@@ -1,4 +1,4 @@
-import { submitBusinessApplication } from '@/lib/businessApplicationService';
+import { resolveBusinessCategory, submitBusinessApplication } from '@/lib/businessApplicationService';
 
 function createAdmin(options?: { duplicate?: boolean }) {
     const duplicateQuery = {
@@ -38,5 +38,33 @@ describe('businessApplicationService', () => {
         const { admin } = createAdmin({ duplicate: true });
         const result = await submitBusinessApplication({ admin: admin as never, input: { contact_name: 'Ada', phone: '+996555123456', business_name: 'Salon' } });
         expect(result).toMatchObject({ ok: false, status: 409, code: 'recent_duplicate' });
+    });
+
+    test('resolves an existing category by slug', async () => {
+        const query = {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({
+                data: [{ slug: 'barbershop', name_ru: 'Барбершоп', is_active: true }],
+                error: null,
+            }),
+        };
+
+        await expect(resolveBusinessCategory({ from: jest.fn(() => query) } as never, 'barbershop'))
+            .resolves.toBe('barbershop');
+    });
+
+    test('requires moderation before an unknown proposed category can be approved', async () => {
+        const query = {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({
+                data: [{ slug: 'barbershop', name_ru: 'Барбершоп', is_active: true }],
+                error: null,
+            }),
+        };
+
+        await expect(resolveBusinessCategory({ from: jest.fn(() => query) } as never, 'Груминг-салон'))
+            .rejects.toThrow('Сначала добавьте предложенную категорию');
     });
 });

@@ -7,13 +7,19 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 
+export type BusinessCategoryOption = {
+    slug: string;
+    name: string;
+};
+
+const PROPOSE_CATEGORY_VALUE = '__propose_category__';
+
 const initial = {
     contact_name: '',
     phone: '',
     email: '',
     business_name: '',
     city: '',
-    category: '',
     comment: '',
     website: '',
     instagram: '',
@@ -22,8 +28,10 @@ const initial = {
     yandex_maps: '',
 };
 
-export function BusinessApplicationForm() {
+export function BusinessApplicationForm({ categories }: { categories: BusinessCategoryOption[] }) {
     const [form, setForm] = useState(initial);
+    const [categoryChoice, setCategoryChoice] = useState(categories.length ? '' : PROPOSE_CATEGORY_VALUE);
+    const [proposedCategory, setProposedCategory] = useState('');
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [sent, setSent] = useState(false);
@@ -39,13 +47,24 @@ export function BusinessApplicationForm() {
 
     async function submit(event: React.FormEvent) {
         event.preventDefault();
-        setSending(true);
         setError(null);
+
+        const category = categoryChoice === PROPOSE_CATEGORY_VALUE
+            ? proposedCategory.trim()
+            : categoryChoice;
+        if (!category) {
+            setError(categoryChoice === PROPOSE_CATEGORY_VALUE
+                ? 'Укажите название новой категории.'
+                : 'Выберите категорию бизнеса или предложите новую.');
+            return;
+        }
+
+        setSending(true);
         try {
             const response = await fetch('/api/business-applications', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify({ ...form, category }),
             });
             const payload = (await response.json()) as { ok?: boolean; message?: string };
             if (!response.ok || !payload.ok) {
@@ -53,6 +72,8 @@ export function BusinessApplicationForm() {
             }
             setSent(true);
             setForm(initial);
+            setCategoryChoice(categories.length ? '' : PROPOSE_CATEGORY_VALUE);
+            setProposedCategory('');
         } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : 'Не удалось отправить заявку');
         } finally {
@@ -77,8 +98,45 @@ export function BusinessApplicationForm() {
                         <Input label="Email" type="email" {...field('email')} />
                         <Input label="Название бизнеса" required {...field('business_name')} />
                         <Input label="Город" {...field('city')} />
-                        <Input label="Категория бизнеса" placeholder="Салон, клиника, автосервис…" {...field('category')} />
+                        <div className="w-full">
+                            <label htmlFor="business-category" className="type-caption mb-1.5 block font-medium text-[var(--text-secondary)]">
+                                Категория бизнеса
+                            </label>
+                            <select
+                                id="business-category"
+                                required
+                                value={categoryChoice}
+                                onChange={(event) => {
+                                    setCategoryChoice(event.target.value);
+                                    setError(null);
+                                }}
+                                className="motion-interactive min-h-[44px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3 text-[16px] text-[var(--text-primary)] hover:border-[var(--border-strong)] focus:border-[var(--focus-ring)] focus:outline-none focus:ring-0 sm:min-h-[40px] sm:text-sm"
+                            >
+                                <option value="" disabled>Выберите категорию</option>
+                                {categories.map((category) => (
+                                    <option key={category.slug} value={category.slug}>{category.name}</option>
+                                ))}
+                                <option value={PROPOSE_CATEGORY_VALUE}>Моей категории нет — предложить новую</option>
+                            </select>
+                            <p className="type-caption mt-1.5 text-[var(--text-muted)]">
+                                Выберите готовую категорию — так заявка пройдёт проверку быстрее.
+                            </p>
+                        </div>
                     </div>
+                    {categoryChoice === PROPOSE_CATEGORY_VALUE ? (
+                        <Input
+                            label="Предложите новую категорию"
+                            required
+                            maxLength={120}
+                            value={proposedCategory}
+                            onChange={(event) => {
+                                setProposedCategory(event.target.value);
+                                setError(null);
+                            }}
+                            placeholder="Например, груминг-салон"
+                            helperText="Новая категория появится в системе только после проверки администратором."
+                        />
+                    ) : null}
                     <label className="block">
                         <span className="type-label text-[var(--text-primary)]">Комментарий</span>
                         <textarea

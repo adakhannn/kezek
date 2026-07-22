@@ -224,7 +224,7 @@ async function makeUniqueBusinessSlug(admin: AdminLike, baseName: string): Promi
     return `${base}-${Date.now().toString(36)}`;
 }
 
-async function resolveBusinessCategory(admin: AdminLike, rawCategory: string | null | undefined): Promise<string> {
+export async function resolveBusinessCategory(admin: AdminLike, rawCategory: string | null | undefined): Promise<string> {
     const normalized = (rawCategory ?? '').trim().toLowerCase();
     const { data, error } = await admin
         .from('categories')
@@ -242,6 +242,10 @@ async function resolveBusinessCategory(admin: AdminLike, rawCategory: string | n
         || (category.name_ru ?? '').trim().toLowerCase() === normalized
     ));
     if (exact) return exact.slug;
+
+    if (normalized) {
+        throw new Error(`Сначала добавьте предложенную категорию «${rawCategory?.trim()}» в справочник категорий.`);
+    }
 
     return (categories.find((category) => category.slug === 'barbershop') ?? categories[0]).slug;
 }

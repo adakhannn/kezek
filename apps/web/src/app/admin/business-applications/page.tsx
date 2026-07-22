@@ -27,13 +27,26 @@ type BusinessRegistrationApplication = {
 
 export default async function BusinessApplicationsPage() {
     const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-    const { data: applications, error } = await admin
-        .from('business_registration_applications')
-        .select('id,contact_name,phone,email,business_name,city,category,comment,status,applicant_user_id,created_at,created_business_id,directory_links,prior_submission_count,risk_flags')
-        .order('created_at', { ascending: false })
-        .limit(200);
+    const [{ data: applications, error }, { data: categories, error: categoriesError }] = await Promise.all([
+        admin
+            .from('business_registration_applications')
+            .select('id,contact_name,phone,email,business_name,city,category,comment,status,applicant_user_id,created_at,created_business_id,directory_links,prior_submission_count,risk_flags')
+            .order('created_at', { ascending: false })
+            .limit(200),
+        admin.from('categories').select('slug,name_ru').eq('is_active', true),
+    ]);
 
     if (error) return <div className="text-red-600">Ошибка: {error.message}</div>;
+    if (categoriesError) return <div className="text-red-600">Ошибка категорий: {categoriesError.message}</div>;
+
+    const categoryNames = new Map<string, string>();
+    (categories ?? []).forEach((category) => {
+        const slug = typeof category.slug === 'string' ? category.slug.trim() : '';
+        const name = typeof category.name_ru === 'string' ? category.name_ru.trim() : '';
+        if (!slug || !name) return;
+        categoryNames.set(slug.toLowerCase(), name);
+        categoryNames.set(name.toLowerCase(), name);
+    });
 
     return (
         <div className="space-y-6">
@@ -43,14 +56,32 @@ export default async function BusinessApplicationsPage() {
             </div>
 
             <div className="grid gap-4">
-                {((applications ?? []) as BusinessRegistrationApplication[]).map((application) => (
-                    <Card key={application.id} variant="outlined" padding="md" className="space-y-3">
+                {((applications ?? []) as BusinessRegistrationApplication[]).map((application) => {
+                    const rawCategory = application.category?.trim() ?? '';
+                    const knownCategoryName = rawCategory ? categoryNames.get(rawCategory.toLowerCase()) : null;
+                    const isProposedCategory = Boolean(rawCategory && !knownCategoryName);
+
+                    return (
+                        <Card key={application.id} variant="outlined" padding="md" className="space-y-3">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h2 className="text-lg font-semibold">{application.business_name}</h2>
                                 <p className="text-sm text-gray-500">
-                                    {application.category || 'Категория не указана'} · {application.city || 'Город не указан'}
+                                    {knownCategoryName || rawCategory || 'Категория не указана'} · {application.city || 'Город не указан'}
                                 </p>
+                                {isProposedCategory ? (
+                                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                                        <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                            Предложена новая категория
+                                        </span>
+                                        <Link
+                                            href={`/admin/categories/new?name=${encodeURIComponent(rawCategory)}`}
+                                            className="text-xs font-medium text-[var(--accent-primary)] underline underline-offset-2"
+                                        >
+                                            Создать категорию
+                                        </Link>
+                                    </div>
+                                ) : null}
                             </div>
                             <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">{application.status}</span>
                         </div>
@@ -109,13 +140,14 @@ export default async function BusinessApplicationsPage() {
                                 id={application.id}
                                 status="approved"
                                 label={application.created_business_id ? 'Одобрено' : 'Одобрить и создать бизнес'}
-                                disabled={Boolean(application.created_business_id)}
+                                disabled={Boolean(application.created_business_id) || isProposedCategory}
                             />
                             <ApplicationStatusButton id={application.id} status="rejected" label="Отклонить" />
                             <ApplicationStatusButton id={application.id} status="rejected" label="Отклонить и блокировать 30 дней" blockDays={30} />
                         </div>
-                    </Card>
-                ))}
+                        </Card>
+                    );
+                })}
 
                 {!applications?.length ? <Card padding="lg">Заявок пока нет.</Card> : null}
             </div>

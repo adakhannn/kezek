@@ -1,14 +1,15 @@
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
-import {CategoryForm} from '@/components/admin/categories/CategoryForm';
-import {Button} from '@/components/ui/Button';
+
+import { CategoryForm } from '@/components/admin/categories/CategoryForm';
+import { Button } from '@/components/ui/Button';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CategoryNewPage() {
+export default async function CategoryNewPage({ searchParams }: { searchParams: Promise<{ name?: string }> }) {
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();
@@ -23,6 +24,9 @@ export default async function CategoryNewPage() {
     const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
     if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
+
+    const params = await searchParams;
+    const proposedName = typeof params.name === 'string' ? params.name.trim().slice(0, 120) : '';
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
@@ -53,7 +57,10 @@ export default async function CategoryNewPage() {
                 <AdminEntityFlowTabs entity="categories" className="max-w-3xl" />
 
                 <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
-                    <CategoryForm mode="create" />
+                    <CategoryForm
+                        mode="create"
+                        initial={proposedName ? { name_ru: proposedName, slug: '', is_active: true } : undefined}
+                    />
                 </section>
             </div>
         </main>

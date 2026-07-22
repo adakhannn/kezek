@@ -1,10 +1,10 @@
 import Link from 'next/link';
 
-import { BusinessApplicationForm } from './BusinessApplicationForm';
+import { BusinessApplicationForm, type BusinessCategoryOption } from './BusinessApplicationForm';
 
 import { Card } from '@/components/ui/Card';
 import { buttonStyles } from '@/components/ui/buttonStyles';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,6 +12,22 @@ export const runtime = 'nodejs';
 export default async function BusinessApplicationPage() {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
+    let categories: BusinessCategoryOption[] = [];
+
+    if (user) {
+        const admin = createSupabaseAdminClient();
+        const { data } = await admin
+            .from('categories')
+            .select('slug,name_ru')
+            .eq('is_active', true)
+            .order('name_ru', { ascending: true });
+
+        categories = (data ?? []).flatMap((category) => (
+            typeof category.slug === 'string' && typeof category.name_ru === 'string'
+                ? [{ slug: category.slug, name: category.name_ru }]
+                : []
+        ));
+    }
 
     return (
         <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
@@ -24,7 +40,7 @@ export default async function BusinessApplicationPage() {
                 </p>
             </div>
 
-            {user ? <BusinessApplicationForm /> : <AuthenticationGate />}
+            {user ? <BusinessApplicationForm categories={categories} /> : <AuthenticationGate />}
         </main>
     );
 }
