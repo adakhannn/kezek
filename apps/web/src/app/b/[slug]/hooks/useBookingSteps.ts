@@ -87,6 +87,14 @@ export function useBookingSteps(params: UseBookingStepsParams) {
         });
     };
 
-    return { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, totalSteps };
+    const goToStep = (targetStep: BookingStep) => {
+        setStep((currentStep) => {
+            if (targetStep < 1 || targetStep >= currentStep) return currentStep;
+            onStepChange?.(targetStep);
+            return targetStep;
+        });
+    };
+
+    return { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, goToStep, totalSteps };
 }
 

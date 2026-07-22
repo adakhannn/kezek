@@ -319,9 +319,9 @@ function MarketplaceBusinessCard({
             className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] p-5 shadow-[var(--shadow-md)] transition-all duration-[var(--motion-base)] hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]"
             style={{ animationDelay: `${index * 40}ms` }}
         >
-            <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
+            <div className="min-w-0 space-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <Badge variant="accent">
                             {t('home.card.badge', 'Проверенный бизнес')}
                         </Badge>
@@ -333,31 +333,33 @@ function MarketplaceBusinessCard({
                         ) : null}
                     </div>
 
-                    <div>
-                        <h2 className="type-section-title text-[var(--text-primary)]">
-                            <Link href={`/b/${business.slug}`} className="transition-colors hover:text-[var(--accent-primary)]">
-                                {business.name}
-                            </Link>
-                        </h2>
-                        {business.address ? (
-                            <p className="type-caption mt-2 text-[var(--text-secondary)]">
-                                {business.address}
-                            </p>
-                        ) : null}
-                    </div>
-                </div>
-
-                <div
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                    <div
+                        className={`inline-flex max-w-full items-center gap-1 rounded-full border px-3 py-1.5 text-left text-xs font-semibold leading-tight ${
                         hasRating
                             ? 'border-[color:color-mix(in_srgb,var(--status-warning)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--status-warning)_14%,transparent)] text-[var(--status-warning-strong)]'
                             : 'border-[var(--border-subtle)] bg-[var(--surface-emphasis)] text-[var(--text-muted)]'
-                    }`}
-                >
-                    <span aria-hidden="true">{hasRating ? '★' : '•'}</span>
-                    {hasRating
-                        ? formatPublicRatingScore(Number(business.rating_score))
-                        : t('common.rating.noRating', 'Нет рейтинга')}
+                        }`}
+                    >
+                        <span className="shrink-0" aria-hidden="true">{hasRating ? '★' : '•'}</span>
+                        <span className="min-w-0 break-words">
+                            {hasRating
+                                ? formatPublicRatingScore(Number(business.rating_score))
+                                : t('common.rating.noRating', 'Нет рейтинга')}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="min-w-0">
+                    <h2 className="type-section-title break-words text-[var(--text-primary)]">
+                        <Link href={`/b/${business.slug}`} className="transition-colors hover:text-[var(--accent-primary)]">
+                            {business.name}
+                        </Link>
+                    </h2>
+                    {business.address ? (
+                        <p className="type-caption mt-2 break-words text-[var(--text-secondary)]">
+                            {business.address}
+                        </p>
+                    ) : null}
                 </div>
             </div>
 

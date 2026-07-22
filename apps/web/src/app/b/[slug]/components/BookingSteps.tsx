@@ -14,7 +14,7 @@ type BookingStepsProps = {
     step: BookingStep;
     totalSteps: number;
     canGoNext: boolean;
-    goPrev: () => void;
+    goToStep: (step: BookingStep) => void;
     stepIndicatorText: string;
 };
 
@@ -23,7 +23,7 @@ export function BookingSteps({
     step,
     totalSteps,
     canGoNext,
-    goPrev: _goPrev,
+    goToStep,
     stepIndicatorText,
 }: BookingStepsProps) {
     const progress = totalSteps > 0 ? Math.max(0, ((step - 1) / totalSteps) * 100) : 0;
@@ -69,62 +69,66 @@ export function BookingSteps({
                         const isUpcoming = item.id > step;
 
                         return (
-                            <div
-                                key={item.id}
-                                role="listitem"
-                                aria-current={isActive ? 'step' : undefined}
-                                className={[
-                                    'rounded-[22px] border px-4 py-4 text-left transition-all',
-                                    isActive
-                                        ? 'border-[var(--accent-primary)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] shadow-[var(--shadow-sm)]'
-                                        : isCompleted
-                                            ? 'border-[color:color-mix(in_srgb,var(--status-success)_26%,transparent)] bg-[var(--status-success-soft)]'
-                                            : 'border-[var(--border-subtle)] bg-[var(--surface-card)]',
-                                ].join(' ')}
-                            >
-                                <div className="flex items-center justify-between gap-3">
-                                    <div
-                                        className={[
-                                            'type-label flex h-9 w-9 items-center justify-center rounded-full border',
-                                            isActive
-                                                ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-[var(--text-inverse)]'
-                                                : isCompleted
-                                                    ? 'border-[var(--status-success)] bg-[var(--status-success)] text-[var(--text-inverse)]'
-                                                    : 'border-[var(--border-default)] bg-[var(--surface-base)] text-[var(--text-secondary)]',
-                                        ].join(' ')}
-                                    >
-                                        {isCompleted ? (
-                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        ) : (
-                                            index + 1
-                                        )}
+                            <div key={item.id} role="listitem" className="h-full">
+                                <button
+                                    type="button"
+                                    disabled={!isCompleted}
+                                    onClick={() => goToStep(item.id)}
+                                    aria-current={isActive ? 'step' : undefined}
+                                    aria-label={isCompleted ? `Вернуться к шагу ${index + 1}: ${item.label}` : undefined}
+                                    className={[
+                                        'h-full w-full rounded-[22px] border px-4 py-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-canvas)]',
+                                        isActive
+                                            ? 'cursor-default border-[var(--accent-primary)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] shadow-[var(--shadow-sm)]'
+                                            : isCompleted
+                                                ? 'cursor-pointer border-[color:color-mix(in_srgb,var(--status-success)_26%,transparent)] bg-[var(--status-success-soft)] hover:-translate-y-0.5 hover:border-[var(--status-success)] hover:shadow-[var(--shadow-sm)]'
+                                                : 'cursor-default border-[var(--border-subtle)] bg-[var(--surface-card)]',
+                                    ].join(' ')}
+                                >
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div
+                                            className={[
+                                                'type-label flex h-9 w-9 items-center justify-center rounded-full border',
+                                                isActive
+                                                    ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-[var(--text-inverse)]'
+                                                    : isCompleted
+                                                        ? 'border-[var(--status-success)] bg-[var(--status-success)] text-[var(--text-inverse)]'
+                                                        : 'border-[var(--border-default)] bg-[var(--surface-base)] text-[var(--text-secondary)]',
+                                            ].join(' ')}
+                                        >
+                                            {isCompleted ? (
+                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : (
+                                                index + 1
+                                            )}
+                                        </div>
+                                        <span
+                                            className={[
+                                                'rounded-full px-2.5 py-1 text-[11px] font-medium',
+                                                isActive
+                                                    ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]'
+                                                    : isCompleted
+                                                        ? 'bg-[var(--status-success-soft)] text-[var(--status-success)]'
+                                                        : 'bg-[var(--surface-emphasis)] text-[var(--text-muted)]',
+                                            ].join(' ')}
+                                        >
+                                            {isActive ? 'Сейчас' : isCompleted ? 'Готово' : isUpcoming ? 'Дальше' : ''}
+                                        </span>
                                     </div>
-                                    <span
-                                        className={[
-                                            'rounded-full px-2.5 py-1 text-[11px] font-medium',
-                                            isActive
-                                                ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]'
-                                                : isCompleted
-                                                    ? 'bg-[var(--status-success-soft)] text-[var(--status-success)]'
-                                                    : 'bg-[var(--surface-emphasis)] text-[var(--text-muted)]',
-                                        ].join(' ')}
-                                    >
-                                        {isActive ? 'Сейчас' : isCompleted ? 'Готово' : isUpcoming ? 'Дальше' : ''}
-                                    </span>
-                                </div>
 
-                                <div className="mt-3">
-                                    <div className="type-label text-[var(--text-primary)]">{item.label}</div>
-                                    <p className="type-caption mt-1 text-[var(--text-secondary)]">
-                                        {isCompleted
-                                            ? 'Шаг уже подтверждён.'
-                                            : isActive
-                                                ? 'Сделайте один понятный выбор и двигайтесь дальше.'
-                                                : 'Откроется после текущего выбора.'}
-                                    </p>
-                                </div>
+                                    <div className="mt-3">
+                                        <div className="type-label text-[var(--text-primary)]">{item.label}</div>
+                                        <p className="type-caption mt-1 text-[var(--text-secondary)]">
+                                            {isCompleted
+                                                ? 'Нажмите, чтобы вернуться к этому шагу.'
+                                                : isActive
+                                                    ? 'Сделайте один понятный выбор и двигайтесь дальше.'
+                                                    : 'Откроется после текущего выбора.'}
+                                        </p>
+                                    </div>
+                                </button>
                             </div>
                         );
                     })}

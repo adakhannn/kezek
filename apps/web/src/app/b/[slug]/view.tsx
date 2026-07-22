@@ -229,7 +229,7 @@ export default function BookingForm({ data }: { data: Data }) {
         return Number.isFinite(parsed) ? Math.min(5, Math.max(1, parsed)) : 1;
     }, [stepFromUrl]);
 
-    const { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, totalSteps } = useBookingSteps({
+    const { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, goToStep, totalSteps } = useBookingSteps({
         branchId,
         dayStr,
         staffId,
@@ -400,7 +400,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     step={step}
                     totalSteps={totalSteps}
                     canGoNext={canGoNext}
-                    goPrev={goPrev}
+                    goToStep={goToStep}
                     stepIndicatorText={stepIndicatorText}
                 />
 
