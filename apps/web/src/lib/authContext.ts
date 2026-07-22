@@ -7,6 +7,7 @@
 export {
     MANAGER_ROLE_KEYS,
     getUserRoleProfile,
+    hasBusinessDashboardAccess,
 } from './userRoleProfile';
 
 export type {

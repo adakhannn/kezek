@@ -1,3 +1,4 @@
+import { AppShellHeaderFrame } from './AppShellHeaderFrame';
 import { AuthStatusServer } from './AuthStatusServer';
 import { Logo } from './Logo';
 import { MobileHeaderMenu } from './MobileHeaderMenu';
@@ -6,7 +7,7 @@ import { LanguageSwitcher } from './i18n/LanguageSwitcher';
 
 export async function AppShellHeader() {
     return (
-        <header className="sticky top-0 z-[100] px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6">
+        <AppShellHeaderFrame>
             <div className="mx-auto max-w-7xl">
                 <div className="relative overflow-visible rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_88%,transparent)] shadow-[var(--shadow-lg)] backdrop-blur-xl">
                     <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.16),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.14),transparent_28%)]" />
@@ -36,6 +37,6 @@ export async function AppShellHeader() {
                     </div>
                 </div>
             </div>
-        </header>
+        </AppShellHeaderFrame>
     );
 }

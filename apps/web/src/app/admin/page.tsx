@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 import { getT } from '@/app/_components/i18n/server';
-import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -215,13 +214,11 @@ export default async function AdminHomePage() {
                                 </svg>
                                 <span>{t('admin.home.createBusiness', 'Создать бизнес')}</span>
                             </Link>
-                            <Link href="/admin/categories/new">
-                                <Button variant="outline" size="sm">
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                    </svg>
-                                    <span>{t('admin.home.createCategory', 'Категория')}</span>
-                                </Button>
+                            <Link href="/admin/categories/new" className={buttonStyles({ variant: 'outline', size: 'sm' })}>
+                                <svg className="h-4 w-4 shrink-0" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                                <span className="whitespace-nowrap">{t('admin.home.createCategory', 'Категория')}</span>
                             </Link>
                         </div>
                     }

@@ -203,7 +203,7 @@ describe('authContext', () => {
             expect(fromRole).toMatchObject({ hasStaff: true, canStaff: true });
         });
 
-        it('keeps super admin profile independent from manager business expansion', async () => {
+        it('does not grant the business dashboard to a super admin', async () => {
             const supabase = createSupabaseMock({
                 isSuperAdmin: true,
                 roleKeys: ['manager'],
@@ -216,7 +216,8 @@ describe('authContext', () => {
             expect(profile).toMatchObject({
                 isSuperAdmin: true,
                 canAdmin: true,
-                canDashboard: true,
+                hasManagerRoles: false,
+                canDashboard: false,
             });
             expect(profile?.businesses).toEqual([]);
         });

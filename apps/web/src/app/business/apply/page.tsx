@@ -1,92 +1,67 @@
-'use client';
+import Link from 'next/link';
 
-import { useState } from 'react';
+import { BusinessApplicationForm } from './BusinessApplicationForm';
 
-import { AlertBanner } from '@/components/ui/AlertBanner';
-import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
+import { buttonStyles } from '@/components/ui/buttonStyles';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-const initial = {
-    contact_name: '', phone: '', email: '', business_name: '', city: '', category: '', comment: '', website: '',
-    instagram: '', two_gis: '', google_maps: '', yandex_maps: '',
-};
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-export default function BusinessApplicationPage() {
-    const [form, setForm] = useState(initial);
-    const [sending, setSending] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [sent, setSent] = useState(false);
-
-    function field(name: keyof typeof initial) {
-        return { value: form[name], onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm((current) => ({ ...current, [name]: event.target.value })) };
-    }
-
-    async function submit(event: React.FormEvent) {
-        event.preventDefault();
-        setSending(true);
-        setError(null);
-        try {
-            const response = await fetch('/api/business-applications', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(form),
-            });
-            const payload = (await response.json()) as { ok?: boolean; message?: string };
-            if (!response.ok || !payload.ok) throw new Error(payload.message || 'Не удалось отправить заявку');
-            setSent(true);
-            setForm(initial);
-        } catch (submitError) {
-            setError(submitError instanceof Error ? submitError.message : 'Не удалось отправить заявку');
-        } finally {
-            setSending(false);
-        }
-    }
+export default async function BusinessApplicationPage() {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     return (
         <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
             <div className="mb-6 text-center">
                 <h1 className="text-3xl font-bold text-[var(--text-primary)]">Подключить бизнес к Kezek</h1>
-                <p className="mt-2 text-[var(--text-secondary)]">Оставить заявку может любой человек — регистрация и вход не требуются.</p>
+                <p className="mt-2 text-[var(--text-secondary)]">
+                    {user
+                        ? 'Заполните заявку — после проверки бизнес будет привязан к вашему аккаунту.'
+                        : 'Сначала войдите в Kezek, чтобы заявка и созданный бизнес были привязаны именно к вам.'}
+                </p>
             </div>
-            <Card variant="elevated" padding="lg">
-                {sent ? (
-                    <AlertBanner variant="success" title="Заявка отправлена" message="Мы получили ваши данные и свяжемся с вами для уточнения деталей регистрации бизнеса." />
-                ) : (
-                    <form onSubmit={submit} className="space-y-5">
-                        {error ? <AlertBanner variant="danger" message={error} onClose={() => setError(null)} /> : null}
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <Input label="Ваше имя" required {...field('contact_name')} />
-                            <Input label="Телефон" type="tel" required placeholder="+996555123456" {...field('phone')} />
-                            <Input label="Email" type="email" {...field('email')} />
-                            <Input label="Название бизнеса" required {...field('business_name')} />
-                            <Input label="Город" {...field('city')} />
-                            <Input label="Категория бизнеса" placeholder="Салон, клиника, автосервис…" {...field('category')} />
-                        </div>
-                        <label className="block">
-                            <span className="type-label text-[var(--text-primary)]">Комментарий</span>
-                            <textarea className="mt-2 min-h-28 w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-[var(--text-primary)]" maxLength={2000} {...field('comment')} />
-                        </label>
-                        <div className="space-y-3 rounded-xl border border-[var(--border-subtle)] p-4">
-                            <div>
-                                <p className="type-label text-[var(--text-primary)]">Ссылки филиала</p>
-                                <p className="type-caption mt-1 text-[var(--text-muted)]">Укажите страницы именно этой локации. После одобрения они будут привязаны к первому созданному филиалу и показаны клиентам.</p>
-                            </div>
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <Input label="Instagram" type="url" placeholder="https://instagram.com/..." {...field('instagram')} />
-                                <Input label="2ГИС" type="url" placeholder="https://2gis.ru/..." {...field('two_gis')} />
-                                <Input label="Google Карты" type="url" placeholder="https://maps.google.com/..." {...field('google_maps')} />
-                                <Input label="Яндекс Карты" type="url" placeholder="https://yandex.ru/maps/..." {...field('yandex_maps')} />
-                            </div>
-                        </div>
-                        <div className="hidden" aria-hidden="true">
-                            <Input label="Website" tabIndex={-1} autoComplete="off" {...field('website')} />
-                        </div>
-                        <p className="type-caption text-[var(--text-muted)]">Отправляя заявку, вы соглашаетесь на обработку контактных данных для связи по вопросу подключения бизнеса.</p>
-                        <Button type="submit" fullWidth isLoading={sending} disabled={sending}>Отправить заявку</Button>
-                    </form>
-                )}
-            </Card>
+
+            {user ? <BusinessApplicationForm /> : <AuthenticationGate />}
         </main>
+    );
+}
+
+function AuthenticationGate() {
+    return (
+        <Card variant="elevated" padding="lg" className="overflow-hidden">
+            <div className="mx-auto max-w-xl text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-emphasis)] text-[var(--accent-primary)]">
+                    <svg className="h-7 w-7" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 className="mt-5 text-xl font-semibold text-[var(--text-primary)]">Войдите перед отправкой заявки</h2>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                    Авторизация займёт меньше минуты. Она нужна, чтобы после одобрения вы автоматически получили доступ владельца к бизнесу.
+                </p>
+
+                <div className="my-6 grid gap-2 text-left sm:grid-cols-3">
+                    {['Заявка закреплена за вами', 'Статус не потеряется', 'Доступ выдаётся автоматически'].map((item) => (
+                        <div key={item} className="rounded-xl bg-[var(--surface-emphasis)] px-3 py-3 text-sm font-medium text-[var(--text-primary)]">
+                            <span className="mr-2 text-[var(--status-success)]" aria-hidden="true">✓</span>
+                            {item}
+                        </div>
+                    ))}
+                </div>
+
+                <Link
+                    href="/auth/sign-in?redirect=/business/apply"
+                    className={buttonStyles({ fullWidth: true })}
+                >
+                    Войти и продолжить
+                </Link>
+                <p className="mt-3 text-xs text-[var(--text-muted)]">
+                    После входа вы автоматически вернётесь к этой форме.
+                </p>
+            </div>
+        </Card>
     );
 }

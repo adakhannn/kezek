@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { hasBusinessDashboardAccess } from '@/lib/authContext';
 import { supabase } from '@/lib/supabaseClient';
 
 const STORAGE_KEY = 'cabinet-other-roles-banner-dismissed';
@@ -48,8 +49,10 @@ export function CabinetOtherRolesBanner() {
                 ]);
 
                 const rolesArr = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
-                const hasDashboard =
-                    !!isSuperData || rolesArr.some((r) => ['owner', 'admin', 'manager'].includes(r));
+                const hasDashboard = hasBusinessDashboardAccess(
+                    !!isSuperData,
+                    rolesArr.some((r) => ['owner', 'admin', 'manager'].includes(r)),
+                );
                 const hasStaff = rolesArr.includes('staff');
                 const hasAdmin = !!isSuperData;
 

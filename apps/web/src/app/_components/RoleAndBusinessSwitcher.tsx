@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
 
+import { hasBusinessDashboardAccess } from '@/lib/authContext';
 import { logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -87,7 +88,10 @@ export function RoleAndBusinessSwitcher({
                 const rolesArr = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
 
                 const roles: RoleSummary = {
-                    hasDashboard: isSuperData || rolesArr.some((r) => ['owner', 'admin', 'manager'].includes(r)),
+                    hasDashboard: hasBusinessDashboardAccess(
+                        !!isSuperData,
+                        businesses.length > 0 || rolesArr.some((r) => ['owner', 'admin', 'manager'].includes(r)),
+                    ),
                     hasStaff: rolesArr.includes('staff'),
                     hasCabinet: true,
                     hasAdmin: !!isSuperData,

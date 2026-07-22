@@ -7,6 +7,10 @@ export type ManagerRoleKey = 'owner' | 'admin' | 'manager';
 
 export type BusinessWithRole = { id: string; role: ManagerRoleKey };
 
+export function hasBusinessDashboardAccess(isSuperAdmin: boolean, hasBusinessAssociation: boolean): boolean {
+    return !isSuperAdmin && hasBusinessAssociation;
+}
+
 export interface UserRoleProfile {
     userId: string;
     isSuperAdmin: boolean;
@@ -53,20 +57,25 @@ export async function getUserRoleProfile(
     ]);
 
     const keys = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
+    const isSuper = !!isSuperAdmin;
     const hasOwnerBiz = (ownedCount ?? 0) > 0;
     const hasStaffRecord = !!staffRow;
     const hasStaffRole = keys.includes(STAFF_ROLE_KEY);
     const hasStaff = hasStaffRecord || hasStaffRole;
-    const hasManagerRoles = hasOwnerBiz || keys.some((k) => MANAGER_ROLE_KEYS.has(k));
-    const isSuper = !!isSuperAdmin;
+    const hasManagerRoles = hasBusinessDashboardAccess(
+        isSuper,
+        hasOwnerBiz || keys.some((k) => MANAGER_ROLE_KEYS.has(k)),
+    );
 
     const businesses: BusinessWithRole[] = [];
 
-    (ownedBusinesses ?? []).forEach((b: { id: string }) => {
-        if (b?.id) businesses.push({ id: b.id, role: 'owner' });
-    });
+    if (!isSuper) {
+        (ownedBusinesses ?? []).forEach((b: { id: string }) => {
+            if (b?.id) businesses.push({ id: b.id, role: 'owner' });
+        });
+    }
 
-    if (userRolesRows?.length && !isSuper) {
+    if (!isSuper && userRolesRows?.length) {
         const roleIds = [...new Set((userRolesRows as { role_id: string }[]).map((r) => r.role_id))];
         const { data: roles } = await supabase.from('roles').select('id, key').in('id', roleIds);
         const roleIdToKey = new Map(
@@ -91,7 +100,7 @@ export async function getUserRoleProfile(
         hasStaff,
         isClient: true,
         canAdmin: isSuper,
-        canDashboard: isSuper || hasManagerRoles,
+        canDashboard: hasManagerRoles,
         canStaff: hasStaff,
         canCabinet: true,
         businesses,
