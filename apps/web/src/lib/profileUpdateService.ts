@@ -5,6 +5,7 @@ export type ProfileUpdateBody = {
   notify_sms?: boolean;
   notify_whatsapp?: boolean;
   notify_telegram?: boolean;
+  notification_emails?: string[];
 };
 
 export type ProfileUpdateSupabaseLike = {
@@ -29,6 +30,10 @@ export type ProfileUpdateSupabaseLike = {
       error: { message: string } | null;
     }>;
   };
+  rpc: (
+    name: string,
+    params: Record<string, unknown>,
+  ) => Promise<{ error: { message: string } | null }>;
 };
 
 export type ProfileUpdateResult =
@@ -121,6 +126,24 @@ export async function updateProfileSettings(params: {
       message: profileError.message,
       status: 400,
     };
+  }
+
+  if (params.body.notification_emails) {
+    const { error: notificationEmailError } = await params.supabase.rpc(
+      'set_my_notification_email_preferences',
+      {
+        target_enabled: notify_email,
+        target_emails: params.body.notification_emails,
+      },
+    );
+    if (notificationEmailError) {
+      return {
+        ok: false,
+        error: 'validation',
+        message: notificationEmailError.message,
+        status: 400,
+      };
+    }
   }
 
   const previousMetadata = (user.user_metadata ?? {}) as Record<string, unknown>;

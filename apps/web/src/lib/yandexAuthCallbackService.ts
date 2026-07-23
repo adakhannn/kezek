@@ -33,6 +33,10 @@ export type YandexAuthAdminClientLike = {
             error?: { message?: string } | null;
         }>;
     };
+    rpc: (
+        name: string,
+        params: Record<string, unknown>,
+    ) => Promise<{ error: { message?: string } | null }>;
 };
 
 type RunYandexOAuthCallbackInput = {
@@ -79,7 +83,6 @@ async function updateExistingProfile(admin: YandexAuthAdminClientLike, userId: s
         .from('profiles')
         .update({
             ...profilePayload(yandexUser),
-            updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
 
@@ -112,9 +115,25 @@ async function ensureProfile(admin: YandexAuthAdminClientLike, userId: string, y
         .from('profiles')
         .update({
             ...profilePayload(yandexUser),
-            updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
+}
+
+async function syncYandexNotificationEmail(
+    admin: YandexAuthAdminClientLike,
+    userId: string,
+    yandexUser: YandexUserInfo,
+) {
+    if (!yandexUser.default_email) return;
+    const { error } = await admin.rpc('sync_user_notification_email', {
+        target_user_id: userId,
+        target_email: yandexUser.default_email,
+        target_source: 'yandex',
+        target_provider_subject: String(yandexUser.id),
+    });
+    if (error) {
+        logError('YandexAuth', 'Notification email sync failed', error);
+    }
 }
 
 async function resolveUserViaEmailDuplicate(
@@ -174,6 +193,7 @@ async function createOrFindUser(
         user_metadata: {
             yandex_id: String(yandexUser.id),
             yandex_username: yandexUser.login,
+            yandex_email: yandexUser.default_email ?? null,
             auth_provider: 'yandex',
         },
     });
@@ -257,8 +277,10 @@ export async function runYandexOAuthCallback({
                 ...(linkedUser.user.user_metadata ?? {}),
                 yandex_id: String(yandexUser.id),
                 yandex_username: yandexUser.login ?? null,
+                yandex_email: yandexUser.default_email ?? null,
             },
         });
+        await syncYandexNotificationEmail(admin, linkUserId, yandexUser);
         return { redirectUrl: `${origin}/cabinet/profile?linked=yandex` };
     }
 
@@ -280,6 +302,7 @@ export async function runYandexOAuthCallback({
     }
 
     const userEmail = currentUser?.user?.email || yandexUser.default_email || `yandex_${yandexUser.id}@yandex.local`;
+    await syncYandexNotificationEmail(admin, userId, yandexUser);
 
     if (!currentUser?.user?.email && yandexUser.default_email) {
         await admin.auth.admin.updateUserById(userId, {

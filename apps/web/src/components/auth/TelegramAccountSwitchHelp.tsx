@@ -1,6 +1,7 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type TelegramAccountSwitchHelpProps = {
     context: 'login' | 'link';
@@ -18,6 +19,16 @@ export function TelegramAccountSwitchHelp({
             ? 'Войти с другого Telegram-аккаунта'
             : 'Подключить другой Telegram-аккаунт';
 
+    useEffect(() => {
+        if (!expanded) return;
+
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setExpanded(false);
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => window.removeEventListener('keydown', closeOnEscape);
+    }, [expanded]);
+
     return (
         <div className="mt-2 text-center">
             <button
@@ -30,44 +41,69 @@ export function TelegramAccountSwitchHelp({
                 {actionLabel}
             </button>
 
-            {expanded ? (
-                <div
-                    id={helpId}
-                    className="mx-auto mt-3 max-w-sm rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-3 text-left"
-                >
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
-                        Telegram запомнил аккаунт в браузере
-                    </p>
-                    <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs leading-relaxed text-[var(--text-secondary)]">
-                        <li>Откройте управление входом Telegram.</li>
-                        <li>Нажмите текущий профиль и выберите Log out.</li>
-                        <li>Вернитесь сюда и обновите кнопку — Telegram предложит другой номер.</li>
-                    </ol>
-                    <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
-                        В приложении: Настройки → Конфиденциальность → Боты и сайты.
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                        <a
-                            href="https://core.telegram.org/widgets/login-legacy"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex min-h-9 items-center justify-center rounded-[var(--radius-md)] bg-[#229ED9] px-3 text-xs font-semibold text-white transition hover:bg-[#168ac2]"
-                        >
-                            Открыть Telegram
-                        </a>
-                        <button
-                            type="button"
-                            className="inline-flex min-h-9 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-subtle)] px-3 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-card)]"
-                            onClick={() => {
-                                onRefresh();
-                                setExpanded(false);
-                            }}
-                        >
-                            Обновить кнопку
-                        </button>
-                    </div>
-                </div>
-            ) : null}
+            {expanded
+                ? createPortal(
+                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                          <button
+                              type="button"
+                              aria-label="Закрыть подсказку"
+                              className="absolute inset-0 cursor-default bg-slate-950/65 backdrop-blur-sm"
+                              onClick={() => setExpanded(false)}
+                          />
+                          <div
+                              id={helpId}
+                              role="dialog"
+                              aria-modal="true"
+                              aria-labelledby={`${helpId}-title`}
+                              className="relative w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-5 text-left shadow-2xl"
+                          >
+                              <button
+                                  type="button"
+                                  aria-label="Закрыть"
+                                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-lg text-[var(--text-secondary)] transition hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
+                                  onClick={() => setExpanded(false)}
+                              >
+                                  ×
+                              </button>
+                              <p
+                                  id={`${helpId}-title`}
+                                  className="pr-8 text-base font-semibold text-[var(--text-primary)]"
+                              >
+                                  Telegram запомнил аккаунт в браузере
+                              </p>
+                              <ol className="mt-3 list-decimal space-y-1.5 pl-4 text-sm leading-relaxed text-[var(--text-secondary)]">
+                                  <li>Откройте управление входом Telegram.</li>
+                                  <li>Нажмите текущий профиль и выберите Log out.</li>
+                                  <li>Вернитесь сюда и обновите кнопку — Telegram предложит другой номер.</li>
+                              </ol>
+                              <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">
+                                  В приложении: Настройки → Конфиденциальность → Боты и сайты.
+                              </p>
+                              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                                  <a
+                                      href="https://core.telegram.org/widgets/login-legacy"
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[var(--radius-md)] bg-[#229ED9] px-3 text-sm font-semibold text-white transition hover:bg-[#168ac2]"
+                                  >
+                                      Открыть Telegram
+                                  </a>
+                                  <button
+                                      type="button"
+                                      className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-subtle)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-emphasis)]"
+                                      onClick={() => {
+                                          onRefresh();
+                                          setExpanded(false);
+                                      }}
+                                  >
+                                      Обновить кнопку
+                                  </button>
+                              </div>
+                          </div>
+                      </div>,
+                      document.body,
+                  )
+                : null}
         </div>
     );
 }

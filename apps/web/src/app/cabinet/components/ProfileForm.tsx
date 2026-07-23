@@ -28,6 +28,13 @@ type LoginConnections = {
     yandex: boolean;
 };
 
+type NotificationEmail = {
+    email: string;
+    verified: boolean;
+    enabled: boolean;
+    sources: string[];
+};
+
 type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
 
 export default function ProfileForm() {
@@ -67,6 +74,9 @@ export default function ProfileForm() {
     });
     const [linkingProvider, setLinkingProvider] = useState<'google' | 'yandex' | null>(null);
     const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
+    const [notificationEmails, setNotificationEmails] = useState<NotificationEmail[]>([]);
+    const [initialNotificationEmails, setInitialNotificationEmails] = useState<NotificationEmail[]>([]);
+    const [notificationEmailsLoaded, setNotificationEmailsLoaded] = useState(false);
 
     useEffect(() => {
         loadProfile();
@@ -104,8 +114,9 @@ export default function ProfileForm() {
     const whatsAppPhoneChanged = normalizedWhatsAppPhone !== initialWhatsAppPhone;
 
     const isDirty = useMemo(() => {
-        return JSON.stringify(profile) !== JSON.stringify(initialProfile);
-    }, [initialProfile, profile]);
+        return JSON.stringify(profile) !== JSON.stringify(initialProfile)
+            || JSON.stringify(notificationEmails) !== JSON.stringify(initialNotificationEmails);
+    }, [initialNotificationEmails, initialProfile, notificationEmails, profile]);
 
     const canSubmit = isDirty && !saving && !phoneValidationError;
 
@@ -116,6 +127,16 @@ export default function ProfileForm() {
                 data: { user },
             } = await supabase.auth.getUser();
             if (!user) return;
+
+            const notificationEmailRequest = fetch('/api/profile/notification-emails')
+                .then(async (response) => {
+                    const payload = await response.json() as {
+                        ok?: boolean;
+                        data?: NotificationEmail[];
+                    };
+                    return response.ok && payload.ok ? (payload.data ?? []) : [];
+                })
+                .catch(() => []);
 
             const { data, error: fetchError } = await supabase
                 .from('profiles')
@@ -166,6 +187,10 @@ export default function ProfileForm() {
                 google: providers.has('google'),
                 yandex: !!data?.yandex_id || !!meta.yandex_id || meta.auth_provider === 'yandex',
             });
+            const nextNotificationEmails = await notificationEmailRequest;
+            setNotificationEmails(nextNotificationEmails);
+            setInitialNotificationEmails(nextNotificationEmails);
+            setNotificationEmailsLoaded(true);
         } catch (e) {
             const { logError } = require('@/lib/log');
             logError('ProfileForm', 'Error loading profile', e);
@@ -184,6 +209,13 @@ export default function ProfileForm() {
             setError(phoneValidationError);
             return;
         }
+        const selectedNotificationEmails = notificationEmails
+            .filter((item) => item.enabled && item.verified)
+            .map((item) => item.email);
+        if (profile.notify_email && notificationEmailsLoaded && selectedNotificationEmails.length === 0) {
+            setError('Выберите хотя бы один адрес для email-уведомлений');
+            return;
+        }
         setSaving(true);
         setMessage(null);
         setError(null);
@@ -198,6 +230,9 @@ export default function ProfileForm() {
                     notify_email: profile.notify_email,
                     notify_whatsapp: profile.notify_whatsapp,
                     notify_telegram: profile.notify_telegram,
+                    ...(notificationEmailsLoaded
+                        ? { notification_emails: selectedNotificationEmails }
+                        : {}),
                 }),
             });
 
@@ -212,6 +247,7 @@ export default function ProfileForm() {
             };
             setProfile(nextProfile);
             setInitialProfile(nextProfile);
+            setInitialNotificationEmails(notificationEmails);
             setMessage(t('cabinet.profile.saved', 'Профиль обновлен'));
             router.refresh();
         } catch (e) {
@@ -363,6 +399,7 @@ export default function ProfileForm() {
 
     function resetChanges() {
         setProfile(initialProfile);
+        setNotificationEmails(initialNotificationEmails);
         setWhatsAppPhone(initialWhatsAppPhone);
         setError(null);
         setMessage(t('cabinet.profile.reset', 'Изменения отменены'));
@@ -639,25 +676,79 @@ export default function ProfileForm() {
                 </div>
 
                 <div className="space-y-3">
-                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
-                        <div className="flex items-center gap-2">
-                            <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            <span className="type-body font-medium text-gray-700 dark:text-gray-300">
-                                {t('cabinet.profile.notifications.email', 'Email')}
-                            </span>
-                        </div>
-                        <input
-                            type="checkbox"
-                            checked={profile.notify_email}
-                            onChange={(e) => {
-                                setProfile({ ...profile, notify_email: e.target.checked });
-                                setError(null);
-                            }}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                    </label>
+                    <div className="space-y-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
+                        <label className="flex cursor-pointer items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <div>
+                                    <span className="type-body font-medium text-gray-700 dark:text-gray-300">
+                                        {t('cabinet.profile.notifications.email', 'Email')}
+                                    </span>
+                                    <p className="type-caption text-gray-500 dark:text-gray-400">
+                                        Выберите один или несколько адресов
+                                    </p>
+                                </div>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={profile.notify_email}
+                                onChange={(e) => {
+                                    setProfile({ ...profile, notify_email: e.target.checked });
+                                    setError(null);
+                                }}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                        </label>
+
+                        {notificationEmailsLoaded && notificationEmails.length > 0 ? (
+                            <div className={`space-y-2 border-t border-[var(--border-subtle)] pt-3 ${profile.notify_email ? '' : 'opacity-60'}`}>
+                                {notificationEmails.map((item) => {
+                                    const sourceLabel = item.sources
+                                        .map((source) => source === 'google' ? 'Google' : source === 'yandex' ? 'Яндекс' : 'Основной')
+                                        .join(' · ');
+                                    return (
+                                        <label
+                                            key={item.email}
+                                            className={`flex items-center justify-between gap-3 rounded-[var(--radius-sm)] px-2 py-2 hover:bg-[var(--surface-emphasis)] ${profile.notify_email ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-medium text-[var(--text-primary)]">
+                                                    {item.email}
+                                                </p>
+                                                <p className="text-xs text-[var(--text-secondary)]">{sourceLabel}</p>
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                checked={item.enabled}
+                                                disabled={!profile.notify_email || !item.verified}
+                                                onChange={(event) => {
+                                                    setNotificationEmails((current) =>
+                                                        current.map((candidate) =>
+                                                            candidate.email === item.email
+                                                                ? { ...candidate, enabled: event.target.checked }
+                                                                : candidate,
+                                                        ),
+                                                    );
+                                                    setError(null);
+                                                }}
+                                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        ) : notificationEmailsLoaded ? (
+                            <p className="type-caption border-t border-[var(--border-subtle)] pt-3 text-amber-600 dark:text-amber-300">
+                                Подключите Google или Яндекс с подтверждённым email.
+                            </p>
+                        ) : (
+                            <p className="type-caption border-t border-[var(--border-subtle)] pt-3 text-gray-500">
+                                Загружаем доступные адреса…
+                            </p>
+                        )}
+                    </div>
 
                     <div className="space-y-1">
                         <label className={`flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3 ${profile.whatsapp_verified ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>

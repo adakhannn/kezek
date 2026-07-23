@@ -12,12 +12,33 @@ export class ParticipantDataService {
         private admin: SupabaseClient
     ) {}
 
+    private async getEnabledNotificationEmails(userId: string): Promise<string[]> {
+        const { data, error } = await this.admin
+            .from('user_notification_emails')
+            .select('email')
+            .eq('user_id', userId)
+            .eq('verified', true)
+            .eq('enabled', true);
+        if (error) {
+            logError('ParticipantDataService', 'Failed to load notification emails', error);
+            return [];
+        }
+        return Array.from(
+            new Set(
+                (data ?? [])
+                    .map((row) => String(row.email ?? '').trim().toLowerCase())
+                    .filter(Boolean),
+            ),
+        );
+    }
+
     /**
      * Получает данные клиента
      */
     async getClientData(booking: BookingRow): Promise<ParticipantData> {
         const data: ParticipantData = {
             email: null,
+            notificationEmails: [],
             name: null,
             phone: null,
             whatsappPhone: null,
@@ -78,6 +99,10 @@ export class ParticipantDataService {
             } catch (e) {
                 logError('ParticipantDataService', 'Failed to get client data from profiles', e);
             }
+            data.notificationEmails = await this.getEnabledNotificationEmails(booking.client_id);
+            if (data.notificationEmails.length > 0) {
+                data.email = data.notificationEmails[0];
+            }
         }
 
         // Fallback для гостевых броней
@@ -100,6 +125,7 @@ export class ParticipantDataService {
     async getOwnerData(biz: BizRow | null): Promise<ParticipantData> {
         const data: ParticipantData = {
             email: null,
+            notificationEmails: [],
             name: null,
             phone: null,
             whatsappPhone: null,
@@ -177,52 +203,34 @@ export class ParticipantDataService {
         }
 
         // Получаем имя и Telegram данные из profiles
-        if (!data.name) {
-            try {
-                const { data: profile } = await this.admin
-                    .from('profiles')
-                    .select('full_name, telegram_id, notify_telegram, telegram_verified')
-                    .eq('id', biz.owner_id)
-                    .maybeSingle<{ 
-                        full_name: string | null;
-                        telegram_id: number | null;
-                        notify_telegram: boolean | null;
-                        telegram_verified: boolean | null;
-                    }>();
-                
-                if (profile) {
-                    if (profile.full_name) {
-                        data.name = profile.full_name;
-                    }
-                    data.telegramId = profile.telegram_id ?? null;
-                    data.notifyTelegram = profile.notify_telegram ?? true;
-                    data.telegramVerified = profile.telegram_verified ?? false;
+        try {
+            const { data: profile } = await this.admin
+                .from('profiles')
+                .select('full_name, notify_email, telegram_id, notify_telegram, telegram_verified')
+                .eq('id', biz.owner_id)
+                .maybeSingle<{
+                    full_name: string | null;
+                    notify_email: boolean | null;
+                    telegram_id: number | null;
+                    notify_telegram: boolean | null;
+                    telegram_verified: boolean | null;
+                }>();
+
+            if (profile) {
+                if (!data.name && profile.full_name) {
+                    data.name = profile.full_name;
                 }
-            } catch (e) {
-                logError('ParticipantDataService', 'Failed to get owner name from profiles', e);
+                data.notifyEmail = profile.notify_email ?? true;
+                data.telegramId = profile.telegram_id ?? null;
+                data.notifyTelegram = profile.notify_telegram ?? true;
+                data.telegramVerified = profile.telegram_verified ?? false;
             }
+        } catch (e) {
+            logError('ParticipantDataService', 'Failed to get owner notification settings', e);
         }
 
-        // Email для уведомлений берется из email_notify_to (приоритет), а не из auth.users
-        const adminEmails = biz.email_notify_to ?? [];
-        if (adminEmails.length > 0) {
-            const normalized = adminEmails
-                .filter(Boolean)
-                .map((e) => String(e).trim().toLowerCase())
-                .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
-            
-            if (normalized.length > 0) {
-                data.email = normalized[0];
-                logDebug('ParticipantDataService', 'Using email from email_notify_to', { 
-                    email: data.email,
-                    emailFromAuth: ownerEmailFromAuth 
-                });
-            }
-        } else {
-            // Fallback: используем email из auth.users
-            data.email = ownerEmailFromAuth;
-            logDebug('ParticipantDataService', 'Using email from auth.users as fallback', { email: data.email });
-        }
+        data.notificationEmails = await this.getEnabledNotificationEmails(biz.owner_id);
+        data.email = data.notificationEmails[0] ?? ownerEmailFromAuth;
 
         return data;
     }
@@ -233,6 +241,7 @@ export class ParticipantDataService {
     async getStaffData(staff: StaffRow | null): Promise<ParticipantData> {
         const data: ParticipantData = {
             email: staff?.email ?? null,
+            notificationEmails: [],
             name: staff?.full_name ?? null,
             phone: staff?.phone ?? null,
             whatsappPhone: staff?.phone ?? null,
@@ -246,13 +255,16 @@ export class ParticipantDataService {
 
         // Получаем Telegram/WhatsApp данные мастера (если есть user_id)
         if (staff && 'user_id' in staff && staff.user_id) {
+            data.notificationEmails = await this.getEnabledNotificationEmails(staff.user_id);
+            data.email = data.notificationEmails[0] ?? data.email;
             try {
                 logDebug('ParticipantDataService', 'Getting staff telegram data', { user_id: staff.user_id });
                 const { data: profile } = await this.admin
                     .from('profiles')
-                    .select('whatsapp_phone, whatsapp_verified, notify_whatsapp, telegram_id, notify_telegram, telegram_verified')
+                    .select('notify_email, whatsapp_phone, whatsapp_verified, notify_whatsapp, telegram_id, notify_telegram, telegram_verified')
                     .eq('id', staff.user_id)
                     .maybeSingle<{ 
+                        notify_email: boolean | null;
                         whatsapp_phone: string | null;
                         whatsapp_verified: boolean | null;
                         notify_whatsapp: boolean | null;
@@ -262,6 +274,7 @@ export class ParticipantDataService {
                     }>();
                 
                 if (profile) {
+                    data.notifyEmail = profile.notify_email ?? true;
                     data.whatsappPhone = profile.whatsapp_phone ?? data.whatsappPhone;
                     data.whatsappVerified = profile.whatsapp_verified ?? false;
                     data.notifyWhatsApp = profile.notify_whatsapp ?? true;

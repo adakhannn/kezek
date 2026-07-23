@@ -1,3 +1,5 @@
+import { removeNotificationEmailSource } from '@/lib/userNotificationEmailService';
+
 export type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
 
 type AuthUser = {
@@ -43,6 +45,7 @@ function cleanMetadata(metadata: Record<string, unknown> | null | undefined, pro
     if (provider === 'yandex') {
         next.yandex_id = null;
         next.yandex_username = null;
+        next.yandex_email = null;
         if (next.auth_provider === 'yandex') next.auth_provider = null;
     } else if (provider === 'telegram') {
         next.telegram_id = null;
@@ -100,6 +103,7 @@ export async function unlinkSocialIdentity(params: {
         if (error || Number(data) !== 1) {
             return { ok: false, error: 'internal', message: 'Не удалось отвязать Google.', status: 500, details: { code: 'google_unlink_failed' } };
         }
+        await removeNotificationEmailSource(params.admin, params.userId, 'google');
     } else {
         const update = params.provider === 'yandex'
             ? { yandex_id: null }
@@ -116,6 +120,9 @@ export async function unlinkSocialIdentity(params: {
         });
         if (metadataError) {
             return { ok: false, error: 'internal', message: 'Связь удалена из профиля, но не удалось очистить данные входа. Обратитесь в поддержку.', status: 500, details: { code: 'metadata_cleanup_failed' } };
+        }
+        if (params.provider === 'yandex') {
+            await removeNotificationEmailSource(params.admin, params.userId, 'yandex');
         }
     }
 

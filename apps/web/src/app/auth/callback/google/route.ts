@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
+import { logWarn } from '@/lib/log';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
+import { syncNotificationEmailsFromUser } from '@/lib/userNotificationEmailService';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +54,17 @@ export async function GET(request: Request) {
         response = NextResponse.redirect(
             signInErrorUrl(requestUrl.origin, 'oauth_exchange_failed'),
         );
+    } else {
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+            try {
+                await syncNotificationEmailsFromUser(createSupabaseAdminClient(), user);
+            } catch (syncError) {
+                logWarn('GoogleAuth', 'Failed to sync notification emails', syncError);
+            }
+        }
     }
 
     return response;

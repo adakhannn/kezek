@@ -135,7 +135,7 @@ export function TelegramLinkWidget({
                     </div>
                 </div>
             )}
-            <div ref={containerRef} className="flex justify-center" />
+            <div ref={containerRef} className="flex min-h-10 justify-center" />
             <TelegramAccountSwitchHelp
                 context="link"
                 onRefresh={() => setWidgetReloadKey((current) => current + 1)}

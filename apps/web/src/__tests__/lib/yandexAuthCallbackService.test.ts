@@ -4,6 +4,7 @@ import { createMockSupabase } from '../api/testHelpers';
 describe('yandexAuthCallbackService', () => {
     test('builds callback redirect for existing user', async () => {
         const admin = createMockSupabase();
+        admin.rpc.mockResolvedValue({ data: null, error: null });
         (admin as unknown as {
             auth: {
                 admin: {
@@ -64,6 +65,7 @@ describe('yandexAuthCallbackService', () => {
 
     test('redirects to sign-in when duplicate email cannot be reconciled', async () => {
         const admin = createMockSupabase();
+        admin.rpc.mockResolvedValue({ data: null, error: null });
         (admin as unknown as {
             auth: {
                 admin: {
@@ -129,6 +131,7 @@ describe('yandexAuthCallbackService', () => {
 
     test('links Yandex to the authenticated user without creating a second session', async () => {
         const admin = createMockSupabase();
+        admin.rpc.mockResolvedValue({ data: null, error: null });
         const updateUserById = jest.fn().mockResolvedValue({ data: {}, error: null });
         (admin as any).auth.admin = {
             createUser: jest.fn(),

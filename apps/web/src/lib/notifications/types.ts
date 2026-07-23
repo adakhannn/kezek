@@ -55,6 +55,7 @@ export interface BookingRow {
 
 export interface ParticipantData {
     email: string | null;
+    notificationEmails: string[];
     name: string | null;
     phone: string | null;
     whatsappPhone: string | null;

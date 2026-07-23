@@ -120,42 +120,57 @@ export class NotificationOrchestrator {
         const recipients: EmailRecipient[] = [];
 
         // Клиент — отдельное письмо с .ics (только если включены email уведомления)
-        if (clientData.email && clientData.notifyEmail) {
-            recipients.push({
-                email: clientData.email,
-                name: clientData.name,
-                role: 'client',
-                withIcs: true,
-            });
+        if (clientData.notifyEmail) {
+            const clientEmails = clientData.notificationEmails.length > 0
+                ? clientData.notificationEmails
+                : clientData.email ? [clientData.email] : [];
+            for (const email of clientEmails) {
+                recipients.push({
+                    email,
+                    name: clientData.name,
+                    role: 'client',
+                    withIcs: true,
+                });
+            }
         }
 
         // Мастер
-        if (staffData.email) {
-            recipients.push({
-                email: staffData.email,
-                name: staffData.name,
-                role: 'staff',
-            });
+        const staffEmails = staffData.notificationEmails.length > 0
+            ? staffData.notificationEmails
+            : staffData.email ? [staffData.email] : [];
+        if (staffData.notifyEmail) {
+            for (const email of staffEmails) {
+                recipients.push({
+                    email,
+                    name: staffData.name,
+                    role: 'staff',
+                });
+            }
         }
 
         // Владелец
-        if (ownerData.email) {
-            recipients.push({
-                email: ownerData.email,
-                name: ownerData.name,
-                role: 'owner',
-            });
+        const ownerEmails = ownerData.notificationEmails.length > 0
+            ? ownerData.notificationEmails
+            : ownerData.email ? [ownerData.email] : [];
+        if (ownerData.notifyEmail) {
+            for (const email of ownerEmails) {
+                recipients.push({
+                    email,
+                    name: ownerData.name,
+                    role: 'owner',
+                });
+            }
         }
 
         // Администраторы из списка
         const adminEmails = biz?.email_notify_to ?? [];
         const normalizedAdminEmails = normalizeEmails(adminEmails);
-        const ownerEmailNormalized = ownerData.email ? ownerData.email.toLowerCase().trim() : null;
+        const ownerEmailSet = new Set(ownerEmails.map((email) => email.toLowerCase().trim()));
         
         for (const em of normalizedAdminEmails) {
             const emNormalized = em.toLowerCase().trim();
             // Пропускаем email, который уже используется как ownerEmail
-            if (ownerEmailNormalized && emNormalized === ownerEmailNormalized) {
+            if (ownerEmailSet.has(emNormalized)) {
                 continue;
             }
             recipients.push({ email: em, name: null, role: 'admin' });

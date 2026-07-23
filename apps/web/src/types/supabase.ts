@@ -328,6 +328,73 @@ export type Database = {
           },
         ]
       }
+      user_notification_email_sources: {
+        Row: {
+          created_at: string
+          email_id: string
+          provider_subject: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          provider_subject?: string | null
+          source: string
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          provider_subject?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notification_email_sources_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "user_notification_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_notification_emails: {
+        Row: {
+          created_at: string
+          email: string
+          enabled: boolean
+          id: string
+          updated_at: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notification_emails_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "auth_users_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -1278,6 +1345,38 @@ export type Database = {
       }
     }
     Functions: {
+      get_my_notification_emails: {
+        Args: never
+        Returns: {
+          email: string
+          enabled: boolean
+          sources: string[]
+          verified: boolean
+        }[]
+      }
+      remove_user_notification_email_source: {
+        Args: {
+          target_source: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      set_my_notification_email_preferences: {
+        Args: {
+          target_emails: string[]
+          target_enabled: boolean
+        }
+        Returns: undefined
+      }
+      sync_user_notification_email: {
+        Args: {
+          target_email: string
+          target_provider_subject?: string | null
+          target_source: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
       _postgis_deprecate: {
         Args: { newname: string; oldname: string; version: string }
         Returns: undefined

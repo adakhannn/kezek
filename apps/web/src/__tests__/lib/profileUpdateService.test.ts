@@ -11,6 +11,7 @@ describe('profileUpdateService', () => {
         updateUser: jest.fn(),
       },
       from: jest.fn(),
+      rpc: jest.fn(),
     } as unknown as jest.Mocked<ProfileUpdateSupabaseLike>;
   }
 
@@ -112,6 +113,54 @@ describe('profileUpdateService', () => {
         telegram_verified: true,
       }),
       { onConflict: 'id' },
+    );
+  });
+
+  test('updates selected notification emails through the database invariant', async () => {
+    const supabase = createSupabase();
+    supabase.auth.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: 'user-id',
+          user_metadata: {},
+        },
+      },
+    });
+    supabase.from
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: {
+            whatsapp_phone: null,
+            whatsapp_verified: false,
+            telegram_id: null,
+            telegram_verified: false,
+          },
+          error: null,
+        }),
+      })
+      .mockReturnValueOnce({
+        upsert: jest.fn().mockResolvedValue({ error: null }),
+      });
+    supabase.rpc.mockResolvedValue({ error: null });
+    supabase.auth.updateUser.mockResolvedValue({ error: null });
+
+    const result = await updateProfileSettings({
+      supabase,
+      body: {
+        notify_email: true,
+        notification_emails: ['google@example.com', 'yandex@example.com'],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      'set_my_notification_email_preferences',
+      {
+        target_enabled: true,
+        target_emails: ['google@example.com', 'yandex@example.com'],
+      },
     );
   });
 });
