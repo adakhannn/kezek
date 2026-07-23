@@ -4,6 +4,7 @@ import { createMockSupabase } from '../api/testHelpers';
 describe('telegramLoginService', () => {
     test('returns sign-in payload for an existing Telegram profile', async () => {
         const admin = createMockSupabase();
+        const updateProfile = jest.fn().mockReturnThis();
         (admin as unknown as {
             auth: {
                 admin: {
@@ -27,7 +28,7 @@ describe('telegramLoginService', () => {
                         data: { id: 'existing-user-id', telegram_id: 123456789 },
                         error: null,
                     }),
-                    update: jest.fn().mockReturnThis(),
+                    update: updateProfile,
                 };
             }
 
@@ -64,6 +65,12 @@ describe('telegramLoginService', () => {
                 redirect: '/',
                 linkage: 'existing',
             },
+        });
+        expect(updateProfile).toHaveBeenCalledWith({
+            full_name: 'Test User',
+            telegram_username: 'testuser',
+            telegram_photo_url: null,
+            telegram_verified: true,
         });
     });
 

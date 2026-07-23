@@ -89,7 +89,6 @@ export async function linkTelegramAccount(params: {
       telegram_username: normalized.telegram_username,
       telegram_photo_url: normalized.telegram_photo_url,
       telegram_verified: true,
-      updated_at: new Date().toISOString(),
     })
     .eq('id', user.id);
 

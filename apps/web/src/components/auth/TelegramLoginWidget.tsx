@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import { TelegramAccountSwitchHelp } from '@/components/auth/TelegramAccountSwitchHelp';
 import { clearTelegramAuthFragment } from '@/lib/clearTelegramAuthFragment';
 import {logError} from '@/lib/log';
 import type { TelegramAuthData } from '@/lib/telegram/verify';
@@ -48,6 +49,7 @@ function TelegramLoginWidgetComponent({
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(false);
     const [currentHostname, setCurrentHostname] = useState<string | null>(null);
+    const [widgetReloadKey, setWidgetReloadKey] = useState(0);
 
     useEffect(() => {
         setCurrentHostname(window.location.hostname);
@@ -199,7 +201,7 @@ function TelegramLoginWidgetComponent({
             }
             delete w[callbackName];
         };
-    }, [size, cornerRadius, requestAccess, router, currentHostname]); // Убрали onSuccess, onError, redirectTo из зависимостей
+    }, [size, cornerRadius, requestAccess, router, currentHostname, widgetReloadKey]); // Убрали onSuccess, onError, redirectTo из зависимостей
 
     const isLocalhost =
         currentHostname === 'localhost' || currentHostname === '127.0.0.1';
@@ -210,19 +212,6 @@ function TelegramLoginWidgetComponent({
                 <p className="mb-2 text-xs text-amber-600 dark:text-amber-400 text-center">
                     Telegram не поддерживает <code className="bg-black/5 dark:bg-white/10 px-1 rounded">localhost</code> в @BotFather. Чтобы тестировать вход локально: запустите туннель (ngrok, localhost.run), откройте сайт по выданному URL и добавьте этот домен в @BotFather → <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code>. Или проверяйте вход на проде.
                 </p>
-            )}
-            {currentHostname && !isLocalhost && (
-                <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 text-center space-y-1">
-                    <p>
-                        Если видите «Bot domain invalid» — в @BotFather выберите бота <strong>@{TELEGRAM_BOT_USERNAME}</strong>, отправьте <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code> и введите <strong>точно</strong> этот домен (как в адресной строке, без https://):
-                    </p>
-                    <p className="font-mono font-semibold text-gray-700 dark:text-gray-300 break-all">
-                        {currentHostname}
-                    </p>
-                    <p>
-                        Проверьте: домен один на бота; если заходите с www — добавьте www. Если без www — добавьте без www.
-                    </p>
-                </div>
             )}
             {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-lg z-10">
@@ -251,6 +240,12 @@ function TelegramLoginWidgetComponent({
                 className="flex justify-center min-h-[40px] w-full"
                 style={{ minHeight: size === 'large' ? '48px' : size === 'medium' ? '40px' : '32px' }}
             />
+            {!isLocalhost ? (
+                <TelegramAccountSwitchHelp
+                    context="login"
+                    onRefresh={() => setWidgetReloadKey((current) => current + 1)}
+                />
+            ) : null}
         </div>
     );
 }

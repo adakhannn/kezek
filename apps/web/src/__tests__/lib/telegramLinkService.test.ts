@@ -80,6 +80,7 @@ describe('telegramLinkService', () => {
   test('links telegram account and updates metadata', async () => {
     const admin = createAdmin();
     let profilesCall = 0;
+    const update = jest.fn().mockReturnThis();
     admin.from.mockImplementation(() => {
       if (profilesCall === 0) {
         profilesCall += 1;
@@ -94,7 +95,7 @@ describe('telegramLinkService', () => {
       }
 
       return {
-        update: jest.fn().mockReturnThis(),
+        update,
         eq: jest.fn().mockResolvedValue({
           error: null,
         }),
@@ -124,5 +125,11 @@ describe('telegramLinkService', () => {
         }),
       }),
     );
+    expect(update).toHaveBeenCalledWith({
+      telegram_id: telegramId,
+      telegram_username: 'testuser',
+      telegram_photo_url: null,
+      telegram_verified: true,
+    });
   });
 });

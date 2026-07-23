@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { TelegramAccountSwitchHelp } from '@/components/auth/TelegramAccountSwitchHelp';
 import { clearTelegramAuthFragment } from '@/lib/clearTelegramAuthFragment';
 import {logError} from '@/lib/log';
 
@@ -38,6 +39,7 @@ export function TelegramLinkWidget({
     const router = useRouter();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(false);
+    const [widgetReloadKey, setWidgetReloadKey] = useState(0);
     
     // Храним последние версии callback'ов в ref, чтобы не перезапускать useEffect
     const onSuccessRef = useRef(onSuccess);
@@ -107,10 +109,10 @@ export function TelegramLinkWidget({
             }
             delete w[callbackName];
         };
-    }, [size, router]); // Убрали onSuccess и onError из зависимостей
+    }, [size, router, widgetReloadKey]); // Убрали onSuccess и onError из зависимостей
 
     return (
-        <div className="relative">
+        <div className="relative min-w-[240px]">
             {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-lg z-10">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -134,6 +136,10 @@ export function TelegramLinkWidget({
                 </div>
             )}
             <div ref={containerRef} className="flex justify-center" />
+            <TelegramAccountSwitchHelp
+                context="link"
+                onRefresh={() => setWidgetReloadKey((current) => current + 1)}
+            />
         </div>
     );
 }
