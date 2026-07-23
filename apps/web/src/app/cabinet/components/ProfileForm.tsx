@@ -519,7 +519,7 @@ export default function ProfileForm() {
                         )}
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
+                    <div id="telegram-connection" className="scroll-mt-24 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                         <span className="type-body font-medium text-gray-700 dark:text-gray-300">Telegram</span>
                         {profile.telegram_connected ? (
                             <div className="flex flex-wrap items-center gap-2">
