@@ -29,6 +29,18 @@ export async function findWhatsAppOwnerByPhone(admin: AdminLike, phone: string):
     const normalizedPhone = normalizePhoneToE164(phone);
     if (!normalizedPhone) return null;
 
+    // A verified profile link is the canonical Kezek identity. Check it before
+    // auth.users so a stale or accidentally-created phone-only auth user cannot
+    // take ownership away from an account that explicitly linked the number.
+    const { data: modernProfiles, error: modernError } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('whatsapp_phone', normalizedPhone)
+        .eq('whatsapp_verified', true)
+        .limit(1);
+    if (modernError) throw modernError;
+    if (modernProfiles?.[0]?.id) return modernProfiles[0].id;
+
     const perPage = 1000;
     for (let page = 1; page <= 100; page += 1) {
         const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
@@ -40,15 +52,6 @@ export async function findWhatsAppOwnerByPhone(admin: AdminLike, phone: string):
         if (owner) return owner.id;
         if (users.length < perPage) break;
     }
-
-    const { data: modernProfiles, error: modernError } = await admin
-        .from('profiles')
-        .select('id')
-        .eq('whatsapp_phone', normalizedPhone)
-        .eq('whatsapp_verified', true)
-        .limit(1);
-    if (modernError) throw modernError;
-    if (modernProfiles?.[0]?.id) return modernProfiles[0].id;
 
     const { data: legacyProfiles, error: legacyError } = await admin
         .from('profiles')

@@ -5,6 +5,7 @@ import { logDebug, logWarn } from '@/lib/log';
 import { runMobileExchangePost } from '@/lib/mobileExchangeRouteService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createWhatsAppSignInSession } from '@/lib/whatsAppCreateSessionService';
+import { findWhatsAppOwnerByPhone } from '@/lib/whatsAppIdentityOwnershipService';
 import { trackWhatsAppMobileMetric } from '@/lib/whatsAppMobileMetricsService';
 import { hashWhatsappOtp, hashWhatsappPhone, secureEqualHex } from '@/lib/whatsAppOtpHash';
 
@@ -33,7 +34,10 @@ type AdminLike = {
     };
     auth: {
         admin: {
-            listUsers: () => Promise<{ data?: { users: AuthUser[] } }>;
+            listUsers: (params?: { page: number; perPage: number }) => Promise<{
+                data?: { users?: AuthUser[] } | null;
+                error?: { message?: string } | null;
+            }>;
             updateUserById: (id: string, payload: unknown) => Promise<unknown>;
             createUser: (payload: unknown) => Promise<{ data?: { user?: AuthUser }; error?: { message?: string } | null }>;
             getUserById: (id: string) => Promise<unknown>;
@@ -104,23 +108,23 @@ function isLocked(attempt: OtpAttemptRow) {
     return Date.parse(attempt.locked_until) > Date.now();
 }
 
-function findUserByPhone(users: AuthUser[] | undefined, phoneE164: string) {
-    return users?.find((user) => {
-        if (user.phone === phoneE164) {
-            return true;
-        }
-
-        const meta = user.user_metadata as { phone?: string } | undefined;
-        return meta?.phone === phoneE164;
-    });
-}
-
 async function resolveOrCreateUser(admin: AdminLike, phoneE164: string): Promise<{ userId: string; linkage: 'existing' | 'created' } | Failure> {
-    const { data: existingUsers } = await admin.auth.admin.listUsers();
-    let user = findUserByPhone(existingUsers?.users, phoneE164);
-
-    if (user) {
-        return { userId: user.id, linkage: 'existing' };
+    try {
+        const ownerId = await findWhatsAppOwnerByPhone(admin as never, phoneE164);
+        if (ownerId) {
+            return { userId: ownerId, linkage: 'existing' };
+        }
+    } catch (error) {
+        logWarn('WhatsAppMobileVerify', 'WhatsApp identity owner lookup failed', {
+            reason: error instanceof Error ? error.message : String(error),
+        });
+        return {
+            ok: false,
+            status: 500,
+            error: 'internal',
+            message: 'Не удалось проверить владельца WhatsApp номера. Попробуйте позже.',
+            details: { code: 'owner_lookup_failed' },
+        };
     }
 
     const { data: created, error } = await admin.auth.admin.createUser({
@@ -315,7 +319,7 @@ export async function runWhatsAppMobileVerifyRoute({
     }
     const resolvedUser = userResult;
 
-    await admin.from('profiles').upsert(
+    const { error: profileLinkError } = (await admin.from('profiles').upsert(
         {
             id: resolvedUser.userId,
             whatsapp_phone: normalizedPhone,
@@ -324,7 +328,21 @@ export async function runWhatsAppMobileVerifyRoute({
         {
             onConflict: 'id',
         },
-    );
+    )) as { error?: { message?: string } | null };
+
+    if (profileLinkError) {
+        logWarn('WhatsAppMobileVerify', 'Failed to persist WhatsApp identity link', {
+            userId: resolvedUser.userId,
+            reason: profileLinkError.message,
+        });
+        return {
+            ok: false,
+            status: 409,
+            error: 'conflict',
+            message: 'Не удалось привязать WhatsApp номер к аккаунту. Попробуйте войти снова.',
+            details: { code: 'identity_link_failed' },
+        };
+    }
 
     await markAttemptConsumed(admin, attempt.id);
 

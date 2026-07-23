@@ -19,11 +19,27 @@ describe('findWhatsAppOwnerByPhone', () => {
             auth: { admin: { listUsers: jest.fn().mockResolvedValue({ data: { users: [
                 { id: 'owner', phone: null, user_metadata: { phone: '996 555 123 456' } },
             ] }, error: null }) } },
-            from: jest.fn(),
+            from: jest.fn().mockImplementation(() => profileQuery({
+                whatsapp_phone: [],
+            })),
         };
 
         await expect(findWhatsAppOwnerByPhone(admin as never, '+996555123456')).resolves.toBe('owner');
-        expect(admin.from).not.toHaveBeenCalled();
+    });
+
+    test('prefers the explicitly linked profile over a stale phone-only auth user', async () => {
+        const admin = {
+            auth: { admin: { listUsers: jest.fn().mockResolvedValue({ data: { users: [
+                { id: 'stale-auth-user', phone: '+996555123456' },
+            ] }, error: null }) } },
+            from: jest.fn().mockImplementation(() => profileQuery({
+                whatsapp_phone: [{ id: 'linked-profile-owner' }],
+            })),
+        };
+
+        await expect(findWhatsAppOwnerByPhone(admin as never, '+996555123456'))
+            .resolves.toBe('linked-profile-owner');
+        expect(admin.auth.admin.listUsers).not.toHaveBeenCalled();
     });
 
     test('finds an owner stored in the legacy verified profile phone field', async () => {

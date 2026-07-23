@@ -114,6 +114,28 @@ function createInMemoryAdmin() {
 
             if (table === 'profiles') {
                 return {
+                    select() {
+                        const filters = new Map<string, unknown>();
+                        const builder = {
+                            eq(field: string, value: unknown) {
+                                filters.set(field, value);
+                                return builder;
+                            },
+                            limit: async (count: number) => ({
+                                data: [...profiles.values()]
+                                    .filter((profile) =>
+                                        [...filters.entries()].every(
+                                            ([field, value]) =>
+                                                profile[field as keyof typeof profile] === value,
+                                        ),
+                                    )
+                                    .slice(0, count)
+                                    .map(({ id }) => ({ id })),
+                                error: null,
+                            }),
+                        };
+                        return builder;
+                    },
                     upsert: async (payload: { id: string; whatsapp_phone: string; whatsapp_verified: boolean }) => {
                         profiles.set(payload.id, payload);
                         return { data: payload, error: null };
@@ -125,6 +147,12 @@ function createInMemoryAdmin() {
         }),
         __getAttempts() {
             return attempts;
+        },
+        __getProfiles() {
+            return profiles;
+        },
+        __getUsers() {
+            return users;
         },
     };
 
@@ -198,6 +226,39 @@ describe('whatsApp mobile auth integration', () => {
         const exchangeData = await expectSuccessResponse(exchangeRes, 200);
         expect(exchangeData).toHaveProperty('data.accessToken', 'access-token');
         expect(exchangeData).toHaveProperty('data.refreshToken', 'refresh-token');
+    });
+
+    test('signs in to the existing account linked through a verified profile', async () => {
+        const admin = createInMemoryAdmin();
+        admin.__getProfiles().set('existing-user', {
+            id: 'existing-user',
+            whatsapp_phone: '+996500574029',
+            whatsapp_verified: true,
+        });
+
+        const start = await runWhatsAppMobileStartRoute({
+            admin: admin as never,
+            phone: '+996500574029',
+        });
+        expect(start.ok).toBe(true);
+        if (!start.ok) return;
+
+        const attempt = admin.__getAttempts()[0];
+        const verify = await runWhatsAppMobileVerifyRoute({
+            admin: admin as never,
+            attemptId: start.payload.attemptId,
+            code: attempt.code ?? '',
+            phone: '+996500574029',
+        });
+
+        expect(verify.ok).toBe(true);
+        if (!verify.ok) return;
+        expect(verify.payload.userId).toBe('existing-user');
+        expect(verify.payload.linkage).toBe('existing');
+        expect(admin.auth.admin.createUser).not.toHaveBeenCalled();
+        expect(createWhatsAppSignInSession).toHaveBeenCalledWith(
+            expect.objectContaining({ userId: 'existing-user' }),
+        );
     });
 
     test('wrong code then success', async () => {
