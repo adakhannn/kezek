@@ -262,11 +262,12 @@ export async function submitBusinessApplication(params: {
     const contactName = text(params.input.contact_name, 120);
     const businessName = text(params.input.business_name, 180);
     const phone = normalizePhoneToE164(text(params.input.phone, 40));
-    const email = text(params.input.email, 254).toLowerCase() || null;
-    if (!contactName || !businessName || !phone) {
-        return { ok: false as const, status: 400, code: 'required_fields', message: 'Укажите имя, название бизнеса и корректный телефон.' };
+    const email = text(params.input.email, 254).toLowerCase();
+    const city = text(params.input.city, 120);
+    if (!contactName || !businessName || !phone || !email || !city) {
+        return { ok: false as const, status: 400, code: 'required_fields', message: 'Укажите имя, название бизнеса, телефон, email и город.' };
     }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return { ok: false as const, status: 400, code: 'invalid_email', message: 'Укажите корректный email.' };
     }
 
@@ -292,7 +293,7 @@ export async function submitBusinessApplication(params: {
             phone,
             email,
             business_name: businessName,
-            city: text(params.input.city, 120) || null,
+            city,
             category: text(params.input.category, 120) || null,
             comment: text(params.input.comment, 2000) || null,
             directory_links: directoryLinks(params.input),

@@ -14,7 +14,7 @@ export type BusinessCategoryOption = {
 
 const PROPOSE_CATEGORY_VALUE = '__propose_category__';
 
-const initial = {
+const emptyForm = {
     contact_name: '',
     phone: '',
     email: '',
@@ -28,15 +28,34 @@ const initial = {
     yandex_maps: '',
 };
 
-export function BusinessApplicationForm({ categories }: { categories: BusinessCategoryOption[] }) {
-    const [form, setForm] = useState(initial);
+export type BusinessApplicationInitialValues = Partial<Pick<
+    typeof emptyForm,
+    'contact_name' | 'phone' | 'email' | 'city'
+>>;
+
+function createInitialForm(initialValues?: BusinessApplicationInitialValues) {
+    return {
+        ...emptyForm,
+        ...initialValues,
+        city: initialValues?.city?.trim() || 'Ош',
+    };
+}
+
+export function BusinessApplicationForm({
+    categories,
+    initialValues,
+}: {
+    categories: BusinessCategoryOption[];
+    initialValues?: BusinessApplicationInitialValues;
+}) {
+    const [form, setForm] = useState(() => createInitialForm(initialValues));
     const [categoryChoice, setCategoryChoice] = useState(categories.length ? '' : PROPOSE_CATEGORY_VALUE);
     const [proposedCategory, setProposedCategory] = useState('');
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [sent, setSent] = useState(false);
 
-    function field(name: keyof typeof initial) {
+    function field(name: keyof typeof emptyForm) {
         return {
             value: form[name],
             onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -71,7 +90,7 @@ export function BusinessApplicationForm({ categories }: { categories: BusinessCa
                 throw new Error(payload.message || 'Не удалось отправить заявку');
             }
             setSent(true);
-            setForm(initial);
+            setForm(createInitialForm(initialValues));
             setCategoryChoice(categories.length ? '' : PROPOSE_CATEGORY_VALUE);
             setProposedCategory('');
         } catch (submitError) {
@@ -95,9 +114,9 @@ export function BusinessApplicationForm({ categories }: { categories: BusinessCa
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Input label="Ваше имя" required {...field('contact_name')} />
                         <Input label="Телефон" type="tel" required placeholder="+996555123456" {...field('phone')} />
-                        <Input label="Email" type="email" {...field('email')} />
+                        <Input label="Email" type="email" required {...field('email')} />
                         <Input label="Название бизнеса" required {...field('business_name')} />
-                        <Input label="Город" {...field('city')} />
+                        <Input label="Город" required {...field('city')} />
                         <div className="w-full">
                             <label htmlFor="business-category" className="type-caption mb-1.5 block font-medium text-[var(--text-secondary)]">
                                 Категория бизнеса

@@ -16,6 +16,26 @@ describe('BusinessApplicationForm categories', () => {
         global.fetch = fetchMock;
     });
 
+    it('prefills account contacts and defaults the city to Osh', () => {
+        render(
+            <BusinessApplicationForm
+                categories={[]}
+                initialValues={{
+                    contact_name: 'Аккаунт владельца',
+                    phone: '+996770574029',
+                    email: 'owner@example.com',
+                }}
+            />,
+        );
+
+        expect((screen.getByLabelText('Ваше имя') as HTMLInputElement).value).toBe('Аккаунт владельца');
+        expect((screen.getByLabelText('Телефон') as HTMLInputElement).value).toBe('+996770574029');
+        expect((screen.getByLabelText('Email') as HTMLInputElement).value).toBe('owner@example.com');
+        expect((screen.getByLabelText('Город') as HTMLInputElement).value).toBe('Ош');
+        expect((screen.getByLabelText('Email') as HTMLInputElement).required).toBe(true);
+        expect((screen.getByLabelText('Город') as HTMLInputElement).required).toBe(true);
+    });
+
     it('submits the slug of an existing system category', async () => {
         const { container } = render(
             <BusinessApplicationForm categories={[{ slug: 'barbershop', name: 'Барбершоп' }]} />,

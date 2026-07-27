@@ -16,7 +16,13 @@ describe('businessApplicationService', () => {
         const { admin, insertQuery } = createAdmin();
         const result = await submitBusinessApplication({
             admin: admin as never,
-            input: { contact_name: ' Ada ', phone: '996 555 123 456', business_name: ' Salon ', email: 'ADA@EXAMPLE.COM' },
+            input: {
+                contact_name: ' Ada ',
+                phone: '996 555 123 456',
+                business_name: ' Salon ',
+                email: 'ADA@EXAMPLE.COM',
+                city: ' Ош ',
+            },
         });
         expect(result).toEqual({ ok: true, id: 'application-id' });
         expect(insertQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
@@ -25,19 +31,54 @@ describe('businessApplicationService', () => {
             phone: '+996555123456',
             business_name: 'Salon',
             email: 'ada@example.com',
+            city: 'Ош',
         }));
     });
 
     test('links an authenticated application to the user', async () => {
         const { admin, insertQuery } = createAdmin();
-        await submitBusinessApplication({ admin: admin as never, userId: 'user-id', input: { contact_name: 'Ada', phone: '+996555123456', business_name: 'Salon' } });
+        await submitBusinessApplication({
+            admin: admin as never,
+            userId: 'user-id',
+            input: {
+                contact_name: 'Ada',
+                phone: '+996555123456',
+                business_name: 'Salon',
+                email: 'ada@example.com',
+                city: 'Ош',
+            },
+        });
         expect(insertQuery.insert).toHaveBeenCalledWith(expect.objectContaining({ applicant_user_id: 'user-id' }));
     });
 
     test('rejects a recent duplicate phone', async () => {
         const { admin } = createAdmin({ duplicate: true });
-        const result = await submitBusinessApplication({ admin: admin as never, input: { contact_name: 'Ada', phone: '+996555123456', business_name: 'Salon' } });
+        const result = await submitBusinessApplication({
+            admin: admin as never,
+            input: {
+                contact_name: 'Ada',
+                phone: '+996555123456',
+                business_name: 'Salon',
+                email: 'ada@example.com',
+                city: 'Ош',
+            },
+        });
         expect(result).toMatchObject({ ok: false, status: 409, code: 'recent_duplicate' });
+    });
+
+    test('requires email and city', async () => {
+        const { admin } = createAdmin();
+        const result = await submitBusinessApplication({
+            admin: admin as never,
+            input: {
+                contact_name: 'Ada',
+                phone: '+996555123456',
+                business_name: 'Salon',
+            },
+        });
+
+        expect(result).toMatchObject({ ok: false, status: 400, code: 'required_fields' });
+        expect(admin.from).not.toHaveBeenCalled();
     });
 
     test('resolves an existing category by slug', async () => {
