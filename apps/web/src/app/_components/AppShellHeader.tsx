@@ -22,16 +22,16 @@ export async function AppShellHeader() {
                             </div>
                         </div>
 
-                        <div className="hidden md:flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_76%,transparent)] px-2 py-1 shadow-[var(--shadow-xs)]">
+                        <div className="hidden lg:flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_76%,transparent)] px-2 py-1 shadow-[var(--shadow-xs)]">
                             <LanguageSwitcher />
                             <RoleAndBusinessSwitcher />
                         </div>
 
-                        <div className="hidden md:block h-9 w-px bg-[var(--border-subtle)]" />
+                        <div className="hidden lg:block h-9 w-px bg-[var(--border-subtle)]" />
 
                         <AuthStatusServer />
 
-                        <div className="md:hidden shrink-0">
+                        <div className="lg:hidden shrink-0">
                             <MobileHeaderMenu />
                         </div>
                     </div>

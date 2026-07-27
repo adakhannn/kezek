@@ -443,8 +443,8 @@ export default function ProfileForm() {
             ) : null}
 
             <Card variant="default" padding="lg" className="space-y-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0">
                         <h3 className="type-section-title text-gray-900 dark:text-gray-100">
                             {t('cabinet.profile.section.personal', 'Личные данные')}
                         </h3>
@@ -452,7 +452,7 @@ export default function ProfileForm() {
                             {t('cabinet.profile.section.personalDesc', 'Поддерживайте профиль актуальным, чтобы связь и запись проходили без лишнего трения')}
                         </p>
                     </div>
-                    <div className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
+                    <div className="w-fit shrink-0 whitespace-nowrap rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
                         {isDirty
                             ? t('cabinet.profile.unsaved', 'Есть несохраненные изменения')
                             : t('cabinet.profile.synced', 'Все изменения сохранены')}

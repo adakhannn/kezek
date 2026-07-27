@@ -59,14 +59,44 @@ function AuthenticationGate() {
                     Авторизация займёт меньше минуты. Она нужна, чтобы после одобрения вы автоматически получили доступ владельца к бизнесу.
                 </p>
 
-                <div className="my-6 grid gap-2 text-left sm:grid-cols-3">
-                    {['Заявка закреплена за вами', 'Статус не потеряется', 'Доступ выдаётся автоматически'].map((item) => (
-                        <div key={item} className="rounded-xl bg-[var(--surface-emphasis)] px-3 py-3 text-sm font-medium text-[var(--text-primary)]">
-                            <span className="mr-2 text-[var(--status-success)]" aria-hidden="true">✓</span>
-                            {item}
-                        </div>
+                <ul className="my-6 grid gap-3 text-left md:grid-cols-3">
+                    {[
+                        {
+                            title: 'Заявка — ваша',
+                            description: 'Сохраним её в аккаунте',
+                        },
+                        {
+                            title: 'Статус сохранится',
+                            description: 'Можно проверить позже',
+                        },
+                        {
+                            title: 'Доступ автоматически',
+                            description: 'Сразу после одобрения',
+                        },
+                    ].map((item) => (
+                        <li
+                            key={item.title}
+                            className="flex min-w-0 items-start gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_72%,transparent)] p-3.5"
+                        >
+                            <span
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[color:color-mix(in_srgb,var(--status-success)_14%,transparent)] text-[var(--status-success)]"
+                                aria-hidden="true"
+                            >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.25} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </span>
+                            <span className="min-w-0 pt-0.5">
+                                <span className="block text-sm font-semibold leading-5 text-[var(--text-primary)]">
+                                    {item.title}
+                                </span>
+                                <span className="mt-0.5 block text-xs leading-5 text-[var(--text-muted)]">
+                                    {item.description}
+                                </span>
+                            </span>
+                        </li>
                     ))}
-                </div>
+                </ul>
 
                 <Link
                     href="/auth/sign-in?redirect=/business/apply"

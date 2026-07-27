@@ -12,6 +12,7 @@ type TelegramNormalizedData = {
 type ProfileRow = {
     id: string | null;
     telegram_id: number | null;
+    full_name: string | null;
 };
 
 type DbError = { message?: string } | null;
@@ -68,7 +69,7 @@ function defaultRandomHex(size: number) {
 async function findExistingProfile(admin: TelegramLoginAdminClientLike, telegramId: number) {
     const profileResponse = (admin
         .from<ProfileRow>('profiles')
-        .select('id, telegram_id')
+        .select('id, telegram_id, full_name')
         .eq('telegram_id', telegramId)
         .maybeSingle() as Promise<{ data: ProfileRow | null; error: { message?: string } | null }>);
     const { data, error } = await profileResponse;
@@ -80,16 +81,22 @@ async function findExistingProfile(admin: TelegramLoginAdminClientLike, telegram
     return data;
 }
 
-async function updateExistingProfile(admin: TelegramLoginAdminClientLike, userId: string, normalized: TelegramNormalizedData) {
+async function updateExistingProfile(
+    admin: TelegramLoginAdminClientLike,
+    profile: ProfileRow,
+    normalized: TelegramNormalizedData,
+) {
+    const providerNameMayFillBlankProfile =
+        !profile.full_name?.trim() && !!normalized.full_name?.trim();
     const { error } = await admin
         .from<ProfileRow>('profiles')
         .update({
-            full_name: normalized.full_name,
+            ...(providerNameMayFillBlankProfile ? { full_name: normalized.full_name } : {}),
             telegram_username: normalized.telegram_username,
             telegram_photo_url: normalized.telegram_photo_url,
             telegram_verified: true,
         })
-        .eq('id', userId);
+        .eq('id', profile.id);
 
     if (error) {
         logError('TelegramLogin', 'Profile update error', error);
@@ -156,7 +163,7 @@ export async function handleTelegramLogin({
     if (existingProfile?.id) {
         userId = existingProfile.id;
         linkage = 'existing';
-        await updateExistingProfile(admin, userId, normalized);
+        await updateExistingProfile(admin, existingProfile, normalized);
     } else {
         const creation = await createNewTelegramUser(admin, normalized, randomHex(32));
         if (!creation.ok) {

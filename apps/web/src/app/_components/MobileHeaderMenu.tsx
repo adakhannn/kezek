@@ -58,11 +58,11 @@ export function MobileHeaderMenu() {
                     <button
                         type="button"
                         aria-label={t('common.close', 'Закрыть')}
-                        className="fixed inset-0 z-[105] bg-black/20 backdrop-blur-[2px] md:hidden"
+                        className="fixed inset-0 z-[105] bg-black/20 backdrop-blur-[2px] lg:hidden"
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-[120] w-[min(22rem,calc(100vw-1.5rem))] rounded-[24px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_95%,transparent)] p-4 shadow-[var(--shadow-lg)] backdrop-blur-xl md:hidden">
+                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-[120] w-[min(22rem,calc(100vw-1.5rem))] rounded-[24px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_95%,transparent)] p-4 shadow-[var(--shadow-lg)] backdrop-blur-xl lg:hidden">
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <p className="type-caption px-1 text-[var(--text-muted)]">

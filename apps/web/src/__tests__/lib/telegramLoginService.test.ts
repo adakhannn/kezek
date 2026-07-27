@@ -25,7 +25,11 @@ describe('telegramLoginService', () => {
                     select: jest.fn().mockReturnThis(),
                     eq: jest.fn().mockReturnThis(),
                     maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: 'existing-user-id', telegram_id: 123456789 },
+                        data: {
+                            id: 'existing-user-id',
+                            telegram_id: 123456789,
+                            full_name: 'Аккаунт владельца',
+                        },
                         error: null,
                     }),
                     update: updateProfile,
@@ -67,8 +71,61 @@ describe('telegramLoginService', () => {
             },
         });
         expect(updateProfile).toHaveBeenCalledWith({
-            full_name: 'Test User',
             telegram_username: 'testuser',
+            telegram_photo_url: null,
+            telegram_verified: true,
+        });
+    });
+
+    test('fills an empty profile name from Telegram without overwriting user names', async () => {
+        const admin = createMockSupabase();
+        const updateProfile = jest.fn().mockReturnThis();
+        (admin as unknown as {
+            auth: {
+                admin: {
+                    getUserById: jest.Mock;
+                    updateUserById: jest.Mock;
+                    createUser: jest.Mock;
+                };
+            };
+        }).auth.admin = {
+            getUserById: jest.fn().mockResolvedValue({
+                data: { user: { email: 'telegram_123456789@telegram.local' } },
+                error: null,
+            }),
+            updateUserById: jest.fn().mockResolvedValue({ data: {}, error: null }),
+            createUser: jest.fn(),
+        };
+        admin.from.mockImplementation((table: string) => {
+            if (table === 'profiles') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: 'existing-user-id', telegram_id: 123456789, full_name: null },
+                        error: null,
+                    }),
+                    update: updateProfile,
+                };
+            }
+            return admin;
+        });
+
+        const result = await handleTelegramLogin({
+            admin,
+            normalized: {
+                telegram_id: 123456789,
+                full_name: 'Adakhan',
+                telegram_username: 'adakhan',
+                telegram_photo_url: null,
+            },
+            randomHex: (size) => `hex-${size}`,
+        });
+
+        expect(result.ok).toBe(true);
+        expect(updateProfile).toHaveBeenCalledWith({
+            full_name: 'Adakhan',
+            telegram_username: 'adakhan',
             telegram_photo_url: null,
             telegram_verified: true,
         });
