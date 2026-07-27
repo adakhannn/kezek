@@ -52,11 +52,21 @@ function defaultRandomHex(size: number) {
     return crypto.randomBytes(size).toString('hex');
 }
 
-function profilePayload(yandexUser: YandexUserInfo) {
+function providerName(yandexUser: YandexUserInfo) {
+    return yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null;
+}
+
+function yandexIdentityPayload(yandexUser: YandexUserInfo) {
     return {
-        full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
         yandex_id: String(yandexUser.id),
         yandex_username: yandexUser.login || null,
+    };
+}
+
+function newProfilePayload(yandexUser: YandexUserInfo) {
+    return {
+        full_name: providerName(yandexUser),
+        ...yandexIdentityPayload(yandexUser),
     };
 }
 
@@ -67,9 +77,12 @@ function redirectWithError(origin: string, message: string) {
 async function findExistingProfile(admin: YandexAuthAdminClientLike, yandexUser: YandexUserInfo) {
     const response = (admin
         .from('profiles')
-        .select('id, yandex_id')
+        .select('id, yandex_id, full_name')
         .eq('yandex_id', String(yandexUser.id))
-        .maybeSingle() as Promise<{ data: { id: string | null; yandex_id: string | null } | null; error: { message?: string } | null }>);
+        .maybeSingle() as Promise<{
+            data: { id: string | null; yandex_id: string | null; full_name: string | null } | null;
+            error: { message?: string } | null;
+        }>);
 
     const { data, error } = await response;
     if (error) {
@@ -78,13 +91,19 @@ async function findExistingProfile(admin: YandexAuthAdminClientLike, yandexUser:
     return data;
 }
 
-async function updateExistingProfile(admin: YandexAuthAdminClientLike, userId: string, yandexUser: YandexUserInfo) {
+async function updateExistingProfile(
+    admin: YandexAuthAdminClientLike,
+    profile: { id: string | null; full_name: string | null },
+    yandexUser: YandexUserInfo,
+) {
+    const name = providerName(yandexUser);
     const { error } = await admin
         .from('profiles')
         .update({
-            ...profilePayload(yandexUser),
+            ...yandexIdentityPayload(yandexUser),
+            ...(!profile.full_name?.trim() && name ? { full_name: name } : {}),
         })
-        .eq('id', userId);
+        .eq('id', profile.id);
 
     if (error) {
         logError('YandexAuth', 'Profile update error', error);
@@ -94,15 +113,15 @@ async function updateExistingProfile(admin: YandexAuthAdminClientLike, userId: s
 async function ensureProfile(admin: YandexAuthAdminClientLike, userId: string, yandexUser: YandexUserInfo) {
     const existingProfileResponse = (admin
         .from('profiles')
-        .select('id')
+        .select('id, full_name')
         .eq('id', userId)
-        .maybeSingle() as Promise<{ data: { id: string } | null }>);
+        .maybeSingle() as Promise<{ data: { id: string; full_name: string | null } | null }>);
     const { data: existingProfile } = await existingProfileResponse;
 
     if (!existingProfile) {
         const { error } = await admin.from('profiles').insert({
             id: userId,
-            ...profilePayload(yandexUser),
+            ...newProfilePayload(yandexUser),
         });
 
         if (error) {
@@ -111,12 +130,7 @@ async function ensureProfile(admin: YandexAuthAdminClientLike, userId: string, y
         return;
     }
 
-    await admin
-        .from('profiles')
-        .update({
-            ...profilePayload(yandexUser),
-        })
-        .eq('id', userId);
+    await updateExistingProfile(admin, existingProfile, yandexUser);
 }
 
 async function syncYandexNotificationEmail(
@@ -286,7 +300,7 @@ export async function runYandexOAuthCallback({
 
     if (existingProfile?.id) {
         userId = existingProfile.id;
-        await updateExistingProfile(admin, userId, yandexUser);
+        await updateExistingProfile(admin, existingProfile, yandexUser);
     } else {
         const userResolution = await createOrFindUser(admin, origin, yandexUser, randomHex);
         if (!userResolution.ok) {

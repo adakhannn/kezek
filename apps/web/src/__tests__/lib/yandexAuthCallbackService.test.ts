@@ -4,6 +4,7 @@ import { createMockSupabase } from '../api/testHelpers';
 describe('yandexAuthCallbackService', () => {
     test('builds callback redirect for existing user', async () => {
         const admin = createMockSupabase();
+        const updateProfile = jest.fn().mockReturnThis();
         admin.rpc.mockResolvedValue({ data: null, error: null });
         (admin as unknown as {
             auth: {
@@ -38,10 +39,14 @@ describe('yandexAuthCallbackService', () => {
                     select: jest.fn().mockReturnThis(),
                     eq: jest.fn().mockReturnThis(),
                     maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: 'existing-user-id', yandex_id: '123' },
+                        data: {
+                            id: 'existing-user-id',
+                            yandex_id: '123',
+                            full_name: 'Аккаунт владельца',
+                        },
                         error: null,
                     }),
-                    update: jest.fn().mockReturnThis(),
+                    update: updateProfile,
                 };
             }
             return admin;
@@ -61,6 +66,10 @@ describe('yandexAuthCallbackService', () => {
 
         expect(result.redirectUrl).toContain('/auth/callback?next=%2F');
         expect(result.redirectUrl).toContain('#access_token=access&refresh_token=refresh');
+        expect(updateProfile).toHaveBeenCalledWith({
+            yandex_id: '123',
+            yandex_username: 'testuser',
+        });
     });
 
     test('redirects to sign-in when duplicate email cannot be reconciled', async () => {
