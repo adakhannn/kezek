@@ -1990,7 +1990,10 @@ The web testing scope and execution status are maintained in
 - post-fix evidence:
   - Fresh local browser load of `/business/role-apply` produced no console warnings or errors.
   - Production live loads of `/business/staff-apply`, `/dashboard/role-applications`, and `/dashboard/staff` on deployment `bbb78c01` produced no console warnings or errors.
-- status: `verified`
+- regression evidence:
+  - On `2026-07-28`, a fresh local live render of the current `main` form preview emitted the same `/logo.png` aspect-ratio warning three times across desktop load, reload, and mobile viewport.
+  - The warning is unrelated to the category-select fix but means the previous global verification no longer holds for the current shared header implementation.
+- status: `reopened`
 - owner: `Codex + User`
 
 ### WB-056
@@ -2063,5 +2066,37 @@ The web testing scope and execution status are maintained in
 - post-fix evidence:
   - Fresh authenticated local load rendered all proof fields and the explicit environment message with zero browser console errors.
   - `/business/staff-apply` also loaded without proof fields leaking into the staff flow and with zero console errors.
+- status: `fixed locally; production verification pending`
+- owner: `Codex`
+
+### WB-058
+- id: `WB-058`
+- date: `2026-07-28`
+- area: `business registration application / form controls`
+- severity: `P2`
+- title: Native category select is vertically misaligned with adjacent inputs
+- build: current production screenshot and local `main` at `c6cc38e2`
+- environment: production screenshot supplied by user; local Next.js dev server; in-app Chromium; desktop and 390 CSS-pixel viewport
+- steps:
+  1. Open `/business/apply` as an authenticated user.
+  2. Compare the `Категория бизнеса` select with the adjacent `Город` input.
+- expected:
+  - The select has the same height, typography, border, spacing, focus treatment, and touch target as the form inputs.
+  - Its arrow has stable spacing in light/dark themes and across supported viewport sizes.
+- actual:
+  - The browser-native select appearance produces a visibly shorter control and an inconsistent arrow/padding treatment.
+- evidence:
+  - User screenshot shows the category select shorter than the adjacent city input.
+- root cause:
+  - The form used a one-off native `<select>` without resetting platform appearance, while text fields use the shared `Input` control contract.
+- fix:
+  - Added shared `Select` UI component with `appearance-none`, a dedicated non-interactive chevron, reserved right padding, and the same label/helper/error/focus/disabled sizing contract as `Input`.
+  - Migrated the business-application category control to the shared component.
+- post-fix evidence:
+  - Desktop live measurements: city input and category select both `327 × 46` CSS pixels; select uses `appearance: none` and `44px` right padding.
+  - Mobile live measurements at 390 CSS pixels: both controls `293 × 50` with `16px` text.
+  - Native option selection was exercised; choosing `Моей категории нет — предложить новую` revealed the dependent category input.
+  - Browser console contained no select-related warnings or errors.
+  - `BusinessApplicationForm` tests passed: 3/3; web TypeScript check passed.
 - status: `fixed locally; production verification pending`
 - owner: `Codex`

@@ -6,6 +6,7 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 
 export type BusinessCategoryOption = {
     slug: string;
@@ -117,30 +118,23 @@ export function BusinessApplicationForm({
                         <Input label="Email" type="email" required {...field('email')} />
                         <Input label="Название бизнеса" required {...field('business_name')} />
                         <Input label="Город" required {...field('city')} />
-                        <div className="w-full">
-                            <label htmlFor="business-category" className="type-caption mb-1.5 block font-medium text-[var(--text-secondary)]">
-                                Категория бизнеса
-                            </label>
-                            <select
-                                id="business-category"
-                                required
-                                value={categoryChoice}
-                                onChange={(event) => {
-                                    setCategoryChoice(event.target.value);
-                                    setError(null);
-                                }}
-                                className="motion-interactive min-h-[44px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3 text-[16px] text-[var(--text-primary)] hover:border-[var(--border-strong)] focus:border-[var(--focus-ring)] focus:outline-none focus:ring-0 sm:min-h-[40px] sm:text-sm"
-                            >
-                                <option value="" disabled>Выберите категорию</option>
-                                {categories.map((category) => (
-                                    <option key={category.slug} value={category.slug}>{category.name}</option>
-                                ))}
-                                <option value={PROPOSE_CATEGORY_VALUE}>Моей категории нет — предложить новую</option>
-                            </select>
-                            <p className="type-caption mt-1.5 text-[var(--text-muted)]">
-                                Выберите готовую категорию — так заявка пройдёт проверку быстрее.
-                            </p>
-                        </div>
+                        <Select
+                            id="business-category"
+                            label="Категория бизнеса"
+                            required
+                            value={categoryChoice}
+                            onChange={(event) => {
+                                setCategoryChoice(event.target.value);
+                                setError(null);
+                            }}
+                            helperText="Выберите готовую категорию — так заявка пройдёт проверку быстрее."
+                        >
+                            <option value="" disabled>Выберите категорию</option>
+                            {categories.map((category) => (
+                                <option key={category.slug} value={category.slug}>{category.name}</option>
+                            ))}
+                            <option value={PROPOSE_CATEGORY_VALUE}>Моей категории нет — предложить новую</option>
+                        </Select>
                     </div>
                     {categoryChoice === PROPOSE_CATEGORY_VALUE ? (
                         <Input

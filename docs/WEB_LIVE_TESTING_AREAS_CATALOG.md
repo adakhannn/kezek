@@ -1846,6 +1846,18 @@ Live evidence (2026-07-17, application anti-abuse increment):
 - production Supabase migrations `20260717040000`, `20260717050000`, and rollout-compatibility migration `20260717060000` applied successfully;
 - result: `PASS` for local UI/error-surface smoke and database deployment; end-to-end production submission/rejection/block/cancellation remains pending deployment.
 
+Live evidence (2026-07-28, business application category control):
+
+- environment: local Next.js dev server and in-app Chromium, isolated safe form preview using the real `BusinessApplicationForm`;
+- reproduced `WB-058` from the supplied production screenshot: the native category select did not match the adjacent city input;
+- post-fix desktop measurements: input and select both `327 × 46` CSS pixels;
+- post-fix mobile measurements at 390 CSS pixels: input and select both `293 × 50`, with 16px text to avoid mobile zoom;
+- selected the missing-category option and verified that the dependent proposal field appeared;
+- console had no select-related warnings or errors; the unrelated shared-logo regression `WB-055` was reopened;
+- evidence: `BusinessApplicationForm` tests `3/3` and web TypeScript check passed;
+- result: `PASS` locally for visual alignment, responsive sizing, accessibility labeling, and selection behavior;
+- remaining gap: production post-deploy verification pending explicit commit/push/deploy command.
+
 ### M3. Users and security actions (`P0`)
 
 Tasks:
