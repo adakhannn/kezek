@@ -21,13 +21,13 @@ export function Footer() {
                                 href="/business/apply"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
-                                Подключить бизнес
+                                {t('footer.connectBusiness')}
                             </Link>
                             <Link
                                 href="/auth/sign-in?redirect=/business/role-apply"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
-                                Заявка в бизнес
+                                {t('footer.joinBusiness')}
                             </Link>
                             <Link
                                 href="/map"

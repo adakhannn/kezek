@@ -1,4 +1,6 @@
 export const footerEn = {
+    'footer.connectBusiness': 'Connect a business',
+    'footer.joinBusiness': 'Join a business',
     'footer.map': 'Branches map',
     'footer.dataDeletion': 'Data deletion',
     'footer.privacy': 'Privacy policy',

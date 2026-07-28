@@ -23,14 +23,21 @@ export async function POST(request: Request) {
         try {
             input = (await request.json()) as BusinessApplicationInput;
         } catch {
-            return Response.json({ ok: false, message: 'Неверный формат запроса' }, { status: 400 });
+            return Response.json(
+                { ok: false, message: 'Неверный формат запроса', code: 'invalid_request' },
+                { status: 400 },
+            );
         }
         try {
             const result = await submitBusinessApplication({ admin: createSupabaseAdminClient() as never, userId: user.id, input });
             if (!result.ok) return Response.json({ ok: false, message: result.message, code: result.code }, { status: result.status });
             return Response.json({ ok: true, id: result.id });
         } catch (error) {
-            return Response.json({ ok: false, message: error instanceof Error ? error.message : 'Не удалось отправить заявку' }, { status: 500 });
+            return Response.json({
+                ok: false,
+                message: error instanceof Error ? error.message : 'Не удалось отправить заявку',
+                code: 'unexpected_error',
+            }, { status: 500 });
         }
     });
 }

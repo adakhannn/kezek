@@ -2024,7 +2024,30 @@ Done when:
 
 - no mojibake, untranslated key, or locale-inconsistent business value remains.
 
-Status: `not started`
+Latest live run:
+
+- date: `2026-07-28`;
+- environment: production reproduction at `https://kezek.kg/business/apply`; local Next.js dev server; in-app Chromium; guest route plus safe authenticated-form preview;
+- production reproduction:
+  - switching to `KG` localized the shared header/footer but left the entire business-application page in Russian (`WB-059`);
+- local post-fix steps:
+  - switched the real guest page RU → KG → EN and reloaded directly in KG and EN;
+  - exercised the authenticated form presentation in RU/KG/EN without submitting or mutating data;
+  - exercised a safe guest `POST /api/business-applications` rejection: `401 auth_required` was rendered in English, then immediately translated to Kyrgyz without clearing the entered form;
+  - inspected headings, instructions, benefits, form labels, category UI, branch-proof links, consent, CTA, footer, URL, document locale, overflow, and browser console;
+- evidence:
+  - guest and authenticated application UI now follow the shared `LanguageProvider` locale;
+  - selected locale survives reload and updates the HTML `lang` attribute;
+  - the two hard-coded business footer links found during post-fix testing were fixed as `WB-060`;
+  - no console errors or error boundary appeared; the unrelated known logo warning remains `WB-055`;
+  - localization/form tests passed `6/6`; web typecheck and the Next.js `16.0.11` production build passed;
+- result: `business application page fixed locally`;
+- remaining gaps:
+  - production verification awaits deployment;
+  - business category display names are database content currently exposed as one `name` value, so localized category content needs a separate schema/content task;
+  - the rest of the site has not yet received the complete O3 localization pass.
+
+Status: `in progress`
 
 ### O4. Keyboard and screen reader (`P1`)
 

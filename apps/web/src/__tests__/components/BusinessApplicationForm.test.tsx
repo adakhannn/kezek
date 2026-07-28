@@ -2,9 +2,18 @@
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+import { LanguageProvider } from '@/app/_components/i18n/LanguageProvider';
 import { BusinessApplicationForm } from '@/app/business/apply/BusinessApplicationForm';
 
 const fetchMock = jest.fn();
+
+function renderForm(props: React.ComponentProps<typeof BusinessApplicationForm>) {
+    return render(
+        <LanguageProvider>
+            <BusinessApplicationForm {...props} />
+        </LanguageProvider>,
+    );
+}
 
 describe('BusinessApplicationForm categories', () => {
     beforeEach(() => {
@@ -14,19 +23,19 @@ describe('BusinessApplicationForm categories', () => {
             json: async () => ({ ok: true }),
         });
         global.fetch = fetchMock;
+        window.localStorage.clear();
+        document.cookie = 'kezek_lang=ru; path=/';
     });
 
     it('prefills account contacts and defaults the city to Osh', () => {
-        render(
-            <BusinessApplicationForm
-                categories={[]}
-                initialValues={{
-                    contact_name: 'Аккаунт владельца',
-                    phone: '+996770574029',
-                    email: 'owner@example.com',
-                }}
-            />,
-        );
+        renderForm({
+            categories: [],
+            initialValues: {
+                contact_name: 'Аккаунт владельца',
+                phone: '+996770574029',
+                email: 'owner@example.com',
+            },
+        });
 
         expect((screen.getByLabelText('Ваше имя') as HTMLInputElement).value).toBe('Аккаунт владельца');
         expect((screen.getByLabelText('Телефон') as HTMLInputElement).value).toBe('+996770574029');
@@ -37,9 +46,9 @@ describe('BusinessApplicationForm categories', () => {
     });
 
     it('submits the slug of an existing system category', async () => {
-        const { container } = render(
-            <BusinessApplicationForm categories={[{ slug: 'barbershop', name: 'Барбершоп' }]} />,
-        );
+        const { container } = renderForm({
+            categories: [{ slug: 'barbershop', name: 'Барбершоп' }],
+        });
 
         fireEvent.change(screen.getByLabelText('Категория бизнеса'), { target: { value: 'barbershop' } });
         fireEvent.submit(container.querySelector('form')!);
@@ -50,9 +59,9 @@ describe('BusinessApplicationForm categories', () => {
     });
 
     it('allows the applicant to propose a missing category', async () => {
-        const { container } = render(
-            <BusinessApplicationForm categories={[{ slug: 'barbershop', name: 'Барбершоп' }]} />,
-        );
+        const { container } = renderForm({
+            categories: [{ slug: 'barbershop', name: 'Барбершоп' }],
+        });
 
         fireEvent.change(screen.getByLabelText('Категория бизнеса'), {
             target: { value: '__propose_category__' },

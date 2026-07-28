@@ -2100,3 +2100,72 @@ The web testing scope and execution status are maintained in
   - `BusinessApplicationForm` tests passed: 3/3; web TypeScript check passed.
 - status: `fixed locally; production verification pending`
 - owner: `Codex`
+
+### WB-059
+- id: `WB-059`
+- date: `2026-07-28`
+- area: `business registration application / localization`
+- severity: `P1`
+- title: Business application page remains Russian after switching the site language
+- build: production `https://kezek.kg` and local `main` after `707dec4a`
+- environment: production; in-app Chromium; unauthenticated desktop session
+- steps:
+  1. Open `/business/apply` directly.
+  2. Use the shared header switcher to select `KG` or `EN`.
+  3. Compare the header/footer locale with the application heading, authentication gate, benefits, and CTA.
+- expected:
+  - All interface copy on the page changes to the selected language.
+  - The page and shared layout use one locale without untranslated keys or mixed Russian copy.
+- actual:
+  - Header and footer change language, but the complete business-application page remains Russian.
+- evidence:
+  - Production live DOM snapshot showed Kyrgyz shared navigation and footer together with Russian heading `Подключить бизнес к Kezek`, Russian authentication instructions, benefit cards, and CTA.
+- root cause:
+  - The server page and client form rendered hard-coded Russian strings instead of consuming the existing `LanguageProvider` dictionaries.
+- fix:
+  - Added a client presentation boundary for localized page and authentication-gate content while retaining authentication and database reads in the server page.
+  - Migrated form labels, helper copy, validation fallbacks, success feedback, proof-link copy, consent, and submit action to the shared RU/KY/EN dictionaries.
+  - Mapped stable API error codes to localized client messages; displayed errors now change language immediately and unknown server failures use a safe localized fallback.
+  - Added component coverage for live locale changes in both guest and authenticated states.
+- post-fix evidence:
+  - Guest local live page switched completely from Russian to Kyrgyz and English, including heading, explanation, authentication gate, benefit cards, CTA, and return hint.
+  - Authenticated-form live preview switched labels, category controls, proof-link copy, consent, and submit action in RU/KY/EN without remounting.
+  - Kyrgyz and English locale selections survived a direct page reload; `document.documentElement.lang` followed the selected locale.
+  - Direct guest route and authenticated-form preview showed no production error boundary and no horizontal document overflow at the tested 1280 CSS-pixel viewport.
+  - Browser console contained no errors; the existing shared-logo aspect-ratio warning remains tracked separately as `WB-055`.
+  - Safe guest-network scenario submitted the local authenticated-form preview and received the expected `401 auth_required`; English feedback appeared without navigation or data creation, then changed to Kyrgyz while all entered values remained intact.
+  - Localization and form component suites passed: 5/5; final combined localization suites passed 6/6.
+  - Web TypeScript validation and the Next.js `16.0.11` production build passed.
+- status: `fixed locally; production verification pending`
+- owner: `Codex`
+
+### WB-060
+- id: `WB-060`
+- date: `2026-07-28`
+- area: `shared public footer / localization`
+- severity: `P2`
+- title: Business entry links in the footer stay Russian in Kyrgyz and English locales
+- build: local post-fix live build for `WB-059`
+- environment: local Next.js dev server; in-app Chromium; unauthenticated desktop session
+- steps:
+  1. Open `/business/apply`.
+  2. Switch the shared locale to `KG` or `EN`.
+  3. Inspect the footer links for connecting or joining a business.
+- expected:
+  - Every footer link uses the selected locale.
+- actual:
+  - `Подключить бизнес` and `Заявка в бизнес` remain Russian while the rest of the footer changes locale.
+- evidence:
+  - Local live DOM snapshot in Kyrgyz showed the two Russian links alongside localized Kyrgyz rights, map, privacy, terms, and data-deletion links.
+- root cause:
+  - These two recently added footer links were hard-coded instead of using the existing footer dictionaries.
+- fix:
+  - Added RU/KY/EN footer dictionary entries and migrated both links to `LanguageProvider`.
+  - Added component coverage for Kyrgyz and English footer states.
+- post-fix evidence:
+  - Local live DOM in Kyrgyz showed `Бизнести кошуу` and `Бизнеске кошулуу арызы`; all other footer links were Kyrgyz.
+  - Local live DOM in English showed `Connect a business` and `Join a business`; all other footer links were English.
+  - Locale persistence remained correct after direct reload.
+  - Footer localization test passed together with the business-application suites: 6/6 total; web TypeScript validation and production build passed.
+- status: `fixed locally; production verification pending`
+- owner: `Codex`
