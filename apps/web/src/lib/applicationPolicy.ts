@@ -13,6 +13,10 @@ type PolicyFailure = {
 };
 
 const POLICY_MESSAGES: Record<string, Omit<PolicyFailure, 'ok' | 'code'>> = {
+    business_exists: {
+        status: 409,
+        message: 'Бизнес с таким названием уже есть в Kezek. Запросите доступ владельца вместо создания повторной карточки.',
+    },
     blocked: {
         status: 403,
         message: 'Отправка заявок временно заблокирована модератором. Если это ошибка, обратитесь в поддержку.',

@@ -1,4 +1,6 @@
 import { mapApplicationPolicyError } from '@/lib/applicationPolicy';
+import { normalizeBusinessNameForMatch } from '@/lib/businessName';
+import { slugifyBusinessName } from '@/lib/businessSlug';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 type AdminLike = {
@@ -12,7 +14,6 @@ type BusinessRegistrationApplicationRow = {
     applicant_user_id: string | null;
     phone: string | null;
     business_name: string | null;
-    city: string | null;
     category: string | null;
     created_business_id?: string | null;
 };
@@ -29,7 +30,6 @@ export type BusinessApplicationInput = {
     phone?: unknown;
     email?: unknown;
     business_name?: unknown;
-    city?: unknown;
     category?: unknown;
     comment?: unknown;
     website?: unknown;
@@ -70,7 +70,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
 }) {
     const { data: application, error: applicationError } = await params.admin
         .from('business_registration_applications')
-        .select('id,applicant_user_id,phone,business_name,city,category,created_business_id')
+        .select('id,applicant_user_id,phone,business_name,category,created_business_id')
         .eq('id', params.applicationId)
         .maybeSingle();
 
@@ -130,12 +130,14 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
         .insert({
             name: businessName,
             slug,
-            address: row.city ? row.city.trim() : null,
             owner_id: row.applicant_user_id,
             categories: [category],
             phones: phone ? [phone] : null,
             branch_limit: 1,
             is_approved: true,
+            creation_source: 'public_application',
+            created_by_user_id: params.reviewerUserId,
+            source_application_id: row.id,
         })
         .select('id')
         .single();
@@ -183,27 +185,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
     return { ok: true as const, businessId: createdBusiness.id, alreadyCreated: false };
 }
 
-export function slugifyBusinessName(input: string): string {
-    const map: Record<string, string> = {
-        а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
-        к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f',
-        х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'shch', ы: 'y', э: 'e', ю: 'yu', я: 'ya', ъ: '', ь: '',
-        ң: 'ng', ү: 'u', ө: 'o',
-    };
-
-    const slug = input
-        .toLowerCase()
-        .trim()
-        .split('')
-        .map((char) => map[char] ?? char)
-        .join('')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .replace(/-+/g, '-')
-        .slice(0, 80);
-
-    return slug || 'business';
-}
+export { slugifyBusinessName } from '@/lib/businessSlug';
 
 async function makeUniqueBusinessSlug(admin: AdminLike, baseName: string): Promise<string> {
     const base = slugifyBusinessName(baseName);
@@ -263,12 +245,33 @@ export async function submitBusinessApplication(params: {
     const businessName = text(params.input.business_name, 180);
     const phone = normalizePhoneToE164(text(params.input.phone, 40));
     const email = text(params.input.email, 254).toLowerCase();
-    const city = text(params.input.city, 120);
-    if (!contactName || !businessName || !phone || !email || !city) {
-        return { ok: false as const, status: 400, code: 'required_fields', message: 'Укажите имя, название бизнеса, телефон, email и город.' };
+    if (!contactName || !businessName || !phone || !email) {
+        return { ok: false as const, status: 400, code: 'required_fields', message: 'Укажите имя, название бизнеса, телефон и email.' };
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return { ok: false as const, status: 400, code: 'invalid_email', message: 'Укажите корректный email.' };
+    }
+
+    const normalizedBusinessName = normalizeBusinessNameForMatch(businessName);
+    const slugPrefix = slugifyBusinessName(businessName);
+    const { data: businessCandidates, error: businessLookupError } = await params.admin
+        .from('businesses')
+        .select('id,name,slug')
+        .like('slug', `${slugPrefix}%`)
+        .limit(25);
+    if (businessLookupError) {
+        throw new Error(businessLookupError.message || 'Не удалось проверить название бизнеса');
+    }
+    const existingBusiness = (businessCandidates ?? []).find((candidate: { name?: string | null }) => (
+        normalizeBusinessNameForMatch(candidate.name ?? '') === normalizedBusinessName
+    ));
+    if (existingBusiness) {
+        return {
+            ok: false as const,
+            status: 409,
+            code: 'business_exists',
+            message: 'Бизнес с таким названием уже есть в Kezek. Запросите доступ владельца вместо создания повторной карточки.',
+        };
     }
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -293,7 +296,6 @@ export async function submitBusinessApplication(params: {
             phone,
             email,
             business_name: businessName,
-            city,
             category: text(params.input.category, 120) || null,
             comment: text(params.input.comment, 2000) || null,
             directory_links: directoryLinks(params.input),

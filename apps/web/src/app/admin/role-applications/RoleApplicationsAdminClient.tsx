@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
+import { useLanguage, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { BUSINESS_ROLE_LABELS, type BusinessRoleKey } from '@/lib/businessRoleApplicationService';
+import { type BusinessRoleKey } from '@/lib/businessRoleApplicationService';
 
 type BusinessRelation = { name: string | null; slug: string | null } | null;
 
@@ -36,15 +37,23 @@ type MutationResponse = { ok: true } | { ok: false; message?: string };
 const statuses = ['pending', 'approved', 'rejected', 'cancelled', 'all'] as const;
 type StatusFilter = typeof statuses[number];
 
-const statusLabels: Record<StatusFilter, string> = {
-    pending: 'Ожидают',
-    approved: 'Одобрены',
-    rejected: 'Отклонены',
-    cancelled: 'Отменены',
-    all: 'Все',
+const statusLabelKeys: Record<StatusFilter, I18nKey> = {
+    pending: 'admin.roleApplications.status.pending',
+    approved: 'admin.roleApplications.status.approved',
+    rejected: 'admin.roleApplications.status.rejected',
+    cancelled: 'admin.roleApplications.status.cancelled',
+    all: 'admin.roleApplications.status.all',
+};
+
+const roleLabelKeys: Record<BusinessRoleKey, I18nKey> = {
+    owner: 'admin.roleApplications.role.owner',
+    admin: 'admin.roleApplications.role.admin',
+    manager: 'admin.roleApplications.role.manager',
+    staff: 'admin.roleApplications.role.staff',
 };
 
 export function RoleApplicationsAdminClient() {
+    const { locale, t } = useLanguage();
     const [items, setItems] = useState<ApplicationRow[]>([]);
     const [status, setStatus] = useState<StatusFilter>('pending');
     const [loading, setLoading] = useState(true);
@@ -62,11 +71,11 @@ export function RoleApplicationsAdminClient() {
             const response = await fetch(url.toString(), { cache: 'no-store' });
             const payload = (await response.json()) as ListResponse;
             if (!response.ok || !payload.ok) {
-                throw new Error(!payload.ok ? payload.message || 'Не удалось загрузить заявки' : 'Не удалось загрузить заявки');
+                throw new Error(!payload.ok ? payload.message || t('admin.roleApplications.error.load') : t('admin.roleApplications.error.load'));
             }
             setItems(payload.items);
         } catch (loadError) {
-            setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить заявки');
+            setError(loadError instanceof Error ? loadError.message : t('admin.roleApplications.error.load'));
         } finally {
             setLoading(false);
         }
@@ -74,7 +83,7 @@ export function RoleApplicationsAdminClient() {
 
     useEffect(() => {
         void load(status);
-    }, [status]);
+    }, [status, locale]);
 
     async function decide(id: string, action: 'approve' | 'reject' | 'unblock', blockDays = 0, blockId?: string) {
         setActionId(`${id}:${action}`);
@@ -87,13 +96,13 @@ export function RoleApplicationsAdminClient() {
             });
             const payload = (await response.json()) as MutationResponse;
             if (!response.ok || !payload.ok) {
-                throw new Error(!payload.ok ? payload.message || 'Не удалось выполнить действие' : 'Не удалось выполнить действие');
+                throw new Error(!payload.ok ? payload.message || t('admin.roleApplications.error.action') : t('admin.roleApplications.error.action'));
             }
             await load();
             setRejectingId(null);
             setRejectNote('');
         } catch (actionError) {
-            setError(actionError instanceof Error ? actionError.message : 'Не удалось выполнить действие');
+            setError(actionError instanceof Error ? actionError.message : t('admin.roleApplications.error.action'));
         } finally {
             setActionId(null);
         }
@@ -115,7 +124,7 @@ export function RoleApplicationsAdminClient() {
                                     : 'bg-[var(--surface-emphasis)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
                             ].join(' ')}
                         >
-                            {statusLabels[item]}
+                            {t(statusLabelKeys[item])}
                         </button>
                     ))}
                 </div>
@@ -123,12 +132,12 @@ export function RoleApplicationsAdminClient() {
 
             {error ? <AlertBanner variant="danger" message={error} onClose={() => setError(null)} /> : null}
 
-            {loading ? <Card padding="lg">Загружаем заявки…</Card> : null}
+            {loading ? <Card padding="lg">{t('admin.roleApplications.loading')}</Card> : null}
 
             {!loading && !items.length ? (
                 <EmptyState
-                    title="Заявок нет"
-                    description="В выбранном статусе пока нет заявок на роли в бизнесах."
+                    title={t('admin.roleApplications.empty.title')}
+                    description={t('admin.roleApplications.empty.description')}
                 />
             ) : null}
 
@@ -146,7 +155,7 @@ export function RoleApplicationsAdminClient() {
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                                    {application.applicant_name || 'Пользователь Kezek'}
+                                    {application.applicant_name || t('admin.roleApplications.userFallback')}
                                 </h2>
                                 <p className="text-sm text-[var(--text-muted)]">
                                     {application.applicant_email || application.applicant_phone || application.applicant_user_id}
@@ -154,7 +163,7 @@ export function RoleApplicationsAdminClient() {
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
-                                    {BUSINESS_ROLE_LABELS[application.requested_role]}
+                                    {t(roleLabelKeys[application.requested_role])}
                                 </span>
                                 <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
                                     {application.status}
@@ -163,9 +172,14 @@ export function RoleApplicationsAdminClient() {
                         </div>
 
                         <div className="rounded-xl bg-[var(--surface-emphasis)] p-3 text-sm text-[var(--text-secondary)]">
-                            <div><b>Бизнес:</b> {businessName}{businessSlug ? ` / ${businessSlug}` : ''}</div>
-                            <div><b>Заявитель:</b> {application.applicant_user_id}</div>
-                            <div><b>Создана:</b> {new Date(application.created_at).toLocaleString('ru-RU')}</div>
+                            <div><b>{t('admin.roleApplications.business')}:</b> {businessName}{businessSlug ? ` / ${businessSlug}` : ''}</div>
+                            <div><b>{t('admin.roleApplications.applicant')}:</b> {application.applicant_user_id}</div>
+                            <div>
+                                <b>{t('admin.roleApplications.created')}:</b>{' '}
+                                {new Date(application.created_at).toLocaleString(
+                                    locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU'
+                                )}
+                            </div>
                         </div>
 
                         {application.message ? (
@@ -187,7 +201,7 @@ export function RoleApplicationsAdminClient() {
                         {application.prior_submission_count > 0 || application.risk_flags.length ? (
                             <div className="flex flex-wrap gap-2 text-xs">
                                 <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-700 dark:text-amber-300">
-                                    Предыдущих заявок: {application.prior_submission_count}
+                                    {t('admin.roleApplications.previousCount').replace('{count}', String(application.prior_submission_count))}
                                 </span>
                                 {application.risk_flags.map((flag) => (
                                     <span key={flag} className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">{flag}</span>
@@ -198,7 +212,7 @@ export function RoleApplicationsAdminClient() {
                         {isPending && isStaffRequest ? (
                             <AlertBanner
                                 variant="info"
-                                message="Заявку сотрудника принимает владелец бизнеса в своём кабинете с обязательным выбором филиала."
+                                message={t('admin.roleApplications.staffNotice')}
                             />
                         ) : null}
 
@@ -210,7 +224,7 @@ export function RoleApplicationsAdminClient() {
                                     onClick={() => decide(application.id, 'approve')}
                                     isLoading={actionId === `${application.id}:approve`}
                                 >
-                                    Одобрить
+                                    {t('admin.roleApplications.approve')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -222,7 +236,7 @@ export function RoleApplicationsAdminClient() {
                                     }}
                                     isLoading={actionId === `${application.id}:reject`}
                                 >
-                                    Отклонить
+                                    {t('admin.roleApplications.reject')}
                                 </Button>
                             </div>
                         ) : null}
@@ -233,18 +247,18 @@ export function RoleApplicationsAdminClient() {
                                     value={rejectNote}
                                     onChange={(event) => setRejectNote(event.target.value)}
                                     maxLength={1000}
-                                    placeholder="Укажите причину отклонения"
+                                    placeholder={t('admin.roleApplications.rejectReason')}
                                     className="min-h-24 w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-3 text-sm"
                                 />
                                 <div className="flex flex-wrap gap-2">
                                     <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject')}>
-                                        Отклонить
+                                        {t('admin.roleApplications.reject')}
                                     </Button>
                                     <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject', 30)}>
-                                        Отклонить и блокировать 30 дней
+                                        {t('admin.roleApplications.rejectAndBlock')}
                                     </Button>
                                     <Button type="button" size="sm" variant="outline" onClick={() => setRejectingId(null)}>
-                                        Отмена
+                                        {t('admin.roleApplications.cancel')}
                                     </Button>
                                 </div>
                             </div>
@@ -252,7 +266,9 @@ export function RoleApplicationsAdminClient() {
 
                         {application.active_block_id ? (
                             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-                                <span className="text-sm text-amber-800 dark:text-amber-200">Подача заявок этого пользователя в бизнес заблокирована.</span>
+                                <span className="text-sm text-amber-800 dark:text-amber-200">
+                                    {t('admin.roleApplications.blocked')}
+                                </span>
                                 <Button
                                     type="button"
                                     size="sm"
@@ -260,7 +276,7 @@ export function RoleApplicationsAdminClient() {
                                     onClick={() => decide(application.id, 'unblock', 0, application.active_block_id ?? undefined)}
                                     isLoading={actionId === `${application.id}:unblock`}
                                 >
-                                    Снять блокировку
+                                    {t('admin.roleApplications.unblock')}
                                 </Button>
                             </div>
                         ) : null}

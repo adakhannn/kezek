@@ -2,14 +2,19 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { AdminDangerZone } from '../../_components/AdminDangerZone';
-import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
 
 import { BranchLimitEditor } from './BranchLimitEditor';
 import { BusinessCardEdit } from './BusinessCardEdit';
 
+import { getServerLocale, getT } from '@/app/_components/i18n/server';
 import { DeleteBizButton } from '@/components/admin/DeleteBizButton';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { StatusChip } from '@/components/ui/StatusChip';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,339 +35,482 @@ type OwnerMini = {
     id: string;
     email: string | null;
     phone: string | null;
-    full_name?: string | null;
+    full_name: string | null;
 };
 
 type RouteParams = { id: string };
 
-export default async function BizPage({ params }: { params: Promise<RouteParams> }) {
+export default async function BusinessDetailPage({ params }: { params: Promise<RouteParams> }) {
     const { id } = await params;
-
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
+    const locale = await getServerLocale();
+    const t = getT(locale);
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const cookieStore = await cookies();
-    const supa = createServerClient(URL, ANON, {
+
+    const supabase = createServerClient(url, anonKey, {
         cookies: {
-            get: (n: string) => cookieStore.get(n)?.value,
+            get: (name: string) => cookieStore.get(name)?.value,
             set: () => {},
             remove: () => {},
         },
     });
 
-    // 1) auth
     const {
         data: { user },
-    } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">Не авторизован</div>;
+    } = await supabase.auth.getUser();
+    if (!user) {
+        return <div className="p-4">{t('admin.error.unauthorized', 'Не авторизован')}</div>;
+    }
 
-    // 2) super-admin check
-    const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-    if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
-    if (!isSuper) return <div className="p-4">Нет доступа</div>;
+    const { data: isSuperAdmin, error: roleError } = await supabase.rpc('is_super_admin');
+    if (roleError) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {roleError.message}</div>;
+    if (!isSuperAdmin) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа')}</div>;
 
-    // 3) service client
-    const admin = createClient(URL, SERVICE);
-
-    // 4) бизнес с дополнительными полями
-    const { data: biz, error: eBiz } = await admin
+    const admin = createClient(url, serviceRoleKey);
+    const { data: business, error: businessError } = await admin
         .from('businesses')
         .select('id,name,slug,categories,owner_id,is_approved,created_at,address,phones,branch_limit')
         .eq('id', id)
         .maybeSingle<BizRow>();
 
-    if (eBiz) return <div className="p-4">Ошибка: {eBiz.message}</div>;
-    if (!biz) return <div className="p-4">Бизнес не найден</div>;
+    if (businessError) {
+        return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {businessError.message}</div>;
+    }
+    if (!business) {
+        return <div className="p-4">{t('admin.businesses.notFound', 'Бизнес не найден')}</div>;
+    }
 
-    // 5) краткая инфа о владельце
+    const [branchesResult, staffResult, servicesResult, bookingsResult, categoriesResult] = await Promise.all([
+        admin.from('branches').select('id', { count: 'exact', head: true }).eq('biz_id', id),
+        admin.from('staff').select('id', { count: 'exact', head: true }).eq('biz_id', id),
+        admin.from('services').select('id', { count: 'exact', head: true }).eq('biz_id', id),
+        admin.from('bookings').select('id', { count: 'exact', head: true }).eq('biz_id', id),
+        admin.from('categories').select('slug,name_ru,is_active').order('name_ru', { ascending: true }),
+    ]);
+
     let owner: OwnerMini | null = null;
-    if (biz.owner_id) {
-        const { data, error } = await admin.auth.admin.getUserById(biz.owner_id);
+    if (business.owner_id) {
+        const { data, error } = await admin.auth.admin.getUserById(business.owner_id);
         if (!error && data?.user) {
-            const meta = (data.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
+            const metadata = (data.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
             owner = {
                 id: data.user.id,
                 email: data.user.email ?? null,
                 phone: (data.user as { phone?: string | null }).phone ?? null,
-                full_name: meta.full_name ?? null,
+                full_name: metadata.full_name?.trim() || null,
             };
         }
     }
 
-    // 6) Статистика
-    const [branchesData, staffData, servicesData, bookingsData] = await Promise.all([
-        admin
-            .from('branches')
-            .select('id', { count: 'exact', head: true })
-            .eq('biz_id', id),
-        admin
-            .from('staff')
-            .select('id', { count: 'exact', head: true })
-            .eq('biz_id', id),
-        admin
-            .from('services')
-            .select('id', { count: 'exact', head: true })
-            .eq('biz_id', id),
-        admin
-            .from('bookings')
-            .select('id', { count: 'exact', head: true })
-            .eq('biz_id', id),
-    ]);
+    const branchesCount = branchesResult.count ?? 0;
+    const staffCount = staffResult.count ?? 0;
+    const servicesCount = servicesResult.count ?? 0;
+    const bookingsCount = bookingsResult.count ?? 0;
+    const categories = Array.isArray(business.categories) ? business.categories : [];
+    const isApproved = business.is_approved === true;
+    const categoryOptions = (categoriesResult.data ?? [])
+        .filter((category) => category.is_active !== false)
+        .map((category) => ({ slug: category.slug, name: category.name_ru }));
 
-    const branchesCount = branchesData.count || 0;
-    const staffCount = staffData.count || 0;
-    const servicesCount = servicesData.count || 0;
-    const bookingsCount = bookingsData.count || 0;
-
-    const categories = Array.isArray(biz.categories) ? biz.categories : [];
-    const isApproved = biz.is_approved === true;
+    const setupItems = [
+        {
+            complete: isApproved,
+            label: t('admin.businessDetail.setup.approved', 'Бизнес доступен клиентам'),
+            action: null,
+        },
+        {
+            complete: Boolean(owner),
+            label: t('admin.businessDetail.setup.owner', 'Назначен владелец'),
+            action: `/admin/businesses/${business.id}/owner`,
+        },
+        {
+            complete: branchesCount > 0,
+            label: t('admin.businessDetail.setup.branch', 'Создан хотя бы один филиал'),
+            action: `/admin/businesses/${business.id}/branches`,
+        },
+        {
+            complete: servicesCount > 0,
+            label: t('admin.businessDetail.setup.services', 'Добавлены услуги'),
+            action: null,
+        },
+    ];
+    const completedSetupItems = setupItems.filter((item) => item.complete).length;
+    const dateLocale = locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU';
 
     return (
         <div className="space-y-6">
-            {/* Заголовок */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                                {biz.name}
-                            </h1>
+            <Card
+                variant="elevated"
+                padding="lg"
+                className="relative overflow-hidden bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--accent-primary)_16%,transparent),transparent_38%)]"
+            >
+                <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full border border-fuchsia-400/15" />
+                <div className="relative space-y-5">
+                    <Link
+                        href="/admin/businesses"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)]"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        {t('admin.businessDetail.back', 'Все бизнесы')}
+                    </Link>
+
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="min-w-0 space-y-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <StatusChip
+                                    status={isApproved ? 'approved' : 'pending'}
+                                    label={
+                                        isApproved
+                                            ? t('admin.businesses.status.approved', 'Одобрен')
+                                            : t('admin.businesses.status.moderation', 'На модерации')
+                                    }
+                                />
+                                {categories.slice(0, 2).map((category) => (
+                                    <Badge key={category} variant="accent" tone="soft">
+                                        {categoryOptions.find((option) => option.slug === category)?.name ?? category}
+                                    </Badge>
+                                ))}
+                                {categories.length > 2 ? <Badge variant="neutral">+{categories.length - 2}</Badge> : null}
+                            </div>
+                            <div>
+                                <h1 className="type-page-title break-words text-[var(--text-primary)]">{business.name}</h1>
+                                <p className="mt-2 font-mono text-sm text-[var(--text-muted)]">/b/{business.slug}</p>
+                            </div>
+                            <p className="type-caption text-[var(--text-muted)]">
+                                {t('admin.businessDetail.created', 'Создан')}{' '}
+                                {business.created_at
+                                    ? new Intl.DateTimeFormat(dateLocale, { dateStyle: 'long' }).format(new Date(business.created_at))
+                                    : '—'}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:justify-end">
                             {isApproved ? (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                <Link
+                                    href={`/b/${business.slug}`}
+                                    target="_blank"
+                                    className={buttonStyles({ variant: 'outline', size: 'sm' })}
+                                >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7v7m0-7L10 14M5 7v12h12v-5" />
                                     </svg>
-                                    Одобрен
-                                </span>
-                            ) : (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
-                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                    </svg>
-                                    На модерации
-                                </span>
-                            )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                            {biz.slug}
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <Link
-                            href="/admin/businesses"
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                            К списку
-                        </Link>
-                        <Link
-                            href={`/admin/businesses/${biz.id}/branches`}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            Филиалы
-                        </Link>
-                        {!biz.owner_id ? (
+                                    <span>{t('admin.businessDetail.openPublic', 'Открыть на сайте')}</span>
+                                </Link>
+                            ) : null}
                             <Link
-                                href={`/admin/businesses/${biz.id}/owner`}
-                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+                                href={`/admin/businesses/${business.id}/branches`}
+                                className={buttonStyles({ variant: 'outline', size: 'sm' })}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                Назначить владельца
+                                <BuildingIcon />
+                                <span>{t('admin.businessDetail.branches', 'Филиалы')}</span>
                             </Link>
-                        ) : (
                             <Link
-                                href={`/admin/businesses/${biz.id}/owner`}
-                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
+                                href={`/admin/businesses/${business.id}/members`}
+                                className={buttonStyles({ variant: 'outline', size: 'sm' })}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                                Редактировать владельца
+                                <UsersIcon />
+                                <span>{t('admin.businessDetail.members', 'Участники')}</span>
                             </Link>
-                        )}
-                        <Link
-                            href={`/admin/businesses/${biz.id}/members`}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            Участники
-                        </Link>
+                            <Link
+                                href={`/admin/businesses/${business.id}/owner`}
+                                className={buttonStyles({ size: 'sm' })}
+                            >
+                                <UserIcon />
+                                <span>
+                                    {owner
+                                        ? t('admin.businessDetail.owner.edit', 'Изменить владельца')
+                                        : t('admin.businessDetail.owner.assign', 'Назначить владельца')}
+                                </span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </Card>
 
-            {/* Статистика */}
-            <AdminEntityFlowTabs entity="businesses" detailHref={`/admin/businesses/${biz.id}`} className="max-w-3xl" />
+            <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <StatCard
+                    label={t('admin.businessDetail.stats.branches', 'Филиалы')}
+                    value={branchesCount}
+                    icon={<BuildingIcon />}
+                    accent="violet"
+                />
+                <StatCard
+                    label={t('admin.businessDetail.stats.staff', 'Сотрудники')}
+                    value={staffCount}
+                    icon={<UsersIcon />}
+                    accent="pink"
+                />
+                <StatCard
+                    label={t('admin.businessDetail.stats.services', 'Услуги')}
+                    value={servicesCount}
+                    icon={<ScissorsIcon />}
+                    accent="emerald"
+                />
+                <StatCard
+                    label={t('admin.businessDetail.stats.bookings', 'Бронирования')}
+                    value={bookingsCount}
+                    icon={<CalendarIcon />}
+                    accent="sky"
+                />
+            </section>
 
-            <BranchLimitEditor businessId={biz.id} initialLimit={biz.branch_limit} currentCount={branchesCount} />
+            <Card variant="outlined" padding="lg">
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,0.65fr)_minmax(0,1.35fr)] lg:items-center">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-soft)] font-bold text-[var(--accent-primary)]">
+                                {completedSetupItems}/{setupItems.length}
+                            </div>
+                            <div>
+                                <h2 className="type-section-title">
+                                    {t('admin.businessDetail.setup.title', 'Готовность бизнеса')}
+                                </h2>
+                                <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                    {t(
+                                        'admin.businessDetail.setup.description',
+                                        'Что ещё нужно для полноценной работы и записи клиентов.',
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        {setupItems.map((item) => (
+                            <SetupItem
+                                key={item.label}
+                                complete={item.complete}
+                                label={item.label}
+                                href={item.action}
+                                actionLabel={t('admin.businessDetail.setup.open', 'Перейти')}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </Card>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                            <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{branchesCount}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Филиалов</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
-                            <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{staffCount}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Сотрудников</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                            <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{servicesCount}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Услуг</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{bookingsCount}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Бронирований</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] xl:items-start">
                 <BusinessCardEdit
-                    bizId={biz.id}
+                    bizId={business.id}
+                    categoryOptions={categoryOptions}
                     initial={{
-                        name: biz.name,
-                        slug: biz.slug,
+                        name: business.name,
+                        slug: business.slug,
                         categories,
-                        address: biz.address,
-                        phones: biz.phones,
+                        address: business.address,
+                        phones: business.phones,
                         is_approved: isApproved,
-                        created_at: biz.created_at,
+                        created_at: business.created_at,
                     }}
                 />
 
-                {/* Владелец */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                        <div className="p-2 bg-gradient-to-br from-indigo-600 to-pink-600 rounded-lg">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
+                <aside className="space-y-6">
+                    <Card variant="elevated" padding="lg" className="space-y-5">
+                        <div>
+                            <h2 className="type-section-title">
+                                {t('admin.businessDetail.owner.title', 'Владелец')}
+                            </h2>
+                            <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                {t(
+                                    'admin.businessDetail.owner.description',
+                                    'Аккаунт, который управляет бизнесом и командой.',
+                                )}
+                            </p>
                         </div>
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Владелец</h2>
-                    </div>
-                    {owner ? (
-                        <div className="space-y-4">
-                            {owner.full_name && (
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Имя</label>
-                                    <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">{owner.full_name}</p>
+
+                        {owner ? (
+                            <div className="space-y-4 border-t border-[var(--border-subtle)] pt-5">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-pink-500 text-lg font-bold text-white">
+                                        {(owner.full_name || owner.email || owner.phone || '?').slice(0, 1).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="truncate font-semibold text-[var(--text-primary)]">
+                                            {owner.full_name || owner.email || owner.phone || t('admin.businessDetail.owner.account', 'Аккаунт владельца')}
+                                        </p>
+                                        <StatusChip status="active" label={t('admin.businessDetail.owner.assigned', 'Назначен')} />
+                                    </div>
                                 </div>
-                            )}
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">ID пользователя</label>
-                                <div className="mt-1 font-mono text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg p-2 border border-gray-200 dark:border-gray-700 break-all">
-                                    {owner.id}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                <div className="space-y-2 text-sm">
                                     {owner.email ? (
-                                        <a href={`mailto:${owner.email}`} className="text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        <a href={`mailto:${owner.email}`} className="block truncate text-[var(--accent-primary)] hover:underline">
                                             {owner.email}
                                         </a>
-                                    ) : (
-                                        <span className="text-gray-500 dark:text-gray-400">—</span>
-                                    )}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Телефон</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                    ) : null}
                                     {owner.phone ? (
-                                        <a href={`tel:${owner.phone}`} className="text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        <a href={`tel:${owner.phone}`} className="block text-[var(--accent-primary)] hover:underline">
                                             {owner.phone}
                                         </a>
-                                    ) : (
-                                        <span className="text-gray-500 dark:text-gray-400">—</span>
-                                    )}
-                                </p>
-                            </div>
-                            <div className="pt-2">
+                                    ) : null}
+                                </div>
+                                <details className="rounded-lg border border-[var(--border-subtle)] px-3 py-2">
+                                    <summary className="cursor-pointer text-xs font-medium text-[var(--text-muted)]">
+                                        {t('admin.businessDetail.owner.technical', 'Технические данные')}
+                                    </summary>
+                                    <p className="mt-2 break-all font-mono text-xs text-[var(--text-muted)]">{owner.id}</p>
+                                </details>
                                 <Link
-                                    href={`/admin/businesses/${biz.id}/owner`}
-                                    className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                                    href={`/admin/businesses/${business.id}/owner`}
+                                    className={buttonStyles({ variant: 'outline', size: 'sm', fullWidth: true })}
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    Редактировать владельца
+                                    <span>{t('admin.businessDetail.owner.edit', 'Изменить владельца')}</span>
                                 </Link>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="text-center py-8">
-                            <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                Владелец не назначен
-                            </p>
-                            <Link
-                                href={`/admin/businesses/${biz.id}/owner`}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 text-sm font-medium"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                                Назначить владельца
-                            </Link>
-                        </div>
-                    )}
-                </div>
+                        ) : (
+                            <div className="rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-canvas)] p-5 text-center">
+                                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-primary)]">
+                                    <UserIcon />
+                                </div>
+                                <p className="mt-3 font-semibold">
+                                    {t('admin.businessDetail.owner.empty', 'Владелец пока не назначен')}
+                                </p>
+                                <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                    {t(
+                                        'admin.businessDetail.owner.empty.description',
+                                        'Без владельца бизнес нельзя полноценно передать клиенту.',
+                                    )}
+                                </p>
+                                <Link
+                                    href={`/admin/businesses/${business.id}/owner`}
+                                    className={buttonStyles({ size: 'sm', fullWidth: true, className: 'mt-4' })}
+                                >
+                                    <span>{t('admin.businessDetail.owner.assign', 'Назначить владельца')}</span>
+                                </Link>
+                            </div>
+                        )}
+                    </Card>
+
+                    <BranchLimitEditor
+                        businessId={business.id}
+                        initialLimit={business.branch_limit}
+                        currentCount={branchesCount}
+                    />
+                </aside>
             </div>
 
             <AdminDangerZone
-                title="Опасная зона"
-                description="Удаление безвозвратно удалит записи, сотрудников, услуги, часы работы и роли, связанные с бизнесом."
+                title={t('admin.businessDetail.danger.title', 'Удаление бизнеса')}
+                description={t(
+                    'admin.businessDetail.danger.description',
+                    'Необратимо удалит связанные записи, сотрудников, услуги, часы работы и роли. Используйте только после проверки зависимостей.',
+                )}
             >
-                <DeleteBizButton bizId={biz.id} bizName={biz.name} />
+                <DeleteBizButton bizId={business.id} bizName={business.name} />
             </AdminDangerZone>
         </div>
+    );
+}
+
+function StatCard({
+    label,
+    value,
+    icon,
+    accent,
+}: {
+    label: string;
+    value: number;
+    icon: ReactNode;
+    accent: 'violet' | 'pink' | 'emerald' | 'sky';
+}) {
+    const accentClasses = {
+        violet: 'bg-violet-500/12 text-violet-400',
+        pink: 'bg-pink-500/12 text-pink-400',
+        emerald: 'bg-emerald-500/12 text-emerald-400',
+        sky: 'bg-sky-500/12 text-sky-400',
+    };
+
+    return (
+        <Card variant="elevated" padding="md" className="min-w-0">
+            <div className="flex items-center gap-3">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accentClasses[accent]}`}>
+                    {icon}
+                </div>
+                <div className="min-w-0">
+                    <p className="text-2xl font-bold tabular-nums text-[var(--text-primary)]">{value}</p>
+                    <p className="truncate text-xs text-[var(--text-muted)] sm:text-sm">{label}</p>
+                </div>
+            </div>
+        </Card>
+    );
+}
+
+function SetupItem({
+    complete,
+    label,
+    href,
+    actionLabel,
+}: {
+    complete: boolean;
+    label: string;
+    href: string | null;
+    actionLabel: string;
+}) {
+    const content = (
+        <>
+            <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                    complete
+                        ? 'bg-[var(--status-success-soft)] text-[var(--status-success)]'
+                        : 'bg-[var(--surface-canvas)] text-[var(--text-muted)]'
+                }`}
+            >
+                {complete ? '✓' : '·'}
+            </span>
+            <span className="min-w-0 flex-1 text-sm font-medium">{label}</span>
+            {!complete && href ? <span className="text-xs text-[var(--accent-primary)]">{actionLabel} →</span> : null}
+        </>
+    );
+    const className =
+        'flex min-h-12 items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-2';
+
+    return href && !complete ? (
+        <Link href={href} className={`${className} transition-colors hover:border-[var(--border-strong)]`}>
+            {content}
+        </Link>
+    ) : (
+        <div className={className}>{content}</div>
+    );
+}
+
+function BuildingIcon() {
+    return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 21h16M6 21V5a2 2 0 012-2h8a2 2 0 012 2v16M9 7h2m2 0h2M9 11h2m2 0h2M9 15h2m2 0h2" />
+        </svg>
+    );
+}
+
+function UsersIcon() {
+    return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m7-10a4 4 0 100-8 4 4 0 000 8zm13 10v-2a4 4 0 00-3-3.87m-2-11.26a4 4 0 010 7.75" />
+        </svg>
+    );
+}
+
+function UserIcon() {
+    return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 21a8 8 0 00-16 0m8-10a4 4 0 100-8 4 4 0 000 8z" />
+        </svg>
+    );
+}
+
+function ScissorsIcon() {
+    return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.12 14.12L19 19m-7-7l7-7m-7 7l-2.88 2.88M12 12L9.12 9.12m0 5.76a3 3 0 11-4.24 4.24 3 3 0 014.24-4.24zm0-5.76a3 3 0 11-4.24-4.24 3 3 0 014.24 4.24z" />
+        </svg>
+    );
+}
+
+function CalendarIcon() {
+    return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+        </svg>
     );
 }

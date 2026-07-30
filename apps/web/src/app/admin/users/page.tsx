@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {redirect} from 'next/navigation';
 
 import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
+
 import UsersClient from './UsersClient';
 
 import { getT } from '@/app/_components/i18n/server';
@@ -119,7 +120,7 @@ export default async function UsersListPage(
     {searchParams}: { searchParams: Promise<{ q?: string; page?: string; perPage?: string; status?: string }> }
 ) {
     const sp = await searchParams;
-    const t = getT('ru');
+    const t = await getT();
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();

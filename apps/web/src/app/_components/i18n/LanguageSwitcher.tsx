@@ -1,6 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
+import { useRouter } from 'next/navigation';
 
 import {useLanguage} from './LanguageProvider';
 
@@ -10,16 +11,33 @@ const LABELS: Record<'ky' | 'ru' | 'en', string> = {
     en: 'EN',
 };
 
+const ACCESSIBLE_LABELS: Record<'ky' | 'ru' | 'en', string> = {
+    ky: 'Кыргызча',
+    ru: 'Русский',
+    en: 'English',
+};
+
 export function LanguageSwitcher({ onLanguageChange }: { onLanguageChange?: () => void } = {}) {
-    const {locale, setLocale} = useLanguage();
+    const {locale, setLocale, t} = useLanguage();
+    const router = useRouter();
 
     const handleLanguageChange = (code: 'ky' | 'ru' | 'en') => {
+        if (code === locale) {
+            onLanguageChange?.();
+            return;
+        }
+
         setLocale(code);
         onLanguageChange?.();
+        router.refresh();
     };
 
     return (
-        <div className="inline-flex items-center gap-1 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_78%,transparent)] p-1 text-[11px] font-semibold text-[var(--text-secondary)] shadow-[var(--shadow-xs)]">
+        <div
+            role="group"
+            aria-label={t('header.language', 'Язык')}
+            className="inline-flex items-center gap-1 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_78%,transparent)] p-1 text-[11px] font-semibold text-[var(--text-secondary)] shadow-[var(--shadow-xs)]"
+        >
             {(['ky', 'ru', 'en'] as const).map((code) => {
                 const active = locale === code;
                 return (
@@ -27,6 +45,9 @@ export function LanguageSwitcher({ onLanguageChange }: { onLanguageChange?: () =
                         key={code}
                         type="button"
                         onClick={() => handleLanguageChange(code)}
+                        aria-label={ACCESSIBLE_LABELS[code]}
+                        aria-pressed={active}
+                        title={ACCESSIBLE_LABELS[code]}
                         className={clsx(
                             'rounded-full px-2.5 py-1 transition-all duration-200',
                             active

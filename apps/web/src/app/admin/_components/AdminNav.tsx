@@ -36,7 +36,7 @@ const homeItem: NavItem = {
 
 const operationsSection: NavSection = {
     key: 'operations',
-    titleKey: 'admin.nav.section.operations' as I18nKey,
+    titleKey: 'admin.nav.section.operations',
     titleFallback: 'Операции',
     items: [
         {
@@ -51,7 +51,7 @@ const operationsSection: NavSection = {
         },
         {
             href: '/admin/business-applications',
-            labelKey: 'admin.nav.businessApplications' as I18nKey,
+            labelKey: 'admin.nav.businessApplications',
             fallback: 'Заявки бизнеса',
             icon: (
                 <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,11 +61,21 @@ const operationsSection: NavSection = {
         },
         {
             href: '/admin/role-applications',
-            labelKey: 'admin.nav.roleApplications' as I18nKey,
+            labelKey: 'admin.nav.roleApplications',
             fallback: 'Заявки доступа',
             icon: (
                 <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+        },
+        {
+            href: '/admin/businesses/new',
+            labelKey: 'admin.nav.createBusinessManually',
+            fallback: 'Создать бизнес вручную',
+            icon: (
+                <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6m15 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             ),
         },
@@ -104,7 +114,7 @@ const operationsSection: NavSection = {
 
 const qualitySection: NavSection = {
     key: 'quality',
-    titleKey: 'admin.nav.section.quality' as I18nKey,
+    titleKey: 'admin.nav.section.quality',
     titleFallback: 'Качество И Репутация',
     items: [
         {
@@ -142,7 +152,7 @@ const qualitySection: NavSection = {
 
 const analyticsSection: NavSection = {
     key: 'analytics',
-    titleKey: 'admin.nav.section.analytics' as I18nKey,
+    titleKey: 'admin.nav.section.analytics',
     titleFallback: 'Аналитика',
     items: [
         {
@@ -167,7 +177,7 @@ const analyticsSection: NavSection = {
         },
         {
             href: '/admin/funnel-analytics',
-            labelKey: 'admin.nav.funnelAnalytics' as I18nKey,
+            labelKey: 'admin.nav.funnelAnalytics',
             fallback: 'Воронка',
             icon: (
                 <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +190,7 @@ const analyticsSection: NavSection = {
 
 const diagnosticsSection: NavSection = {
     key: 'diagnostics',
-    titleKey: 'admin.nav.section.diagnostics' as I18nKey,
+    titleKey: 'admin.nav.section.diagnostics',
     titleFallback: 'Мониторинг И Диагностика',
     items: [
         {
@@ -225,7 +235,7 @@ const diagnosticsSection: NavSection = {
         },
         {
             href: '/admin/ratings-debug',
-            labelKey: 'admin.nav.ratingsDebug' as I18nKey,
+            labelKey: 'admin.nav.ratingsDebug',
             fallback: 'Ratings debug',
             icon: (
                 <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,7 +247,13 @@ const diagnosticsSection: NavSection = {
 };
 
 const sections: NavSection[] = [operationsSection, qualitySection, analyticsSection, diagnosticsSection];
-const primaryItems: NavItem[] = [homeItem, operationsSection.items[0], operationsSection.items[2], analyticsSection.items[0]];
+const primaryItems: NavItem[] = [
+    homeItem,
+    operationsSection.items[0],
+    operationsSection.items[1],
+    operationsSection.items[2],
+    analyticsSection.items[0],
+];
 const toSiteItem: NavItem = {
     href: '/',
     labelKey: 'admin.nav.toSite',
@@ -271,8 +287,11 @@ export function AdminNav() {
         return () => document.removeEventListener('mousedown', onClickOutside);
     }, []);
 
-    const isItemActive = (item: NavItem): boolean =>
-        item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+    const isItemActive = (item: NavItem): boolean => {
+        if (item.href === '/admin') return pathname === '/admin';
+        if (item.href === '/admin/businesses' && pathname === '/admin/businesses/new') return false;
+        return pathname.startsWith(item.href);
+    };
 
     const hasActiveInSections = sections.some((section) => section.items.some(isItemActive));
 
@@ -359,7 +378,7 @@ export function AdminNav() {
                         <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                        <span>{t('admin.nav.sections' as I18nKey, 'Разделы')}</span>
+                        <span>{t('admin.nav.sections')}</span>
                     </button>
 
                     {isSectionsOpen ? (
@@ -383,7 +402,7 @@ export function AdminNav() {
                     <svg className="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
-                    <span>{t('admin.nav.sections' as I18nKey, 'Разделы')}</span>
+                    <span>{t('admin.nav.sections')}</span>
                     <svg className={`h-4 w-4 transition-transform ${isSectionsOpen ? 'rotate-180' : ''}`} aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>

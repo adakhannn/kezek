@@ -6,6 +6,10 @@ import { Footer } from '@/app/_components/Footer';
 import { LanguageProvider } from '@/app/_components/i18n/LanguageProvider';
 import { LanguageSwitcher } from '@/app/_components/i18n/LanguageSwitcher';
 
+jest.mock('next/navigation', () => ({
+    useRouter: () => ({ refresh: jest.fn() }),
+}));
+
 describe('Footer localization', () => {
     beforeEach(() => {
         window.localStorage.clear();
@@ -20,11 +24,11 @@ describe('Footer localization', () => {
             </LanguageProvider>,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: 'KG' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Кыргызча' }));
         expect(screen.getByRole('link', { name: 'Бизнести кошуу' })).toBeTruthy();
         expect(screen.getByRole('link', { name: 'Бизнеске кошулуу арызы' })).toBeTruthy();
 
-        fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+        fireEvent.click(screen.getByRole('button', { name: 'English' }));
         expect(screen.getByRole('link', { name: 'Connect a business' })).toBeTruthy();
         expect(screen.getByRole('link', { name: 'Join a business' })).toBeTruthy();
     });

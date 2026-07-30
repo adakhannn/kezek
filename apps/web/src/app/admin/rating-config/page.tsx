@@ -46,7 +46,7 @@ export default async function RatingConfigPage() {
         .limit(1)
         .maybeSingle();
 
-    const t = getT('ru');
+    const t = await getT();
     
     if (superErr) {
         return (

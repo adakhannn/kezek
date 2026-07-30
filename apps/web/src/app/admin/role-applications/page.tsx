@@ -1,21 +1,24 @@
 import { RoleApplicationsAdminClient } from './RoleApplicationsAdminClient';
 
+import { getT } from '@/app/_components/i18n/server';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default function AdminRoleApplicationsPage() {
+export default async function AdminRoleApplicationsPage() {
+    const t = await getT();
+
     return (
         <div className="space-y-6">
             <div>
                 <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-indigo-500">
-                    Доступы
+                    {t('admin.roleApplications.eyebrow')}
                 </p>
                 <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-                    Заявки на роли в бизнесах
+                    {t('admin.roleApplications.title')}
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm text-[var(--text-secondary)]">
-                    Супер-админ рассматривает заявки владельцев и может обработать любую заявку на доступ.
-                    После одобрения система выдаёт роль выбранному аккаунту.
+                    {t('admin.roleApplications.description')}
                 </p>
             </div>
             <RoleApplicationsAdminClient />

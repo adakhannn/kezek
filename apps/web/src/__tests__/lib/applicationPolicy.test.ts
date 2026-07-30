@@ -5,6 +5,7 @@ describe('application policy errors', () => {
         ['APPLICATION_POLICY:active_limit', 429, 'active_limit'],
         ['APPLICATION_POLICY:cooldown_7d', 429, 'cooldown_7d'],
         ['APPLICATION_POLICY:blocked', 403, 'blocked'],
+        ['APPLICATION_POLICY:business_exists', 409, 'business_exists'],
         ['APPLICATION_POLICY:owner_cannot_be_staff', 409, 'owner_cannot_be_staff'],
     ])('maps %s to a safe API response', (message, status, code) => {
         expect(mapApplicationPolicyError({ code: 'P0001', message })).toMatchObject({

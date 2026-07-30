@@ -37,7 +37,18 @@ export function BusinessApplicationPageContent({
             </div>
 
             {isAuthenticated ? (
-                <BusinessApplicationForm categories={categories} initialValues={initialValues} />
+                <div className="space-y-4">
+                    <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+                        <span>{t('business.apply.existing.prefix')}</span>{' '}
+                        <Link
+                            href="/business/owner-apply"
+                            className="font-semibold text-[var(--accent-primary)] hover:underline"
+                        >
+                            {t('business.apply.existing.link')}
+                        </Link>
+                    </div>
+                    <BusinessApplicationForm categories={categories} initialValues={initialValues} />
+                </div>
             ) : (
                 <AuthenticationGate />
             )}

@@ -23,7 +23,7 @@ type CategoryUsageRow = {
 };
 
 export default async function CategoriesPage() {
-    const t = getT('ru');
+    const t = await getT();
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();

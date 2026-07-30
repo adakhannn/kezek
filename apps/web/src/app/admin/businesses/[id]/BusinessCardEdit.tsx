@@ -3,11 +3,23 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { slugifyBusinessName } from '@/lib/businessSlug';
+
+type CategoryOption = {
+    slug: string;
+    name: string;
+};
 
 type Props = {
     bizId: string;
+    categoryOptions: CategoryOption[];
     initial: {
         name: string;
         slug: string;
@@ -19,223 +31,296 @@ type Props = {
     };
 };
 
-export function BusinessCardEdit({ bizId, initial }: Props) {
+export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
+    const { locale, t } = useLanguage();
     const router = useRouter();
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [name, setName] = useState(initial.name);
     const [slug, setSlug] = useState(initial.slug);
-    const [categoriesText, setCategoriesText] = useState((initial.categories || []).join(', '));
+    const [slugEdited, setSlugEdited] = useState(false);
+    const [categories, setCategories] = useState(initial.categories);
     const [address, setAddress] = useState(initial.address ?? '');
-    const [phonesText, setPhonesText] = useState((initial.phones || []).join('\n'));
+    const [phonesText, setPhonesText] = useState((initial.phones ?? []).join('\n'));
     const [isApproved, setIsApproved] = useState(initial.is_approved);
 
-    const handleSave = async () => {
+    function reset() {
+        setName(initial.name);
+        setSlug(initial.slug);
+        setSlugEdited(false);
+        setCategories(initial.categories);
+        setAddress(initial.address ?? '');
+        setPhonesText((initial.phones ?? []).join('\n'));
+        setIsApproved(initial.is_approved);
+        setError(null);
+    }
+
+    function toggleCategory(categorySlug: string) {
+        setCategories((current) =>
+            current.includes(categorySlug)
+                ? current.filter((value) => value !== categorySlug)
+                : [...current, categorySlug],
+        );
+    }
+
+    async function save() {
         setError(null);
         setSaving(true);
         try {
-            const categories = categoriesText
-                .split(/[,\n]/)
-                .map((s) => s.trim())
-                .filter(Boolean);
             const phones = phonesText
                 .split('\n')
-                .map((s) => s.trim())
+                .map((value) => value.trim())
                 .filter(Boolean);
-
-            const res = await fetch(`/admin/api/businesses/${bizId}/update`, {
+            const response = await fetch(`/admin/api/businesses/${bizId}/update`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: name.trim(),
-                    slug: slug.trim(),
-                    categories: categories.length ? categories : [],
+                    slug: slugifyBusinessName(slug || name),
+                    categories,
                     address: address.trim() || null,
-                    phones: phones.length ? phones : null,
+                    phones: phones.length > 0 ? phones : null,
                     is_approved: isApproved,
                 }),
             });
-
-            const json = await res.json();
-            if (!json.ok) {
-                setError(json.error || 'Ошибка сохранения');
-                return;
+            const payload = (await response.json()) as { ok?: boolean; error?: string };
+            if (!response.ok || !payload.ok) {
+                throw new Error(payload.error || t('admin.businessDetail.error.save', 'Не удалось сохранить изменения'));
             }
             setEditing(false);
             router.refresh();
-        } catch (e) {
-            setError(e instanceof Error ? e.message : 'Ошибка сохранения');
+        } catch (saveError) {
+            setError(
+                saveError instanceof Error
+                    ? saveError.message
+                    : t('admin.businessDetail.error.save', 'Не удалось сохранить изменения'),
+            );
         } finally {
             setSaving(false);
         }
-    };
+    }
 
-    const handleCancel = () => {
-        setName(initial.name);
-        setSlug(initial.slug);
-        setCategoriesText((initial.categories || []).join(', '));
-        setAddress(initial.address ?? '');
-        setPhonesText((initial.phones || []).join('\n'));
-        setIsApproved(initial.is_approved);
-        setError(null);
-        setEditing(false);
-    };
+    const categoryName = (slugValue: string) =>
+        categoryOptions.find((option) => option.slug === slugValue)?.name ?? slugValue;
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-indigo-600 to-pink-600 rounded-lg">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Основная информация</h2>
-                </div>
-                {!editing ? (
-                    <Button type="button" variant="outline" onClick={() => setEditing(true)}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Редактировать
-                    </Button>
-                ) : (
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving}>
-                            Отмена
-                        </Button>
-                        <Button type="button" onClick={() => void handleSave()} disabled={saving} isLoading={saving}>
-                            Сохранить
-                        </Button>
-                    </div>
+        <Card variant="elevated" padding="lg" className="space-y-5">
+            <SectionHeader
+                title={t('admin.businessDetail.profile.title', 'Профиль бизнеса')}
+                description={t(
+                    'admin.businessDetail.profile.description',
+                    'Данные, которые определяют карточку бизнеса и его видимость для клиентов.',
                 )}
-            </div>
+                action={
+                    editing ? (
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                disabled={saving}
+                                onClick={() => {
+                                    reset();
+                                    setEditing(false);
+                                }}
+                            >
+                                {t('admin.businessDetail.cancel', 'Отмена')}
+                            </Button>
+                            <Button type="button" size="sm" isLoading={saving} onClick={() => void save()}>
+                                {t('admin.businessDetail.save', 'Сохранить')}
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
+                            {t('admin.businessDetail.edit', 'Редактировать')}
+                        </Button>
+                    )
+                }
+            />
 
-            {error ? <AlertBanner variant="danger" message={error} className="mb-4" compact /> : null}
+            {error ? <AlertBanner variant="danger" message={error} compact /> : null}
 
             {editing ? (
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Название</label>
-                        <input
-                            type="text"
+                <div className="space-y-5 border-t border-[var(--border-subtle)] pt-5">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <Input
+                            label={t('admin.businessDetail.name', 'Название')}
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
+                            maxLength={160}
+                            required
+                            onChange={(event) => {
+                                const nextName = event.target.value;
+                                setName(nextName);
+                                if (!slugEdited) setSlug(slugifyBusinessName(nextName));
+                            }}
                         />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Slug (URL)</label>
-                        <input
-                            type="text"
+                        <Input
+                            label={t('admin.businessDetail.slug', 'URL-адрес')}
                             value={slug}
-                            onChange={(e) => setSlug(e.target.value)}
-                            placeholder="my-business"
-                            className="w-full font-mono rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
+                            maxLength={80}
+                            required
+                            helperText={`/b/${slug || '...'}`}
+                            onChange={(event) => {
+                                setSlug(event.target.value);
+                                setSlugEdited(true);
+                            }}
+                            onBlur={() => setSlug(slugifyBusinessName(slug || name))}
                         />
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Только латиница, цифры и дефис</p>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Категории (slug через запятую)</label>
-                        <input
-                            type="text"
-                            value={categoriesText}
-                            onChange={(e) => setCategoriesText(e.target.value)}
-                            placeholder="salon, barbershop"
-                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Адрес</label>
-                        <input
-                            type="text"
+                        <Input
+                            label={t('admin.businessDetail.address', 'Адрес')}
                             value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
+                            onChange={(event) => setAddress(event.target.value)}
+                            placeholder={t('admin.businessDetail.address.placeholder', 'Адрес основной локации')}
                         />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Телефоны (по одному на строку)</label>
-                        <textarea
-                            value={phonesText}
-                            onChange={(e) => setPhonesText(e.target.value)}
-                            rows={2}
-                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="is_approved"
-                            checked={isApproved}
-                            onChange={(e) => setIsApproved(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <label htmlFor="is_approved" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Одобрен (виден на площадке)
-                        </label>
-                    </div>
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Slug (URL)</label>
-                        <div className="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                            /b/{initial.slug}
+                        <div>
+                            <label
+                                htmlFor="business-phones"
+                                className="type-caption mb-1.5 block font-medium text-[var(--text-secondary)]"
+                            >
+                                {t('admin.businessDetail.phones', 'Телефоны')}
+                            </label>
+                            <textarea
+                                id="business-phones"
+                                value={phonesText}
+                                onChange={(event) => setPhonesText(event.target.value)}
+                                rows={3}
+                                placeholder={t('admin.businessDetail.phones.placeholder', 'Один номер на строку')}
+                                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--focus-ring)]"
+                            />
                         </div>
                     </div>
-                    <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Категории</label>
-                        {(initial.categories?.length ?? 0) > 0 ? (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {initial.categories!.map((cat) => (
-                                    <span
-                                        key={cat}
-                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+
+                    <fieldset className="space-y-3">
+                        <legend className="type-label">
+                            {t('admin.businessDetail.categories', 'Категории')}
+                        </legend>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                            {categoryOptions.map((option) => {
+                                const checked = categories.includes(option.slug);
+                                return (
+                                    <label
+                                        key={option.slug}
+                                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-3 transition-colors ${
+                                            checked
+                                                ? 'border-[var(--focus-ring)] bg-[var(--accent-soft)]'
+                                                : 'border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
+                                        }`}
                                     >
-                                        {cat}
-                                    </span>
+                                        <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() => toggleCategory(option.slug)}
+                                            className="h-4 w-4"
+                                        />
+                                        <span className="min-w-0">
+                                            <span className="block font-medium">{option.name}</span>
+                                            <span className="block truncate text-xs text-[var(--text-muted)]">{option.slug}</span>
+                                        </span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </fieldset>
+
+                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border-default)] p-4">
+                        <input
+                            type="checkbox"
+                            checked={isApproved}
+                            onChange={(event) => setIsApproved(event.target.checked)}
+                            className="mt-1 h-4 w-4"
+                        />
+                        <span>
+                            <span className="type-label block">
+                                {t('admin.businessDetail.approved', 'Показывать бизнес клиентам')}
+                            </span>
+                            <span className="type-caption mt-1 block text-[var(--text-muted)]">
+                                {t(
+                                    'admin.businessDetail.approved.helper',
+                                    'Отключите, чтобы временно скрыть бизнес из публичного каталога.',
+                                )}
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            ) : (
+                <div className="space-y-5 border-t border-[var(--border-subtle)] pt-5">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <InfoBlock
+                            label={t('admin.businessDetail.publicUrl', 'Публичная ссылка')}
+                            value={`/b/${initial.slug}`}
+                            mono
+                        />
+                        <InfoBlock
+                            label={t('admin.businessDetail.created', 'Создан')}
+                            value={
+                                initial.created_at
+                                    ? new Intl.DateTimeFormat(
+                                          locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU',
+                                          { dateStyle: 'long' },
+                                      ).format(new Date(initial.created_at))
+                                    : '—'
+                            }
+                        />
+                        <InfoBlock
+                            label={t('admin.businessDetail.address', 'Адрес')}
+                            value={initial.address || t('admin.businessDetail.notSpecified', 'Не указан')}
+                        />
+                        <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-canvas)] p-4">
+                            <p className="type-caption text-[var(--text-muted)]">
+                                {t('admin.businessDetail.phones', 'Телефоны')}
+                            </p>
+                            {(initial.phones?.length ?? 0) > 0 ? (
+                                <div className="mt-2 space-y-1">
+                                    {initial.phones!.map((phone) => (
+                                        <a
+                                            key={phone}
+                                            href={`tel:${phone}`}
+                                            className="block font-medium text-[var(--accent-primary)] hover:underline"
+                                        >
+                                            {phone}
+                                        </a>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="mt-2 font-medium">
+                                    {t('admin.businessDetail.notSpecified', 'Не указаны')}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <p className="type-caption mb-2 text-[var(--text-muted)]">
+                            {t('admin.businessDetail.categories', 'Категории')}
+                        </p>
+                        {initial.categories.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                                {initial.categories.map((category) => (
+                                    <Badge key={category} variant="accent">
+                                        {categoryName(category)}
+                                    </Badge>
                                 ))}
                             </div>
                         ) : (
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Категории не указаны</p>
+                            <p className="type-body text-[var(--text-muted)]">
+                                {t('admin.businessDetail.categories.empty', 'Категории не выбраны')}
+                            </p>
                         )}
                     </div>
-                    {initial.address && (
-                        <div>
-                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Адрес</label>
-                            <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{initial.address}</p>
-                        </div>
-                    )}
-                    {initial.phones && initial.phones.length > 0 && (
-                        <div>
-                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Телефоны</label>
-                            <div className="mt-1 space-y-1">
-                                {initial.phones.map((phone, idx) => (
-                                    <p key={idx} className="text-sm text-gray-900 dark:text-gray-100">
-                                        {phone}
-                                    </p>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {initial.created_at && (
-                        <div>
-                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Дата создания</label>
-                            <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                {new Date(initial.created_at).toLocaleDateString('ru-RU', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </p>
-                        </div>
-                    )}
                 </div>
             )}
+        </Card>
+    );
+}
+
+function InfoBlock({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+    return (
+        <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-canvas)] p-4">
+            <p className="type-caption text-[var(--text-muted)]">{label}</p>
+            <p className={`mt-2 break-words font-medium text-[var(--text-primary)] ${mono ? 'font-mono text-sm' : ''}`}>
+                {value}
+            </p>
         </div>
     );
 }

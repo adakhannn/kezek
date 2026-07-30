@@ -37,7 +37,7 @@ type HealthCheckResponse = {
 };
 
 export default async function HealthCheckPage() {
-    const t = getT('ru');
+    const t = await getT();
     
     // Используем унифицированную функцию форматирования дат
     function formatDate(value: string | null) {

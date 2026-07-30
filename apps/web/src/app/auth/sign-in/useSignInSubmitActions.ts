@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 
 import { toSafeAuthMessage } from '@/lib/authUserMessages';
+import { buildGoogleOAuthRedirectUrl } from '@/lib/googleOAuthRedirect';
 import { supabase } from '@/lib/supabaseClient';
 
 type UseSignInSubmitActionsOptions = {
@@ -24,8 +25,10 @@ export function useSignInSubmitActions({
         setSending(true);
         setError(null);
         try {
-            const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg';
-            const redirectTo = `${origin}/auth/callback/google?next=${encodeURIComponent(redirectParam)}`;
+            const redirectTo = buildGoogleOAuthRedirectUrl(
+                window.location.origin,
+                redirectParam,
+            );
 
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',

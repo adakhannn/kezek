@@ -21,6 +21,7 @@ const APPLICATION_ERROR_KEYS: Partial<Record<string, I18nKey>> = {
     invalid_request: 'business.apply.error.invalidRequest',
     required_fields: 'business.apply.error.requiredFields',
     invalid_email: 'business.apply.error.invalidEmail',
+    business_exists: 'business.apply.error.businessExists',
     recent_duplicate: 'business.apply.error.recentDuplicate',
     pending_duplicate: 'business.apply.error.pendingDuplicate',
     blocked: 'business.apply.error.blocked',
@@ -34,7 +35,6 @@ const emptyForm = {
     phone: '',
     email: '',
     business_name: '',
-    city: '',
     comment: '',
     website: '',
     instagram: '',
@@ -45,14 +45,13 @@ const emptyForm = {
 
 export type BusinessApplicationInitialValues = Partial<Pick<
     typeof emptyForm,
-    'contact_name' | 'phone' | 'email' | 'city'
+    'contact_name' | 'phone' | 'email'
 >>;
 
 function createInitialForm(initialValues?: BusinessApplicationInitialValues) {
     return {
         ...emptyForm,
         ...initialValues,
-        city: initialValues?.city?.trim() || 'Ош',
     };
 }
 
@@ -139,10 +138,16 @@ export function BusinessApplicationForm({
                     ) : null}
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Input label={t('business.apply.field.contactName')} required {...field('contact_name')} />
-                        <Input label={t('business.apply.field.phone')} type="tel" required placeholder="+996555123456" {...field('phone')} />
+                        <Input
+                            label={t('business.apply.field.phone')}
+                            type="tel"
+                            required
+                            placeholder={t('business.apply.field.phonePlaceholder')}
+                            helperText={t('business.apply.field.phoneHint')}
+                            {...field('phone')}
+                        />
                         <Input label="Email" type="email" required {...field('email')} />
                         <Input label={t('business.apply.field.businessName')} required {...field('business_name')} />
-                        <Input label={t('business.apply.field.city')} required {...field('city')} />
                         <Select
                             id="business-category"
                             label={t('business.apply.field.category')}

@@ -17,7 +17,7 @@ type Biz = { id: string; name: string; slug: string | null };
 
 export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const t = getT('ru');
+    const t = await getT();
 
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

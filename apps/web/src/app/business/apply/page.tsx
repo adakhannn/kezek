@@ -15,7 +15,6 @@ export default async function BusinessApplicationPage() {
         contact_name: '',
         phone: '',
         email: '',
-        city: 'Ош',
     };
 
     if (user) {
@@ -58,7 +57,6 @@ export default async function BusinessApplicationPage() {
                 accountEmail: user.email,
                 notificationEmails: notificationEmailsResult.data,
             }),
-            city: 'Ош',
         };
     }
 

@@ -80,7 +80,7 @@ export default async function RatingsStatusPage() {
             }),
         ]);
     } catch {
-        const t = await getT('ru');
+        const t = await getT();
         return (
             <RatingsStatusErrorState
                 title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
@@ -97,7 +97,7 @@ export default async function RatingsStatusPage() {
         redirect('/auth/sign-in?redirect=/admin/ratings-status');
     }
 
-    const t = await getT('ru');
+    const t = await getT();
 
     if (!statusRes.ok) {
         return (

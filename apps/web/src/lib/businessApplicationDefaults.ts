@@ -33,3 +33,21 @@ export function selectBusinessApplicationEmail(params: {
 
     return candidates[0]?.email?.trim().toLowerCase() ?? '';
 }
+
+export function selectBusinessApplicationPhone(params: {
+    profilePhone?: string | null;
+    accountPhone?: string | null;
+    metadataPhone?: string | null;
+    whatsAppPhone?: string | null;
+    whatsAppVerified?: boolean | null;
+}): string {
+    const candidates = [
+        params.profilePhone,
+        params.accountPhone,
+        params.metadataPhone,
+        params.whatsAppVerified ? params.whatsAppPhone : null,
+    ];
+
+    return candidates.find((candidate) => typeof candidate === 'string' && candidate.trim())
+        ?.trim() ?? '';
+}

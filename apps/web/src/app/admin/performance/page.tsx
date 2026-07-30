@@ -8,8 +8,8 @@ import { getT } from '@/app/_components/i18n/server';
 
 export const dynamic = 'force-dynamic';
 
-export default function PerformancePage() {
-    const t = getT('ru');
+export default async function PerformancePage() {
+    const t = await getT();
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-2xl font-bold mb-6">{t('admin.performance.title', 'Мониторинг производительности')}</h1>

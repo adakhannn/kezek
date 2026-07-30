@@ -10,7 +10,9 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('@/app/_components/i18n/LanguageProvider', () => ({
     useLanguage: () => ({
-        t: (_key: string, fallback: string) => fallback,
+        t: (key: string, fallback?: string) => ({
+            'admin.nav.sections': 'Разделы',
+        }[key] ?? fallback ?? key),
     }),
 }));
 
@@ -27,5 +29,7 @@ describe('AdminNav', () => {
         expect(document.getElementById('admin-tablet-menu')).not.toBeNull();
         expect(screen.getAllByRole('link', { name: 'Главная' }).length).toBeGreaterThan(0);
         expect(screen.getAllByRole('link', { name: 'Категории' }).length).toBeGreaterThan(0);
+        expect(screen.getAllByRole('link', { name: 'Заявки бизнеса' }).length).toBeGreaterThan(0);
+        expect(screen.getAllByRole('link', { name: 'Заявки доступа' }).length).toBeGreaterThan(0);
     });
 });

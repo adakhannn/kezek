@@ -14,7 +14,7 @@ export const headerKy = {
     'header.staffCabinet': 'Кызматкердин кабинети',
     'header.staffCabinetShort': 'Кызматкер',
     'header.roleBusiness.loading': 'Кабинеттерди жүктөөдө...',
-    'header.roleBusiness.client': 'Клиент',
+    'header.roleBusiness.client': 'Кардар',
     'header.roleBusiness.admin': 'Админ',
     'header.roleBusiness.owner': 'Ээси / менеджер',
     'header.roleBusiness.staff': 'Кызматкер',

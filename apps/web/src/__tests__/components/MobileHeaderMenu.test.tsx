@@ -6,6 +6,9 @@ import { MobileHeaderMenu } from '@/app/_components/MobileHeaderMenu';
 
 jest.mock('next/navigation', () => ({
     usePathname: () => '/',
+    useRouter: () => ({
+        refresh: jest.fn(),
+    }),
 }));
 
 jest.mock('@/app/_components/RoleAndBusinessSwitcher', () => ({

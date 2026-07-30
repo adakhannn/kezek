@@ -4,11 +4,8 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
-
-import { getT } from '@/app/_components/i18n/server';
+import { getServerLocale, getT } from '@/app/_components/i18n/server';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -27,7 +24,8 @@ type Biz = {
 };
 
 export default async function Page() {
-    const t = getT('ru');
+    const locale = await getServerLocale();
+    const t = getT(locale);
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -122,17 +120,7 @@ export default async function Page() {
             <PageHeader
                 title={t('admin.businesses.title', 'Бизнесы')}
                 description={`${t('admin.businesses.stats.total', 'Всего')}: ${totalCount} • ${t('admin.businesses.stats.approved', 'Одобрено')}: ${approvedCount}`}
-                actions={
-                    <Link href="/admin/businesses/new" className={buttonStyles({ size: 'md' })}>
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span>{t('admin.businesses.create', 'Создать бизнес')}</span>
-                    </Link>
-                }
             />
-            <AdminEntityFlowTabs entity="businesses" className="max-w-3xl" />
-
             {!list || list.length === 0 ? (
                 <EmptyState
                     icon={
@@ -142,11 +130,6 @@ export default async function Page() {
                     }
                     title={t('admin.businesses.empty.title', 'Пока нет бизнесов')}
                     description={t('admin.businesses.empty.description', 'Создайте первый бизнес, чтобы начать работу')}
-                    action={
-                        <Link href="/admin/businesses/new">
-                            <Button>{t('admin.businesses.create', 'Создать бизнес')}</Button>
-                        </Link>
-                    }
                 />
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -221,11 +204,14 @@ export default async function Page() {
                                 </div>
 
                                 <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                                    {t('admin.businesses.created', 'Создан')}: {new Date(b.created_at).toLocaleDateString('ru-RU', {
+                                    {t('admin.businesses.created', 'Создан')}: {new Date(b.created_at).toLocaleDateString(
+                                        locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU',
+                                        {
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric',
-                                    })}
+                                        },
+                                    )}
                                 </div>
 
                                 <div className="border-t border-gray-200 pt-4 dark:border-gray-700">

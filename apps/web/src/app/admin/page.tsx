@@ -59,7 +59,7 @@ function normRel<T>(rel: T | T[] | null | undefined): T | null {
 }
 
 export default async function AdminHomePage() {
-    const t = getT('ru');
+    const t = await getT();
     const { startISO, endISO, label } = bishkekDayRange();
     const warnings: DashboardWarning[] = [];
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -202,7 +202,7 @@ export default async function AdminHomePage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
-            <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl space-y-6 py-6 sm:space-y-8 sm:py-8">
                 <PageHeader
                     title={t('admin.home.title', 'Панель администратора')}
                     description={t('admin.home.subtitle', 'Обзор системы и управление')}

@@ -1,6 +1,7 @@
 import {
     isUsableAccountEmail,
     selectBusinessApplicationEmail,
+    selectBusinessApplicationPhone,
 } from '@/lib/businessApplicationDefaults';
 
 describe('businessApplicationDefaults', () => {
@@ -29,5 +30,27 @@ describe('businessApplicationDefaults', () => {
             accountEmail: '996770574029@whatsapp.kezek.kg',
             notificationEmails: [],
         })).toBe('');
+    });
+
+    test('falls back to a verified WhatsApp phone', () => {
+        expect(selectBusinessApplicationPhone({
+            whatsAppPhone: ' +996770574029 ',
+            whatsAppVerified: true,
+        })).toBe('+996770574029');
+    });
+
+    test('does not use an unverified WhatsApp phone', () => {
+        expect(selectBusinessApplicationPhone({
+            whatsAppPhone: '+996770574029',
+            whatsAppVerified: false,
+        })).toBe('');
+    });
+
+    test('prefers the profile contact phone over provider identities', () => {
+        expect(selectBusinessApplicationPhone({
+            profilePhone: '+996555123456',
+            whatsAppPhone: '+996770574029',
+            whatsAppVerified: true,
+        })).toBe('+996555123456');
     });
 });

@@ -14,7 +14,7 @@ const tabs = [
 export const dynamic = 'force-dynamic';
 
 export default async function AnalyticsLayout({ children }: { children: React.ReactNode }) {
-    const t = getT('ru');
+    const t = await getT();
 
     return (
         <main className="min-h-screen">

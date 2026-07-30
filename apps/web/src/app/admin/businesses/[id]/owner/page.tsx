@@ -41,7 +41,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
         },
     });
 
-    const t = getT('ru');
+    const t = await getT();
     
     // 1) Авторизация
     const { data: { user } } = await supa.auth.getUser();
