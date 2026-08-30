@@ -16,7 +16,7 @@ type Props = {
     bizId: string;
     branchId?: string;
     yandexMapsApiKey?: string;
-    initial?: { name: string; address: string; is_active: boolean; lat?: number | null; lon?: number | null; directory_links?: Record<string, string | null> };
+    initial?: { name: string; address: string; is_active: boolean; lat?: number | null; lon?: number | null; directory_links?: Record<string, string | null>; contact_phone?: string | null; contact_whatsapp?: string | null; contact_email?: string | null; website_url?: string | null; inherit_business_contacts?: boolean | null };
 };
 
 type ApiOk = { ok: true; id?: string };
@@ -37,6 +37,13 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
         google_maps: initial?.directory_links?.google_maps ?? '',
         yandex_maps: initial?.directory_links?.yandex_maps ?? '',
     });
+    const [contacts, setContacts] = useState({
+        contact_phone: initial?.contact_phone ?? '',
+        contact_whatsapp: initial?.contact_whatsapp ?? '',
+        contact_email: initial?.contact_email ?? '',
+        website_url: initial?.website_url ?? '',
+    });
+    const [inheritBusinessContacts, setInheritBusinessContacts] = useState(initial?.inherit_business_contacts !== false);
 
     const [err, setErr] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -52,9 +59,14 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
             links.instagram !== (initial?.directory_links?.instagram ?? '') ||
             links.two_gis !== (initial?.directory_links?.two_gis ?? '') ||
             links.google_maps !== (initial?.directory_links?.google_maps ?? '') ||
-            links.yandex_maps !== (initial?.directory_links?.yandex_maps ?? '')
+            links.yandex_maps !== (initial?.directory_links?.yandex_maps ?? '') ||
+            contacts.contact_phone !== (initial?.contact_phone ?? '') ||
+            contacts.contact_whatsapp !== (initial?.contact_whatsapp ?? '') ||
+            contacts.contact_email !== (initial?.contact_email ?? '') ||
+            contacts.website_url !== (initial?.website_url ?? '') ||
+            inheritBusinessContacts !== (initial?.inherit_business_contacts !== false)
         );
-    }, [mode, name, address, isActive, lat, lon, links, initial]);
+    }, [mode, name, address, isActive, lat, lon, links, contacts, inheritBusinessContacts, initial]);
 
     function extractError(e: unknown): string {
         return e instanceof Error ? e.message : String(e);
@@ -79,6 +91,8 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                 is_active: isActive,
                 lat, lon,
                 directory_links: links,
+                ...contacts,
+                inherit_business_contacts: inheritBusinessContacts,
             };
 
             const resp = await fetch(url, {
@@ -171,6 +185,35 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                     ] as const).map(([key, label, placeholder]) => (
                         <Input key={key} label={label} type="url" placeholder={placeholder} value={links[key]} onChange={(e) => setLinks((current) => ({ ...current, [key]: e.target.value }))} />
                     ))}
+                </div>
+            </div>
+
+            <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Публичные контакты филиала</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Эти данные принадлежат бизнесу. Личные телефоны владельцев и сотрудников здесь не используются.
+                    </p>
+                </div>
+                <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <input
+                        type="checkbox"
+                        checked={inheritBusinessContacts}
+                        onChange={(event) => setInheritBusinessContacts(event.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded"
+                    />
+                    <span>
+                        Использовать контакты бизнеса для незаполненных полей
+                        <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+                            Контакт филиала всегда имеет приоритет.
+                        </span>
+                    </span>
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <Input label="Телефон" type="tel" placeholder="+996..." value={contacts.contact_phone} onChange={(e) => setContacts((value) => ({ ...value, contact_phone: e.target.value }))} />
+                    <Input label="WhatsApp" type="tel" placeholder="+996..." value={contacts.contact_whatsapp} onChange={(e) => setContacts((value) => ({ ...value, contact_whatsapp: e.target.value }))} />
+                    <Input label="Публичный email" type="email" placeholder="hello@business.kg" value={contacts.contact_email} onChange={(e) => setContacts((value) => ({ ...value, contact_email: e.target.value }))} />
+                    <Input label="Сайт" type="url" placeholder="https://..." value={contacts.website_url} onChange={(e) => setContacts((value) => ({ ...value, website_url: e.target.value }))} />
                 </div>
             </div>
 

@@ -13,6 +13,7 @@ type SendWhatsAppOpts = {
 import { sanitizeObject } from '@shared-client/log';
 
 import { getWhatsAppAccessToken, getWhatsAppPhoneNumberId } from '../env';
+import { resolveWhatsAppGraphApiVersion } from '../whatsAppGraphApi';
 // Для обратной совместимости создаём обёртки
 const logDebugSafe = (scope: string, message: string, data?: unknown) => {
     if (process.env.NODE_ENV === 'production') return;
@@ -63,7 +64,8 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
             ? phoneNumber
             : `${'*'.repeat(Math.max(0, phoneNumber.length - 4))}${phoneNumber.slice(-4)}`;
 
-    const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+    const graphApiVersion = resolveWhatsAppGraphApiVersion(process.env.WHATSAPP_GRAPH_API_VERSION);
+    const url = `https://graph.facebook.com/${graphApiVersion}/${phoneNumberId}/messages`;
 
     // Если указан шаблон, используем его (для отправки вне 24-часового окна)
     const body = opts.template ? {

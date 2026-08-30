@@ -1,12 +1,14 @@
+import { type PublicContactFields, validatePublicContacts } from '@/lib/businessContacts';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
 
-export type BranchCreateBody = {
+export type BranchCreateBody = PublicContactFields & {
   name: string;
   address?: string | null;
   is_active?: boolean;
   lat?: number | null;
   lon?: number | null;
   directory_links?: Record<string, string | null>;
+  inherit_business_contacts?: boolean;
 };
 
 export type BranchCreateAdminLike = {
@@ -70,6 +72,15 @@ export async function createBranch(params: {
 
   const explicitLinks = normalizeDirectoryLinks(body.directory_links);
   const directoryLinks = await resolveInitialDirectoryLinks(admin, bizId, explicitLinks);
+  const contacts = validatePublicContacts(body);
+  if (!contacts.ok) {
+    return {
+      ok: false,
+      error: 'validation',
+      message: contacts.message,
+      status: 400,
+    };
+  }
 
   const { data, error } = await admin
     .from('branches')
@@ -80,6 +91,8 @@ export async function createBranch(params: {
       is_active: body.is_active ?? true,
       coords: coordsWkt,
       directory_links: directoryLinks,
+      ...contacts.value,
+      inherit_business_contacts: body.inherit_business_contacts !== false,
     })
     .select('id')
     .single();

@@ -26,6 +26,10 @@ type Props = {
         categories: string[];
         address: string | null;
         phones: string[] | null;
+        contact_phone: string | null;
+        contact_whatsapp: string | null;
+        contact_email: string | null;
+        website_url: string | null;
         is_approved: boolean;
         created_at: string | null;
     };
@@ -42,6 +46,12 @@ export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
     const [slugEdited, setSlugEdited] = useState(false);
     const [categories, setCategories] = useState(initial.categories);
     const [address, setAddress] = useState(initial.address ?? '');
+    const [contacts, setContacts] = useState({
+        contact_phone: initial.contact_phone ?? '',
+        contact_whatsapp: initial.contact_whatsapp ?? '',
+        contact_email: initial.contact_email ?? '',
+        website_url: initial.website_url ?? '',
+    });
     const [phonesText, setPhonesText] = useState((initial.phones ?? []).join('\n'));
     const [isApproved, setIsApproved] = useState(initial.is_approved);
 
@@ -51,6 +61,12 @@ export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
         setSlugEdited(false);
         setCategories(initial.categories);
         setAddress(initial.address ?? '');
+        setContacts({
+            contact_phone: initial.contact_phone ?? '',
+            contact_whatsapp: initial.contact_whatsapp ?? '',
+            contact_email: initial.contact_email ?? '',
+            website_url: initial.website_url ?? '',
+        });
         setPhonesText((initial.phones ?? []).join('\n'));
         setIsApproved(initial.is_approved);
         setError(null);
@@ -68,10 +84,7 @@ export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
         setError(null);
         setSaving(true);
         try {
-            const phones = phonesText
-                .split('\n')
-                .map((value) => value.trim())
-                .filter(Boolean);
+            const phones = phonesText.split('\n').map((value) => value.trim()).filter(Boolean);
             const response = await fetch(`/admin/api/businesses/${bizId}/update`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -81,6 +94,7 @@ export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
                     categories,
                     address: address.trim() || null,
                     phones: phones.length > 0 ? phones : null,
+                    ...contacts,
                     is_approved: isApproved,
                 }),
             });
@@ -189,7 +203,15 @@ export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
                                 className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--focus-ring)]"
                             />
                         </div>
+                        <Input label="Публичный телефон" type="tel" placeholder="+996..." value={contacts.contact_phone} onChange={(event) => setContacts((value) => ({ ...value, contact_phone: event.target.value }))} />
+                        <Input label="WhatsApp бизнеса" type="tel" placeholder="+996..." value={contacts.contact_whatsapp} onChange={(event) => setContacts((value) => ({ ...value, contact_whatsapp: event.target.value }))} />
+                        <Input label="Публичный email" type="email" placeholder="hello@business.kg" value={contacts.contact_email} onChange={(event) => setContacts((value) => ({ ...value, contact_email: event.target.value }))} />
+                        <Input label="Сайт" type="url" placeholder="https://..." value={contacts.website_url} onChange={(event) => setContacts((value) => ({ ...value, website_url: event.target.value }))} />
                     </div>
+
+                    <p className="type-caption text-[var(--text-muted)]">
+                        Публичные контакты принадлежат бизнесу и не связаны с профилем владельца или сотрудников.
+                    </p>
 
                     <fieldset className="space-y-3">
                         <legend className="type-label">

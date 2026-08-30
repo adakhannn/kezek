@@ -59,7 +59,7 @@ export default async function Page() {
     } catch (e: unknown) {
         if (e instanceof BizAccessError) {
             if (e.code === 'NOT_AUTHENTICATED') {
-                redirect('/b/kezek');
+                redirect('/auth/sign-in?redirect=/dashboard/bookings');
             }
             if (e.code === 'NO_BIZ_ACCESS') {
                 const t = getT('ru');
@@ -94,7 +94,7 @@ export default async function Page() {
         } else if (e instanceof Error) {
             // Fallback по старым строковым сообщениям
             if (e.message === 'UNAUTHORIZED') {
-                redirect('/b/kezek');
+                redirect('/auth/sign-in?redirect=/dashboard/bookings');
             }
             if (e.message === 'NO_BIZ_ACCESS') {
                 const t = getT('ru');

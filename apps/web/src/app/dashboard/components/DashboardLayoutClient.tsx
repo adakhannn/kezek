@@ -3,7 +3,7 @@
 import { ErrorDisplay, type ErrorType } from '@/app/_components/ErrorDisplay';
 
 type DashboardLayoutClientProps = {
-    errorType: 'NO_BIZ_ACCESS' | 'GENERAL';
+    errorType: 'NO_BIZ_ACCESS' | 'SERVICE_UNAVAILABLE' | 'GENERAL';
     errorMessage?: string;
     diagnostics?: {
         checkedSuperAdmin?: boolean;

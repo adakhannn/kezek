@@ -324,6 +324,7 @@ export const staffRu = {
     'staff.services.selectedOf': 'из',
     'staff.sidebar.closeMenu': 'Закрыть меню',
     'staff.sidebar.openMenu': 'Открыть меню',
+    'staff.sidebar.more': 'Ещё',
     'staff.slots.createInSlot': 'Создать запись в этот слот',
     'staff.slots.error.loadServices': 'Ошибка загрузки услуг',
     'staff.slots.filters.title': 'Фильтры свободных слотов',

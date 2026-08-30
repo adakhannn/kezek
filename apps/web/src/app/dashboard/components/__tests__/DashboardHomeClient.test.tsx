@@ -14,10 +14,6 @@ jest.mock('@/app/_components/i18n/LanguageProvider', () => ({
     }),
 }));
 
-jest.mock('../IntegrationsStatusCard', () => ({
-    IntegrationsStatusCard: () => <div>Integrations status</div>,
-}));
-
 describe('DashboardHomeClient', () => {
     test('рендерит базовый dashboard summary и быстрые действия', () => {
         render(
@@ -44,10 +40,12 @@ describe('DashboardHomeClient', () => {
 
         expect(screen.getByText('Kezek Studio')).toBeTruthy();
         expect(screen.getByText('Быстрые действия')).toBeTruthy();
-        expect(screen.getByText('Integrations status')).toBeTruthy();
-        expect(screen.getByRole('link', { name: /Открыть «Календарь»/i }).getAttribute('href')).toBe(
-            '/dashboard/bookings',
-        );
+        expect(screen.queryByText('Статус интеграций')).toBeNull();
+        expect(
+            screen
+                .getAllByRole('link', { name: /Открыть календарь/i })
+                .some((link) => link.getAttribute('href') === '/dashboard/bookings'),
+        ).toBe(true);
         expect(screen.getByRole('link', { name: /Добавить сотрудника/i }).getAttribute('href')).toBe(
             '/dashboard/staff/new',
         );
@@ -72,9 +70,9 @@ describe('DashboardHomeClient', () => {
         );
 
         expect(screen.getByText('Ваш бизнес в Kezek')).toBeTruthy();
-        expect(screen.getByText('Давайте доведём кабинет до рабочего состояния.')).toBeTruthy();
-        expect(screen.getByText('Создайте хотя бы один филиал, чтобы клиенты могли записываться.')).toBeTruthy();
-        expect(screen.getByText('Добавьте услуги и укажите продолжительность и цену.')).toBeTruthy();
-        expect(screen.getByText('Добавьте сотрудников и укажите, кто оказывает какие услуги.')).toBeTruthy();
+        expect(screen.getByText('Давай доведём кабинет до рабочего состояния.')).toBeTruthy();
+        expect(screen.getAllByText('Создай хотя бы один филиал, чтобы клиенты могли записываться.').length).toBeGreaterThan(0);
+        expect(screen.getByText('Добавь услуги и укажи продолжительность и цену.')).toBeTruthy();
+        expect(screen.getByText('Добавь сотрудников и укажи, кто оказывает какие услуги.')).toBeTruthy();
     });
 });

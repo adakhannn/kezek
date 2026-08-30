@@ -11,6 +11,7 @@ type DashboardQuickActionsCardProps = {
     subtitle: string;
     navigationHint: string;
     priorityLabel: string;
+    actionLabel: string;
 };
 
 const focusToneClasses: Record<DashboardHomeFocus['tone'], string> = {
@@ -28,30 +29,28 @@ export function DashboardQuickActionsCard({
     subtitle,
     navigationHint,
     priorityLabel,
+    actionLabel,
 }: DashboardQuickActionsCardProps) {
     return (
-        <section className="rounded-[28px] border border-[var(--border-default)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-md)] sm:p-5">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)]">
-                <div className={`rounded-[24px] border p-4 shadow-sm ${focusToneClasses[focus.tone]}`}>
+        <section className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-md)] sm:p-5">
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.6fr)]">
+                <div className={`self-start rounded-2xl border p-5 shadow-sm ${focusToneClasses[focus.tone]}`}>
                     <p className="type-label uppercase tracking-[0.08em] opacity-80">{priorityLabel}</p>
                     <h2 className="type-section-title mt-2">{focus.title}</h2>
                     <p className="type-body mt-2 max-w-[32rem] opacity-85">{focus.description}</p>
                     <Link
                         href={focus.href}
-                        className="type-label mt-4 inline-flex items-center gap-2 rounded-full border border-current/15 bg-white/60 px-4 py-2 text-current transition hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10"
+                        className="type-label mt-5 inline-flex items-center gap-2 rounded-lg border border-current/15 bg-black/5 px-4 py-2.5 text-current transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
                     >
                         {focus.ctaLabel}
                         <span aria-hidden="true">-&gt;</span>
                     </Link>
                 </div>
 
-                <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <h3 className="type-section-title [color:var(--text-primary)]">{title}</h3>
-                            <p className="type-caption mt-1 max-w-[40rem] [color:var(--text-muted)]">{subtitle}</p>
-                        </div>
-                        <p className="type-caption max-w-[18rem] [color:var(--text-secondary)] sm:text-right">{navigationHint}</p>
+                <div className="min-w-0">
+                    <div>
+                        <h3 className="type-section-title [color:var(--text-primary)]">{title}</h3>
+                        <p className="type-caption mt-1 max-w-[44rem] [color:var(--text-muted)]">{subtitle}</p>
                     </div>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -59,7 +58,7 @@ export function DashboardQuickActionsCard({
                             <Link
                                 key={action.key}
                                 href={action.href}
-                                className={`group flex min-h-[132px] flex-col rounded-[22px] border px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${action.className}`}
+                                className={`group flex min-h-[128px] flex-col rounded-2xl border px-4 py-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${action.className}`}
                             >
                                 <div className="flex items-center justify-between gap-3">
                                     <span className="type-label uppercase tracking-[0.08em] opacity-80">
@@ -69,10 +68,10 @@ export function DashboardQuickActionsCard({
                                         {action.emphasis}
                                     </span>
                                 </div>
-                                <span className="type-section-title mt-4">{action.title}</span>
+                                <span className="type-section-title mt-3">{action.title}</span>
                                 <span className={`type-caption mt-2 max-w-[22rem] ${action.hintClassName}`}>{action.hint}</span>
                                 <span className="type-label mt-auto inline-flex items-center gap-1 pt-4 opacity-90">
-                                    Перейти
+                                    {actionLabel}
                                     <span aria-hidden="true" className="transition group-hover:translate-x-0.5">
                                         -&gt;
                                     </span>
@@ -80,6 +79,7 @@ export function DashboardQuickActionsCard({
                             </Link>
                         ))}
                     </div>
+                    <p className="type-caption mt-3 [color:var(--text-muted)]">{navigationHint}</p>
                 </div>
             </div>
         </section>

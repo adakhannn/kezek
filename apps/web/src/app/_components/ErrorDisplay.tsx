@@ -13,6 +13,7 @@ export type ErrorType =
     | 'UNAUTHORIZED' 
     | 'NO_STAFF_RECORD' 
     | 'NO_BIZ_ACCESS' 
+    | 'SERVICE_UNAVAILABLE'
     | 'GENERAL';
 
 export interface ErrorDisplayProps {
@@ -86,11 +87,26 @@ export function ErrorDisplay({
                     actions: [
                         { href: '/cabinet', label: t('header.myBookings', 'Мои записи') },
                         { href: '/staff', label: t('header.staffCabinet', 'Кабинет сотрудника') },
-                        { href: '/b/kezek', label: t('error.noBizAccess.action.public', 'Перейти на публичную витрину') },
+                        { href: '/', label: t('error.noBizAccess.action.public', 'Перейти в каталог') },
                         { href: '/auth/sign-in', label: t('error.noBizAccess.action.signIn', 'Войти под другой учётной записью') },
                     ],
                 };
             
+            case 'SERVICE_UNAVAILABLE':
+                return {
+                    title: t('error.serviceUnavailable.title', 'Нет соединения с сервисом'),
+                    description: t('error.serviceUnavailable.description', 'Проверьте интернет-соединение и попробуйте ещё раз. Ваша сессия и данные не изменены.'),
+                    icon: (
+                        <svg className="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.5 16.5h7m-9.5-3a9 9 0 0112 0M3.5 10a13 13 0 0117 0M12 20h.01" />
+                        </svg>
+                    ),
+                    actions: [
+                        { href: '/dashboard', label: t('error.serviceUnavailable.action.retry', 'Повторить') },
+                        { href: '/', label: t('error.serviceUnavailable.action.home', 'В каталог') },
+                    ],
+                };
+
             default:
                 return {
                     title: t('error.general.title', 'Произошла ошибка'),
@@ -101,7 +117,7 @@ export function ErrorDisplay({
                         </svg>
                     ),
                     actions: [
-                        { href: context === 'staff' ? '/' : '/b/kezek', label: t('error.general.action.home', 'На главную') },
+                        { href: '/', label: t('error.general.action.home', 'На главную') },
                         { href: '/auth/sign-in', label: t('error.general.action.signIn', 'Войти снова') },
                     ],
                 };

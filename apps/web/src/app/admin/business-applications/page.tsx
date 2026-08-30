@@ -5,6 +5,7 @@ import { ApplicationStatusButton } from './ApplicationStatusButton';
 
 import { getServerLocale, getT, type I18nKey } from '@/app/_components/i18n/server';
 import { Card } from '@/components/ui/Card';
+import { canModerateBusinessRegistrationApplication } from '@/lib/businessApplicationStatus';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,6 +89,7 @@ export default async function BusinessApplicationsPage() {
                     const rawCategory = application.category?.trim() ?? '';
                     const knownCategoryName = rawCategory ? categoryNames.get(rawCategory.toLowerCase()) : null;
                     const isProposedCategory = Boolean(rawCategory && !knownCategoryName);
+                    const canModerate = canModerateBusinessRegistrationApplication(application.status);
 
                     return (
                         <Card key={application.id} variant="outlined" padding="md" className="space-y-3">
@@ -173,30 +175,30 @@ export default async function BusinessApplicationsPage() {
                             </Link>
                         ) : null}
 
-                        <div className="flex flex-wrap gap-2">
-                            <ApplicationStatusButton
-                                id={application.id}
-                                status="approved"
-                                label={application.created_business_id
-                                    ? t('admin.businessApplications.button.approved')
-                                    : t('admin.businessApplications.button.approve')}
-                                disabled={Boolean(application.created_business_id) || isProposedCategory}
-                                variant="primary"
-                            />
-                            <ApplicationStatusButton
-                                id={application.id}
-                                status="rejected"
-                                label={t('admin.businessApplications.button.reject')}
-                            />
-                            <ApplicationStatusButton
-                                id={application.id}
-                                status="rejected"
-                                label={t('admin.businessApplications.button.rejectBlock')}
-                                blockDays={30}
-                                variant="danger"
-                            />
-                        </div>
-                        {isProposedCategory ? (
+                        {canModerate ? (
+                            <div className="flex flex-wrap gap-2">
+                                <ApplicationStatusButton
+                                    id={application.id}
+                                    status="approved"
+                                    label={t('admin.businessApplications.button.approve')}
+                                    disabled={isProposedCategory}
+                                    variant="primary"
+                                />
+                                <ApplicationStatusButton
+                                    id={application.id}
+                                    status="rejected"
+                                    label={t('admin.businessApplications.button.reject')}
+                                />
+                                <ApplicationStatusButton
+                                    id={application.id}
+                                    status="rejected"
+                                    label={t('admin.businessApplications.button.rejectBlock')}
+                                    blockDays={30}
+                                    variant="danger"
+                                />
+                            </div>
+                        ) : null}
+                        {canModerate && isProposedCategory ? (
                             <p className="text-xs text-amber-700 dark:text-amber-300">
                                 {t('admin.businessApplications.approvalBlockedByCategory')}
                             </p>

@@ -22,6 +22,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             {
                 href: '/dashboard',
                 label: t('dashboard.nav.home', 'Главная'),
+                mobilePrimary: true,
                 icon: (
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -32,6 +33,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             {
                 href: '/dashboard/bookings',
                 label: t('dashboard.nav.bookings', 'Брони'),
+                mobilePrimary: true,
                 icon: (
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -41,6 +43,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             {
                 href: '/dashboard/staff',
                 label: t('dashboard.nav.staff', 'Сотрудники'),
+                mobilePrimary: true,
                 icon: (
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -86,6 +89,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             {
                 href: '/dashboard/branches',
                 label: t('dashboard.nav.branches', 'Филиалы'),
+                mobilePrimary: true,
                 icon: (
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -98,6 +102,15 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
                 icon: (
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                ),
+            },
+            {
+                href: '/dashboard/settings',
+                label: t('dashboard.nav.settings', 'Настройки'),
+                icon: (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.03 1.56V20.3h-3v-.08a1.7 1.7 0 00-1.03-1.56 1.7 1.7 0 00-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 007.02 15a1.7 1.7 0 00-1.56-1.03H5.4v-3h.06A1.7 1.7 0 007.02 9a1.7 1.7 0 00-.34-1.88l-.06-.06 2.12-2.12.06.06a1.7 1.7 0 001.88.34 1.7 1.7 0 001.03-1.56V3.7h3v.08a1.7 1.7 0 001.03 1.56 1.7 1.7 0 001.88-.34l.06-.06 2.12 2.12-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.56 1.03h.04v3h-.04A1.7 1.7 0 0019.4 15z" />
                     </svg>
                 ),
             },
@@ -118,6 +131,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             openLabel={t('dashboard.sidebar.openMenu', 'Открыть меню')}
             closeLabel={t('dashboard.sidebar.closeMenu', 'Закрыть меню')}
             navTitle={t('dashboard.sidebar.navTitle', 'Разделы workspace')}
+            moreLabel={t('dashboard.sidebar.more', 'Ещё')}
             headerSlot={<BusinessSwitcher serverCurrentBizId={bizId} />}
             desktopStorageKey="kezek.dashboard.sidebar.collapsed"
         />

@@ -52,6 +52,7 @@ export const bookingRu = {
     'booking.noSlots': 'Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.',
     'booking.notFound': 'Бронь не найдена',
     'booking.phoneLabel': 'Телефон:',
+    'booking.branchContacts': 'Контакты филиала',
     'booking.promotionApplied': 'Применена акция:',
     'booking.promotions.discountPercent': 'Скидка {percent}%',
     'booking.promotions.freeAfterN': 'Каждая {n}-я услуга бесплатно',

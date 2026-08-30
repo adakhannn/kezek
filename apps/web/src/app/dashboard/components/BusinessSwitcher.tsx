@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
-
+import { logWarn } from '@/lib/log';
 
 type Business = {
     id: string;
@@ -15,112 +16,111 @@ type Business = {
 };
 
 type State =
-    | { status: 'idle' | 'loading'; currentBizId?: string | null; businesses: Business[] }
-    | { status: 'error'; message: string };
+    | { status: 'loading' }
+    | { status: 'idle'; currentBizId: string | null; businesses: Business[] }
+    | { status: 'error' };
+
+function businessName(business: Business | null | undefined, fallback: string) {
+    return business?.name || business?.slug || fallback;
+}
 
 export function BusinessSwitcher({ serverCurrentBizId }: { serverCurrentBizId?: string } = {}) {
     const { t } = useLanguage();
     const router = useRouter();
-    const [state, setState] = useState<State>({ status: 'loading', businesses: [] });
+    const [state, setState] = useState<State>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
+    const [switchingBusiness, setSwitchingBusiness] = useState<Business | null>(null);
+    const [switchError, setSwitchError] = useState<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
 
         const load = async () => {
-            setState((prev) => {
-                if (prev.status === 'loading') {
-                    return prev;
-                }
-                if (prev.status === 'idle') {
-                    return { status: 'loading', currentBizId: prev.currentBizId, businesses: prev.businesses };
-                }
-                // Для состояния ошибки начинаем загрузку с пустого списка
-                return { status: 'loading', businesses: [] };
-            });
             try {
-                const res = await fetch('/api/me/current-business', {
+                const response = await fetch('/api/me/current-business', {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
                 });
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}`);
-                }
-                const json = (await res.json()) as {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const result = (await response.json()) as {
                     ok: boolean;
                     data?: { currentBizId: string | null; businesses: Business[] };
-                    error?: { message?: string };
                 };
-                if (!json.ok || !json.data) {
-                    throw new Error(json.error?.message || 'Failed to load current business');
-                }
+                if (!result.ok || !result.data) throw new Error('Invalid current-business response');
                 if (cancelled) return;
+
                 setState({
                     status: 'idle',
-                    currentBizId: json.data.currentBizId,
-                    businesses: json.data.businesses || [],
+                    currentBizId: result.data.currentBizId,
+                    businesses: Array.isArray(result.data.businesses) ? result.data.businesses : [],
                 });
-            } catch (e) {
-                if (cancelled) return;
-                setState({
-                    status: 'error',
-                    message:
-                        e instanceof Error
-                            ? e.message
-                            : t('dashboard.businessSwitcher.error', 'Не удалось загрузить список бизнесов'),
-                });
+            } catch (error) {
+                logWarn('BusinessSwitcher', 'failed to load businesses', error);
+                if (!cancelled) setState({ status: 'error' });
             }
         };
 
         void load();
-
         return () => {
             cancelled = true;
         };
-    }, [t]);
+    }, []);
 
-    const handleSelect = async (bizId: string) => {
-        if (state.status === 'loading' || isSaving) return;
-        const effective = serverCurrentBizId ?? (state.status === 'idle' ? state.currentBizId : undefined);
-        if (state.status === 'idle' && effective === bizId) {
+    useEffect(() => {
+        if (!switchingBusiness) return;
+
+        if (serverCurrentBizId === switchingBusiness.id) {
+            setSwitchingBusiness(null);
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setSwitchingBusiness(null);
+            setSwitchError(t('dashboard.businessSwitcher.timeout'));
+        }, 15_000);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [serverCurrentBizId, switchingBusiness, t]);
+
+    const handleSelect = async (business: Business) => {
+        if (state.status !== 'idle' || switchingBusiness) return;
+
+        const effectiveBizId = serverCurrentBizId ?? state.currentBizId;
+        if (effectiveBizId === business.id) {
             setIsOpen(false);
             return;
         }
-        setIsSaving(true);
+
+        setSwitchError(null);
+        setSwitchingBusiness(business);
+
         try {
-            const res = await fetch('/api/me/current-business', {
+            const response = await fetch('/api/me/current-business', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bizId }),
+                body: JSON.stringify({ bizId: business.id }),
             });
-            if (!res.ok) {
-                throw new Error(`HTTP ${res.status}`);
-            }
-            const json = (await res.json()) as { ok: boolean; error?: { message?: string } };
-            if (!json.ok) {
-                throw new Error(json.error?.message || 'Failed to change business');
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const result = (await response.json()) as { ok?: boolean };
+            if (!result.ok) throw new Error('Business switch failed');
+
             setIsOpen(false);
             router.refresh();
-        } catch (e) {
-            setState({
-                status: 'error',
-                message:
-                    e instanceof Error
-                        ? e.message
-                        : t('dashboard.businessSwitcher.changeError', 'Не удалось сменить бизнес'),
-            });
-        } finally {
-            setIsSaving(false);
+        } catch (error) {
+            logWarn('BusinessSwitcher', 'failed to switch business', error);
+            setSwitchingBusiness(null);
+            setSwitchError(t('dashboard.businessSwitcher.changeError'));
         }
     };
 
     if (state.status === 'error') {
         return (
-                        <AlertBanner
+            <AlertBanner
                 variant="danger"
-                message={t('dashboard.businessSwitcher.errorShort', 'Ошибка загрузки бизнесов')}
+                message={t('dashboard.businessSwitcher.errorShort')}
                 compact
                 className="mt-2"
             />
@@ -129,99 +129,133 @@ export function BusinessSwitcher({ serverCurrentBizId }: { serverCurrentBizId?: 
 
     if (state.status === 'loading') {
         return (
-            <div className="mt-2 h-8 w-40 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" aria-hidden="true" />
+            <div
+                className="mt-2 h-8 w-40 animate-pulse rounded-lg bg-[var(--surface-emphasis)]"
+                aria-label={t('dashboard.businessSwitcher.loading')}
+            />
         );
     }
 
-    // На этом этапе остаётся только состояние 'idle'
-    if (state.status !== 'idle') {
-        return null;
-    }
-
     const { currentBizId, businesses } = state;
-    if (!businesses || businesses.length === 0) {
-        return null;
-    }
+    if (businesses.length === 0) return null;
 
-    // Серверный bizId из layout — источник истины, чтобы сайдбар совпадал с контентом после refresh
-    const effectiveBizId = serverCurrentBizId ?? currentBizId ?? null;
-    const current =
-        businesses.find((b) => b.id === effectiveBizId) ??
-        businesses[0] ??
-        null;
+    const effectiveBizId = serverCurrentBizId ?? currentBizId;
+    const current = businesses.find((business) => business.id === effectiveBizId) ?? businesses[0];
+    const currentName = businessName(current, t('dashboard.businessSwitcher.unknown'));
+    const currentLabel = current.city ? `${currentName} · ${current.city}` : currentName;
 
-    const currentName = current?.name || current?.slug || t('dashboard.businessSwitcher.unknown', 'Бизнес');
-    const currentCity = current?.city || '';
-    const label = currentCity ? `${currentName} · ${currentCity}` : currentName;
-
-    // Если бизнес один, показываем просто бейдж без дропдауна
     if (businesses.length === 1) {
         return (
             <div className="mt-3">
-                <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    <span className="truncate max-w-[140px]">{label}</span>
+                <div className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] shadow-[var(--shadow-xs)]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span className="max-w-[140px] truncate">{currentLabel}</span>
                 </div>
             </div>
         );
     }
 
-    return (
-        <div className="mt-3">
-            <button
-                type="button"
-                onClick={() => setIsOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition hover:border-indigo-300 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-indigo-500 dark:hover:text-indigo-300"
-            >
-                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span className="truncate max-w-[140px]">{label}</span>
-                <svg
-                    className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    stroke="currentColor"
-                >
-                    <path d="M6 8l4 4 4-4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-            </button>
+    const switchingName = businessName(switchingBusiness, t('dashboard.businessSwitcher.unknown'));
 
-            {isOpen && (
-                <div className="mt-2 max-h-56 w-56 overflow-auto rounded-lg border border-gray-200 bg-white py-1 text-xs shadow-lg dark:border-gray-700 dark:bg-gray-900">
-                    {businesses.map((b) => {
-                        const isActive = b.id === current?.id;
-                        const title = b.name || b.slug || t('dashboard.businessSwitcher.unknown', 'Бизнес');
-                        const subtitle = b.city || undefined;
-                        return (
-                            <button
-                                key={b.id}
-                                type="button"
-                                disabled={isSaving}
-                                onClick={() => void handleSelect(b.id)}
-                                className={`flex w-full items-center justify-between px-3 py-1.5 text-left transition ${
-                                    isActive
-                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-100'
-                                        : 'text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800'
-                                }`}
-                            >
-                                <div className="flex flex-col">
-                                    <span className="truncate">{title}</span>
-                                    {subtitle && (
-                                        <span className="truncate text-[10px] text-gray-500 dark:text-gray-400">
-                                            {subtitle}
-                                        </span>
-                                    )}
-                                </div>
-                                {isActive && (
-                                    <span className="ml-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
+    return (
+        <>
+            <div className="mt-3">
+                <button
+                    type="button"
+                    disabled={Boolean(switchingBusiness)}
+                    onClick={() => setIsOpen((previous) => !previous)}
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:cursor-wait disabled:opacity-70"
+                >
+                    {switchingBusiness ? (
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--accent-primary)] border-t-transparent" />
+                    ) : (
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    )}
+                    <span className="max-w-[140px] truncate">{currentLabel}</span>
+                    <svg
+                        aria-hidden="true"
+                        className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        stroke="currentColor"
+                    >
+                        <path d="M6 8l4 4 4-4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </button>
+
+                {isOpen ? (
+                    <div
+                        role="listbox"
+                        aria-label={t('dashboard.businessSwitcher.listLabel')}
+                        className="mt-2 max-h-56 w-56 overflow-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] py-1 text-xs shadow-[var(--shadow-lg)]"
+                    >
+                        {businesses.map((business) => {
+                            const active = business.id === current.id;
+                            const title = businessName(business, t('dashboard.businessSwitcher.unknown'));
+                            return (
+                                <button
+                                    key={business.id}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={active}
+                                    disabled={Boolean(switchingBusiness)}
+                                    onClick={() => void handleSelect(business)}
+                                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition disabled:cursor-wait disabled:opacity-70 ${
+                                        active
+                                            ? 'bg-[var(--surface-emphasis)] font-semibold text-[var(--text-primary)]'
+                                            : 'text-[var(--text-secondary)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]'
+                                    }`}
+                                >
+                                    <span className="flex min-w-0 flex-col">
+                                        <span className="truncate">{title}</span>
+                                        {business.city ? (
+                                            <span className="truncate text-[10px] font-normal text-[var(--text-muted)]">
+                                                {business.city}
+                                            </span>
+                                        ) : null}
+                                    </span>
+                                    {switchingBusiness?.id === business.id ? (
+                                        <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-[var(--accent-primary)] border-t-transparent" />
+                                    ) : active ? (
+                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                                    ) : null}
+                                </button>
+                            );
+                        })}
+                    </div>
+                ) : null}
+
+                {switchError ? (
+                    <AlertBanner variant="danger" message={switchError} compact className="mt-2" />
+                ) : null}
+            </div>
+
+            {switchingBusiness && typeof document !== 'undefined'
+                ? createPortal(
+                      <div
+                          className="fixed inset-0 z-[250] flex items-center justify-center bg-[color:color-mix(in_srgb,var(--surface-page)_72%,transparent)] px-4 backdrop-blur-sm"
+                          role="status"
+                          aria-live="polite"
+                          aria-busy="true"
+                      >
+                          <div className="w-full max-w-sm rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-6 text-center shadow-[var(--shadow-xl)]">
+                              <span className="mx-auto block h-10 w-10 animate-spin rounded-full border-4 border-[var(--accent-primary)] border-t-transparent" />
+                              <p className="type-section-title mt-4 text-[var(--text-primary)]">
+                                  {t('dashboard.businessSwitcher.switchingTitle')}
+                              </p>
+                              <p className="type-body mt-2 font-semibold text-[var(--text-primary)]">
+                                  {switchingName}
+                              </p>
+                              <p className="type-caption mt-2 text-[var(--text-muted)]">
+                                  {t('dashboard.businessSwitcher.switchingDescription')}
+                              </p>
+                          </div>
+                      </div>,
+                      document.body,
+                  )
+                : null}
+        </>
     );
 }
-
-
-

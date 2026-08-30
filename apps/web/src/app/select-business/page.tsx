@@ -1,5 +1,6 @@
 'use client';
 
+import { BriefcaseBusiness, Check, ChevronRight, Info, LoaderCircle, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -159,64 +160,124 @@ export default function SelectBusinessPage() {
     const { businesses, currentBizId } = state;
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/40 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/60 flex items-center justify-center px-4 py-8">
-            <div className="w-full max-w-lg">
-                <div className="mb-6 text-center">
-                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-50">
+        <main className="flex min-h-[calc(100svh-11rem)] items-start justify-center px-4 py-8 sm:items-center sm:px-6 sm:py-12">
+            <div className="w-full max-w-3xl">
+                <header className="mb-6 text-center sm:mb-8">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-[var(--shadow-lg)]">
+                        <BriefcaseBusiness className="h-7 w-7" aria-hidden="true" />
+                    </div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
+                        {t('selectBusiness.eyebrow', 'Рабочее пространство')}
+                    </p>
+                    <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
                         {t('selectBusiness.title', 'Выберите бизнес для работы')}
                     </h1>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
                         {t(
                             'selectBusiness.subtitle',
                             'У вашего аккаунта несколько бизнесов. Выберите, с каким вы хотите работать сейчас.',
                         )}
                     </p>
-                </div>
+                </header>
 
-                <div className="space-y-2">
-                    {businesses.map((biz) => {
-                        const isActive = biz.id === currentBizId;
-                        const isSaving = savingId === biz.id;
-                        const title = biz.name || biz.slug || t('selectBusiness.unknown', 'Бизнес без названия');
-                        const subtitle = biz.city || undefined;
-                        return (
-                            <button
-                                key={biz.id}
-                                type="button"
-                                disabled={!!savingId}
-                                onClick={() => void handleSelect(biz.id)}
-                                className={`w-full rounded-xl border px-4 py-3 text-left transition shadow-sm ${
-                                    isActive
-                                        ? 'border-indigo-500 bg-indigo-50/80 text-indigo-900 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-50'
-                                        : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/30'
-                                } ${savingId ? 'pointer-events-none opacity-90' : ''}`}
-                            >
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-medium">{title}</p>
-                                        {subtitle && (
-                                            <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
-                                                {subtitle}
-                                            </p>
-                                        )}
+                <section
+                    aria-labelledby="business-list-title"
+                    className="overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-[var(--shadow-lg)]"
+                >
+                    <div className="flex items-center justify-between gap-4 border-b border-[var(--border-subtle)] px-5 py-4 sm:px-6">
+                        <div>
+                            <h2 id="business-list-title" className="text-base font-semibold text-[var(--text-primary)]">
+                                {t('selectBusiness.listTitle', 'Доступные бизнесы')}
+                            </h2>
+                            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                                {t('selectBusiness.count', 'Всего')}: {businesses.length}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 p-4 sm:p-5">
+                        {businesses.map((biz) => {
+                            const isActive = biz.id === currentBizId;
+                            const isSaving = savingId === biz.id;
+                            const title = biz.name || biz.slug || t('selectBusiness.unknown', 'Бизнес без названия');
+                            const subtitle = biz.city || (biz.slug ? `/b/${biz.slug}` : null);
+
+                            return (
+                                <button
+                                    key={biz.id}
+                                    type="button"
+                                    disabled={!!savingId}
+                                    onClick={() => void handleSelect(biz.id)}
+                                    aria-current={isActive ? 'true' : undefined}
+                                    aria-busy={isSaving}
+                                    className={`group w-full rounded-xl border p-4 text-left transition-all sm:p-5 ${
+                                        isActive
+                                            ? 'border-[var(--accent-primary)] bg-[color:color-mix(in_srgb,var(--accent-primary)_9%,var(--surface-card))] shadow-[var(--shadow-sm)]'
+                                            : 'border-[var(--border-default)] bg-[var(--surface-card)] hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-emphasis)] hover:shadow-[var(--shadow-md)]'
+                                    } ${savingId && !isSaving ? 'opacity-50' : ''}`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div
+                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                                                isActive
+                                                    ? 'bg-[var(--accent-primary)] text-white'
+                                                    : 'bg-[var(--surface-emphasis)] text-[var(--text-secondary)] group-hover:text-[var(--accent-primary)]'
+                                            }`}
+                                        >
+                                            {isActive ? (
+                                                <Check className="h-5 w-5" aria-hidden="true" />
+                                            ) : (
+                                                <BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />
+                                            )}
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="truncate font-semibold text-[var(--text-primary)]">{title}</p>
+                                                {isActive ? (
+                                                    <span className="rounded-full bg-emerald-500/12 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
+                                                        {t('selectBusiness.current', 'Текущий')}
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                            {subtitle ? (
+                                                <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-[var(--text-muted)]">
+                                                    {biz.city ? <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : null}
+                                                    <span className="truncate">{subtitle}</span>
+                                                </p>
+                                            ) : null}
+                                        </div>
+
+                                        <div className="flex shrink-0 items-center gap-2 text-sm font-medium text-[var(--accent-primary)]">
+                                            <span className="hidden sm:inline">
+                                                {isSaving
+                                                    ? t('selectBusiness.saving', 'Переключаем…')
+                                                    : isActive
+                                                      ? t('selectBusiness.continue', 'Продолжить')
+                                                      : t('selectBusiness.choose', 'Выбрать')}
+                                            </span>
+                                            {isSaving ? (
+                                                <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                                            ) : (
+                                                <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                                            )}
+                                        </div>
                                     </div>
-                                    {isSaving ? (
-                                        <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-                                    ) : isActive ? (
-                                        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                                    ) : null}
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </section>
 
-                <p className="mt-4 text-[11px] text-center text-gray-500 dark:text-gray-500">
-                    {t(
-                        'selectBusiness.hint',
-                        'Вы всегда сможете сменить бизнес в левом меню кабинета — переключатель под заголовком.',
-                    )}
-                </p>
+                <div className="mx-auto mt-5 flex max-w-xl items-start justify-center gap-2 text-center text-xs leading-5 text-[var(--text-muted)]">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <p>
+                        {t(
+                            'selectBusiness.hint',
+                            'Вы всегда сможете сменить бизнес через переключатель в шапке кабинета.',
+                        )}
+                    </p>
+                </div>
             </div>
         </main>
     );

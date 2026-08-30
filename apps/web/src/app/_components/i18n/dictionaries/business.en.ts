@@ -44,6 +44,7 @@ export const businessEn = {
     'business.apply.error.invalidRequest': 'We could not process the form. Check the details and try again.',
     'business.apply.error.requiredFields': 'Enter your name, business name, phone, and email.',
     'business.apply.error.invalidEmail': 'Enter a valid email address.',
+    'business.apply.error.serviceUnavailable': 'Application submission is temporarily unavailable because of server configuration. Try again later.',
     'business.apply.error.businessExists': 'A business with this name already exists in Kezek. Request owner access instead of creating a duplicate listing.',
     'business.apply.error.recentDuplicate': 'An application with this phone number has already been submitted. We will contact you soon.',
     'business.apply.error.pendingDuplicate': 'This application is already waiting for review.',
@@ -52,5 +53,11 @@ export const businessEn = {
     'business.apply.error.monthlyLimit': 'You have reached the 30-day application limit. Try again later or contact support.',
     'business.apply.error.cooldown24h': 'You can submit a new application 24 hours after a rejection.',
     'business.apply.error.submit': 'Could not submit the application',
+    'business.notFound.title': 'Business not found',
+    'business.notFound.description': 'Check the page address or return to the catalog to choose another business.',
+    'business.unavailable.title': 'Could not load the business',
+    'business.unavailable.description': 'Check your internet connection and try again.',
+    'business.unavailable.retry': 'Try again',
+    'business.unavailable.catalog': 'Back to catalog',
 } as const;
 

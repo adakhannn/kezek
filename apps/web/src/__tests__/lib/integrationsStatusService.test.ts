@@ -63,6 +63,42 @@ describe('integrationsStatusService', () => {
             whatsapp: { configured: true, ok: true },
             telegram: { configured: true, ok: true },
         });
+        expect(fetcher).toHaveBeenNthCalledWith(
+            1,
+            'https://graph.facebook.com/v21.0/123456?fields=id,verified_name,display_phone_number',
+            {
+                cache: 'no-store',
+                headers: { Authorization: 'Bearer token' },
+            },
+        );
+        expect(String(fetcher.mock.calls[0]?.[0])).not.toContain('token');
+    });
+
+    test('classifies an inaccessible WhatsApp phone number without exposing provider details', async () => {
+        const result = await checkWhatsAppIntegration({
+            env: {
+                WHATSAPP_ACCESS_TOKEN: 'secret-token',
+                WHATSAPP_PHONE_NUMBER_ID: '123456',
+            },
+            fetcher: jest.fn().mockResolvedValue({
+                ok: false,
+                status: 400,
+                text: async () =>
+                    JSON.stringify({
+                        error: {
+                            message:
+                                'Unsupported get request. Object does not exist, cannot be loaded due to missing permissions.',
+                        },
+                    }),
+                json: async () => ({}),
+            }) as never,
+        });
+
+        expect(result).toEqual({
+            configured: true,
+            ok: false,
+            message: 'У токена нет доступа к настроенному номеру WhatsApp',
+        });
     });
 
     test('returns not configured Telegram status when token is missing', async () => {

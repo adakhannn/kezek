@@ -3,6 +3,7 @@
  */
 export type AuthErrorCode =
     | 'NOT_AUTHENTICATED'
+    | 'SERVICE_UNAVAILABLE'
     | 'NO_BIZ_ACCESS'
     | 'NO_STAFF_RECORD'
     | 'NO_STAFF_ACCESS'

@@ -41,4 +41,9 @@ export const commonRu = {
     'common.rating.lowRatingHint': 'низкий рейтинг',
     'common.rating.noRating': 'Недостаточно данных для рейтинга',
     'common.warning': 'Предупреждение',
+    'error.serviceUnavailable.title': 'Нет соединения с сервисом',
+    'error.serviceUnavailable.description': 'Проверьте интернет-соединение и попробуйте ещё раз. Ваша сессия и данные не изменены.',
+    'error.serviceUnavailable.action.retry': 'Повторить',
+    'error.serviceUnavailable.action.home': 'В каталог',
+    'error.action.reload': 'Обновить страницу',
 } as const;

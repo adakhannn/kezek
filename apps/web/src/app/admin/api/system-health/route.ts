@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
 
-import { logError, logDebug } from '@/lib/log';
-import { getServiceClient } from '@/lib/supabaseService';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
-import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { formatInTimeZone } from 'date-fns-tz';
+
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { getIntegrationsStatus } from '@/lib/integrationsStatusService';
+import { logError, logDebug } from '@/lib/log';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -44,11 +45,17 @@ type SystemHealthResponse = {
     integrations: {
         whatsapp: {
             ok: boolean;
+            configured: boolean;
+            providerReachable: boolean;
+            providerMessage?: string;
             lastSuccessDate: string | null;
             recentFailures: number;
         };
         telegram: {
             ok: boolean;
+            configured: boolean;
+            providerReachable: boolean;
+            providerMessage?: string;
             lastSuccessDate: string | null;
             recentFailures: number;
         };
@@ -217,6 +224,10 @@ export async function GET(req: Request) {
             .gte('status_code', 400)
             .gte('created_at', oneDayAgo.toISOString());
 
+        // Global provider credentials and reachability belong to the super-admin
+        // operational surface. Business dashboards must not expose this state.
+        const providerHealth = await getIntegrationsStatus();
+
         // Агрегируем метрики по всем endpoint за последний час
         const { data: allMetrics } = await admin
             .from('api_request_metrics')
@@ -277,12 +288,18 @@ export async function GET(req: Request) {
             },
             integrations: {
                 whatsapp: {
-                    ok: whatsappLastSuccess !== null && (whatsappRecentFailures?.length ?? 0) < 5,
+                    ok: providerHealth.whatsapp.ok && (whatsappRecentFailures?.length ?? 0) < 5,
+                    configured: providerHealth.whatsapp.configured,
+                    providerReachable: providerHealth.whatsapp.ok,
+                    providerMessage: providerHealth.whatsapp.message,
                     lastSuccessDate: whatsappLastSuccess?.created_at ?? null,
                     recentFailures: whatsappRecentFailures?.length ?? 0,
                 },
                 telegram: {
-                    ok: telegramLastSuccess !== null && (telegramRecentFailures?.length ?? 0) < 5,
+                    ok: providerHealth.telegram.ok && (telegramRecentFailures?.length ?? 0) < 5,
+                    configured: providerHealth.telegram.configured,
+                    providerReachable: providerHealth.telegram.ok,
+                    providerMessage: providerHealth.telegram.message,
                     lastSuccessDate: telegramLastSuccess?.created_at ?? null,
                     recentFailures: telegramRecentFailures?.length ?? 0,
                 },

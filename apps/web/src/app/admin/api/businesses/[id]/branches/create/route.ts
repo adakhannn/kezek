@@ -8,17 +8,19 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { branchCreateError, resolveInitialDirectoryLinks } from '@/lib/branchCreateService';
+import { validatePublicContacts, type PublicContactFields } from '@/lib/businessContacts';
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { validateLatLon } from '@/lib/validation';
 
-type Body = {
+type Body = PublicContactFields & {
     name: string;
     address?: string | null;
     is_active?: boolean;
     lat?: number | null;
     lon?: number | null;
     directory_links?: Record<string, string | null>;
+    inherit_business_contacts?: boolean;
 };
 
 const norm = (s?: string | null) => {
@@ -51,6 +53,9 @@ export async function POST(req: Request, context: unknown) {
         const name = norm(body.name);
         if (!name) return NextResponse.json({ ok: false, error: 'Название обязательно' }, { status: 400 });
 
+        const contacts = validatePublicContacts(body);
+        if (!contacts.ok) return NextResponse.json({ ok: false, error: contacts.message }, { status: 400 });
+
         let coordsWkt: string | null = null;
         if (body.lat != null || body.lon != null) {
             if (body.lat == null || body.lon == null) {
@@ -74,6 +79,8 @@ export async function POST(req: Request, context: unknown) {
                     bizId,
                     body.directory_links && typeof body.directory_links === 'object' ? body.directory_links : {},
                 ),
+                ...contacts.value,
+                inherit_business_contacts: body.inherit_business_contacts !== false,
             })
             .select('id')
             .maybeSingle();

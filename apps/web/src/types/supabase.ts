@@ -137,38 +137,53 @@ export type Database = {
         Row: {
           address: string | null
           biz_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
           coords: unknown
           created_at: string | null
           directory_links: Json
           id: string
+          inherit_business_contacts: boolean
           is_active: boolean | null
           lat: number | null
           lon: number | null
           name: string
+          website_url: string | null
         }
         Insert: {
           address?: string | null
           biz_id: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           coords?: unknown
           created_at?: string | null
           directory_links?: Json
           id?: string
+          inherit_business_contacts?: boolean
           is_active?: boolean | null
           lat?: number | null
           lon?: number | null
           name: string
+          website_url?: string | null
         }
         Update: {
           address?: string | null
           biz_id?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           coords?: unknown
           created_at?: string | null
           directory_links?: Json
           id?: string
+          inherit_business_contacts?: boolean
           is_active?: boolean | null
           lat?: number | null
           lon?: number | null
           name?: string
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -186,6 +201,9 @@ export type Database = {
           branch_limit: number
           categories: string[] | null
           city_id: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
           coords: unknown
           created_at: string | null
           email_notify_to: string[] | null
@@ -197,12 +215,16 @@ export type Database = {
           plan: string | null
           slug: string
           tz: string | null
+          website_url: string | null
         }
         Insert: {
           address?: string | null
           branch_limit?: number
           categories?: string[] | null
           city_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           coords?: unknown
           created_at?: string | null
           email_notify_to?: string[] | null
@@ -214,12 +236,16 @@ export type Database = {
           plan?: string | null
           slug: string
           tz?: string | null
+          website_url?: string | null
         }
         Update: {
           address?: string | null
           branch_limit?: number
           categories?: string[] | null
           city_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           coords?: unknown
           created_at?: string | null
           email_notify_to?: string[] | null
@@ -231,6 +257,7 @@ export type Database = {
           plan?: string | null
           slug?: string
           tz?: string | null
+          website_url?: string | null
         }
         Relationships: [
           {

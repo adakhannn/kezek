@@ -1,8 +1,11 @@
 import type { BusinessCategoryOption } from './BusinessApplicationForm';
 import { BusinessApplicationPageContent } from './BusinessApplicationPageContent';
 
-import { selectBusinessApplicationEmail } from '@/lib/businessApplicationDefaults';
-import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import {
+    selectBusinessApplicationEmail,
+    selectBusinessApplicationPhone,
+} from '@/lib/businessApplicationDefaults';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -18,16 +21,15 @@ export default async function BusinessApplicationPage() {
     };
 
     if (user) {
-        const admin = createSupabaseAdminClient();
         const [categoriesResult, profileResult, notificationEmailsResult] = await Promise.all([
-            admin
+            supabase
                 .from('categories')
                 .select('slug,name_ru')
                 .eq('is_active', true)
                 .order('name_ru', { ascending: true }),
             supabase
                 .from('profiles')
-                .select('full_name,phone')
+                .select('full_name,phone,whatsapp_phone,whatsapp_verified')
                 .eq('id', user.id)
                 .maybeSingle(),
             supabase
@@ -52,7 +54,13 @@ export default async function BusinessApplicationPage() {
 
         initialValues = {
             contact_name: profileResult.data?.full_name?.trim() || metadataName,
-            phone: profileResult.data?.phone?.trim() || user.phone?.trim() || metadataPhone,
+            phone: selectBusinessApplicationPhone({
+                profilePhone: profileResult.data?.phone,
+                accountPhone: user.phone,
+                metadataPhone,
+                whatsAppPhone: profileResult.data?.whatsapp_phone,
+                whatsAppVerified: profileResult.data?.whatsapp_verified,
+            }),
             email: selectBusinessApplicationEmail({
                 accountEmail: user.email,
                 notificationEmails: notificationEmailsResult.data,

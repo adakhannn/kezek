@@ -7,6 +7,7 @@ import BranchErrorDisplay from './BranchErrorDisplay';
 import EditBranchPageClient from './EditBranchPageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 
 
 
@@ -29,11 +30,13 @@ export default async function EditBranchPage({
     const [
         { data: branch, error },
         { data: ratingConfig },
+        { data: business, error: businessError },
     ] = await Promise.all([
         supabase
             .from('branches')
-            .select('id,name,address,is_active,biz_id,lat,lon,rating_score,businesses!inner(slug,name,city)')
+            .select('id,name,address,is_active,biz_id,lat,lon,rating_score,contact_phone,contact_whatsapp,contact_email,website_url,inherit_business_contacts')
             .eq('id', id)
+            .eq('biz_id', bizId)
             .maybeSingle(),
         supabase
             .from('rating_global_config')
@@ -48,12 +51,22 @@ export default async function EditBranchPage({
                 staff_discipline_weight: number;
                 window_days: number;
             }>(),
+        supabase
+            .from('businesses')
+            .select('slug,name,contact_phone,contact_whatsapp,contact_email,website_url')
+            .eq('id', bizId)
+            .maybeSingle(),
     ]);
 
     if (error) {
-        return <BranchErrorDisplay error={error.message} />;
+        logError('EditBranchPage', 'Failed to load branch', { branchId: id, bizId, error });
+        return <BranchErrorDisplay />;
     }
-    if (!branch || String(branch.biz_id) !== String(bizId)) return notFound();
+    if (businessError) {
+        logError('EditBranchPage', 'Failed to load business context', { branchId: id, bizId, error: businessError });
+        return <BranchErrorDisplay />;
+    }
+    if (!branch || !business) return notFound();
 
     // Загружаем расписание филиала
     const { data: scheduleData } = await supabase
@@ -69,18 +82,21 @@ export default async function EditBranchPage({
         breaks: (s.breaks || []) as Array<{ start: string; end: string }>,
     }));
 
-    const businessesData = branch.businesses as { slug: string; name?: string | null; city?: string | null } | { slug: string; name?: string | null; city?: string | null }[] | null;
-    const bizSlug = Array.isArray(businessesData) ? businessesData[0]?.slug || '' : businessesData?.slug || '';
-    const bizName = Array.isArray(businessesData) ? businessesData[0]?.name || null : businessesData?.name || null;
-
     return (
         <EditBranchPageClient 
             branch={branch} 
             isSuperAdmin={isSuperAdmin}
             initialSchedule={initialSchedule}
             bizId={String(bizId)}
-            bizSlug={bizSlug}
-            bizName={bizName}
+            bizSlug={business.slug}
+            bizName={business.name}
+            businessContacts={{
+                contact_phone: business.contact_phone,
+                contact_whatsapp: business.contact_whatsapp,
+                contact_email: business.contact_email,
+                website_url: business.website_url,
+            }}
+            yandexMapsApiKey={process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}
             ratingScore={branch.rating_score}
             ratingWeights={ratingConfig ? {
                 reviews: ratingConfig.staff_reviews_weight,

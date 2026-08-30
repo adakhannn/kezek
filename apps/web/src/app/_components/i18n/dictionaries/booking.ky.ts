@@ -50,6 +50,7 @@ export const bookingKy = {
     'booking.noSlots': 'Бул күнгө бош терезедер жок. Башка күндү же кызматкерди тандаңыз.',
     'booking.notFound': 'Бронь табылган жок',
     'booking.phoneLabel': 'Телефон:',
+    'booking.branchContacts': 'Филиалдын байланыштары',
     'booking.promotions.discountPercent': '{percent}% арзандатуу',
     'booking.promotions.freeAfterN': 'Ар бир {n}-чи кызмат бекер',
     'booking.promotions.title': '🎁 Бул филиалда активдүү акциялар:',

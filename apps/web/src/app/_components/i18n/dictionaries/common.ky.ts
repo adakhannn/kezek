@@ -41,4 +41,9 @@ export const commonKy = {
     'common.rating.lowRatingHint': 'төмөн рейтинг',
     'common.rating.noRating': 'Рейтинг жок',
     'common.warning': 'Эскертүү',
+    'error.serviceUnavailable.title': 'Сервис менен байланыш жок',
+    'error.serviceUnavailable.description': 'Интернет байланышын текшерип, кайра аракет кылыңыз. Сессияңыз жана маалыматтарыңыз өзгөргөн жок.',
+    'error.serviceUnavailable.action.retry': 'Кайра аракет кылуу',
+    'error.serviceUnavailable.action.home': 'Каталогго кайтуу',
+    'error.action.reload': 'Баракты жаңылоо',
 } as const;

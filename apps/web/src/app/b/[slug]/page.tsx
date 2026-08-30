@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { JSX } from 'react';
 
 import BusinessInfo from './BusinessInfo';
+import BusinessPageState from './BusinessPageState';
 
 import { getT, getServerLocale } from '@/app/_components/i18n/server';
 import { BusinessPageViewTracker } from '@/lib/analyticsTrackEvent';
@@ -27,7 +28,7 @@ async function getData(slug: string) {
     }
 
     const [biz] = await q(
-        `businesses?select=id,slug,name,address,phones,rating_score,tz&slug=eq.${slug}&is_approved=eq.true&limit=1`,
+        `businesses?select=id,slug,name,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,rating_score,tz&slug=eq.${slug}&is_approved=eq.true&limit=1`,
     );
 
     if (!biz) {
@@ -36,7 +37,7 @@ async function getData(slug: string) {
 
     const [branches, services, staff] = await Promise.all([
         q(
-            `branches?select=id,name,address,rating_score,directory_links&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`,
+            `branches?select=id,name,address,rating_score,directory_links,contact_phone,contact_whatsapp,contact_email,website_url,inherit_business_contacts&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`,
         ),
         q(
             `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`,
@@ -108,16 +109,7 @@ export default async function Page({
     const data = await getData(slug);
 
     if (!data) {
-        return (
-            <main className="mx-auto flex min-h-[60vh] w-full max-w-[var(--container-lg)] items-center justify-center px-4 py-10">
-                <div className="rounded-[28px] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-8 text-center shadow-[var(--shadow-md)]">
-                    <h1 className="type-page-title text-[var(--text-primary)]">Бизнес не найден</h1>
-                    <p className="type-body mt-3 text-[var(--text-secondary)]">
-                        Проверьте адрес страницы или вернитесь в каталог, чтобы выбрать другой бизнес.
-                    </p>
-                </div>
-            </main>
-        );
+        return <BusinessPageState kind="not-found" />;
     }
 
     return (

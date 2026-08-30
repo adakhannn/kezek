@@ -44,6 +44,7 @@ export const businessKy = {
     'business.apply.error.invalidRequest': 'Форманы иштетүү мүмкүн болгон жок. Маалыматтарды текшерип, кайра аракет кылыңыз.',
     'business.apply.error.requiredFields': 'Атыңызды, бизнестин аталышын, телефонду жана email дарегин көрсөтүңүз.',
     'business.apply.error.invalidEmail': 'Туура email дарегин көрсөтүңүз.',
+    'business.apply.error.serviceUnavailable': 'Сервердин жөндөөсүнө байланыштуу арыз жөнөтүү убактылуу жеткиликсиз. Кийинчерээк аракет кылыңыз.',
     'business.apply.error.businessExists': 'Мындай аталыштагы бизнес Kezek системасында бар. Кайталанган карточка түзбөстөн, ээсинин мүмкүнчүлүгүн сураңыз.',
     'business.apply.error.recentDuplicate': 'Бул номер менен арыз жөнөтүлгөн. Жакында сиз менен байланышабыз.',
     'business.apply.error.pendingDuplicate': 'Мындай арыз кароону күтүп жатат.',
@@ -52,5 +53,11 @@ export const businessKy = {
     'business.apply.error.monthlyLimit': '30 күндүк арыз чегине жеттиңиз. Кийинчерээк аракет кылыңыз же колдоо кызматына кайрылыңыз.',
     'business.apply.error.cooldown24h': 'Арыз четке кагылгандан кийин жаңысын 24 сааттан соң жөнөтүүгө болот.',
     'business.apply.error.submit': 'Арызды жөнөтүү мүмкүн болгон жок',
+    'business.notFound.title': 'Бизнес табылган жок',
+    'business.notFound.description': 'Барактын дарегин текшериңиз же башка бизнести тандоо үчүн каталогго кайтыңыз.',
+    'business.unavailable.title': 'Бизнести жүктөө мүмкүн болгон жок',
+    'business.unavailable.description': 'Интернет байланышын текшерип, кайра аракет кылыңыз.',
+    'business.unavailable.retry': 'Кайра аракет кылуу',
+    'business.unavailable.catalog': 'Каталогго кайтуу',
 } as const;
 

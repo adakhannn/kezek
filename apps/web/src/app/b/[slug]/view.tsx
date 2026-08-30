@@ -29,6 +29,7 @@ import { Card } from '@/components/ui/Card';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
+import { resolvePublicContacts } from '@/lib/businessContacts';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 import { formatStaffName } from '@/lib/i18nHelpers';
 import { logDebug, logError } from '@/lib/log';
@@ -76,6 +77,14 @@ export default function BookingForm({ data }: { data: Data }) {
     });
 
     const { data: branchPromotions = [] } = useBranchPromotions(branchId || null);
+    const selectedBranch = useMemo(
+        () => branches.find((branch) => branch.id === branchId) ?? null,
+        [branchId, branches],
+    );
+    const publicContacts = useMemo(
+        () => resolvePublicContacts(biz, selectedBranch),
+        [biz, selectedBranch],
+    );
 
     const staffIds = useMemo(() => staff.map((person) => person.id), [staff]);
     const { data: serviceStaffData, isLoading: serviceStaffLoading } = useServiceStaff(biz.id, staffIds);
@@ -349,7 +358,7 @@ export default function BookingForm({ data }: { data: Data }) {
     return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_top_right,rgba(244,114,182,0.07),transparent_24%),linear-gradient(180deg,var(--surface-canvas),color-mix(in_srgb,var(--surface-muted)_72%,var(--surface-canvas)))]">
             <div className="mx-auto max-w-[var(--container-xl)] space-y-5 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-                <BookingHeader biz={biz} t={t} />
+                <BookingHeader biz={biz} contacts={publicContacts} branchName={selectedBranch?.name} t={t} />
 
                 <Card variant="elevated" padding="lg">
                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">

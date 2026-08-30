@@ -8,6 +8,10 @@ export type Biz = {
     name: string;
     address: string;
     phones: string[];
+    contact_phone?: string | null;
+    contact_whatsapp?: string | null;
+    contact_email?: string | null;
+    website_url?: string | null;
     rating_score: number | null;
     tz?: string | null;
 };
@@ -17,6 +21,11 @@ export type Branch = {
     name: string;
     address?: string | null;
     rating_score: number | null;
+    contact_phone?: string | null;
+    contact_whatsapp?: string | null;
+    contact_email?: string | null;
+    website_url?: string | null;
+    inherit_business_contacts?: boolean | null;
     directory_links?: {
         instagram?: string | null;
         two_gis?: string | null;

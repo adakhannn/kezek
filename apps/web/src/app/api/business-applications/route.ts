@@ -33,6 +33,16 @@ export async function POST(request: Request) {
             if (!result.ok) return Response.json({ ok: false, message: result.message, code: result.code }, { status: result.status });
             return Response.json({ ok: true, id: result.id });
         } catch (error) {
+            if (
+                error instanceof Error
+                && error.message.includes('SUPABASE_SERVICE_ROLE_KEY')
+            ) {
+                return Response.json({
+                    ok: false,
+                    message: 'Business application submission is temporarily unavailable',
+                    code: 'service_unavailable',
+                }, { status: 503 });
+            }
             return Response.json({
                 ok: false,
                 message: error instanceof Error ? error.message : 'Не удалось отправить заявку',

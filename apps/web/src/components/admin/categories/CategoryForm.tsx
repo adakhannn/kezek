@@ -1,11 +1,14 @@
 'use client';
 
+import { Check, ExternalLink, Link2, Plus, Save } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 
 type Props = {
     mode: 'create' | 'edit';
@@ -156,22 +159,21 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
     }
 
     return (
-        <form onSubmit={submit} className="space-y-6">
-            <div>
+        <form onSubmit={submit} className="space-y-7">
+            <div className="space-y-5">
                 <Input
                     label="Название категории"
                     placeholder="Например: Парикмахерская"
                     value={nameRu}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameRu(e.target.value)}
                     required
-                    helperText="Название категории на русском языке"
+                    autoComplete="off"
+                    helperText="Показывается владельцам бизнеса и клиентам."
                 />
-            </div>
 
-            <div>
                 <Input
-                    label="Slug (URL-идентификатор)"
-                    placeholder="Автоматически генерируется из названия"
+                    label="Адрес публичной страницы"
+                    placeholder="formiruetsya-avtomaticheski"
                     value={slug}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         setSlug(e.target.value);
@@ -188,33 +190,62 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                     }}
                     helperText={
                         slugDirty
-                            ? 'Slug будет автоматически нормализован (латиница, цифры и дефисы)'
-                            : 'Slug генерируется автоматически из названия. Его можно отредактировать вручную.'
+                            ? 'Адрес будет нормализован: допустимы латиница, цифры и дефисы.'
+                            : 'Формируется автоматически из названия. При необходимости его можно изменить.'
                     }
                 />
                 {slug && (
-                    <div className="mt-2 rounded-lg bg-gray-100 p-2 dark:bg-gray-800">
-                        <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">Предпросмотр:</p>
-                        <code className="text-sm font-mono text-gray-900 dark:text-gray-100">
-                            /b/{makeSlug(slug)}
-                        </code>
+                    <div
+                        className="mt-3 flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3"
+                        aria-live="polite"
+                    >
+                        <Link2 className="h-4 w-4 shrink-0 text-[var(--accent-primary)]" aria-hidden="true" />
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                                Будущий адрес
+                            </p>
+                            <code className="mt-0.5 block truncate text-sm text-[var(--text-primary)]">
+                                kezek.kg/b/{makeSlug(slug)}
+                            </code>
+                        </div>
+                        <ExternalLink className="h-4 w-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
                     </div>
                 )}
             </div>
 
-            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-emphasis)] p-4">
                 <input
                     type="checkbox"
                     id="is_active"
                     checked={isActive}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsActive(e.target.checked)}
-                    className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600"
+                    className="peer sr-only"
+                    aria-label="Доступна для выбора"
                 />
-                <label htmlFor="is_active" className="flex-1 cursor-pointer">
-                    <div className="font-medium text-gray-900 dark:text-gray-100">Активна</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Активные категории доступны для выбора при создании бизнеса
-                    </div>
+                <label
+                    htmlFor="is_active"
+                    className="flex cursor-pointer items-center justify-between gap-4 rounded-lg peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus-ring)] peer-focus-visible:ring-offset-4 peer-focus-visible:ring-offset-[var(--surface-emphasis)]"
+                >
+                    <span className="min-w-0">
+                        <span className="block font-medium text-[var(--text-primary)]">Доступна для выбора</span>
+                        <span className="mt-1 block text-sm leading-5 text-[var(--text-muted)]">
+                            Владельцы смогут назначать эту категорию своим бизнесам.
+                        </span>
+                    </span>
+                    <span
+                        className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+                            isActive ? 'bg-[var(--accent-primary)]' : 'bg-[var(--border-strong)]'
+                        }`}
+                        aria-hidden="true"
+                    >
+                        <span
+                            className={`absolute top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm transition-transform ${
+                                isActive ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                        >
+                            {isActive ? <Check className="h-3 w-3 text-[var(--accent-primary)]" /> : null}
+                        </span>
+                    </span>
                 </label>
             </div>
 
@@ -238,37 +269,33 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
 
             {error ? <AlertBanner variant="danger" title="Ошибка" message={error} /> : null}
 
-            <div className="flex items-center gap-4 border-t border-gray-200 pt-4 dark:border-gray-700">
-                <Button
-                    type="submit"
-                    disabled={mode === 'edit' ? !changed : false}
-                    isLoading={loading}
-                    className="min-w-[140px]"
+            <div className="flex flex-col-reverse gap-3 border-t border-[var(--border-subtle)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <Link
+                    href="/admin/categories"
+                    className={buttonStyles({
+                        variant: 'ghost',
+                        className: 'w-full text-[var(--text-secondary)] sm:w-auto',
+                    })}
                 >
-                    {mode === 'create' ? (
-                        <>
-                            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Создать
-                        </>
-                    ) : (
-                        <>
-                            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Сохранить
-                        </>
+                    Отмена
+                </Link>
+                <div className="flex w-full items-center gap-4 sm:w-auto">
+                    {mode === 'edit' && !changed && (
+                        <span className="hidden items-center gap-2 text-sm text-[var(--text-muted)] sm:flex">
+                            <Check className="h-4 w-4" aria-hidden="true" />
+                            Изменений нет
+                        </span>
                     )}
-                </Button>
-                {mode === 'edit' && !changed && (
-                    <span className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Нет изменений
-                    </span>
-                )}
+                    <Button
+                        type="submit"
+                        disabled={mode === 'edit' ? !changed : false}
+                        isLoading={loading}
+                        className="w-full min-w-[160px] sm:w-auto"
+                        leadingIcon={mode === 'create' ? <Plus className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                    >
+                        {mode === 'create' ? 'Создать категорию' : 'Сохранить изменения'}
+                    </Button>
+                </div>
             </div>
         </form>
     );

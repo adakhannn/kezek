@@ -52,6 +52,7 @@ export const bookingEn = {
     'booking.noSlots': 'No available slots for this day. Try selecting another day or master.',
     'booking.notFound': 'Booking not found',
     'booking.phoneLabel': 'Phone:',
+    'booking.branchContacts': 'Branch contacts',
     'booking.promotionApplied': 'Applied promotion:',
     'booking.promotions.discountPercent': '{percent}% discount',
     'booking.promotions.freeAfterN': 'Every {n}th service is free',

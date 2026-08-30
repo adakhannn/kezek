@@ -15,24 +15,32 @@
  */
 
 // Auth
+import type { Translations } from '../LanguageProvider';
+
+import { adminEn } from './admin.en';
+import { adminKy } from './admin.ky';
+import { adminRu } from './admin.ru';
+import { apiDocsEn } from './apiDocs.en';
+import { apiDocsKy } from './apiDocs.ky';
+import { apiDocsRu } from './apiDocs.ru';
+import { authEn } from './auth.en';
 import { authKy } from './auth.ky';
 import { authRu } from './auth.ru';
-import { authEn } from './auth.en';
 
 // Booking
+import { bookingEn } from './booking.en';
 import { bookingKy } from './booking.ky';
 import { bookingRu } from './booking.ru';
-import { bookingEn } from './booking.en';
 
 // Home
+import { businessEn } from './business.en';
+import { businessKy } from './business.ky';
+import { homeEn } from './home.en';
 import { homeKy } from './home.ky';
 import { homeRu } from './home.ru';
-import { homeEn } from './home.en';
 
 // Business
-import { businessKy } from './business.ky';
 import { businessRu } from './business.ru';
-import { businessEn } from './business.en';
 
 // Header
 import { headerKy } from './header.ky';
@@ -45,14 +53,14 @@ import { dashboardRu } from './dashboard.ru';
 import { dashboardEn } from './dashboard.en';
 
 // Staff
+import { servicesEn } from './services.en';
+import { servicesKy } from './services.ky';
+import { staffEn } from './staff.en';
 import { staffKy } from './staff.ky';
 import { staffRu } from './staff.ru';
-import { staffEn } from './staff.en';
 
 // Services
-import { servicesKy } from './services.ky';
 import { servicesRu } from './services.ru';
-import { servicesEn } from './services.en';
 
 // Branches
 import { branchesKy } from './branches.ky';
@@ -65,9 +73,6 @@ import { financeRu } from './finance.ru';
 import { financeEn } from './finance.en';
 
 // Admin
-import { adminKy } from './admin.ky';
-import { adminRu } from './admin.ru';
-import { adminEn } from './admin.en';
 
 // Common
 import { commonKy } from './common.ky';
@@ -85,9 +90,9 @@ import { monthPickerRu } from './monthPicker.ru';
 import { monthPickerEn } from './monthPicker.en';
 
 // TimeRange
+import { timeRangeEn } from './timeRange.en';
 import { timeRangeKy } from './timeRange.ky';
 import { timeRangeRu } from './timeRange.ru';
-import { timeRangeEn } from './timeRange.en';
 
 // Notifications
 import { notificationsKy } from './notifications.ky';
@@ -110,16 +115,17 @@ import { cabinetRu } from './cabinet.ru';
 import { cabinetEn } from './cabinet.en';
 
 // API Docs
-import { apiDocsKy } from './apiDocs.ky';
-import { apiDocsRu } from './apiDocs.ru';
-import { apiDocsEn } from './apiDocs.en';
 
 // Dev
 import { devKy } from './dev.ky';
 import { devRu } from './dev.ru';
 import { devEn } from './dev.en';
 
-import type { Translations } from '../LanguageProvider';
+// Business workspace selection
+import { selectBusinessKy } from './selectBusiness.ky';
+import { selectBusinessRu } from './selectBusiness.ru';
+import { selectBusinessEn } from './selectBusiness.en';
+
 
 // Re-export type for convenience
 export type { Translations } from '../LanguageProvider';
@@ -162,6 +168,7 @@ export const ky: Translations = mergeDictionaries(
     cabinetKy,
     apiDocsKy,
     devKy,
+    selectBusinessKy,
 );
 
 /**
@@ -189,6 +196,7 @@ export const ru: Translations = mergeDictionaries(
     cabinetRu,
     apiDocsRu,
     devRu,
+    selectBusinessRu,
 );
 
 /**
@@ -216,4 +224,5 @@ export const en: Translations = mergeDictionaries(
     cabinetEn,
     apiDocsEn,
     devEn,
+    selectBusinessEn,
 );

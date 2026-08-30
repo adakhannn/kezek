@@ -207,25 +207,32 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
     const selectedTypeKey = PROMOTION_TYPE_KEYS.find((k) => k.value === formData.promotion_type);
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <section className="overflow-hidden rounded-2xl border border-slate-700/70 bg-gradient-to-br from-slate-900 via-[#101827] to-slate-950 shadow-[0_20px_55px_-42px_rgba(129,140,248,0.7)]">
+            <div className="flex flex-col gap-5 border-b border-white/10 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-fuchsia-400/20 bg-fuchsia-400/10 text-fuchsia-300">
+                        <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 12v8H4v-8m16 0H4m16 0h1V8h-5.5M4 12H3V8h5.5M12 8v12m0-12H8.5a2.5 2.5 0 1 1 2.5-2.5V8Zm0 0h3.5A2.5 2.5 0 1 0 13 5.5V8Z" />
+                        </svg>
+                    </span>
+                    <div className="min-w-0">
+                        <h2 className="text-xl font-semibold text-white sm:text-2xl">
                         {t('branches.promotions.title', 'Акции филиала')}
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {t('branches.promotions.subtitle', 'Управление акциями и специальными предложениями')}
-                    </p>
+                        </h2>
+                        <p className="mt-1 max-w-xl text-sm leading-6 text-slate-400">
+                            {t('branches.promotions.subtitle', 'Управление акциями и специальными предложениями')}
+                        </p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:items-center">
                     {!showForm && bizSlug && (
                         <a
                             href={`/b/${bizSlug}/promotions`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all"
+                            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-indigo-400/35 bg-indigo-400/5 px-4 py-2 text-sm font-medium text-indigo-200 transition hover:border-indigo-300/60 hover:bg-indigo-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                         >
-                            <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg aria-hidden="true" className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
@@ -233,18 +240,24 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                         </a>
                     )}
                     {!showForm && (
-                        <Button onClick={startCreate} size="sm">
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
+                        <Button
+                            onClick={startCreate}
+                            className="min-h-10 justify-center rounded-xl px-4 shadow-[0_10px_24px_-14px_rgba(236,72,153,0.9)]"
+                            leadingIcon={(
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            )}
+                        >
                             {t('branches.promotions.add', 'Добавить акцию')}
                         </Button>
                     )}
                 </div>
             </div>
 
+            <div className="space-y-6 p-5 sm:p-6">
             {showForm ? (
-                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:p-5">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {editingId ? t('branches.promotions.edit.title', 'Редактирование акции') : t('branches.promotions.create.title', 'Создание акции')}
                     </h3>
@@ -324,7 +337,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                         placeholder={t('branches.promotions.titleRu.placeholder', 'Опционально. Если не указано, будет использовано название типа акции')}
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
                         <Input
                             label={t('branches.promotions.validFrom.label', 'Дата начала (опционально)')}
                             type="date"
@@ -363,11 +376,40 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 </div>
             ) : null}
 
-            {loading ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('branches.promotions.loading', 'Загрузка...')}</div>
+            {!showForm && (loading ? (
+                <div className="grid min-h-56 place-items-center rounded-2xl border border-white/10 bg-white/[0.025]" aria-live="polite">
+                    <div className="flex flex-col items-center gap-3 text-sm text-slate-400">
+                        <span className="h-7 w-7 animate-spin rounded-full border-2 border-indigo-300/25 border-t-indigo-300" aria-hidden="true" />
+                        {t('branches.promotions.loading', 'Загрузка...')}
+                    </div>
+                </div>
             ) : promotions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    {t('branches.promotions.empty', 'Нет акций. Добавьте первую акцию.')}
+                <div className="relative grid min-h-64 place-items-center overflow-hidden rounded-2xl border border-dashed border-indigo-400/25 bg-gradient-to-br from-indigo-400/[0.07] via-transparent to-fuchsia-400/[0.06] px-5 py-9 text-center">
+                    <div aria-hidden="true" className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-fuchsia-500/10 blur-3xl" />
+                    <div className="relative mx-auto max-w-md">
+                        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-indigo-300/20 bg-indigo-300/10 text-indigo-200 shadow-lg shadow-indigo-950/20">
+                            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m7 12 3 3 7-7M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+                            </svg>
+                        </span>
+                        <h3 className="mt-4 text-lg font-semibold text-white">
+                            {t('branches.promotions.emptyTitle')}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-400">
+                            {t('branches.promotions.emptyDescription')}
+                        </p>
+                        <Button
+                            onClick={startCreate}
+                            className="mt-5 min-h-10 rounded-xl px-5"
+                            leadingIcon={(
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            )}
+                        >
+                            {t('branches.promotions.emptyAction')}
+                        </Button>
+                    </div>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -453,7 +495,8 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                         );
                     })}
                 </div>
-            )}
+            ))}
+            </div>
             <ConfirmDialog
                 open={confirmDeleteId !== null}
                 onClose={() => setConfirmDeleteId(null)}
@@ -465,7 +508,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 confirmVariant="danger"
             />
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
-        </div>
+        </section>
     );
 }
 

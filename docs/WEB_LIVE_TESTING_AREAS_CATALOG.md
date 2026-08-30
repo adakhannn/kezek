@@ -170,7 +170,7 @@ Done when:
 - configuration failures are explicit and safe;
 - valid builds use the intended environment consistently.
 
-Status: `verified`
+Status: `in progress`
 
 ### 2026-06-23 - A2 Environment and service wiring
 
@@ -299,6 +299,39 @@ Status: `verified`
 - remaining gaps:
   - none for A2
   - webhook authenticity, replay, and provider-signature depth remains assigned to `N2`/`N3`, not A2
+
+### 2026-07-30 - A2 regression: public page coupled to service-role configuration
+
+- status: `fixed locally; production verification pending`
+- result: `PASS WITH GAPS`
+- build: local `main` based on `078fef8b` plus the `WB-061` fix
+- environment:
+  - `http://localhost:3000`, Next.js `16.0.11`, Windows
+  - valid public Supabase URL/anon configuration
+  - `SUPABASE_SERVICE_ROLE_KEY` intentionally absent
+  - Chromium via Playwright, clean guest context
+- steps:
+  1. Reproduced the authenticated Server Component failure from the supplied browser screenshots.
+  2. Removed the public page's dependency on the service-role client and kept reads inside the user-scoped SSR/RLS context.
+  3. Cold-loaded `/business/apply` directly in Chromium and inspected status, visible UI, and console errors.
+  4. Sent a direct HTTP request to the same route and inspected the response for the service-role exception and runtime overlay.
+  5. Inspected production RLS and grants for `categories`, `profiles`, and `user_notification_emails`.
+  6. Exercised the authenticated page-data branch with a server-component regression test.
+  7. Ran the related component suites, TypeScript validation, and a production build.
+- evidence:
+  - original screenshots: `codex-clipboard-d5efdb08-2b74-4322-8bcc-7e7e718534a5.png`, `codex-clipboard-4d0da988-b8e4-4c87-b585-04f56c0535e8.png`
+  - direct route: HTTP `200`, no `SUPABASE_SERVICE_ROLE_KEY` or `Runtime Error` marker
+  - Chromium live smoke: 1/1 passed, direct route rendered, zero console errors
+  - rebase validation: upstream `28464c58` still used the admin client and reproduced the crash while the local fix was temporarily stashed; after reapplication the same route returned `200`
+  - production schema: categories are readable by authenticated users; profile and notification-email reads are owner-scoped by `auth.uid()`
+  - business application Jest suites: 6/6 passed
+  - web TypeScript check: passed
+  - Next.js production build: passed
+- bugs:
+  - `WB-061` fixed locally
+- remaining gaps:
+  - authenticated-session visual refresh in the user's preserved browser
+  - production deployment and post-deploy verification
 
 ### A3. Production build and deploy smoke (`P0`)
 
@@ -1288,7 +1321,18 @@ Done when:
 
 - selected business always belongs to the user and controls displayed data.
 
-Status: `not started`
+Status: `in progress`
+
+Live evidence (2026-07-31, workspace selector UI/UX):
+
+- environment: local Next.js dev server, authenticated owner account with two businesses;
+- `/select-business` and `/api/me/current-business` returned HTTP `200` before and after the hot reload;
+- replaced the low-positioned narrow selector with a responsive workspace panel that identifies the current business, exposes explicit continue/select actions, and shows city or public slug context;
+- corrected the page-height calculation so the selector is centered within the available shell rather than one full viewport below the shared header;
+- fixed missing RU/KY/EN localization as `WB-065`;
+- evidence: workspace selection and RU/KY/EN localization tests passed `3/3`; web TypeScript validation passed;
+- result: implementation, API-read smoke, and regression checks `PASS`;
+- remaining gaps: authenticated visual confirmation at desktop/mobile widths, real business switch plus dashboard/API persistence reload, stale-access recovery, and production deployment.
 
 ### F3. Role switcher UX (`P1`)
 
@@ -1335,7 +1379,28 @@ Done when:
 
 - dashboard summary matches the selected business and role.
 
-Status: `not started`
+Status: `in progress`
+
+Live evidence (2026-07-31, dashboard UI/UX and hover contrast):
+
+- environment: local Next.js dev server, authenticated owner on `/dashboard`, dark theme;
+- reproduced `WB-066`: hovering the calendar quick action produced a near-white card with unreadable light text;
+- migrated quick-action hover/focus surfaces to design tokens and translucent semantic accents;
+- removed the stretched empty focus panel, reduced nested-card noise, moved the navigation hint below the actions, and normalized all four KPI cards into one responsive grid;
+- dashboard business context and supporting API requests remained successful during hot reload;
+- evidence: supplied desktop screenshot, dashboard component tests `2/2`, web TypeScript validation, and `git diff --check`;
+- result: implementation and regression checks `PASS`;
+- remaining gaps: authenticated visual hover/focus confirmation, mobile viewport smoke, loading/error/stale-data scenarios, metric comparison, and production deployment.
+
+Live evidence (2026-07-31, integration-status architecture):
+
+- environment: local Next.js dev server and a clean browser session;
+- removed the platform-wide WhatsApp/Telegram health card from the business overview because it did not represent the selected business;
+- removed `/api/dashboard/integrations-status`; a direct browser request now reaches the safe application `404` surface;
+- moved provider reachability to the protected super-admin system-health API;
+- supporting evidence: integration/dashboard suites `7/7`, regenerated Next route types, and successful web TypeScript validation;
+- result: local architecture and unauthenticated boundary checks `PASS`;
+- remaining gaps: authenticated owner visual confirmation, authenticated super-admin provider diagnostics, mobile viewport smoke, and production deployment.
 
 ### G2. Dashboard navigation (`P1`)
 
@@ -1349,7 +1414,27 @@ Done when:
 
 - every workspace section is reachable and context remains correct.
 
-Status: `not started`
+Status: `in progress`
+
+Live evidence (2026-07-31, provider-health ownership):
+
+- environment: local Next.js dev server and clean browser session;
+- reproduced `WB-067`: the owner dashboard exposed one global Meta/Telegram health result as if it belonged to the selected business;
+- moved live provider checks to `/admin/system-health`, where provider reachability and 24-hour delivery telemetry are shown separately;
+- Meta credentials are no longer sent in a URL query parameter, and common token/permission/Phone Number ID failures receive safe actionable classifications;
+- direct guest access to the admin health API did not expose diagnostics;
+- result: implementation, automated regression, and unauthenticated boundary checks `PASS`;
+- remaining gaps: authenticated super-admin visual/network confirmation for unavailable and healthy providers, retry behavior, and production deployment.
+
+Implementation evidence (2026-08-13, responsive workspace navigation):
+
+- environment: local Next.js dev server; supplied authenticated owner screenshot at `768x802`;
+- reproduced `WB-081`: the phone-style workspace drawer remained active at tablet width, overlapped the branch workspace, sat behind the global header, and competed with its separate hamburger menu;
+- replaced the shared phone/tablet drawer with breakpoint-specific navigation: bottom navigation plus a complete `More` sheet on phones, a labeled persistent rail on tablets, and the existing collapsible sidebar on desktop;
+- applied the same shared behavior to owner and staff workspaces, including safe-area spacing, Escape/backdrop dismissal, scroll locking, active destination state, and RU/EN/KY labels;
+- evidence: supplied screenshot, workspace navigation tests `4/4`, web TypeScript validation, and `git diff --check`;
+- result: local implementation and automated regression checks `PASS`;
+- remaining gaps: authenticated post-fix visual checks at phone/tablet widths, interaction with the global header menu, route traversal/Back/Forward, and production deployment.
 
 ### G3. Dashboard analytics (`P1`)
 
@@ -1489,6 +1574,14 @@ Done when:
 - service configuration produces correct booking choices and totals.
 
 Status: `not started`
+
+Diagnostic/fix evidence (2026-08-13):
+
+- environment: local development build at `http://localhost:3000/dashboard/services/new`, authenticated owner screenshot;
+- reproduced `WB-082`: clearing the duration field forced `0`, so entering `30` produced the confusing value `030`;
+- fixed the controlled input model so an empty editing state is preserved and leading zeroes are normalized before validation/submission;
+- focused ServiceForm regression tests passed `3/3`; web TypeScript validation passed;
+- remaining gap: authenticated post-fix browser confirmation and the complete create/edit/disable/delete service lifecycle are still required, so I2 remains `not started`.
 
 ### I3. Staff management (`P1`)
 
@@ -1858,6 +1951,37 @@ Live evidence (2026-07-28, business application category control):
 - result: `PASS` locally for visual alignment, responsive sizing, accessibility labeling, and selection behavior;
 - remaining gap: production post-deploy verification pending explicit commit/push/deploy command.
 
+Live evidence (2026-07-30, business application account-phone prefill):
+
+- environment: local Next.js dev server, authenticated owner account, production Supabase read-only data inspection;
+- reproduced `WB-062`: name and email were prefilled on `/business/apply`, but the required phone field was empty;
+- production data inspection confirmed this account has no contact phone and has a verified WhatsApp identity, so the verified fallback should have been used;
+- connected the existing canonical phone selector to the Server Component and loaded WhatsApp identity fields through the user-scoped SSR/RLS client;
+- local route remained HTTP `200` with no runtime error;
+- evidence: authenticated page-data regression plus form/default suites passed `11/11`; web TypeScript validation passed;
+- result: `PASS` for data-path and regression verification;
+- remaining gaps: authenticated visual refresh and production post-deploy verification.
+
+Live evidence (2026-07-30, business application submission diagnosis):
+
+- environment: local authenticated browser with `SUPABASE_SERVICE_ROLE_KEY` absent; read-only production duplicate-name lookup;
+- local submission returned HTTP `500` before duplicate-name validation, so the generic alert was not caused by an existing business;
+- read-only production lookup separately confirmed that the submitted test name already exists and would return controlled `409 business_exists` in a configured environment;
+- missing server configuration now returns localized `503 service_unavailable` rather than a generic internal error;
+- evidence: targeted business application suites passed `24/24`; web TypeScript validation passed;
+- result: `PASS` for root-cause isolation and safe error-surface fix;
+- remaining gaps: configured local/staging insert and production post-deploy verification.
+
+Live evidence (2026-07-31, terminal application moderation):
+
+- environment: local Next.js dev server and authenticated super-admin browser;
+- rejected safe application `7362bb5c-e0f3-47b9-ad0a-6123f1b49c85`; the initial status mutation returned HTTP `200`;
+- reproduced `WB-064`: after reload, the rejected card still exposed approve/reject/block controls, and a repeated rejection reached the API and returned controlled HTTP `409`;
+- added a shared status policy so moderation controls render only for `new` and `contacted` applications; terminal cards remain read-only;
+- post-fix route render returned HTTP `200`; status-policy, route, and service regression suites passed `18/18`; web TypeScript validation passed;
+- result: `PASS` for API terminal-state enforcement and local UI implementation;
+- remaining gaps: authenticated visual confirmation after refresh and production post-deploy verification.
+
 ### M3. Users and security actions (`P0`)
 
 Tasks:
@@ -1901,7 +2025,29 @@ Done when:
 
 - system configuration updates safely without orphaning active data.
 
-Status: `not started`
+Status: `in progress`
+
+Live evidence (2026-07-31, category creation UI/UX):
+
+- environment: local Next.js dev server, authenticated super-admin route `/admin/categories/new`;
+- direct authenticated render returned HTTP `200` before and after the UI update;
+- removed duplicated back/tabs navigation and rebuilt the page around one creation flow;
+- grouped the category name, generated public address, availability state, and primary/cancel actions with responsive behavior;
+- added an accessible availability switch, live URL preview, and explicit context when the name originates from a business application;
+- evidence: focused `CategoryForm` interaction tests passed `2/2`; web TypeScript validation and `git diff --check` passed;
+- result: implementation and functional regression checks `PASS`;
+- remaining gaps: authenticated desktop/mobile visual confirmation and safe create/edit persistence smoke.
+
+Live evidence (2026-07-31, category list UI/UX):
+
+- environment: local Next.js dev server, authenticated super-admin route `/admin/categories`;
+- reproduced the desktop overflow from the supplied screenshot: destructive controls were clipped behind a horizontal scrollbar and duplicated list/create navigation consumed vertical space;
+- replaced the wide table with responsive category rows/cards, removed duplicated navigation, and aligned list/header/stats styling with the creation flow;
+- moved the destructive “remove from businesses” option from every row into the confirmation dialog and kept deletion behind an explicit confirmation;
+- authenticated post-fix route render returned HTTP `200`; no new server runtime error appeared;
+- evidence: web TypeScript validation, focused category form tests `2/2`, and `git diff --check` passed;
+- result: implementation and server-render smoke `PASS`;
+- remaining gaps: authenticated desktop/mobile visual confirmation; delete confirmation is intentionally unsubmitted to preserve data.
 
 ### M6. Monitoring, analytics, and health (`P2`)
 
@@ -2182,6 +2328,53 @@ corepack pnpm -C apps/web test:e2e:seed-required
 corepack pnpm -C apps/web test:e2e:visual
 ```
 
+### 2026-08-02 - B2/A4 connectivity recovery regression
+
+- status: `verified locally with deployment gap`
+- result: `PASS WITH GAP`
+- build: local `main` plus current uncommitted public business recovery fix
+- environment:
+  - app: `http://127.0.0.1:3000/b/kezek`, Next.js dev server
+  - browser: in-app browser, desktop `1280x800` and mobile `390x844`
+  - backend connection intentionally unavailable during the failure-state run
+- steps:
+  1. Direct-loaded `/b/kezek` while the server could not reach Supabase.
+  2. Verified the transport failure renders the business unavailable recovery UI instead of `Business not found`.
+  3. Switched RU to EN and verified the heading, description, retry, catalog action, header, and footer update consistently.
+  4. Clicked retry while the failure remained active and verified the page stayed usable without a blank shell or redirect loop.
+  5. Repeated the visual/layout check at `390x844` and measured document/card geometry.
+- evidence:
+  - browser DOM: `Could not load the business`, `Check your internet connection and try again`, `Try again`, `Back to catalog`
+  - expected controlled console evidence: handled `TypeError: fetch failed` plus sanitized `BusinessPage` log; no stack or secret rendered in UI
+  - mobile geometry: viewport/document `390px`, recovery card `358px`, horizontal overflow `0px`
+  - automated recovery and locale suite: `2/2`; TypeScript validation passed
+- bugs:
+  - `WB-071` fixed locally
+- remaining gaps:
+  - repeat offline -> online recovery with a reachable valid business backend after deployment
+  - confirm deployed production no longer preserves a stale false-404 route state
+
+### 2026-08-02 - G1 header cabinet switcher regression
+
+- status: `fixed locally; live visual confirmation pending`
+- result: `PASS WITH GAP`
+- build: local `main` plus current uncommitted workspace-navigation fix
+- environment: `http://localhost:3000/dashboard`, authenticated multi-business owner screenshot and local component verification
+- steps:
+  1. Inspected the open header dropdown and compared it with the dashboard sidebar business selector.
+  2. Traced its session, role, business, route, and navigation behavior in `RoleAndBusinessSwitcher`.
+  3. Separated cabinet navigation from business workspace switching.
+  4. Verified current-route labelling, active cabinet state, EN copy, Escape close, and absence of duplicated business rows.
+- evidence:
+  - pre-fix screenshot: `codex-clipboard-b4fa9a16-2e49-4294-998f-c7caa875e287.png`
+  - focused `RoleAndBusinessSwitcher` tests: `2/2`
+  - web TypeScript validation: passed
+- bugs:
+  - `WB-072` fixed locally
+- remaining gaps:
+  - refresh the authenticated Chrome dashboard and visually confirm desktop dropdown placement and cabinet navigation
+  - repeat the dropdown check in the mobile header before marking the regression fully verified
+
 Done when:
 
 - required suites pass and every skip is an explicit environment gap.
@@ -2249,9 +2442,216 @@ Status: `not started`
 
 ### Wave 1: public and critical paths
 
+### 2026-08-09 - C6/A2 auth refresh and local Supabase connectivity
+
+- status: `verified with gap`
+- environment: local Next.js 16 dev server at `http://localhost:3000`, production Supabase, desktop browser
+- steps:
+  - reproduced the development issue stack after loading the app with an existing session;
+  - compared browser output with Supabase Auth/API logs;
+  - audited the global auth updater lifecycle and removed repeated polling/refresh behavior;
+  - restarted the local server with outbound network access and cold-loaded `/` in a clean browser tab;
+  - inspected rendered catalog data and browser console warnings/errors.
+- evidence:
+  - pre-fix screenshot showed ten accumulated issues from a Supabase Auth fetch failure and Turbopack source-map diagnostics;
+  - Supabase logs showed successful `/user`, profile, RPC, and REST requests rather than a provider outage;
+  - post-fix live `/` rendered two real businesses, categories, contacts, and booking links;
+  - post-fix browser console contained zero warnings/errors;
+  - auth lifecycle regression tests passed `3/3` and TypeScript validation passed.
+- result:
+  - the initial/same-user session no longer creates an RSC refresh loop;
+  - the local SSR process can reach the intended Supabase environment again.
+- remaining gaps:
+  - hard-refresh the user's existing authenticated Chrome tab once and confirm the development issue badge remains empty;
+  - deployed production is unaffected by the local network sandbox but still needs normal deployment verification after commit.
+
 `A1`, `A3`, `B1`, `B2`, `C1`, `C3-C6`, `D1-D4`, `E1`, `F1`, `F4`, `Q1`
 
+### 2026-07-31 - B2 public contact architecture post-fix verification
+
+- status: `verified with gaps`
+- environment:
+  - local Next.js development server at `http://localhost:3000`
+  - connected production Supabase schema
+  - desktop viewport and mobile `390x844`
+- steps:
+  - opened `/`, `/b/testovyy-biznes-1`, `/b/testovyy-biznes-2`, and `/b/testovyy-biznes-1/booking` directly;
+  - verified the public phone is a real `tel:` action rather than profile text;
+  - verified booking uses the same resolved contact model and remains readable on mobile;
+  - inspected browser console warnings/errors;
+  - verified contact columns and inheritance state in Supabase.
+- evidence:
+  - public page DOM contains a `Контакты бизнеса` group and `tel:+996500574029`;
+  - booking DOM contains the same callable contact;
+  - mobile screenshot at `390x844` showed no horizontal overflow or obscured CTA;
+  - no hydration, Server Component, or runtime errors were recorded;
+  - Supabase verification returned `4` business contact columns, `5` branch contact columns, and `0` invalid inheritance rows;
+  - focused tests passed `22/22`, TypeScript and production build passed.
+- result:
+  - business-owned contacts are separated from login/profile identities;
+  - branch contacts support explicit per-field override and business fallback;
+  - newly approved applications no longer publish the applicant phone.
+- remaining gaps:
+  - production currently has no active public branch, so branch override/fallback could not be exercised end-to-end without creating test data;
+  - authenticated owner settings save and admin branch editing require an authenticated live session;
+  - deployed-production verification remains pending until commit/push/deploy.
+
+### 2026-07-31 - G1 dashboard language-switch regression
+
+- status: `verified with gap`
+- environment: `http://localhost:3000/dashboard`, authenticated owner, EN locale
+- steps:
+  - switched the shared language selector to EN;
+  - inspected the focus card, quick actions, KPI cards, and sidebar;
+  - compared all dashboard `t()` keys with RU/KY/EN dictionaries;
+  - ran localized view-model and rendered component regression tests.
+- evidence:
+  - pre-fix authenticated screenshot showed Russian fallback strings inside the English dashboard;
+  - missing translations and two hardcoded labels were identified and replaced;
+  - dashboard localization tests passed `4/4`;
+  - TypeScript and `git diff --check` passed.
+- result:
+  - dashboard-owned UI copy now has RU/KY/EN values;
+  - business name, city, and profile name remain unchanged because they are user data, not interface translations.
+- remaining gaps:
+  - refresh the authenticated dashboard and visually switch RU → EN → KY once more for post-fix confirmation.
+
 ### Wave 2: business operations
+
+### 2026-08-02 - I1 new-branch inherited contacts
+
+- status: `verified with gap`
+- environment: `http://localhost:3000/dashboard/branches/new`, authenticated owner screenshot plus local component/runtime checks
+- steps:
+  - inspected the new-branch contact section with inheritance enabled;
+  - verified the form receives current-business contacts from the authorized business context;
+  - toggled inheritance off and on in the regression scenario;
+  - submitted the form and inspected the branch payload.
+- evidence:
+  - pre-fix screenshot showed empty/placeholder-like fields while business-contact inheritance was enabled;
+  - post-fix regression displays all available effective business values immediately;
+  - submitted branch fields remain empty while `inherit_business_contacts=true`, preserving live fallback semantics;
+  - focused branch, business-context, and workspace-switch suites pass and TypeScript validation passes.
+- result:
+  - owners can see the contacts that clients will receive without creating stale copies in branch storage.
+- remaining gaps:
+  - authenticated visual confirmation of the four inherited fields on the real new-branch route;
+  - no test branch was created, preserving production data.
+
+### 2026-08-09 - I1 new-branch localization regression
+
+- status: `in progress`
+- environment: `http://localhost:3000/dashboard/branches/new`, authenticated owner screenshot and local runtime/component verification
+- steps:
+  - switched the new-branch page from RU to EN;
+  - inspected server-rendered and client-rendered branch form sections;
+  - audited every Kezek-owned visible string in the page, form, and map wrapper;
+  - exercised English contact UI and the localized map failure state;
+  - compared branch dictionary keys across RU, EN, and KY.
+- evidence:
+  - pre-fix screenshot showed mixed English and Russian content in the same form;
+  - post-fix branch suites passed `4/4`, including English contact labels, translated map recovery, and dictionary parity;
+  - TypeScript validation passed.
+- result:
+  - page title, access/limit feedback, address helper, contact inheritance UI, field labels, and Kezek-owned map copy now follow the selected locale.
+- remaining gaps:
+  - authenticated visual RU -> EN -> KY switch is required in the user's browser;
+  - legal links/copyright rendered inside the Yandex canvas are provider-owned and may use the provider's configured language;
+  - no branch was created or modified during verification.
+
+### 2026-08-09 - A4 localized service recovery follow-up
+
+- status: `in progress`
+- environment: `http://127.0.0.1:3000/dashboard/branches/new`, guest direct load, English locale, in-app browser
+- steps:
+  - directly loaded the protected nested route without a usable authenticated service session;
+  - inspected the rendered recovery surface and browser console;
+  - compared all visible recovery actions with the selected locale.
+- evidence:
+  - live DOM showed an English recovery heading, description, and links, but a Russian imperative reload button;
+  - WB-077 records the defect and local fix;
+  - focused ErrorDisplay test and the combined localization suites passed `5/5`; TypeScript validation passed.
+- result:
+  - the missing reload-action translations are now present in RU, EN, and KY.
+- remaining gaps:
+  - authenticated branch-form RU -> EN -> KY confirmation remains separate under WB-076.
+
+### 2026-08-09 - I1 branch edit direct-load regression
+
+- status: `in progress`
+- environment: `http://localhost:3000/dashboard/branches/fe1dde50-c04a-4b48-b215-bde72aa60625`, authenticated owner, desktop, production Supabase
+- steps:
+  - directly opened the existing branch edit route;
+  - inspected the visible error and the corresponding Supabase REST request;
+  - replaced the ambiguous embedded join with business-scoped branch and business queries;
+  - observed the post-HMR requests against the same real branch without changing data.
+- evidence:
+  - pre-fix screenshot and API logs showed PostgREST status `300` for `businesses!inner(...)`;
+  - post-fix API logs showed the same branch ID loaded with explicit `biz_id` and status `200` three times;
+  - focused page test, dictionary parity, TypeScript validation, and `git diff --check` passed.
+- result:
+  - the database request now resolves the branch and current business unambiguously;
+  - internal PostgREST messages are no longer rendered to users on future failures.
+- remaining gaps:
+  - visually confirm the full branch edit form in the authenticated browser after one hard refresh;
+  - edit/save behavior was not exercised to avoid changing the real branch.
+
+### 2026-08-09 - I1 branch map recovery follow-up
+
+- status: `in progress`
+- environment: local Next.js dev, authenticated branch screenshot plus in-app browser `/map`, production Yandex Maps/Supabase wiring
+- steps:
+  - reproduced the map initialization overlay from the authenticated branch route;
+  - audited rejected-loader caching and map error classification;
+  - added clean retry semantics and a localized recovery action;
+  - directly loaded `/map` in a clean browser tab and inspected the real map DOM and console.
+- evidence:
+  - pre-fix screenshot showed the Next.js overlay for `[BranchMapPicker] Failed to initialize Yandex Maps`;
+  - post-fix suites passed `3/3` and TypeScript validation passed;
+  - live `/map` rendered the Yandex canvas, one real branch marker/list item, and no map console error.
+- result:
+  - transient provider/network failures no longer poison every later map attempt;
+  - the branch form remains usable with manual address entry and an explicit retry action.
+- remaining gaps:
+  - hard-refresh the authenticated branch route and visually confirm its embedded map;
+  - location selection and save were not exercised to avoid modifying the real branch.
+
+### 2026-08-09 - I1 branch edit map wiring follow-up
+
+- status: `in progress`
+- environment: local Next.js dev, authenticated owner, existing safe branch
+- steps:
+  - visually inspected the post-WB-079 fallback on the real edit route;
+  - compared environment/contact props across public map, new-branch, and edit-branch integrations;
+  - restored the missing edit-route map and contact-inheritance data flow.
+- evidence:
+  - screenshot showed the localized recoverable map fallback on the edit page;
+  - focused test confirms the public map key and business contacts reach the edit client;
+  - related suites passed `3/3`; TypeScript validation passed.
+- result:
+  - create and edit routes now use the same shared form configuration contract.
+- remaining gaps:
+  - hard-refresh the authenticated edit route and confirm the real map canvas appears;
+  - no branch coordinates or contacts were modified.
+
+### 2026-08-02 - G1 business workspace switch feedback
+
+- status: `verified with gap`
+- environment: `http://localhost:3000/dashboard`, authenticated multi-business owner, desktop
+- steps:
+  - opened the sidebar business selector and switched between two available businesses;
+  - inspected pending, success-confirmation, timeout, and request-failure behavior;
+  - ran focused component checks with a deferred API response and refreshed server props.
+- evidence:
+  - pre-fix screenshot showed no prominent indication that the workspace was changing;
+  - the post-fix component keeps a blocking progress surface visible until the selected `serverCurrentBizId` is rendered;
+  - repeated clicks are disabled and failed/stalled requests restore a usable selector with localized feedback;
+  - focused tests passed `2/2`; TypeScript validation and `git diff --check` passed.
+- result:
+  - workspace switching now communicates the selected target and the full request-to-render transition instead of ending feedback at the API response.
+- remaining gaps:
+  - refresh the authenticated browser and visually confirm the overlay during one real switch between the two existing businesses;
+  - deployed-production verification remains pending.
 
 `G1-G3`, `H1-H5`, `I1-I5`, `J1-J4`, `K1-K5`, `L1-L3`
 

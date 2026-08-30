@@ -1,9 +1,9 @@
 'use client';
 
+import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -13,7 +13,13 @@ type ApiOk = { ok: true };
 type ApiErr = { ok: false; error?: string };
 type DeleteResp = ApiOk | ApiErr;
 
-export function DeleteCategoryButton({ id, slug }: { id: string; slug: string }) {
+type DeleteCategoryButtonProps = {
+    id: string;
+    name: string;
+    usageCount: number;
+};
+
+export function DeleteCategoryButton({ id, name, usageCount }: DeleteCategoryButtonProps) {
     const router = useRouter();
     const toast = useToast();
     const [forceDeleteFromBusinesses, setForceDeleteFromBusinesses] = useState(false);
@@ -54,6 +60,7 @@ export function DeleteCategoryButton({ id, slug }: { id: string; slug: string })
 
             toast.showSuccess('Категория удалена.');
             setConfirmOpen(false);
+            setForceDeleteFromBusinesses(false);
             router.refresh();
         } catch (deleteError) {
             const message = extractError(deleteError);
@@ -64,43 +71,66 @@ export function DeleteCategoryButton({ id, slug }: { id: string; slug: string })
         }
     }
 
-    return (
-        <div className="flex flex-col gap-2">
-            <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                <input
-                    type="checkbox"
-                    checked={forceDeleteFromBusinesses}
-                    onChange={(event) => setForceDeleteFromBusinesses(event.target.checked)}
-                    className="h-4 w-4 rounded border-[var(--border-default)] text-[var(--accent-primary)] focus:ring-[var(--focus-ring)]"
-                />
-                Удалить категорию из всех бизнесов
-            </label>
+    function closeDialog() {
+        setConfirmOpen(false);
+        setForceDeleteFromBusinesses(false);
+        setError(null);
+    }
 
+    return (
+        <>
             <Button
                 type="button"
-                variant="danger"
+                variant="ghost"
                 size="sm"
                 onClick={() => setConfirmOpen(true)}
                 disabled={loading}
                 isLoading={loading}
+                className="shrink-0 text-[var(--status-danger)]"
+                leadingIcon={<Trash2 className="h-4 w-4" />}
             >
                 {loading ? 'Удаляем…' : 'Удалить'}
             </Button>
 
-            {error ? <AlertBanner variant="danger" message={error} compact /> : null}
             <ConfirmDialog
                 open={confirmOpen}
-                onClose={() => setConfirmOpen(false)}
+                onClose={closeDialog}
                 onConfirm={onDelete}
                 title="Удалить категорию"
-                message={`Удалить категорию «${slug}»?`}
+                description="Это действие нельзя отменить."
+                message={
+                    <div className="space-y-4">
+                        <p className="type-body text-[var(--text-secondary)]">
+                            Категория <strong className="text-[var(--text-primary)]">«{name}»</strong> будет удалена.
+                        </p>
+                        {error ? (
+                            <p role="alert" className="rounded-lg bg-[var(--status-danger)]/10 p-3 text-sm text-[var(--status-danger)]">
+                                {error}
+                            </p>
+                        ) : null}
+                        {usageCount > 0 ? (
+                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--status-warning)]/40 bg-[var(--status-warning)]/10 p-3">
+                                <input
+                                    type="checkbox"
+                                    checked={forceDeleteFromBusinesses}
+                                    onChange={(event) => setForceDeleteFromBusinesses(event.target.checked)}
+                                    className="mt-0.5 h-4 w-4 rounded border-[var(--border-default)] text-[var(--accent-primary)] focus:ring-[var(--focus-ring)]"
+                                />
+                                <span className="text-sm leading-5 text-[var(--text-secondary)]">
+                                    Также убрать категорию из {usageCount}{' '}
+                                    {usageCount === 1 ? 'бизнеса' : usageCount < 5 ? 'бизнесов' : 'бизнесов'}
+                                </span>
+                            </label>
+                        ) : null}
+                    </div>
+                }
                 confirmLabel="Удалить"
                 cancelLabel="Отмена"
                 confirmVariant="danger"
                 isLoading={loading}
             />
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
-        </div>
+        </>
     );
 }
 

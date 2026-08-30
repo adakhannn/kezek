@@ -1,90 +1,65 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
-import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 /**
- * Клиентский компонент, который отслеживает изменения авторизации
- * и автоматически обновляет серверные компоненты
- * 
- * Этот компонент не рендерит ничего, только подписывается на изменения
+ * Keeps Server Components in sync with meaningful authentication changes.
+ * Supabase emits INITIAL_SESSION immediately after subscription; that event is
+ * the baseline and must not trigger a refresh, otherwise every RSC remount
+ * starts another refresh cycle.
  */
 export function AuthStatusUpdater() {
     const router = useRouter();
-    const lastSessionRef = useRef<string | null>(null);
 
     useEffect(() => {
         let mounted = true;
+        let initialized = false;
+        let lastUserId: string | null = null;
+        let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
-        // Функция для проверки и обновления сессии
-        const checkAndRefresh = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                const currentUserId = session?.user?.id || null;
-                
-                // Если сессия изменилась, обновляем серверные компоненты
-                if (lastSessionRef.current !== currentUserId) {
-                    lastSessionRef.current = currentUserId;
-                    if (mounted) {
-                        router.refresh();
-                    }
-                }
-            } catch (error) {
-                // Игнорируем ошибки проверки сессии
-                logWarn('AuthStatusUpdater', 'session check error', error);
-            }
+        const queueRefresh = () => {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(() => {
+                if (mounted) router.refresh();
+            }, 150);
         };
 
-        // Проверяем сессию сразу при монтировании (с небольшой задержкой для установки cookies)
-        const initialTimeout = setTimeout(() => {
-            if (mounted) {
-                checkAndRefresh();
-            }
-        }, 100);
-
-        // Подписываемся на изменения состояния авторизации
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
+        } = supabase.auth.onAuthStateChange((event, session) => {
             if (!mounted) return;
 
-            const currentUserId = session?.user?.id || null;
-            
-            // При изменении состояния авторизации обновляем серверные компоненты
-            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-                lastSessionRef.current = currentUserId;
-                
-                // Небольшая задержка для установки cookies перед обновлением
-                setTimeout(() => {
-                    if (mounted) {
-                        router.refresh();
-                    }
-                }, 200);
-            } else if (event === 'USER_UPDATED') {
-                // Также обновляем при изменении данных пользователя
-                checkAndRefresh();
+            const currentUserId = session?.user?.id ?? null;
+
+            if (event === 'INITIAL_SESSION' || !initialized) {
+                initialized = true;
+                lastUserId = currentUserId;
+                return;
+            }
+
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                if (lastUserId !== currentUserId) {
+                    lastUserId = currentUserId;
+                    queueRefresh();
+                }
+                return;
+            }
+
+            if (event === 'USER_UPDATED') {
+                lastUserId = currentUserId;
+                queueRefresh();
             }
         });
 
-        // Периодическая проверка сессии (на случай, если событие не сработало)
-        const intervalId = setInterval(() => {
-            if (mounted) {
-                checkAndRefresh();
-            }
-        }, 2000); // Проверяем каждые 2 секунды
-
         return () => {
             mounted = false;
-            clearTimeout(initialTimeout);
-            clearInterval(intervalId);
+            if (refreshTimer) clearTimeout(refreshTimer);
             subscription.unsubscribe();
         };
     }, [router]);
 
-    // Этот компонент ничего не рендерит
     return null;
 }
-

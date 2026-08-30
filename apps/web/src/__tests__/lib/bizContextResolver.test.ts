@@ -130,7 +130,7 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
             branch_limit: 2,
         });
         expect(mockAdmin.select).toHaveBeenCalledWith(
-            'id,name,slug,rating_score,tz,owner_id,branch_limit',
+            'id,name,slug,rating_score,tz,owner_id,branch_limit,contact_phone,contact_whatsapp,contact_email,website_url',
         );
     });
 
@@ -244,6 +244,29 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
         (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
             data: { user: null },
             error: null,
+        });
+
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({
+            code: 'NOT_AUTHENTICATED',
+        });
+    });
+
+    test('не завершает сессию при временной сетевой ошибке Supabase Auth', async () => {
+        (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
+            data: { user: null },
+            error: { message: 'fetch failed', status: 0, code: 'unexpected_failure' },
+        });
+
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'AUTH_SERVICE_UNAVAILABLE',
+        });
+    });
+
+    test('считает отклонённую сервером сессию неавторизованной', async () => {
+        (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
+            data: { user: null },
+            error: { message: 'invalid session', status: 401, code: 'session_not_found' },
         });
 
         await expect(resolveBizContextForManagers()).rejects.toMatchObject({

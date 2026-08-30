@@ -9,6 +9,7 @@ export type WorkspaceNavItem = {
     label: string;
     icon: ReactNode;
     match?: (pathname: string) => boolean;
+    mobilePrimary?: boolean;
 };
 
 type WorkspaceNavListProps = {
@@ -29,6 +30,7 @@ type WorkspaceSidebarShellProps = {
     openLabel: string;
     closeLabel: string;
     navTitle: string;
+    moreLabel?: string;
     headerSlot?: ReactNode;
     desktopStorageKey?: string;
 };
@@ -131,6 +133,96 @@ function WorkspaceSidebarPanel({
     );
 }
 
+function WorkspaceTabletRail({ items, pathname, navTitle }: Pick<WorkspaceNavListProps, 'items' | 'pathname'> & { navTitle: string }) {
+    return (
+        <aside className="hidden w-[184px] shrink-0 self-start md:block lg:hidden" aria-label={navTitle}>
+            <div className="sticky top-28 px-2 pb-6">
+                <nav className="max-h-[calc(100dvh-8rem)] space-y-1 overflow-y-auto rounded-[24px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] p-2 shadow-[var(--shadow-lg)] backdrop-blur-xl">
+                    {items.map((item) => {
+                        const active = isItemActive(item, pathname);
+
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                aria-label={item.label}
+                                aria-current={active ? 'page' : undefined}
+                                className={clsx(
+                                    'group flex min-h-12 w-full items-center gap-2.5 rounded-2xl border px-3 py-2 text-left text-xs font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
+                                    active
+                                        ? 'border-[color:color-mix(in_srgb,var(--accent-primary)_25%,transparent)] bg-[color:color-mix(in_srgb,var(--accent-primary)_16%,var(--surface-card))] text-[var(--accent-primary)] shadow-[var(--shadow-xs)]'
+                                        : 'border-transparent text-[var(--text-secondary)] hover:border-[var(--border-subtle)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]',
+                                )}
+                            >
+                                <span className="shrink-0 [&>svg]:h-5 [&>svg]:w-5">{item.icon}</span>
+                                <span className="min-w-0 truncate">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
+            </div>
+        </aside>
+    );
+}
+
+function WorkspaceMobileBar({
+    items,
+    pathname,
+    moreLabel,
+    onOpen,
+    isOpen,
+}: Pick<WorkspaceNavListProps, 'items' | 'pathname'> & { moreLabel: string; onOpen: () => void; isOpen: boolean }) {
+    const configuredPrimaryItems = items.filter((item) => item.mobilePrimary);
+    const primaryItems = (configuredPrimaryItems.length > 0 ? configuredPrimaryItems : items).slice(0, 4);
+    const primaryHrefs = new Set(primaryItems.map((item) => item.href));
+    const secondaryIsActive = items.some((item) => !primaryHrefs.has(item.href) && isItemActive(item, pathname));
+
+    return (
+        <nav
+            className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-[89] grid grid-cols-5 rounded-[24px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-1.5 shadow-[var(--shadow-xl)] backdrop-blur-xl md:hidden"
+            aria-label={moreLabel}
+        >
+            {primaryItems.map((item) => {
+                const active = isItemActive(item, pathname);
+
+                return (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        aria-current={active ? 'page' : undefined}
+                        className={clsx(
+                            'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
+                            active
+                                ? 'bg-[color:color-mix(in_srgb,var(--accent-primary)_16%,var(--surface-card))] text-[var(--accent-primary)]'
+                                : 'text-[var(--text-muted)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]',
+                        )}
+                    >
+                        <span className="[&>svg]:h-5 [&>svg]:w-5">{item.icon}</span>
+                        <span className="w-full truncate text-center">{item.label}</span>
+                    </Link>
+                );
+            })}
+            <button
+                type="button"
+                onClick={onOpen}
+                aria-label={moreLabel}
+                aria-expanded={isOpen}
+                className={clsx(
+                    'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
+                    secondaryIsActive
+                        ? 'bg-[color:color-mix(in_srgb,var(--accent-primary)_16%,var(--surface-card))] text-[var(--accent-primary)]'
+                        : 'text-[var(--text-muted)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]',
+                )}
+            >
+                <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01" />
+                </svg>
+                <span className="w-full truncate text-center">{moreLabel}</span>
+            </button>
+        </nav>
+    );
+}
+
 export function WorkspaceSidebarShell({
     title,
     subtitle,
@@ -143,6 +235,7 @@ export function WorkspaceSidebarShell({
     openLabel,
     closeLabel,
     navTitle,
+    moreLabel = openLabel,
     headerSlot,
     desktopStorageKey = 'kezek.workspace.sidebar.collapsed',
 }: WorkspaceSidebarShellProps) {
@@ -152,10 +245,15 @@ export function WorkspaceSidebarShell({
         if (!isOpen) return;
 
         document.body.style.overflow = 'hidden';
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', onKeyDown);
         return () => {
             document.body.style.overflow = '';
+            document.removeEventListener('keydown', onKeyDown);
         };
-    }, [isOpen]);
+    }, [isOpen, onClose]);
 
     useEffect(() => {
         try {
@@ -176,25 +274,15 @@ export function WorkspaceSidebarShell({
 
     return (
         <>
-            <button
-                type="button"
-                onClick={onOpen}
-                className={clsx(
-                    'lg:hidden fixed left-4 top-24 z-[92] inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] shadow-[var(--shadow-md)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]',
-                    isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
-                )}
-                aria-label={openLabel}
-            >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" />
-                </svg>
-            </button>
+            <WorkspaceMobileBar items={items} pathname={pathname} moreLabel={moreLabel} onOpen={onOpen} isOpen={isOpen} />
+
+            <WorkspaceTabletRail items={items} pathname={pathname} navTitle={navTitle} />
 
             {isOpen ? (
                 <button
                     type="button"
-                    aria-hidden="true"
-                    className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-[2px] lg:hidden"
+                    aria-label={closeLabel}
+                    className="fixed inset-0 z-[125] bg-black/55 backdrop-blur-[3px] md:hidden"
                     onClick={onClose}
                 />
             ) : null}
@@ -245,35 +333,39 @@ export function WorkspaceSidebarShell({
                 </div>
             </div>
 
-            <div
-                className={clsx(
-                    'fixed inset-y-0 left-0 z-[95] w-full max-w-[21rem] p-3 transition-transform duration-300 ease-out lg:hidden',
-                    isOpen ? 'translate-x-0' : '-translate-x-full',
-                )}
-            >
-                <WorkspaceSidebarPanel
-                    title={title}
-                    subtitle={subtitle}
-                    badge={badge}
-                    items={items}
-                    pathname={pathname}
-                    navTitle={navTitle}
-                    headerSlot={headerSlot}
-                    onNavigate={onClose}
-                    closeButton={
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
-                            aria-label={closeLabel}
-                        >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    }
-                />
-            </div>
+            {isOpen ? (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={navTitle}
+                    className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-[130] h-[min(44rem,calc(100dvh-1rem))] animate-[workspace-sheet-in_240ms_ease-out] motion-reduce:animate-none md:hidden"
+                >
+                    <div className="h-full overflow-hidden">
+                        <WorkspaceSidebarPanel
+                            title={title}
+                            subtitle={subtitle}
+                            badge={badge}
+                            items={items}
+                            pathname={pathname}
+                            navTitle={navTitle}
+                            headerSlot={headerSlot}
+                            onNavigate={onClose}
+                            closeButton={
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
+                                    aria-label={closeLabel}
+                                >
+                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            }
+                        />
+                    </div>
+                </div>
+            ) : null}
         </>
     );
 }

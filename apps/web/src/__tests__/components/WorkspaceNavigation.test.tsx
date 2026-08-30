@@ -45,4 +45,21 @@ describe('WorkspaceSidebarShell', () => {
         expect(screen.getByTitle('Open workspace navigation')).not.toBeNull();
         expect(screen.queryByTitle('Close workspace navigation')).toBeNull();
     });
+
+    test('opens the mobile navigation from the More action', () => {
+        render(<WorkspaceSidebarShell {...props} moreLabel="More" />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'More' }));
+
+        expect(props.onOpen).toHaveBeenCalledTimes(1);
+    });
+
+    test('closes the mobile sheet with Escape and locks background scroll while open', () => {
+        render(<WorkspaceSidebarShell {...props} isOpen />);
+
+        expect(document.body.style.overflow).toBe('hidden');
+        fireEvent.keyDown(document, { key: 'Escape' });
+
+        expect(props.onClose).toHaveBeenCalledTimes(1);
+    });
 });

@@ -1,12 +1,14 @@
+import { type PublicContactFields, validatePublicContacts } from '@/lib/businessContacts';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
 
-export type BranchUpdateBody = {
+export type BranchUpdateBody = PublicContactFields & {
   name: string;
   address?: string | null;
   is_active: boolean;
   lat?: number | null;
   lon?: number | null;
+  inherit_business_contacts?: boolean;
 };
 
 export type BranchUpdateAdminLike = {
@@ -73,15 +75,32 @@ export async function updateBranch(params: {
     };
   }
 
+  const contacts = validatePublicContacts(body);
+  if (!contacts.ok) {
+    return {
+      ok: false,
+      error: 'validation',
+      message: contacts.message,
+      status: 400,
+    };
+  }
+
   const updateData: {
     name: string;
     address: string | null;
     is_active: boolean;
     coords?: string | null;
+    contact_phone: string | null;
+    contact_whatsapp: string | null;
+    contact_email: string | null;
+    website_url: string | null;
+    inherit_business_contacts: boolean;
   } = {
     name: body.name.trim(),
     address: body.address ?? null,
     is_active: !!body.is_active,
+    ...contacts.value,
+    inherit_business_contacts: body.inherit_business_contacts !== false,
   };
 
   if ('lat' in body || 'lon' in body) {

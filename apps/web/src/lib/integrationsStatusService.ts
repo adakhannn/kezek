@@ -1,6 +1,7 @@
 import { logWarn } from '@/lib/log';
+import { resolveWhatsAppGraphApiVersion } from '@/lib/whatsAppGraphApi';
 
-type IntegrationStatus = {
+export type IntegrationStatus = {
     configured: boolean;
     ok: boolean;
     message?: string;
@@ -18,6 +19,7 @@ type FetchLike = (url: string, init?: RequestInit) => Promise<FetchResponseLike>
 type EnvLike = Partial<{
     WHATSAPP_ACCESS_TOKEN?: string;
     WHATSAPP_PHONE_NUMBER_ID?: string;
+    WHATSAPP_GRAPH_API_VERSION?: string;
     TELEGRAM_BOT_TOKEN?: string;
 }>;
 
@@ -56,21 +58,23 @@ export async function checkWhatsAppIntegration({
     }
 
     try {
-        const url = `https://graph.facebook.com/v18.0/${env.WHATSAPP_PHONE_NUMBER_ID}?access_token=${encodeURIComponent(
-            env.WHATSAPP_ACCESS_TOKEN ?? '',
-        )}&fields=verified_name`;
-        const res = await fetcher(url, { cache: 'no-store' });
+        const graphApiVersion = resolveWhatsAppGraphApiVersion(env.WHATSAPP_GRAPH_API_VERSION);
+        const url = `https://graph.facebook.com/${graphApiVersion}/${env.WHATSAPP_PHONE_NUMBER_ID}?fields=id,verified_name,display_phone_number`;
+        const res = await fetcher(url, {
+            cache: 'no-store',
+            headers: {
+                Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+            },
+        });
 
         if (!res.ok) {
             const body = await res.text();
-            if (res.status === 401) {
-                return { configured: true, ok: false, message: 'Неверный или истёкший токен WhatsApp' };
-            }
-            if (res.status === 404) {
-                return { configured: true, ok: false, message: 'Номер WhatsApp не найден в Meta Business' };
-            }
-            logWarn('IntegrationsStatus', 'WhatsApp API error', { status: res.status, body: body.slice(0, 200) });
-            return { configured: true, ok: false, message: `Ошибка API WhatsApp (${res.status})` };
+            const message = classifyWhatsAppProviderError(res.status, body);
+            logWarn('IntegrationsStatus', 'WhatsApp API error', {
+                status: res.status,
+                category: message,
+            });
+            return { configured: true, ok: false, message };
         }
 
         return { configured: true, ok: true };
@@ -79,6 +83,37 @@ export async function checkWhatsAppIntegration({
         logWarn('IntegrationsStatus', 'WhatsApp check failed', { error: msg });
         return { configured: true, ok: false, message: msg || 'Сеть или сервер недоступен' };
     }
+}
+
+function classifyWhatsAppProviderError(status: number, body: string): string {
+    let providerMessage = '';
+    try {
+        const parsed = JSON.parse(body) as { error?: { message?: string; code?: number } };
+        providerMessage = parsed.error?.message ?? '';
+    } catch {
+        // A non-JSON provider response is classified by HTTP status below.
+    }
+
+    const normalized = providerMessage.toLowerCase();
+    if (status === 401 || normalized.includes('access token') || normalized.includes('oauth')) {
+        return 'Токен WhatsApp недействителен или истёк';
+    }
+    if (
+        status === 403 ||
+        normalized.includes('missing permissions') ||
+        normalized.includes('does not have permission')
+    ) {
+        return 'У токена нет доступа к настроенному номеру WhatsApp';
+    }
+    if (
+        status === 404 ||
+        normalized.includes('unsupported get request') ||
+        normalized.includes('does not exist')
+    ) {
+        return 'Настроенный Phone Number ID недоступен этому Meta Business';
+    }
+
+    return `Meta WhatsApp API недоступен (HTTP ${status})`;
 }
 
 export async function checkTelegramIntegration({

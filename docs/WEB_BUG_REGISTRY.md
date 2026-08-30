@@ -2169,3 +2169,755 @@ The web testing scope and execution status are maintained in
   - Footer localization test passed together with the business-application suites: 6/6 total; web TypeScript validation and production build passed.
 - status: `fixed locally; production verification pending`
 - owner: `Codex`
+
+### WB-061
+- id: `WB-061`
+- date: `2026-07-30`
+- area: `business registration application / environment degradation`
+- severity: `P1`
+- title: Authenticated business application page crashes when the local service-role key is absent
+- build: local `main` at `078fef8b`
+- environment: `http://localhost:3000`, Next.js `16.0.11` dev server, authenticated browser session, `SUPABASE_SERVICE_ROLE_KEY` intentionally absent
+- steps:
+  1. Start the web app with valid public Supabase configuration but without `SUPABASE_SERVICE_ROLE_KEY`.
+  2. Open `/business/apply` while authenticated.
+  3. Inspect the rendered page and browser console.
+- expected:
+  - The public application entry renders without requiring privileged database credentials.
+  - Privileged submission operations fail inside their API boundary with safe, explicit feedback if the server is not fully configured.
+- actual:
+  - The Server Component unconditionally creates a service-role client and throws `SUPABASE_SERVICE_ROLE_KEY is required for server-side operations`.
+  - Next.js displays a full development error overlay and the root error boundary logs a second console error.
+- evidence:
+  - User screenshots `codex-clipboard-d5efdb08-2b74-4322-8bcc-7e7e718534a5.png` and `codex-clipboard-4d0da988-b8e4-4c87-b585-04f56c0535e8.png`.
+  - Stack trace points to `BusinessApplicationPage` in `src/app/business/apply/page.tsx:22`.
+- root cause:
+  - A public Server Component used the service-role client merely to read active categories, coupling page rendering to an administrative secret.
+- fix:
+  - Removed the service-role client from the public page.
+  - Active categories, the signed-in user's profile, and verified notification emails are now loaded through the cookie-aware SSR client, so RLS remains the authorization boundary.
+  - Kept privileged application creation inside the server API route.
+- post-fix evidence:
+  - Direct local HTTP load returned `200` and contained neither the service-role exception nor a runtime-error overlay.
+  - Fresh Chromium live smoke loaded `/business/apply` directly, rendered the authentication entry, and recorded zero browser console errors.
+  - After updating to `main` commit `28464c58`, temporarily restoring the upstream page reproduced the same service-role crash in the running authenticated browser; reapplying this fix restored HTTP `200` and the Chromium smoke passed again.
+  - Production schema inspection confirmed `categories` has RLS enabled plus an authenticated `SELECT` policy, while `profiles` and `user_notification_emails` restrict reads to `auth.uid()`.
+  - A server-component regression test exercised the authenticated data-loading branch with no service-role client and verified category/profile/email prefill.
+  - Business application suites passed: 6/6; TypeScript check passed.
+  - Next.js `16.0.11` production build passed with `SUPABASE_SERVICE_ROLE_KEY` absent from the local environment.
+- gaps:
+  - Refresh the already authenticated local browser once to visually confirm the full form in the user's preserved session.
+  - Production verification remains pending deployment.
+- status: `fixed locally; authenticated-session visual confirmation and production verification pending`
+- owner: `Codex`
+
+### WB-062
+- id: `WB-062`
+- date: `2026-07-30`
+- area: `business registration application / account prefill`
+- severity: `P1`
+- title: Business application does not prefill the phone stored in the user's account
+- build: local `main` at `28464c58` plus the `WB-061` fix
+- environment: `http://localhost:3000`, Next.js `16.0.11`, authenticated owner account
+- steps:
+  1. Sign in with an account that has a contact phone or a verified WhatsApp phone.
+  2. Open `/business/apply` directly.
+  3. Inspect the phone field.
+- expected:
+  - The contact phone from `profiles.phone` is used first.
+  - If it is empty, the verified linked `profiles.whatsapp_phone` is used.
+- actual:
+  - The form renders an empty required phone field while the same account supplies its name and email.
+- evidence:
+  - User screenshot `codex-clipboard-1e540be7-a096-4032-a954-19d65bd79f14.png`.
+- root cause:
+  - Commit `28464c58` added and tested `selectBusinessApplicationPhone()`, but the Server Component never called it and did not select `whatsapp_phone` or `whatsapp_verified`.
+- fix:
+  - Extended the user-scoped profile projection with `whatsapp_phone` and `whatsapp_verified`.
+  - Connected the existing canonical phone selector to the page prefill.
+  - Preserved the intended priority: contact phone, Supabase Auth phone, metadata phone, then verified WhatsApp phone.
+- post-fix evidence:
+  - Read-only production data check confirmed the affected account has no contact phone but does have a verified WhatsApp phone, matching the missing fallback scenario without exposing the number.
+  - The authenticated Server Component test now exercises the verified-WhatsApp fallback and receives the phone in `initialValues`.
+  - Business application page/form/default tests passed: 11/11.
+  - Web TypeScript validation passed.
+  - Local `/business/apply` continued to return HTTP `200` without a runtime error.
+- gaps:
+  - Visual confirmation in the user's preserved authenticated browser is pending one refresh.
+  - Production verification remains pending deployment.
+- status: `fixed locally; authenticated visual confirmation and production verification pending`
+- owner: `Codex`
+
+### WB-063
+- id: `WB-063`
+- date: `2026-07-30`
+- area: `business registration application / submission error handling`
+- severity: `P1`
+- title: Missing local service configuration is shown as a generic application failure
+- build: local `main` at `28464c58` plus `WB-061`/`WB-062` fixes
+- environment: `http://localhost:3000`, authenticated owner account, `SUPABASE_SERVICE_ROLE_KEY` absent
+- steps:
+  1. Complete `/business/apply`.
+  2. Submit the form.
+  3. Inspect the alert and API response.
+- expected:
+  - Configuration failures return a safe explicit `503` response and understandable localized feedback.
+  - An existing business name returns controlled `409 business_exists`.
+- actual:
+  - The API returns `500 unexpected_error` before checking the business name.
+  - The form shows only the generic message `Не удалось отправить заявку`.
+- evidence:
+  - User screenshot `codex-clipboard-68f06925-bf81-4291-bf91-5fe53e332ba8.png`.
+  - Local request log: `POST /api/business-applications 500`.
+  - Read-only production lookup confirms one exact business-name match, but this was not the cause of the observed `500`.
+- root cause:
+  - The route converted a missing service-role key into a generic internal error and the client had no configuration-specific error mapping.
+- fix:
+  - Missing privileged server configuration now returns safe `503 service_unavailable` instead of generic `500 unexpected_error`.
+  - Added localized RU/KY/EN feedback for this code.
+- post-fix evidence:
+  - API regression test verifies exact `503 service_unavailable` payload without exposing configuration values.
+  - Business application API/page/form/localization/default/service suites passed: 24/24.
+  - Web TypeScript validation passed.
+- gaps:
+  - A configured service-role environment is still required for a real local application insert because RLS intentionally grants this table only to `service_role`.
+  - Production post-deploy verification remains pending.
+- status: `fixed locally; configured-environment and production verification pending`
+- owner: `Codex`
+
+### WB-064
+- id: `WB-064`
+- date: `2026-07-31`
+- area: `admin business applications / terminal status UI`
+- severity: `P1`
+- title: Rejected business applications continue to show moderation actions
+- build: local `main` at `28464c58` plus current business-application fixes
+- environment: `http://localhost:3000/admin/business-applications`, authenticated super-admin
+- steps:
+  1. Reject a safe test business application with a reason.
+  2. Reload the applications page.
+  3. Click `Отклонить` again and confirm.
+- expected:
+  - A rejected application shows its terminal status and no approve/reject/block controls.
+  - Repeated moderation cannot be initiated from the UI.
+- actual:
+  - `Одобрить и создать бизнес`, `Отклонить`, and `Отклонить и блокировать 30 дней` remain visible.
+  - The repeated reject form opens and only fails after submission with `Заявка уже обработана или недоступна`.
+- evidence:
+  - User screenshots `codex-clipboard-e473d1c0-0813-4d70-b8d9-363b2ca2dbb9.png` and `codex-clipboard-f3e6480d-fd58-46a2-94e8-448678c6571b.png`.
+  - Local live requests: initial rejection returned `200`; repeated rejection returned `409`.
+- root cause:
+  - The server page rendered moderation controls unconditionally without checking whether status was `new`/`contacted` or terminal.
+- fix:
+  - Added one canonical terminal-status guard for business-application moderation.
+  - Approve, reject, and block actions now render only for `new` and `contacted` applications.
+  - Rejected and approved cards remain visible for audit history but expose no repeated mutation controls.
+- post-fix evidence:
+  - Local authenticated route re-rendered successfully with HTTP `200` after the change.
+  - Status-policy, API route, and business-application service suites passed `18/18`.
+  - Web TypeScript validation passed.
+- status: `fixed locally; authenticated visual confirmation and production verification pending`
+- owner: `Codex`
+
+### WB-065
+- id: `WB-065`
+- date: `2026-07-31`
+- area: `business workspace selection / localization`
+- severity: `P1`
+- title: Business selection screen remains Russian after switching language
+- build: local `main` at `28464c58` plus current UI/UX changes
+- environment: `http://localhost:3000/select-business`, authenticated multi-business owner
+- steps:
+  1. Open `/select-business`.
+  2. Switch the shared language control to `KG` or `EN`.
+  3. Inspect the workspace selection heading, statuses, actions, loading, and error text.
+- expected:
+  - The complete selection flow follows the selected site language.
+- actual:
+  - `selectBusiness.*` keys were absent from all dictionaries, so fallback Russian copy remained inside the otherwise localized shell.
+- evidence:
+  - Source inspection found every page string relying on a Russian fallback with no matching dictionary entries.
+  - Regression test reproduced the locale contract and now verifies the complete English selection screen.
+- root cause:
+  - The page was introduced with fallback strings but no RU/KY/EN domain dictionary.
+- fix:
+  - Added a dedicated `selectBusiness` RU/KY/EN dictionary and registered it in the central dictionary bundle.
+  - Localized headings, current state, actions, loading, errors, count, and the switcher hint.
+- post-fix evidence:
+  - Workspace selection and RU/KY/EN localization tests passed `3/3`.
+  - Web TypeScript validation passed.
+  - Authenticated local route rendered after hot reload with HTTP `200`.
+- status: `fixed locally; authenticated language-switch and production verification pending`
+- owner: `Codex`
+
+### WB-066
+- id: `WB-066`
+- date: `2026-07-31`
+- area: `owner dashboard / quick actions hover`
+- severity: `P1`
+- title: Quick-action hover makes card text unreadable in the dark dashboard
+- build: local `main` at `28464c58` plus current UI/UX changes
+- environment: `http://localhost:3000/dashboard`, authenticated owner, dark theme
+- steps:
+  1. Open the owner dashboard.
+  2. Hover the `Открыть «Календарь»` quick-action card.
+- expected:
+  - Hover reinforces the card boundary and preserves readable contrast.
+- actual:
+  - The card background becomes nearly white while its text remains a very light dark-theme color.
+- evidence:
+  - User screenshot `codex-clipboard-c2f3b4eb-810a-4b98-a104-6dd266d071ee.png`.
+- root cause:
+  - Quick actions mixed unconditional light Tailwind hover backgrounds with `dark:*` variants while the application theme is primarily driven by design tokens.
+- fix:
+  - Replaced light/dark hover pairs with theme-token text and translucent semantic accent surfaces.
+  - Added consistent focus-visible rings, restrained lift, and token-based shadows.
+  - Rebalanced the dashboard composition so the focus card no longer stretches into a large empty panel and KPI cards share one consistent grid.
+- post-fix evidence:
+  - Dashboard component regression tests passed `2/2`.
+  - Web TypeScript validation and `git diff --check` passed.
+  - Authenticated dashboard/API requests remained successful during hot reload.
+- status: `fixed locally; authenticated hover screenshot and production verification pending`
+- owner: `Codex`
+
+### WB-067
+- id: `WB-067`
+- date: `2026-07-31`
+- area: `owner dashboard / integration status`
+- severity: `P1`
+- title: Owner dashboard presents platform-wide provider health as a business integration status
+- build: local `main` at `28464c58` plus current UI/UX changes
+- environment: `http://localhost:3000/dashboard`, authenticated owner
+- steps:
+  1. Open the owner dashboard.
+  2. Inspect the `Статус интеграций` card.
+  3. Compare the displayed state with the server implementation and runtime log.
+- expected:
+  - A business-facing status explains whether that business can send each notification type.
+  - Platform credential diagnostics are restricted to an operational/admin surface.
+- actual:
+  - The card checks global `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, and `TELEGRAM_BOT_TOKEN` values and displays the same platform-level result to every business.
+  - The WhatsApp probe receives HTTP `400` from Meta because the configured object is unavailable to the configured token, while the UI only reports a generic `Ошибка API WhatsApp (400)`.
+  - The probe does not verify delivery or any business-specific notification configuration.
+- evidence:
+  - User screenshot `codex-clipboard-b21ea8e1-dcb4-4af8-9c61-92124011452d.png`.
+  - Local server log records a Meta Graph `Unsupported get request` response without exposing credentials.
+  - Source trace: `DashboardHomeClient` -> `IntegrationsStatusCard` -> `/api/dashboard/integrations-status` -> `getIntegrationsStatus`.
+- root cause:
+  - A platform infrastructure health check was embedded in the business dashboard and labeled as a business integration status.
+  - The WhatsApp check uses a direct object lookup and collapses distinct Meta errors into one generic status.
+- fix:
+  - Removed the platform provider health card and its API endpoint from the owner dashboard.
+  - Moved live provider reachability into the existing super-admin `/admin/system-health` surface and kept it separate from delivery telemetry.
+  - Changed the Meta probe to use an `Authorization: Bearer` header instead of putting the access token in the URL.
+  - Added safe Meta error classification and one validated Graph API version resolver shared by health checks and message sending.
+- post-fix evidence:
+  - Integration service and owner dashboard regression suites passed `7/7`.
+  - Next route types regenerated successfully and web TypeScript validation passed.
+  - Browser live check confirmed the removed owner endpoint returns the application's safe `404` surface.
+  - Browser live check confirmed the admin health endpoint is not exposed to a guest session.
+- status: `fixed locally; authenticated owner and super-admin visual confirmation and production verification pending`
+- owner: `Codex`
+
+### WB-068
+- id: `WB-068`
+- date: `2026-07-31`
+- area: `public business contacts / booking`
+- severity: `P1`
+- title: Applicant or owner personal phone is used as the public business contact
+- build: local `main` plus current contact-layer changes
+- environment: local web with connected production Supabase
+- steps:
+  1. Approve an authenticated business registration application.
+  2. Open the created `/b/[slug]` page.
+  3. Compare the displayed phone with the application contact and the business/branch settings.
+- expected:
+  - Public contact channels are business-owned fields configured explicitly for the business or branch.
+  - Auth/profile contacts of owners and employees are never published automatically.
+- actual:
+  - Approval copied `business_registration_applications.phone` into `businesses.phones`, and public pages treated it as the business phone.
+  - Branches could not define their own phone, WhatsApp, email, or website.
+- evidence:
+  - Source trace: `approveBusinessApplication()` copied the applicant phone into `businesses.phones`.
+  - Local live public page displayed the migrated phone as a callable contact.
+- root cause:
+  - Legacy `businesses.phones` combined applicant review data and customer-facing business contact data.
+- fix:
+  - Added dedicated business and branch contact columns with E.164/email/HTTPS constraints.
+  - Added per-field branch override with explicit fallback to business contacts.
+  - Added owner settings, owner/admin branch editing, and public Call/WhatsApp/Email/website actions.
+  - Business approval no longer publishes the applicant's phone.
+- post-fix evidence:
+  - Supabase migration applied successfully; all 9 columns exist and no branch has a null inheritance flag.
+  - Contact domain, branch create/update, and application approval tests passed `22/22`.
+  - Production build and TypeScript validation passed.
+  - Desktop and 390x844 live browser checks rendered the callable business contact without hydration/runtime errors.
+- status: `fixed locally; authenticated settings save, active-branch override, and deployed-production verification pending`
+- owner: `Codex`
+
+### WB-069
+- id: `WB-069`
+- date: `2026-07-31`
+- area: `G1 dashboard entry and overview / localization`
+- severity: `P1`
+- title: Dashboard remains partially Russian after switching to English or Kyrgyz
+- build: local `main` plus current dashboard UI changes
+- environment: `http://localhost:3000/dashboard`, authenticated owner
+- steps:
+  1. Open the owner dashboard.
+  2. Switch the shared language control from RU to EN.
+  3. Inspect the focus card, quick-action badges and CTAs, KPI hints, and sidebar.
+- expected:
+  - All interface copy changes to the selected language; business and profile names remain unchanged as user data.
+- actual:
+  - New dashboard keys were absent from RU/KY/EN dictionaries, so `t()` returned Russian fallback text.
+  - The quick-action CTA and metrics aria-label were hardcoded in Russian.
+- evidence:
+  - User screenshot `codex-clipboard-c76f2963-53e7-4437-91fe-9776c5838398.png`.
+  - Source/dictionary comparison confirmed missing command-center, emphasis, KPI hint, sidebar, and access-application keys.
+- root cause:
+  - The dashboard redesign added fallback strings without adding the corresponding entries to all locale dictionaries.
+- fix:
+  - Added complete RU/KY/EN translations for the dashboard overview, sidebar, switcher errors, rating, and visit-package states.
+  - Replaced hardcoded quick-action and accessibility labels with translated props.
+  - Added a regression test that rejects Cyrillic fallback copy in the English dashboard view model.
+- post-fix evidence:
+  - Dashboard localization and component suites passed `4/4`.
+  - TypeScript validation and `git diff --check` passed.
+- status: `fixed locally; authenticated post-fix language-switch visual verification pending`
+- owner: `Codex`
+
+### WB-070
+- id: `WB-070`
+- date: `2026-07-31`
+- area: `A3 production build / fonts`
+- severity: `P2`
+- title: Production build depends on live Google Fonts availability
+- build: local `main` plus current changes
+- environment: local `next build`
+- steps:
+  1. Run `pnpm --filter web build` while `fonts.googleapis.com` or `fonts.gstatic.com` is unavailable.
+- expected:
+  - A reproducible production build does not fail because a third-party font CDN is temporarily unreachable.
+- actual:
+  - `next/font` fails the build while fetching Geist and Geist Mono from Google.
+- evidence:
+  - Two consecutive builds failed exclusively in the Google font fetch step after TypeScript and localization tests passed.
+- root cause:
+  - Root layout imports remote Google fonts at build time instead of vendoring/self-hosting the required font assets.
+- fix:
+  - Pending: migrate Geist and Geist Mono to local font assets.
+- status: `open; does not invalidate localization type/tests, but blocks current local production build`
+- owner: `Codex`
+
+### WB-071
+- id: `WB-071`
+- date: `2026-08-02`
+- area: `B2 business page / A4 recovery states`
+- severity: `P1`
+- title: Temporary connectivity loss can leave a valid business page in a false not-found state
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000/b/kezek`, Next.js dev server, in-app browser, desktop and `390x844`
+- steps:
+  1. Open a valid public business page.
+  2. Lose connectivity while navigating or refreshing the business route.
+  3. Observe the state after the route request fails and after connectivity returns.
+- expected:
+  - A transport failure is shown as a recoverable connectivity error, not as a definitive missing business.
+  - The page retries when connectivity returns and keeps retry/catalog actions available.
+- actual:
+  - The route could remain on `Business not found` after a temporary offline period, with no retry action or online recovery.
+  - Server-rendered not-found copy could also remain in the previous language after switching locale.
+- evidence:
+  - User screenshot `codex-clipboard-26b95d1f-0477-4e76-bf37-2e30261159a0.png`.
+  - Post-fix live forced transport failure rendered `Could not load the business`, `Try again`, and `Back to catalog` instead of a false 404.
+  - Live RU -> EN switch updated the entire recovery surface; retry kept the page usable during the continuing failure.
+  - Mobile `390x844` geometry: card width `358px`, document width and scroll width `390px` (no horizontal overflow).
+- root cause:
+  - The not-found surface was a terminal Server Component result and had no browser connectivity awareness, retry action, or `online` event recovery.
+- fix:
+  - Added one shared client recovery state for definitive not-found and transient unavailable outcomes.
+  - Offline state now overrides false not-found copy; returning online automatically refreshes the route.
+  - Both outcomes expose retry and catalog actions and use the live client locale.
+- post-fix evidence:
+  - `BusinessPageState` regression suite passed `2/2` and TypeScript validation passed.
+  - Browser live check covered forced fetch failure, retry, language switching, desktop layout, and mobile layout.
+- status: `fixed locally; online recovery against a valid Supabase response and deployed-production verification pending`
+- owner: `Codex`
+
+### WB-072
+- id: `WB-072`
+- date: `2026-08-02`
+- area: `G1 dashboard header / workspace navigation`
+- severity: `P1`
+- title: Header dropdown mixes cabinet and business switching and does not identify the current cabinet
+- build: local `main` plus current uncommitted dashboard changes
+- environment: `http://localhost:3000/dashboard`, authenticated multi-business owner, desktop
+- steps:
+  1. Open the owner dashboard with access to more than one business.
+  2. Open the header dropdown labelled `Owner / manager`.
+  3. Compare its contents with the business switcher in the dashboard sidebar.
+- expected:
+  - The header control identifies and switches the current cabinet/role context.
+  - Business workspace selection has one clear owner and is not duplicated inside an unrelated role menu.
+  - The active cabinet is visibly identified and all copy follows the selected locale.
+- actual:
+  - The control displayed the highest available role instead of the currently open cabinet.
+  - It mixed business rows, a second business-selection link, and cabinet destinations in one menu.
+  - On the dashboard this duplicated the dedicated sidebar business switcher; the English menu also contained Russian fallback copy.
+- evidence:
+  - User screenshot `codex-clipboard-b4fa9a16-2e49-4294-998f-c7caa875e287.png`.
+  - Source inspection of `RoleAndBusinessSwitcher` confirmed inline POST business switching and role links shared one menu.
+- root cause:
+  - A single header component owned two independent navigation domains and derived its trigger label from role priority rather than the current pathname.
+- fix:
+  - Restricted the header dropdown to cabinet switching only; business switching remains in the dedicated dashboard workspace selector and `/select-business` flow.
+  - Derived the trigger and active marker from the current route.
+  - Added menu semantics, Escape handling, focus states, and removed obsolete manager wording from RU/KY/EN labels.
+- post-fix evidence:
+  - Focused component suite passed `2/2`; TypeScript validation passed.
+  - Regression tests verify no business rows appear, the dashboard cabinet is active, Escape closes the menu, and `/cabinet/*` displays `My bookings` instead of the highest available role.
+- status: `fixed locally; authenticated visual post-fix verification pending`
+- owner: `Codex`
+
+### WB-073
+- id: `WB-073`
+- date: `2026-08-02`
+- area: `G1 dashboard workspace switching`
+- severity: `P1`
+- title: Business switching has no clear pending state or protection against repeated actions
+- build: local `main` plus current uncommitted dashboard changes
+- environment: `http://localhost:3000/dashboard`, authenticated multi-business owner, desktop
+- steps:
+  1. Open the business selector in the dashboard sidebar.
+  2. Select another business.
+  3. Observe the interface while the current-business request and dashboard refresh are in progress.
+- expected:
+  - The selected target and switching progress are immediately visible.
+  - Repeated business selections are blocked until the server-confirmed workspace is rendered.
+  - A failed or stalled switch returns to a usable selector with safe feedback.
+- actual:
+  - Switching caused only subtle changes in the selector and page content, so it was unclear whether the action had started or completed.
+  - The selector stayed interactive while the request was pending.
+- evidence:
+  - User screenshot `codex-clipboard-8a8b7d1b-6944-4acd-8f7e-17af138c0175.png`.
+  - Component inspection confirmed there was no pending state spanning the POST request and subsequent Server Component refresh.
+- root cause:
+  - The switcher treated the API response as the end of the interaction even though the visible workspace changes only after `router.refresh()` returns updated server props.
+- fix:
+  - Added one explicit switching state that starts before the request and ends only when `serverCurrentBizId` confirms the selected business.
+  - Added a localized blocking overlay and inline spinners with the target business name.
+  - Disabled repeated selections while pending and added a 15-second timeout with recoverable localized feedback.
+  - Kept the selector usable after request failure without exposing server details.
+- post-fix evidence:
+  - Focused component suite passed `2/2` for delayed success/server confirmation and API failure recovery.
+  - TypeScript validation and `git diff --check` passed.
+- status: `fixed locally; authenticated visual post-fix verification pending`
+- owner: `Codex`
+
+### WB-074
+- id: `WB-074`
+- date: `2026-08-02`
+- area: `I1 branch management / business contacts`
+- severity: `P1`
+- title: Enabled contact inheritance does not show which business values a new branch will publish
+- build: local `main` plus current uncommitted branch-contact changes
+- environment: `http://localhost:3000/dashboard/branches/new`, authenticated owner, desktop
+- steps:
+  1. Configure public contacts for a business.
+  2. Open the new-branch form with `Use business contacts` enabled.
+  3. Inspect the empty branch contact inputs.
+- expected:
+  - The form immediately shows the effective inherited business contacts.
+  - Inherited values remain linked to business settings unless the owner explicitly overrides a field.
+  - Disabling inheritance reveals only branch-owned values.
+- actual:
+  - Empty inputs made the effective public contacts invisible even though inheritance was enabled.
+  - The owner could not confirm which phone, WhatsApp, email, or website clients would see.
+- evidence:
+  - User screenshot `codex-clipboard-8f34cdc7-c54f-43de-854b-3231fc8b2028.png`.
+  - Source inspection confirmed the form received only branch fields and did not receive current business contacts.
+- root cause:
+  - Contact fallback existed only in the public contact resolver; the branch editor had no presentation model for effective inherited values.
+- fix:
+  - Extended the already-authorized manager business context with the four public business contact fields.
+  - Passed those fields to the new-branch form and derived each displayed value from `branch override -> business fallback`.
+  - Kept inherited values out of the branch payload so later business-contact edits continue to propagate.
+  - Added localized source/missing-value guidance for RU, EN, and KY.
+- post-fix evidence:
+  - Component regression verifies inherited display, checkbox behavior, and that inherited values are not copied into the create payload.
+  - Branch form, business switcher, and business-context tests passed; TypeScript validation passed.
+- status: `fixed locally; authenticated visual post-fix verification pending`
+- owner: `Codex`
+
+### WB-075
+- id: `WB-075`
+- date: `2026-08-09`
+- area: `C6 session restoration / A2 service connectivity`
+- severity: `P1`
+- title: Auth status updater can create repeated Server Component refreshes and multiply transient Supabase errors
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000`, Next.js 16 development server, authenticated Chrome and clean in-app browser
+- steps:
+  1. Open the local application with an existing Supabase session.
+  2. Allow `AuthStatusUpdater` to mount or experience a short network interruption.
+  3. Inspect the Next.js development issue overlay and Supabase requests.
+- expected:
+  - The initial session establishes a baseline without refreshing the same Server Components repeatedly.
+  - A token refresh for the same identity does not force a full RSC refresh.
+  - One transient auth failure produces one recoverable error, not a growing issue stack.
+- actual:
+  - Every mount compared the existing user with a fresh `null` ref and called `router.refresh()`.
+  - A two-second polling interval and auth events caused additional checks and remounts.
+  - A short failed Auth fetch produced multiple development-overlay issues, each accompanied by Turbopack's invalid source-map diagnostic.
+- evidence:
+  - User screenshot `codex-clipboard-1ecdd33e-d10e-4555-b6ea-5102f0c24a19.png` showed `10 Issues` and the Supabase Auth fetch stack through `AppShellHeader`.
+  - Supabase Auth/API logs at the same time showed successful `/user`, RPC, profile, and REST responses, excluding a database outage or persistent CORS failure.
+  - Source inspection found an initial `getSession()` refresh, an auth subscription refresh, and a two-second session polling interval in the global root layout updater.
+- root cause:
+  - The client updater did not treat `INITIAL_SESSION` as a baseline and reset its identity ref after every RSC-triggered remount.
+  - The local server was also initially started inside a network-restricted process, making transient server fetch failures deterministic in that run.
+- fix:
+  - Replaced session polling with one Supabase auth subscription.
+  - `INITIAL_SESSION`, duplicate `SIGNED_IN`, and same-user `TOKEN_REFRESHED` events no longer refresh Server Components.
+  - Real sign-in, sign-out, identity change, and profile update still schedule one debounced refresh.
+  - Cleanup now cancels pending refresh work and unsubscribes reliably.
+  - Restarted the local Next.js server with outbound access to the configured Supabase environment.
+- post-fix evidence:
+  - Auth updater regression suite passed `3/3`; TypeScript validation passed.
+  - Fresh live browser load rendered both real businesses and their contacts with no console warnings or errors.
+  - Local `/` returned `HTTP 200`; Supabase-backed marketplace data loaded instead of the service-unavailable state.
+- status: `fixed locally; authenticated Chrome session refresh confirmation pending`
+- owner: `Codex`
+
+### WB-076
+- id: `WB-076`
+- date: `2026-08-09`
+- area: `I1 branch management / localization`
+- severity: `P1`
+- title: New-branch page remains partially Russian after switching to English or Kyrgyz
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000/dashboard/branches/new`, authenticated multi-business owner, desktop
+- steps:
+  1. Open the new-branch page in Russian.
+  2. Switch the shared language selector to English.
+  3. Inspect the page heading, address helper, contact section, map guidance, and contact field labels.
+- expected:
+  - Every Kezek-owned label and recovery message follows the selected locale.
+  - Server-rendered page headings and client form content change consistently.
+- actual:
+  - Address instructions changed to English, while the page heading, manual-address helper, contact title/description, inheritance control, and contact labels stayed Russian.
+  - Kezek's map footer guidance and map failure state were also hardcoded in Russian.
+- evidence:
+  - User screenshot `codex-clipboard-11238a37-5bc5-4132-98cf-f90b79cc3d73.png`.
+  - Source audit found untranslated literals in the Server Component, branch form, and map component; the branch dictionaries lacked the corresponding keys.
+- root cause:
+  - The branch form migration to shared i18n covered the address and submit fields but left the newer contact/inheritance UI as literals.
+  - The Server Component used fixed Russian text, and the map error UI was injected as Russian HTML.
+- fix:
+  - Added one complete, matching set of branch form/new-page/map keys to RU, EN, and KY dictionaries.
+  - Moved contact labels, descriptions, inheritance copy, page title, branch-limit feedback, and manual-address helper to `t()`.
+  - Made the Server Component resolve its translator from the current locale cookie.
+  - Replaced imperative map-error HTML with localized React UI and localized the map search placeholder/footer guidance.
+- post-fix evidence:
+  - Branch localization, contact form, and map recovery suites passed `4/4`.
+  - Dictionary parity test confirms RU, EN, and KY expose the same branch keys.
+  - TypeScript validation passed.
+- status: `fixed locally; authenticated visual RU -> EN -> KY confirmation pending`
+- owner: `Codex`
+
+### WB-077
+- id: `WB-077`
+- date: `2026-08-09`
+- area: `A4 error boundaries / localization`
+- severity: `P2`
+- title: Service-unavailable recovery keeps the reload action in Russian under English locale
+- build: local `main` plus current uncommitted changes
+- environment: `http://127.0.0.1:3000/dashboard/branches/new`, guest direct load, English locale, in-app browser
+- steps:
+  1. Set the application locale to English.
+  2. Direct-load an authenticated dashboard route without a usable session/service connection.
+  3. Inspect the localized recovery actions.
+- expected:
+  - The heading, description, links, and imperative reload button all use English.
+- actual:
+  - The recovery surface was English except for the button `Обновить страницу`.
+- evidence:
+  - Live DOM snapshot showed `Service connection unavailable`, `Try again`, `Back to catalog`, and the Russian reload button in the same recovery UI.
+- root cause:
+  - `ErrorDisplay` requested `error.action.reload`, but the shared RU/EN/KY dictionaries did not define that key, so the Russian fallback leaked into every locale.
+- fix:
+  - Added `error.action.reload` to the English, Russian, and Kyrgyz shared dictionaries.
+- post-fix evidence:
+  - Focused ErrorDisplay localization test passed and resolves the English button as `Reload page`.
+  - Combined localization suites passed `5/5`; TypeScript validation passed.
+  - Post-fix direct reload in the in-app browser rendered `Reload page` alongside the English recovery copy.
+- status: `fixed and live-verified locally`
+- owner: `Codex`
+
+### WB-078
+- id: `WB-078`
+- date: `2026-08-09`
+- area: `I1 branch management / A4 error surfaces`
+- severity: `P1`
+- title: Branch edit page fails on ambiguous businesses embed and exposes the PostgREST error
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000/dashboard/branches/fe1dde50-c04a-4b48-b215-bde72aa60625`, authenticated owner, desktop
+- steps:
+  1. Open the branch list for the active business.
+  2. Open the existing branch directly.
+  3. Observe the branch edit route.
+- expected:
+  - The branch edit form opens for a branch belonging to the active business.
+  - A recoverable failure shows safe localized guidance without backend details.
+- actual:
+  - The branch request returned HTTP `300` / PostgREST ambiguous-embedding failure.
+  - The page printed `Could not embed because more than one relationship was found for 'branches' and 'businesses'` directly in the UI.
+- evidence:
+  - User screenshot `codex-clipboard-ab081a8b-d989-4eb8-a668-8361a1ba3579.png`.
+  - Supabase API logs recorded the failing `branches?...businesses!inner(...)` request with status `300`.
+- root cause:
+  - The edit page embedded `businesses` through an inferred PostgREST relationship instead of scoping the branch to the already resolved active business.
+  - `BranchErrorDisplay` rendered the raw database error message.
+- fix:
+  - Removed the embedded relationship from the branch query.
+  - Scoped the branch lookup by both branch ID and the active `biz_id`.
+  - Loaded the current business identity through a separate unambiguous query.
+  - Added a localized recovery surface that logs internal diagnostics server-side but never prints database details to the user.
+- post-fix evidence:
+  - Focused page test confirms the branch query contains no embedded `businesses`, applies `id + biz_id`, and loads business identity separately.
+  - Dictionary parity and TypeScript validation passed.
+  - Live Supabase API logs recorded the corrected branch request with status `200` three times after HMR; the prior request was `300`.
+- status: `fixed locally; live network verified, final visual confirmation pending`
+- owner: `Codex`
+
+### WB-079
+- id: `WB-079`
+- date: `2026-08-09`
+- area: `I1 branch management / map resilience`
+- severity: `P1`
+- title: Recoverable Yandex Maps initialization failure opens the Next.js error overlay and cannot retry
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000/dashboard/branches/fe1dde50-c04a-4b48-b215-bde72aa60625`, authenticated owner, desktop, Next.js dev
+- steps:
+  1. Open the existing branch edit route after a prior network interruption or map script failure.
+  2. Wait for the map picker to initialize.
+- expected:
+  - A transient map failure keeps the form usable, shows localized fallback guidance, and permits retry.
+  - Recoverable provider failures do not trigger the framework error overlay.
+- actual:
+  - `BranchMapPicker` logged initialization through `console.error`, which opened the Next.js dev overlay.
+  - The Yandex loader cached its rejected Promise, so later attempts reused the same failure until the module/page was fully restarted.
+- evidence:
+  - User screenshot `codex-clipboard-4d4de514-e6fa-4a2a-9134-aaf867df5119.png`.
+- root cause:
+  - `loadYandexMaps()` never cleared `loadPromise` after script rejection.
+  - The map picker classified provider/network degradation as an application error instead of a recoverable warning.
+- fix:
+  - Reset the cached loader and remove the failed script after rejection so a later call starts a clean request.
+  - Added a localized `Retry map loading` action to the fallback surface.
+  - Changed recoverable map initialization, geocoding, and interaction diagnostics from error to warning logging.
+- post-fix evidence:
+  - Loader recovery, retry UI, and dictionary parity suites passed `3/3`; TypeScript validation passed.
+  - Live browser direct-load of `/map` rendered the real Yandex map and branch marker with no map error in console.
+- status: `fixed locally; shared loader live-verified, authenticated branch visual confirmation pending`
+- owner: `Codex`
+
+### WB-080
+- id: `WB-080`
+- date: `2026-08-09`
+- area: `I1 branch management / environment wiring`
+- severity: `P1`
+- title: Branch edit route does not pass Yandex Maps configuration or business contact inheritance data
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000/dashboard/branches/fe1dde50-c04a-4b48-b215-bde72aa60625`, authenticated owner, desktop
+- steps:
+  1. Open the existing branch edit page after WB-079 fallback handling is active.
+  2. Inspect the map panel.
+- expected:
+  - The edit route initializes Yandex Maps with the same server-provided public key as the create and public-map routes.
+  - Empty branch contact fields can inherit the active business contacts.
+- actual:
+  - The map displayed its safe fallback because `EditBranchPageClient` never received or forwarded `yandexMapsApiKey`.
+  - The same route also omitted business contact values when rendering the shared branch form.
+- evidence:
+  - User screenshot `codex-clipboard-6cad5cb8-bfd1-479e-a0da-d89f2faafc6e.png`.
+  - Source comparison showed `/map` and `/dashboard/branches/new` pass the server environment key while `/dashboard/branches/[id]` did not.
+- root cause:
+  - The shared `BranchForm` contract had evolved, but the edit route integration was not updated with its environment and inheritance props.
+- fix:
+  - Extended the edit-page business query with public business contact fields.
+  - Passed the server-side `NEXT_PUBLIC_YANDEX_MAPS_API_KEY` and business contacts through `EditBranchPageClient` into the shared form.
+- post-fix evidence:
+  - Focused edit-page test confirms the map key and all four business contact fields are passed with the business-scoped branch data.
+  - Combined branch map/edit/loader suites passed `3/3`; TypeScript validation passed.
+- status: `fixed locally; authenticated visual confirmation pending`
+- owner: `Codex`
+
+### WB-081
+- id: `WB-081`
+- date: `2026-08-13`
+- area: `G2 dashboard navigation / O responsive UI`
+- severity: `P1`
+- title: Dashboard workspace drawer obscures tablet content and competes with the global mobile menu
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000/dashboard/branches/fe1dde50-c04a-4b48-b215-bde72aa60625`, authenticated owner, responsive viewport `768x802`
+- steps:
+  1. Open an authenticated dashboard route at tablet width.
+  2. Open workspace navigation.
+  3. Inspect the relationship between the sticky global header, workspace drawer, and page content.
+- expected:
+  - Tablet navigation occupies a predictable layout column and never covers the working area.
+  - Phone navigation remains reachable without competing floating hamburger controls.
+  - Long navigation lists remain scrollable and respect safe-area insets.
+- actual:
+  - The phone-style left drawer was reused up to the desktop `lg` breakpoint.
+  - At `768px` it opened below/behind the higher-z-index global header and covered a large part of the branch form and map.
+  - A separate global hamburger remained visible, making the two menu responsibilities unclear.
+- evidence:
+  - User screenshot `codex-clipboard-cb521204-c878-4a04-bd34-dad1d6708e00.png` at `768x802`.
+- root cause:
+  - One fixed off-canvas layout served both phones and tablets.
+  - The workspace trigger used the same hamburger pattern as the global account/language menu.
+  - Dashboard and staff content retained spacing reserved for the old floating trigger.
+- fix:
+  - Added a labeled, persistent tablet navigation rail that participates in page layout instead of overlaying content.
+  - Replaced the phone drawer with a bottom navigation bar for primary destinations and a safe-area-aware `More` bottom sheet for the complete workspace navigation and business selector.
+  - Added backdrop dismissal, Escape handling, background scroll lock, active secondary-section indication, reduced-motion support, and localized `More` labels in RU/EN/KY.
+  - Applied the shared responsive navigation architecture to both owner and staff workspaces and removed the obsolete top spacing.
+- post-fix evidence:
+  - Workspace navigation tests passed `4/4`, including mobile opening, Escape dismissal, scroll locking, and desktop collapse persistence.
+  - Web TypeScript validation and `git diff --check` passed.
+- status: `fixed locally; authenticated tablet/mobile visual confirmation pending`
+- owner: `Codex`
+
+### WB-082
+- id: `WB-082`
+- date: `2026-08-13`
+- area: `I2 service management / O form UX`
+- severity: `P1`
+- title: Clearing service duration forces zero and turns a new 30-minute value into 030
+- build: local `main` plus current uncommitted changes
+- environment: `http://localhost:3000/dashboard/services/new`, authenticated owner, desktop viewport
+- steps:
+  1. Open the new-service form.
+  2. Clear the default duration.
+  3. Type `30`.
+- expected:
+  - The duration field can remain empty while the user edits it.
+  - Typing `30` displays and submits exactly `30` minutes.
+- actual:
+  - Clearing the field immediately changed its controlled value to `0`.
+  - Typing `30` after that zero displayed `030`, making the intended value unclear.
+- evidence:
+  - User screenshot `codex-clipboard-be040e9d-4971-4047-9593-4f7aceb72c73.png`.
+- root cause:
+  - The input handler used `Number(value) || 0` on every keystroke, so the valid editing state `''` was coerced to zero.
+- fix:
+  - Store duration as an input draft string while editing, allow a real empty state, strip leading zeroes, and convert to a number only after validation for the API payload.
+  - Added integer input metadata (`min=1`, `step=1`, numeric input mode).
+- post-fix evidence:
+  - Focused ServiceForm tests passed `3/3`: clearing retains an empty field, `030` normalizes to `30`, and the API payload contains numeric `30`.
+  - Web TypeScript validation passed.
+- status: `fixed locally; authenticated visual confirmation pending`
+- owner: `Codex`

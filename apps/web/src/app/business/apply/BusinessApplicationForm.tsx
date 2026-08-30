@@ -21,6 +21,7 @@ const APPLICATION_ERROR_KEYS: Partial<Record<string, I18nKey>> = {
     invalid_request: 'business.apply.error.invalidRequest',
     required_fields: 'business.apply.error.requiredFields',
     invalid_email: 'business.apply.error.invalidEmail',
+    service_unavailable: 'business.apply.error.serviceUnavailable',
     business_exists: 'business.apply.error.businessExists',
     recent_duplicate: 'business.apply.error.recentDuplicate',
     pending_duplicate: 'business.apply.error.pendingDuplicate',

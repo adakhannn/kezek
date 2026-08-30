@@ -45,6 +45,7 @@ type Business = {
     name: string;
     address: string | null;
     phones: string[] | null;
+    contact_phone: string | null;
     categories: string[] | null;
     rating_score: number | null;
     promotions_count?: number;
@@ -78,7 +79,7 @@ export default async function Home({
 
         let query = supabase
             .from('businesses')
-            .select('id,slug,name,address,phones,categories,rating_score', { count: 'exact' })
+            .select('id,slug,name,address,phones,contact_phone,categories,rating_score', { count: 'exact' })
             .eq('is_approved', true);
 
         if (q) {
@@ -314,8 +315,8 @@ function MarketplaceBusinessCard({
                     <span className="h-2 w-2 rounded-full bg-[var(--status-success)]" aria-hidden="true" />
                     {t('home.card.onlineBooking', 'Онлайн-запись')}
                 </span>
-                {business.phones?.[0] ? (
-                    <span className="min-w-0 truncate">{business.phones[0]}</span>
+                {business.contact_phone ? (
+                    <span className="min-w-0 truncate">{business.contact_phone}</span>
                 ) : null}
             </div>
 

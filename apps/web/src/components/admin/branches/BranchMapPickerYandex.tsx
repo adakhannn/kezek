@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import {logError} from '@/lib/log';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { logWarn } from '@/lib/log';
 import { loadYandexMaps } from '@/lib/yamaps';
 
 /* =======================
@@ -53,7 +54,7 @@ interface IMap {
 
 type ZoomControlOptions = { options?: { size?: 'small' | 'large'; position?: PositionOpt } };
 type GeolocationControlOptions = { options?: { position?: PositionOpt } };
-type SearchControlOptions = { provider?: string; options?: { size?: 'small' | 'large'; position?: PositionOpt } };
+type SearchControlOptions = { provider?: string; options?: { size?: 'small' | 'large'; position?: PositionOpt; placeholderContent?: string } };
 
 interface ISearchControl {
     events: IEventManager;
@@ -90,9 +91,12 @@ type Props = {
 };
 
 export default function BranchMapPickerYandex({ lat, lon, yandexMapsApiKey, onPick }: Props) {
+    const { t } = useLanguage();
     const boxRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<IMap | null>(null);
     const placemarkRef = useRef<IPlacemark | null>(null);
+    const [loadError, setLoadError] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
     // Используем ref для хранения последней версии onPick, чтобы избежать пересоздания карты
     const onPickRef = useRef(onPick);
     
@@ -106,6 +110,7 @@ export default function BranchMapPickerYandex({ lat, lon, yandexMapsApiKey, onPi
 
         (async () => {
             try {
+            setLoadError(false);
             const ymaps = (await loadYandexMaps(yandexMapsApiKey)) as unknown as IYMaps;
                 if (destroyed || !boxRef.current) return;
 
@@ -133,7 +138,11 @@ export default function BranchMapPickerYandex({ lat, lon, yandexMapsApiKey, onPi
 
             const search = new ymaps.control.SearchControl({
                 provider: 'yandex#search',
-                options: { size: 'large', position: { left: 10, top: 10 } },
+                options: {
+                    size: 'large',
+                    position: { left: 10, top: 10 },
+                    placeholderContent: t('branches.map.searchPlaceholder', 'Адрес или объект'),
+                },
             });
             map.controls.add(search);
 
@@ -191,7 +200,7 @@ export default function BranchMapPickerYandex({ lat, lon, yandexMapsApiKey, onPi
                     // Yandex Maps возвращает координаты в формате [lat, lon]
                     onPickRef.current(coords[0], coords[1], addr);
                 } catch (error) {
-                    logError('BranchMapPicker', 'Geocoding error', error);
+                    logWarn('BranchMapPicker', 'Geocoding unavailable', error);
                     // В случае ошибки все равно передаем координаты
                     onPickRef.current(coords[0], coords[1], undefined);
                 }
@@ -205,27 +214,18 @@ export default function BranchMapPickerYandex({ lat, lon, yandexMapsApiKey, onPi
                 try {
                     const coords = e.get<Coordinates>('coords');
                     if (!coords || !Array.isArray(coords) || coords.length < 2) {
-                        logError('BranchMapPicker', 'Invalid coordinates from click event', { coords });
+                        logWarn('BranchMapPicker', 'Invalid coordinates from click event', { coords });
                         return;
                     }
                     setPoint(coords);
                     await geocodeAndEmit(coords);
                 } catch (error) {
-                    logError('BranchMapPicker', 'Error handling map click', error);
+                    logWarn('BranchMapPicker', 'Map click could not be handled', error);
                 }
             });
             } catch (error) {
-                logError('BranchMapPicker', 'Failed to initialize Yandex Maps', error);
-                if (boxRef.current) {
-                    boxRef.current.innerHTML = `
-                        <div class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 rounded border">
-                            <div class="text-center p-4">
-                                <p class="text-red-600 dark:text-red-400 font-medium mb-2">Ошибка загрузки карты</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">Карта временно недоступна. Введите адрес филиала вручную.</p>
-                            </div>
-                        </div>
-                    `;
-                }
+                logWarn('BranchMapPicker', 'Yandex Maps is temporarily unavailable', error);
+                if (!destroyed) setLoadError(true);
             }
         })();
 
@@ -237,21 +237,39 @@ export default function BranchMapPickerYandex({ lat, lon, yandexMapsApiKey, onPi
             }
             placemarkRef.current = null;
         };
-    }, [lat, lon, yandexMapsApiKey]); // onPick не включаем в зависимости, чтобы карта не пересоздавалась при каждом рендере
+    }, [lat, lon, retryKey, t, yandexMapsApiKey]); // onPick хранится в ref; локаль/повтор пересоздают карту
 
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <div
-                ref={boxRef}
-                className="w-full h-72 sm:h-80"
-            />
+            <div className="relative h-72 w-full sm:h-80">
+                <div ref={boxRef} className="h-full w-full" />
+                {loadError ? (
+                    <div className="absolute inset-0 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-800">
+                        <div className="p-4 text-center">
+                            <p className="mb-2 font-medium text-red-600 dark:text-red-400">
+                                {t('branches.map.errorTitle', 'Не удалось загрузить карту')}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {t('branches.map.errorDescription', 'Карта временно недоступна. Введите адрес филиала вручную.')}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => setRetryKey((current) => current + 1)}
+                                className="mt-4 rounded-lg border border-violet-400/50 px-3 py-2 text-sm font-medium text-violet-600 transition hover:bg-violet-500/10 dark:text-violet-300"
+                            >
+                                {t('branches.map.retry', 'Повторить загрузку карты')}
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
+            </div>
             <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-gray-50 text-[11px] text-gray-500 dark:border-gray-800 dark:bg-gray-900/80 dark:text-gray-400">
-                <span>Переместите метку или выберите адрес через поиск на карте.</span>
+                <span>{t('branches.map.hint', 'Переместите метку или выберите адрес через поиск на карте.')}</span>
                 <span className="hidden sm:inline-flex items-center gap-1">
                     <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                     </svg>
-                    Яндекс Карты
+                    {t('branches.map.providerName', 'Яндекс Карты')}
                 </span>
             </div>
         </div>

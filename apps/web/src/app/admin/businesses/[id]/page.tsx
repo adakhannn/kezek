@@ -28,6 +28,10 @@ type BizRow = {
     created_at: string | null;
     address: string | null;
     phones: string[] | null;
+    contact_phone: string | null;
+    contact_whatsapp: string | null;
+    contact_email: string | null;
+    website_url: string | null;
     branch_limit: number;
 };
 
@@ -71,7 +75,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<R
     const admin = createClient(url, serviceRoleKey);
     const { data: business, error: businessError } = await admin
         .from('businesses')
-        .select('id,name,slug,categories,owner_id,is_approved,created_at,address,phones,branch_limit')
+        .select('id,name,slug,categories,owner_id,is_approved,created_at,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,branch_limit')
         .eq('id', id)
         .maybeSingle<BizRow>();
 
@@ -302,6 +306,10 @@ export default async function BusinessDetailPage({ params }: { params: Promise<R
                         categories,
                         address: business.address,
                         phones: business.phones,
+                        contact_phone: business.contact_phone,
+                        contact_whatsapp: business.contact_whatsapp,
+                        contact_email: business.contact_email,
+                        website_url: business.website_url,
                         is_approved: isApproved,
                         created_at: business.created_at,
                     }}

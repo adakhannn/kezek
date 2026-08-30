@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
                 <div className="flex items-start">
                     <MobileSidebar bizId={bizId} />
-                    <section className="flex-1 min-h-screen pt-20 lg:pt-0">
+                    <section className="min-h-screen min-w-0 flex-1 pb-24 pt-4 md:pb-0 lg:pt-0">
                         <ErrorBoundary>
                             {children}
                         </ErrorBoundary>
@@ -29,7 +29,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     } catch (e: unknown) {
         if (e instanceof BizAccessError) {
             if (e.code === 'NOT_AUTHENTICATED') {
-                redirect('/b/kezek');
+                redirect('/auth/sign-in?redirect=/dashboard');
+            }
+            if (e.code === 'SERVICE_UNAVAILABLE') {
+                return <DashboardLayoutClient errorType="SERVICE_UNAVAILABLE" />;
             }
             if (e.code === 'NO_BIZ_ACCESS') {
                 return (
@@ -42,7 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         } else if (e instanceof Error) {
             // Fallback для старых/других ошибок по message
             if (e.message === 'UNAUTHORIZED') {
-                redirect('/b/kezek');
+                redirect('/auth/sign-in?redirect=/dashboard');
             }
             if (e.message === 'NO_BIZ_ACCESS') {
                 const diagnostics = e instanceof BizAccessError ? e.diagnostics : undefined;

@@ -31,6 +31,10 @@ export type ManagerBusinessContext = {
     tz: string | null;
     owner_id: string | null;
     branch_limit: number | null;
+    contact_phone: string | null;
+    contact_whatsapp: string | null;
+    contact_email: string | null;
+    website_url: string | null;
 };
 
 /**
@@ -45,14 +49,22 @@ export async function resolveBizContextForManagers() {
 
     logDebug('AuthBiz', 'Starting business context resolution');
     const { data: userData, error: eUser } = await supabase.auth.getUser();
-    if (eUser || !userData?.user) {
+    if (eUser) {
         logError('AuthBiz', 'User authentication failed', {
             error: eUser?.message,
             hasUser: !!userData?.user,
             errorCode: eUser?.code,
             errorStatus: eUser?.status,
         });
-        // Типизированный код ошибки + совместимое текстовое сообщение
+        const authStatus = typeof eUser.status === 'number' ? eUser.status : 0;
+        const authCode = typeof eUser.code === 'string' ? eUser.code : '';
+        const isRejectedSession = authStatus === 401 || authStatus === 403 || authCode === 'session_not_found';
+        if (!isRejectedSession) {
+            throw new BizAccessError('SERVICE_UNAVAILABLE', 'AUTH_SERVICE_UNAVAILABLE');
+        }
+        throw new BizAccessError('NOT_AUTHENTICATED', 'UNAUTHORIZED');
+    }
+    if (!userData?.user) {
         throw new BizAccessError('NOT_AUTHENTICATED', 'UNAUTHORIZED');
     }
     const userId = userData.user.id;
@@ -112,7 +124,7 @@ export async function resolveBizContextForManagers() {
     // repeat RLS-sensitive identity lookups or receive a service client.
     const businessResult = await serviceClient
         .from('businesses')
-        .select('id,name,slug,rating_score,tz,owner_id,branch_limit')
+        .select('id,name,slug,rating_score,tz,owner_id,branch_limit,contact_phone,contact_whatsapp,contact_email,website_url')
         .eq('id', bizId)
         .maybeSingle<Omit<ManagerBusinessContext, 'city'>>();
     const business = businessResult.data

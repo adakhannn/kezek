@@ -1,6 +1,22 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Public smoke pages', () => {
+    test('business application entry renders without privileged server configuration', async ({ page }) => {
+        const consoleErrors: string[] = [];
+        page.on('console', (message) => {
+            if (message.type() === 'error') consoleErrors.push(message.text());
+        });
+
+        const response = await page.goto('/business/apply');
+
+        expect(response?.status()).toBe(200);
+        await expect(page).toHaveURL(/\/business\/apply$/);
+        await expect(page.locator('h1').first()).toBeVisible();
+        await expect(page.locator('a[href^="/auth/sign-in"]').first()).toBeVisible();
+        await expect(page.getByText('SUPABASE_SERVICE_ROLE_KEY')).toHaveCount(0);
+        expect(consoleErrors).toEqual([]);
+    });
+
     test('sign-in page renders the primary auth form', async ({ page }) => {
         await page.goto('/auth/sign-in');
 

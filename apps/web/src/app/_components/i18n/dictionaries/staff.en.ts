@@ -337,6 +337,7 @@ export const staffEn = {
     'staff.services.selectedOf': 'of',
     'staff.sidebar.closeMenu': 'Close menu',
     'staff.sidebar.openMenu': 'Open menu',
+    'staff.sidebar.more': 'More',
     'staff.slots.createInSlot': 'Create booking in this slot',
     'staff.slots.error.loadServices': 'Error loading services',
     'staff.slots.filters.title': 'Filters for free slots',

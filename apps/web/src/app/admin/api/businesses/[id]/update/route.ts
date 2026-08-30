@@ -6,9 +6,10 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { validatePublicContacts, type PublicContactFields } from '@/lib/businessContacts';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
-type Body = {
+type Body = PublicContactFields & {
     name?: string;
     slug?: string;
     categories?: string[] | null;
@@ -117,6 +118,16 @@ export async function PATCH(req: Request, context: unknown) {
 
         if (body.phones !== undefined) {
             updates.phones = body.phones === null ? null : Array.isArray(body.phones) ? body.phones.filter((p): p is string => typeof p === 'string').map((p) => p.trim()).filter(Boolean) : [];
+        }
+
+        const contactFieldsPresent = ['contact_phone', 'contact_whatsapp', 'contact_email', 'website_url']
+            .some((field) => field in body);
+        if (contactFieldsPresent) {
+            const contacts = validatePublicContacts(body);
+            if (!contacts.ok) {
+                return NextResponse.json({ ok: false, error: contacts.message }, { status: 400 });
+            }
+            Object.assign(updates, contacts.value);
         }
 
         if (body.is_approved !== undefined) {

@@ -8,6 +8,7 @@ import BranchMapPickerYandex from '@/components/admin/branches/BranchMapPickerYa
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import type { PublicContactFields } from '@/lib/businessContacts';
 
 type Initial = {
     id?: string;
@@ -16,14 +17,21 @@ type Initial = {
     is_active: boolean;
     lat?: number | null;
     lon?: number | null;
+    contact_phone?: string | null;
+    contact_whatsapp?: string | null;
+    contact_email?: string | null;
+    website_url?: string | null;
+    inherit_business_contacts?: boolean;
 };
 
 export default function BranchForm({
                                        initial,
+                                       businessContacts = {},
                                        apiBase,
                                        yandexMapsApiKey,
                                    }: {
     initial: Initial;
+    businessContacts?: PublicContactFields;
     apiBase: string; // '/api/branches'
     yandexMapsApiKey?: string;
 }) {
@@ -34,6 +42,21 @@ export default function BranchForm({
     const [err, setErr] = useState<string | null>(null);
     const [lat, setLat] = useState<number | null>(initial.lat ?? null);
     const [lon, setLon] = useState<number | null>(initial.lon ?? null);
+    const inheritsBusinessContacts = form.inherit_business_contacts !== false;
+
+    function contactValue(field: keyof PublicContactFields): string {
+        const branchValue = form[field];
+        if (typeof branchValue === 'string' && branchValue) return branchValue;
+        if (!inheritsBusinessContacts) return '';
+        return businessContacts[field] ?? '';
+    }
+
+    function contactHelper(field: keyof PublicContactFields): string | undefined {
+        if (!inheritsBusinessContacts || form[field]) return undefined;
+        return businessContacts[field]
+            ? t('branches.form.contacts.inheritedValue', 'Наследуется от бизнеса. Введите другое значение, чтобы переопределить.')
+            : t('branches.form.contacts.missingBusinessValue', 'В контактах бизнеса это поле пока не заполнено.')
+    }
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -119,6 +142,69 @@ export default function BranchForm({
                 placeholder={t('branches.form.addressPlaceholder', 'Адрес будет определен автоматически при выборе на карте')}
                 helperText={t('branches.form.addressManualHint', 'Адрес можно выбрать на карте или ввести вручную')}
             />
+
+            <div className="space-y-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5">
+                <div>
+                    <h2 className="type-section-title text-[var(--text-primary)]">
+                        {t('branches.form.contacts.title', 'Контакты филиала')}
+                    </h2>
+                    <p className="type-caption mt-1 text-[var(--text-secondary)]">
+                        {t('branches.form.contacts.description', 'Укажите публичные контакты этой локации. Пустые поля могут наследоваться от бизнеса.')}
+                    </p>
+                </div>
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-[var(--surface-emphasis)] p-3">
+                    <input
+                        type="checkbox"
+                        checked={inheritsBusinessContacts}
+                        onChange={(event) => setForm((current) => ({
+                            ...current,
+                            inherit_business_contacts: event.target.checked,
+                        }))}
+                        className="mt-0.5 h-5 w-5 rounded border-[var(--border-default)]"
+                    />
+                    <span>
+                        <span className="block text-sm font-medium text-[var(--text-primary)]">
+                            {t('branches.form.contacts.inherit', 'Использовать контакты бизнеса')}
+                        </span>
+                        <span className="block text-xs text-[var(--text-secondary)]">
+                            {t('branches.form.contacts.inheritHint', 'Только для полей, которые не заполнены у филиала.')}
+                        </span>
+                    </span>
+                </label>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Input
+                        label={t('branches.form.contacts.phone', 'Телефон филиала')}
+                        value={contactValue('contact_phone')}
+                        onChange={(event) => setForm((current) => ({ ...current, contact_phone: event.target.value }))}
+                        helperText={contactHelper('contact_phone')}
+                        placeholder="+996555123456"
+                        inputMode="tel"
+                    />
+                    <Input
+                        label={t('branches.form.contacts.whatsapp', 'WhatsApp филиала')}
+                        value={contactValue('contact_whatsapp')}
+                        onChange={(event) => setForm((current) => ({ ...current, contact_whatsapp: event.target.value }))}
+                        helperText={contactHelper('contact_whatsapp')}
+                        placeholder="+996555123456"
+                        inputMode="tel"
+                    />
+                    <Input
+                        label={t('branches.form.contacts.email', 'Email филиала')}
+                        value={contactValue('contact_email')}
+                        onChange={(event) => setForm((current) => ({ ...current, contact_email: event.target.value }))}
+                        helperText={contactHelper('contact_email')}
+                        type="email"
+                    />
+                    <Input
+                        label={t('branches.form.contacts.website', 'Сайт филиала')}
+                        value={contactValue('website_url')}
+                        onChange={(event) => setForm((current) => ({ ...current, website_url: event.target.value }))}
+                        helperText={contactHelper('website_url')}
+                        placeholder="https://example.com"
+                        type="url"
+                    />
+                </div>
+            </div>
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <input

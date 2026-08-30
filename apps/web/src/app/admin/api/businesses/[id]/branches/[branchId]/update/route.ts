@@ -7,16 +7,18 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { validatePublicContacts, type PublicContactFields } from '@/lib/businessContacts';
 import {logError} from '@/lib/log';
 import { validateLatLon } from '@/lib/validation';
 
-type Body = {
+type Body = PublicContactFields & {
     name?: string | null;
     address?: string | null;
     is_active?: boolean;
     lat?: number | null;
     lon?: number | null;
     directory_links?: Record<string, string | null>;
+    inherit_business_contacts?: boolean;
 };
 
 type Patch = Partial<{ name: string | null; address: string | null; is_active: boolean }> & { [k: string]: unknown };
@@ -55,11 +57,15 @@ async function handler(req: Request) {
         const admin = createClient(URL, SERVICE);
         const body = (await req.json()) as Body;
 
-        const patch: Patch = {};
+        const contacts = validatePublicContacts(body);
+        if (!contacts.ok) return NextResponse.json({ ok: false, error: contacts.message }, { status: 400 });
+
+        const patch: Patch = { ...contacts.value };
         if ('name' in body) patch.name = norm(body.name);
         if ('address' in body) patch.address = norm(body.address);
         if ('is_active' in body) patch.is_active = !!body.is_active;
         if ('directory_links' in body) patch.directory_links = body.directory_links && typeof body.directory_links === 'object' ? body.directory_links : {};
+        if ('inherit_business_contacts' in body) patch.inherit_business_contacts = body.inherit_business_contacts !== false;
 
         // Координаты: меняем ТОЛЬКО coords; lat/lon не трогаем (их пересчитает БД)
         if ('lat' in body || 'lon' in body) {

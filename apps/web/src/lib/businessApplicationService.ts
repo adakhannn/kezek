@@ -106,7 +106,6 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
 
     const slug = await makeUniqueBusinessSlug(params.admin, businessName);
     const category = await resolveBusinessCategory(params.admin, row.category);
-    const phone = normalizePhoneToE164(row.phone ?? '');
     let ownerRoleId: string | null = null;
 
     if (row.applicant_user_id) {
@@ -132,7 +131,13 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
             slug,
             owner_id: row.applicant_user_id,
             categories: [category],
-            phones: phone ? [phone] : null,
+            // Applicant phone is review/contact data, not a public business contact.
+            // The owner configures business-owned contacts after approval.
+            phones: null,
+            contact_phone: null,
+            contact_whatsapp: null,
+            contact_email: null,
+            website_url: null,
             branch_limit: 1,
             is_approved: true,
             creation_source: 'public_application',

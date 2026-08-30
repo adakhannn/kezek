@@ -23,14 +23,14 @@ async function getData(slug: string) {
 
     // Оптимизация: сначала получаем бизнес, затем параллельно загружаем все остальные данные
     const [biz] = await q(
-        `businesses?select=id,slug,name,address,phones,rating_score&slug=eq.${slug}&is_approved=eq.true&limit=1`
+        `businesses?select=id,slug,name,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,rating_score,tz&slug=eq.${slug}&is_approved=eq.true&limit=1`
     );
     if (!biz) return null;
 
     // Параллельная загрузка всех данных для улучшения производительности
     const [branches, services, staff] = await Promise.all([
         q(
-            `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
+            `branches?select=id,name,address,rating_score,contact_phone,contact_whatsapp,contact_email,website_url,inherit_business_contacts&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
         ),
         q(
             `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`

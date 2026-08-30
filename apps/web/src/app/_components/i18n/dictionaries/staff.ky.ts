@@ -329,6 +329,7 @@ export const staffKy = {
     'staff.services.selectedOf': 'дан',
     'staff.sidebar.closeMenu': 'Менюну жабуу',
     'staff.sidebar.openMenu': 'Менюну ачуу',
+    'staff.sidebar.more': 'Дагы',
     'staff.slots.createInSlot': 'Бул слотко жазылыш түзүү',
     'staff.slots.filters.title': 'Эркин слоттор үчүн фильтрлер',
     'staff.slots.found': 'Табылган эркин слоттор:',

@@ -44,6 +44,7 @@ export const businessRu = {
     'business.apply.error.invalidRequest': 'Не удалось обработать форму. Проверьте данные и попробуйте ещё раз.',
     'business.apply.error.requiredFields': 'Укажите имя, название бизнеса, телефон и email.',
     'business.apply.error.invalidEmail': 'Укажите корректный email.',
+    'business.apply.error.serviceUnavailable': 'Отправка заявок временно недоступна из-за настройки сервера. Попробуйте позже.',
     'business.apply.error.businessExists': 'Бизнес с таким названием уже есть в Kezek. Запросите доступ владельца вместо создания повторной карточки.',
     'business.apply.error.recentDuplicate': 'Заявка с этим номером уже отправлена. Мы скоро свяжемся с вами.',
     'business.apply.error.pendingDuplicate': 'Такая заявка уже ожидает рассмотрения.',
@@ -52,5 +53,11 @@ export const businessRu = {
     'business.apply.error.monthlyLimit': 'Достигнут лимит заявок за 30 дней. Попробуйте позже или обратитесь в поддержку.',
     'business.apply.error.cooldown24h': 'После отклонения новую заявку можно отправить через 24 часа.',
     'business.apply.error.submit': 'Не удалось отправить заявку',
+    'business.notFound.title': 'Бизнес не найден',
+    'business.notFound.description': 'Проверьте адрес страницы или вернитесь в каталог, чтобы выбрать другой бизнес.',
+    'business.unavailable.title': 'Не удалось загрузить бизнес',
+    'business.unavailable.description': 'Проверьте интернет-соединение и попробуйте ещё раз.',
+    'business.unavailable.retry': 'Повторить',
+    'business.unavailable.catalog': 'В каталог',
 } as const;
 

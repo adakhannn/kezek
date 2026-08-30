@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function NewBranchPage() {
+    const t = await getT();
     // проверка доступа; данные не нужны
     const { supabase, userId, bizId, business } = await getBizContextForManagers();
 
@@ -19,7 +20,6 @@ export default async function NewBranchPage() {
     const canCreateBranch = isSuperAdmin || isPrimaryOwner;
 
     if (!canCreateBranch) {
-        const t = getT('ru');
         return (
             <main className="mx-auto max-w-3xl p-6">
                                 <AlertBanner
@@ -41,8 +41,8 @@ export default async function NewBranchPage() {
             <main className="mx-auto max-w-3xl p-6">
                 <AlertBanner
                     variant="warning"
-                    title="Лимит филиалов достигнут"
-                    message={`Для бизнеса разрешено ${branchLimit} филиалов. Обратитесь к суперадминистратору для увеличения лимита.`}
+                    title={t('branches.new.limit.title', 'Лимит филиалов достигнут')}
+                    message={t('branches.new.limit.description', 'Для бизнеса разрешено до {limit} филиалов. Обратитесь к суперадминистратору для увеличения лимита.').replace('{limit}', String(branchLimit))}
                 />
             </main>
         );
@@ -50,9 +50,24 @@ export default async function NewBranchPage() {
 
     return (
         <main className="mx-auto max-w-3xl p-6 space-y-4">
-            <h1 className="text-2xl font-semibold">Новый филиал</h1>
+            <h1 className="text-2xl font-semibold">{t('branches.new.title', 'Новый филиал')}</h1>
             <BranchForm
-                initial={{ name: '', address: '', is_active: true }}
+                initial={{
+                    name: '',
+                    address: '',
+                    is_active: true,
+                    contact_phone: '',
+                    contact_whatsapp: '',
+                    contact_email: '',
+                    website_url: '',
+                    inherit_business_contacts: true,
+                }}
+                businessContacts={{
+                    contact_phone: business?.contact_phone ?? null,
+                    contact_whatsapp: business?.contact_whatsapp ?? null,
+                    contact_email: business?.contact_email ?? null,
+                    website_url: business?.website_url ?? null,
+                }}
                 apiBase="/api/branches"
                 yandexMapsApiKey={process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}
             />

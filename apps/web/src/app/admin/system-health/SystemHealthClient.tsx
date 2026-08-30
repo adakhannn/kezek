@@ -45,11 +45,17 @@ type SystemHealthData = {
     integrations: {
         whatsapp: {
             ok: boolean;
+            configured: boolean;
+            providerReachable: boolean;
+            providerMessage?: string;
             lastSuccessDate: string | null;
             recentFailures: number;
         };
         telegram: {
             ok: boolean;
+            configured: boolean;
+            providerReachable: boolean;
+            providerMessage?: string;
             lastSuccessDate: string | null;
             recentFailures: number;
         };
@@ -257,6 +263,11 @@ export default function SystemHealthClient() {
                             title="WhatsApp"
                             ok={data.integrations.whatsapp.ok}
                             lines={[
+                                data.integrations.whatsapp.configured
+                                    ? data.integrations.whatsapp.providerReachable
+                                        ? 'Провайдер доступен, учётные данные приняты'
+                                        : data.integrations.whatsapp.providerMessage || 'Провайдер не отвечает'
+                                    : data.integrations.whatsapp.providerMessage || 'Провайдер не настроен',
                                 `Последний успех: ${formatDate(data.integrations.whatsapp.lastSuccessDate)}`,
                                 data.integrations.whatsapp.recentFailures > 0 ? `Ошибок за 24ч: ${data.integrations.whatsapp.recentFailures}` : 'Нет новых сбоев',
                             ]}
@@ -265,6 +276,11 @@ export default function SystemHealthClient() {
                             title="Telegram"
                             ok={data.integrations.telegram.ok}
                             lines={[
+                                data.integrations.telegram.configured
+                                    ? data.integrations.telegram.providerReachable
+                                        ? 'Провайдер доступен, учётные данные приняты'
+                                        : data.integrations.telegram.providerMessage || 'Провайдер не отвечает'
+                                    : data.integrations.telegram.providerMessage || 'Провайдер не настроен',
                                 `Последний успех: ${formatDate(data.integrations.telegram.lastSuccessDate)}`,
                                 data.integrations.telegram.recentFailures > 0 ? `Ошибок за 24ч: ${data.integrations.telegram.recentFailures}` : 'Нет новых сбоев',
                             ]}

@@ -1,11 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
+import { ArrowLeft, FolderPlus } from 'lucide-react';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
-import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
-
 import { CategoryForm } from '@/components/admin/categories/CategoryForm';
-import { Button } from '@/components/ui/Button';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,38 +28,65 @@ export default async function CategoryNewPage({ searchParams }: { searchParams: 
     const proposedName = typeof params.name === 'string' ? params.name.trim().slice(0, 120) : '';
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
-            <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
-                {/* Заголовок */}
-                <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6 mb-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                                Новая категория
-                            </h1>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Создайте новую категорию для бизнесов
-                            </p>
-                        </div>
-                        <Link href="/admin/categories">
-                            <Button variant="outline">
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                </svg>
-                                Назад к категориям
-                            </Button>
-                        </Link>
+        <main className="px-4 py-6 sm:px-6 sm:py-8">
+            <div className="mx-auto max-w-3xl">
+                <Link
+                    href="/admin/categories"
+                    className={buttonStyles({
+                        variant: 'ghost',
+                        size: 'sm',
+                        className: '-ml-3 mb-5 text-[var(--text-muted)]',
+                    })}
+                >
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                    Категории
+                </Link>
+
+                <header className="mb-6 flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-[var(--shadow-md)]">
+                        <FolderPlus className="h-6 w-6" aria-hidden="true" />
                     </div>
-                </section>
+                    <div className="min-w-0 pt-0.5">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
+                            Каталог бизнесов
+                        </p>
+                        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
+                            Новая категория
+                        </h1>
+                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+                            Категория станет доступна при создании и редактировании бизнеса.
+                        </p>
+                        {proposedName ? (
+                            <div className="mt-3 inline-flex rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1 text-xs text-[var(--text-secondary)]">
+                                Название перенесено из заявки бизнеса
+                            </div>
+                        ) : null}
+                    </div>
+                </header>
 
-                {/* Форма */}
-                <AdminEntityFlowTabs entity="categories" className="max-w-3xl" />
-
-                <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
-                    <CategoryForm
-                        mode="create"
-                        initial={proposedName ? { name_ru: proposedName, slug: '', is_active: true } : undefined}
-                    />
+                <section
+                    aria-label="Создание категории"
+                    className="overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-[var(--shadow-lg)]"
+                >
+                    <div className="border-b border-[var(--border-subtle)] px-5 py-4 sm:px-7">
+                        <div className="flex items-center gap-3">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--surface-emphasis)] text-xs font-semibold text-[var(--accent-primary)]">
+                                1
+                            </span>
+                            <div>
+                                <h2 className="text-base font-semibold text-[var(--text-primary)]">Параметры категории</h2>
+                                <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                                    Укажите понятное клиентам название. URL сформируется автоматически.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-5 sm:p-7">
+                        <CategoryForm
+                            mode="create"
+                            initial={proposedName ? { name_ru: proposedName, slug: '', is_active: true } : undefined}
+                        />
+                    </div>
                 </section>
             </div>
         </main>

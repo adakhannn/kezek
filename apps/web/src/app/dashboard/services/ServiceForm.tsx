@@ -25,6 +25,10 @@ type Initial = {
     branch_ids?: string[];   // множественный (используется только в create)
 };
 
+type ServiceFormState = Omit<Initial, 'duration_min'> & {
+    duration_min: string;
+};
+
 export default function ServiceForm({
                                         initial,
                                         branches,
@@ -39,8 +43,9 @@ export default function ServiceForm({
 
     const isEdit = !!initial.id;
 
-    const [form, setForm] = useState<Initial>({
+    const [form, setForm] = useState<ServiceFormState>({
         ...initial,
+        duration_min: initial.duration_min > 0 ? String(initial.duration_min) : '',
         branch_ids: initial.branch_ids ?? [],
     });
 
@@ -103,7 +108,8 @@ export default function ServiceForm({
             }
 
             // Валидация длительности
-            const durationValidation = validatePositiveNumber(form.duration_min, { min: 1, required: true, allowZero: false });
+            const durationMin = form.duration_min.trim();
+            const durationValidation = validatePositiveNumber(durationMin, { min: 1, required: true, allowZero: false });
             if (!durationValidation.valid) {
                 throw new Error(durationValidation.error || t('services.form.error.durationInvalid', 'Длительность должна быть не менее 1 минуты'));
             }
@@ -149,7 +155,7 @@ export default function ServiceForm({
                 name_ru: form.name_ru.trim(),
                 name_ky: form.name_ky?.trim() || null,
                 name_en: form.name_en?.trim() || null,
-                duration_min: Number(form.duration_min) || 0,
+                duration_min: Number(durationMin),
                 price_from: priceFromStr.trim() === '' ? 0 : Number(priceFromStr) || 0,
                 price_to: priceToStr.trim() === '' ? 0 : Number(priceToStr) || 0,
                 active: !!form.active,
@@ -209,8 +215,16 @@ export default function ServiceForm({
                     label={t('services.form.duration', 'Длительность (мин)')}
                     type="number"
                     min={1}
+                    step={1}
+                    inputMode="numeric"
                     value={form.duration_min}
-                    onChange={(e) => setForm((f) => ({ ...f, duration_min: Number(e.target.value) || 0 }))}
+                    onChange={(e) => {
+                        const value = e.target.value.replace(/^0+(?=\d)/, '');
+                        setForm((f) => ({
+                            ...f,
+                            duration_min: value,
+                        }));
+                    }}
                     required
                 />
                 <Input

@@ -41,4 +41,9 @@ export const commonEn = {
     'common.rating.lowRatingHint': 'low rating',
     'common.rating.noRating': 'Not enough data for rating',
     'common.warning': 'Warning',
+    'error.serviceUnavailable.title': 'Service connection unavailable',
+    'error.serviceUnavailable.description': 'Check your internet connection and try again. Your session and data have not changed.',
+    'error.serviceUnavailable.action.retry': 'Try again',
+    'error.serviceUnavailable.action.home': 'Back to catalog',
+    'error.action.reload': 'Reload page',
 } as const;

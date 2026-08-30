@@ -5,16 +5,18 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
+import { PublicContactActions } from '@/components/business/PublicContactActions';
 import { Badge } from '@/components/ui/Badge';
 import { Card, cardStyles } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { resolvePublicContacts } from '@/lib/businessContacts';
 import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
 
-type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
-type Branch = { id: string; name: string; address?: string | null; rating_score: number | null; directory_links?: Record<string, string | null> | null };
+type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; contact_phone?: string | null; contact_whatsapp?: string | null; contact_email?: string | null; website_url?: string | null; rating_score: number | null };
+type Branch = { id: string; name: string; address?: string | null; rating_score: number | null; contact_phone?: string | null; contact_whatsapp?: string | null; contact_email?: string | null; website_url?: string | null; inherit_business_contacts?: boolean | null; directory_links?: Record<string, string | null> | null };
 type Service = {
     id: string;
     name_ru: string;
@@ -132,11 +134,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                 {biz.address}
                                             </span>
                                         ) : null}
-                                        {biz.phones?.length ? (
-                                            <span className="type-caption rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-[var(--text-secondary)]">
-                                                {biz.phones.join(', ')}
-                                            </span>
-                                        ) : null}
+                                        <PublicContactActions contacts={resolvePublicContacts(biz)} compact />
                                     </div>
                                 }
                                 actions={
@@ -271,6 +269,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                     'Филиал будет доступен в потоке записи при выборе удобной локации.',
                                                 )}
                                             </p>
+                                            <PublicContactActions contacts={resolvePublicContacts(biz, branch)} compact className="mt-4" />
                                             {branch.directory_links && Object.values(branch.directory_links).some(Boolean) ? (
                                                 <div className="mt-4 flex flex-wrap gap-2">
                                                     {([

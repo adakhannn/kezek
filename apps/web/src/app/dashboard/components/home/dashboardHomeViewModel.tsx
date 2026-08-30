@@ -31,18 +31,18 @@ export function getDashboardHomeViewModel(
 
     const onboardingItems = [
         props.branchesCount === 0
-            ? t('dashboard.onboarding.noBranches', 'Создайте хотя бы один филиал, чтобы клиенты могли записываться.')
+            ? t('dashboard.onboarding.noBranches', 'Создай хотя бы один филиал, чтобы клиенты могли записываться.')
             : null,
         props.servicesActive === 0
-            ? t('dashboard.onboarding.noServices', 'Добавьте услуги и укажите длительность и цену.')
+            ? t('dashboard.onboarding.noServices', 'Добавь услуги и укажи продолжительность и цену.')
             : null,
         props.staffActive === 0
-            ? t('dashboard.onboarding.noStaff', 'Добавьте сотрудников и укажите, кто оказывает какие услуги.')
+            ? t('dashboard.onboarding.noStaff', 'Добавь сотрудников и укажи, кто оказывает какие услуги.')
             : null,
         props.bookingsToday === 0
             ? t(
                   'dashboard.onboarding.noBookings',
-                  'Проверьте календарь и доступность команды. Первые записи появятся здесь автоматически.',
+                  'Проверь «Календарь» — первые брони появятся здесь автоматически.',
               )
             : null,
     ].filter((item): item is string => Boolean(item));
@@ -184,8 +184,8 @@ export function getDashboardHomeViewModel(
             hint: t('dashboard.quickActions.openCalendarHint', 'посмотреть ближайшие записи'),
             emphasis: t('dashboard.quickActions.openCalendarEmphasis', 'Контроль дня'),
             className:
-                'border-indigo-100 bg-indigo-50/60 text-indigo-800 hover:border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-100',
-            hintClassName: 'text-indigo-700/80 dark:text-indigo-200/90',
+                'border-indigo-500/25 bg-indigo-500/[0.07] text-[var(--text-primary)] hover:border-indigo-400/55 hover:bg-indigo-500/[0.12]',
+            hintClassName: 'text-[var(--text-muted)]',
         },
         {
             key: 'addStaff',
@@ -194,8 +194,8 @@ export function getDashboardHomeViewModel(
             hint: t('dashboard.quickActions.addStaffHint', 'усилить команду или открыть новую смену'),
             emphasis: t('dashboard.quickActions.addStaffEmphasis', 'Рост команды'),
             className:
-                'border-emerald-100 bg-emerald-50/60 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100',
-            hintClassName: 'text-emerald-700/80 dark:text-emerald-200/90',
+                'border-emerald-500/25 bg-emerald-500/[0.07] text-[var(--text-primary)] hover:border-emerald-400/55 hover:bg-emerald-500/[0.12]',
+            hintClassName: 'text-[var(--text-muted)]',
         },
         {
             key: 'addService',
@@ -204,8 +204,8 @@ export function getDashboardHomeViewModel(
             hint: t('dashboard.quickActions.addServiceHint', 'обновить каталог, цену и длительность'),
             emphasis: t('dashboard.quickActions.addServiceEmphasis', 'Каталог услуг'),
             className:
-                'border-sky-100 bg-sky-50/60 text-sky-800 hover:border-sky-200 hover:bg-sky-50 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-100',
-            hintClassName: 'text-sky-700/80 dark:text-sky-200/90',
+                'border-sky-500/25 bg-sky-500/[0.07] text-[var(--text-primary)] hover:border-sky-400/55 hover:bg-sky-500/[0.12]',
+            hintClassName: 'text-[var(--text-muted)]',
         },
         {
             key: 'assignServices',
@@ -214,8 +214,8 @@ export function getDashboardHomeViewModel(
             hint: t('dashboard.quickActions.assignServicesHint', 'проверить связки между командой и услугами'),
             emphasis: t('dashboard.quickActions.assignServicesEmphasis', 'Операционная точность'),
             className:
-                'border-purple-100 bg-purple-50/60 text-purple-800 hover:border-purple-200 hover:bg-purple-50 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-100',
-            hintClassName: 'text-purple-700/80 dark:text-purple-200/90',
+                'border-purple-500/25 bg-purple-500/[0.07] text-[var(--text-primary)] hover:border-purple-400/55 hover:bg-purple-500/[0.12]',
+            hintClassName: 'text-[var(--text-muted)]',
         },
     ];
 

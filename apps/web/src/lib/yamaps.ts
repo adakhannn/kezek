@@ -10,6 +10,7 @@ declare global {
 }
 
 let loadPromise: Promise<typeof ymaps> | null = null;
+const SCRIPT_ID = 'kezek-yandex-maps-api';
 
 export function loadYandexMaps(apiKey?: string): Promise<typeof ymaps> {
     if (typeof window === 'undefined') throw new Error('run in client only');
@@ -29,11 +30,16 @@ export function loadYandexMaps(apiKey?: string): Promise<typeof ymaps> {
     }
 
     if (!loadPromise) {
-        loadPromise = new Promise((resolve, reject) => {
-            const s = document.createElement('script');
-            s.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(key)}&lang=ru_RU`;
-            s.async = true;
-            s.onload = () => {
+        const staleScript = document.getElementById(SCRIPT_ID);
+        if (staleScript && !window.ymaps) staleScript.remove();
+
+        const script = document.createElement('script');
+        script.id = SCRIPT_ID;
+        script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(key)}&lang=ru_RU`;
+        script.async = true;
+
+        const pending = new Promise<typeof ymaps>((resolve, reject) => {
+            script.onload = () => {
                 const ym = window.ymaps;
                 if (!ym) {
                     return reject(
@@ -49,13 +55,19 @@ export function loadYandexMaps(apiKey?: string): Promise<typeof ymaps> {
                     reject(new Error(`[yamaps] ym.ready threw: ${msg}`));
                 }
             };
-            s.onerror = () =>
+            script.onerror = () =>
                 reject(
                     new Error(
                         '[yamaps] Script failed to load (network or CORS). Check API key, allowed referrers in Yandex Console, and browser Network tab for api-maps.yandex.ru.'
                     )
                 );
-            document.head.appendChild(s);
+            document.head.appendChild(script);
+        });
+
+        loadPromise = pending.catch((error) => {
+            loadPromise = null;
+            script.remove();
+            throw error;
         });
     }
     return loadPromise;
