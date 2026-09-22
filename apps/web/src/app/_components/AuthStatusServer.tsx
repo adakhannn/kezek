@@ -12,6 +12,7 @@ import { getT } from './i18n/server';
 import { getUserRoleProfile, resolveDefaultDashboard } from '@/lib/authContext';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { logWarn } from '@/lib/log';
+import { isAuthSessionMissingError } from '@/lib/supabaseAuthRecovery';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,8 +44,19 @@ export async function AuthStatusServer() {
         );
     }
 
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth.user;
+    let user = null;
+    try {
+        const { data: auth, error } = await supabase.auth.getUser();
+        if (error && !isAuthSessionMissingError(error)) {
+            logWarn('AuthStatusServer', 'Supabase user lookup failed', error);
+        } else {
+            user = auth.user;
+        }
+    } catch (error) {
+        if (!isAuthSessionMissingError(error)) {
+            logWarn('AuthStatusServer', 'Supabase user lookup failed', error);
+        }
+    }
 
     if (!user) {
         return (

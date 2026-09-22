@@ -27,7 +27,7 @@ describe('yandexAuthCallbackRouteService', () => {
 
         expect(result).toEqual({
             ok: false,
-            redirectUrl: 'https://kezek.kg/auth/sign-in?error=access_denied',
+            redirectUrl: 'http://localhost/auth/sign-in?error=access_denied',
         });
     });
 
@@ -39,7 +39,7 @@ describe('yandexAuthCallbackRouteService', () => {
 
         expect(result).toEqual({
             ok: false,
-            redirectUrl: 'https://kezek.kg/auth/sign-in?error=no_code',
+            redirectUrl: 'http://localhost/auth/sign-in?error=no_code',
         });
     });
 
@@ -68,8 +68,6 @@ describe('yandexAuthCallbackRouteService', () => {
         const result = await runYandexAuthCallbackRoute({
             requestUrl: 'http://localhost/api/auth/yandex/callback?code=oauth-code',
             env: {
-                NEXT_PUBLIC_SITE_ORIGIN: 'http://localhost',
-                NEXT_PUBLIC_YANDEX_REDIRECT_URI: 'https://kezek.kg/auth/callback-yandex',
                 YANDEX_OAUTH_CLIENT_ID: 'client-id',
                 YANDEX_OAUTH_CLIENT_SECRET: 'client-secret',
                 NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321',
@@ -91,7 +89,7 @@ describe('yandexAuthCallbackRouteService', () => {
         );
         const tokenRequest = (fetchImpl as jest.Mock).mock.calls[0];
         expect(String(tokenRequest[1].body)).toContain(
-            'redirect_uri=https%3A%2F%2Fkezek.kg%2Fauth%2Fcallback-yandex',
+            'redirect_uri=http%3A%2F%2Flocalhost%2Fauth%2Fcallback-yandex',
         );
         expect(result).toEqual({
             ok: true,
@@ -109,8 +107,6 @@ describe('yandexAuthCallbackRouteService', () => {
         const result = await runYandexAuthCallbackRoute({
             requestUrl: 'http://localhost/api/auth/yandex/callback?code=bad-code',
             env: {
-                NEXT_PUBLIC_SITE_ORIGIN: 'http://localhost',
-                NEXT_PUBLIC_YANDEX_REDIRECT_URI: 'https://kezek.kg/auth/callback-yandex',
                 YANDEX_OAUTH_CLIENT_ID: 'client-id',
                 YANDEX_OAUTH_CLIENT_SECRET: 'client-secret',
             },
@@ -122,6 +118,29 @@ describe('yandexAuthCallbackRouteService', () => {
         expect(result).toEqual({
             ok: false,
             redirectUrl: 'http://localhost/auth/sign-in?error=yandex_exchange_failed',
+        });
+    });
+
+    test('uses the configured tunnel origin for code exchange and failure redirect', async () => {
+        const fetchImpl = jest.fn().mockResolvedValueOnce({ ok: false, status: 400 });
+
+        const result = await runYandexAuthCallbackRoute({
+            requestUrl: 'https://localhost:3000/auth/callback-yandex?code=bad-code',
+            env: {
+                NODE_ENV: 'development',
+                YANDEX_OAUTH_PUBLIC_ORIGIN: 'https://test.trycloudflare.com',
+                YANDEX_OAUTH_CLIENT_ID: 'client-id',
+                YANDEX_OAUTH_CLIENT_SECRET: 'client-secret',
+            },
+            fetchImpl: fetchImpl as never,
+        });
+
+        expect(String((fetchImpl as jest.Mock).mock.calls[0][1].body)).toContain(
+            'redirect_uri=https%3A%2F%2Ftest.trycloudflare.com%2Fauth%2Fcallback-yandex',
+        );
+        expect(result).toEqual({
+            ok: false,
+            redirectUrl: 'https://test.trycloudflare.com/auth/sign-in?error=yandex_exchange_failed',
         });
     });
 });

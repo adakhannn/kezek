@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { logError } from '@/lib/log';
-import { supabase } from '@/lib/supabaseClient';
+import { loadWorkLocations } from '@/lib/scheduling/locationsClient';
 
 export type TemporaryTransferRow = {
     staff_id: string;
@@ -27,21 +27,11 @@ export function useTemporaryTransfers(bizId: string, date: string, staff: StaffR
             for (const s of staff) {
                 staffHomeBranches.set(s.id, s.branch_id);
             }
-            const staffIds = Array.from(staffHomeBranches.keys());
-            const { data, error } = await supabase
-                .from('staff_schedule_rules')
-                .select('staff_id, branch_id, date_on')
-                .eq('biz_id', bizId)
-                .in('staff_id', staffIds)
-                .eq('kind', 'date')
-                .eq('is_active', true)
-                .eq('date_on', date);
-            if (ignore) return;
-            if (error) {
+            const data = await loadWorkLocations(bizId, date, date, true).catch(error => {
                 logError('useTemporaryTransfers', 'Error loading temporary transfers', error);
-                setTransfers([]);
-                return;
-            }
+                return [];
+            });
+            if (ignore) return;
             const list = (data ?? [])
                 .filter((rule: { staff_id: string; branch_id: string; date_on: string }) => {
                     const homeBranchId = staffHomeBranches.get(rule.staff_id);

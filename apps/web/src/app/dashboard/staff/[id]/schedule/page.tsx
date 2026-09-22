@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation';
 import Client from './Client';
 import StaffSchedulePageClient from './StaffSchedulePageClient';
 
+import ScheduleEditor from '@/components/scheduling/ScheduleEditor';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -64,12 +66,16 @@ export default async function StaffSchedulePage({
                 bizCity={bizCity}
             />
 
-            <Client
+            {explicitSchedulingEnabled() ? <ScheduleEditor
+                staffId={String(staff.id)}
+                branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
+                homeBranchId={String(staff.branch_id)}
+            /> : <Client
                 bizId={String(bizId)}
                 staffId={String(staff.id)}
                 branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
                 homeBranchId={String(staff.branch_id)}
-            />
+            />}
         </main>
     );
 }

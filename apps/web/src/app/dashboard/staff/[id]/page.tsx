@@ -4,6 +4,7 @@ import StaffDetailPageClient from './StaffDetailPageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logWarn } from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -172,6 +173,7 @@ export default async function Page({
 
     return (
         <StaffDetailPageClient
+            explicitScheduling={explicitSchedulingEnabled()}
             staff={{
                 id: String(staff.id),
                 full_name: String(staff.full_name),

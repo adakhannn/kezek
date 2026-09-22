@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -15,6 +16,7 @@ type State = {
 };
 
 export function AccountDeletionPanel() {
+    const { locale, t } = useLanguage();
     const [state, setState] = useState<State | null>(null);
     const [confirmation, setConfirmation] = useState('');
     const [busy, setBusy] = useState(false);
@@ -67,13 +69,24 @@ export function AccountDeletionPanel() {
     }
 
     const pending = state?.request?.status === 'pending';
+    const confirmationPhrase = t('cabinet.profile.deletion.confirmationPhrase', 'УДАЛИТЬ');
+    const scheduledFor = state?.request
+        ? new Intl.DateTimeFormat(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        }).format(new Date(state.request.scheduled_for))
+        : null;
+    const blockerMessage = (blocker: Blocker) => t(
+        `cabinet.profile.deletion.blocker.${blocker.code}` as never,
+        blocker.message,
+    );
 
     return (
         <Card variant="outlined" padding="lg" className="space-y-4 border-red-300/60 dark:border-red-900/60">
             <div>
-                <h3 className="type-section-title text-red-700 dark:text-red-300">Удаление аккаунта</h3>
+                <h3 className="type-section-title text-red-700 dark:text-red-300">{t('cabinet.profile.deletion.title', 'Удаление аккаунта')}</h3>
                 <p className="type-caption mt-1 text-gray-500 dark:text-gray-400">
-                    После запроса у вас будет 7 дней на отмену. Затем личные данные и способы входа будут удалены, а история завершённых записей — обезличена.
+                    {t('cabinet.profile.deletion.description', 'После запроса у вас будет 7 дней на отмену. Затем личные данные и способы входа будут удалены, а история завершённых записей — обезличена.')}
                 </p>
             </div>
 
@@ -82,26 +95,26 @@ export function AccountDeletionPanel() {
             {pending ? (
                 <AlertBanner
                     variant="warning"
-                    title="Аккаунт ожидает удаления"
-                    message={`Удаление запланировано на ${new Date(state.request!.scheduled_for).toLocaleString('ru-RU')}. До этого момента запрос можно отменить.`}
-                    action={<Button type="button" size="sm" variant="outline" onClick={cancelDeletion} isLoading={busy}>Отменить удаление</Button>}
+                    title={t('cabinet.profile.deletion.pending.title', 'Аккаунт ожидает удаления')}
+                    message={t('cabinet.profile.deletion.pending.message', `Удаление запланировано на ${scheduledFor}. До этого момента запрос можно отменить.`).replace('{date}', scheduledFor ?? '')}
+                    action={<Button type="button" size="sm" variant="outline" onClick={cancelDeletion} isLoading={busy}>{t('cabinet.profile.deletion.cancel', 'Отменить удаление')}</Button>}
                 />
             ) : (
                 <>
                     {state?.blockers?.length ? (
                         <div className="rounded-[var(--radius-md)] bg-amber-50 p-4 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                            <p className="type-label">Сейчас удалить аккаунт нельзя:</p>
+                            <p className="type-label">{t('cabinet.profile.deletion.blocked.title', 'Сейчас удалить аккаунт нельзя:')}</p>
                             <ul className="type-caption mt-2 list-disc space-y-1 pl-5">
-                                {state.blockers.map((blocker) => <li key={blocker.code}>{blocker.message} ({blocker.count})</li>)}
+                                {state.blockers.map((blocker) => <li key={blocker.code}>{blockerMessage(blocker)} ({blocker.count})</li>)}
                             </ul>
                         </div>
                     ) : null}
 
                     <Input
-                        label="Подтверждение"
+                        label={t('cabinet.profile.deletion.confirmation.label', 'Подтверждение')}
                         value={confirmation}
                         onChange={(event) => setConfirmation(event.target.value)}
-                        placeholder="Введите УДАЛИТЬ"
+                        placeholder={t('cabinet.profile.deletion.confirmation.placeholder', `Введите ${confirmationPhrase}`).replace('{phrase}', confirmationPhrase)}
                         disabled={!state?.eligible || busy}
                     />
                     <div className="flex justify-end">
@@ -109,10 +122,10 @@ export function AccountDeletionPanel() {
                             type="button"
                             variant="danger"
                             onClick={requestDeletion}
-                            disabled={!state?.eligible || confirmation !== 'УДАЛИТЬ'}
+                            disabled={!state?.eligible || confirmation !== confirmationPhrase}
                             isLoading={busy}
                         >
-                            Запросить удаление аккаунта
+                            {t('cabinet.profile.deletion.request', 'Запросить удаление аккаунта')}
                         </Button>
                     </div>
                 </>

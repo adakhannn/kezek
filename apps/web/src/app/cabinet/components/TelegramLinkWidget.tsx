@@ -74,8 +74,17 @@ export function TelegramLinkWidget({
 
                 const data = await resp.json();
 
-                if (!data?.ok) {
-                    throw new Error(data?.message || 'Ошибка привязки Telegram');
+                if (!resp.ok || data?.ok !== true) {
+                    const message = typeof data?.message === 'string'
+                        ? data.message
+                        : 'Ошибка привязки Telegram';
+                    // Expected API rejections belong in the profile notice, not the dev error overlay.
+                    if (resp.status >= 400 && resp.status < 500 && data?.ok === false
+                        && ['auth', 'forbidden', 'validation', 'conflict', 'rate_limit'].includes(data.error)) {
+                        onErrorRef.current?.(message);
+                        return;
+                    }
+                    throw new Error(message);
                 }
 
                 // Обновляем страницу, чтобы показать обновленный профиль

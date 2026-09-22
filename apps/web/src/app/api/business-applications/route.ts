@@ -2,6 +2,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { submitBusinessApplication, type BusinessApplicationInput } from '@/lib/businessApplicationService';
+import { notifyBusinessApplicationSubmitted } from '@/lib/businessRoleApplicationNotificationService';
+import { logError } from '@/lib/log';
 import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -29,8 +31,28 @@ export async function POST(request: Request) {
             );
         }
         try {
-            const result = await submitBusinessApplication({ admin: createSupabaseAdminClient() as never, userId: user.id, input });
+            const admin = createSupabaseAdminClient();
+            const result = await submitBusinessApplication({ admin: admin as never, userId: user.id, input });
             if (!result.ok) return Response.json({ ok: false, message: result.message, code: result.code }, { status: result.status });
+            try {
+                const displayName = typeof input.contact_name === 'string' && input.contact_name.trim()
+                    ? input.contact_name.trim()
+                    : typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()
+                        ? user.user_metadata.full_name.trim()
+                        : user.email ?? user.phone ?? 'Пользователь Kezek';
+                await notifyBusinessApplicationSubmitted(admin, {
+                    id: result.id,
+                    businessName: typeof input.business_name === 'string' ? input.business_name.trim() : 'Kezek',
+                    origin: new URL(request.url).origin,
+                    applicant: {
+                        id: user.id,
+                        name: displayName,
+                        email: typeof input.email === 'string' ? input.email.trim() : user.email,
+                    },
+                });
+            } catch (notificationError) {
+                logError('ApplicationNotification', 'Business application notification workflow failed', notificationError);
+            }
             return Response.json({ ok: true, id: result.id });
         } catch (error) {
             if (

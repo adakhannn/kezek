@@ -8,7 +8,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { validateName, validatePositiveNumber, validatePriceRange } from '@/lib/validation';
+import { validateName } from '@/lib/validation';
 
 type Branch = { id: string; name: string };
 
@@ -28,6 +28,8 @@ type Initial = {
 type ServiceFormState = Omit<Initial, 'duration_min'> & {
     duration_min: string;
 };
+
+type ServiceFieldErrors = Partial<Record<'nameRu' | 'nameKy' | 'nameEn' | 'duration' | 'priceFrom' | 'priceTo' | 'branches', string>>;
 
 export default function ServiceForm({
                                         initial,
@@ -55,6 +57,7 @@ export default function ServiceForm({
 
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<ServiceFieldErrors>({});
 
     const allSelected = useMemo(
         () => (form.branch_ids ?? []).length === branches.length && branches.length > 0,
@@ -62,6 +65,7 @@ export default function ServiceForm({
     );
 
     function toggleBranch(id: string) {
+        setFieldErrors((errors) => ({ ...errors, branches: undefined }));
         setForm((f) => {
             const ids = new Set(f.branch_ids ?? []);
             if (ids.has(id)) ids.delete(id);
@@ -71,6 +75,7 @@ export default function ServiceForm({
     }
 
     function toggleAll() {
+        setFieldErrors((errors) => ({ ...errors, branches: undefined }));
         setForm((f) => {
             if (allSelected) return { ...f, branch_ids: [] };
             return { ...f, branch_ids: branches.map((b) => b.id) };
@@ -79,85 +84,76 @@ export default function ServiceForm({
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setSaving(true);
         setErr(null);
+        setFieldErrors({});
+
+        const validationErrors: ServiceFieldErrors = {};
+        const nameRu = form.name_ru.trim();
+        const nameKy = form.name_ky?.trim() ?? '';
+        const nameEn = form.name_en?.trim() ?? '';
+        const durationMin = form.duration_min.trim();
+        const duration = Number(durationMin);
+        const priceFromRaw = priceFromStr.trim();
+        const priceToRaw = priceToStr.trim();
+        const priceFromNum = priceFromRaw === '' ? 0 : Number(priceFromRaw);
+        const priceToNum = priceToRaw === '' ? 0 : Number(priceToRaw);
+
+        if (!nameRu) {
+            validationErrors.nameRu = t('services.form.error.nameRequired', 'Название обязательно');
+        } else if (!validateName(nameRu).valid) {
+            validationErrors.nameRu = t('services.form.error.nameRuInvalid', 'Введите не менее 2 символов');
+        }
+
+        if (nameKy && !validateName(nameKy, false).valid) {
+            validationErrors.nameKy = t('services.form.error.nameKyInvalid', 'Введите не менее 2 символов');
+        }
+
+        if (nameEn && !validateName(nameEn, false).valid) {
+            validationErrors.nameEn = t('services.form.error.nameEnInvalid', 'Введите не менее 2 символов');
+        }
+
+        if (!Number.isInteger(duration) || duration < 1) {
+            validationErrors.duration = t('services.form.error.durationInvalid', 'Укажите целое число не менее 1 минуты');
+        }
+
+        if (!Number.isFinite(priceFromNum) || priceFromNum < 0) {
+            validationErrors.priceFrom = t('services.form.error.priceInvalid', 'Цена не может быть отрицательной');
+        }
+
+        if (!Number.isFinite(priceToNum) || priceToNum < 0) {
+            validationErrors.priceTo = t('services.form.error.priceInvalid', 'Цена не может быть отрицательной');
+        }
+
+        if (!validationErrors.priceFrom && !validationErrors.priceTo && priceFromNum > 0 && priceToNum > 0 && priceFromNum > priceToNum) {
+            validationErrors.priceTo = t('services.form.error.priceRangeInvalid', 'Минимальная цена не может быть больше максимальной');
+        }
+
+        if ((form.branch_ids ?? []).length === 0) {
+            validationErrors.branches = t('services.form.error.branchRequired', 'Выберите хотя бы один филиал');
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setFieldErrors(validationErrors);
+            setErr(t('services.form.error.fixFields', 'Проверьте выделенные поля'));
+            return;
+        }
+
+        setSaving(true);
         try {
             const url = isEdit
                 ? `${apiBase}/${encodeURIComponent(form.id!)}/update`
                 : `${apiBase}/create`;
 
-            // валидация
-            const nameRuValidation = validateName(form.name_ru.trim());
-            if (!nameRuValidation.valid) {
-                throw new Error(nameRuValidation.error || t('services.form.error.nameRequired', 'Название обязательно'));
-            }
-
-            // Валидация опциональных названий
-            if (form.name_ky && form.name_ky.trim()) {
-                const nameKyValidation = validateName(form.name_ky.trim(), false);
-                if (!nameKyValidation.valid) {
-                    throw new Error(t('services.form.error.nameKyInvalid', 'Название (кыргызский) должно содержать минимум 2 символа'));
-                }
-            }
-
-            if (form.name_en && form.name_en.trim()) {
-                const nameEnValidation = validateName(form.name_en.trim(), false);
-                if (!nameEnValidation.valid) {
-                    throw new Error(t('services.form.error.nameEnInvalid', 'Название (английский) должно содержать минимум 2 символа'));
-                }
-            }
-
-            // Валидация длительности
-            const durationMin = form.duration_min.trim();
-            const durationValidation = validatePositiveNumber(durationMin, { min: 1, required: true, allowZero: false });
-            if (!durationValidation.valid) {
-                throw new Error(durationValidation.error || t('services.form.error.durationInvalid', 'Длительность должна быть не менее 1 минуты'));
-            }
-
-            // Валидация цен
-            const priceFromNum = priceFromStr.trim() === '' ? 0 : Number(priceFromStr) || 0;
-            const priceToNum = priceToStr.trim() === '' ? 0 : Number(priceToStr) || 0;
-
-            if (priceFromNum > 0) {
-                const priceFromValidation = validatePositiveNumber(priceFromNum, { min: 0, allowZero: false });
-                if (!priceFromValidation.valid) {
-                    throw new Error(priceFromValidation.error || t('services.form.error.priceFromInvalid', 'Минимальная цена должна быть больше 0'));
-                }
-            }
-
-            if (priceToNum > 0) {
-                const priceToValidation = validatePositiveNumber(priceToNum, { min: 0, allowZero: false });
-                if (!priceToValidation.valid) {
-                    throw new Error(priceToValidation.error || t('services.form.error.priceToInvalid', 'Максимальная цена должна быть больше 0'));
-                }
-            }
-
-            // Валидация диапазона цен
-            if (priceFromNum > 0 || priceToNum > 0) {
-                const rangeValidation = validatePriceRange(priceFromNum, priceToNum);
-                if (!rangeValidation.valid) {
-                    throw new Error(rangeValidation.error || t('services.form.error.priceRangeInvalid', 'Минимальная цена не может быть больше максимальной'));
-                }
-            }
-
-            // Валидация филиалов
-            const ids = form.branch_ids ?? [];
-            if (ids.length === 0) {
-                throw new Error(
-                    t('services.form.error.branchRequired', 'Выберите хотя бы один филиал'),
-                );
-            }
-
             // готовим тело запроса:
             // - create: шлём branch_ids: string[]
             // - edit:   шлём branch_ids: string[] (теперь тоже множественный выбор)
             const payload = {
-                name_ru: form.name_ru.trim(),
-                name_ky: form.name_ky?.trim() || null,
-                name_en: form.name_en?.trim() || null,
-                duration_min: Number(durationMin),
-                price_from: priceFromStr.trim() === '' ? 0 : Number(priceFromStr) || 0,
-                price_to: priceToStr.trim() === '' ? 0 : Number(priceToStr) || 0,
+                name_ru: nameRu,
+                name_ky: nameKy || null,
+                name_en: nameEn || null,
+                duration_min: duration,
+                price_from: priceFromNum,
+                price_to: priceToNum,
                 active: !!form.active,
                 ...(isEdit ? { service_id: form.id } : {}),
                 branch_ids: form.branch_ids ?? [],
@@ -183,7 +179,7 @@ export default function ServiceForm({
     }
 
     return (
-        <form onSubmit={onSubmit} className="space-y-6">
+        <form noValidate onSubmit={onSubmit} className="space-y-6">
             {err && (
                 <AlertBanner variant="danger" message={err} compact />
             )}
@@ -192,20 +188,32 @@ export default function ServiceForm({
                 <Input
                     label={t('services.form.nameRu', 'Название (русский) *')}
                     value={form.name_ru}
-                    onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
+                    onChange={(e) => {
+                        setForm((f) => ({ ...f, name_ru: e.target.value }));
+                        setFieldErrors((errors) => ({ ...errors, nameRu: undefined }));
+                    }}
                     required
+                    error={fieldErrors.nameRu}
                     placeholder={t('services.form.nameRuPlaceholder', 'Взрослая стрижка')}
                 />
                 <Input
                     label={t('services.form.nameKy', 'Название (кыргызский)')}
                     value={form.name_ky || ''}
-                    onChange={(e) => setForm((f) => ({ ...f, name_ky: e.target.value || null }))}
+                    onChange={(e) => {
+                        setForm((f) => ({ ...f, name_ky: e.target.value || null }));
+                        setFieldErrors((errors) => ({ ...errors, nameKy: undefined }));
+                    }}
+                    error={fieldErrors.nameKy}
                     placeholder={t('services.form.nameKyPlaceholder', 'Чоңдордун чач кесуү')}
                 />
                 <Input
                     label={t('services.form.nameEn', 'Название (английский)')}
                     value={form.name_en || ''}
-                    onChange={(e) => setForm((f) => ({ ...f, name_en: e.target.value || null }))}
+                    onChange={(e) => {
+                        setForm((f) => ({ ...f, name_en: e.target.value || null }));
+                        setFieldErrors((errors) => ({ ...errors, nameEn: undefined }));
+                    }}
+                    error={fieldErrors.nameEn}
                     placeholder={t('services.form.nameEnPlaceholder', 'Adult haircut')}
                 />
             </div>
@@ -224,8 +232,10 @@ export default function ServiceForm({
                             ...f,
                             duration_min: value,
                         }));
+                        setFieldErrors((errors) => ({ ...errors, duration: undefined }));
                     }}
                     required
+                    error={fieldErrors.duration}
                 />
                 <Input
                     label={t('services.form.priceFrom', 'Цена от')}
@@ -237,7 +247,9 @@ export default function ServiceForm({
                         setPriceFromStr(val);
                         // Обновляем form для совместимости
                         setForm((f) => ({ ...f, price_from: val === '' ? 0 : Number(val) || 0 }));
+                        setFieldErrors((errors) => ({ ...errors, priceFrom: undefined, priceTo: undefined }));
                     }}
+                    error={fieldErrors.priceFrom}
                 />
                 <Input
                     label={t('services.form.priceTo', 'Цена до')}
@@ -249,7 +261,9 @@ export default function ServiceForm({
                         setPriceToStr(val);
                         // Обновляем form для совместимости
                         setForm((f) => ({ ...f, price_to: val === '' ? 0 : Number(val) || 0 }));
+                        setFieldErrors((errors) => ({ ...errors, priceFrom: undefined, priceTo: undefined }));
                     }}
+                    error={fieldErrors.priceTo}
                 />
             </div>
 
@@ -291,6 +305,7 @@ export default function ServiceForm({
                         </div>
                     )}
                 </div>
+                {fieldErrors.branches && <p role="alert" className="type-caption text-[var(--status-danger)]">{fieldErrors.branches}</p>}
             </div>
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">

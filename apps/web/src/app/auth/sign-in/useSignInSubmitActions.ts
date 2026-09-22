@@ -50,22 +50,12 @@ export function useSignInSubmitActions({
         setSending(true);
         setError(null);
         try {
-            const redirectUri =
-                process.env.NEXT_PUBLIC_YANDEX_REDIRECT_URI ||
-                'https://kezek.kg/auth/callback-yandex';
-            const yandexAuthUrl = new URL('https://oauth.yandex.ru/authorize');
-            yandexAuthUrl.searchParams.set('response_type', 'code');
-            yandexAuthUrl.searchParams.set(
-                'client_id',
-                process.env.NEXT_PUBLIC_YANDEX_CLIENT_ID || '',
-            );
-            yandexAuthUrl.searchParams.set('redirect_uri', redirectUri);
-
             if (typeof window !== 'undefined') {
                 sessionStorage.setItem('yandex_redirect', redirectParam);
+                const startUrl = new URL('/api/auth/yandex/start', window.location.origin);
+                startUrl.searchParams.set('redirect', redirectParam);
+                window.location.assign(startUrl.toString());
             }
-
-            window.location.href = yandexAuthUrl.toString();
         } catch (err) {
             setError(toSafeAuthMessage(err));
             setSending(false);

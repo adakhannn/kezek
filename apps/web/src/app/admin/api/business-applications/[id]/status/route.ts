@@ -7,6 +7,8 @@ import { cookies } from 'next/headers';
 
 import { rejectApplicationWithPolicy } from '@/lib/applicationPolicy';
 import { approveBusinessApplicationAndCreateBusiness } from '@/lib/businessApplicationService';
+import { notifyBusinessApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 const statuses = new Set(['new', 'contacted', 'approved', 'rejected']);
@@ -38,6 +40,14 @@ export async function POST(request: Request, context: unknown) {
 
         if (!result.ok) {
             return Response.json({ ok: false, error: result.message }, { status: result.status });
+        }
+        try {
+            await notifyBusinessApplicationApproved(admin, {
+                applicationId: id,
+                origin: new URL(request.url).origin,
+            });
+        } catch (notificationError) {
+            logError('ApplicationNotification', 'Approved business application notification failed', notificationError);
         }
 
         return Response.json({ ok: true, businessId: result.businessId, alreadyCreated: result.alreadyCreated });

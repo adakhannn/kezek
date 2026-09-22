@@ -212,6 +212,28 @@ export function getWhatsAppAuthTemplateLanguage(): string {
     });
 }
 
+/** Optional template settings for workflow notifications. Empty names mean the
+ * corresponding channel is not enabled yet, while Email and Telegram continue
+ * to work independently. */
+export function getWhatsAppTemplateName(key: 'staff_owner' | 'staff_applicant' | 'staff_approved' | 'business_applicant' | 'business_admin' | 'business_approved' | 'owner_applicant' | 'owner_admin' | 'owner_approved'): string {
+    const names: Record<typeof key, string | undefined> = {
+        staff_owner: process.env.WHATSAPP_STAFF_APPLICATION_OWNER_TEMPLATE_NAME,
+        staff_applicant: process.env.WHATSAPP_STAFF_APPLICATION_APPLICANT_TEMPLATE_NAME,
+        staff_approved: process.env.WHATSAPP_STAFF_APPLICATION_APPROVED_TEMPLATE_NAME,
+        business_applicant: process.env.WHATSAPP_BUSINESS_APPLICATION_APPLICANT_TEMPLATE_NAME,
+        business_admin: process.env.WHATSAPP_BUSINESS_APPLICATION_ADMIN_TEMPLATE_NAME,
+        business_approved: process.env.WHATSAPP_BUSINESS_APPLICATION_APPROVED_TEMPLATE_NAME,
+        owner_applicant: process.env.WHATSAPP_OWNER_APPLICATION_APPLICANT_TEMPLATE_NAME,
+        owner_admin: process.env.WHATSAPP_OWNER_APPLICATION_ADMIN_TEMPLATE_NAME,
+        owner_approved: process.env.WHATSAPP_OWNER_APPLICATION_APPROVED_TEMPLATE_NAME,
+    };
+    return names[key]?.trim() ?? '';
+}
+
+export function getWhatsAppTemplateLanguage(): string {
+    return process.env.WHATSAPP_APPLICATION_TEMPLATE_LANGUAGE?.trim() || 'ru';
+}
+
 /**
  * Получает стратегию шаблона OTP для WhatsApp mobile auth.
  * Поддерживаемые значения:

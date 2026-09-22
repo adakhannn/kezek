@@ -10,6 +10,8 @@ type Branch = { id: string; name: string };
 type ServiceRow = {
     id: string;
     name_ru: string;
+    name_ky: string | null;
+    name_en: string | null;
     duration_min: number;
     price_from: number;
     price_to: number;
@@ -40,7 +42,7 @@ export default async function ServicesListPage({
             .order('name'),
         supabase
             .from('services')
-            .select('id,name_ru,duration_min,price_from,price_to,active,branch_id')
+            .select('id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id')
             .eq('biz_id', bizId)
             .order('name_ru'),
     ]);
@@ -58,6 +60,8 @@ export default async function ServicesListPage({
     // Группируем услуги по названию (убираем дубли)
     type GroupedService = {
         name_ru: string;
+        name_ky: string | null;
+        name_en: string | null;
         duration_min: number;
         price_from: number;
         price_to: number;
@@ -80,6 +84,8 @@ export default async function ServicesListPage({
         if (!serviceMap.has(key)) {
             serviceMap.set(key, {
                 name_ru: s.name_ru,
+                name_ky: s.name_ky,
+                name_en: s.name_en,
                 duration_min: s.duration_min,
                 price_from: s.price_from,
                 price_to: s.price_to,

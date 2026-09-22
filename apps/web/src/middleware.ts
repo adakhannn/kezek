@@ -1,8 +1,9 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
+import { isInvalidRefreshTokenError, isSupabaseAuthCookie } from '@/lib/supabaseAuthRecovery';
 
 function isAndroidUserAgent(userAgent: string | null) {
     return Boolean(userAgent && /Android/i.test(userAgent));
@@ -22,6 +23,32 @@ function toAndroidIntentUrl(deepLink: string) {
     } catch {
         return null;
     }
+}
+
+function applySecurityHeaders(response: NextResponse) {
+    response.headers.set('X-DNS-Prefetch-Control', 'on');
+    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+    return response;
+}
+
+function clearInvalidSupabaseSession(req: NextRequest) {
+    const staleCookieNames = req.cookies
+        .getAll()
+        .map(({ name }) => name)
+        .filter(isSupabaseAuthCookie);
+
+    staleCookieNames.forEach((name) => req.cookies.delete(name));
+
+    const response = NextResponse.next({ request: req });
+    staleCookieNames.forEach((name) => {
+        response.cookies.set({ name, value: '', path: '/', maxAge: 0 });
+    });
+    return response;
 }
 
 export async function middleware(req: NextRequest) {
@@ -59,56 +86,48 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    const res = NextResponse.next();
-
-    res.headers.set('X-DNS-Prefetch-Control', 'on');
-    res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
-    res.headers.set('X-Frame-Options', 'SAMEORIGIN');
-    res.headers.set('X-Content-Type-Options', 'nosniff');
-    res.headers.set('X-XSS-Protection', '1; mode=block');
-    res.headers.set('Referrer-Policy', 'origin-when-cross-origin');
-    // geolocation=(self) — для страницы карты «Ближайший ко мне»
-    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
-
-    // Главная — публичный каталог. Авторизованные пользователи также должны
-    // открывать её напрямую, а не автоматически попадать в свой кабинет.
-    if (pathname === '/') return res;
-
+    let response = NextResponse.next({ request: req });
     let supabase: ReturnType<typeof createServerClient>;
+
     try {
-        supabase = createServerClient(
-            getSupabaseUrl(),
-            getSupabaseAnonKey(),
-            {
-                cookies: {
-                    get: (name: string) => req.cookies.get(name)?.value,
-                    set: (name: string, value: string, options?: { path?: string; domain?: string; maxAge?: number; expires?: Date; httpOnly?: boolean; secure?: boolean; sameSite?: 'lax' | 'strict' | 'none' | boolean }) => {
-                        res.cookies.set({ name, value, ...options });
-                    },
-                    remove: (name: string, options?: { path?: string; domain?: string }) => {
-                        res.cookies.set({ name, value: '', ...options });
-                    },
+        supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+            cookies: {
+                getAll() {
+                    return req.cookies.getAll();
                 },
-            }
-        );
-    } catch (e) {
+                setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+                    cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+                    response = NextResponse.next({ request: req });
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        response.cookies.set(name, value, options);
+                    });
+                },
+            },
+        });
+    } catch (error) {
         const { logWarn } = await import('@/lib/log');
-        logWarn('middleware', 'Supabase runtime configuration is invalid', e);
-        return res;
+        logWarn('middleware', 'Supabase runtime configuration is invalid', error);
+        return applySecurityHeaders(response);
     }
 
-    let userRes: { user: unknown };
     try {
-        const authResult = await supabase.auth.getUser();
-        userRes = authResult.data;
-    } catch (e) {
-        const { logWarn } = await import('@/lib/log');
-        logWarn('middleware', 'Supabase user lookup failed', e);
-        return res;
-    }
-    if (!userRes.user) return res;
+        const { error } = await supabase.auth.getUser();
+        if (error) {
+            if (isInvalidRefreshTokenError(error)) {
+                response = clearInvalidSupabaseSession(req);
+            }
+            return applySecurityHeaders(response);
+        }
+    } catch (error) {
+        if (isInvalidRefreshTokenError(error)) {
+            return applySecurityHeaders(clearInvalidSupabaseSession(req));
+        }
 
-    return res;
+        const { logWarn } = await import('@/lib/log');
+        logWarn('middleware', 'Supabase user lookup failed', error);
+    }
+
+    return applySecurityHeaders(response);
 }
 
 export const config = {

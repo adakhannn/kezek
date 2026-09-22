@@ -33,26 +33,36 @@ import { bookingKy } from './booking.ky';
 import { bookingRu } from './booking.ru';
 
 // Home
+import { bookingsEn } from './bookings.en';
+import { bookingsKy } from './bookings.ky';
+import { bookingsRu } from './bookings.ru';
+import { branchesEn } from './branches.en';
+import { branchesKy } from './branches.ky';
+import { branchesRu } from './branches.ru';
 import { businessEn } from './business.en';
 import { businessKy } from './business.ky';
+import { businessRu } from './business.ru';
+import { dashboardKy } from './dashboard.ky';
+import { headerEn } from './header.en';
+import { headerKy } from './header.ky';
 import { homeEn } from './home.en';
 import { homeKy } from './home.ky';
 import { homeRu } from './home.ru';
 
 // Business
-import { businessRu } from './business.ru';
 
 // Header
-import { headerKy } from './header.ky';
 import { headerRu } from './header.ru';
-import { headerEn } from './header.en';
 
 // Dashboard
-import { dashboardKy } from './dashboard.ky';
 import { dashboardRu } from './dashboard.ru';
 import { dashboardEn } from './dashboard.en';
 
 // Staff
+import { monthPickerEn } from './monthPicker.en';
+import { monthPickerKy } from './monthPicker.ky';
+import { scheduleFormRu, scheduleFormKy, scheduleFormEn } from './scheduleForm';
+import { schedulingRu, schedulingKy, schedulingEn } from './scheduling';
 import { servicesEn } from './services.en';
 import { servicesKy } from './services.ky';
 import { staffEn } from './staff.en';
@@ -63,9 +73,6 @@ import { staffRu } from './staff.ru';
 import { servicesRu } from './services.ru';
 
 // Branches
-import { branchesKy } from './branches.ky';
-import { branchesRu } from './branches.ru';
-import { branchesEn } from './branches.en';
 
 // Finance
 import { financeKy } from './finance.ky';
@@ -85,9 +92,7 @@ import { datePickerRu } from './datePicker.ru';
 import { datePickerEn } from './datePicker.en';
 
 // MonthPicker
-import { monthPickerKy } from './monthPicker.ky';
 import { monthPickerRu } from './monthPicker.ru';
-import { monthPickerEn } from './monthPicker.en';
 
 // TimeRange
 import { timeRangeEn } from './timeRange.en';
@@ -100,9 +105,6 @@ import { notificationsRu } from './notifications.ru';
 import { notificationsEn } from './notifications.en';
 
 // Bookings
-import { bookingsKy } from './bookings.ky';
-import { bookingsRu } from './bookings.ru';
-import { bookingsEn } from './bookings.en';
 
 // Footer
 import { footerKy } from './footer.ky';
@@ -154,6 +156,8 @@ export const ky: Translations = mergeDictionaries(
     headerKy,
     dashboardKy,
     staffKy,
+    schedulingKy,
+    scheduleFormKy,
     servicesKy,
     branchesKy,
     financeKy,
@@ -182,6 +186,8 @@ export const ru: Translations = mergeDictionaries(
     headerRu,
     dashboardRu,
     staffRu,
+    schedulingRu,
+    scheduleFormRu,
     servicesRu,
     branchesRu,
     financeRu,
@@ -210,6 +216,8 @@ export const en: Translations = mergeDictionaries(
     headerEn,
     dashboardEn,
     staffEn,
+    schedulingEn,
+    scheduleFormEn,
     servicesEn,
     branchesEn,
     financeEn,

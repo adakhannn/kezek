@@ -1,10 +1,13 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logDebug, logError, logWarn } from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { todayDateString } from '@/lib/time';
 
 type StaffCreateFromUserInput = {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     body: {
         user_id: string;
@@ -158,7 +161,7 @@ export async function runStaffCreateFromUser({
         return grantRoleResult;
     }
 
-    const scheduleResult = await initializeSchedule({
+    const scheduleResult = explicitSchedulingEnabled() ? { success: false, daysCreated: 0, error: undefined } : await initializeSchedule({
         admin,
         bizId,
         branchId: body.branch_id,
@@ -191,7 +194,7 @@ async function ensureStaffBranchAssignment({
     branchId,
     staffId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     branchId: string;
     staffId: string | undefined;
@@ -234,7 +237,7 @@ async function ensureStaffRole({
     bizId,
     userId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     userId: string;
 }): Promise<{ ok: true } | StaffCreateFromUserFailure> {
@@ -287,7 +290,7 @@ async function initializeSchedule({
     branchId,
     staffId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     branchId: string;
     staffId: string | undefined;

@@ -14,10 +14,12 @@ export default function TransferStaffDialog({
     staffId,
     currentBranchId,
     branches,
+    explicitScheduling = false,
 }: {
     staffId: string;
     currentBranchId: string;
     branches: Branch[];
+    explicitScheduling?: boolean;
 }) {
     const { t } = useLanguage();
     const router = useRouter();
@@ -44,11 +46,11 @@ export default function TransferStaffDialog({
             const res = await fetch(`/api/staff/${encodeURIComponent(staffId)}/transfer`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ target_branch_id: target, copy_schedule: copySchedule }),
+                body: JSON.stringify({ target_branch_id: target, expected_branch_id: currentBranchId, copy_schedule: explicitScheduling ? false : copySchedule }),
             });
             const json = await res.json().catch(() => ({ ok: false, error: 'NON_JSON_RESPONSE' }));
             if (!res.ok || !json.ok) {
-                setErr(json.error ?? `HTTP_${res.status}`);
+                setErr(json.message ?? json.error ?? `HTTP_${res.status}`);
                 setLoading(false);
                 return;
             }
@@ -145,7 +147,7 @@ export default function TransferStaffDialog({
                         </select>
                     </div>
 
-                    <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3 sm:p-4">
+                    {explicitScheduling ? <AlertBanner variant="info" message={t('scheduling.transferHint')} /> : <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3 sm:p-4">
                         <label className="inline-flex cursor-pointer items-start gap-3">
                             <input
                                 type="checkbox"
@@ -163,7 +165,7 @@ export default function TransferStaffDialog({
                                 </span>
                             </div>
                         </label>
-                    </div>
+                    </div>}
 
                     <AlertBanner
                         variant="warning"

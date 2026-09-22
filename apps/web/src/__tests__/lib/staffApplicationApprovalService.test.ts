@@ -16,6 +16,21 @@ function query(result: unknown) {
 }
 
 describe('staffApplicationApprovalService', () => {
+    test('explicit scheduling grants access without inventing working hours', async () => {
+        const previous = process.env.SCHEDULE_V2_ENABLED;
+        process.env.SCHEDULE_V2_ENABLED = 'true';
+        try {
+            const admin = { from: jest.fn(), rpc: jest.fn().mockResolvedValue({
+                data: [{ staff_id: 'staff-1', biz_id: 'biz-1', branch_id: 'branch-1' }], error: null,
+            }) };
+            const result = await approveStaffApplication({ admin, applicationId: 'a', reviewerUserId: 'owner-1', branchId: 'branch-1', isActive: true });
+            expect(result).toMatchObject({ ok: true, schedule: { initialized: false, daysCreated: 0, error: null } });
+            expect(mockedInitializeStaffSchedule).not.toHaveBeenCalled();
+        } finally {
+            if (previous === undefined) delete process.env.SCHEDULE_V2_ENABLED;
+            else process.env.SCHEDULE_V2_ENABLED = previous;
+        }
+    });
     beforeEach(() => {
         jest.clearAllMocks();
     });

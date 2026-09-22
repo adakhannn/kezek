@@ -2,6 +2,7 @@ import StaffPageClient from './StaffPageClient';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { loadStaffApplicationSummary } from '@/lib/staffApplicationSummary';
 
 
 export const runtime = 'nodejs';
@@ -22,7 +23,8 @@ export default async function Page({
                                    }: {
     searchParams?: Promise<{ dismissed?: string | string[] }>;
 }) {
-    const { supabase, bizId, business } = await getBizContextForManagers();
+    const { supabase, bizId, business, userId } = await getBizContextForManagers();
+    const staffApplications = await loadStaffApplicationSummary(userId, bizId);
 
     // распаковываем и нормализуем dismissed
     const sp = (searchParams ? await searchParams : undefined) ?? {};
@@ -49,6 +51,7 @@ export default async function Page({
 
     return (
         <StaffPageClient
+            staffApplications={staffApplications}
             initialRows={rows ?? []}
             showDismissed={showDismissed}
             bizName={bizName}

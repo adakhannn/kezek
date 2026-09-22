@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { ApplicationBranchSelect } from './ApplicationBranchSelect';
+import { ApplicationHistoryNotice } from './ApplicationHistoryNotice';
+
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -125,7 +128,7 @@ export function RoleApplicationsClient() {
             if (action === 'approve') {
                 const scheduleText = payload.schedule_initialized
                     ? ` Расписание подготовлено на ${payload.schedule_days_created ?? 0} дней.`
-                    : ' Карточка создана, но расписание нужно проверить вручную.';
+                    : ' Настройте рабочий график в карточке сотрудника, чтобы открыть запись клиентов.';
                 setNotice(`Сотрудник принят и получил рабочий кабинет.${scheduleText}`);
             } else if (action === 'reject') {
                 setNotice('Заявка сотрудника отклонена.');
@@ -183,8 +186,8 @@ export function RoleApplicationsClient() {
                                 <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                                     {application.applicant_name || 'Пользователь Kezek'}
                                 </h2>
-                                <p className="text-sm text-[var(--text-muted)]">
-                                    {application.applicant_email || application.applicant_phone || application.applicant_user_id}
+                                <p className="break-words text-sm text-[var(--text-muted)]">
+                                    {[application.applicant_email, application.applicant_phone].filter(Boolean).join(' · ') || application.applicant_user_id}
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -208,16 +211,7 @@ export function RoleApplicationsClient() {
                             {application.reviewed_at ? ` · Рассмотрена: ${new Date(application.reviewed_at).toLocaleString('ru-RU')}` : ''}
                         </div>
 
-                        {application.prior_submission_count > 0 || application.risk_flags.length ? (
-                            <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-700 dark:text-amber-300">
-                                    Предыдущих заявок: {application.prior_submission_count}
-                                </span>
-                                {application.risk_flags.map((flag) => (
-                                    <span key={flag} className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">{flag}</span>
-                                ))}
-                            </div>
-                        ) : null}
+                        <ApplicationHistoryNotice count={application.prior_submission_count} flags={application.risk_flags ?? []} />
 
                         {isPending && !isEditing ? (
                             <div className="flex flex-wrap gap-2">
@@ -268,31 +262,17 @@ export function RoleApplicationsClient() {
                         ) : null}
 
                         {isPending && isEditing ? (
-                            <div className="space-y-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-emphasis)] p-4">
-                                <div>
-                                    <label htmlFor={`branch-${application.id}`} className="type-label text-[var(--text-primary)]">
-                                        Филиал сотрудника
-                                    </label>
-                                    <select
-                                        id={`branch-${application.id}`}
-                                        value={branchId}
-                                        onChange={(event) => setBranchId(event.target.value)}
-                                        className="mt-2 w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-[var(--text-primary)]"
-                                    >
-                                        {branches.map((branch) => (
-                                            <option key={branch.id} value={branch.id}>
-                                                {branch.name}{branch.address ? ` · ${branch.address}` : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div className="min-w-0 space-y-5 rounded-xl border border-[var(--border-default)] bg-[var(--surface-emphasis)] p-4 sm:p-5">
+                                <ApplicationBranchSelect id={`branch-${application.id}`} branches={branches}
+                                    value={branchId} onChange={setBranchId} disabled={actionId !== null} />
 
-                                <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                                     <input
                                         type="checkbox"
                                         checked={isActive}
                                         onChange={(event) => setIsActive(event.target.checked)}
-                                        className="mt-1 h-4 w-4"
+                                        disabled={actionId !== null}
+                                        className="mt-1 h-4 w-4 shrink-0 accent-indigo-500"
                                     />
                                     <span>
                                         <b className="text-[var(--text-primary)]">Активировать сотрудника сразу</b><br />
@@ -300,11 +280,13 @@ export function RoleApplicationsClient() {
                                     </span>
                                 </label>
 
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-col gap-3 border-t border-[var(--border-default)] pt-4 sm:flex-row">
                                     <Button
                                         type="button"
                                         size="sm"
                                         onClick={() => decide(application.id, 'approve')}
+                                        className="min-h-11 w-full justify-center sm:w-auto"
+                                        disabled={actionId !== null || !branchId}
                                         isLoading={actionId === `${application.id}:approve`}
                                     >
                                         Принять сотрудника
@@ -314,6 +296,7 @@ export function RoleApplicationsClient() {
                                         size="sm"
                                         variant="outline"
                                         onClick={() => setEditingId(null)}
+                                        className="min-h-11 w-full justify-center sm:w-auto"
                                         disabled={actionId !== null}
                                     >
                                         Отмена

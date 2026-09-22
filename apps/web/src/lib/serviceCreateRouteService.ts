@@ -44,8 +44,8 @@ export async function createServiceRouteEntry(params: {
     };
   }
 
-  const duration = Number(body.duration_min) || 0;
-  if (duration <= 0) {
+  const duration = Number(body.duration_min);
+  if (!Number.isInteger(duration) || duration < 1) {
     return {
       ok: false,
       error: 'validation',
@@ -54,8 +54,16 @@ export async function createServiceRouteEntry(params: {
     };
   }
 
-  const price_from = Number(body.price_from) || 0;
-  const price_to = Number(body.price_to) || 0;
+  const price_from = Number(body.price_from);
+  const price_to = Number(body.price_to);
+  if (!Number.isFinite(price_from) || !Number.isFinite(price_to) || price_from < 0 || price_to < 0) {
+    return {
+      ok: false,
+      error: 'validation',
+      message: 'Цена не может быть отрицательной',
+      status: 400,
+    };
+  }
   if (price_to && price_from && price_to < price_from) {
     return {
       ok: false,

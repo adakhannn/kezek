@@ -1,4 +1,7 @@
 export const authEn = {
+    'auth.loading.description': 'We are checking the secure connection and opening sign-in options.',
+    'auth.loading.hint': 'This usually takes only a few seconds',
+    'auth.loading.title': 'Preparing sign-in',
     'auth.benefits.easy.desc': 'One click — and you are in. No complex forms or long questionnaires',
     'auth.benefits.easy.title': 'Simplicity',
     'auth.benefits.fast.desc': 'No registration or passwords — choose a method and sign in within seconds',
@@ -26,4 +29,15 @@ export const authEn = {
     'auth.variantEmailHint': 'Enter your e‑mail, we will send a secure magic link or one‑time code. No password required.',
     'auth.whatsapp': 'Sign in with WhatsApp',
     'auth.yandex': 'Sign in with Yandex',
+    'auth.botLogin.title': 'Sign in with Telegram',
+    'auth.botLogin.loading': 'Preparing…',
+    'auth.botLogin.instructions': 'Open the bot and approve only your own request. Compare the code here and in Telegram:',
+    'auth.botLogin.open': 'Open Telegram',
+    'auth.botLogin.waiting': 'Waiting for confirmation. This link expires in 5 minutes.',
+    'auth.botLogin.account': 'Check the account to sign in:',
+    'auth.botLogin.finish': 'Sign in to this account',
+    'auth.botLogin.closed': 'The request is closed or expired. Create a new one.',
+    'auth.botLogin.new': 'Different account / new link',
+    'auth.botLogin.retrying': 'Checking connection. Retrying automatically.',
+    'auth.botLogin.error': 'Could not sign in. Please try again.',
 } as const;

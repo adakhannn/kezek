@@ -7,6 +7,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { logError, logDebug } from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { readScheduledDay } from '@/lib/scheduling/read';
 import { TZ } from '@/lib/time';
 
 export interface ShiftDataServiceOptions {
@@ -115,9 +117,10 @@ export async function getShiftData({
     }
     
     // Дата в локальной TZ (без времени)
-    const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
+    const scheduledDay = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, targetDate) : null;
+    const ymd = scheduledDay?.ymd ?? formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
     const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
-    const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const today = formatInTimeZone(new Date(), scheduledDay?.day.tz ?? TZ, 'yyyy-MM-dd');
     const dateStart = `${ymd}T00:00:00`;
     const dateEnd = `${ymd}T23:59:59`;
 
@@ -352,7 +355,9 @@ export async function getShiftData({
 
     // Обрабатываем проверку выходного дня
     let isDayOff = false;
-    if (ymd === today && dayOffResults.length >= 3) {
+    if (scheduledDay) {
+        isDayOff = !scheduledDay.day.intervals.length;
+    } else if (ymd === today && dayOffResults.length >= 3) {
         const [timeOffsResult, dateRuleResult, whRowResult] = dayOffResults;
 
         // 1. Проверяем staff_time_off

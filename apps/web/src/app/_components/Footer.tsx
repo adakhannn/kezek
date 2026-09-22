@@ -24,7 +24,7 @@ export function Footer() {
                                 {t('footer.connectBusiness')}
                             </Link>
                             <Link
-                                href="/auth/sign-in?redirect=/business/role-apply"
+                                href="/business/role-apply"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
                                 {t('footer.joinBusiness')}

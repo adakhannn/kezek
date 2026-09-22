@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 
 export type ServiceUpdateBody = {
@@ -26,7 +28,7 @@ type Success = { ok: true };
 type ServiceRecord = { id: string; biz_id: string; name_ru: string };
 
 export type ServiceUpdateAdminClientLike = {
-    from: (table: string) => any;
+    from: SupabaseClient['from'];
 };
 
 function normalizeOptionalName(value?: string | null) {
@@ -51,8 +53,21 @@ export async function runServiceUpdateFlow({
     if (!body.name_ru?.trim()) {
         return validationError('Имя обязательно');
     }
-    if (!body.duration_min || body.duration_min <= 0) {
+    if (!Number.isInteger(body.duration_min) || body.duration_min < 1) {
         return validationError('Длительность должна быть больше 0');
+    }
+
+    if (
+        !Number.isFinite(body.price_from)
+        || !Number.isFinite(body.price_to)
+        || body.price_from < 0
+        || body.price_to < 0
+    ) {
+        return validationError('Цена не может быть отрицательной');
+    }
+
+    if (body.price_from > 0 && body.price_to > 0 && body.price_from > body.price_to) {
+        return validationError('Минимальная цена не может быть больше максимальной');
     }
 
     const serviceCheck = await checkResourceBelongsToBiz<ServiceRecord>(

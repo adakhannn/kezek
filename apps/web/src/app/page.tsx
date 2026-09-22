@@ -371,7 +371,7 @@ function BusinessAudienceSection({ t }: { t: Translator }) {
                             {t('home.business.connect', 'Подключить бизнес')}
                         </Link>
                         <Link
-                            href="/auth/sign-in?redirect=/business/role-apply"
+                            href="/business/role-apply"
                             className="inline-flex min-h-[46px] items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
                         >
                             {t('home.business.join', 'Присоединиться к команде')}

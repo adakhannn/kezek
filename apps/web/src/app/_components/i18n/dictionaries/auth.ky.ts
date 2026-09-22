@@ -1,4 +1,7 @@
 export const authKy = {
+    'auth.loading.description': 'Коопсуз туташууну текшерип, кирүү ыкмаларын ачып жатабыз.',
+    'auth.loading.hint': 'Адатта бул бир нече секундду гана алат',
+    'auth.loading.title': 'Кирүүнү даярдап жатабыз',
     'auth.benefits.easy.desc': 'Бир баскыч — жана сиз ичиндесиз. Татаал формалар жана узун анкеталар жок',
     'auth.benefits.easy.title': 'Жөнөкөйлүк',
     'auth.benefits.fast.desc': 'Катталуусуз жана сыр сөзсүз — ыкманы тандаңыз жана секундада кириңиз',
@@ -26,4 +29,15 @@ export const authKy = {
     'auth.variantEmailHint': 'Почтаңызды жазыңыз, биз кирүү үчүн коопсуз шилтеме же код жөнөтөбүз. Сыр сөз ойлоп табуунун кереги жок.',
     'auth.whatsapp': 'WhatsApp аркылуу кирүү',
     'auth.yandex': 'Яндекс менен кирүү',
+    'auth.botLogin.title': 'Telegram аркылуу кирүү',
+    'auth.botLogin.loading': 'Даярдалууда…',
+    'auth.botLogin.instructions': 'Ботту ачып, өзүңүздүн сурооңузду гана ырастаңыз. Сайттагы жана Telegramдагы кодду салыштырыңыз:',
+    'auth.botLogin.open': 'Telegram ачуу',
+    'auth.botLogin.waiting': 'Ырастоо күтүлүүдө. Шилтеме 5 мүнөт жарактуу.',
+    'auth.botLogin.account': 'Кирүү үчүн аккаунтту текшериңиз:',
+    'auth.botLogin.finish': 'Бул аккаунтка кирүү',
+    'auth.botLogin.closed': 'Суроо жабылды же мөөнөтү бүттү. Жаңысын түзүңүз.',
+    'auth.botLogin.new': 'Башка аккаунт / жаңы шилтеме',
+    'auth.botLogin.retrying': 'Байланыш текшерилүүдө. Автоматтык түрдө кайталайбыз.',
+    'auth.botLogin.error': 'Кирүү мүмкүн болгон жок. Кайра аракет кылыңыз.',
 } as const;

@@ -106,7 +106,7 @@ function WorkspaceSidebarPanel({
     closeButton?: ReactNode;
 }) {
     return (
-        <div className="flex h-full flex-col overflow-hidden rounded-[32px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] shadow-[var(--shadow-xl)] backdrop-blur-xl">
+        <div className="flex h-full flex-col overflow-hidden rounded-[32px] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xl)]">
             <div className="border-b border-[var(--border-subtle)] bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.12),transparent_30%)] px-4 py-4 sm:px-5">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -282,7 +282,7 @@ export function WorkspaceSidebarShell({
                 <button
                     type="button"
                     aria-label={closeLabel}
-                    className="fixed inset-0 z-[125] bg-black/55 backdrop-blur-[3px] md:hidden"
+                    className="fixed inset-0 z-[125] bg-black/70 md:hidden"
                     onClick={onClose}
                 />
             ) : null}
@@ -338,7 +338,7 @@ export function WorkspaceSidebarShell({
                     role="dialog"
                     aria-modal="true"
                     aria-label={navTitle}
-                    className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-[130] h-[min(44rem,calc(100dvh-1rem))] animate-[workspace-sheet-in_240ms_ease-out] motion-reduce:animate-none md:hidden"
+                    className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-[130] h-[min(44rem,calc(100dvh-1rem))] animate-[workspace-sheet-in_160ms_ease-out] motion-reduce:animate-none md:hidden"
                 >
                     <div className="h-full overflow-hidden">
                         <WorkspaceSidebarPanel

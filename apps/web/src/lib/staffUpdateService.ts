@@ -1,8 +1,10 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logWarn } from '@/lib/log';
 
 type StaffUpdateInput = {
-    supabase: any;
-    admin: any;
+    supabase: SupabaseClient;
+    admin: SupabaseClient;
     staffId: string;
     userId: string;
     bizId: string;
@@ -82,7 +84,9 @@ export async function runStaffUpdate({
             ok: false,
             status: 400,
             error: 'internal',
-            message: error.message,
+            message: error.message.includes('SCHEDULE_USE_TRANSFER_COMMAND')
+                ? 'Для смены филиала используйте «Перевести сотрудника» в карточке. Остальные изменения не сохранены.'
+                : error.message,
         };
     }
 
@@ -103,7 +107,7 @@ async function checkManagerRoleAccess({
     userId,
     bizId,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     userId: string;
     bizId: string;
 }) {
@@ -131,7 +135,7 @@ async function resolveLinkedUserId({
     email,
     phone,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     email?: string | null;
     phone?: string | null;
 }) {
@@ -153,7 +157,7 @@ async function resolveLinkedUserId({
     return foundUser?.id ?? null;
 }
 
-async function addStaffRole(admin: any, userId: string, bizId: string) {
+async function addStaffRole(admin: SupabaseClient, userId: string, bizId: string) {
     const { data: roleStaff } = await admin
         .from('roles')
         .select('id')

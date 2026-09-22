@@ -20,11 +20,13 @@ export default function StaffPageClient({
     showDismissed,
     bizName,
     bizCity,
+    staffApplications,
 }: {
     initialRows: Row[];
     showDismissed?: boolean;
     bizName?: string | null;
     bizCity?: string | null;
+    staffApplications?: import('@/lib/staffApplicationSummary').StaffApplicationSummary;
 }) {
     const { t } = useLanguage();
 
@@ -61,6 +63,27 @@ export default function StaffPageClient({
 
             <FlashBanner showInitially={showDismissed ?? false} text={t('staff.dismissed', 'Сотрудник уволен.')} />
 
+            {staffApplications && (
+                <Link href="/dashboard/role-applications"
+                    className="flex min-h-16 flex-col gap-3 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-4 transition hover:bg-indigo-500/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h2 className="font-semibold text-[var(--text-primary)]">
+                            {t('dashboard.applications.title', 'Заявки сотрудников')}
+                            {staffApplications.pending != null && staffApplications.pending > 0 && (
+                                <span className="ml-2 inline-flex min-w-7 items-center justify-center rounded-full bg-indigo-600 px-2 py-0.5 text-sm text-white">{staffApplications.pending}</span>
+                            )}
+                        </h2>
+                        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                            {staffApplications.pending === null
+                                ? t('dashboard.applications.unavailable', 'Не удалось загрузить количество. Откройте список заявок.')
+                                : staffApplications.pending > 0
+                                    ? t('dashboard.applications.pending', 'Ожидают вашего решения. Рассмотрите заявки и выберите филиал для новых сотрудников.')
+                                    : t('dashboard.applications.empty', 'Новых заявок нет. История рассмотрения доступна здесь.')}
+                        </p>
+                    </div>
+                    <span className="shrink-0 font-semibold text-indigo-500">{t('dashboard.applications.open', 'Открыть заявки')} →</span>
+                </Link>
+            )}
             <StaffListClient initialRows={initialRows} />
         </main>
     );

@@ -1,3 +1,4 @@
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 
 type DbClient = {
@@ -107,7 +108,7 @@ export async function approveStaffApplication(params: {
         };
     }
 
-    const scheduleResult = await initializeStaffSchedule(
+    const scheduleResult = explicitSchedulingEnabled() ? { success: false, daysCreated: 0, error: undefined } : await initializeStaffSchedule(
         // The runtime admin client implements the same query interface expected by the helper.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         params.admin as any,

@@ -1,4 +1,7 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+﻿
+import { timingSafeEqual } from 'crypto';
+
+import { NextRequest, NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { writeTelegramAuthAuditEvent } from '@/lib/telegramAuthAuditLogService';
@@ -14,6 +17,8 @@ import {
 } from '@/lib/telegramMobileAuthAttemptService';
 import { runTelegramMobileCallbackRoute } from '@/lib/telegramMobileCallbackRouteService';
 import { parseTelegramMobileStartPayload } from '@/lib/telegramMobileDeepLinkPayload';
+import { handleProfileLinkUpdate } from '@/lib/telegramProfileLinkWebhookService';
+import { handleWebLoginUpdate } from '@/lib/telegramWebLoginWebhookService';
 
 type TelegramUser = {
     id: number;
@@ -27,6 +32,7 @@ type TelegramMessage = {
     text?: string;
     chat?: {
         id: number;
+        type?: string;
     };
     from?: TelegramUser;
 };
@@ -323,6 +329,8 @@ async function handleTelegramConfirmCallback(callback: TelegramCallbackQuery) {
 }
 
 async function processTelegramWebhookUpdate(update: TelegramUpdate) {
+    if (await handleProfileLinkUpdate(update)) return;
+    if (await handleWebLoginUpdate(update)) return;
     const messageText = update.message?.text?.trim();
     if (messageText?.startsWith('/start') && update.message) {
         await handleTelegramStartCommand(update.message);
@@ -342,9 +350,13 @@ export async function runTelegramWebhookPostHttp(
     request: NextRequest,
 ): Promise<NextResponse> {
     const expectedSecret = getExpectedWebhookSecret();
+    if (!expectedSecret) {
+        return createErrorResponse('service_unavailable', 'Telegram webhook is not configured', undefined, 503);
+    }
     if (expectedSecret) {
         const provided = request.headers.get('x-telegram-bot-api-secret-token') || '';
-        if (provided !== expectedSecret) {
+        if (Buffer.byteLength(provided) !== Buffer.byteLength(expectedSecret)
+            || !timingSafeEqual(Buffer.from(provided), Buffer.from(expectedSecret))) {
             return createErrorResponse('forbidden', 'Invalid telegram webhook secret', undefined, 403);
         }
     }

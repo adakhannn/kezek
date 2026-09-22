@@ -1,4 +1,7 @@
 export const authRu = {
+    'auth.loading.description': 'Проверяем безопасное подключение и открываем способы входа.',
+    'auth.loading.hint': 'Обычно это занимает всего несколько секунд',
+    'auth.loading.title': 'Готовим вход',
     'auth.benefits.easy.desc': 'Один клик — и вы уже внутри. Никаких сложных форм и длинных анкет',
     'auth.benefits.easy.title': 'Простота',
     'auth.benefits.fast.desc': 'Без регистрации и паролей — выберите способ и войдите за секунды',
@@ -26,4 +29,15 @@ export const authRu = {
     'auth.variantEmailHint': 'Укажите почту, мы пришлём на неё безопасную ссылку/код для входа. Пароль придумывать не нужно.',
     'auth.whatsapp': 'Войти через WhatsApp',
     'auth.yandex': 'Войти через Яндекс',
+    'auth.botLogin.title': 'Войти через Telegram',
+    'auth.botLogin.loading': 'Подготовка…',
+    'auth.botLogin.instructions': 'Откройте бота и подтвердите только свой запрос. Сверьте код на сайте и в Telegram:',
+    'auth.botLogin.open': 'Открыть Telegram',
+    'auth.botLogin.waiting': 'Ждём подтверждения. Ссылка действует 5 минут.',
+    'auth.botLogin.account': 'Проверьте аккаунт для входа:',
+    'auth.botLogin.finish': 'Войти в этот аккаунт',
+    'auth.botLogin.closed': 'Запрос закрыт или истёк. Создайте новый.',
+    'auth.botLogin.new': 'Другой аккаунт / новая ссылка',
+    'auth.botLogin.retrying': 'Проверяем соединение. Повторим автоматически.',
+    'auth.botLogin.error': 'Не удалось войти. Попробуйте заново.',
 } as const;

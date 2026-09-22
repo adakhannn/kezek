@@ -34,6 +34,18 @@ function createAdmin(options?: {
 }
 
 describe('unlinkSocialIdentity', () => {
+    test('unlinks Telegram while preserving the Yandex login', async () => {
+        const { admin, update } = createAdmin({
+            profile: { yandex_id: 'yandex-id', telegram_id: 123, telegram_verified: true },
+            userMetadata: { yandex_id: 'yandex-id', telegram_id: 123, telegram_username: 'test' },
+        });
+        const result = await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'telegram' });
+        expect(result).toEqual({ ok: true, data: { provider: 'telegram', remainingMethods: 1 } });
+        expect(update).toHaveBeenCalledWith({ telegram_id: null, telegram_verified: false, notify_telegram: false });
+        expect(admin.auth.admin.updateUserById).toHaveBeenCalledWith('user-id', {
+            user_metadata: { yandex_id: 'yandex-id', telegram_id: null, telegram_username: null },
+        });
+    });
     test('rejects unlinking the last login method', async () => {
         const { admin } = createAdmin({ identities: [{ provider: 'google' }] });
         const result = await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'google' });
@@ -81,6 +93,7 @@ describe('unlinkSocialIdentity', () => {
             user_metadata: {
                 yandex_id: null,
                 yandex_username: null,
+                yandex_email: null,
                 auth_provider: null,
             },
         });

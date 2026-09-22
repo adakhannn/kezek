@@ -1,4 +1,5 @@
 export type DashboardHomeClientProps = {
+    staffApplications?: import('@/lib/staffApplicationSummary').StaffApplicationSummary;
     bizName: string | null;
     bizCity: string | null;
     formattedDate: string;

@@ -1,8 +1,12 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logError } from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { readScheduledDay } from '@/lib/scheduling/read';
 import { TZ, formatDateInTz } from '@/lib/time';
 
 type StaffShiftTodayContext = {
-    supabase: any;
+    supabase: SupabaseClient;
     staffId: string;
     bizId: string;
 };
@@ -41,10 +45,11 @@ export async function runStaffShiftToday({
     const staffPercentSalon = Number(staffData?.percent_salon ?? 40);
     const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
 
-    const ymd = formatDateInTz(now, TZ);
+    const scheduled = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, now) : null;
+    const ymd = scheduled?.ymd ?? formatDateInTz(now, TZ);
     const dow = new Date(`${ymd}T12:00:00`).getDay();
 
-    const isDayOff = await resolveIsDayOff({ supabase, staffId, bizId, ymd, dow });
+    const isDayOff = scheduled ? !scheduled.day.intervals.length : await resolveIsDayOff({ supabase, staffId, bizId, ymd, dow });
 
     const { data: shift, error: shiftError } = await supabase
         .from('staff_shifts')
@@ -172,7 +177,7 @@ async function resolveIsDayOff({
     ymd,
     dow,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     staffId: string;
     bizId: string;
     ymd: string;
@@ -217,7 +222,7 @@ async function resolveIsDayOff({
     return !Array.isArray(intervals) || intervals.length === 0;
 }
 
-async function loadShiftItems({ supabase, shiftId }: { supabase: any; shiftId: string }) {
+async function loadShiftItems({ supabase, shiftId }: { supabase: SupabaseClient; shiftId: string }) {
     const { data, error } = await supabase
         .from('staff_shift_items')
         .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
@@ -238,7 +243,7 @@ async function loadTodayBookings({
     staffId,
     ymd,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     staffId: string;
     ymd: string;
 }) {
@@ -261,7 +266,7 @@ async function loadTodayBookings({
     return data ?? [];
 }
 
-async function loadAvailableServices({ supabase, staffId }: { supabase: any; staffId: string }) {
+async function loadAvailableServices({ supabase, staffId }: { supabase: SupabaseClient; staffId: string }) {
     const { data, error } = await supabase
         .from('service_staff')
         .select('services:services!inner (name_ru, name_ky, name_en)')

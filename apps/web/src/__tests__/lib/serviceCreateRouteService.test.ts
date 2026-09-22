@@ -53,6 +53,30 @@ describe('serviceCreateRouteService', () => {
     });
   });
 
+  test('rejects a negative price before writing any service', async () => {
+    const admin = createAdmin();
+
+    const result = await createServiceRouteEntry({
+      admin,
+      bizId: 'biz-id',
+      body: {
+        name_ru: 'Test Service',
+        duration_min: 60,
+        price_from: 0,
+        price_to: -300,
+        branch_ids: ['branch-id-1'],
+      },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'validation',
+      message: 'Цена не может быть отрицательной',
+      status: 400,
+    });
+    expect(admin.from).not.toHaveBeenCalled();
+  });
+
   test('rejects branches outside business ownership', async () => {
     const admin = createAdmin();
     admin.from.mockReturnValueOnce(createBranchesQuery(['branch-id-1']));

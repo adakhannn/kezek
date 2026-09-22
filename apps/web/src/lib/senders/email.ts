@@ -29,3 +29,20 @@ export async function sendEmailPassword(opts: {
     if (!from) throw new Error('EMAIL_FROM is not configured');
     await getResend().emails.send({ from, to: opts.to, subject, html });
 }
+
+export async function sendEmail(opts: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+}) {
+    const from = process.env.EMAIL_FROM;
+    if (!from) throw new Error('EMAIL_FROM is not configured');
+    await getResend().emails.send({
+        from,
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+        text: opts.text,
+    });
+}

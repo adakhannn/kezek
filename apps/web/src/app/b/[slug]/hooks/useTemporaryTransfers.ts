@@ -2,7 +2,7 @@ import { addDays } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
 
-import { supabase } from '@/lib/supabaseClient';
+import { loadWorkLocations } from '@/lib/scheduling/locationsClient';
 import { TZ } from '@/lib/time';
 
 type TemporaryTransfer = {
@@ -58,25 +58,9 @@ export function useTemporaryTransfers(params: {
 
                 // Загружаем все правила расписания для всех сотрудников этого бизнеса на нужный период
                 // Важно: загружаем для ВСЕХ филиалов, а не только для выбранного, чтобы корректно определить временные переводы
-                const staffIds = Array.from(staffHomeBranches.keys());
-
-                const { data, error: fetchError } = await supabase
-                    .from('staff_schedule_rules')
-                    .select('staff_id, branch_id, date_on')
-                    .eq('biz_id', bizId)
-                    .in('staff_id', staffIds)
-                    .eq('kind', 'date')
-                    .eq('is_active', true)
-                    .gte('date_on', minDateStr)
-                    .lte('date_on', maxDateStr);
+                const data = await loadWorkLocations(bizId, minDateStr, maxDateStr);
 
                 if (ignore) return;
-
-                if (fetchError) {
-                    setError(fetchError.message);
-                    setTemporaryTransfers([]);
-                    return;
-                }
 
                 // Фильтруем: временный перевод = branch_id в правиле отличается от домашнего филиала сотрудника
                 const transfers = (data ?? [])

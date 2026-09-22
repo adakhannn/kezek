@@ -15,6 +15,20 @@ jest.mock('@/app/_components/i18n/LanguageProvider', () => ({
 }));
 
 describe('DashboardHomeClient', () => {
+    test('prioritizes pending applications over setup and hides the focus when processed', () => {
+        const props = {
+            bizName: 'Business', bizCity: null, formattedDate: '2026-09-17T00:00:00Z',
+            bookingsToday: 0, staffActive: 0, servicesActive: 0, branchesCount: 0,
+            needOnboarding: true, ratingScore: null, ratingConfigScope: null, ratingWeights: null,
+        };
+        const { rerender } = render(<DashboardHomeClient {...props} staffApplications={{ pending: 2 }} />);
+        expect(screen.getByText('Заявки сотрудников · 2')).toBeTruthy();
+        expect(screen.getByRole('link', { name: /Рассмотреть заявки/ }).getAttribute('href')).toBe('/dashboard/role-applications');
+        expect(screen.queryByText('Сначала доведите кабинет до рабочего состояния')).toBeNull();
+        rerender(<DashboardHomeClient {...props} staffApplications={{ pending: 0 }} />);
+        expect(screen.queryByText('Заявки сотрудников · 2')).toBeNull();
+        expect(screen.getByText('Сначала доведите кабинет до рабочего состояния')).toBeTruthy();
+    });
     test('рендерит базовый dashboard summary и быстрые действия', () => {
         render(
             <DashboardHomeClient

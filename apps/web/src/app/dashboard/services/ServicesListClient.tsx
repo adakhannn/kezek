@@ -1,15 +1,19 @@
 'use client';
 
+import { getServiceName } from '@shared-client/i18n';
 import Link from 'next/link';
 
 import DeleteServiceButton from './DeleteServiceButton';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { buttonStyles } from '@/components/ui/Button';
 
 type Branch = { id: string; name: string };
 
 type GroupedService = {
     name_ru: string;
+    name_ky: string | null;
+    name_en: string | null;
     duration_min: number;
     price_from: number;
     price_to: number;
@@ -37,6 +41,7 @@ export default function ServicesListClient({
         n.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
 
     const displayBizName = bizName || t('finance.biz.defaultName', 'Ваш бизнес в Kezek');
+    const displayServiceName = (service: GroupedService) => getServiceName(service, locale);
 
     return (
         <div className="px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
@@ -99,8 +104,8 @@ export default function ServicesListClient({
                 </div>
             </div>
 
-            {/* Mobile: Cards View */}
-            <div className="md:hidden space-y-3">
+            {/* Compact view: cards stay readable while the workspace sidebar is visible. */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 2xl:hidden gap-3 sm:gap-4">
                 {list.map((s) => {
                     const branchNames = s.branch_ids
                         .map((bid) => branches.find((b) => b.id === bid)?.name)
@@ -112,9 +117,9 @@ export default function ServicesListClient({
                             key={s.first_id}
                             className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm"
                         >
-                            <div className="flex items-start justify-between gap-3 mb-3">
-                                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1">
-                                    {s.name_ru}
+                            <div className="flex items-start justify-between gap-3 mb-4">
+                                <h3 className="min-w-0 text-base sm:text-lg font-semibold leading-snug text-gray-900 dark:text-gray-100 break-words">
+                                    {displayServiceName(s)}
                                 </h3>
                                 <span
                                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
@@ -128,46 +133,50 @@ export default function ServicesListClient({
                                         : t('services.status.hidden', 'скрыта')}
                                 </span>
                             </div>
-                            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <div className="min-w-0 rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
+                                    <dt className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                                         {t('services.table.duration', 'Длительность')}:
-                                    </span>
-                                    <span>
-                                        {s.duration_min} {locale === 'en' ? 'min' : 'мин'}
-                                    </span>
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-gray-100">
+                                        {s.duration_min} {t('services.unit.minutes', 'мин')}
+                                    </dd>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                                <div className="min-w-0 rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
+                                    <dt className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                                         {t('services.table.price', 'Цена')}:
-                                    </span>
-                                    <span>
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-gray-100 break-words">
                                         {formatNumber(s.price_from)}–{formatNumber(s.price_to)}{' '}
                                         {t('booking.currency', 'сом')}
-                                    </span>
+                                    </dd>
                                 </div>
-                                <div className="flex items-start gap-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">
+                                <div className="min-w-0 rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
+                                    <dt className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                                         {t('services.table.branches', 'Филиал')}:
-                                    </span>
-                                    <span className="break-words">
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-gray-100 break-words">
                                         {branchNames || '—'}
                                         {s.branch_ids.length > 1 && (
                                             <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
                                                 ({s.branch_ids.length})
                                             </span>
                                         )}
-                                    </span>
+                                    </dd>
                                 </div>
-                            </div>
-                            <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            </dl>
+                            <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
                                 <Link
                                     href={`/dashboard/services/${s.first_id}`}
-                                    className="flex-1 px-3 py-2 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 text-center"
+                                    className={buttonStyles({
+                                        variant: 'outline',
+                                        size: 'sm',
+                                        className: 'w-full sm:w-auto text-center',
+                                    })}
                                 >
                                     {t('common.editShort', 'Редакт.')}
                                 </Link>
-                                <div className="flex-1">
+                                <div className="w-full sm:w-auto">
                                     <DeleteServiceButton id={s.first_id} />
                                 </div>
                             </div>
@@ -181,8 +190,8 @@ export default function ServicesListClient({
                 )}
             </div>
 
-            {/* Desktop: Table View */}
-            <div className="hidden md:block bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+            {/* Wide desktop: table has enough room for six meaningful columns. */}
+            <div className="hidden 2xl:block bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full">
                         <thead>
@@ -220,11 +229,11 @@ export default function ServicesListClient({
                                         className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                     >
                                         <td className="p-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                            {s.name_ru}
+                                            {displayServiceName(s)}
                                         </td>
                                         <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
                                             {s.duration_min}{' '}
-                                            {locale === 'en' ? 'min' : 'мин'}
+                                            {t('services.unit.minutes', 'мин')}
                                         </td>
                                         <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
                                             {formatNumber(s.price_from)}–{formatNumber(s.price_to)}{' '}
@@ -255,7 +264,11 @@ export default function ServicesListClient({
                                             <div className="flex gap-2">
                                                 <Link
                                                     href={`/dashboard/services/${s.first_id}`}
-                                                    className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
+                                                    className={buttonStyles({
+                                                        variant: 'outline',
+                                                        size: 'sm',
+                                                        className: 'leading-none',
+                                                    })}
                                                 >
                                                     {t('common.editShort', 'Редакт.')}
                                                 </Link>

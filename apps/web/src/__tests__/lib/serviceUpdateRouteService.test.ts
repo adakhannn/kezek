@@ -87,6 +87,32 @@ describe('serviceUpdateRouteService', () => {
         expect(result).toEqual({ ok: true });
     });
 
+    test('rejects a negative price before reading or changing a service', async () => {
+        const admin = createMockSupabase();
+
+        const result = await runServiceUpdateFlow({
+            admin: admin as never,
+            bizId: 'biz-id',
+            serviceId: 'service-id',
+            body: {
+                name_ru: 'Massage',
+                duration_min: 60,
+                price_from: 0,
+                price_to: -300,
+                active: true,
+                branch_ids: ['branch-1'],
+            },
+        });
+
+        expect(result).toEqual({
+            ok: false,
+            error: 'validation',
+            message: 'Цена не может быть отрицательной',
+            status: 400,
+        });
+        expect(admin.from).not.toHaveBeenCalled();
+    });
+
     test('returns conflict when removed branch still has future bookings', async () => {
         const admin = createMockSupabase();
         (checkResourceBelongsToBiz as jest.Mock).mockResolvedValue({

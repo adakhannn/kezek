@@ -3,10 +3,12 @@ export const dynamic = 'force-dynamic';
 
 import { releaseApplicationBlock } from '@/lib/applicationPolicy';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { notifyStaffApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
 import {
     normalizeBusinessRole,
     rejectBusinessRoleApplication,
 } from '@/lib/businessRoleApplicationService';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import {
     approveStaffApplication,
@@ -123,6 +125,18 @@ export async function POST(request: Request, context: unknown) {
     });
     if (!result.ok) {
         return Response.json({ ok: false, message: result.message }, { status: result.status });
+    }
+
+    if (application.applicant_user_id) {
+        try {
+            await notifyStaffApplicationApproved(admin, {
+                applicantUserId: application.applicant_user_id,
+                businessId: application.biz_id,
+                origin: new URL(request.url).origin,
+            });
+        } catch (notificationError) {
+            logError('ApplicationNotification', 'Approved staff application notification failed', notificationError);
+        }
     }
 
     return Response.json({

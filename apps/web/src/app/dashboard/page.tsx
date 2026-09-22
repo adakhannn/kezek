@@ -3,6 +3,7 @@ import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { DashboardHomeClient } from './components/DashboardHomeClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { loadStaffApplicationSummary } from '@/lib/staffApplicationSummary';
 import { getBusinessTimezone } from '@/lib/time';
 
 
@@ -31,12 +32,13 @@ async function count(
 }
 
 export default async function DashboardHome() {
-    const { supabase, bizId, business } = await getBizContextForManagers();
+    const { supabase, bizId, business, userId } = await getBizContextForManagers();
 
     const [
         [, staffActive, servicesActive, branchesCount],
         { data: ratingConfig },
         { data: bizRatingConfig },
+        staffApplications,
     ] = await Promise.all([
         Promise.all([
             // bookingsToday будет пересчитан после получения таймзоны бизнеса
@@ -74,6 +76,7 @@ export default async function DashboardHome() {
                 staff_discipline_weight: number;
                 window_days: number;
             }>(),
+        loadStaffApplicationSummary(userId, bizId),
     ]);
 
     const biz = business;
@@ -117,6 +120,7 @@ export default async function DashboardHome() {
 
     return (
         <DashboardHomeClient
+            staffApplications={staffApplications}
             bizName={bizName}
             bizCity={bizCity}
             formattedDate={formattedDate}

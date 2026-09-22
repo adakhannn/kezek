@@ -1,9 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AccountDeletionPanel } from './AccountDeletionPanel';
+import { ConnectionUnlinkConfirmation } from './ConnectionUnlinkConfirmation';
+import { ProfileNotice } from './ProfileNotice';
+import { TelegramBotLink } from './TelegramBotLink';
 import { TelegramLinkWidget } from './TelegramLinkWidget';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -16,11 +19,13 @@ import { supabase } from '@/lib/supabaseClient';
 type Profile = {
     full_name: string | null;
     phone: string | null;
+    whatsapp_phone: string | null;
     notify_email: boolean;
     notify_whatsapp: boolean;
     whatsapp_verified: boolean;
     notify_telegram: boolean;
     telegram_connected: boolean;
+    telegram_username: string | null;
 };
 
 type LoginConnections = {
@@ -37,6 +42,9 @@ type NotificationEmail = {
 
 type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
 
+const TelegramProfileConnection = process.env.NEXT_PUBLIC_TELEGRAM_BOT_LINK_ENABLED === 'true'
+    ? TelegramBotLink : TelegramLinkWidget;
+
 export default function ProfileForm() {
     const router = useRouter();
     const { t } = useLanguage();
@@ -47,20 +55,24 @@ export default function ProfileForm() {
     const [profile, setProfile] = useState<Profile>({
         full_name: null,
         phone: null,
+        whatsapp_phone: null,
         notify_email: true,
         notify_whatsapp: true,
         whatsapp_verified: false,
         notify_telegram: true,
         telegram_connected: false,
+        telegram_username: null,
     });
     const [initialProfile, setInitialProfile] = useState<Profile>({
         full_name: null,
         phone: null,
+        whatsapp_phone: null,
         notify_email: true,
         notify_whatsapp: true,
         whatsapp_verified: false,
         notify_telegram: true,
         telegram_connected: false,
+        telegram_username: null,
     });
     const [otpCode, setOtpCode] = useState('');
     const [otpSending, setOtpSending] = useState(false);
@@ -74,6 +86,8 @@ export default function ProfileForm() {
     });
     const [linkingProvider, setLinkingProvider] = useState<'google' | 'yandex' | null>(null);
     const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
+    const [pendingUnlink, setPendingUnlink] = useState<{ provider: SocialProvider; label: string } | null>(null);
+    const unlinkBusyRef = useRef(false);
     const [notificationEmails, setNotificationEmails] = useState<NotificationEmail[]>([]);
     const [initialNotificationEmails, setInitialNotificationEmails] = useState<NotificationEmail[]>([]);
     const [notificationEmailsLoaded, setNotificationEmailsLoaded] = useState(false);
@@ -84,16 +98,16 @@ export default function ProfileForm() {
         const linked = params.get('linked');
         const linkError = params.get('error');
         if (linked) {
-            setMessage(`${linked === 'yandex' ? 'Яндекс' : 'Google'} успешно подключён`);
+            setMessage(t('cabinet.profile.connections.linked', 'Способ входа успешно подключён'));
             window.history.replaceState(null, '', window.location.pathname);
         } else if (linkError) {
             const safeMessage = linkError === 'yandex_identity_already_linked'
-                ? 'Этот Яндекс-аккаунт уже подключён к другому пользователю.'
-                : 'Не удалось подключить способ входа. Попробуйте ещё раз.';
+                ? t('cabinet.profile.connections.yandexAlreadyLinked', 'Этот Яндекс-аккаунт уже подключён к другому пользователю.')
+                : t('cabinet.profile.connections.linkError', 'Не удалось подключить способ входа. Попробуйте ещё раз.');
             setError(safeMessage);
             window.history.replaceState(null, '', window.location.pathname);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (!message) return;
@@ -112,6 +126,9 @@ export default function ProfileForm() {
             ? t('cabinet.profile.whatsapp.phone.invalid', 'Укажите корректный номер WhatsApp')
             : null;
     const whatsAppPhoneChanged = normalizedWhatsAppPhone !== initialWhatsAppPhone;
+    const telegramNotificationIdentity = profile.telegram_username
+        ? `@${profile.telegram_username.replace(/^@/, '')}`
+        : profile.full_name;
 
     const isDirty = useMemo(() => {
         return JSON.stringify(profile) !== JSON.stringify(initialProfile)
@@ -140,7 +157,7 @@ export default function ProfileForm() {
 
             const { data, error: fetchError } = await supabase
                 .from('profiles')
-                .select('full_name, phone, whatsapp_phone, notify_email, notify_whatsapp, whatsapp_verified, notify_telegram, telegram_id, telegram_verified, yandex_id')
+                .select('full_name, phone, whatsapp_phone, notify_email, notify_whatsapp, whatsapp_verified, notify_telegram, telegram_id, telegram_username, telegram_verified, yandex_id')
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -153,6 +170,7 @@ export default function ProfileForm() {
             const meta = (user.user_metadata ?? {}) as {
                 auth_provider?: string | null;
                 telegram_id?: number | string | null;
+                telegram_username?: string | null;
                 yandex_id?: number | string | null;
             };
             const appMeta = (user.app_metadata ?? {}) as {
@@ -172,11 +190,13 @@ export default function ProfileForm() {
             const nextProfile = {
                 full_name: data?.full_name ?? null,
                 phone: data?.phone ?? null,
+                whatsapp_phone: data?.whatsapp_phone ?? null,
                 notify_email: data?.notify_email ?? true,
                 notify_whatsapp: whatsappConnected ? (data?.notify_whatsapp ?? true) : false,
                 whatsapp_verified: whatsappConnected,
                 notify_telegram: telegramConnected ? (data?.notify_telegram ?? true) : false,
                 telegram_connected: telegramConnected,
+                telegram_username: data?.telegram_username ?? meta.telegram_username ?? null,
             };
 
             setProfile(nextProfile);
@@ -213,7 +233,7 @@ export default function ProfileForm() {
             .filter((item) => item.enabled && item.verified)
             .map((item) => item.email);
         if (profile.notify_email && notificationEmailsLoaded && selectedNotificationEmails.length === 0) {
-            setError('Выберите хотя бы один адрес для email-уведомлений');
+            setError(t('cabinet.profile.notifications.email.required', 'Выберите хотя бы один адрес для email-уведомлений'));
             return;
         }
         setSaving(true);
@@ -346,7 +366,7 @@ export default function ProfileForm() {
             },
         });
         if (linkError) {
-            setError(linkError.message || 'Не удалось подключить Google');
+            setError(linkError.message || t('cabinet.profile.connections.googleLinkError', 'Не удалось подключить Google'));
             setLinkingProvider(null);
         }
     }
@@ -358,17 +378,23 @@ export default function ProfileForm() {
             const response = await fetch('/api/auth/yandex/link/start', { method: 'POST' });
             const data = (await response.json()) as { ok?: boolean; authUrl?: string; message?: string };
             if (!response.ok || !data.ok || !data.authUrl) {
-                throw new Error(data.message || 'Не удалось подключить Яндекс');
+                throw new Error(data.message || t('cabinet.profile.connections.yandexLinkError', 'Не удалось подключить Яндекс'));
             }
             window.location.assign(data.authUrl);
         } catch (linkError) {
-            setError(linkError instanceof Error ? linkError.message : 'Не удалось подключить Яндекс');
+            setError(linkError instanceof Error ? linkError.message : t('cabinet.profile.connections.yandexLinkError', 'Не удалось подключить Яндекс'));
             setLinkingProvider(null);
         }
     }
 
-    async function handleUnlink(provider: SocialProvider, label: string) {
-        if (!window.confirm(`Отвязать ${label}? После этого вход через этот способ будет недоступен.`)) return;
+    function handleUnlink(provider: SocialProvider, label: string) {
+        if (!unlinkBusyRef.current) setPendingUnlink({ provider, label });
+    }
+
+    async function confirmUnlink() {
+        if (!pendingUnlink || unlinkBusyRef.current) return;
+        const { provider, label } = pendingUnlink;
+        unlinkBusyRef.current = true;
 
         setUnlinkingProvider(provider);
         setError(null);
@@ -380,7 +406,7 @@ export default function ProfileForm() {
                 body: JSON.stringify({ provider }),
             });
             const data = (await response.json()) as { ok?: boolean; message?: string };
-            if (!response.ok || !data.ok) throw new Error(data.message || `Не удалось отвязать ${label}`);
+            if (!response.ok || !data.ok) throw new Error(data.message || t('cabinet.profile.connections.unlinkError', `Не удалось отвязать ${label}`));
 
             if (provider === 'whatsapp') {
                 setWhatsAppPhone('');
@@ -389,10 +415,12 @@ export default function ProfileForm() {
                 setOtpCode('');
             }
             await loadProfile();
-            setMessage(`${label} успешно отвязан`);
+            setMessage(t('cabinet.profile.connections.unlinked', `${label} успешно отвязан`));
         } catch (unlinkError) {
-            setError(unlinkError instanceof Error ? unlinkError.message : `Не удалось отвязать ${label}`);
+            setError(unlinkError instanceof Error ? unlinkError.message : t('cabinet.profile.connections.unlinkError', `Не удалось отвязать ${label}`));
         } finally {
+            unlinkBusyRef.current = false;
+            setPendingUnlink(null);
             setUnlinkingProvider(null);
         }
     }
@@ -420,27 +448,24 @@ export default function ProfileForm() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            {message || error ? (
-                <div className="sticky top-20 z-40 space-y-2" aria-live="assertive">
-                    {message ? (
-                        <AlertBanner
-                            variant="success"
-                            message={message}
-                            className="shadow-lg backdrop-blur-sm"
-                            onClose={() => setMessage(null)}
-                        />
-                    ) : null}
-                    {error ? (
-                        <AlertBanner
-                            variant="danger"
-                            title={t('cabinet.profile.error.title', 'Не удалось выполнить действие')}
-                            message={error}
-                            className="shadow-lg backdrop-blur-sm"
-                            onClose={() => setError(null)}
-                        />
-                    ) : null}
-                </div>
-            ) : null}
+            <ConnectionUnlinkConfirmation
+                open={!!pendingUnlink}
+                title={`${t('cabinet.profile.connections.unlink', 'Отвязать')} ${pendingUnlink?.label || ''}?`}
+                message={t('cabinet.profile.connections.unlinkConfirm', 'После отвязки вход через этот способ будет недоступен.')}
+                confirmLabel={t('cabinet.profile.connections.unlink', 'Отвязать')}
+                cancelLabel={t('common.cancel', 'Отмена')}
+                isLoading={!!unlinkingProvider}
+                onClose={() => { if (!unlinkBusyRef.current) setPendingUnlink(null); }}
+                onConfirm={confirmUnlink}
+            />
+            <ProfileNotice
+                message={message}
+                error={error}
+                errorTitle={t('cabinet.profile.error.title', 'Не удалось выполнить действие')}
+                closeLabel={t('cabinet.profile.notice.close', 'Закрыть уведомление')}
+                onDismissMessage={() => setMessage(null)}
+                onDismissError={() => setError(null)}
+            />
 
             <Card variant="default" padding="lg" className="space-y-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -528,30 +553,30 @@ export default function ProfileForm() {
                         <span className="type-body font-medium text-gray-700 dark:text-gray-300">Google</span>
                         {loginConnections.google ? (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">{t('cabinet.profile.connections.connected', 'Подключено')}</span>
                                 <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('google', 'Google')} isLoading={unlinkingProvider === 'google'}>
-                                    Отвязать
+                                    {t('cabinet.profile.connections.unlink', 'Отвязать')}
                                 </Button>
                             </div>
                         ) : (
                             <Button type="button" size="sm" onClick={handleGoogleLink} isLoading={linkingProvider === 'google'}>
-                                Подключить
+                                {t('cabinet.profile.connections.connect', 'Подключить')}
                             </Button>
                         )}
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
-                        <span className="type-body font-medium text-gray-700 dark:text-gray-300">Яндекс</span>
+                        <span className="type-body font-medium text-gray-700 dark:text-gray-300">{t('cabinet.profile.connections.yandex', 'Яндекс')}</span>
                         {loginConnections.yandex ? (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
-                                <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('yandex', 'Яндекс')} isLoading={unlinkingProvider === 'yandex'}>
-                                    Отвязать
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">{t('cabinet.profile.connections.connected', 'Подключено')}</span>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('yandex', t('cabinet.profile.connections.yandex', 'Яндекс'))} isLoading={unlinkingProvider === 'yandex'}>
+                                    {t('cabinet.profile.connections.unlink', 'Отвязать')}
                                 </Button>
                             </div>
                         ) : (
                             <Button type="button" size="sm" onClick={handleYandexLink} isLoading={linkingProvider === 'yandex'}>
-                                Подключить
+                                {t('cabinet.profile.connections.connect', 'Подключить')}
                             </Button>
                         )}
                     </div>
@@ -560,16 +585,16 @@ export default function ProfileForm() {
                         <span className="type-body font-medium text-gray-700 dark:text-gray-300">Telegram</span>
                         {profile.telegram_connected ? (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">{t('cabinet.profile.connections.connected', 'Подключено')}</span>
                                 <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('telegram', 'Telegram')} isLoading={unlinkingProvider === 'telegram'}>
-                                    Отвязать
+                                    {t('cabinet.profile.connections.unlink', 'Отвязать')}
                                 </Button>
                             </div>
                         ) : (
-                            <TelegramLinkWidget
+                            <TelegramProfileConnection
                                 onSuccess={() => {
                                     loadProfile();
-                                    setMessage('Telegram успешно подключён');
+                                    setMessage(t('cabinet.profile.telegram.connected', 'Telegram успешно подключён'));
                                 }}
                                 onError={setError}
                                 size="medium"
@@ -579,12 +604,17 @@ export default function ProfileForm() {
 
                     <div className="space-y-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                            <span className="type-body font-medium text-gray-700 dark:text-gray-300">WhatsApp</span>
+                            <span className="min-w-0">
+                                <span className="block type-body font-medium text-gray-700 dark:text-gray-300">{t('cabinet.profile.notifications.whatsapp', 'WhatsApp')}</span>
+                                {profile.whatsapp_verified && profile.whatsapp_phone ? (
+                                    <span className="block truncate text-xs text-[var(--text-secondary)]">{profile.whatsapp_phone}</span>
+                                ) : null}
+                            </span>
                             {profile.whatsapp_verified ? (
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">{t('cabinet.profile.connections.connected', 'Подключено')}</span>
                                     <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('whatsapp', 'WhatsApp')} isLoading={unlinkingProvider === 'whatsapp'}>
-                                        Отвязать
+                                        {t('cabinet.profile.connections.unlink', 'Отвязать')}
                                     </Button>
                                     {whatsAppPhoneChanged ? (
                                         <Button
@@ -594,7 +624,7 @@ export default function ProfileForm() {
                                             disabled={otpSending || !!whatsAppPhoneValidationError}
                                             isLoading={otpSending}
                                         >
-                                            Подтвердить новый номер
+                                            {t('cabinet.profile.whatsapp.confirmNewNumber', 'Подтвердить новый номер')}
                                         </Button>
                                     ) : null}
                                 </div>
@@ -606,12 +636,12 @@ export default function ProfileForm() {
                                     disabled={otpSending || !normalizedWhatsAppPhone || !!whatsAppPhoneValidationError}
                                     isLoading={otpSending}
                                 >
-                                    Подключить
+                                    {t('cabinet.profile.connections.connect', 'Подключить')}
                                 </Button>
                             ) : null}
                         </div>
                         <Input
-                            label="Номер WhatsApp"
+                            label={t('cabinet.profile.whatsapp.phone.label', 'Номер WhatsApp')}
                             type="tel"
                             value={whatsAppPhone}
                             onChange={(event) => {
@@ -623,20 +653,20 @@ export default function ProfileForm() {
                             placeholder="+996555123456"
                             helperText={
                                 profile.whatsapp_verified && !whatsAppPhoneChanged
-                                    ? 'Этот номер используется для входа через WhatsApp и уведомлений.'
-                                    : 'Введите номер, на который придёт код подтверждения WhatsApp.'
+                                    ? t('cabinet.profile.whatsapp.phone.connectedHint', 'Этот номер используется для входа через WhatsApp и уведомлений.')
+                                    : t('cabinet.profile.whatsapp.phone.connectHint', 'Введите номер, на который придёт код подтверждения WhatsApp.')
                             }
                             error={whatsAppPhoneValidationError ?? undefined}
                         />
                         {profile.whatsapp_verified && whatsAppPhoneChanged ? (
                             <p className="type-caption text-amber-600 dark:text-amber-400">
-                                Чтобы сменить WhatsApp-номер, подтвердите новый номер кодом. Контактный телефон выше при этом не меняется.
+                                {t('cabinet.profile.whatsapp.phone.changeHint', 'Чтобы сменить WhatsApp-номер, подтвердите новый номер кодом. Контактный телефон выше при этом не меняется.')}
                             </p>
                         ) : null}
                         {showOtpInput ? (
                             <div className="flex flex-wrap items-end gap-2">
                                 <Input
-                                    label="Код из WhatsApp"
+                                    label={t('cabinet.profile.whatsapp.code.label', 'Код из WhatsApp')}
                                     type="text"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
@@ -648,10 +678,10 @@ export default function ProfileForm() {
                                     className="w-36 text-center"
                                 />
                                 <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpCode.length !== 6} isLoading={otpVerifying}>
-                                    Подтвердить
+                                    {t('cabinet.profile.whatsapp.verify', 'Подтвердить')}
                                 </Button>
                                 <Button type="button" size="sm" variant="ghost" onClick={() => { setShowOtpInput(false); setOtpCode(''); }}>
-                                    Отмена
+                                    {t('cabinet.profile.whatsapp.cancel', 'Отмена')}
                                 </Button>
                             </div>
                         ) : null}
@@ -687,7 +717,7 @@ export default function ProfileForm() {
                                         {t('cabinet.profile.notifications.email', 'Email')}
                                     </span>
                                     <p className="type-caption text-gray-500 dark:text-gray-400">
-                                        Выберите один или несколько адресов
+                                        {t('cabinet.profile.notifications.email.description', 'Выберите один или несколько адресов')}
                                     </p>
                                 </div>
                             </div>
@@ -706,7 +736,11 @@ export default function ProfileForm() {
                             <div className={`space-y-2 border-t border-[var(--border-subtle)] pt-3 ${profile.notify_email ? '' : 'opacity-60'}`}>
                                 {notificationEmails.map((item) => {
                                     const sourceLabel = item.sources
-                                        .map((source) => source === 'google' ? 'Google' : source === 'yandex' ? 'Яндекс' : 'Основной')
+                                        .map((source) => source === 'google'
+                                            ? 'Google'
+                                            : source === 'yandex'
+                                                ? t('cabinet.profile.connections.yandex', 'Яндекс')
+                                                : t('cabinet.profile.notifications.email.primary', 'Основной'))
                                         .join(' · ');
                                     return (
                                         <label
@@ -741,11 +775,11 @@ export default function ProfileForm() {
                             </div>
                         ) : notificationEmailsLoaded ? (
                             <p className="type-caption border-t border-[var(--border-subtle)] pt-3 text-amber-600 dark:text-amber-300">
-                                Подключите Google или Яндекс с подтверждённым email.
+                                {t('cabinet.profile.notifications.email.empty', 'Подключите Google или Яндекс с подтверждённым email.')}
                             </p>
                         ) : (
                             <p className="type-caption border-t border-[var(--border-subtle)] pt-3 text-gray-500">
-                                Загружаем доступные адреса…
+                                {t('cabinet.profile.notifications.email.loading', 'Загружаем доступные адреса…')}
                             </p>
                         )}
                     </div>
@@ -761,7 +795,7 @@ export default function ProfileForm() {
                                 className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                             />
                         </label>
-                        {!profile.whatsapp_verified ? <p className="type-caption px-3 text-gray-500">Сначала подключите WhatsApp в разделе способов входа.</p> : null}
+                        {!profile.whatsapp_verified ? <p className="type-caption px-3 text-gray-500">{t('cabinet.profile.notifications.whatsapp.notConnected', 'Сначала подключите WhatsApp в разделе способов входа.')}</p> : null}
                     </div>
 
                     {false && (
@@ -862,8 +896,15 @@ export default function ProfileForm() {
                             <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 0C5.371 0 0 5.371 0 12s5.371 12 12 12 12-5.371 12-12S18.629 0 12 0zm5.496 8.246l-1.89 8.91c-.143.637-.523.793-1.059.494l-2.93-2.162-1.414 1.362c-.156.156-.287.287-.586.287l.21-3.004 5.472-4.946c.238-.21-.051-.328-.369-.118l-6.768 4.263-2.91-.909c-.633-.197-.647-.633.133-.936l11.37-4.386c.523-.189.983.118.812.935z" />
                             </svg>
-                            <span className="type-body font-medium text-gray-700 dark:text-gray-300">
-                                {t('cabinet.profile.notifications.telegram', 'Telegram')}
+                            <span className="min-w-0">
+                                <span className="block type-body font-medium text-gray-700 dark:text-gray-300">
+                                    {t('cabinet.profile.notifications.telegram', 'Telegram')}
+                                </span>
+                                {profile.telegram_connected ? (
+                                    <span className="block truncate text-xs text-[var(--text-secondary)]">
+                                        {telegramNotificationIdentity ?? t('cabinet.profile.notifications.telegram.connected', 'Подключённый аккаунт')}
+                                    </span>
+                                ) : null}
                             </span>
                         </div>
                         <input
@@ -881,7 +922,7 @@ export default function ProfileForm() {
                         />
                     </label>
 
-                    {!profile.telegram_connected ? <p className="type-caption px-3 text-gray-500">Сначала подключите Telegram в разделе способов входа.</p> : null}
+                    {!profile.telegram_connected ? <p className="type-caption px-3 text-gray-500">{t('cabinet.profile.notifications.telegram.notConnected', 'Сначала подключите Telegram в разделе способов входа.')}</p> : null}
                     </div>
 
                     {false && !profile.telegram_connected && (

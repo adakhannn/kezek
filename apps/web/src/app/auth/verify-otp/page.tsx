@@ -3,9 +3,11 @@ import {Suspense} from 'react';
 
 import VerifyOtpPage from './VerifyOtpPage';
 
+import { AuthPageLoading } from '@/app/auth/_components/AuthPageLoading';
+
 export default function Page() {
     return (
-        <Suspense fallback={<div className="text-sm text-gray-400">Загружаем…</div>}>
+        <Suspense fallback={<AuthPageLoading />}>
             <VerifyOtpPage/>
         </Suspense>
     );

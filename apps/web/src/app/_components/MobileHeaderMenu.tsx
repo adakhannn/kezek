@@ -58,11 +58,11 @@ export function MobileHeaderMenu() {
                     <button
                         type="button"
                         aria-label={t('common.close', 'Закрыть')}
-                        className="fixed inset-0 z-[105] bg-black/35 lg:hidden"
+                        className="fixed inset-0 z-[105] bg-black/70 lg:hidden"
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-[120] w-[min(22rem,calc(100vw-1.5rem))] rounded-[24px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_98%,transparent)] p-4 shadow-[var(--shadow-lg)] backdrop-blur-xl md:fixed md:left-1/2 md:right-auto md:top-36 md:w-[min(44rem,calc(100vw-2rem))] md:-translate-x-1/2 md:p-5 lg:hidden">
+                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-[120] w-[min(22rem,calc(100vw-1.5rem))] rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-lg)] md:fixed md:left-1/2 md:right-auto md:top-36 md:w-[min(44rem,calc(100vw-2rem))] md:-translate-x-1/2 md:p-5 lg:hidden">
                         <div className="space-y-4 md:grid md:grid-cols-3 md:items-start md:gap-4 md:space-y-0">
                             <section className="space-y-2 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-emphasis)]/45 p-3">
                                 <p className="type-caption px-1 text-[var(--text-muted)]">

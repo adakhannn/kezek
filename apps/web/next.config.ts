@@ -1,6 +1,10 @@
 import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
+const localTunnelHost = process.env.NODE_ENV === 'development' && process.env.LOCAL_AUTH_PUBLIC_ORIGIN
+    ? new URL(process.env.LOCAL_AUTH_PUBLIC_ORIGIN).hostname
+    : null;
+
 /**
  * Security Headers для защиты от XSS, clickjacking, MIME sniffing и других атак
  */
@@ -55,6 +59,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+    // Разрешаем dev-ресурсы только для текущего временного HTTPS-туннеля.
+    allowedDevOrigins: localTunnelHost ? [localTunnelHost] : [],
     // Билд должен падать при ошибках типов
     typescript: { ignoreBuildErrors: false },
 

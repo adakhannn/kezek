@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import {logError} from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 
 type ScheduleItem = {
     day_of_week: number;
@@ -64,6 +65,19 @@ export async function POST(req: Request) {
         // Валидация расписания
         if (!Array.isArray(body.schedule)) {
             return NextResponse.json({ ok: false, error: 'schedule должен быть массивом' }, { status: 400 });
+        }
+
+        if (explicitSchedulingEnabled()) {
+            const { error } = await admin.rpc('replace_branch_schedule', {
+                p_biz: id, p_branch: branchId, p_actor: user.id, p_days: body.schedule,
+            });
+            if (error) {
+                const conflict = error.message.includes('SCHEDULE_BOOKING_CONFLICT');
+                return NextResponse.json({ ok: false, error: conflict
+                    ? 'Новые часы конфликтуют с записями клиентов. Изменение не применено.'
+                    : 'Проверьте все семь дней, интервалы и перерывы.' }, { status: conflict ? 409 : 400 });
+            }
+            return NextResponse.json({ ok: true });
         }
 
         // Удаляем старое расписание

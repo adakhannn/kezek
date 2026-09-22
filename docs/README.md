@@ -60,6 +60,7 @@ Use one primary document per topic:
 
 - [CONTRIBUTING.md](/C:/projects/kezek/CONTRIBUTING.md): contribution and PR rules
 - [TESTING_GUIDE.md](/C:/projects/kezek/TESTING_GUIDE.md): testing workflow
+- [MANUAL_TESTING_TRACKER.md](/C:/projects/kezek/docs/MANUAL_TESTING_TRACKER.md): short living checklist for the current manual product run
 - [API_TESTING.md](/C:/projects/kezek/API_TESTING.md): API route testing
 - [E2E_TESTING.md](/C:/projects/kezek/E2E_TESTING.md): end-to-end testing
 

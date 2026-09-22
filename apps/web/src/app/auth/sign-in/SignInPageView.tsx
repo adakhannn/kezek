@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { TelegramBotLogin } from '@/components/auth/TelegramBotLogin';
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 
@@ -150,11 +151,11 @@ export function SignInPageView({
                             ) : null}
 
                             <div className="w-full">
-                                <TelegramLoginWidget
+                                {process.env.NEXT_PUBLIC_TELEGRAM_BOT_LOGIN_ENABLED === 'true' ? <TelegramBotLogin redirectTo={redirectParam || '/'} /> : <TelegramLoginWidget
                                     redirectTo={redirectParam || '/'}
                                     onError={handleTelegramError}
                                     size="large"
-                                />
+                                />}
                             </div>
 
                             <div className="space-y-1 text-center text-[11px] text-gray-500 dark:text-gray-400">

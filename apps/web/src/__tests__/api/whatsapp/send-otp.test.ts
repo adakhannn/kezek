@@ -13,6 +13,12 @@ import { sendWhatsApp } from '@/lib/senders/whatsapp';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 // Мокаем зависимости
+jest.mock('@/lib/env', () => ({
+    ...jest.requireActual('@/lib/env'),
+    getWhatsAppAuthTemplateName: () => 'test_auth_template',
+    getWhatsAppAuthTemplateLanguage: () => 'ru',
+}));
+
 jest.mock('@/lib/senders/sms', () => ({
     normalizePhoneToE164: jest.fn(),
 }));
@@ -26,6 +32,7 @@ jest.mock('@/lib/supabaseHelpers', () => ({
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
+    routeRateLimit: jest.requireActual('@/lib/rateLimit').routeRateLimit,
     withRateLimit: jest.fn((req, config, handler) => handler()),
     RateLimitConfigs: {
         auth: {},

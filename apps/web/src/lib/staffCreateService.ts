@@ -1,10 +1,13 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logDebug, logError, logWarn } from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { todayDateString } from '@/lib/time';
 
 type StaffCreateInput = {
-    supabase: any;
-    admin: any;
+    supabase: SupabaseClient;
+    admin: SupabaseClient;
     userId: string;
     bizId: string;
     body: {
@@ -103,7 +106,7 @@ export async function runStaffCreate({
         await addStaffRole(admin, linkedUserId, bizId);
     }
 
-    const scheduleResult = await initializeSchedule({
+    const scheduleResult = explicitSchedulingEnabled() ? { success: false, daysCreated: 0, error: undefined } : await initializeSchedule({
         admin,
         bizId,
         branchId: body.branch_id,
@@ -136,7 +139,7 @@ async function checkManagerRoleAccess({
     userId,
     bizId,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     userId: string;
     bizId: string;
 }) {
@@ -146,11 +149,13 @@ async function checkManagerRoleAccess({
         .eq('user_id', userId)
         .eq('biz_id', bizId);
 
-    type RoleRow = { roles: { key: string } | null };
-    const rolesArray = (roles ?? []) as RoleRow[];
-    return rolesArray.some((roleRow) =>
-        roleRow.roles?.key && ['owner', 'admin', 'manager'].includes(roleRow.roles.key),
-    );
+    const rolesArray = roles ?? [];
+    return rolesArray.some((roleRow: unknown) => {
+        if (!roleRow || typeof roleRow !== 'object' || !('roles' in roleRow)) return false;
+        const role = roleRow.roles;
+        if (!role || typeof role !== 'object' || !('key' in role)) return false;
+        return typeof role.key === 'string' && ['owner', 'admin', 'manager'].includes(role.key);
+    });
 }
 
 async function resolveLinkedUserId({
@@ -158,7 +163,7 @@ async function resolveLinkedUserId({
     email,
     phone,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     email?: string | null;
     phone?: string | null;
 }) {
@@ -186,7 +191,7 @@ async function createInitialBranchAssignment({
     branchId,
     staffId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     branchId: string;
     staffId: string | undefined;
@@ -209,7 +214,7 @@ async function createInitialBranchAssignment({
     }
 }
 
-async function addStaffRole(admin: any, userId: string, bizId: string): Promise<void> {
+async function addStaffRole(admin: SupabaseClient, userId: string, bizId: string): Promise<void> {
     const { data: roleStaff } = await admin
         .from('roles')
         .select('id')
@@ -247,7 +252,7 @@ async function initializeSchedule({
     branchId,
     staffId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     branchId: string;
     staffId: string | undefined;

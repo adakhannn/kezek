@@ -12,6 +12,8 @@ type AlertBannerProps = {
     icon?: ReactNode;
     action?: ReactNode;
     onClose?: () => void;
+    closeLabel?: string;
+    appearance?: 'tinted' | 'elevated';
     compact?: boolean;
     className?: string;
 };
@@ -24,6 +26,20 @@ const variantStyles: Record<AlertBannerVariant, string> = {
         'border-[color:color-mix(in_srgb,var(--status-warning)_24%,transparent)] bg-[var(--status-warning-soft)] text-[var(--status-warning)]',
     danger:
         'border-[color:color-mix(in_srgb,var(--status-danger)_24%,transparent)] bg-[var(--status-danger-soft)] text-[var(--status-danger)]',
+};
+
+const elevatedVariantStyles: Record<AlertBannerVariant, string> = {
+    info: 'border-[color:color-mix(in_srgb,var(--status-info)_52%,transparent)] bg-[var(--surface-elevated)] text-[var(--text-primary)]',
+    success: 'border-[color:color-mix(in_srgb,var(--status-success)_52%,transparent)] bg-[var(--surface-elevated)] text-[var(--text-primary)]',
+    warning: 'border-[color:color-mix(in_srgb,var(--status-warning)_52%,transparent)] bg-[var(--surface-elevated)] text-[var(--text-primary)]',
+    danger: 'border-[color:color-mix(in_srgb,var(--status-danger)_52%,transparent)] bg-[var(--surface-elevated)] text-[var(--text-primary)]',
+};
+
+const iconStyles: Record<AlertBannerVariant, string> = {
+    info: 'text-[var(--status-info)]',
+    success: 'text-[var(--status-success)]',
+    warning: 'text-[var(--status-warning)]',
+    danger: 'text-[var(--status-danger)]',
 };
 
 const defaultIcons: Record<AlertBannerVariant, ReactNode> = {
@@ -56,6 +72,8 @@ export function AlertBanner({
     icon,
     action,
     onClose,
+    closeLabel = 'Close banner',
+    appearance = 'tinted',
     compact = false,
     className,
 }: AlertBannerProps) {
@@ -65,12 +83,12 @@ export function AlertBanner({
             className={clsx(
                 'rounded-[var(--radius-lg)] border',
                 compact ? 'px-3 py-2' : 'px-4 py-3',
-                variantStyles[variant],
+                appearance === 'elevated' ? elevatedVariantStyles[variant] : variantStyles[variant],
                 className,
             )}
         >
             <div className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0" aria-hidden="true">
+                <div className={clsx('mt-0.5 shrink-0', appearance === 'elevated' && iconStyles[variant])} aria-hidden="true">
                     {icon ?? defaultIcons[variant]}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -82,8 +100,8 @@ export function AlertBanner({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="motion-interactive shrink-0 opacity-70 hover:opacity-100"
-                        aria-label="Close banner"
+                        className="motion-interactive -m-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full opacity-70 hover:bg-black/5 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:bg-white/10"
+                        aria-label={closeLabel}
                     >
                         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />

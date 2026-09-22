@@ -83,8 +83,10 @@ export default function StaffDetailPageClient({
     reviews,
     ratingScore,
     ratingWeights,
+    explicitScheduling = false,
 }: {
     staff: StaffData;
+    explicitScheduling?: boolean;
     branches: Branch[];
     reviews: Review[];
     ratingScore?: number | null;
@@ -162,6 +164,7 @@ export default function StaffDetailPageClient({
                             </Link>
                             {activeBranches.length > 1 ? (
                                 <TransferStaffDialog
+                                    explicitScheduling={explicitScheduling}
                                     staffId={String(staff.id)}
                                     currentBranchId={String(staff.branch_id)}
                                     branches={activeBranches.map((branch) => ({ id: String(branch.id), name: String(branch.name) }))}

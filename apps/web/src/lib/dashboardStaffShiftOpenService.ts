@@ -1,4 +1,8 @@
-﻿import { logDebug, logError } from '@/lib/log';
+﻿import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { logDebug, logError } from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { readScheduledDay } from '@/lib/scheduling/read';
 import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
 
 type Result =
@@ -23,8 +27,8 @@ export async function runDashboardStaffShiftOpen({
     staff,
 }: {
     req: Request;
-    supabase: any;
-    admin: any;
+    supabase: SupabaseClient;
+    admin: SupabaseClient;
     bizId: string;
     staffId: string;
     staff: {
@@ -34,7 +38,12 @@ export async function runDashboardStaffShiftOpen({
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get('date');
     const targetDate = dateParam ? new Date(`${dateParam}T00:00:00`) : new Date();
-    const ymd = formatDateInTz(targetDate, TZ);
+    const scheduled = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, dateParam || targetDate) : null;
+    const ymd = scheduled?.ymd ?? formatDateInTz(targetDate, TZ);
+    if (scheduled && !scheduled.expectedStart) return {
+        ok: false, statusCode: 400, errorType: 'validation',
+        message: 'На этот день не назначены рабочие часы. Сначала настройте график сотрудника.',
+    };
 
     if (staff.branch_id == null) {
         logDebug('OwnerShiftOpen', 'Staff has no branch_id', { staffId, bizId });
@@ -76,7 +85,7 @@ export async function runDashboardStaffShiftOpen({
         };
     }
 
-    const { expectedStart } = await resolveExpectedStart({
+    const { expectedStart } = scheduled ?? await resolveExpectedStart({
         supabase,
         bizId,
         staffId,
@@ -130,7 +139,7 @@ export async function runDashboardStaffShiftOpen({
         .insert({
             staff_id: staffId,
             biz_id: bizId,
-            branch_id: staff.branch_id,
+            branch_id: scheduled?.day.branch_id ?? staff.branch_id,
             shift_date: ymd,
             status: 'open',
             opened_at: openedAt.toISOString(),
@@ -147,7 +156,7 @@ export async function runDashboardStaffShiftOpen({
             hint: (createError as { hint?: string })?.hint,
             staffId,
             bizId,
-            branch_id: staff.branch_id,
+            branch_id: scheduled?.day.branch_id ?? staff.branch_id,
             shift_date: ymd,
         };
         logError('OwnerShiftOpen', 'Error creating shift', errorPayload);
@@ -179,7 +188,7 @@ async function resolveExpectedStart({
     ymd,
     targetDate,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     bizId: string;
     staffId: string;
     ymd: string;

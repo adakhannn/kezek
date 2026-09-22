@@ -13,6 +13,7 @@ jest.mock('@/lib/telegramLoginHttpService', () => ({
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
+    routeRateLimit: jest.requireActual('@/lib/rateLimit').routeRateLimit,
     withRateLimit: jest.fn((req, _config, handler) => handler()),
     RateLimitConfigs: {
         auth: {},

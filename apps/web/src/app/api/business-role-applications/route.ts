@@ -1,7 +1,12 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import {
+    notifyOwnerApplicationSubmitted,
+    notifyStaffApplicationSubmitted,
+} from '@/lib/businessRoleApplicationNotificationService';
 import { submitBusinessRoleApplication } from '@/lib/businessRoleApplicationService';
+import { logError } from '@/lib/log';
 import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -81,6 +86,28 @@ export async function POST(request: Request) {
                     { ok: false, code: result.code, message: result.message },
                     { status: result.status },
                 );
+            }
+
+            if (input.requested_role === 'staff' || input.requested_role === 'owner') {
+                try {
+                    const notificationInput = {
+                        id: result.id,
+                        businessId: typeof input.biz_id === 'string' ? input.biz_id : '',
+                        origin: new URL(request.url).origin,
+                        applicant: {
+                            id: user.id,
+                            name: result.applicant.name,
+                            email: result.applicant.email,
+                        },
+                    };
+                    if (input.requested_role === 'staff') {
+                        await notifyStaffApplicationSubmitted(createSupabaseAdminClient(), notificationInput);
+                    } else {
+                        await notifyOwnerApplicationSubmitted(createSupabaseAdminClient(), notificationInput);
+                    }
+                } catch (error) {
+                    logError('BusinessRoleApplicationNotification', 'Notification workflow failed', error);
+                }
             }
 
             return Response.json({ ok: true, id: result.id });

@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { getYandexCallbackUrl, getYandexOAuthCredentials } from '@/lib/yandexOAuthConfig';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST() {
+export async function POST(request: Request) {
     const supabase = await createSupabaseServerClient();
     const {
         data: { user },
@@ -17,17 +18,16 @@ export async function POST() {
         return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     }
 
-    const clientId = process.env.NEXT_PUBLIC_YANDEX_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_YANDEX_REDIRECT_URI || 'https://kezek.kg/auth/callback-yandex';
-    if (!clientId) {
+    const credentials = getYandexOAuthCredentials();
+    if (!credentials) {
         return createErrorResponse('config', 'Вход через Яндекс временно недоступен', undefined, 503);
     }
 
     const state = randomUUID();
     const authUrl = new URL('https://oauth.yandex.ru/authorize');
     authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('client_id', clientId);
-    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('client_id', credentials.clientId);
+    authUrl.searchParams.set('redirect_uri', getYandexCallbackUrl(request.url));
     authUrl.searchParams.set('state', state);
 
     const response = NextResponse.json({ ok: true, authUrl: authUrl.toString() });

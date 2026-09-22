@@ -26,6 +26,6 @@ describe('Footer', () => {
         expect(screen.getByRole('link', { name: 'Бизнести кошуу' }).getAttribute('href'))
             .toBe('/business/apply');
         expect(screen.getByRole('link', { name: 'Бизнеске кошулуу' }).getAttribute('href'))
-            .toBe('/auth/sign-in?redirect=/business/role-apply');
+            .toBe('/business/role-apply');
     });
 });

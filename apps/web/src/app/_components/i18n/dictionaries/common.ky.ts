@@ -1,4 +1,5 @@
 export const commonKy = {
+    'common.cancel': 'Жокко чыгаруу',
     'common.map.title': 'Филиалдар картасы',
     'common.map.allCategories': 'Бардык категориялар',
     'common.map.findNearest': 'Мага жакын',
@@ -32,7 +33,7 @@ export const commonKy = {
     'common.map.nearbyFetchError': 'Жакынкы филиалдарды издегенде ката чыкты. Кийин кайра аракет кылыңыз.',
     'common.map.nearbyEmpty': '20 км аралыкта филиал табылган жок. Сол тизмеден тандаңыз.',
     'common.daysAgo': 'күн мурун',
-    'common.editShort': 'Редакт.',
+    'common.editShort': 'Түзөтүү',
     'common.loading': 'Жүктөлүүдө...',
     'common.never': 'эч качан',
     'common.noData': 'маалымат жок',

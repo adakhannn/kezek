@@ -6,6 +6,7 @@ import type {
     YandexAuthAdminClientLike,
     YandexUserInfo,
 } from '@/lib/yandexAuthCallbackService';
+import { getYandexCallbackUrl, getYandexOAuthCredentials, getYandexPublicOrigin } from '@/lib/yandexOAuthConfig';
 
 type Failure = {
     ok: false;
@@ -42,10 +43,9 @@ export async function runYandexAuthCallbackRoute({
     const error = searchParams.get('error');
     const redirectTo = searchParams.get('redirect') || '/';
 
-    const origin = env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
-    const redirectUri =
-        env.NEXT_PUBLIC_YANDEX_REDIRECT_URI ||
-        'https://kezek.kg/auth/callback-yandex';
+    const origin = getYandexPublicOrigin(requestUrl, env);
+    const redirectUri = getYandexCallbackUrl(requestUrl, env);
+    const credentials = getYandexOAuthCredentials(env);
 
     if (error) {
         return {
@@ -61,6 +61,11 @@ export async function runYandexAuthCallbackRoute({
         };
     }
 
+    if (!credentials) {
+        logWarn('YandexAuth', 'OAuth credentials are not configured');
+        return buildAuthFailureRedirect(origin, 'yandex_unavailable');
+    }
+
     let yandexUser: YandexUserInfo;
     try {
         const tokenResponse = await fetchImpl('https://oauth.yandex.ru/token', {
@@ -71,8 +76,8 @@ export async function runYandexAuthCallbackRoute({
             body: new URLSearchParams({
                 grant_type: 'authorization_code',
                 code,
-                client_id: env.YANDEX_OAUTH_CLIENT_ID!,
-                client_secret: env.YANDEX_OAUTH_CLIENT_SECRET!,
+                client_id: credentials.clientId,
+                client_secret: credentials.clientSecret,
                 redirect_uri: redirectUri,
             }),
         });

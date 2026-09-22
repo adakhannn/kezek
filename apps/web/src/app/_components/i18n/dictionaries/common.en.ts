@@ -1,4 +1,5 @@
 export const commonEn = {
+    'common.cancel': 'Cancel',
     'common.map.title': 'Branches map',
     'common.map.allCategories': 'All categories',
     'common.map.findNearest': 'Nearest to me',

@@ -1,8 +1,12 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logDebug, logError, logWarn } from '@/lib/log';
+import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { readScheduledDay } from '@/lib/scheduling/read';
 import { TZ, dateAtTz, formatDateInTz, todayTz } from '@/lib/time';
 
 type ShiftOpenContext = {
-    supabase: any;
+    supabase: SupabaseClient;
     staffId: string;
     bizId: string;
     branchId: string | null;
@@ -37,9 +41,14 @@ export async function runOpenStaffShift({
     branchId,
     now = new Date(),
 }: ShiftOpenContext & { now?: Date }): Promise<ShiftOpenResult> {
-    const ymd = formatDateInTz(now, TZ);
+    const scheduled = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, now) : null;
+    const ymd = scheduled?.ymd ?? formatDateInTz(now, TZ);
 
-    const dayOffResult = await ensureStaffCanWorkToday({ supabase, staffId, bizId, ymd });
+    const dayOffResult = scheduled
+        ? scheduled.expectedStart
+            ? { ok: true as const, expectedStart: scheduled.expectedStart }
+            : { ok: false as const, status: 400 as const, error: 'validation' as const, message: 'На сегодня не назначены рабочие часы. Обратитесь к руководителю.' }
+        : await ensureStaffCanWorkToday({ supabase, staffId, bizId, ymd });
     if (!dayOffResult.ok) {
         return dayOffResult;
     }
@@ -52,7 +61,7 @@ export async function runOpenStaffShift({
     const { data: rpcResult, error: rpcError } = await supabase.rpc('open_staff_shift_safe', {
         p_staff_id: staffId,
         p_biz_id: bizId,
-        p_branch_id: branchId,
+        p_branch_id: scheduled?.day.branch_id ?? branchId,
         p_shift_date: ymd,
         p_opened_at: now.toISOString(),
         p_expected_start: dayOffResult.expectedStart ? dayOffResult.expectedStart.toISOString() : null,
@@ -109,7 +118,7 @@ async function ensureStaffCanWorkToday({
     bizId,
     ymd,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     staffId: string;
     bizId: string;
     ymd: string;
@@ -154,7 +163,7 @@ async function resolveExpectedStart({
     bizId,
     ymd,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     staffId: string;
     bizId: string;
     ymd: string;

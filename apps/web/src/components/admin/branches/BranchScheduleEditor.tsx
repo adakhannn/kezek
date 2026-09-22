@@ -3,168 +3,71 @@
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { TimeRangesEditor } from '@/components/scheduling/TimeRangesEditor';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { validateScheduleDay, type ScheduleDay } from '@/lib/scheduling/model';
 
+type Row = ScheduleDay & { day_of_week: number };
 type Props = {
-    bizId: string;
-    branchId: string;
-    initialSchedule?: Array<{
-        day_of_week: number;
-        intervals?: Array<{ start: string; end: string }>;
-        breaks?: Array<{ start: string; end: string }>;
-    }>;
-    apiBase?: string; // API base path, e.g., '/api/branches' or '/admin/api/businesses/{bizId}/branches'
+    bizId: string; branchId: string;
+    initialSchedule?: Array<{ day_of_week: number; intervals?: ScheduleDay['intervals']; breaks?: ScheduleDay['breaks'] }>;
+    apiBase?: string;
 };
 
 export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], apiBase }: Props) {
-    const { t } = useLanguage();
-    
-    // Получаем начальное время из первого рабочего дня
-    const getInitialTime = () => {
-        for (const s of initialSchedule) {
-            const firstInterval = s.intervals?.[0];
-            if (firstInterval?.start && firstInterval?.end) {
-                return { start: firstInterval.start, end: firstInterval.end };
-            }
-        }
-        return { start: '09:00', end: '21:00' };
-    };
-
-    const initialTime = getInitialTime();
-    const [start, setStart] = useState(initialTime.start);
-    const [end, setEnd] = useState(initialTime.end);
+    const { t, locale } = useLanguage();
+    const [days, setDays] = useState<Row[]>(() => [1, 2, 3, 4, 5, 6, 0].map(day => {
+        const saved = initialSchedule.find(row => row.day_of_week === day);
+        return { day_of_week: day, intervals: saved?.intervals?.map(r => ({ ...r })) ?? [],
+            breaks: saved?.breaks?.map(r => ({ ...r })) ?? [] };
+    }));
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    async function handleSave() {
-        setSaving(true);
-        setError(null);
-        setSuccess(false);
-
-        if (!start || !end) {
-            setError(t('branches.schedule.error.required', 'Укажите время начала и окончания работы'));
-            setSaving(false);
-            return;
-        }
-
-        if (start >= end) {
-            setError(t('branches.schedule.error.invalid', 'Время начала должно быть раньше времени окончания'));
-            setSaving(false);
-            return;
-        }
-
-        try {
-            // Создаем расписание для всех дней недели (0 = воскресенье, 1 = понедельник, ..., 6 = суббота)
-            const scheduleArray = [];
-            for (let dow = 0; dow <= 6; dow++) {
-                scheduleArray.push({
-                    day_of_week: dow,
-                    intervals: [{ start, end }],
-                    breaks: [],
-                });
-            }
-
-            // Определяем API путь
-            const apiPath = apiBase 
-                ? `${apiBase}/${encodeURIComponent(branchId)}/schedule`
-                : `/admin/api/businesses/${bizId}/branches/${branchId}/schedule`;
-
-            const res = await fetch(apiPath, {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ schedule: scheduleArray }),
-            });
-
-            const text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch {
-                throw new Error(text || t('branches.schedule.error.server', 'Ошибка сервера'));
-            }
-
-            if (!res.ok || !data.ok) {
-                throw new Error(data.error || `HTTP ${res.status}`);
-            }
-
-            setSuccess(true);
-            setTimeout(() => setSuccess(false), 3000);
-        } catch (e) {
-            setError(e instanceof Error ? e.message : String(e));
-        } finally {
-            setSaving(false);
-        }
+    function change(index: number, value: ScheduleDay) {
+        setDays(previous => previous.map((day, i) => i === index ? { ...day, ...value } : day));
+        setSuccess(false); setError('');
     }
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                    {t('branches.schedule.title', 'Расписание работы филиала')}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t('branches.schedule.description', 'Установите рабочие часы, которые будут использоваться по умолчанию для всех сотрудников филиала во все дни недели. Если у сотрудника есть индивидуальное расписание, оно имеет приоритет.')}
-                </p>
-            </div>
+    async function save() {
+        setError(''); setSuccess(false);
+        try { days.forEach(validateScheduleDay); }
+        catch { setError(t('scheduling.invalid')); return; }
+        setSaving(true);
+        try {
+            const path = apiBase ? `${apiBase}/${encodeURIComponent(branchId)}/schedule`
+                : `/admin/api/businesses/${bizId}/branches/${branchId}/schedule`;
+            const response = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' },
+                credentials: 'include', body: JSON.stringify({ schedule: days }) });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) throw new Error(payload.message || payload.error || t('branches.schedule.error.server'));
+            setSuccess(true);
+        } catch (cause) { setError(cause instanceof Error ? cause.message : t('branches.schedule.error.server')); }
+        finally { setSaving(false); }
+    }
 
-            <Card className="p-6">
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {t('branches.schedule.workingHours', 'Рабочие часы')}
-                        </label>
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1">
-                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                    {t('branches.schedule.from', 'С')}
-                                </label>
-                                <input
-                                    type="time"
-                                    value={start}
-                                    onChange={(e) => setStart(e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                    {t('branches.schedule.to', 'До')}
-                                </label>
-                                <input
-                                    type="time"
-                                    value={end}
-                                    onChange={(e) => setEnd(e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <p className="text-xs text-blue-800 dark:text-blue-300">
-                            {t('branches.schedule.hint', 'Это расписание будет применяться ко всем дням недели (понедельник - воскресенье).')}
-                        </p>
-                    </div>
-                </div>
-            </Card>
-
-            {error ? <AlertBanner variant="danger" message={error} /> : null}
-
-            {success ? (
-                <AlertBanner
-                    variant="success"
-                    message={t('branches.schedule.success', 'Расписание успешно сохранено')}
-                />
-            ) : null}
-
-            <div className="flex items-center gap-3 pt-4">
-                <Button onClick={handleSave} disabled={saving} isLoading={saving} className="min-w-[160px]">
-                    {t('branches.schedule.saveButton', 'Сохранить расписание')}
-                </Button>
-            </div>
+    return <form className="space-y-5" onSubmit={e => { e.preventDefault(); void save(); }}>
+        <div>
+            <h3 className="text-lg font-semibold">{t('branches.schedule.title')}</h3>
+            <p className="mt-2 text-sm text-slate-400">{t('scheduling.branchHint')}</p>
         </div>
-    );
+        <fieldset disabled={saving} className="grid min-w-0 gap-4 lg:grid-cols-2 disabled:opacity-60">
+            {days.map((day, index) => {
+                const label = new Intl.DateTimeFormat(locale === 'ky' ? 'ky-KG' : locale, { weekday: 'long', timeZone: 'UTC' })
+                    .format(new Date(Date.UTC(2026, 0, 4 + day.day_of_week)));
+                return <section key={day.day_of_week} aria-label={label} className="min-w-0 space-y-4 rounded-xl border border-slate-500/30 p-4">
+                    <h4 className="font-semibold capitalize">{label}{!day.intervals.length && ` — ${t('scheduling.closed')}`}</h4>
+                    <TimeRangesEditor label={t('scheduling.work')} ranges={day.intervals}
+                        change={intervals => change(index, { ...day, intervals, breaks: intervals.length ? day.breaks : [] })} />
+                    {day.intervals.length > 0 && <TimeRangesEditor label={t('scheduling.breaks')} ranges={day.breaks}
+                        change={breaks => change(index, { ...day, breaks })} />}
+                </section>;
+            })}
+        </fieldset>
+        {error && <AlertBanner variant="danger" message={error} />}
+        {success && <AlertBanner variant="success" message={t('branches.schedule.success')} />}
+        <Button type="submit" disabled={saving} isLoading={saving}>{t('branches.schedule.saveButton')}</Button>
+    </form>;
 }

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
+import { getLocalAuthPublicOrigin } from '@/lib/localAuthPublicOrigin';
 import { logWarn } from '@/lib/log';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { syncNotificationEmailsFromUser } from '@/lib/userNotificationEmailService';
@@ -17,14 +18,15 @@ function signInErrorUrl(origin: string, code: string) {
 
 export async function GET(request: Request) {
     const requestUrl = new URL(request.url);
+    const publicOrigin = getLocalAuthPublicOrigin(request.url);
     const code = requestUrl.searchParams.get('code');
     const nextPath = sanitizeAuthReturnPath(requestUrl.searchParams.get('next'));
 
     if (!code) {
-        return NextResponse.redirect(signInErrorUrl(requestUrl.origin, 'no_code'));
+        return NextResponse.redirect(signInErrorUrl(publicOrigin, 'no_code'));
     }
 
-    const callbackUrl = new URL('/auth/callback', requestUrl.origin);
+    const callbackUrl = new URL('/auth/callback', publicOrigin);
     callbackUrl.searchParams.set('next', nextPath);
     let response = NextResponse.redirect(callbackUrl);
 
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseAnonKey) {
-        return NextResponse.redirect(signInErrorUrl(requestUrl.origin, 'oauth_config_error'));
+        return NextResponse.redirect(signInErrorUrl(publicOrigin, 'oauth_config_error'));
     }
 
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -52,7 +54,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
         response = NextResponse.redirect(
-            signInErrorUrl(requestUrl.origin, 'oauth_exchange_failed'),
+            signInErrorUrl(publicOrigin, 'oauth_exchange_failed'),
         );
     } else {
         const {

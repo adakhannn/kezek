@@ -43,6 +43,21 @@ export function getUserDisplayName(user: AuthUser) {
     return fullName || name || user.email || user.phone || 'Пользователь Kezek';
 }
 
+export type BusinessRoleApplicant = { name: string; email: string | null; phone: string | null };
+
+// Read identity on the server, never from the submitted form. Keep preview,
+// persisted application and notification names consistent.
+export async function loadBusinessRoleApplicant(db: Pick<DbClient, 'from'>, user: AuthUser): Promise<BusinessRoleApplicant> {
+    const { data: profile, error } = await db.from('profiles')
+        .select('full_name,phone').eq('id', user.id).maybeSingle();
+    if (error) throw new Error('Не удалось загрузить данные профиля. Попробуйте ещё раз.');
+    return {
+        name: profile?.full_name?.trim() || getUserDisplayName(user),
+        email: user.email?.trim() || null,
+        phone: profile?.phone?.trim() || user.phone?.trim() || null,
+    };
+}
+
 function safeEvidenceLinks(value: unknown) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
     const input = value as Record<string, unknown>;
@@ -171,15 +186,16 @@ export async function submitBusinessRoleApplication(params: {
         };
     }
 
+    const applicant = await loadBusinessRoleApplicant(params.admin, params.user);
     const { data, error } = await params.admin
         .from('business_role_applications')
         .insert({
             applicant_user_id: params.user.id,
             biz_id: bizId,
             requested_role: requestedRole,
-            applicant_name: getUserDisplayName(params.user),
-            applicant_email: params.user.email ?? null,
-            applicant_phone: params.user.phone ?? null,
+            applicant_name: applicant.name,
+            applicant_email: applicant.email,
+            applicant_phone: applicant.phone,
             message,
             evidence_links: evidenceLinks,
             policy_version: 1,
@@ -201,7 +217,7 @@ export async function submitBusinessRoleApplication(params: {
         throw new Error(error.message);
     }
 
-    return { ok: true as const, id: data?.id ?? null };
+    return { ok: true as const, id: data?.id ?? null, applicant };
 }
 
 export async function approveBusinessRoleApplication(params: {

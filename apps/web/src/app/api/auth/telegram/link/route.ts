@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { withErrorHandler } from '@/lib/apiErrorHandler';
-import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
 import { runTelegramLinkHttp } from '@/lib/telegramLinkHttpService';
 
 /**
@@ -10,7 +10,7 @@ import { runTelegramLinkHttp } from '@/lib/telegramLinkHttpService';
  * Связывает Telegram аккаунт с текущим залогиненным пользователем
  */
 export async function POST(req: Request) {
-  return withRateLimit(req, RateLimitConfigs.auth, async () =>
+  return withRateLimit(req, routeRateLimit('api/auth/telegram/link', RateLimitConfigs.auth), async () =>
     withErrorHandler('TelegramLink', () => runTelegramLinkHttp(req)),
   );
 }

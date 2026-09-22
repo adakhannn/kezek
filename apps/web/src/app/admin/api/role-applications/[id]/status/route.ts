@@ -3,11 +3,13 @@ export const dynamic = 'force-dynamic';
 
 import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
 import { releaseApplicationBlock } from '@/lib/applicationPolicy';
+import { notifyOwnerApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
 import {
     approveBusinessRoleApplication,
     normalizeBusinessRole,
     rejectBusinessRoleApplication,
 } from '@/lib/businessRoleApplicationService';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -99,6 +101,18 @@ export async function POST(request: Request, context: unknown) {
 
     if (!result.ok) {
         return Response.json({ ok: false, message: result.message }, { status: result.status });
+    }
+
+    if (body.action === 'approve' && normalizeBusinessRole(application.requested_role) === 'owner' && application.applicant_user_id) {
+        try {
+            await notifyOwnerApplicationApproved(admin, {
+                applicantUserId: application.applicant_user_id,
+                businessId: application.biz_id,
+                origin: new URL(request.url).origin,
+            });
+        } catch (notificationError) {
+            logError('ApplicationNotification', 'Approved owner application notification failed', notificationError);
+        }
     }
 
     return Response.json({ ok: true });

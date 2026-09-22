@@ -47,7 +47,16 @@ export function getDashboardHomeViewModel(
             : null,
     ].filter((item): item is string => Boolean(item));
 
-    const primaryFocus: DashboardHomeFocus = props.needOnboarding
+    const pending = props.staffApplications?.pending;
+    const primaryFocus: DashboardHomeFocus = pending != null && pending > 0
+        ? {
+              title: `${t('dashboard.applications.title', 'Заявки сотрудников')} · ${pending}`,
+              description: t('dashboard.applications.pending', 'Ожидают вашего решения. Рассмотрите заявки и выберите филиал для новых сотрудников.'),
+              ctaLabel: t('dashboard.applications.review', 'Рассмотреть заявки'),
+              href: '/dashboard/role-applications',
+              tone: 'info',
+          }
+        : props.needOnboarding
         ? {
               title: t('dashboard.commandCenter.focus.setupTitle', 'Сначала доведите кабинет до рабочего состояния'),
               description:

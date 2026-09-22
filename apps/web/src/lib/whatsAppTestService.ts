@@ -7,12 +7,7 @@ export function getWhatsAppTestSnapshot(env: NodeJS.ProcessEnv) {
     const hasPhoneId = Boolean(phoneNumberId);
     const hasVerifyToken = Boolean(verifyToken);
 
-    const tokenPreview = accessToken
-        ? `${accessToken.slice(0, 10)}...${accessToken.slice(-5)}`
-        : 'не установлен';
-
     const resolvedPhoneId = phoneNumberId || 'не установлен';
-    const tokenLength = accessToken?.length || 0;
     const phoneIdIsValid =
         resolvedPhoneId !== 'не установлен' && /^\d+$/.test(resolvedPhoneId);
 
@@ -20,7 +15,7 @@ export function getWhatsAppTestSnapshot(env: NodeJS.ProcessEnv) {
         configured: hasToken && hasPhoneId && phoneIdIsValid,
         details: {
             WHATSAPP_ACCESS_TOKEN: hasToken
-                ? `${tokenPreview} (${tokenLength} символов)`
+                ? 'установлен'
                 : 'не установлен',
             WHATSAPP_PHONE_NUMBER_ID: resolvedPhoneId,
             WHATSAPP_PHONE_NUMBER_ID_VALID: phoneIdIsValid,

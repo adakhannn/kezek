@@ -17,6 +17,7 @@ jest.mock('@/lib/supabaseHelpers', () => ({
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
+    routeRateLimit: jest.requireActual('@/lib/rateLimit').routeRateLimit,
     withRateLimit: jest.fn((req, config, handler) => handler()),
     RateLimitConfigs: {
         auth: {},

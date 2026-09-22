@@ -1,4 +1,5 @@
 export const commonRu = {
+    'common.cancel': 'Отмена',
     'common.map.title': 'Карта филиалов',
     'common.map.allCategories': 'Все категории',
     'common.map.findNearest': 'Ближайший ко мне',

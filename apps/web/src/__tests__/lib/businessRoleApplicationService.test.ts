@@ -1,6 +1,7 @@
 import {
     canBusinessManagerApproveRole,
     submitBusinessRoleApplication,
+    loadBusinessRoleApplicant,
 } from '@/lib/businessRoleApplicationService';
 
 describe('businessRoleApplicationService role policy', () => {
@@ -54,7 +55,7 @@ describe('businessRoleApplicationService role policy', () => {
         expect(admin.from).not.toHaveBeenCalled();
     });
 
-    test('submits owner proof with the versioned policy contract', async () => {
+    test.each(['owner', 'staff'] as const)('submits %s with profile identity and the versioned policy contract', async (requestedRole) => {
         const query = (data: unknown) => {
             const chain: Record<string, jest.Mock> = {};
             for (const method of ['select', 'eq', 'insert']) chain[method] = jest.fn(() => chain);
@@ -74,6 +75,7 @@ describe('businessRoleApplicationService role policy', () => {
                 if (table === 'businesses') return businessQuery;
                 if (table === 'roles') return roleQuery;
                 if (table === 'user_roles') return existingRoleQuery;
+                if (table === 'profiles') return query({ full_name: 'Saved profile name', phone: '+996222222222' });
                 roleApplicationCall += 1;
                 return roleApplicationCall === 1 ? duplicateQuery : insertQuery;
             }),
@@ -84,16 +86,42 @@ describe('businessRoleApplicationService role policy', () => {
             user: { id: 'user-1', email: 'owner@example.com' },
             input: {
                 biz_id: 'biz-1',
-                requested_role: 'owner',
-                message: 'Я владелец и могу подтвердить бизнес.',
+                requested_role: requestedRole,
+                message: requestedRole === 'owner' ? 'Я владелец и могу подтвердить бизнес.' : '',
                 evidence_links: { instagram: 'https://instagram.com/test-business' },
             },
         });
 
-        expect(result).toEqual({ ok: true, id: 'application-1' });
+        expect(result).toMatchObject({ ok: true, id: 'application-1' });
         expect(insertQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
+            applicant_user_id: 'user-1',
+            applicant_name: 'Saved profile name',
+            applicant_phone: '+996222222222',
+            message: requestedRole === 'owner' ? 'Я владелец и могу подтвердить бизнес.' : '',
             evidence_links: { instagram: 'https://instagram.com/test-business' },
             policy_version: 1,
         }));
+        expect(result).toMatchObject({ applicant: { name: 'Saved profile name', email: 'owner@example.com', phone: '+996222222222' } });
+    });
+});
+
+describe('application identity', () => {
+    const user = { id: 'user-1', email: 'auth@example.com', phone: '+996111111111', user_metadata: { full_name: 'Old name' } };
+    function db(data: unknown, error: unknown = null) {
+        const chain = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), maybeSingle: jest.fn().mockResolvedValue({ data, error }) };
+        return { from: jest.fn(() => chain), chain };
+    }
+    test('uses saved profile name and contact phone, scoped to the authenticated user', async () => {
+        const client = db({ full_name: ' Profile name ', phone: ' +996222222222 ' });
+        expect(await loadBusinessRoleApplicant(client, user)).toEqual({ name: 'Profile name', phone: '+996222222222', email: 'auth@example.com' });
+        expect(client.chain.eq).toHaveBeenCalledWith('id', 'user-1');
+    });
+    test('falls back to login data when profile is missing or blank', async () => {
+        for (const profile of [null, { full_name: ' ', phone: '' }]) {
+            expect(await loadBusinessRoleApplicant(db(profile), user)).toEqual({ name: 'Old name', email: user.email, phone: user.phone });
+        }
+    });
+    test('does not silently persist stale identity on a profile read failure', async () => {
+        await expect(loadBusinessRoleApplicant(db(null, { message: 'failure' }), user)).rejects.toThrow('Не удалось загрузить');
     });
 });

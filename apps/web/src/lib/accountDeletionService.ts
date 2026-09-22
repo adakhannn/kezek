@@ -17,6 +17,7 @@ type AdminLike = {
 };
 
 export const ACCOUNT_DELETION_GRACE_DAYS = 7;
+const ACCOUNT_DELETION_CONFIRMATION_PHRASES = new Set(['УДАЛИТЬ', 'DELETE', 'ӨЧҮРҮҮ']);
 
 async function countQuery(query: PromiseLike<{ count: number | null; error: { message?: string } | null }>) {
     const { count, error } = await query;
@@ -54,7 +55,7 @@ export async function getAccountDeletionState(admin: AdminLike, userId: string) 
 }
 
 export async function requestAccountDeletion(admin: AdminLike, userId: string, confirmation: string) {
-    if (confirmation !== 'УДАЛИТЬ') {
+    if (!ACCOUNT_DELETION_CONFIRMATION_PHRASES.has(confirmation.trim().toUpperCase())) {
         return { ok: false as const, status: 400, message: 'Введите УДАЛИТЬ для подтверждения.', code: 'confirmation_required' };
     }
     const blockers = await assessAccountDeletion(admin, userId);

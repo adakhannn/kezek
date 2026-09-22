@@ -13,6 +13,7 @@
 !.env.example
 
 # Logs & cache
+**/.pnpm-store/
 **/*.log
 **/npm-debug.log*
 **/yarn-debug.log*
@@ -34,3 +35,4 @@ coverage/
 **/playwright/.cache/
 .vercel
 .env*.local
+**/telegram-test.env.local
