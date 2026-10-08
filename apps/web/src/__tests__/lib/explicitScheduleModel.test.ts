@@ -2,6 +2,10 @@ import { emptyWeek, validatePublishSchedule, validDate } from '@/lib/scheduling/
 
 const command = () => ({ kind: 'week' as const, from: '2026-09-28', branchId: '00000000-0000-0000-0000-000000000001', expectedRevision: 0, days: emptyWeek() });
 describe('explicit schedule contract', () => {
+    test('public publication rejects internal reset markers', () => {
+        const input = { ...command(), kind: 'day', days: { day: { intervals: [], breaks: [], use_regular: true } } };
+        expect(() => validatePublishSchedule(input)).toThrow('SCHEDULE_INVALID');
+    });
     test('an explicit week of days off is valid; no hours are invented', () => {
         const input = command(); expect(() => validatePublishSchedule(input)).not.toThrow();
         expect(input.days['1'].intervals).toEqual([]);

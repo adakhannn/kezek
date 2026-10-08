@@ -963,7 +963,10 @@ export type Database = {
       staff_time_off: {
         Row: {
           biz_id: string
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string | null
+          created_by: string | null
           date_from: string
           date_to: string
           id: string
@@ -972,7 +975,10 @@ export type Database = {
         }
         Insert: {
           biz_id: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string | null
+          created_by?: string | null
           date_from: string
           date_to: string
           id?: string
@@ -981,7 +987,10 @@ export type Database = {
         }
         Update: {
           biz_id?: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string | null
+          created_by?: string | null
           date_from?: string
           date_to?: string
           id?: string

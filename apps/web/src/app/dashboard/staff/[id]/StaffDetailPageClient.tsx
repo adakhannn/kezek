@@ -353,7 +353,7 @@ export default function StaffDetailPageClient({
                 </p>
             </Card>
 
-            <DangerActions staffId={String(staff.id)} />
+            <DangerActions staffId={String(staff.id)} allowPermanentDelete={!explicitScheduling} />
         </div>
     );
 }

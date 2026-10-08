@@ -8,7 +8,7 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
-export default function DangerActions({ staffId }: { staffId: string }) {
+export default function DangerActions({ staffId, allowPermanentDelete = true }: { staffId: string; allowPermanentDelete?: boolean }) {
     const { t } = useLanguage();
     const r = useRouter();
     const [busy, setBusy] = useState(false);
@@ -80,7 +80,7 @@ export default function DangerActions({ staffId }: { staffId: string }) {
                         {t('staff.danger.dismiss.desc', 'РЎРѕС‚СЂСѓРґРЅРёРє Р±СѓРґРµС‚ СЃРєСЂС‹С‚ (is_active = false), РЅРѕ РІСЃРµ РґР°РЅРЅС‹Рµ СЃРѕС…СЂР°РЅСЏС‚СЃСЏ. РњРѕР¶РЅРѕ РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ РїРѕР·Р¶Рµ.')}
                     </p>
                 </div>
-                <div className="border-t border-red-200 pt-3 dark:border-red-800">
+                {allowPermanentDelete && <div className="border-t border-red-200 pt-3 dark:border-red-800">
                     <Button
                         variant="danger"
                         disabled={busy}
@@ -94,7 +94,7 @@ export default function DangerActions({ staffId }: { staffId: string }) {
                     <p className="mt-2 text-xs leading-relaxed text-red-700 dark:text-red-400">
                         {t('staff.danger.delete.desc', 'РџРѕР»РЅРѕРµ СѓРґР°Р»РµРЅРёРµ СЃРѕС‚СЂСѓРґРЅРёРєР° Рё РІСЃРµС… СЃРІСЏР·Р°РЅРЅС‹С… РґР°РЅРЅС‹С…. Р‘СѓРґСѓС‰РёРµ Р±СЂРѕРЅРё РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РѕС‚РјРµРЅРµРЅС‹. Р­С‚Рѕ РґРµР№СЃС‚РІРёРµ РЅРµР»СЊР·СЏ РѕС‚РјРµРЅРёС‚СЊ.')}
                     </p>
-                </div>
+                </div>}
             </div>
 
             <ConfirmDialog
@@ -108,7 +108,7 @@ export default function DangerActions({ staffId }: { staffId: string }) {
                 confirmVariant="danger"
                 isLoading={busy && confirmMode === 'dismiss'}
             />
-            <ConfirmDialog
+            {allowPermanentDelete && <ConfirmDialog
                 open={confirmMode === 'delete'}
                 onClose={() => setConfirmMode(null)}
                 onConfirm={deletePermanently}
@@ -118,7 +118,7 @@ export default function DangerActions({ staffId }: { staffId: string }) {
                 cancelLabel={t('common.cancel', 'РћС‚РјРµРЅР°')}
                 confirmVariant="danger"
                 isLoading={busy && confirmMode === 'delete'}
-            />
+            />}
         </div>
     );
 }

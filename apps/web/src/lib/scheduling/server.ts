@@ -14,6 +14,7 @@ const messages: Record<string, string> = {
     SCHEDULE_STALE: 'График уже изменён. Обновите данные перед сохранением.',
     SCHEDULE_FORBIDDEN: 'Недостаточно прав для изменения графика.',
     SCHEDULE_NOT_FOUND: 'Сотрудник не найден или неактивен.',
+    SCHEDULE_WEEK_REQUIRED: 'Сначала опубликуйте обычную неделю, действующую на выбранную дату.',
 };
 
 export async function readSchedule(staffId: string, bizId: string, from: string, to: string): Promise<ScheduleSnapshot> {
@@ -53,6 +54,18 @@ export async function scheduleHttp(request: Request, staffId?: string) {
         }
         if (!staffId) return createErrorResponse('forbidden', 'Сотрудник не может самостоятельно публиковать график.', undefined, 403);
         const body: unknown = await request.json();
+        if (body && typeof body === 'object' && 'action' in body && body.action === 'reset-day') {
+            const reset = body as { from?: unknown; expectedRevision?: unknown };
+            if (typeof reset.from !== 'string' || !validDate(reset.from) ||
+                typeof reset.expectedRevision !== 'number' || !Number.isSafeInteger(reset.expectedRevision) || reset.expectedRevision < 0) throw new Error('SCHEDULE_INVALID');
+            const { data, error } = await getServiceClient().rpc('reset_staff_schedule_day', {
+                p_staff: staffId, p_biz: context.bizId, p_actor: context.userId,
+                p_expected_revision: reset.expectedRevision, p_day: reset.from,
+            });
+            if (error) throw error;
+            if (!data?.ok) return createErrorResponse('conflict', 'Обычный график конфликтует с записями клиентов.', data?.conflicts, 409);
+            return createSuccessResponse(data);
+        }
         validatePublishSchedule(body);
         const { data, error } = await getServiceClient().rpc('publish_staff_schedule', {
             p_staff: staffId, p_biz: context.bizId, p_actor: context.userId,

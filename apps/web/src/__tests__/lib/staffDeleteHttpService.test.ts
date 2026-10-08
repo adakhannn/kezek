@@ -29,6 +29,7 @@ import { runStaffDeleteService } from '@/lib/staffDeleteService';
 describe('staffDeleteHttpService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    delete process.env.SCHEDULE_V2_ENABLED;
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
     (getRouteParamUuid as jest.Mock).mockResolvedValue('staff-1');
@@ -51,5 +52,15 @@ describe('staffDeleteHttpService', () => {
     );
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
+  });
+
+  test('refuses destructive legacy cleanup before any write in explicit mode', async () => {
+    process.env.SCHEDULE_V2_ENABLED = 'true';
+    try {
+      const response = await runStaffDeleteHttp({ params: { id: 'staff-1' } });
+      expect(response.status).toBe(409);
+      expect(runStaffDeleteService).not.toHaveBeenCalled();
+      expect(getServiceClient).not.toHaveBeenCalled();
+    } finally { delete process.env.SCHEDULE_V2_ENABLED; }
   });
 });

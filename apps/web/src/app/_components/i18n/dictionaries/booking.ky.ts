@@ -1,4 +1,13 @@
 export const bookingKy = {
+    'booking.confirm.title': 'Жазылууну ырастоо',
+    'booking.confirm.description': 'Маалыматтарды текшериңиз. Жазылуу ырастагандан кийин гана түзүлөт.',
+    'booking.confirm.when': 'Качан',
+    'booking.confirm.branch': 'Филиал',
+    'booking.confirm.staff': 'Кызматкер',
+    'booking.confirm.services': 'Кызматтар',
+    'booking.confirm.cancel': 'Артка кайтуу',
+    'booking.confirm.submit': 'Жазылууну ырастоо',
+    'booking.confirm.saving': 'Жазылуу түзүлүүдө…',
     'booking.authChoice.authButton': 'Кирүү же катталуу',
     'booking.authChoice.cancel': 'Жокко чыгаруу',
     'booking.authChoice.guestButton': 'Катталбай брондоо',

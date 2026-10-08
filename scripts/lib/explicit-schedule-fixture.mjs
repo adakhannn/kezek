@@ -6,6 +6,8 @@ export async function setupScheduleFixture(db) {
 await db.exec(`
 create role anon; create role authenticated; create role service_role;
 create schema auth;
+create schema supabase_migrations;
+create table supabase_migrations.schema_migrations(version text primary key,name text);
 create function auth.uid() returns uuid language sql as $$ select '${owner}'::uuid $$;
 create function public.is_super_admin() returns boolean language sql as $$ select false $$;
 create type booking_status as enum ('hold','confirmed','paid','cancelled');
@@ -15,7 +17,7 @@ create table staff(id uuid primary key,biz_id uuid,branch_id uuid,user_id uuid,i
 create table staff_branch_assignments(id uuid default gen_random_uuid(),biz_id uuid,staff_id uuid,branch_id uuid,valid_from date,valid_to date);
 create table roles(id uuid primary key,key text);
 create table user_roles(user_id uuid,biz_id uuid,role_id uuid);
-create table staff_time_off(id uuid default gen_random_uuid(),staff_id uuid,biz_id uuid,date_from date,date_to date);
+create table staff_time_off(id uuid default gen_random_uuid(),staff_id uuid,biz_id uuid,date_from date,date_to date,reason text,created_at timestamptz default now());
 create table staff_schedule_rules(id uuid default gen_random_uuid(),staff_id uuid,biz_id uuid,branch_id uuid,
 kind text,date_on date,date_from date,date_to date,day_of_week int,is_active boolean,priority int default 0,
 created_at timestamptz default now(),tz text,intervals jsonb,breaks jsonb);
@@ -37,4 +39,6 @@ await db.exec(await readFile(new URL('../../supabase/migrations/20260918130000_e
 await db.exec(await readFile(new URL('../../supabase/migrations/20260918131000_explicit_schedule_booking_consumers.sql',import.meta.url),'utf8'));
 await db.exec(await readFile(new URL('../../supabase/migrations/20260918132000_explicit_schedule_complex_booking_writers.sql',import.meta.url),'utf8'));
 await db.exec(await readFile(new URL('../../supabase/migrations/20260918133000_atomic_staff_home_transfer.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations/20261008065051_complete_schedule_operations.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations/20261009090000_staff_absence_lifecycle.sql',import.meta.url),'utf8'));
 }

@@ -1,4 +1,13 @@
 export const bookingRu = {
+    'booking.confirm.title': 'Подтвердить запись',
+    'booking.confirm.description': 'Проверьте детали. Запись будет создана только после подтверждения.',
+    'booking.confirm.when': 'Когда',
+    'booking.confirm.branch': 'Филиал',
+    'booking.confirm.staff': 'Сотрудник',
+    'booking.confirm.services': 'Услуги',
+    'booking.confirm.cancel': 'Вернуться',
+    'booking.confirm.submit': 'Подтвердить запись',
+    'booking.confirm.saving': 'Создаём запись…',
     'booking.authChoice.authButton': 'Войти или зарегистрироваться',
     'booking.authChoice.cancel': 'Отмена',
     'booking.authChoice.guestButton': 'Запись без регистрации',

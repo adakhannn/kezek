@@ -1,12 +1,26 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logError } from '@/lib/log';
 import { TZ, todayStringInTz, formatDateInTz } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { staffFinanceByIdQuerySchema } from '@/lib/validation/schemas';
 
+type ShiftStatsRow = {
+    total_amount: number | null;
+    master_share: number | null;
+    salon_share: number | null;
+    late_minutes: number | null;
+};
+
+type ShiftListRow = ShiftStatsRow & {
+    shift_date: string | null;
+    status: string | null;
+};
+
 type DeprecatedStaffFinanceContext = {
     req: Request;
-    supabase: any;
-    admin: any;
+    supabase: SupabaseClient;
+    admin: SupabaseClient;
     bizId: string;
     staffId: string;
     staff: {
@@ -151,7 +165,7 @@ export async function runDeprecatedStaffFinance({
                   },
             bookings,
             services,
-            allShifts: allShiftsResult.data.map((entry: any) => ({
+            allShifts: allShiftsResult.data.map((entry) => ({
                 shift_date: typeof entry.shift_date === 'string' ? entry.shift_date : '',
                 status: typeof entry.status === 'string' ? entry.status : 'closed',
                 total_amount: Number(entry.total_amount ?? 0),
@@ -186,7 +200,7 @@ async function resolveIsDayOff({
     ymd,
     today,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     bizId: string;
     staffId: string;
     ymd: string;
@@ -201,6 +215,7 @@ async function resolveIsDayOff({
         .select('id')
         .eq('biz_id', bizId)
         .eq('staff_id', staffId)
+        .is('cancelled_at', null)
         .lte('date_from', ymd)
         .gte('date_to', ymd);
 
@@ -221,7 +236,7 @@ async function resolveIsDayOff({
     return !!(dateRule && Array.isArray(dateRule.intervals) && dateRule.intervals.length === 0);
 }
 
-async function loadShiftItems({ admin, shiftId }: { admin: any; shiftId: string }) {
+async function loadShiftItems({ admin, shiftId }: { admin: SupabaseClient; shiftId: string }) {
     const { data, error } = await admin
         .from('staff_shift_items')
         .select(
@@ -244,7 +259,7 @@ async function loadBookings({
     staffId,
     ymd,
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     staffId: string;
     ymd: string;
 }) {
@@ -266,7 +281,7 @@ async function loadBookings({
     return data ?? [];
 }
 
-async function loadAvailableServices({ supabase, staffId }: { supabase: any; staffId: string }) {
+async function loadAvailableServices({ supabase, staffId }: { supabase: SupabaseClient; staffId: string }) {
     const { data, error } = await supabase
         .from('service_staff')
         .select('services:services!inner (name_ru, name_ky, name_en)')
@@ -279,7 +294,7 @@ async function loadAvailableServices({ supabase, staffId }: { supabase: any; sta
     }
 
     return (Array.isArray(data) ? data : [])
-        .map((entry: any) => {
+        .map((entry) => {
             const service = Array.isArray(entry?.services) ? entry.services[0] : entry?.services;
             if (!service || typeof service.name_ru !== 'string' || !service.name_ru) {
                 return null;
@@ -304,7 +319,7 @@ function calculateCurrentWork({
     hourlyRate,
     now,
 }: {
-    shift: any;
+    shift: { status?: string | null; opened_at?: string | null } | null;
     hourlyRate: number | null;
     now: Date;
 }) {
@@ -335,12 +350,12 @@ async function loadRecentClosedShifts({
     staffId,
     statsWindowStart,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     staffId: string;
     statsWindowStart: string;
 }): Promise<
-    | { ok: true; data: any[] }
+    | { ok: true; data: ShiftStatsRow[] }
     | { ok: false; status: 500; error: 'internal'; message: string }
 > {
     const { data, error } = await admin
@@ -370,11 +385,11 @@ async function loadAllShifts({
     bizId,
     staffId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     staffId: string;
 }): Promise<
-    | { ok: true; data: any[] }
+    | { ok: true; data: ShiftListRow[] }
     | { ok: false; status: 500; error: 'internal'; message: string }
 > {
     const { data, error } = await admin
@@ -397,7 +412,7 @@ async function loadAllShifts({
     return { ok: true, data: Array.isArray(data) ? data : [] };
 }
 
-function buildStats(entries: any[]) {
+function buildStats(entries: ShiftStatsRow[]) {
     return entries.reduce(
         (acc, entry) => ({
             totalAmount: acc.totalAmount + Number(entry.total_amount ?? 0),

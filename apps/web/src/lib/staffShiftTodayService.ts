@@ -188,6 +188,7 @@ async function resolveIsDayOff({
         .select('id')
         .eq('biz_id', bizId)
         .eq('staff_id', staffId)
+        .is('cancelled_at', null)
         .lte('date_from', ymd)
         .gte('date_to', ymd);
 

@@ -1,5 +1,5 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { Service } from '../types';
 import { fmtErr, withNetworkRetry } from '../utils';
@@ -41,8 +41,10 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         feedback,
     } = params;
     const [loading, setLoading] = useState(false);
+    const inFlight = useRef(false);
 
     async function createBooking(slotTime: Date, slotStaffId?: string) {
+        if (inFlight.current) return;
         if (!services.length) {
             feedback.showError(
                 t(
@@ -98,6 +100,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             return;
         }
 
+        inFlight.current = true;
         setLoading(true);
         try {
             const startISO = formatInTimeZone(
@@ -172,6 +175,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 );
             feedback.showError(message);
         } finally {
+            inFlight.current = false;
             setLoading(false);
         }
     }

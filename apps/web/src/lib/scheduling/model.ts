@@ -50,6 +50,10 @@ export function validatePublishSchedule(value: unknown): asserts value is Publis
     for (const key of keys) {
         const day = input.days[key];
         validateScheduleDay(day);
+        // Internal reset markers may only be written by the dedicated reset operation.
+        if (Object.keys(day).some(field => field !== 'intervals' && field !== 'breaks')) {
+            throw new Error('SCHEDULE_INVALID');
+        }
     }
 }
 

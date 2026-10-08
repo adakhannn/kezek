@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { AuthChoiceModal } from './components/AuthChoiceModal';
+import { BookingConfirmModal } from './components/BookingConfirmModal';
 import { BookingFormSections } from './components/BookingFormSections';
 import { BookingHeader } from './components/BookingHeader';
 import { BookingSteps } from './components/BookingSteps';
@@ -188,6 +189,7 @@ export default function BookingForm({ data }: { data: Data }) {
     const [authChoiceModalOpen, setAuthChoiceModalOpen] = useState(false);
     const [selectedSlotTime, setSelectedSlotTime] = useState<Date | null>(null);
     const [selectedSlotStaffId, setSelectedSlotStaffId] = useState<string | null>(null);
+    const [pendingBooking, setPendingBooking] = useState<{ slotTime: Date; staffId: string } | null>(null);
 
     const { createBooking, loading: bookingLoading } = useBookingCreation({
         bizId: biz.id,
@@ -348,11 +350,15 @@ export default function BookingForm({ data }: { data: Data }) {
             service_id: serviceId || null,
             service_ids: serviceIds,
             services_count: serviceIds.length,
-            staff_id: slotStaffId || staffId === 'any' ? null : staffId || null,
+            staff_id: slotStaffId || (staffId === 'any' ? null : staffId || null),
             slot_start_at: slotTime.toISOString(),
             session_id: getSessionId(),
         });
-        createBooking(slotTime, slotStaffId);
+        if (isAuthed) {
+            setPendingBooking({ slotTime, staffId: slotStaffId });
+        } else {
+            void createBooking(slotTime, slotStaffId);
+        }
     };
 
     return (
@@ -477,6 +483,25 @@ export default function BookingForm({ data }: { data: Data }) {
                 }}
                 t={t}
                 slotTimeLabel={selectedSlotTime ? toLabel(selectedSlotTime) : null}
+            />
+
+            <BookingConfirmModal
+                open={pendingBooking !== null}
+                busy={bookingLoading}
+                onClose={() => setPendingBooking(null)}
+                onConfirm={() => {
+                    if (pendingBooking && !bookingLoading) {
+                        void createBooking(pendingBooking.slotTime, pendingBooking.staffId);
+                    }
+                }}
+                dayLabel={dayLabel}
+                timeLabel={pendingBooking ? toLabel(pendingBooking.slotTime, businessTz) : ''}
+                branchName={selectedBranch?.name ?? ''}
+                staffName={staff.find((member) => member.id === pendingBooking?.staffId)?.full_name ?? ''}
+                serviceNames={servicesForBooking.map((service) =>
+                    locale === 'ky' ? service.name_ky || service.name_ru : locale === 'en' ? service.name_en || service.name_ru : service.name_ru,
+                )}
+                t={t}
             />
 
             <GuestBookingModal

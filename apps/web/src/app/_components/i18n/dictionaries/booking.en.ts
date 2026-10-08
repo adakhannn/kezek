@@ -1,4 +1,13 @@
 export const bookingEn = {
+    'booking.confirm.title': 'Confirm booking',
+    'booking.confirm.description': 'Review the details. The booking is created only after you confirm.',
+    'booking.confirm.when': 'When',
+    'booking.confirm.branch': 'Branch',
+    'booking.confirm.staff': 'Staff member',
+    'booking.confirm.services': 'Services',
+    'booking.confirm.cancel': 'Go back',
+    'booking.confirm.submit': 'Confirm booking',
+    'booking.confirm.saving': 'Creating booking…',
     'booking.authChoice.authButton': 'Sign in or register',
     'booking.authChoice.cancel': 'Cancel',
     'booking.authChoice.guestButton': 'Book without registration',
