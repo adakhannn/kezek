@@ -1,0 +1,27 @@
+{
+  "id": "C214",
+  "status": "PASS_ONE_COMPOUND_UNSAVED_EMAIL_NOTIFICATION_DRAFT_RESET_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c214-notification-draft-plan.json",
+  "caseId": "S26-E201-unsaved-email-notification-draft-reset",
+  "observationWindowUtc": [
+    "2026-10-26T10:42:04Z",
+    "2026-10-26T10:42:33Z"
+  ],
+  "restoration": "Profilecleanafter2Reset+oneReload, thenobservedalso-accessAdminpanel link ->actualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1/markHandoff beforeevidenceemission.",
+  "actual": "LoadedknownSAownprofile: masterEmail1/enabled, ownkezekkgrecipient1/enabled, WhatsApp0disabled/Telegram0disabled; SaveResetdisabled. ONEEmailmasterclick ->0/recipient1disabled/dirtynotice/SaveResetenabled. ONEReset ->master1/recipient1enabled/clean/SaveResetdisabled. ONErecipientclick ->recipient0/master1/dirtynotice; ONEReset ->both1/clean. ONEreload ->samevisibleall4checkboxstates/SaveResetdisabled/nameAnonymized/phoneblank/WhatsAppblank. No profileinputchanged or submission.",
+  "effects": "Only2localunsavedcheckboxclicks+2Reset+oneReload. No Save/Enter/profilePOST/email/SMS/OTP/send/provider/link/unlink/deletion/role/booking/payment/source/test/build/server command. ExistingTelegramBotdomaininvalid observedwithoutinteraction, notnewbug. Ordinaryread/auth/analytics/telemetryunenumerated, notzeroTOTALwrites.",
+  "toolNotes": "ProfileinitialResetwaitdeadline ->ONEfreshAXactualfullyloadedcleanprofile; no duplicateprofilelink/reload/auth/toolworkaround. Otherplannedreloadoncesucceeded.",
+  "limits": "LocaldraftUI/visiblecheckboxrestoreonly. NOTpersistentnotificationupdate/delivery/API/no-writeaudit/wholeE2/phoneidentity/servererrorproof. C77unknownnotify_smsSaveblockerunchanged.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 11,
+    "windowUiAfter": 12,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

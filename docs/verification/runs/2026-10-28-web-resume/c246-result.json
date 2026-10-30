@@ -1,0 +1,55 @@
+{
+  "id": "C246",
+  "status": "READINESS_RESTORED_AND_FIRST_ACTUAL_DIRTY_RELOAD_CASE_PASS",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c246-manual-refresh-resumption-plan.json",
+  "caseId": "S28-P201-admin-branch-unsaved-dirty-reload",
+  "newCondition": {
+    "humanMessage": "Обновил, панель видна",
+    "firstActualClockUtc": "2026-10-28T12:04:30Z"
+  },
+  "readiness": {
+    "afterClockUtc": "2026-10-28T12:08:50Z",
+    "actual": "Admin initialAX+headinginnerText+tabinventory agree. ONEAcardclick thenwait/freshAX ->exactAURL+heading; independentheadinginnerText+sameproviderinventory alsoexactA. Ordinaryobservedbranches ->actual2of2/originalinactivefa5+active057; exactinactivefa5edit originalknownbaseline. C243contradiction no longer observed in this bounded test, cause unknown/no softwarefix credit."
+  },
+  "observationWindowUtc": [
+    "2026-10-28T12:11:00Z",
+    "2026-10-28T12:16:39Z"
+  ],
+  "actual": "Exactinactivefa5original S1 TEST INACTIVE BRANCH/blankaddress+4directorylinks+4publiccontacts/coords—/—/inherittrue/activefalse/7closed/disabledSave+Нетизменений. FilledONLYname C243 UNSAVED BRANCH NAME 28OCT+ordinaryTab ->exactvisiblevalue/Saveenabled. FilledONLYaddress C243 UNSAVED ADDRESS 28OCT+Tab ->bothdraftsretained. Afteractual12:12:10clock ONEintentionalreload WHILEdirty ->sameexacteditor/originalname/blankaddress/allbaseline/disabledSave/nochanges; markersgone. Ordinarylist ->bothoriginalbranches/inactive+active/count2of2; reentryexactfa5 ->alloriginalfields/7closed/disabledSave. NeverSave/Enter/submit. ONEcompoundPASS, notperfield/recoverycredit.",
+  "recovery": {
+    "afterClockUtc": "2026-10-28T12:14:23Z",
+    "beforeClockUtc": "2026-10-28T12:16:39Z",
+    "actual": "ObservedАдминка ->actualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/Today28Oct0-0-0; markHandoff. Sameworkingtab/provider0777/noauth/newtab/serverchange."
+  },
+  "toolNotes": [
+    "InitialpostclickAXmaystillshowoldpage; waitingthenfreshAXsettledcorrectly, no duplicateclick.",
+    "Firstbranchlistheadingwaitusedincorrect Филиалы бизнеса, actualheadingФилиалы; selectorfailureisnotproductfailure. ONEfreshAX showedcorrectlist; no repeatclick.",
+    "Reentryexactheadingwaitdeadline followedONEfreshAX actualcorrecteditor; no duplicateclick/reload.",
+    "Oldmapunavailable notice remained; no mapreload/search/location/SDK/key/network/providerinteraction or newmapbug claim."
+  ],
+  "originalBlockedAttempt": {
+    "evidence": "c243-result.json",
+    "windowUtc": [
+      "2026-10-28T09:19:59Z",
+      "2026-10-28T09:22:13Z"
+    ],
+    "status": "BLOCKED_AT_SETUP",
+    "preserved": true,
+    "noRetroactivePass": true
+  },
+  "timebox": "Originalreadiness7min endedatreadybefore12:11:30; separate6mincasephasestart12:11:00/deadline12:17:00 appendedtoplanBEFOREinput. Actualcase+adminrestoreconfirmedbefore12:16:39. No harduserdeadline/privilegeextension.",
+  "effects": "Two local synthetic field drafts+ordinaryTab, ONE intentional dirtyreload, readnavigation/list/reentry/adminrestore. No Save/Enter/POST/entity/name/address/active/contacts/inheritance/coords/schedule/role/security/booking/hold/confirm/cancel/payment/message command; no source/test/build/server/API/SQL/SDK/storage/clipboard action. Appread/auth/analytics/telemetry unenumerated, notzeroTOTALwrites. No pendingfixtureeffect.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 1,
+    "windowUiAfter": 2,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0,
+    "logicalFixes": 17,
+    "accepted": 27,
+    "remaining": 289
+  },
+  "limits": "Onlycurrentactualadminexistingbranch unsaveddirtyreload/discard. No wholeP2/browserbfcache/otherroles/multitab/closedbrowser/session/security/visual guarantee. Manualrecovery is0productfix/acceptance; oldC243/C241/F013/F005/othertechnicalandfixtureblocks preserved ashistory/currentindependentblocks."
+}

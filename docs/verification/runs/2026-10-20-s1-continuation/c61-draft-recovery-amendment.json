@@ -1,0 +1,7 @@
+{
+  "id":"C61-recovery-amendment",
+  "reason":"CUA read-only value result for telinput is <redacted>; initial phonevalue capture was not readable and subsequent draftLength10 was redactionmarkerlength, NOT actual7digitinputlength or productappendbug. Do not bypass masking or type the redactionmarker asoriginalvalue.",
+  "recovery":"Use currentlyvisible enabled Сбросить button to restore initialProfile/notificationdraft with no submit, then normalreload and verify knownname/cleanstate/Save disabled/errorabsent. Originalstoredphone value equality cannot be certified through thismaskedread surface.",
+  "caseImpact":"Validation observation relies on prescribed fill actions + visiblearia-invalid/error/Save-disabled, not independentreading of hiddenphonevalue. Restore-noop canclaim clean UIstate and no Saveaction, NOT exactstoredphonecomparison/persistence/securityPASS.",
+  "noBypass":"No alternativeproperty/storage/rawAPI/SDK read or screenshot attempt to unmask phone; no contactdata in evidence."
+}

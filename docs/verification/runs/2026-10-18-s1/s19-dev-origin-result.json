@@ -1,0 +1,27 @@
+{
+  "id": "S1.1-DEV-origin-project",
+  "recordedUtc": "2026-10-18T11:44:43Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "plan": "s19-dev-origin-plan.json",
+  "role": "Actualowner/Аккаунт владельца/currentbusinessc28c8109/RU",
+  "live": "Existing Заявки доступа sidebar -> settled Заявки сотрудников;4historical staff applications:1Принят,3Отменён, repeat-history badges3/2/1. No error alert or write controls invoked.",
+  "normalRequests": [
+    {
+      "origin": "http://localhost:3000",
+      "path": "/api/me/current-business"
+    },
+    {
+      "origin": "http://localhost:3000",
+      "path": "/dashboard/api/role-applications"
+    }
+  ],
+  "projectEvidence": "Documented pageAssets inventory observes current primary browser normal app requests at exact https://beulnmftzbmtbdlgurht.supabase.co; S18 normal anonymous app GET200 at same exact host restores known branch IDs/addresses/data agreeing with owner public oracle S16.",
+  "primaryNormalAuthTraffic": "Existing main application's own /auth/v1/user, rpc/is_super_admin, rpc/my_role_keys, profiles observed as resource path metadata only. These are NOT S18 isolated-process permissions; no agent direct invocation, cookie/token/header/body extraction or service-role impersonation.",
+  "errors": "Captured error-level buffer filtered after11:43:01UTC returned[]; not all historical/allnetworkrequests/error-free claim.",
+  "effects": "Read-only existing sidebar navigation and resource metadata only. No approve/refuse/grants/submit/authswitch/prefselection/entities/SQL; ordinary app telemetry/auth refresh writes unknown.",
+  "limits": [
+    "Basic same-origin authenticated UI API read, not caller-denial/RLS/foreignbiz/full endpoint security",
+    "Exact DEV project identity, not independent SQL/admin-console certification",
+    "A2-01 still partial because deployed public/API/authcallback/webhook origins explicitly deferred by user"
+  ]
+}

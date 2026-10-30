@@ -1,0 +1,31 @@
+{
+  "id": "C111",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "existingCaseId": "A3-01-S1-01",
+  "scope": "Mandatory A3-01 declared variant is local production build output execution. C110compile0 alone insufficient; this finiteplan tests actualcompiledprivacyentry/reload. No repeated C93pageAssets.bundle, no newassetbinary/freshcache/visualcertification. A3-02asset/cache blockers retained, not silently closed.",
+  "runtime": {
+    "harness": "scripts/closure-web-built-runtime-c111-20261025.mjs",
+    "host": "127.0.0.1",
+    "port": 3107,
+    "watchdogSeconds": 300,
+    "rawLog": "c111-runtime-raw.txt",
+    "outbound": "SameC110NodeTCP/fetchdeny/dummy.invalid/no.env/no realkeys; not OSfirewall"
+  },
+  "timeboxMinutes": 5,
+  "expected": "Actual defaultbuilt /privacy at127.0.0.1:3107 shows Политика конфиденциальности and nine numbered sections; one ordinaryreload retainscompleteguestdocument/signin withoutvisibleerroroverlay. Only localcompiledoutputscope, notdeployedproduction/DEVintegration/allroutes/visual/no-flash.",
+  "steps": [
+    "Verify C110rawfinishedexit0/no timeout/exact1685source; onlyexpectedNextgenerateddeclarationdelta inisolatedcopy. Syntaxcheck C111, exactport3107free/no existingC111log. Saveplan/harnesshashbefore start; freshclock oneownedruntime.",
+    "Use same alreadyhealthy authorized humanTab2/resume25HumanTab; no newtab. Freshclock navigate once to explicitindependent compiledprivacy URL http://127.0.0.1:3107/privacy. This is NOT deniederrorpage rescue: human alreadyrestored working localhost/admin beforeplan. No login/cookies/storage/API/termsacceptance/forms. Readactualheading/nine numberedsections/guestSignIn.",
+    "Freshclock oneordinaryreload, verify samecompleteguestdocument/nooverlay. No assetsbundle/export/HTTP/SDK/evaluatefetch/screenshot/viewport/cache controls. No C93overrunretry. Source/localfonts unchanged verifiedoffline, notnewbrowserassetbinaryproof.",
+    "Freshclock directreturn to previouslyobserved http://localhost:3000/admin; currentknownSAprotectedheading/Anonymized/Business3/RU/handoff. Do notlogout/relogin. Verify exactownedruntimePID/path fromraw and readonlyprocess before stoppingONLYit; verifylistener3107gone, main3000preserved. No filecleanup.",
+    "Policydenial/interruption/uncertainstate/startupfail ->stopno retries/newtab/alternatebrowser/port/URL/securityfix/rebuild; preserveblocker, stoponlyownedruntime. Humanstop ->safeeffects+PAUSEDexisting/readback/new25Octfinal."
+  ],
+  "effects": "One isolateddummy nextstart/temporarypublicnavigation+reload onexistinghumanTab andreturn. No newtab/DEVDBbusiness/roles/booking/payment/profile/messages/authtransition/persistentfixtures/securitycommands. Normalmainappauth/telemetry unenumerated/notzeroTOTALwrites.",
+  "accounting": "Atbestone refreshed EXISTING A3-01 case/currentrequirement20->21,S116->17/primary62->63; not NEW functionalUIcase/fix.25OctnewfunctionalUI0/fix0, logical11inherited; archivedold21UI/2fixnotadded. No asset/freshcache/visual/fulltechnicalgreen.",
+  "savedBeforeRuntimeUtc": "2026-10-25T09:04:35Z",
+  "harnessHashes": {
+    "scripts/closure-web-built-runtime-c111-20261025.mjs": "4758b27b56f2121431d091ae74020592f1c766df214aa60a7490c95b09b55a8a",
+    "scripts/closure-web-offline-guard-c110-20261025.cjs": "6eadc63ffd8e7aa4c94a56e7309b4ff9274fcaf1090e6b51b6aeef0a7f18c45d"
+  }
+}

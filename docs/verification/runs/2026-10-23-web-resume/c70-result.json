@@ -1,0 +1,19 @@
+{
+  "id":"C70",
+  "plan":"c70-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "humanRecovery":"User explicitly reported project launched and renewed until-stop request. Fresh inventory after23:23:04UTC: ONLY human tab2/providerbrowser-use:9330166e-02eb-4317-b88d-df1476284c6a on localhost root. New healthy human provider, NOT retry/rebind of denied23011460. Root Admin/Anonymized/logout; ordinary menu -> protected/admin heading/3business4branch1staff4service30bookings. Email not extracted/read; human-restored superadmin context with actual privileged page control, not new login credit. No auth transition this subpackage.",
+  "original":{"weights":[35,25,20,20],"windowDays":30,"sum":"100.00%","saveEnabled":true,"observedAfterUtc":"2026-10-22T23:24:26Z"},
+  "cases":[
+    {"key":"sum-above-100","status":"passed","observationWindowUtc":["2026-10-22T23:24:46Z","2026-10-22T23:25:01Z"],"actual":"One ordinary ArrowRight first slider35->36; label36%, sum101.00%, warning sum must equal100%, Save disabled. Clock23:24:52 Reset ->35/25/20/20, sum100.00%, days30, Save enabled. No submit."},
+    {"key":"days-above-365","status":"passed","observationWindowUtc":["2026-10-22T23:25:01Z","2026-10-22T23:25:14Z"],"actual":"One ordinary spinbutton fill366; visible label366days confirms React state commitment, inputvalue366/min1/max365/rangeOverflowtrue/rangeUnderflowfalse/validfalse, Save disabled. Clock23:25:08 Reset ->30days/Save enabled, original weights unchanged."},
+    {"key":"days-lower-bound-1","status":"passed","observationWindowUtc":["2026-10-22T23:25:14Z","2026-10-22T23:25:30Z"],"actual":"One ordinary fill1 -> visible label1day/input1/native validtrue/rangeUnderflowfalse/rangeOverflowfalse. Save remained enabled in AX (no disabled attribute); weights sum100. Clock23:25:23 Reset ->30days/originalweights. No server acceptance claim."},
+    {"key":"days-upper-bound-365","status":"passed","observationWindowUtc":["2026-10-22T23:25:30Z","2026-10-22T23:25:47Z"],"actual":"One ordinary fill365 ->label365days/input365/native validtrue/no range violation, Save isEnabledtrue. Clock23:25:39 Reset ->DOM weights35/25/20/20, days30/native validtrue/Save enabled. No submit."}
+  ],
+  "restore":"Clock23:25:47 ordinary observed В админку link. One waitForURL timed out; no second click/navigation. Fresh AX actual localhost/admin/Anonymized/protected heading/business3 before23:26:11. Human tab2 marked handoff; no agent newtabs/oldblockedbindings. No claim timeout was product bug or precise navigation timing.",
+  "effects":"Four transient unsaved React draft variants in ONE form session, exact Reset aftereach. NEVERSave/Enter/recalc/POST/configpersist/jobs/business/role/grant/booking/shift/payment/review/source/test/build/server/DB/APIprobe commands. Ordinary app auth lookups/telemetry unenumerated, not zero-total-writes. AX/DOM/nativeinputvalidity not visual/screenreader/API/model/security/financial PASS.",
+  "matrix":{"scope":"M5-04 bounded unsavedvalidation subset, not complete requirement","total":8,"passed":6,"failed":0,"blocked":2,"notRun":0,"remaining":2,"newC70Pass":4,"reusedC69Pass":2,"newFixes":0},
+  "counts":"Accepted21/316/S117of25 primary63of79/S23of70/S41of47/9logicalverifiedlivefixes unchanged; new23Octwindow4newUIvariants/0newfix/0accepted delta. M5-04partial; server-rejection/dependency2BLOCKED retained, C69originalUTC unchanged. Prior setup blockers retained as history, human recovery does not fix their unknown cause.",
+  "next":"C71 only remaining not_run knownstaff directselect-cabinet variant, independent of F013 Past reload. Finite plan beforeUI, ordinary knownstaff login, exact staff+personal options/noAdminbusiness, uncheckRemember then own personal cabinet only, no staff/Past/reload/businesschoice. RestoreSA. No duplicate already-passed role/receipt/profile/build/rating cases."
+}

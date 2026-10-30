@@ -33,6 +33,7 @@ const statusVariantMap: Record<string, BadgeVariant> = {
     failed: 'danger',
     canceled: 'danger',
     cancelled: 'danger',
+    no_show: 'danger',
     rejected: 'danger',
 };
 

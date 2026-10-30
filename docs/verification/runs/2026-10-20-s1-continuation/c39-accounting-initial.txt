@@ -1,0 +1,7 @@
+Initial post-candidate validator: valid=false
+Unpassed/misassigned child: A1-01
+Unpassed/misassigned child: A1-03
+Unpassed/misassigned child: A1-04
+Unpassed/misassigned child: A1-05
+Cause: three affected owner children were correctly marked stale, but four parent requirements still carried their prior passed status. Metadata correction demotes those parents to partial; no product bug or new fix credit. Derived report generation correctly refused this intermediate state. Original observations retained.
+Initial all-in-one patch output exceeded output budget and was rejected before application; full patch regenerated and applied. No partially applied source/data mutation or product evidence claim.

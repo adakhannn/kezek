@@ -1,0 +1,35 @@
+{
+  "id": "C03",
+  "candidateId": "dev-20261020-S1-ed0bdd7faf24",
+  "caseId": "B2-04-S13-3",
+  "status": "PASS_functional_live_only",
+  "observedUtc": "2026-10-20T08:50:56Z",
+  "role": "existing superadmin, then actual guest after ordinary logout",
+  "environment": "DEV localhost:3000 RU; CUA existing user tab2",
+  "approval": "Human explicit action-time yes to exact B and sole branch",
+  "deletion": {
+    "businessId": "85adc551-249c-4931-a445-aa6f905f1bea",
+    "name": "S1 TEST 20261020 Business Availability",
+    "slug": "s1-test-20261020-business-availability",
+    "soleBranchId": "e1eedc5a-5464-4add-989b-5accee455a99",
+    "preflight": "Actual admin detail: owner not assigned, 1 branch, 0 staff, 0 services, 0 bookings",
+    "clockImmediatelyBeforeSubmitUtc": "2026-10-20T08:48:53Z",
+    "commandCount": 1,
+    "mechanism": "Ordinary admin Delete business -> named irreversible confirmation -> Delete once",
+    "verifiedOutcome": "Returned to admin businesses; total4->3, approved3->3. B absent. A plus both original businesses remain with original visible owners/branch/staff counts.",
+    "recoverability": "Irreversible in product; deliberately not recreated",
+    "limits": "No direct DB inspection. Sole child removal inferred from business deletion workflow, not independently SQL-proven. Local RPC definition absent; ordinary UI success is not a complete cascade audit."
+  },
+  "liveChecks": [
+    "Superadmin known deleted public slug: heading Бизнес не найден, catalogue recovery link; no network-error message",
+    "Superadmin known deleted booking slug with former child id/step2: Бизнес не найден; no booking form",
+    "Ordinary logout completes to home with Войти; actual guest role",
+    "Guest catalogue3 contains A and original business1/business2; B absent",
+    "Guest exact deleted public slug: Бизнес не найден; click В каталог returns working catalogue",
+    "Guest exact deleted booking slug/former child id/step2: settled Бизнес не найден, no form/date/slot/create controls"
+  ],
+  "screenshot": "One capture of post-delete admin list failed Unable to capture screenshot. No retry unchanged; not blank-app evidence; no visual/device PASS.",
+  "sideEffects": "One authorized irreversible test-business deletion and its application cascade, ordinary logout. No booking/hold/create/cancel/pay, no other entity edits. Ordinary telemetry IDs unenumerated; not zero total DB writes.",
+  "retainedBusinessIds": ["fe2d412c-21c6-40ef-b5d3-23f49f550610", "c28c8109-bedc-4f9e-bbc2-30f4b549131e", "35e5b36c-a967-4708-ba4d-7d3fc24b89f4"],
+  "coverageLimits": "Known-deleted-slug functional acceptance only, not visual, responsive, RLS/security or complete delete-cascade verification"
+}

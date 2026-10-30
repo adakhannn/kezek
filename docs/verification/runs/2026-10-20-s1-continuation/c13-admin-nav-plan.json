@@ -1,0 +1,23 @@
+{
+  "id":"C13",
+  "stage":"S2.1",
+  "requirementId":"M1-03",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "reason":"Continue next read-only admin navigation block after M1-01/02; reuse current authorized superadmin, no auth loops or source change",
+  "matrix":[
+    ["home","/admin"],["businesses","/admin/businesses"],["business-applications","/admin/business-applications"],["role-applications","/admin/role-applications"],["business-new","/admin/businesses/new"],["categories","/admin/categories"],["users","/admin/users"],["roles","/admin/roles"],
+    ["rating-config","/admin/rating-config"],["ratings-status","/admin/ratings-status"],["promotions-debug","/admin/promotions-debug"],["analytics-overview","/admin/analytics/overview"],["analytics-system","/admin/analytics/system"],["funnel-analytics","/admin/funnel-analytics"],["monitoring","/admin/monitoring"],["performance","/admin/performance"],["system-health","/admin/system-health"],["health-check","/admin/health-check"],["ratings-debug","/admin/ratings-debug"]
+  ],
+  "caseIdRule":"S21-M103- plus matrix key. All19 finite navigation destinations remain in denominator; menu source used only discovery, actual links must be observed before clicking.",
+  "currentSubgroup":"Operational pages first: reuse home C12 original current evidence; businesses reload plus business-applications/role-applications/business-new/categories/users/roles via actual menu, each content plus full document reload. Remaining11 navigation destinations not_run pending separate preflight, monitoring explicitly blocked.",
+  "reuse":"C12 home admin full reload and actual nav current candidate/current superadmin source identical; retain original observation evidence, not a new repeat PASS. Businesses initial navigation C12 supporting evidence but reload still required.",
+  "expected":"Actual selected page and meaningful list/empty/form/error state after navigation and reload, retained admin shell; no unexpected global error, denial, login loop or broken route. Forms only viewed: no submit/save/approve/reject/permission/delete. A visible list-read error remains FAIL, not empty PASS.",
+  "preflight":"Observe actual menu inventory then visit only declared safe operational links. Check mount behavior before other groups; debug/job/mutation or secret-exposing controls are not run. Future unavailable cases remain blocked/not_run, never removed for percentage.",
+  "blocked":{"monitoring":"Source MonitoringClient automatically fetches /admin/api/metrics plus stats/auth-flow. Prior denied metrics boundary prohibits replay or UI workaround: do not open this page."},
+  "limits":"DEV functional navigation only; not M1-04 deployed production, API/RLS, no-flash/visual, every data model count, forms validation or CRUD. AX is not screenshot/accessibility reader PASS. C12 staff-count observation retained pendingS3.3, not masked as correctness.",
+  "stop":"Unexpected mutations or sensitive values -> stop; missing route/error -> retain actual failure, no source-only fix. Capture not attempted. One bounded UI diagnostic, no repeatedclick/HTTP/CDP/native/newtab workaround.",
+  "budgetMinutes":25,
+  "handoff":"Retain superadmin usertab5 and actual last read-only page, no new entities/settings or business/grants commands. Ordinary telemetry unenumerated, no zero DB writes claim.",
+  "report":"After subgroup: M1-03 cases PASS/19,FAIL,BLOCKED,not_run; whole S2 remains2/70 unless full requirement accepted; S119/25/68of79 unchanged.",
+  "deadlineUtc":"2026-10-20T13:00:00Z"
+}

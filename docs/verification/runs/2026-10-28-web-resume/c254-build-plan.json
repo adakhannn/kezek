@@ -1,0 +1,35 @@
+{
+  "id": "C254",
+  "status": "FINITE_NEW_CANDIDATE_OFFLINE_BUILD_PLAN_BEFORE_COMPILER",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "sourceFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+  "fileCount": 1687,
+  "reason": "C251actualF022UIbeforeFAIL ->minimalC252copyfix+39targetedPASS/currenttscexit0/fullfailedgatesretained. OldC206/C207exactothercandidate STALE; newsourceconditiononlyonecoldbuild, notunchangedretry. C253serviceentryBLOCKEDbeforeinput/notfixedLIVEclaim.",
+  "destination": "test-results/closure-web-20261028-c254-60022ce29b32/build",
+  "rawLog": "docs/verification/runs/2026-10-28-web-resume/c254-build-raw.txt",
+  "scripts": [
+    {
+      "path": "scripts/closure-web-isolated-build-c254-20261028.mjs",
+      "sha256": "346831641185d5143ee3abb46fb4d3d132e34fdc7c92225df533eb54732b11af"
+    },
+    {
+      "path": "scripts/closure-web-offline-guard-c254-20261028.cjs",
+      "sha256": "8723f9d6fe6835ff831ae03bedf914093d0705e0fef4613743226ea21f9d4707"
+    },
+    {
+      "path": "scripts/closure-web-offline-guard-c254-20261028.test.cjs",
+      "sha256": "5849eb1057e4e284b0f72700ef4c537948fd86272427f87af3be352022519f63"
+    }
+  ],
+  "cloneReview": "ExactC206harness/guard/test onlyC254/C255/candidate/date/runpath replacements; no compilerflag/network/securityrule changes.",
+  "watchdogSeconds": 240,
+  "compiler": "InstallednormalNext16defaultTurbopack/types/prerender; exact1687sourcecopy/no.env/norealkeys/dummy.invalidenv/localfonts. NodeTCP/fetchdenial exceptexactownedPostCSSloopbackIPC/notOSfirewall.",
+  "steps": [
+    "Verifyharnesssyntax/16existingguardassertions, exactcandidatehash anddest/logabsence; inspectmain3000/3107listenerprocessonly. No mainrestart.",
+    "ONEharnesslaunch+recordPID/raw/exit/watchdog. OnunchangedFAILstop/noloop.",
+    "Ifbuild0, separatefiniteC255ownedcompiledruntime/privacyentry/ONEreload/adminreturn/noassetbundle/visual/cacheclaim. Thisindependentpublicdocumentcasemustnotretryserviceeditor/C241forbiddenprovider; C253remainsBLOCKED.",
+    "StopONLYownedcompiler/runtime exactPIDtree, preserveartifacts/mainserver/tab; humanstopPAUSEDexistingkezek/readback/newfinal."
+  ],
+  "technical": "Current541suites535PASS6FAIL/2589tests2578PASS11FAIL same11asC204/fullLint52errors167warnings samediagnostics; currenttscactualcommandexit0/targeted39PASS. No fullgreen.",
+  "effects": "Ownedisolatedcopy/dependencyjunctions/compiler/generatedcache/rawlogonly. No DEVDB/fixture/role/booking/payment/message/sourceproducteditsfrombuild."
+}

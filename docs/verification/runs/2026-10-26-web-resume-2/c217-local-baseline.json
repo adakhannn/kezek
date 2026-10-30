@@ -1,0 +1,20 @@
+{
+  "id": "C217-baseline",
+  "afterClockUtc": "2026-10-26T10:56:28Z",
+  "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+  "actual": {
+    "nameRu": "LIVE TEST Service 31 Рус",
+    "nameKy": "LIVE TEST Service 31 Кыргыз",
+    "nameEn": "LIVE TEST Service 31 Еng",
+    "duration": 1,
+    "priceFromVisibleBlankMeansZero": true,
+    "priceTo": 300,
+    "branch1": true,
+    "branch2": false,
+    "active": true,
+    "staffAdahanAssigned": false
+  },
+  "list": "Exact99group1min/0-300/active/onlybranch1. Other60minEnggroup2branches andhiddene215notinteracted.",
+  "pendingLocalDraft": false,
+  "noPersistentEffectIntended": true
+}

@@ -1,0 +1,32 @@
+{
+  "id": "C121",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "files": 1685,
+  "reason": "F016 C120one-lineCategoryForm runtimechange plus focusedtest after C110/C11188d5build. New510fcandidate genuinelyneeds fresh build; heartbeat/calendar alone not reason. Original C110/C111/C92/C93/failures/UTC immutable.",
+  "harness": "scripts/closure-web-isolated-build-c121-20261025.mjs",
+  "guard": "scripts/closure-web-offline-guard-c121-20261025.cjs",
+  "guardTest": "scripts/closure-web-offline-guard-c121-20261025.test.cjs",
+  "destination": "test-results/closure-web-20261025-c121-510f3832db4d/build",
+  "rawLog": "c121-build-raw.txt",
+  "preflight": "Readactualprogress/C110finished09:03:21exit0/PID30748 and C111runtimeharness stop history. Fresh10:10:31read-only shows main127.0.0.1:3000PID23304/no3107listener/no C110/C121ownedNode process; mainuntouched. C121harness/guard/test mechanicalcandidate/path/tokenchange only from C110, reviewedexactPostCSSpolicy.16finiteofflinepolicytestsPASS, notproductPASS. Exactdestination/rawlog absence checked againbyemitter andharness before launch.",
+  "timebox": {
+    "compilerSeconds": 240,
+    "preparationAndClassificationMinutes": 12,
+    "oneCompilerAttempt": true
+  },
+  "expected": "One fresh exact1685file defaultNext16.0.11Turbopack productionbuild exit0/types/prerenders. No compiler-switch/mock/type-skip/check-disable. Copyrejects .env/symlinks/generatedcache; exactsource/copycount/fingerprint; existingdependencyjunctions/noinstall. Systemenvallowlist/dummy.invalidSupabase/emptyrealkeys/Sentrytelemetryoff. NodeTCP/fetchdeniedexcept exactgeneratedC121PostCSSworker+loopbackargvport/main3000excluded; notOSfirewall/native-network confinementclaim. No renewedFonts/GitHub/networkpermission.",
+  "steps": [
+    "Save finiteplan/harnesshashes beforecompiler; actualclock/source and no existingraw/dest/ownedattempt.16policytests alreadyPASS, no externalrequests.",
+    "One harnesslaunch; preserveappend-onlyrawlog/actualUTC/PID/exit/watchdog240. No oldcompilerretry/mainrestart/fullOAuthlogs. Humanstop stops onlyexactownedcompiler, PAUSEDexistingkezek/readback/new25Octfinal.",
+    "FAIL/timeout kept/no unchangedrerun/speculativesecurity/configfix. Exit0technicalBUILDonly/0newUI/fix/accepted; separatefinitecompiledruntime/CUAplanafterward beforeA3-01promotion. No C93assetbundle/screenshot/cache/manualdate/auth/F013/profileSave repetition."
+  ],
+  "effects": "Owned isolatedcopy/junctions/compiler/cache/rawlog only; retainall/no cleanup. No .env/downloads/DEVAPI/DB/newfixture/roles/payment/booking/productsource/securitymutation. Ordinarymainappauth/telemetryunenumerated/notzeroTOTALwrites.",
+  "accounting": "20/316296left/S116primary62,S23/70,S41/47.25Oct4newUI/1fix/logical12 remain. No acceptancefromcompiler alone; oldfulltechnicalfailures remain/NOT_READY.",
+  "savedBeforeBuildUtc": "2026-10-25T10:11:10Z",
+  "harnessHashes": {
+    "scripts/closure-web-isolated-build-c121-20261025.mjs": "58a76472f589a8543c50dccb1115ef91e70147f6c926d4b4e8180fc09c2064f2",
+    "scripts/closure-web-offline-guard-c121-20261025.cjs": "4799c03d469f052a32038bc48189d6208ae323d9c7b8fd5cb124d00299afb092",
+    "scripts/closure-web-offline-guard-c121-20261025.test.cjs": "d862c770d2d1b4e7af7ca463ca4ca9340d50d234f8fb2c4324709c502b99a24d"
+  }
+}

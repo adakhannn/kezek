@@ -25,11 +25,12 @@ export type QuickDeskClientPayloadResult =
 
 type TranslateFn = (key: string, fallback: string) => string;
 
-async function searchUsersApi(q: string): Promise<FoundUser[]> {
+async function searchUsersApi(q: string, signal: AbortSignal): Promise<FoundUser[]> {
     const res = await fetch('/api/users/search', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ q }),
+        signal,
     });
     const j = await res.json();
     if (!j.ok) throw new Error(j.error || 'SEARCH_FAILED');
@@ -46,42 +47,52 @@ export function useQuickDeskClient() {
     const [newClientName, setNewClientName] = useState('');
     const [newClientPhone, setNewClientPhone] = useState('');
 
-    const searchUsers = useCallback(async (q: string) => {
-        setSearchLoading(true);
+    const updateSearchQ = useCallback((value: string) => {
+        setSearchQ(value);
+        setSelectedClientId('');
+        setFoundUsers([]);
         setSearchErr(null);
-        try {
-            const items = await searchUsersApi(q);
-            setFoundUsers(items);
-        } catch (e: unknown) {
-            setSearchErr(e instanceof Error ? e.message : String(e));
+        setSearchLoading(clientMode === 'existing' && !!value.trim());
+    }, [clientMode]);
+
+    const updateClientMode = useCallback((mode: QuickDeskClientMode) => {
+        setClientMode(mode);
+        if (mode !== 'new') {
+            setNewClientName('');
+            setNewClientPhone('');
+        }
+        if (mode !== 'existing') {
+            setSearchQ('');
             setFoundUsers([]);
-        } finally {
+            setSelectedClientId('');
+            setSearchErr(null);
             setSearchLoading(false);
         }
     }, []);
 
     useEffect(() => {
         if (!searchQ.trim() || clientMode !== 'existing') {
-            setFoundUsers([]);
             return;
         }
+        let active = true;
+        const controller = new AbortController();
         const timer = setTimeout(() => {
-            searchUsers(searchQ);
+            void searchUsersApi(searchQ, controller.signal).then(items => {
+                if (active) setFoundUsers(items);
+            }).catch((error: unknown) => {
+                if (!active) return;
+                setSearchErr(error instanceof Error ? error.message : String(error));
+                setFoundUsers([]);
+            }).finally(() => {
+                if (active) setSearchLoading(false);
+            });
         }, 500);
-        return () => clearTimeout(timer);
-    }, [searchQ, clientMode, searchUsers]);
-
-    useEffect(() => {
-        if (clientMode !== 'new') {
-            setNewClientName('');
-            setNewClientPhone('');
-        }
-        if (clientMode !== 'existing') {
-            setSearchQ('');
-            setFoundUsers([]);
-            setSelectedClientId('');
-        }
-    }, [clientMode]);
+        return () => {
+            active = false;
+            clearTimeout(timer);
+            controller.abort();
+        };
+    }, [searchQ, clientMode]);
 
     const getClientPayload = useCallback(
         (t: TranslateFn): QuickDeskClientPayloadResult => {
@@ -89,7 +100,7 @@ export function useQuickDeskClient() {
                 return { ok: true, payload: { clientId: null, clientName: null, clientPhone: null } };
             }
             if (clientMode === 'existing') {
-                if (!selectedClientId) {
+                if (searchLoading || !foundUsers.some(user => user.id === selectedClientId)) {
                     return {
                         ok: false,
                         error: t('bookings.desk.errors.selectClient', 'Выбери клиента из поиска'),
@@ -123,12 +134,12 @@ export function useQuickDeskClient() {
                 payload: { clientId: null, clientName: name, clientPhone: phone },
             };
         },
-        [clientMode, selectedClientId, newClientName, newClientPhone],
+        [clientMode, selectedClientId, foundUsers, searchLoading, newClientName, newClientPhone],
     );
 
     const canSubmitClient =
         clientMode === 'none' ||
-        (clientMode === 'existing' && !!selectedClientId) ||
+        (clientMode === 'existing' && !searchLoading && foundUsers.some(user => user.id === selectedClientId)) ||
         (clientMode === 'new' && !!newClientName.trim() && !!newClientPhone.trim());
 
     const reset = useCallback(() => {
@@ -138,13 +149,15 @@ export function useQuickDeskClient() {
         setFoundUsers([]);
         setNewClientName('');
         setNewClientPhone('');
+        setSearchLoading(false);
+        setSearchErr(null);
     }, []);
 
     return {
         clientMode,
-        setClientMode,
+        setClientMode: updateClientMode,
         searchQ,
-        setSearchQ,
+        setSearchQ: updateSearchQ,
         foundUsers,
         selectedClientId,
         setSelectedClientId,

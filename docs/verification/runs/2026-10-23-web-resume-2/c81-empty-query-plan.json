@@ -1,0 +1,38 @@
+{
+  "id": "C81",
+  "requirementIds": [
+    "B3-04"
+  ],
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "timeboxMinutesIncludingRestore": 6,
+  "reason": "C80 original-requirement review identifies missing empty-query persistence. G024/G027 proved empty/reset but not empty reload/history; June primary is absent. C79 populated-query four PASS are not repeated.",
+  "query": "C81-NO-MATCH-23OCT",
+  "cases": [
+    {
+      "key": "empty-query-reload",
+      "caseId": "S23-B304-empty-query-reload",
+      "expected": "Committed q=C81-NO-MATCH-23OCT, exact input and genuine no-results state survive ordinary reload; no catalogue-unavailable error or unfiltered business cards."
+    },
+    {
+      "key": "empty-query-history",
+      "caseId": "S23-B304-empty-query-history",
+      "expected": "From that no-results URL click observed public Privacy link; Back restores q/input/no-results, Forward same Privacy page, Back same no-results. ONE history variant, not per-click PASS."
+    }
+  ],
+  "steps": [
+    "Fresh same human Tab2 known SA/admin; clock visible brand ->root. Fill observed search input with unique nonsensitive test marker; await committed URL and real no-results UI. If not empty or real error, stop/classify, do not alter query to force expected result.",
+    "Clock ordinary reload; verify URL/decoded field/no-results and absence of catalogue error or unfiltered cards.",
+    "Clock observed public Privacy footer link ->actual Privacy page. Clock Back/Forward/Back with fresh UI observations and exact query/field/empty state checks.",
+    "Clock visible Reset ->clean root/empty field; clock observed Admin menu and Admin-panel item ->original SA/admin, verify protected heading/Anonymized/Business3 and markHandoff. Cleanup/setup not new PASS."
+  ],
+  "stop": "Any natural error or interrupted navigation: one fresh observation, no repeated click/reload/auth loop, forced DOM events, replacement tab/browser, raw HTTP or forbidden providers/routes. No booking/map/location/auth/profile Save/notification/config/business selection/role/grant/new fixtures.",
+  "effects": "Read-only public URL navigation/reload/history plus same authorized header return; no product/DB/business commands. Ordinary analytics/telemetry unenumerated, not zeroTOTALwrites. No screenshot retry or visual/device/screenreader/no-flash/API-security claims.",
+  "accounting": "At best B3-04 6 PASS +2 pagination BLOCKED /8, not accepted. New window at best 8 UI variants (prior current-window6+2), 0 fixes or accepted delta.",
+  "savedBeforeUiUtc": "2026-10-23T01:04:04Z",
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/lib/publicBusinessSearchFilter.ts": "a298916c644ef93fb5c81c4d1eb970b48465566e6a7e9469cda047710d922f61",
+    "apps/web/src/app/layout.tsx": "e90e3606f09bbf02315130df0f0ce4be109d05fbd47ee88c472d8fd2b892bc2f"
+  }
+}

@@ -1,9 +1,11 @@
 # Project Improvement Plan
 
-**Status:** active roadmap  
+**Status:** historical architecture roadmap; retained for wave context
 **Created:** 2026-03-21  
 **Last normalized:** 2026-03-30  
 **Purpose:** long-term technical improvement roadmap for the `main` branch.
+
+Current operational priority as of2026-10-14: [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md) and [WEB_GLOBAL_READINESS_STATE.json](./WEB_GLOBAL_READINESS_STATE.json). Completed phases and green-test statements below describe the March wave, not current release readiness. The October saved full Jest/lint baseline is not green; use the current verification plan for next work.
 
 ## How To Read This File
 

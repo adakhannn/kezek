@@ -1,0 +1,8 @@
+{
+  "plannedUtc": "2026-10-18T12:09:48Z",
+  "reason": "Exact-source Turbopack cold build failed fetching eleven Google font binaries; no external font permission/network expansion",
+  "isolation": "New exact closure-s1-20261018-f002-functional directory, same1659 source files/fingerprint0cc81561; installed Next webpack compiler and Next built-in font test response hook supplies local Arial CSS only",
+  "limits": "Functional waiting-state and error/settled DOM test only. This instrumented build is NOT default compiler/real font/build/assets gate PASS; original failed build and old successful build evidence retained",
+  "network": "No Google requests or new destinations permitted. Existing public DEV GET policy unchanged; service-role/auth/write methods remain denied",
+  "stop": "Owned child automatic180s build timeout; browser server480s and public-read expiry12:25UTC; human deadline12:40UTC"
+}

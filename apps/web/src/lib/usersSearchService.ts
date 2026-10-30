@@ -17,6 +17,12 @@ export async function runUsersSearch({ supabase, bizId, input }: UsersSearchCont
     const pageNum = Math.max(1, Math.min(100, input.page));
     const perPageNum = Math.max(1, Math.min(100, input.perPage));
 
+    // A missing search term must never become a platform account directory.
+    // Keep this guard below HTTP validation too, for direct service consumers.
+    if (!query) {
+        return { items: [], page: pageNum, perPage: perPageNum };
+    }
+
     const admin = getServiceClient();
     const { data, error } = await admin.auth.admin.listUsers({
         page: pageNum,
@@ -28,11 +34,19 @@ export async function runUsersSearch({ supabase, bizId, input }: UsersSearchCont
     }
 
     const users = data.users ?? [];
-    const { data: existingStaff } = await supabase
-        .from('staff')
-        .select('user_id')
-        .eq('biz_id', bizId)
-        .not('user_id', 'is', null);
+    const userIds = users.map(user => user.id);
+    const [staffResult, profileResult] = await Promise.all([
+        supabase.from('staff').select('user_id').eq('biz_id', bizId).not('user_id', 'is', null),
+        userIds.length
+            ? admin.from('profiles').select('id,full_name').in('id', userIds)
+            : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (profileResult.error) throw new Error('Client profile names unavailable');
+    const existingStaff = staffResult.data;
+    // Match only the already authorized Auth page; do not expose additional profile
+    // fields or use display names/provider metadata to make authorization decisions.
+    const profileNames = new Map<string, string>((profileResult.data ?? []).map(profile =>
+        [profile.id, typeof profile.full_name === 'string' ? profile.full_name.trim() : '']));
 
     const existingStaffUserIds = new Set(
         (existingStaff ?? [])
@@ -48,10 +62,13 @@ export async function runUsersSearch({ supabase, bizId, input }: UsersSearchCont
                 email: user.email ?? null,
                 phone: user.phone ?? null,
                 full_name:
-                    (typeof meta.full_name === 'string' ? meta.full_name : undefined) ??
-                    (typeof meta.fullName === 'string' ? meta.fullName : undefined) ??
-                    user.email ??
-                    'Без имени',
+                    profileNames.get(user.id) ||
+                    (
+                        (typeof meta.full_name === 'string' ? meta.full_name : undefined) ??
+                        (typeof meta.fullName === 'string' ? meta.fullName : undefined) ??
+                        user.email ??
+                        'Без имени'
+                    ),
             };
         })
         .filter(user => !existingStaffUserIds.has(user.id));

@@ -1,5 +1,10 @@
 import { runWhatsAppSendOtpRoute } from '@/lib/whatsAppSendOtpRouteService';
 
+jest.mock('@/lib/env', () => ({
+    getWhatsAppAuthTemplateName: () => 'test_auth_template',
+    getWhatsAppAuthTemplateLanguage: () => 'ru',
+}));
+
 jest.mock('@/lib/senders/sms', () => ({
     normalizePhoneToE164: jest.fn(),
 }));
@@ -38,6 +43,9 @@ describe('whatsAppSendOtpRouteService', () => {
             phone: '+996555123456',
             normalizePhone: normalizePhoneToE164,
             sendMessage: sendWhatsApp,
+            authTemplateName: 'test_auth_template',
+            authTemplateLanguage: 'ru',
+            requireTemplate: true,
         });
         expect(result).toEqual({
             ok: true,

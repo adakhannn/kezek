@@ -41,6 +41,7 @@ export default async function BookingsPage() {
         .select(`
       id, status, start_at, end_at, promotion_applied, subscription_applied,
       service_id, staff_id, branch_id, biz_id,
+      booking_services (duration_min, service:services (id, name_ru, name_ky, name_en, duration_min)),
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),
       branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
@@ -48,16 +49,17 @@ export default async function BookingsPage() {
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
-        .neq('status', 'cancelled')
+        .in('status', ['hold', 'confirmed'])
         .gte('end_at', nowISO)
         .order('start_at', { ascending: true });
 
-    // Прошедшие брони - записи, которые уже закончились (end_at < now)
+    // Terminal visits belong in own history even before their scheduled end.
     const { data: past } = await supabase
         .from('bookings')
         .select(`
       id, status, start_at, end_at, promotion_applied, subscription_applied,
       service_id, staff_id, branch_id, biz_id,
+      booking_services (duration_min, service:services (id, name_ru, name_ky, name_en, duration_min)),
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),
       branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
@@ -65,7 +67,7 @@ export default async function BookingsPage() {
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
-        .lt('end_at', nowISO)
+        .or(`end_at.lt.${nowISO},status.in.(paid,cancelled,no_show)`)
         .order('start_at', { ascending: false });
 
     return (

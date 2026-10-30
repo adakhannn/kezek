@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -29,8 +29,21 @@ export function BusinessSwitcher({ serverCurrentBizId }: { serverCurrentBizId?: 
     const router = useRouter();
     const [state, setState] = useState<State>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
+    const triggerRef = useRef<HTMLButtonElement>(null);
     const [switchingBusiness, setSwitchingBusiness] = useState<Business | null>(null);
     const [switchError, setSwitchError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault();
+            setIsOpen(false);
+            triggerRef.current?.focus();
+        };
+        document.addEventListener('keydown', closeOnEscape);
+        return () => document.removeEventListener('keydown', closeOnEscape);
+    }, [isOpen]);
 
     useEffect(() => {
         let cancelled = false;
@@ -161,6 +174,7 @@ export function BusinessSwitcher({ serverCurrentBizId }: { serverCurrentBizId?: 
         <>
             <div className="mt-3">
                 <button
+                    ref={triggerRef}
                     type="button"
                     disabled={Boolean(switchingBusiness)}
                     onClick={() => setIsOpen((previous) => !previous)}

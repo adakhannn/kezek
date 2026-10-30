@@ -29,6 +29,7 @@ export type BookingItem = {
     staff?: { full_name: string }[];
     servicesSummary?: string;
     client_name?: string | null;
+    client_id?: string | null;
     client_phone?: string | null;
 };
 

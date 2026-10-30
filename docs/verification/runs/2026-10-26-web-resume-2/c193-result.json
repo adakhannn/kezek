@@ -1,0 +1,57 @@
+{
+  "id": "C193",
+  "status": "PASS_ACTIVE_BOTH_COORDINATES_MISSING_PUBLIC_MAP_EXCLUSION",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "observationWindowUtc": [
+    "2026-10-26T08:33:25Z",
+    "2026-10-26T08:38:18Z"
+  ],
+  "plan": "c193-map-missing-coordinates-plan.json",
+  "caseId": "S26-B405-active-both-coordinates-null-exclusion",
+  "steps": [
+    {
+      "scope": "eligibility",
+      "actual": "FreshfixtureA protectedadmindetail approvedBarber/2branches0staffservicesbookings/ownerunassigned/limit2. Branchlist fa5inactive and057active. Active057editor exactname, coordinates—/—, blankaddress/fourdirectorylinks/fourcontacts, inherittrue/activetrue/7closed days, SaveDisabled/Nochanges. No input or Save."
+    },
+    {
+      "scope": "public positive eligibility",
+      "completedBeforeClockUtc": "2026-10-26T08:34:26Z",
+      "actual": "Public businessA correcth1/verified/onlinebookingavailable/1activebranch, exactACTIVE057heading, inactivebranchabsent. No Bookactivation."
+    },
+    {
+      "scope": "map assertion",
+      "actionAfterClockUtc": "2026-10-26T08:34:26Z",
+      "actual": "Observedfooter Картафилиалов ->settled /map. Allcategories, full Доступныефилиалы list exactlybusiness2branch1(fe1d) andbranch2(23a0) with theirnamedcards/addresses/branchspecificBookhrefs. No A/businessname/ACTIVE057entry. Positivecontrols remain; absence not inferred from countalone. No selection/Book/geo/provider/nearest interaction."
+    },
+    {
+      "scope": "restoration",
+      "completedBeforeClockUtc": "2026-10-26T08:38:18Z",
+      "actual": "ObservedAdminmenu ->protectedadmin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1, markHandoff."
+    }
+  ],
+  "incidentalObservation": "Adminbranch map loader unavailable message was present oneditor. This is a different surface and pre-existing limitation; not publicprovidererror PASS/newdefect/fix. No Retryclicked.",
+  "dependencyHashes": {
+    "apps/web/src/app/map/page.tsx": "0ab9da2291bfd94ad0750ce7e43785547cb0e70b1822317826d8f562186991a5",
+    "apps/web/src/app/map/MapPageClient.tsx": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+    "apps/web/src/app/api/branches/map/route.ts": "8e37853d835e95ff07adda6fd441adbfe58368b3aea4cdd20a38dfe39dd8c938",
+    "apps/web/src/lib/branchesMapHttpService.ts": "bf441dc2e9d722ddc859f7534cffba03cc885179a2d6121202591684981da8e8",
+    "apps/web/src/lib/branchesMapService.ts": "a6bc3d4410f334e86c7c312917233f44673a754bec33da21636171a0b96bf43e",
+    "apps/web/src/lib/branches/buildApprovedBusinessesQuery.ts": "1c75ae4b07d1f67f28fd55ddfda068f53bfeb6f209f9f1dcdb1de6f7af0d8a69",
+    "apps/web/src/lib/publicCategoryLabels.ts": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f",
+    "apps/web/src/lib/yamaps.ts": "407b15f2aabf256c568ff4aec039b79ea43ae0a0037e5a2c3ff4682bdb3c9d57",
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/b/[slug]/page.tsx": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6",
+    "apps/web/src/app/b/[slug]/BusinessInfo.tsx": "d3a8e198cfb7e90c276387c5bfb049d540896715dc6eddb8de3a5d8cd0faa906"
+  },
+  "credit": {
+    "newUi": 1,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292,
+    "newWindowUi": 3
+  },
+  "effects": "Read-only UI navigation. No input/Save/dataupdate/booking/hold/confirm/cancel/payment/role/entity/permission/providerkey/env/source/test/build/DB/API/SDK/storage or externalcontact action. Ambient apptelemetry/auth unenumerated.",
+  "limits": "One both-null active eligiblecontrol functionalassertion, not marker visualproof or wholeB4-05. Missingonlylat/onlylon/providerfailure variants remainunproved."
+}

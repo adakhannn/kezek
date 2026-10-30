@@ -1,0 +1,148 @@
+{
+  "id": "WEB_RESUME2_FINAL_20261026_133050",
+  "status": "PAUSED_BY_USER_NOT_READY",
+  "scope": "WEB only/local DEV; logical close of this resumed window, no continuity across pauses/gaps claim.",
+  "windowOpenedUtc": "2026-10-26T07:18:35Z",
+  "humanStopFirstClockUtc": "2026-10-26T13:30:50Z",
+  "recordedAfterUtc": "2026-10-26T13:38:29Z",
+  "pauseEvidence": {
+    "path": "docs/verification/runs/2026-10-26-web-resume-2/pause-20261026-133050.json",
+    "sha256": "1439c4b4c44d329e27fe2c0f93f95f758b2b6614417ee7faeae8bd755b3a1acb"
+  },
+  "candidate": {
+    "id": "dev-20261026-WEB-5387d70d6af1",
+    "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+    "fileCount": 1687
+  },
+  "acceptance": {
+    "acceptedBeforeWindow": 23,
+    "acceptedAtStop": 27,
+    "remaining": 289,
+    "total": 316,
+    "newlyAcceptedThisWindow": 4,
+    "requirements": [
+      "D1-01",
+      "F2-02",
+      "F2-04",
+      "D1-04"
+    ],
+    "S1": {
+      "accepted": 17,
+      "total": 25,
+      "primaryPassed": 63,
+      "primaryTotal": 79
+    },
+    "S2": {
+      "accepted": 5,
+      "total": 70
+    },
+    "S4": {
+      "accepted": 3,
+      "total": 47
+    },
+    "S6": {
+      "accepted": 2,
+      "total": 29
+    },
+    "releaseReady": false,
+    "decision": "NOT_READY"
+  },
+  "executionCredit": {
+    "newFunctionalUiPassThisWindow": 19,
+    "newVerifiedLiveFixesThisWindow": 1,
+    "fixIds": [
+      "F021"
+    ],
+    "verifiedFixesLogicalRun": 17,
+    "inheritedLogicalFixes": 16,
+    "historicalFunctionalRefreshEvents": 1,
+    "buildRefreshEvents": 1,
+    "distinctBuildCasesRefreshed": 1,
+    "existingCertifiedCasesAssociatedInC236": 3,
+    "associationAddsNewUiOrDistinctReuseCredit": false,
+    "priorArchivedWindowNotAdded": {
+      "newUiPass": 23,
+      "newVerifiedFixes": 4,
+      "newAcceptedRequirements": 2,
+      "notAddedToThisWindow": true
+    }
+  },
+  "verifiedFix": {
+    "id": "F021",
+    "problem": "OwnSA UserBasic Name Save failed missing user id because Next16 supplied promised route params.",
+    "change": "Minimal await ctx.params; no permission/contact/credential/security changes.",
+    "verification": "C203 actualbeforeFAIL ->C204 targeted5FAIL2PASS to7PASS/types0 ->C205 SAME-LIVE nameSave/reentry/reload/originalАдаханОсоровrestored. Effects01/02/03 append-only pendingfalse."
+  },
+  "technicalGates": {
+    "supportingTypecheckReceipt": "C204 exit0 retained; Q1-01 exactargv/cwd/config provenance BLOCKED, notnewtscFAIL",
+    "targetedF021": "7PASS",
+    "fullTests": {
+      "suites": 541,
+      "passedSuites": 535,
+      "failedSuites": 6,
+      "tests": 2565,
+      "passedTests": 2554,
+      "failedTests": 11,
+      "scope": "Samefailedidentitiesretained/no wholeGREEN"
+    },
+    "fullLint": {
+      "errors": 52,
+      "warnings": 167,
+      "status": "FAIL"
+    },
+    "currentBuild": "C206 exact1687colddefaultNext16Turbopack exit0/44s/types36prerenders plusC207actualcompiledprivacy/reload/adminrestorePASS; ownedruntime intentionallystopped, no unchangedrebuild"
+  },
+  "lastCompletedSubpackage": "C236",
+  "latestAcceptance": "D1-04 finiteinactive service/branch/business matrix accepted fromexistingcurrentcertifiedrealUIcases afterexactdependencies+primaryreview; original20OctUTC/beforeFAIL preserved/no UIreplay.",
+  "remainingBlockers": [
+    "F013 staffhistoryreload auth cause unresolved; no unchangedauth/reloadloop.",
+    "F005 pending actualLIVEverification; oldlogoutinjection nonworking.",
+    "C189 publiccatalogue/M1 intermittent fetchfailure causeunknown; recovery notfixproof.",
+    "C221 calendar knownpositive absent; no unchangedretry.",
+    "C233 compoundhours testcase incomplete: emptyintervalrejectobserved; reversedtimeinput componentcommitunconfirmed/no secondSave, sevenclosedrestored.",
+    "C235 ownerhourlypartition positiveaggregate absent/uncomputednotice/all24rows—; no filteractivation/no zero-dataPASS/cron-recalc.",
+    "C223 Q1-01 executedtsccommand provenance insufficient; supportingexit0 retained/no rerun.",
+    "E3-04 secondindependentpureclientfixture unavailable; expired/depletedpackagefixtures unverified/no create/consume/purchase.",
+    "C77 validProfileSave unknownhiddennotify_sms remainsBLOCKED; no unmask/validSave loop.",
+    "Other role/multirole/fixture/security/API/cache/visual/production/technical gates remain; denominators and oldfailures retained."
+  ],
+  "safety": {
+    "pendingFixtureEffects": false,
+    "restoreFacts": "C196 ownnewserviceassociation removed;C205 originalownAuthname restored;C211 Business2 preference restored;C214/C224 notificationdraftsReset;C217/C222 serviceinvaliddraftsdiscarded;C230quota2/2 restored;C233 originalinactiveA7closed restored;C235 reportAll30 untouched; frozenC179/C183 pendingfalse.",
+    "mainServerLeftForUser": "127.0.0.1:3000 PID19968 retained for user/no continuing test process",
+    "noActiveTemporaryCompilerRuntimeNetworkLease": true,
+    "browserPreserved": true,
+    "noNewProductUiDbTestBuildServerActionAfterStop": true,
+    "ordinaryAuthTelemetryNormalizationWritesUnenumerated": true,
+    "zeroTotalWritesClaim": false,
+    "unknownActorDirtyChangesPreserved": true,
+    "gitStageCommitPushDeployResetPerformed": false
+  },
+  "historyIntegrity": {
+    "priorFinalPath": "docs/verification/runs/2026-10-26-web-resume/final-report.json",
+    "priorFinalSHA256": "43e73d1c1b4b6fe22e44dda03608262c3799492be749667647f3c1cc1eb0b127",
+    "priorFinalStillMatches": true,
+    "frozenC179C183StillMatch": true,
+    "observationGap": "C236 records clock gap12:59:50->13:24:25/no exactactivities or continuityclaim; administrativeclosure not a producttest."
+  },
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configSHA256": "6a45487971cbbb620ee61b6758a1a898e57c29e9ff152ba614684cc62a5a9dbe",
+    "readbackVerifiedBeforeClockUtc": "2026-10-26T13:36:00Z",
+    "previousExactConfiguration": "automation-before-pause-20261026-133050.toml",
+    "previousSHA256": "db4f1c4c1519c282275ee1a97bbd007e73b7923518c3e50fcbe90344da510542",
+    "noDuplicate": true
+  },
+  "next": {
+    "id": "C237",
+    "status": "SAVED_ONLY_NOT_STARTED",
+    "review": "C237boundedreadonlybusiness-slug-invalid-collision history/guards/payload/effects beforefiniteUI",
+    "executionAuthorized": false,
+    "resumeRequires": "Newdirecthumanrequest plusfreshclock/usage/currentprogress/source/UI and allpriorconstraints."
+  }
+}

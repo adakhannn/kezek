@@ -1,0 +1,9 @@
+(node:28548) ESLintIgnoreWarning: The ".eslintignore" file is no longer supported. Switch to using the "ignores" property in "eslint.config.js": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+C:\projects\kezek\apps\web\src\__tests__\components\ExistingSessionRedirectSignals.test.tsx
+  0:0  warning  File ignored because of a matching ignore pattern. Use "--no-ignore" to disable file ignore settings or use "--no-warn-ignored" to suppress this warning
+
+✖ 1 problem (0 errors, 1 warning)
+exit_code: 0
+Scope correction required: initial test file ignored; not treated as lint PASS for that file.

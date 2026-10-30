@@ -1,0 +1,28 @@
+{
+  "id": "C134",
+  "caseId": "S26-M103-today-cancelled-summary",
+  "status": "FAIL_BEFORE",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "plan": "c134-today-scope-plan.json",
+  "observationWindowUtc": [
+    "2026-10-25T20:06:09Z",
+    "2026-10-25T20:06:37Z"
+  ],
+  "expected": "For the current loaded Today table with exactly one cancelled row, summary Cancelled must be1 and row label Отменено; Hold0/Confirmed0. No Today-query warning or auth barrier; unrelated Business-count warning retained separately.",
+  "actual": "After saved C134 scope refinement, fresh DOM-backed current table read at actual2026-10-26 shows exactly one09:00–10:00 cancelled row at business2/branch1; independent count1. Current Отменено chip parent text is0 and row label raw cancelled. C133 initial unrelated Business-count warning guard STOP is preserved; no repeat reload/navigation/auth/booking action. Separate old intermittent M1-home failure remains open.",
+  "independentExpectedCounts": {
+    "cancelled": 1,
+    "hold": 0,
+    "confirmed": 0
+  },
+  "observedChip": {
+    "label": "Отменено",
+    "count": 0
+  },
+  "observedRowStatus": "cancelled",
+  "cause": "Admin page raw key aggregation stores cancelled but reads canceled; its explicit label map also omits cancelled. Generated DB enum uses cancelled. Local page presentation mismatch, not booking data or auth/network cause.",
+  "effects": "DOM-only read of existing UI, no reload or app mutation in before scenario. Any later source edit changes candidate and requires explicit dependency/build accounting.",
+  "credit": "0PASS/0fix/0accepted",
+  "oldIntermittentFailureNotResolved": true
+}

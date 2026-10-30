@@ -1,0 +1,17 @@
+{
+  "id": "C132",
+  "completedBeforeUtc": "2026-10-25T20:04:03Z",
+  "type": "bounded readonly today-status reconciliation history/source/oracle review",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "trigger": "New real Bishkek date26Oct brought retained cancelled09:00–10:00 row into current Today list. Incidental C129/C131 admin-return AX shows cancelled row yet Отменено0; not planned bug execution credit.",
+  "history": "M1-03-home original traversal+reload proof concerns meaningful read/error handling and retains separate intermittent count-fetchFAIL C57. No positive non-empty cancelled today reconciliation in current selected cases. C59 own cancelled receipt status is another surface, not admin summary proof. Original proofs/UTC retained; bounded review not global absence claim.",
+  "independentOracle": "On actual current local day2026-10-26, visible Today table with one cancelled09:00–10:00 row must have Cancelled1, Hold0/Confirmed0 and a user-facing Russian cancelled label. Oracle is visible status-row enumeration, not source-derived numeric constant. Exactly one row and no warning required; no 20-row limit overflow assumption.",
+  "source": "DB generated booking_status includes cancelled, not canceled. Admin home reduces raw status keys then reads statusCounts.canceled and label map only canceled; StatusChip supports both tones but explicit page label passes raw cancelled. Source explains a possible spelling mismatch, runtime repro still required. Date filter actual Bishkek day/limit20 retained; no DB query or booking mutation.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/page.tsx": "3cf6b7d0aa1fb7eeac62e50283a9d10211586536ca5f30f7fbdae381d24391e6",
+    "apps/web/src/components/ui/StatusChip.tsx": "22bfa2bbbafe90432079a60635a48a88964c712f5343d88ccff5f85c1f538cd5",
+    "apps/web/src/types/supabase.ts": "e832078b52acf1ae6eeebe0825e045d69621f5b7e7a9df48cc15d776c0dcb005"
+  },
+  "credit": "0 UI/PASS/fix/accepted",
+  "boundaries": "No existing booking cancellation/modification/new fixture/auth transition/date manipulation/API/SDK/HTTP/DB probes; no attempt to fix old intermittent fetch issue."
+}

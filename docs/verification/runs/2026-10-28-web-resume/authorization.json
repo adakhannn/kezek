@@ -1,0 +1,17 @@
+{
+  "id": "HUMAN_RESUME_20261028",
+  "request": "можешь продолжить, пока я сам не попрошу остановиться",
+  "firstActualClockUtc": "2026-10-28T08:35:29Z",
+  "firstActualClockBishkek": "2026-10-28T14:35:29+06:00",
+  "scope": "SameKezekWEB/localDEV autonomous workflow untilNEWdirecthumanstop or unavailableusage. Prospective supersessionof26Octpause only; no fixeddeadline/newprivileges/continuityclaim/purchases/resets.",
+  "previousStopFirstClockUtc": "2026-10-26T13:30:50Z",
+  "priorFinalPath": "docs/verification/runs/2026-10-26-web-resume-2/final-report.json",
+  "priorFinalSHA256": "802d4e256b960fb95e65e72d01e5faf2ba7c1da1e998adc019537e04d9f8a280",
+  "priorFinalImmutable": true,
+  "ordinaryUsageAllowed": true,
+  "usedPercent": 8,
+  "existingAutomationId": "kezek",
+  "sameThread": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "routineReversibleAuthority": "Human26Octauthorizedoneworkingtab andfullroutineWEBaccess/no repeatquestions; persistswithinexistingproject/safetyboundaries. Newresumeauthorizesonelegitimateworkingentry afterfreshinventoryempty, notdenieddocument/providerbypass.",
+  "constraints": "WEB/local only. No native/mobile/subagents/new chats/commit/push/deploy. No direct DB/SQL/RPC/SDK/HTTP, secrets/storage extraction, forbidden providers/endpoints or permission bypass. No new identities/roles/jobs/fixtures/booking commands/payments/irreversible delete without specific action-time authority. No unchanged DONE/tool/auth/catalogue/F013/profileSave/cache/visual/provider retry. Old journals/finals/UTC immutable."
+}

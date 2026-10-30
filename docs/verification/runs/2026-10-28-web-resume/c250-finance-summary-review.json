@@ -1,0 +1,96 @@
+{
+  "id": "C250",
+  "status": "READONLY_FINANCE_HISTORY_COMPLETE_ORIGINAL_ARITHMETIC_PRESERVED_CURRENT_SOURCE_BRIDGE_BLOCKED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c250-finance-summary-review-plan.json",
+  "reviewWindowUtc": [
+    "2026-10-28T12:51:10Z",
+    "2026-10-28T12:57:14Z"
+  ],
+  "timeboxNote": "Target6minutes; finalclockcheck6minutes4seconds. No open-endedarchivehunt. Subsequentnamesvalidationplanning is a separateindependentpriority, not continuingfinancialrepro.",
+  "history": [
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G125-owner-closed-snapshot-regression.json",
+      "sha256": "f3ba1d9d79554908bc72334660f9a9de7a0d7184441c6b116c462becb4ad8c53",
+      "originalWindowUtc": [
+        "2026-10-17T02:45:09Z",
+        "2026-10-17T02:47:50Z"
+      ],
+      "scope": "Actualownownerindividualstaff1bfd Day13/year2026 positiveclosedsummary-rowmath; originalsourceFingerprint2c1... and nofinancialcommands preserved."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/g125-owner-year2026-settled-ru.txt",
+      "sha256": "9a6bbd67f53ee1e3aec532386e0b5d7604d11111b2a4fcdd6c6609c8f380c3a5"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/g125-owner-day13-details-ru.txt",
+      "sha256": "5b071b99552096d101ce49c26c4123dbee743845eb89879509c5af5d09404625"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/g125-verification.json",
+      "sha256": "cc84d1550d850a3599b37d88da1aeeceb8160422e7414642285dfabc959777e6"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G098-finance-status-counts-after.json",
+      "sha256": "1d5308d942216fa9897f29b46addd19667de70f5383058c8c4a5276de2ddfc25",
+      "originalCompletedUtc": "2026-10-16T01:36:22Z",
+      "scope": "ActualallstaffMonth/Year1000=901services+99materials/781employee/219business/3closed andindividualYearcontrol. Not absentallstaffproof; doNOTreplayasnewuncoveredcase."
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/finance-stage.json",
+      "sha256": "fb21558beaaee83936b75b9709ff63f6f0f3edec4beb080e52bc8a5040bc76e0",
+      "originalStageMetadata": "2026-10-09T06:29:00+06:00",
+      "scope": "Originalowner day/month/year/branch2empty andturnoverbasis350=301+49,181+169 beforeguaranteecase; notallfuturefinancialmatrix, metadata notexactclickUTC."
+    }
+  ],
+  "independentHistoricalArithmetic": {
+    "yearTurnover": {
+      "rows": [
+        650,
+        0,
+        350
+      ],
+      "sum": 1000
+    },
+    "yearStaff": {
+      "rows": [
+        600,
+        0,
+        181
+      ],
+      "sum": 781
+    },
+    "yearBusiness": {
+      "rows": [
+        50,
+        0,
+        169
+      ],
+      "sum": 219
+    },
+    "yearMaterials": {
+      "rows": [
+        50,
+        0,
+        49
+      ],
+      "sum": 99
+    },
+    "day": "13Octservices600+materials50=turnover650; base360+topup240=staff600 andbusiness50. Ownerturnoverincludesmaterials, staffservice-only901/year cannot be conflatedwithowner1000."
+  },
+  "sourceClassification": "CurrentAllStaff hookGET /api/dashboard/finance/all andindividualhookGET /api/dashboard/staff/id/finance/stats use localperiod/date state. ReviewedHTTP/servicechain select/RPC-statistics/computeonly/no explicitupdate/insert/delete. AllstafftotalStats reduceperstaffrows; totalsdisplayservices+consumables. RuntimeRPC/schema/body not independentlyinspected/no DB-writeabsence proof. No UI/filter/date or rawrequests executed in review.",
+  "bridgeBlocker": {
+    "status": "BLOCKED_MISSING_EXECUTION_DATED_DEPENDENCY_BRIDGE",
+    "owner": "Historicalcurrent-certification provenance",
+    "facts": "G125verification carriesaggregate2c1sourcefingerprint,stagehash andartifacthashes, notexactownerAllStaff/individualreceiver-rendererdependencybodies/hashes. G098recordsfunctionalpositiveandchangedcopyfiles, notcompletecurrentexecution-map. Reviewedfocusedarchivesdonotestablishfullmatchingcurrentdependencybridge. Do notguessidentityfromPASS/newcandidateorpostdatingartifact.",
+    "exit": "New exactexecution-datedsource/dependency evidence or a genuinelychangeddependency/requirednewmethod justifyingseparatefiniteLIVEplan. Missingbridge alone is not permission torepeatDONEG125/G098moneycontrolsforcounts."
+  },
+  "decision": "K3-03remains partial; originalboundedmoneyproofs preserved/notpromoted/currentPASS0/newreuse0. Do not startanotheridenticalDay13/year2026/allstaffcomparison. IndependentI2-03 remainingnonemptyname-length boundaries have explicit2..100contract and no matchingprimary located; source-onlyfeedbackrisk needsfiniteactualUIplanC251, notspeculativefix.",
+  "effects": "Read-only localprimary/source/dependencyclassification. No browser/auth/date/filter/export/hours/rate/shift/reopen/booking/payment/package/financial/source/test/build/server/SQL/API/SDK/storage action.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}

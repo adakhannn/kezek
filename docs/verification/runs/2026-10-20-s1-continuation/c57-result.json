@@ -1,0 +1,44 @@
+{
+  "id": "C57",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint": "40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "files": 1683,
+  "change": "Human-approved selfhosted unchanged official Geist1.800 and GeistMono1.701 fullvariableTTF/OFL via next/font/local; preserve variables100..900/normal/swap and original Arial fallbackmetrics. No packages/lock/route/auth/data change.",
+  "artifactValidation": "Official GitblobSHA and SHA256 match; full RU/KY/Latin and weight100..900 metadata verified with real Next fontkit, matching C54 font versions/verticalmetrics/Latin advances. TTF rather than Google-subset WOFF2: total341004bytes; no compression/format conversion/font upgrade.",
+  "checks": {
+    "initialJest": "Two attempts2PASS2FAIL: next/jest font-loader mapping stubs compiledfontkit, so font.familyName undefined. Test harness issue, not product fontfailure. Independent realNode metadata inspection succeeded. Removed reliance on font-loader internals in Jest; hash/TTF integrity+config+license asserted there.",
+    "initialExplicitLint": "4errors no-require-imports in new JS test; converted test to TS imports. No disabled lint rules.",
+    "finalJest": "5PASS/1suite, src/__tests__/app/localFonts.test.ts,07:05UTC; not LIVE",
+    "finalExplicitLint": "exit0 --no-ignore layout.tsx and localFonts.test.ts, legacy.eslintignore notice retained",
+    "typecheck": "pnpm -C apps/web typecheck exit0 after final source/test changes",
+    "fullGates": "Whole-repo lint baseline not recertified; huge all-Jest run not repeated under user's no-hugeJest constraint. No service/domain/validation logic change requiring scoped coverage gate. Not whole-project-green.",
+    "scriptSyntax": "Both new build/guard scripts node --check exit0"
+  },
+  "build": {
+    "method": "build, not LIVE",
+    "status": "PASS",
+    "raw": "c57-build-raw.txt",
+    "startedUtc": "2026-10-21T07:07:35.162Z",
+    "finishedUtc": "2026-10-21T07:08:56.816Z",
+    "pid": 10988,
+    "ownedSession": 69819,
+    "exitCode": 0,
+    "timedOut": false,
+    "compileSeconds": 31.9,
+    "typecheck": "completed",
+    "prerenders": "36/36",
+    "environment": "Fresh exact1683copy; no.env, allowlisted systemenv, dummy.invalid Supabase/no realcredentials/DEVkeys, Sentryandtelemetrydisabled, standardNext16.0.11Turbopack,240s watchdog. External NodeTCP/fetch denied except exactPostCSSworkerIPC; not OSfirewall/nativeconfinement claim.",
+    "warnings": "Multiplelockfileworkspaceinference, stale baseline-browser-mapping, deprecatedmiddleware convention. No Googlefontdownload failure, no fontmock/type-skip/compiler-switch."
+  },
+  "live": {
+    "role": "same knownSAkezekkg, no logout/login",
+    "tab": "18/provider90447e64-f1be-4740-a944-28b015348d51",
+    "adminReload": {"afterUtc":"2026-10-21T07:09:20Z","beforeUtc":"2026-10-21T07:10:00Z","actual":"Reload action's snapshot timed out; a single fresh DOM proves completed authorized Admin-panel/Anonymized/protectedheading. Explicit warning Business count TypeError:fetchfailed, count0 while historical3cards and othercounts4/1/4/30 remain. Not blanket adminPASS or font causality."},
+    "observedFontAssets": {"beforeUtc":"2026-10-21T07:11:01Z","method":"CUApageAssets inventory/bundle of alreadyobservedfontsandCSS, not rawURLfetch bypass","bundleDirectory":"C:/Users/AdaX/AppData/Local/Temp/browser-use/assets/1a327716-97af-419b-939c-00bd53d7fd05","downloaded":3,"failed":0,"fonts":[{"url":"http://localhost:3000/_next/static/media/Geist.p.a6c8254c.ttf","sha256":"73894e0448cae90a92b6c2f8732b7bb9acb7b94c418bff559dad4a18e1de9659"},{"url":"http://localhost:3000/_next/static/media/GeistMono.p.04960cf6.ttf","sha256":"d00e590b8eb3a59acc329b2d044fd143ae935090b7da33199ebee27cc7de8196"}],"css":"Observed stylesheet contains localTTFfontfaces/normal/swap/100..900, both variables and exact oldArialfallbackmetrics. Third __nextjs_font/geist-latin.woff2 belongs to devtools, not rootloader. No pixel/actualglyphpaint/fresh-cache/prodassetsPASS."},
+    "publicReload": {"afterUtc":"2026-10-21T07:11:01Z","beforeUtc":"2026-10-21T07:11:54Z","actual":"Ordinary footertermslink -> final agreementheading and text; fullreload retainspubliccontent/headerAnonymized/Logout. No form/agreementaccepted, no domainnavigation."},
+    "restore": {"afterUtc":"2026-10-21T07:11:54Z","actual":"Ordinary /admin entry restores sameSAprotectedoverview, Business3 and other4/1/4/30,3historicalcards,no errorwarning. This is transient recovery observation, not productfix or proof networkrootcause."}
+  },
+  "effects": "Generated exactisolatedcopy/cache/log and publicofficialfontassetdownloads; no primaryserverrestart, business/role/grant/booking/payment/package/review commands, no UIauthtransition/newtabs inC57. Ordinary authlookup/telemetry unenumerated, notzeroTOTALwrites. Own compiler10988 exitednormally. Existinguser2root/5blocked/18admin retained.",
+  "acceptance": "CompilePASS plus DEVlocalfontdelivery evidence; A3-01 requires actual builtoutputexecution next, four A3-02fresh-cacheassets remainstale. No new livefix/requirementcredit yet; 9logicalverifiedlivefixes unchanged.",
+  "next": "C58 bounded actual isolated nextstartprivacy+reload and observedproductionfontassets using127.0.0.1 guestorigin/noexistinglocalhostcookies. No unchanged rebuild. Preserve C57transientadminreadwarning; no blind datafix."
+}

@@ -1,0 +1,20 @@
+{
+  "id": "C146",
+  "caseId": "S26-O303-admin-today-title-en",
+  "status": "PASS_SAME_LIVE",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "plan": "c146-same-live-plan.json",
+  "observationWindowUtc": [
+    "2026-10-25T20:32:50Z",
+    "2026-10-25T20:34:03Z"
+  ],
+  "expected": "English settled Admin Panel and section heading exactly Today's Bookings (no U+005C), original RU preserved after restore.",
+  "actual": "English selected, server Admin Panel settled. Fresh exact heading innerText Today's Bookings, no U+005C. Existingstatus Cancelled1 remained as control,0newcredit. After20:33:03actualclock Русский restored, protected Панель администратора/Admin-panel/Anonymized/RU/Business3/Booking30/Отменено1; human tab2markedhandoff.",
+  "effects": "Locale preference/automaticrefresh only, restoreRU; no app data/booking/auth/config commands; ordinarytelemetry unenumerated.",
+  "newUiPass": 1,
+  "newVerifiedFix": 1,
+  "newAccepted": 0,
+  "limits": "Exact title scalar only, not all English copy/locale/dictionary/visual/SSRflash/fulltechnical acceptance.",
+  "next": "C146 exactEnglishTodayheading SAME-LIVEPASS/F019verified, RUprotectedadminrestored.26Oct6NEWUI/3fix/logical15;20of316296left/S116primary62 pending finalcurrentcandidate1686build. NextC147 onefresh offline/dummyenv/localfont/defaultTurbopack build for C141+C145 source; C137/C138 oldcandidateproofimmutable/no retry. SeparateC148actualcompiledoutput required before restoreA3-01. Fulltest/lint/cache/visual/fixtures/security/F013/M1intermittent failures retained."
+}

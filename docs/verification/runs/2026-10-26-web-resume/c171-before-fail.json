@@ -1,0 +1,38 @@
+{
+  "id": "C171",
+  "status": "FAIL_BOTH_NONDIGIT_CONTACT_VARIANTS",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "caseId": "S26-I102-nondigit-phone-whatsapp-rejection",
+  "plan": "c171-nondigit-contact-plan.json",
+  "inputObservationAddendum": "c171-input-observation-addendum.json",
+  "observationWindowUtc": [
+    "2026-10-25T22:51:49Z",
+    "2026-10-25T22:54:27Z"
+  ],
+  "expected": "Each nonempty no-digit marker must show its field-specific validation message and retain editor/input. Ordinary leave/reentry must preserve original blank persisted contacts, unchanged inactivebranch/allbundledfields. A success navigation with marker silently gone is FAIL, not acceptable normalization. One compoundcase if both variants PASS; no extra credit from baseline/discard controls.",
+  "baseline": "ExactknownSA/admin/RU ->A2branches0staff/services/bookings ->fa5inactive, originalname/blankaddress+fourlinks+fourcontacts/coords—/—/inherittrue/activefalse/sevenclosed days/SaveDisabled. Originalbranchcontrol057unchanged.",
+  "variants": [
+    {
+      "field": "Телефон",
+      "fillAfterClockUtc": "2026-10-25T22:52:23Z",
+      "knownSyntheticFillArgument": "INVALID PHONE TEST",
+      "submitAfterClockUtc": "2026-10-25T22:53:05Z",
+      "actual": "AXfilledfieldredacted/nonempty+Saveenabled. One ordinary Save unexpectedly completednavigationbranchlist2/2 with no fieldvalidationmessage. Reentry exactfa5 allcontactsblank/SaveDisabled/originalbaseline. FAIL silent acceptance/drop, not observedexactecho or DBtransportproof."
+    },
+    {
+      "field": "WhatsApp",
+      "fillAfterClockUtc": "2026-10-25T22:53:33Z",
+      "knownSyntheticFillArgument": "INVALID WHATSAPP TEST",
+      "submitAfterClockUtc": "2026-10-25T22:53:40Z",
+      "actual": "Same distinctfield ordinaryfill/AXredacted/Saveenabled; one Save navigatedbranchlist2/2. Reentry originalblankWhatsApp+othercontacts/allbaseline/SaveDisabled. FAIL silent acceptance/drop."
+    }
+  ],
+  "restoration": {
+    "afterClockUtc": "2026-10-25T22:53:58Z",
+    "actual": "ObservedАдминка return->protected/admin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1/handoff; chooser1untouched/noauth/newtabs."
+  },
+  "effects": "Two ordinary UIupdateattempts accepted by app on existinginactiveA, visiblecontactsblank->syntheticnoncontacttext->blank; no additionalrestoreSave needed because readbackblank/allbaseline. Backend emptyrepresentation/auth/telemetry effects unenumerated, notzeroTOTALwrites/rawDBproof. No realcontactvalues/OTP/message/call/email/privateinput/unmask/newentity/activation/role/securitycommand.",
+  "classificationAfterLive": "normalizePhone removes nondigits and returnsnull whennone. validatePublicContacts only rejects normalizedtruthyinvalidE164; nonempty raw text normalizednull bypasses check and update writesnull. Samecause forbothfields; no session/network/provider cause inferred.",
+  "credit": "0NEWPASS/0fix/0accepted; realUIFAIL preserved",
+  "next": "C172 minimal validator guard for nonempty raw invalid phone/WhatsApp, meaningful rejection/blank/formatting regressions and required technicalchecks; SAME-LIVE C173 plan before retest."
+}

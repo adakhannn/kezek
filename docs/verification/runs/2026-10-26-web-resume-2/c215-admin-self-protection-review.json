@@ -1,0 +1,34 @@
+{
+  "id": "C215",
+  "status": "BOUNDED_READONLY_REVIEW_COMPLETE_NO_SAFE_NEW_RUNTIME_INVARIANT_METHOD",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "requirementId": "M3-03",
+  "afterClockUtc": "2026-10-26T10:43:30Z",
+  "history": "Boundedtargetedhistorysearchlocatednoexactadminselfblock/selfdemote/lastsuperadminruntimeproof. G084profileaccount-deletion5bookingsUIguards andC214ownprofilewarningSArole1/roles2 aredifferentmethod; neither globaladmincountnoradminmutationprotectionproof. ExistingC203/C205ownUserBasicName methoddifferentsecurityactions/notreplayed.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/users/UserSecurityActions.tsx": "d97fea03c035b7a26c6fe60ac73dde5320a4a0b86093b8a5f948d7407d0a14c7",
+    "apps/web/src/app/admin/users/[id]/page.tsx": "28c2c4d1a38959f01995e2e02aeeed83fe465cc35c27a6adef290a26317e7a94",
+    "apps/web/src/app/admin/api/users/[id]/suspend/route.ts": "78dff26a0040c3e7447172ad1b02df3a590fc124c29226d127c15e9726022d15",
+    "apps/web/src/app/admin/api/users/[id]/delete/route.ts": "5e76d1dfaeb3f3451cfb0aedb0a1e60ee7c0f67ba5583de0d6a2c5844818a4f9",
+    "apps/web/src/app/admin/api/users/[id]/toggle-super/route.ts": "7e8c4ca4f9c9eb4af9bd8c98554faf28084f7096b22c00b8f5021d88d95e3fe5"
+  },
+  "sourceBoundary": {
+    "suspend": "Sourceexplicitme.id===targetId rejectsbeforewrite; global-supervictimreject too. Actualblock branchremovesuser_roles/unlinksdeactivatesstaff/upsertssuspension+invalidatesessions; unblockdoesnotrestoreroles. Do notinvokeasreversibleUIprobe.",
+    "delete": "Sourceexplicitselfrejectandsupervictimrejectbeforedestructivewrites; notruntime/deployedproof. Separatefinaldeleteirreversible/action-timeconsentrequired; neverinvoke.",
+    "toggleSuper": "ClientonChange immediatelyPOSTsroletoggle/no localdraft/preview. ReviewedhandlerdeletesglobaluserroleonmakeSuperfalse; no explicitselfcomparison/last-admincountguardinthisreviewedbody. ThisisnarrowSOURCErisk, NOTprovenruntimeabsenceofDBguard/lastadmincount/productbug.",
+    "controls": "ComponentreceivesuserId/isSuper/isBlockedonly; disabledmostlyloading/blocked. Enabledcontrolalonecannotprovebackendinvariantfailure. No UIcommandorcurrentrolechangeplanned."
+  },
+  "decision": "Runtimecurrent-user/last-adminrejection remainsBLOCKED ataction/invariantoracleboundary; no selfdemote/block/delete command, newsecurityfixture/grant/API/SQL/SDK/storageorUNIT-as-LIVE. No speculativecode/securitychange. No needlessUIreplaysolelytocountenabledbuttons.",
+  "effects": "Source/historyread/reportonly; no browser/auth/UI/user/security/profile/booking/source/test/build/serveraction.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowUi": 12,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  },
+  "next": "C216 ONLYboundedREADONLY I2-03 existingknown1minservice99c03a5d edit validation(history/currentServiceFormsubmitguard+receiverbundled-effects) BEFOREfiniteUIplan. Identifygenuinelyuncoveredinvalidname/duration/pricevariant+visiblebaseline/restorationwithoutnewentity/assignment/inactive/DONEreplay. No Save/Create/toggle/serviceprice-duration-name/association/delete/booking/configwritefromreview. ExistingG005lifecycle/C196stafflink DONE; no unchangedrepeat. Ifcannotguaranteesafeinvaliddraftboundary exactblocker+independentpriority."
+}

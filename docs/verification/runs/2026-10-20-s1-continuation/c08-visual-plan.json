@@ -1,0 +1,14 @@
+{
+  "id":"C08",
+  "caseId":"S12-INITIAL-VISUAL",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "reason":"Human confirmed Ctrl+0 reset100%; actual new state permits ONE fresh preflight instead of unchanged C05 screenshot retry",
+  "scope":"RU functional visual document entry states; all4routes in actual guest and existing owner context. Separate SSR/coldcache/device-locale gates unchanged.",
+  "matrix":{"roles":["guest","existing owner osorovadahan04@gmail.com"],"routes":["/","/auth/sign-in","/terms","/privacy"]},
+  "method":"Actual CSS viewport+DPR and fresh raw screenshot per direct document entry/reload. Inspect pixels, label original URL and actual redirect/loading/destination. Authenticated sign-in may legitimately redirect, record rather than forcing guest form.",
+  "acceptance":"All8 sampled entry frames useful page/loading/redirect content, no blank application shell, correct role and actual viewport+image. This is visual evidence of sampled document states, NOT every-paint/no-flash guarantee or original prehydration response; A1-02 remains open until S12-SSR also passes.",
+  "stop":"First bad capture/mapping or policy/control failure -> retain partial and stop no unchanged retry. Password/CAPTCHA/device handoff, no bypass. No viewport override loop/new browser/tab for this case.",
+  "auth":"Ordinary already authorized existing Google identity only; no account/credentials/grants changes, authcode/token/cookie extraction or business/booking commands",
+  "handoff":"Retain user tab; record final actual role/page and ordinary auth transitions. No settings/app/DB restore needed beyond languageRU unchanged.",
+  "timeBudgetMinutes":15
+}

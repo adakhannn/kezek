@@ -1,0 +1,13 @@
+{
+  "id": "C29",
+  "status": "PARENT_SESSION_GUARD_OBSERVED_F005_ERROR_PATH_STILL_UNREACHED",
+  "candidate": "dev-20261020-S1-6b8b3bf85fe5",
+  "observationAfterUtc": "2026-10-20T22:45:20Z",
+  "observationBeforeUtc": "2026-10-20T22:47:51Z",
+  "actual": "InitialsameSAroleapplicationsreadsuccessempty. Ordinarylogout in existingrootTab2 removedsession. ExistingrolepageTab5 automatically redirected to sign-in before any retainedSPAstatusfilter could be used. This is actual parentguardreachability evidence; NO component401alertobserved, NO artificialfetch/interception. Cannot use logoutasSAME-LIVE proof ofF005errorrendering.",
+  "restoration": "OrdinaryGoogle chooser selected only knownkezekkg@gmail.com -> actualadminroot/Admin-panel. Menu roleapplications successful empty +ONEfullreload actualsameSAemptywithoutnonemptyalert. Tab2actualroot/logoutbuttonvisible again. Fourchooseraccounts NOT fourindependentsessions. No CAPTCHA/password/grant/newaccount/credential extraction.",
+  "decision": "F005 fixed_pending_verification unchanged. Current successfulreads cannot close historicalfalseempty-onerror. Nav16PASS2FAIL1BLOCKED/19 unchanged. No newfix/newcase/requirementcredit. Real non-auth readfailure still needed; no repeatlogout/repeatedrepair to chase it.",
+  "counts": {"S1":"17/25accepted8left;63/79PASS16left", "S2":"1/70accepted69left", "product":"18/316accepted298leftNOT_READY", "newVerifiedFixesThisLogicalRun":8, "delta":0},
+  "effects": "One intentional sharedsession ordinarylogout+knownSAlogin/restoration, with ordinaryauth/telemetry IDs unenumerated. No DBbusinesscommands/moderation/grants/jobs/recalc/SQL/cleanup. Tab2was intentionallyused fornamedmultitabsessiontest andrestoredroot; Tab5roleappsRU, bothhandoff. NeverzeroTOTALwrites.",
+  "next": "Do not repeat C28/C29 unchanged. F005liveerror pending and C13businessapptransientcauseunknown retained. Define independent F4protected-route matrix from currentguardcontracts and availableidentities; missingmanager/businessadmin fixtures remainblocked, no newroles. S1build/assets/SSR/visual/domain blockers unchanged; Fontspermissionexpired."
+}

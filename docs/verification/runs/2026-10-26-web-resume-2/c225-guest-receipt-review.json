@@ -1,0 +1,16 @@
+{
+  "id": "C225",
+  "status": "READONLY_REVIEW_COMPLETE_NEW_GUEST_PROJECTION_CASE_ELIGIBLE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "startedAfterUtc": "2026-10-26T11:54:51Z",
+  "requirementId": "D4-05",
+  "history": [
+    {"file":"apps/web/test-results/global-2026-10-14/stage-G026-public-receipt-negative.json","sha256":"59241d59aab52e3557025e773258cf111bc14a73ca34c3ddcb2080a2b047fb97","originalUtc":"2026-10-14T04:02:41Z","scope":"Guest NONEXISTENT UUID NotFound; explicitly excludes real client object access."},
+    {"file":"apps/web/test-results/night-2026-10-09/guest-dashboard-guard-stage.json","sha256":"1136b3a84bdba249c8fdb289f9397854fd14172411f6462b7793e19bfd83a6b3","scope":"Guest dashboard gate, not receipt projection. Stage timestamp remains metadata."},
+    {"file":"apps/web/test-results/night-2026-10-09/guest-stage.json","sha256":"d1ee0f207ffda2154a7cafd80135e0c762743dafbe76d669fb687adfcff1cbf1","scope":"Guest-created receipt/notification/cleanup, different from guest viewing known CLIENT receipt. Historical commands not repeated."},
+    {"file":"docs/verification/runs/2026-10-20-s1-continuation/c59-result.json","sha256":"69cbbda8a7a16a3aed05a23b90191ed497718e3ac250b10f9f3842b9e324a527","originalWindowUtc":["2026-10-21T07:31:05Z","2026-10-21T07:32:40Z"],"caseId":"S42-C59-cancelled","allRecordedDependenciesMatchCurrent":true,"scope":"Authenticated known-client positive oracle association only, not new execution/reuse credit."}
+  ],
+  "contract": "Migration explicitly defines UUID-capability PUBLIC receipt: visit details only, no client identity/contacts/internal notes/financial ledger. RPC source returns id/status/start/end/public staff name/services. Reading SQL is not deployment proof. Page ordinary RLS projection then narrow public RPC fallback. Client renders ID/status/service/master/date/optional promotion, no client contact props. Readable public receipt is intended and alone is not an IDOR defect. AX can certify only rendered projection, not hidden network/RLS/DB/API security.",
+  "decision": "One genuinely uncovered guest-to-known-client public-receipt projection case. C59 current-certified positive oracle available without repeating client status execution. Save finite plan before UI.",
+  "effects": "Local read/hash only. No browser/auth/SQL/API/SDK/DB/source/test/build/server actions, new UI/fix/acceptance."
+}

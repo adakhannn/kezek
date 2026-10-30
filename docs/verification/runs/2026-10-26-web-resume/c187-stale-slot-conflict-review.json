@@ -1,0 +1,128 @@
+{
+  "id": "C187",
+  "status": "READONLY_COMPLETE_HISTORICAL_CONFLICT_NOT_CURRENT_CERTIFIED",
+  "observationWindowUtc": [
+    "2026-10-26T00:55:50Z",
+    "2026-10-26T00:58:03Z"
+  ],
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirement": "D3-05",
+  "primary": {
+    "path": "apps/web/test-results/night-2026-10-09/booking-conflict-stage.json",
+    "originalUpdatedAt": "2026-10-09T06:05:00+06:00",
+    "timestampMeaning": "StageupdatedAtmetadata retained verbatim; not fabricated exact actiontimestamp or newly executed UTC.",
+    "before": "Knownowner-as-client samebranch/staff/service60/12Oct09:00 selected in two actualtabs. Firstconfirmed3117ad85, secondstaletab receivedserver500/rawtime-slot-error/[objectObject]/staleconfirmation+slots; duplicate notcreated alreadybeforefix.",
+    "after": "Same sequentialtwo-tab scenario first629e5c4d, secondstaleconfirm409/localizedmessage/confirmationcloses/09:00..09:45removed/10:00first. Stage records SQLUIexactslotoneactiveconfirmedrow629e5c4d. Both specificbookings3117ad85/629e5c4d cancelledthenSQLUI0active/public09:00restored. No oldbooking/SQL/UI operation repeated.",
+    "scope": "Actual historical single-service sameuser sequential stale-slot conflict, not trueparallel/differentusers/complexservices/networklossretryidempotency/rapidpendingdoubleconfirm. D3-02remainsseparateBLOCKED. HistoricalbeforeFAIL/after/cleanup preserved, not relabelledcurrentfailure."
+  },
+  "independentOracle": "When a once-selected slot becomes unavailable before confirmation, server must reject second creation meaningfully, leave no second active appointment and recover the UI from staleconfirmation/slot choices. Historicalmethod fits this narrow stimulus, but current certification additionally requires matching executed code/receiver dependencies and environment.",
+  "dependencyComparison": [
+    {
+      "path": "apps/web/src/lib/bookingSlotConflict.ts",
+      "currentSha256": "35aaae6a6d7f38492ccbd95e31900fa844e5986803a956f4f9560d1e7af5982d",
+      "archived15OctSha256": "35aaae6a6d7f38492ccbd95e31900fa844e5986803a956f4f9560d1e7af5982d",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    },
+    {
+      "path": "apps/web/src/lib/bookingCommandsSupabase.ts",
+      "currentSha256": "865e2756dc7a9063980e4573291889180a5545883fdef7a69c4dc444ecb19f3c",
+      "archived15OctSha256": "865e2756dc7a9063980e4573291889180a5545883fdef7a69c4dc444ecb19f3c",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    },
+    {
+      "path": "apps/web/src/lib/quickHoldHttpService.ts",
+      "currentSha256": "3d292c0893a1c1d56e9d98f68e16b6f638c8b20ee5374b04c20a56e6b097436d",
+      "archived15OctSha256": "3d292c0893a1c1d56e9d98f68e16b6f638c8b20ee5374b04c20a56e6b097436d",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    },
+    {
+      "path": "apps/web/src/lib/quickHoldService.ts",
+      "currentSha256": "a1a995340d46790489d778b0867d032fab7bff2b7824ca723cce215814d84152",
+      "archived15OctSha256": "a1a995340d46790489d778b0867d032fab7bff2b7824ca723cce215814d84152",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    },
+    {
+      "path": "apps/web/src/lib/quickHoldClient.ts",
+      "currentSha256": "14471571cae6bf13a67631f5f8e77e7d98bca4c2a2a83d6cc998b86d7670982c",
+      "archived15OctSha256": "14471571cae6bf13a67631f5f8e77e7d98bca4c2a2a83d6cc998b86d7670982c",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts",
+      "currentSha256": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72",
+      "archived15OctSha256": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/view.tsx",
+      "currentSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+      "archived15OctSha256": "210695684170b3f39c77c5762d7a06aeaf952e95292f2a745daf28c7bd7b2617",
+      "identical": false,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/utils.ts",
+      "currentSha256": "49eadc4f84c8dcf9a55b303dd269605eed828f9499db20a454627c8c1e5cc33b",
+      "archived15OctSha256": "49eadc4f84c8dcf9a55b303dd269605eed828f9499db20a454627c8c1e5cc33b",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot is later than09Oct actualUI; not an at-execution source boundary."
+    }
+  ],
+  "sourceClassification": "Current bookingCommandError maps exact overlap message or23P01 toBookingSlotConflictError; quickHoldHTTP maps that typederror to409 booking_slot_unavailable. QuickHoldClient preserveserrorcode; useBookingCreation displayslocalizederror/calls onSlotUnavailable; currentview callback closespendingconfirmation and refreshesavailability. Domain hold precedesconfirm/notification. These sourcepaths support intended behavior only; they do not demonstrate currentDBconstraint/deployedRPC/clientexecution or notifications safety.",
+  "missingBridge": "Focused09Octstage has no at-execution source fingerprint/per-file hashes or savedsourcebody. Located15OctG052snapshot matches7of8 reviewed currentpathbytes, but is six days after actualproof and cannot bridge09Oct execution. view.tsx also differs from15Oct snapshot. Later14Octbaseline manifest has onlyHEAD/dirtycount/note. No complete executiondated dependency boundary/current fullrecovery equivalence established; do not guess identity from unchangedhelper names, successfultests or originalfixstatus.",
+  "decision": "Keep original historicalconflict evidence/UTC/metadata as historical. Do not reuse/promote full currentD3-05 or count a newUI/fix. NarrowcurrentconflictcaseBLOCKED by unavailable matchingexecutiondependency proof and no permitted freshbookingcommand/fixture. Existingpartialrequirement remainspartial; not an openproductregression.",
+  "blocker": "A fresh realconflict requirescreating/holding/confirming at leastoneappointment and a stale secondattempt, with independent effectoracle and plannedcleanup. Currentreview explicitlyforbidsthose commands/newfixture/role/SQL/API/SDK/storage/networkfault/browser/newtabs. OldSQLUI record is evidence only, not permission to executeSQL or probe. No unchangedwizardreplay or mock-asLIVE.",
+  "dependencyHashes": {
+    "apps/web/src/lib/bookingSlotConflict.ts": "35aaae6a6d7f38492ccbd95e31900fa844e5986803a956f4f9560d1e7af5982d",
+    "apps/web/src/lib/bookingCommandsSupabase.ts": "865e2756dc7a9063980e4573291889180a5545883fdef7a69c4dc444ecb19f3c",
+    "apps/web/src/lib/quickHoldHttpService.ts": "3d292c0893a1c1d56e9d98f68e16b6f638c8b20ee5374b04c20a56e6b097436d",
+    "apps/web/src/lib/quickHoldService.ts": "a1a995340d46790489d778b0867d032fab7bff2b7824ca723cce215814d84152",
+    "apps/web/src/lib/quickHoldClient.ts": "14471571cae6bf13a67631f5f8e77e7d98bca4c2a2a83d6cc998b86d7670982c",
+    "apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/utils.ts": "49eadc4f84c8dcf9a55b303dd269605eed828f9499db20a454627c8c1e5cc33b",
+    "apps/web/src/app/api/quick-hold/route.ts": "018f8c789c7b5f9a7d528bf338ab398350192c4b55ac6cd14494b1f54759b0aa",
+    "apps/web/src/app/b/[slug]/components/BookingConfirmModal.tsx": "9380f9fb64939450cf029bf77b3e06bc676cb66dd6587e540716a9ab2b631a67",
+    "packages/core-domain/src/booking/useCases.ts": "1ae1f883706b986bc659baeba70d84c85488b4e5a660bb9f4ba20365b18ce082"
+  },
+  "hashes": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/booking-conflict-stage.json",
+      "sha256": "383f7a7cc5509a0630eaf6451bff11bf7f5d38dbbbbc0d01e3bc377e57c4972c"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/booking-slot-conflict-after.jpg",
+      "sha256": "6ad94b650ea65b4171b91e7b3255fa9666cc31396129243008a12e1bed7427f0"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json",
+      "sha256": "3da860aca21ee2cdcdf76cc862d09a9ee06e99f0ae6879dd0658d0ee17263abf"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/baseline-manifest.json",
+      "sha256": "6960259ffcdd469b273d99f756eebbf09a30ade6c126ceef57a3ac3a0e9f77cc"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c186-double-submit-review.json",
+      "sha256": "adb4d7d1bb03bb02107c444dc24f8ea4ad911ebadfeb1993749d757e2fdf3fc1"
+    }
+  ],
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "reused": 0,
+    "accepted": 23,
+    "remaining": 293,
+    "windowUi": 23,
+    "windowFixes": 4
+  },
+  "effects": "Source/history/evidence/accounting reads and records only; no browser/auth/booking/hold/slot/Next/confirm/cancel/payment/DB/SQL/API/SDK/storage/fault/newfixture/role/source/test/build/server action. UserTab2/admin/mainserver untouched/no freshUIhealthclaim; frozenC179/C183journals pendingfalse. Ordinarybackgroundauth/telemetryunenumerated.",
+  "next": "C188 ONLY bounded read-only D1-01 four entry-method evidence/dependency review before any finiteUIplan: direct booking URL, publicbusiness CTA, map CTA, and filtered-search result path. Reuse exactcurrentC164maphandoff onlywithmatchingdependencies/originalUTC; C166typing/URLsettlement is not bookingactivation. Review G092genericbusiness entry and other exact primary for actual navigation, no sourcehref-asLIVE or duplicatecredit. Identify genuinelyuncovered method only; no unchangedpublic/map/wizard/auth replay. NO browser/Next/date/staff/service/slot/hold/booking/confirm/cancel/newentity/API/SDK/storage action fromreview. If complete applicablematrix unavailable retainexactgaps and only plan genuinelynew allowed entry variants withindependentexpectations, otherwiseindependentunfinishedpriority. Allpriorboundaries remain."
+}

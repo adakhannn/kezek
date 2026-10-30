@@ -3,7 +3,7 @@
 import { clsx } from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
+import { type KeyboardEvent, type ReactNode, useRef } from 'react';
 
 export type TabItem = {
     key: string;
@@ -11,6 +11,8 @@ export type TabItem = {
     href?: string;
     badge?: ReactNode;
     disabled?: boolean;
+    id?: string;
+    panelId?: string;
 };
 
 type TabsProps = {
@@ -24,6 +26,21 @@ type TabsProps = {
 
 export function Tabs({ items, value, onValueChange, size = 'md', stretch = false, className }: TabsProps) {
     const pathname = usePathname();
+    const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
+    const enabledButtons = items.filter(item => !item.href && !item.disabled);
+    const tabStopKey = enabledButtons.some(item => item.key === value) ? value : enabledButtons[0]?.key;
+
+    function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>, key: string) {
+        if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key) || !enabledButtons.length) return;
+        const current = enabledButtons.findIndex(item => item.key === key);
+        if (current < 0) return;
+        event.preventDefault();
+        const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? enabledButtons.length - 1
+            : (current + (event.key === 'ArrowRight' ? 1 : -1) + enabledButtons.length) % enabledButtons.length;
+        const next = enabledButtons[nextIndex];
+        buttonRefs.current.get(next.key)?.focus();
+        onValueChange?.(next.key);
+    }
 
     return (
         <div
@@ -73,7 +90,15 @@ export function Tabs({ items, value, onValueChange, size = 'md', stretch = false
                         key={item.key}
                         type="button"
                         role="tab"
+                        id={item.id}
+                        aria-controls={item.panelId}
                         aria-selected={isActive}
+                        tabIndex={item.key === tabStopKey ? 0 : -1}
+                        ref={element => {
+                            if (element) buttonRefs.current.set(item.key, element);
+                            else buttonRefs.current.delete(item.key);
+                        }}
+                        onKeyDown={event => handleKeyDown(event, item.key)}
                         onClick={() => {
                             if (!item.disabled) onValueChange?.(item.key);
                         }}

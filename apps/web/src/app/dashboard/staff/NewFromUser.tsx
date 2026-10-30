@@ -17,6 +17,8 @@ type FoundUser = {
     full_name: string;
 };
 
+type SearchError = { kind: 'empty_query' } | { kind: 'request'; message: string };
+
 export default function NewFromUser({ branches }: { branches: Branch[] }) {
     const { t } = useLanguage();
     const r = useRouter();
@@ -28,10 +30,18 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
     const [selectedUserId, setSelectedUserId] = useState('');
     const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
     const [isActive, setIsActive] = useState(true);
-    const [err, setErr] = useState<string | null>(null);
+    const [err, setErr] = useState<SearchError | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
 
     async function doSearch(query: string) {
+        const normalizedQuery = query.trim();
+        if (!normalizedQuery) {
+            setResults([]);
+            setSelectedUserId('');
+            setHasSearched(false);
+            setErr({ kind: 'empty_query' });
+            return;
+        }
         setLoading(true);
         setErr(null);
         setHasSearched(true);
@@ -39,17 +49,17 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
             const res = await fetch('/api/users/search', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ q: query }),
+                body: JSON.stringify({ q: normalizedQuery }),
             });
             const j = await res.json();
             if (!j.ok) {
-                setErr(j.error ?? 'search_failed');
+                setErr({ kind: 'request', message: j.error ?? 'search_failed' });
                 setResults([]);
             } else {
                 setResults(j.items ?? []);
             }
         } catch (e: unknown) {
-            setErr(e instanceof Error ? e.message : String(e));
+            setErr({ kind: 'request', message: e instanceof Error ? e.message : String(e) });
         } finally {
             setLoading(false);
         }
@@ -107,13 +117,15 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                 title={t('staff.new.manualOverride.title', 'Ручное добавление сотрудника')}
                 message={t('staff.new.manualOverride.message', 'Основной безопасный сценарий — человек сам отправляет заявку на доступ к бизнесу. Этот поиск используйте, когда точно знаете, какой аккаунт нужно связать с карточкой сотрудника.')}
             />
-            {err ? <AlertBanner variant="danger" message={err} /> : null}
+            {err ? <AlertBanner variant="danger" message={err.kind === 'empty_query'
+                ? t('staff.new.table.empty.enterQuery', 'Введите запрос и нажмите «Найти», чтобы увидеть пользователей.')
+                : err.message} /> : null}
 
             <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t('staff.new.search.label', 'Поиск пользователя')}{' '}
                     <span className="text-xs text-gray-500">
-                        ({t('staff.new.search.hint', 'email / телефон / ФИО')})
+                        {t('staff.new.search.hint', '(email / телефон / ФИО)')}
                     </span>
                 </label>
                 <div className="flex flex-col gap-2 sm:flex-row">

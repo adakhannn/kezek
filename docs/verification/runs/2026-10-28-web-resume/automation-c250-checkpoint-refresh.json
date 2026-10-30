@@ -1,0 +1,20 @@
+{
+  "id": "C250_AUTOMATION_READBACK",
+  "recordedAfterClockUtc": "2026-10-28T13:03:31Z",
+  "automationId": "kezek",
+  "kind": "heartbeat",
+  "status": "ACTIVE",
+  "name": "Kezek WEB — до команды остановиться",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "rrule": "FREQ=MINUTELY;INTERVAL=15",
+  "beforeSHA256": "8535a17aee86c793bd07d6f6b69841f995ebaaa4b24af6e6a96a0520825b9dc0",
+  "configSHA256": "d640eb0287367fcc5fc69708c002692b9c368a4f103f58c6f28fc54d52d19a4b",
+  "backup": "automation-before-c250-checkpoint.toml",
+  "toolUpdateSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "previousFullConfigurationPreservedInBackup": true,
+  "originalConstraintsPreservedAsSuffix": true,
+  "noDuplicate": true,
+  "change": "CurrentC249/C250readonlyclassification+nextC251finiteUIplan replace supersededoperationalcheckpoint; originalconstraintsunchangedsuffix/fulloldbackup, sameACTIVE/15min/chat/name. Sourcefeedbackrisk notproductbugyet/no newprivileges."
+}

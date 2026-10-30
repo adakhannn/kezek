@@ -179,7 +179,7 @@ export default function StaffServicesEditor({
                                         {getServiceName(s)}
                                     </span>
                                     <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                                        {s.duration_min} РјРёРЅ
+                                        {s.duration_min} {t('staff.cabinet.services.duration', 'мин')}
                                     </span>
                                 </div>
                                 {isChecked && (

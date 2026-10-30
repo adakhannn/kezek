@@ -1,0 +1,23 @@
+{
+  "id":"C42",
+  "plannedAfterUtc":"2026-10-21T01:01:56Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementIds":["C1-03"],
+  "scope":"Ordinary fresh Google login after normal logout, preserving explicit same-origin public return. Four authorized existing identities x redirect/next aliases =8 finite cases. Not existing-session C39 replay, not arbitrary OAuth/provider/security certificate.",
+  "budgetMinutes":12,
+  "identities":[
+    {"key":"SA","chooser":"Адахан Осоров kezekkg@gmail.com","actual":"Anonymized / Админ-панель"},
+    {"key":"CLIENT","chooser":"Адахан Осоров low.fade.osh@gmail.com","actual":"LIVE TEST CLIENT12OCT / Клиент"},
+    {"key":"STAFF","chooser":"Образ obraz.osh@gmail.com","actual":"Адахан Осоров / Кабинет сотрудника, existing1bfd0e3b"},
+    {"key":"OWNER","chooser":"Адахан Осоров osorovadahan04@gmail.com","actual":"Аккаунт владельца / Владелец, two businesses unchanged"}
+  ],
+  "entryUrls":["http://localhost:3000/auth/sign-in?redirect=%2Fterms","http://localhost:3000/auth/sign-in?next=%2Fterms"],
+  "expected":"After choosing known account via ordinary Google, final exact http://localhost:3000/terms and heading Пользовательское соглашение with selected authenticated identity. Not generic role destination; explicit public return must survive callback. No accepting agreement, only viewing page.",
+  "steps":["Verify actual initial role", "Normal Logout, verify root/Войти", "Document goto one planned safe sign-in URL", "Verify sign-in form and Google button", "Ordinary Google selection of exact known account", "Wait for terms heading; verify benign final URL and identity", "Repeat next distinct planned alias/identity only; no duplicate retries for counts", "Restore originalSA via ordinary login ifneeded; preserve originaluser2/5"],
+  "boundaries":"Do not read callback URLs/authcodes/cookies/storage/serverlogs. No raw HTTP/evaluatefetch/SDK/interception or new credential/role fixtures. CAPTCHA/password/device -> handoff and block case. No policy-denied endpoint/tab. No screenshots unchanged retry; DOM not visual/no-flash/device proof.",
+  "effects":"Ordinary logout/login may sync app auth/profile notification metadata and telemetry; IDs unenumerated, notzeroTOTALwrites. No agent business/booking/job/role/grant/current-business writes, no settings changes.",
+  "matrixBefore":{"passed":0,"failed":0,"blocked":0,"notRun":8,"total":8},
+  "acceptance":"Only safe-success callback subset. Full C1-03 remains incomplete: unsafe/failure/alias-precedence/provider/session cases separate; no fullsecurity PASS. Missing roles not manufactured.",
+  "sourceChangePolicy":"Fix only after true UI failure, exact expectation/fact recorded; bounded12min covers normal path and restoration. If failure persists, stop remaining dependent matrix and report it rather than count generic page as success.",
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

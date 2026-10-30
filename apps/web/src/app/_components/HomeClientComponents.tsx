@@ -8,6 +8,8 @@ import {useLanguage} from './i18n/LanguageProvider';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { bookingCountForm } from '@/lib/bookingCountForm';
+import { publicCategoryLabel } from '@/lib/publicCategoryLabels';
 
 
 type HomeHeroProps = {
@@ -19,6 +21,7 @@ type HomeHeaderProps = {
     q: string;
     cat: string;
     categories: string[];
+    categoryLabels?: Record<string, string>;
     totalResults: number;
 };
 
@@ -26,10 +29,11 @@ type HomeResultsHeaderProps = {
     totalResults: number;
     q: string;
     cat: string;
+    categoryLabels?: Record<string, string>;
 };
 
 export function HomeHero({ totalBusinesses, children }: HomeHeroProps) {
-    const {t} = useLanguage();
+    const {t, locale} = useLanguage();
 
     const steps = [
         {
@@ -100,7 +104,7 @@ export function HomeHero({ totalBusinesses, children }: HomeHeroProps) {
                             </h2>
                         </div>
                         <div className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-primary)]">
-                            {totalBusinesses} {t('home.hero.available', 'мест')}
+                            {totalBusinesses} {t(`home.hero.available.${bookingCountForm(totalBusinesses, locale)}`, t('home.hero.available', 'мест'))}
                         </div>
                     </div>
 
@@ -132,8 +136,8 @@ export function HomeHero({ totalBusinesses, children }: HomeHeroProps) {
     );
 }
 
-export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) {
-    const {t} = useLanguage();
+export function HomeHeader({q, cat, categories, totalResults, categoryLabels = {}}: HomeHeaderProps) {
+    const {t, locale} = useLanguage();
     const router = useRouter();
     const [query, setQuery] = useState(q);
 
@@ -177,7 +181,7 @@ export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) 
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-                        {totalResults} {t('home.results.shortCount', 'вариантов')}
+                        {totalResults} {t(`home.results.shortCount.${bookingCountForm(totalResults, locale)}`, t('home.results.shortCount', 'вариантов'))}
                     </span>
                     <Link
                         href="/map"
@@ -227,7 +231,7 @@ export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) 
                         <span className="type-label shrink-0 text-[var(--text-muted)]">
                             {t('home.cats.title', 'Категории:')}
                         </span>
-                        {[{ label: t('home.cats.all', 'Все'), value: '' }, ...categories.map((category) => ({ label: category, value: category }))].map((item) => (
+                        {[{ label: t('home.cats.all', 'Все'), value: '' }, ...categories.map((category) => ({ label: publicCategoryLabel(categoryLabels, category), value: category }))].map((item) => (
                             <Link
                                 key={item.value || 'all'}
                                 href={buildMarketplaceHref(query.trim(), item.value)}
@@ -267,12 +271,12 @@ function buildMarketplaceHref(query: string, category: string): string {
     return search ? `/?${search}` : '/';
 }
 
-export function HomeResultsHeader({ totalResults, q, cat }: HomeResultsHeaderProps) {
+export function HomeResultsHeader({ totalResults, q, cat, categoryLabels = {} }: HomeResultsHeaderProps) {
     const { t } = useLanguage();
 
     const activeFilters = [
         q ? `${t('home.results.query', 'Поиск')}: ${q}` : null,
-        cat ? `${t('home.results.category', 'Категория')}: ${cat}` : null,
+        cat ? `${t('home.results.category', 'Категория')}: ${publicCategoryLabel(categoryLabels, cat)}` : null,
     ].filter(Boolean) as string[];
 
     return (

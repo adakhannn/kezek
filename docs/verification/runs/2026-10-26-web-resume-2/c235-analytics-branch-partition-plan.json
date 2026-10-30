@@ -1,0 +1,40 @@
+{
+  "id": "C235",
+  "status": "FINITE_PLAN_BEFORE_UI_POSITIVE_HOURLY_ELIGIBILITY_REQUIRED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-G302-hourly-branch-partition-consistency",
+  "requirementIds": [
+    "G3-02"
+  ],
+  "variants": [
+    "owner-analytics:hourly-two-branch-partition-and-overview-invariance"
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/analytics/page.tsx": "52d4b3235f2af1ae29ec8364ed40c62bcf398f96c87b1eaaa4866ce26fb80ff4",
+    "apps/web/src/app/dashboard/analytics/useDashboardAnalyticsPageData.ts": "fdfb1ec557ae06afe47111bee5ec8cdcae573b11bc168e6658a14bc33197ecf0",
+    "apps/web/src/app/dashboard/analytics/DashboardAnalyticsSections.tsx": "cbdf7fa5ce09ddba2e606515c7423d97ba012d041b742b2a88c1cedbd6cbf9a2",
+    "apps/web/src/app/dashboard/analytics/analyticsPeriod.ts": "4f3e82c45cfc41cb2882e7a5dd603589323b00cf0e9f889fc2a776938025f22d",
+    "apps/web/src/lib/dashboardAnalyticsHttpService.ts": "dcc008d2ffe0356627963c1c1ef3e08a0c7c563c5f197d46f0e69315bb59d364",
+    "apps/web/src/lib/dashboardAnalyticsLoadService.ts": "954b285b545cc4a8cb0aab441dfbe7daa70c643b2d6dcf71163b05eda8c559e3",
+    "apps/web/src/lib/dashboardAnalyticsOverviewService.ts": "b3dcf0065e4649939c33c057ea213e65290360533d0c78ac5b4879df3dbf66d5"
+  },
+  "timeboxMinutes": 10,
+  "role": "Knownosorovadahan04 owner/ownbusiness2; knownSArestore",
+  "expected": "OwnerBusiness2loadeddefault30/All (independent26Octinclusive30start27Sep/end26Oct), exact2knownbranches1fe1/223a. Hourly24rowswith>=1positivebooking/promoAllcell, no loading/error. SnapshotAllA ->branch1 ->branch2 ->AllB sameperiod. PerhourA=B1+B2 forbooking+promo, AllA=AllB anddailyoverviewstatus/valuesunchanged. No positiveinitialmeansBLOCKEDbeforemutatingfilter, notemptydataPASS. RestoreoriginalAll/default30/readback thenSAadmin.",
+  "steps": [
+    "FreshknownSAadmin/clock ->ordinarylogout/Googleknownowner only. Ifexistingbusinesschooser requireknownBusiness2current, Continuecurrentonly/no businessswitch orRemember change. Actualownbusiness2dashboard thenobservedAnalyticslink. No authloops/newtabs/forbiddenroutes.",
+    "Requiredefault30/All/exact2expectedbranchoptions andsettledanalyticsnoerror/loading. Captureoriginalvisibleperiod/overview/hourlytable24rows viaordinaryAX/visibleinnerText only. RequirepositiveAllcount, elseBLOCKEDnofilter/reload/retry/numericclaims.",
+    "Ordinaryselector branch1; waitloadsettled andcapturetable+period+overview. Branch2similarly. SelectoriginalAllonce, settledcaptureAllB. No preset/datefill/export/Retry/cron/recalc/booking/shift/payment actions.",
+    "Compare24hourbooking/promoadditivity independentmath andAllA=AllB; anydataunstableorerror=>BLOCKEDnotassumeproductcause. Ifpositiveconsistentpartitionandstableoverview=>ONEcompoundUI PASS only, notsourceSQL/aggregationtruth/security.",
+    "KeepAll/default30original, restoreownerlogout/GoogleknownSA; automaticdestinationmayhonornext/dashboard so observedAdminmenu->Adminpanel ifneeded. Actualprotectedadmin/RU/Anonymized/Business3/markHandoff."
+  ],
+  "stopRules": [
+    "No directHTTP/API/SDK/SQL/storage/networktimeline/credentials extraction. ReadonlynormalUIonly.",
+    "No knownmissingaggregate simulatedzeroPASS; no errorRetry/requery/serverrestart/config/sourcefix fromsetupfailure.",
+    "No newidentity/role/fixture/job/cron/booking/hold/slot/attendance/package/payment/export/send.",
+    "Navigationtimeout ->ONEfreshAX/no duplicateclick/auth, timebox10minutes.",
+    "Onlyscopecontrols changed restoreAllonceevenonerror; do not persistinvalidrange or manualdate workaround."
+  ],
+  "effects": "Ordinary2logouts+2Googlelogins includingrestore; read-onlyreportGETs andlocalbranchfilterstate, finalAll/default30. No intentional domainwrites; ordinaryauth/analytics/telemetryunenumerated.",
+  "credit": "AtmostONEcompoundNEWUI, not preset/historyrefresh/positivecontrol asnewcases. G3-02wholepartial/timezones/numericbooking-ETL/fullG3notclosed."
+}

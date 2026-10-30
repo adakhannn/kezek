@@ -3,6 +3,8 @@
 import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type TelegramAccountSwitchHelpProps = {
     context: 'login' | 'link';
     onRefresh: () => void;
@@ -12,12 +14,13 @@ export function TelegramAccountSwitchHelp({
     context,
     onRefresh,
 }: TelegramAccountSwitchHelpProps) {
+    const { t } = useLanguage();
     const [expanded, setExpanded] = useState(false);
     const helpId = useId();
     const actionLabel =
         context === 'login'
-            ? 'Войти с другого Telegram-аккаунта'
-            : 'Подключить другой Telegram-аккаунт';
+            ? t('auth.telegramSwitch.login', 'Войти с другого Telegram-аккаунта')
+            : t('auth.telegramSwitch.link', 'Подключить другой Telegram-аккаунт');
 
     useEffect(() => {
         if (!expanded) return;
@@ -46,7 +49,7 @@ export function TelegramAccountSwitchHelp({
                       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                           <button
                               type="button"
-                              aria-label="Закрыть подсказку"
+                              aria-label={t('common.closeDialog', 'Закрыть подсказку')}
                               className="absolute inset-0 cursor-default bg-slate-950/65 backdrop-blur-sm"
                               onClick={() => setExpanded(false)}
                           />
@@ -59,7 +62,7 @@ export function TelegramAccountSwitchHelp({
                           >
                               <button
                                   type="button"
-                                  aria-label="Закрыть"
+                                  aria-label={t('common.closeDialog', 'Закрыть')}
                                   className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-lg text-[var(--text-secondary)] transition hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                   onClick={() => setExpanded(false)}
                               >
@@ -69,15 +72,15 @@ export function TelegramAccountSwitchHelp({
                                   id={`${helpId}-title`}
                                   className="pr-8 text-base font-semibold text-[var(--text-primary)]"
                               >
-                                  Telegram запомнил аккаунт в браузере
+                                  {t('auth.telegramSwitch.title', 'Telegram запомнил аккаунт в браузере')}
                               </p>
                               <ol className="mt-3 list-decimal space-y-1.5 pl-4 text-sm leading-relaxed text-[var(--text-secondary)]">
-                                  <li>Откройте управление входом Telegram.</li>
-                                  <li>Нажмите текущий профиль и выберите Log out.</li>
-                                  <li>Вернитесь сюда и обновите кнопку — Telegram предложит другой номер.</li>
+                                  <li>{t('auth.telegramSwitch.step1', 'Откройте управление входом Telegram.')}</li>
+                                  <li>{t('auth.telegramSwitch.step2', 'Нажмите текущий профиль и выберите Log out.')}</li>
+                                  <li>{t('auth.telegramSwitch.step3', 'Вернитесь сюда и обновите кнопку — Telegram предложит другой номер.')}</li>
                               </ol>
                               <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">
-                                  В приложении: Настройки → Конфиденциальность → Боты и сайты.
+                                  {t('auth.telegramSwitch.appHint', 'В приложении: Настройки → Конфиденциальность → Боты и сайты.')}
                               </p>
                               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                                   <a
@@ -86,7 +89,7 @@ export function TelegramAccountSwitchHelp({
                                       rel="noreferrer"
                                       className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[var(--radius-md)] bg-[#229ED9] px-3 text-sm font-semibold text-white transition hover:bg-[#168ac2]"
                                   >
-                                      Открыть Telegram
+                                      {t('auth.telegramSwitch.open', 'Открыть Telegram')}
                                   </a>
                                   <button
                                       type="button"
@@ -96,7 +99,7 @@ export function TelegramAccountSwitchHelp({
                                           setExpanded(false);
                                       }}
                                   >
-                                      Обновить кнопку
+                                      {t('auth.telegramSwitch.refresh', 'Обновить кнопку')}
                                   </button>
                               </div>
                           </div>

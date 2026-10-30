@@ -1,0 +1,138 @@
+{
+  "id": "S1.2-20261018-result",
+  "observedThroughUtc": "2026-10-18T08:07:51Z",
+  "provenance": "Structured transcription of actual CUA DOM snapshots and captured browser-console results in this turn; not screenshot, HTTP trace, pre-hydration capture, or unit evidence.",
+  "candidateId": "dev-20261018-S1-452faff676ef",
+  "environment": "localhost:3000 Next dev; RU; actual owner and guest; existing IAB2 tab3",
+  "routes": [
+    {
+      "role": "owner",
+      "route": "/",
+      "direct": "Actual home heading and two business cards after goto timeout; metadata changed then DOM confirmed",
+      "reload": "same heading, two cards, owner account"
+    },
+    {
+      "role": "owner",
+      "route": "/terms",
+      "direct": "Пользовательское соглашение, sections1–8, home links, owner",
+      "reload": "same heading and section8, owner"
+    },
+    {
+      "role": "owner",
+      "route": "/privacy",
+      "direct": "Политика конфиденциальности, sections1–9, owner",
+      "reload": "same heading and section9, owner"
+    },
+    {
+      "role": "owner",
+      "route": "/auth/sign-in",
+      "direct": "Login UI initially; active owner session redirects to /select-business with two businesses; business2 current",
+      "reload": "Login UI and owner observed after reload; later Forward settled at expected business selector. Initial login flash not claimed absent."
+    },
+    {
+      "role": "guest",
+      "route": "/",
+      "direct": "Full document logout return to home; guest Войти, two businesses",
+      "reload": "same heading and two businesses, guest"
+    },
+    {
+      "role": "guest",
+      "route": "/terms",
+      "direct": "terms heading and section8, guest",
+      "reload": "heading/section8/guest all true"
+    },
+    {
+      "role": "guest",
+      "route": "/privacy",
+      "direct": "privacy heading and section9, guest",
+      "reload": "heading/section9/guest all true"
+    },
+    {
+      "role": "guest",
+      "route": "/auth/sign-in",
+      "direct": "Google/Yandex/WhatsApp login UI; no owner badge",
+      "reload": "First snapshot pending; subsequent explicit reload shows complete login UI. Settled page states Telegram localhost limitation; no Telegram login attempted."
+    }
+  ],
+  "history": {
+    "owner": "Back -> privacy with owner; Forward -> loading selector -> settled two-business selector. Source useExistingSessionRedirect and decideSignInRedirect(count>1) confirms expected redirect.",
+    "guest": "Back -> privacy guest; Forward -> initial pending -> complete guest login UI"
+  },
+  "missingRoutes": [
+    {
+      "role": "guest",
+      "route": "/__s12_missing_page_20261018",
+      "actual": "404 / Страница не найдена / Возможно, ссылка устарела или в адресе есть ошибка. Вернитесь на главную страницу или войдите в аккаунт, чтобы продолжить работу. / На главную -> / / Войти -> /auth/sign-in; no displayed stack/secret. Actual owner account label on owner case.",
+      "scope": "Unknown route presentation only, not authorization for existing routes or API status verification"
+    },
+    {
+      "role": "guest",
+      "route": "/dashboard/__s12_missing_page_20261018",
+      "actual": "404 / Страница не найдена / Возможно, ссылка устарела или в адресе есть ошибка. Вернитесь на главную страницу или войдите в аккаунт, чтобы продолжить работу. / На главную -> / / Войти -> /auth/sign-in; no displayed stack/secret. Actual owner account label on owner case.",
+      "scope": "Unknown route presentation only, not authorization for existing routes or API status verification"
+    },
+    {
+      "role": "guest",
+      "route": "/cabinet/__s12_missing_page_20261018",
+      "actual": "404 / Страница не найдена / Возможно, ссылка устарела или в адресе есть ошибка. Вернитесь на главную страницу или войдите в аккаунт, чтобы продолжить работу. / На главную -> / / Войти -> /auth/sign-in; no displayed stack/secret. Actual owner account label on owner case.",
+      "scope": "Unknown route presentation only, not authorization for existing routes or API status verification"
+    },
+    {
+      "role": "guest",
+      "route": "/staff/__s12_missing_page_20261018",
+      "actual": "404 / Страница не найдена / Возможно, ссылка устарела или в адресе есть ошибка. Вернитесь на главную страницу или войдите в аккаунт, чтобы продолжить работу. / На главную -> / / Войти -> /auth/sign-in; no displayed stack/secret. Actual owner account label on owner case.",
+      "scope": "Unknown route presentation only, not authorization for existing routes or API status verification"
+    },
+    {
+      "role": "guest",
+      "route": "/admin/__s12_missing_page_20261018",
+      "actual": "404 / Страница не найдена / Возможно, ссылка устарела или в адресе есть ошибка. Вернитесь на главную страницу или войдите в аккаунт, чтобы продолжить работу. / На главную -> / / Войти -> /auth/sign-in; no displayed stack/secret. Actual owner account label on owner case.",
+      "scope": "Unknown route presentation only, not authorization for existing routes or API status verification"
+    },
+    {
+      "role": "owner",
+      "route": "/dashboard/__s12_missing_page_20261018",
+      "actual": "404 / Страница не найдена / Возможно, ссылка устарела или в адресе есть ошибка. Вернитесь на главную страницу или войдите в аккаунт, чтобы продолжить работу. / На главную -> / / Войти -> /auth/sign-in; no displayed stack/secret. Actual owner account label on owner case.",
+      "scope": "Unknown route presentation only, not authorization for existing routes or API status verification"
+    }
+  ],
+  "recovery404": "Clicked На главную from public404; initial pending snapshot, then settled home heading and Найдено:2, guest.",
+  "console": {
+    "capturedErrorLevel": [],
+    "hydrationOrServerComponentErrorsObserved": false,
+    "scope": "Captured browser buffer only; no network-request completeness claim",
+    "warnings": [
+      {
+        "kind": "logo aspect-ratio",
+        "knownHistorical": "WB-055",
+        "repeated": true
+      },
+      {
+        "utc": "2026-10-18T08:02:36.785Z",
+        "message": "@supabase/ssr: createServerClient was configured without set and remove cookie methods, but the client needs to set cookies.",
+        "classification": "warning observed during logout; random logout/early expiry impact not reproduced; not a confirmed new product bug"
+      }
+    ]
+  },
+  "authTransitions": {
+    "logout": "2026-10-18 about08:02:36UTC owner -> guest through Выйти; logout intermediate then home verified",
+    "login": "2026-10-18 about08:06:14–08:06:38UTC ordinary Google chooser existing osorovadahan04@gmail.com -> actual owner selector; business2 still current; no business selection/POST action clicked"
+  },
+  "notClaimed": [
+    "cold/cleared browser cache",
+    "SSR before hydration",
+    "visual or device PASS",
+    "real screen reader PASS",
+    "controlled Server Component exception",
+    "controlled client API error/retry",
+    "whole console clean",
+    "security/RLS PASS"
+  ],
+  "blockers": [
+    "No documented CUA cold-cache or pre-hydration control used; A1-01/A1-02 remain incomplete",
+    "Screenshot unavailable; unchanged screenshot failure not retried",
+    "Safe bounded failure injection for actual Server Component and client request/retry not executed; unit failures not substituted"
+  ],
+  "sideEffects": "Ordinary logout/login and navigation only; no business Save/create/update/cancel/pay, role/credential changes, backend fault injection, restart, deploy, or new browser tab. Ordinary telemetry/auth writes not enumerated; TOTAL DB writes unknown.",
+  "runtimeFixes": 0
+}

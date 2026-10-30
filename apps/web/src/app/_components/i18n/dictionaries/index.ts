@@ -20,6 +20,8 @@ import type { Translations } from '../LanguageProvider';
 import { adminEn } from './admin.en';
 import { adminKy } from './admin.ky';
 import { adminRu } from './admin.ru';
+import { analyticsRu, analyticsKy, analyticsEn } from './analytics';
+import { applicationHistoryRu, applicationHistoryKy, applicationHistoryEn } from './applicationHistory';
 import { apiDocsEn } from './apiDocs.en';
 import { apiDocsKy } from './apiDocs.ky';
 import { apiDocsRu } from './apiDocs.ru';
@@ -31,6 +33,7 @@ import { authRu } from './auth.ru';
 import { bookingEn } from './booking.en';
 import { bookingKy } from './booking.ky';
 import { bookingRu } from './booking.ru';
+import { bookingFlowEn, bookingFlowKy, bookingFlowRu } from './bookingFlow';
 
 // Home
 import { bookingsEn } from './bookings.en';
@@ -151,10 +154,12 @@ function mergeDictionaries(...dicts: Translations[]): Translations {
 export const ky: Translations = mergeDictionaries(
     authKy,
     bookingKy,
+    bookingFlowKy,
     homeKy,
     businessKy,
     headerKy,
     dashboardKy,
+    analyticsKy,
     staffKy,
     schedulingKy,
     scheduleFormKy,
@@ -162,6 +167,7 @@ export const ky: Translations = mergeDictionaries(
     branchesKy,
     financeKy,
     adminKy,
+    applicationHistoryKy,
     commonKy,
     datePickerKy,
     monthPickerKy,
@@ -181,10 +187,12 @@ export const ky: Translations = mergeDictionaries(
 export const ru: Translations = mergeDictionaries(
     authRu,
     bookingRu,
+    bookingFlowRu,
     homeRu,
     businessRu,
     headerRu,
     dashboardRu,
+    analyticsRu,
     staffRu,
     schedulingRu,
     scheduleFormRu,
@@ -192,6 +200,7 @@ export const ru: Translations = mergeDictionaries(
     branchesRu,
     financeRu,
     adminRu,
+    applicationHistoryRu,
     commonRu,
     datePickerRu,
     monthPickerRu,
@@ -211,10 +220,12 @@ export const ru: Translations = mergeDictionaries(
 export const en: Translations = mergeDictionaries(
     authEn,
     bookingEn,
+    bookingFlowEn,
     homeEn,
     businessEn,
     headerEn,
     dashboardEn,
+    analyticsEn,
     staffEn,
     schedulingEn,
     scheduleFormEn,
@@ -222,6 +233,7 @@ export const en: Translations = mergeDictionaries(
     branchesEn,
     financeEn,
     adminEn,
+    applicationHistoryEn,
     commonEn,
     datePickerEn,
     monthPickerEn,

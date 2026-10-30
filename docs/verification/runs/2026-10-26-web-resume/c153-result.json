@@ -1,0 +1,55 @@
+{
+  "id": "C153",
+  "caseId": "S26-O401-admin-category-warning-dismiss-alternatives",
+  "status": "PASS_COMPOUND_SCOPED_LIVE",
+  "plan": "c152-c153-dismiss-plan.json",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "observationWindowUtc": [
+    "2026-10-25T20:53:47Z",
+    "2026-10-25T20:57:25Z"
+  ],
+  "baseline": {
+    "categoryIds": [
+      "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+      "85157ef2-b18e-4be3-88f7-04c41fd02e5b",
+      "0851842b-feca-4cda-97a5-37b7ffe971ae"
+    ],
+    "total": 3,
+    "active": 2,
+    "usage": 3
+  },
+  "steps": [
+    {
+      "action": "One observed Categories link",
+      "actual": "URL waiter timed out; next actualAX already correct categories/list3, no repeated click or productlatencyFAIL."
+    },
+    {
+      "clockUtc": "2026-10-25T20:54:06Z",
+      "action": "Open ONLY exact inactive target list warning; locator.press Escape on observed Close window control",
+      "actual": "Named irreversible warning/no forcecontrol, Escape removes warning, original target/list retained. Locator explicitly focuses observed control before native key: NOT complete Tab order or focus restoration proof."
+    },
+    {
+      "clockUtc": "2026-10-25T20:54:19Z",
+      "action": "Reopen exact same warning only for different Close-control subvariant; click ONLY Закрыть окно",
+      "actual": "Warning removed, original target/list retained. No dialogDelete/Confirm/Enter/Cancel-path newcredit."
+    },
+    {
+      "clockUtc": "2026-10-25T20:54:30Z",
+      "action": "ONE ordinary reload",
+      "actual": "All baselineIDs/names/slugs/activity/usages retained; total3/active2/usage3, popularBarber2."
+    },
+    {
+      "clockUtc": "2026-10-25T20:54:41Z",
+      "action": "Observed adminreturn",
+      "actual": "Protected Панель администратора/Admin-panel/Anonymized/Logout/RU/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1, handoffmarked."
+    }
+  ],
+  "actual": "Both planned non-loading warning dismiss paths Escape and visible Close window worked on exact retained inactive category. One reload preserved originalthreecategoryIDs/name/slug/activity/usages and summaries. Protected admin restored; no deletion or source fix.",
+  "effects": "Local warning open/Escape/Close and navigation/reload only; no categorySave/Create/Delete/Confirm/Enter/activation/role/fixture/booking/payment/auth command; ordinary telemetry unenumerated.",
+  "newUiPass": 1,
+  "newVerifiedFix": 0,
+  "newAccepted": 0,
+  "limits": "One compound functional admin keyboard/dismiss integration only. Not focus trap/order/restoration, screenreader, visual/layout/device/cache/no-flash, actual deletion/cascade/security or wholeO4/M5 acceptance.",
+  "next": "C153 compound admin-category warning Escape+Close-control one NEWUI PASS, originalcategory/list retained after one reload/protectedadminRUrestore.26Oct8NEWUI/3fix/logical15;21of316295left/S117primary63/S23/S41/NOT_READY; no source/build change. C151 negativecreate validation remains BLOCKED: no Submit/Create/Save/Enter/newentity authority inferred; codeguard notLIVE. NextC154 boundedREADONLY M3-01 known-own-SA userdetail local-name-draft/Cancel history/effects review BEFORE any finiteUIplan. Do not repeat knownusersearch or touch password/email/phone/grants/super/suspension/message/save/create/delete; no credentials/unmasking/newfixture. If already covered or effects uncertain, exactblocker+independent unfinishedpriority, notUNIT imitation. Existing build/oldcases/F013/auth/cache/visual/owner retries forbidden withoutnewcondition."
+}

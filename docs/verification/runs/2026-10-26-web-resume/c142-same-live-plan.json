@@ -1,0 +1,18 @@
+{
+  "id": "C142",
+  "savedBeforeUiUtc": "2026-10-25T20:26:48Z",
+  "candidate": "dev-20261026-WEB-1f5ebe44a70f",
+  "caseIds": [
+    "S26-O303-admin-today-en",
+    "S26-O303-admin-today-ky"
+  ],
+  "timeBudgetMinutes": 5,
+  "steps": [
+    "Clock; ordinary English control on existing protected admin/RU usertab2. Wait server Admin Panel; same current26Octone09:00cancelledrow must read Cancelled, summary Cancelled1/Pending0/Confirmed0. No Todayerror/auth barrier/date/fixture change; otherwiseBLOCKED/no retry.",
+    "Clock; ordinary Кыргызча, wait Администратор панели; same row Жокко чыгарылган and summary1/Күтүүдө0/Ырасталган0. No data/booking action, authored names unchanged.",
+    "Clock; ordinary Русский restore, wait Панель администратора; original Отменено1/Ожидание0/Подтверждено0 and totalbookings30 protectedheader/Anonymized/Business3/RU; mark handoff. RUcontrolrefresh notnewcase."
+  ],
+  "expected": "Exact C140 same-live EN/KY systemstatus labels translate with current selected/server locale; numeric cancelled1 preserved, RUoldlabels preserved.",
+  "effects": "Only ordinary locale preference/automatic apprefresh, no booking/auth/config/DB command; ordinary telemetry unenumerated.",
+  "excluded": "General languageswitch/wholelocale/SSRflash/cache/visual/paidnonzeroLIVE/security/newfixtures"
+}

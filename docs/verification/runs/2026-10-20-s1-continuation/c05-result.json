@@ -1,0 +1,20 @@
+{
+  "id":"C05",
+  "status":"BLOCKED_AFTER_FIRST_FRAME_0_CLOSURES",
+  "candidateId":"dev-20261020-S1-ed0bdd7faf24",
+  "caseId":"S12-INITIAL-VISUAL",
+  "role":"actual guest on mainDEV catalogue",
+  "observedUtc":"2026-10-20T09:14:52Z",
+  "timestampBoundary":"Verified post-observation clock checkpoint; exact screenshot capture timestamp not claimed",
+  "attempt":"One fresh mainDEV screenshot and actual viewport inspection; stopped before four-route/owner matrix because capture mapping differs",
+  "image":"c05-guest-home.jpg",
+  "mainDevViewport":{"width":1806,"height":1651,"dpr":0.45000001788139343,"rawJpeg":"5850x5503"},
+  "comparison":{"priorC04Origin":"s1assets-20261020-ed0bdd.localhost:3104","width":451,"height":413,"dpr":1.8000000715255735,"normalCurrentFrame":"c04-production-assets.jpg"},
+  "actual":"MainDEV pixels show real catalogue/header/three retained business cards, not a blank application, but content occupies only upper-left fraction of oversized raw frame. No first-paint/device/complete four-route visual PASS.",
+  "inference":"Approximately4x CSS size and quarter DPR between origins suggests per-site browser zoom/state; cause NOT established, no CSS bug inferred",
+  "requiredAction":"Asked human once to press Ctrl+0 on localhost:3000 and report100% status. No auth/session/data reset needed. Await actual answer/state change before recheck.",
+  "stopApplied":"No repeated screenshot, viewport override, replacement tab/browser, native, CDP or HTTP workaround",
+  "sideEffects":"One read-only screenshot and DOM viewport read; no auth/app/DB writes by commands. Ordinary existing telemetry unenumerated.",
+  "countsUnchanged":{"requirements":"18/25","cases":"59/79","remainingCases":20},
+  "remainingBreakdown":{"browserColdSSRVisual":10,"originalTransientRequestClassification":1,"staleChunkRecovery":1,"deployedDomain":8}
+}

@@ -1,0 +1,93 @@
+{
+  "id": "C127",
+  "type": "bounded readonly M5-02 service-category contract/history/source classification",
+  "startedAfterUtc": "2026-10-25T10:55:14Z",
+  "completedBeforeUtc": "2026-10-25T10:59:41Z",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "originalRequirement": "verify use by services/businesses;",
+  "history": "Original catalog explicitly includes services/businesses. Reviewed M5-02 historical refs WB094/G086 concern public category labels/filter/content contract, not independent service-category assignment or inherited service membership. C124 certifies only current business reference counts. No applicable service-category primary proof identified in these bounded sources; not a global archive absence claim, and original UTC/evidence remain unchanged.",
+  "sourceObservations": [
+    "ServiceForm Initial/state/visible controls/submit payload contain localized names, duration, prices, active and branch membership; no category assignment control or payload field.",
+    "ServiceCreateBody and constructed inserted service rows contain biz_id/branch_id and service attributes, no category field. ServiceUpdateBody/updatePayload and added rows similarly have no category field. Source was read, no handler executed.",
+    "Checked-in generated services Row/Insert/Update type has no category field. This is not a freshly verified deployed DB schema, RPC or trigger claim.",
+    "Public marketplace category filter selects businesses.categories; publicCategoryLabels loads slug/name_ru metadata. This supports a business taxonomy interpretation but does not settle the service obligation."
+  ],
+  "blocker": {
+    "status": "BLOCKED_CONTRACT_DECISION_REQUIRED",
+    "owner": "human/product requirement owner",
+    "question": "Does service-category use mean inheriting the business taxonomy in a specified observable service flow, or an independent service-to-category feature? Specify the expected supported behavior before UI acceptance or implementation.",
+    "exit": "Explicit expected service-category relationship and observable flow; then bounded fixture/authority review and finite independent live plan. No schema, category assignment, fixture or feature expansion inferred.",
+    "notBug": "No actual UI repro of a supported service-category contract; do not create a runtime defect or speculative fix from this source/wording mismatch."
+  },
+  "effects": "Read-only local files/status/diff only. No browser/app/DB commands, auth transition, source/test/build/runtime changes. Ordinary prior auth/telemetry remains unenumerated; no zero TOTAL writes claim.",
+  "credit": {
+    "newUiPass": 0,
+    "newFixes": 0,
+    "acceptedDelta": 0,
+    "acceptedBefore": 21,
+    "acceptedAfter": 21,
+    "remaining": 295,
+    "wholeM502Accepted": false,
+    "casePlanComplete": false
+  },
+  "hashes": [
+    {
+      "path": "docs/WEB_LIVE_TESTING_AREAS_CATALOG.md",
+      "sha256": "94ab076fb44eb3d232f8c6a6c94c0618368b8e3e7d7269fb55bd8ec95bdb3e88"
+    },
+    {
+      "path": "docs/verification/reviews.jsonl",
+      "sha256": "2b227b5c22cc06d83160aa0ed36856d26f0ef48f21971771c783947a46d6f1f8"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+      "sha256": "c17d0059a7b5b5d28588fb3d213ef0b3ac3f819f22c3dd0c9c8def49383864c2"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c123-usage-review.json",
+      "sha256": "e0f7453817789cb10712994d7f080902eb30544e62b69a9f3f568618e0286e1e"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c124-result.json",
+      "sha256": "88fa9bc422ad07999fcbdd5c0c88a478496a46f556a9b3aab34a631c4a92d7ba"
+    },
+    {
+      "path": "apps/web/src/app/dashboard/services/ServiceForm.tsx",
+      "sha256": "b778953aa764cc3277969010b8077dbed68357d33341bec6b8c3188edb112fd8"
+    },
+    {
+      "path": "apps/web/src/app/api/services/create/route.ts",
+      "sha256": "2b7b0c26320b11131c3d7bb8ff3056481865c7f1bbe42dbba560b3cd1bb64492"
+    },
+    {
+      "path": "apps/web/src/lib/serviceCreateHttpService.ts",
+      "sha256": "17a7adcb6ba033a04a7258e54e45172f2a6074b0ac57972dae3a3100a6cfe667"
+    },
+    {
+      "path": "apps/web/src/lib/serviceCreateRouteService.ts",
+      "sha256": "6ee8e86f76831c589cb2006f414f8c177b24c75111299445499c4cecd13c96fd"
+    },
+    {
+      "path": "apps/web/src/lib/serviceUpdateRouteService.ts",
+      "sha256": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28"
+    },
+    {
+      "path": "apps/web/src/types/supabase.ts",
+      "sha256": "e832078b52acf1ae6eeebe0825e045d69621f5b7e7a9df48cc15d776c0dcb005"
+    },
+    {
+      "path": "apps/web/src/app/page.tsx",
+      "sha256": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a"
+    },
+    {
+      "path": "apps/web/src/lib/publicCategoryLabels.ts",
+      "sha256": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f"
+    }
+  ],
+  "next": "C128 bounded readonly history/effect review of retained inactive test category destructive-confirmation Cancel before any new UI plan. Determine whether exact category Cancel/reload has original proof; reuse only if applicable with original UTC/no new PASS. If genuinely uncovered, save finite C129 warning-open/Cancel/reload plan for exact c7cef81b only; NEVER dialog Confirm/Delete/Enter/force checkbox or actual deletion. No new category/fixture, service-category implementation, unchanged C119/C124/C126/build/auth/F013 retry. M5-02 services contract remains explicitly BLOCKED until clarified; all older safety/stale gates retained."
+}

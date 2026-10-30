@@ -1,0 +1,18 @@
+{
+  "id":"C06-before",
+  "candidateId":"dev-20261020-S1-ed0bdd7faf24",
+  "findingId":"S1-F004",
+  "caseId":"A3-04-S1-02",
+  "status":"LIVE_FAIL_RETRY_AFTER_CHUNK_RESTORED",
+  "environment":"Real current-source local production build; isolated dummy backend; actual CUA user interaction, not mocked React/unit",
+  "role":"guest; no auth submission",
+  "origin":"http://s1chunk-20261020-ed0bdd.localhost:3104",
+  "targetPath":"/auth/sign-in",
+  "steps":["Load actual privacy page; guest sign-in link and13script resources; target auth chunk not loaded", "09:20:52.740UTC: recoverably rename only isolated generated auth chunk a3ede8c22273d7ed.js,90s restore guard", "Click actual Войти link", "09:21:07.396UTC: visible Что-то пошло не так and Failed to load chunk; browser error matches exact resource", "09:21:33UTC: restore file before UI retry, hash2fd1f6ce...MATCH/backup absent", "Click Попробовать снова once", "09:21:37.740UTC: same chunk error again, error view persists despite restored file", "Ordinary browser reload same URL shows actual Kezek sign-in UI; no sign-in action submitted"],
+  "expected":"User retry after the asset becomes available must recover without requiring knowledge of a separate browser refresh",
+  "actual":"Boundary reset alone reuses rejected module load; visible retry does not recover. Full document reload does recover.",
+  "impact":"Users encountering missing/stale JS assets remain stuck behind the advertised retry. No data loss or unauthorized DB effect observed.",
+  "proof":["c06-chunk-error.jpg","c06-reload-control.jpg","browser console errors09:21:07.396Z and09:21:37.740Z, exact Next chunk path"],
+  "sideEffects":"One recoverable rename/restoration of own isolated generated asset; bytes unchanged. No source/DB/auth/booking command. Task-owned temporary tab closed; main user tab preserved. Isolated process22768 stopped after control.",
+  "limits":"Controlled missing-file fault emulates unavailable chunk, NOT actual deployed old-document lifecycle or production domain PASS. Telegram iframe Bot domain invalid on dummy origin is expected external restriction, not this finding. Screenshot current error/control only, not device matrix."
+}

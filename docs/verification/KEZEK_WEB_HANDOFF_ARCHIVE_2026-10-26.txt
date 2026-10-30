@@ -1,0 +1,1597 @@
+АРХИВ ПЕРЕДАЧИ KEZEK WEB 26Oct2026
+
+НЕ РАЗРЕШЕНИЕ НА RESUME. CURRENT PAUSED. Более поздняя прямая остановка отменяет старые until-stop разрешения.
+
+Это точный снимок сохранённых файлов и исторического prompt, не буквальная стенограмма каждого сообщения чата. Primary ledger и источники остаются в репозитории.
+
+Начинать с KEZEK_WEB_HANDOFF_2026-10-26.txt; этот длинный архив читать точечно.
+
+
+AUTOMATION METADATA (без изменения конфигурации)
+
+{
+  "id": "kezek",
+  "name": "Kezek WEB — до команды остановиться",
+  "status": "PAUSED",
+  "kind": "heartbeat",
+  "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+  "rrule": "FREQ=MINUTELY;INTERVAL=15",
+  "configSHA256": "3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b"
+}
+
+
+ПОЛНЫЙ ИСТОРИЧЕСКИЙ PROMPT AUTOMATION. Самый последний HUMAN STOP имеет приоритет.
+
+Продолжай живое тестирование и стабилизацию только WEB Kezek в C:\projects\kezek по новому прямому разрешению человека 21 октября 2026: «можешь дальше продолжить работать автономно пока я сам не остановлю тебя, кстати вход через суперадмина реализовал, можешь проверить вкладки браузера». Разрешение наблюдалось 2026-10-21T06:07:49Z. Оно перспективно заменяет прежний предел 11:00 Бишкек; фиксированного срока теперь нет. Старые финалы, пауза04:41 и проверка04:44 остаются неизменной историей; не заявляй непрерывность работы. Работай до явной команды остановиться либо недоступного лимита Codex, без покупок и сбросов. Сначала настоящий clockUTC, get_usage_limits и актуальный progress. Ошибка чтения лимита не означает исчерпание: один ограниченный повтор, затем честный статус. При stop безопасно заверши текущие эффекты, явно PAUSED существующую kezek, проверь настройку повторным чтением и сохрани итог. Не создавай дубликаты автоматизации или новые чаты.
+
+Источники фактов: docs/verification/runs/2026-10-20-s1-continuation/progress.json, docs/WEB_VERIFICATION_LEDGER.json, docs/WEB_CLOSURE_PLAN.json, docs/WEB_VERIFICATION_METHOD.md; CONTRIBUTING/AGENTS и git status/diff. Реестр важнее этого checkpoint. Candidate dev-20261020-S1-4e13384124d3, SHA4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833,1677файлов был подтверждён неизменным при новом запуске. S1 16/25 принято9осталось; текущие связанные caseIds62/79PASS17осталось. C50 исправил счёт: исходный beforeFAIL B2-03-S13-4 сохранён, текущий вариант представлен уже принятым S14-F001-empty; S14-positive дополнительный контроль. Не исключай действующие blocked/stale случаи. S2 3/70,67осталось; продукт19/316,297осталось, NOT_READY. В логическом запуске9проверенныхфиксов; в завершённом утреннем окне только1новыйF012,8унаследованы. Новое разрешение/восстановление вкладки даёт0PASS/0фиксов.
+
+Одна активная цепочка: конечный план случаев с независимыми ожиданиями -> actualUI -> минимальный фикс только после настоящего UIrepro -> SAME-LIVE и адресные регрессии. UNIT/SQL/code неLIVE; не закрывай требование без всех обязательных вариантов. После каждого подпакета сообщай было/стало/дельта, закрыто/осталось/блокеры. При неизменном неактуальном состоянии не отправляй повторные уведомления. Не повторяй done без изменённой зависимости/условия. Не обещай wholegreen или отсутствие всех ошибок. Домен и deployed-production отложены пользователем в конец; работаем локально. Код/схемы/права/флаги безопасности не менять из одного инструментального сбоя.
+
+Браузер только computer-use skill+cua_repl. Пользователь вручную открыл рабочую вкладку18/provider90447e64-f1be-4740-a944-28b015348d51 в IAB2 на http://localhost:3000/admin; actualUI подтверждает Админ-панель/Anonymized,3бизнеса4филиала1сотрудник4услуги30броней. Handle restoredAdminTab52; повторно не привязывай без stale. UserTab2/providerbrowser-use:e03cd732-23aa-4d7d-91fa-d2c54e68fd41 остаётся root, та же cookie-сессия, не независимая роль. UserTab5/providerc6f744b5-18d3-4b56-9132-c301225c7e66 всё ещё ошибочный документ после C49: НЕ bind/retry/goto/back/reload; новую18 восстановил человек, не агент как обход. Не закрывай пользовательские вкладки. MarkHandoff текущей рабочей и сохраняемых вкладок. Никогда не привязывай/повторяй старые denied8f1d8750-106d-47a7-8b2d-d23fef8aaa02 или blocked5db2ef6d-2f4b-4783-9ee2-83943fbcac77; guest/admin/api/metrics?limit=1 и /admin/monitoring запрещены, включая другой URL/вкладку/HTTP/UI обход. Supabaseoldtab отсутствует, не создавай замену и не выполняй старый SQLg062ProjectionSql. Не применять externalPlaywright/CDP/native/rawHTTP/SDK/pagefetch/evaluatefetch/token-cookie-authcode-password-storage extraction. Скриншоты C09 неработали/неверный viewport; без новой причины не повторяй снимки/масштаб/ручной ремонт и не называй DOM визуальным/device/screenreader/no-flash PASS.
+
+Следующий конкретный подпакет C53: один новый ограниченный <=5мин план повторного входа после уже доказанного C49 Google-chooser abandonment, так как человек восстановил разрешённую локальную сессию. C49 Back/reload2PASS сохранить; retry1BLOCKED после задержки выборааккаунта/expiredOAuthstate не считать продуктовым багом. Сначала план, затем обычныйlogout/local signin safe /terms, Google chooser, сразу только известный kezekkg и проверка локального результата; никаких ручных callbackURL/code replay. Восстановить /admin. Если блокируется навигация, не обходить; один boundeddiagnostic<=10мин и отдельный независимый сценарий, не unit-имитация. Не повторять32готовых returnварианта, F4-02 48PASS16BLOCKED0notrun/64 (33новых+15reused), F4-01 12PASS4BLOCKED. Полный C3-03 остаётся partial: реальный explicit consent-refusal/Yandex cancel не проверены.
+
+Далее S1 остаток17:8domainproductionпоследними,5currentbuild/assets stale,2SSR/initialvisual,1owner cold-load,1оригинальный transient request без response/timing. Cold требует актуального Disablecache+DevToolsopen; старый вопрос00:30безответа, не задавай повторно без новой необходимости. GoogleFonts compiler publicGET разрешение истекло20Oct12:30UTC, новоеuntilstop его НЕвозобновляет; не запускай повторную сборку без новой точечной сетевой санкции. F005 fixed_pending_verification: предыдущий logout давал parentredirect до ошибки компонента, не повторяй эту нерабочую инъекцию. M1-03 16PASS2FAIL1BLOCKED/19, неизвестная причина старого business-app fetchfail, не выдавай восстановление зафикс. Другие доступные S2 проверки — только новый конечный план без повторов закрытого.
+
+Разрешён только DEV Supabase beulnmftzbmtbdlgurht через обычный UI. Четыре известные Google идентичности: kezekkg@gmail.com суперадмин; osorovadahan04@gmail.com владелец(aliasosorov@sportsoft.ru); obraz.osh@gmail.com сотрудник(aliasadakhannn@yandex.com, НЕpureclient); low.fade.osh@gmail.com pureclient. Обычный вход разрешён, CAPTCHA/password/device вручную, безобхода. Новых пользователей/ролей/jobs/multijob/admin/manager/foreignowner/secondstaff, credentials/grants не создавать без specific action-time confirmation. Нет service-roleimpersonation/платежей/покупок/чужих сообщений/ослабления защиты/DBreset/автоочистки/слепых миграций. No native/mobile/subagents/newchats/commit/push/deploy/stage/reset; грязные actorunknown изменения сохранить.
+
+FixtureAfe2d412c-21c6-40ef-b5d3-23f49f550610 retained с inactivefa5f1017-d987-40c8-90ca-b042898c694f и active057447c8-b200-4403-b056-49e3c250840f, без staff/services/bookings. FixtureB85adc551-249c-4931-a445-aa6f905f1bea+solee1eedc5a уже необратимо удалены C03 после точного подтверждения, не повторять. IDs/effects в fixtures/fixture-registry.json. Новое необратимое UIdelete всегда точное подтверждение при действии. Existing bookings/shifts/packages/payments не трогать; f821dd52 NEVERcancel без отдельного точного подтверждения; closed909/256 неreopen. G062migration20261015075000 уже применена, не повторять. Ordinary telemetry/auth writes unenumerated, никогда zeroTOTALwrites. Основной сервер pnpm -C apps/web dev session77823 ранее был healthy; не restart без подтверждения остановки и проекта, не печатай полный OAuth serverlog. Компьютер должен быть включён, Codex работать; непрерывность не гарантировать.
+
+C54 актуально: человек явно ответил «да давай» на новый запрос разрешить компилятору только публичные GET fonts.googleapis.com/fonts.gstatic.com до своей остановки. Новая санкция записана c54-font-permission.json; НЕ DEV Supabase/accounts/keys. У попытки отдельная ограниченная lease06:50UTC21Oct; это не общий срок работы. Node guard (не OS firewall), exactPostCSSIPC, dummy env,16offline policychecksPASS/неproductPASS. C53 immediate retry после abandonedchooser фактически PASS локальныйterms и восстановлена/admin: Googleabandonmentsubset3/3,fullC3-03partial. Старую C49ошибку сохранить. Следующийплан c54-build-assets-plan.json: один свежийcoldbuild exact1677/C39SHA4e defaultTurbopack, no mock/type-skip/compiler-switch, watchdog240s. Harness scripts/closure-s1-isolated-build-c54-20261021.mjs, exacttest-results/closure-s1-20261021-c54-fontread/build. Не повторять процесс если ужеесть/завершён: сперва progress/raw c54-build-raw.txt. BuildFAIL сохранятьбезunchangedretry. Build0 лишьпервыйшаг, затем отдельныеactualCUAassets/dummyofflineownedserver; неcompileкакLIVEassetPASS. Приhumanstop revokeACTIVEpermissionfile и остановитьтолькоowncompiler/server; неcleanup.
+
+LATEST C57 supersedes stale next-actions above: C54 build already EXIT1/finished06:25:52/pid25396, C55 bounded diagnostic completed (CSS timeout, binary200), no unchanged repeat. C56 ownclient history4newPASS, E1-03 acceptedS4.2; S4=1/47 and product20/316,296left; S1=16/25,62/79 and S2=3/70 unchanged. SAkezekkg restored on user18/admin at06:43:16, ownpopup19closed. C57 receiptcases NOT started. NEW direct human «да давай» approved selfhosting real Geist/GeistMono official licensed local files via next/font/local, preservevariables/no redesign/nomock/compiler-switch/checkdisable. Active finite c57-local-fonts-plan.json. First verify source/blobsha/version/metrics/RU+KYcoverage andlicense against actualC54fonts, then minimalfontdeliveryedit/newcandidate/dependencyreview, freshdefaultbuild alloutboundNodeblocked/dummyenv/no.env, actualCUApublic/admin regression. Do not blanketpromote oldvisual/build evidence or changeoriginalUTC. Current oldcandidate4e1677 until fontedit; actualledgerprogresswins. Fontdownloadstage publicofficialsourcesallowed by thisdecision; compilerdoesnotgetGitHub/accounts/DEVkeys. Prior06:50compilerleaseexpired; no needGooglecompilerGETafterlocalchange. Untilhumanstopcontinuessameboundaries.
+
+LATEST C58 COMPLETE at21Oct07:20UTC supersedes C57 action above: realfonts nowlocal, candidate dev-20261020-S1-40a5aef0e785 SHA40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf/1683files. C57colddefaultNext16Turbopack exit0/types36prerenders, noGooglecompilerfetch; C58actualnextstartprivacydocument/reload+CUAobserved2localfontbinaryhashes/3CSS PASS. Ownruntime9100stopped and owntab20closed, allusertabs2/5/18retained, SA18/admin3biz4branch1staff4service30bookingrestored, noUIauthtransition. Files c57-result.json/c58-result.json/c57-candidate-review.json, EV313-321. DO NOT rebuild/repeatdone. A3-01 accepted: S1 NOW17/25 8left, primary63/79 16left, S1.1=2/8; product21/316 295left, S2=3/70,S4=1/47, NOT_READY;9livefixes unchanged,1builddeliverystabilization notnewlivebugcredit. Four A3-02fresh-cachecases stillSTALE; noDisablecacheconfirmation/visual/pixel/deployedprodPASS. OldC54/C15buildFAIL and alloriginalUTC preserved. C57adminreload had explicit Businesscount TypeError:fetchfailed/count0 with3historicalcards, restored3/no warning laterwithoutfix: currentM1home FAILEDintermittent (15PASS3FAIL1BLOCKED/19), causeunknown/notfontcausality. No blindnetwork/datacodefix. Next safe independent finiteplan maytestremainingownreceiptpaid/cancelled/no-show statuses notalreadycertified, NEVERrepeatC56pastconfirmed/f821cancel. Or address actualcacheblocker onlywithnewcondition; no repeatedhumanrepairquestion. CompilerGoogleGETno longerneeded; c54leaseexpired. Onstop do notedit hashed oldpermissionevidence; append revocation/stoprecord and PAUSEDreadback. Untilhumanstop continues unchangedstrictscope.
+
+LATEST C60 COMPLETE supersedes all receipt next-actions above: C59cancelled/no-show2NEWreceipts entry+reloadPASS, own21/22closed,SArestored07:35:50. C60 oneNEWpaid034receiptcaseRU/KY/EN+reloadPASS, justified by exactG01414Octdateformatterchange afterL03013Octpaidproof; not3independentcases. Actualpaid12Oct17:00/Выполнена-Аткарылган-Completed/fullsameID/service/master, RUrestored/own23closed/knownSA18/adminBusiness3/Anonymized/protectedheadingrestored07:49:53. E1-02statusmatrixNOW4PASS1holdBLOCKED/5;1confirmedC56reused+2C59+1C60, NOTwholeE1-02 or newfix. No paid/cancelled/no-show/confirmedreceipt repeat without newdependency. Filesc59/c60result, latestEV327, progressactiveC60. Candidate40a5aef0e785/1683 and all acceptedcountsS117/25primary63/79,S23/70,S41/47,product21/316unchanged,9livefixes. No source/test/build/business/role/grant/money/reviewcommands inC59C60; ordinaryauthtransitions/telemetryunenumerated. Next choose independent remainingrequirement after historicaldependencyreview+finiteplan; profileE2initialload alreadyhasWB193/WB202historicalproof, don'tjustrepeatforcounts. M1-04 is productionServerComponenterror check, NOTlistfilters. Holdfixtureblocked/no newpersistentfixture. S1freshcache/ownerDisablecachecondition unconfirmed/no repeatedrepairask. Keep local-only/domainlast, no unchangedbuild or oldC53retry. Untilhumanstop remainsACTIVE, preserve safetyconstraints and oldfinals.
+
+LATEST C63 COMPLETE supersedes staff next-actions: C61 unsavedprofiledraft3PASS2BLOCKED/5; phoneDOM<redacted> length10 isMASK, NOTactualvalue/productbug; Reset/reloadclean, noSave/OTP/unmasking. C62initial27oracleFAILpreserved; independentnight9Oct transfer+guesttransfer+cleanupfacts add2cancelled19Oct12:00endedrows ->29, equal-starttieunordered. C63finiteplan BEFOREUI: corrected29historymembership/rankgroups1NEWPASS; pendingordinaryPastreload1NEWFAIL actualТребуетсяавторизация despiteimmediatelypriorownstaff1bfdhistory29. RootTab2stillАдаханОсоров/Выйти, user18headerstaff+Войти. No secondreload/injection/API/cookietokenprobe. F013OPEN/causeUNKNOWN; getStaffContextgetUsererror ORmissinguser mapunauthorized, network/session/cookiecausalityNOTproven. SAkezekkg restoredordinaryGoogle08:52/admin/Anonymized/Business3, user2/18handoff/5untouched/no newtabs. EV336-337/c63result, staffmatrixNOW2PASS1FAIL1BLOCKED/4:1C62emptyreused+1C63historyPASS; no retimeoldPASS/eraseinitialFAIL. Product21/316,S117/25primary63/79,S23/70,S41/47 and9verifiedlivefixesUNCHANGED; candidate40a5/1683unchanged, validatortrue/errors[]. NextC64 ONLYboundedreadonlyclassificationofF013usingexistingnonsensitiveevidence/source, no unchangedUIauth/reloadloop/fullOAuthserverlogs/rawHTTP/tokens/SDK. Establishsafeobservablecause beforefix, elseexactblocker+independentunfinishedrequirement. Do notrepeatC61draft/receipts/C62empty/C63historywithoutnewdependency; no newfixture/securityweakening. UntilhumanstopACTIVE andallconstraintsunchanged.
+
+LATEST C66 COMPLETE at21Oct09:22:47UTC supersedes C63nextC64: C64boundedreadonlyF013classificationDONE/runtimecauseunresolved/no speculativeauthfix. No correlatedgetUserstatus/code; staffmapsallreturnederror/missinguser toUNAUTHORIZED; sourceNOTruntimecause. Do not repeatdiagnostic/auth/reloadwithoutnewcondition. C65SAexplicitdirectselect-cabinet1NEWPASS optionsAdmin+personal/uncheckedRememberreturnadmin; C66pureclient+guest2NEWdirectselectorPASS bothordinaryrootredirects/no privilegedoptions. F1-03matrixNOW3PASS2notrun2BLOCKED/7; C65SAoriginalUTCnotrerun. Owner/staffnotrun;manager/multirolemissingfixturesblocked retained. KnownSA18/adminAnonymized/Business3 restored09:22:47;2/18handoff/5untouched/no newtabs. EV338-343/c64-c66results, candidate40a5/1683unchanged; Product21/316,S117/25primary63/79,S23/70,S41/47,9verifiedlivefixesunchanged/NOT_READY. NextC67 ONLYknownowner directselector finiteplan BEFOREUI/business+personal/noAdminstaff; Rememberunchecked beforeownDashboardreturn, no businessselection/change; ordinarySArestore. No SA/client/guestselector repeats/C64repeat/no F013staffreload. No newfixtures/securitychanges/paymentcommands; alluntilhumanstopconstraintsunchanged.
+
+LATEST C68 COMPLETE supersedes C66nextC67: C67ownerknownlogin reachedВыберитебизнес/Тестовыйбизнес2Текущий, obeyedplanstop/no businesschoice; directselect-cabinetNOTexecuted, ownerBLOCKEDnotproductFAIL/no newbug. F1-03NOW3PASS3BLOCKED1staffnotrun/7, no unchangedownerretry. SArestored09:33:21. C68globaloverviewvalidfiltersUI:7daypreset1NEWPASSdates14..21Oct/selectedDOM/globalscope. Manualdatefill22Sep+oneTab left30dayselected ->commitUNCONFIRMED/BLOCKEDnotproductbug, no rawDOMeventworkaround/repeat. Invalidrange/partialAPIerror/retryBLOCKED; reporterrorviewhidesfilters/prefs persist, do NOTintentionallypersistinvalidrange. Original21Sep..21Oct/30daysrestoredUI/adminAnonymized/Business3before09:49:51;2/18handoff/5untouched/no newtabs/noauthtransition. C68matrix1UI-PASS4BLOCKED/5; NOTactualGETcompletion/filterresponse/numericETL/financial/visualPASS. EV344-348/c67-c68results. GAPlastUIclock09:49:51->nextactual10:57:20, no continuouswork or preciseactivitiesclaim; c68-observation-gap.json. Fresh10:58usageordinaryallowed41%used, notexhausted. Candidate40a5/1683,Product21/316,S117/25primary63/79,S23/70,S41/47,9verifiedlivefixesUNCHANGED/F013OPEN. NextC69finiteM5-04unsavedratingdraftplan BEFOREUI: captureoriginal4weights/windowdays; onlysum-invaliddraft viaordinarysliderkey andwindow-invaliddraftifvisiblycommitted; Resetbetween/after/adminreturn. SourceonChangeLOCALonly, SavePOST/recalcseparate. NEVERSave/Enter/recalc/POST/configurationpersist/jobs; stopinputuncertaintywithoutblindretry. No M3knownsearchrepeat/historyalreadycovers. UntilhumanstopACTIVE/allconstraintsunchanged; do notrerunC67/C68/C64withoutnewcondition.
+
+NEW HUMAN RESUME23Oct2026 supersedes priorhumanstop prospectively ONLY: «можешь продолжить пока я сам не попрошу остановиться». Firstactualclock22Oct23:04:14UTC=23Oct05:04:14Bishkek, usageordinaryallowed3%used. No fixeddeadline; untilnewexplicitstop/usageunavailable, no purchases/resets/continuityguarantee. Source40a5/1683 unchanged, ledgervalid/errors[]/21of316, prior21OctfinalSHA6149152f...unchanged. PRIORpause/finals remainimmutablehistory; no retroactiveworkclaim. CURRENTprogress is docs/verification/runs/2026-10-23-web-resume/progress.json; ledger/statecurrentpointerwinsold20Octprogress. Newwindowlivefix0/newPASS0/newaccepted0 onresume. C69done twoUIvalidationPASS(sum99/days0), server/dependency2BLOCKED. C70planinnewrun: onlysum101,days366invalid,1valid,365valid, Resetaftereach; NEVERSave/Enter/recalc/POST/configpersist/jobs. OldPASSnotrepeatwithoutdependencychange; all oldblockedstaffF013/ownerchoice/manualdate/cache/visual/rolefixtures retained. FreshIAB2inventoryNOtabs/oldhandlesabsent, local3000stopped/projectverified. OnelegitimateNEWC70normalentrytabperplan allowed, notcapture/deniedtabreplacement; neverbindoldforbiddenproviders/routes. Startmainserver: pnpmshimEPERMoutsideworkspaceattempt; no unchangedretry/packageinstall. Existingnode nextdev--turbopack samepackage-script launchedsession92268, startup warningsnotproductbug/no lockfilecleanup. No fullOAuthlogpolls; no serverrestartunlessstoppedverified. Actualrolemustbefresh; knownSAkezekkgGoogleordinaryloginallowed, CAPTCHA/password/devicehumanhandoff/no bypass. Same4knownidentities andALLpriorconstraints unchanged: WEBlocalonly/domainproductionlast; no rawHTTP/SDK/token-cookie-authcode-password-storageextract/native/mobile/subagents/newchats/users/roles/jobs/grants/service-roleimpersonation/payments/purchases/messages/securityweakening/DBreset/cleanup/migrations/commit/push/deploy/stage/reset. Do notopenmonitoring/metrics/oldblockedtabs. NewuntilstopdoesNOTrenewrevokedFontsnetwork/downloadapproval; fontsnowlocal/no unchangedbuild. Onstop safeeffects+explicitPAUSEDkezek/readback+new23Octfinal, no overwriteoldfinal. Keepquietunchangednonactionable state; reportmeaningfuldelta/blocker only.
+
+LATEST 23Oct resume setup diagnostic supersedes all earlier server92268/no-listener claims: current progress docs/verification/runs/2026-10-23-web-resume/progress.json. C70 four draft cases NOT_RUN/0 new product PASS/fixes/accepted delta. One legitimate agent tab1/provider browser-use:23011460-bc97-4219-918d-2e16e9c8c958 timed out then Browser Use URL policy denied its data:error document. NEVER bind/retry/goto/back/reload this provider or create replacement tab/alternate URL/browser/rawHTTP/native workaround. Human manually tried localhost and reported failure. Own session92268 stopped; replacement47667 running Next dev Turbopack hostname127.0.0.1, elevated read-only check23:14:38UTC confirms listener127.0.0.1:3000 PID29340/parent23188 from Kezek Next. Normal sandbox no-listener output was inconclusive, NOT server-down proof. DNSlocalhost has127.0.0.1+::1; reachability/rootcause unresolved, not proven IPv6 or product/auth bug. No speculative bind/security/config/source fix or unchanged server restart. Await human healthy allowed local entry or genuinely new diagnostic condition; bounded read-only checks only, no repeated repair questions or identical retry. Quiet unchanged/nonactionable. Automation ACTIVE under new explicit23Oct until-human-stop; old pause/finals immutable. On explicitstop safe effects+PAUSED existingkezek/readback+new23Octfinal. Counts21/316, S117/25 primary63/79,S23/70,S41/47; source40a5/1683 unchanged; F013OPEN and all safetyconstraints retained.
+
+LATEST C71 COMPLETE on23OctBishkek/22Oct23:31:48UTC supersedes ALL earlier blocked local-entry and C70next instructions: Human manually restored NEWhealthy userTab2/providerbrowser-use:9330166e-02eb-4317-b88d-df1476284c6a. Reuse c70HumanTab whilevalid; olddenied23011460absent/NEVERretry, no workaround. C70fourNEWunsavedratingboundaryvariants sum101/days366invalid/1valid/365valid actualUI PASS, exactReset35/25/20/20+30days aftereach, noSave/recalc/persist. M5-04subset6PASS2BLOCKED/8 incl2C69originalPASS, notwholeacceptance. C71knownstaffGoogleobraz.osh direct/select-cabinet ONEnewPASS: exactstaff+personaloptions/noAdminbusiness, Rememberunchecked thenown/cabinet; noF013Past/reload. Defaultauthautomaticallylanded/staff; erroneousrootwaittimeoutretained/notproductbug; no duplicateauth. KnownSAkezekkg restoredordinaryGoogle/userTab2/admin/Anonymized/Business3 before23:31:48; tabhandoff/no newagenttabs. Freshsource40a5/1683unchanged; latestEV361; new23Octwindow5NEWUIvariants/0fix/0accepted delta. Counts21/316295left,S117/25primary63/79,S23/70,S41/47,9logicalverifiedlivefixesunchanged/NOT_READY. F1-03 NOW4PASS3BLOCKED0notrun/7; allavailabledirectselectorrolesDONE, owner/manager/multiroleblocksretained. DO NOT repeatdirectselector/C70ratings/receipts/profile/build oroldC53/F013reloaddiagnostic unchanged. CURRENTsourceprogress docs/verification/runs/2026-10-23-web-resume/progress.json, c70-result/c71-result. NextC72 ONLYboundedreadonlyhistory/dependencyreview F3-01/02/03 role-dropdown/currentlabels/Back/staledata BEFOREnewUIplan; reuseapplicableoriginalproofs/originalUTC, no newcreditfromcontrols. Thenonlygenuinelyuncoveredfinitevariantswithindependentexpectations/allowed effects. Ifalreadycovered/unsafe/newfixtureorpermissionrequired, exactblocker+independentremainingpriority, notunitimitation. Do notrepeatrepairasks/manualdate/coldcache/visual/F013withoutnewcondition. AutomationACTIVEuntilhumanstop/usageunavailable; clockbeforeactions, no guaranteedcontinuity. Priorpausedfinalsimmutable; onstop safeeffects+PAUSEDexistingkezek/readback+new23Octfinal. Allpriorconstraints/knownidentities/localonly/domainlast remain; no authsecret/storage/HTTP/native/newroles/fixtures/grants/payment/securityweakening/commit/push/deploy/stage/reset. Ordinaryauth/telemetryunenumerated, notzeroTOTALwrites.
+
+EXPLICIT HUMAN STOP23OctBishkek: «сделай логическое завершение», first actual clock2026-10-22T23:59:59Z. Autonomy revoked prospectively; do NOT resume product tests from a stale heartbeat. Existing kezek must remain PAUSED until a NEW direct human authorization. Current docs/verification/runs/2026-10-23-web-resume/progress.json is authoritative; final-report.json closes this resumed window, old21Oct finals immutable. C74 is complete:7NEWUIcases in23Octwindow/0fix/0accepted delta; counts21/316, S117/25primary63/79,S23/70,S41/47; source40a5/1683 unchanged. F013OPEN, missingfixtures/cache/visual/serverdependency blockers retained. C75 client/guest historicalreview is only a saved next step, NOT execution authorization. No product/UI/DB changes on administrative finalization; preserve current usertab. Main local development server intentionally left available for user, not a continuing test process. No active temporary compiler/runtime/networkpermission renewal. Future resume requires new human request, currentclock/usage/progress/source/UI and all prior safety constraints.
+
+NEW DIRECT HUMAN RESUME23Oct2026 supersedes immediately preceding HUMAN STOP only prospectively: «свет дали можешь продолжать». Firstactualclock2026-10-23T00:13:06Z=06:13:06Bishkek. Resume same WEB-only autonomous workflow UNTIL NEW explicit human stop/usageunavailable, no fixeddeadline/newprivileges; no continuity across pause/powerreport. CURRENTprogress is docs/verification/runs/2026-10-23-web-resume-2/progress.json; ledger/statecurrentpointerwinsoldprogress. Previous23Octfinal docs/verification/runs/2026-10-23-web-resume/final-report.json SHAe703a0e29ccf7dfe408640557db163b2903e2c6b5fa423a7378422a2b8964cea IMMUTABLE; prior7UI-PASS are archivedoldwindow, newwindowstarts0newPASS/0fix/0accepted. Candidate40a5/1683unchanged;21/316295left,S117/25primary63/79,S23/70,S41/47;9logicalverifiedlivefixes/NOT_READY. FreshIAB2samehumanTab2/provider9330166e/currentc70HumanTab/admin/Anonymized/Business3 actual; keepworkinghandlewhilevalid/markHandoff/preserveuser. Existing127.0.0.1:3000 PID29340 listener confirmed00:14:14, no restart/relogin/newtab/oldblockedbinding. C70fourratingdrafts/C71staffselector/C73SAheader/C74staffheader DONE, do NOTrepeat. Header subset2PASS3BLOCKED2notrun/7. NextC75 boundedREADONLY review c75-review-plan.json: exactC66guestprimary+originalUTC+hashes/candidate before any narrowreuse; G078clientEscape had no navigation, neverrepeatfocus test. ThenonlygenuinelyuncoveredC76clientheadernavigation after independentfiniteplan. Setup/recovery/review are0newexecutioncredit; reusedproofNOTnewPASS. F013OPEN/noPaststaffreload orunchangedauthdiagnostic; owner/manager/multirolefixturesblocked retained. Same4knownGoogleidentities only: kezekkgSA,osorovadahan04owner,obraz.oshstaff(aliasadakhannn),low.fadepureclient. No newcredentials/users/roles/jobs/fixtures/grants/payment/purchases/messages/impersonation/securityweakening/DBreset/cleanup/blindmigrations/native/mobile/subagents/newchat/commit/push/deploy/stage/reset. Nevermonitoring/deniedmetrics/oldblockedproviders incl23011460; no rawHTTP/SDK/token-cookie-authcode-password-storage/clipboard extraction, no fullOAuthlogs; f821nevercancel/closed909256notreopen. Domainproductionlast/localonly, no unchangedbuild/fonts/capture/manualdate/coldcache/repairquestion retries. Resume does NOTrenew revokedFontscompiler/downloadauthority; fonts alreadylocal. Clock/usage/currentprogress first; clockbeforeeachnewscenario/longaction/appDBwrite. Alloldboundaries unchanged; auth/telemetryunenumerated/notzeroTOTALwrites. ExistingkezekACTIVE/no duplicate; quietunchanged/nonactionable, notifymeaningfuldelta/blocker. OnNEWstop safeeffects+explicitPAUSEDkezek/readback+newresume2final; oldfinalsimmutable.
+
+NEW EXPLICIT HUMAN PAUSE23Oct2026: «давай пока что на паузу». First actual clock2026-10-23T06:34:23Z=12:34:23Bishkek. Stop supersedes all prior until-stop autonomy prospectively. Remain PAUSED until NEW direct human authorization; stale heartbeat is NOT resume permission. Current progress docs/verification/runs/2026-10-23-web-resume-2/progress.json and final-report.json close this window. C109 F015 verified manual-addressdraft/blur/clear/name/discard, noSave. Candidate88d5303de67a/1685files;20/316296left because freshproductionbuildpending, S116/25primary62/79,S23/70,S41/47. Thiswindow21newfunctionalUIPASS/2verifiedlivefixes(F014,F015),logical11; prior7UIoldwindowarchived/notadded. C110 newcandidatebuild plan NOT started/savednextonly, no authorization toexecute. F013OPEN andallfixtures/cache/visual/technical/security blockers remain; no whole-green. No new product/UI/DB actions on administrative finalization. Preserve userTab2/admin; mainserverleftforuser/notcontinuingtest. No active temporarycompiler/runtime/networklease, no renewal; oldfinalsimmutable. Future resume needs newhumancommand+freshclock/usage/progress/source/UI/allpriorboundaries.
+
+NEW DIRECT HUMAN RESUME25Oct2026: «можешь продолжать пока сам не останавлю тебя». Firstactualclock2026-10-25T08:52:04Z=14:52:04Bishkek; ordinaryusageallowed2%used. Supersedes previoushumanpause ONLY prospectively, no continuityclaim/newprivileges/fixeddeadline. Same WEB-only untilnewexplicitstop/usageunavailable, no purchases/resets. CURRENTprogress docs/verification/runs/2026-10-25-web-resume/progress.json; ledger/statepointerwins oldcheckpoints. Prior23Octresume2final SHA84c42de6d4edeac2a811f038e987a9fb946cc446359287d1766fd7faa7119e6b IMMUTABLE; its21newUI/2fixes archived, newwindow0newPASS/0fix/0accepted. Candidate88d5303de67a SHA88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7/1685 unchanged;20/316296left,S116/25primary62/79,S23/70,S41/47;11logicalverifiedfixes includingF014/F015. Newcandidate productionbuildPENDING afterF015; C110 finiteplan before anycompiler, offline/dummyenv/no.env/localfonts/no renewednetworkpermission; C92/C93 oldproofsimmutable. No unchanged C93pageAssets.bundle overrun retry. Initial25OctIAB2samehumanTab2/provider9330166e showscannotaccesslocalhostadmin; listener3000/3107 absent andnoNextprocess inread-onlycheck08:53:13. No security/config/sourcefix fromrecovery; verifyproject/serverstopped before one normalmainserverstart, no packageinstall/oldpnpmshimEPERMretry/fullOAuthlogs. ExistinghumanTab2 only; no newtab/deniedprovidersincl23011460/monitoring/metrics/rawHTTP/SDK/token-cookie-authcode-password-storage/clipboard/native/mobile/subagents/newchat. All priorknown4identities/fixtures/booking/payment/roles/security/localonly/domainlast constraints unchanged. No repeatF015draft/C106name/auth/F013/manualdate/cache/visual/profileSave withoutchangedcondition. PreserveuserTab/handoff; ordinaryauth/telemetryunenumerated/notzeroTOTALwrites. Quietunchanged/nonactionable; notifymeaningfuldelta/blocker. NEWstop ->safeeffects+explicitPAUSEDexistingkezek/readback+new25Octfinal, oldfinalsimmutable.
+
+NEW EXPLICIT HUMAN PAUSE 25Oct2026: «сделай логическое завершение и сделай паузу». First actual clock 2026-10-25T11:00:44Z =17:00:44 Bishkek. Supersedes all prior until-stop autonomy prospectively. Remain PAUSED until NEW direct human authorization; stale/queued heartbeat is NOT resume permission. Current docs/verification/runs/2026-10-25-web-resume/progress.json and final-report.json close this window. Candidate510f3832db4d/1685files, accepted21/316295left, S117/25primary63/79,S23/70,S41/47. Window5NEWfunctionalUIPASS/1verifiedlivefixF016; logical12. Two refresh events of existing A3-01/one distinct case plus one historical functional refresh C126, not newPASS. C127 services-category contract BLOCKED; C128 is saved next review only, NOT execution authorization. F013OPEN and fixture/cache/visual/security/technical blockers retained, NOT_READY. Existing testcategory originalname/slug/inactive/usage0 visibly restored C126; no pending effects. No new product/UI/DB/build actions during finalization. Preserve userTab2/admin and mainserver available for user, not continuing test process. No active temporary compiler/runtime/networklease. Priorfinals immutable. Future resume requires fresh human command, clock/usage/progress/source/UI/allprior boundaries.
+
+NEW DIRECT HUMAN RESUME 26Oct2026 Bishkek: «можешь продолжить дальше пока я тебя сам не останавлю». First actual clock 2026-10-25T19:37:40Z=26Oct01:37:40Bishkek; usage ordinaryallowed14%used. Prospectively supersedes previous pause only; same WEB-only until NEW explicit human stop/usageunavailable, no deadline/new privileges/purchases/resets/continuity guarantee. CURRENT progress docs/verification/runs/2026-10-26-web-resume/progress.json and ledger/current pointer win all old checkpoints. Prior25Oct final SHA59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676 IMMUTABLE; prior5UI/1fix archived, newwindow starts0NEWPASS/0fix/0accepted. Inherited candidate510f/1685/21of316295left/S117primary63/S23/S41/logical12 pendingfreshsource verification. Next C128 boundedreadonly category Cancel-warning history/effects review BEFORE any new UI plan; no actualDelete/Confirm/Enter/force/newcategory. Existingtab only/no replacement/forbiddenprovider binding. FreshCUAinventory IAB2 tabs[] despiteambientadminURL; actualUI role unknown; do not infer healthyUI fromambient. Mainserver stopped mustbeproject/processverified beforeone normalstart, no blindrestart/configfix/packageinstall. All prior WEB/localonly/domainlast/known4identities/fixtures/booking/role/security/noHTTPsecrets/native/mobile/subagents/newchat/commitpushdeploystagereset/expirednetworkconstraints retained. No unchanged currentbuild/F016draft/C124/C126/auth/F013/profileSave/cache/visual/manualdate/c93bundle retry. Recovery/review0credit. On NEWstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal; oldfinalsimmutable. Quiet unchanged nonactionable; notify meaningful delta/blocker only.
+
+LATEST 26Oct C150 complete: Current authoritative progress docs/verification/runs/2026-10-26-web-resume/progress.json and ledger/current pointer supersede old next-actions. Candidate dev-20261026-WEB-c1115361a3b4, SHA c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853 /1686files. This26Octwindow7NEWfunctionalUI-PASS/3verifiedlivefixesF017F018F019, logical15; old25Oct5UI/1fix archived/notadded. Accepted21/316295left,S117/25primary63/79,S23/70,S41/47,NOT_READY. F017 canonical cancelled count+RUlabel, F018 adminToday EN/KY systemstatus copy, F019 EnglishTodaytitle straybackslash all originalbeforeFAIL preserved and SAME-LIVE verified. C129 unusedcategory warningCancel, C131 usedcategory warninguncheckedforce+Cancel, C150 create-mode unsaved addressdraft/Cancel/reentry DONE; no newcategory/Create/Save/Delete/booking command. Do NOT repeat done without changedcondition. C147 exact1686 colddefaultTurbopack exit0/types36prerenders/25.9scompile +C148 actualcompiledprivacyentry/reload/guestdocument PASS, ownruntime24964stopped/3107gone; C137/C138 oldcandidate finished too. Two refreshEVENTS/ONEdistinctexistingA3-01case, notNEWfunctionalPASS. No active temporary compiler/runtime/networklease, no permissionrenewal. Main127.0.0.1:3000PID18368/session60432 retained for user, no restart unless stopped/projectverified. Human restored tab2/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba, working resume26HumanTab while valid; actualprotectedadmin/Anonymized/RU/Business3/4branch1staff4service30booking/TodayCancelled1, markHandoff. User Googlechooser tab1/provider874f5fb2-0ef7-48a3-9e30-627d63f028ce untouched; no new tab/authtransition or deniedbinding. Latest C135 fullWEB540suites534PASS6FAIL/2550tests2539PASS11FAIL and lint52errors167warnings remain failed; same failedassertion identities/lintdiagnostics as C91, not causeproof. C1415 and C1456 targeted tests/types/scopedlint PASS; full suite not rerun for later page-copy-only deltas, no whole-green. M1home intermittent Businesscount fetchfailed recurred C133, remains OPEN/unknowncause; C134 Today-only query guard refinement preserved C133BLOCKED/no reloadloop. F013OPEN/F005pending, role/fixture/profileSave/cache/visual/security/service-category-contract blockers retained. NextC151 boundedREADONLY M5-04 negativecreate-validation history/effects review BEFORE any finiteUIplan; no Create/Save/Enter/newentity authority inferred. Only genuinelyuncovered variants with independently safe allowed effects; otherwise exactblocker+independentpriority, no unitimitation. All existing WEB/localonly/domainlast/known4identities/noHTTPsecrets/native/mobile/subagents/newchat/newroles/fixtures/jobs/grants/payment/messages/securityweakening/commitpushdeploystagereset boundaries unchanged. Ordinary auth/telemetry and locale preferences unenumerated, never zeroTOTALwrites. No unchanged build/fonts/C93bundle/cache/visual/manualdate/profileSave/F013/auth retries. Prior25Octfinal SHA59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676 and olderfinals immutable. Until NEWexplicit human stop/usageunavailable, no fixeddeadline/continuityclaim. On stop safeeffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal; oldfinals immutable. Quiet unchanged/nonactionable; notify meaningfuldelta/blocker only.
+
+LATEST 26Oct C162 complete supersedes older next-actions. Authoritative progress remains docs/verification/runs/2026-10-26-web-resume/progress.json and the ledger. B4-01 now accepted: one NEW actual direct /map entry plus one historical Footer navigation case reused only after exact functional source comparison; the historical G085 UTC 2026-10-15T22:26:25Z is preserved and is not new UI execution. Accepted 22/316, 294 remain; S6=1/29. S1=17/25 with primary63/79, S2=3/70, S4=1/47 unchanged; NOT_READY. This26Oct window13 NEW functional UI-PASS,3 verified live fixes F017/F018/F019,15 logical fixes;1 reused historical case,1 new accepted requirement. Candidate c1115361a3b4/1686 unchanged. C153 warning Escape/Close, C155 own-SA local name discard, C157 active/blocked user filters and C160 pureclient Telegram reminder CTA to own profile are DONE; do not repeat without a changed dependency. C160 did not link Telegram, save profile or click Later; localhost Bot domain invalid remains a provider limitation, no tunnel/domain/security workaround. C158 read-only S2 frontier grouped all67 remaining requirements and grants no new privileges; do not repeat the unchanged audit. Current userTab2/resume26HumanTab/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba is restored to protected/admin/RU/Anonymized/Business3 after C162; Google chooser userTab1 untouched. No geolocation permission, nearest, provider/marker interaction, booking command or visual/cache proof from C162. Next C163 is ONLY a bounded read-only B4-04 historical branch-selection-to-booking-path dependency review: exact G023 primary/original UTC/IDs/helper/map selection and booking query receiver; G085/G087 support and current visible hrefs are not newly activated-navigation proof. Reuse only a complete finite branch handoff matrix with demonstrated matching dependencies; otherwise retain exact blocker and select an independent unfinished priority. No UI/auth/location/entity effect from this review, and no unchanged wizard replay for counts. All prior WEB-local-only/known4identities/forbidden routes and providers/no HTTP-secrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/payments/messages/security weakening/commit-push-deploy-stage-reset boundaries remain. Current build C147/C148 done; no unchanged rebuild, font permission renewal or C93 bundle retry. F013/F005/M1 intermittent, technical, role, fixture, profileSave, cache, visual and security blockers remain. Prior finals immutable. Until a NEW explicit human stop or unavailable usage; no continuity guarantee. On stop safely finish current effects, explicitly PAUSE existing kezek, read back and save a new26Oct final. Stay quiet on unchanged non-actionable state; notify meaningful changes only.
+
+LATEST 26Oct C166 complete supersedes older next-actions. The authoritative run remains docs/verification/runs/2026-10-26-web-resume/progress.json and the ledger. B3-02 category/reset acceptance is now complete for its finite nine functional variants across six case rows: three NEW compound UI cases, one named historical empty-query-with-category reset refresh after HomeClient changed, and two C79 proofs reused with exact current dependencies and original UTC preserved. Accepted 23/316, 293 remain; S6=2/29. S1=17/25 with primary63/79, S2=3/70 and S4=1/47 unchanged; NOT_READY. This26Oct window17 NEW functional UI-PASS,3 verified fixes F017/F018/F019,15 logical fixes,2 new accepted requirements,3 reused historical cases and2 historical functional refresh events; neither reuse nor refresh is extra NEW UI. C164 four accessible map branch CTA combinations passed as ONE compound case with one old G023 branch2 list refresh; provider-balloon two variants remain BLOCKED, whole B4-04 partial. No slot, Next, date, staff, service, hold or booking command. C166 root filters were fully cleared to original three businesses, then userTab2/resume26HumanTab restored to protected/admin/RU/Anonymized/Business3; chooser1 untouched, no new tabs or auth transition. Candidate c1115361a3b4/1686 unchanged; current build remains C147/C148 completed, do not repeat. Next C167 is ONLY a bounded read-only review of B3-01 historical input evidence and whether permitted CUA can establish the needed measurement before any finite UI plan. Distinguish immediate field echo and final URL settlement from proof of 500ms debounce, request counts or end-to-end latency; C166 ordinary query typing is not timing proof. Do not repeat unchanged search/query/history cases for counts or use raw HTTP, storage/tokens, proxy/network fault, native tools, new tabs or fake clocks. If the required runtime condition cannot be measured with the permitted tool, retain the exact blocker and select an independent unfinished priority. Advertised service search DEC-CATALOG-SEARCH, B3-03 network failure and B3-04 real pagination remain open. All existing WEB-local-only/domain-last/known4identity/forbidden routes and providers/no new credentials, fixtures, roles, jobs, grants, payments, messages, security weakening, mobile/native/subagents/new chats, commit/push/deploy/stage/reset boundaries remain. F013/F005/M1 intermittent and other technical, role, profileSave, cache, visual and security blockers remain. No unchanged fonts/build/C93 bundle, diagnostic or repair-question retries. Ordinary app auth/analytics/telemetry writes remain unenumerated, never zeroTOTALwrites. Old finals immutable. Until a NEW human stop or unavailable usage; on stop finish current effects safely, explicitly PAUSE existing kezek, read back and save a new26Oct final. Stay quiet while unchanged or non-actionable; notify meaningful changes only.
+
+LATEST 26Oct C169 complete supersedes older next-actions. Authoritative progress docs/verification/runs/2026-10-26-web-resume/progress.json and ledger. C167 bounded read-only B3-01 debounce review DONE: permitted CUA capability metadata only pageAssets/webmcp, no correlated input/request timeline; source500ms/field echo/final URL settlement are not LIVE timing proof. Exact measurement blocker retained, no query rerun/fake clocks/instrumentation/HTTP/storage or UNIT imitation. C168 reviewed independent existing inactive branch website effects; C169 ordinary UI HTTP validation rejection plus HTTPS save/reentry/reload and clear-save/reentry/reload passed as ONE compound NEW functional case. Window17->18 NEW UI-PASS,3 verified fixesF017F018F019,15 logical;23/316 accepted293left/S117primary63/S23/S41/S62 unchanged/NOT_READY. Exactly3ordinarySave attempts: one visibleHTTPSvalidationrejection plus2successful updates, original visibleblankwebsite/name/address/links/othercontacts/coords/inheritance/inactive/sevenclosed days restored; no pending effects or newfixture. IDs/effects append-only c169-fixture-effects.json references unchanged original fixture registry. Ordinaryauth/telemetry/emptyrepresentation normalization unenumerated, never zeroTOTALwrites. UserTab2/resume26HumanTab/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba restored protected/admin/RU/Anonymized/Business3 before22:45:30UTC; chooser1 untouched/no auth/newtabs. Toolwait timeouts preserved, eachSave once/no duplicatewrite; no productfix from tooltiming. Candidatec1115361a3b4/1686/currentC147C148build unchanged/no rebuild. NextC170 ONLYboundedREADONLY I1-02 remaining publiccontact/inheritance/timezone history-and-effects review before any finite UIplan. Establish independently permitted data/effects and complete finite variants; websitecontract/address/name DONE/no unchangedreplay. No privatephone/unmask/OTP/message/notification/newfixture/role/security/activation/mappermission authority inferred. Ifunsafe exactblocker+independentunfinishedpriority. All prior WEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newroles/jobs/grants/payment/messages/securityweakening/commitpushdeploystagereset boundaries unchanged. F013/F005/M1intermittent, fixtures/profileSave/cache/visual/security/technical blockers retained. Priorfinals immutable. UntilNEWhumanstop/usageunavailable/no deadline/continuityclaim; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Stayquiet unchanged/nonactionable; meaningfuldelta only.
+
+LATEST 26Oct C175 complete supersedes older next-actions. Current progress docs/verification/runs/2026-10-26-web-resume/progress.json and ledger authoritative. Candidate dev-20261026-WEB-82c7088de609, SHA82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c/1686files. NewF020 realC171beforeFAIL: exact knownsynthetic no-digit phone/WhatsApp fill each ordinarySave wronglyaccepted/navigation then blankreadback. MaskedAX is toolboundary/notbug; no unmask/DOMvalue/privatephone extraction. C172 minimal2condition WEBbusinessContacts guard nowrejects nonemptyinvalidnormalizedphone/WhatsApp; blank/formattedcontacts unchanged. C173 SAME-LIVE both exactarguments rejectedwith respectiveexistingformaterror oneditor, ordinarydiscard/reentryalloriginalblankbaseline, F020VERIFIED. This26Octwindow19NEWfunctionalUIPASS/4verifiedfixesF017F018F019F020/logical16;2newacceptedrequirements/3historicalreuses/2historicalfunctionalrefreshevents unchanged. OriginalbeforeFAIL/testoraclecorrection preserved: initialauxiliary+12oraclewrong for existingE164regex; corrected+1 control before8PASS2FAIL->after10PASS/types0/runtime-scopedlint0(testignoredwarning1). FullWEBcoverage540suites534PASS6FAIL/2558tests2547PASS11FAIL, same11failedassertionidentitiesasC135; fullLint52errors167warnings/samediagnostics, notcauseproof/wholeGREEN. CurrentC174colddefaultNext16Turbopack40.0scompile/types36prerenders/exit0 thenC175actualcompiledprivacy9sections/guestmenu/reload/adminrestorePASS, A3-01restored22->23/316293left/S117primary63/S23/S41/S62. ThirdbuildrefreshEVENT/ONEdistinctexistingcase, notNEWUI/fix/newrequirement. Owncompiler23980finished23:04:38, ownruntime14212/session77169stopped23:05:53,3107gone/main3000PID18368retained/no activecompiler/runtime/networklease. No unchangedrebuild/fontsrenewal/C93bundle. UserTab2/resume26HumanTab/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba protected/admin/RU/Anonymized/Business3 restoredbefore23:05:52; chooser1untouched/no newtabs/auth. OriginalinactiveAname/address/fourlinks/fourcontacts/coords/inheritance/inactive/sevenclosed days retained; C173-fixture-effects append-only, originalregistry/priorfinals unchanged. Ordinaryauth/telemetry/emptyrepresentation writes unenumerated, neverzeroTOTALwrites. NextC176 ONLYboundedreadonly exact remaining publicemail validation/normalization UIhistory/dependency/effect review BEFORE finiteplan; C170 broadmatrixDONE/no repeat audit. No privatecontact, email/message/OTP/send/foreignrecipient authority inferred; onlyindependentlysafe syntheticnonrecipient data iflaterplanned. Website/nondigit/name/address DONE/no unchangedreplay. All existing WEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/payment/messages/securityweakening/commitpushdeploystagereset boundaries retained. F013/F005/M1intermittent androle/fixture/profileSave/cache/visual/technical/securityblockers remain/NOT_READY. UntilNEWhumanstop/usageunavailable, no deadline/continuityclaim; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable; meaningfuldeltaonly.
+
+LATEST 26Oct C177 complete supersedes older next-actions. Currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger authoritative. C176 exactpublicemail history/effectsreview DONE0credit. C177 ordinaryinvalidpublicemail knownsynthetic INVALID EMAIL TEST thenONE Saveclick produced visible nativebrowsermissing@validation on sameeditor; ordinaryleave/reentry originalblank/allbaseline/SaveDisabled, ONE NEW functionalUIPASS. Uppercaseknownsynthetic C177.TEST@EXAMPLE.INVALID ordinaryfillAXredacted ->normalization/persist/reload BLOCKED before validSave; no.value/DOMcomparison/unmask/storage/clipboard/HTTP or providerworkaround. Nativeerror provesclientconstraint/recovery only, NOT serveremailregex/network/no-write/securityPASS. Window19->20 NEWUI/4verifiedfixes/logical16;23/316293left/S117primary63/S23/S41/S62 unchanged/NOT_READY. Candidate82c7088de609/1686/currentC174C175build unchanged/no rebuild/retest. ExistinginactiveAallblankcontacts/address/links/name/coords—inherittrue/activefalse/7closed days restored, no pendingeffects/no successfulemailupdate command/message/email-send/OTP/privatecontact/newfixture. Ordinaryauth/telemetryunenumerated, neverzeroTOTALwrites. UserTab2/resume26HumanTab/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba restoredprotected/admin/RU/Anonymized/Business3 after23:14:41UTC;chooser1untouched/noauth/newtabs. NextC178 ONLYboundedREADONLY exactpublicbusinesscontactinheritance history/receiver/source and retainedfixtureA viability review before finiteUIplan. C170broadmatrix/C176emailreview DONE/no repeataudit. Need independentlysafe complete matrix parentfallback/branchoverride/inheritdisabled plus exactvisible-restoration/effect review; no parent/activecontrol/contact/flag write fromreview or newfixture/mappermission/booking/role/security authority. Ifunsafe exactblocker+independentunfinishedpriority; do not repeatwebsite/nondigit/email/nativevalidation/address/name withoutchangedcondition. All priorWEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/payments/messages/securityweakening/commitpushdeploystagereset boundaries unchanged. F013/F005/M1intermittent/role/fixture/profileSave/cache/visual/security/technicalblockers remain. FullC17211testFAIL/lint52errors167warnings retained; no unchangedtests/build/fonts/C93bundle/diagnostic/repairquestion. No activecompiler/runtime/networklease; main18368preserved. Priorfinals immutable. UntilNEWhumanstop/usageunavailable/no fixeddeadline/continuityclaim; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable; meaningfuldeltaonly.
+
+LATEST 26Oct C179 complete supersedes older next-actions. Currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger authoritative. C178 exactpublicwebsiteinheritance history/receiver/effectsreview DONE0credit (G092/G129 originalUTC/hashes preserved, notparent-branchinheritance executionproof). C179 fullfinite3variantpublicwebsite matrix ONEcompoundNEWUI PASS: businesswebsiteP ->heroP+activebranchP; branchwebsiteB ->heroP+branchB; clearbranchB/inheritfalse ->heroP/noBranchSite. Onlyknownsynthetic https c179-parent.example.invalid andc179-branch.example.invalid hrefs, readnormalvisibleanchorhrefs/no activation/privatecontact/message. Exactly5ordinaryupdates on existingretainedfixtureAparentfe2d412c andACTIVEcontrol057447c8:parentP,branchB,branchblank+inheritfalse,branchinherittrue,parentblank. BranchactivityTRUE/publication/owner/category/limits/schedule/coords/othercontacts unchanged; inactivefa5 untouched. Bothoriginaleditorbaselines pluspublicnoSite/oneactivecontrol restored; finaladminRU/Anonymized/Business3/handoff before23:36:51UTC. c179-effects-journal.json finalpendingfalse andprogress.pendingFixtureEffects.pendingfalse; HASHEDjournal607 is nowimmutable, doNOTrerunjournal/updateorauto-cleanup. No pendingeffects. No bit-identicalDBrollback orzeroTOTALwrites; ordinaryauth/telemetry/emptyrepresentations unenumerated. Window20->21NEWfunctionalUI/4verifiedfixF017-F020/logical16;23/316293left/S117primary63/S23/S41/S62 unchanged/NOT_READY;wholeI1-02/I1-03partial/mapboundary retained. Candidate82c7088de609/1686/currentC174C175build unchanged/no rebuild/tests; C172full11testFAIL/lint52errors167warnings retained. SameuserTab2/resume26HumanTab/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba protected/admin/RU/Anonymized/Business3 restored;chooser1untouched/no newtabs/auth. NextC180 ONLYboundedREADONLY B4-05 missingcoordinates/mapprovidererror historicalproof/currentdependency/effect review before anyfiniteUIplan: exactoriginalpublicmap proofs plusfreshC179ACTIVEAcoords—, no map/provider/location/permission/networkfault/SDK/HTTP actionfromreview. Adminbranchmapunavailable notice isNOTpublicmaperror proof. Reuseonlycomplete matchingmethod/dependencies/originalUTC, else exactblocker+independentunfinishedpriority; no unchangedmap/wizard/providerretry orUNITimitation. Publicinheritance/website/nondigit/email/nativeguard/address/name casesDONE/no unchangedreplay. Allprior WEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/payment/messages/securityweakening/commitpushdeploystagereset boundaries unchanged. F013/F005/M1intermittent androle/fixture/profileSave/cache/visual/security/technicalblockers remain. No activecompiler/runtime/networklease/main18368retained; no fontsrenewal/C93bundle/unchangeddiagnostic/repairquestion. Oldfinals immutable. UntilNEWhumanstop/usageunavailable/no deadline/continuityclaim; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+LATEST 26Oct C180 complete supersedes older next-actions. Authoritative currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json and ledger. B4-05 readonlyreview DONE0UI/fix/accepted/reuse: exactG085/G087MapPageClient and mapquery/loader dependencies match, but originalproofs explicitlyexclude providerfailure and do not establish missingcoords matrix. OldWB019controlledblankkey publicprovider primaryfilesmissing; WB008branchesGET500 differs; WB049/WB079/adminbranchmapnotice aredifferent surfaces. C179approvedACTIVE057coords—/— is onlysafe precondition, publicmapexclusion assertionNOTexecuted; no incidentalC162count2 promoted/newtimestamp. ProviderfailurecaseBLOCKED/no env/key/security/networkfault/SDK/HTTP/providerretry/rebuild/mockLIVE workaround. No browser/UI/auth/DB/entity/source/test/build/server actionC180; priorC179journalEV607 immutablependingfalse/tab2admin/main18368preserved. Candidate82c7088de609/1686/currentC174C175build unchanged;23/316293left/UI21/fix4logical16/S117primary63/S23/S41/S62 unchanged/NOT_READY, full11testFAIL/lint52errors167warnings retained. NextC181 ONLYboundedREADONLY I1-02timezone contract/originalhistory/receiver review: identify businessvsbranchtimezone/currentUIcontrol/bookingdisplayconsumers/independentoracle. C170no branchcontrol observation is notfullsemantics. NO timezone/date/clock/schedule/business/branch write/fakeclock/booking/auth/sourcefeature fromreview. Ifunsafe/missingcontract retainexactblocker+independentpriority, no unchanged contacts/map/provider/build/F013/repairquestion repeats. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/payments/messages/securityweakening/commitpushdeploystagereset boundaries unchanged. No activecompiler/runtime/networklease/renewal; oldfinals immutable. UntilNEWhumanstop/usageunavailable; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+LATEST 26Oct C181 complete supersedes older next-actions. Currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger authoritative. Narrowtimezonecontractreview0newUI/fix/accepted/reuse: repositorybusinesses.tz nullable/branches no tz; reviewed admin+dashboardbranch andbusinesscontactsettings forms have no timezonecontrol/payload. Booking selectsbusiness.tz; day/calendar/labels consume businessTz withsharedJSfallback, SQLsources usebusinesszone/literalfallback. SQL onlyread/notexecuted/deploy/schema proof; actualenvnotextracted. No runtime mismatch/bug inferredfromfallbackorcontrolabsence. OriginalG088/G089/G091 date guards/G129contactlocale preserveoriginalUTC/exclusions, notmidnight/allzoneproof; WB014forcedUTC oldprimarymissing. I1-02timezone runtimeBLOCKED/no independentnondefaultfixture/control/midnight proof; no timezone/env/clock/schedule/booking/entity/source change/fakeclock. ExistingC179journalEV607 immutablependingfalse/tab2admin/main18368preserved withoutfreshUIhealthclaim. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI21/fix4logical16/S117primary63/S23/S41/S62 unchanged/NOT_READY; full11testFAIL/lint52errors167warnings retained/no unchangedtestsbuild. NextC182 ONLYboundedREADONLY exactbranch directory_links history/currentreceiver/effects review before finiteUIplan: distinguish originalWB045firstbranchonboarding proof fromretainedexistingbranch edit/publicpropagation; establish exactfourlinkshape andsafe syntheticHTTPS/restoration. Reuseonlycomplete matchingmethod/dependencies/originalUTC; no genericwebsite/inheritance/contactreplay. NO approval/application/newbranch/newentity/externalInstagram-mapdestination/provider/location/permission/privatecontact/message/Save/flagwrite fromreview. Ifunsafe exactblocker+independentunfinishedpriority; no UNITimitation. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/payments/messages/securityweakening/commitpushdeploystagereset boundaries retained. No activecompiler/runtime/networklease/renewal; oldfinals immutable. UntilNEWhumanstop/usageunavailable; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+LATEST 26Oct C183 complete supersedes older next-actions. Currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger authoritative. C182exactdirectory_links history/receiver/effectsreview0credit; oldWB045firstbranchonboarding isdifferentmethod/no newcreation/reuseclaim. C183ONEcompoundNEWfunctionalUI PASS: existingACTIVE057 fourknownsyntheticHTTPSdirectorylinks edit, reentry+oneReload exactvalues, publiclabelledInstagram/2ГИС/GoogleКарты/ЯндексКарты exacthrefs, clearSave/reentry+oneReload/publicabsence recovery. NO externaldestinationclick/provider/map/location/permission/newtab/authtransition. Exactly2ordinarySaveupdates, eachonce despiteheadingwaitdeadline thenonefreshAXexpectedlist; nottimingbug/fix. Originalname/blankaddress+fourlinks+fourcontacts/coords—/—/inherittrue/activeTRUE/7closed days retained/restored; inactivefa5untouched. Frozen c183-effects-journal.json EV616 nowimmutablependingfalse; doNOTrerunjournal/auto-cleanup. Publicnoanchors/originaloneactivecontrol thenprotectedadmin/RU/Anonymized/Business3/handoff restoredbefore00:16:04UTC. Userchooser1untouched/main18368retained/no activecompiler/runtime/networklease. Window21->22NEWUI/4verifiedfixF017-F020/logical16;23of316293left/S117primary63/S23/S41/S62 unchanged/NOT_READY, wholeI1-02/I1-03partial. Candidate82c7088de609/1686/currentC174C175build unchanged/no testsrebuild/fontsrenewal/C93bundle; full11testFAIL/lint52errors167warnings retained. NextC184 ONLYboundedREADONLY M2-05 existingfixtureA business-deletion-warning history/handler/effects review BEFORE finiteUIplan: determine whetherfirstcontrol openscancellablewarning andexactdependencycount/name boundary orimmediatelydeletes. NO businessDelete/finalConfirm/typedconfirmation/Enter/force/newentity/cleanup/role/security actionfromreview. Irreversibledelete requires NEW exacthuman action-timeconfirmation; oldBdeletionconsent notborrowed. Reuseonlycomplete matchingmethod/dependencies/originalUTC; no unchangedcategory/branchwarning/website/inheritance/directorylink/contact/map/timezone/F013/profileSave/cache/visual/repairquestion replay orUNITimitation. Ifunsafe exactblocker+independentunfinishedpriority. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/payments/messages/securityweakening/commitpushdeploystagereset boundaries unchanged. C179EV607oldjournals/finals immutable; ordinaryauth/telemetry/emptyrepresentation writes unenumerated/notzeroTOTALwrites. UntilNEWhumanstop/usageunavailable; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+LATEST 26Oct C185 complete supersedes older next-actions. Currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger authoritative. C184readonlybusinessDeleteBizButton history/handlerreview0credit: outerbuttonsetConfirmOpentrue/Cancelcloseonly, separatefinalonDeletePOSTneverinvoked. C03oldBactualdeletion20Oct08:50:56Z retained/consentnotborrowed, C115branchCancel differs. C185ONEnewactualnamedA businesswarningCancel/reload/retention PASS: exactAname/alldata/irreversiblemessage+separateCancel/Delete; Cancelonly, originalbusinessname/slug/approvedBarber/ownerunassigned/limit2/2branches0staffservicesbookings retainedafteroneReload; originalfa5inactive+057activeIDs/names2of2 retained. NO finalDelete/Enter/typedname/force/Save/Create/entity/role/booking/payment/schedule command. Onecompoundcase/notgenericDialog/focus/dependencycascade/securityproof; wholeM2-05partial. Window22->23NEWUI/4verifiedfixF017-F020/logical16;23of316293left/S117primary63/S23/S41/S62 unchanged/NOT_READY. UserTab2/resume26HumanTab/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba protectedadmin/RU/Anonymized/Business3 restoredbefore00:29:16UTC/handoff; chooser1untouched/noauth/newtabs. C179EV607/C183EV616 journalsimmutablependingfalse; no pendingeffects/main18368preserved/no activecompiler/runtime/networklease. Candidate82c7088de609/1686/buildC174C175 unchanged/no testsrebuild/fonts/C93bundle; full11testFAIL/lint52errors167warnings retained. NextC186 ONLYboundedREADONLY D3-02 double-submit historicalprimary/currentdependency/effects review: exactoldactualsubmissionstimulus+independentduplicate-outcomeoracle/originalUTC; pendingguard/idempotencyreceiver dependencies. Reuseonlycomplete matchingmethod/dependencies, never source/UNIT-asLIVE. NO newbooking/hold/slot/Next/date/staff/service/confirm/doubleclick/cancel/payment/fixture/role/API/SDK/storage actionfromreview, no unchangedwizardreplay. Ifprimary/matchingproofmissing exactblocker+independentunfinishedpriority. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenproviders-routes/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/messages/securityweakening/commitpushdeploystagereset boundaries retained. No repeatedDONEwarning/contacts/map/timezone/F013/auth/profileSave/cache/visual/diagnostic/repairquestion. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites; oldfinals immutable. UntilNEWhumanstop/usageunavailable; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+LATEST 26Oct C186 complete supersedes older next-actions. Currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger authoritative. NarrowD3-02 double-submit readonlyreview0UI/fix/accepted/reuse: sourcebusy+useRefinFlight and mockedunresolvedcall-counttest are not LIVE. Oldnight09OctWB102/bug033 has sequential sameowner two-tab stale-slot before500/after409+recordedSQLUIoneactivebooking/cleanup, notrapidpending same-formduplicate; RepeatBooking11Oct07:08/07:16 navigation notnewsubmission, G090/G091 donotprovecommand. OriginalnightupdatedAt2026-10-09T06:05:00+06:00 keptasstageMETADATA notexactclickUTC; oldbefore/after/IDs/cleanup notretimed/repeated. D3-02nowBLOCKED no matchingrealrapidconfirm pair+independentsingle-resultoracle/no newbookingfixture/command authority. JSquick-hold input lacks explicitidempotencytoken inreviewedpath but NOT provenruntimebug/DBconstraintabsence; no speculativefix. No browser/auth/UI/booking/hold/slot/confirm/cancel/payment/DB/SQL/API/SDK/storage/fault/source/test/build/serveractionC186; tab2admin/main18368 and frozenC179/C183journals pendingfalse untouched/no freshUIhealthclaim. Counts23of316293left/UI23/fix4F017-F020/logical16/S117primary63/S23/S41/S62 unchanged/NOT_READY; candidate82c7088de609/1686/buildC174C175 unchanged/full11testFAIL/lint52errors167warnings retained. NextC187 ONLYboundedREADONLY D3-05 exactWB102/bug033 stale-slotconflict primary/currentdependency/effects review. Preserveactualoriginalbefore500-after409/onebookingoracle/cleanup anddistinguishsequentialsameuser fromparallel/differentusers/rapidduplicate. Establishcurrenterror-mapping/clientrecovery/receiver againstavailablearchivedsource; no guesseddependencyidentity fromoldPASS. Reuseonlycomplete matchingfinite method/dependencies/originalUTC. NO browser/newtab/newbooking/hold/slot/Next/date/staff/service/confirm/doubleclick/cancel/payment/SQL/API/SDK/storage/fault/newfixture/role actionfromreview or unchangedwizardreplay. Ifmatchingprimary/sourceboundaryunavailable exactblocker+independentunfinishedpriority; no UNITimitation. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/messages/securityweakening/commitpushdeploystagereset boundaries unchanged. No repeatedDONEwarning/contacts/map/timezone/F013/auth/profileSave/cache/visual/diagnostic/repairquestion/build/fonts/C93bundle; no activecompiler/runtime/networklease/renewal. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites, oldfinals immutable. UntilNEWhumanstop/usageunavailable; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+LATEST 26Oct C187 complete supersedes older next-actions. Authoritative currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger. D3-05 narrowstale-slotconflict readonlyreview0UI/fix/accepted/reuse: originalnight09OctWB102/bug033 actualsameusersequentialtwo-tabs before500-after409/localizedrefusal/closedconfirmation/removedslot andrecordedSQLUIoneactivebooking+cleanup preserved. OriginalupdatedAt2026-10-09T06:05:00+06:00 isstageMETADATA notexactclicktime. No trueparallel/differentuser/complex/rapidpendingdouble/retryidempotency claim. Current7of8reviewederror-mapping/quick-hold/clientcreation/helper paths matchexact15OctG052snapshot, butsnapshotpostdates09Oct andview.tsxdiffers. No09Octexecutiondatedsourcehash/body/dependencybridge located; no guessedidentityfromoldverified/tests, no currentD3-05promotion orproductregression. CurrentcaseBLOCKED/matchinghistoricalproof unavailable/freshbookingcommandsnotauthorized; originalpartialrequirement retained. No browser/auth/UI/booking/hold/slot/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/newfixture/role/source/test/build/serveractionC187. Counts23of316293left/UI23/fix4F017-F020/logical16/S117primary63/S23/S41/S62 unchanged/NOT_READY; candidate82c7088de609/1686/buildC174C175/full11testFAIL/lint52errors167warnings unchanged. UserTab2/admin/main18368 untouched/no freshUIhealthclaim, C179EV607/C183EV616 journalsimmutablependingfalse/no activecompiler/runtime/networklease. NextC188 ONLYboundedREADONLY D1-01 fourentry-method evidence/dependency review beforefiniteUIplan: directbookingURL/publicbusinessCTA/mapCTA/filtered-searchpath. ExactcurrentC164maphandoff mayreusablysupportmethod onlyaftermatchingdeps/originalUTC; C166typing/URLsettlement notbookingactivation. ReviewG092genericbusinessentry/otherprimary actualnav, no sourcehref-asLIVE/duplicatecredit. Identifygenuinelyuncoveredmethod only; no unchangedpublic/map/wizard/auth replay. NO browser/Next/date/staff/service/slot/hold/booking/confirm/cancel/newentity/API/SDK/storage actionfromreview. Ifcompleteapplicablematrix unavailable exactgaps thenfinitegenuinelynewallowedentryvariantswithindependentexpectations orindependentunfinishedpriority; no UNITimitation. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/messages/payments/securityweakening/commitpushdeploystagereset boundaries unchanged. No repeatedDONEwarning/contacts/map/timezone/F013/auth/profileSave/cache/visual/diagnostic/repairquestion/build/fonts/C93bundle; no lease renewal. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites; oldfinals immutable. UntilNEWhumanstop/usageunavailable; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+LATEST 26Oct C189 complete supersedes older next-actions. Currentprogress docs/verification/runs/2026-10-26-web-resume/progress.json/ledger authoritative. C188D1-01fourentrymethodsreview0credit: currentC164maphandoff all7depsmatch/original25Oct22:09:16..22:12:28UTC retained/no rerun; G09216Oct00:03:38UTCbusinessCTA actualoldproof/notblanketcurrentcert; C79Подробнее/queryC166settlement notBookactivation. FiniteC189genuinelynewfilteredsearchcardBookCTA plan savedbeforeUI. C189BLOCKED AT SETUP: ordinarybrand fromhealthyadmin once ->pendingRendering thencompletedactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/Найдено0 instead of3businesses. Notemptyquery/loadingPASS/networkcause/productfixproof. NO queryfill/Book/bookingwizard/selection/Next/date/staff/service/slot/hold/confirm/cancel/newbooking; no reload/requery/forcedgoto/provider/auth/serverretry/repairask. Actualpubliccatalogueavailability observationunplanned/notnewdistinctbug/no B3-03networkproof; reason/status/response/timingUNKNOWN; healthyprotectedadmincount3 doesnotexplain it or proveM1adminsamecause. Source/security/config notchangedfromtoolwait/readfailure. OrdinaryobservedАдминmenu->Админпанель once; headingwaitdeadline thenonefreshAX actualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1/handoff restored before01:16:32UTC. Userchooser1untouched/noauth/newtabs/pendingeffects. C189cannotretrywithoutgenuinelynewcatalogcondition. WindowUI23/fix4F017-F020/logical16/23of316293left/S117primary63/S23/S41/S62 unchanged/NOT_READY; candidate82c7088de609/1686/buildC174C175/full11testFAIL/lint52errors167warnings unchanged. NextC190 ONLYboundedREADONLY newlylocated apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependencycomparison forD3-05; fileNOTreviewedC187focused09Octset, genuineNEWevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL anddistinguishreport/mocked/API/source/LIVE; do notoverwriteC187history or infercataloguecause. NO browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/newfixture/role/source/test/build/server command fromreview/unchangedwizardreplay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient exactblocker+independentunfinishedpriority. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenroutes-providers/noHTTPsecrets/native/mobile/subagents/newchats/newfixtures/roles/jobs/grants/messages/payments/securityweakening/commitpushdeploystagereset boundaries retained. FrozenC179EV607/C183EV616 journals/finals immutablependingfalse; main18368preserved/no activecompiler/runtime/networklease/renewal. No unchangedDONEwarning/contacts/map/timezone/F013/auth/profileSave/cache/visual/diagnostic/repairquestion/build/fonts/C93bundle repeat. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites. UntilNEWhumanstop/usageunavailable; onstop safecurrenteffects+explicitPAUSEDexistingkezek/readback+NEW26Octfinal. Quietunchanged/nonactionable;meaningfuldeltaonly.
+
+NEW EXPLICIT HUMAN STOP 26Oct2026: «сделай логическое завершение и на паузу». First actual clock 2026-10-26T01:27:50Z (07:27:50 Bishkek). This supersedes all prior until-stop authorization prospectively. Remain PAUSED until NEW direct human authorization; stale/queued heartbeat is NOT resume permission. C189 is closed BLOCKED at actual catalogue precondition, no new UI/fix/accepted credit. C190 is saved readonly next review only, NOT authorized execution while paused. Current 26Oct progress/final-report.json close the window; older finals and C179/C183 frozen journals immutable. No pending fixture effects or active temporary compiler/runtime/networklease. Preserve user tab and main development server available for user, not continuing tests. Counts23/316293left/UI23/fix4F017-F020/logical16; candidate82c7088de609/1686/buildC174C175 and all blockers/failed technical gates retained/NOT_READY. No product/UI/DB/test/build/server action during finalization.
+
+
+=== ТОЧНЫЙ ФАЙЛ C:/projects/kezek/docs/verification/runs/2026-10-26-web-resume/final-report.json ===
+{
+  "id": "2026-10-26-web-resume-final",
+  "status": "PAUSED_BY_USER",
+  "request": "сделай логическое завершение и на паузу",
+  "firstActualStopClockUtc": "2026-10-26T01:27:50Z",
+  "finalizedUtc": "2026-10-26T01:29:27Z",
+  "windowResumeFirstClockUtc": "2026-10-25T19:37:40Z",
+  "continuousObservation": false,
+  "noContinuityAcrossHistoricalPauses": true,
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "sourceFileCount": 1686,
+  "readiness": "NOT_READY",
+  "accepted": 23,
+  "remaining": 293,
+  "total": 316,
+  "S1": {
+    "accepted": 17,
+    "total": 25,
+    "primaryPassed": 63,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 3,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 1,
+    "total": 47
+  },
+  "S6": {
+    "accepted": 2,
+    "total": 29
+  },
+  "newWindowPassedFunctionalUiCases": 23,
+  "newWindowVerifiedLiveFixes": 4,
+  "verifiedFixesLogicalRun": 16,
+  "newWindowFirstAcceptedRequirements": 2,
+  "reusedPriorProofCasesThisWindow": 3,
+  "refreshedExistingCaseEventsThisWindow": 3,
+  "distinctRefreshedExistingCasesThisWindow": 1,
+  "refreshedHistoricalFunctionalCasesThisWindow": 2,
+  "priorWindowArchived": {
+    "newUiPass": 5,
+    "newVerifiedFixes": 1,
+    "notAddedToThisWindow": true
+  },
+  "fixes": [
+    {
+      "id": "S1-F017",
+      "status": "verified",
+      "scope": "Admin Today canonical cancelled count and RU label."
+    },
+    {
+      "id": "S1-F018",
+      "status": "verified",
+      "scope": "Admin Today EN/KY system status copy."
+    },
+    {
+      "id": "S1-F019",
+      "status": "verified",
+      "scope": "English Today title stray backslash removed."
+    },
+    {
+      "id": "S1-F020",
+      "status": "verified",
+      "scope": "Nonempty nondigit phone/WhatsApp validation: actual before FAIL retained, minimal WEB guard and SAME-LIVE rejection/recovery verified."
+    }
+  ],
+  "acceptedRequirementsThisWindow": [
+    "B4-01",
+    "B3-02"
+  ],
+  "accounting": "Inherited21 accepted ->23;2 first accepted requirements. Reuses/functional refresh/build refresh do not add NEW UI cases or fixes. Latest C188 review/C189 blocked add0.",
+  "currentBuild": {
+    "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+    "pid": 23980,
+    "ownedSession": 25359,
+    "startedUtc": "2026-10-25T23:03:23.215Z",
+    "finishedUtc": "2026-10-25T23:04:38.101Z",
+    "exitCode": 0,
+    "timedOut": false,
+    "rawLog": "c174-build-raw.txt",
+    "buildEvidence": "c174-result.json",
+    "executionEvidence": "c175-result.json",
+    "ownedRuntimePid": 14212,
+    "runtimeStopped": true
+  },
+  "technicalGates": {
+    "evidence": "c172-technical-checks.json",
+    "typecheck": "PASS",
+    "targeted10": "PASS",
+    "scopedLint": "0errors/1ignoredtestwarning",
+    "fullLint": "FAIL52errors167warnings",
+    "sourceUnit": "FAIL11/PASS2547",
+    "fullCoverage": "EXECUTED_FULL_FAILED_TEST_GATE_RETAINED",
+    "currentBuild": "C174_C175_SCOPED_PASS"
+  },
+  "latestProductOrReviewEvidence": "S1-EV-628 / c189-result.json",
+  "blockers": [
+    "C189 actual public catalogue temporarily unavailable before query/Book CTA; cause unknown. No unchanged retry or speculative source/auth fix.",
+    "F013 OPEN, F005 live verification pending, M1 business-count intermittent read failure unresolved.",
+    "Role/fixture/owner/profile Save/cache/visual/security/technical and timezone/provider/runtime booking proof blockers retained.",
+    "Full WEB test gate retains11 failed assertions; full lint52errors167warnings. Scoped successful checks/build do not establish whole green.",
+    "Domain/deployed production deferred; NOT_READY."
+  ],
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configurationSHA256": "3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b",
+    "name": "Kezek WEB — до команды остановиться",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "existingAutomationNoDuplicate": true,
+    "preservedScheduleThreadName": true
+  },
+  "effectsAndProcesses": {
+    "newTemporaryProcessesStarted": false,
+    "stopOrRestartCommandsIssued": false,
+    "activeTemporaryNetworkPermission": false,
+    "compilerAndTemporaryRuntime": "C174/C175 recorded finished/stopped; no later temporary process started in this window.",
+    "mainServer": {
+      "lastRecordedPid": 18368,
+      "leftUnmodifiedForUser": true,
+      "continuingTestProcess": false,
+      "currentHealth": "Not established. Scoped normal process/listener checks at finalization returned no rows; prior sandbox visibility limitations retained, not proof of server failure. No restart or recovery attempted."
+    }
+  },
+  "uiAndWrites": "Administrative finalization only. No new product/UI/auth/DB/source/test/build/server action after stop. No pending fixture effects per frozen C179/C183 journals. User Tab2 preserved without new browser manipulation; last actual C189 handoff restored protected admin/RU/Anonymized/Business3 before01:16:32UTC. No fresh UI health claim. Prior ordinary auth/telemetry/normalization writes unenumerated, never zero TOTAL writes.",
+  "pendingFixtureEffects": false,
+  "immutableJournals": [
+    "S1-EV-607",
+    "S1-EV-616"
+  ],
+  "priorFinal": {
+    "path": "../2026-10-25-web-resume/final-report.json",
+    "sha256": "59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676",
+    "unchanged": true
+  },
+  "savedNextOnly": "C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged.",
+  "resumeRequires": "NEW direct human authorization, then fresh clock/usage/progress/source/UI and all prior safety boundaries. C190 saved review is NOT authorized while paused."
+}
+
+
+
+=== ТОЧНЫЙ ФАЙЛ C:/projects/kezek/docs/verification/runs/2026-10-26-web-resume/progress.json ===
+{
+  "status": "PAUSED_BY_USER",
+  "authorization": "можешь продолжить дальше пока я тебя сам не останавлю",
+  "authorizationEvidence": "authorization.json",
+  "firstClockAfterResumeUtc": "2026-10-25T19:37:40Z",
+  "timezone": "Asia/Bishkek",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "sourceFileCount": 1686,
+  "accepted": 23,
+  "remaining": 293,
+  "total": 316,
+  "S1": {
+    "accepted": 17,
+    "total": 25,
+    "primaryPassed": 63,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 3,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 1,
+    "total": 47
+  },
+  "verifiedFixesLogicalRun": 16,
+  "newWindowLiveFixes": 4,
+  "newWindowAcceptedRequirements": 2,
+  "newWindowPassedCases": 23,
+  "reusedPriorProofCasesThisWindow": 3,
+  "refreshedExistingCasesThisWindow": 3,
+  "refreshedHistoricalFunctionalCasesThisWindow": 2,
+  "activeSubpackage": "C189_CLOSED_HUMAN_PAUSED_C190_NOT_EXECUTED",
+  "casePlan": "c189-search-booking-entry-plan.json",
+  "lastCheckpoint": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN RESUME. Saved next only: C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged.",
+  "checkpointAfterClockUtc": "2026-10-26T01:29:27Z",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "existingAutomation": true,
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "configurationReadback": true,
+    "configSHA256": "3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "nameAndCadencePreserved": true,
+    "evidence": "pause-20261026-012750.json"
+  },
+  "browser": {
+    "inventory": "Human-restored two tabs: local root2 and Google chooser1; local2 used only, chooser1 untouched/preserved",
+    "workingTabId": "2",
+    "workingProvider": "09f3d86a-f489-4f3f-be0a-e00c844b51ba",
+    "handle": "resume26HumanTab",
+    "actualRole": "ProtectedAdmin/Admin-panel/Anonymized/RU/Business3 restoredC179",
+    "userTabHandoff": true,
+    "noNewTabOrAuthAction": true
+  },
+  "server": {
+    "before": "No 3000/3107 listener and no Next or owned compiler/runtime process in scoped read-only check; exact project/package/Next binary verified.",
+    "clockBeforeStartUtc": "2026-10-25T19:39:17Z",
+    "oneNormalStart": true,
+    "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "cwd": "C:/projects/kezek/apps/web",
+    "sessionId": 60432,
+    "pid": 18368,
+    "parentPid": 12676,
+    "listen": "127.0.0.1:3000",
+    "verifiedBeforeUtc": "2026-10-25T19:40:00Z",
+    "status": "LISTENER_CONFIRMED_NOT_ACTUAL_UI_HEALTH",
+    "noRestartLoopInstallOrFullOauthLog": true
+  },
+  "priorCompletedWindow": "../2026-10-25-web-resume/final-report.json",
+  "priorFinalSHA256": "59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676",
+  "continuousObservationAcrossPause": false,
+  "releaseReady": false,
+  "fixedDeadline": null,
+  "autonomousResumeAllowed": false,
+  "finalReportFile": "final-report.json",
+  "priorWindowArchived": {
+    "newUiPass": 5,
+    "newVerifiedFixes": 1,
+    "notAddedToThisWindow": true
+  },
+  "currentBuild": {
+    "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+    "pid": 23980,
+    "ownedSession": 25359,
+    "startedUtc": "2026-10-25T23:03:23.215Z",
+    "finishedUtc": "2026-10-25T23:04:38.101Z",
+    "exitCode": 0,
+    "timedOut": false,
+    "rawLog": "c174-build-raw.txt",
+    "buildEvidence": "c174-result.json",
+    "executionEvidence": "c175-result.json",
+    "ownedRuntimePid": 14212,
+    "runtimeStopped": true
+  },
+  "technicalGates": {
+    "evidence": "c172-technical-checks.json",
+    "typecheck": "PASS",
+    "targeted10": "PASS",
+    "scopedLint": "0errors/1ignoredtestwarning",
+    "fullLint": "FAIL52errors167warnings",
+    "sourceUnit": "FAIL11/PASS2547",
+    "fullCoverage": "EXECUTED_FULL_FAILED_TEST_GATE_RETAINED",
+    "currentBuild": "C174_C175_SCOPED_PASS"
+  },
+  "inheritedBlockers": {
+    "progress": "docs/verification/runs/2026-10-25-web-resume/progress.json",
+    "latestContractReview": "docs/verification/runs/2026-10-25-web-resume/c127-service-contract-review.json",
+    "F013": "OPEN/no unchanged auth/reload diagnostic",
+    "F005": "pending LIVE",
+    "profileSave": "Specific consent absent; no repeat ask/Save",
+    "cacheVisualRoleFixtureSecurity": "Retained; no unchanged retries or exclusion",
+    "createNegativeValidation": "C151: source-only validation guards; Submit/Create/Save/Enter/newentity authority absent, no LIVE rejection credit"
+  },
+  "constraints": "All prior WEB/knownidentity/safety constraints retained, no broadenedauthority/newnetworkapproval. ExistingF013OPEN/F005pending/fixture/cache/visual/role/serverdependency blockers unchanged. Explicitstop ->safeeffects+PAUSEDreadback+newfinal; neveroverwriteoldfinals or buy/reset limits.",
+  "distinctRefreshedExistingCasesThisWindow": 1,
+  "restoredPriorRequirementIds": [
+    "A3-01"
+  ],
+  "lastAdministrativeAudit": "pause-20261026-012750.json",
+  "S6": {
+    "accepted": 2,
+    "total": 29
+  },
+  "pendingFixtureEffects": {
+    "subpackage": "C183",
+    "pending": false,
+    "journal": "c183-effects-journal.json",
+    "lastConfirmedStage": "restored",
+    "rollbackScope": "Onlyexactfourknownsynthetic C183directorylinks clear throughordinaryACTIVE057 form afterfreshknownstate; preserve allotherbaseline/no blindretry/cleanup.",
+    "completedEvidence": "c183-result.json",
+    "restoredBeforeUtc": "2026-10-26T00:14:32Z"
+  },
+  "pausedAtUtc": "2026-10-26T01:27:50Z",
+  "pauseRequest": "сделай логическое завершение и на паузу",
+  "pauseEvidence": "docs/verification/runs/2026-10-26-web-resume/pause-20261026-012750.json"
+}
+
+
+
+=== ТОЧНЫЙ ФАЙЛ C:/projects/kezek/docs/verification/runs/2026-10-26-web-resume/pause-20261026-012750.json ===
+{
+  "id": "HUMAN_PAUSE_20261026_012750",
+  "request": "сделай логическое завершение и на паузу",
+  "firstActualClockUtc": "2026-10-26T01:27:50Z",
+  "firstActualClockBishkek": "2026-10-26 07:27:50 +06:00",
+  "finalizedUtc": "2026-10-26T01:29:27Z",
+  "authority": "Direct human stop prospectively supersedes all prior until-stop authorization. NEW direct human authorization required; stale/queued heartbeat is not resume permission.",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configurationSHA256": "3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b",
+    "name": "Kezek WEB — до команды остановиться",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "existingAutomationNoDuplicate": true,
+    "preservedScheduleThreadName": true
+  },
+  "effects": "Administrative finalization only. No new product/UI/auth/DB/source/test/build/server action after stop. No pending fixture effects per frozen C179/C183 journals. User Tab2 preserved without new browser manipulation; last actual C189 handoff restored protected admin/RU/Anonymized/Business3 before01:16:32UTC. No fresh UI health claim. Prior ordinary auth/telemetry/normalization writes unenumerated, never zero TOTAL writes.",
+  "processes": {
+    "newTemporaryProcessesStarted": false,
+    "stopOrRestartCommandsIssued": false,
+    "activeTemporaryNetworkPermission": false,
+    "compilerAndTemporaryRuntime": "C174/C175 recorded finished/stopped; no later temporary process started in this window.",
+    "mainServer": {
+      "lastRecordedPid": 18368,
+      "leftUnmodifiedForUser": true,
+      "continuingTestProcess": false,
+      "currentHealth": "Not established. Scoped normal process/listener checks at finalization returned no rows; prior sandbox visibility limitations retained, not proof of server failure. No restart or recovery attempted."
+    }
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 27,
+    "observedAfterClockUtc": "2026-10-26T01:27:50Z",
+    "limitExhaustion": false
+  },
+  "savedNextOnly": "C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged."
+}
+
+
+
+=== ТОЧНЫЙ ФАЙЛ C:/projects/kezek/docs/WEB_VERIFICATION_METHOD.md ===
+# WEB: измеримая приёмка и разбор прежнего метода
+
+18 октября 2026. Изменение метода по прямому запросу пользователя. Это работа с учётом; живые проверки, расписание автоматизации, приложение и БД не возобновляются. Старые финальные отчёты остаются неизменными.
+
+## Почему работа шла, а понятного процента не было
+
+1. **Учитывалась активность, а не закрытые требования.** Stage Gxxx мог означать исправление, успешный просмотр, тест с моками, подготовку отчёта или паузу. Счётчик стадий не измеряет завершение продукта.
+2. **Единица приёмки была слишком крупной.** 81 область и 33 пакета объединяют много независимых состояний. Исправление конкретного перехода оставляло всю область `in_progress`; полезный результат не становился отдельной закрытой карточкой.
+3. **Правило было написано, но не внедрено.** План от 14 октября уже требовал ID, ожидаемый результат и доказательство для каждого сценария. Исполняемого реестра таких сценариев и проверки полноты не было. Новый текст без реестра повторил бы ту же ошибку.
+4. **Исторические и текущие результаты трудно сопоставлять.** Каталог содержит исторические `verified`, state — `needs_verification`, отдельный баг — `same-live verified`. Это разные утверждения. Пересекающиеся наборы тестов, повторные исправления одного бага и изменение кандидата дополнительно мешают простому подсчёту.
+5. **Слишком много открытых направлений.** В state 16 пакетов `in_progress`, 16 `queued`, один `blocked`. Это не доказательство одновременной работы, но плохая очередь для доведения цепочки до результата. Возвраты к доступным языковым/визуальным деталям не закрывали критические вопросы доступа, операций и финансов.
+6. **Блокировка инструмента сместила цель.** В G138–G155 всего 18 стадий: 6 с локальными тестами, 9 административных/учётных, 2 запуска окна, 1 заблокированная попытка живого сценария. Новых исправлений runtime за эти окна — 0. Некоторые проверки были полезны, но не заменяли требуемую живую приёмку. Это классификация стадий, НЕ распределение затраченных часов: достоверной поминутной статистики нет.
+7. **Избыточное дублирование.** Одни и те же длинные результаты переносились в progress, state, каталог, трекер, черновики и финал. Перед изменением метода: каталог 3016 строк, state 3120, трекер 1121. Повторные проверки хешей подтверждают сохранность файлов, но не корректность продукта.
+
+Ответственность за эту организацию работы лежит на агенте. Сбой управления браузером объясняет часть ограничений, но не отсутствие удобного учёта до него.
+
+## Что уже внедрено
+
+- `WEB_VERIFICATION_LEDGER.json` — единый машинный реестр измерений.
+- База `WEB-ACCEPTANCE-1`: все **321 исходное обязательство** из Tasks каталога с постоянными ID; **316 применимых**, 5 исключённых пунктов C2 по существующему social-only решению. Ни один заблокированный пункт не удалён ради красивого процента.
+- Исходная формулировка каждого пункта сохранена. Это пока обязательства, а не 316 атомарных тестов: «активный, истёкший, исчерпанный пакет» требует нескольких случаев.
+- Завершён импорт всего **доступного** архива: **2 477 файлов**, 291 JSON stage/progress/final, 204 реальные записи дефектов и снимки пяти исходных документов. У всех файлов SHA-256; before/after, FAIL и служебные записи не удалены. Изображения не выдаются за заново выполненную визуальную приёмку.
+- Все **316 применимых обязательств** классифицированы: 228 имеют узкие исторические свидетельства, 20 — только документы без найденного первичного файла, 29 — техническую проверку/блокер вместо live, 39 — без найденного целевого свидетельства. Для каждого сохранены источники и остаток. Это не 228 полностью принятых требований.
+- В дефектах: **121 исторически подтверждённое узкое исправление**, 32 старых verified без найденного первичного доказательства, 42 fixed с незавершённой проверкой, 8 исторически open/reopened, 1 относится к исключённому email/password. WB-082 уточнён отдельным G005 follow-up; старый статус не затёрт. Две разные WB-045 разделены суффиксами, WB-165/166 — отдельные дефекты, образец WB-001 не посчитан.
+- 109 точных файловых ссылок июня/июля отсутствуют в текущем архиве. Это явная граница восстановления: декларации сохранены, но не превращены в первичный PASS. Исторически открытое не объявляется свежевоспроизведённым.
+- `scripts/web-verification-report.mjs` вычисляет числа и отказывает в корректном отчёте при повреждённых доказательствах, неверном кандидате, изменённых зависимостях, неполной матрице вариантов или подмене live тестом с моками. Он ничего не меняет в продукте.
+- `WEB_VERIFICATION_REPORT.md` — производная сводка, а не ещё один независимо редактируемый источник правды.
+
+## Какие проценты показываем
+
+| Показатель | Формула | Значение и предел |
+| --- | --- | --- |
+| Полная приёмка требований | принятые обязательства / 316 | На завершении импорта истории было 0/316. Текущий числитель вычисляется в WEB_VERIFICATION_REPORT.md из живых карточек реестра; не дублируется вручную здесь. Это НЕ процент написанного продукта |
+| Выполнение тест-плана | законченные PASS и FAIL случаи / все обязательные атомарные случаи | Только после фиксации всех вариантов; пока `не определён`, а не выдуманный процент |
+| Разбор старых свидетельств | классифицированные обязательства / 316 | 316/316, 100%; доступная история перенесена, это НЕ готовность приложения |
+| Исправления | новые подтверждённые дефекты; закрытые узкие исправления; ожидают ретеста; вновь открыты | Без сложения follow-up одного WB и без знаменателя «все будущие баги» |
+| Готовность к выпуску | обязательная приёмка плюс отдельные ворота безопасности, финансов, среды и релиза | Нельзя получить GO средним процентом, скрывающим критический FAIL |
+
+Не складываем эти показатели и не выдаём их среднее за готовность. Количество кейсов не переводится в оставшиеся часы: один заблокированный доступ может стоить больше двадцати проверок текста. Оценку времени даём отдельно диапазоном по ближайшему пакету, с фактом и причинами отклонения.
+
+Состав базы зафиксирован хешем. Добавление/изменение требования — новая версия базы и явная дельта числителя/знаменателя. Дробление на дочерние случаи не увеличивает вес исходного обязательства. Нельзя выбирать только удобные роли, языки или размеры, чтобы получить 100%.
+
+## Что означает «проверено на 100%»
+
+Так можно говорить о **конкретной карточке с конечным перечнем условий**, а не о том, что неизвестных ошибок никогда не будет.
+
+Перед исполнением карточка содержит:
+
+- постоянный ID и родительское требование;
+- цель и явные исключения; приоритет;
+- роль, бизнес/объект, среду и версию кода/контракта/миграции;
+- предусловия, разрешённые данные, последовательность шагов;
+- независимый ожидаемый результат, включая побочные эффекты;
+- все применимые варианты (например RU/KY/EN, пусто/успех/ошибка, свой/чужой объект), а также причину неприменимости остальных;
+- обязательный способ доказательства: live, unit, контракт, визуальная проверка; один способ не подменяет другой.
+
+После исполнения добавляются фактический результат, UTC, доказательства и хеши, затронутые зависимости, эффекты/восстановление, дефект и адресные регрессии. Для визуального PASS нужны измеренный CSS viewport и свежий снимок. Хеш доказывает целостность файла, а не истинность утверждения; содержание доказательства проверяется отдельно.
+
+**Исправлено и принято**: есть настоящий исходный сбой, точные ожидание/факт, изменение кода, повтор того же сценария после исправления, необходимые отрицательные/соседние проверки и учтённые эффекты. Проблемы обязательного lint/coverage не скрываются: функциональный сценарий может пройти, технический gate остаётся FAIL. В таком случае нельзя писать «вся работа по области завершена».
+
+Пример: WB-202 доказал правильную первоначальную загрузку профиля RU/KY/EN в успешном пути. G141 обнаружил три ошибки границы загрузки в UNIT. Это не аннулирует уже наблюдавшийся успешный путь и не закрывает поведение при сбое. В отчёте это две отдельные группы карточек. WB-201 подтвердил контрольные доли 50/219; это не проверка всех формул, округления и гарантий.
+
+## Свежесть без бесконечных повторов
+
+Исторический PASS сохраняется с датой и контекстом. Переход в текущий PASS требует проверки зависимостей и среды. При чисто тестовом изменении не обнуляем автоматически все живые результаты. Если нет достаточной карты зависимостей, ставим `требует разбора`, не придумываем PASS и не запускаем весь сайт заново.
+
+Повтор нужен при изменении затронутого кода/общей зависимости, схемы, контрактов, роли, значимых данных/окружения или для оговорённого финального smoke. Новая календарная дата, новый heartbeat и новый отчёт сами по себе не повод повторять завершённые проверки.
+
+## Новый порядок работы
+
+Конкретная очередь: [WEB_CLOSURE_PLAN.md](./WEB_CLOSURE_PLAN.md), машинное распределение ID — [WEB_CLOSURE_PLAN.json](./WEB_CLOSURE_PLAN.json). Восемь этапов и 25 подпакетов охватывают все 316 обязательств без дублей; плановые рубежи отделены от фактической приёмки. Проверка: `node scripts/web-closure-plan.mjs --json`. Создание плана не заполняет результаты кейсов и не даёт разрешение на исполнение.
+
+1. **Использовать восстановленный учёт.** Конечный проход по всем областям A–Q завершён: [остаток по требованиям](./WEB_EVIDENCE_REVIEW.md), [история дефектов](./WEB_HISTORICAL_DEFECTS.md). История с доказательствами не тестируется заново только ради нового формата. Отсутствующие файлы остаются явно отсутствующими; новые найденные доказательства добавляются отдельным уточнением, не заменой старого снимка.
+2. **Одна активная цепочка.** Выбираем ближайший незакрытый пакет по риску/зависимости; до старта перечисляем случаи, ожидаемый результат, лимит времени и критерий остановки. Заканчиваем PASS, FAIL с дефектом либо конкретным BLOCKED. Не оставляем ещё одну безымянную «работу в процессе».
+3. **Блокер получает владельца и выход.** Записываем что недоступно, какие проверки сделаны, какой результат разблокирует работу. На неизменный инструментальный сбой — одна короткая диагностика, ориентир до 10 минут. Без повторов, новых вкладок/ролей или обхода запретов. При невозможности безопасно завершить текущую цепочку переходим к заранее указанной независимой; это не закрывает исходный блокер.
+4. **Автотест решает конкретный вопрос.** Пишем его для воспроизводимой регрессии или названного недоказанного контракта, а не ради увеличения количества/coverage после потери браузера. UNIT-only находка остаётся находкой с отдельным планом live-подтверждения.
+5. **Один источник записи.** Итог кейса — в реестре и первичном evidence. Каталог содержит требования, баг-реестр — дефекты, исторические final — неизменные снимки. Не копируем полный абзац в пять документов. Административный ориентир — до 15% рабочего блока; превышение объясняем. Пока измерений времени нет, процент фактически затраченного времени не заявляем.
+6. **Короткий отчёт по дельте.** «Было принято N, стало M; проверены X случаев; Y PASS, Z FAIL, B BLOCKED; исправлено K новых дефектов; повторено R из-за конкретной зависимости; следующий закрываемый пакет». Неизменный heartbeat не создаёт видимость результата.
+
+Связи E2 с G071/G123/G127/G141/G151/G152 уже внесены. Следующий шаг после согласования — конечная матрица вариантов выбранного требования и проверка применимости старого результата к зависимостям кандидата. Живые тесты сейчас явно остановлены пользователем. Границы прямых API/RPC остаются отдельным блокирующим направлением для выпуска; косметика не повышает его статус.
+
+## Обязательные ограничения
+
+Текст старого каталога — не разрешение на любые перечисленные действия. Сохраняются все ограничения пользователя: WEB only, разрешённые четыре Google-идентичности, запрет новых ролей/fixtures, запрещённый endpoint/вкладка, no token extraction, реальные платежи/чужие сообщения/необратимое удаление/автоочистка/commit/push/deploy. Изменение метода не возобновляет истёкшее окно и не выдаёт новые полномочия. Автоматизация остаётся на паузе.
+
+## Проверка и обновление отчёта
+
+Из корня репозитория:
+
+```powershell
+node --test scripts/web-verification-report.test.mjs
+node --test scripts/web-evidence-accounting.test.mjs
+node scripts/web-verification-report.mjs --json
+node scripts/web-verification-report.mjs
+node scripts/web-verification-report.mjs --reviews
+node scripts/web-verification-report.mjs --defects
+```
+
+Команды только читают реестр и свидетельства. При изменении записей сначала проверяется отчёт, затем его текст сохраняется через обычный файловый patch. Тесты самого отчётчика не входят в счётчик проверок Kezek.
+
+
+
+=== РЕЕСТР: МЕТАДАННЫЕ / КАНДИДАТ / СЛЕДУЮЩАЯ ПОЛИТИКА (сам полный ledger читать из исходного файла) ===
+
+{
+  "candidate": {
+    "id": "dev-20261026-WEB-82c7088de609",
+    "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+    "status": "active_scoped_acceptance_not_release",
+    "currentCertification": true,
+    "environmentScope": "DEV plus explicitly isolated local production-mode case; not deployed production",
+    "sourceScope": "Exact ordered mechanical build selection, including source/tests/public assets and17 selected build/package entries; no environment secrets or generated caches",
+    "previousCandidate": {
+      "id": "dev-20261026-WEB-c1115361a3b4",
+      "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853"
+    },
+    "observedUtc": "2026-10-25T22:59:29Z",
+    "fileCount": 1686,
+    "sourceBoundary": {
+      "pathsFile": "docs/verification/runs/2026-10-26-web-resume/c172-source-paths.json",
+      "sha256": "615fc6422d39bb7304f2f4ca593aca71326414be32e849cd96f5efe7c18305a1",
+      "fileCount": 1686
+    },
+    "buildStatus": "PASS_C174exact1686colddefaultNext16Turbopack/types36prerenders;C175actualcompiledprivacyentry/reload/guestdocument. Noassetbundle/freshcache/visual/deployedproduction/fulltechnicalPASS; priorfailuresretained.",
+    "certificationReviewEvidenceId": "S1-EV-584"
+  },
+  "nextBatch": {
+    "status": "PAUSED_BY_USER",
+    "objective": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN RESUME. Saved next only: C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged.",
+    "run": "docs/verification/runs/2026-10-26-web-resume/progress.json",
+    "authorization": "можешь продолжить дальше пока я тебя сам не останавлю",
+    "deadlineUtc": null,
+    "automationResumeAuthorized": false,
+    "policyBeforeHumanPause": {
+      "status": "S1_continuation_active",
+      "objective": "C70finite remainingratingdraftboundaryplan BEFOREUI: sum101 viaoneArrowRight plusdays366invalid/1valid/365valid, Resetaftereach, NEVERSave/Enter/recalc/POST/persistconfiguration. C69sum99/days0 alreadyPASSoriginalUTC/notrepeat. Planned4newUIboundaryvariants not4financialexecutions; server/dependencyremainBLOCKED/fullM5partial. No C68dateinputrepair orC67owner/F013unchangedretest.",
+      "run": "docs/verification/runs/2026-10-20-s1-continuation/progress.json",
+      "authorization": "какой сейчас прогресс? хочу дальше тебя запустить тебе до 11часов утра автономно, можешь начинать сразу после моего сообщения; harddeadline21Oct05UTC, noautonomousresumeafter; no newprivileges/networkpermission",
+      "deadlineUtc": "2026-10-21T05:00:00Z",
+      "automationResumeAuthorized": true
+    },
+    "resumeRequiresExplicitUserAuthorization": true,
+    "previousHumanPausedPolicy": {
+      "status": "PAUSED_BY_USER_NOT_READY",
+      "run": "docs/verification/runs/2026-10-20-s1-continuation/progress.json",
+      "authorization": "нужно сделать логическое завершение и процесс поставить на паузу потом продожим",
+      "finalReport": "docs/verification/runs/2026-10-20-s1-continuation/final-report-until-stop-2026-10-21.json",
+      "objective": "DO NOT EXECUTE UNTIL EXPLICIT HUMAN RESUME. Saved next: C70finite remainingratingdraftboundaryplan BEFOREUI: sum101 viaoneArrowRight plusdays366invalid/1valid/365valid, Resetaftereach, NEVERSave/Enter/recalc/POST/persistconfiguration. C69sum99/days0 alreadyPASSoriginalUTC/notrepeat. Planned4newUIboundaryvariants not4financialexecutions; server/dependencyremainBLOCKED/fullM5partial. No C68dateinputrepair orC67owner/F013unchangedretest."
+    },
+    "policyBefore23OctHumanPause": {
+      "status": "ACTIVE_UNTIL_USER_STOP",
+      "objective": "C75 boundedreadonlyhistoricalapplicabilityreview for remaining client/guest header variants BEFOREUI. C66guest original21Oct09:20:34..09:20:56 source40a5 and actualrootВойти/noaccount may support narrowguestmenuabsence with hashes+originalUTC, not newexecution; verify exact evidence. G078client Escape had NOmenuitemactivation/navigation, so do not repeatEscape but identify whether client root->personal menu+Back remains genuinelyuncovered. Onlyafterfiniteplan C76 oneclientnavigationcase ifneeded. No SA/staffheader/directselector/rating/receipt/profile/build/F013repeat; owner/manager/multiroleBLOCKED retained.",
+      "authorization": "можешь продолжить пока я сам не попрошу остановиться",
+      "run": "docs/verification/runs/2026-10-23-web-resume/progress.json"
+    },
+    "previous23OctPausedPolicy": {
+      "status": "PAUSED_BY_USER_NOT_READY",
+      "run": "docs/verification/runs/2026-10-23-web-resume/progress.json",
+      "authorization": "сделай логическое завершение",
+      "finalReport": "docs/verification/runs/2026-10-23-web-resume/final-report.json",
+      "objective": "DO NOT EXECUTE UNTIL NEW EXPLICIT HUMAN RESUME. Saved next: C75 boundedreadonlyhistoricalapplicabilityreview for remaining client/guest header variants BEFOREUI. C66guest original21Oct09:20:34..09:20:56 source40a5 and actualrootВойти/noaccount may support narrowguestmenuabsence with hashes+originalUTC, not newexecution; verify exact evidence. G078client Escape had NOmenuitemactivation/navigation, so do not repeatEscape but identify whether client root->personal menu+Back remains genuinelyuncovered. Onlyafterfiniteplan C76 oneclientnavigationcase ifneeded. No SA/staffheader/directselector/rating/receipt/profile/build/F013repeat; owner/manager/multiroleBLOCKED retained."
+    },
+    "previousObjectiveBeforePause": "C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged.",
+    "autonomousResumeAllowed": false,
+    "pauseEvidence": "docs/verification/runs/2026-10-26-web-resume/pause-20261026-012750.json",
+    "finalReport": "docs/verification/runs/2026-10-26-web-resume/final-report.json",
+    "policyBefore26OctResume": {
+      "status": "PAUSED_BY_USER",
+      "run": "docs/verification/runs/2026-10-25-web-resume/progress.json",
+      "finalReport": "docs/verification/runs/2026-10-25-web-resume/final-report.json",
+      "objective": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN RESUME. Saved next only: C128 bounded readonly history/effect review of retained inactive test category destructive-confirmation Cancel before any new UI plan. Determine whether exact category Cancel/reload has original proof; reuse only if applicable with original UTC/no new PASS. If genuinely uncovered, save finite C129 warning-open/Cancel/reload plan for exact c7cef81b only; NEVER dialog Confirm/Delete/Enter/force checkbox or actual deletion. No new category/fixture, service-category implementation, unchanged C119/C124/C126/build/auth/F013 retry. M5-02 services contract remains explicitly BLOCKED until clarified; all older safety/stale gates retained."
+    }
+  },
+  "lastEvidence": {
+    "id": "S1-EV-631",
+    "path": "docs/verification/runs/2026-10-26-web-resume/final-report.json",
+    "sha256": "43e73d1c1b4b6fe22e44dda03608262c3799492be749667647f3c1cc1eb0b127"
+  }
+}
+
+
+=== READONLY GIT STATUS / DIFF STAT на подготовке передачи; авторство не установлено, ничего не staged/reset ===
+
+ M README.md
+ M apps/web/eslint.config.mjs
+ M apps/web/jest.setup.js
+ M apps/web/package.json
+A  apps/web/src/__tests__/api/admin/category-update.test.ts
+A  apps/web/src/__tests__/api/admin/funnel-analytics.test.ts
+ M apps/web/src/__tests__/api/auth/telegram-mobile-callback.test.ts
+ M apps/web/src/__tests__/api/auth/telegram-mobile-confirm.test.ts
+ M apps/web/src/__tests__/api/auth/telegram-mobile-integration.test.ts
+ M apps/web/src/__tests__/api/auth/telegram-mobile-start.test.ts
+ M apps/web/src/__tests__/api/auth/telegram-mobile-status.test.ts
+ M apps/web/src/__tests__/api/branches/create.test.ts
+ M apps/web/src/__tests__/api/dashboard/staff/shift-close.test.ts
+A  apps/web/src/__tests__/api/dashboardRoleApplicationsRead.test.ts
+ M apps/web/src/__tests__/api/notify.test.ts
+ M apps/web/src/__tests__/api/quick-book-guest.test.ts
+ M apps/web/src/__tests__/api/quick-hold.test.ts
+ M apps/web/src/__tests__/api/staff/shift/open.test.ts
+ M apps/web/src/__tests__/api/staff/shift/today.test.ts
+ M apps/web/src/__tests__/api/users/search.test.ts
+A  apps/web/src/__tests__/app/staff/StaffDetailServerPage.test.tsx
+ M apps/web/src/__tests__/app/staff/finance/utils/itemLogic.test.ts
+A  apps/web/src/__tests__/app/staff/finance/utils/summaryAmounts.test.ts
+A  apps/web/src/__tests__/app/staff/finance/utils/summaryExport.test.ts
+A  apps/web/src/__tests__/components/AdminDiagnosticClients.test.tsx
+A  apps/web/src/__tests__/components/AdminDiagnosticPageScope.test.tsx
+AM apps/web/src/__tests__/components/AdminFunnelRoute.test.tsx
+A  apps/web/src/__tests__/components/AdminGlobalFunnelPage.test.tsx
+A  apps/web/src/__tests__/components/AdminUserStats.test.tsx
+AM apps/web/src/__tests__/components/AllStaffFinanceStatsData.test.tsx
+A  apps/web/src/__tests__/components/ApplicationReviewHistory.test.tsx
+A  apps/web/src/__tests__/components/AuthChoiceModalTranslations.test.tsx
+AM apps/web/src/__tests__/components/BookingAnyStaffCreation.test.tsx
+A  apps/web/src/__tests__/components/BookingAvailabilityRefresh.test.tsx
+A  apps/web/src/__tests__/components/BookingCalendarDayLabels.test.tsx
+A  apps/web/src/__tests__/components/BookingCancelConfirmationLabels.test.tsx
+AM apps/web/src/__tests__/components/BookingCardTranslations.test.tsx
+A  apps/web/src/__tests__/components/BookingDayRange.test.tsx
+A  apps/web/src/__tests__/components/BookingExistingVisitsNotice.test.tsx
+A  apps/web/src/__tests__/components/BookingFinalAmountCopy.test.tsx
+A  apps/web/src/__tests__/components/BookingRepeatLink.test.tsx
+A  apps/web/src/__tests__/components/BookingRepeatOffdayHint.test.tsx
+AM apps/web/src/__tests__/components/BookingSelectionRestore.test.tsx
+AM apps/web/src/__tests__/components/BookingSlotConflictRecovery.test.tsx
+A  apps/web/src/__tests__/components/BookingStaffDayAvailability.test.tsx
+A  apps/web/src/__tests__/components/BookingStep5AuthGuidance.test.tsx
+A  apps/web/src/__tests__/components/BookingSummaryStaffChoice.test.tsx
+AM apps/web/src/__tests__/components/BookingWizardTranslations.test.tsx
+A  apps/web/src/__tests__/components/BookingWorkLocations.test.tsx
+AM apps/web/src/__tests__/components/BookingsWorkspaceTranslations.test.tsx
+A  apps/web/src/__tests__/components/BranchBusinessContextTranslations.test.tsx
+AM apps/web/src/__tests__/components/BranchPromotionsPanel.test.tsx
+A  apps/web/src/__tests__/components/BranchScheduleWeekdayLocale.test.tsx
+AM apps/web/src/__tests__/components/BusinessContactSettingsForm.test.tsx
+A  apps/web/src/__tests__/components/BusinessContactSettingsLocale.test.tsx
+AM apps/web/src/__tests__/components/BusinessInfoTranslations.test.tsx
+ M apps/web/src/__tests__/components/BusinessPageState.test.tsx
+ M apps/web/src/__tests__/components/BusinessSwitcher.test.tsx
+A  apps/web/src/__tests__/components/CabinetBookingHistoryQuery.test.tsx
+ M apps/web/src/__tests__/components/CategoryForm.test.tsx
+AM apps/web/src/__tests__/components/ClientCabinetComplex.test.tsx
+A  apps/web/src/__tests__/components/ClientCabinetCount.test.tsx
+A  apps/web/src/__tests__/components/ClientEditFormTranslations.test.tsx
+AM apps/web/src/__tests__/components/ClientsListClosedShift.test.tsx
+AM apps/web/src/__tests__/components/DashboardAnalytics.test.tsx
+A  apps/web/src/__tests__/components/DashboardAnalyticsData.test.tsx
+A  apps/web/src/__tests__/components/DashboardBusinessScope.test.tsx
+A  apps/web/src/__tests__/components/DashboardHistorySearch.test.tsx
+A  apps/web/src/__tests__/components/DashboardLayoutAccessBoundary.test.tsx
+A  apps/web/src/__tests__/components/DashboardOnboardingNotice.test.tsx
+A  apps/web/src/__tests__/components/DataDeletionQuoteRendering.test.tsx
+A  apps/web/src/__tests__/components/DialogAccessibleLabels.test.tsx
+A  apps/web/src/__tests__/components/ErrorBoundaryNavigation.test.tsx
+ M apps/web/src/__tests__/components/ErrorDisplayI18n.test.tsx
+A  apps/web/src/__tests__/components/ExistingSessionRedirectRefresh.test.tsx
+ M apps/web/src/__tests__/components/ExplicitScheduleCalendar.test.tsx
+A  apps/web/src/__tests__/components/FinanceBusinessContextTranslations.test.tsx
+AM apps/web/src/__tests__/components/FinancePeriodFilters.test.tsx
+A  apps/web/src/__tests__/components/FinanceTotalsBasis.test.tsx
+AM apps/web/src/__tests__/components/FinanceViewContext.test.tsx
+A  apps/web/src/__tests__/components/GuestBookingFunnelSuccess.test.tsx
+AM apps/web/src/__tests__/components/GuestBookingReceipt.test.tsx
+A  apps/web/src/__tests__/components/GuestBookingTranslations.test.tsx
+A  apps/web/src/__tests__/components/HomeBranchAvailability.test.tsx
+A  apps/web/src/__tests__/components/HomeCountTranslations.test.tsx
+A  apps/web/src/__tests__/components/LanguageProviderServerLocale.test.tsx
+A  apps/web/src/__tests__/components/MapBookingContext.test.tsx
+A  apps/web/src/__tests__/components/MapCountTranslations.test.tsx
+A  apps/web/src/__tests__/components/MapDialogAccessibility.test.tsx
+AM apps/web/src/__tests__/components/MonthPickerCalendarLocale.test.tsx
+AM apps/web/src/__tests__/components/NewFromUserSearchGuard.test.tsx
+AM apps/web/src/__tests__/components/NoShowPresentation.test.tsx
+AM apps/web/src/__tests__/components/OwnerCalendarNavigationState.test.tsx
+AM apps/web/src/__tests__/components/OwnerCalendarTranslations.test.tsx
+A  apps/web/src/__tests__/components/PickerAccessibleLabels.test.tsx
+AM apps/web/src/__tests__/components/ProfileFormDraftLocale.test.tsx
+AM apps/web/src/__tests__/components/ProfileInitialLoadingServer.test.tsx
+A  apps/web/src/__tests__/components/ProfileLoadFailureBoundary.test.tsx
+A  apps/web/src/__tests__/components/ProfilePageAuthBoundary.test.tsx
+A  apps/web/src/__tests__/components/PublicCategoryLabels.test.tsx
+A  apps/web/src/__tests__/components/QuickDesk.test.tsx
+A  apps/web/src/__tests__/components/QuickDeskClient.test.tsx
+AM apps/web/src/__tests__/components/ReceiptDateLocale.test.tsx
+A  apps/web/src/__tests__/components/ReviewDialogAccessibility.test.tsx
+ M apps/web/src/__tests__/components/RoleAndBusinessSwitcher.test.tsx
+A  apps/web/src/__tests__/components/RoleApplicationsReadState.test.tsx
+A  apps/web/src/__tests__/components/RoleMenuFocus.test.tsx
+A  apps/web/src/__tests__/components/RouteLoading.test.tsx
+A  apps/web/src/__tests__/components/ScheduleWeekdayLocale.test.tsx
+A  apps/web/src/__tests__/components/SellVisitPackageTerms.test.tsx
+A  apps/web/src/__tests__/components/ServiceManagementPages.test.tsx
+AM apps/web/src/__tests__/components/ShiftControls.test.tsx
+AM apps/web/src/__tests__/components/ShiftSummaryRevenue.test.tsx
+AM apps/web/src/__tests__/components/StaffBookingListHistory.test.tsx
+A  apps/web/src/__tests__/components/StaffClosedShiftStats.test.tsx
+A  apps/web/src/__tests__/components/StaffDetailPageClient.test.tsx
+AM apps/web/src/__tests__/components/StaffFinanceCountTranslations.test.tsx
+A  apps/web/src/__tests__/components/StaffFinanceHoursInput.test.tsx
+AM apps/web/src/__tests__/components/StaffFinanceMoneyBasis.test.tsx
+AM apps/web/src/__tests__/components/StaffFinanceStatsTranslations.test.tsx
+A  apps/web/src/__tests__/components/StaffFinanceWorkspaceTranslations.test.tsx
+A  apps/web/src/__tests__/components/StaffServicesEditor.test.tsx
+A  apps/web/src/__tests__/components/StaffShiftStatsBoundary.test.tsx
+A  apps/web/src/__tests__/components/StaffWorkspaceLocale.test.tsx
+A  apps/web/src/__tests__/components/TabsKeyboard.test.tsx
+A  apps/web/src/__tests__/components/TelegramAccountSwitchHelpI18n.test.tsx
+A  apps/web/src/__tests__/components/ToastAccessibleLabels.test.tsx
+A  apps/web/src/__tests__/fixtures/telegramAttemptPersistence.ts
+ M apps/web/src/__tests__/lib/accountDeletionService.test.ts
+ M apps/web/src/__tests__/lib/adminHealthCheckHttpService.test.ts
+A  apps/web/src/__tests__/lib/adminUserStats.test.ts
+ M apps/web/src/__tests__/lib/bizContextResolver.test.ts
+ M apps/web/src/__tests__/lib/bookingCalendarDate.test.ts
+ M apps/web/src/__tests__/lib/bookingCancelHttpService.test.ts
+ M apps/web/src/__tests__/lib/bookingCancelRouteService.test.ts
+A  apps/web/src/__tests__/lib/bookingCountForm.test.ts
+A  apps/web/src/__tests__/lib/bookingNotificationDispatch.test.ts
+A  apps/web/src/__tests__/lib/bookingSlotConflict.test.ts
+ M apps/web/src/__tests__/lib/branchPromotionHttpService.test.ts
+ M apps/web/src/__tests__/lib/branchPromotionService.test.ts
+A  apps/web/src/__tests__/lib/branchPromotionValidationContracts.test.ts
+ M apps/web/src/__tests__/lib/branchPromotionsHttpService.test.ts
+ M apps/web/src/__tests__/lib/branchPromotionsService.test.ts
+ M apps/web/src/__tests__/lib/branchesMapService.test.ts
+ M apps/web/src/__tests__/lib/businessContacts.test.ts
+A  apps/web/src/__tests__/lib/cabinetBookingServices.test.ts
+A  apps/web/src/__tests__/lib/dashboardBookingClientIdentityHttpService.test.ts
+A  apps/web/src/__tests__/lib/dashboardBookingClientIdentityService.test.ts
+AM apps/web/src/__tests__/lib/dashboardStaffShiftCloseLedger.test.ts
+A  apps/web/src/__tests__/lib/funnelEventNavigation.test.ts
+A  apps/web/src/__tests__/lib/guestBookingChoiceCopy.test.ts
+A  apps/web/src/__tests__/lib/guestBookingNotificationDispatch.test.ts
+ M apps/web/src/__tests__/lib/notifications/NotificationOrchestrator.test.ts
+A  apps/web/src/__tests__/lib/notifications/telegramRecipients.test.ts
+ M apps/web/src/__tests__/lib/performanceStatsHttpService.test.ts
+ M apps/web/src/__tests__/lib/performanceStatsService.test.ts
+A  apps/web/src/__tests__/lib/promotionSaveErrorMessage.test.ts
+A  apps/web/src/__tests__/lib/publicBusinessSearchFilter.test.ts
+A  apps/web/src/__tests__/lib/publicCategoryLabels.test.ts
+ M apps/web/src/__tests__/lib/quickBookGuestHttpService.test.ts
+ M apps/web/src/__tests__/lib/quickHoldClient.test.ts
+ M apps/web/src/__tests__/lib/ratingsAdminHttpService.test.ts
+A  apps/web/src/__tests__/lib/repeatBookingHref.test.ts
+A  apps/web/src/__tests__/lib/shiftDataReadBranches.test.ts
+ M apps/web/src/__tests__/lib/signInRedirectLogic.test.ts
+A  apps/web/src/__tests__/lib/staffDetailReviews.test.ts
+ M apps/web/src/__tests__/lib/staffFinanceStatsService.test.ts
+AM apps/web/src/__tests__/lib/staffShiftCloseService.test.ts
+AM apps/web/src/__tests__/lib/staffShiftItemsIdentity.test.ts
+A  apps/web/src/__tests__/lib/staffShiftSavedLedger.test.ts
+ M apps/web/src/__tests__/lib/telegramMobileAuthAttemptService.test.ts
+ M apps/web/src/__tests__/lib/telegramMobileConfirmRouteService.test.ts
+ M apps/web/src/__tests__/lib/telegramWebhookHttpService.test.ts
+ M apps/web/src/__tests__/lib/usersSearchHttpService.test.ts
+AM apps/web/src/__tests__/lib/usersSearchService.test.ts
+ M apps/web/src/__tests__/lib/whatsAppSendOtpRouteService.test.ts
+ M apps/web/src/__tests__/lib/whatsAppVerifyOtpHttpService.test.ts
+A  apps/web/src/__tests__/lib/workLocationsClient.test.ts
+A  apps/web/src/__tests__/lib/workLocationsHttp.test.ts
+ M apps/web/src/app/_components/ErrorDisplay.tsx
+ M apps/web/src/app/_components/HomeClientComponents.tsx
+ M apps/web/src/app/_components/RoleAndBusinessSwitcher.tsx
+ M apps/web/src/app/_components/i18n/LanguageProvider.tsx
+ M apps/web/src/app/_components/i18n/dictionaries/admin.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/admin.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/admin.ru.ts
+AM apps/web/src/app/_components/i18n/dictionaries/analytics.ts
+A  apps/web/src/app/_components/i18n/dictionaries/applicationHistory.ts
+ M apps/web/src/app/_components/i18n/dictionaries/auth.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/auth.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/auth.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/booking.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/booking.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/booking.ru.ts
+AM apps/web/src/app/_components/i18n/dictionaries/bookingFlow.ts
+ M apps/web/src/app/_components/i18n/dictionaries/bookings.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/bookings.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/bookings.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/branches.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/branches.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/branches.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/business.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/business.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/business.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/cabinet.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/cabinet.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/cabinet.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/common.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/common.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/common.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/dashboard.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/dashboard.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/dashboard.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/datePicker.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/datePicker.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/datePicker.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/finance.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/finance.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/finance.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/home.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/home.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/home.ru.ts
+ M apps/web/src/app/_components/i18n/dictionaries/index.ts
+ M apps/web/src/app/_components/i18n/dictionaries/staff.en.ts
+ M apps/web/src/app/_components/i18n/dictionaries/staff.ky.ts
+ M apps/web/src/app/_components/i18n/dictionaries/staff.ru.ts
+ M apps/web/src/app/admin/analytics/overview/AdminAnalyticsOverviewSections.tsx
+ M apps/web/src/app/admin/analytics/overview/page.tsx
+ M apps/web/src/app/admin/analytics/overview/useAdminAnalyticsOverviewData.ts
+ M apps/web/src/app/admin/api/analytics/overview/route.ts
+ M apps/web/src/app/admin/api/categories/[id]/update/route.ts
+ M apps/web/src/app/admin/api/funnel-analytics/route.ts
+ M apps/web/src/app/admin/business-applications/page.tsx
+ M apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx
+ M apps/web/src/app/admin/businesses/[id]/owner/page.tsx
+ M apps/web/src/app/admin/funnel-analytics/FunnelAnalyticsClient.tsx
+ M apps/web/src/app/admin/funnel-analytics/page.tsx
+ M apps/web/src/app/admin/health-check/page.tsx
+ M apps/web/src/app/admin/monitoring/MonitoringClient.tsx
+ M apps/web/src/app/admin/monitoring/page.tsx
+ M apps/web/src/app/admin/page.tsx
+ M apps/web/src/app/admin/performance/PerformanceClient.tsx
+ M apps/web/src/app/admin/promotions-debug/page.tsx
+ M apps/web/src/app/admin/ratings-debug/RatingsDebugClient.tsx
+ M apps/web/src/app/admin/ratings-status/page.tsx
+ M apps/web/src/app/admin/role-applications/RoleApplicationsAdminClient.tsx
+ M apps/web/src/app/admin/system-health/SystemHealthClient.tsx
+ M apps/web/src/app/admin/system-health/page.tsx
+ M apps/web/src/app/admin/users/UsersClient.tsx
+ M apps/web/src/app/admin/users/page.tsx
+A  apps/web/src/app/api/bookings/client-identities/route.ts
+ M apps/web/src/app/auth/callback/page.tsx
+ M apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts
+ M apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts
+ M apps/web/src/app/b/[slug]/BusinessInfo.tsx
+ M apps/web/src/app/b/[slug]/BusinessPageState.tsx
+ M apps/web/src/app/b/[slug]/components/BookingDateCalendar.tsx
+ M apps/web/src/app/b/[slug]/components/BookingFormSections.tsx
+ M apps/web/src/app/b/[slug]/components/BookingSteps.tsx
+ M apps/web/src/app/b/[slug]/components/BookingSummary.tsx
+ M apps/web/src/app/b/[slug]/components/BranchSelector.tsx
+ M apps/web/src/app/b/[slug]/components/SlotPicker.tsx
+ M apps/web/src/app/b/[slug]/components/StaffSelector.tsx
+A  apps/web/src/app/b/[slug]/hooks/useBookingAvailabilityRefresh.ts
+ M apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts
+ M apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts
+ M apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts
+ M apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts
+ M apps/web/src/app/b/[slug]/hooks/useGuestBooking.ts
+ M apps/web/src/app/b/[slug]/hooks/useSlotsLoader.ts
+ M apps/web/src/app/b/[slug]/hooks/useTemporaryTransfers.ts
+ M apps/web/src/app/b/[slug]/utils.ts
+ M apps/web/src/app/b/[slug]/view.tsx
+ M apps/web/src/app/booking/[id]/BookingLayoutClient.tsx
+ M apps/web/src/app/booking/[id]/page.tsx
+ M apps/web/src/app/cabinet/ClientCabinet.tsx
+ M apps/web/src/app/cabinet/bookings/page.tsx
+ M apps/web/src/app/cabinet/components/BookingCard.tsx
+ M apps/web/src/app/cabinet/components/MapDialog.tsx
+ M apps/web/src/app/cabinet/components/ProfileForm.tsx
+ M apps/web/src/app/cabinet/components/ReviewDialog.tsx
+ M apps/web/src/app/dashboard/analytics/DashboardAnalyticsSections.tsx
+A  apps/web/src/app/dashboard/analytics/analyticsPeriod.ts
+ M apps/web/src/app/dashboard/analytics/page.tsx
+ M apps/web/src/app/dashboard/analytics/useDashboardAnalyticsPageData.ts
+ M apps/web/src/app/dashboard/bookings/components/BookingFilters.tsx
+ M apps/web/src/app/dashboard/bookings/components/BookingsList.tsx
+ M apps/web/src/app/dashboard/bookings/components/BookingsViewSections.tsx
+ M apps/web/src/app/dashboard/bookings/components/QuickDesk.tsx
+A  apps/web/src/app/dashboard/bookings/components/QuickDeskBookingFields.tsx
+ M apps/web/src/app/dashboard/bookings/components/SellVisitPackageModal.tsx
+ M apps/web/src/app/dashboard/bookings/components/bookingsViewTypes.ts
+A  apps/web/src/app/dashboard/bookings/components/useCalendarHistory.ts
+ M apps/web/src/app/dashboard/bookings/components/useDashboardBookingsListController.ts
+ M apps/web/src/app/dashboard/bookings/components/useQuickDeskClient.ts
+ M apps/web/src/app/dashboard/bookings/page.tsx
+ M apps/web/src/app/dashboard/bookings/view.tsx
+ M apps/web/src/app/dashboard/branches/[id]/BranchPromotionsPanel.tsx
+ M apps/web/src/app/dashboard/components/BusinessSwitcher.tsx
+ M apps/web/src/app/dashboard/components/DashboardHomeClient.tsx
+ M apps/web/src/app/dashboard/components/home/DashboardOnboardingNotice.tsx
+ M apps/web/src/app/dashboard/finance/components/AllStaffFinanceStats.tsx
+ M apps/web/src/app/dashboard/finance/components/AllStaffFinanceStatsSections.tsx
+AM apps/web/src/app/dashboard/finance/components/financePeriodDate.ts
+ M apps/web/src/app/dashboard/finance/components/useAllStaffFinanceStatsData.ts
+ M apps/web/src/app/dashboard/layout.tsx
+ M apps/web/src/app/dashboard/services/[id]/page.tsx
+ M apps/web/src/app/dashboard/services/page.tsx
+ M apps/web/src/app/dashboard/settings/BusinessContactSettingsForm.tsx
+ M apps/web/src/app/dashboard/settings/page.tsx
+ M apps/web/src/app/dashboard/staff/NewFromUser.tsx
+ M apps/web/src/app/dashboard/staff/[id]/StaffDetailPageClient.tsx
+ M apps/web/src/app/dashboard/staff/[id]/StaffServicesEditor.tsx
+ M apps/web/src/app/dashboard/staff/[id]/finance/components/StaffFinanceShiftCard.tsx
+ M apps/web/src/app/dashboard/staff/[id]/finance/components/StaffFinanceStatsSections.tsx
+ M apps/web/src/app/dashboard/staff/[id]/finance/stats/StaffFinanceStatsPageClient.tsx
+ M apps/web/src/app/dashboard/staff/[id]/page.tsx
+ M apps/web/src/app/data-deletion/page.tsx
+ M apps/web/src/app/layout.tsx
+A  apps/web/src/app/loading.tsx
+ M apps/web/src/app/map/MapPageClient.tsx
+A  apps/web/src/app/map/branchBookingHref.ts
+ M apps/web/src/app/page.tsx
+ M apps/web/src/app/staff/__tests__/StaffCabinetPages.test.tsx
+ M apps/web/src/app/staff/bookings/StaffBookingsView.tsx
+AM apps/web/src/app/staff/bookings/useStaffBookingListHistory.ts
+ M apps/web/src/app/staff/finance/components/ClientItem.tsx
+ M apps/web/src/app/staff/finance/components/ClientsList.tsx
+ M apps/web/src/app/staff/finance/components/ClientsListHeader.tsx
+ M apps/web/src/app/staff/finance/components/FinancePage.tsx
+ M apps/web/src/app/staff/finance/components/ShiftControls.tsx
+ M apps/web/src/app/staff/finance/components/ShiftSummary.tsx
+ M apps/web/src/app/staff/finance/components/__tests__/FinancePage.debounce.test.tsx
+ M apps/web/src/app/staff/finance/hooks/useFinanceMutations.ts
+ M apps/web/src/app/staff/finance/hooks/useFinancePageViewState.ts
+ M apps/web/src/app/staff/finance/hooks/useShiftStats.ts
+ M apps/web/src/app/staff/finance/page.tsx
+ M apps/web/src/app/staff/finance/services/shiftDataService.ts
+ M apps/web/src/app/staff/finance/utils/export.ts
+ M apps/web/src/app/staff/finance/utils/itemLogic.ts
+ M apps/web/src/app/staff/finance/utils/permissions.ts
+A  apps/web/src/app/staff/finance/utils/summaryAmounts.ts
+A  apps/web/src/app/staff/schedule/ExplicitStaffSchedule.tsx
+ M apps/web/src/app/staff/schedule/page.tsx
+ M apps/web/src/components/ErrorBoundary.tsx
+A  apps/web/src/components/admin/ApplicationReviewHistory.tsx
+ M apps/web/src/components/admin/branches/BranchForm.tsx
+ M apps/web/src/components/admin/branches/BranchScheduleEditor.tsx
+ M apps/web/src/components/admin/categories/CategoryForm.tsx
+ M apps/web/src/components/auth/TelegramAccountSwitchHelp.tsx
+ M apps/web/src/components/pickers/DatePickerPopover.tsx
+ M apps/web/src/components/pickers/MonthPickerPopover.tsx
+ M apps/web/src/components/scheduling/ScheduleEditor.tsx
+ M apps/web/src/components/ui/Dialog.tsx
+ M apps/web/src/components/ui/StatusChip.tsx
+ M apps/web/src/components/ui/Tabs.tsx
+ M apps/web/src/components/ui/Toast.tsx
+ M apps/web/src/lib/API_ERROR_FORMATS.md
+ M apps/web/src/lib/adminHealthCheckHttpService.ts
+A  apps/web/src/lib/adminUserStats.ts
+ M apps/web/src/lib/bizContextResolver.ts
+ M apps/web/src/lib/bookingCalendarDate.ts
+ M apps/web/src/lib/bookingCancelHttpService.ts
+ M apps/web/src/lib/bookingCancelRouteService.ts
+ M apps/web/src/lib/bookingCommandsSupabase.ts
+A  apps/web/src/lib/bookingCountForm.ts
+A  apps/web/src/lib/bookingNotificationDispatch.ts
+A  apps/web/src/lib/bookingSlotConflict.ts
+ M apps/web/src/lib/branchPromotionHttpService.ts
+ M apps/web/src/lib/branchPromotionService.ts
+ M apps/web/src/lib/branchPromotionsHttpService.ts
+ M apps/web/src/lib/branchPromotionsService.ts
+ M apps/web/src/lib/branchesMapService.ts
+ M apps/web/src/lib/businessContacts.ts
+A  apps/web/src/lib/cabinetBookingServices.ts
+A  apps/web/src/lib/dashboardBookingClientIdentityHttpService.ts
+AM apps/web/src/lib/dashboardBookingClientIdentityService.ts
+A  apps/web/src/lib/dashboardBookingSearch.ts
+ M apps/web/src/lib/dashboardStaffShiftCloseService.ts
+ M apps/web/src/lib/finance/types.ts
+ M apps/web/src/lib/funnelEvents.ts
+A  apps/web/src/lib/guestBookingNotificationDispatch.ts
+ M apps/web/src/lib/notifications/NotificationOrchestrator.ts
+A  apps/web/src/lib/notifications/telegramRecipients.ts
+ M apps/web/src/lib/notifyBookingService.ts
+ M apps/web/src/lib/performanceStatsHttpService.ts
+ M apps/web/src/lib/performanceStatsService.ts
+A  apps/web/src/lib/promotionSaveErrorMessage.ts
+A  apps/web/src/lib/publicBusinessSearchFilter.ts
+AM apps/web/src/lib/publicCategoryLabels.ts
+ M apps/web/src/lib/quickBookGuestHttpService.ts
+ M apps/web/src/lib/quickHoldClient.ts
+ M apps/web/src/lib/quickHoldHttpService.ts
+ M apps/web/src/lib/quickHoldService.ts
+ M apps/web/src/lib/ratingsAdminHttpService.ts
+A  apps/web/src/lib/repeatBookingHref.ts
+ M apps/web/src/lib/scheduling/locations.ts
+ M apps/web/src/lib/scheduling/locationsClient.ts
+ M apps/web/src/lib/signInRedirectLogic.ts
+A  apps/web/src/lib/staffDetailReviews.ts
+ M apps/web/src/lib/staffFinanceRouteService.ts
+ M apps/web/src/lib/staffFinanceStatsService.ts
+A  apps/web/src/lib/staffShift/savedLedger.ts
+ M apps/web/src/lib/staffShiftCloseService.ts
+ M apps/web/src/lib/staffShiftItemsService.ts
+ M apps/web/src/lib/usersSearchService.ts
+ M apps/web/src/lib/validation/schemas.ts
+ M docs/CLEANUP_AND_NEXT_PHASE_PLAN.md
+ M docs/MANUAL_TESTING_TRACKER.md
+ M docs/PROJECT_IMPROVEMENT_PLAN.md
+ M docs/README.md
+ M docs/WEB_BUG_REGISTRY.md
+A  docs/WEB_CLOSURE_PLAN.json
+AM docs/WEB_CLOSURE_PLAN.md
+A  docs/WEB_EVIDENCE_AUDIT_CHECKS.json
+A  docs/WEB_EVIDENCE_CROSSWALK.json
+A  docs/WEB_EVIDENCE_REVIEW.md
+AM docs/WEB_GLOBAL_READINESS_PLAN.md
+AM docs/WEB_GLOBAL_READINESS_STATE.json
+A  docs/WEB_HISTORICAL_DEFECTS.md
+ M docs/WEB_LIVE_TESTING_AREAS_CATALOG.md
+AM docs/WEB_VERIFICATION_LEDGER.json
+AM docs/WEB_VERIFICATION_METHOD.md
+AM docs/WEB_VERIFICATION_REPORT.md
+A  docs/verification/README.md
+AM docs/verification/inventory.jsonl
+AM docs/verification/records.jsonl
+A  docs/verification/references.jsonl
+AM docs/verification/reviews.jsonl
+A  docs/verification/runs/2026-10-18-s1/accounting-checks.json
+A  docs/verification/runs/2026-10-18-s1/checkpoint-verification.json
+AM docs/verification/runs/2026-10-18-s1/emit-r2-patch.mjs
+AM docs/verification/runs/2026-10-18-s1/emit-s24-checkpoint.mjs
+A  docs/verification/runs/2026-10-18-s1/emit-s25-checkpoint.mjs
+AM docs/verification/runs/2026-10-18-s1/final-report.draft.json
+A  docs/verification/runs/2026-10-18-s1/final-report.json
+A  docs/verification/runs/2026-10-18-s1/final-verification.json
+AM docs/verification/runs/2026-10-18-s1/progress.json
+A  docs/verification/runs/2026-10-18-s1/s11-build-console.txt
+A  docs/verification/runs/2026-10-18-s1/s11-result.json
+A  docs/verification/runs/2026-10-18-s1/s11-server-stop.txt
+AM docs/verification/runs/2026-10-18-s1/s12-case-plan.json
+A  docs/verification/runs/2026-10-18-s1/s12-result.json
+A  docs/verification/runs/2026-10-18-s1/s13-case-plan.json
+A  docs/verification/runs/2026-10-18-s1/s13-result.json
+A  docs/verification/runs/2026-10-18-s1/s14-accounting-repair.json
+A  docs/verification/runs/2026-10-18-s1/s14-build-console.txt
+A  docs/verification/runs/2026-10-18-s1/s14-business-tests-before.txt
+A  docs/verification/runs/2026-10-18-s1/s14-error-result.json
+AM docs/verification/runs/2026-10-18-s1/s14-fix-result.json
+A  docs/verification/runs/2026-10-18-s1/s14-home-tests-before.txt
+A  docs/verification/runs/2026-10-18-s1/s14-product-fix.patch
+A  docs/verification/runs/2026-10-18-s1/s14-production-error-plan.json
+A  docs/verification/runs/2026-10-18-s1/s14-source-paths.json
+A  docs/verification/runs/2026-10-18-s1/s14-tests-after.txt
+AM docs/verification/runs/2026-10-18-s1/s14-update-spec.json
+A  docs/verification/runs/2026-10-18-s1/s15-config-plan.json
+A  docs/verification/runs/2026-10-18-s1/s15-config-result.json
+A  docs/verification/runs/2026-10-18-s1/s15-server-diagnostics.txt
+A  docs/verification/runs/2026-10-18-s1/s16-oracle-plan.json
+A  docs/verification/runs/2026-10-18-s1/s16-oracle-result.json
+AM docs/verification/runs/2026-10-18-s1/s17-assets-plan.json
+AM docs/verification/runs/2026-10-18-s1/s17-assets-result.json
+A  docs/verification/runs/2026-10-18-s1/s17-assets/00dcbccdb07d66b5
+A  docs/verification/runs/2026-10-18-s1/s17-assets/046cc401f0d0a55a.woff2
+A  docs/verification/runs/2026-10-18-s1/s17-assets/0cab9bd821410e61.png
+A  docs/verification/runs/2026-10-18-s1/s17-assets/0f99b47d882b0bb3.woff2
+A  docs/verification/runs/2026-10-18-s1/s17-assets/38ff2ecc878f123e
+A  docs/verification/runs/2026-10-18-s1/s17-assets/4f6c3ffccb6e7848.css
+A  docs/verification/runs/2026-10-18-s1/s17-assets/5efb2b5f70b136db.svg
+A  docs/verification/runs/2026-10-18-s1/s17-assets/99e4ea76c3c3fecf.svg
+A  docs/verification/runs/2026-10-18-s1/s17-assets/a09583e84c0a4489.svg
+A  docs/verification/runs/2026-10-18-s1/s17-assets/b1d5bd9b2d0fdb36.css
+A  docs/verification/runs/2026-10-18-s1/s17-assets/df361fb703652d2d.woff2
+A  docs/verification/runs/2026-10-18-s1/s17-assets/manifest.json
+AD docs/verification/runs/2026-10-18-s1/s18-network-open.json
+AM docs/verification/runs/2026-10-18-s1/s18-recovery-plan.json
+AM docs/verification/runs/2026-10-18-s1/s18-recovery-result.json
+A  docs/verification/runs/2026-10-18-s1/s18-server-reads.txt
+A  docs/verification/runs/2026-10-18-s1/s19-dev-origin-plan.json
+A  docs/verification/runs/2026-10-18-s1/s19-dev-origin-result.json
+A  docs/verification/runs/2026-10-18-s1/s20-ssr-plan.json
+A  docs/verification/runs/2026-10-18-s1/s20-ssr-result.json
+A  docs/verification/runs/2026-10-18-s1/s21-inactive-service-plan.json
+A  docs/verification/runs/2026-10-18-s1/s21-inactive-service-result.json
+A  docs/verification/runs/2026-10-18-s1/s22-dev-network-classification.json
+A  docs/verification/runs/2026-10-18-s1/s23-loading-before.json
+A  docs/verification/runs/2026-10-18-s1/s23-loading-plan.json
+A  docs/verification/runs/2026-10-18-s1/s24-build-console.txt
+A  docs/verification/runs/2026-10-18-s1/s24-functional-build-console.txt
+A  docs/verification/runs/2026-10-18-s1/s24-functional-build-plan.json
+A  docs/verification/runs/2026-10-18-s1/s24-loading-result.json
+A  docs/verification/runs/2026-10-18-s1/s24-server-reads.txt
+A  docs/verification/runs/2026-10-18-s1/s24-source-paths.json
+A  docs/verification/runs/2026-10-18-s1/s24-test-before.txt
+A  docs/verification/runs/2026-10-18-s1/s24-tests-after.txt
+A  docs/verification/runs/2026-10-18-s1/s25-assets/01a8bb319fb0d349.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/067fe027276e862c.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/13beb90111eb8498.woff2
+A  docs/verification/runs/2026-10-18-s1/s25-assets/2ac64c51434fc97d.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/43625d7b7588bfc8.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/43810e182fb0caa8
+A  docs/verification/runs/2026-10-18-s1/s25-assets/519694dc7a749bf0.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/527c2bb5bf0527b9.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/5c9699158eed3216.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/79931bae3f8f8bfa.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/7b84edc43c7bf1bd.css
+A  docs/verification/runs/2026-10-18-s1/s25-assets/8523fa55a2ac080b.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/8c6005eba403b971.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/8fd66755322b9c0d.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/9580ef4d5bab4cd6.woff2
+A  docs/verification/runs/2026-10-18-s1/s25-assets/9ded0bee9277a645.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/9e13b19da486d58f.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/a09583e84c0a4489.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/ce1ba886e94bd480.png
+A  docs/verification/runs/2026-10-18-s1/s25-assets/da5f167305b618aa.svg
+A  docs/verification/runs/2026-10-18-s1/s25-assets/e54231841c2b7b6d
+A  docs/verification/runs/2026-10-18-s1/s25-assets/f24891251a35b10b.woff2
+A  docs/verification/runs/2026-10-18-s1/s25-assets/f3e79c30d51a133c.css
+A  docs/verification/runs/2026-10-18-s1/s25-assets/manifest.json
+A  docs/verification/runs/2026-10-18-s1/s25-build-assets-result.json
+A  docs/verification/runs/2026-10-18-s1/s25-build-console.txt
+A  docs/verification/runs/2026-10-18-s1/s25-font-build-plan.json
+A  docs/verification/runs/2026-10-18-s1/s26-accounting-verification.json
+AM docs/verification/runs/2026-10-18-s1/s26-remaining-plan.json
+A  docs/verification/snapshots.jsonl
+A  docs/verification/sourceLines.jsonl
+A  docs/verification/stages.jsonl
+AM scripts/closure-s1-build-network.cjs
+A  scripts/closure-s1-font-fixture.cjs
+AM scripts/closure-s1-font-read-guard.cjs
+AM scripts/closure-s1-font-read-guard.test.cjs
+AM scripts/closure-s1-isolated-build.mjs
+AM scripts/closure-s1-production-smoke.mjs
+A  scripts/closure-s1-public-pending-guard.cjs
+A  scripts/closure-s1-public-read-guard.cjs
+A  scripts/closure-s1-public-read-policy.cjs
+A  scripts/closure-s1-public-read-policy.test.cjs
+AM scripts/closure-s1-public-recovery.mjs
+A  scripts/test-complex-booking-identity.mjs
+A  scripts/test-guest-schedule-booking-writer.mjs
+A  scripts/test-public-booking-receipt.mjs
+A  scripts/test-simple-schedule-booking-writer.mjs
+AM scripts/web-closure-plan.mjs
+A  scripts/web-closure-plan.test.mjs
+AM scripts/web-evidence-accounting.mjs
+AM scripts/web-evidence-accounting.test.mjs
+AM scripts/web-evidence-audit.mjs
+AM scripts/web-evidence-migrate.mjs
+AD scripts/web-evidence-repair-ledger.mjs
+AM scripts/web-verification-report.mjs
+AM scripts/web-verification-report.test.mjs
+A  supabase/migrations/20261009050000_public_active_category_labels.sql
+A  supabase/migrations/20261009100000_create_funnel_events.sql
+A  supabase/migrations/20261009101000_restrict_funnel_retention.sql
+A  supabase/migrations/20261009103000_simple_booking_effective_schedule.sql
+A  supabase/migrations/20261009104000_complex_booking_identity_contacts.sql
+A  supabase/migrations/20261009105000_public_booking_receipt_composition.sql
+A  supabase/migrations/20261009110000_guest_booking_effective_schedule.sql
+A  supabase/migrations/20261015075000_work_locations_include_home_days.sql
+?? apps/web/src/__tests__/api/admin/globalOverview.test.ts
+?? apps/web/src/__tests__/app/localFonts.test.ts
+?? apps/web/src/__tests__/components/AdminBranchFormAddress.test.tsx
+?? apps/web/src/__tests__/components/AdminGlobalOverviewScope.test.tsx
+?? apps/web/src/__tests__/components/AdminHomeTodayStatuses.test.tsx
+?? apps/web/src/__tests__/components/AdminRoleApplicationsReadState.test.tsx
+?? apps/web/src/__tests__/components/BookingBranchStepBoundary.test.tsx
+?? apps/web/src/__tests__/components/BusinessCardEditNameError.test.tsx
+?? apps/web/src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx
+?? apps/web/src/__tests__/components/ExistingSessionRedirectSignals.test.tsx
+?? apps/web/src/__tests__/components/HealthCheckCallerRead.test.tsx
+?? apps/web/src/__tests__/components/PerformanceResponseEnvelope.test.tsx
+?? apps/web/src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx
+?? apps/web/src/__tests__/components/RatingsDebugActionsRender.test.tsx
+?? apps/web/src/__tests__/components/RatingsStatusCallerRead.test.tsx
+?? apps/web/src/__tests__/lib/adminGlobalOverviewService.test.ts
+?? apps/web/src/__tests__/lib/ratingsAdminReadService.test.ts
+?? apps/web/src/app/fonts/
+?? apps/web/src/lib/adminGlobalOverviewReadService.ts
+?? apps/web/src/lib/adminGlobalOverviewService.ts
+?? apps/web/src/lib/adminHealthCheckReadService.ts
+?? apps/web/src/lib/chunkLoadRecovery.ts
+?? apps/web/src/lib/ratingsAdminReadService.ts
+?? docs/verification/KEZEK_WEB_HANDOFF_2026-10-26.txt
+?? docs/verification/runs/2026-10-20-s1-continuation/
+?? docs/verification/runs/2026-10-20-s1-fixtures/
+?? docs/verification/runs/2026-10-23-web-resume-2/
+?? docs/verification/runs/2026-10-23-web-resume/
+?? docs/verification/runs/2026-10-25-web-resume/
+?? docs/verification/runs/2026-10-26-web-resume/
+?? scripts/closure-c57-font-source.mjs
+?? scripts/closure-c57-inspect-fonts.mjs
+?? scripts/closure-c58-built-runtime.mjs
+?? scripts/closure-s1-chunk-lease-20261020.mjs
+?? scripts/closure-s1-chunk-lease-f004-20261020.mjs
+?? scripts/closure-s1-font-diagnostic-c55-20261021.cjs
+?? scripts/closure-s1-font-read-guard-20261020.cjs
+?? scripts/closure-s1-font-read-guard-20261020.test.cjs
+?? scripts/closure-s1-font-read-guard-c54-20261021.cjs
+?? scripts/closure-s1-font-read-guard-f004-20261020.cjs
+?? scripts/closure-s1-font-read-guard-f005-20261020.cjs
+?? scripts/closure-s1-isolated-build-20261020.mjs
+?? scripts/closure-s1-isolated-build-c54-20261021.mjs
+?? scripts/closure-s1-isolated-build-c57-20261021.mjs
+?? scripts/closure-s1-isolated-build-f004-20261020.mjs
+?? scripts/closure-s1-isolated-build-f005-20261020.mjs
+?? scripts/closure-s1-offline-guard-c57-20261021.cjs
+?? scripts/closure-s1-production-smoke-20261020.mjs
+?? scripts/closure-s1-production-smoke-f004-20261020.mjs
+?? scripts/closure-s1-production-smoke-f005-20261020.mjs
+?? scripts/closure-s1-type-diagnostic-20261020.mjs
+?? scripts/closure-s1-warm-build-20261020.mjs
+?? scripts/closure-web-built-runtime-c111-20261025.mjs
+?? scripts/closure-web-built-runtime-c122-20261025.mjs
+?? scripts/closure-web-built-runtime-c138-20261026.mjs
+?? scripts/closure-web-built-runtime-c148-20261026.mjs
+?? scripts/closure-web-built-runtime-c175-20261026.mjs
+?? scripts/closure-web-built-runtime-c93-20261023.mjs
+?? scripts/closure-web-isolated-build-c110-20261025.mjs
+?? scripts/closure-web-isolated-build-c121-20261025.mjs
+?? scripts/closure-web-isolated-build-c137-20261026.mjs
+?? scripts/closure-web-isolated-build-c147-20261026.mjs
+?? scripts/closure-web-isolated-build-c174-20261026.mjs
+?? scripts/closure-web-isolated-build-c92-20261023.mjs
+?? scripts/closure-web-offline-guard-c110-20261025.cjs
+?? scripts/closure-web-offline-guard-c110-20261025.test.cjs
+?? scripts/closure-web-offline-guard-c121-20261025.cjs
+?? scripts/closure-web-offline-guard-c121-20261025.test.cjs
+?? scripts/closure-web-offline-guard-c137-20261026.cjs
+?? scripts/closure-web-offline-guard-c137-20261026.test.cjs
+?? scripts/closure-web-offline-guard-c147-20261026.cjs
+?? scripts/closure-web-offline-guard-c147-20261026.test.cjs
+?? scripts/closure-web-offline-guard-c174-20261026.cjs
+?? scripts/closure-web-offline-guard-c174-20261026.test.cjs
+?? scripts/closure-web-offline-guard-c92-20261023.cjs
+?? scripts/closure-web-offline-guard-c92-20261023.test.cjs
+?? scripts/closure-web-prepared-build-c92-20261023.mjs
+
+
+ README.md                                          |    11 +-
+ apps/web/eslint.config.mjs                         |    17 +-
+ apps/web/jest.setup.js                             |    13 +-
+ apps/web/package.json                              |     2 +-
+ .../api/auth/telegram-mobile-callback.test.ts      |    12 +-
+ .../api/auth/telegram-mobile-confirm.test.ts       |    53 +-
+ .../api/auth/telegram-mobile-integration.test.ts   |    10 +-
+ .../api/auth/telegram-mobile-start.test.ts         |     9 +
+ .../api/auth/telegram-mobile-status.test.ts        |    18 +-
+ apps/web/src/__tests__/api/branches/create.test.ts |    52 +-
+ .../api/dashboard/staff/shift-close.test.ts        |    11 +
+ apps/web/src/__tests__/api/notify.test.ts          |    27 +
+ .../web/src/__tests__/api/quick-book-guest.test.ts |    15 +-
+ apps/web/src/__tests__/api/quick-hold.test.ts      |    19 +
+ .../web/src/__tests__/api/staff/shift/open.test.ts |     1 +
+ .../src/__tests__/api/staff/shift/today.test.ts    |     1 +
+ apps/web/src/__tests__/api/users/search.test.ts    |     4 +-
+ .../app/staff/finance/utils/itemLogic.test.ts      |    50 +-
+ .../__tests__/components/AdminFunnelRoute.test.tsx |     2 +-
+ .../components/AllStaffFinanceStatsData.test.tsx   |    26 +
+ .../components/BookingAnyStaffCreation.test.tsx    |    37 +-
+ .../components/BookingCardTranslations.test.tsx    |    33 +-
+ .../components/BookingSelectionRestore.test.tsx    |    18 +
+ .../BookingSlotConflictRecovery.test.tsx           |     2 +-
+ .../components/BookingWizardTranslations.test.tsx  |   111 +
+ .../BookingsWorkspaceTranslations.test.tsx         |    21 +-
+ .../components/BranchPromotionsPanel.test.tsx      |    31 +-
+ .../BusinessContactSettingsForm.test.tsx           |     7 +
+ .../components/BusinessInfoTranslations.test.tsx   |    52 +
+ .../components/BusinessPageState.test.tsx          |    21 +
+ .../__tests__/components/BusinessSwitcher.test.tsx |    16 +
+ .../src/__tests__/components/CategoryForm.test.tsx |    40 +
+ .../components/ClientCabinetComplex.test.tsx       |     2 +-
+ .../components/ClientsListClosedShift.test.tsx     |    10 +-
+ .../components/DashboardAnalytics.test.tsx         |    16 +-
+ .../__tests__/components/ErrorDisplayI18n.test.tsx |    41 +
+ .../components/ExplicitScheduleCalendar.test.tsx   |     8 +-
+ .../components/FinancePeriodFilters.test.tsx       |     3 +-
+ .../components/FinanceViewContext.test.tsx         |    32 +
+ .../components/GuestBookingReceipt.test.tsx        |    16 +-
+ .../components/MonthPickerCalendarLocale.test.tsx  |     3 +-
+ .../components/NewFromUserSearchGuard.test.tsx     |    14 +
+ .../components/NoShowPresentation.test.tsx         |     9 +
+ .../OwnerCalendarNavigationState.test.tsx          |    41 +-
+ .../components/OwnerCalendarTranslations.test.tsx  |     5 +-
+ .../components/ProfileFormDraftLocale.test.tsx     |    36 +-
+ .../ProfileInitialLoadingServer.test.tsx           |     2 +-
+ .../components/ReceiptDateLocale.test.tsx          |    15 +
+ .../components/RoleAndBusinessSwitcher.test.tsx    |    60 +-
+ .../__tests__/components/ShiftControls.test.tsx    |    11 +-
+ .../components/ShiftSummaryRevenue.test.tsx        |    16 +-
+ .../components/StaffBookingListHistory.test.tsx    |    63 +-
+ .../StaffFinanceCountTranslations.test.tsx         |    31 +-
+ .../components/StaffFinanceMoneyBasis.test.tsx     |     6 +-
+ .../StaffFinanceStatsTranslations.test.tsx         |     6 +-
+ .../__tests__/lib/accountDeletionService.test.ts   |    15 +-
+ .../lib/adminHealthCheckHttpService.test.ts        |    26 +
+ .../src/__tests__/lib/bizContextResolver.test.ts   |    19 +
+ .../src/__tests__/lib/bookingCalendarDate.test.ts  |    41 +
+ .../__tests__/lib/bookingCancelHttpService.test.ts |     1 -
+ .../lib/bookingCancelRouteService.test.ts          |    19 +-
+ .../lib/branchPromotionHttpService.test.ts         |    10 +
+ .../__tests__/lib/branchPromotionService.test.ts   |    10 +
+ .../lib/branchPromotionsHttpService.test.ts        |    10 +
+ .../__tests__/lib/branchPromotionsService.test.ts  |     2 +
+ .../src/__tests__/lib/branchesMapService.test.ts   |    41 +-
+ .../web/src/__tests__/lib/businessContacts.test.ts |    34 +
+ .../lib/dashboardStaffShiftCloseLedger.test.ts     |    11 +
+ .../notifications/NotificationOrchestrator.test.ts |    17 +
+ .../lib/performanceStatsHttpService.test.ts        |    27 +-
+ .../__tests__/lib/performanceStatsService.test.ts  |    46 +-
+ .../lib/quickBookGuestHttpService.test.ts          |    16 +
+ apps/web/src/__tests__/lib/quickHoldClient.test.ts |     1 +
+ .../__tests__/lib/ratingsAdminHttpService.test.ts  |     5 +
+ .../src/__tests__/lib/signInRedirectLogic.test.ts  |    21 +
+ .../__tests__/lib/staffFinanceStatsService.test.ts |     2 +
+ .../__tests__/lib/staffShiftCloseService.test.ts   |    11 +
+ .../__tests__/lib/staffShiftItemsIdentity.test.ts  |    15 +
+ .../lib/telegramMobileAuthAttemptService.test.ts   |    56 +-
+ .../lib/telegramMobileConfirmRouteService.test.ts  |    18 +-
+ .../lib/telegramWebhookHttpService.test.ts         |    31 +-
+ .../__tests__/lib/usersSearchHttpService.test.ts   |    11 +-
+ .../src/__tests__/lib/usersSearchService.test.ts   |    13 +-
+ .../lib/whatsAppSendOtpRouteService.test.ts        |     8 +
+ .../lib/whatsAppVerifyOtpHttpService.test.ts       |    17 +-
+ apps/web/src/app/_components/ErrorDisplay.tsx      |    47 +-
+ .../src/app/_components/HomeClientComponents.tsx   |    20 +-
+ .../app/_components/RoleAndBusinessSwitcher.tsx    |    35 +-
+ .../src/app/_components/i18n/LanguageProvider.tsx  |     7 +-
+ .../app/_components/i18n/dictionaries/admin.en.ts  |     8 +-
+ .../app/_components/i18n/dictionaries/admin.ky.ts  |     6 +
+ .../app/_components/i18n/dictionaries/admin.ru.ts  |     6 +
+ .../app/_components/i18n/dictionaries/analytics.ts |     6 +
+ .../app/_components/i18n/dictionaries/auth.en.ts   |     9 +
+ .../app/_components/i18n/dictionaries/auth.ky.ts   |     9 +
+ .../app/_components/i18n/dictionaries/auth.ru.ts   |     9 +
+ .../_components/i18n/dictionaries/booking.en.ts    |    23 +-
+ .../_components/i18n/dictionaries/booking.ky.ts    |    23 +-
+ .../_components/i18n/dictionaries/booking.ru.ts    |    23 +-
+ .../_components/i18n/dictionaries/bookingFlow.ts   |   102 +
+ .../_components/i18n/dictionaries/bookings.en.ts   |    34 +
+ .../_components/i18n/dictionaries/bookings.ky.ts   |    36 +-
+ .../_components/i18n/dictionaries/bookings.ru.ts   |    36 +-
+ .../_components/i18n/dictionaries/branches.en.ts   |     5 +
+ .../_components/i18n/dictionaries/branches.ky.ts   |     5 +
+ .../_components/i18n/dictionaries/branches.ru.ts   |     5 +
+ .../_components/i18n/dictionaries/business.en.ts   |    60 +
+ .../_components/i18n/dictionaries/business.ky.ts   |    60 +
+ .../_components/i18n/dictionaries/business.ru.ts   |    60 +
+ .../_components/i18n/dictionaries/cabinet.en.ts    |    31 +-
+ .../_components/i18n/dictionaries/cabinet.ky.ts    |    32 +-
+ .../_components/i18n/dictionaries/cabinet.ru.ts    |    26 +-
+ .../app/_components/i18n/dictionaries/common.en.ts |    21 +
+ .../app/_components/i18n/dictionaries/common.ky.ts |    21 +
+ .../app/_components/i18n/dictionaries/common.ru.ts |    21 +
+ .../_components/i18n/dictionaries/dashboard.en.ts  |     5 +
+ .../_components/i18n/dictionaries/dashboard.ky.ts  |     5 +
+ .../_components/i18n/dictionaries/dashboard.ru.ts  |     5 +
+ .../_components/i18n/dictionaries/datePicker.en.ts |     4 +
+ .../_components/i18n/dictionaries/datePicker.ky.ts |     4 +
+ .../_components/i18n/dictionaries/datePicker.ru.ts |     4 +
+ .../_components/i18n/dictionaries/finance.en.ts    |    45 +
+ .../_components/i18n/dictionaries/finance.ky.ts    |    45 +
+ .../_components/i18n/dictionaries/finance.ru.ts    |    45 +
+ .../app/_components/i18n/dictionaries/home.en.ts   |     6 +
+ .../app/_components/i18n/dictionaries/home.ky.ts   |     6 +
+ .../app/_components/i18n/dictionaries/home.ru.ts   |     6 +
+ .../src/app/_components/i18n/dictionaries/index.ts |    12 +
+ .../app/_components/i18n/dictionaries/staff.en.ts  |    17 +-
+ .../app/_components/i18n/dictionaries/staff.ky.ts  |    21 +-
+ .../app/_components/i18n/dictionaries/staff.ru.ts  |    17 +-
+ .../overview/AdminAnalyticsOverviewSections.tsx    |    27 +-
+ apps/web/src/app/admin/analytics/overview/page.tsx |     6 -
+ .../overview/useAdminAnalyticsOverviewData.ts      |    43 +-
+ .../src/app/admin/api/analytics/overview/route.ts  |   146 +-
+ .../app/admin/api/categories/[id]/update/route.ts  |    19 +-
+ .../src/app/admin/api/funnel-analytics/route.ts    |    20 +-
+ .../src/app/admin/business-applications/page.tsx   |    14 +-
+ .../app/admin/businesses/[id]/BusinessCardEdit.tsx |     5 +-
+ .../src/app/admin/businesses/[id]/owner/page.tsx   |     2 +-
+ .../funnel-analytics/FunnelAnalyticsClient.tsx     |     2 +-
+ apps/web/src/app/admin/funnel-analytics/page.tsx   |    18 +-
+ apps/web/src/app/admin/health-check/page.tsx       |    46 +-
+ .../src/app/admin/monitoring/MonitoringClient.tsx  |   110 +-
+ apps/web/src/app/admin/monitoring/page.tsx         |    17 +-
+ apps/web/src/app/admin/page.tsx                    |    26 +-
+ .../app/admin/performance/PerformanceClient.tsx    |    14 +-
+ apps/web/src/app/admin/promotions-debug/page.tsx   |    16 +-
+ .../app/admin/ratings-debug/RatingsDebugClient.tsx |     8 +-
+ apps/web/src/app/admin/ratings-status/page.tsx     |    73 +-
+ .../RoleApplicationsAdminClient.tsx                |    23 +-
+ .../app/admin/system-health/SystemHealthClient.tsx |     2 +-
+ apps/web/src/app/admin/system-health/page.tsx      |    18 +-
+ apps/web/src/app/admin/users/UsersClient.tsx       |    22 +-
+ apps/web/src/app/admin/users/page.tsx              |    46 +-
+ apps/web/src/app/auth/callback/page.tsx            |   100 +-
+ .../app/auth/sign-in/useExistingSessionRedirect.ts |    18 +-
+ .../app/auth/sign-in/useSignInRedirectDecision.ts  |     2 +
+ apps/web/src/app/b/[slug]/BusinessInfo.tsx         |    45 +-
+ apps/web/src/app/b/[slug]/BusinessPageState.tsx    |    17 +-
+ .../b/[slug]/components/BookingDateCalendar.tsx    |     6 +-
+ .../b/[slug]/components/BookingFormSections.tsx    |    27 +-
+ .../src/app/b/[slug]/components/BookingSteps.tsx   |    18 +-
+ .../src/app/b/[slug]/components/BookingSummary.tsx |    12 +-
+ .../src/app/b/[slug]/components/BranchSelector.tsx |     2 +-
+ .../web/src/app/b/[slug]/components/SlotPicker.tsx |     5 +-
+ .../src/app/b/[slug]/components/StaffSelector.tsx  |     7 +-
+ .../src/app/b/[slug]/hooks/useBookingCreation.ts   |    17 +-
+ .../app/b/[slug]/hooks/useBookingFlowDerived.ts    |    26 +-
+ .../app/b/[slug]/hooks/useBookingSelectionState.ts |    13 +-
+ apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts |    21 +-
+ apps/web/src/app/b/[slug]/hooks/useGuestBooking.ts |    34 +-
+ apps/web/src/app/b/[slug]/hooks/useSlotsLoader.ts  |     2 +-
+ .../app/b/[slug]/hooks/useTemporaryTransfers.ts    |    87 +-
+ apps/web/src/app/b/[slug]/utils.ts                 |     4 +
+ apps/web/src/app/b/[slug]/view.tsx                 |    50 +-
+ .../src/app/booking/[id]/BookingLayoutClient.tsx   |    23 +-
+ apps/web/src/app/booking/[id]/page.tsx             |    26 +-
+ apps/web/src/app/cabinet/ClientCabinet.tsx         |    60 +-
+ apps/web/src/app/cabinet/bookings/page.tsx         |     8 +-
+ .../web/src/app/cabinet/components/BookingCard.tsx |    84 +-
+ apps/web/src/app/cabinet/components/MapDialog.tsx  |    24 +-
+ .../web/src/app/cabinet/components/ProfileForm.tsx |    11 +-
+ .../src/app/cabinet/components/ReviewDialog.tsx    |    52 +-
+ .../analytics/DashboardAnalyticsSections.tsx       |   103 +-
+ apps/web/src/app/dashboard/analytics/page.tsx      |    18 +-
+ .../analytics/useDashboardAnalyticsPageData.ts     |    22 +-
+ .../bookings/components/BookingFilters.tsx         |     2 +-
+ .../dashboard/bookings/components/BookingsList.tsx |     5 +-
+ .../bookings/components/BookingsViewSections.tsx   |     9 +-
+ .../dashboard/bookings/components/QuickDesk.tsx    |    62 +-
+ .../bookings/components/SellVisitPackageModal.tsx  |    16 +-
+ .../bookings/components/bookingsViewTypes.ts       |     1 +
+ .../useDashboardBookingsListController.ts          |    44 +-
+ .../bookings/components/useQuickDeskClient.ts      |    73 +-
+ apps/web/src/app/dashboard/bookings/page.tsx       |     2 +-
+ apps/web/src/app/dashboard/bookings/view.tsx       |     4 +-
+ .../branches/[id]/BranchPromotionsPanel.tsx        |    14 +-
+ .../app/dashboard/components/BusinessSwitcher.tsx  |    16 +-
+ .../dashboard/components/DashboardHomeClient.tsx   |     1 +
+ .../components/home/DashboardOnboardingNotice.tsx  |     4 +-
+ .../finance/components/AllStaffFinanceStats.tsx    |    46 +-
+ .../components/AllStaffFinanceStatsSections.tsx    |    33 +-
+ .../finance/components/financePeriodDate.ts        |     2 +-
+ .../components/useAllStaffFinanceStatsData.ts      |    21 +-
+ apps/web/src/app/dashboard/layout.tsx              |    30 +-
+ apps/web/src/app/dashboard/services/[id]/page.tsx  |     6 +-
+ apps/web/src/app/dashboard/services/page.tsx       |    11 +-
+ .../settings/BusinessContactSettingsForm.tsx       |    30 +-
+ apps/web/src/app/dashboard/settings/page.tsx       |    10 +-
+ apps/web/src/app/dashboard/staff/NewFromUser.tsx   |    24 +-
+ .../dashboard/staff/[id]/StaffDetailPageClient.tsx |     2 +-
+ .../dashboard/staff/[id]/StaffServicesEditor.tsx   |     2 +-
+ .../finance/components/StaffFinanceShiftCard.tsx   |    10 +-
+ .../components/StaffFinanceStatsSections.tsx       |    32 +-
+ .../finance/stats/StaffFinanceStatsPageClient.tsx  |     8 +-
+ apps/web/src/app/dashboard/staff/[id]/page.tsx     |    77 +-
+ apps/web/src/app/data-deletion/page.tsx            |     8 +-
+ apps/web/src/app/layout.tsx                        |    23 +-
+ apps/web/src/app/map/MapPageClient.tsx             |    12 +-
+ apps/web/src/app/page.tsx                          |    31 +-
+ .../app/staff/__tests__/StaffCabinetPages.test.tsx |     5 +-
+ .../src/app/staff/bookings/StaffBookingsView.tsx   |    10 +-
+ .../staff/bookings/useStaffBookingListHistory.ts   |    45 +-
+ .../app/staff/finance/components/ClientItem.tsx    |     4 +-
+ .../app/staff/finance/components/ClientsList.tsx   |     4 +-
+ .../staff/finance/components/ClientsListHeader.tsx |     2 +-
+ .../app/staff/finance/components/FinancePage.tsx   |     5 +-
+ .../app/staff/finance/components/ShiftControls.tsx |    10 +-
+ .../app/staff/finance/components/ShiftSummary.tsx  |    15 +-
+ .../__tests__/FinancePage.debounce.test.tsx        |     8 +-
+ .../app/staff/finance/hooks/useFinanceMutations.ts |     1 +
+ .../staff/finance/hooks/useFinancePageViewState.ts |   139 +-
+ .../src/app/staff/finance/hooks/useShiftStats.ts   |     5 +-
+ apps/web/src/app/staff/finance/page.tsx            |     4 +-
+ .../app/staff/finance/services/shiftDataService.ts |     5 +-
+ apps/web/src/app/staff/finance/utils/export.ts     |     7 +-
+ apps/web/src/app/staff/finance/utils/itemLogic.ts  |    23 +-
+ .../web/src/app/staff/finance/utils/permissions.ts |    17 +-
+ apps/web/src/app/staff/schedule/page.tsx           |     7 +-
+ apps/web/src/components/ErrorBoundary.tsx          |     8 +
+ .../src/components/admin/branches/BranchForm.tsx   |     1 +
+ .../admin/branches/BranchScheduleEditor.tsx        |     4 +-
+ .../components/admin/categories/CategoryForm.tsx   |     2 +-
+ .../components/auth/TelegramAccountSwitchHelp.tsx  |    25 +-
+ .../src/components/pickers/DatePickerPopover.tsx   |     2 +-
+ .../src/components/pickers/MonthPickerPopover.tsx  |    21 +-
+ .../src/components/scheduling/ScheduleEditor.tsx   |    19 +-
+ apps/web/src/components/ui/Dialog.tsx              |     5 +-
+ apps/web/src/components/ui/StatusChip.tsx          |     1 +
+ apps/web/src/components/ui/Tabs.tsx                |    27 +-
+ apps/web/src/components/ui/Toast.tsx               |     5 +-
+ apps/web/src/lib/API_ERROR_FORMATS.md              |     8 +
+ apps/web/src/lib/adminHealthCheckHttpService.ts    |    31 +-
+ apps/web/src/lib/bizContextResolver.ts             |     5 +-
+ apps/web/src/lib/bookingCalendarDate.ts            |    34 +-
+ apps/web/src/lib/bookingCancelHttpService.ts       |     1 -
+ apps/web/src/lib/bookingCancelRouteService.ts      |    50 +-
+ apps/web/src/lib/bookingCommandsSupabase.ts        |    15 +-
+ apps/web/src/lib/branchPromotionHttpService.ts     |     2 +-
+ apps/web/src/lib/branchPromotionService.ts         |     3 +
+ apps/web/src/lib/branchPromotionsHttpService.ts    |     4 +-
+ apps/web/src/lib/branchPromotionsService.ts        |     3 +
+ apps/web/src/lib/branchesMapService.ts             |     7 +-
+ apps/web/src/lib/businessContacts.ts               |     4 +-
+ .../lib/dashboardBookingClientIdentityService.ts   |    16 +-
+ .../web/src/lib/dashboardStaffShiftCloseService.ts |   115 +-
+ apps/web/src/lib/finance/types.ts                  |     3 +
+ apps/web/src/lib/funnelEvents.ts                   |     2 +
+ .../lib/notifications/NotificationOrchestrator.ts  |    15 +-
+ apps/web/src/lib/notifyBookingService.ts           |    27 +-
+ apps/web/src/lib/performanceStatsHttpService.ts    |     4 +-
+ apps/web/src/lib/performanceStatsService.ts        |    21 +-
+ apps/web/src/lib/publicCategoryLabels.ts           |     4 +-
+ apps/web/src/lib/quickBookGuestHttpService.ts      |    36 +-
+ apps/web/src/lib/quickHoldClient.ts                |     5 +-
+ apps/web/src/lib/quickHoldHttpService.ts           |    64 +-
+ apps/web/src/lib/quickHoldService.ts               |     8 +-
+ apps/web/src/lib/ratingsAdminHttpService.ts        |    59 +-
+ apps/web/src/lib/scheduling/locations.ts           |     5 +-
+ apps/web/src/lib/scheduling/locationsClient.ts     |    11 +-
+ apps/web/src/lib/signInRedirectLogic.ts            |    11 +-
+ apps/web/src/lib/staffFinanceRouteService.ts       |     2 +-
+ apps/web/src/lib/staffFinanceStatsService.ts       |     5 +-
+ apps/web/src/lib/staffShiftCloseService.ts         |   115 +-
+ apps/web/src/lib/staffShiftItemsService.ts         |    49 +-
+ apps/web/src/lib/usersSearchService.ts             |    35 +-
+ apps/web/src/lib/validation/schemas.ts             |     4 +-
+ docs/CLEANUP_AND_NEXT_PHASE_PLAN.md                |     6 +-
+ docs/MANUAL_TESTING_TRACKER.md                     |   461 +-
+ docs/PROJECT_IMPROVEMENT_PLAN.md                   |     4 +-
+ docs/README.md                                     |    16 +
+ docs/WEB_BUG_REGISTRY.md                           |  1297 +-
+ docs/WEB_CLOSURE_PLAN.md                           |    14 +-
+ docs/WEB_GLOBAL_READINESS_PLAN.md                  |     6 +-
+ docs/WEB_GLOBAL_READINESS_STATE.json               |  1536 +-
+ docs/WEB_LIVE_TESTING_AREAS_CATALOG.md             |   360 +-
+ docs/WEB_VERIFICATION_LEDGER.json                  | 33235 ++++++++++++++++++-
+ docs/WEB_VERIFICATION_METHOD.md                    |    19 +-
+ docs/WEB_VERIFICATION_REPORT.md                    |   122 +-
+ docs/verification/inventory.jsonl                  |   557 +
+ docs/verification/records.jsonl                    |    65 +
+ docs/verification/reviews.jsonl                    |    60 +
+ .../runs/2026-10-18-s1/emit-r2-patch.mjs           |     2 +-
+ .../runs/2026-10-18-s1/emit-s24-checkpoint.mjs     |    13 +-
+ .../runs/2026-10-18-s1/final-report.draft.json     |     3 +-
+ docs/verification/runs/2026-10-18-s1/progress.json |   574 +-
+ .../runs/2026-10-18-s1/s12-case-plan.json          |    56 +-
+ .../runs/2026-10-18-s1/s14-fix-result.json         |     2 +-
+ .../runs/2026-10-18-s1/s14-update-spec.json        |     2 +-
+ .../runs/2026-10-18-s1/s17-assets-plan.json        |     2 +-
+ .../runs/2026-10-18-s1/s17-assets-result.json      |     2 +-
+ .../runs/2026-10-18-s1/s18-network-open.json       |     1 -
+ .../runs/2026-10-18-s1/s18-recovery-plan.json      |     2 +-
+ .../runs/2026-10-18-s1/s18-recovery-result.json    |     2 +-
+ .../runs/2026-10-18-s1/s26-remaining-plan.json     |     3 +-
+ scripts/closure-s1-build-network.cjs               |     4 +-
+ scripts/closure-s1-font-read-guard.cjs             |     4 +-
+ scripts/closure-s1-font-read-guard.test.cjs        |     8 +
+ scripts/closure-s1-isolated-build.mjs              |    13 +-
+ scripts/closure-s1-production-smoke.mjs            |    21 +-
+ scripts/closure-s1-public-recovery.mjs             |    10 +-
+ scripts/web-closure-plan.mjs                       |     4 +-
+ scripts/web-evidence-accounting.mjs                |    29 +-
+ scripts/web-evidence-accounting.test.mjs           |     9 +-
+ scripts/web-evidence-audit.mjs                     |    72 +-
+ scripts/web-evidence-migrate.mjs                   |    43 +-
+ scripts/web-evidence-repair-ledger.mjs             |    13 -
+ scripts/web-verification-report.mjs                |    79 +-
+ scripts/web-verification-report.test.mjs           |    53 +
+ 330 files changed, 40954 insertions(+), 4162 deletions(-)
+

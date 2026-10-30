@@ -4,7 +4,6 @@ import {cookies} from 'next/headers';
 import BookingLayoutClient from './BookingLayoutClient';
 import NotFoundMessage from './NotFoundMessage';
 
-import { LanguageProvider } from '@/app/_components/i18n/LanguageProvider';
 
 
 export default async function BookingPage({
@@ -44,10 +43,8 @@ export default async function BookingPage({
         .eq('id', id)
         .maybeSingle();
 
-    // Если RLS не пустил (data=null) — ниже есть fallback через RPC (Шаг 2)
+    // Guests use a narrow UUID-based receipt RPC, never a privileged table client.
     if (!data) {
-        // рендерим пусто — компонент заново отрисуется после RPC (см. Шаг 2 код ниже)
-        // но чтобы сейчас всё работало, просто вернём упрощённый Fallback (после Шага 2 заменим)
         return <FallbackBooking id={id}/>;
     }
 
@@ -87,7 +84,6 @@ export default async function BookingPage({
     const master = Array.isArray(data.staff) ? data.staff[0] : data.staff;
 
     return (
-        <LanguageProvider>
             <BookingLayoutClient
                 id={String(data.id)}
                 services={services}
@@ -96,7 +92,6 @@ export default async function BookingPage({
                 status={data.status}
                 promotionApplied={data.promotion_applied}
             />
-        </LanguageProvider>
     );
 }
 
@@ -108,14 +103,12 @@ async function FallbackBooking({ id }: { id: string }) {
         cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
-    const { data, error } = await supabase.rpc('booking_view_public', { p_id: id });
+    const { data, error } = await supabase.rpc('booking_receipt_public', { p_id: id });
     if (error || !data || data.length === 0) {
         return (
-            <LanguageProvider>
                 <main className="mx-auto max-w-xl p-6">
                     <NotFoundMessage id={id} />
                 </main>
-            </LanguageProvider>
         );
     }
 
@@ -128,27 +121,14 @@ async function FallbackBooking({ id }: { id: string }) {
         .maybeSingle();
     
     return (
-        <LanguageProvider>
             <BookingLayoutClient
                 id={String(row.id)}
-                services={
-                    row.service_name
-                        ? [
-                              {
-                                  name_ru: row.service_name,
-                                  name_ky: null,
-                                  name_en: null,
-                                  duration_min: null,
-                              },
-                          ]
-                        : null
-                }
+                services={Array.isArray(row.services) ? row.services : null}
                 masterName={row.staff_name}
                 startAt={new Date(row.start_at)}
                 status={row.status}
                 promotionApplied={bookingData?.promotion_applied || null}
             />
-        </LanguageProvider>
     );
 }
 

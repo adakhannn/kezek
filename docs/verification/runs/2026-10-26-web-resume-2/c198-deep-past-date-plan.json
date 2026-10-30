@@ -1,0 +1,47 @@
+{
+  "id": "C198",
+  "preparedUtc": "2026-10-26T09:19:51Z",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D2-02"
+  ],
+  "objective": "Previouslyunproved lowerdate-bound via direct Step4 URL withactualstaff/serviceeligibility andmatchingvalidcontrol; not repeatcalendarorG091offdayNoSlots.",
+  "historical": {
+    "G091": {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G091-deep-date-recovery.json",
+      "originalUtc": "2026-10-15T23:48:47Z",
+      "limit": "Past15OctThursdaywasoffday; NoSlotsStep5didnotprovedate guard."
+    },
+    "G090": {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G090-service-selection-navigation.json",
+      "originalUtc": "2026-10-15T23:34:14Z",
+      "use": "Originalexistingstaff/service19OctMonday actualeligible service andslots onlysupplies priorworkingweekday, notcurrentnewUIcredit."
+    }
+  },
+  "role": "KnownkezekkgSA asauthenticatedpublicviewer/RU",
+  "timeboxMinutes": 10,
+  "routes": {
+    "validControl": "http://localhost:3000/b/testovyy-biznes-2/booking?step=4&branch=fe1dde50-c04a-4b48-b215-bde72aa60625&staff=1bfd0e3b-6fce-42a1-b439-6313af27112f&service=51571512-66c0-47db-91ab-cb89d61aa97b&day=2026-10-26",
+    "pastProbe": "http://localhost:3000/b/testovyy-biznes-2/booking?step=4&branch=fe1dde50-c04a-4b48-b215-bde72aa60625&staff=1bfd0e3b-6fce-42a1-b439-6313af27112f&service=51571512-66c0-47db-91ab-cb89d61aa97b&day=2026-10-19",
+    "baseRecovery": "http://localhost:3000/b/testovyy-biznes-2/booking"
+  },
+  "independentOracle": "ActualUTC26Oct/Bishkeksameday,19OctMondaysevenDaysEarlier. Validcontrolsamebusiness/branch/staff/service andsameweekday ->Step4/servicecheckboxchecked/60min100–300/Nextenabled. PastprobechangesONLYday ->notallowadvancewithpastday despiteidenticalvisibleeligiblechoices. Requireactualstaffeligible/servicecheckboxchecked/summaryretained; ifchoicescleared/staffnotavailable/network/toolfailure, lowerdatecausalityNOTproven/recordBLOCKED, no speculativefix. Do notactivateNextonServiceStep toavoidenteringTime. A safe calendarredirect withexplicitdatewarning alsoacceptable as scopedUIguard, notserverproof.",
+  "steps": [
+    "FreshprotectedSAadmin/RUbaseline andclock. ONEordinarydirectmatchingvalidControlURL; waitsettledeligiblecheckedservice/summary/Nextenabled. No checkboxorNextactionneeded. Ifmissingeligiblepositivecontrolstopbeforepastprobe.",
+    "ONEordinarydirectpastProbeURLchangingonlyday. Waitsettledactualsameidentity/services/summary+Nextstate. IfNextenabled ->realUIFAIL preservewithoutclickingNext/slot/booking. Ifdisabledandsameeligibility ->scopedlowerdateUIGuardPASS; ifeligibilitymissingretainexactBLOCKED.",
+    "RecoverbaseURLStep1/no choices/Nextdisabled; ordinarybrandthenAdminmenu/protectedadmin/RU/Anonymized/Business3/markHandoff. Noauthtransition."
+  ],
+  "noCommands": "No slot/ChooseTime/Confirm/hold/booking/cancel/payment/Save/serviceassociation/entity/fakeclock/storage/HTTP/SDK/SQL/providerfault orsecuritychange.",
+  "credit": "AtmostONEcompoundnegativecase;validcontrolandrestoration0newcredit. D2-02wholepartial, source/testsnotLIVE.",
+  "dependencyHashes": {
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts": "cd7b1a69c595a2055dfcdd3881543fc26f86d8f08cf65140caae787b48a3613f",
+    "apps/web/src/app/b/[slug]/hooks/useServicesFilter.ts": "1fa9c4f3a64b31f48a495a1bc8df2cbd6d83580b60b15f3e8c8c6d2eac0a8201",
+    "apps/web/src/app/b/[slug]/components/BookingFormSections.tsx": "5b42b8700581cbe1c4dae3664dc29e94392e2ed519b982ff2fb7957c11e15be6"
+  }
+}

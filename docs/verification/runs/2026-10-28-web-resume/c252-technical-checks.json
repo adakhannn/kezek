@@ -1,0 +1,143 @@
+{
+  "id": "C252_TECHNICAL_CHECKS",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "targeted": {
+    "beforeNewFailed": 24,
+    "beforeExistingPassed": 3,
+    "afterPassed": 39,
+    "afterFailed": 0,
+    "afterSuites": 2
+  },
+  "typecheck": {
+    "id": "typecheck",
+    "executable": "C:\\Program Files\\nodejs\\node.exe",
+    "argv": [
+      "node_modules/typescript/bin/tsc",
+      "-p",
+      "tsconfig.json",
+      "--noEmit"
+    ],
+    "cwd": "C:/projects/kezek/apps/web",
+    "config": "apps/web/tsconfig.json",
+    "startedUtc": "2026-10-28T13:53:04.901Z",
+    "pid": 22132,
+    "watchdogMs": 180000,
+    "finishedUtc": "2026-10-28T13:53:55.941Z",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "log": "C:/projects/kezek/docs/verification/runs/2026-10-28-web-resume/c252-typecheck.log"
+  },
+  "fullCoverage": {
+    "suites": 541,
+    "passedSuites": 535,
+    "failedSuites": 6,
+    "passed": 2578,
+    "failed": 11,
+    "total": 2589,
+    "failedNames": [
+      "/api/admin/ratings/jobs returns jobs payload",
+      "Staff cabinet pages basic render StaffBookingsView отображает вкладки и базовую информацию о бронированиях",
+      "does not advertise a confirmed empty list after a http failure",
+      "does not advertise a confirmed empty list after a json failure",
+      "does not advertise a confirmed empty list after a network failure",
+      "does not advertise an editable empty identity after authentication rejects",
+      "does not advertise an editable empty identity after the profile read fails",
+      "does not advertise an editable empty identity when authentication returns no user",
+      "telegramMobileAuthAttemptService binds telegram context to pending attempt",
+      "telegramMobileAuthAttemptService stores source metadata when start payload includes source info",
+      "telegramWebhookHttpService handles /start payload and sends approval message with source details"
+    ],
+    "sameFailedAssertionIdentitiesAsC204": true,
+    "report": "docs/verification/runs/2026-10-28-web-resume/c252-full-tests.json",
+    "coverage": "docs/verification/runs/2026-10-28-web-resume/c252-coverage/coverage-final.json"
+  },
+  "fullLint": {
+    "errors": 52,
+    "warnings": 167,
+    "sameDiagnosticsAsC204": true,
+    "changedRuntimeFiles": [
+      {
+        "file": "C:\\projects\\kezek\\apps\\web\\src\\app\\_components\\i18n\\dictionaries\\services.en.ts",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "C:\\projects\\kezek\\apps\\web\\src\\app\\_components\\i18n\\dictionaries\\services.ky.ts",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "C:\\projects\\kezek\\apps\\web\\src\\app\\_components\\i18n\\dictionaries\\services.ru.ts",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "C:\\projects\\kezek\\apps\\web\\src\\app\\dashboard\\services\\ServiceForm.tsx",
+        "errors": 0,
+        "warnings": 0
+      }
+    ],
+    "testFileNotInFullLintSelection": true
+  },
+  "rawHashes": [
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-before-tests.log",
+      "sha256": "349432413ec5fb77f4831881e78cc7beb50324ef71e2ca6e966a7d87ffa64c93"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-before-tests.json",
+      "sha256": "e5aa7f61850fd4dfb8ef311b16e2571988a019c7eb6ea31ac683bfe7d6e2d080"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-before-test-receipt.json",
+      "sha256": "ebf7ca002de6b23a7574d9dddad952c7f995a628795d9bb5a34c1bb18702e230"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-targeted-tests.log",
+      "sha256": "6d5c4921a8b1857b730ba247703da06f5efb2c1c83da2905c500c4241107979a"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-targeted-tests.json",
+      "sha256": "ed0af8d8759411225610cfeeee56e65a18c65900e276d297ba73eb0b8d617581"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-targeted-receipt.json",
+      "sha256": "8785208de9876f495e6c8237f5ce1e6456b345987873fc1f4ed307a285eb711e"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-typecheck-receipt.json",
+      "sha256": "58922a6b6b3d403ae98872fc4c5a2d16104dc830c4d0908bd89cb438a22a4480"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-lint.log",
+      "sha256": "b9d1014d883abcb8f10b7e001607be4d0de2c303bc64705a95a68b93fb90a6fd"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-lint-receipt.json",
+      "sha256": "e1ff7b317f8d2791d679035d03e89d40735a7756828e620c155d5c9cc6c58aa3"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-full-tests.json",
+      "sha256": "d60d40f657d6018850e986cdc0f656fbebe84f95579eccbadd3f93827ff7b542"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-full-coverage.log",
+      "sha256": "836035712ba86047a34ac9f356ba425b077b37be1a9503dca7f487cee40392fb"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-full-coverage-receipt.json",
+      "sha256": "3879599b73321c69ed3c8e53a1f7a0e97753caacabd6c22454c02b4e1da983fa"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c252-coverage/coverage-final.json",
+      "sha256": "80704ce6f49d334b04da29a0e8991a30b3dfffd34f488f06796901c1ef265976"
+    }
+  ],
+  "E2E": "OnlyactualCUAplannedall6allowed; externalPlaywright/CDP/HTTP/native runnernotexecuted; unitismockednotLIVE.",
+  "limits": "Freshcommandsfornewcandidate only/fullfailedgatesretained, notreleasegreen. No source/sharedvalidator/DB/role/booking/financialchangefromchecks; ownedcheckscompleted/notimeout."
+}

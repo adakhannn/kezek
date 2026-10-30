@@ -1,0 +1,36 @@
+{
+  "id": "C185",
+  "savedBeforeUiUtc": "2026-10-26T00:26:55Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "caseId": "S26-M205-retained-business-warning-cancel-reload",
+  "requirementIds": [
+    "M2-05"
+  ],
+  "timeBudgetMinutes": 5,
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "name": "S1 TEST 20261020 Branch Availability",
+    "slug": "s1-test-20261020-branch-availability",
+    "inactive": "fa5f1017-d987-40c8-90ca-b042898c694f",
+    "active": "057447c8-b200-4403-b056-49e3c250840f"
+  },
+  "variants": [
+    "retained-business:named-irreversible-warning-cancel-reload"
+  ],
+  "expected": "Opening a warning must name the exact existingbusiness and allow safe cancellation. Cancel must retain the samebusiness ID/name/slug/approval/owner/limit and both existingbranchIDs/activity/counts afterordinaryreload. No actualdeletion/dependencyguard/cascade claim fromCancel.",
+  "steps": [
+    "Clock/fresh knownSA currenthumanTab2/admin/RU/Anonymized/Business3. ObservedA link ->exactID/name/slug/approvedBarber/ownerunassigned/2branches0staffservicesbookings/limit2. Unknown/error/mismatch ->BLOCKED/no warning/retry. Setupcontrol0credit.",
+    "ClockclickONLYobserved outerbutton exactУдалитьбизнес once toopenwarning. Require dialogtitleУдалитьбизнес/message exactquotedAname+alldata+irreversible/Отмена and separateУдалить footercontrol. No typedinput orforce expected; anyuncertainboundary stopCancel/Closeonly. NeverclickdialogУдалить/finalConfirm/Enter/force/typedname or invokedeletion. Sourcefirstbutton openslocalwarning only.",
+    "ClickONLYobservedОтмена. Requiredialoggone/samebusinessbaseline/no successdeletionmessage/navigation. ClockONEordinaryreload ofdetail ->sameexactbusinessfields/counts/limit/owner/status.",
+    "ObservedФилиалы link ->bothoriginalIDs/names/inactivefa5 andactive057,2of2. No edit/delete/activation/source/forminput. Clock/adminreturnprotectedheading/RU/Anonymized/Business3; markHandoff. No reopeningwarningforEscape/Close/focus/additionalcredit."
+  ],
+  "effects": "Onlywarningopen/Cancel, detailreload/listnavigation/adminreturn. No productDelete/Save/Create/Enter/force/owner/role/fixture/booking/payment/schedule/auth command; ordinaryappauth/telemetry unenumerated, notzeroTOTALwrites.",
+  "limits": "Oneactualintegration namedbusinessCancel case. No dependencycountsinsidewarning expectation, actualdeletion/cascade/rejection/fullM2-05/security/visual/device/focus/screenreader proof. C03Bdeletionimmutable/no repeat.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/DeleteBizButton.tsx": "8a30ebce78dee1fa98bfeec486873c9b464de85832404606014dd59ce362ea8e",
+    "apps/web/src/components/ui/ConfirmDialog.tsx": "1ec577bf6b472799a6d70f14a6e370bafa05a0a33f415605196f69305b609bfb",
+    "apps/web/src/components/ui/Dialog.tsx": "18198988ea80785df83f313a2169ca18c961e8444e9e7bae47666c4514439db4",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+  }
+}

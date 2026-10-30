@@ -1,0 +1,61 @@
+{
+  "id": "C169",
+  "status": "PASS_SCOPED_COMPOUND_LIVE",
+  "caseId": "S26-M202-inactive-branch-website-https-validation-persist-restore",
+  "plan": "c169-branch-website-plan.json",
+  "review": "c168-branch-website-review.json",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "observationWindowUtc": [
+    "2026-10-25T22:42:08Z",
+    "2026-10-25T22:45:30Z"
+  ],
+  "baseline": "ActualknownSA/admin/RU/Anonymized/3biz4branch1staff4service30bookings. ObservedfixtureA detail exactID/2branches0staff0services0bookings/ownerunassigned/limit2. Exactfa5 branch initialname S1 TEST INACTIVE BRANCH/address+fourlinks+fourcontactsblank/coords—/—/inherittrue/activefalse/Savechangesdisabled and7daysclosed. Mapunavailableexistingnotice untouched/no retry.",
+  "steps": [
+    {
+      "afterClockUtc": "2026-10-25T22:43:23Z",
+      "actual": "Onlywebsite filledHTTP; exactAXvalue/Saveenabled, otherbaseline unchanged."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:43:28Z",
+      "actual": "ONEordinarySave click ->visible Сайт должен быть корректной HTTPS-ссылкой/editor retainsHTTP. OrdinaryBacklist/reenter exactfa5 ->blankwebsite/errorgone/SaveDisabled/allbaseline. No repeatedSubmit."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:43:52Z",
+      "saveAfterClockUtc": "2026-10-25T22:43:57Z",
+      "actual": "Onlywebsite filledHTTPS; ONEordinarySave ->originalbranchlist2/2inactivefa5+activecontrol. Reentry exactHTTPS/allotherbaseline/disabledSave."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:44:16Z",
+      "actual": "ONEordinaryreload retains exactHTTPS website/originalfields/disabledSave. Headercabinetloading transient notauthfailure; no authaction."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:44:24Z",
+      "saveAfterClockUtc": "2026-10-25T22:44:32Z",
+      "actual": "Onlywebsite cleared; ONEordinarySave restore ->branchlist2/2sameIDs/names/states. Reentryblankwebsite/allbaseline/disabledSave."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:44:49Z",
+      "actual": "ONEordinaryreload initiallyloading, waitedobservedtextbox visible; completeeditorblankwebsite/originalname/address/fourlinks/othercontacts/coords—/—/inheritchecked/inactiveunchecked/disabledSave/7daysclosed."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:45:00Z",
+      "actual": "ObservedАдминка ->actualprotected/admin/RU/Anonymized/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1; markHandoff. Userchooser1untouched/no newtab/auth."
+    }
+  ],
+  "toolArtifacts": "Initial businessURLwait timedout while pendingRendering; bounded headingwait later proved target without secondclick/goto/reload. SuccessSave andrestore heading waits reporteddeadline eventhough subsequentfreshAX showedexpectedlist (restore diagnostics alreadyvisible). EachSave performed exactlyonce; no retry/productFAIL/rootcause inferred from tool timing.",
+  "effects": "Atmost3ordinarybranchUpdate submits: one expectedvalidationrejection, HTTPSwrite, blankrestore. Wholeform may normalize emptyrepresentations; no bit-identical rawDBrollback claim. No newfixture/contactsprivatevalue/activation/owner/maplocation/schedule/booking/payment/profile/message/notification/security command. Ordinaryauth/telemetryunenumerated.",
+  "fixtureEffects": "c169-fixture-effects.json",
+  "credit": {
+    "newFunctionalUiPass": 1,
+    "newVerifiedFix": 0,
+    "newAcceptedRequirement": 0,
+    "beforeWindowUi": 17,
+    "afterWindowUi": 18,
+    "logicalVerifiedFixes": 15,
+    "accepted": 23,
+    "remaining": 293
+  },
+  "limits": "Only existinginactivebranch website HTTPS validation/persistence/recovery; not full contacts(phone/email/WhatsApp), inheritance fallback, timezone, publiccontactrendering, native/browser validation coverage, rawHTTP/APIsecurity, wholeCRUD or wholeI1-02. Onecompoundcase ifcomplete, not3PASS.",
+  "next": "C167 precise runtime500msdebounce remainsBLOCKED/no correlated permittedCUA input/requesttimeline; no searchrepeat/sourcefix/UNITimitation. C169 existinginactiveAbranch websiteHTTP-rejection/HTTPSpersist+reload/clearrestore+reload ONEcompoundNEWUI PASS.26Oct17->18NEWUI/3fix/logical15;23of316293left/S117primary63/S23/S41/S62unchanged/NOT_READY. Exactly3ordinarySaveattempts(1visiblevalidationrejection+2successfulupdates), originalvisibleblankwebsite/allotherfields/inactive state restored, no pendingeffects. ExistinghumanTab2/admin/RU/Anonymized/Business3 restored/chooser1untouched/noauth/newtabs/source/build/serverchange. NextC170 ONLYboundedREADONLY I1-02 remaining publiccontact/inheritance/timezone history-and-effects review before any finiteplan. WebsitecontractDONE; no unchangedwebsite/address/name replay. Establish independent allowed data/effects and complete finite variant matrix before any input; no privatephone/unmask/OTP/message/notification command, newfixture/role/security/activation/mappermission. If unsafe retainexactblocker+independentunfinishedpriority. All priorboundaries/F013/F005/M1intermittent/cache/visual/technical/domainlast blockers retained."
+}

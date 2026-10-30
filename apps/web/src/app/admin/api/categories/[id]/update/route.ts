@@ -8,6 +8,7 @@ import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
+import { uuidSchema } from '@/lib/validation/schemas';
 
 type Body = {
     name_ru?: string | null;
@@ -51,13 +52,7 @@ function isSlugValid(s: string) {
     return /^[a-z0-9-]{2,}$/.test(s);
 }
 
-export async function POST(req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
+export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -79,6 +74,12 @@ export async function POST(req: Request, context: unknown) {
         if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
+        // Next route parameters are asynchronous; never send an unresolved ID to persistence.
+        const { id } = await context.params;
+        if (!uuidSchema.safeParse(id).success) {
+            return NextResponse.json({ok: false, error: 'Некорректный идентификатор категории'}, {status: 400});
+        }
+
         const admin = createClient(URL, SERVICE);
         const body = (await req.json()) as Body;
 
@@ -86,7 +87,7 @@ export async function POST(req: Request, context: unknown) {
         const {data: cur, error: eCur} = await admin
             .from('categories')
             .select('id,slug,name_ru,is_active')
-            .eq('id', params.id)
+            .eq('id', id)
             .maybeSingle<CategoryRow>();
 
         if (eCur) return NextResponse.json({ok: false, error: eCur.message}, {status: 400});
@@ -138,7 +139,7 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ok: true, updated: false, slug: cur.slug});
         }
 
-        const {error: eUpd} = await admin.from('categories').update(patch).eq('id', params.id);
+        const {error: eUpd} = await admin.from('categories').update(patch).eq('id', id);
         if (eUpd) {
             const pgErr = eUpd as PostgrestError;
             const isDup = pgErr.code === '23505' || /duplicate|unique/i.test(pgErr.message);

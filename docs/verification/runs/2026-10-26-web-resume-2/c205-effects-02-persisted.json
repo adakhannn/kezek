@@ -1,0 +1,12 @@
+{
+  "id": "C205_EFFECT_CONFIRMED",
+  "recordedUtc": "2026-10-26T09:55:15Z",
+  "immutableAppendOnly": true,
+  "targetUserId": "125e60ab-eb79-4d92-bc6d-d84ae534eeee",
+  "actual": "ONEexactSAME-LIVEtemporaryNameSave ->visibleСохранено; ownrecordreentryheading+inputC203 OWN NAME TEST/SaveDisabled/Нетизменений; ONEreloadsameexactName/pristine/SuperAdmin1/Active. GlobalheaderAnonymized asbefore. No contact/securitycontrols touched.",
+  "pending": true,
+  "phase": "OWN_TEMPORARY_NAME_PERSISTED_RECOVER_NOW",
+  "originalName": "Адахан Осоров",
+  "explicitRetestSaves": 1,
+  "recovery": "FillONLYNameАдаханОсоровandONEordinarySave, thenreentry/reloadownbaseline. No unrelatedactionsbefore recovery."
+}

@@ -1,0 +1,42 @@
+{
+  "id": "C75",
+  "plan": "c75-review-plan.json",
+  "type": "READONLY_REVIEW_NOT_LIVE",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint": "40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "sources": [
+    "docs/verification/runs/2026-10-20-s1-continuation/c66-result.json",
+    "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json",
+    "docs/verification/runs/2026-10-23-web-resume/c72-role-history-review.json"
+  ],
+  "guest": {
+    "originalCaseId": "S21-F103-DIRECT-guest",
+    "originalObservationWindowUtc": [
+      "2026-10-21T09:20:34Z",
+      "2026-10-21T09:20:56Z"
+    ],
+    "sourceCandidateMatches": true,
+    "all7DeclaredDependencyHashesMatch": true,
+    "verdict": "Related proof retained, NOT reused as complete F3 guestheader PASS. Exact C66 primary states root/Войти/noВыйти/account and no selector/privilegedoptionbuttons after directselect-cabinet. It does not explicitly enumerate absence of the header role trigger/menu. Source/code alone cannot fill that runtime evidence gap. Original F1-03 guestPASS/UTC remain unchanged; no repeated directselector or retroactive header assertion."
+  },
+  "client": {
+    "original": "G078 completed15Oct11:36:53UTC, source9e5e49e8, currentrolecomponent hash e6447eb8c58d4ad1a2cd85292e4c8784a2d5635d4b98c8456718c644785f3150",
+    "verdict": "Primary explicitly says menuItemActivationfalse/no cabinetnavigation: Escape/focus RU/KY/EN/outsideclick, not root->personal menuitem/Back. No need repeat oldEscape/focus/C71selector. One scopedpureclient menu/history variant remains genuinelyuncovered."
+  },
+  "matrix": {
+    "total": 7,
+    "passed": 2,
+    "blocked": 3,
+    "notRun": 2,
+    "newLivePass": 0,
+    "reusedPass": 0,
+    "newFixes": 0
+  },
+  "effects": "Read-only archived facts/dependencies only; no auth/UIinput/app/DB/API/source/test/build/server/business/role/grant/money changes. Setup actualSAcontrol unscored. Olddatedproofs and hashedfinals untouched.",
+  "next": "C76 finite2variant plan BEFOREUI: onepureclient header root->personal/Back/Forward case, and exactguest headerabsence during REQUIRED ordinaryclientlogout beforeSArestore. Guestcase adds no separate navigation/login or repeat of C66selector/G016cross-tabstaleness; TWO variants within ONE ordinaryauthsessionflow, not2independenttransactions. RestoreknownSA. Other3roleblocks retained; no wholeF3/F3-03/APIsecurityclaim.",
+  "sourceHashes": {
+    "docs/verification/runs/2026-10-20-s1-continuation/c66-result.json": "dbacfdee5d24d30e21d3afdfe640a5a62a97c04d5f08ae6cb1fd3a93c612f9c5",
+    "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json": "9a1030a5024b0c3fb50800bc2d52d13221dc6dcfcc319bfa9e9850514696ee98",
+    "docs/verification/runs/2026-10-23-web-resume/c72-role-history-review.json": "d7fd239353fe9ffa08de0dda6da524a58aa616d5b9d82bda4fd65c41a84e4e22"
+  }
+}

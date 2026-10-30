@@ -2,7 +2,7 @@ import { validateCreateGuestBookingParams } from '@core-domain/booking';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { logDebug, logError } from '@/lib/log';
+import { dispatchCreatedGuestBookingNotification } from '@/lib/guestBookingNotificationDispatch';
 import { createSupabaseAnonClient } from '@/lib/supabaseHelpers';
 import {
     type QuickBookGuestInput,
@@ -47,38 +47,6 @@ function normalizeQuickBookGuestInput(
     return domainValidation.data;
 }
 
-async function notifyGuestBooking(
-    bookingId: string,
-    req: Request,
-    type: 'hold' | 'confirm' = 'hold',
-) {
-    const notifyUrl = new URL('/api/notify', req.url);
-
-    logDebug('QuickBookGuest', 'Calling notify API', {
-        url: notifyUrl.toString(),
-        type,
-        bookingId,
-    });
-
-    const response = await fetch(notifyUrl, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ type, booking_id: bookingId }),
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        logError('QuickBookGuest', 'Notify API error', {
-            status: response.status,
-            errorText,
-        });
-        return;
-    }
-
-    const result = await response.json().catch(() => ({}));
-    logDebug('QuickBookGuest', 'Notify API success', result);
-}
-
 export async function runQuickBookGuestHttp(req: Request): Promise<NextResponse> {
     const validationResult = await validateRequest(req, quickBookGuestSchema);
     if (!validationResult.success) {
@@ -97,7 +65,7 @@ export async function runQuickBookGuestHttp(req: Request): Promise<NextResponse>
         {
             supabase,
             notifyGuestBooking: async ({ bookingId, type }) =>
-                notifyGuestBooking(bookingId, req, type),
+                dispatchCreatedGuestBookingNotification(bookingId, type, normalized),
         },
         normalized,
     );

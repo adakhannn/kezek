@@ -1,0 +1,76 @@
+{
+  "id": "C183",
+  "status": "PASS_ONE_COMPOUND_FOUR_DIRECTORY_LINKS_EXISTING_BRANCH",
+  "plan": "c183-directory-links-plan.json",
+  "review": "c182-directory-links-review.json",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "caseId": "S26-I103-existing-branch-four-directory-links-public-persist-clear",
+  "observationWindowUtc": [
+    "2026-10-26T00:12:06Z",
+    "2026-10-26T00:16:04Z"
+  ],
+  "baseline": "Fresh actual userTab2 protectedadmin/RU/Anonymized/Business3 ->fixtureA approvedbarber/originalname+slug/unassignedowner/2branches0staffservicesbookings/limit2. ACTIVE057 originalname/blankaddress+fourlinks+fourcontacts/coords—/—/inherittrue/activeTRUE/7closed days/SaveDisabled. Inactivefa5 listretained/untouched.",
+  "steps": [
+    {
+      "clockUtc": "2026-10-26T00:12:47Z",
+      "action": "Pendingjournal prepared before firstwrite; ordinaryfourfills only",
+      "actual": "AX exactfourknownsyntheticHTTPSvalues, Saveenabled, allotherbaseline unchanged."
+    },
+    {
+      "clockUtc": "2026-10-26T00:12:55Z",
+      "action": "ONE ordinarySavechanges click",
+      "actual": "Headingwait timedout; onefreshAX proved completedbrancheslist2/2. No duplicateSave. Reentryallfourexactvalues/SaveDisabled. Oneplannedreload after00:13:15 retainedfourexactvalues/originalotherfields."
+    },
+    {
+      "clockUtc": "2026-10-26T00:13:26Z",
+      "action": "Ordinarysame-tab publicbusiness entry",
+      "actual": "ExactA/oneACTIVE057/noinactivebranch. Fourlabelledanchors map to corresponding exactHTTPSknownmarkers; ordinaryhrefattributes read after00:13:26 and before00:13:40 clocks, neveractivated.",
+      "hrefs": {
+        "instagram": "https://c183-directory.example.invalid/instagram",
+        "two_gis": "https://c183-directory.example.invalid/two-gis",
+        "google_maps": "https://c183-directory.example.invalid/google-maps",
+        "yandex_maps": "https://c183-directory.example.invalid/yandex-maps"
+      }
+    },
+    {
+      "clockUtc": "2026-10-26T00:13:55Z",
+      "action": "After00:13:40 exacteditorreentry, clearONLYfourfields thenONEordinarySavechanges restore",
+      "actual": "Againheadingwait deadline thenonefreshAX completedbrancheslist2/2; eachSave once. Reentryallfourblank/SaveDisabled; oneplannedreload after00:14:13 retainedoriginalname/blankaddress+links+contacts/coords—/—/inherittrue/activeTRUE/7closed days."
+    },
+    {
+      "clockUtc": "2026-10-26T00:14:32Z",
+      "action": "After publicsame-tabentry, restorationrecord",
+      "actual": "FullpublicAXexactA/oneactive057/nofourdirectoryanchors/nomarkers/noSite. Journalrestored/pendingfalse. Then/adminreturn protectedheading/Business3/4branch1staff4service30booking/TodayCancelled1/RU; boundedwait collapsedAdmin-panel/Anonymized settled, markHandoff beforefinalclock."
+    }
+  ],
+  "toolArtifacts": "BothSave headingwaits timed out before actualnavigation finished; each followed onefreshAX showing successful expectedlist. No duplicatewrite, unchangedretry, productbug/fix or networkcause claim. Temporary shell cabinet-loading text settled ordinarily; no auth action. Publichref read occurred after00:13:26 entryclock and before00:13:40 returnclock; no precise per-attribute timestamp is claimed.",
+  "effects": {
+    "ordinaryUpdates": 2,
+    "target": {
+      "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+      "slug": "s1-test-20261020-branch-availability",
+      "branch": "057447c8-b200-4403-b056-49e3c250840f",
+      "branchName": "S1 TEST ACTIVE CONTROL",
+      "inactiveUntouched": "fa5f1017-d987-40c8-90ca-b042898c694f"
+    },
+    "pending": false,
+    "journal": "c183-effects-journal.json",
+    "originalRegistry": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+    "originalRegistrySHA256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca",
+    "restoration": "Originalvisiblefields+publicabsence restored. No byte-identicalDBrollback/zeroTOTALwrites claim; wholeform emptyrepresentations/audit/auth/telemetry unenumerated.",
+    "limits": "Exactly2plannednormalupdates onexistingACTIVE057 directory_links only, originalotherbundledfields retained. No active/publication/inheritance/name/address/contact/coords/schedule/owner/role/payment/booking/entity command beyond bundledunchangedfields. No externalactivation/message/mapprovider/permission. Emptyrepresentations/audit/auth/telemetryunenumerated."
+  },
+  "credit": {
+    "newFunctionalUiPass": 1,
+    "beforeWindowUi": 21,
+    "afterWindowUi": 22,
+    "fourLinksAreOneCompoundCase": true,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 23,
+    "remaining": 293
+  },
+  "limits": "Existingbranch fourdirectorylinks persisted/publicmetadata/clear recovery only. No firstbranchcreation/onboarding/applicationapproval, externaldestination/provider/marker/location/permission/security/visual/cache/booking command or wholeI1-02/I1-03 acceptance.",
+  "next": "C183 fourdirectory_links existingACTIVE057edit/reentry/reload/publicexactfourhrefs/clearrestore ONEcompoundNEWUI PASS. Exactly2ordinaryupdates, allfouroriginalblank/SaveDisabled/otherfields/inherittrue/activeTRUE/7closed days/publicnoanchors restored; inactivefa5untouched/journalpendingfalse. Window21->22NEWUI/4fix/logical16/23of316293left unchanged/NOT_READY. No externaldestination/provider/location/permission/contact/booking/role/source/test/build command; candidate82c7088de609/1686/buildC174C175 unchanged. NextC184 ONLYboundedREADONLY M2-05 existingfixtureA business-deletion-warning history/handler/effects review BEFORE any finiteUIplan: prove whether first control opens a cancellable warning and exactdependencycount/name boundary, or immediately invokes deletion. No businessDelete/finalConfirm/typedconfirmation/Enter/force/newentity/cleanup or role/security command fromreview. Any irreversibledelete requires separate exacthuman action-time confirmation, neverinferredfromoldBdeletionconsent. Reuseonlycomplete matchingmethod/dependencies/originalUTC, no repeatedcategory/branchwarningcase or UNITimitation. Ifunsafe exactblocker+independentunfinishedpriority; allpriorconstraints/blockers unchanged."
+}

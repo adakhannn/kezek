@@ -1,0 +1,42 @@
+{
+  "recordedUtc": "2026-10-20T07:07:51Z",
+  "completedObservationAfterClockUtc": "2026-10-20T07:11:40Z",
+  "status": "PREPARED_NOT_ACCEPTANCE_PASS",
+  "environment": "DEV beulnmftzbmtbdlgurht through localhost ordinary superadmin UI",
+  "actualAccount": "kezekkg@gmail.com selected in ordinary Google chooser; admin panel confirmed",
+  "fixtures": [
+    {
+      "key": "A",
+      "businessId": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+      "name": "S1 TEST 20261020 Branch Availability",
+      "slug": "s1-test-20261020-branch-availability",
+      "createSubmittedAfterClockUtc": "2026-10-20T07:05:27Z",
+      "observed": "Created business detail: approved, no owner, zero branches/staff/services/bookings, limit2",
+      "approved": true,
+      "owner": null,
+      "branches": [
+        {"id":"fa5f1017-d987-40c8-90ca-b042898c694f","name":"S1 TEST INACTIVE BRANCH","active":false,"submittedAfterClockUtc":"2026-10-20T07:08:31Z","verification":"Admin branches list: Выключен"},
+        {"id":"057447c8-b200-4403-b056-49e3c250840f","name":"S1 TEST ACTIVE CONTROL","active":true,"submittedAfterClockUtc":"2026-10-20T07:08:59Z","verification":"Admin branches list: Активен; total2/2"}
+      ],
+      "visualEvidence": "One screenshot attempt on new20Octprovider returned Unable to capture screenshot; not retried. DOM verification only, not visual/device PASS.",
+      "retention": "KEEP; no automatic deletion"
+    },
+    {
+      "key": "B",
+      "businessId": "85adc551-249c-4931-a445-aa6f905f1bea",
+      "name": "S1 TEST 20261020 Business Availability",
+      "slug": "s1-test-20261020-business-availability",
+      "createSubmittedAfterClockUtc": "2026-10-20T07:10:00Z",
+      "hideSubmittedAfterClockUtc": "2026-10-20T07:10:24Z",
+      "approved": false,
+      "owner": null,
+      "observed": "Created approved, owner unassigned and zero dependencies; after disabling visibility and save: На модерации, public link CTA absent, readiness0/4",
+      "branches": [{"id":"e1eedc5a-5464-4add-989b-5accee455a99","name":"S1 TEST BUSINESS ACTIVE BRANCH","active":true,"submittedAfterClockUtc":"2026-10-20T07:11:12Z","verification":"Admin branches list: Активен; total1/1"}],
+      "retention": "KEEP; later deleted-slug scenario requires specific action-time deletion confirmation"
+    }
+  ],
+  "effects": "Two new businesses, three branches, application creation-audit contexts, B approvaltrue->false. Ordinary auth/telemetry writes unenumerated. No existing business/entity write commands. No new access grants.",
+  "finalAdminList": "4 total /3 approved. A approved2branches0staff/no owner; B moderation1branch0staff/no owner; originalbiz2 still2branches1staff and originalbiz1 still0branches0staff with original owner displayed.",
+  "fixtureLimitations": "No owner/staff/services/schedules/available slots: active branch is a visibility control, not a successful-booking control. Booking exclusion acceptance must use an independently valid positive booking control and inspect whether these fixture dependencies suffice. No deleted-slug fixture yet.",
+  "acceptance": {"acceptedS1":16,"remainingS1":9,"passedCases":56,"remainingCases":23,"newCasesClosed":0}
+}

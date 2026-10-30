@@ -1,0 +1,35 @@
+{
+  "id": "C241",
+  "status": "BLOCKED_SETTLED_PUBLIC_BUSINESS_LOAD_ERROR_AFTER_INITIAL_GUARD_RENDER",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c240-foreign-branch-review-plan.json",
+  "caseId": "S28-D102-foreign-active-branch-query-rejected",
+  "observationWindowUtc": [
+    "2026-10-28T09:04:36Z",
+    "2026-10-28T09:13:12Z"
+  ],
+  "negativeEntryAfterClockUtc": "2026-10-28T09:05:09Z",
+  "recoveryEntryAfterClockUtc": "2026-10-28T09:07:21Z",
+  "restorationObservedBeforeClockUtc": "2026-10-28T09:13:12Z",
+  "positive": "Fresh protected SA/admin/RU/Anonymized/Business3. ONE ownbranch positive URL: navigation wait timeout then ONE fresh AX showed actual day Step2, branch1 name in header+summary, selected current28Oct and Next enabled. Calendar availability hint says unavailable; this is not a staff/day/slot availability test and no Next was clicked.",
+  "negative": "ONE foreign active057 URL initially rendered Step1, two own business2 branches unselected, no A branch or selected foreign name, summary none, Next disabled. Initial URL still rawStep2/foreignbranch. A bounded header-role readiness wait found no Admin match; ONE fresh AX then showed auto-normalized URL step=1&day=2026-10-28/no branch, but actual body replaced by Не удалось загрузить бизнес / Проверьте интернет-соединение и попробуйте ещё раз / Повторить / В каталог. Header Клиент+Anonymized/Выйти at that observation. The complete settled no-error guard oracle is therefore NOT met; initial correct render and normalized URL are partial observations only, not PASS.",
+  "classification": "Cause/status/response/request timing unknown. No new distinct defect, role loss, network cause, URL-normalization causality or same cause as C189/M1 proven. No speculative auth/config/data/source fix, no Retry/reload/public requery. Tool navigation/header wait deadlines retained as tool observations, not product latency proof.",
+  "recovery": "Planned base public recovery was deliberately skipped because it would repeat newly failed public loading. Invalid branch was already absent from auto-normalized URL. ONE ordinary known /admin entry for restoration showed protected Панель администратора/RU/Anonymized/Business3/4branches1staff4services30bookings/28OctToday0-0-0; markHandoff. No authentication transition or permission/role mutation. No pending fixture or selection mutation command.",
+  "effects": "Three document entries: ownbranch positive, foreignbranch negative, protected admin restore. No checkbox/date/staff/service selection, Next/slot/ChooseTime/hold/booking/confirm/cancel/payment/Save/entity/association/role/security/API/SDK/SQL/storage extraction/source/test/build/server command. Application auth/analytics/telemetry unenumerated; not zero TOTAL writes.",
+  "blocker": {
+    "owner": "Public business document availability / unresolved runtime dependency",
+    "exit": "A genuinely new independently healthy public business condition and allowed finite verification path; do not retry unchanged catalogue/auth/provider/URL-normalization loop. Preserve same candidate/source and unknown cause unless observable evidence changes."
+  },
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0,
+    "windowUi": 1,
+    "windowLiveFixes": 0,
+    "logicalFixes": 17,
+    "accepted": 27,
+    "remaining": 289
+  }
+}
+

@@ -121,6 +121,8 @@ export function useSignInRedirectDecision({
             const uid = data.user?.id;
             const target = await decideRedirect(fallback, uid);
             router.replace(target);
+            // The cached server layout may still reflect a failed auth lookup.
+            router.refresh();
         },
         [decideRedirect, router],
     );

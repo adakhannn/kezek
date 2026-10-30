@@ -1,0 +1,23 @@
+{
+  "id": "AUTOMATION_CURRENT_CONTEXT_REFRESH",
+  "completedBeforeUtc": "2026-10-26T08:42:11Z",
+  "authority": "Existing automation transfer/resume and later full task-scoped autonomy approved directly by human.",
+  "beforeSnapshot": "docs/verification/runs/2026-10-26-web-resume-2/automation-before-context-refresh.toml",
+  "beforeSHA256": "c8870f5d500d43d5251f7272d22d2b91e9bfe364720967f5c8ea615f51d69424",
+  "afterSHA256": "75ee31fe949f59e58f0afa76baee836c8060e8445e180a322ff4b7540d5c9185",
+  "oldPromptCharacters": 74431,
+  "newPromptCharacters": 6334,
+  "preserved": [
+    "id kezek",
+    "kind heartbeat",
+    "name",
+    "ACTIVE",
+    "15minute cadence",
+    "targetThreadId01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+    "all task safety limits via current handoff/current progress references"
+  ],
+  "updateToolSuccess": true,
+  "viewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "reason": "Replace accumulated stale checkpoints with concise current run/authority/method/boundaries. Exact previous configuration archived, not lost. Current progress/ledger always authoritative."
+}

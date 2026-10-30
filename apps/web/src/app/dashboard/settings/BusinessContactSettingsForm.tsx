@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function BusinessContactSettingsForm({ initial }: Props) {
+    const { t } = useLanguage();
     const [form, setForm] = useState(initial);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ variant: 'success' | 'danger'; text: string } | null>(null);
@@ -31,7 +33,9 @@ export function BusinessContactSettingsForm({ initial }: Props) {
             if (!response.ok || !payload.ok) {
                 setMessage({
                     variant: 'danger',
-                    text: payload.error?.message || payload.error || 'Не удалось сохранить контакты',
+                    text: typeof payload.message === 'string' ? payload.message
+                        : typeof payload.error?.message === 'string' ? payload.error.message
+                        : t('business.contactSettings.saveError'),
                 });
                 return;
             }
@@ -41,9 +45,9 @@ export function BusinessContactSettingsForm({ initial }: Props) {
                 contact_email: payload.data?.contact_email ?? '',
                 website_url: payload.data?.website_url ?? '',
             });
-            setMessage({ variant: 'success', text: 'Публичные контакты сохранены' });
+            setMessage({ variant: 'success', text: t('business.contactSettings.saved') });
         } catch {
-            setMessage({ variant: 'danger', text: 'Не удалось связаться с сервером' });
+            setMessage({ variant: 'danger', text: t('business.contactSettings.networkError') });
         } finally {
             setSaving(false);
         }
@@ -55,49 +59,49 @@ export function BusinessContactSettingsForm({ initial }: Props) {
 
             <Card variant="elevated" padding="lg">
                 <div className="mb-5">
-                    <h2 className="type-section-title text-[var(--text-primary)]">Контакты бизнеса</h2>
+                    <h2 className="type-section-title text-[var(--text-primary)]">{t('business.contactSettings.heading')}</h2>
                     <p className="type-body mt-1 text-[var(--text-secondary)]">
-                        Эти данные видят клиенты. Они не связаны с телефонами входа, владельцев или сотрудников.
+                        {t('business.contactSettings.description')}
                     </p>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                     <Input
-                        label="Публичный телефон"
+                        label={t('business.contactSettings.phone')}
                         value={form.contact_phone ?? ''}
                         onChange={(event) => setForm((current) => ({ ...current, contact_phone: event.target.value }))}
                         placeholder="+996555123456"
                         inputMode="tel"
-                        helperText="Основной номер для звонков клиентов"
+                        helperText={t('business.contactSettings.phoneHint')}
                     />
                     <Input
-                        label="Рабочий WhatsApp"
+                        label={t('business.contactSettings.whatsapp')}
                         value={form.contact_whatsapp ?? ''}
                         onChange={(event) => setForm((current) => ({ ...current, contact_whatsapp: event.target.value }))}
                         placeholder="+996555123456"
                         inputMode="tel"
-                        helperText="Только бизнес-номер, не номер авторизации"
+                        helperText={t('business.contactSettings.whatsappHint')}
                     />
                     <Input
-                        label="Публичный email"
+                        label={t('business.contactSettings.email')}
                         value={form.contact_email ?? ''}
                         onChange={(event) => setForm((current) => ({ ...current, contact_email: event.target.value }))}
                         placeholder="hello@example.com"
                         type="email"
                     />
                     <Input
-                        label="Сайт"
+                        label={t('business.contactSettings.website')}
                         value={form.website_url ?? ''}
                         onChange={(event) => setForm((current) => ({ ...current, website_url: event.target.value }))}
                         placeholder="https://example.com"
                         type="url"
-                        helperText="Только HTTPS-ссылка"
+                        helperText={t('business.contactSettings.websiteHint')}
                     />
                 </div>
             </Card>
 
             <div className="flex justify-end">
                 <Button type="submit" isLoading={saving} disabled={saving}>
-                    Сохранить контакты
+                    {t('business.contactSettings.save')}
                 </Button>
             </div>
         </form>

@@ -1,0 +1,48 @@
+{
+  "id": "C185",
+  "status": "PASS_NAMED_BUSINESS_WARNING_CANCEL_RELOAD_RETENTION",
+  "plan": "c185-business-warning-plan.json",
+  "review": "c184-business-warning-review.json",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "caseId": "S26-M205-retained-business-warning-cancel-reload",
+  "observationWindowUtc": [
+    "2026-10-26T00:27:03Z",
+    "2026-10-26T00:29:16Z"
+  ],
+  "steps": [
+    {
+      "clockUtc": "2026-10-26T00:27:03Z",
+      "action": "FreshcurrenthumanTab2/admin ->observedfixtureA",
+      "actual": "ProtectedSA/Admin-panel/Anonymized/RU/Business3. ExactAID/name/slug/approvedBarber/ownerunassigned/limit2/2branches0staffservicesbookings. FirstAXlaggednavigation; onefreshAXsettledtarget, no repeatclick."
+    },
+    {
+      "clockUtc": "2026-10-26T00:27:19Z",
+      "action": "OuterУдалитьбизнес button once openswarning; clickONLYvisibleОтмена",
+      "actual": "WarningtitleУдалитьбизнес; exactmessage Удалить бизнес «S1 TEST 20261020 Branch Availability» вместе со всеми данными? Это действие необратимо.; separateЗакрытьокно/Отмена/Удалить. Cancelremoveddialog/remainedsamebusiness. FooterУдалить/Enter/typedinput/force neveractivated. Focusreturnedouterbutton incidentallyobserved, notfocusmatrixcredit."
+    },
+    {
+      "clockUtc": "2026-10-26T00:27:29Z",
+      "action": "ONEordinarydetailreload thenobservedФилиалы",
+      "actual": "Originalbusinessname/slug/approvedBarber/unassignedowner/limit2/addressphonesnotprovided/2branches0staffservicesbookings retained; no deletiontoast/redirect/notfound. Branches2of2exactfa5inactive and057active names/IDs; no edit/delete/activation."
+    },
+    {
+      "clockUtc": "2026-10-26T00:27:42Z",
+      "action": "ObservedАдминка return+handoff",
+      "actual": "ProtectedПанельадминистратора/Admin-panel/Anonymized/RU/Business3/4branch1staff4service30booking/TodayCancelled1. Googlechooser1untouched/no newtab/authtransition."
+    }
+  ],
+  "actual": "Independent namedbusiness warning cancellation and retainedbusiness/children afterreload complete. This is one newintegrationcase, not reusedC03execution or genericsharedDialogcount. WholeM2-05 remainspartial; actualdeletion/dependencyrejection/cascade not tested.",
+  "effects": "Warningopen/Cancel andnavigation/reload only. No productDelete/finalConfirm/Enter/typedname/force/Save/Create/owner/role/booking/payment/schedule command, no pendingfixtureeffect. Ordinaryauth/telemetryunenumerated, notzeroTOTALwrites. No source/test/build/server/DB probe.",
+  "credit": {
+    "newFunctionalUiPass": 1,
+    "beforeWindowUi": 22,
+    "afterWindowUi": 23,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 23,
+    "remaining": 293
+  },
+  "limits": "Oneactualintegration namedbusinessCancel case. No dependencycountsinsidewarning expectation, actualdeletion/cascade/rejection/fullM2-05/security/visual/device/focus/screenreader proof. C03Bdeletionimmutable/no repeat.",
+  "next": "C185 namedexistingA businesswarningCancel/reload/bothbranchretention ONEnewUI PASS: exactname/alldata/irreversible warning, Cancelonly; originalbusiness/approval/owner/limit/counts andinactivefa5+active057 retained. No finalDelete/Enter/typedname/force/entitywrite, oldC03Bconsentunused. Window22->23NEWUI/4verifiedfix/logical16/23of316293left unchanged/NOT_READY. WholeM2-05partial/dependencycascadeguardsunexecuted. SAadminRU/Anonymized/Business3/handoff restored; chooser1untouched/noauth/newtabs/pendingeffects. NextC186 ONLYboundedREADONLY D3-02 double-submit protection historicalprimary/currentdependency/effects review: exact oldactual submission stimulus andindependent duplicate-outcome oracle/originalUTC, pendingguard/idempotency receiver dependencies. Reuseonlycomplete matchingmethod/dependencies, never source/UNIT-asLIVE. NO newbooking/hold/slot/Next/date/staff/service/confirm/doubleclick/cancel/payment/fixture/role/API/SDK/storage actionfromreview, no unchangedwizardreplay. Ifprimary/matchingproof missing retainexactblocker+independentunfinishedpriority. AllpriorWEBlocalonly/domainlast/known4identities/forbiddenproviders/routes/securityconstraints unchanged; currentcandidate/build/testsunchanged, no repeatedF013/auth/profileSave/cache/visual/diagnostic/repairquestion."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "C88",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "caseId": "S23-M201-empty-name-reject-cancel",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "timeboxMinutes": 6,
+  "target": "Existing isolated fixtureA fe2d412c-21c6-40ef-b5d3-23f49f550610 only",
+  "expected": "A business must not acquire an empty name. After clearing Name and one ordinary Save, UI must reject the invalid draft with an explicit name-related error, keep editor open and preserve all original persisted business fields. Cancel then ordinary reload shows exact original name/slug/empty address/approved Barbershop/owner unassigned/2branches/0staff/services/bookings/limit2. One rejection-and-recovery case, not per-click credit. No HTTP status/DB total-write/translation/visual claim from DOM.",
+  "steps": [
+    "Fresh same human Tab2/knownSA/admin; clock observed A link, verify exact original name S1 TEST 20261020 Branch Availability, slug s1-test-20261020-branch-availability, empty address/phones, approved Barbershop, owner unassigned,2branches/0staff/service/bookings/limit2.",
+    "Clock Edit; verify exact baseline and blank contact inputs, original category/publication. If masked/unknown/nonempty/baseline mismatch Cancel and stop without submit.",
+    "Clock clear only Name via ordinary fill; automatic slug may clear as reviewed. Fresh state must show both blank, other fields untouched. If input uncertain, Cancel and BLOCKED without retry.",
+    "Clock immediately before exactly ONE ordinary Save. Expect rejected blank name, explicit name-related error and editor retained, no success/closed editor. If outcome ambiguous do not resubmit; one fresh state read then Cancel/reload only.",
+    "Clock Cancel, clock ordinary reload. Verify original exact name/slug/empty address and protected baseline; clock Admin link and handoff. If invalid data unexpectedly persisted, mark FAIL and stop product tests for safe precise recovery review, no blind speculative write."
+  ],
+  "effects": "One planned invalid ordinary UI Save/PATCH for existing A with name and autoslug empty; source checks empty name before business UPDATE. Auth/role/business reads and normal telemetry/audit unenumerated, no zeroTOTALwrites claim. Local Cancel and normal reload. No valid business save/new fixture/owner/approval/category/contact/branch/role/grant/delete/payment/booking/profile/notification/OTP/message commands; no rawHTTP/SDK/SQL/token probes or fault injection.",
+  "stop": "Baseline mismatch, user/browser interruption, auth challenge, ambiguous state or unexpected mutation ->stop scenario, preserve evidence, no duplicate submit/newtab/bypass. Never infer human profile-save consent from heartbeat.",
+  "accounting": "At best ONE new UI case, current window10->11,0fix/0accepted delta; M2-01 partial/casePlanCompletefalse. No repeats of C84/C86.",
+  "savedBeforeUiUtc": "2026-10-23T02:04:39Z",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "3c34f87e772554f134220aad060c038f0e763c6c26c734055a1b9cd6f06b2756",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+  }
+}

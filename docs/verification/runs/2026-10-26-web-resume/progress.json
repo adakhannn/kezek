@@ -1,0 +1,141 @@
+{
+  "status": "PAUSED_BY_USER",
+  "authorization": "можешь продолжить дальше пока я тебя сам не останавлю",
+  "authorizationEvidence": "authorization.json",
+  "firstClockAfterResumeUtc": "2026-10-25T19:37:40Z",
+  "timezone": "Asia/Bishkek",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "sourceFileCount": 1686,
+  "accepted": 23,
+  "remaining": 293,
+  "total": 316,
+  "S1": {
+    "accepted": 17,
+    "total": 25,
+    "primaryPassed": 63,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 3,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 1,
+    "total": 47
+  },
+  "verifiedFixesLogicalRun": 16,
+  "newWindowLiveFixes": 4,
+  "newWindowAcceptedRequirements": 2,
+  "newWindowPassedCases": 23,
+  "reusedPriorProofCasesThisWindow": 3,
+  "refreshedExistingCasesThisWindow": 3,
+  "refreshedHistoricalFunctionalCasesThisWindow": 2,
+  "activeSubpackage": "C189_CLOSED_HUMAN_PAUSED_C190_NOT_EXECUTED",
+  "casePlan": "c189-search-booking-entry-plan.json",
+  "lastCheckpoint": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN RESUME. Saved next only: C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged.",
+  "checkpointAfterClockUtc": "2026-10-26T01:29:27Z",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "existingAutomation": true,
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "configurationReadback": true,
+    "configSHA256": "3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "nameAndCadencePreserved": true,
+    "evidence": "pause-20261026-012750.json"
+  },
+  "browser": {
+    "inventory": "Human-restored two tabs: local root2 and Google chooser1; local2 used only, chooser1 untouched/preserved",
+    "workingTabId": "2",
+    "workingProvider": "09f3d86a-f489-4f3f-be0a-e00c844b51ba",
+    "handle": "resume26HumanTab",
+    "actualRole": "ProtectedAdmin/Admin-panel/Anonymized/RU/Business3 restoredC179",
+    "userTabHandoff": true,
+    "noNewTabOrAuthAction": true
+  },
+  "server": {
+    "before": "No 3000/3107 listener and no Next or owned compiler/runtime process in scoped read-only check; exact project/package/Next binary verified.",
+    "clockBeforeStartUtc": "2026-10-25T19:39:17Z",
+    "oneNormalStart": true,
+    "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "cwd": "C:/projects/kezek/apps/web",
+    "sessionId": 60432,
+    "pid": 18368,
+    "parentPid": 12676,
+    "listen": "127.0.0.1:3000",
+    "verifiedBeforeUtc": "2026-10-25T19:40:00Z",
+    "status": "LISTENER_CONFIRMED_NOT_ACTUAL_UI_HEALTH",
+    "noRestartLoopInstallOrFullOauthLog": true
+  },
+  "priorCompletedWindow": "../2026-10-25-web-resume/final-report.json",
+  "priorFinalSHA256": "59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676",
+  "continuousObservationAcrossPause": false,
+  "releaseReady": false,
+  "fixedDeadline": null,
+  "autonomousResumeAllowed": false,
+  "finalReportFile": "final-report.json",
+  "priorWindowArchived": {
+    "newUiPass": 5,
+    "newVerifiedFixes": 1,
+    "notAddedToThisWindow": true
+  },
+  "currentBuild": {
+    "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+    "pid": 23980,
+    "ownedSession": 25359,
+    "startedUtc": "2026-10-25T23:03:23.215Z",
+    "finishedUtc": "2026-10-25T23:04:38.101Z",
+    "exitCode": 0,
+    "timedOut": false,
+    "rawLog": "c174-build-raw.txt",
+    "buildEvidence": "c174-result.json",
+    "executionEvidence": "c175-result.json",
+    "ownedRuntimePid": 14212,
+    "runtimeStopped": true
+  },
+  "technicalGates": {
+    "evidence": "c172-technical-checks.json",
+    "typecheck": "PASS",
+    "targeted10": "PASS",
+    "scopedLint": "0errors/1ignoredtestwarning",
+    "fullLint": "FAIL52errors167warnings",
+    "sourceUnit": "FAIL11/PASS2547",
+    "fullCoverage": "EXECUTED_FULL_FAILED_TEST_GATE_RETAINED",
+    "currentBuild": "C174_C175_SCOPED_PASS"
+  },
+  "inheritedBlockers": {
+    "progress": "docs/verification/runs/2026-10-25-web-resume/progress.json",
+    "latestContractReview": "docs/verification/runs/2026-10-25-web-resume/c127-service-contract-review.json",
+    "F013": "OPEN/no unchanged auth/reload diagnostic",
+    "F005": "pending LIVE",
+    "profileSave": "Specific consent absent; no repeat ask/Save",
+    "cacheVisualRoleFixtureSecurity": "Retained; no unchanged retries or exclusion",
+    "createNegativeValidation": "C151: source-only validation guards; Submit/Create/Save/Enter/newentity authority absent, no LIVE rejection credit"
+  },
+  "constraints": "All prior WEB/knownidentity/safety constraints retained, no broadenedauthority/newnetworkapproval. ExistingF013OPEN/F005pending/fixture/cache/visual/role/serverdependency blockers unchanged. Explicitstop ->safeeffects+PAUSEDreadback+newfinal; neveroverwriteoldfinals or buy/reset limits.",
+  "distinctRefreshedExistingCasesThisWindow": 1,
+  "restoredPriorRequirementIds": [
+    "A3-01"
+  ],
+  "lastAdministrativeAudit": "pause-20261026-012750.json",
+  "S6": {
+    "accepted": 2,
+    "total": 29
+  },
+  "pendingFixtureEffects": {
+    "subpackage": "C183",
+    "pending": false,
+    "journal": "c183-effects-journal.json",
+    "lastConfirmedStage": "restored",
+    "rollbackScope": "Onlyexactfourknownsynthetic C183directorylinks clear throughordinaryACTIVE057 form afterfreshknownstate; preserve allotherbaseline/no blindretry/cleanup.",
+    "completedEvidence": "c183-result.json",
+    "restoredBeforeUtc": "2026-10-26T00:14:32Z"
+  },
+  "pausedAtUtc": "2026-10-26T01:27:50Z",
+  "pauseRequest": "сделай логическое завершение и на паузу",
+  "pauseEvidence": "docs/verification/runs/2026-10-26-web-resume/pause-20261026-012750.json"
+}

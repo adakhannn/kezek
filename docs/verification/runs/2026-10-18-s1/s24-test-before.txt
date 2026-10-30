@@ -1,0 +1,6 @@
+2026-10-18T12:05:05Z captured pre-implementation run.
+pnpm -C apps/web exec jest --runInBand --watch=false src/__tests__/components/RouteLoading.test.tsx
+Exit1. Suite failed to run: Cannot find module '../../app/loading'.
+Test Suites:1 failed/1; Tests:0 total; Time20.498s.
+This is a missing component/module failure, NOT three failing behavioral assertions.
+Process also emitted baseline-browser-mapping/punycode notices and pnpm ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "jest" not found after the actual Jest failure. Do not interpret as a successful test run or hide the launcher notice.

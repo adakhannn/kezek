@@ -4,6 +4,24 @@ This file is the main documentation index for the project.
 
 If you are unsure which document is current, start here.
 
+## Current WEB Priority
+
+**30 октября 2026: широкий автономный ручной прогон закрыт, `kezek` PAUSED.**
+Начало для следующего агента: [WEB_AGENT_HANDOFF.md](WEB_AGENT_HANDOFF.md).
+Там указаны источники истины, незавершённый F022, блокеры и условия новой задачи.
+Принято 28/316, осталось 288; NOT_READY. Старые команды запуска ниже и в архивах не действуют.
+
+As of 2026-10-18, the measurable closure queue is [WEB_CLOSURE_PLAN.md](./WEB_CLOSURE_PLAN.md): 316 obligations assigned once to eight phases, with conditional milestones, actual ledger counts, 50 unfinished defect chains and explicit blockers. Its [JSON](./WEB_CLOSURE_PLAN.json) is checked by `node scripts/web-closure-plan.mjs --json`. Planning does not authorize live tests or resume automation.
+
+As of 2026-10-14, the operational priority is stabilizing the existing WEB product for a verified closed-pilot candidate, not starting another broad architecture or redesign wave.
+
+- [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md): overall analysis, scope, ordered work packages and completion criteria.
+- [WEB_GLOBAL_READINESS_STATE.json](./WEB_GLOBAL_READINESS_STATE.json): current-candidate status for all82 catalogue areas and33 planned work packages. Historical targeted results remain separate.
+- [WEB_LIVE_TESTING_AREAS_CATALOG.md](./WEB_LIVE_TESTING_AREAS_CATALOG.md): detailed scenarios; old area statuses are not current release approval.
+- [WEB_BUG_REGISTRY.md](./WEB_BUG_REGISTRY.md): defect evidence, including open and pending historical follow-ups.
+
+The March architecture plans below describe their own delivered waves; their green baseline statements do not certify the October product candidate. Creating this plan does not resume a scheduled run, modify the application or authorize deployment.
+
 ## Sources Of Truth
 
 Use one primary document per topic:
@@ -28,6 +46,7 @@ Use one primary document per topic:
    - repo maintenance checks in [package.json](/C:/projects/kezek/package.json), including `check:docs-links` and `check:hotspots`
 
 5. Improvement planning
+   - [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md) — current WEB execution priority
    - [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md)
    - [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
    - [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md)
@@ -66,6 +85,8 @@ Use one primary document per topic:
 
 ### Planning
 
+- [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md): current overall WEB verification and pilot-readiness plan
+- [WEB_GLOBAL_READINESS_STATE.json](./WEB_GLOBAL_READINESS_STATE.json): living work-package and release-area decisions
 - [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md): long-term roadmap
 - [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md): latest delivered progress snapshot
 - [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md): current working cleanup and next-phase plan

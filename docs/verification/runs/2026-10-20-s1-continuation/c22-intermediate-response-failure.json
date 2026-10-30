@@ -1,0 +1,6 @@
+{
+ "status":"FAILED_SAME_LIVE_SECOND_PROTOTYPE_NOT_ACCEPTED",
+ "observedBeforeUtc":"2026-10-20T13:10:01Z",
+ "actual":"After current caller/globalrole alignment, actual performance fullreload reaches global boundary: Что-то пошло не так / Cannot read properties of undefined (reading 'length'). Source confirms HTTP standardized success envelope {ok:true,data:{stats,timestamp}}, while PerformanceClient expects root stats/timestamp. No arbitrary fault injected.",
+ "next":"Minimal client read standard envelope; reject malformed success payload as inline read error rather than assigning undefined. No stats calculation/auth-policy changes. Add presentation integration tests for envelope, successful empty, forbidden and malformed data, real same-page reload after. Preserve this actual failed prototype alongside first auth->forbidden result. No verifiedfix count yet."
+}

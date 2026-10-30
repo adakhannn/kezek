@@ -1,0 +1,24 @@
+{
+  "id": "C199",
+  "status": "PASS_DEEP_STEP4_UPPER_DATE_NEXT_GUARD",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "plan": "c199-deep-upper-date-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T09:23:39Z",
+    "2026-10-26T09:25:44Z"
+  ],
+  "actual": "ONEordinarysame-tabdeepStep4documententrywithonlydaychangedto28Dec2026Monday. Afterrole/catalogsettlement samebranchfe1/staffАдаханОсоров/service5157checkboxchecked/selected1/60min100–300som/day28DecMonday; Nextdisabled. DocumentedbuttonisEnabledfalse confirmed before recovery. No no-staff/unavailable-servicenotice, no slotlist/offdayNoSlotsinference.",
+  "independentOracle": "Actualtoday26OctMonday; +60days25DecFriday;28DecMonday+63daysoutsidewindow. Sameeligiblechoicespositivecontrol C19826OctNextenabled withexact8dependencyhashesmatching beforeprobe. Reusedcontrol0newcasecredit/originalUTCnotchanged.",
+  "restoration": "BasebookingdocumentresetStep1/bothbranchesunchecked/no staff/services/Nextdisabled/day26Oct. Brand->root3businesses; actualAdminmenu->protected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1; markHandoff.",
+  "effects": "Documentnavigation/restoredlocalURLdraftonly; noNext/time/slot/ChooseTime/Confirm/hold/booking/cancel/payment/Save/serviceassociation/config/entity/authtransition/source/test/build/server/HTTP/SDK/SQL/storage/fakeclock. Ordinaryappauth/analytics/telemetry/draftwritesunenumerated.",
+  "credit": {
+    "newUi": 1,
+    "newWindowUiBefore": 6,
+    "newWindowUiAfter": 7,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292
+  },
+  "limits": "NarrowStep4upperNextdateguard only; NOTStep5/backendrejection/API/RLS/fullD2/timezone/midnight/visual/securityproof. CalendarG089originalproofnotrerun/retimed."
+}

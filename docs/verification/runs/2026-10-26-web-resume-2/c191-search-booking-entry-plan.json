@@ -1,0 +1,53 @@
+{
+  "id": "C191",
+  "status": "PLANNED_AWAITING_EXPLICIT_SINGLE_WORKING_TAB_AUTHORIZATION",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D1-01"
+  ],
+  "caseId": "S26-D101-filtered-search-booking-cta-entry",
+  "preparedUtc": "2026-10-26T07:26:44Z",
+  "priorPlan": "docs/verification/runs/2026-10-26-web-resume/c189-search-booking-entry-plan.json",
+  "priorBlockedResult": "docs/verification/runs/2026-10-26-web-resume/c189-result.json",
+  "newCondition": {
+    "meaning": "Actual stopped local Next runtime established and one normal start completed. This is a changed runtime condition, not a new-date justification or proof of prior cause.",
+    "checks": "Get-NetTCPConnection no3000/3107; no next node processes; independent IPGlobalProperties listener inventory empty; own PowerShell visible via CIM, node13 processes visible. No kill/restart of an existing process.",
+    "firstStartClockUtc": "2026-10-26T07:26:05Z",
+    "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "cwd": "C:/projects/kezek/apps/web",
+    "sessionId": 43364,
+    "launcherPid": 6696,
+    "listenerPid": 19968,
+    "verifiedListener": "127.0.0.1:3000",
+    "verifiedAfterClockUtc": "2026-10-26T07:26:44Z",
+    "health": "LISTENER_ONLY_NOT_UI_HEALTH"
+  },
+  "browserGate": {
+    "observed": "Current chat inventory IAB2 has0tabs. Old chat tabs not rebound or touched; prohibited providers not accessed.",
+    "humanQuestion": "Explicitly allow one working localhost:3000/admin tab or human opens it in this chat.",
+    "approvalRequired": true,
+    "elapsedTimeNotApproval": true,
+    "noAlternateBrowserOrNativeFallback": true
+  },
+  "method": "Ordinary visible UI only on permitted working tab. One healthy-root precondition attempt under changed runtime, then exact original filtered Book activation method.",
+  "timeboxMinutesAfterUiStart": 6,
+  "steps": [
+    "Verify actual existing known role/route; if session absent use only ordinary permitted known Google login, CAPTCHA/password/device by human. No roles/credentials created.",
+    "Ordinary brand/home entry once. If pending navigation, one fresh AX/bounded completion wait, never duplicateclick/reload.",
+    "Require healthy catalogue and identifiable business2 result. If explicit unavailable/error, STOP this chain; no query/retry/source fix.",
+    "Enter original finite query for existing business2, wait settled matching result; activate its separate Book CTA once.",
+    "Verify correct business booking URL and settled identifiable wizard. Existing valid draft may restore; do not clear/read storage or demand blank selections.",
+    "No branch/date/staff/service/slot/Next/hold/confirm/cancel commands. Ordinary return to protected admin when originally permitted, verify restoration and markHandoff."
+  ],
+  "independentOracle": "The separate Book CTA on the settled sole business2 search result enters that same business booking wizard. Error/loading/empty catalogue cannot pass. No booking creation/delivery/security/visual/timing claim.",
+  "originalQuery": "Тестовый бизнес 2",
+  "expectedEffects": "Read-only catalogue/wizard entry plus ordinary navigation. Ambient auth/analytics/draft/telemetry unenumerated; do not claim zero total writes.",
+  "stopRules": [
+    "Pending working-tab permission: do not create/open replacement.",
+    "Repeated catalogue error under newruntime: preserve exact blocker, no retry.",
+    "Unexpected sensitive/role/entity mutation boundary: stop before action.",
+    "Tool failure: one bounded diagnosis, no alternate provider/browser/HTTP/native bypass."
+  ],
+  "independentFallback": "C192 genuinely unexecuted B4-05 both-null active coordinate control from C180, only if permitted UI available and current baseline verified; no coordinates/provider/fixture mutation.",
+  "creditRule": "Original C189 never executed query/CTA; a complete first live method now may earn ONE new UI case. No fix or whole D1-01 acceptance automatically."
+}

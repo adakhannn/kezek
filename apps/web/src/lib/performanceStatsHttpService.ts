@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getPerformanceStatsSnapshot, type PerformanceStatsAuthClientLike } from '@/lib/performanceStatsService';
-import { getServiceClient } from '@/lib/supabaseService';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function runPerformanceStatsHttp(): Promise<NextResponse> {
   const result = await getPerformanceStatsSnapshot(
-    getServiceClient() as unknown as PerformanceStatsAuthClientLike,
+    await createSupabaseServerClient() as unknown as PerformanceStatsAuthClientLike,
   );
 
   if (!result.ok) {

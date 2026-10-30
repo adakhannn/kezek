@@ -1,0 +1,30 @@
+{
+  "id": "C70-SETUP",
+  "recordedUtc": "2026-10-22T23:12:50Z",
+  "status": "BLOCKED_AWAITING_HUMAN_LOCAL_ENTRY",
+  "productCasesExecuted": 0,
+  "newProductPasses": 0,
+  "newFixes": 0,
+  "acceptedRequirementDelta": 0,
+  "caseDisposition": "All four C70 planned draft variants NOT_RUN: authenticated local entry unavailable. Setup blocker is not four product failures and not a product bug.",
+  "serverAttempts": [
+    {"command": "pnpm -C apps/web dev", "result": "EXIT1: pnpm shim EPERM creating external tool-version symlink; no package installation forced"},
+    {"sessionId": 92268, "command": "node node_modules/next/dist/bin/next dev --turbopack", "result": "Reported ready; browser localhost connection timed out and host listener unconfirmed. Own process stopped with Ctrl+C before replacement."},
+    {"sessionId": 47667, "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1", "cwd": "C:/projects/kezek/apps/web", "approval": "require_escalated approved by reviewer", "result": "Reported ready in 4.8 seconds; session still running on bounded poll. Host listener check returned no row, so browser reachability remains UNVERIFIED. No further restart without new evidence."}
+  ],
+  "browser": {
+    "browserId": "2",
+    "tabId": "1",
+    "providerId": "browser-use:23011460-bc97-4219-918d-2e16e9c8c958",
+    "creationReason": "One legitimate new C70 local entry after fresh inventory found no tabs, before any denial on this new provider",
+    "creationResult": "net::ERR_CONNECTION_TIMED_OUT",
+    "oneSubsequentBindResult": "Browser Use URL policy blocked the resulting data: error document",
+    "doNotRetry": true,
+    "boundary": "No bind/goto/back/reload retry, no replacement agent tab, alternate URL/browser/HTTP/native workaround after policy denial. Do not decode or persist encoded error document.",
+    "actualRole": "UNVERIFIED_AFTER_PAUSE"
+  },
+  "humanHandoff": "One new request sent to manually open healthy http://localhost:3000/ in Codex browser and, only if available, ordinary known superadmin login. No protection changes, data clearing, credential extraction or error-document refresh requested.",
+  "next": "Await genuinely human-restored healthy allowed local tab, fresh inventory and actual identity control, then C70 plan. Do not retry unchanged blocked setup on heartbeats; keep quiet unless new evidence or human input.",
+  "effects": "No app form input, login or business/configuration/role/grant/money commands this resumed window. Auth/telemetry effects unenumerated; no zero-total-writes claim. No source or safety-setting change. Existing old finals unchanged.",
+  "automation": "Existing kezek remains ACTIVE under explicit new until-stop authorization; setup blocker does not authorize automatic bypass or new automation. Explicit user stop requires PAUSED and readback."
+}

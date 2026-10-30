@@ -1,0 +1,20 @@
+{
+  "id":"C69",
+  "plan":"c69-rating-unsaved-validation-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-21T11:02:04Z",
+  "restoredBeforeUtc":"2026-10-21T11:08:40Z",
+  "original":{"weights":[35,25,20,20],"windowDays":30,"saveEnabled":true,"actual":"KnownSAAnonymized/original18; focusedordinaryrating-configentryreportednavigationtimeout, freshDOMactualНастройкирейтингов/4sliders/spinbutton. Initialsum100/validdays capturedfromvisiblecontrols, notDB/secret/storage."},
+  "cases":[
+    {"key":"weight-sum-unsaved","status":"passed","observationWindowUtc":["2026-10-21T11:04:03Z","2026-10-21T11:07:10Z"],"actual":"OneordinaryArrowLeftfirstslider35->34, labelОтзывыклиентов34%/weights34,25,20,20/Суммавесов99.00%/Суммадолжнаравняться100%/Save disabled. After11:06:04ordinaryReset ->exact35,25,20,20/days30/Saveenabled. Resetobservationspartofsamecase, no extraindependentcase."},
+    {"key":"window-days-unsaved","status":"passed","observationWindowUtc":["2026-10-21T11:07:10Z","2026-10-21T11:08:02Z"],"actual":"Oneordinaryspinbuttonfill0 ->labelКоличество дней(0дней) confirmsstatecommit, visiblevalue0/nativevalidity.rangeUnderflowtrue/Save disabled. NoEnter/Submit. After11:07:33ordinaryReset ->originalweights35,25,20,20/days30/rangeUnderflowfalse/Saveenabled/sum100.00%. UnlikeC68dateinput,thisnumberinputshowsactualReactlabel/statecommit; notretroproofC68worked."},
+    {"key":"server-rejection-feedback","status":"blocked","observationWindowUtc":["2026-10-21T11:02:04Z","2026-10-21T11:08:40Z"],"actual":"No SavePOST/serverfailure/injection requested; no servervalidationclaimfromdisabledUI."},
+    {"key":"persisted-dependencies","status":"blocked","observationWindowUtc":["2026-10-21T11:02:04Z","2026-10-21T11:08:40Z"],"actual":"No persistedconfiguration/model/recalc/jobs changed; dependencyhandlinguncertified, notremovedfromdenominator."}
+  ],
+  "restore":"BothdraftsResetverifiedoriginalvalues; 11:08:02ordinaryГлавная returnhadoneheadingwaitdeadline, freshDOMactualAnonymized/protectedПанельадминистратора/Бизнесы3/exactlocalhost/adminbefore11:08:40. User2/18handoff/5untouched/no newtabs/noauthtransition.",
+  "effects":"OnlytransientunsavedReactdraft+localReset. NEVERSave/Enter/recalc/POST/configpersist/business/role/grant/booking/shift/payment/review/source/test/build/server/DB/APIprobe commands. No cookie/token/storage/OSclipboard/nativeinspection. Ordinaryappauthlookup/telemetryunenumerated/notzeroTOTALwrites. No server/model/formula/numericratingcertification orvisual/devicePASS.",
+  "matrix":{"total":4,"passed":2,"failed":0,"blocked":2,"notRun":0,"remaining":2,"newLivePass":2,"newFixes":0,"scope":"2UIvalidationvariantsinONEunsavedformsession, not2independentconfigurationwrites/financeexecutions."},
+  "counts":"Product21/316,S117/25primary63/79,S23/70,S41/47unchanged;9verifiedlivefixesunchanged,F013open. M5-04partial.",
+  "next":"C70finite remainingratingdraftboundaryplan BEFOREUI: sum101 viaoneArrowRight plusdays366invalid/1valid/365valid, Resetaftereach, NEVERSave/Enter/recalc/POST/persistconfiguration. C69sum99/days0 alreadyPASSoriginalUTC/notrepeat. Planned4newUIboundaryvariants not4financialexecutions; server/dependencyremainBLOCKED/fullM5partial. No C68dateinputrepair orC67owner/F013unchangedretest."
+}

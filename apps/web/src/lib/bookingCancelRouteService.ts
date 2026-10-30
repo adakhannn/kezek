@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logDebug, logError } from '@/lib/log';
+import { dispatchBookingNotification } from '@/lib/bookingNotificationDispatch';
 import { runServerCancelBooking } from '@/lib/serverCancelBookingService';
 
 type BookingRow = {
@@ -28,13 +28,9 @@ export type BookingCancelRouteResult = CancelFailure | CancelSuccess;
 export async function runBookingCancelRoute({
     supabase,
     bookingId,
-    requestUrl,
-    fetchImpl = fetch,
 }: {
     supabase: SupabaseClient;
     bookingId: string;
-    requestUrl: string;
-    fetchImpl?: typeof fetch;
 }): Promise<BookingCancelRouteResult> {
     const { data: booking } = await supabase
         .from('bookings')
@@ -78,12 +74,7 @@ export async function runBookingCancelRoute({
             supabase,
             clientId: isClientOwner ? user.id : undefined,
             notify: async ({ bookingId: id, type }) => {
-                await notifyBookingChange({
-                    bookingId: id,
-                    type,
-                    requestUrl,
-                    fetchImpl,
-                });
+                await dispatchBookingNotification(supabase, id, type);
             },
         },
         bookingId,
@@ -108,42 +99,5 @@ async function canManagerCancelBooking(bookingId: string): Promise<boolean> {
         return check.belongs;
     } catch {
         return false;
-    }
-}
-
-async function notifyBookingChange({
-    bookingId,
-    type,
-    requestUrl,
-    fetchImpl,
-}: {
-    bookingId: string;
-    type: 'hold' | 'confirm' | 'cancel';
-    requestUrl: string;
-    fetchImpl: typeof fetch;
-}) {
-    logDebug('BookingsCancel', 'Triggering notifications', { bookingId, type });
-
-    try {
-        const notifyUrl = new URL('/api/notify', requestUrl);
-        const response = await fetchImpl(notifyUrl, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ type, booking_id: bookingId }),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error');
-            logError('BookingsCancel', 'Notify API error', {
-                status: response.status,
-                errorText,
-            });
-            return;
-        }
-
-        const result = await response.json().catch(() => ({}));
-        logDebug('BookingsCancel', 'Notify API success', result);
-    } catch (error) {
-        logError('BookingsCancel', 'Notify API exception', error);
     }
 }

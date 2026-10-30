@@ -1,0 +1,6 @@
+
+> web@0.1.0 typecheck C:\projects\kezek\apps\web
+> tsc -p tsconfig.json --noEmit
+
+src/app/admin/ratings-debug/RatingsDebugClient.tsx(76,37): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+ ELIFECYCLE  Command failed with exit code 2.

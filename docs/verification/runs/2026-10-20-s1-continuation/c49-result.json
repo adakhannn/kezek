@@ -1,0 +1,19 @@
+{
+  "id": "C49",
+  "plan": "c49-google-abandonment-plan.json",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "cases": [
+    {"key":"chooser-back","status":"passed","observationWindowUtc":["2026-10-21T02:22:39Z","2026-10-21T02:23:23Z"],"actual":"Normal SA logout; safe local sign-in -> actual Google known-account chooser. Ordinary Back without account selection returned useful guest form at /auth/sign-in?redirect=%2Fterms, no Logout/authenticated identity; Google/Yandex/WhatsApp controls available. This is abandonment, not explicit provider refusal."},
+    {"key":"reload-after-back","status":"passed","observationWindowUtc":["2026-10-21T02:23:23Z","2026-10-21T02:26:27Z"],"actual":"Reload actual returned local sign-in document. Useful guest form, Google enabled, guest login link1, Logout buttons0; WhatsApp href /auth/whatsapp?redirect=%2Fterms. No accidental app session or stuck callback. Range is bounding clocks, not reload latency."},
+    {"key":"retry-recovery","status":"blocked","observationWindowUtc":["2026-10-21T02:26:27Z","2026-10-21T02:34:08Z"],"actual":"Retry Google opened chooser. Account not selected until after 02:33:41 clock due elapsed agent/tool/context gap. One known kezekkg selection then expected terms wait returned browser URL-policy blocked error document; tool diagnostic reports bad_oauth_state/OAuth state expired and DNS ERR_NAME_NOT_RESOLVED for kezek.kg. No authenticated local return observed. Do not call this proven application defect or retry/cancel PASS; delayed provider selection is confounding. No retry/bind/goto/HTTP bypass of blocked document; no auth code/token/cookie read."}
+  ],
+  "matrixAfter":{"passed":2,"blocked":1,"failed":0,"notRun":0,"total":3,"remaining":1,"newLivePass":2,"newFixes":0},
+  "unverifiedRequiredModes":["Explicit Google consent/access_denied callback: no decline action in current known-account chooser; no consent revocation or new identity", "Yandex cancellation requires external provider/callback readiness; not manufactured"],
+  "effects":"One normal SA logout. First Google chooser entry abandoned before account selection. Second entry selected known SA once but local authentication/restoration outcome unknown. No new entities/roles/grants/business/booking/OTP/messages/source/tests. Ordinary authsync/telemetry unenumerated, not zeroTOTALwrites.",
+  "budgetDeviation":"Planned8min from02:22:39 to02:30:39 exceeded. Actual restoration selection only after02:33:41; no continuous-work or precise provider/reload latency claim. At blocked result stopped browser input, preserved tabs and requested human ordinary local sign-in restoration; no bypass.",
+  "browserAfter":{"tab":"5","state":"Blocked error document after expired Google state; local session unknown, NOT restoredSA","secondary":"Original user2 untouched this subpackage; sharedcookie, not independent session","handoff":true,"humanRestorationRequested":true},
+  "acceptanceDelta":{"S1":0,"S2":0,"product":0},
+  "counts":{"acceptedS1":16,"remainingS1":9,"passedPrimaryS1Cases":61,"remainingPrimaryS1Cases":18,"acceptedS2":3,"remainingS2":67,"productAccepted":19,"productRemaining":297},
+  "next":"C49 retry-recovery BLOCKED pending human ordinary local signin restoration after URL-policy blocked expired-state page. Do not retry/rebind blocked document or route via other tab/HTTP; do not repeat 32 completed return variants. If no human response, no auth/UI imitation with unit work. Can inspect independent narrowly scoped evidence for next finite caseplan, but no new app/DB actions until safe browser handoff. Deadline21Oct05UTC, draft04:35/pause04:45 unchanged."
+}

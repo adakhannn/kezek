@@ -3,6 +3,7 @@
 import type { ShiftCalculations } from '../hooks/useShiftCalculations';
 import type { Shift, ShiftItem } from '../types';
 import { exportShiftSummaryToCSV } from '../utils/export';
+import { shiftSummaryAmounts } from '../utils/summaryAmounts';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +30,9 @@ export function ShiftSummary({
     shiftDate,
 }: ShiftSummaryProps) {
     const { t, locale } = useLanguage();
+    const revenue = shiftSummaryAmounts(calculations);
+    const moneyLocale = locale === 'en' ? 'en-US' : 'ru-RU';
+    const currency = t('staff.finance.shift.som', 'сом');
 
     const handleExportSummary = () => {
         exportShiftSummaryToCSV(
@@ -61,7 +65,7 @@ export function ShiftSummary({
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        {t('staff.finance.summary.export', 'Экспорт')}
+                        {t('staff.finance.summary.exportLabel', 'Export')}
                     </Button>
                 )}
             </div>
@@ -69,11 +73,16 @@ export function ShiftSummary({
             {/* Общий оборот */}
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                 <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                    {t('staff.finance.summary.totalTurnover', 'Общий оборот')}
+                    {t('finance.totalWithConsumables', 'Services and materials')}
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {calculations.displayTotalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-gray-500">{t('staff.finance.shift.som', 'сом')}</span>
+                    {revenue.total.toLocaleString(moneyLocale)} <span className="text-base text-gray-500">{currency}</span>
                 </div>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    {t('finance.servicesRevenue', 'Services')}: {revenue.services.toLocaleString(moneyLocale)} {currency}
+                    {' · '}
+                    {t('finance.consumablesRevenue', 'Materials')}: {revenue.consumables.toLocaleString(moneyLocale)} {currency}
+                </p>
             </div>
             
             {/* Сотруднику */}

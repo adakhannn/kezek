@@ -1,0 +1,30 @@
+{
+  "id": "C113",
+  "requirementIds": [
+    "M2-02"
+  ],
+  "caseId": "S25-M202-inactive-branch-address-persist-restore",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "timeboxMinutesIncludingRestore": 8,
+  "targetBusiness": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "targetBranch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+  "marker": "C113 TEST ADDRESS 25OCT",
+  "expected": "One complete ordinary inactivebranch persistedaddress edit/recovery: Saveexactsyntheticmarker ->listshowsmarkerforinactivebranch only; reentry addresssame/Savechangesdisabled; oneordinaryreload retainsmarker. Then clearONLYaddress and ordinarySave ->listoriginal2branches/no marker; reentry+ordinaryreload emptyaddress/originalname/coords—/—/blanklinks+contacts/inherittrue/activefalse/nochangesdisabled. SameSA/admin restored. No codefix/newfixcredit, wholeM2-02partial.",
+  "steps": [
+    "Freshclock/samehumanTab2/resume25HumanTab/knownSA protectedadmin. ObservedA ->verifyoriginalbusinessname/slug/2branches0staff/services/bookings/ownerunassigned/limit2/blankaddressphones ->Филиалы listoriginalinactivefa5+activecontrol. Exactinactiveedit only. Captureallbundledbaselinefields: originalname, emptyaddress/fourlinks/fourcontacts, coords—/—, inheritchecked, activeunchecked/Savechangesdisabled, separate7daysclosed. Anythingunknown/masked/nonempty/changed ->stopBLOCKED/noSave. No schedule/map/active/contacts inputs.",
+    "Freshclock fill ONLYAddress synthetic C113 TEST ADDRESS 25OCT; readexactvalue/otherbaselinefields and Saveenabled. Freshclockimmediatelybefore ONEordinaryСохранитьизменения click, noEnter/API/retry. Expectnavigationlistmarkerunderinactivefa5,2/2andactivecontrolunchanged. Error/uncertainty ->no blindrepeat; preserveexactstate, assessoneboundedreadonlyUI outcome.",
+    "Clock reenterexactfa5edit ->persistedmarkerandallotherbaseline/disabledSave. ClockONEordinaryreload ->sameinitialmarker. No authchallenge workaround/relogin. This serverread isnotrawDB/HTTP proof.",
+    "Clock clearONLYaddress; verifyemptyandotherbaselineunchanged. Freshclockimmediatelybefore ONEordinarySave restore. Expectlistoriginal2branches/no marker. Clock reentryexactinactiveedit/oneordinaryreload ->originalvisibleemptyaddress/allbaseline/disabledSave. No thirdSave/cleanup/newfixture. Ifrestorefails retainactualmarkerstate/reportexactblocker/no repeatedwrite.",
+    "ClockAdminroot ->protectedheading/Anonymized/Business3/RU andhumanTabhandoff. Humanstop safelyfinishalreadyplannedrollbackonlyifexactknownstate, explicitlyPAUSEDexisting/readback/newfinal. No source/security/config/build/otherbusiness commands."
+  ],
+  "effects": "Atmost2ordinaryUIbranchupdatecommands on isolatedinactiveA: emptyaddress->syntheticmarker->emptyvisibleaddress. Bundlednormalform may normalizeemptycontact/link/coord/inheritrepresentations; not exactphysicalDBrollback or zeroTOTALwrites. No newentity/role/grant/activation/publication/schedule/mapretry/search/geolocation/contactvalue/booking/package/payment/profile/notification/message/security commands. Ordinary auth/telemetry unenumerated.",
+  "accounting": "Atbest1NEWfunctionalUIPASS25Oct0->1,0newfix/0accepteddelta;21/316295left/logical11unchanged. ExistingC109draft andC106guard not rerunforcredit; no wholeM2-02CRUD/visual/directAPIsecuritycertificate.",
+  "savedBeforeUiUtc": "2026-10-25T09:13:23Z",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+  }
+}

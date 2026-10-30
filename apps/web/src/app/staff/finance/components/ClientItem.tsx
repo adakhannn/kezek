@@ -41,8 +41,8 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
     const canDelete = permissions.canDelete;
     
     // Получаем сообщения о недоступных действиях
-    const editMessage = getPermissionMessage('edit', permissionContext);
-    const deleteMessage = getPermissionMessage('delete', permissionContext);
+    const editMessage = getPermissionMessage('edit', permissionContext, t);
+    const deleteMessage = getPermissionMessage('delete', permissionContext, t);
 
     return (
         <div

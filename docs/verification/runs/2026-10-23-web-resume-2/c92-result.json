@@ -1,0 +1,16 @@
+{
+  "id":"C92",
+  "candidate":"dev-20261023-WEB-b876ccbde0a8",
+  "sourceFingerprint":"b876ccbde0a87655431e32b2f6677b45b40c51376f0d3833f0434dafc4eab29a",
+  "files":1684,
+  "status":"PASS_TECHNICAL_BUILD_LIVE_BUILT_OUTPUT_PENDING",
+  "plans":["c92-build-plan.json","c92-prepared-continuation-plan.json"],
+  "preparation":"Initial copy matched source but sandbox junction EPERM stopped before compiler,0compiler attempts. Original harness not rerun/copy not deleted. Read-only exact source+snapshot/.next/log/process guards, saved continuation plan, scoped tool approval completed only4local dependencyjunctions and first default compiler. No app/OS security configuration or credentials changed. Preparation window first clock02:46:43 to first compiler03:00:26 exceeded12min orientation by about1m44 due scoped EPERM diagnosis/approval; not a continuous-work assertion.",
+  "guard":"16offlinepolicy checks/syntax0; no product or OS-firewall credit. All Node TCP/fetch denied except exact C92PostCSS loopback IPC, main3000 excluded; no Google/GitHub/font permission renewal or downloads.",
+  "build":{"method":"build, not LIVE","raw":"c92-build-raw.txt","startedUtc":"2026-10-23T03:00:26.876Z","finishedUtc":"2026-10-23T03:01:27.983Z","pid":17020,"ownedSession":79068,"exitCode":0,"timedOut":false,"compileSeconds":31.0,"typecheck":"completed","prerenders":"36/36","environment":"Exact1684coldcopy, no.env, stripped systemenv/dummy.invalid Supabase/no real keys/Sentry+telemetry disabled/default Next16.0.11 Turbopack/watchdog240s. No mocks/type-skip/compiler-switch/threshold/config change.","warnings":"Multiple lockfiles/workspace inference, stale baseline-browser-mapping, deprecated middleware convention; preserved, not repaired blindly."},
+  "postflight":"Current primary source fingerprint unchanged, .next/BUILD_ID exists. Only copy source delta apps/web/next-env.d.ts exact compiler-generated .next/dev/types/routes.d.ts -> .next/types/routes.d.ts, primary file untouched. Limited elevated process check PID17020 absent; planned3107listener absent. No rawHTTP/SDK/browser actions in C92.",
+  "effects":"Own local isolated copy/junctions/cache/compiler/log only, no cleanup/mainserverrestart/business/roles/grants/booking/payment/package/profile/notifications/messages commands. Primary app auth/telemetry unenumerated, not zeroTOTALwrites.",
+  "counts":{"compilerAttempts":1,"newUiCases":0,"newLiveFixes":0,"acceptedBefore":20,"acceptedAfter":20,"acceptedDelta":0,"remaining":296,"newWindowUiPassed":14,"newWindowLiveFixes":1},
+  "limits":"Compile PASS does not close A3-01 until actual built-output execution; A3-02fresh-cache4cases stay stale, no visuals/deployedproduction/full lint or whole-source-unit PASS. C91full lint52errors167warnings/source-unit11FAIL2530PASS retained; F013OPEN.",
+  "next":"C93 only separately planned actual exact C92 nextstart privacy document/reload plus observed local font/CSS assets under dummy/offline owned127.0.0.1runtime, no rebuild. Preserve user localhostSA tab and all denied-provider/route constraints; own new tab is independent built-output case, never a blocked-tab repair. Stop ownruntime/tab after bounded test, no cleanup; original cache/visual/role/production blockers remain."
+}

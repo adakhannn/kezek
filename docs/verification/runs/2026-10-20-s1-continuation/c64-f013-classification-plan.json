@@ -1,0 +1,13 @@
+{
+  "id":"C64",
+  "plannedAfterUtc":"2026-10-21T08:57:39Z",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "timeboxMinutes":10,
+  "mode":"READ_ONLY_DIAGNOSTIC_NOT_LIVE_RETEST",
+  "question":"Can existing non-sensitive evidence/source distinguish true absent session from transient getUser/transport error behind C63 staff reload authorization page?",
+  "inputs":["c63-result.json","staffRoleSync.ts resolveStaffContext","supabaseHelpers.ts serverclient factory","staff/layout and error handling","existing targeted tests/history only"],
+  "expectation":"Trace exact error mapping and documented observability. Source alone cannot establish C63 runtimecause. No currentPASS/fix from code/tests/history.",
+  "steps":["Read auth-context/serverclient/error rendering dependencies", "Find relevant existing targeted tests and archived transportclassification evidence without fullserverlogs or privatevalues", "Record established mappings versus unknownruntimefacts", "If no safe concretecause, keepF013open andselectindependentunfinishedrequirement withhistoricaldependencyreview"],
+  "constraints":"No browser navigation/auth/reload, rawHTTP/SDK/DB/token/cookie/storage inspection, fullOAuthserverlogs, faultinjection, product/security/codechange or unchangedtest/buildrun. No productPASScredit.",
+  "exit":"Exactcause supported by existing evidence OR precise runtimeobservabilityblocker. Do not fix from inferred network/session cause."
+}

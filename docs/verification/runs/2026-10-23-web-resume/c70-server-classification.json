@@ -1,0 +1,22 @@
+{
+  "id": "C70-SERVER-CLASSIFICATION",
+  "observedUtc": "2026-10-22T23:14:38Z",
+  "correctionTo": "c70-setup-blocker.json",
+  "userNewEvidence": "Human manually tried localhost and reported unable to open; asked whether project was not started.",
+  "readOnlyElevatedDiagnostics": {
+    "localAddress": "127.0.0.1",
+    "localPort": 3000,
+    "owningProcess": 29340,
+    "parentProcess": 23188,
+    "process": "node.exe / Kezek Next dist/server/lib/start-server.js",
+    "processCreatedLocal": "2026-10-23T05:10:34.724056+06:00",
+    "session": 47667,
+    "localhostAddresses": ["127.0.0.1", "::1"],
+    "conclusion": "Next process and IPv4 loopback listener CONFIRMED. Earlier no-row checks in restricted execution were inconclusive, not proof server was down. HTTP/browser reachability remains unverified. IPv6 mismatch/isolation/firewall or other root cause not proven."
+  },
+  "boundaries": "No HTTP request, UI retry, cookie/token inspection, alternate tab/URL bypass, protection/binding/config/source change, or server restart performed in this classification. New blocked provider remains prohibited. Existing server left running.",
+  "automationReadbackUtc": "2026-10-22T23:16:19Z",
+  "automation": {"id": "kezek", "status": "ACTIVE", "exactUpdatedPromptReadback": true, "sameCadenceAndTarget": true},
+  "productDelta": {"executedCases": 0, "passedCases": 0, "fixes": 0, "acceptedRequirements": 0},
+  "next": "Await healthy allowed human-restored local entry or genuinely new diagnostic condition. No identical restart/auth/browser loop, no repeated repair request. Keep quiet while unchanged."
+}

@@ -1,0 +1,32 @@
+{
+  "recordedUtc": "2026-10-18T12:18:00Z",
+  "liveThroughUtc": "2026-10-18T12:17:52.029Z",
+  "loadingLiveVerified": true,
+  "role": "public guest on isolated test origin; main owner session untouched and restored",
+  "environment": "Current1659-file source0cc81561; isolated next start3103 of webpack/font-fixture functional artifact. Default Turbopack build failed font network; functional build timed out after36 prerenders while tracing. NOT successful full/default build, visual, font, assets, deployed or all-route certification",
+  "actual": "Same privacy-to-home transition under actual10s businesses GET delay shows RUЗагрузка..., ENLoading..., KYЖүктөлүүдө... status. Real permitted DEV GET200 then two correct businesses and no loading status. Guard-disabled independent error-origin first shows loader, then Каталог временно недоступен alert with zero status elements, not perpetual spinner. MainDEV ordinary transition also settles correct2-business home and owner settings load uses localized status then correct form.",
+  "steps": [
+    "Preserve S23 genuine10s before-repro without indicator; user explicitly approves change",
+    "Add only root loading.tsx using existing LanguageProvider/common.loading and nonmodal role=status/live=polite/busy=true",
+    "Genuine pre-module test fails; after7s72PASS/types0/explicit new-file lint0errors0warnings",
+    "Default source build fails11font fetches. Preserve failed attempt. Separate bounded webpack/localfont fixture artifact compiles/types/36pages but times out on traces; not promoted to full build PASS",
+    "Start exact owned functional artifact PID10376, actualReady4s; enable only previously approved public DEV GET flag",
+    "Fresh test origin/privacy -> visible home link -> RU status; actualbusinessGET200 ->2correct businesses/statusremoved",
+    "On privacy use actual menu to select EN, repeat same home link ->Loading... ->2correct businesses/statusremoved",
+    "Repeat KY ->Жүктөлүүдө... ->2correct businesses/statusremoved",
+    "Remove read flag; independent error origin home firststatus then safe catalogue error/statusremoved",
+    "Restore test originRU and mainlocalhost owner/RU/business2/settings; stop exact owned server; verify3103absent andflagabsent"
+  ],
+  "networkEvents": {
+    "RU": {"delay":"2026-10-18T12:13:57.534Z","businesses200":"2026-10-18T12:14:08.550Z","categories200":"2026-10-18T12:14:09.405Z"},
+    "EN": {"delay":"2026-10-18T12:15:06.952Z","businesses200":"2026-10-18T12:15:17.171Z","categories200":"2026-10-18T12:15:19.472Z"},
+    "KY": {"delay":"2026-10-18T12:15:57.496Z","businesses200":"2026-10-18T12:16:07.851Z","categories200":"2026-10-18T12:16:08.782Z"},
+    "error": {"delay":"2026-10-18T12:16:40.677Z","settledErrorObservedBy":"2026-10-18T12:17:00Z","publicReadFlagAbsent":true},
+    "sequenceCaveat": "Guard counter is sampled on completion and duplicates with concurrent prefetch; not unique requestIDs or DB write count"
+  },
+  "sourceDelta": ["apps/web/src/app/loading.tsx","apps/web/src/__tests__/components/RouteLoading.test.tsx"],
+  "sideEffects": "Only normal anonymous public DEV GET and isolated-origin language preferencesRU->EN->KY->RU. No user auth switch, credential changes, business/entity commands/Save/slot/hold/create/cancel/pay/DBcleanup. Ordinary telemetry writes unenumerated; isolated telemetry requests rejected by guard. No zeroTOTALDBwrites claim.",
+  "checks": {"productScopedSuites":7,"productScopedTests":72,"failed":0,"typecheckExit":0,"newFileLintExit":0,"policyMemoryTests":21,"defaultBuildExit":1,"functionalBuildExit":1,"functionalBuildTimedOut":true,"functionalNextStartReady":true},
+  "handoff": {"observedUtc":"2026-10-18T12:17:52.029Z","tab":"IAB2/tab3","page":"localhost:3000/dashboard/settings","role":"owner","business":"c28c8109","language":"RU","markHandoff":true,"isolated3103Stopped":true,"permissionMarkerPresent":false},
+  "limits": ["No screenshot/device/screen-reader PASS", "No original SSR response workaround", "Build and fresh-assets gates reopened on current source; previousR2 successes remain historical", "Small loading fix does not alter database, auth, booking semantics, settled data, default compiler or real font configuration"]
+}

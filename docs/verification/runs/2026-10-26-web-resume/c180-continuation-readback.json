@@ -1,0 +1,37 @@
+{
+  "id": "C180_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-25T23:45:40Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "d8e13389bd30444050c4e12bea5c07c4232294d784fef44dc69ce49d22db7344",
+    "latestPromptCheckpoint": "C180"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 25,
+    "observedAfterClockUtc": "2026-10-25T23:42:37Z"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "c179JournalImmutable": true,
+  "pendingFixtureEffects": false,
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 21,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "newUiFromC180": 0,
+  "newFixFromC180": 0,
+  "newAcceptedFromC180": 0,
+  "releaseDecision": "NOT_READY",
+  "next": "C181 bounded readonly timezone contract/history/receiver review only; no setting/date/schedule/clock/booking/entity/source/UI action from review.",
+  "effects": "Only read-only classification and verification/continuation records. No browser, auth, map/provider/permission/networkfault, product source/test/build/server/DB/entity commands. Main server and user tab preserved without fresh UI health claim. C179 known effects remain restored; ordinary background auth/telemetry unenumerated."
+}

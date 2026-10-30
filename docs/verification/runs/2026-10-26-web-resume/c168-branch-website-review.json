@@ -1,0 +1,39 @@
+{
+  "id": "C168",
+  "completedBeforeUtc": "2026-10-25T22:41:59Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "branch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+    "branchName": "S1 TEST INACTIVE BRANCH",
+    "active": false,
+    "control": "057447c8-b200-4403-b056-49e3c250840f",
+    "staffServicesBookings": 0
+  },
+  "history": "Bounded current M2-02/I1-02 case inventory and C105-C113 branch evidence reviewed. Name rejection, address draft and address persistence are already certified; none of those prove website HTTP rejection/HTTPS persistence/clear recovery. No new credit from their baseline/reload controls. No global absence claim.",
+  "source": "BranchForm website type=url accepts syntactically validHTTP but ordinary submit sends bundled fields to local branch update. validatePublicContacts rejects non-HTTPS before branches.update; HTTPS is normalized by URL.toString. Backend uses ordinary session/superadmin checks, update scoped both branch and business. No website fetch, SMS, email or webhook call in this path. Inheritance/activation/schedule/coords remain original.",
+  "authority": "The human authorized ongoing DEV WEB testing; a bounded reversible edit/restore of this existing isolated inactive test branch is within that scope. This does not create a fixture/entity or grant access, and does not invoke deletion, payment, message, notification or location permission. No authority inferred from code. Only proceed with fresh exact blank unmasked bundled baseline/no staff/services/bookings. Unknown/masked/unexpected values ->BLOCKED/noSubmit. No private contact input.",
+  "recovery": "At most one rejected HTTP save attempt, one HTTPS save and one clear restore save. Original visible blank website and all fields restored. Physical null/empty representations and ordinary telemetry/auth writes unenumerated, never zeroTOTALwrites. If rejection unexpectedly persists HTTP, stop positive variant and only restore exact known website by one planned clear save; preserveFAIL.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+  },
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c112-address-persistence-review.json",
+      "sha256": "d5cec96b6a57a39300a5089ec7ec8cc65a4bbfaecba8b2e9b4433b62421e210c"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c113-result.json",
+      "sha256": "69018d75c67bb18d3b7260aad835213be5377fe430086d44be570c6db5970cbf"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "sha256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca"
+    }
+  ],
+  "credit": "0UI/0fix/0accepted"
+}

@@ -3,6 +3,8 @@
 import { clsx } from 'clsx';
 import { ReactNode, useEffect, useId, useRef } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type DialogProps = {
     open: boolean;
     onClose: () => void;
@@ -32,6 +34,7 @@ export function Dialog({
     dismissible = true,
     className,
 }: DialogProps) {
+    const { t } = useLanguage();
     const dialogRef = useRef<HTMLDivElement | null>(null);
     const previouslyFocusedRef = useRef<HTMLElement | null>(null);
     const titleId = useId();
@@ -139,7 +142,7 @@ export function Dialog({
                             type="button"
                             onClick={onClose}
                             className="motion-interactive rounded-[var(--radius-sm)] p-1 text-[var(--text-muted)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
-                            aria-label="Close dialog"
+                            aria-label={t('common.closeDialog', 'Закрыть окно')}
                         >
                             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />

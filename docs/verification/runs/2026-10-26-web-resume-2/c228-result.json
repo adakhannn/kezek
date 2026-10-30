@@ -1,0 +1,28 @@
+{
+  "id": "C228",
+  "status": "PASS_ONE_DEEP_UNASSIGNED_SERVICE_PRUNING_NEXT_GUARD_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c228-unassigned-service-plan.json",
+  "caseId": "S26-D2-deep-unassigned-service-cleared-guard",
+  "observationWindowUtc": [
+    "2026-10-26T12:08:26Z",
+    "2026-10-26T12:11:11Z"
+  ],
+  "negativeSettledBeforeClockUtc": "2026-10-26T12:09:27Z",
+  "actual": "Positive single documententry Step4/branchfe1/staff1bfd/day26Oct/service5157 after hydration: known60min100–300som checkbox checked/Выбрано1/summarycorrect/Nextenabled; documented isEnabled true. ONE negative documententry differs ONLYservice99c03a5d (existingactive1min0–300 but unassignedstaff): aftersettlement samebranch/staff/day and known60mineligibleoption remain, checkboxunchecked/Услуга Не выбран/no totals; service99 absent/removedfromsettledURL. Nextdisabled/documented isEnabledfalse. No phantom1min0–300summary or autochosen5157. No checkbox/Next/Step5/slot activation.",
+  "toolObservation": "Positive hydration initially no staff; waited roleloadinghidden then servicecheckboxrole locator no_matches deadline. ONEfreshAX showed settled correct positive service/summary. Negative roleloadinghidden yieldedsettledno-servicequery. No duplicate goto/requery; timing not product bug.",
+  "effects": "Three ordinary same-tab document entries (positive calibration/negative/base recovery), local wizard URL/selection only. No authchange/assignment/serviceedit/Save/entity/slot/ChooseTime/hold/confirm/booking/cancel/payment/SQL/API/SDK/storage/secret/source/test/build/server commands. Ordinaryread/auth/analytics/telemetryunenumerated.",
+  "restoration": "Base bookingURL ->Step1/bothbranchcheckboxes0/branch-service-staffNotselected/Nextdisabled; ordinarybrand->root then observedAdminmenu/Adminpanel ->protectedadmin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1;markHandoff. No pending effects.",
+  "limits": "One unavailable service deep-link selection-pruning+summary+disabledNext guard, not inactive-service/configuration/serverRLS/slot/booking/fullD2/security/visualproof. Positivecontrol/recovery0extraNEWcredit; G090/C196originals unchanged.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 17,
+    "windowUiAfter": 18,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

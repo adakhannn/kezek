@@ -55,6 +55,7 @@ export function DashboardHomeClient(props: DashboardHomeClientProps) {
                     title={t('dashboard.onboarding.title', 'Давай доведём кабинет до рабочего состояния.')}
                     items={viewModel.onboardingItems}
                     summaryLabel={t('dashboard.onboarding.summary', 'Стартовая готовность')}
+                    remainingLabel={t('dashboard.onboarding.remaining', 'Осталось: {count}')}
                 />
             ) : null}
 

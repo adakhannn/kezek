@@ -1,0 +1,128 @@
+{
+  "id": "C253",
+  "status": "SAME_LIVE_PLAN_AFTER_F022_MINIMAL_COPY_FIX",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "caseId": "S28-I203-service-localized-name-length-rejection-discard",
+  "requirementIds": [
+    "I2-03",
+    "P1-02"
+  ],
+  "variants": [
+    "service-name:ru:one-character",
+    "service-name:ru:101-characters",
+    "service-name:ky:one-character",
+    "service-name:ky:101-characters",
+    "service-name:en:one-character",
+    "service-name:en:101-characters"
+  ],
+  "variantArguments": [
+    {
+      "id": "service-name:ru:one-character",
+      "field": "ru",
+      "value": "Я",
+      "length": 1,
+      "bound": "short",
+      "expectedMessage": "Field+summaryexplainatleast2characters"
+    },
+    {
+      "id": "service-name:ru:101-characters",
+      "field": "ru",
+      "value": "C251_ЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯ",
+      "length": 101,
+      "bound": "long",
+      "expectedMessage": "Field+summarymustexplainmaximum100characters/orvalidrange2..100; sayingONLYatleast2 ismisleading for101characters and isUIfeedbackFAIL evenifsubmissionrejected."
+    },
+    {
+      "id": "service-name:ky:one-character",
+      "field": "ky",
+      "value": "Ө",
+      "length": 1,
+      "bound": "short",
+      "expectedMessage": "Field+summaryexplainatleast2characters"
+    },
+    {
+      "id": "service-name:ky:101-characters",
+      "field": "ky",
+      "value": "C251_ӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨ",
+      "length": 101,
+      "bound": "long",
+      "expectedMessage": "Field+summarymustexplainmaximum100characters/orvalidrange2..100; sayingONLYatleast2 ismisleading for101characters and isUIfeedbackFAIL evenifsubmissionrejected."
+    },
+    {
+      "id": "service-name:en:one-character",
+      "field": "en",
+      "value": "Q",
+      "length": 1,
+      "bound": "short",
+      "expectedMessage": "Field+summaryexplainatleast2characters"
+    },
+    {
+      "id": "service-name:en:101-characters",
+      "field": "en",
+      "value": "C251_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "length": 101,
+      "bound": "long",
+      "expectedMessage": "Field+summarymustexplainmaximum100characters/orvalidrange2..100; sayingONLYatleast2 ismisleading for101characters and isUIfeedbackFAIL evenifsubmissionrejected."
+    }
+  ],
+  "timeboxMinutesIncludingRestore": 15,
+  "stopNewVariantsAfterMinute": 10,
+  "knownTarget": {
+    "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+    "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+    "originalNames": {
+      "ru": "LIVE TEST Service 31 Рус",
+      "ky": "LIVE TEST Service 31 Кыргыз",
+      "en": "LIVE TEST Service 31 Еng"
+    },
+    "duration": 1,
+    "priceFrom": 0,
+    "priceTo": 300,
+    "branch1": true,
+    "branch2": false,
+    "active": true,
+    "staff": false
+  },
+  "role": "Knownownerosorovadahan04/currentBusiness2/RU",
+  "historyReview": {
+    "primary": [
+      {
+        "path": "docs/verification/runs/2026-10-26-web-resume-2/c217-result.json",
+        "sha256": "20eeec90dd72ced81d2feb26481d2d76ff19697ade1f7348e1816a34410e9eca"
+      },
+      {
+        "path": "docs/verification/runs/2026-10-28-web-resume/c248-result.json",
+        "sha256": "01bb035ee0ce5e064003acef256a83cecfd512ed06b56dc484c7c0986bf5bc1c"
+      }
+    ],
+    "scope": "C217blankRU/duration0/negativeprice/rangeDONE; C248positivefractionDONE. Neither testsnonempty1charor101charname. Targetedstage/result/review search found no shortlocalizedservice-nameprimary. No blank/price/duration/branchvalidationsreplayed."
+  },
+  "independentContract": "SharedvalidateName explicittrimmedlength2..100; optionalKY/EN blankallowed but nonempty has samebounds. ServiceFormFORMnoValidate, localnameinputs preservevalues; validationreturnsbeforefetch. Namesmustreject1and101 withcorrectreadablelengthreason. Sourcecurrentlyusesminimum2copy foranyinvalidname; this isSOURCE-onlyrisk, not productbug/fixcredit until actual101 UI observed.",
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "ea08d8678e4574ed7f947241eb8993bb97fd23521f298f2bbbb5263708196353",
+    "apps/web/src/lib/serviceUpdateHttpService.ts": "593f4840a1ab042ca8c5b4d492f2b910aa8a46d5fbda954e104da92ba359c175",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28",
+    "apps/web/src/app/dashboard/services/[id]/page.tsx": "8ece808ba3e5509051baa9eb6ebb325af88cf780f6709c965797cdd3fc4eff75",
+    "apps/web/src/app/dashboard/services/[id]/EditServicePageClient.tsx": "2b31863251c1cbe415cb17a9ed2f8d5366a03e8a291b26e9b84910a41575b657",
+    "apps/web/src/lib/validation.ts": "1fbd74cb490998dc7d887a82d53e19f57c3447cef539ee3cc9662334428f9d54",
+    "packages/shared-client/src/validation.ts": "69190403d42d96f5c946d0341364385e4cc92400d0f51304a65084897c432298",
+    "apps/web/src/app/_components/i18n/dictionaries/services.ru.ts": "c76e0ff556b63a7ea1f74f7cf2bdcf951c83661ee5772148d3d8d3f0d1d98748",
+    "apps/web/src/app/_components/i18n/dictionaries/services.en.ts": "2386c94ea1763318b8b30ce5a6b2f3c66887c9da259ddf6deb84d976543ab868",
+    "apps/web/src/app/_components/i18n/dictionaries/services.ky.ts": "389dead11c3016bff2d49e2e8063977e23cb458f3be29488ba6f9139ab175454"
+  },
+  "expected": "All6namefields1/101 eachmustshowВведите от2до100символов +Проверьте выделенные поля/sameeditor/exactAXpublicdraft; ONEinvalidSavepervariant; discard/reentryaftereach. Originalall3names/1min/list0–300/branch1only/active/staffunchecked afterONEfinalreload. KnownSAadminrestore/handoff. OnecompoundPASSONLYall6; controlssupportedunitnotseparateNEWUI.",
+  "steps": [
+    "Clock/freshSAadmin ->ordinaryknownownerGoogle/currentBusiness2Continueonly ->Services/exact99. Requireallknownbaseline, positivecatalogue/identity orBLOCKEDbeforeinput. No newfixture/association/businessswitch.",
+    "Clockforvariant: ordinaryfillONEdeclaredfield/value+Tab; exactAXecho/knownlengthmustbeobservable beforeONEinvalidSave. Allotherfieldsunchanged. Ifinputmasked/commituncertain stop/discard/no rawDOMvalue/event workaround.",
+    "ONEordinarySave/noEnter; captureexactfield+summarymessage/sameeditor. TooltimeoutONEfreshAX/no repeatSave. For101 ifonlymin2message, recordrealUIfeedbackFAIL; stopremainingvariants anddiscard/reenteroriginal. Do notpatchfromsource-onlyexpectation.",
+    "Ifallpasscontinueexactfinitesixarguments, discard/reenteraftereach. No furtherlengthcombinations/locales/max100validSave. Recoverypriority/nonewvariantafterminute12.",
+    "FinalONEreloadbaseline/currentownerlogout/GoogleknownSA/protectedadminRU/Anonymized/Business3/handoff. IfrealUIFAIL, preservethisevidenceandclassifysafeobservablecause, thenMINIMALfix+targetedregressions/SAME-LIVE allsix undernewfiniteplan. Anyproductsourcechange =>newcandidate andexistingA3-01buildstale untilproperofflinebuild+actualexecution, notfreshbuildfromunchangedcode."
+  ],
+  "effects": "Localinvalidpublicname drafts andatmostsixordinaryinvalidSavevalidationattempts, discard/reentry/ONEreload, knownauthrestore. NEVERvalidSave/Create/namepersist/groupmerge/branch-stafflink/booking/slot/hold/financial/review/message/API/SDK/SQL/storage/source/test/build/server action in case.",
+  "limits": "No duplicate-name mutation fromC249; no fullI2/P1/financial/security/visualcertificate. Ifguardunexpectedlyacceptsnavigate, stoprecordFAIL/readbaselineonly/noblindvalidrewrite/groupcleanup. Anyfuturefixrequiresactualrepro, alloriginalFAIL/UTC retained.",
+  "parentBeforePlan": "docs/verification/runs/2026-10-28-web-resume/c251-service-name-length-plan.json",
+  "beforeFail": "docs/verification/runs/2026-10-28-web-resume/c251-continuation-before-fail.json",
+  "setupAbortAtMinute": 7,
+  "reason": "ReplayingRUshortnow justified bychangedfeedbackdependency afteractualF022repro; notdate/countreplay."
+}

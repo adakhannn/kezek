@@ -1,0 +1,13 @@
+{
+  "id": "C205_EFFECTS_PRE_RETEST",
+  "recordedAfterClockUtc": "2026-10-26T09:54:00Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "immutableAppendOnly": true,
+  "baselineReference": "c203-effects-01-baseline.json",
+  "beforeRecovery": "c203-effects-02-before-failure-recovered.json",
+  "freshBaseline": "Sameown125detail/originalNameАдаханОсоров/SaveDisabled/Нетизменений/SuperAdmin1/Active; freshAXnochangeafterawaitfixHMR. Maskedcontactsuntouched.",
+  "pending": true,
+  "phase": "PREPARED_BEFORE_RETEST_SAVE",
+  "testName": "C203 OWN NAME TEST",
+  "recovery": "OnlyNameoriginalАдаханОсоровwithoneordinarySave; requireownreentry/reloadbaselinebeforependingfalse. No contacts/security/role/Magiclink controls."
+}

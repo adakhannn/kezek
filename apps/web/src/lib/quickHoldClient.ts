@@ -25,12 +25,14 @@ type QuickHoldResponseBody =
 export class QuickHoldClientError extends Error {
     status: number;
     details?: unknown;
+    code?: string;
 
-    constructor(message: string, options?: { status?: number; details?: unknown }) {
+    constructor(message: string, options?: { status?: number; details?: unknown; code?: string }) {
         super(message);
         this.name = 'QuickHoldClientError';
         this.status = options?.status ?? 500;
         this.details = options?.details;
+        this.code = options?.code;
     }
 }
 
@@ -84,6 +86,7 @@ export async function createQuickHoldBooking(
 
         throw new QuickHoldClientError(message, {
             status: response.status,
+            code: body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : undefined,
             details:
                 body && typeof body === 'object' && 'details' in body ? body.details : undefined,
         });

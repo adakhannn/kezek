@@ -1,0 +1,50 @@
+{
+  "id": "C160",
+  "caseId": "S26-C405-client-banner-profile-navigation",
+  "status": "PASS_SCOPED_LIVE_NAVIGATION",
+  "plan": "c159-c160-telegram-banner-plan.json",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "observationWindowUtc": [
+    "2026-10-25T21:40:38Z",
+    "2026-10-25T21:44:20Z"
+  ],
+  "steps": [
+    {
+      "clockUtc": "2026-10-25T21:40:38Z",
+      "action": "Fresh actualSAadmin/RU thenordinarylogout/localSign-in inexistinguserTab2",
+      "actual": "Protectedadmin/Anonymized/Business3 baseline, logoutrootguest, observedGooglebutton. No userchooser1interaction/newtabs."
+    },
+    {
+      "clockUtc": "2026-10-25T21:41:04Z",
+      "action": "OrdinaryGooglechooserONLYknownlow.fade.osh immediately",
+      "actual": "Normalcallback/localroot; awaited actualcabinetloadinggone. Settled Клиент/LIVE TESTCLIENT12OCT, visible Не пропускайте изменения записи banner/ПодключитьTelegram/Later. Setup0newlogin/selectorcredit."
+    },
+    {
+      "clockUtc": "2026-10-25T21:41:41Z",
+      "action": "Click ONLY actual reminderbanner ПодключитьTelegram once",
+      "actual": "Actual /cabinet/profile#telegram-connection, ownLIVE TESTCLIENT12OCT readyprofile/Telegramconnectioncontainer, Googleconnected, Telegramunlinked; Save/Resetdisabled. No profile input/notificationcheckbox/providerwidget/Laterclick. No linkconfirmationdialog or botattempt flow activated."
+    },
+    {
+      "action": "Retain observed provider boundary",
+      "actual": "Telegramembeddedframe says Bot domain invalid. Sign-inpage already explicitlystateslocalhostunsupported. This is notsuccessfulTelegramlogin/link or a newproductbug; no tunnel/BotFather/domain/security workaround."
+    },
+    {
+      "clockUtc": "2026-10-25T21:41:58Z",
+      "action": "Ordinarylogout forSArestore",
+      "actual": "Rootguest/localSign-in viaactualcontrols."
+    },
+    {
+      "clockUtc": "2026-10-25T21:42:13Z",
+      "action": "OrdinaryGoogleknownkezekkg restore",
+      "actual": "Normalcallback automaticallylanded /admin. MistakenrootURLwaittimedout; nextactualAX /admin/Admin-panel/Anonymized/RU/Logout/protectedheading/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1 before21:42:45UTC. No repeatlogin/reload; markHandoff."
+    }
+  ],
+  "actual": "A settled named pureclient with visibleTelegramreminder used its bannerCTA to reach own readyprofile at exactTelegramanchor. No link/account/profile command was activated; originalSAadmin restored. One bannernavigation case only, not actualTelegramcapability.",
+  "effects": "One banner navigation plus ordinaryknownGoogleauthtransitions fornewscenario/setup0credit; ordinaryauth/telemetryunenumerated. No profile/provider/account-role/entity/booking/payment/notification command, snoozewrite, fixture or networkpermission renewal.",
+  "newUiPass": 1,
+  "newVerifiedFix": 0,
+  "newAccepted": 0,
+  "limits": "One bannerCTA functionalcase only; not actualTelegramlogin/link/permission/reminderexpiry/notificationdelivery, visual/scroll/focus/SR or fullC4-05 acceptance.",
+  "next": "C158S2frontierreview67remaining/3accepted70total complete0credit; do not repeat unchanged audit. C160pureclient visibleTelegramreminder->ownprofile#telegram-connection1NEWscopedUI PASS; profileSave/Resetdisabled/noinput/providerwidgetaction. Localwidget Botdomaininvalid retained as provider/local-domain blocker, not newproductbug/fix; no tunnel/domain/security work. KnownSA restoredordinaryGoogle/currentuserTab2/admin/RU/Anonymized/Business3 before21:42:45UTC; chooser1untouched/no newtab.26Oct12NEWUI/3fix/logical15/21of316295left/S117primary63/S23/S41 unchanged/NOT_READY. NextC161 boundedREADONLY B4-01 publicmap entry history/dependency review: exact original direct-entry AND publicnavigation primaryproofs/UTC/sourcehashes/currentroutewiring. Decide whether complete narrow historicalmatrix is reusable with unchanged functionaldeps; no blanketpromotion, no rerun justdate/fonts/currentheartbeat. If missingmethod/hash/dependencyrelation retainexactblocker and nextindependentpriority. No locationgrant/revoke/providerconfig/storage/tunnel/newfixture/HTTP/auth/scenario fromreview. No unchanged C160banner/login/profile/selector/receipt/draft/build/F013/cache/visual retries."
+}

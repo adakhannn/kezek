@@ -1,0 +1,17 @@
+{
+  "id":"C12",
+  "stage":"S2.1",
+  "requirementId":"M1-01",
+  "caseId":"S21-M101-superadmin-root",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "reason":"Positive caller control after C11 four non-admin classes denied; next priority in S2.1, human authorized continuation until19:00",
+  "steps":["Record existing staff then ordinary logout","Select ONLY known Google superadmin kezekkg@gmail.com; no account/credentials/grant changes","After completed login verify actual admin identity/global role in visible header, not chooser alone","Open /admin directly as full document entry; if already target after redirect use reload","Inspect actual administrator navigation/home content then reload and inspect again","Follow ordinary Бизнесы navigation as read-only child positive control; no mutation"],
+  "expected":"Correct known superadmin can reach actual admin shell/home and business-list navigation rather than denial, generic error or login loop. Current three retained businesses, fixtureB deletion stays absent; this list is supporting control, not full M1-03 navigation acceptance.",
+  "variants":["known superadmin login + direct /admin + reload + read-only child control"],
+  "scope":"DEV functional access only. Not deployed production/ServerComponent gate, first-paint/no-flash/API/RPC/RLS/CSRF/IDOR or every admin page.",
+  "forbidden":"No denied metrics endpoint or related workaround; no navigation to metrics-dependent monitoring/debug pages, directHTTP/CDP/SDK, extraction of cookies/tokens/authcodes, business/grants/revoke/delete/save commands or new entities.",
+  "stop":"Auth password/CAPTCHA/device requires human; unexpected identity or data writes stop. Control failure bounded diagnosis<=10min, no rebind/newtab/repeatedunchangedcapture. No screenshot attempted because existing capture block remains; actual AX/DOM only.",
+  "budgetMinutes":15,
+  "handoff":"Retain usertab5 at read-only /admin/businesses as superadmin; original usertab2 untouched. Ordinary auth/telemetry writes unenumerated; no zeroTOTALDBwrites claim.",
+  "deadlineUtc":"2026-10-20T13:00:00Z"
+}

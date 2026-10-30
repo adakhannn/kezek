@@ -1,0 +1,93 @@
+{
+  "assets": [
+    {
+      "contentType": "font/woff2",
+      "id": "0f99b47d882b0bb3",
+      "kind": "font",
+      "name": "797e433ab948586e-s.p.29207c2f.woff2",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/0f99b47d882b0bb3.woff2",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    },
+    {
+      "contentType": "font/woff2",
+      "id": "df361fb703652d2d",
+      "kind": "font",
+      "name": "caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/df361fb703652d2d.woff2",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2"
+    },
+    {
+      "contentType": "image/webp",
+      "id": "00dcbccdb07d66b5",
+      "kind": "image",
+      "name": "image",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/00dcbccdb07d66b5",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/image?url=%2Flogo.png&w=256&q=75"
+    },
+    {
+      "contentType": "text/css",
+      "id": "b1d5bd9b2d0fdb36",
+      "kind": "stylesheet",
+      "name": "7af0e173cf372ed8.css",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/b1d5bd9b2d0fdb36.css",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/chunks/7af0e173cf372ed8.css"
+    },
+    {
+      "contentType": "text/css",
+      "id": "4f6c3ffccb6e7848",
+      "kind": "stylesheet",
+      "name": "e2f6a80195c5d503.css",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/4f6c3ffccb6e7848.css",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/chunks/e2f6a80195c5d503.css"
+    },
+    {
+      "contentType": "image/webp",
+      "id": "38ff2ecc878f123e",
+      "kind": "image",
+      "name": "image",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/38ff2ecc878f123e",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/image?url=%2Flogo.png&w=640&q=75"
+    },
+    {
+      "contentType": "font/woff2",
+      "id": "046cc401f0d0a55a",
+      "kind": "font",
+      "name": "8a480f0b521d4e75-s.ea323500.woff2",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/046cc401f0d0a55a.woff2",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/media/8a480f0b521d4e75-s.ea323500.woff2"
+    },
+    {
+      "contentType": "image/png",
+      "id": "0cab9bd821410e61",
+      "kind": "image",
+      "name": "icon-192.png",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/0cab9bd821410e61.png",
+      "url": "http://s1assets-20261018-110530.localhost:3103/icon-192.png"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "a09583e84c0a4489",
+      "kind": "image",
+      "name": "svg-1",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/a09583e84c0a4489.svg",
+      "url": "inline-svg:a09583e84c0a4489"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "5efb2b5f70b136db",
+      "kind": "image",
+      "name": "svg-2",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/5efb2b5f70b136db.svg",
+      "url": "inline-svg:5efb2b5f70b136db"
+    },
+    {
+      "contentType": "image/svg+xml",
+      "id": "99e4ea76c3c3fecf",
+      "kind": "image",
+      "name": "svg-3",
+      "path": "C:\\Users\\AdaX\\AppData\\Local\\Temp/browser-use/assets/93c39ad2-12c6-4370-aa4d-20d8fe4e2d43/99e4ea76c3c3fecf.svg",
+      "url": "inline-svg:99e4ea76c3c3fecf"
+    }
+  ],
+  "failures": []
+}

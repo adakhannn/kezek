@@ -250,7 +250,7 @@ export default function DatePickerPopover({
                 aria-haspopup="dialog"
                 aria-label={
                     selected
-                        ? t('datePicker.selected', `Выбранная дата: ${displayValue}`)
+                        ? t('datePicker.selected', 'Выбранная дата: {value}').replace('{value}', displayValue)
                         : t('datePicker.open', 'Выбрать дату')
                 }
                 className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[40px] sm:py-2 sm:text-sm touch-manipulation"

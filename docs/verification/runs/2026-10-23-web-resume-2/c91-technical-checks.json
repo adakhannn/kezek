@@ -1,0 +1,64 @@
+{
+  "id": "C91-technical",
+  "scope": "Technical only, not LIVE acceptance. Full lint/source-unit suite running separately, no claim yet.",
+  "beforeInitial": {
+    "chunk_id": "32a225",
+    "wall_time_seconds": 30.0024672,
+    "session_id": 79717,
+    "original_token_count": 42,
+    "output": "[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n",
+    "termination": {
+      "chunk_id": "5858b2",
+      "wall_time_seconds": 0.0113547,
+      "exit_code": 1,
+      "original_token_count": 0,
+      "output": ""
+    },
+    "classification": "Own bounded process interrupted after about2min without result; no test result/causality inferred; elevated read-only confirms own PID19336 gone."
+  },
+  "beforeRoots": {
+    "chunk_id": "37277d",
+    "wall_time_seconds": 0,
+    "exit_code": 1,
+    "original_token_count": 611,
+    "output": "[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\nFAIL src/__tests__/components/BusinessCardEditNameError.test.tsx\n  ● Test suite failed to run\n\n    jest: failed to cache transform results in: C:/Users/AdaX/AppData/Local/Packages/sandbox.{3f18c401-acba-4718-8774-c6217e787584}/AC/Temp/jest/jest-transform-cache-d1377abe6a175bced42f5c73d0cab0e4-79ef2876fae7ca75eedb2aa53dc48338/21/jestsetup_2179aa0b462a181e227e05dc9191e13d.map\n    Failure message: EPERM: operation not permitted, rename 'C:\\Users\\AdaX\\AppData\\Local\\Packages\\sandbox.{3f18c401-acba-4718-8774-c6217e787584}\\AC\\Temp\\jest\\jest-transform-cache-d1377abe6a175bced42f5c73d0cab0e4-79ef2876fae7ca75eedb2aa53dc48338\\21\\jestsetup_2179aa0b462a181e227e05dc9191e13d.map.1665888664' -> 'C:\\Users\\AdaX\\AppData\\Local\\Packages\\sandbox.{3f18c401-acba-4718-8774-c6217e787584}\\AC\\Temp\\jest\\jest-transform-cache-d1377abe6a175bced42f5c73d0cab0e4-79ef2876fae7ca75eedb2aa53dc48338\\21\\jestsetup_2179aa0b462a181e227e05dc9191e13d.map'\n\n      at writeFileSync (../../node_modules/.pnpm/_2d1b0e884843999425ba47332df8271e/node_modules/write-file-atomic/lib/index.js:252:8)\n      at writeCacheFile (../../node_modules/.pnpm/_7a81027496e6a2d0d5f5a3bad5409b04/node_modules/@jest/transform/build/ScriptTransformer.js:908:33)\n      at ScriptTransformer._buildTransformResult (../../node_modules/.pnpm/_7a81027496e6a2d0d5f5a3bad5409b04/node_modules/@jest/transform/build/ScriptTransformer.js:510:7)\n      at ScriptTransformer.transformSource (../../node_modules/.pnpm/_7a81027496e6a2d0d5f5a3bad5409b04/node_modules/@jest/transform/build/ScriptTransformer.js:554:17)\n      at ScriptTransformer._transformAndBuildScript (../../node_modules/.pnpm/_7a81027496e6a2d0d5f5a3bad5409b04/node_modules/@jest/transform/build/ScriptTransformer.js:674:40)\n      at ScriptTransformer.transform (../../node_modules/.pnpm/_7a81027496e6a2d0d5f5a3bad5409b04/node_modules/@jest/transform/build/ScriptTransformer.js:726:19)\n\nTest Suites: 1 failed, 1 total\nTests:       0 total\nSnapshots:   0 total\nTime:        16.712 s\nRan all test suites within paths \"src/__tests__/components/BusinessCardEditNameError.test.tsx\".\n(node:30368) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+  },
+  "beforeWorkspaceCache": {
+    "chunk_id": "a6ac61",
+    "wall_time_seconds": 15.2477536,
+    "exit_code": 1,
+    "original_token_count": 7125,
+    "output": "Warning: truncated output (original token count: 7125)\nTotal output lines: 454\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:29956) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\nFAIL src/__tests__/components/BusinessCardEditNameError.test.tsx (8.819 s)\n  business name rejection ru\n    × localizes server rejection without changing payload; Cancel restores original (1179 ms)\n    √ preserves unrelated server feedback and retained editor (68 ms)\n    √ preserves successful save refresh and editor closure (56 ms)\n  business name rejection ky\n    × localizes server rejection without changing payload; Cancel restores original (1059 ms)\n    √ preserves unrelated server feedback and retained editor (46 ms)\n    √ preserves successful save refresh and editor closure (42 ms)\n  business name rejection en\n    × localizes server rejection without changing payload; Cancel restores original (1058 ms)\n    √ preserves unrelated server feedback and retained editor (53 ms)\n    √ preserves successful save refresh and editor closure (58 ms)\n\n  ● business name rejection ru › localizes server rejection without changing payload; Cancel restores original\n\n    Unable to find an element with the text: Введите название бизнеса. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.\n\n    Ignored nodes: comments, script, style\n    \u001b[36m<body>\u001b[39m\n      \u001b[36m<div>\u001b[39m\n        \u001b[36m<div\u001b[39m\n          \u001b[33mclass\u001b[39m=\u001b[32m\"motion-interactive rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] shadow-[var(--shadow-md)] p-6 space-y-5\"\u001b[39m\n        \u001b[36m>\u001b[39m\n          \u001b[36m<div\u001b[39m\n            \u001b[33mclass\u001b[39m=\u001b[32m\"flex flex-…6125 tokens truncated…tion-interactive w-full min-h-[44px] rounded-[var(--radius-md)] border px-4 py-3 text-[16px] sm:min-h-[40px] sm:text-sm border-[var(--border-default)] bg-[var(--surface-card)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] hover:border-[var(--border-strong)] focus:border-[var(--focus-ring)] focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 read-only:cursor-not-allowed read-only:bg-[color:color-mix(in_srgb,var(--surface-card)_78%,var(--surface-canvas))]\"\u001b[39m\n                  \u001b[33mid\u001b[39m=\u001b[32m\"«r1b»\"\u001b[39m\n                  \u001b[33mmaxlength\u001b[39m=\u001b[32m\"80\"\u001b[39m\n                  \u001b[33mrequired\u001b[39m=\u001b[32m\"\"\u001b[39m\n                  \u001b[33mvalue\u001b[39m=\u001b[32m\"business\"\u001b[39m\n                \u001b[36m/>\u001b[39m\n                \u001b[36m<p...\n\n      35 |         fireEvent.change(screen.getByRole('textbox', { name: dictionary['admin.businessDetail.name'], exact: true }), { target: { value: '' } });\n      36 |         fireEvent.click(screen.getByRole('button', { name: dictionary['admin.businessDetail.save'], exact: true }));\n    > 37 |         expect(await screen.findByText(message, { exact: true })).toBeTruthy();\n         |                             ^\n      38 |         expect(global.fetch).toHaveBeenCalledTimes(1);\n      39 |         const [url, request] = jest.mocked(global.fetch).mock.calls[0];\n      40 |         expect(url).toBe('/admin/api/businesses/test-id/update');\n\n      at waitForWrapper (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/wait-for.js:163:27)\n      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33\n      at Object.findByText (src/__tests__/components/BusinessCardEditNameError.test.tsx:37:29)\n\nTest Suites: 1 failed, 1 total\nTests:       3 failed, 6 passed, 9 total\nSnapshots:   0 total\nTime:        10.346 s\nRan all test suites within paths \"src/__tests__/components/BusinessCardEditNameError.test.tsx\".\n"
+  },
+  "after": {
+    "chunk_id": "1d44e0",
+    "wall_time_seconds": 13.3733458,
+    "exit_code": 0,
+    "original_token_count": 361,
+    "output": "[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:3884) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\nPASS src/__tests__/components/BusinessCardEditNameError.test.tsx\n  business name rejection ru\n    √ localizes server rejection without changing payload; Cancel restores original (319 ms)\n    √ preserves unrelated server feedback and retained editor (67 ms)\n    √ preserves successful save refresh and editor closure (77 ms)\n  business name rejection ky\n    √ localizes server rejection without changing payload; Cancel restores original (168 ms)\n    √ preserves unrelated server feedback and retained editor (87 ms)\n    √ preserves successful save refresh and editor closure (71 ms)\n  business name rejection en\n    √ localizes server rejection without changing payload; Cancel restores original (141 ms)\n    √ preserves unrelated server feedback and retained editor (68 ms)\n    √ preserves successful save refresh and editor closure (56 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       9 passed, 9 total\nSnapshots:   0 total\nTime:        4.789 s, estimated 9 s\nRan all test suites within paths \"src/__tests__/components/BusinessCardEditNameError.test.tsx\".\n"
+  },
+  "typecheck": {
+    "chunk_id": "d34e89",
+    "wall_time_seconds": 25.0804759,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "scopedLint": {
+    "chunk_id": "cc10f4",
+    "wall_time_seconds": 30.006879,
+    "session_id": 65796,
+    "original_token_count": 74,
+    "output": "(node:20196) ESLintIgnoreWarning: The \".eslintignore\" file is no longer supported. Switch to using the \"ignores\" property in \"eslint.config.js\": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files\n(Use `node --trace-warnings ...` to show where the warning was created)\n",
+    "final": {
+      "chunk_id": "09561b",
+      "wall_time_seconds": 0.0000086,
+      "exit_code": 0,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  "runnerChanges": "Same targeted test. --roots src bounded discovery, then explicit EPERM temp transform-cache failure led to cacheDirectory inside workspace, not config/threshold/dependency/security change. No package install; warnings retained. Initial raw before test output is truncated, summary3FAIL6PASS/9 preserved, not full raw proof.",
+  "live": "UNEXECUTED after source change; F014 not verified.",
+  "fullE2E": "External Playwright forbidden by task. Targeted CUA3locale exact plan required; not full E2E PASS."
+}

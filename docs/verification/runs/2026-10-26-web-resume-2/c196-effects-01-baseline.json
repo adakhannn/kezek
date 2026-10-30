@@ -1,0 +1,38 @@
+{
+  "id": "C196_EFFECTS_BASELINE",
+  "recordedUtc": "2026-10-26T08:54:03Z",
+  "stage": "PREPARED_NO_ASSOCIATION_WRITE_YET",
+  "immutableAppendOnly": true,
+  "authority": "Directhuman fulltaskaccess/no further routinequestions; current C196/C195 finiteplan.",
+  "actualRole": "Knownowner osorovadahan04 viaordinaryGooglelogin; actualheader Кабинетбизнеса/Аккаунтвладельца; business2currentbeforechooser andcontinuedcurrentbusiness, no newrole/grant.",
+  "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+  "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+  "staffId": "1bfd0e3b-6fce-42a1-b439-6313af27112f",
+  "targetServiceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+  "targetServiceName": "LIVE TEST Service 31 Рус",
+  "targetDurationMin": 1,
+  "targetPriceRange": [
+    0,
+    300
+  ],
+  "targetOriginalAssociationPresent": false,
+  "identityProof": "Ordinaryowner/dashboard/services list targetuniquename/active1min0-300som/Branch1 editlink /dashboard/services/99c03a5d-1919-44cf-8de7-f86bc209e561. Freshstaffeditor samebranch shows target1mincheckboxunchecked; existing60mincheckboxchecked, count1of2.",
+  "baseline": {
+    "target1minChecked": false,
+    "existing60minChecked": true,
+    "selectedCount": 1,
+    "availableCount": 2,
+    "staffActive": true,
+    "staffBranch": "Филиал 1 Бизнеса 2",
+    "staffRevenuePercent": [
+      60,
+      40
+    ],
+    "hourlyRateBlank": true
+  },
+  "plannedEffect": "Toggle ONLYtarget1min checkbox once. Component immediately inserts one service_staff pair; no globalSave. It is a reversible servicecapability association, not accountsecurityaccess.",
+  "recovery": "Read exactstaffeditor fresh; if ownnewtargetlinkconfirmedchecked, uncheckONLYthis1minrelation once. Requireuncheckedafterordinaryreload and existing60minstillchecked/count1of2. Do not touch existing60minassignment, staffprofile, roles, services, books/shifts/packages/payments. Neverblindduplicate aftertimeout.",
+  "pending": true,
+  "writesExecutedSoFar": 0,
+  "broaderWrites": "Ordinaryauth/session/business-contextselection/telemetry occurred, unenumerated; zero TOTAL writes notclaimed."
+}

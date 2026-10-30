@@ -1,0 +1,15 @@
+{
+  "id": "typecheck",
+  "executable": "C:\\Program Files\\nodejs\\node.exe",
+  "argv": [
+    "node_modules/typescript/bin/tsc",
+    "-p",
+    "tsconfig.json",
+    "--noEmit"
+  ],
+  "cwd": "C:/projects/kezek/apps/web",
+  "config": "apps/web/tsconfig.json",
+  "startedUtc": "2026-10-28T13:53:04.901Z",
+  "pid": 22132,
+  "watchdogMs": 180000
+}

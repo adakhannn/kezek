@@ -1,0 +1,29 @@
+{
+  "id": "C150",
+  "caseId": "S26-M501-create-local-draft-cancel",
+  "status": "PASS_SCOPED_LIVE",
+  "plan": "c149-c150-create-draft-plan.json",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "observationWindowUtc": [
+    "2026-10-25T20:43:19Z",
+    "2026-10-25T20:45:53Z"
+  ],
+  "baseline": {
+    "categoryIds": [
+      "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+      "85157ef2-b18e-4be3-88f7-04c41fd02e5b",
+      "0851842b-feca-4cda-97a5-37b7ffe971ae"
+    ],
+    "total": 3,
+    "active": 2,
+    "usage": 3
+  },
+  "actual": "Observed Categories ->NewCategory link shows blank Name/Address and availabilitychecked. After actual20:43:38 clock NameC150 Өнөр Үңкүр ->c150-onor-ungkur; Address spaced C150 Draft URL+Tab ->c150-draft-url. NameC150 NEXT DRAFT retainsmanualaddress. ClearAddress+Tab ->c150-next-draft/automatichelper. ONLYCancel ->all3originalIDs/name/slug/activity/usages and summaries3/2/3. Actual20:44:08 clock reenter observed NewCategory ->blankName/Address/availabilitychecked; Cancelcleanup returns original list. After20:44:22 clock observedadminreturn ->protectedheading/Admin-panel/Anonymized/RU/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1. Human tab2markedhandoff.",
+  "effects": "Local unsaved text drafts and navigation only; no Create/Save/Enter/Delete/activation/propagation/categoryentity/fixture/role/auth/booking/payment command. Ordinary auth/telemetry unenumerated.",
+  "newUiPass": 1,
+  "newVerifiedFix": 0,
+  "newAccepted": 0,
+  "limits": "Not successful create/delete/dependency/duplicateerror/RPC/visual/cache/security/wholeM5 acceptance. Full categoryCRUD remainspartial.",
+  "next": "C150create-mode unsaved localdraft auto/manual/clear/Cancel/reentry one NEWUI PASS, no entity/source/build change.26Oct7NEWUI/3verifiedfixesF017F018F019/logical15;21of316295left/S117primary63/S23/S41/NOT_READY. Current c1111686C147/C148build/output done,2refreshEVENTS/1distinctexistingcase; no repeat. NextC151 bounded readonly M5-04 remaining create-form negativevalidation history/effects review BEFORE any finiteUIplan. No Create/Save/Enter/entity command inferred; only if source can establish invalid-local-input prevents app mutation and variant genuinelyuncovered, else exactblocker+independent remainingpriority. No newfixture/user/role/job/booking/payment/security actions, no unitimitation; all prior constraints retained."
+}

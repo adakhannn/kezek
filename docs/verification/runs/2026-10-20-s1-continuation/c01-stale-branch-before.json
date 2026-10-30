@@ -1,0 +1,15 @@
+{
+  "observedAfterClockUtc":"2026-10-20T08:21:50Z",
+  "candidate":"dev-20261018-S1-0cc81561faf0",
+  "case":"B2-03-S13-2",
+  "finding":"S1-F003 proposed: URL step bypasses missing/invalid branch prerequisite",
+  "actualRole":"Existing superadmin; settled header Админ",
+  "oracle":"Admin Abranches2/2: inactivefa5f1017-d987-40c8-90ca-b042898c694f Выключен; active057447c8-b200-4403-b056-49e3c250840f Активен",
+  "steps":["Open Apublic page:1 activebranch namedS1 TEST ACTIVE CONTROL, inactiveabsent", "Click visible Выбрать филиал: Шаг1из5, Филиалы:1, onlyactivecontrolbutton, Nextdisabled, summaryФилиал:Не выбран", "Navigate /b/s1-test-20261020-branch-availability/booking?branch=fa5f1017-d987-40c8-90ca-b042898c694f&step=2", "Wait normal session settled headerАдмин", "Observe Шаг2из5, День, Можно переходить к следующему шагу, Nextenabled despite summaryФилиал:Не выбран", "Click Next once: Шаг3из5/Сотрудник, summaryФилиал:Не выбран, На эту дату нет доступных специалистов, Nextdisabled"],
+  "expected":"Invalid inactive branch parameter rejected; later URL step cannot skip required branch selection. Return/keep step1 with enabled active-control option and Nextdisabled until selection.",
+  "actual":"Inactive entity absent and ID notselected, but step2 accepted and step3 reachable with no branch. Form falsely marks priorbranchstep Готово and suggests changing date for no specialists.",
+  "impact":"Misleading/dead-end booking navigation from stale branch link. Not evidence of inactive booking creation, authorization bypass or data leak.",
+  "boundary":"No date/slot selection, hold, create, cancel, pay, settings/entity writes; only readonly URL and Next flow. Ordinary telemetry unenumerated. Fixture staff/services absent, so not a successful-booking control.",
+  "harnessNotice":"One initial wait used shortened heading Выберите филиал and found0matches; subsequent actualDOM used Шаг1.Выберитефилиал. This selector miss is not an application failure.",
+  "screenshot":"Earlier automated capture recovered but raw5850x5503 vs CSS1806x1651/DPR0.45; no device/visual PASS inferred"
+}

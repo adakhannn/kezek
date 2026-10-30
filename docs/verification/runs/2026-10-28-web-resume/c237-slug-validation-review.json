@@ -1,0 +1,33 @@
+{
+  "id": "C237",
+  "status": "READONLY_SLUG_REVIEW_COMPLETE_COLLISION_ALREADY_CERTIFIED_NEW_LOCAL_NORMALIZATION_SCOPE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "history": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c94-duplicate-slug-review.json",
+      "sha256": "04969fd6cf645aa1f1ea2b2fcb88625d8f2ad9adb26f892aee690110da7c2b2d",
+      "scope": "Oldreviewsets exactduplicateSave/recoveryeffects, no invalidrawslugnormalization execution."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c95-result.json",
+      "sha256": "d1a21e17832519f5d3365da5b355dc76a6b2817f42b7e47f6a8cab14494e2361",
+      "originalUtc": "2026-10-23T05:10:07Z",
+      "caseId": "S23-M201-duplicate-slug-reject-cancel",
+      "currentDependenciesMatch": true,
+      "scope": "Alreadycurrentcertified collisiontest(occupiedbusiness2slug). Associateonlyifneeded/no newUI/reusecredit, no resubmit."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+      "sha256": "09eac23bdae938278aff4aa5668cc321c669727dfdc8a3c789e94bb2cc9474f7",
+      "scope": "Nameautoslug/manualASCIIoverride/Cancel, notrawinvalidURLpunctuation/Unicode/fallback normalization."
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "de60a1526da8b49cde543fac99d3e9e76fded3a0e4b813b151bb0b9b9e95c257",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+  },
+  "contract": "BusinessCardEdit localonChange; slugblur andSave bothcanonicalize throughslugifyBusinessName, optionalblankURL fallsbacktoname; unsupportedpunctuation/whitespace-only mapsbusiness fallback. Therefore rawinvalidslugserverreject not reachablethroughnormalUI; do NOT submit punctuation expectingrejection, because validnormalizedslugcouldpersist. Normalizer lowercase/Cyrillicmapping/nonalnumhyphens/trim/max80/fallbackbusiness. Duplicate route guard is beforeupdate andalreadyC95. Localnormalization/discard is safeindependentuncoveredconsumer case. No directAPI/stateforcing to testunreachableinvalidpayload.",
+  "decision": "C238ONEcompound localrawURLcanonicalization+discard: markedRU/KYinput ->expectedlowerASCIIhyphens; allpunctuation ->business; emptyURL ->unchangedoriginalname-derivedslug; NEVER Save/Enter. WholeI6-02remains partial/matrixnotcomplete, existingC95notrerun.",
+  "effects": "Localread/hash only; no productUIfield/Save/persistence/SQL/API/SDK/source/test/buildactions;0credit."
+}

@@ -1,0 +1,44 @@
+{
+  "id": "C232",
+  "status": "READONLY_REVIEW_COMPLETE_SAFE_LOCAL_INVALID_INTERVAL_RECOVERY_UNCOVERED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "startedAfterUtc": "2026-10-26T12:29:47Z",
+  "requirementIds": [
+    "I1-01",
+    "M2-02"
+  ],
+  "history": [
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G130-branch-weekdays-after.json",
+      "sha256": "d0a09214fc043837f16672f57478021246b5b3a420709c6367e7ec46f49f5124",
+      "originalWindowUtc": [
+        "2026-10-17T03:19:47Z",
+        "2026-10-17T03:24:02Z"
+      ],
+      "scope": "Ownerbranch1existingMonday09–18weekdaylocale proof/state unchanged/no scheduleSave, not invalidrangevalidation."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G019-schedule-weekdays-before.json",
+      "sha256": "938ace7d0b006bb6ca5106f5c5e27db58f1688bd37c8f197151126f904678cd5",
+      "originalUtc": "2026-10-14T03:20:33Z",
+      "scope": "Staff schedule draft weekdaylocale, different form/surface."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c173-result.json",
+      "sha256": "96f10a916da11d3cdc08e218a304e209db0ec6a83f0647c3bd76d2ab1670b4a3",
+      "scope": "InactiveAsevencloseddays baseline during contactguard proof, not scheduleinvaliddraft."
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/components/admin/branches/BranchScheduleEditor.tsx": "a6541b7e84a02e288346e0516766a32b453b94ef0e925d23a8474bc8467ee88b",
+    "apps/web/src/components/scheduling/TimeRangesEditor.tsx": "c2ea1eaa151ed0454106a05fbfc400ff5034448a9fd8d93c40d4a79f1e594f8f",
+    "apps/web/src/lib/scheduling/model.ts": "84f5704b73c1f3477a39fd6a5a307d59a591e6f5c8a9d87bf76ef33c800a0d97",
+    "apps/web/src/app/_components/i18n/dictionaries/scheduling.ts": "78a4de69eb7c4a5ecb374fde7404a7f9deafacfd7038afc054cc3f682a4eaa21",
+    "apps/web/src/app/_components/i18n/dictionaries/branches.ru.ts": "7c99034a1e9adfce714cc1165e4096d4f444a31e0a4a8af5bcd7f75fca996a9f"
+  },
+  "source": "AdminBranchEdit loads exactbranchhours; separate BranchScheduleEditor form. TimeRangesEditor Add appends local empty start/end only; change/remove local setDays, clears feedback; noautoPOST. ScheduleSave validates eachday before setSaving/fetch; missing/timeformat/start>=end/overlap/breakoutside =>catch scheduling.invalid return BEFOREPOST. Valid save wouldPOSTwholeweek, forbiddeninC233. No required attribute blocks nativeform before reviewedJS guard; actualUI maydiffer ->recordonly.",
+  "independentOracle": "New workinterval must have both times with start strictlyearlierthanend. Localemptyrange and 09:00–08:00 mustnot be accepted. Valid09:00–18:00 localcontrol thenremoveonlynewrow, sevenclosed originaldays/reentry+reloadbaseline. No persisted opening of inactivefixture or changes to workingstaff.",
+  "decision": "One compound localinvalidschedule-validation+discard recovery case genuinely distinct from locale/contact/actualpublishedschedule tests. FiniteC233 plan beforeUI. No quota/schedule/entity write authority inferred by review.",
+  "effects": "Localread/hash only, no UI/auth/Save/toggle/timeinput/DB/API/SDK/SQL/source/test/build/server commands;0executioncredit."
+}

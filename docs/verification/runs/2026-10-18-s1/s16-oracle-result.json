@@ -1,0 +1,134 @@
+{
+  "id": "S1.3-independent-business-projection",
+  "observedThroughUtc": "2026-10-18T11:03:38Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "plan": "s16-oracle-plan.json",
+  "method": "Structured transcription of fresh actual CUA DOM observations across owner read surfaces and public business pages; not DB SELECT/unit/screenshot",
+  "business1": {
+    "idPrefix": "35e5b36c",
+    "slug": "testovyy-biznes-1",
+    "identity": "Тестовый бизнес 1",
+    "owner": {
+      "branches": "0 of1; Пока нет филиалов",
+      "services": "Нет услуг",
+      "staff": "Active0/total0; Пока нет сотрудников",
+      "contacts": {
+        "phone": "+996500574029",
+        "whatsapp": "",
+        "email": "",
+        "website": ""
+      },
+      "promotions": "No existing branches; no branch promotion subjects. Public query contract scopes promotions to active branch IDs."
+    },
+    "public": {
+      "branches": 0,
+      "services": 0,
+      "staff": 0,
+      "promotions": 0,
+      "phoneHref": "tel:+996500574029",
+      "otherBusinessContactLinksAbsent": true,
+      "availability": "Нет активных филиалов; no booking CTA, catalog recovery remains"
+    }
+  },
+  "business2": {
+    "idPrefix": "c28c8109",
+    "slug": "testovyy-biznes-2",
+    "identity": "Тестовый бизнес 2",
+    "branches": [
+      {
+        "id": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+        "name": "Филиал 1 Бизнеса 2",
+        "address": "город республиканского подчинения Ош, Толойконский айылный аймак, село Дыйкан-Кыштак, переулок Мамырова, 11",
+        "active": true,
+        "inheritBusinessContacts": true,
+        "phone": "+996500574029",
+        "otherContactsEmpty": true,
+        "promotions": "LIVE TEST NIGHT09OCT PROMOTION EDITED / Неактивна / Каждая4-я услуга бесплатно / Used0"
+      },
+      {
+        "id": "23a0ce35-5556-4e98-84ee-89ae067908fa",
+        "name": "Филиал 2 Бизнеса 2",
+        "address": "Ош, улица Алымбека датки, 212",
+        "active": true,
+        "inheritBusinessContacts": true,
+        "phone": "+996500574029",
+        "otherContactsEmpty": true,
+        "promotions": "Акций пока нет"
+      }
+    ],
+    "services": [
+      {
+        "id": "51571512-66c0-47db-91ab-cb89d61aa97b",
+        "branch": 1,
+        "name": "LIVE TEST Service 31 Еng LIVE TEST Service 31 Еng LIVE TEST Service 31 Еng",
+        "duration": 60,
+        "price": [
+          100,
+          300
+        ],
+        "active": true
+      },
+      {
+        "id": "08112346-5bda-42d2-b28c-f20cbd7edf27",
+        "branch": 2,
+        "name": "LIVE TEST Service 31 Еng LIVE TEST Service 31 Еng LIVE TEST Service 31 Еng",
+        "duration": 60,
+        "price": [
+          100,
+          300
+        ],
+        "active": true
+      },
+      {
+        "id": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+        "branch": 1,
+        "name": "LIVE TEST Service 31 Рус",
+        "duration": 1,
+        "price": [
+          0,
+          300
+        ],
+        "active": true
+      },
+      {
+        "id": "e21565db-8dc1-41df-b6e3-0dc9d16b040a",
+        "branch": 2,
+        "name": "LIVE TEST SERVICE 14OCT G005 EDITED",
+        "duration": 45,
+        "price": [
+          150,
+          275
+        ],
+        "active": false
+      }
+    ],
+    "staff": {
+      "id": "1bfd0e3b-6fce-42a1-b439-6313af27112f",
+      "name": "Адахан Осоров",
+      "branch": 1,
+      "active": true,
+      "activeCount": 1,
+      "totalCount": 1
+    },
+    "businessContacts": {
+      "phone": "+996500574029",
+      "whatsapp": "",
+      "email": "",
+      "website": ""
+    },
+    "public": "Fresh direct public page matches identity, exact two branch names/addresses, inherited phone links, three active branch-specific service rows/durations/prices and one active staff name/branch. Active promotions0; inactive promotion and hidden service absent. Booking CTAs point to same business; positive first-step/two-branch behavior already freshly verified S14, not repeated.",
+    "directoryLinks": "Branch1 also renders Instagram/2GIS/Google/Yandex href https://kezek.kg/. Observed hrefs only, no outbound click, external destination correctness not asserted; domain/integration checks remain deferred."
+  },
+  "comparison": "Owner service table groups identical name across branches: two active name groups correspond to three public branch rows, not mismatch. Per-branch filters verified individual IDs;1min0–300 row matches owner source, not assumed historical31min.",
+  "effects": {
+    "businessPreference": "Two normal persisted current-business selections2->1 at11:00:24UTC,1->2 at11:02:34UTC; final owner/RU/currentbusiness2 restored. No business entity mutation.",
+    "forms": "Read existing edit forms only. No inputs edited, Save/activate/deactivate/delete/add/submit or booking/slot/hold/create/pay/cancel invoked.",
+    "totalDBWrites": "Unknown ordinary preference/auth/telemetry persistence; never zero-total claim.",
+    "processes": "Primary3000 untouched; isolated3103 already stopped"
+  },
+  "limits": [
+    "Finite B2-02 existing two-business core data projection only; not all role/RLS, mutation lifecycle, locales/devices/visual or external directory destinations",
+    "No new inactive/deleted fixture created; B2-03 inactive branch/business and B2-04 deleted slug remain open",
+    "Existing S14 booking behavior evidence reused on unchanged current candidate"
+  ]
+}

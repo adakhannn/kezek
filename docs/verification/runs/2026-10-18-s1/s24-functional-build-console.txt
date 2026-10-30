@@ -1,0 +1,47 @@
+Captured partial chunks only: initial metadata12:09:51.473/PID27368/same1659-files0cc81561, Next16webpack/fontfixture. Some intermediate warning chunks were observed but not stored. Final exit1/timedOuttrue retained; not successful build.
+
+[@sentry/nextjs - Client] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+[@sentry/nextjs - Client] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+
+ ⚠ Compiled with warnings in 2.0min
+
+../../../../../node_modules/.pnpm/_012d613488bd2ba4e5ec34a1c2b90413/node_modules/swagger-jsdoc/src/utils.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+../../../../../node_modules/.pnpm/_012d613488bd2ba4e5ec34a1c2b90413/node_modules/swagger-jsdoc/src/utils.js
+../../../../../node_modules/.pnpm/_012d613488bd2ba4e5ec34a1c2b90413/node_modules/swagger-jsdoc/src/specification.js
+../../../../../node_modules/.pnpm/_012d613488bd2ba4e5ec34a1c2b90413/node_modules/swagger-jsdoc/src/lib.js
+../../../../../node_modules/.pnpm/_012d613488bd2ba4e5ec34a1c2b90413/node_modules/swagger-jsdoc/index.js
+./src/lib/swagger.ts
+./src/app/api/swagger.json/route.ts
+
+../../../../../node_modules/.pnpm/_0e72f788072870741e1a6d93ec3d0b2e/node_modules/next/dist/esm/shared/lib/constants.js
+A Node.js API is used (process.features at line: 75) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+../../../../../node_modules/.pnpm/_0e72f788072870741e1a6d93ec3d0b2e/node_modules/next/dist/esm/shared/lib/constants.js
+../../../../../node_modules/.pnpm/_0e72f788072870741e1a6d93ec3d0b2e/node_modules/next/dist/esm/api/constants.js
+../../../../../node_modules/.pnpm/_d7961bb9f300963e5be4a728e7aaaaad/node_modules/@sentry/nextjs/build/esm/common/utils/isBuild.js
+../../../../../node_modules/.pnpm/_d7961bb9f300963e5be4a728e7aaaaad/node_modules/@sentry/nextjs/build/esm/edge/index.js
+
+   Running TypeScript ...
+   Collecting page data using 7 workers ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 7 workers (0/36) ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 7 workers (9/36) 
+   Generating static pages using 7 workers (18/36) 
+   Generating static pages using 7 workers (27/36) 
+ ✓ Generating static pages using 7 workers (36/36) in 6.7s
+   Finalizing page optimization ...
+   Collecting build traces ...
+{"event":"finished","startedUtc":"2026-10-18T12:09:51.473Z","finishedUtc":"2026-10-18T12:12:51.915Z","exitCode":1,"signal":null,"timedOut":true,"pid":27368,"dest":"C:\\projects\\kezek\\test-results\\closure-s1-20261018-f002-functional\\build"}

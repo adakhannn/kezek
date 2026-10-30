@@ -1,0 +1,28 @@
+{"event":"spawned","pid":23604,"utc":"2026-10-20T09:07:45.690Z","origin":"http://s1assets-20261020-ed0bdd.localhost:3104","automaticStopSeconds":300,"network":"all outbound Node TCP/fetch denied; dummy invalid backend; no real credentials"}
+   ▲ Next.js 16.0.11
+   - Local:         http://127.0.0.1:3104
+   - Network:       http://127.0.0.1:3104
+
+ ✓ Starting...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\projects\kezek\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\projects\kezek\test-results\closure-s1-20261020-f003-fontread-v2\build\apps\web\pnpm-lock.yaml
+   * C:\projects\kezek\test-results\closure-s1-20261020-f003-fontread-v2\build\pnpm-lock.yaml
+
+ ✓ Ready in 3.6s
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+{"event":"stopped","pid":23604,"utc":"2026-10-20T09:09:36.272Z","exitCode":4294967295,"signal":null}

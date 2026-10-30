@@ -1,0 +1,712 @@
+Initialbaseline notice. Original captured output is TRUNCATED by tool max7000; do not claim fullraw. Summary2PASS1FAIL retained.
+Warning: truncated output (original token count: 7549)
+Total output lines: 755
+
+(node:28584) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/RatingsDebugActionsRender.test.tsx (8.343 s)
+  × all three entity types render existing row actions without executing commands (465 ms)
+  √ empty lists have no action buttons (36 ms)
+  √ read errors do not display stale row controls (47 ms)
+
+  ● all three entity types render existing row actions without executing commands
+
+    TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Пересчитать"
+
+    Here are the accessible roles:
+
+      main:
+
+      Name "":
+      [36m<main[39m
+        [33mclass[39m=[32m"max-w-5xl mx-auto space-y-6"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      heading:
+
+      Name "Отладка рейтингов":
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-2xl font-bold text-gray-900 dark:text-gray-100"[39m
+      [36m/>[39m
+
+      Name "С рейтингом NULL":
+      [36m<h2[39m
+        [33mclass[39m=[32m"mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"[39m
+      [36m/>[39m
+
+      Name "Без метрик за последние N дней":
+      [36m<h2[39m
+        [33mclass[39m=[32m"mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"[39m
+      [36m/>[39m
+
+      Name "Последние ошибки пересчёта":
+      [36m<h2[39m
+        [33mclass[39m=[32m"mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      paragraph:
+
+      Name "":
+      [36m<p[39m
+        [33mclass[39m=[32m"mt-1 text-sm text-gray-600 dark:text-gray-400"[39m
+      [36m/>[39m
+
+      Name "":
+      [36m<p[39m
+        [33mclass[39m=[32m"mt-2 text-xs text-gray-500 dark:text-gray-400"[39m
+      [36m/>[39m
+
+      Name "":
+      [36m<p[39m
+        [33mclass[39m=[32m"mb-3 text-xs text-gray-500 dark:text-gray-400"[39m
+      [36m/>[39m
+
+      Name "":
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-gray-500 dark:text-gray-400"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      combobox:
+
+      Name "Дней без метрик:":
+      [36m<select[39m
+        [33mclass[39m=[32m"rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"[39m
+        [33mid[39m=[32m"days"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      option:
+
+      Name "1":
+      [36m<option[39m
+        [33mvalue[39m=[32m"1"[39m
+      [36m/>[39m
+
+      Name "3":
+      [36m<option[39m
+        [33mvalue[39m=[32m"3"[39m
+      [36m/>[39m
+
+      Name "7":
+      [36m<option[39m
+        [33mvalue[39m=[32m"7"[39m
+      [36m/>[39m
+
+      Name "14":
+      [36m<option[39m
+        [33mvalue[39m=[32m"14"[39m
+      [36m/>[39m
+
+      Name "30":
+      [36m<option[39m
+        [33mvalue[39m=[32m"30"[39m
+      [36m/>[39m
+
+      Name "90":
+      [36m<option[39m
+        [33mvalue[39m=[32m"90"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      button:
+
+      Name "Обновить":
+      [36m<button[39m
+        [33mclass[39m=[32m"rounded-lg bg-gray-200 px-3 py-1.5 text-sm hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"[39m
+        [33mtype[39m=[32m"button"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      link:
+
+      Name "← Здоровье рейтингов":
+      [36m<a[39m
+        [33mclass[39m=[32m"underline hover:no-underline"[39m
+        [33mhref[39m=[32m"/admin/ratings-status"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      table:
+
+      Name "":
+      [36m<table[39m
+        [33mclass[39m=[32m"min-w-full text-sm"[39m
+      [36m/>[39m
+
+      Name "":
+      [36m<table[39m
+        [33mclass[39m=[32m"min-w-full text-sm"[39m
+      [36m/>[39m
+
+      Name "":
+      [36m<table[39m
+        [33mclass[39m=[32m"min-w-full text-sm"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      rowgroup:
+
+      Name "":
+      [36m<thead />[39m
+
+      Name "":
+      [36m<tbody />[39m
+
+      Name "":
+      [36m<thead />[39m
+
+      Name "":
+      [36m<tbody />[39m
+
+      Name "":
+      [36m<thead />[39m
+
+      Name "":
+      [36m<tbody />[39m
+
+      --------------------------------------------------
+      row:
+
+      Name "ID Имя biz_id branch_id Последний пересчёт Действия":
+      [36m<tr[39m
+        [33mclass[39m=[32m"border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"[39m
+      [36m/>[39m
+
+      Name "staff-1 — biz-1 branch-1 — [object Object]":
+      [36m<tr[39m
+        [33mclass[39m=[32m"border-b border-gray-100 dark:border-gray-800"[39m
+      [36m/>[39m
+
+      Name "ID Имя biz_id Последний пересчёт Действия":
+      [36m<tr[39m
+        [33mclass[39m=[32m"border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"[39m
+      [36m/>[39m
+
+      Name "branch-1 Branch control biz-1 — [object Object]":
+      [36m<tr[39m
+        [33mclass[39m=[32m"border-b border-gray-100 dark:border-gray-800"[39m
+      [36m/>[39m
+
+      Name "ID Имя slug Последний пересчёт Действия":
+      [36m<tr[39m
+        [33mclass[39m=[32m"border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"[39m
+      [36m/>[39m
+
+      Name "biz-1 Business control — — [object Object]":
+      [36m<tr[39m
+        [33mclass[39m=[32m"border-b border-gray-100 dark:border-gray-800"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      columnheader:
+
+      Name "ID":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Имя":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "biz_id":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "branch_id":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Последний пересчёт":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Действия":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "ID":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Имя":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "biz_id":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Последний пересчёт":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Действия":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "ID":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Имя":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "slug":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Последний пересчёт":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      Name "Действия":
+      [36m<th[39m
+        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      cell:
+
+      Name "staff-1":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "—":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "biz-1":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "branch-1":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "—":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "[object Object]":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "branch-1":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "Branch control":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "biz-1":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "—":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "[object Object]":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "biz-1":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "Business control":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "—":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "—":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      Name "[object Object]":
+      [36m<td[39m
+        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<main[39m
+          [33mclass[39m=[32m"max-w-5xl mx-auto space-y-6"[39m
+        [36m>[39m
+          [36m<section[39m
+            [33mclass[39m=[32m"rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-4"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<h1[39m
+                  [33mclass[39m=[32m"text-2xl font-bold text-gray-900 dark:text-gray-100"[39m
+                [36m>[39m
+                  [0mОтладка рейтингов[0m
+                [36m</h1>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"mt-1 text-sm text-gray-600 dark:text-gray-400"[39m
+                [36m>[39m
+                  [0mСущности с NULL рейтингом, без метрик за период, последние ошибки пересчёта.[0m
+                [36m</p>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm text-gray-600 dark:text-gray-400"[39m
+                  [33mfor[39m=[32m"days"[39m
+                [36m>[39m
+                  [0mДней без метрик[0m
+                  [0m:[0m
+                [36m</label>[39m
+                [36m<select[39m
+                  [33mclass[39m=[32m"rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"[39m
+                  [33mid[39m=[32m"days"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"1"[39m
+                  [36m>[39m
+                    [0m1[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"3"[39m
+                  [36m>[39m
+                    [0m3[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"7"[39m
+                  [36m>[39m
+                    [0m7[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"14"[39m
+                  [36m>[39m
+                    [0m14[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"30"[39m
+                  [36m>[39m
+                    [0m30[0m
+                  [36m</option>[39m
+      …549 tokens truncated…0m
+                [36m</div>[39m
+                [36m<table[39m
+                  [33mclass[39m=[32m"min-w-full text-sm"[39m
+                [36m>[39m
+                  [36m<thead>[39m
+                    [36m<tr[39m
+                      [33mclass[39m=[32m"border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"[39m
+                    [36m>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mID[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mИмя[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mbiz_id[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mbranch_id[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mПоследний пересчёт[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mДействия[0m
+                      [36m</th>[39m
+                    [36m</tr>[39m
+                  [36m</thead>[39m
+                  [36m<tbody>[39m
+                    [36m<tr[39m
+                      [33mclass[39m=[32m"border-b border-gray-100 dark:border-gray-800"[39m
+                    [36m>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mstaff-1[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m—[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mbiz-1[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mbranch-1[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m—[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m[object Object][0m
+                      [36m</td>[39m
+                    [36m</tr>[39m
+                  [36m</tbody>[39m
+                [36m</table>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"border-b border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-200"[39m
+                [36m>[39m
+                  [0mФилиалы[0m
+                [36m</div>[39m
+                [36m<table[39m
+                  [33mclass[39m=[32m"min-w-full text-sm"[39m
+                [36m>[39m
+                  [36m<thead>[39m
+                    [36m<tr[39m
+                      [33mclass[39m=[32m"border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"[39m
+                    [36m>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mID[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mИмя[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mbiz_id[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mПоследний пересчёт[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mДействия[0m
+                      [36m</th>[39m
+                    [36m</tr>[39m
+                  [36m</thead>[39m
+                  [36m<tbody>[39m
+                    [36m<tr[39m
+                      [33mclass[39m=[32m"border-b border-gray-100 dark:border-gray-800"[39m
+                    [36m>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mbranch-1[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mBranch control[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mbiz-1[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m—[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m[object Object][0m
+                      [36m</td>[39m
+                    [36m</tr>[39m
+                  [36m</tbody>[39m
+                [36m</table>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"border-b border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-200"[39m
+                [36m>[39m
+                  [0mБизнесы[0m
+                [36m</div>[39m
+                [36m<table[39m
+                  [33mclass[39m=[32m"min-w-full text-sm"[39m
+                [36m>[39m
+                  [36m<thead>[39m
+                    [36m<tr[39m
+                      [33mclass[39m=[32m"border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"[39m
+                    [36m>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mID[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mИмя[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mslug[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mПоследний пересчёт[0m
+                      [36m</th>[39m
+                      [36m<th[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300"[39m
+                      [36m>[39m
+                        [0mДействия[0m
+                      [36m</th>[39m
+                    [36m</tr>[39m
+                  [36m</thead>[39m
+                  [36m<tbody>[39m
+                    [36m<tr[39m
+                      [33mclass[39m=[32m"border-b border-gray-100 dark:border-gray-800"[39m
+                    [36m>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mbiz-1[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0mBusiness control[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m—[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m—[0m
+                      [36m</td>[39m
+                      [36m<td[39m
+                        [33mclass[39m=[32m"px-4 py-2 text-gray-800 dark:text-gray-200"[39m
+                      [36m>[39m
+                        [0m[object Object][0m
+                      [36m</td>[39m
+                    [36m</tr>[39m
+                  [36m</tbody>[39m
+                [36m</table>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</section>[39m
+          [36m<section>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"[39m
+            [36m>[39m
+              [0mБез метрик за последние N дней[0m
+            [36m</h2>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"space-y-4"[39m
+            [36m/>[39m
+          [36m</section>[39m
+          [36m<section>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"[39m
+            [36m>[39m
+              [0mПоследние ошибки пересчёта[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-sm text-gray-500 dark:text-gray-400"[39m
+            [36m>[39m
+              [0mНет записей.[0m
+            [36m</p>[39m
+          [36m</section>[39m
+        [36m</main>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      17 |   render(<RatingsDebugClient />);
+      18 |   await screen.findByText('Business control');
+    > 19 |   expect(screen.getAllByRole('button', { name: 'Пересчитать', exact: true })).toHaveLength(3);
+         |                 ^
+      20 |   expect(screen.queryByText('[object Object]')).toBeNull();
+      21 |   expect(screen.getByText('Branch control')).toBeTruthy(); expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+      22 |   expect(fetchMock.mock.calls).toEqual([['/api/admin/ratings/debug-entities?days=7', { cache: 'no-store' }]]);
+
+      at Object.getElementError (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/config.js:37:19)
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+      at Object.getAllByRole (src/__tests__/components/RatingsDebugActionsRender.test.tsx:19:17)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 2 passed, 3 total
+Snapshots:   0 total
+Time:        9.011 s
+Ran all test suites within paths "src/__tests__/components/RatingsDebugActionsRender.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

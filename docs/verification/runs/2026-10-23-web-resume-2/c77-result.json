@@ -1,0 +1,106 @@
+{
+  "id": "C77",
+  "type": "bounded_readonly_history_dependency_and_effect_review",
+  "plan": "progress.json at C76_COMPLETE_C77_PROFILE_HISTORY_EFFECT_REVIEW_NEXT, saved before this review",
+  "startedAfterUtc": "2026-10-23T00:31:35Z",
+  "reviewClockUtc": "2026-10-23T00:32:38Z",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "requirements": [
+    "E2-01",
+    "E2-03"
+  ],
+  "history": [
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-031-profile-name-search.json",
+      "verdict": "L031 tests search using an already-edited canonical client name, explicitly no profile mutation; not a profile Save/reload execution."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G071-profile-draft-after.json",
+      "originalCompletedUtc": "2026-10-15T09:54:43Z",
+      "verdict": "WB193 actual unsaved name/phone draft survives locale changes; Reset/reload restores stored profile; explicitly no Save. Do not repeat or promote to persistence-after-save."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json",
+      "originalCompletedUtc": "2026-10-17T02:37:01Z",
+      "verdict": "WB202 staff successful initial loading RU/EN/KY; no Save. Error/identity-change boundary remains separate."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G127-owner-profile-loading-regression.json",
+      "originalCompletedUtc": "2026-10-17T03:01:18Z",
+      "verdict": "Owner successful initial loading read-only, no editing/Save/persistence transaction."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c61-result.json",
+      "originalCompletedBeforeUtc": "2026-10-21T08:08:31Z",
+      "verdict": "3 unsaved invalid-phone variants PASS, exact phone equality masked/blocked, server-error blocked. No Save; do not repeat or extract phone."
+    }
+  ],
+  "sourceEffects": {
+    "form": "ProfileForm.handleSubmit serializes full_name, normalized phone, notify_email/whatsapp/telegram and selected notification_emails when loaded; it is not a name-only PATCH. Name onChange and Reset remain local until submit.",
+    "service": "profileUpdateService upserts full_name, phone and notification booleans into profiles; omitted notify_sms defaults true and is included in upsert. It then may call set_my_notification_email_preferences and finally auth.updateUser full_name metadata.",
+    "notificationRpc": "Reviewed migration function updates enabled/updated_at for all own notification-email rows and profiles.notify_email. Reviewed function contains no message send; this does not certify the current deployed DB or absence of downstream trigger effects.",
+    "risk": "Current stored notify_sms is neither loaded nor displayed by this form. Cannot promise original SMS setting preserved or restored by a name Save/revert. Exact contact phone is tool-masked and must not be extracted/retyped.",
+    "classification": "Source-level bundled-write/authority blocker, NOT a new runtime bug or proof that this account currently has notify_sms=false. No speculative fix or UNIT imitation."
+  },
+  "decision": {
+    "saveReload": "BLOCKED_BEFORE_UI",
+    "reason": "A new valid name-save/reload/restore variant is genuinely not established by the reviewed evidence, but normal Save writes profile/contact/notification preferences and Auth metadata together. Current no-notification-change boundary prevents assuming name-only authorization.",
+    "owner": "Human chooses whether to authorize these exact bundled writes for existing pureclient low.fade.osh@gmail.com, with temporary name restoration but no guaranteed restoration of unknown prior SMS setting; otherwise leave Save blocked.",
+    "noRepairAskLoop": true,
+    "notWholeE2Acceptance": true
+  },
+  "effects": "No browser/app/DB action, auth switch, profile Save/Reset/phone input, notification change, OTP, messages, linking/unlinking, product/source/test/build/server changes. Shell evidence/source reads and reporting files only. No zero-total-writes claim about the running app.",
+  "counts": {
+    "newUiCases": 0,
+    "reusedProofCases": 0,
+    "newLiveFixes": 0,
+    "acceptedDelta": 0,
+    "accepted": 21,
+    "remaining": 295,
+    "newWindowPassedCases": 2
+  },
+  "next": "E2 Save remains blocked pending one exact human decision; do not repeat question or infer assent from a heartbeat. Independent next C78: bounded historical/dependency/fixture review E3-01/03 existing package states and cross-surface reads BEFORE any new finite UI plan; no attendance/deduction/purchase/package mutations/new fixtures. Do not repeat already-observed package control for credit. All prior safety constraints retained.",
+  "completedBeforeUtc": "2026-10-23T00:33:53Z",
+  "sourceAndHistoryHashes": [
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-031-profile-name-search.json",
+      "sha256": "9f217c5673e62692caa4cb67f22517f5747ed73f084029d52d66b95e444011bd"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G071-profile-draft-after.json",
+      "sha256": "f2762ba01e5d2898c6d14b0048cbba58b4c6b6f11265de9626851dce2f5c6a44"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json",
+      "sha256": "ba5d86e09aacefb06ef598d88bedf21d56839c063fad29e21a7707d912da3cfa"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G127-owner-profile-loading-regression.json",
+      "sha256": "8a8090c8ca489861146b0263cdae5052e9522e392eebbc0e4ea3a7942ed508cc"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c61-result.json",
+      "sha256": "84873fc9ba7d3fe7994ec4dab7236276030d4a18ee8f55c41212d954574e413c"
+    },
+    {
+      "path": "apps/web/src/app/cabinet/components/ProfileForm.tsx",
+      "sha256": "2f5afa0c883dd72e87b0a367a48fbc10bc127ebb05b56a9cc35508e4c1123fe9"
+    },
+    {
+      "path": "apps/web/src/lib/profileUpdateService.ts",
+      "sha256": "6c84cd2e14dce97b5c13d48e1b66a01dee71339240458a5cc4c7968405550130"
+    },
+    {
+      "path": "apps/web/src/lib/profileUpdateHttpService.ts",
+      "sha256": "5425c061b5ddb0ddb560c7756cdc4044e4fa8c12ce2cfb16c965cf8e0e1390e5"
+    },
+    {
+      "path": "apps/web/src/app/api/profile/update/route.ts",
+      "sha256": "b9f6c674c1e91b38c7437436931dcb30678ae683e060398261aad0f96753ceea"
+    },
+    {
+      "path": "supabase/migrations/20260723090000_user_notification_emails.sql",
+      "sha256": "46936d74f08ac6894933df212bb036d2ef496de4000da393de86ec33c9f2bb8b"
+    }
+  ]
+}

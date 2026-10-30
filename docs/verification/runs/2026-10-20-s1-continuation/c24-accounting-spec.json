@@ -1,0 +1,108 @@
+{
+  "id": "C24",
+  "fromCandidate": "dev-20261020-S1-0800034a3a7e",
+  "resultFile": "c24-result.json",
+  "originalFile": "c24-original-boundaries.json",
+  "newPaths": [
+    "apps/web/src/lib/adminHealthCheckReadService.ts",
+    "apps/web/src/__tests__/components/HealthCheckCallerRead.test.tsx"
+  ],
+  "reviewEvidenceId": "S1-EV-218",
+  "reviewBasis": "Exact1665fileprior reconstructed via3savedoldboundaries and excluding2newfiles. OnlyHealthCheck ownpage/HTTPadapter+newsharedauthorizedread wiring changed. SharedadminAccess/layout/cookiehelpers/puredata/model/otherAPIunchanged; everypasseddependencyhash verified. Originalobservationdates retained; notblanketnewlivecertification. Existingpuredataerrorcountbehavior notfixed/certified.",
+  "caseId": "S21-M103-health-check",
+  "observationUpperUtc": "2026-10-20T22:09:08Z",
+  "dependencies": [
+    "apps/web/src/app/admin/layout.tsx",
+    "apps/web/src/lib/adminAccess.ts",
+    "apps/web/src/app/admin/health-check/page.tsx",
+    "apps/web/src/lib/adminHealthCheckReadService.ts",
+    "apps/web/src/lib/adminHealthCheckHttpService.ts",
+    "apps/web/src/lib/adminHealthCheckService.ts"
+  ],
+  "caseEvidenceIds": [
+    "S1-EV-209",
+    "S1-EV-210",
+    "S1-EV-217"
+  ],
+  "finding": {
+    "id": "S1-F009",
+    "requirementIds": [
+      "M1-03"
+    ],
+    "caseIds": [
+      "S21-M103-health-check"
+    ],
+    "title": "Health Check server self-request loses caller session and reads wrong response shape",
+    "expected": "Same currentglobalSA opens report without internalHTTP/credentialforwarding; deniedcaller cannotreadprivilegeddata; HTTP retains standard envelope",
+    "steps": [
+      "KnownSA actualmenuHealthCheck redirects signin",
+      "Extractcommonrequest-contextread+sharedcurrentglobalrole and SSRdirectcall",
+      "ActualsameSA menu+fullreloadreportPASS"
+    ],
+    "observedUtc": "2026-10-20T13:50:58Z",
+    "evidenceIds": [
+      "S1-EV-210"
+    ],
+    "fixEvidenceIds": [
+      "S1-EV-209",
+      "S1-EV-211",
+      "S1-EV-212",
+      "S1-EV-213",
+      "S1-EV-214",
+      "S1-EV-215",
+      "S1-EV-216",
+      "S1-EV-217"
+    ]
+  },
+  "evidence": [
+    [
+      209,
+      "c24-plan.json"
+    ],
+    [
+      210,
+      "c24-before.json"
+    ],
+    [
+      211,
+      "c24-unit-initial-harness-and-contract-fail.txt"
+    ],
+    [
+      212,
+      "c24-unit-before.txt"
+    ],
+    [
+      213,
+      "c24-unit-after.txt"
+    ],
+    [
+      214,
+      "c24-types-after.txt"
+    ],
+    [
+      215,
+      "c24-lint-after.txt"
+    ],
+    [
+      216,
+      "c24-api-route-after.txt"
+    ],
+    [
+      217,
+      "c24-result.json"
+    ]
+  ],
+  "newFixCount": 5,
+  "verifiedFixIds": [
+    "S1-F003",
+    "S1-F004",
+    "S1-F006",
+    "S1-F008",
+    "S1-F009"
+  ],
+  "label": "HealthCheckcaller+directserverread",
+  "planFile": "c24-plan.json",
+  "page": "/admin/health-check",
+  "browserState": "HealthCheckshift/rating/promo report aftermenu+reload, notmodel/healthcertification",
+  "completion": "C24 HealthCheck actualmenu+fullreloadPASS; sharedreadloader currentcaller/globalrole;15unit+3routePASS/scoped2servicecoverage100/types0/lint0. No writes/jobs/email. Observationtimestampboundary/timegap13:55->22:09 explicitly notcontinuous. Nav14PASS4FAIL1BLOCKED/19; requirementstillnotaccepted."
+}

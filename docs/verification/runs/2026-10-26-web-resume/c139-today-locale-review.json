@@ -1,0 +1,23 @@
+{
+  "id": "C139",
+  "completedBeforeUtc": "2026-10-25T20:22:05Z",
+  "type": "bounded readonly admin Today cancelled locale history/dependency/oracle review",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "history": "Current O3-03 primary cases certify business-name validation RU/KY/EN C91 only, not admin Today statuses. O3-04 has no current concrete cases. Historical reviews273/274 list mixed stages, explicitly not entire route/state matrix. New real26Oct date exposed retained cancelled row; F017 introduced canonical cancelled label and only RU SAME-LIVE was certified. No old general language switch/receipt proof is repeated for credit; original UTC retained.",
+  "independentOracle": "After English or Кыргызча is selected and server admin heading matches that locale, the system-generated cancelled row/status summary must use Cancelled or Жокко чыгарылган respectively and retain count1/Hold0/Confirmed0. This is UI system copy, not authored business/service/client data; those names intentionally remain unchanged. RU restoration is cleanup/control only.",
+  "source": "Admin page has server getT for headings but bookingStatusLabel returns hardcoded Russian statuses. LanguageSwitcher ordinary setLocale then router.refresh updates server; no rawcookie/storage access by agent. Canonical booking dictionaries already state cancelled ENCancelled/KYЖокко чыгарылган; status label meaning therefore independently established. Source predicts possible gap, not runtime FAIL.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/page.tsx": "af975adf54afc9a401c7cbb3ba03982728b6f6d82469c4721709763425b33fae",
+    "apps/web/src/app/_components/i18n/LanguageSwitcher.tsx": "746062470100868f8ef6b5da79689f4e38c39e1396106e7e04c6baed64582162",
+    "apps/web/src/app/_components/i18n/LanguageProvider.tsx": "17b0b88e3cb5da54af4ff787bc51988e3f7f3810a11e33cd3bf07dd91ed6a744",
+    "apps/web/src/app/_components/i18n/server.ts": "ac9bdd164cf83f7fd67ad2bc0e5b084c1dd606828e0f082bc3588c632ff1296b",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.ru.ts": "2d9b180cbc875cdb274631504fb9344b7f47383ae89a10177c2da04bc2e57937",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.ky.ts": "f43de72a0d659e8ff1343bbde0936348223f754ad5a9783e727e90ae7f26f481",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.en.ts": "1ce54f2958cfed6dd55fa98e143a6cca51c02206862d0f020ef096ca00a6ce58",
+    "apps/web/src/app/_components/i18n/dictionaries/booking.ru.ts": "c9906f8c324ef9cd7162ea3ce0138844c39382f6c96d8de7c1d8bab5809bb8e3",
+    "apps/web/src/app/_components/i18n/dictionaries/booking.ky.ts": "261fd0e7b28fe0ce7da013c39891ae28e2d3ab3956b7381416315327e372e285",
+    "apps/web/src/app/_components/i18n/dictionaries/booking.en.ts": "ddb1646682b0bfa81bda3aa61df214506dc1b67d8b34e6159a875a3dabdbbcbb"
+  },
+  "credit": "0UI/fix/accepted",
+  "scope": "Only new current admin Today cancellation-copy variants en/ky; no whole locale/dictionary/layout/overflow/SSRflash/device certification."
+}

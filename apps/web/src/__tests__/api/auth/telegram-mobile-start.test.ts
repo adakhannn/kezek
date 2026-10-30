@@ -8,6 +8,15 @@ import {
 
 setupApiTestMocks();
 
+// Route tests exercise the HTTP envelope/feature gate, not persistent attempts.
+// Keep the database/audit boundary explicit after the async-service extraction.
+jest.mock('@/lib/telegramMobileStartRouteService', () => ({
+    runTelegramMobileStartRoute: jest.fn(async () => ({
+        ok: true,
+        payload: { nonce: 'test-nonce', botDeepLink: 'https://t.me/kezek_auth_bot?start=test', expiresAt: 123456789 },
+    })),
+}));
+
 describe('/api/auth/telegram/mobile/start', () => {
     const previousFlag = process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH;
     const previousRolloutPercent =

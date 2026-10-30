@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor, within } from '@testing-library/react';
 
 import { FinancePage } from '../FinancePage';
 
@@ -249,8 +249,6 @@ describe('FinancePage debounced save', () => {
     });
 
     test('delete still saves immediately', async () => {
-        const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
-
         renderPage();
 
         clickAddClient();
@@ -259,12 +257,12 @@ describe('FinancePage debounced save', () => {
 
         const deleteButton = screen.getByTitle(/удалить/i);
         fireEvent.click(deleteButton);
+        expect(mockSaveItems).not.toHaveBeenCalled();
+        fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Удалить', exact: true }));
         await flushAsyncWork();
 
         expect(mockSaveItems).toHaveBeenCalled();
         expect(mockSaveItems.mock.calls.find((call) => Array.isArray(call[0]) && call[0].length === 0)).toBeDefined();
-
-        confirmSpy.mockRestore();
     });
 
     test('flushes meaningful unsaved changes when leaving clients tab', async () => {

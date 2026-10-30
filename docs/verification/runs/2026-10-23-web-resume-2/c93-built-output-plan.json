@@ -1,0 +1,40 @@
+{
+  "id": "C93",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "sourceFingerprint": "b876ccbde0a87655431e32b2f6677b45b40c51376f0d3833f0434dafc4eab29a",
+  "existingCaseId": "A3-01-S1-01",
+  "precondition": "C92exact1684defaultbuild exit0/types36prerenders, compiledsourcevalidated except one exact generated Next declaration. No new compiler attempt. Elevated read-only check3107listener absent and old compiler17020 gone.",
+  "timeboxMinutes": 10,
+  "runtime": {
+    "harness": "scripts/closure-web-built-runtime-c93-20261023.mjs",
+    "host": "127.0.0.1",
+    "port": 3107,
+    "watchdogSeconds": 600,
+    "raw": "c93-runtime-raw.txt",
+    "scope": "Exact completed build, strippedenv/no.env/dummy.invalid/no realkeys/Sentry+telemetrydisabled/C92NodeoutboundTCPfetchdenied, no OS firewall claim. Different hostname from userlocalhost; actual guest state must be observed, no cookie/session extraction or login."
+  },
+  "cases": [
+    {
+      "id": "built-privacy-document-entry-reload",
+      "expected": "Actual compiled /privacy on127.0.0.1:3107 shows Политика конфиденциальности and nine numbered sections, ordinary full reload retains document and guest sign-in state without visible error overlay. This is scoped local built-output proof, not deployedproduction or allroutes/visual/no-flash."
+    },
+    {
+      "id": "built-local-font-css-observation",
+      "expected": "CUApageAssets inventory/bundle of already observed resources: two local production TTFs match unchanged real Geist169056bytes/SHA73894e0448cae90a92b6c2f8732b7bb9acb7b94c418bff559dad4a18e1de9659 and Mono171948bytes/SHAd00e590b8eb3a59acc329b2d044fd143ae935090b7da33199ebee27cc7de8196, CSS retains correspondingfontfaces/100..900/normal/swap/variables and Arialfallbackmetrics. Not rawURLfetch/evaluatefetch or actual painted glyph/fresh-cache/visual PASS."
+    }
+  ],
+  "steps": [
+    "Syntaxcheck newruntime, save plan/harnesshash before startup. Recheck candidate/result and no existingC93log/runtime/3107 conflict; clock start one owned runtime only. No primaryserver restart/logs/config edits.",
+    "Computer-use skill+cua_repl only. Retain same selected IAB2/humanTab2 and validhandle. Create exactly one own temporary background tab for independent compiled-output case at http://127.0.0.1:3107/privacy, not capture/denied-provider replacement or alternative rescue. Recordactual guest document; no auth/terms acceptance/forms.",
+    "Clock ordinary reload, verify same complete document/guest state. Inspect only relevant alreadyobserved local assets through pageAssets capability; bundle only matchinglocalTTF/CSS, inspectfiles/hashes offline. No arbitrary network/API/monitoring/metrics/storage probes or screenshots.",
+    "Close only own temporary case tab after result. Validate exactownedruntimePID fromharness, stop onlyit and verifyexit; no filecleanup. Preserve original humanTab2/admin and markHandoff; actualknownSA/protectedadmin/Business3 is restoration observation, not repeat count.",
+    "If startup/capture/policy fails, retainexactblocker, stop onlyownedruntime, no newreplacementtab/alternativebrowser/URL/port/rawHTTP/securitychange/rebuild. Successfulcompile doesnotbecomeLIVEPASS without actualUI."
+  ],
+  "counts": "At mostone refreshed existingA3-01case/+1currentaccepted requirement returning20->21 afterallrequiredproof; not a newly discovered obligation/fix or duplicated14currentwindowfunctionalcases. A3-02fourfresh-cachecases remainstale. FulltechnicalFAIL gates unchanged.",
+  "exclusions": "No DEVDB roles/business/user/booking/payment/profile/message commands, authtransition or newfixtures. Node/dummy runtime remains local; ordinaryauthlookup/telemetry unenumerated, never zeroTOTALwrites. Domainproductionlast, no visual/device/screenreader/no-flash/globalgreencertification.",
+  "savedBeforeRuntimeUtc": "2026-10-23T03:03:42Z",
+  "harnessHashes": {
+    "scripts/closure-web-built-runtime-c93-20261023.mjs": "4b52cbd65ab61a9b87f6245ea0b5ffb90420f1a9e121f1476524ccd03c350d85",
+    "scripts/closure-web-offline-guard-c92-20261023.cjs": "5f0307438ec8e6664f1096989659f0f9c08ebd88c80456a6e4a5ebe0055204ab"
+  }
+}

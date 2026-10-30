@@ -1,0 +1,14 @@
+{
+  "id":"C21",
+  "candidateId":"dev-20261020-S1-1c0013b28e40",
+  "parent":"M1-03",
+  "authority":"Human20Oct continue until explicit stop; fixed19:00 cutoff superseded prospectively",
+  "cases":["S21-M103-promotions-debug","S21-M103-performance","S21-M103-system-health","S21-M103-health-check","S21-M103-ratings-debug"],
+  "preflight":"Source inspected before UI: promotions-debug no mount query, blank manual lookup form; performance mount readonly stats+30s timer; system-health mount readonly aggregate+provider existing-credential getMe/GET health probes, no sending messages; health-check server readonly queries with no email/send/job invocation; ratings-debug mount readonly entity report, POST recalc only separate unclicked control. No page uses denied /admin/api/metrics endpoint. No SDK/direct API executed by agent.",
+  "steps":"Known superadmin existing user tab5: observed global menu link to each destination; confirm settled actual destination and functional body/error; ONE planned full reload; confirm actual role, body and error afterward. No invented URL grids, no repeated reload loop. Record failures even if recovered. If control times out, one fresh state observation may distinguish completion; no bypass.",
+  "expected":"Each menu entry and full reload retains authorized admin shell and shows its functional read surface (including independently successful empty state) without unexpected login/500/alert. Backend degradation may be correctly reported by health dashboard: navigation PASS does NOT mean components healthy. Promotions blank query form is expected; no lookup necessary for nav case. Metrics/model/authorization at API layer not certified.",
+  "exclusions":"No init/reset/save/recalculate/jobs/POST/SQL/grants/delete/messages/payment; no fields/filter changes; no monitoring/denied endpoint; no screenshot retry; no visual/device/screenreader PASS; no whole M1-03 acceptance while four failed and monitoring blocked.",
+  "bounded":"At most15min for five navigation cases; each failed case retained and advance independent destination. No product source change in this batch unless a separately planned UI-reproduced fix chain is authorized and root cause established.",
+  "effects":"Ordinary telemetry/read-only UI and normal provider health probes only; no enumerated business commands. Existing telemetry not cleaned; never zeroTOTALwrites.",
+  "before":{"passed":9,"failed":4,"blocked":1,"notRun":5,"total":19}
+}

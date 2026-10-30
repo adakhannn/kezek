@@ -1,0 +1,32 @@
+{
+  "ledgerValid": true,
+  "errors": [],
+  "sourceFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "productAccepted": 19,
+  "productRemaining": 297,
+  "S1Accepted": 16,
+  "S2Accepted": 3,
+  "S1PrimaryPassed": 62,
+  "S1PrimaryRemaining": 17,
+  "releaseReady": false,
+  "finalizedUtc": "2026-10-21T04:43:26Z",
+  "artifactHashes": {
+    "docs/WEB_VERIFICATION_LEDGER.json": "e7833c669fa1ad1876c734fc7ce1f5e19197d4160d63d29d2a70776afe18181a",
+    "docs/WEB_GLOBAL_READINESS_STATE.json": "e6e58107585a2594e045bbfb366d1df50cf64c7164e835032c1ec4db76665bd7",
+    "docs/WEB_VERIFICATION_REPORT.md": "71ffc87abaafe2d5130fa851b53cfbfb9005910a32fb9ce8dd546d08cbf99ff1",
+    "docs/WEB_CLOSURE_PLAN.md": "72d8413df8ea38798a35847993f8eb8289707d91e241ec1a8d177d073620ef13",
+    "docs/verification/runs/2026-10-20-s1-continuation/progress.json": "9ec5b7a3f009eb0eeb9224b0d1c8edd29e0bfac1a2b7b24474189f68eff9f192",
+    "docs/verification/runs/2026-10-20-s1-continuation/final-report-2026-10-21-1100.json": "0060cbd81a38c97bb529cb7b260802ae422f3b71e02b9d303c8409048d6b8e1d",
+    "docs/verification/runs/2026-10-20-s1-continuation/c51-automation-paused.json": "74aeceb426e26b0f7858929c40ac1ebe24151cbd210dd54708261abdd87c7903"
+  },
+  "id": "KEZEK_WEB_FINAL_VERIFICATION_2026_10_21_1100",
+  "verifiedUtc": "2026-10-21T04:44:16Z",
+  "automationActualReadbackStatus": "PAUSED",
+  "automationPreservedFieldsVerified": true,
+  "autonomousResumeAllowed": false,
+  "deadlineUtc": "2026-10-21T05:00:00Z",
+  "finalArtifactCreationPendingAtSnapshotNowSatisfied": true,
+  "noNewProductTestsThisFinalization": true,
+  "priorFinalsUnchanged": true
+}

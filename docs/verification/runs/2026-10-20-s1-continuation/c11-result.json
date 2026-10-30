@@ -1,0 +1,26 @@
+{
+  "id":"C11",
+  "stage":"S2.1",
+  "requirementId":"M1-02",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "startedAfterClockUtc":"2026-10-20T10:35:15Z",
+  "status":"8_PASS_0_FAIL",
+  "method":"Actual CUA page AX/DOM after ordinary protected document navigation and reload; no screenshots/first-paint inspection, no direct API/RPC/HTTP/CDP or storage/credential extraction",
+  "results":[
+    {"id":"S21-M102-owner-root","role":"owner","route":"/admin","status":"passed","observed":"Direct document entry and reload: Доступ ограничен/Нужны права супер-админа, no admin nav/statistics/control. Current account canonical email osorov@sportsoft.ru; authorized Google osorovadahan04 selected previously. Historical G060 sourceLines7424 records this known primary alias; owner/business2 context already actual C10."},
+    {"id":"S21-M102-owner-nested","role":"owner","route":"/admin/businesses","status":"passed","observed":"Direct entry and reload retain same owner denial. No business table/admin actions. Ordinary subsequent logout returns public guest catalogue3."},
+    {"id":"S21-M102-guest-root","role":"guest","route":"/admin","status":"passed","observed":"After completed logout, direct protected entry twice -> /auth/sign-in?redirect=/admin, useful sign-in/loading followed by form, no admin content. Re-entry retests protected boundary, NOT claimed as reload of hidden /admin after redirect."},
+    {"id":"S21-M102-guest-nested","role":"guest","route":"/admin/businesses","status":"passed","observed":"Direct protected entry twice -> same safe local /auth/sign-in?redirect=/admin, actual guest Войти/form; no admin table/nav. Nested path retention is not the assertion here."},
+    {"id":"S21-M102-client-root","role":"client low.fade.osh@gmail.com","route":"/admin","status":"passed","observed":"Ordinary Google selection -> protected /admin from existing local next; actual low.fade.osh@gmail.com/LIVE TEST CLIENT12OCT, global super_admin required. Full /admin reload retains denial. No extra sign-in or role grant."},
+    {"id":"S21-M102-client-nested","role":"client low.fade.osh@gmail.com","route":"/admin/businesses","status":"passed","observed":"Direct entry plus reload retain client denial with own canonical email, no admin nav/table. На главную works; actual Клиент header and catalogue3, Telegram optional reminder NOT clicked/linked."},
+    {"id":"S21-M102-staff-root","role":"staff obraz.osh@gmail.com","route":"/admin","status":"passed","observed":"Actual /staff ID1bfd0e3b/current original branch1 business2 confirms employee, not pureclient. Direct /admin and reload deny with global super_admin requirement. Canonical email displayed adakhannn@yandex.com differs from selected Google identity; no link/unlink change or account-merge correctness asserted."},
+    {"id":"S21-M102-staff-nested","role":"staff obraz.osh@gmail.com","route":"/admin/businesses","status":"passed","observed":"Direct entry and reload retain denial, no admin business table/actions. Кабинет сотрудника link returns /staff; after loading actual same1bfd0e3b/branch1 business2/service31 and own history29. No booking/history mutation."}
+  ],
+  "observation":"Staff OAuth callback showed authenticated staff header while Авторизация… persisted across observations and a selector wait timed out. During bounded read-only diagnosis it completed by itself to /staff. Auth selected after10:38:34UTC, /staff actual confirmed before10:45:31UTC; exact completion latency/root cause NOT measured. No repeat login, SDK/auth injection, source fix or distinct bug count. Do not claim fast/login latency PASS from M1-02.",
+  "effects":"Owner logout, client Google login/logout, staff Google login; ordinary application auth/telemetry writes unenumerated. No business select/save, credentials/grants, new entities, bookings/holds/slots/cancel/pay, SQL/migrations, deploy or source changes. Existing usertab2 untouched; tab5 retained/handoff.",
+  "handoff":"Tab5 actual staff obraz.osh through allowed Google, /staff RU, existing employee1bfd0e3b branch1 business2. Cache flag human controlled, no new claim that it remains enabled. Two tabs retained.",
+  "acceptanceBoundary":"M1-02 finite non-admin UI rejection only. Does not accept F4 API/RPC, all namespaces, visual/no-flash, IDOR/CSRF or production. Manager/foreignowner/newrole fixtures not created; other requirements remain open.",
+  "counts":{"S1":"19/25;6left;68/79cases;11left","S2":"1/70;69left","S2.1":"1/12;11left","thisMatrix":"8/8PASS;0left","product":"20/316accepted;296left;NOT_READY"},
+  "newFixes":0,
+  "deadlineUtc":"2026-10-20T13:00:00Z"
+}

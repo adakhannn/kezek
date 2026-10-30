@@ -1,12 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import { canCancel as canCancelBooking, type BookingStatus } from '@core-domain/booking';
 
 import BookingCard from './components/BookingCard';
 import MyVisitPackagesBlock from './components/MyVisitPackagesBlock';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { bookingCountForm } from '@/lib/bookingCountForm';
+import { cabinetBookingServices, type CabinetVisitService } from '@/lib/cabinetBookingServices';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Tabs } from '@/components/ui/Tabs';
@@ -14,7 +17,7 @@ import { buttonStyles } from '@/components/ui/buttonStyles';
 
 type Booking = {
     id: string;
-    status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
+    status: BookingStatus;
     start_at: string;
     end_at: string;
     promotion_applied?: Record<string, unknown> | null;
@@ -23,6 +26,7 @@ type Booking = {
     staff_id?: string | null;
     branch_id?: string | null;
     biz_id?: string | null;
+    booking_services?: CabinetVisitService[] | null;
     services?:
         | { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number }[]
         | { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number }
@@ -64,41 +68,15 @@ export default function ClientCabinet({
     upcoming: Booking[];
     past: Booking[];
 }) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
+    const tabId = useId();
 
     const getSubtitle = () => {
-        if (tab === 'upcoming') {
-            const count = upcoming.length;
-            if (count === 1) {
-                return t('cabinet.bookings.subtitle.upcoming.one', 'Р Р€ РІРВ°РЎРѓ 1 РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РВ°РЎРЏ РВ·РВ°пись');
-            }
-            if (count < 5) {
-                return t('cabinet.bookings.subtitle.upcoming.few', 'Р Р€ РІРВ°РЎРѓ {count} РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёРВµ РВ·РВ°писи').replace(
-                    '{count}',
-                    String(count),
-                );
-            }
-            return t('cabinet.bookings.subtitle.upcoming.many', 'Р Р€ РІРВ°РЎРѓ {count} РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–').replace(
-                '{count}',
-                String(count),
-            );
-        }
-
-        const count = past.length;
-        if (count === 1) {
-            return t('cabinet.bookings.subtitle.past.one', 'Р Р€ РІРВ°РЎРѓ 1 Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РВ°РЎРЏ РВ·РВ°пись');
-        }
-        if (count < 5) {
-            return t('cabinet.bookings.subtitle.past.few', 'Р Р€ РІРВ°РЎРѓ {count} Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёРВµ РВ·РВ°писи').replace(
-                '{count}',
-                String(count),
-            );
-        }
-        return t('cabinet.bookings.subtitle.past.many', 'Р Р€ РІРВ°РЎРѓ {count} Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–').replace(
-            '{count}',
-            String(count),
-        );
+        const count = tab === 'upcoming' ? upcoming.length : past.length;
+        const form = bookingCountForm(count, locale);
+        return t(`cabinet.bookings.subtitle.${tab}.${form}`, `Записей: ${count}`)
+            .replace('{count}', String(count));
     };
 
     return (
@@ -116,10 +94,14 @@ export default function ClientCabinet({
                             items={[
                                 {
                                     key: 'upcoming',
+                                    id: `${tabId}-upcoming-tab`,
+                                    panelId: `${tabId}-upcoming-panel`,
                                     label: t('cabinet.bookings.tabs.upcoming', 'РџСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёРВµ'),
                                 },
                                 {
                                     key: 'past',
+                                    id: `${tabId}-past-tab`,
+                                    panelId: `${tabId}-past-panel`,
                                     label: t('cabinet.bookings.tabs.past', 'Р СџРЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёРВµ'),
                                 },
                             ]}
@@ -130,7 +112,7 @@ export default function ClientCabinet({
             />
 
             {tab === 'upcoming' && (
-                <section className="space-y-4">
+                <section role="tabpanel" id={`${tabId}-upcoming-panel`} aria-labelledby={`${tabId}-upcoming-tab`} tabIndex={0} className="space-y-4">
                     {upcoming.length === 0 ? (
                         <EmptyState
                             icon={
@@ -148,7 +130,7 @@ export default function ClientCabinet({
                         />
                     ) : (
                         upcoming.map((b) => {
-                            const servicesArray = b.services ? (Array.isArray(b.services) ? b.services : [b.services]) : [];
+                            const servicesArray = cabinetBookingServices(b);
                             const service = servicesArray[0] ?? null;
                             const staff = first(b.staff);
                             const branch = first(b.branches);
@@ -189,7 +171,7 @@ export default function ClientCabinet({
                                     review={extractReview(b.reviews)}
                                     promotionApplied={b.promotion_applied}
                                     subscriptionApplied={b.subscription_applied}
-                                    canCancel
+                                    canCancel={canCancelBooking(b.status)}
                                 />
                             );
                         })
@@ -198,7 +180,7 @@ export default function ClientCabinet({
             )}
 
             {tab === 'past' && (
-                <section className="space-y-4">
+                <section role="tabpanel" id={`${tabId}-past-panel`} aria-labelledby={`${tabId}-past-tab`} tabIndex={0} className="space-y-4">
                     {past.length === 0 ? (
                         <EmptyState
                             compact
@@ -212,7 +194,7 @@ export default function ClientCabinet({
                         />
                     ) : (
                         past.map((b) => {
-                            const servicesArray = b.services ? (Array.isArray(b.services) ? b.services : [b.services]) : [];
+                            const servicesArray = cabinetBookingServices(b);
                             const service = servicesArray[0] ?? null;
                             const staff = first(b.staff);
                             const branch = first(b.branches);

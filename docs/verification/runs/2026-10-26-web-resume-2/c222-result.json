@@ -1,0 +1,26 @@
+{
+  "id": "C222",
+  "status": "PASS_ONE_COMPOUND_EXISTING_SERVICE_NO_BRANCHES_REJECTION_RECOVERY",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c222-service-no-branches-plan.json",
+  "caseId": "S26-I203-existing-service-no-branches-reject-discard",
+  "observationWindowUtc": [
+    "2026-10-26T11:32:08Z",
+    "2026-10-26T11:32:42Z"
+  ],
+  "actual": "Freshsameknownowner/exact99editoralloriginalnames/1min/0-300/branch1checked/branch2unchecked/activeTRUE/staffAdahanunchecked. ONEclickonlybranch1 ->bothbranchcheckboxes0, allothersunchanged. ONEordinaryinvalidSave ->Проверьтевыделенныеполя+Выберит е хотябыодинфилиал [visibleactual: Выберите хотя бы один филиал], remainsameeditor. SidebarServicesdiscard/exact99reentry restoresoriginalbranch1only; ONEreloadsameallfields/activeTRUE/staffunchecked. No validSave/copyremoval/assignmentexecuted.",
+  "effects": "Oneunsavedbranchcheckboxchange+ONEinvalidSavevalidationattempt/discard/exactreentry/oneReload. SharedknownownerrolefromC221; ordinaryownerlogout/knownSAGooglerestore. C221calendarUIdate26Allrestoredbeforeindependentcase; no extraauthcycle. No newservice/validupdate/branchcopydelete/assignment/activation/booking/slot/hold/Confirm/cancel/payment/source/test/build/server/APItool/SQL/SDK/storageaction. Ordinaryauth/read/telemetryunenumerated; notzeroTOTALwrites.",
+  "restoration": "Originalvisibleallfieldsandbranch1/staffunchecked afterdiscard+oneReload; ordinaryknownkezekkgGoogle->adminheadingwaitdeadline thenONEfreshAXactualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1/markHandoff. No duplicateauth/newtabs.",
+  "limits": "UIbranch-requiredguard/recoveryonly; notbackendresponse/network/writeaudit/namegroupatomicity/duplicates/fullI2-03/security/visualproof. C217scalarfourDONEnotrerun. C221calendarpositiveBLOCKEDnotnewbug/fix orpassedview-switch.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 14,
+    "windowUiAfter": 15,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

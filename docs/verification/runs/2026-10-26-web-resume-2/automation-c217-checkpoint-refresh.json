@@ -1,0 +1,15 @@
+{
+  "automationId": "kezek",
+  "checkpoint": "C217",
+  "verifiedUtc": "2026-10-26T11:02:55Z",
+  "status": "ACTIVE",
+  "sameSchedule": "FREQ=MINUTELY;INTERVAL=15",
+  "sameTargetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "updateToolSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "configSHA256": "f9fec4a539006db3019e2d87d7a026f97f85d9ab44c9220c5cc89b9465796e41",
+  "before": "automation-before-c217-checkpoint.toml",
+  "noDuplicate": true,
+  "notProductExecution": true
+}

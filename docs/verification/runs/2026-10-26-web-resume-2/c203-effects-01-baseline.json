@@ -1,0 +1,13 @@
+{
+  "id": "C203_EFFECTS_BASELINE",
+  "recordedUtc": "2026-10-26T09:45:03Z",
+  "immutableAppendOnly": true,
+  "targetUserId": "125e60ab-eb79-4d92-bc6d-d84ae534eeee",
+  "knownIdentity": "kezekkg@gmail.com",
+  "originalVisibleName": "Адахан Осоров",
+  "temporaryName": "C203 OWN NAME TEST",
+  "baseline": "ActualownID/knownemail/SuperAdminheading; NameАдаханОсоров/SaveDisabled/Нетизменений. GlobalheaderAnonymized. SuperAdmincheckbox1/Active. Emailmaskedanduntouched/Phonevisiblyblankuntouched. No securitycontrolsactivated.",
+  "pending": true,
+  "phase": "PREPARED_BEFORE_ANY_SAVE",
+  "recovery": "Ifownnamepersists, onlyNameoriginalАдаханОсоровandoneordinarySave/reentry/reload. IfSavefailsdiscarddraft/reentrybaseline, do notassumezerowritesfromerroralone. Nevertouchcontacts/roles/password/Magiclink/delete/block/securitycontrols."
+}

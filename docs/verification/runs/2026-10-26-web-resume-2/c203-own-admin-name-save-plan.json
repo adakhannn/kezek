@@ -1,0 +1,35 @@
+{
+  "id": "C203",
+  "status": "FINITE_PLAN_BASELINE_REQUIRED_BEFORE_SAVE",
+  "preparedAfterClockUtc": "2026-10-26T09:44:13Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "M3-01"
+  ],
+  "target": {
+    "userId": "125e60ab-eb79-4d92-bc6d-d84ae534eeee",
+    "knownIdentity": "kezekkg@gmail.com",
+    "role": "existingSuperAdminONLY",
+    "priorOriginalVisibleName": "Адахан Осоров"
+  },
+  "authority": "Latesthumanfulltask-scopedroutineautonomy; ordinaryreversibleownDEVnon-sensitiveNamechange/restoration. Doesnotauthorizecontacts/password/role/securitygrantorconfirmationflags. Noirreversibledeletion/newcredentials/privilegechange.",
+  "steps": [
+    "FreshknownSAadmin. OrdinaryUserslist->observedownknownID/emailrow; verifyactualdetail ownID/name/SuperAdmin andeditableoriginalName/Save disabled. Email/phone stayuntouched/redacted; neverunmask/readvalues/retype.",
+    "BeforeSaveappendexactoriginalvisibleName/targetID/temporarysyntheticname/pendingtrue journal. Ifbaselinewrong/uncertainstopwithoutmutation.",
+    "FillNameONLY C203 OWN NAME TEST, oneSave. ExpectedvisibleSaved thenordinaryreentry/reload sameownrecord shows exactsyntheticname; nocontact/security/roleoperation. ToolpendingfreshAXbeforeanyretry/no duplicateSave.",
+    "IfactualsaveerrorpreserveexactbeforeFAIL/no speculativetransportcause. Discarddraft/reentry baseline; ifpersistenceuncertainprioritizeexactownName recovery.",
+    "Ifsaved, restoreexactoriginalNameviaONEordinarySave, reentry/reloadmustoriginal/pristine. Appendfinaljournalpendingfalse. No blank/invalidNamepolicytest/additionalfields.",
+    "Protectedadmin/RU/Anonymized/Business3restore/markHandoff. HeaderAnonymized mayremaincanonicalprofile, notrequireAuthmetadatanamepropagationtoallunrelatedsurfaces."
+  ],
+  "temporaryName": "C203 OWN NAME TEST",
+  "independentExpected": "OwnAuthmetadataName validSave persists toexactUserBasicForm/reentry/reload; originalName canrestorethroughsameUI; originalSuperAdmin/status/contactsnotedited. Onecompoundcase, notE2canonicalprofileorrole/securityproof.",
+  "mutationTimebox": "Onceowneffectexistsfinishrecoverybeforeothercases; noarbitrarycutoffabandonsit.",
+  "effects": "AtmosttwoordinaryownUserBasicSavecommands forName+restore; formresubmitsunchangedcontactcontrols internally. No newidentity/role/password/securityaccess/changecontacts/message/OTP/notification/booking/payment/fixture/newentity/API/SDK/SQL/storage/secretprobe.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/users/UserBasicForm.tsx": "fe991b224262b4793e5c26ba882e008c43ef011cf4b969da5ba2f7426e7d9c19",
+    "apps/web/src/app/admin/users/[id]/page.tsx": "28c2c4d1a38959f01995e2e02aeeed83fe465cc35c27a6adef290a26317e7a94",
+    "apps/web/src/app/admin/api/users/[id]/update-basic/route.ts": "fe7ba2fb7fcbae459ddddee5186e2ff73295710e4a3cd7c990efe12430a380b5",
+    "apps/web/src/lib/validation.ts": "1fbd74cb490998dc7d887a82d53e19f57c3447cef539ee3cc9662334428f9d54"
+  },
+  "credit": "AtmostONEnewM3-01caseifallpersistence/recovery variantspass. UIbeforeFAIL mayjustifyminimalfixonlyafteractualrepro andsameLIVE/targetedregression; sourcealone notbug. NeverwholeM3acceptancefromonecase."
+}

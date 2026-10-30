@@ -75,6 +75,9 @@ export const branchesKy = {
     'branches.promotions.error.delete': 'Аkцияны жок кылуу катасы',
     'branches.promotions.error.load': 'Акцияларды жүктөө катасы',
     'branches.promotions.error.save': 'Аkцияны сактоо катасы',
+    'branches.promotions.validation.visitCount': 'Визиттердин саны 0дөн чоң болушу керек',
+    'branches.promotions.validation.discount': 'Арзандатуунун пайызы 1ден 100гө чейин болушу керек',
+    'branches.promotions.validation.general': 'Акциянын параметрлерин текшерип, кайра аракет кылыңыз',
     'branches.promotions.error.update': 'Аkцияны жаңылоо катасы',
     'branches.promotions.everyNthFree': 'Ар бир {n}-чи кызмат бекер',
     'branches.promotions.isActive.label': 'Активдүү (кардарларга көрсөтүлөт)',
@@ -144,4 +147,6 @@ export const branchesKy = {
     'branches.table.name': 'Аталышы',
     'branches.table.status': 'Статус',
     'branches.title': 'Филиалдар',
+    'branches.edit.bizContext': 'Бизнес',
+    'branches.edit.bizDefaultName': 'Kezekтеги бизнесиңиз',
 } as const;

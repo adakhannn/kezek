@@ -1,0 +1,38 @@
+{
+  "id": "C176",
+  "startedAfterUtc": "2026-10-25T23:09:47Z",
+  "completedBeforeUtc": "2026-10-25T23:12:45Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "type": "Bounded exact publicemail UIhistory/dependency/effect review; not repeatedC170broadaudit",
+  "history": "Reviewed currentI1-02 cases/C169website/C171C173nondigitcontact records and targetedcontact_email references in23Oct/25Oct/26Oct results/plans. No targeted actual publicemail malformed-input rejection or lowercasepersist/reload/clear proof identified in reviewed set. Existing businessContacts UNIT supports lowercaseemail, not LIVE. No globalabsenceclaim or othercase repetition.",
+  "source": "Visible Публичный email is Input type=email with localcontact_email state. Input forwards nativeattributes, no novalidate. Ordinary form submit sends wholebranchbody to existinglocalupdate; validatePublicContacts optionaltrim/lowercase/isEmail/max254 precedesupdate. Update scopedbranch+business; no send/email/OTP/webhook call in path. No newrecipient/account/entity. Email/helper unchanged byC172 phoneguard.",
+  "observationBoundary": "Phone/WhatsApp inputAX redacts nonempty values. Do not infer emailnormalization from fillargument or comparison against redactedDOM; never unmask/valueextract. Malformedemail acceptance can be assessed via visible/native validation-message/validity metadata without reading value. If emailAX also redacts, uppercasepersist-normalization variant BLOCKED before validSave; knownsyntheticdraft discarded viaordinarylist/reentry.",
+  "authority": "Continuing DEVWEB scope covers ordinary reversible existingisolatedinactivefixture edits. Use ONLY synthetic no-recipient INVALID EMAIL TEST and(ifvaluefullyobservable) C177.TEST@EXAMPLE.INVALID. No actualprivatecontact, email/SMTP/mailto/message/OTP/notification command, publiclinkclick or recipientcreation. Freshallblank/unmasked baseline/no staff/services/bookings required. No normalization save under opaqueinput.",
+  "credit": "0UI/fix/accepted from review",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/lib/businessContacts.ts": "9d8d54d9187e8235823eb5c6e599bc4f805bd6776f03ab1bcb92841a5877ff4f",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+    "apps/web/src/components/ui/Input.tsx": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf"
+  },
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c169-result.json",
+      "sha256": "c51a3ad745c77606cc3939dc289a7a58f73b89bd2e3cea41f872b4a8e0e789f0"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c171-before-fail.json",
+      "sha256": "8e15f6b998c9922a2897a40351dd7c606fe45a34a8929d78c830260f8619271c"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c173-result.json",
+      "sha256": "96f10a916da11d3cdc08e218a304e209db0ec6a83f0647c3bd76d2ab1670b4a3"
+    },
+    {
+      "path": "apps/web/src/__tests__/lib/businessContacts.test.ts",
+      "sha256": "a0dc1f28f7ec1ce948a3e7190bbe1179b613442911156c47a67aaaff9cfb9aa8"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "C85",
+  "type": "bounded read-only payload/effect/authority review",
+  "startedAfterUtc": "2026-10-23T01:46:42Z",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "target": "Retained isolated test business A fe2d412c-21c6-40ef-b5d3-23f49f550610 only; NOT either original business or deleted B.",
+  "evidence": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/preparation-plan.json",
+      "fact": "A explicitly prepared as isolated DEV fixture, contacts none, owner null; no new entity/role authority inferred."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+      "fact": "Actual current A exact name/slug, approved/barbershop, owner unassigned,2branches/0staff/0services/0bookings, local editor blank contacts and address. No Save occurred."
+    },
+    {
+      "path": "apps/web/src/lib/manualBusinessCreationService.ts",
+      "fact": "Creation payload explicitly address:null and phones:null for empty phone. Public contact columns default nullable in public-contacts migration; no migration execution now."
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+      "fact": "Only explicit Save PATCHes name,slug,categories,address,phones,contacts,is_approved. Address blank is serialized null. Local Cancel and blur have no request. No owner/branch/role fields in payload."
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+      "fact": "Normal authenticated superadmin check. Validates name/slug/categories/contacts before one businesses update. Address blank/null canonicalizes to null; sends no application notification/job or role command. The app's own service client is not agent SDK/impersonation."
+    },
+    {
+      "path": "apps/web/src/lib/businessContacts.ts",
+      "fact": "Known empty contact values normalize to null, not unrelated private owner contacts. Do not touch or extract any contact field."
+    },
+    {
+      "path": "supabase/migrations/20260729010000_business_creation_provenance.sql",
+      "fact": "Reviewed business creation audit trigger is INSERT-only. Repo trigger search is not proof of deployed trigger absence; no zero-total-effects or byte-perfect timestamp/audit rollback claim."
+    }
+  ],
+  "decision": "A reversible ordinary address edit on this existing isolated DEV test record is within current WEB testing scope. It creates no fixture/role/credential, deletes nothing and changes no security or notification setting. Do not reuse old deletion consent; no permanent deletion is planned. Pre-UI finite plan must recheck exact fresh baseline and all bundled states before Save, preserve them, and restore address null. If baseline differs, contact value is masked/unknown or outcome ambiguous, stop instead of silently broadening writes.",
+  "limits": "Restoration certifies the original user-visible business fields and canonical null address through UI, not a raw DB snapshot, all triggers/audits/timestamps, concurrent edits or general rollback. Persisted address briefly appears on this explicitly named test business; no real personal address or third-party message is used.",
+  "effects": "Review only,0newUI/0fix/0accepted. No Save/DB action yet; profile-save permission remains separately unanswered and is not borrowed.",
+  "next": "C86 one finite address-save/reload/restore case only, ordinary UI. Never change name/slug/category/publication/owner/contacts/limits/branches or create data; clock immediately before each save. Restore safely before handing off.",
+  "completedBeforeUtc": "2026-10-23T01:49:46Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/preparation-plan.json",
+      "sha256": "6ff4ea7e56ca5879fe9c4ec12537817d7848ebb765af683fd7ed3f44c09a6821"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+      "sha256": "09eac23bdae938278aff4aa5668cc321c669727dfdc8a3c789e94bb2cc9474f7"
+    },
+    {
+      "path": "apps/web/src/lib/manualBusinessCreationService.ts",
+      "sha256": "ac857b53240fefd374695a964094846e932943f8a1ec580061cf62876d8a3ce7"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+      "sha256": "3c34f87e772554f134220aad060c038f0e763c6c26c734055a1b9cd6f06b2756"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+      "sha256": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c"
+    },
+    {
+      "path": "apps/web/src/lib/businessContacts.ts",
+      "sha256": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a"
+    },
+    {
+      "path": "supabase/migrations/20260729010000_business_creation_provenance.sql",
+      "sha256": "054b06443ad62271da7c2d10de69f7aa86d9588b38ca41b51062491d36949608"
+    }
+  ]
+}

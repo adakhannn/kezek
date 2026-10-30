@@ -1,0 +1,12 @@
+{
+  "id": "kezek",
+  "status": "PAUSED",
+  "readbackVerified": true,
+  "exactConfiguredPromptIncludingStopCheckpoint": true,
+  "promptSHA256": "c28aa0bb2953db87f5d7ca9dc8e0ac60855c5ae7a925f0d3acfd63a4e019f581",
+  "sameNameCadenceTarget": true,
+  "noDuplicateCreated": true,
+  "readbackBeforeUtc": "2026-10-23T00:01:17Z",
+  "recordedAfterClockUtc": "2026-10-23T00:03:32Z",
+  "requiresNewHumanResume": true
+}

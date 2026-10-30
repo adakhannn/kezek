@@ -5,6 +5,7 @@ import StaffDetailPageClient from './StaffDetailPageClient';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { projectStaffDetailReviews } from '@/lib/staffDetailReviews';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -88,81 +89,7 @@ export default async function Page({
         .order('start_at', { ascending: false })
         .limit(100);
 
-    // Обрабатываем отзывы из оптимизированного запроса
-    type BookingRow = {
-        id: string;
-        start_at: string;
-        end_at: string;
-        client_name: string | null;
-        client_phone: string | null;
-        service_id: string | null;
-        services?: Array<{
-            name_ru: string;
-            name_ky?: string | null;
-            name_en?: string | null;
-        }> | {
-            name_ru: string;
-            name_ky?: string | null;
-            name_en?: string | null;
-        } | null;
-        reviews?: Array<{
-            id: string;
-            rating: number;
-            comment: string | null;
-            created_at: string;
-        }> | null;
-    };
-
-    type ReviewData = {
-        id: string;
-        rating: number;
-        comment: string | null;
-        created_at: string;
-        booking_id: string;
-        service_name: string | null;
-        start_at: string;
-        end_at: string;
-        client_name: string | null;
-        client_phone: string | null;
-    };
-    
-    const reviews: ReviewData[] = [];
-    
-    (bookingsData ?? []).forEach((booking: BookingRow) => {
-        if (!booking.reviews || booking.reviews.length === 0) return;
-        
-        // Получаем название услуги
-        const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
-        let serviceName: string | null = null;
-        if (service && typeof service === 'object' && service !== null && 'name_ru' in service) {
-            if (service.name_ky) {
-                serviceName = String(service.name_ky);
-            } else if (service.name_en) {
-                serviceName = String(service.name_en);
-            } else {
-                serviceName = String(service.name_ru);
-            }
-        }
-        
-        // Обрабатываем все отзывы для этого booking
-        booking.reviews.forEach((review) => {
-            reviews.push({
-                id: review.id,
-                rating: review.rating,
-                comment: review.comment,
-                created_at: review.created_at,
-                booking_id: booking.id,
-                service_name: serviceName,
-                start_at: booking.start_at,
-                end_at: booking.end_at,
-                client_name: booking.client_name,
-                client_phone: booking.client_phone,
-            });
-        });
-    });
-    
-    // Сортируем отзывы по дате создания (новые первыми)
-    reviews.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const reviews = projectStaffDetailReviews(bookingsData ?? []);
 
     const _activeBranches = (branches ?? []).filter((b) => b.is_active);
 

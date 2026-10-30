@@ -1,0 +1,51 @@
+{
+  "id": "C155",
+  "caseId": "S26-M301-own-sa-name-draft-discard",
+  "status": "PASS_COMPOUND_SCOPED_LIVE",
+  "plan": "c155-own-user-draft-plan.json",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "observationWindowUtc": [
+    "2026-10-25T21:08:21Z",
+    "2026-10-25T21:09:18Z"
+  ],
+  "target": {
+    "id": "125e60ab-eb79-4d92-bc6d-d84ae534eeee",
+    "knownIdentity": "kezekkg@gmail.com",
+    "role": "Super Admin",
+    "listAndGlobalHeader": "Anonymized",
+    "detailOriginalVisibleName": "Адахан Осоров"
+  },
+  "steps": [
+    {
+      "action": "Fresh protectedadmin; ordinary Users link and known own-SA visible row without search/pagination",
+      "actual": "ProtectedRU/Admin-panel/Anonymized; list8active8blocked0super1. Exactly known email/ID own-SA row identified. Two initial link clicks returned old tree until explicit URLwait; navigation completed without repeatedclick, no productlatencyFAIL."
+    },
+    {
+      "action": "Open observed own-SA row",
+      "actual": "Correct knownemail/ID/SuperAdmin/detailheadingАдаханОсоров; NameАдаханОсоров; Save disabled/Нетизменений. Emailredacted/not read or edited; Phone/security untouched."
+    },
+    {
+      "clockUtc": "2026-10-25T21:08:47Z",
+      "action": "Name ONLY fill C155 LOCAL DRAFT then ordinary Tab blur",
+      "actual": "Name shows exactsyntheticdraft, Save enabled/no Нетизменений; detailheading remainsАдаханОсоров/globalheaderAnonymized. Tab focuses redactedEmail but no input/unmask/extraction."
+    },
+    {
+      "clockUtc": "2026-10-25T21:08:52Z",
+      "action": "Observed Ксписку then reopen exact same observed account row",
+      "actual": "List retainsAnonymized/knownemail/ID/SuperAdmin. Reentry original NameАдаханОсоров restored, Save disabled/Нетизменений; no draft persisted in form. No submit/reload/account command."
+    },
+    {
+      "clockUtc": "2026-10-25T21:09:07Z",
+      "action": "Observed Админка link; protectedroot restored/markHandoff",
+      "actual": "RU/Admin-panel/Anonymized/Logout/Pанельадминистратора/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1."
+    }
+  ],
+  "actual": "Local synthetic own-SA name draft enabled Save while leaving rendered identity unchanged; Back-to-list and exactsame-account reentry restored original name/pristine Save disabled. One compound unsaved-draft/discard case. No persistence/update/last-admin/foreignaccount proof.",
+  "effects": "Local name draft and ordinary existing-account navigation only. No Save/Create/Delete/Enter/security/account/role/credential/booking/payment/auth command, no newentity/fixture. Ordinary telemetry unenumerated, not zeroTOTALwrites.",
+  "newUiPass": 1,
+  "newVerifiedFix": 0,
+  "newAccepted": 0,
+  "limits": "One compound unsaved own-SA form case only; no persisted user update, server validation, last-admin protection, foreign account/roles, visual/focus/accessibility or wholeM3 acceptance.",
+  "next": "C155 own-SA local Name draft/Tab blur/Back-to-list/reentry1NEWcompoundUI PASS, pristine form restored/noSave;26Oct9NEWUI/3fix/logical15,21of316295left/S117primary63/S23/S41 unchanged/NOT_READY. C154 review0credit refined missing Cancel to actual Back-to-list; no bug inferred. NextC156 boundedREADONLY M3-01 user-list status-filter history/effect/dependency review BEFORE any new finiteUIplan: All/Active/Blocked only if genuinely uncovered, independent expectedknown8active0blocked/currentactual counts. Do not repeat knownusersearch/stats as newPASS, ownname draft, categories or completed cases. No checkbox/bulk/security/role/account command/newfixture/auth/HTTP workaround. If covered/unsafe, exactblocker plus independent unfinishedpriority. F013/F005/fixture/cache/visual/technical blockers retained; no unchanged diagnostic/rebuild."
+}

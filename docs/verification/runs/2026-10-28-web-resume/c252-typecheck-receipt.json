@@ -1,0 +1,20 @@
+{
+  "id": "typecheck",
+  "executable": "C:\\Program Files\\nodejs\\node.exe",
+  "argv": [
+    "node_modules/typescript/bin/tsc",
+    "-p",
+    "tsconfig.json",
+    "--noEmit"
+  ],
+  "cwd": "C:/projects/kezek/apps/web",
+  "config": "apps/web/tsconfig.json",
+  "startedUtc": "2026-10-28T13:53:04.901Z",
+  "pid": 22132,
+  "watchdogMs": 180000,
+  "finishedUtc": "2026-10-28T13:53:55.941Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "log": "C:/projects/kezek/docs/verification/runs/2026-10-28-web-resume/c252-typecheck.log"
+}

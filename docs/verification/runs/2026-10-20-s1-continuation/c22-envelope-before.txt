@@ -1,0 +1,296 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:2072) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+  console.error
+    TypeError: Cannot read properties of undefined (reading 'length')
+        at length (C:\projects\kezek\apps\web\src\app\admin\performance\PerformanceClient.tsx:112:15)
+        at Object.react-stack-bottom-frame (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+        at renderWithHooks (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+        at updateFunctionComponent (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+        at beginWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+        at runWithFiberInDEV (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+        at performUnitOfWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+        at workLoopSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+        at renderRootSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11)
+        at performWorkOnRoot (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14462:44)
+        at performWorkOnRootViaSchedulerTask (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:16216:7)
+        at performWorkUntilDeadline (C:\projects\kezek\node_modules\.pnpm\scheduler@0.26.0\node_modules\scheduler\cjs\scheduler.development.js:45:48)
+        at Timeout.task [as _onTimeout] (C:\projects\kezek\node_modules\.pnpm\jsdom@20.0.3\node_modules\jsdom\lib\jsdom\browser\Window.js:520:19)
+        at listOnTimeout (node:internal/timers:594:17)
+        at processTimers (node:internal/timers:529:7) {
+      [stack]: [Getter/Setter],
+      [message]: "Cannot read properties of undefined (reading 'length')"
+    }
+    
+    The above error occurred in the <PerformanceClient> component.
+    
+    React will try to recreate this component tree from scratch using the error boundary you provided, RenderBoundary.
+
+      at defaultOnCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8331:17)
+      at logCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8367:9)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at RenderBoundary.update.callback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8400:11)
+      at callCallback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5363:16)
+      at commitCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5383:11)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitClassCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12067:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12688:25)
+      at recursivelyTraverseLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:13590:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12693:11)
+      at flushLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15559:15)
+      at commitRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15402:9)
+      at commitRootWhenReady (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14652:7)
+      at performWorkOnRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14575:15)
+      at performWorkOnRootViaSchedulerTask (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:16216:7)
+      at performWorkUntilDeadline (../../node_modules/.pnpm/scheduler@0.26.0/node_modules/scheduler/cjs/scheduler.development.js:45:48)
+      at Timeout.task [as _onTimeout] (../../node_modules/.pnpm/jsdom@20.0.3/node_modules/jsdom/lib/jsdom/browser/Window.js:520:19)
+
+  console.error
+    TypeError: Cannot read properties of undefined (reading 'length')
+        at length (C:\projects\kezek\apps\web\src\app\admin\performance\PerformanceClient.tsx:112:15)
+        at Object.react-stack-bottom-frame (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+        at renderWithHooks (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+        at updateFunctionComponent (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+        at beginWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+        at runWithFiberInDEV (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+        at performUnitOfWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+        at workLoopSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+        at renderRootSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11)
+        at performWorkOnRoot (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14462:44)
+        at performWorkOnRootViaSchedulerTask (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:16216:7)
+        at performWorkUntilDeadline (C:\projects\kezek\node_modules\.pnpm\scheduler@0.26.0\node_modules\scheduler\cjs\scheduler.development.js:45:48)
+        at Timeout.task [as _onTimeout] (C:\projects\kezek\node_modules\.pnpm\jsdom@20.0.3\node_modules\jsdom\lib\jsdom\browser\Window.js:520:19)
+        at listOnTimeout (node:internal/timers:594:17)
+        at processTimers (node:internal/timers:529:7) {
+      [stack]: [Getter/Setter],
+      [message]: "Cannot read properties of undefined (reading 'length')"
+    }
+    
+    The above error occurred in the <PerformanceClient> component.
+    
+    React will try to recreate this component tree from scratch using the error boundary you provided, RenderBoundary.
+
+      at defaultOnCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8331:17)
+      at logCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8367:9)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at RenderBoundary.update.callback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8400:11)
+      at callCallback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5363:16)
+      at commitCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5383:11)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitClassCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12067:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12688:25)
+      at recursivelyTraverseLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:13590:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12693:11)
+      at flushLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15559:15)
+      at commitRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15402:9)
+      at commitRootWhenReady (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14652:7)
+      at performWorkOnRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14575:15)
+      at performWorkOnRootViaSchedulerTask (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:16216:7)
+      at performWorkUntilDeadline (../../node_modules/.pnpm/scheduler@0.26.0/node_modules/scheduler/cjs/scheduler.development.js:45:48)
+      at Timeout.task [as _onTimeout] (../../node_modules/.pnpm/jsdom@20.0.3/node_modules/jsdom/lib/jsdom/browser/Window.js:520:19)
+
+  console.error
+    TypeError: Cannot read properties of undefined (reading 'length')
+        at length (C:\projects\kezek\apps\web\src\app\admin\performance\PerformanceClient.tsx:112:15)
+        at Object.react-stack-bottom-frame (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+        at renderWithHooks (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+        at updateFunctionComponent (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+        at beginWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+        at runWithFiberInDEV (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+        at performUnitOfWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+        at workLoopSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+        at renderRootSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11)
+        at performWorkOnRoot (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14462:44)
+        at performWorkOnRootViaSchedulerTask (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:16216:7)
+        at performWorkUntilDeadline (C:\projects\kezek\node_modules\.pnpm\scheduler@0.26.0\node_modules\scheduler\cjs\scheduler.development.js:45:48)
+        at Timeout.task [as _onTimeout] (C:\projects\kezek\node_modules\.pnpm\jsdom@20.0.3\node_modules\jsdom\lib\jsdom\browser\Window.js:520:19)
+        at listOnTimeout (node:internal/timers:594:17)
+        at processTimers (node:internal/timers:529:7) {
+      [stack]: [Getter/Setter],
+      [message]: "Cannot read properties of undefined (reading 'length')"
+    }
+    
+    The above error occurred in the <PerformanceClient> component.
+    
+    React will try to recreate this component tree from scratch using the error boundary you provided, RenderBoundary.
+
+      at defaultOnCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8331:17)
+      at logCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8367:9)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at RenderBoundary.update.callback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8400:11)
+      at callCallback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5363:16)
+      at commitCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5383:11)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitClassCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12067:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12688:25)
+      at recursivelyTraverseLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:13590:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12693:11)
+      at flushLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15559:15)
+      at commitRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15402:9)
+      at commitRootWhenReady (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14652:7)
+      at performWorkOnRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14575:15)
+      at performWorkOnRootViaSchedulerTask (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:16216:7)
+      at performWorkUntilDeadline (../../node_modules/.pnpm/scheduler@0.26.0/node_modules/scheduler/cjs/scheduler.development.js:45:48)
+      at Timeout.task [as _onTimeout] (../../node_modules/.pnpm/jsdom@20.0.3/node_modules/jsdom/lib/jsdom/browser/Window.js:520:19)
+
+  console.error
+    TypeError: Cannot read properties of undefined (reading 'length')
+        at length (C:\projects\kezek\apps\web\src\app\admin\performance\PerformanceClient.tsx:112:15)
+        at Object.react-stack-bottom-frame (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+        at renderWithHooks (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+        at updateFunctionComponent (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+        at beginWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+        at runWithFiberInDEV (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+        at performUnitOfWork (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+        at workLoopSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+        at renderRootSync (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11)
+        at performWorkOnRoot (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:14462:44)
+        at performWorkOnRootViaSchedulerTask (C:\projects\kezek\node_modules\.pnpm\_49424a62639d115e2786b63da93effe0\node_modules\react-dom\cjs\react-dom-client.development.js:16216:7)
+        at performWorkUntilDeadline (C:\projects\kezek\node_modules\.pnpm\scheduler@0.26.0\node_modules\scheduler\cjs\scheduler.development.js:45:48)
+        at Timeout.task [as _onTimeout] (C:\projects\kezek\node_modules\.pnpm\jsdom@20.0.3\node_modules\jsdom\lib\jsdom\browser\Window.js:520:19)
+        at listOnTimeout (node:internal/timers:594:17)
+        at processTimers (node:internal/timers:529:7) {
+      [stack]: [Getter/Setter],
+      [message]: "Cannot read properties of undefined (reading 'length')"
+    }
+    
+    The above error occurred in the <PerformanceClient> component.
+    
+    React will try to recreate this component tree from scratch using the error boundary you provided, RenderBoundary.
+
+      at defaultOnCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8331:17)
+      at logCaughtError (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8367:9)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at RenderBoundary.update.callback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:8400:11)
+      at callCallback (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5363:16)
+      at commitCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5383:11)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitClassCallbacks (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12067:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12688:25)
+      at recursivelyTraverseLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:13590:11)
+      at commitLayoutEffectOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12693:11)
+      at flushLayoutEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15559:15)
+      at commitRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15402:9)
+      at commitRootWhenReady (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14652:7)
+      at performWorkOnRoot (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:14575:15)
+      at performWorkOnRootViaSchedulerTask (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:16216:7)
+      at performWorkUntilDeadline (../../node_modules/.pnpm/scheduler@0.26.0/node_modules/scheduler/cjs/scheduler.development.js:45:48)
+      at Timeout.task [as _onTimeout] (../../node_modules/.pnpm/jsdom@20.0.3/node_modules/jsdom/lib/jsdom/browser/Window.js:520:19)
+
+FAIL src/__tests__/components/PerformanceResponseEnvelope.test.tsx (6.317 s)
+  PerformanceClient standardized response envelope
+    × renders a confirmed empty report from data.stats (1102 ms)
+    × renders operations from nested data without changing their values (1025 ms)
+    √ retains forbidden as an error, not empty success (69 ms)
+    × keeps malformed success inline instead of crashing: {"ok":true} (1022 ms)
+    × keeps malformed success inline instead of crashing: {"ok":true,"data":{"stats":null,"timestamp":123}} (1022 ms)
+
+  ● PerformanceClient standardized response envelope › renders a confirmed empty report from data.stats
+
+    Unable to find an element with the text: Нет данных. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<p>[39m
+          [0mUnexpected render crash[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      20 |   test('renders a confirmed empty report from data.stats', async () => {
+      21 |     respond({ ok: true, data: { stats: [], timestamp: 123 } });
+    > 22 |     expect(await screen.findByText('Нет данных')).toBeTruthy();
+         |                         ^
+      23 |     expect(screen.queryByText('Unexpected render crash')).toBeNull();
+      24 |   });
+      25 |   test('renders operations from nested data without changing their values', async () => {
+
+      at waitForWrapper (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+      at Object.findByText (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:22:25)
+
+  ● PerformanceClient standardized response envelope › renders operations from nested data without changing their values
+
+    Unable to find an element with the text: test_operation. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<p>[39m
+          [0mUnexpected render crash[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      25 |   test('renders operations from nested data without changing their values', async () => {
+      26 |     respond({ ok: true, data: { stats: [{ operation: 'test_operation', count: 2, avgDuration: 12, minDuration: 10, maxDuration: 14, p95Duration: 14, p99Duration: 14, errorRate: 0 }], timestamp: 123 } });
+    > 27 |     expect(await screen.findByText('test_operation')).toBeTruthy();
+         |                         ^
+      28 |     expect(screen.getByText('2')).toBeTruthy();
+      29 |   });
+      30 |   test('retains forbidden as an error, not empty success', async () => {
+
+      at waitForWrapper (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+      at Object.findByText (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:27:25)
+
+  ● PerformanceClient standardized response envelope › keeps malformed success inline instead of crashing: {"ok":true}
+
+    Unable to find an element with the text: Invalid performance stats response. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<p>[39m
+          [0mUnexpected render crash[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      35 |   test.each([{ ok: true }, { ok: true, data: { stats: null, timestamp: 123 } }])('keeps malformed success inline instead of crashing: %j', async body => {
+      36 |     respond(body);
+    > 37 |     expect(await screen.findByText('Invalid performance stats response')).toBeTruthy();
+         |                         ^
+      38 |     expect(screen.queryByText('Unexpected render crash')).toBeNull();
+      39 |   });
+      40 | });
+
+      at waitForWrapper (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+      at findByText (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:37:25)
+
+  ● PerformanceClient standardized response envelope › keeps malformed success inline instead of crashing: {"ok":true,"data":{"stats":null,"timestamp":123}}
+
+    Unable to find an element with the text: Invalid performance stats response. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<p>[39m
+          [0mUnexpected render crash[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      35 |   test.each([{ ok: true }, { ok: true, data: { stats: null, timestamp: 123 } }])('keeps malformed success inline instead of crashing: %j', async body => {
+      36 |     respond(body);
+    > 37 |     expect(await screen.findByText('Invalid performance stats response')).toBeTruthy();
+         |                         ^
+      38 |     expect(screen.queryByText('Unexpected render crash')).toBeNull();
+      39 |   });
+      40 | });
+
+      at waitForWrapper (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+      at findByText (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:37:25)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 1 passed, 5 total
+Snapshots:   0 total
+Time:        9.015 s
+Ran all test suites within paths "src/__tests__/components/PerformanceResponseEnvelope.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

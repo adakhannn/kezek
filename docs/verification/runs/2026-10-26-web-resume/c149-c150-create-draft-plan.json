@@ -1,0 +1,58 @@
+{
+  "id": "C149_REVIEW_C150_PLAN",
+  "caseId": "S26-M501-create-local-draft-cancel",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "savedBeforeUiUtc": "2026-10-25T20:43:10Z",
+  "review": {
+    "id": "C149",
+    "scope": "bounded readonly create-mode local-draft branch history/effects review0credit",
+    "history": "Night09Oct admin-stage primary updatedAt2026-10-09T05:18:00+06:00 records actual duplicatebarbershopslug rejection/unique manualslug inactivecreation and rename/save/reload. Original retained inactive category and exact original UTC/hash preserved. C120 specifically edit savedslug and localdraft/Cancel/reentry; createautos andmanualoverride there are UNIT support only. Current case inventory has no targeted create-mode unsaved local auto/manual/clear/Cancel/reentry UI case. Bounded selected proof review, not global absence claim; do not repeat creation, duplicate rejection, edit or persistence for credit.",
+    "oracle": "New unsubmitted form should start blank name/address with available checked; name draft automatically generates readable URL, manual URL normalizes and survives name-only change, clearing URL/blur resumes automatic currentname URL. Cancel discards localdraft, leaves original category IDs/counts, and new form reentry starts blank. One compound case, not per field PASS.",
+    "source": "Only localReactstate for field changes/blur. Explicit form submit alone POST creates entity. Therefore never click Create/Save/Enter, never toggle availability or touch existing category. Cancel is ordinary categories link; no new entity/fixture/category is created. Existing create fixture proof not repeated; mocked tests notLIVE.",
+    "hashes": [
+      {
+        "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+        "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+      },
+      {
+        "path": "docs/verification/runs/2026-10-25-web-resume/c118-category-review.json",
+        "sha256": "1c1b3cc16c3afad50cec93c8177f31678bcb01d1a1b1e9d053566e2ef583eb0b"
+      },
+      {
+        "path": "docs/verification/runs/2026-10-25-web-resume/c120-result.json",
+        "sha256": "2a03c120ad7dee5bdf3b99c39e8d6e3ca5c56f84b9a560f9a7fdb150254c1493"
+      },
+      {
+        "path": "apps/web/src/components/admin/categories/CategoryForm.tsx",
+        "sha256": "e0bbc27c43198e471d2590b9edff4652b9e92a1e2ab2e72d67b23fdfbdbed585"
+      },
+      {
+        "path": "apps/web/src/app/admin/categories/new/page.tsx",
+        "sha256": "fb0eaa006e0879c9cbe7e531afdfd1650951444186446e57e279341158aa25eb"
+      },
+      {
+        "path": "apps/web/src/__tests__/components/CategoryForm.test.tsx",
+        "sha256": "c9f8c100247258f76a4bf540940904730e48624efcfe89259999edfb16422a6d"
+      }
+    ],
+    "credit": "0UI/fix/accepted"
+  },
+  "scenario": {
+    "id": "C150",
+    "timeBudgetMinutes": 5,
+    "role": "existing protectedSA/Admin-panel/Anonymized/RU",
+    "expected": "Create-mode unsaved auto/manual/clear address draft is local and Cancel/reentry discards it; all original categories retained.",
+    "steps": [
+      "Clock; existing human tab2/admin ->observed Categories link, baseline3total2active3usage/originalthreeIDs. Observed NewCategory link only, no query/guessedfixture. New form heading/blankName+Address/availablechecked; no auth/readerror, elseBLOCKED/no retry. Create button presence/enabled not asserted as bug and NEVER clicked.",
+      "Clock; fill ONLY Name C150 Өнөр Үңкүр ->address c150-onor-ungkur. Fill Address with spaced C150 Draft URL then ordinaryTab ->c150-draft-url. ChangeName C150 NEXT DRAFT ->manualc150-draft-url retained. Clear ONLY Address +Tab ->c150-next-draft. No Enter/submit/availability toggle/public preview click. Inputuncertainty stop/reobserve/no rawDOMevents.",
+      "Click ONLY Отмена ->originallist3/2/3 and all originalIDs/name/slug/activity. Clock reenter observed NewCategory link ->blankName+Address/availablechecked, no draft retained. Cancel again cleanup. Clock observed adminreturn ->protectedRU/Admin-panel/Anonymized/Business3, mark handoff."
+    ]
+  },
+  "effects": "Local unsaved text drafts and navigation only; no Create/Save/Enter/Delete/activation/propagation/categoryentity/fixture/role/auth/booking/payment command. Ordinary auth/telemetry unenumerated.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/categories/CategoryForm.tsx": "e0bbc27c43198e471d2590b9edff4652b9e92a1e2ab2e72d67b23fdfbdbed585",
+    "apps/web/src/app/admin/categories/new/page.tsx": "fb0eaa006e0879c9cbe7e531afdfd1650951444186446e57e279341158aa25eb",
+    "apps/web/src/__tests__/components/CategoryForm.test.tsx": "c9f8c100247258f76a4bf540940904730e48624efcfe89259999edfb16422a6d"
+  },
+  "limits": "Not successful create/delete/dependency/duplicateerror/RPC/visual/cache/security/wholeM5 acceptance. Full categoryCRUD remainspartial."
+}

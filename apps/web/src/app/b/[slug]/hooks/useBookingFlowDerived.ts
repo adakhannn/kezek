@@ -1,11 +1,10 @@
 'use client';
 
-import type { Locale } from 'date-fns';
 import { useEffect, useMemo } from 'react';
 
 import type { Service, Staff } from '../types';
 
-import { formatBookingDayLabel } from '@/lib/bookingCalendarDate';
+import { formatBookingDayLabel, type BookingDayLocale } from '@/lib/bookingCalendarDate';
 import { logDebug, logWarn } from '@/lib/log';
 
 type TransferRow = {
@@ -15,11 +14,12 @@ type TransferRow = {
 };
 
 type UseBookingFlowDerivedParams = {
+    selectionReady: boolean;
     branchId: string;
     businessTz: string;
     day: Date;
     dayStr: string;
-    dateLocale: Locale;
+    dateLocale: BookingDayLocale;
     serviceId: string;
     serviceIds: string[];
     services: Service[];
@@ -30,9 +30,12 @@ type UseBookingFlowDerivedParams = {
     staffByBranch: Staff[];
     staffId: string;
     temporaryTransfers: TransferRow[];
+    workingLocations?: TransferRow[];
+    staffAvailabilityReady?: boolean;
 };
 
 export function useBookingFlowDerived({
+    selectionReady,
     branchId,
     businessTz,
     day,
@@ -48,8 +51,13 @@ export function useBookingFlowDerived({
     staffByBranch,
     staffId,
     temporaryTransfers,
+    workingLocations,
+    staffAvailabilityReady = true,
 }: UseBookingFlowDerivedParams) {
     useEffect(() => {
+        // Empty async catalog results are not evidence that a restored choice
+        // is invalid. Validate only after selection and its dependencies load.
+        if (!selectionReady) return;
         if (!staffId || !dayStr) {
             if (!staffId) logDebug('Booking', 'Staff cleared, clearing services');
             if (!dayStr) logDebug('Booking', 'Day cleared, clearing services');
@@ -77,10 +85,16 @@ export function useBookingFlowDerived({
 
             return wasChanged ? validIds : prev;
         });
-    }, [dayStr, servicesFiltered, setServiceIds, staffId]);
+    }, [selectionReady, dayStr, servicesFiltered, setServiceIds, staffId]);
 
     const staffFiltered = useMemo<Staff[]>(() => {
-        if (!branchId) return [];
+        if (!branchId || !staffAvailabilityReady) return [];
+        if (workingLocations !== undefined) {
+            const available = new Set(workingLocations
+                .filter(row => row.date === dayStr && row.branch_id === branchId)
+                .map(row => row.staff_id));
+            return staff.filter(member => available.has(member.id));
+        }
 
         const mainStaff = staffByBranch;
         const mainStaffIds = new Set(mainStaff.map((member) => member.id));
@@ -106,7 +120,7 @@ export function useBookingFlowDerived({
         }
 
         return mainStaff;
-    }, [branchId, dayStr, staff, staffByBranch, temporaryTransfers]);
+    }, [branchId, dayStr, staff, staffByBranch, temporaryTransfers, workingLocations, staffAvailabilityReady]);
 
     const service = useMemo(() => {
         const found = servicesFiltered.find((item) => item.id === serviceId)

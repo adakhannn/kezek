@@ -178,6 +178,7 @@ describe('staffFinanceStatsService', () => {
                 totalMaster: 700,
                 totalSalon: 400,
                 totalGuaranteedAmount: 700,
+                totalTopupAmount: 99,
                 hasGuaranteedPayment: true,
                 totalLateMinutes: 5,
                 totalClients: 1,
@@ -190,6 +191,7 @@ describe('staffFinanceStatsService', () => {
                         master_share: 700,
                         salon_share: 400,
                         guaranteed_amount: 700,
+                        topup_amount: 99,
                     }),
                 ],
             });

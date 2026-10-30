@@ -1,0 +1,52 @@
+{
+  "id": "C109-technical",
+  "before": {
+    "report": "apps/web/test-results/c109-address-before.json",
+    "exitCode": 1,
+    "failed": 3,
+    "passed": 0,
+    "meaning": "Before runtime fix; React controlled-value-without-onChange warning and original-value retention; UNIT notLIVE"
+  },
+  "after": {
+    "chunk_id": "7c235b",
+    "wall_time_seconds": 8.506681799999999,
+    "exit_code": 0,
+    "original_token_count": 201,
+    "output": "[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:7324) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\nPASS src/__tests__/components/AdminBranchFormAddress.test.tsx\nPASS src/__tests__/components/BranchFormContacts.test.tsx\n\nTest Suites: 2 passed, 2 total\nTests:       5 passed, 5 total\nSnapshots:   0 total\nTime:        4.471 s\nRan all test suites within paths \"src/__tests__/components/AdminBranchFormAddress.test.tsx\", \"src/__tests__/components/BranchFormContacts.test.tsx\".\nTest results written to: test-results\\c109-address-after.json\n"
+  },
+  "typecheck": {
+    "initial": {
+      "chunk_id": "155526",
+      "wall_time_seconds": 10.017541,
+      "session_id": 39041,
+      "original_token_count": 0,
+      "output": ""
+    },
+    "final": {
+      "chunk_id": "5bcafa",
+      "wall_time_seconds": 0.0000116,
+      "exit_code": 0,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  "scopedLint": {
+    "initial": {
+      "chunk_id": "41d5e4",
+      "wall_time_seconds": 10.0015506,
+      "session_id": 26029,
+      "original_token_count": 74,
+      "output": "(node:21888) ESLintIgnoreWarning: The \".eslintignore\" file is no longer supported. Switch to using the \"ignores\" property in \"eslint.config.js\": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+    },
+    "final": {
+      "chunk_id": "aca948",
+      "wall_time_seconds": 0.0000212,
+      "exit_code": 0,
+      "original_token_count": 73,
+      "output": "\nC:\\projects\\kezek\\apps\\web\\src\\__tests__\\components\\AdminBranchFormAddress.test.tsx\n  0:0  warning  File ignored because of a matching ignore pattern. Use \"--no-ignore\" to disable file ignore settings or use \"--no-warn-ignored\" to suppress this warning\n\n✖ 1 problem (0 errors, 1 warning)\n\n"
+    },
+    "testIgnored": true,
+    "subsequentExplicitNoIgnoreTestLint": {"exitCode": 0, "output": "ESLintIgnoreWarning for deprecated .eslintignore only; no source/test lint diagnostics"}
+  },
+  "fullGates": "Prior C91 full lint52errors167warnings and source11FAIL2530PASS historicalonly; full currentcandidate rerun deferred during bounded targetedfix, NOT currentfullPASS. ExternalPlaywright prohibited. No service/route/validation change, no coverage gate rerun required."
+}

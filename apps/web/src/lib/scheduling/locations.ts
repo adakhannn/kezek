@@ -21,11 +21,12 @@ export async function workLocationsHttp(request: Request, manager: boolean) {
             if (!data) return createErrorResponse('not_found', 'Бизнес недоступен.', undefined, 404);
             if (from < formatInTimeZone(new Date(), data.tz || 'Asia/Bishkek', 'yyyy-MM-dd')) return createErrorResponse('validation', 'Прошедшие даты недоступны.', undefined, 400);
         }
-        const result = explicitSchedulingEnabled()
+        const complete = explicitSchedulingEnabled();
+        const result = complete
             ? await admin.rpc('read_staff_work_locations', { p_biz: bizId, p_from: from, p_to: to })
             : await admin.from('staff_schedule_rules').select('staff_id, branch_id, date_on')
                 .eq('biz_id', bizId).eq('kind', 'date').eq('is_active', true).gte('date_on', from).lte('date_on', to);
         if (result.error) throw result.error;
-        return createSuccessResponse(result.data ?? []);
+        return createSuccessResponse(result.data ?? [], { availabilityComplete: complete });
     } catch (error) { return handleApiError(error, 'WorkLocations', 'Не удалось определить филиалы сотрудников.'); }
 }

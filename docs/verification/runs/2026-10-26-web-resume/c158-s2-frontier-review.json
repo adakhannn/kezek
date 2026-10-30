@@ -1,0 +1,188 @@
+{
+  "id": "C158",
+  "type": "bounded readonly S2 closure-frontier review",
+  "observationWindowUtc": [
+    "2026-10-25T21:34:44Z",
+    "2026-10-25T21:40:18Z"
+  ],
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "S2": {
+    "accepted": 3,
+    "total": 70,
+    "remainingFullAcceptance": 67
+  },
+  "groups": [
+    {
+      "label": "Wrong-role UI matrix",
+      "ids": [
+        "F4-01",
+        "F4-02",
+        "M1-02"
+      ],
+      "closureConstraint": "Available roles already done. Full matrix still lacks separately authorized manager/admin/foreign-role fixtures; forbidden routes/providers remain excluded from execution, not removed from obligations."
+    },
+    {
+      "label": "API, cookie, log, webhook and security boundaries",
+      "ids": [
+        "F4-03",
+        "P4-01",
+        "P4-02",
+        "P4-03",
+        "P4-04",
+        "N2-01",
+        "N2-02",
+        "N2-04",
+        "N3-01",
+        "N3-02",
+        "N3-04"
+      ],
+      "closureConstraint": "No rawHTTP/SDK/token-cookie-authcode/storage extraction/replay, forbidden metrics/monitoring, credential or webhook-event manipulation. UNIT/source is not LIVE authorization proof. Safe redacted UI observations alone do not close these broad requirements."
+    },
+    {
+      "label": "Viewport and no-flash proof",
+      "ids": [
+        "C1-05",
+        "F4-04"
+      ],
+      "closureConstraint": "Current measured viewport/screenshots unavailable; oldC09blocker/no unchanged retry. DOM not visual/no-flash."
+    },
+    {
+      "label": "Admin runtime failures",
+      "ids": [
+        "M1-03",
+        "M1-04"
+      ],
+      "closureConstraint": "M1home intermittent fetchfailed remains open; no unchanged diagnostic/reloadloop. Scoped dummy compiledprivacy does not prove authorized productionadmin ServerComponent behavior; no fresh deployedproduction authority, domainlast."
+    },
+    {
+      "label": "Roles and business context",
+      "ids": [
+        "F1-01",
+        "F1-02",
+        "F1-03",
+        "F1-04",
+        "F2-01",
+        "F2-02",
+        "F2-03",
+        "F2-04",
+        "F2-05",
+        "I5-01",
+        "I5-02",
+        "I5-03",
+        "I5-04",
+        "M4-01",
+        "M4-02",
+        "M4-03",
+        "M4-04"
+      ],
+      "closureConstraint": "Available selector roles done; manager/multirole missing, ownerbusinessselectionC67blocked. Grant/demote/revoke/restore/create commands and isolated recovery fixture need specific action-time authority. No same-state retries."
+    },
+    {
+      "label": "User lifecycle/security",
+      "ids": [
+        "M3-01",
+        "M3-02",
+        "M3-03",
+        "M3-04"
+      ],
+      "closureConstraint": "Known search, own localdraft and filters done; cannot close create/persistedupdate/credential/link/suspend/delete/protection/audit matrix with those controls. C82 source risks not runtime cause or authority; no current-account demotion."
+    },
+    {
+      "label": "Signin and return matrix",
+      "ids": [
+        "C1-02",
+        "C1-03",
+        "C1-04"
+      ],
+      "closureConstraint": "Knownprovider/return variants retain originalproof, missing roles/provider validation remain. No repeated known32return cases or unsafe callback replay; newloginsetup is0credit."
+    },
+    {
+      "label": "Other provider/callback variants",
+      "ids": [
+        "C3-02",
+        "C3-03",
+        "C3-04",
+        "C3-05"
+      ],
+      "closureConstraint": "Googleknown4login accepted separately. Chooserabandonment3/3done; explicitconsentrefusal/Yandexcancel/login/callback replay not proven. No credentials/newidentity/manualcallback/authcode replay; no unchangedC53retry."
+    },
+    {
+      "label": "Telegram",
+      "ids": [
+        "C4-01",
+        "C4-02",
+        "C4-03",
+        "C4-04",
+        "C4-05",
+        "N2-03"
+      ],
+      "closureConstraint": "Accountlogin/link/webhook/replay not closed by source or notificationdelivery. No linking/unlinking/newidentity/Telegrammessage action authorized here. Independent C4-05 safe banner->profile navigation can advance one uncovered variant with ordinary knownGoogle setup; fullbanner lifecycle remains partial."
+    },
+    {
+      "label": "WhatsApp",
+      "ids": [
+        "C5-01",
+        "C5-02",
+        "C5-03",
+        "C5-04",
+        "C5-05",
+        "N3-03"
+      ],
+      "closureConstraint": "OTP/provider/account-phone commands and valid/expired/reused/providerfailure conditions missing; no phone unmasking/OTP/messages/newidentity or mockednetwork failure used asLIVE."
+    },
+    {
+      "label": "Sessions",
+      "ids": [
+        "C6-01",
+        "C6-02",
+        "C6-03",
+        "C6-04",
+        "C6-05"
+      ],
+      "closureConstraint": "SA/client/stafflogoutBackdone; owner/missingroles/browsertabclose-reopen/multitab matrix incomplete. PreserveuserGooglechoosertab/no newtab/role fixture/storage probes; no repeat completedlogout flows for counts."
+    },
+    {
+      "label": "Profile",
+      "ids": [
+        "E2-01",
+        "E2-02",
+        "E2-03",
+        "E2-04"
+      ],
+      "closureConstraint": "Load/draft and historicalsave proofs retained. Current fullSave couples maskedphone/preferences; specificconsent absent/C77, no repeatask/unmask/Save/OTP; F005liveerror reachability unresolved. No unit imitation."
+    }
+  ],
+  "classification": "These are constraints to FULL requirement acceptance, not a claim every unexecuted subvariant is forbidden or blocked. Preserve original statuses, FAILs, case matrices and denominator. No newly safe complete full-S2 requirement identified; one independently safe incomplete Telegram-banner navigation variant selected for a finite plan. All read-only review0executioncredit.",
+  "notRepeated": "No browser input, authtransition, account/entity/security/DB/API action, tests/build, source fix, diagnostic/reloadloop or completedcase rerun.",
+  "counts": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "windowUi": 11,
+    "windowFix": 3,
+    "accepted": 21,
+    "remaining": 295
+  },
+  "hashes": [
+    {
+      "path": "docs/WEB_CLOSURE_PLAN.json",
+      "sha256": "f619441fd25eecc1535a3527ad394bb0baf466ccb3ec6f2312f665d913fb6bdc"
+    },
+    {
+      "path": "docs/WEB_EVIDENCE_REVIEW.md",
+      "sha256": "7a969bcc5cc904ac00ac5c2b3d720c4ca9edc44de618f2234ca5af744de13715"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c157-result.json",
+      "sha256": "7f07aeffa203e36dc8d17c5bc5144e96f8cd4773743d0002489d17fda227e3b9"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c82-protection-review.json",
+      "sha256": "db376a529e5518cec69afa107f26f7ae65d25014c90bca57a52b390f455f2b83"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c77-result.json",
+      "sha256": "bb54aa0fb6c68b7492e9d9d60b88004a2f2686865b4db388568f554f21e3a875"
+    }
+  ]
+}

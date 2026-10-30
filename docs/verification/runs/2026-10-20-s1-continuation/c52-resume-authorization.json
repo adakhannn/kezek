@@ -1,0 +1,54 @@
+{
+  "id": "C52",
+  "kind": "NEW_AUTHORIZATION_AND_HUMAN_BROWSER_RECOVERY_NOT_PASS",
+  "authorization": "можешь дальше продолжить работать автономно пока я сам не остановлю тебя, кстати вход через суперадмина реализовал, можешь проверить вкладки браузера",
+  "observedStartUtc": "2026-10-21T06:07:49Z",
+  "prospectivelySupersedes": "Prior21Oct11:00Bishkek timebox only; historical final-report-2026-10-21-1100.json and explicit pause remain unchanged.",
+  "until": "Explicit human stop or unavailable Codex usage, no fixed deadline",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "sourceUnchanged": true,
+  "ledgerValid": true,
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "weeklyUsedPercent": 28
+  },
+  "browser": {
+    "browser": "2",
+    "tab": "18",
+    "provider": "90447e64-f1be-4740-a944-28b015348d51",
+    "handle": "restoredAdminTab52",
+    "humanOpened": true,
+    "actualPath": "http://localhost:3000/admin",
+    "actualRole": "Админ-панель/Anonymized; protectedadmin overview present",
+    "observedCounts": "3businesses4branches1staff4services30bookings",
+    "oldTab5": "Still blocked error document; not bound/retried/navigated",
+    "userTab2": "root, samecookies; preserved",
+    "images": "Not retried/no visual ordevicePASS"
+  },
+  "automation": {
+    "id": "kezek",
+    "kind": "heartbeat",
+    "status": "ACTIVE",
+    "exactReadback": true,
+    "readbackUtc": "2026-10-21T06:12:13Z",
+    "name": "Kezek WEB — до команды остановиться",
+    "existingScheduleAndTargetPreserved": true
+  },
+  "baseline": {
+    "acceptedS1": 16,
+    "remainingS1": 9,
+    "passedPrimaryCases": 62,
+    "remainingPrimaryCases": 17,
+    "totalPrimaryCases": 79,
+    "acceptedS2": 3,
+    "remainingS2": 67,
+    "productAccepted": 19,
+    "productRemaining": 297,
+    "inheritedLogicalVerifiedFixes": 9,
+    "newThisAuthorizationFixes": 0
+  },
+  "effects": "Inventory and bind only human restored permitted tab18/read actualrole. No login/logout or app/DB commands yet; ordinarytelemetryunenumerated. Existingautomation resumed per new explicit authorization. No new test/acceptance/fix credit.",
+  "constraints": "WEBonly,known4identities,DEVordinaryUI; no new credentials/grants/roles/jobs/users; no native/subagents/newchats/commit/push/deploy/stage/reset. Domainlast. ExpiredcompilerFontspermission not renewed; no deniedtab/endpoint/API/HTTP/token-cookie-authcode extraction or workaround.",
+  "next": "C53 single bounded immediate retry after chooser abandonment; re-establish abandonment as precondition only, do not recount old2PASS. Then exactsafe /terms local return and /admin restoration. Full C3-03 remains partial."
+}

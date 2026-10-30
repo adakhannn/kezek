@@ -1,4 +1,13 @@
 export const authEn = {
+    'auth.telegramSwitch.login': 'Sign in with another Telegram account',
+    'auth.telegramSwitch.link': 'Connect another Telegram account',
+    'auth.telegramSwitch.title': 'Telegram remembers the account in this browser',
+    'auth.telegramSwitch.step1': 'Open Telegram sign-in management.',
+    'auth.telegramSwitch.step2': 'Select the current profile and choose Log out.',
+    'auth.telegramSwitch.step3': 'Return here and refresh the button — Telegram will offer another phone number.',
+    'auth.telegramSwitch.appHint': 'In the app: Settings → Privacy → Bots and Websites.',
+    'auth.telegramSwitch.open': 'Open Telegram',
+    'auth.telegramSwitch.refresh': 'Refresh button',
     'auth.loading.description': 'We are checking the secure connection and opening sign-in options.',
     'auth.loading.hint': 'This usually takes only a few seconds',
     'auth.loading.title': 'Preparing sign-in',

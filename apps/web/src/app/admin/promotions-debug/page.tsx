@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 
 import { PromotionsDebugClient } from './PromotionsDebugClient';
 
+import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+
 export default async function PromotionsDebugPage() {
     const cookieStore = await cookies();
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -25,14 +27,12 @@ export default async function PromotionsDebugPage() {
     }
 
     // Проверяем, что пользователь - суперадмин
-    const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('roles!inner(key)')
-        .eq('user_id', user.id)
-        .eq('roles.key', 'super_admin')
-        .single();
+    const { isSuperAdmin } = await checkCurrentUserIsSuperAdmin(
+        supabase as unknown as SuperAdminRoleClient,
+        user.id,
+    );
 
-    if (!roleData) {
+    if (!isSuperAdmin) {
         redirect('/dashboard');
     }
 

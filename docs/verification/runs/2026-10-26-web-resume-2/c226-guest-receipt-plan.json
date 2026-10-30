@@ -1,0 +1,28 @@
+{
+  "id":"C226",
+  "status":"FINITE_PLAN_BEFORE_UI",
+  "candidate":"dev-20261026-WEB-5387d70d6af1",
+  "caseId":"S26-D405-guest-public-receipt-projection",
+  "requirementIds":["D4-05"],
+  "variants":["guest:known-client-public-receipt-visit-only-projection"],
+  "dependencyHashes":{
+    "apps/web/src/app/booking/[id]/page.tsx":"c34dc3a6789b226bb952eadb9cbfd075e1b928708584c433f50db4e1ba5ffb0c",
+    "apps/web/src/app/booking/[id]/BookingLayoutClient.tsx":"4532570bc2541ae5c4190cba90b697c7db64f71c2093da5ef741029e6784e631",
+    "apps/web/src/app/_components/AppShellHeader.tsx":"9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+    "apps/web/src/app/_components/AuthStatusWrapper.tsx":"0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+    "apps/web/src/middleware.ts":"a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b",
+    "supabase/migrations/20261009105000_public_booking_receipt_composition.sql":"6549703ec1a573e4b0d4a75381455e17bf02f3730b87f2a5af71dc1fd68fa51f"
+  },
+  "timeboxMinutes":7,
+  "positiveOracle":{"caseId":"S42-C59-cancelled","originalUtc":"2026-10-21T07:32:40Z","id":"a4278f13-11b1-490e-b1bd-51154a1a545f","status":"Отменена","date":"26 октября 2026 09:00","service":"LIVE TEST Service 31","master":"Адахан Осоров","allRecordedDependenciesMatchCurrent":true,"credit":"Association only, not new client execution."},
+  "expected":"Actual logged-out guest header Войти/no account, same public receipt fullUUID/cancelled/date/service/master. Complete ordinary AX must contain no protected client identity LIVE TEST CLIENT12OCT, client email/contact fields, private cabinet data/internal notes/mutation controls. Professional master name is public. Public visit details are intended.",
+  "steps":[
+    "Fresh existing SA admin/RU baseline ->ordinary observed account logout ->verify guest. No newtab/role fixture.",
+    "ONE direct http://localhost:3000/booking/a4278f13-11b1-490e-b1bd-51154a1a545f in existing allowed tab. Wait settled receipt; timeout ->ONE fresh AX, no duplicate navigation.",
+    "Inspect complete ordinary AX positive visit fields and absence of protected client fields/actions. No hidden DOM/storage/network extraction or receipt action. No reload/status replay. NotFound/missing eligibility means BLOCKED, not privacy PASS.",
+    "Observed Sign in ->ordinary known Google kezekkg ->protected admin/RU/Anonymized/Business3 restore/markHandoff."
+  ],
+  "stopRules":["No booking/hold/slot/ChooseTime/Confirm/Cancel/Repeat/Review/Pay/email/OTP/newentity commands.","No forbiddenroutes/providers/newtabs/HTTP/SDK/SQL/storage/secrets/unmask.","Unexpected private data ->record actual repro/stop, not speculative source fix.","Uncertain role/navigation ->bounded observation, no unchanged auth/URL loops."],
+  "effects":"Ordinary logout/login/public receipt read. No booking mutation; ordinary auth/analytics/telemetry writes unenumerated, not zero TOTAL writes.",
+  "credit":"At most ONE compound NEW functional UI case. D4-05 stays partial, no API/RLS/hidden data/all surfaces/security certificate. Old status proofs not repeated or retimed."
+}

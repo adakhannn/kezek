@@ -1,0 +1,23 @@
+{
+  "id": "C183_EFFECTS_JOURNAL",
+  "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "branch": "057447c8-b200-4403-b056-49e3c250840f",
+  "original": "Allfourdirectorylinksblank; originalname/blankaddress+fourcontacts/coords—/—/inherittrue/activeTRUE/7closed days. Inactivefa5 untouched.",
+  "events": [
+    {
+      "stage": "prepared",
+      "afterClockUtc": "2026-10-26T00:12:47Z"
+    },
+    {
+      "stage": "links_saved",
+      "afterClockUtc": "2026-10-26T00:13:07Z"
+    },
+    {
+      "stage": "restored",
+      "afterClockUtc": "2026-10-26T00:14:32Z"
+    }
+  ],
+  "pending": false,
+  "lastConfirmedStage": "restored",
+  "rollbackScope": "Onlyexactfourknownsynthetic C183directorylinks clear throughordinaryACTIVE057 form afterfreshknownstate; preserve allotherbaseline/no blindretry/cleanup."
+}

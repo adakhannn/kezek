@@ -1,0 +1,14 @@
+{
+  "id": "C124-independent-business-oracle",
+  "source": "ActualUI allbusinesslist /admin/businesses after10:27:04Z, before opening categories page in C124",
+  "universe": "Всего3/Одобрено3/exact3knownIDs/no pagination/filter/+Ntruncation",
+  "businessCategorySets": {
+    "fe2d412c-21c6-40ef-b5d3-23f49f550610": ["barbershop"],
+    "c28c8109-bedc-4f9e-bbc2-30f4b549131e": ["zhenskaya-parikmaherskaya"],
+    "35e5b36c-a967-4708-ba4d-7d3fc24b89f4": ["barbershop"]
+  },
+  "expectedBusinessUsage": {"barbershop":2,"zhenskaya-parikmaherskaya":1,"live-test-night09oct-category":0},
+  "expectedTotalReferences": 3,
+  "expectedMostUsed": {"slug":"barbershop","count":2},
+  "effects": "Read-only list; no business/detail/edit/role/contact/API/SQL command. Expectation calculated from observedmembership sets before actual categorycounts, not categoryRPCsource copied asoracle. ExistingC119/C120counts are not currentactualproof."
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1792542128130" clover="3.2.0">
+  <project timestamp="1792542128130" name="All files">
+    <metrics statements="20" coveredstatements="20" conditionals="5" coveredconditionals="5" methods="7" coveredmethods="7" elements="32" coveredelements="32" complexity="0" loc="20" ncloc="20" packages="1" files="1" classes="1"/>
+    <file name="useExistingSessionRedirect.ts" path="C:\projects\kezek\apps\web\src\app\auth\sign-in\useExistingSessionRedirect.ts">
+      <metrics statements="20" coveredstatements="20" conditionals="5" coveredconditionals="5" methods="7" coveredmethods="7"/>
+      <line num="3" count="1" type="stmt"/>
+      <line num="5" count="1" type="stmt"/>
+      <line num="6" count="1" type="stmt"/>
+      <line num="13" count="5" type="stmt"/>
+      <line num="17" count="5" type="stmt"/>
+      <line num="18" count="5" type="stmt"/>
+      <line num="19" count="5" type="stmt"/>
+      <line num="20" count="5" type="stmt"/>
+      <line num="21" count="8" type="cond" truecount="3" falsecount="0"/>
+      <line num="24" count="4" type="stmt"/>
+      <line num="25" count="4" type="stmt"/>
+      <line num="26" count="1" type="stmt"/>
+      <line num="27" count="1" type="stmt"/>
+      <line num="30" count="5" type="stmt"/>
+      <line num="31" count="5" type="cond" truecount="1" falsecount="0"/>
+      <line num="33" count="5" type="stmt"/>
+      <line num="34" count="5" type="cond" truecount="1" falsecount="0"/>
+      <line num="36" count="5" type="stmt"/>
+      <line num="37" count="5" type="stmt"/>
+      <line num="38" count="5" type="stmt"/>
+    </file>
+  </project>
+</coverage>

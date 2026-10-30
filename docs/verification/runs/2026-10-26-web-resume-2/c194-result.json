@@ -1,0 +1,24 @@
+{
+  "id": "C194",
+  "status": "BLOCKED_AT_TWO_ELIGIBLE_SERVICES_PRECONDITION",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "plan": "c194-multi-service-selection-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T08:42:11Z",
+    "2026-10-26T08:44:55Z"
+  ],
+  "actual": "Existingbusiness2/branchfe1/current26Oct/defaultday ->actualstaff1bfd selectable ->ServiceStep4 shows exactlyONE eligible60min100-300som checkbox. Other1minservice visibleonpublicbusinesspage is not an eligible secondchoicefor thisstaff. No servicecheckboxselected, no multifield assertion executed. Current Nextdisabled alone is setup and doesnot earn repeatedsingle-servicePASS.",
+  "transient": "Initial document hydration showed headerloading/guestguidance; waitedactualAdminrole beforeactions. Not an authfailure or rolechange.",
+  "restoration": "One ordinary document entry to alreadyknown basebookingroute resetsvisibleStep1/bothbranchesunchecked/no stafforservice/Nextdisabled. Ordinarybrand->cleanroot3businesses thenobservedAdminmenu->protectedadmin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1, markHandoff.",
+  "blocker": "FEWER_THAN_TWO_ACTUAL_ELIGIBLE_SERVICES_FOR_SAME_STAFF_BRANCH",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292,
+    "newWindowUi": 3
+  },
+  "effects": "Ordinary localwizardbranch/staff selectionsandnavigation only; no slot/ChooseTime/Confirm/hold/booking/cancel/payment/source/test/build/DB/API/SDK/storageprobe/persistentfixtureconfiguration. Ambient apppreferences/auth/analytics/draftwrites unenumerated.",
+  "next": "C195 separately plan current ordinaryserviceassignment viability+reversiblelink baseline/restore under newhumanfull task-scoped autonomy; do not turn C194plan into unplannedSave."
+}

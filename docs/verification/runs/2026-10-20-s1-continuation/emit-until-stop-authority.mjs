@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import {updateJson} from './json-evidence-patch.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation';
+const read=f=>JSON.parse(fs.readFileSync(f,'utf8'));
+const p=read(run+'/progress.json'),s=read('docs/WEB_GLOBAL_READINESS_STATE.json'),d=read(run+'/nonfinal-draft.json'),l=read('docs/WEB_VERIFICATION_LEDGER.json');
+const utc=new Date().toISOString();
+const authority='Latest direct human20Oct2026: «можешь дальше продолжить пока я сам не останавлю». Prospective replacement of19:00 cutoff; no fixed deadline. Continue until human stop or unavailable Codex limits. No new privileges or renewal of expired compiler Fonts network approval.';
+if(p.status==='ACTIVE_UNTIL_USER_STOP')throw Error('Already applied');
+p.priorTimeboxedWindow={authorization:p.authorization,deadlineUtc:p.deadlineUtc,draftByUtc:p.draftByUtc,noNewLongScenarioAfterUtc:p.noNewLongScenarioAfterUtc,finalizeAndPauseFromUtc:p.finalizeAndPauseFromUtc,supersededProspectivelyAtUtc:utc};
+Object.assign(p,{status:'ACTIVE_UNTIL_USER_STOP',authorization:authority,deadlineUtc:null,draftByUtc:null,noNewLongScenarioAfterUtc:null,finalizeAndPauseFromUtc:null,finalizationStillRequiredByDeadline:false,activeSubpackage:'C21 preflight remaining five M1-03 admin navigation destinations',checkpointAfterClockUtc:utc});
+p.automation={id:'kezek',status:'ACTIVE',readback:true,untilUtc:null,rrule:'FREQ=MINUTELY;INTERVAL=15',explicitPauseRequiredOnHumanStop:true};
+l.updatedUtc=utc;l.nextBatch.objective='C21 remaining five M1-03 destinations: source preflight automatic side effects/denied dependencies, then safe actual UI nav/reload. Human authorizes until explicit stop; no old19:00 finalization. All blocked/fail remain open. S117/25,S2 1/70,18/316 unchanged.';p.lastCheckpoint=l.nextBatch.objective;
+Object.assign(s.progressAccounting,{currentInteractiveStatus:'active_until_explicit_human_stop',currentAuthorization:authority,currentDeadlineUtc:null,autonomousResumeAllowed:true,latestCheckpointUtc:utc});
+d.priorTimeboxedFinalization=d.finalization;d.deadlineUtc=null;d.draftRefreshedUtc=utc;d.productScenariosFinished=false;d.finalization={trigger:'explicit human stop or unavailable Codex usage',fixedDeadlineUtc:null,notYetPaused:true,authority};
+process.stdout.write('*** Begin Patch\n'+updateJson(run+'/progress.json',p)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s)+updateJson(run+'/nonfinal-draft.json',d)+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l)+'*** End Patch\n');

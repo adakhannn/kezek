@@ -1,0 +1,21 @@
+{
+  "id": "C248_AUTOMATION_READBACK",
+  "recordedAfterClockUtc": "2026-10-28T12:41:05Z",
+  "automationId": "kezek",
+  "kind": "heartbeat",
+  "status": "ACTIVE",
+  "name": "Kezek WEB — до команды остановиться",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "rrule": "FREQ=MINUTELY;INTERVAL=15",
+  "beforeSHA256": "44c550cddc388088d8c98b83e49a505f7b465682a1e6bea9b63b7dfff6c74c83",
+  "configSHA256": "8535a17aee86c793bd07d6f6b69841f995ebaaa4b24af6e6a96a0520825b9dc0",
+  "backup": "automation-before-c248-checkpoint.toml",
+  "toolUpdateSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "previousFullConfigurationPreservedInBackup": true,
+  "originalConstraintsPreservedAsSuffix": true,
+  "historicalCheckpointPrefixesCompacted": true,
+  "noDuplicate": true,
+  "change": "CurrentC248/nextC249 replace supersededC246/C245 operational prefixes; exactoldfullTOMLbackup preserved and original7545charconstraintsasunchangedsuffix. SameACTIVE/name/15min/chat; no newpermissions/network/runnerauthority."
+}

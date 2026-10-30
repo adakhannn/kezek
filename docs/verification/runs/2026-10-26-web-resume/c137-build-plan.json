@@ -1,0 +1,32 @@
+{
+  "id": "C137",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "sourceFingerprint": "f0dad7beb1d68eadee7fe8e88e9066fc26fb20f1d4584868bb5e15666b343a7c",
+  "files": 1686,
+  "savedBeforeBuildUtc": "2026-10-25T20:14:36Z",
+  "reason": "F017 new actual-UI-reproduced Today count/label fix and new3test file make510f C121/C122 build historical; changed source is new condition, not calendar/heartbeat retry.",
+  "harness": "scripts/closure-web-isolated-build-c137-20261026.mjs",
+  "guard": "scripts/closure-web-offline-guard-c137-20261026.cjs",
+  "guardTest": "scripts/closure-web-offline-guard-c137-20261026.test.cjs",
+  "destination": "test-results/closure-web-20261026-c137-f0dad7beb1d6/build",
+  "rawLog": "c137-build-raw.txt",
+  "timebox": {
+    "compilerSeconds": 240,
+    "preparationAndClassificationMinutes": 12,
+    "oneCompilerAttempt": true
+  },
+  "preflight": "Read-only main127.0.0.1:3000PID18368/no3107listener/no C137owned process, mainuntouched. Exact destination/raw absent checked by emitter and harness.16finite offline guard testsPASS; notproductPASS. Mechanical C121 harness/guard/test substitutions only: newcandidate/hash/filecount/path/date/C137tokens, same policy.",
+  "expected": "Fresh exact1686file cold defaultNext16.0.11Turbopack build exit0/types/prerenders, no mock/compiler-switch/checkskip/install. Copy rejects .env/symlinks/generatedcache, exact source/copy count+fingerprint. Env systemallowlist/dummy.invalid backend/no realkeys, Sentry+telemetryoff. NodeTCP/fetch denied except exact owned generatedPostCSS loopback argvport; not OS firewall/native-confinement claim, no renewed network/font/download permission.",
+  "steps": [
+    "Clock/source/progress/attempt absence then ONE harness launch. Preserve rawappend-only log/PID/UTC/exit/watchdog. No unchanged C121/C93retry/mainrestart/fullOAuthlogs.",
+    "FAIL/timeout preserve, no unchangedrerun or speculative config/security/source repair. Humanstop stop onlyexactowncompiler +PAUSEDexistingkezek/readback/new26Octfinal.",
+    "Exit0 is technicalBUILDonly/0UI/fix/accepted. Save separate finite compiledruntime/actualCUA publicdocument plan before A3-01promotion; no pageAssets.bundle/capture/cache/visual/auth repetition."
+  ],
+  "effects": "Own isolatedcopy/dependencyjunctions/compiler/cache/rawlog only. No envcopy/download/DEVDB/appfixture/booking/role/securityconfig command; ordinary mainauth/telemetry unenumerated.",
+  "accounting": "Current20/316296left,S116primary62,S23/70,S41/47;26Oct3newUI/1fix/logical13; fulltest11FAIL/fullLint52errors retained/NOT_READY.",
+  "harnessHashes": {
+    "scripts/closure-web-isolated-build-c137-20261026.mjs": "cb6383e41934f2a5a0581a6d6464b7fe8c3738dc04823f21234ea3d51784a54b",
+    "scripts/closure-web-offline-guard-c137-20261026.cjs": "4aebd6b28bfb3ce4607a718e5a2de7deb43d3a9e17deebc0dfd806823c7d3f4e",
+    "scripts/closure-web-offline-guard-c137-20261026.test.cjs": "549686f0e2d12b8c56a4252cb93d2f8bb41e7f74d45b3b7aa85e08bc6657dcae"
+  }
+}

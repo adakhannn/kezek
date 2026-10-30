@@ -1,0 +1,162 @@
+{
+  "id": "S1.2",
+  "status": "checkpoint_partial",
+  "requirements": [
+    {
+      "id": "A1-01",
+      "expectedVariants": [
+        "owner:/:cold-cache-document",
+        "owner:/auth/sign-in:cold-cache-document",
+        "owner:/terms:cold-cache-document",
+        "owner:/privacy:cold-cache-document",
+        "guest:/:cold-cache-document",
+        "guest:/auth/sign-in:cold-cache-document",
+        "guest:/terms:cold-cache-document",
+        "guest:/privacy:cold-cache-document"
+      ],
+      "caseIds": [
+        "S12-cold-1",
+        "S12-cold-2",
+        "S12-cold-3",
+        "S12-cold-4",
+        "S12-cold-5",
+        "S12-cold-6",
+        "S12-cold-7",
+        "S12-cold-8"
+      ]
+    },
+    {
+      "id": "A1-03",
+      "expectedVariants": [
+        "owner:/:direct+reload",
+        "owner:/auth/sign-in:direct+reload",
+        "owner:/terms:direct+reload",
+        "owner:/privacy:direct+reload",
+        "guest:/:direct+reload",
+        "guest:/auth/sign-in:direct+reload",
+        "guest:/terms:direct+reload",
+        "guest:/privacy:direct+reload"
+      ],
+      "caseIds": [
+        "S12-owner-route-1",
+        "S12-owner-route-2",
+        "S12-owner-route-3",
+        "S12-owner-route-4",
+        "S12-guest-route-1",
+        "S12-guest-route-2",
+        "S12-guest-route-3",
+        "S12-guest-route-4"
+      ]
+    },
+    {
+      "id": "A1-04",
+      "expectedVariants": [
+        "owner:/:direct+reload",
+        "owner:/auth/sign-in:direct+reload",
+        "owner:/terms:direct+reload",
+        "owner:/privacy:direct+reload",
+        "guest:/:direct+reload",
+        "guest:/auth/sign-in:direct+reload",
+        "guest:/terms:direct+reload",
+        "guest:/privacy:direct+reload"
+      ],
+      "caseIds": [
+        "S12-owner-route-1",
+        "S12-owner-route-2",
+        "S12-owner-route-3",
+        "S12-owner-route-4",
+        "S12-guest-route-1",
+        "S12-guest-route-2",
+        "S12-guest-route-3",
+        "S12-guest-route-4"
+      ]
+    },
+    {
+      "id": "A1-02",
+      "expectedVariants": [
+        "pre-hydration SSR content four routes",
+        "no blank shell visual four routes"
+      ],
+      "caseIds": [
+        "S12-SSR",
+        "S12-INITIAL-VISUAL"
+      ]
+    },
+    {
+      "id": "A1-05",
+      "expectedVariants": [
+        "owner:back-forward",
+        "guest:back-forward"
+      ],
+      "caseIds": [
+        "S12-owner-history",
+        "S12-guest-history"
+      ]
+    },
+    {
+      "id": "A4-01",
+      "expectedVariants": [
+        "public unknown URL",
+        "dashboard unknown URL owner",
+        "dashboard unknown URL guest",
+        "cabinet unknown URL guest",
+        "staff unknown URL guest",
+        "admin unknown URL guest"
+      ],
+      "caseIds": [
+        "S12-404-public",
+        "S12-404-owner",
+        "S12-404-guest",
+        "S12-404-cabinet",
+        "S12-404-staff",
+        "S12-404-admin"
+      ]
+    },
+    {
+      "id": "A4-02",
+      "expectedVariants": [
+        "controlled server-render failure",
+        "controlled API failure"
+      ],
+      "caseIds": [
+        "S12-server-failure",
+        "S12-api-failure"
+      ]
+    },
+    {
+      "id": "A4-03",
+      "expectedVariants": [
+        "404 home recovery",
+        "server error retry recovery",
+        "API error retry recovery"
+      ],
+      "caseIds": [
+        "S12-404-recovery",
+        "S12-server-recovery",
+        "S12-api-recovery"
+      ]
+    },
+    {
+      "id": "A4-04",
+      "expectedVariants": [
+        "404 safe content",
+        "server failure safe content",
+        "API failure safe content"
+      ],
+      "caseIds": [
+        "S12-404-safe",
+        "S12-server-safe",
+        "S12-api-safe"
+      ]
+    }
+  ],
+  "scope": "RU functional DEV baseline, not all locales/devices: those remain mandatory O cases. Owner and guest entry states; authorized ordinary logout/login, no changed accounts or credentials. Failed console entries classified by current navigation interval; logs absence scoped to captured buffer.",
+  "reviewNote": "Before remaining 404 execution, corrected plan to include all five namespaces explicitly required by A4-01; no successful requirement count yet. Missing routes test 404 presentation, not access control of existing resources. A1-01 cold-cache proof is NOT inferred from document navigation/reload.",
+  "acceptedRequirementIds": [
+    "A1-03",
+    "A1-04",
+    "A1-05",
+    "A4-01"
+  ],
+  "remaining": 5
+}

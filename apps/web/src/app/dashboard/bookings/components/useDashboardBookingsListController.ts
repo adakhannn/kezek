@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { FilterPreset, applyPreset } from './FilterPresets';
 import type { BookingItem } from './bookingsViewTypes';
 
 import { cancelBookingWithFallback, confirmBooking } from '@/lib/bookingDashboardService';
+import { filterDashboardBookings } from '@/lib/dashboardBookingSearch';
 import { logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -72,6 +73,7 @@ export function useDashboardBookingsListController({
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [currentStaffId, setCurrentStaffId] = useState<string | null>(null);
     const [hasStaffAccess, setHasStaffAccess] = useState<boolean>(false);
+    const visibleList = useMemo(() => filterDashboardBookings(list, searchQuery), [list, searchQuery]);
 
     useEffect(() => {
         async function fetchCurrentStaff() {
@@ -115,6 +117,7 @@ export function useDashboardBookingsListController({
                     staff_id,
                     services (name_ru, name_ky, name_en),
                     staff (full_name),
+                    client_id,
                     client_name,
                     client_phone,
                     booking_services (
@@ -170,6 +173,7 @@ export function useDashboardBookingsListController({
                 services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
                 staff?: { full_name: string }[] | null;
                 client_name?: string | null;
+                client_id?: string | null;
                 client_phone?: string | null;
                 booking_services?: {
                     duration_min: number | null;
@@ -181,6 +185,21 @@ export function useDashboardBookingsListController({
             setTotalCount(count ?? 0);
 
             const rawRows = (data ?? []) as ListBookingRow[];
+            const missingNames = rawRows.filter(row => row.client_id && !row.client_name?.trim()).map(row => String(row.id));
+            const clientNames = new Map<string, string>();
+            if (missingNames.length) {
+                try {
+                    const response = await fetch('/api/bookings/client-identities', {
+                        method: 'POST', headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ bookingIds: missingNames }),
+                    });
+                    if (!response.ok) throw new Error('Client name lookup failed');
+                    const result = await response.json() as { identities?: { bookingId: string; name: string }[] };
+                    for (const identity of result.identities ?? []) clientNames.set(identity.bookingId, identity.name);
+                } catch (error) {
+                    logWarn('useDashboardBookingsListController', 'Client names unavailable', error);
+                }
+            }
             const mapped: BookingItem[] = rawRows.map((row) => {
                 const base: BookingItem = {
                     id: String(row.id),
@@ -191,7 +210,8 @@ export function useDashboardBookingsListController({
                     staff_id: row.staff_id,
                     services: row.services as BookingItem['services'],
                     staff: row.staff as BookingItem['staff'],
-                    client_name: row.client_name ?? undefined,
+                    client_id: row.client_id,
+                    client_name: row.client_name?.trim() || clientNames.get(String(row.id)),
                     client_phone: row.client_phone ?? undefined,
                 };
 
@@ -227,23 +247,7 @@ export function useDashboardBookingsListController({
                 return base;
             });
 
-            let filtered = mapped;
-            if (searchQuery.trim()) {
-                const queryText = searchQuery.toLowerCase().trim();
-                filtered = filtered.filter((booking) => {
-                    const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
-                    const master = Array.isArray(booking.staff) ? booking.staff[0] : booking.staff;
-                    return (
-                        service?.name_ru?.toLowerCase().includes(queryText) ||
-                        master?.full_name?.toLowerCase().includes(queryText) ||
-                        booking.client_name?.toLowerCase().includes(queryText) ||
-                        booking.client_phone?.includes(queryText) ||
-                        String(booking.id).toLowerCase().includes(queryText)
-                    );
-                });
-            }
-
-            setList(filtered);
+            setList(mapped);
         } finally {
             setIsLoading(false);
         }
@@ -301,7 +305,7 @@ export function useDashboardBookingsListController({
     }
 
     return {
-        list,
+        list: visibleList,
         statusFilter,
         branchFilter,
         searchQuery,

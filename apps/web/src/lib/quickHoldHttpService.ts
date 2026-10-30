@@ -1,8 +1,9 @@
-import { type BookingError, validateCreateBookingParams } from '@core-domain/booking';
+import { type BookingError, type CreateBookingResult, validateCreateBookingParams } from '@core-domain/booking';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { logDebug, logError } from '@/lib/log';
+import { dispatchBookingNotification } from '@/lib/bookingNotificationDispatch';
+import { BookingSlotConflictError } from '@/lib/bookingSlotConflict';
 import { runQuickHold } from '@/lib/quickHoldService';
 import { resolveRequestAuthContext } from '@/lib/requestAuthContext';
 import { validateRequest } from '@/lib/validation/apiValidation';
@@ -36,41 +37,6 @@ function normalizeQuickHoldInput(raw: QuickHoldRequestBody) {
     }
 
     return domainValidation.data;
-}
-
-async function notifyHold(
-    bookingId: string,
-    req: Request,
-    type: 'hold' | 'confirm' | 'cancel' = 'hold',
-) {
-    try {
-        const notifyUrl = new URL('/api/notify', req.url);
-        logDebug('QuickHold', 'Calling notify API', {
-            url: notifyUrl.toString(),
-            type,
-            bookingId,
-        });
-
-        const response = await fetch(notifyUrl, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ type, booking_id: bookingId }),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error');
-            logError('QuickHold', 'Notify API error', {
-                status: response.status,
-                errorText,
-            });
-            return;
-        }
-
-        const result = await response.json().catch(() => ({}));
-        logDebug('QuickHold', 'Notify API success', result);
-    } catch (error) {
-        logError('QuickHold', 'Notify API exception', error);
-    }
 }
 
 function mapQuickHoldError(error: BookingError) {
@@ -108,14 +74,22 @@ export async function runQuickHoldHttp(req: Request): Promise<NextResponse> {
         return normalized as NextResponse;
     }
 
-    const result = await runQuickHold(
-        {
-            supabase: authContext.supabase,
-            userId: authContext.user.id,
-            notify: ({ bookingId, type }) => notifyHold(bookingId, req, type),
-        },
-        normalized,
-    );
+    let result: CreateBookingResult;
+    try {
+        result = await runQuickHold(
+            {
+                supabase: authContext.supabase,
+                userId: authContext.user.id,
+                notify: ({ bookingId, type }) => dispatchBookingNotification(authContext.supabase, bookingId, type),
+            },
+            normalized,
+        );
+    } catch (error) {
+        if (error instanceof BookingSlotConflictError) {
+            return createErrorResponse('booking_slot_unavailable', error.message, undefined, 409);
+        }
+        throw error;
+    }
 
     if (!result.ok) {
         return mapQuickHoldError(result.error);

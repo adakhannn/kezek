@@ -1,0 +1,190 @@
+{
+  "id": "S1.1-fresh-origin-assets",
+  "recordedUtc": "2026-10-18T11:22:25Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "plan": "s17-assets-plan.json",
+  "origin": "http://s1assets-20261018-110530.localhost:3103",
+  "cacheBoundary": "New timestamp-named local origin, not previous localhost:3000 or127.0.0.1:3103 cache keys; first navigation in this run. No claim of global browser cache clearing.",
+  "live": {
+    "method": "Actual built application through CUA; supported pageAssets observed inventory and bundle; DOM read-only resource state",
+    "inventoryId": "c237f13c-d9b5-4d54-8aad-3dc5fd40eeaa",
+    "initialCounts": {
+      "font": 3,
+      "image": 3,
+      "stylesheet": 2,
+      "script": 13,
+      "other": 6,
+      "inlineSvg": 3
+    },
+    "bundle": {
+      "requested": 11,
+      "downloaded": 11,
+      "failed": 0,
+      "includesInlineSvg": 3
+    },
+    "stylesheets": [
+      {
+        "name": "7af0e173cf372ed8.css",
+        "actualCSSRules": 17
+      },
+      {
+        "name": "e2f6a80195c5d503.css",
+        "actualCSSRules": 112
+      }
+    ],
+    "fontFamily": "Geist, \"Geist Fallback\", Arial, Helvetica, sans-serif",
+    "logo": {
+      "complete": true,
+      "naturalWidth": 320,
+      "naturalHeight": 86,
+      "url": "/_next/image?url=%2Flogo.png&w=640&q=75"
+    },
+    "chunks": "13 observed script resources plus DOM script references. Actual menu expands and English button changes h1/search labels, demonstrating working current-page hydration/chunk execution; no claim each prefetched script executed.",
+    "interaction": "Menu initially collapsed -> expanded language/RU selected/Войти; English -> Find a place and book online and English search labels.",
+    "console": "Captured error buffer contains only older10:50/10:51 isolated business-render errors, no entries from fresh-origin interval. Server guard logs frontend metrics/analytics API failures; not zero-total network errors."
+  },
+  "assets": [
+    {
+      "id": "0f99b47d882b0bb3",
+      "kind": "font",
+      "name": "797e433ab948586e-s.p.29207c2f.woff2",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/media/797e433ab948586e-s.p.29207c2f.woff2",
+      "contentType": "font/woff2",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/0f99b47d882b0bb3.woff2",
+      "bytes": 23108,
+      "sha256": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",
+      "magicHex": "774f46320001000000005a44"
+    },
+    {
+      "id": "df361fb703652d2d",
+      "kind": "font",
+      "name": "caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "contentType": "font/woff2",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/df361fb703652d2d.woff2",
+      "bytes": 29288,
+      "sha256": "9b6f5ff45b278c744b5f379a2c4ecbaf858a842b8eaf82ac8d21b699ca16c608",
+      "magicHex": "774f46320001000000007268"
+    },
+    {
+      "id": "00dcbccdb07d66b5",
+      "kind": "image",
+      "name": "image",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/image?url=%2Flogo.png&w=256&q=75",
+      "contentType": "image/webp",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/00dcbccdb07d66b5",
+      "bytes": 10918,
+      "sha256": "563beb576113a5269a198ef7cabf316c4ec301b07f1633c60477461354faf914",
+      "magicHex": "524946469e2a000057454250"
+    },
+    {
+      "id": "b1d5bd9b2d0fdb36",
+      "kind": "stylesheet",
+      "name": "7af0e173cf372ed8.css",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/chunks/7af0e173cf372ed8.css",
+      "contentType": "text/css",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/b1d5bd9b2d0fdb36.css",
+      "bytes": 3656,
+      "sha256": "bd2fb657c1127188b97c89a684b5fd5fc717fb9fb78ecfbcca0632ab5d34aa3f",
+      "magicHex": "40666f6e742d666163657b66"
+    },
+    {
+      "id": "4f6c3ffccb6e7848",
+      "kind": "stylesheet",
+      "name": "e2f6a80195c5d503.css",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/chunks/e2f6a80195c5d503.css",
+      "contentType": "text/css",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/4f6c3ffccb6e7848.css",
+      "bytes": 221644,
+      "sha256": "f474d93c2a64edeaf49fc22c9921da887860c236370002057130a2d915063bad",
+      "magicHex": "406c617965722070726f7065"
+    },
+    {
+      "id": "38ff2ecc878f123e",
+      "kind": "image",
+      "name": "image",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/image?url=%2Flogo.png&w=640&q=75",
+      "contentType": "image/webp",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/38ff2ecc878f123e",
+      "bytes": 30226,
+      "sha256": "c071ae432f0aebd34064d54dc70959de62d84bee70dcfdcac8c7adbf89b2d7a0",
+      "magicHex": "524946460a76000057454250"
+    },
+    {
+      "id": "046cc401f0d0a55a",
+      "kind": "font",
+      "name": "8a480f0b521d4e75-s.ea323500.woff2",
+      "url": "http://s1assets-20261018-110530.localhost:3103/_next/static/media/8a480f0b521d4e75-s.ea323500.woff2",
+      "contentType": "font/woff2",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/046cc401f0d0a55a.woff2",
+      "bytes": 14900,
+      "sha256": "6129fc8571c3e0cb0a4c41f5160c974a843b055009dc4ad8858bd808e18a2d86",
+      "magicHex": "774f46320001000000003a34"
+    },
+    {
+      "id": "0cab9bd821410e61",
+      "kind": "image",
+      "name": "icon-192.png",
+      "url": "http://s1assets-20261018-110530.localhost:3103/icon-192.png",
+      "contentType": "image/png",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/0cab9bd821410e61.png",
+      "bytes": 169650,
+      "sha256": "40cd2b1688a334e4fd46dbe45655f1bcdc826da4d85e61fdc6302f64cf0dcfbb",
+      "magicHex": "89504e470d0a1a0a0000000d"
+    },
+    {
+      "id": "a09583e84c0a4489",
+      "kind": "image",
+      "name": "svg-1",
+      "url": "inline-svg:a09583e84c0a4489",
+      "contentType": "image/svg+xml",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/a09583e84c0a4489.svg",
+      "bytes": 186,
+      "sha256": "0c81a19f06285b2debdffad43334f6ff46b343a9622c022124aa6ea154ada52a",
+      "magicHex": "3c73766720636c6173733d22"
+    },
+    {
+      "id": "5efb2b5f70b136db",
+      "kind": "image",
+      "name": "svg-2",
+      "url": "inline-svg:5efb2b5f70b136db",
+      "contentType": "image/svg+xml",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/5efb2b5f70b136db.svg",
+      "bytes": 241,
+      "sha256": "3d1ad0e2b0e18dce16b286118e3549136cc3c26f9d1c4c9647c6a8e3b68d1f5c",
+      "magicHex": "3c73766720636c6173733d22"
+    },
+    {
+      "id": "99e4ea76c3c3fecf",
+      "kind": "image",
+      "name": "svg-3",
+      "url": "inline-svg:99e4ea76c3c3fecf",
+      "contentType": "image/svg+xml",
+      "path": "docs/verification/runs/2026-10-18-s1/s17-assets/99e4ea76c3c3fecf.svg",
+      "bytes": 231,
+      "sha256": "317d9d9eff9926f682cb7a25629de296752356eb0165ebe5b489a8391558e00e",
+      "magicHex": "3c73766720636c6173733d22"
+    }
+  ],
+  "server": {
+    "pid": 25816,
+    "startUtc": "2026-10-18T11:05:56.470Z",
+    "readyMs": 1902,
+    "automaticStopUtc": "2026-10-18T11:10:56.500Z",
+    "signal": "SIGTERM",
+    "primary3000Untouched": true,
+    "ownedPidAnd3103AbsentAt": "2026-10-18T11:20:49Z"
+  },
+  "returnIncident": {
+    "navigation": "Return to localhost:3000/dashboard/settings timed out; metadata showed actual target URL. Fresh DOM: Нет соединения с сервисом / Повторить / В каталог / Обновить страницу, headerВойти not proof of logout.",
+    "retry": "Clicked actual Обновить страницу once -> Runtime.evaluate control timeout; outcome unknown. No rebind/replacement/tab/restart/auth reset.",
+    "primary": "14216 Respondingtrue; port3000 owned14216 verified11:21UTC. No restart.",
+    "userReport": "User confirmed manual refresh; fresh CUA DOM after11:23:29UTC independently confirms Аккаунт владельца, businessc28c8109/Тестовый бизнес2, RU, expected unchanged contacts. No login/logout/reset or new preference selection. This is manual refresh recovery, not successful app retry proof for A4-03."
+  },
+  "limits": [
+    "Local built home shared static resource delivery/hydration only, not every route, external CDN/deployed/TLS, visual/font appearance/device or SSR flash-free",
+    "Backend remains dummy/guarded; missing data catalogue error expected, not production data integration",
+    "English client change left server catalogue error Russian before refresh; not locale error-state PASS"
+  ],
+  "effects": "No business entity or configuration mutation; only isolated-origin language preference, public app telemetry attempts and owned bounded server. Primary known preferencebusiness2 previously restored; total telemetry writes unknown."
+}

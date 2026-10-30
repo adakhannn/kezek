@@ -1,0 +1,14 @@
+{
+  "recordedUtc": "2026-10-18T12:26:43.579Z",
+  "candidateId": "dev-20261018-S1-0cc81561faf0",
+  "sourceFingerprint": "0cc81561faf0c47d8dbd4b993204d9cfb40e5e2ac339473a21121310c479364e",
+  "method": "live",
+  "directApproval": "Да, только публичные GET Google Fonts",
+  "build": {"directory":"test-results/closure-s1-20261018-f002-fontread/build","startedUtc":"2026-10-18T12:23:26.518Z","finishedUtc":"2026-10-18T12:24:56.341Z","copiedFiles":1659,"compiler":"defaultNext16Turbopack","compileSeconds":34.4,"staticPages":36,"typecheck":"success","exitCode":0,"timedOut":false,"fontFixture":false,"realCredentials":false},
+  "live": {"url":"http://s1assets-after-20261018-122521.localhost:3103/privacy","serverPid":11608,"readyMs":1819,"privacyHeading":true,"policySections":"all9visible in initialDOM","reloadHeading":true,"menuExpandedAfterActualClick":true,"guestSignInLink":true,"logoDecoded":{"width":320,"height":86,"complete":true},"stylesheets":{"count":2,"cssomRules":[17,112]},"observedScripts":13,"fontsResourceFiles":3,"documentFontsStatus":"loaded","documentFontIteration":[],"fontIterationLimit":"Empty iterator is not proof of selected-face rendering; actual font bytes delivered and CSSfont-face rules present, no typography/screenshot claim"},
+  "assetBundle": {"inventoryId":"854313a5-c322-4d00-a474-29aa5bf879a9","requested":23,"downloaded":23,"failed":0,"fonts":3,"stylesheets":2,"externalImages":3,"inlineSvgImages":15,"retainedDirectory":"docs/verification/runs/2026-10-18-s1/s25-assets","manifest":"s25-assets/manifest.json","notScriptResponseExport":true},
+  "acceptance": {"newlyRecertified":["A3-01","A3-02"],"acceptedOverall":16,"remainingOverall":300,"acceptedS1":16,"remainingS1":9,"s1ActiveCaseIds":79,"s1PassedCaseIds":56,"s1BlockedCaseIds":22,"s1NotRunCaseIds":1},
+  "sideEffects": "Compiler only separately authorized public anonymous font GET; Node guard denies other destinations/auth/cookies/write/body, not OSfirewall or native network isolation proof. Runtime used dummyinvalidconfig/all-data-networkblocked; no Supabase authorization/user session/service-role. Public asset bundle and owned-process stop only. Main session not switched; ordinary main-app telemetry unenumerated.",
+  "cleanup": {"stoppedUtc":"2026-10-18T12:26:43.579Z","ownedPidAbsent":true,"port3103Listeners":0,"publicDevReadMarkerAbsent":true,"primary14216Responding":true,"return":"localhost:3000/dashboard/settings; owner/RU/businessc28c8109"},
+  "limits": ["Local built artifact only; domain/deployedCDN/callback/webhook checks deferred", "Fresh unique-origin assets namespace; not global browser cache clearing or all8cold-document cases", "No screenshot/device/screen-reader/fontvisual PASS", "Earlier defaultfontfailure and webpackfixturetimeout retained; new success does not prove earlierrootcause or wholebaselinegreen", "Menu interaction proves relevant runtime chunks hydration, not every script/route behavior"]
+}

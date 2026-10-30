@@ -1,0 +1,135 @@
+{
+  "id": "S1.1-20261018-result",
+  "observedUtc": "2026-10-18T07:52:26Z",
+  "packageId": "S1.1",
+  "candidate": {
+    "observedUtc": "2026-10-18T07:42:48.279Z",
+    "gitHead": "7f5c8ae90a2d1e7e533867a728f39ca7504eb570",
+    "scope": "rg files apps/web/src,public,packages excluding tests/test-results/node_modules/dist plus 5 build files; excludes environment secrets, generated cache and docs",
+    "fileCount": 1123,
+    "sourceFingerprint": "452faff676ef8bb23a09f62496f9bc2d37c2aa106405c2a6d69dbd4b59e6de7c",
+    "dependencyHashes": {
+      "apps/web/next.config.ts": "518a6abdb8e2af3e6cae376f9377fc2ee6f5d62bd26bbfaff89966dfabb82f32",
+      "apps/web/package.json": "2e0a61f64bd602035cd59591a1f3177c062a2b1707887c78fa50f71264e4d2de",
+      "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+      "apps/web/src/app/dashboard/layout.tsx": "0c02a3f458300606108f583579feaf75e8dad62120f5be1be20db91499cc7255",
+      "apps/web/src/app/dashboard/visit-packages/[id]/page.tsx": "143758d49f7973f6d266682290598799e53ca5f28cb105540505eaa1a409f4b6",
+      "apps/web/src/app/layout.tsx": "40d4f84d997a26d7fa22fe1b37d6441492571d8af3509c019f1e6fd4640b41eb",
+      "apps/web/src/app/page.tsx": "3a009aaed140d6ac80d535c3ab4aaa507ced4ce8284ab32201e6fb8a0cf40ade",
+      "apps/web/src/app/privacy/page.tsx": "6fb2d02da63e4fae431b29249637ea89d12dc5c621aa552582909d37693e34dd",
+      "apps/web/src/app/terms/page.tsx": "3d8bf956d0c4232e26499fd7a08a69038d5ca9ce9c8e9b937d8dc84e4acab757",
+      "apps/web/src/lib/env.ts": "72e1d6ebae43be24b2762565df53e0a00254c8f6a4928d40eb0089801236e254",
+      "pnpm-lock.yaml": "e5031391748b68bf318ef0991680f5c32f6c29641f0a9ac480f14842b52f8d7b"
+    }
+  },
+  "environment": "DEV localhost:3000 plus isolated production-mode build at 127.0.0.1:3102 with dummy .invalid config; no deployed domain",
+  "steps": [
+    "Inventory identified existing IAB2/tab3. Forbidden tab1 and user Telegram/WhatsApp tabs untouched.",
+    "Read owner/business c28c8109 package types. Clicked existing edit link 47ada482-2569-43c6-a2a7-090617ba4af9; compilation intermediate retained; final DOM rendered edit form.",
+    "Reloaded edit URL; name, visits=2, days=30, discount=0 and branch1 selection persisted; no Save.",
+    "Created exact isolated mechanical source copy with no .env; cold next build, real installed compiler and unchanged next.config.ts; no fallback compiler/config bypass.",
+    "Started that build loopback-only 127.0.0.1:3102, opened /privacy through CUA, observed all9 sections and home links, then reload retained content.",
+    "Inspected rendered logo dimensions/font state; clicked home in isolated app; read safe catalogue unavailable alert under deliberately unavailable data backend.",
+    "Returned tab3 to localhost:3000; owner badge and catalogue2 restored. Owned production child stopped, PID and listener absent; primary PID14216/3000 remains."
+  ],
+  "build": {
+    "startedUtc": "2026-10-18T07:46:36.489Z",
+    "finishedUtc": "2026-10-18T07:49:03.147Z",
+    "pid": 17996,
+    "exitCode": 0,
+    "compiledSeconds": 61,
+    "typeScriptCompleted": true,
+    "staticPages": "36/36",
+    "copiedFiles": 1656,
+    "copyFingerprint": "26746ec0760ff009aec884917a28b97f133d93c80ac9a03232f8c1ed359fa49d",
+    "sourceNextConfigAndObservedPageHashesEqual": true,
+    "warnings": [
+      "multiple lockfiles/root inference",
+      "deprecated middleware convention",
+      "old baseline-browser-mapping"
+    ],
+    "guard": "No copied .env or real credentials; allowlisted OS environment; Node fetch and non-PostCSS TCP denied. Not an OS firewall. No claim of network-free native compiler."
+  },
+  "liveProduction": {
+    "origin": "http://127.0.0.1:3102",
+    "auth": "guest, separate loopback hostname from original localhost",
+    "privacy": {
+      "h1": "Политика конфиденциальности",
+      "lastSection": "9. Контакты",
+      "reloadRetained": true
+    },
+    "image": {
+      "src": "/_next/image?url=%2Flogo.png&w=640&q=75",
+      "complete": true,
+      "naturalWidth": 320,
+      "naturalHeight": 86
+    },
+    "fonts": {
+      "status": "loaded",
+      "bodyFont": "Geist, \"Geist Fallback\", Arial, Helvetica, sans-serif"
+    },
+    "cssViewport": {
+      "width": 772,
+      "height": 412
+    },
+    "catalogError": {
+      "heading": "Каталог временно недоступен",
+      "body": "Не удалось загрузить данные. Обновите страницу или попробуйте ещё раз позже.",
+      "countStillVisible": 0
+    },
+    "productionRelease": false
+  },
+  "otherObservations": {
+    "screenshot": {
+      "status": "blocked",
+      "error": "Unable to capture screenshot",
+      "viewportAtFailure": {
+        "width": 1277,
+        "height": 1648,
+        "dpr": 0.375
+      },
+      "retry": false,
+      "devicePass": false
+    },
+    "homeNavigation": {
+      "status": "eventually_observed_after_navigation_timeout",
+      "error": "Page.navigate timeout",
+      "metadataChangedToHome": true,
+      "subsequentDocumentReadSucceeded": true,
+      "notConfirmedProductFailure": true
+    },
+    "console": {
+      "firstWarnErrorRead": [],
+      "laterWarningTimestamp": "2026-10-18T07:49:23.379Z",
+      "message": "Image /logo.png width/height modified; aspect ratio warning",
+      "classification": "existing WB-055 follow-up, not a new distinct defect; timestamp predates isolated-production page"
+    }
+  },
+  "closure": {
+    "acceptedRequirementIds": [
+      "A3-01"
+    ],
+    "scope": "Current copied source compiles in production mode and actual built legal page reload plus controlled data-error shell work. Not production integration/auth/security/deployment/cache certification.",
+    "remainingInPackage": 7
+  },
+  "effects": {
+    "businessCommands": 0,
+    "save": false,
+    "authSwitchOnOriginalOrigin": false,
+    "productionDeploy": false,
+    "realDatabaseCommands": false,
+    "totalDatabaseWrites": "Unknown ordinary telemetry; not claimed zero total",
+    "temporaryServerStoppedUtc": "2026-10-18T07:52:20.230Z",
+    "listener3102Absent": true,
+    "primary3000Pid": 14216,
+    "retainedBuild": "test-results/closure-s1-20261018/build",
+    "automaticCleanup": false
+  },
+  "limitations": [
+    "A2-02 missing/invalid config variants not run: dummy reachable syntax with denied data network is not both configuration variants.",
+    "Domain/production origins, callback/webhook and TLS deferred by explicit user decision, not excluded.",
+    "No hard-cache-clear or all-route assets/chunks matrix; individual logo/font observation does not close A3-02.",
+    "Production nested business/private route and deployment stale-chunk scenarios pending.",
+    "No screenshot proof; no visual/device PASS."
+  ]
+}

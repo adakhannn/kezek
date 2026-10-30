@@ -1,0 +1,26 @@
+{
+  "id": "C244",
+  "status": "FINITE_READONLY_TECHNICAL_REVIEW_PLAN_BEFORE_REUSE_ACCOUNTING",
+  "requirementId": "Q1-02",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "timeboxMinutes": 5,
+  "goal": "Classify existing actual C204 full-Jest primary for current core/extended group coverage and failed-gate status, without rerunning tests or treating mocks as LIVE. Existing 11FAIL/52lint errors retained.",
+  "inputs": [
+    "apps/web/test-results/c204-full-jest.json",
+    "docs/verification/runs/2026-10-26-web-resume-2/c204-technical-checks.json",
+    "apps/web/package.json",
+    "apps/web/jest.config.js",
+    "docs/verification/runs/2026-10-26-web-resume-2/c204-source-paths.json"
+  ],
+  "independentExpected": [
+    "Primary raw Jest totals/statuses/start/end timestamps agree with preserved C204 metadata/hash. Parse structured JSON only; do not print raw failures/secret-containing logs.",
+    "Current package core/extended path selections can be mapped to actually reported suite names. Distinguish report membership from actual separately invoked script argv/cwd/config provenance. Missing command provenance or unrepresented required suite ->retain exact limitation, no invented execution or unchanged rerun.",
+    "Any observed failed suite/assertion keeps technical gate FAIL; no acceptance from the word run or from same-failure identities. At most a technical NONLIVE failed/blocked case or supporting review,0NEWUI/0fix/0newexecution."
+  ],
+  "effects": "Read-only local primary/config/path classification; no test runner/CLI test invocation, browser/UI/auth/DB/entity/source/test/build/server mutation, no HTTP/SDK/SQL/storage. Existing mock/unit outcomes remain NONLIVE.",
+  "stopRules": [
+    "No speculative runtime/security fix from UNIT/source failure.",
+    "No full technical PASS, no exclusion of failed/blocked denominator.",
+    "If original command receipt is absent, do not repeat C223 typecheck provenance audit or rerun commands."
+  ]
+}

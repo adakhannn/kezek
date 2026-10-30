@@ -1,0 +1,125 @@
+{
+  "id": "C188",
+  "status": "READONLY_ENTRY_METHOD_MATRIX_REVIEW_COMPLETE_SEARCH_CTA_GENUINELY_UNCOVERED",
+  "observationWindowUtc": [
+    "2026-10-26T01:11:10Z",
+    "2026-10-26T01:13:49Z"
+  ],
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirement": "D1-01 four entry mechanisms; no fullacceptance from currentpartialproof",
+  "matrix": [
+    {
+      "method": "direct-positive-booking-URL",
+      "status": "CURRENT_INDEPENDENT_METHOD_PROOF_NOT_ESTABLISHED_IN_REVIEWED_SET",
+      "evidence": "Historicaldirect/recovery/negative/returnroute references are not automatically a currentpositive directdocument-entrycase. ExistingmapCTA uses sameURLbutdifferententrymethod. No directrerun plannedwithoutexactdependency/history reason."
+    },
+    {
+      "method": "public-business-generic-CTA",
+      "status": "HISTORICAL_ACTUAL_NAVIGATION_NOT_CURRENT_CERTIFIED",
+      "path": "apps/web/test-results/global-2026-10-16/stage-G092-public-business-entry.json",
+      "originalUtc": "2026-10-16T00:03:38Z",
+      "actual": "RealKYВыбратьфилиал activation ->samebusiness Step1/2unselectedbranches/Nextdisabled. Old3genericCTAshrefs were allsame; no service-specificCTA. CurrentBusinessInfo/view changed from older15Octsnapshot; full16Octexecutionboundary notestablishedhere. Sourcehrefalone insufficient; no unchangedgenericbusinessCTA replay planned."
+    },
+    {
+      "method": "public-map-CTA",
+      "status": "CURRENT_EXISTING_PROOF_AVAILABLE_NO_NEW_EXECUTION_OR_REUSE_CASE_CREDIT",
+      "path": "docs/verification/runs/2026-10-26-web-resume/c164-result.json",
+      "originalObservationWindowUtc": [
+        "2026-10-25T22:09:16Z",
+        "2026-10-25T22:12:28Z"
+      ],
+      "caseId": "S26-B404-accessible-map-branch-handoff",
+      "actual": "Real4list/selectedoverlaybranchCTA combinations actualwizard correctbusiness+branch. All7declaredfunctional dependenciesexactcurrent; existingcasealreadycandidate82c7088de609afterC172review. No providerballoonacceptance neededtoinventD1route-entrycredit, no maprepeat."
+    },
+    {
+      "method": "filtered-search-result-Book-CTA",
+      "status": "GENUINELY_UNCOVERED_ACTIVATED_BOOKING_METHOD",
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c79-result.json",
+      "originalWindowUtc": [
+        "2026-10-23T00:50:30Z",
+        "2026-10-23T00:53:46Z"
+      ],
+      "actual": "C79 query andq+cat historyclickedПодробнее topublicmarketing/businessdetail only. C166 category/reset/typing/URLsettlement not bookingCTAactivation. Currentrootcard has separate /b/slug/booking Записаться whenactivebranches; clickingit fromsettledmatchingquery is a distinctentrymethod, notanother query/history/500ms test."
+    }
+  ],
+  "mapDependencyComparison": [
+    {
+      "path": "apps/web/src/app/map/MapPageClient.tsx",
+      "originalSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+      "currentSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+      "identical": true
+    },
+    {
+      "path": "apps/web/src/app/map/branchBookingHref.ts",
+      "originalSha256": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+      "currentSha256": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+      "identical": true
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/booking/page.tsx",
+      "originalSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+      "currentSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+      "identical": true
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx",
+      "originalSha256": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+      "currentSha256": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+      "identical": true
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/view.tsx",
+      "originalSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+      "currentSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+      "identical": true
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts",
+      "originalSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+      "currentSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+      "identical": true
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts",
+      "originalSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+      "currentSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+      "identical": true
+    }
+  ],
+  "sourceEffects": "RootHome businesscard has separateПодробнее /b/slug andBook /b/slug/booking; Bookconditionalhas_active_branches. Querycommit changes publicURL only. Bookingserverloadsapprovedbiz/activebranches/services/staff and mountsnormalwizard; no hold/create until later slot+confirmation. Automatic draft/auth/telemetry reads/writes may occur and are unenumerated. Reviewneverreads storage/secrets or activatesUI.",
+  "independentOracle": "Activating Book on the sole matched business2 result must reach that same business booking route and identifiable settledwizard rather than genericmarketing, wrongbusiness, authredirect or error. GenericCTA has no explicitbranch/choice override; an existing validlocaldraft mayrestorechoices. Do not demand fabricatedblankstate or clearstorage/advancewizard to manufactureone. This certifies entryonly, not completebookingmetadata/availability.",
+  "decision": "Do not acceptwholeD1-01: direct/businessmethodcurrentproofgaps retained. ExistingC164mapproofpreserved/originalUTC and0newcredit; C189onefilteredsearchBookmethod finiteplanbeforeUI only. No branch/date/service/staff/slot/Next/hold/confirm/newbooking action.",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G092-public-business-entry.json",
+      "sha256": "c8ea312d51197fbd6071213f2369b0bc5377dac0f9f16624d49235ffd2ac3e7b"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c164-result.json",
+      "sha256": "cbb33d4059d216b4f8575cff555d52b124742831262c52c39433ca5872e7945a"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c164-map-branch-handoff-plan.json",
+      "sha256": "6f43bea56c5ee5f9cea5dc6d10be57141726de5c6c404fe8ed41812100a016a8"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c79-result.json",
+      "sha256": "7b9277d9e0b294579e7da8fd0f3daaf51e7a875da494e5eea3aac8b86c595709"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c166-result.json",
+      "sha256": "c25d8a7ed444c06b8a5b4f3fa0f6db3807531822663679c3a15ef0c3fce375fc"
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+  },
+  "credit": "0UI/fix/accepted/newreusecase",
+  "discoveryForLater": "Focused file discovery also located apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json, notopened inC188. This is a genuinely new candidateprimary for a laterbounded follow-up toC187, not authorization to replaybooking or rewriteC187pastreview. Keep separate fromactiveentrychain."
+}

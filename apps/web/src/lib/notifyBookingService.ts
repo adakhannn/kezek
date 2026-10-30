@@ -1,5 +1,6 @@
 import { sendBookingNotificationsUseCase } from '@core-domain/booking';
 import type { BookingNotificationPort } from '@core-domain/booking';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -7,7 +8,7 @@ import { getEmailFrom, getResendApiKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { BookingDataService } from '@/lib/notifications/BookingDataService';
 import { NotificationOrchestrator } from '@/lib/notifications/NotificationOrchestrator';
-import type { NotificationResult } from '@/lib/notifications/types';
+import type { BookingRow, NotificationResult } from '@/lib/notifications/types';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 type NotifyBookingInput = {
@@ -36,7 +37,7 @@ type NotifyBookingResult = NotifyBookingFailure | NotifyBookingSuccess;
 export async function runNotifyBooking({
     type,
     booking_id,
-}: NotifyBookingInput): Promise<NotifyBookingResult> {
+}: NotifyBookingInput, requestClient?: SupabaseClient): Promise<NotifyBookingResult> {
     logDebug('Notify', 'Received notification request', { type, booking_id });
 
     let apiKey: string;
@@ -53,7 +54,10 @@ export async function runNotifyBooking({
     }
 
     const from = getEmailFrom();
-    const { supabase, admin } = await createSupabaseClients();
+    const { supabase: cookieClient, admin } = await createSupabaseClients();
+    // Server callers reuse the authenticated request client, including bearer auth.
+    // Authentication and booking ownership checks below still apply to every call.
+    const supabase = requestClient ?? cookieClient;
 
     const {
         data: { user },
@@ -103,10 +107,21 @@ export async function runNotifyBooking({
         }
     }
 
+    return deliverStoredBookingNotification(supabase, admin, booking, type, { apiKey, from });
+}
+
+/** Internal delivery only. Callers must authorize the command before reaching here. */
+export async function deliverStoredBookingNotification(
+    supabase: SupabaseClient,
+    admin: SupabaseClient,
+    booking: BookingRow,
+    type: NotifyBookingInput['type'],
+    config: { apiKey: string; from: string },
+): Promise<NotifyBookingResult> {
+    const bookingDataService = new BookingDataService(admin);
     const ownerEmail = await bookingDataService.getOwnerEmailFromBusiness(booking.biz);
     const orchestrator = new NotificationOrchestrator(supabase, admin, {
-        apiKey,
-        from,
+        ...config,
         replyTo: ownerEmail ?? undefined,
     });
 
@@ -121,7 +136,7 @@ export async function runNotifyBooking({
         },
     };
 
-    await sendBookingNotificationsUseCase(notifications, booking_id, type);
+    await sendBookingNotificationsUseCase(notifications, booking.id, type);
 
     const result = resultHolder.value;
     if (!result) {

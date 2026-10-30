@@ -1,0 +1,20 @@
+{
+  "id":"C73",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "requirementIds":["F3-01","F3-02"],
+  "timeboxMinutes":8,
+  "scope":"Header-dropdown route/currentlabel/browserBack subset. ONE currentSA roundtrip case, not perclick/locale/edge. Full role/API/security/stale-cross-account/visual requirements remainpartial; F3-03 is reviewed C72, not certified by same-account route changes.",
+  "matrix":[
+    {"role":"superadmin","status":"not_run","executeThisStage":true,"expected":"Current/admin triggerАдмин-панель, exact menuМоизаписи+Админ-панель with onlyadmin aria-current=page. Choose personal ->current/cabinet or its normalbookings child, triggerМоизаписи, ownpersonalnavigation, no adminoverview heading/cards retained. Openmenu: onlypersonal current. Back ->admin/protectedheading/triggerAdmin. Forward ->samepersonal; explicitheaderAdmin ->admin/currentmarker; Back ->personal. Final explicitAdmin restore; do not count setup/restore as extra cases."},
+    {"role":"staff","status":"not_run","executeThisStage":false,"expected":"Own staff+personal route pair/dropdown labels/Back, noAdminbusiness. No staff/bookings Past reload; independentlyplan before execution."},
+    {"role":"client","status":"not_run","executeThisStage":false,"expected":"Only own personal menu/currentlabel, no privileged choices; first review historicalG078 applicability, no unchanged Escape test or unnecessary re-login."},
+    {"role":"guest","status":"not_run","executeThisStage":false,"expected":"No authenticated role menu; first review existing C66 guest proof for exact reuse, not automatic new execution."},
+    {"role":"owner","status":"blocked","executeThisStage":false,"expected":"Business+personal context; known entry stopped at select-business C67, no new selection authority/unchanged retry."},
+    {"role":"manager","status":"blocked","executeThisStage":false,"expected":"Requires unavailable authorized manager fixture; do not create/grant."},
+    {"role":"multirole","status":"blocked","executeThisStage":false,"expected":"Requires unavailable authorized multirole fixture; do not create/grant."}
+  ],
+  "steps":["Freshinventory and actual knownSA/admin protectedheading baseline; reuse c70HumanTab onlywhilevalid, preserve humanprovider9330166e", "Clock; openobservedheader menu, inspect exactoptions/hrefs/currentmarker from DOM only", "Clock; ordinary ownpersonal menuitem; wait actualpersonalUI thenread trigger/menu marker/noadminoverviewDOM", "Clock; BrowserBack once ->admin/currentlabel/protectedheading, no hardreload", "Clock; BrowserForward once ->personal thenactualstate; explicitheadermenu Admin ->admin andcurrentlabel", "Clock; BrowserBack once ->personal; final explicitAdmin menuitem, adminheading/Anonymized/Business3 andhandoff"],
+  "stop":"Any forbiddenroute/dependency or unexpectedidentity/auth/error ->stopchain, onefreshobservation only; no duplicate click/reload, oldprovider binding/newtab/HTTP/nativeworkaround. A toolwaittimeout alone is not productFAIL. Do not force goto to make Back expectations pass. If route-normalization changes expected history, recordactual and stop, do not rewrite precondition after seeing result.",
+  "effects":"Ordinary header localmenu toggles and authorized Link/Back/Forward documentnavigation only. No Remember/persistentpreference/role/business selection changes, no Save/recalc/configPOST, booking/shift/payment/review/jobs/grants/newfixture commands. Auth/telemetry unenumerated/notzeroTOTALwrites. No raw cookie/token/storage/API probes.",
+  "accounting":"Seven scoped roles: initial0PASS3BLOCKED4not_run. At best1NEWPASS3BLOCKED3not_run, remaining6; blocked not removed. Scope not complete F3 edge/locale/identity matrix. G016/G078 historical results and C65-C71 untouched/not retimed/not newfix credit."
+}

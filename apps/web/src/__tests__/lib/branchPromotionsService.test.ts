@@ -90,6 +90,8 @@ describe('branchPromotionsService', () => {
             status: 400,
             error: 'validation',
             message: 'Количество визитов должно быть больше 0',
+            details: { field: 'params.visit_count' },
         });
+        expect(admin.from).toHaveBeenCalledTimes(1);
     });
 });

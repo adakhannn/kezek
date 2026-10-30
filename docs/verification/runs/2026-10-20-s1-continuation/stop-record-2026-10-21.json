@@ -1,0 +1,20 @@
+{
+  "id": "USER_STOP_2026_10_21",
+  "request": "нужно сделать логическое завершение и процесс поставить на паузу потом продожим",
+  "observedAfterClockUtc": "2026-10-21T11:10:49Z",
+  "administrativeRecordAfterClockUtc": "2026-10-21T11:14:58Z",
+  "newScenariosAfterStop": 0,
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "readbackBeforeUtc": "2026-10-21T11:11:12Z",
+    "exactUnchangedPrompt": true,
+    "sameCadenceAndTarget": true
+  },
+  "browser": "Readonlyfreshinventory/DOM actualoriginal18/admin/Anonymized/protectedheading;0sliders/no leftoverratingdraft onpage. Original2root/5blocked/18preserved;2/18handoff. No UIinputsafterhumanstop.",
+  "ownedProcesses": "FormerC57compiler10988/C58isolatedruntime9100 absent; no listener3107. No kills required/no broadcleanup. Mainpnpmdevserverleftuntouchedforuser.",
+  "permissionRevocation": "Humanstop ends prospectiveuntilstop testing and any remainingtask-scopedcompilerFontsGET/downloadauthority. C54leasealreadyexpired06:50/selfhostingdoesnotneedGoogleGET. Append-onlyrecord; hashedoldpermissionevidenceNOTedited; no firewall/network/securitysettingchanged.",
+  "effects": "Administrativepause/report/evidencewritesonly afterstop; no app/DB/test/build/auth/source/role/business/booking/shift/payment commands. Existingordinarytelemetrynotenumerated, no zeroTOTALwritesclaim.",
+  "resume": "Explicitnewhumanresume required; C70onlysavednextplanNOTstarted. Do notautoresume olduntilstopprose oroldtimewindow.",
+  "timeSemantics": "11:10:49 is the first tool clock AFTER receiving the human stop, not the exact message time or proof the message arrived after that clock."
+}

@@ -45,7 +45,7 @@ describe('usersSearchHttpService', () => {
         const response = await runUsersSearchHttp(
             new Request('http://localhost/api/users/search', {
                 method: 'POST',
-                body: JSON.stringify({ page: 1, perPage: 50 }),
+                body: JSON.stringify({ q: 'known@example.test', page: 1, perPage: 50 }),
                 headers: { 'content-type': 'application/json' },
             }),
         );
@@ -58,5 +58,14 @@ describe('usersSearchHttpService', () => {
         });
         expect(response.status).toBe(200);
         expect(body.page).toBe(1);
+    });
+
+    test.each([{}, {q:''}, {q:'  '}, {q:'\t\n'}])('rejects a missing/blank query before privileged search %j', async (payload) => {
+        const { runUsersSearchHttp } = await import('@/lib/usersSearchHttpService');
+        const response = await runUsersSearchHttp(new Request('http://localhost/api/users/search', {
+            method: 'POST', headers: {'content-type':'application/json'}, body:JSON.stringify(payload),
+        }));
+        expect(response.status).toBe(400);
+        expect(runUsersSearch).not.toHaveBeenCalled();
     });
 });

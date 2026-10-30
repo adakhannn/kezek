@@ -1,0 +1,22 @@
+{
+  "id":"C60",
+  "plan":"c60-paid-receipt-regression-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-21T07:41:50Z",
+  "completedBeforeUtc":"2026-10-21T07:49:53Z",
+  "applicabilityReview":"L03013Octpaidreceipt predates14OctG014/WB182 actualBookingLayoutClient/bookingCalendarDate deterministicKY change. G014 liveproof hadconfirmed19Octreceipt+cancelledHistorycard, notpaid12Octreceipt. Therefore new paid-onlydate/locale targetedregression justified by changeddependency. OldL030 andG014 observations remainoriginaldated, notretimed/recounted. No whole receipt/review rerun.",
+  "setup":"Freshoriginaluser2root/5blocked/18admin andsameknownSAprotectedheading. Ordinarylogout after07:42:42; knownlow.fade.oshGoogle selectedafter07:45:18, actualКлиент/LIVE TEST CLIENT12OCT. ActualpersonalHistoryOpenpaidanchor observedhrefand_blank; setup/list0newPASScredit.",
+  "receipt":{"id":"03469725-c5ba-4978-abfe-2179f19caeab","tab":"23/provider668b81c5-a47f-4170-b595-89b1d0f02816","method":"ActualownHistoryOpenentry, no APIprobes/rawHTTP/evaluatefetch","observations":[
+    {"key":"ru-entry-reload","observationWindowUtc":["2026-10-21T07:46:17Z","2026-10-21T07:47:04Z"],"actual":"ActualsamefullID/#03469725/Выполнена/12октября2026г.в17:00/existingLIVE TESTService31/АдаханОсоров; normalreloadsame. NoCancel/Pay/Review/Repeatcommand."},
+    {"key":"ky-toggle-reload","observationWindowUtc":["2026-10-21T07:47:04Z","2026-10-21T07:47:29Z"],"actual":"Кыргызча actualpressed, Аткарылган/samefullID/date2026-ж.,12-октябрь17:00/master; normalreloadretainsKYdate/status/ID. No RUmonthfallback. Service displays storedKYname, not a translation-qualitycertification."},
+    {"key":"en-toggle-reload","observationWindowUtc":["2026-10-21T07:47:29Z","2026-10-21T07:48:08Z"],"actual":"English actualpressed, Completed/samefullID/dateOctober12,2026at05:00PM/AdakhanOsorov; normalreloadsame. Samebookedinstant, notfinancialcalculationPASS."},
+    {"key":"ru-restored","observationWindowUtc":["2026-10-21T07:48:08Z","2026-10-21T07:48:41Z"],"actual":"Русский actualpressed, Выполнена/12октября2026г.в17:00/АдаханОсоров; own23closed, mainclientRU/LIVE TESTCLIENT/Logoutretained."}
+  ]},
+  "matrix":{"total":5,"passed":4,"newLivePassThisStage":1,"newLivePassC59C60":3,"reusedCurrentPassC56":1,"notRun":0,"blocked":1,"failed":0,"remaining":1,"note":"One newpaidreceiptentrycase with3localeobservations+reloads, not3newindependentcases. ConfirmedC56+cancelled/no-showC59 not reexecuted. HoldBLOCKED/nofixture; fullE1-02stillpartial."},
+  "restore":{"observationWindowUtc":["2026-10-21T07:48:41Z","2026-10-21T07:49:53Z"],"actual":"Ordinaryclientlogout andGoogleknownkezekkg selectedafter07:49:28. ActualAnonymized/protectedПанельадминистратора/Business3/knownhistoricalcards, exacthttp://localhost:3000/admin. RU18+original2markedhandoff; allusertabsretained."},
+  "toolTiming":"Clientcabinet waitdeadline once beforeasyncnavigationcompleted; singlefreshDOMprovedreadyHistory, no repeatedclick. GoogleinitialLoading/documentstate waitedforvisibleknownaccount thenimmediateselection, no staleOAuthreplay.",
+  "effects":"2ordinarylogouts+2GoogleloginsincludingSArestore; UIlocaleRU-KY-EN-RU; ownpaidpopup23closed. No payment/package/review/cancel/Repeat/booking/status/shift/role/grant/SQL/APIprobe/source/test/build/servercommands. f821/closed909256untouched. Ordinaryauthlookup/telemetryunenumerated,notzeroTOTALwrites.",
+  "counts":"Acceptedrequirements unchanged21/316,S117/25primary63/79,S23/70,S41/47. Newfix0/currentwindowlivefix0. Onlypaidnotrun->PASS, holdretainedBLOCKED; oldsourcechangesnotnewfixes.",
+  "next":"E1-02hold remainsBLOCKED/nofixturecreation; do not repeatcompletedreceipts or oldfontbuild/returnmatrix. Select next independent read-onlyadminlist/profile case by remaining ledger+historicaldependencyreview before UI; no blind intermittentnetworkfix, domainproductionlast."
+}

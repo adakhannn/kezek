@@ -1,0 +1,20 @@
+{
+  "id":"C59",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "requirement":"E1-02",
+  "timeboxMinutes":10,
+  "scope":"Two NEW actual pureclient terminalreceipt entries via existing History links, cancelled and no-show. Not repeatconfirmed C56 or paidL030/review workflow. No backend/businessmutation.",
+  "role":"OrdinaryGooglelow.fade.osh -> actualLIVE TEST CLIENT12OCT/Клиент; restoreknownSAkezekkg aftertests",
+  "statusMatrix":[
+    {"status":"confirmed","case":"S42-C56-history-receipt-entry","execution":"REUSE current dependency-reviewed C56 actualpastf821 receipt/reload; originalUTC retained"},
+    {"status":"cancelled","case":"C59-cancelled","execution":"NEW","id":"a4278f13-11b1-490e-b1bd-51154a1a545f","expected":"ActualHistoryOpen entry and normalreceipt reload retainfullownID/#a4278f13, Отменена,26Oct202609:00,knownservice/master; no Cancel/Repeat/Review/Pay controlclicked"},
+    {"status":"no_show","case":"C59-no-show","execution":"NEW","id":"eaa3f7e5-662b-4290-979e-3c04a2584e7c","expected":"ActualHistoryOpen entry and normalreceipt reload retainfullownID/#eaa3f7e5, Неявка,12Oct202616:15,knownservice/master; no cancellation/review/status mutation"},
+    {"status":"paid","execution":"HISTORICAL_NOT_CURRENTLY_PROMOTED","source":"L030 ownpaid03469725 receipt12Oct17:00. No exact complete current dependency boundary in thatrecord; no silentcurrentPASS or unchanged paid/review actionrepeat. Separate review/retest decision remains."},
+    {"status":"hold","execution":"BLOCKED","reason":"No knowncurrentownholdfixture; no booking/holdcreation authorized for thisread-onlycase. Keep slot in denominator."}
+  ],
+  "expectationSources":["C56 actualownHistory8IDs/status/time, sourcehashes currentreviewC57", "global-2026-10-15/g080-final-history-ru.txt terminalIDs andtimes", "BookingLayoutClient statusMap + ownreceiptpage ordinaryRLSread; code is expectation support, notLIVE"],
+  "steps":["Freshinventory andactualSA in existing18; clock beforeordinarylogout/Googleclientlogin","Observedpersonalbookings -> History; no listfilterrecertification/countcredit","For eachtwoownknownID, clickactualOpenanchor scopedbyobservedhref (maycreatelegitimateownreceipttab); observe finalID/status/date/service/master and normalreload","Closeonlyownreceipttabs; clock beforeordinaryclientlogout/GoogleSArestore, actual/admin/protectedheading/knownSA, markhandoff"],
+  "effects":"Ordinary2logouts+2Googlelogins ifcompleted. Existinguser2/5/18preserved; ownpopupsonlyclosedafterproof. No booking/create/cancel/reopen/repeat/review/payment/package/shift/role/grant/SQL/APIprobe. f821NEVERcancel, closed909/256untouched. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites.",
+  "acceptance":"Onlycancelled/no-show2case subset canPASS. E1-02partial with paidcurrentproof and holdblocked slots retained. No foreignobject/RPC/API/RLS/security/visual/device/locale/fullreceiptcertification. 0fixunlessactualUIrepro.",
+  "stop":"Unexpectedidentity/data/password/CAPTCHA/device/blockrecord andstop affectedchain; no fixturemutation or navbypass. Mainserver restartonlyifstoppedconfirmed. Browser onlycomputer-use/cua_repl."
+}

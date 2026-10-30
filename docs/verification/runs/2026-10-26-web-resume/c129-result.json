@@ -1,0 +1,75 @@
+{
+  "id": "C129",
+  "caseId": "S26-M501-inactive-category-confirmation-cancel",
+  "plan": "c129-confirmation-cancel-plan.json",
+  "status": "PASS_SCOPED_LIVE",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "observationWindowUtc": [
+    "2026-10-25T19:58:31Z",
+    "2026-10-25T19:59:30Z"
+  ],
+  "humanRecovery": {
+    "reply": "готвово",
+    "freshInventory": "Human tab2/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba on local root; separate user Google chooser tab1 left untouched. Root already Admin/Anonymized/Logout/RU, ordinary observed role menu navigated to protected admin. No login/OAuth action or new tab.",
+    "credit": 0
+  },
+  "baseline": {
+    "rows": [
+      {
+        "id": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+        "name": "LIVE TEST NIGHT09OCT CATEGORY EDITED",
+        "slug": "live-test-night09oct-category",
+        "active": false,
+        "usage": 0
+      },
+      {
+        "id": "85157ef2-b18e-4be3-88f7-04c41fd02e5b",
+        "name": "Барбершоп",
+        "slug": "barbershop",
+        "active": true,
+        "usage": 2
+      },
+      {
+        "id": "0851842b-feca-4cda-97a5-37b7ffe971ae",
+        "name": "Женская парикмахерская",
+        "slug": "zhenskaya-parikmaherskaya",
+        "active": true,
+        "usage": 1
+      }
+    ],
+    "summary": {
+      "total": 3,
+      "active": 2,
+      "usage": 3,
+      "popular": "Барбершоп/2"
+    }
+  },
+  "steps": [
+    {
+      "clockUtc": "2026-10-25T19:58:43Z",
+      "action": "Click only target row list Delete button",
+      "actual": "Dialog Удалить категорию / Это действие нельзя отменить. / Категория «LIVE TEST NIGHT09OCT CATEGORY EDITED» будет удалена.; Cancel and Delete present, no force checkbox."
+    },
+    {
+      "action": "Click ONLY Отмена",
+      "actual": "Dialog removed; original target row/list retained."
+    },
+    {
+      "clockUtc": "2026-10-25T19:58:52Z",
+      "action": "One ordinary reload",
+      "actual": "All three original category IDs/names/slugs/activity/usage and summaries retained exactly; no deletion."
+    },
+    {
+      "clockUtc": "2026-10-25T19:59:04Z",
+      "action": "Click observed В админку",
+      "actual": "URL wait timed out, retained as tool timing observation. Next actual AX already /admin, protected heading/Admin-panel/Anonymized/RU/Logout/Business3/Branch4/Staff1/Service4/Booking30. No repeated click or speculative fix."
+    }
+  ],
+  "actual": "Exact retained inactive category destructive warning named target and irreversibility; ONLY Cancel closed it. After one ordinary reload all baseline rows and summaries remained exact. Protected admin restored and user tab marked handoff.",
+  "effects": "Warning open/Cancel/navigation/reload only. No Delete/Confirm/Enter/force/Save/activation/propagation/config/business/role/booking/payment command. Ordinary auth/telemetry unenumerated, not zero TOTAL writes.",
+  "limits": "One compound new UI case, no fix/whole requirement acceptance/actual deletion/API audit/cache/visual/focus/device/screensreader/no-flash credit.",
+  "newUiPass": 1,
+  "newFix": 0,
+  "newAccepted": 0
+}

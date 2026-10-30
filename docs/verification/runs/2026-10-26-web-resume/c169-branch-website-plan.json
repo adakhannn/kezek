@@ -1,0 +1,38 @@
+{
+  "id": "C169",
+  "savedBeforeUiUtc": "2026-10-25T22:41:59Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "caseId": "S26-M202-inactive-branch-website-https-validation-persist-restore",
+  "requirementIds": [
+    "M2-02",
+    "I1-02"
+  ],
+  "timeBudgetMinutesIncludingRestore": 10,
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "branch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+    "branchName": "S1 TEST INACTIVE BRANCH",
+    "active": false,
+    "control": "057447c8-b200-4403-b056-49e3c250840f",
+    "staffServicesBookings": 0
+  },
+  "invalid": "http://c169-branch.example.invalid/",
+  "valid": "https://c169-branch.example.invalid/",
+  "expected": "One compound website contract case: ordinary HTTP Save rejected with HTTPS validation message, remains editor; leave/reenter shows original blank website. HTTPS Save succeeds; reentry and one ordinary reload retain exact HTTPS URL with Save disabled. Clear website Save restores original blank after reentry/reload. Other branch data/counts/activity remain original; return protectedSA/admin/RU/Business3. No external link activation. Whole requirements remain partial.",
+  "steps": [
+    "Clock/current humanTab2/admin/RU/Anonymized ->observed fixtureA link; require2branches/0staff/services/bookings and original business. Observed branches ->exact inactivefa5 only. Require name S1 TEST INACTIVE BRANCH, address/fourlinks/fourcontacts blank and unmasked, coordinates—/—, inheritancechecked, activeunchecked, no changes/disabledSave, separate7daysclosed. Mismatch ->BLOCKED/no input/save. Do not retry map or geolocation.",
+    "Clock fillONLY website HTTP marker; verify exactvalue/allotherbaseline. Freshclock immediatelybefore ONE ordinary Savechanges click, neverEnter. Expect HTTPS rejection message/editor remains. Leave via observed branchlist/reenter to verify website blank and otherfields original; do not infer zeroDBwrites from error. No repeatedinvalidSubmit. Unexpectedsuccess ->FAIL/skippositivecase/oneplannedclearrestoreonly.",
+    "Clock fillONLY website exactHTTPS marker; verify allotherfields original. Freshclock immediatelybefore ONE Savechanges click; requirelist2/2 same inactive/control. Reenter exactbranch, requireHTTPS value anddisabledSave; clockONEordinaryreload then requireexactsameHTTPS/otherbaseline. Do not click externalURL/map/contacts.",
+    "Clock clearONLYwebsite; verify originalblank/otherfields. Freshclock immediatelybefore ONE ordinary Save restore. Requirelist2/2 andbothoriginalnames/states. Reentry+oneordinaryreload requirewebsiteblank/allbaseline/disabledSave. No thirdsuccessfulSave or cleanup/newfixture. Restore uncertainty ->preserveexactstate/report/no blindwrite retry.",
+    "Clock restoreadmin throughobserved adminlink/allowed/admin once; actualprotectedheading/Anonymized/RU/Business3, markHandoff. Humanstop safelyfinish only known planned rollback then PAUSEDreadback/newfinal. No auth/newtab/source/build/server/role/booking/payment/security command."
+  ],
+  "effects": "Atmost3ordinarybranchUpdate submits: one expectedvalidationrejection, HTTPSwrite, blankrestore. Wholeform may normalize emptyrepresentations; no bit-identical rawDBrollback claim. No newfixture/contactsprivatevalue/activation/owner/maplocation/schedule/booking/payment/profile/message/notification/security command. Ordinaryauth/telemetryunenumerated.",
+  "limits": "Only existinginactivebranch website HTTPS validation/persistence/recovery; not full contacts(phone/email/WhatsApp), inheritance fallback, timezone, publiccontactrendering, native/browser validation coverage, rawHTTP/APIsecurity, wholeCRUD or wholeI1-02. Onecompoundcase ifcomplete, not3PASS.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+  }
+}

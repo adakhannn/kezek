@@ -1,0 +1,39 @@
+## missing
+ ⨯ Error: NEXT_PUBLIC_SUPABASE_URL must be a valid URL
+    at b (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:172)
+    at e (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:484)
+    at i (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:7915)
+    at k (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:9788) {
+  digest: '104581892'
+}
+ ⨯ Error: NEXT_PUBLIC_SUPABASE_URL must be a valid URL
+    at b (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:172)
+    at e (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:484)
+    at i (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:7915)
+    at Module.j (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:9292) {
+  digest: '3339729535'
+}
+
+
+## invalid
+ ⨯ Error: NEXT_PUBLIC_SUPABASE_URL must be a valid URL
+    at b (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:299)
+    at e (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:484)
+    at i (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:7915)
+    at k (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:9788) {
+  digest: '2975312770'
+}
+ ⨯ Error: NEXT_PUBLIC_SUPABASE_URL must be a valid URL
+    at b (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:299)
+    at e (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\test-results_closure-s1-20261018-f001_build_apps_web_src_836e9029._.js:1:484)
+    at i (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:7915)
+    at Module.j (C:\projects\kezek\test-results\closure-s1-20261018-f001\build\apps\web\.next\server\chunks\ssr\[root-of-the-server]__82e39f95._.js:1:9292) {
+  digest: '3358412409'
+}
+
+
+## missing-stop
+{"event":"stopped","pid":21640,"utc":"2026-10-18T10:51:21.639Z","exitCode":4294967295,"signal":null}
+
+## invalid-stop
+{"event":"stopped","pid":23152,"utc":"2026-10-18T10:52:34.106Z","exitCode":4294967295,"signal":null}

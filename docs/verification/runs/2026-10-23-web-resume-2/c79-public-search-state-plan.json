@@ -1,0 +1,63 @@
+{
+  "id": "C79",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "requirementIds": [
+    "B3-04"
+  ],
+  "timeboxMinutesIncludingRestore": 10,
+  "history": "G02414Oct03:42:59Z tests name/category/empty/reset, not reload/detailhistory; G02714Oct04:14:02Z punctuation transport and reset, no reload/detailhistory. Reviewed original primary records before plan. No repeat search semantic/empty/reset PASS credit. Service-search contract gap remains open.",
+  "oracle": "Public query/category encoded in current visible URL must identify the same search field/category and result set after ordinary reload and after navigating to a visible matching business detail and browser Back/Forward. URL-addressable search is the independent user-facing expectation, not preservation of an unsubmitted local draft. Exact existing public business name is used, no service-search assumption. Read current HomeHeader/page wiring to identify permitted controls only.",
+  "cases": [
+    {
+      "key": "query-reload",
+      "caseId": "S23-B304-query-reload",
+      "expected": "Settled public search URL contains q=Тестовый бизнес 2, no cat; normal reload retains decoded field and same matching business card/href, no catalogue error."
+    },
+    {
+      "key": "query-history",
+      "caseId": "S23-B304-query-history",
+      "expected": "From that query click observed matching business About link; Back restores same q URL/field/matching card. Forward returns same business detail; Back restores query again. ONE history variant, not separate click PASS."
+    },
+    {
+      "key": "query-category-reload",
+      "caseId": "S23-B304-query-category-reload",
+      "expected": "From query select an actually observed category linked to existing matching business; retain q plus observed cat in URL. Reload retains field/category URL/selected-label/result business, no catalogue error. If no suitable observed category, BLOCKED not guessed."
+    },
+    {
+      "key": "query-category-history",
+      "caseId": "S23-B304-query-category-history",
+      "expected": "From same q+cat click observed matching business About; Back restores same q+cat/field/selected category/result. Forward same detail; Back same q+cat. ONE history variant."
+    }
+  ],
+  "steps": [
+    "Reuse healthyhumanTab2/currentknownSA/admin. Clock visible public-site link ->root; fresh search UI/actualmatchingbusiness/category observed, no logout.",
+    "Clock fill observed search field with exact public business name and await settled encodedqURL/result. Settle wait only, no double submit/debounce credit.",
+    "Execute query-reload then query-history with clocks and fresh DOM states after each action, exactURL and field/href comparison.",
+    "Select suitable observed category preserving query; execute query-category-reload then query-category-history similarly. Stop category pair if unsuitable/missing.",
+    "Restore public clean root through visible brand/reset control only as cleanup, not newPASS. Return observed Admin-panel menuitem/admin original healthy state, markHandoff samehumanTab2."
+  ],
+  "stop": "Natural service/auth/navigation error ->FAIL or BLOCKED appropriate; one fresh observation, no blind retry/reload loop/newtab/alternatebrowser/HTTP/DOMevent workaround. Do not open booking wizard/map, grant location, authchange, choose business, Save/config/persistent preferences. Preserve forbidden routes/providers.",
+  "effects": "Publicread-onlysearch GET navigation/reload/history and header return, no appbusiness/profile/role/grant/package/booking/payment/review commands. Ordinary analytics/telemetry unenumerated, not zeroTOTALwrites. No source/test/build/server changes; no visual/no-flash/device/screenreader/API-RLS/security claims.",
+  "accounting": "Four narrow query-state variants, no reused/newfix/wholeB3 acceptance from this subset. casePlanComplete remainsfalse pending full expectation boundary/other applicable variants; no denominator deletion. Source unchanged.",
+  "savedBeforeUiUtc": "2026-10-23T00:50:30Z",
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/lib/publicBusinessSearchFilter.ts": "a298916c644ef93fb5c81c4d1eb970b48465566e6a7e9469cda047710d922f61",
+    "apps/web/src/app/layout.tsx": "e90e3606f09bbf02315130df0f0ce4be109d05fbd47ee88c472d8fd2b892bc2f"
+  },
+  "historyHashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G024-catalog-search.json",
+      "sha256": "1d305ccf78f7e81917b73ac8dc9dcd3c123bd3882de4440ea0b0a2377cc63ee9"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G027-catalog-punctuation-after.json",
+      "sha256": "c9847e0571dfe69fa01a570e60f91f02f7eb81381f76aa7ed2fddba0c2faff45"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G027-catalog-punctuation-before.json",
+      "sha256": "51865450fae89065ae9b90b3d9e80b54c96267c5ddb37c15b3a4e46ca548c9e0"
+    }
+  ]
+}

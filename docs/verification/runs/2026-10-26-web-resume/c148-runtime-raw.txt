@@ -1,0 +1,17 @@
+{"event":"spawned","utc":"2026-10-25T20:36:55.788Z","pid":24964,"candidate":"dev-20261026-WEB-c1115361a3b4","sourceFingerprint":"c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853","host":"127.0.0.1","port":3107,"watchdogMs":300000,"noEnvFiles":true,"dummyBackend":true,"generatedDeclarationOnly":true}
+   ▲ Next.js 16.0.11
+   - Local:         http://127.0.0.1:3107
+   - Network:       http://127.0.0.1:3107
+
+ ✓ Starting...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\projects\kezek\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\projects\kezek\test-results\closure-web-20261026-c147-c1115361a3b4\build\apps\web\pnpm-lock.yaml
+   * C:\projects\kezek\test-results\closure-web-20261026-c147-c1115361a3b4\build\pnpm-lock.yaml
+
+ ✓ Ready in 1581ms
+{"event":"finished","utc":"2026-10-25T20:38:02.026Z","pid":24964,"exitCode":4294967295,"signal":null}

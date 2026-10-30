@@ -1,0 +1,19 @@
+{
+  "executable": "C:\\Program Files\\nodejs\\node.exe",
+  "argv": [
+    "node_modules/jest/bin/jest.js",
+    "--runInBand",
+    "--runTestsByPath",
+    "src/__tests__/components/ServiceForm.test.tsx",
+    "--json",
+    "--outputFile=../../docs/verification/runs/2026-10-28-web-resume/c252-before-tests.json"
+  ],
+  "cwd": "C:/projects/kezek/apps/web",
+  "config": "apps/web/jest.config.js",
+  "startedUtc": "2026-10-28T13:48:41.961Z",
+  "finishedUtc": "2026-10-28T13:49:35.997Z",
+  "exitCode": 1,
+  "signal": null,
+  "log": "c252-before-tests.log",
+  "report": "c252-before-tests.json"
+}

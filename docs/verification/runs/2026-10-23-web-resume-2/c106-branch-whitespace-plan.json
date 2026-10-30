@@ -1,0 +1,30 @@
+{
+  "id": "C106",
+  "requirementIds": [
+    "M2-02"
+  ],
+  "caseId": "S23-M202-existing-branch-whitespace-reject-discard",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "timeboxMinutesIncludingRestore": 6,
+  "targetBusiness": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "targetBranch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+  "originalName": "S1 TEST INACTIVE BRANCH",
+  "invalidName": "   ",
+  "expected": "ExistinginactiveAbranch must not acquire whitespace-only name. Oneordinary Savechanges submit afterexact3spaces must show required-nameerror and retainform, not navigate/success; sourceexpectsclientguardbeforefetch, but no HTTP/no-total-writeclaimfromDOM. LeavingviaКспискуфилиалов thennormalreentry showsoriginalname/inactive and unchangedotherfields, initialСохранитьизмененияdisabled/Нетизменений. Abranchcount2/2andactivecontrol unchanged. One complete invaliddraft/discard case, notnewcreate/delete/schedule/map/publicavailability/role/security/visualproof.",
+  "steps": [
+    "ClockfreshsamehumanTab2knownSAadmin. ObservedA link ->Филиалы; exactinactivebranchname/id andactivecontrol/count2/2. Openedit ONLYfa5inactive. Verifyheadingname/business, inactivecheckboxfalse, originalname and initiallydisabledСохранитьизменения/nochanges. Observe allbundled address/contacts/links/coords/inheritance; unknown/masked/nonemptyunexpectedbaseline ->stop/noSubmit. No map/schedule/active/contactscontrolinput.",
+    "ClockfillONLYНазваниефилиала with3literalspaces; freshDOMvalue/length3ordinaryinput andnootherchanges. Changedformsaveenabled isexpected; no productFAILfrombuttonalone. Clockimmediatelybefore ONEordinaryСохранитьизменения click, NEVEREnter/validSave/nativevalidationbypass/DOMevents/rawHTTP. ExpectНазваниефилиалаобязательно input/bannererrorandformretained; no secondSubmit.",
+    "ClockobservedКспискуфилиалов link ->originaltwo branches. Reopenexactinactivebranch viaobservededitlink, confirmoriginalname/inactive/allbaselinefields andnochangesdisabledSave. No extraSubmit or schedule/mapclick/retry. ClockAdminroot/knownSAAnonymizedBusiness3/RU; markhumanTabhandoff.",
+    "Unexpectedactualsave/privatebaseline/mismatch/authchallenge/policyinterruption/uncertaininput ->stop/no repeat/newfixture/cleanup/securityfix. Oneboundedread toclassifystoredstate, exactretainedstate ifchanged, no unapprovedvalidrollback. Humanstop ->safeeffects/PAUSEDreadback/newfinal."
+  ],
+  "effects": "AtmostONEordinaryinvalidformSubmit expectedclienttrimrejectionbeforefetch. No validbranch/businessSave/newfixture/create/delete/activepublication/schedule/contact/map/role/payment/booking/profile/preferences/messages/securitycommands. AppnormalYandexSDKmount/auth/telemetry effects unenumerated/notzeroTOTALwrites; neverinspectkeys/requestgeolocation/mapsearch/SDK/HTTP/token/storage/clipboard/native/screenshot APIs.",
+  "accounting": "Atbest1NEWUIPASS19->20,0newfix/0accepteddelta. M2-02 remainsincompletematrix; fullcreate/edit/delete andrequiredotherfieldvariantsblocked/unrunretained. Sourcechecks0productPASS. No repeatsC01availability/M2-01drafts/C99-C103auth/C91-C93build/F013/cache/manualdate/profileSave.",
+  "savedBeforeUiUtc": "2026-10-23T06:08:24Z",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "142dc0ccd41693697d71516ba7c7e9ed1ca3e491f1771e577f4bd78ea321e3f8",
+    "apps/web/src/components/admin/branches/BranchMapPickerYandex.tsx": "2ea6e90f39759778b9a414f574a1d405220fe2263010d7175dda67a5fdeda101",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c"
+  }
+}

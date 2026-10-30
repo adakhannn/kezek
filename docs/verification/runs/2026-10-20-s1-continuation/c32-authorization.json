@@ -1,0 +1,21 @@
+{
+  "id": "C32",
+  "kind": "NEW_PROSPECTIVE_TIMEBOX_NOT_PRODUCT_FIX",
+  "human": "какой сейчас прогресс? хочу дальше тебя запустить тебе до 11часов утра автономно, можешь начинать сразу после моего сообщения",
+  "observedStartUtc": "2026-10-20T23:05:05Z",
+  "timezone": "Asia/Bishkek UTC+06",
+  "deadlineLocal": "2026-10-21T11:00:00+06:00",
+  "deadlineUtc": "2026-10-21T05:00:00Z",
+  "draftByUtc": "2026-10-21T04:35:00Z",
+  "shortOnlyFromUtc": "2026-10-21T04:40:00Z",
+  "finalizeAndPauseFromUtc": "2026-10-21T04:45:00Z",
+  "noNewScenarioAfterUtc": "2026-10-21T04:50:00Z",
+  "administrativeOnlyAfterDeadline": true,
+  "explicitPausedReadbackRequired": true,
+  "finalReportFile": "final-report-2026-10-21-1100.json",
+  "supersedes": "Prior untilhumanstop permission prospectively replaced by thisfixeddeadline; oldtimehistory/finalsunchanged",
+  "automation": {"id":"kezek","status":"ACTIVE","rrule":"FREQ=MINUTELY;INTERVAL=15","targetThreadId":"01a0a908-6eca-7fb1-a481-57f09516a2d1","promptExactReadback":true},
+  "baseline": {"S1":"17/25accepted8left63/79cases16left","S2":"1/70accepted69left","product":"18/316accepted298leftNOT_READY","navigation":"16PASS2FAIL1BLOCKED/19","wrongrole":"12PASS4BLOCKED/16","verifiedFixesLogicalRun":8},
+  "noExpansion": "WEBonly, sameknownidentities/DEVscope/constraints. No newroles/jobs/users/credentials/subagents/native/commit/push/deploy/reset. Expired20Oct12:30Fontsnetworkpermission NOTrenewed. Domainlast.",
+  "initialUI": "Freshinventory sameIAB2/user5provider c6f744b5; actualsameSA Admin-panel/Anonymized /admin. AmbientratingsstatusURL notcurrentproof. Existing2root unchanged thiswindow."
+}

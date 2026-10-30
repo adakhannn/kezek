@@ -1,0 +1,72 @@
+{
+  "id": "C165",
+  "type": "bounded readonly category/reset historicalmethod/dependency review",
+  "observationWindowUtc": [
+    "2026-10-25T22:19:45Z",
+    "2026-10-25T22:24:30Z"
+  ],
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "requirement": "B3-02 only",
+  "history": "G02414Oct03:42:59UTC knownquery+women->emptyqcat/resetroot2; G02714Oct04:14:02 literalpunctuation/reset, service-searchgap retained. HomeClientComponents changed since15Octcopy, so oldG024emptyqcatReset meritsONE namedfunctionalrefresh, not NEWUI. C79 saved23Oct00:50:30 plan plus actualresult through00:53:46 contains exactqcategoryselectionpreservesquery and later nonemptyqcatHeaderReset00:52:57->rootblank/all3. Allfour C79 dependency hashes EXACTcurrent. No categorysemantic/membership proof inferred from queryreload alone.",
+  "reuse": [
+    {
+      "caseId": "S23-B304-query-category-reload",
+      "primary": "docs/verification/runs/2026-10-23-web-resume-2/c79-result.json",
+      "originalObservationWindowUtc": [
+        "2026-10-23T00:52:12Z",
+        "2026-10-23T00:52:21Z"
+      ],
+      "scope": "Narrow newparent mapping: actualpreparationcategoryselection retained q, resultfield/summary. Does NOT recertify category-only membership or count asnewUI."
+    },
+    {
+      "caseId": "S26-B302-header-reset-historical",
+      "primary": "docs/verification/runs/2026-10-23-web-resume-2/c79-result.json",
+      "originalObservationWindowUtc": [
+        "2026-10-23T00:52:57Z",
+        "2026-10-23T00:53:46Z"
+      ],
+      "scope": "ExplicitordinaryСбросить afterqcat ->cleanrootURL/blankfield/3businesses in restoration primary. Reused one complete resetmethod, originalwindow preserved, no currentrerun/newexecution."
+    }
+  ],
+  "independentMatrix": "Every actualactivecategory availablein fixture (barber/women) with expectedmembership and All; categoryselect retainingq (reused); clearingtextfield retaincat; All removescat retainingq; fullheaderResetnonempty (reused); emptyqcatReset; staleinactive/unknowncat normalempty/reset. These are functional state transitions only, not service-searchfeature, timing/debounce/performance, pagination, locale/visual or networkfailure acceptance.",
+  "effects": "Source categorylinks/All construct query URL withcurrentq/cat and omitpage; Reset linksroot; textonChange local/debouncedURLreplacement, notentity mutation. No persistentprofile/category/businesscommand. Readonlyreview itself no UI/auth effect.",
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/lib/publicBusinessSearchFilter.ts": "a298916c644ef93fb5c81c4d1eb970b48465566e6a7e9469cda047710d922f61",
+    "apps/web/src/app/layout.tsx": "e90e3606f09bbf02315130df0f0ce4be109d05fbd47ee88c472d8fd2b892bc2f",
+    "apps/web/src/lib/publicCategoryLabels.ts": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f"
+  },
+  "oldVsCurrentHomeClient": {
+    "archived15Oct": "8b21b2d5af5568ed7a72b5091db7e006c11123114fd072d4bacea69dcf450666",
+    "current": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00"
+  },
+  "credit": {
+    "reusedCases": 2,
+    "newExecution": 0,
+    "newFix": 0,
+    "newAccepted": 0
+  },
+  "hashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G024-catalog-search.json",
+      "sha256": "1d305ccf78f7e81917b73ac8dc9dcd3c123bd3882de4440ea0b0a2377cc63ee9"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G027-catalog-punctuation-after.json",
+      "sha256": "c9847e0571dfe69fa01a570e60f91f02f7eb81381f76aa7ed2fddba0c2faff45"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c79-public-search-state-plan.json",
+      "sha256": "86e5f34eb877ad41e5825815b5ae9f3665a0b7ad468571f7f72ebe84b95961b0"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c79-result.json",
+      "sha256": "7b9277d9e0b294579e7da8fd0f3daaf51e7a875da494e5eea3aac8b86c595709"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c153-result.json",
+      "sha256": "06f73b54efc49c5e618b7ea14d4100366eb08074d6c16282a941d548187695e8"
+    }
+  ]
+}

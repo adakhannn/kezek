@@ -1,0 +1,80 @@
+{
+  "observedUtc": "2026-10-18T12:38:33.255Z",
+  "reporterValid": true,
+  "evidenceFiles": 2554,
+  "accepted": 16,
+  "remaining": 300,
+  "releaseReady": false,
+  "files": [
+    {
+      "path": "docs/WEB_VERIFICATION_LEDGER.json",
+      "sha256": "d9b14ff920a02070ff16f824393041084689f99df023cf29c28c2c6ed8162177",
+      "mtimeUtc": "2026-10-18T12:38:01.925Z",
+      "beforeDeadline": true
+    },
+    {
+      "path": "docs/WEB_VERIFICATION_REPORT.md",
+      "sha256": "874ec05f0ef026b648b6a1a6efa4e0e2572bda31e4a9e42385c4cac969220b94",
+      "mtimeUtc": "2026-10-18T12:36:35.846Z",
+      "beforeDeadline": true
+    },
+    {
+      "path": "docs/WEB_CLOSURE_PLAN.md",
+      "sha256": "73d1238dccbe591b1da1d83a1db47244625d589efd31075b387c0a2bbc5742c3",
+      "mtimeUtc": "2026-10-18T12:36:39.742Z",
+      "beforeDeadline": true
+    },
+    {
+      "path": "docs/WEB_GLOBAL_READINESS_STATE.json",
+      "sha256": "d0d8a11bc687500b652c22625fc9ea0501fdb6f71b238b9a6bd09730b1826a16",
+      "mtimeUtc": "2026-10-18T12:37:23.570Z",
+      "beforeDeadline": true
+    },
+    {
+      "path": "docs/verification/runs/2026-10-18-s1/progress.json",
+      "sha256": "d749dd5bcae163287a8da209b6075e6bea52fc8be284ab9784bfd97d63407745",
+      "mtimeUtc": "2026-10-18T12:36:31.646Z",
+      "beforeDeadline": true
+    },
+    {
+      "path": "docs/verification/runs/2026-10-18-s1/final-report.json",
+      "sha256": "5fe28c778886bea87c46cae53ce09f8f89c496f124e67a89d068001c04f2bcb2",
+      "mtimeUtc": "2026-10-18T12:36:31.115Z",
+      "beforeDeadline": true
+    }
+  ],
+  "status": "FINAL_VERIFIED_NOT_READY",
+  "clockBeforeCheck": "2026-10-18 12:38:30 UTC",
+  "deadlineUtc": "2026-10-18T12:40:00Z",
+  "s1": {
+    "accepted": 16,
+    "remaining": 9,
+    "total": 25,
+    "casePassed": 56,
+    "caseRemaining": 23,
+    "caseTotal": 79
+  },
+  "sourceFingerprint": "0cc81561faf0c47d8dbd4b993204d9cfb40e5e2ac339473a21121310c479364e",
+  "allFinalFilesBeforeDeadline": true,
+  "checks": {
+    "productScoped": "7s72PASS",
+    "typesExit": 0,
+    "newFileLintExit": 0,
+    "defaultBuildExit": 0,
+    "accounting": "61of61PASS",
+    "diffCheckExit": 0
+  },
+  "cleanup": {
+    "owned3103AbsentVerifiedUtc": "2026-10-18T12:26:43.579Z",
+    "publicReadFlagAbsent": true,
+    "primaryOwnerRUbusiness2SettingsFreshVerified": true,
+    "automationAlreadyPausedReadback": true,
+    "noAutomationResume": true
+  },
+  "noProductScenarioAfterS25": true,
+  "ordinaryTelemetryWrites": "unknown, not zeroTOTALDBwrites",
+  "wholeProductReady": false,
+  "indexOwnership": "user/actorunknown; no agentstage/reset/commit/push; exact initialindex preservation not claimed",
+  "timePrecisionNotes": "s26-accounting-verification.json",
+  "noContinuousWorkClaim": true
+}

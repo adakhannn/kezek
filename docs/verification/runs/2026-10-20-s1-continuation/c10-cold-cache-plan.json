@@ -1,0 +1,19 @@
+{
+  "id": "C10",
+  "requirementId": "A1-01",
+  "candidateId": "dev-20261020-S1-bbc338182f70",
+  "authorizedAfterClockUtc": "2026-10-20T10:26:59Z",
+  "reason": "Human explicitly enabled Disable cache, left developer tools open and requested the eight checks without screenshots",
+  "tab": {"browser":"2","id":"5","provider":"c6f744b5-18d3-4b56-9132-c301225c7e66","selectionProof":"CUA selected tab5; existing repairedUserTab binding reused"},
+  "cachePrerequisite": "Manual human-operated Disable cache with developer tools kept open. Not a CUA-controlled cache flag or cookie/storage reset. Ordinary reload alone is not the proof; actual human cache control is the changed prerequisite.",
+  "caseIds": {"guest":["S12-cold-5","S12-cold-6","S12-cold-7","S12-cold-8"],"owner":["S12-cold-1","S12-cold-2","S12-cold-3","S12-cold-4"]},
+  "routes": ["/","/auth/sign-in","/terms","/privacy"],
+  "steps": "Fresh role proof; full document reload for current home or direct navigation for other known routes; inspect current destination and rendered content using CUA. Record navigation performance transfer counters when available as supporting evidence only. Then ordinary authorized existing owner Google sign-in and repeat four routes.",
+  "expected": "Guest home catalogue and sign-in form load; terms/privacy meaningful legal content. Owner has actual owner identity/context; home and legal pages meaningful, sign-in may legitimately redirect to authorized destination. No transport/error boundary/dead end in tested document entry. Confirm actual result, not source/unit output.",
+  "limits": "No screenshot, visual/SSR/every-paint/device/locale/production claim. No direct HTTP/CDP, cache/cookie extraction, denied endpoint, new browser, settings change by agent, business mutations or booking commands. No exhaustive network diagnosis inferred from successful content.",
+  "stop": "Cache-control prerequisite withdrawn, unknown/changed tab, auth password/CAPTCHA/device challenge or navigation/control failure -> retain partial and stop affected case; no bypass. Do not close DevTools or user tabs.",
+  "budgetMinutes": 20,
+  "report": "After guest and owner groups: current cases PASS/left; accept A1-01 only when all eight pass with current dependency mapping. Baseline18/25 requirements and60/79 cases; max delta +1 requirement/+8cases.",
+  "handoff": "Retain user tab and markHandoff; record final owner/page and ordinary auth transition. Disable cache remains human controlled; user may turn it off afterwards. No auth/business settings save. Ordinary telemetry/auth writes unenumerated.",
+  "deadlineUtc": "2026-10-20T12:30:00Z"
+}

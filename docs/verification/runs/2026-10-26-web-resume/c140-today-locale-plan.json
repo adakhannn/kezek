@@ -1,0 +1,45 @@
+{
+  "id": "C140",
+  "savedBeforeUiUtc": "2026-10-25T20:22:05Z",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "timeBudgetMinutes": 5,
+  "cases": [
+    {
+      "id": "S26-O303-admin-today-en",
+      "locale": "en",
+      "heading": "Admin Panel",
+      "expectedCancelled": "Cancelled"
+    },
+    {
+      "id": "S26-O303-admin-today-ky",
+      "locale": "ky",
+      "heading": "Администратор панели",
+      "expectedCancelled": "Жокко чыгарылган"
+    }
+  ],
+  "requirementIds": [
+    "O3-03",
+    "O3-04"
+  ],
+  "expected": "After English or Кыргызча is selected and server admin heading matches that locale, the system-generated cancelled row/status summary must use Cancelled or Жокко чыгарылган respectively and retain count1/Hold0/Confirmed0. This is UI system copy, not authored business/service/client data; those names intentionally remain unchanged. RU restoration is cleanup/control only.",
+  "steps": [
+    "Fresh protected current human tab2/admin/RU with actual today26Oct/same one cancelled09:00–10:00 and Cancelled1 baseline from C136/C138; controls reused,0newcredit. No extra reload.",
+    "Clock; ordinary observed English language control once. Wait for translated server admin heading, inspect selectedlocale/header/Today table and summary. Require same row/date/count1, no Today error/auth barrier. Only system status copy must be English; authored names excluded. Timeout ->actualAX once/no repeatedclick.",
+    "Clock; ordinary Кыргызча once, same settled server heading/selectedlocale/row/counts and KYstatus oracle. No manualdates/bookingactions or data commands. If recoveryuncertain stop rather than auth/reload loop.",
+    "Clock; ordinary Русский restoration, wait protected original server heading/Admin-panel/Anonymized/RU/Todaycount1. Mark handoff. Preserve both before outcomes; no fix until true UI mismatch. Minimal local system-copy translation may follow separately, no business/data/auth/security change."
+  ],
+  "effects": "Ordinary locale preference controls and their app refresh only; restoreRU. No Save/Delete/booking/status/config/fixture/role/payment/message command. Ordinary auth/telemetry unenumerated.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/page.tsx": "af975adf54afc9a401c7cbb3ba03982728b6f6d82469c4721709763425b33fae",
+    "apps/web/src/app/_components/i18n/LanguageSwitcher.tsx": "746062470100868f8ef6b5da79689f4e38c39e1396106e7e04c6baed64582162",
+    "apps/web/src/app/_components/i18n/LanguageProvider.tsx": "17b0b88e3cb5da54af4ff787bc51988e3f7f3810a11e33cd3bf07dd91ed6a744",
+    "apps/web/src/app/_components/i18n/server.ts": "ac9bdd164cf83f7fd67ad2bc0e5b084c1dd606828e0f082bc3588c632ff1296b",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.ru.ts": "2d9b180cbc875cdb274631504fb9344b7f47383ae89a10177c2da04bc2e57937",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.ky.ts": "f43de72a0d659e8ff1343bbde0936348223f754ad5a9783e727e90ae7f26f481",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.en.ts": "1ce54f2958cfed6dd55fa98e143a6cca51c02206862d0f020ef096ca00a6ce58",
+    "apps/web/src/app/_components/i18n/dictionaries/booking.ru.ts": "c9906f8c324ef9cd7162ea3ce0138844c39382f6c96d8de7c1d8bab5809bb8e3",
+    "apps/web/src/app/_components/i18n/dictionaries/booking.ky.ts": "261fd0e7b28fe0ce7da013c39891ae28e2d3ab3956b7381416315327e372e285",
+    "apps/web/src/app/_components/i18n/dictionaries/booking.en.ts": "ddb1646682b0bfa81bda3aa61df214506dc1b67d8b34e6159a875a3dabdbbcbb"
+  },
+  "excluded": "General language-switch replay, existing receipt/localization cases, pixel/overflow/device/no-flash/coldcache/wholelocale/source-onlyPASS"
+}

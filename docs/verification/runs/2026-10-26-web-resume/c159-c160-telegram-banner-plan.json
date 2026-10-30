@@ -1,0 +1,49 @@
+{
+  "id": "C159_REVIEW_C160_PLAN",
+  "savedBeforeAnyUiUtc": "2026-10-25T21:40:18Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "caseId": "S26-C405-client-banner-profile-navigation",
+  "review": {
+    "id": "C159",
+    "history": "Night09Oct notifications-stage original05:48+06 is bookingdelivery/dedup, NOT actualbanner proof; profile-stage06:10+06 is ownername/preferences, NOT currentbanner navigation. L02011Oct explicitly records pureclientGoogle-only/profile/Telegramreminderdeferred at08:08..08:32UTC, without seven-day expiry or bannerCTA result. Preserve exactoldUTC/hash; do not promote olddeferral/notifications to currentC4-05 PASS. No targeted bannerCTA result located in focused stage/result/review search.",
+    "source": "ReminderBanners hides forguest/SA, prioritizesmissingname, thenunverifiedTelegram. TelegramReminderBanner separatelyreads profile and per-userlocal7daysnooze. CTA only router.push /cabinet/profile#telegram-connection; Later writes7daylocalpreference. Profile anchor exists; BotLink createsattempt only onclickStart, LinkWidget installs officialTelegramscript and grants/linkscallback only through its authflow. Do not activate any provider widget/Link/Unlink/Later/OTP/permission. Sourceeffect reasoning not LIVE proof.",
+    "fullRequirementRemainder": "Guest/SAhidden observed controls not newcredit here; verifiedlinked/no-name/error/loading/snoozepersist/realexpiry/providerlink lifecycle not certified. No forcedstorage read/clear/timechange, fixture or syntheticerror. WholeC4-05 remains partial.",
+    "credit": "0newUI/fix/accepted",
+    "originalPrimary": [
+      {
+        "path": "apps/web/test-results/night-2026-10-09/notifications-stage.json",
+        "sha256": "5fac0b36d09058804af272c3a0810a5692b9e65fd25eaf148ffbe1d09ef1579f"
+      },
+      {
+        "path": "apps/web/test-results/night-2026-10-09/profile-stage.json",
+        "sha256": "ec530283358bc7ae73f58d901db62f703f3e4ac6c26b5675667c566d40bcc4b4"
+      },
+      {
+        "path": "apps/web/test-results/live-2026-10-11/stage-020-pure-client.json",
+        "sha256": "66940176dbf3d06d4d5d6824b4af5e9f85d1c3f6ac50e8176c32e3ab83a1f2a5"
+      }
+    ]
+  },
+  "scenario": {
+    "id": "C160",
+    "timeBudgetMinutes": 8,
+    "role": "Known pureclient low.fade.osh@gmail.com; restore knownSAkezekkg afterwards",
+    "expected": "For a settled named pureclient with visibleTelegramreminder, its banner ConnectTelegram CTA must navigate to own profile at #telegram-connection and display Telegramconnectionsection. It must not itself start link/createattempt/providerdialog or save profile. No secret/phone/widget grant required.",
+    "steps": [
+      "Clock; fresh actualexistinghumanTab2/protectedSA/RU/admin. PreserveuserGooglechooser1 untouched, no newtabs/bindforbiddenproviders/replacement. Ordinarylogout/localSign-in/Google via observedcontrols in SAMEworkingtab; choose ONLY knownlow.fade.osh immediately. Setup0credit, no repeatedlogin/return/selector certification. Password/CAPTCHA/device/consentbarrier ->humanhandoff/no bypass/no unchangedretry. Do not useolduserGooglechoosertab1.",
+      "Require settledactualpureclient/nameLIVE TESTCLIENT12OCT and visible Telegramreminder heading/exactbannerCTA. If absent, unknownlinked/snoozed/loadstate or wrongidentity, BLOCKED notFAIL; no clearstorage/Wait7days/mock/forcebanner/profileSave. RestoreknownSA ordinarily andstopthiscase.",
+      "Clock; click ONLY observed reminderbanner ПодключитьTelegram once, not providerwidget. Require actual/cabinet/profile#telegram-connection and settledownprofile/Telegramsection. No widgetclick/Link/Unlink/Botopen/Createattempt/Later/Save/phone/contact/OTP/Enter/message/securitypermission; no extractionofstorage/cookie/providerIDs. A renderedwidgetisnot authorization to interact withit. Ifunexpectedauth/linkdialog, stop/dismissonlysafeordinaryCancel ifavailable andpreservefinding, do not grant.",
+      "Clock; ordinarylogout thenGooglechooseknownkezekkg; restoreactualprotected/admin/RU/Admin-panel/Anonymized/Business3 andmarkHandoff. Preserveallusertabs; no newtab/reloginloop/sourcefixfromtoolerror. No profileinput wasedited; noSave/cleanupcommand."
+    ]
+  },
+  "effects": "One banner navigation plus ordinaryknownGoogleauthtransitions fornewscenario/setup0credit; ordinaryauth/telemetryunenumerated. No profile/provider/account-role/entity/booking/payment/notification command, snoozewrite, fixture or networkpermission renewal.",
+  "limits": "One bannerCTA functionalcase only; not actualTelegramlogin/link/permission/reminderexpiry/notificationdelivery, visual/scroll/focus/SR or fullC4-05 acceptance.",
+  "dependencyHashes": {
+    "apps/web/src/app/_components/TelegramReminderBanner.tsx": "571fef17e2fa72963c628600d2e329b7bd54b6bb971563079a58b9a073c93587",
+    "apps/web/src/app/_components/ReminderBanners.tsx": "bc7738ed7834198cb0760c9c2086cedc9d5f0ec7e02122ab56628d65bd13c45f",
+    "apps/web/src/app/cabinet/components/ProfileForm.tsx": "2f5afa0c883dd72e87b0a367a48fbc10bc127ebb05b56a9cc35508e4c1123fe9",
+    "apps/web/src/app/cabinet/components/TelegramBotLink.tsx": "d3a590478b35a1c719b41591d49b02b591c5cc34b656643eac028d8663310b96",
+    "apps/web/src/app/cabinet/components/TelegramLinkWidget.tsx": "d7929105558ad1a3cf8d67dfdd8c92aa135f4582e043c4747a3453aafba5fcf7",
+    "apps/web/src/app/auth/sign-in/useSignInSubmitActions.ts": "f6c6237a3c77f1dc19b037d75babe677d7392d0c6de59a3dd58fc7038a0bb6f2"
+  }
+}

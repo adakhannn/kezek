@@ -1,0 +1,16 @@
+{
+  "request": "можешь продолжать пока сам не останавлю тебя",
+  "firstActualClockUtc": "2026-10-25T08:52:04Z",
+  "firstActualClockBishkek": "2026-10-25 14:52:04 +06:00",
+  "effect": "Prospectively resumes same WEB-only autonomous workflow until new explicit humanstop or unavailableusage; no fixeddeadline/newprivileges/continuity acrosspause.",
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 2
+  },
+  "scope": "All previous safety/identity/fixture/browser/network/action-timeconfirmation constraints unchanged. No new networkfonts/compiler approval, credentials/roles/fixtures/payment/security/commit/push/deploy/stage/reset/native/mobile/subagents/newchat authority. Oldfinalsimmutable.",
+  "credit": {
+    "newUiPass": 0,
+    "newFixes": 0,
+    "newAccepted": 0
+  }
+}

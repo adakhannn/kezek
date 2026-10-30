@@ -1,0 +1,11 @@
+{
+  "id":"C55",
+  "kind":"BOUNDED_COMPILER_ENVIRONMENT_DIAGNOSTIC_NOT_LIVE_PRODUCT_TEST",
+  "reason":"C54 fresh currentcandidate failed 11 WOFF2 connections after renewed public-fontGET permission; do not repeatbuild or changecompiler/TLS/fonts to manufacturegreen.",
+  "budgetMinutes":10,
+  "requests":["https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap","https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwTGFWNOITddY4.woff2"],
+  "expected":"Within same compiler Node guard/dummy clean env, one public GET per host, no redirects/auth/cookies/body. Record only status/size or transport error class. No fullresponsebody/payload retained, no new appAPI/browserbypass. Binary URL taken from actual C54Turbopack log; CSS is same publicGeist guardpreflight contract.",
+  "classification":"Node GET failures narrow environment transport/guard; success would only distinguish Node from nativeTurbopack transport, not repair/certifybuild. No automaticbuildrerun withoutidentifiedchangedcondition; no productfix/livePASScredit.",
+  "limits":"No TLSverificationdisable,proxycredentials,OSnetworkchanges,newhost,privateaccount/DEVDBqueries,or alternatebrowser/HTTP bypass of denied UI. Compiler environment contains no real.env/keys. The prior C54failure remains.",
+  "nextIndependent":"After classification, prepare finite own-client upcoming/history/detail read-only caseplan from known fixtures and source contract; no booking cancel/reopen/create/payment. If evidence alreadydone/current, reuse without execution credit."
+}

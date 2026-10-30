@@ -1,0 +1,37 @@
+{
+  "id": "C186_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-26T00:44:20Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "182b90a49207d5378702034001cd168b05202a49e83e05ed04f2587c4fa947af",
+    "latestPromptCheckpoint": "C186"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 27,
+    "observedAfterClockUtc": "2026-10-26T00:41:17Z"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "c179AndC183JournalsImmutable": true,
+  "pendingFixtureEffects": false,
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 23,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "newUiFromC186": 0,
+  "newFixFromC186": 0,
+  "newAcceptedFromC186": 0,
+  "releaseDecision": "NOT_READY",
+  "next": "C187 bounded readonly D3-05 sequential stale-slot conflict primary/dependency review; no booking/hold/slot/confirm/cancel/payment/SQL/API/SDK/storage/fault/newfixture/role/browser action or unchangedwizardreplay.",
+  "effects": "Read-only D3-02 classification and accounting/continuation records only. No browser/UI/auth/DB/booking/entity/source/test/build/server command; mainserver/userTab2preserved without freshUIhealthclaim. Frozenfixturejournals pendingfalse, ordinarybackgroundauth/telemetryunenumerated."
+}

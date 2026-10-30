@@ -1,20 +1,11 @@
 import { getPerformanceStats, getOperations } from '@/lib/performance';
+import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
 
-export type PerformanceStatsAuthClientLike = {
+export type PerformanceStatsAuthClientLike = SuperAdminRoleClient & {
   auth: {
     getUser: () => Promise<{
       data: { user: { id: string } | null };
     }>;
-  };
-  from: (table: string) => {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: () => Promise<{
-          data: { is_super_admin?: boolean } | null;
-          error: null;
-        }>;
-      };
-    };
   };
 };
 
@@ -38,13 +29,9 @@ export async function getPerformanceStatsSnapshot(
     };
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_super_admin')
-    .eq('id', user.id)
-    .maybeSingle();
+  const { isSuperAdmin } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
-  if (!profile?.is_super_admin) {
+  if (!isSuperAdmin) {
     return {
       ok: false,
       error: 'forbidden',

@@ -1,0 +1,374 @@
+PASS src/__tests__/components/BookingDayRange.test.tsx (5.451 s)
+PASS src/__tests__/components/BookingSelectionRestore.test.tsx (6.676 s)
+  ● Console
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: false,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: true,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Checking services validity after staff/day change {
+        dayStr: '2026-10-12',
+        serviceIds: [ 'service-1' ],
+        servicesFilteredCount: 1,
+        staffId: 'staff-1',
+        validIds: [ 'service-1' ]
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: false,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: true,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Checking services validity after staff/day change {
+        dayStr: '2026-10-12',
+        serviceIds: [ 'service-1' ],
+        servicesFilteredCount: 1,
+        staffId: 'staff-1',
+        validIds: [ 'service-1' ]
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: false,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: false,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Checking services validity after staff/day change {
+        dayStr: '2026-10-12',
+        serviceIds: [ 'service-1' ],
+        servicesFilteredCount: 0,
+        staffId: 'staff-1',
+        validIds: []
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.warn
+      [Booking] Selected services are not valid for current staff/day, clearing serviceIds
+
+      40 |             console.warn(`[${scope}] ${message}`, sanitized);
+      41 |         } else {
+    > 42 |             console.warn(`[${scope}] ${message}`);
+         |                     ^
+      43 |         }
+      44 |     }
+      45 |
+
+      at warn (../../packages/shared-client/src/log.ts:42:21)
+      at src/app/b/[slug]/hooks/useBookingFlowDerived.ts:82:24
+      at basicStateReducer (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:5802:45)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:6951:28)
+      at dispatchSetState (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:6927:7)
+      at setServiceIds (src/app/b/[slug]/hooks/useBookingFlowDerived.ts:68:9)
+      at Object.react-stack-bottom-frame (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+      at runWithFiberInDEV (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitHookEffectListMount (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+      at commitHookPassiveMountEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+      at commitPassiveMountOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+      at recursivelyTraversePassiveMountEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+      at flushPassiveEffects (../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+      at ../../node_modules/.pnpm/_49424a62639d115e2786b63da93effe0/node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+      at flushActQueue (../../node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:566:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (../../node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:859:10)
+      at ../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:189:26)
+      at rerender (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:210:7)
+      at rerender (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:343:12)
+      at Object.rerender (src/__tests__/components/BookingSelectionRestore.test.tsx:53:5)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: true,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Checking services validity after staff/day change {
+        dayStr: '2026-10-12',
+        serviceIds: [ 'service-1' ],
+        servicesFilteredCount: 1,
+        staffId: 'staff-1',
+        validIds: [ 'service-1' ]
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Finding service {
+        found: 'Test',
+        foundInAll: true,
+        foundInBranch: true,
+        foundInFiltered: true,
+        serviceId: 'service-1'
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Checking services validity after staff/day change {
+        dayStr: '2026-10-12',
+        serviceIds: [ 'service-1' ],
+        servicesFilteredCount: 1,
+        staffId: 'staff-1',
+        validIds: [ 'service-1' ]
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+PASS src/__tests__/components/BookingStaffDayAvailability.test.tsx
+  ● Console
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+    console.log
+      [Booking] Finding service {
+        found: null,
+        foundInAll: false,
+        foundInBranch: false,
+        foundInFiltered: false,
+        serviceId: ''
+      }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+    console.log
+      [Booking] Staff cleared, clearing services
+
+      at log (../../packages/shared-client/src/log.ts:27:21)
+
+
+Test Suites: 4 passed, 4 total
+Tests:       36 passed, 36 total
+Snapshots:   0 total
+Time:        13.966 s
+Ran all test suites within paths "src/__tests__/components/BookingBranchStepBoundary.test.tsx", "src/__tests__/components/BookingDayRange.test.tsx", "src/__tests__/components/BookingStaffDayAvailability.test.tsx", "src/__tests__/components/BookingSelectionRestore.test.tsx".
+

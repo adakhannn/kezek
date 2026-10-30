@@ -1,0 +1,14 @@
+{
+  "id": "C204",
+  "status": "MINIMAL_FIX_AND_REGRESSION_PLAN_BEFORE_PRODUCT_EDIT",
+  "preparedAfterClockUtc": "2026-10-26T09:48:42Z",
+  "source": "apps/web/src/app/admin/api/users/[id]/update-basic/route.ts",
+  "originalSha256": "fe7ba2fb7fcbae459ddddee5186e2ff73295710e4a3cd7c990efe12430a380b5",
+  "beforeLive": "S1-EV-666 / S1-F021 actualownUserBasicSave missing user id, originalbaseline recovered/pendingfalse.",
+  "cause": "Next16params promise is read synchronously asRecord; params.id undefined triggersmissinguserid beforeauth/datawrite. Awaitbothpromisedandplain contextparams whilepreservingallremainingguards/payload/errorhandling.",
+  "change": "Onlyawaitctx.params andtypeacceptPromise<Record>|Record. No authquery/RLS/security/adminscope/validation/contact/role/userpayload changes, no broadotherroutefix.",
+  "regression": "New mockedroute tests promised+sync exacttargetID/metadata preservation, missingID noSDK, unauthenticated/non-super denial noadminwrite, missingtarget/updatefailure handling. Run genuinebefore againstunchangedproductroute thenafter; no mockedtestasLIVE.",
+  "sameLive": "RepeatexactC203NameC203 OWN NAME TESTSaveonce/reentry/reload, thenoriginalNameАдаханОсоровSaveonce/reentry/reload. Appendseparatejournalsbeforeeachownwrite; pendingfalseonlyafterrecovery. Keepcontacts/security/roles untouched. RestoreSAadmin.",
+  "checks": "Targetedregression/types/scopedlint plus requiredfullweblint/test/coverage withfailedgatespreserved, no mobile/provider/rawAPI. Newcandidate/dependencyreview; A3-01stale pendingfreshnewcandidateofflinebuild andseparateactualCUAexecution. No unchangedoldbuildretry/networkpermissionrenewal.",
+  "limits": "FixcreditonlyafterSAME-LIVEoriginalvariantandaddressedregressions; no wholeM3/security/credentials/profileE2proof."
+}

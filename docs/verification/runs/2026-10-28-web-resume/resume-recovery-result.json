@@ -1,0 +1,30 @@
+{
+  "id": "RESUME28_RECOVERY_RESULT",
+  "status": "MAIN_READY_EXISTING_SA_SESSION_RESTORED_ZERO_PRODUCT_CREDIT",
+  "sourceCandidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "fileCount": 1687,
+  "server": {
+    "oneStartAfterClockUtc": "2026-10-28T08:42:39Z",
+    "sessionId": 31372,
+    "launcherPid": 31368,
+    "listenerPid": 6060,
+    "listener": "127.0.0.1:3000",
+    "ready": "Next16.0.11/Turbopack Ready24.6s",
+    "warnings": "Existingbaseline-browser-mappingage/multiplelockfiles/middlewareconvention only; nopackageinstall/cleanup/configfix."
+  },
+  "browser": {
+    "initialInventory": "IAB2tabs[]",
+    "newWorkingTabId": "1",
+    "newProvider": "browser-use:0777f06e-9992-423c-a911-193bae880c9c",
+    "handle": "resume28Tab",
+    "oneNewLegitimateEntry": true,
+    "initialCreateTimedOut": true,
+    "afterTimeout": "ONEinventoryshowedsamealready-createdtabatlocalhostadmin/titleKezek, no data:error/denial. Bindthatcurrenttabonce ->actualprotectedadmin; no duplicategoto/reload/newtab/providerworkaround.",
+    "actual": "RU/Anonymized/Adminpanel/Business3/4branches1staff4services30bookings/Today28Octnone/0-0-0",
+    "observedBeforeClockUtc": "2026-10-28T08:45:25Z",
+    "authTransitions": 0,
+    "markedHandoff": true
+  },
+  "effects": "Mainserverstart+oneworkingtab/recovery read only;0NEWUI/fix/accepted, noDB/entity/booking/role/payment/secretprobe/build/retest. Oldfinal802unchanged; ordinaryauth/telemetryunenumerated."
+}

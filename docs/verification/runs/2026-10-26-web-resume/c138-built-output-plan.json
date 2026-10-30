@@ -1,0 +1,31 @@
+{
+  "id": "C138",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "sourceFingerprint": "f0dad7beb1d68eadee7fe8e88e9066fc26fb20f1d4584868bb5e15666b343a7c",
+  "existingCaseId": "A3-01-S1-01",
+  "savedBeforeRuntimeUtc": "2026-10-25T20:16:48Z",
+  "scope": "Current f0dad7 compiled output after F017 sourcechange; C137 compile alone insufficient. One actual public privacy entry+reload in current healthy human tab. No C93assetbundle/newtab/cache/visual/production domain check.",
+  "runtime": {
+    "harness": "scripts/closure-web-built-runtime-c138-20261026.mjs",
+    "host": "127.0.0.1",
+    "port": 3107,
+    "watchdogSeconds": 300,
+    "rawLog": "c138-runtime-raw.txt",
+    "outbound": "Same C137 Node TCP/fetch deny except exact owned PostCSS IPC, dummy.invalid/no.env/no realkeys; not OS firewall"
+  },
+  "timeBudgetMinutes": 5,
+  "expected": "Actual built /privacy at127.0.0.1:3107 renders Политика конфиденциальности/nine numbered sections and guest Войти; one reload retains complete document/no error overlay. No app auth/sign-in command.",
+  "steps": [
+    "Require finished C137 exit0/no timeout/exact1686 copy+current source, only expected generated Next declaration difference. Syntaxchecked harness, fresh3107free/noexistingruntime/log. Clock one owned launch only.",
+    "Computer-use/cua_repl same human tab2/resume26HumanTab; verify healthy current localhostadmin before navigation. Clock direct independent compiled privacy http://127.0.0.1:3107/privacy. This is separate planned compiled-output test, never denied-page recovery. Read heading/nine numberedsections/guest sign-in only; no forms/auth.",
+    "Clock one ordinary reload, same complete public document/no overlay. No assetbundle/HTTP/SDK/evaluatefetch/token/storage/clipboard/capture/viewport/cache workaround.",
+    "Clock return observed http://localhost:3000/admin, protected Admin-panel/Anonymized/Business3/RU and corrected TodayCount1 if unchanged. Mark handoff. Verify exactownedPID/path then stopONLYruntime; confirm3107gone/main3000PID18368 preserved. Retain files/no cleanup.",
+    "Denial/interruption/uncertain state/startupFAIL ->stop no alternate/newtab/retry/configrepair/rebuild. Humanstop safe effects +PAUSEDexistingkezek/readback/new26Octfinal."
+  ],
+  "effects": "Owned isolateddummy nextstart and temporary public document entry/reload/return only. No DEVDB/booking/payment/role/message/persistentfixture/appauth transition. Ordinary auth/telemetry unenumerated.",
+  "accounting": "At best refresh ONE existing A3-01case accepted20->21/S116->17/primary62->63;0NEWfunctionalUI/fix.26Oct3NEWUI/1fix/logical13 unchanged; full technical errors/cache/visual/stale blockers retained.",
+  "harnessHashes": {
+    "scripts/closure-web-built-runtime-c138-20261026.mjs": "ee5cc661fae6c88a90901ee949ebd18c67ccf498ad7cec40f51e692d88c40828",
+    "scripts/closure-web-offline-guard-c137-20261026.cjs": "4aebd6b28bfb3ce4607a718e5a2de7deb43d3a9e17deebc0dfd806823c7d3f4e"
+  }
+}

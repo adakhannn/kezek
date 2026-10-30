@@ -1,0 +1,37 @@
+{
+  "id": "C140",
+  "status": "FAIL_BEFORE_TWO_LOCALES",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "sourceFingerprint": "f0dad7beb1d68eadee7fe8e88e9066fc26fb20f1d4584868bb5e15666b343a7c",
+  "plan": "c140-today-locale-plan.json",
+  "observationWindowUtc": [
+    "2026-10-25T20:22:48Z",
+    "2026-10-25T20:24:18Z"
+  ],
+  "cases": [
+    {
+      "id": "S26-O303-admin-today-en",
+      "locale": "en",
+      "heading": "Admin Panel",
+      "expectedCancelled": "Cancelled",
+      "status": "FAIL",
+      "actual": "Selected en and waited exact translated server admin heading Admin Panel. Today table headings and page body translated, same09:00–10:00 business2/branch1 row with count1; system row status and summary label still Russian Отменено. Raw DOM-backed table and chip read confirmed mismatch; authored names excluded."
+    },
+    {
+      "id": "S26-O303-admin-today-ky",
+      "locale": "ky",
+      "heading": "Администратор панели",
+      "expectedCancelled": "Жокко чыгарылган",
+      "status": "FAIL",
+      "actual": "Selected ky and waited exact translated server admin heading Администратор панели. Today table headings and page body translated, same09:00–10:00 business2/branch1 row with count1; system row status and summary label still Russian Отменено. Raw DOM-backed table and chip read confirmed mismatch; authored names excluded."
+    }
+  ],
+  "restoration": {
+    "afterClockUtc": "2026-10-25T20:23:17Z",
+    "actual": "Русский selected, server Панель администратора/Admin-panel/Anonymized/RU, TodayCancelled1. No booking/data/auth action; handoff marked."
+  },
+  "cause": "Admin bookingStatusLabel returns hardcoded Russian strings, used by row and all three summary chips despite surrounding server getT locale.",
+  "incidental": "English Today heading visibly includes a backslash before apostrophe. Outside the two cancelled-copy assertions; no separate bug/fix credit or casual source change.",
+  "effects": "Ordinary locale preference controls and their app refresh only; restoreRU. No Save/Delete/booking/status/config/fixture/role/payment/message command. Ordinary auth/telemetry unenumerated.",
+  "credit": "0PASS/0fix/0accepted"
+}

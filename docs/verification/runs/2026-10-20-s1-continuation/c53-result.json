@@ -1,0 +1,17 @@
+{
+  "id":"C53",
+  "plan":"c53-immediate-retry-plan.json",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint":"4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "caseId":"S21-C303-ABANDON-retry-recovery",
+  "observationWindowUtc":["2026-10-21T06:14:00Z","2026-10-21T06:17:41Z"],
+  "actual":"NormalSA logout from human-restored permitted usertab18; guest safe sign-in /auth/sign-in?redirect=%2Fterms -> Googlechooser -> ordinary Back withoutselection as required setup only. At06:15:29 Googleagain, before06:15:53 clock secondchooser observed; knownkezekkg selected immediately afterward. Initial bounded heading wait tool timed out at3000ms; single freshDOM then proved actual termsheading/Admin/Anonymized/Logout and exact http://localhost:3000/terms. No secondaccountclick or repeatedlogin. Before06:16:38 clock local terms success confirmed; normalgoto/admin ->adminheading andAnonymized. Original usertabs2/5/18preserved,5notbound/retried. Hand-off18and2.",
+  "status":"passed",
+  "timingLimits":"Bounding clock range, not precise callback latency. Selectedaccountafter06:15:53, safe local result observed before06:16:38. Completed/restored before06:17:41,within5min budget. Toolwaittimeout retained, not a productFAIL when subsequent actualUIproved completednavigation.",
+  "matrixBefore":{"passed":2,"blocked":1,"total":3},
+  "matrixAfter":{"passed":3,"blocked":0,"failed":0,"notRun":0,"total":3,"remaining":0,"newLivePass":1,"reusedPreviousPass":2,"newFixes":0},
+  "effects":"One normal knownSAlogout and one ordinaryGoogleknownSAlogin; freshBack precondition notcounted as anothercase. Authsync/telemetry unenumerated, notzeroTOTALwrites. No account/role/grant/business/booking/OTP/messages/link/unlink/save/source/test changes. Final/admin restored, no token/cookie/authcode reads.",
+  "originalFailure":"C49 expired-state blocked observation remains in c49-result.json with its originaltime; human restoration and prompt immediate retry changedconditions. No codefix/newbugcredit or provenSupabasefallbackconfigurationcause.",
+  "limits":"3/3Googlechooser abandonment subset only. Explicit providerconsent/access_denied callback andYandexcancel unverified, fullC3-03partial. Not API/RLS/fullauth/security/visual/no-flash/production/sessioncardinalityPASS.",
+  "next":"C54 fresh isolated currentcandidate build with newly explicit human GoogleFonts publicGET-only permission untilhumanstop. No DEV Supabase/accounts/keys tocompiler. Existingcurrentbuild/assets stale5cases; keepdomainlast. Validateisolation andfinitebuildplanfirst, notunchangedoldbuildretry."
+}

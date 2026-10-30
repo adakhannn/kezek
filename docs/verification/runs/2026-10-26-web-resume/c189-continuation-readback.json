@@ -1,0 +1,37 @@
+{
+  "id": "C189_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-26T01:17:29Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "4e1274a39ef7841a9574450b839a383d4117a4b5c033245c3fc2e097dc4567f1",
+    "latestPromptCheckpoint": "C189"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 27,
+    "observedAfterClockUtc": "2026-10-26T01:11:10Z"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "c179AndC183JournalsImmutable": true,
+  "pendingFixtureEffects": false,
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 23,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "newUiFromC189": 0,
+  "newFixFromC189": 0,
+  "newAcceptedFromC189": 0,
+  "releaseDecision": "NOT_READY",
+  "next": "C190 bounded readonly newlylocated live-2026-10-13/stage-042-stale-slot-conflict.json primary/dependency review only; C189rootcatalogue mustnotretryunchanged/no causeinference or booking/entity command.",
+  "effects": "Administrative continuation after C189cataloguepreconditionerror and ordinaryadminrestore. No query/Book/booking/hold/slot/selection/confirm/cancel/auth/DB/entity/source/test/build/server command. UserTab2protectedadmin preserved; mainserver unchanged/no activecompiler/runtime/networklease. Ordinaryauth/telemetryunenumerated."
+}

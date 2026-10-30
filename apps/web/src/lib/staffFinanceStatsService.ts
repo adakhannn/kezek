@@ -136,6 +136,7 @@ export async function runStaffFinanceStats({
         totalBaseMasterShare: 0,
         totalBaseSalonShare: 0,
         totalGuaranteedAmount: 0,
+        totalTopupAmount: 0,
         hasGuaranteedPayment: false,
         shifts: mappedShifts,
     };
@@ -149,7 +150,8 @@ export async function runStaffFinanceStats({
         stats.totalBaseMasterShare += shift.base_master_share;
         stats.totalBaseSalonShare += shift.base_salon_share;
         stats.totalGuaranteedAmount += shift.guaranteed_amount;
-        stats.hasGuaranteedPayment ||= shift.guaranteed_amount > shift.base_master_share;
+        stats.totalTopupAmount += shift.topup_amount;
+        stats.hasGuaranteedPayment ||= shift.topup_amount > 0;
     }
 
     return {
@@ -407,6 +409,7 @@ function mapShiftForStats({
         hours_worked: displayHoursWorked,
         hourly_rate: hourlyRate,
         guaranteed_amount: displayGuaranteedAmount,
+        topup_amount: Math.max(0, Math.round((displayGuaranteedAmount - baseMasterShare) * 100) / 100),
         items: shiftItems.map((item) => ({
             id: item.id,
             client_name: item.client_name || '',

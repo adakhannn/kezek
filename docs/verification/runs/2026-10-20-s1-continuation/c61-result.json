@@ -1,0 +1,23 @@
+{
+  "id":"C61",
+  "plan":"c61-profile-draft-validation-plan.json",
+  "amendment":"c61-draft-recovery-amendment.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-21T07:57:59Z",
+  "completedBeforeUtc":"2026-10-21T08:08:31Z",
+  "setup":"Freshoriginaltabs2root/5blocked/18admin. OrdinarySAlogoutafter07:58:35/Googleknownlow.fade.oshselectedafter08:00:00; actualКлиент/LIVE TESTCLIENT12OCT. OrdinarycabinetProfilelink -> loadedИмя LIVE TEST CLIENT12OCT, Phonevisible, Allchangessaved and Save/Resetdisabled. Setup notnewWB202profileloadPASS.",
+  "cases":[
+    {"key":"letters","status":"passed","observationWindowUtc":["2026-10-21T08:02:27Z","2026-10-21T08:02:48Z"],"actual":"DocumentedCUAfill('abc') to observedPhonefield -> inlinealertУкажитекорректныйномертелефона, aria-invalidtrue, Saveenabledfalse, unsavedchangesnotice. NoSave/submit."},
+    {"key":"below-min","status":"passed","observationWindowUtc":["2026-10-21T08:02:48Z","2026-10-21T08:04:42Z"],"actual":"CUAfill('1234567') -> samevisibleinlineerror/aria-invalidtrue/Savefalse. AttemptedDOMvalueLength10 was lengthofmask<redacted>, notactualinputlength orappendbug; preservecorrection. No unmasking/submit. Inputaction+UIerrorproof, not independentlyreadhiddenvalue."},
+    {"key":"above-max","status":"passed","observationWindowUtc":["2026-10-21T08:04:42Z","2026-10-21T08:05:06Z"],"actual":"CUAfill prescribed21digitdraft -> aria-invalidtrue/visiblecorrectphoneerror/Savefalse/Resettrue. Hiddenvalue notread; noSave/submit."},
+    {"key":"restore-noop","status":"blocked","observationWindowUtc":["2026-10-21T08:05:06Z","2026-10-21T08:06:14Z"],"actual":"Originalphonevalue masked byCUA, so exactstoreddigitcomparison NOTcertified. Nevertypedmaskasoriginal. VisibleResetclick restores cleanUI: aria-invalidnull/errorfalse/Savefalse/Resetfalse. Normalreload keepsknownname andsamecleanUI. Cleanupsuccessful, butmandatoryexactphoneequalitypart remainsBLOCKED; notnewE2-03persistencePASS."},
+    {"key":"real-server-error","status":"blocked","observationWindowUtc":["2026-10-21T07:57:59Z","2026-10-21T08:08:31Z"],"actual":"No naturalrealserverfailureencountered; noSave/APIprobe/faultinjection/interception/logout-during-profile-error trick. No UNIT/live substitution."}
+  ],
+  "matrix":{"total":5,"passed":3,"blocked":2,"failed":0,"notRun":0,"newInputVariants":3,"remaining":2,"scope":"Three inputvariants inONEunsavedprofiledraftsequence, not3independentprofileexecutions. Exactmaskedphonerestoreproof andrealservererror remainBLOCKED, no removedslots."},
+  "restore":{"observationWindowUtc":["2026-10-21T08:06:14Z","2026-10-21T08:08:31Z"],"actual":"Ordinaryclientlogout/Googleknownkezekkgselectedafter08:07:36; actualAnonymized/protectedПанельадминистратора/Business3, exacthttp://localhost:3000/admin, original18+2markedhandoff. No newtabs; oldblocked5untouched."},
+  "toolTiming":"Googleaction snapshot once timedout; singlefreshDOMprovedchooser, no repeatedclick. PhoneDOMvalueautomatically<redacted>; do notinferactualdigits/length or bypass. No runtimebug/fix fromthesetoollimitations.",
+  "effects":"Only3unsavedinvaliddraftfills plusordinaryReset/reload; NO Save/submit/profilePOST/OTP/providerlink/unlink/notificationtoggle/message/realphonechange/booking/payment/package/review/role/grant/SQL/source/test/build/servercommands. 2ordinarylogouts+2GoogleloginsincludingSArestore. Ordinaryauthlookup/telemetryunenumerated,notzeroTOTALwrites. No claim rawDBstate/writecount measured.",
+  "counts":"E2-02 not_run->partial,0fullyacceptedrequirementdelta/0fix. Product21/316,S117/25primary63/79,S23/70,S41/47 remain. E2-01initialloadsetup/E2-03persistence/E2-04phoneidentityflows NOTcertified.",
+  "next":"Do not repeat3passedphoneinputvariants or attemptunmasking; originalphoneexactcomparisonblocked/realservererroronlynaturalrepro. ExistingG141unitfailure remainsnotLIVE. Select independent remainingcasewithfiniteplan/historyreview; no OTP/providerlink/unlink/notificationchanges/newfixtures or unchangedreceipt/fontbuild repeat."
+}

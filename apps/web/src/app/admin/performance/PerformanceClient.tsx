@@ -23,8 +23,10 @@ type PerformanceStat = {
 
 type PerformanceStatsResponse = {
     ok: boolean;
-    stats: PerformanceStat[];
-    timestamp: number;
+    data?: {
+        stats: PerformanceStat[];
+        timestamp: number;
+    };
     error?: string;
 };
 
@@ -46,8 +48,12 @@ export default function PerformanceClient() {
                 throw new Error(data.error || 'Failed to load performance stats');
             }
 
-            setStats(data.stats);
-            setLastUpdate(new Date(data.timestamp));
+            if (!Array.isArray(data.data?.stats) || !Number.isFinite(data.data.timestamp)) {
+                throw new Error('Invalid performance stats response');
+            }
+
+            setStats(data.data.stats);
+            setLastUpdate(new Date(data.data.timestamp));
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Unknown error');
         } finally {

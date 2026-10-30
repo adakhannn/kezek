@@ -1,0 +1,44 @@
+{
+  "id": "HUMAN_PAUSE_20261025_110044",
+  "request": "сделай логическое завершение и сделай паузу",
+  "firstActualClockUtc": "2026-10-25T11:00:44Z",
+  "firstActualClockBishkek": "2026-10-25 17:00:44 +06:00",
+  "finalizedUtc": "2026-10-25T11:02:22Z",
+  "authority": "Direct human pause prospectively supersedes all prior until-stop authorization. NEW direct human authorization required; stale/queued heartbeat is not resume permission.",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "configurationReadback": true,
+    "configurationSHA256": "c761dcd94ec7dea6e715aff7ff0a0683ac425dd2ec1b567ce4f1c6dee687d0f4",
+    "name": "Kezek WEB — до команды остановиться",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "existingAutomationNoDuplicate": true,
+    "preservedScheduleThreadName": true,
+    "promptAppend": "Explicit human pause and current checkpoint appended; earlier history retained."
+  },
+  "effects": "Administrative finalization only. No new product/UI/DB/source/test/build commands after stop. C126 original category name/custom slug/inactive/usage0 visibly restored before stop; no pending save/dialog/recovery. Browser not manipulated during finalization; preserve user Tab2/admin from last actual C126 handoff. Ordinary prior auth/telemetry unenumerated, not zero TOTAL writes.",
+  "processes": {
+    "readbackBeforeUtc": "2026-10-25T11:01:24Z",
+    "mainServer": {
+      "pid": 23304,
+      "listen": "127.0.0.1:3000",
+      "leftAvailableForUser": true,
+      "continuingTestProcess": false
+    },
+    "compiler19300Absent": true,
+    "temporaryRuntime12932Absent": true,
+    "port3107NoListener": true,
+    "ownedC121C122HarnessProcessesAbsent": true,
+    "newTemporaryProcessesStarted": false,
+    "activeTemporaryNetworkPermission": false
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 11,
+    "limitExhaustion": false
+  },
+  "savedNextOnly": "C128 bounded readonly history/effect review of retained inactive test category destructive-confirmation Cancel before any new UI plan. Determine whether exact category Cancel/reload has original proof; reuse only if applicable with original UTC/no new PASS. If genuinely uncovered, save finite C129 warning-open/Cancel/reload plan for exact c7cef81b only; NEVER dialog Confirm/Delete/Enter/force checkbox or actual deletion. No new category/fixture, service-category implementation, unchanged C119/C124/C126/build/auth/F013 retry. M5-02 services contract remains explicitly BLOCKED until clarified; all older safety/stale gates retained."
+}

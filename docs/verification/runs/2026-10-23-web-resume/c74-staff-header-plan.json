@@ -1,0 +1,15 @@
+{
+  "id":"C74",
+  "caseId":"S23-F3-HEADER-staff",
+  "requirementIds":["F3-01","F3-02"],
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "timeboxMinutesIncludingAuthRestore":12,
+  "reason":"Staff header-menu route+history variant remainsnot_run in C73 finite7rolematrix. C71 directselector is a different control/path; no repeat or newcredit for it. G016cross-accountstale-menu/G078Escape alreadyreviewedC72, not repeated. F013Past-listreload explicitly out of scope.",
+  "role":"Known Google obraz.osh@gmail.com / existingstaff1bfd0e3b / primaryaliasadakhannn@yandex.com, NOTpureclient. Restore onlyknownSAkezekkg@gmail.com.",
+  "expected":"Own/staff landing, staffidentity+ownID; header triggerКабинетсотрудника, exactstaff+personal menuitems, onlystaff aria-currentpage, noAdmin/business. Ordinarypersonal menu ->/cabinet or normal/bookings child, triggerМоизаписи/currentPersonal andpersonalnav; no previousstaffhomepage/profile/servicecard retained (staffaccesslinks intentionallyallowed). Back ->own/staff/currentStaff andownID. Forward ->personal/currentPersonal. ExplicitStaffmenu ->own/staff/currentStaff; Back ->personal/currentPersonal. ONE new rolecase, not peredge/marker. No staff/bookings route/reload or F3-03cross-account/security/visualclaim.",
+  "steps":["Freshinventory/actualSA/admin baseline. Clock ordinarySAlogout/localGoogle; selectonlyknownstaff immediately from actualchooser, await normal/staff landing (do NOT wait root as C71)","Read ownstaff identity/ID andheader; clockopenmenu, exactoptions/currentmarker","Clock chooseownpersonal menuitem; waitsettledpersonalUI thenclockopenmenu/readmarker+absenceofpreviousstaffhomepagecontent","Clock Backonce ->ownstaff/currentmarker; clock Forwardonce ->personal/currentmarker","Clock explicitStaffmenuitem ->staff/currentmarker; clock Backonce ->personal/currentmarker","Clock ordinarylogout; localGoogleknownSA restore/admin/protectedheading/Anonymized/Business3; preservehumanTab2/provider9330166e/handoff"],
+  "stop":"Unexpectedauth/role/error/forbiddenroute ->stopcase, onefreshobservation withoutduplicateclick/reload/URL guesses, restoreSA viaordinaryallowedflow ifpossible. CAPTCHA/password/device/expiredOAuth requirehumanhandoff/no bypass/code replay. A toolwaittimeout alone is not productFAIL; captureactualstate. No newtabs/blockedprovider/HTTP/native workaround. No preference/businesschooser selection.",
+  "effects":"Ordinary2logout+2knownGooglelogin(includingrestore), authorized Link/Back/Forward reads, transientlocalmenu only. No persistentpreference/Remember/configSave/recalc/POST/jobs/roles/grants/newfixture/businessselection/booking/shift/payment/review/source/test/build/server/DB/APIprobe commands. Auth/telemetryunenumerated/notzeroTOTALwrites; no cookies/tokens/authcode/storage/clipboard inspection.",
+  "matrix":"Before1PASS3BLOCKED3not_run/7. Atbest2PASS3BLOCKED2not_run/7, remaining5. SAoriginalC73PASSnotrerun; owner/manager/multiroleblocks retained. Client/guest needhistoricalapplicabilityreview first. FullF3parentsremainpartial/casePlanCompletefalse."
+}

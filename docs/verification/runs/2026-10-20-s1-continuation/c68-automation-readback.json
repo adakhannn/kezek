@@ -1,0 +1,10 @@
+{
+  "id":"kezek",
+  "readbackBeforeUtc":"2026-10-21T10:59:24Z",
+  "status":"ACTIVE",
+  "rrule":"FREQ=MINUTELY;INTERVAL=15",
+  "exactPromptReadback":true,
+  "changed":"ExistingpromptappendC67-C68+observationgap+nextC69; sameid/name/status/cadence/target, no duplicateautomation/newchat.",
+  "next":"FiniteunsavedratingdraftUIvalidationonly, neverSave/Enter/recalc/POST/persistconfig. StopremainsPAUSED/readback/safeowned-effectfinalization.",
+  "validator":{"valid":true,"errors":[],"accepted":21,"applicable":316,"releaseReady":false}
+}

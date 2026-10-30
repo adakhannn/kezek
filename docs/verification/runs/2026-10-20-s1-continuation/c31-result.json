@@ -1,0 +1,16 @@
+{
+  "id": "C31",
+  "candidate": "dev-20261020-S1-6b8b3bf85fe5",
+  "status": "THREE_REMAINING_AVAILABLE_PAGE_CASES_PASS",
+  "cases": [
+    {"key":"superadmin-staff","afterUtc":"2026-10-20T22:57:31Z","beforeUtc":"2026-10-20T22:57:45Z","actual":"SameknownSA:/staff explicit Нет доступа к кабинету сотрудника/no activeownrecord. GlobalSArole doesnotimpersonate staff."},
+    {"key":"owner-staff","afterUtc":"2026-10-20T22:58:58Z","beforeUtc":"2026-10-20T22:59:10Z","actual":"KnownownerGoogle authenticated as Аккаунт владельца/Владелец; 2businesschooser withbusiness2markedcurrent, NOselectionclicked. Directstaff denied:noactiveownrecord."},
+    {"key":"staff-dashboard","afterUtc":"2026-10-20T22:59:59Z","beforeUtc":"2026-10-20T23:00:24Z","actual":"KnownobrazGoogle ordinarylogin autoroutes ownstaffID1bfd0e3b/АдаханОсоров, personalstaffpositivecontrol. Directdashboard settled Сотрудник header + Нет доступа к кабинету управления; no managementworkspace."}
+  ],
+  "restoration": "Knownkezekkg ordinaryGoogle selected and actualAdmin-panel/Anonymized/rootadminrestored. WaitForURL timedout once, ONEfreshDOM proved success; no repeatedlogin or callback/tokeninspection. ExistingTab2remainsroot/sharedsession; bothhandoff.",
+  "matrix": {"passed":12,"blocked":4,"notRun":0,"failed":0,"total":16,"remaining":4,"newLivePassThisSubpackage":3,"newLivePassC30C31":8,"reusedPass":4},
+  "decision": "All8newavailablecases plus4reusedadminroot negatives PASS;4missingbusinessadmin/managerrole/affiliationcases BLOCKED. F4-01partial, noacceptedrequirementdelta. No fixture/role creation requested. Page boundary notHTTP/RLS/CSRF/IDOR/no-flash/productioncertification.",
+  "counts": {"S1":"17/25accepted8left63/79cases16left","S2":"1/70accepted69left","navigation":"16PASS2FAIL1BLOCKED/19","product":"18/316accepted298leftNOT_READY","verifiedFixesLogicalRun":8},
+  "effects": "OrdinarySAlogout->ownerlogin/logout->stafflogin/logout->SAlogin. Ownerbusinesschooser readonly/noContinue/Select; oldbusiness2currentlabel retained. Existingstaff normalpostlogin autoroute can run existing idempotent staff-role-sync; no agentcreatedrole/job/fixture or SDK; no grant/Save/businesscommands/recalc/SQL. Ordinaryauth/routing/preferences/telemetry effects not independentlyenumerated, NEVERzeroTOTALDBwrites. No fullOAuthlogs/credentialsread.",
+  "next": "F4-01availablematrixdone12PASS4BLOCKED; do notrepeat unchanged orcreate missingroles. Nextdefine F4-02 directURL/reload/copiedlink/newtab PAGE-only contexts, reusing actual existingdirectproof and documentedbrowserconstraints; no replacementforcapture/deniedendpoint. M1-03businessapptransient andF005realerrorpending unchanged; monitoringforbidden. Domain/production last, Fontsapprovalexpired."
+}

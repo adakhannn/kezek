@@ -59,7 +59,7 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const [slugDirty, setSlugDirty] = useState<boolean>(false);
+    const [slugDirty, setSlugDirty] = useState<boolean>(mode === 'edit' && !!initial?.slug);
     const initRef = useRef(false);
 
     useEffect(() => {

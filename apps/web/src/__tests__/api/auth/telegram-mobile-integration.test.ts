@@ -28,6 +28,10 @@ import {
 
 setupApiTestMocks();
 
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client,
+}));
+
 describe('Telegram mobile auth integration', () => {
     const previousSecret = process.env.TELEGRAM_MOBILE_BOT_SECRET;
     const mockedCreateClient = createClient as unknown as jest.Mock;
@@ -35,9 +39,9 @@ describe('Telegram mobile auth integration', () => {
         typeof handleTelegramLogin
     >;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
-        __resetTelegramMobileAuthAttemptsForTests();
+        await __resetTelegramMobileAuthAttemptsForTests();
         __resetTelegramMobileBotRequestReplayStoreForTests();
         __resetNonceProbeProtectionForTests();
         __resetMobileExchangeStoreForTests();
@@ -83,7 +87,7 @@ describe('Telegram mobile auth integration', () => {
         });
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = previousSecret;
     });
 

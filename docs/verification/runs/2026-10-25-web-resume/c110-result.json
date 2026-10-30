@@ -1,0 +1,42 @@
+{
+  "id": "C110",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "files": 1685,
+  "status": "BUILD_PASS_NOT_LIVE",
+  "event": "finished",
+  "startedUtc": "2026-10-25T09:01:47.450Z",
+  "finishedUtc": "2026-10-25T09:03:21.588Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "pid": 30748,
+  "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261025-c110-88d5303de67a\\build",
+  "ownedSession": 89601,
+  "copy": {
+    "event": "prepared",
+    "startedUtc": "2026-10-25T09:01:47.450Z",
+    "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261025-c110-88d5303de67a\\build",
+    "copiedFiles": 1685,
+    "copyFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+    "noEnvFiles": true,
+    "coldNextCache": true,
+    "defaultCompiler": true,
+    "dummyBackend": true,
+    "limitation": "Node TCP/fetch restriction except exact PostCSS IPC; not OS firewall or LIVE/deployed-production PASS"
+  },
+  "rawLog": "c110-build-raw.txt",
+  "compile": "40.0s",
+  "typecheck": "PASS",
+  "prerenders": 36,
+  "policyTests": {
+    "passed": 16,
+    "failed": 0,
+    "networkRequests": 0,
+    "scope": "Guardpredicate/TCP/fetch denial tests only/notproductPASS"
+  },
+  "warnings": "Multiplelockfiles/workspacerootinference, stalebaselinebrowsermapping, middlewaredeprecated retained; noconfig/packagecleanup or compilerchange.",
+  "effects": "Isolatedlocalcopy/junctions/compiler/cache/rawlog only. No .env/externaldownloads/DEVAPI/DB/newfixture/roles/payments/booking/source mutations/cleanup. Ordinary mainappauth/telemetry unenumerated/notzeroTOTALwrites.",
+  "counts": "0newUI/0fix/0accepted delta;20/316 until C111actualbuiltoutput. OldC92/C93 and23Octfinalsimmutable.",
+  "next": "C111 saved finite existing-tab compiledprivacyentry/reload/return/runtimecleanup, no assetbundle/no newtab; actualUI required before A3-01recertification."
+}

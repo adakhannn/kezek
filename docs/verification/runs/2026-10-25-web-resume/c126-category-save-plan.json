@@ -1,0 +1,29 @@
+{
+  "id": "C126",
+  "requirementIds": [
+    "M5-01"
+  ],
+  "caseId": "S25-M501-existing-category-name-persist-restore-regression",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "timeboxMinutesIncludingRecovery": 8,
+  "targetId": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+  "originalName": "LIVE TEST NIGHT09OCT CATEGORY EDITED",
+  "originalSlug": "live-test-night09oct-category",
+  "temporaryName": "C126 TEST CATEGORY NAME 25OCT",
+  "expected": "Freshmarkedcategoryoriginalname/customslug/inactive0usage/nochangesdisabled. OnlyName temporarymarker; Save enabled andoriginalslug/inactiveunchanged. ONEordinarySave ->listtemporaryname/sameoriginalslug/inactive0usage/original3categories2active3references. Reentry+ONEordinaryreload retainmarker/customslug/inactive/disabledSave. OnlyName restoreoriginal; secondandlastSave ->listoriginalname/slug/inactive0usage/summaries; reentry+ONEordinaryreload originalvalues/nochangesdisabled. Cancel/rootadmin/handoff. Atmostonefreshhistoricalregressionevent, no newfunctionalcase/fix/acceptancecredit.",
+  "steps": [
+    "Clock/freshsamehumanTab2/knownSA/protectedadmin ->observedCategories3. ExacttestID/originalname/slug/inactive0usage/3categories2active3referencebaseline. Openexactobservededitlink ->name+slugexactoriginal/availabilityunchecked/disabledSave. Anyunknown/baselinechange ->BLOCKED/no input/Save.",
+    "Clock fillONLYName C126 TEST CATEGORY NAME 25OCT. Verifyexactmarker/samecustomslug/uncheckedavailability/Saveenabled. ActualclockIMMEDIATELYbeforeONEordinaryСохранитьизменения; NEVEREnter/slug/checkbox/Delete. Expectlistmarker/sameoriginalslug/inactive0usage/summariesunchanged. Pendingnavigation ->oneboundedreadonlysettlingcheck/no duplicateSave. Error/uncertainoutcome ->STOPnoconditionalretry.",
+    "Clockreentryexacttestedit/ONEordinaryreload ->persistedmarker/originalslug/inactive/disabledSave. Then ONLYName restoreexactoriginal. Verifyoriginalname/originalslug/uncheckedavailability, clockIMMEDIATELYbeforesecondandlastordinarySave. Expectlistoriginalallbaseline. No thirdSave/cleanup/newfixture eveniferror.",
+    "Clockexactreentry/ONEordinaryreload ->originalname/customslug/inactive/nochangesdisabled. Cancelsolelycleanup ->list. ClockВадминку ->protectedheading/Anonymized/collapsedАдмин-панель/RU/Business3/handoff. Humanstop onlysafealreadyplannedrecoveryifexactknownstate, thenPAUSEDexisting/readback/newfinal. No auth/source/build/data/securityexpansion."
+  ],
+  "effects": "Atmost2ordinarycategoryupdatecommands on retainedinactive0usagefixture, Nameonly marker->original; bundledoriginalslug/is_active resubmittedunchanged, propagateSlug:true inexistingpayload but sourcecondition predictsnocat_replace_slug forunchangedslug. No independentRPC/trigger/audit/physicalDBrollback/writecount proof; ordinaryauth/telemetryunenumerated. No newcategory/fixture/role/activation/actualslugchange/delete/job/notification/payment/booking/HTTP/SDK/SQL/secret/storagecommands.",
+  "accounting": "Freshexecution afterF016changeddependency revisits historical9Octpersistededit, notnewcasecredit: newWindowPassedCases stays5/newfix1/logical12/accepted21. Trackseparate refreshedHistoricalFunctionalCasesThisWindow1 ifPASS. NewledgercaseID is current atomictracking, not claimoldhistorywasunexecuted. M5-01wholepartial/casePlanCompletefalse; no successfulcreate/delete/dependency/security/visualcertificate.",
+  "savedBeforeUiUtc": "2026-10-25T10:41:50Z",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/categories/CategoryForm.tsx": "e0bbc27c43198e471d2590b9edff4652b9e92a1e2ab2e72d67b23fdfbdbed585",
+    "apps/web/src/app/admin/api/categories/[id]/update/route.ts": "1a7504a8a83c1e5aa8be04b966b35582e8ebeb09406ee24df161f38c31e2ff16",
+    "apps/web/src/app/admin/categories/[id]/page.tsx": "155695f88fd25d8657775acc8b6fa6e64ec9588e3278eff165b37ce36fb02d7b",
+    "apps/web/src/app/admin/categories/page.tsx": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+  }
+}

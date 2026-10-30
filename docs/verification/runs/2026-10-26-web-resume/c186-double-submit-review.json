@@ -1,0 +1,96 @@
+{
+  "id": "C186",
+  "status": "READONLY_COMPLETE_DOUBLE_SUBMIT_LIVE_BLOCKED_NOT_REUSED",
+  "observationWindowUtc": [
+    "2026-10-26T00:41:17Z",
+    "2026-10-26T00:43:36Z"
+  ],
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirement": "D3-02",
+  "independentOracle": "Two rapid attempts to confirm the same pending appointment must not cause two successful booking effects. Evidence needs the actual repeated user stimulus, pending/disabled behavior and an independently observed single resulting appointment; one successful submit alone, a source boolean, mocked call count or a later slot conflict is not equivalent.",
+  "history": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/booking-conflict-stage.json",
+      "originalUpdatedAt": "2026-10-09T06:05:00+06:00",
+      "timeLimit": "OriginalstageupdatedAt metadata, not an exact click timestamp.",
+      "actual": "WB102/bug033 same knownowner-as-client opens same slot in two tabs; confirms first then second stale tab. Afterfix localized409/confirmationclosed/slotremoved, recorded SQLUIexactslotoneactivebooking; both specifictestbookings cancelledthenSQLUI0active. This is sequential cross-tab slot conflict, NOT rapid two confirms while one same-form command pending. Gaps explicitly trueparallel/differentuser/complex/networklossaftercommit retry.",
+      "reuse": "No D3-02 credit. Originalbefore500/after409/cleanup/IDs remain immutable; do not reopen/cancel/recreate old bookings or repeat SQL."
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-11/stage-015-repeat-booking.json",
+      "originalTime": "Beforefix07:08UTC, repeat07:16UTC; exactstageoriginaltimes retained",
+      "actual": "Repeat past cancelled booking CTA restores booking context; no newrepeatbooking submitted. Rebookingnavigation is not duplicate-submit execution."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G090-service-selection-navigation.json",
+      "originalUtc": "2026-10-15T23:34:14Z",
+      "actual": "Service/wizard navigation, not a rapid confirmation command."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G091-deep-date-recovery.json",
+      "originalUtc": "2026-10-15T23:48:47Z",
+      "actual": "Explicit scope excludes slotselection/hold/command/doublesubmit."
+    }
+  ],
+  "sourceOnly": "BookingConfirmModal disables confirm/cancel while busy; view onConfirm checks pendingBooking and !bookingLoading. useBookingCreation additionally checks synchronous useRef inFlight before ordinarycommand and setsit before await, resetting finally. createQuickHoldBooking posts normal quick-hold request; withNetworkRetry can retry a TypeError once. The HTTP/service/domain adapter path holds/confirms and can dispatch notifications. Reviewed JS request has no explicit idempotency token; absence here does not prove absence of DB constraints/idempotency or a runtime duplicate bug. No sourcefix or securityweakening inferred.",
+  "unitBoundary": "BookingAnyStaffCreation.test double confirmation mocked unresolved createQuickHoldBooking returns one mockedcall. BookingConfirmModal.test busyguard is mocked component support. These are technical coverage only, not actualUI/transport/booking outcome proof; no rerun/UNIT imitation.",
+  "blocker": "Focused primary set contains no matching live rapid same-form confirmation pair with independent single-result oracle. Current authorization excludes newbooking/hold/slot/confirm/doubleclick/cancel/payment/newfixture and rawHTTP/SDK/storage probes. FixtureA has no services/staff/bookings and cannot safely supply this command precondition. No unchangedwizard replay, backend bypass, network fault or newentity/role created to manufacture proof. Existing single-slot conflict proof is kept separate.",
+  "decision": "D3-02 blocked/no historicalpromotion.0newUI/PASS/fix/accepted/reuse. Original successful booking/conflict histories preserved; do not retime them or treat restoration/setup as newcredit.",
+  "dependencyHashes": {
+    "apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/components/BookingConfirmModal.tsx": "9380f9fb64939450cf029bf77b3e06bc676cb66dd6587e540716a9ab2b631a67",
+    "apps/web/src/app/b/[slug]/utils.ts": "49eadc4f84c8dcf9a55b303dd269605eed828f9499db20a454627c8c1e5cc33b",
+    "apps/web/src/lib/quickHoldClient.ts": "14471571cae6bf13a67631f5f8e77e7d98bca4c2a2a83d6cc998b86d7670982c",
+    "apps/web/src/app/api/quick-hold/route.ts": "018f8c789c7b5f9a7d528bf338ab398350192c4b55ac6cd14494b1f54759b0aa",
+    "apps/web/src/lib/quickHoldHttpService.ts": "3d292c0893a1c1d56e9d98f68e16b6f638c8b20ee5374b04c20a56e6b097436d",
+    "apps/web/src/lib/quickHoldService.ts": "a1a995340d46790489d778b0867d032fab7bff2b7824ca723cce215814d84152",
+    "apps/web/src/lib/bookingCommandsSupabase.ts": "865e2756dc7a9063980e4573291889180a5545883fdef7a69c4dc444ecb19f3c"
+  },
+  "hashes": [
+    {
+      "path": "docs/WEB_EVIDENCE_REVIEW.md",
+      "sha256": "7a969bcc5cc904ac00ac5c2b3d720c4ca9edc44de618f2234ca5af744de13715"
+    },
+    {
+      "path": "docs/WEB_BUG_REGISTRY.md",
+      "sha256": "1d36236397e7ecd48f35725b97214d719a46323df933cec2b2653c7f9713c5a0"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/booking-conflict-stage.json",
+      "sha256": "383f7a7cc5509a0630eaf6451bff11bf7f5d38dbbbbc0d01e3bc377e57c4972c"
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-11/stage-015-repeat-booking.json",
+      "sha256": "cb4f645a4d1a256ff5f81598024e2b9dc0a8c41f9790359da07770ce9d84941f"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G090-service-selection-navigation.json",
+      "sha256": "2228fd85d336a325ca5316dcf150a7f7d4e49cceace94f62d9d49ab84948f5ca"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G091-deep-date-recovery.json",
+      "sha256": "52ebcb39dc6971da8340817ac0767ad5f6c6b429b9d6fbc6dbde63a3f8c0e7f2"
+    },
+    {
+      "path": "apps/web/src/__tests__/components/BookingAnyStaffCreation.test.tsx",
+      "sha256": "ca5abca168eb571e41a3bf011d645ecd09d442d2a001606e19a2e71db6533e3e"
+    },
+    {
+      "path": "apps/web/src/__tests__/components/BookingConfirmModal.test.tsx",
+      "sha256": "b26ac87bd46f421f68c976ac615a2852f8d60dde59de5520c35e426776ad783f"
+    }
+  ],
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "reused": 0,
+    "accepted": 23,
+    "remaining": 293,
+    "windowUi": 23,
+    "windowFixes": 4
+  },
+  "effects": "Repository source/history/accounting reads and records only; no browser/auth/DB/SQL/API/SDK/booking/hold/slot/confirm/cancel/payment/newentity/source/test/build/server action. UserTab2/admin/mainserver remain untouched, no freshUIhealth claim; old journals pendingfalse/immutable. Ordinary background auth/telemetry unenumerated.",
+  "next": "C187 ONLY bounded read-only D3-05 exactWB102/bug033 stale-slot conflict primary/dependency/effect review. Preserve originalstage09OctupdatedAt/real before500-after409/onebooking oracle/cleanup and distinguish sequential sameuser two-tab stimulus from parallel/differentusers/rapidduplicate. Establish exact current error-mapping/client-recovery/receiver dependencies against available archivedsource, no current-source identity guessed from old PASS. Reuse only complete matching finite requirement/method/dependencies/originalUTC. NO browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/doubleclick/cancel/payment/SQL/API/SDK/storage/fault/newfixture/role action from review or unchangedwizard replay. Ifcurrentmatchingprimary/sourceboundary is unavailable, retain exactblocker and select an independent unfinished priority; no UNIT imitation."
+}

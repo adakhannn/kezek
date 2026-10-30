@@ -1,0 +1,42 @@
+{
+  "id": "C121",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "files": 1685,
+  "status": "BUILD_PASS_NOT_LIVE",
+  "event": "finished",
+  "startedUtc": "2026-10-25T10:11:28.503Z",
+  "finishedUtc": "2026-10-25T10:12:48.920Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "pid": 19300,
+  "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261025-c121-510f3832db4d\\build",
+  "ownedSession": 57829,
+  "copy": {
+    "event": "prepared",
+    "startedUtc": "2026-10-25T10:11:28.503Z",
+    "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261025-c121-510f3832db4d\\build",
+    "copiedFiles": 1685,
+    "copyFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+    "noEnvFiles": true,
+    "coldNextCache": true,
+    "defaultCompiler": true,
+    "dummyBackend": true,
+    "limitation": "Node TCP/fetch restriction except exact PostCSS IPC; not OS firewall or LIVE/deployed-production PASS"
+  },
+  "rawLog": "c121-build-raw.txt",
+  "compile": "31.3s",
+  "typecheck": "PASS",
+  "prerenders": 36,
+  "policyTests": {
+    "passed": 16,
+    "failed": 0,
+    "networkRequests": 0,
+    "scope": "Guardpredicate/TCP/fetch denial tests only/notproductPASS"
+  },
+  "warnings": "Multiplelockfiles/workspacerootinference, stalebaselinebrowsermapping, middlewaredeprecated retained; noconfig/packagecleanup or compilerchange.",
+  "effects": "Owned isolatedcopy/junctions/compiler/cache/rawlog only; retainall/no cleanup. No .env/downloads/DEVAPI/DB/newfixture/roles/payment/booking/productsource/securitymutation. Ordinarymainappauth/telemetryunenumerated/notzeroTOTALwrites.",
+  "counts": "0newUI/0fix/0accepted delta;20/316 until C122actualbuiltoutput. OldC92/C93 and23Octfinalsimmutable.",
+  "next": "C122 saved finite existing-tab compiledprivacyentry/reload/return/runtimecleanup, no assetbundle/no newtab; actualUI required before A3-01recertification."
+}

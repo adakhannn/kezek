@@ -1,0 +1,12 @@
+{
+  "id":"C92-guard-checks",
+  "completedBeforeUtc":"2026-10-23T02:55:35Z",
+  "syntax":{"harnessExit":0,"guardExit":0,"testExit":0},
+  "command":"node --test scripts/closure-web-offline-guard-c92-20261023.test.cjs",
+  "exit":0,
+  "tests":16,
+  "passed":16,
+  "failed":0,
+  "actual":"Exact PostCSS IPC predicate incl wrapped argument; denial of DEV/Google/GitHub/other loopback/IPv6/wrong or main or privileged/out-of-range/malformed port/wrong worker/positional connect/named pipe; actual ordinary Node Socket.connect throws before connection, fetch throws without reaching host.",
+  "effects":"Pure predicates/denial calls, no actual network or compiler yet. Not product/live/OS-firewall PASS; no role/DB/source-config/network permission change."
+}

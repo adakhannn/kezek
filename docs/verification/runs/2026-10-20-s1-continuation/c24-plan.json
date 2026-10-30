@@ -1,0 +1,24 @@
+{
+  "id": "C24",
+  "parent": "M1-03",
+  "candidateId": "dev-20261020-S1-0800034a3a7e",
+  "scope": "Health Check page read/caller only; domain deferred; no writes/jobs/messages",
+  "reason": "C21 knownSA health-check redirects signin despite immediate admin home access. SSR selfHTTP fetch has no browser caller cookies and expects wrong flat success shape. Need direct shared request-context read loader, keeping page+API same currentglobalSA boundary.",
+  "expected": "Known currentglobalSA actual HealthCheckmenu+reload renders shifts/ratings/promotions read panels. Existing data maydegraded: truthful health labels not universalhealthPASS. Guest/non-SA/foreignrole/rolescope/readerror cannot invoke privilegedread. API preserves standard envelope; SSR no selfHTTP/domain/forwardedcredentials.",
+  "matrix": [
+    "actualknownSA menu beforefix",
+    "unit page caller/error/success",
+    "unit sharedread current/guest/nonSA/foreign/businessscope/error",
+    "unit unchangedHTTPenvelope +errorstatus",
+    "actualsameSA menu afterfix+fullreload"
+  ],
+  "steps": [
+    "Recordactual currentbefore usingobservedmenu",
+    "Failingregressions retained",
+    "Extract commonreadloader fromexistingHTTPadapter; reuse existingcheckCurrentUserIsSuperAdmin currentuser/globalNULLscope; SSR callloader no selfHTTP",
+    "SAME-LIVE actual success before verifiedcount",
+    "Targeted tests/types/lint and changedservice coverage>=60"
+  ],
+  "limits": "No direct API/HTTP probes, no cookie/token extraction or forwarding, no newcredentials/roles/fixtures, no SQL/recalc/jobs/cron/email/messages/pay, no screenshotretry. In-memorynegativecontrols notrealHTTP/RLSproof. Preserve all priorfailures/raw.",
+  "budgetMinutes": 25
+}

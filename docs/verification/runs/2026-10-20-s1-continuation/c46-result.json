@@ -1,0 +1,218 @@
+{
+  "id": "C46",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "reviewedUtc": "2026-10-21T01:53:33Z",
+  "plan": "c46-signin-opening-reuse-plan.json",
+  "method": "Current applicability review of existing live evidence; zero new live executions",
+  "matrix": {
+    "passed": 5,
+    "reused": 5,
+    "newLivePass": 0,
+    "blocked": 0,
+    "notRun": 0,
+    "total": 5,
+    "remaining": 0
+  },
+  "review": [
+    {
+      "id": "S12-guest-route-2",
+      "expectedScope": "Guest plain document entry/reload shows useful provider sign-in controls, no active-owner header; pending initial snapshot alone not accepted.",
+      "observedUtc": "2026-10-18T08:07:51Z",
+      "observationWindowUtc": null,
+      "actual": "Google/Yandex/WhatsApp login UI; no owner badge; RELOAD: First snapshot pending; subsequent explicit reload shows complete login UI. Settled page states Telegram localhost limitation; no Telegram login attempted.; captured console: no hydration/Server Component errors, warnings retained.",
+      "role": "guest",
+      "evidenceIds": [
+        "S1-EV-4"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/app/_components/Footer.tsx": "25f3a3974aa8cb72fc9d4b9de98bb64648f103c345c0362090d504b23969df0a",
+        "apps/web/src/app/_components/i18n/LanguageProvider.tsx": "17b0b88e3cb5da54af4ff787bc51988e3f7f3810a11e33cd3bf07dd91ed6a744",
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/SignInPageView.tsx": "7fb3cfbb5309c7132ff7d58ab6f190f3cc663578a14cef26e64770fe85676bd7",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/app/not-found.tsx": "7ab3bd11be4d4fdb2eaa57a857591406638abea2787c4b61321b16c1c43064ae",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/layout.tsx": "40d4f84d997a26d7fa22fe1b37d6441492571d8af3509c019f1e6fd4640b41eb"
+      },
+      "reusedSourceCaseId": null
+    },
+    {
+      "id": "S21-C104-DEFAULT-SA",
+      "expectedScope": "Already-authenticated knownSA generic sign-in opens and settles useful authenticated admin page, no new provider action during case.",
+      "observedUtc": "2026-10-21T00:47:50Z",
+      "observationWindowUtc": [
+        "2026-10-21T00:47:35Z",
+        "2026-10-21T00:47:50Z"
+      ],
+      "actual": "Existing SA session: document goto generic /auth/sign-in first showed sign-in controls, then automatically settled http://localhost:3000/admin; Админ-панель/Anonymized and Панель администратора heading. No provider/login/logout within this case. Not repeated C39 unsafe query matrix; generic no-query input newly executed.",
+      "role": "known globalSA kezekkg@gmail.com",
+      "evidenceIds": [
+        "S1-EV-279",
+        "S1-EV-280"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b",
+        "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616",
+        "apps/web/src/lib/bizContextResolver.ts": "2fc6aa9999eae3fa29ac0f22fa47fc274e22e9f096db6547f20ac99dd1eee9c1",
+        "apps/web/src/lib/bizContextResolutionStrategies.ts": "5a3ed738def4bba6a747031bab7e3d0136aa3f2bc65cdd08f3afa67fe9fe4df4",
+        "apps/web/src/lib/staffRoleSync.ts": "f20610aec14385e1db6a6840a76818bfd27eaab98182542350720b7293cd4036",
+        "apps/web/src/lib/currentBusinessService.ts": "b6d7e264c2b58f61dd79fe03170d336565dfbe3f5bdfffdf43238fa13fe65691",
+        "apps/web/src/lib/currentBusinessHttpService.ts": "2b5d4c3924047e6247f147c221a65ceca5b5950520bc1e14e9ae0b7040eaad95",
+        "apps/web/src/app/admin/page.tsx": "3cf6b7d0aa1fb7eeac62e50283a9d10211586536ca5f30f7fbdae381d24391e6",
+        "apps/web/src/app/admin/layout.tsx": "4b4ee9ec52e896212de823533465bef3c75d1071761182fc6fafceae3e54c572"
+      },
+      "reusedSourceCaseId": null
+    },
+    {
+      "id": "S21-C104-DEFAULT-OWNER2",
+      "expectedScope": "Already-authenticated knownowner generic sign-in opens and settles useful two-business selector with retained currentbusiness, no selection.",
+      "observedUtc": "2026-10-21T00:36:28Z",
+      "observationWindowUtc": [
+        "2026-10-21T00:35:49Z",
+        "2026-10-21T00:36:28Z"
+      ],
+      "actual": "REUSED exact C40 generic owner sign-in action, originalUTC preserved: /auth/sign-in -> /select-business with2businesses/currentbusiness2. No new owner execution, no new context command. Source/dependencies byte-identical.",
+      "role": "known owner osorovadahan04@gmail.com, two own businesses",
+      "evidenceIds": [
+        "S1-EV-4",
+        "S1-EV-277",
+        "S1-EV-278",
+        "S1-EV-279",
+        "S1-EV-280"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b",
+        "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616",
+        "apps/web/src/lib/bizContextResolver.ts": "2fc6aa9999eae3fa29ac0f22fa47fc274e22e9f096db6547f20ac99dd1eee9c1",
+        "apps/web/src/lib/bizContextResolutionStrategies.ts": "5a3ed738def4bba6a747031bab7e3d0136aa3f2bc65cdd08f3afa67fe9fe4df4",
+        "apps/web/src/lib/staffRoleSync.ts": "f20610aec14385e1db6a6840a76818bfd27eaab98182542350720b7293cd4036",
+        "apps/web/src/lib/currentBusinessService.ts": "b6d7e264c2b58f61dd79fe03170d336565dfbe3f5bdfffdf43238fa13fe65691",
+        "apps/web/src/lib/currentBusinessHttpService.ts": "2b5d4c3924047e6247f147c221a65ceca5b5950520bc1e14e9ae0b7040eaad95",
+        "apps/web/src/app/select-business/page.tsx": "05ecf5066b72c8964e1eb19fe0e8df11d8bd8de215f08bdcb13ee48dece4da7d"
+      },
+      "reusedSourceCaseId": "S12-owner-route-2"
+    },
+    {
+      "id": "S21-C104-DEFAULT-STAFF",
+      "expectedScope": "Already-authenticated knownstaff generic sign-in opens and settles ownstaff workspace, no reauth/job/context command.",
+      "observedUtc": "2026-10-21T00:49:54Z",
+      "observationWindowUtc": [
+        "2026-10-21T00:49:34Z",
+        "2026-10-21T00:49:54Z"
+      ],
+      "actual": "After ordinary known staff entry and actual ownworkspace proof, generic /auth/sign-in document separately tested EXISTING session. Initial sign-in controls then http://localhost:3000/staff; Кабинет сотрудника, own1bfd0e3b/name/branch1business2/one service, owner/admin workspace absent. No job/business selection or commands.",
+      "role": "known active staff obraz.osh@gmail.com / Адахан Осоров,1bfd0e3b",
+      "evidenceIds": [
+        "S1-EV-279",
+        "S1-EV-280"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b",
+        "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616",
+        "apps/web/src/lib/bizContextResolver.ts": "2fc6aa9999eae3fa29ac0f22fa47fc274e22e9f096db6547f20ac99dd1eee9c1",
+        "apps/web/src/lib/bizContextResolutionStrategies.ts": "5a3ed738def4bba6a747031bab7e3d0136aa3f2bc65cdd08f3afa67fe9fe4df4",
+        "apps/web/src/lib/staffRoleSync.ts": "f20610aec14385e1db6a6840a76818bfd27eaab98182542350720b7293cd4036",
+        "apps/web/src/lib/currentBusinessService.ts": "b6d7e264c2b58f61dd79fe03170d336565dfbe3f5bdfffdf43238fa13fe65691",
+        "apps/web/src/lib/currentBusinessHttpService.ts": "2b5d4c3924047e6247f147c221a65ceca5b5950520bc1e14e9ae0b7040eaad95",
+        "apps/web/src/app/staff/page.tsx": "11aef009139d0873c3a05f7eba851a8b3e1ed8a28e38d5559841252f07a75ffa",
+        "apps/web/src/app/staff/layout.tsx": "46be5252e22ecb3967e9badbfb245c3edba9f338afc8728086c4560c8b53dae8",
+        "apps/web/src/app/staff/StaffCabinet.tsx": "84b2e49d79e0e444363173468c6bc63c04698131bd3cced4ddaf2366cf4a9bf8"
+      },
+      "reusedSourceCaseId": null
+    },
+    {
+      "id": "S21-C104-DEFAULT-CLIENT",
+      "expectedScope": "Already-authenticated knownpureclient generic sign-in opens and settles useful publicroot with client identity, no new provider action.",
+      "observedUtc": "2026-10-21T00:48:47Z",
+      "observationWindowUtc": [
+        "2026-10-21T00:48:30Z",
+        "2026-10-21T00:48:47Z"
+      ],
+      "actual": "After ordinary known Google identity entry had already settled atroot, generic /auth/sign-in document separately tested EXISTING session. Initial sign-in controls, then public http://localhost:3000/ with expected catalogue heading, button Клиент, LIVE TEST CLIENT12OCT and Выйти. No privileged workspace or providerclick within test. Telegram promotion prompt observed, not clicked/linked.",
+      "role": "pureclient low.fade.osh@gmail.com / LIVE TEST CLIENT12OCT",
+      "evidenceIds": [
+        "S1-EV-279",
+        "S1-EV-280"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b",
+        "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616",
+        "apps/web/src/lib/bizContextResolver.ts": "2fc6aa9999eae3fa29ac0f22fa47fc274e22e9f096db6547f20ac99dd1eee9c1",
+        "apps/web/src/lib/bizContextResolutionStrategies.ts": "5a3ed738def4bba6a747031bab7e3d0136aa3f2bc65cdd08f3afa67fe9fe4df4",
+        "apps/web/src/lib/staffRoleSync.ts": "f20610aec14385e1db6a6840a76818bfd27eaab98182542350720b7293cd4036",
+        "apps/web/src/lib/currentBusinessService.ts": "b6d7e264c2b58f61dd79fe03170d336565dfbe3f5bdfffdf43238fa13fe65691",
+        "apps/web/src/lib/currentBusinessHttpService.ts": "2b5d4c3924047e6247f147c221a65ceca5b5950520bc1e14e9ae0b7040eaad95",
+        "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a"
+      },
+      "reusedSourceCaseId": null
+    }
+  ],
+  "sourceChecks": {
+    "currentFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+    "validatorBeforeValid": true,
+    "evidenceHashes": "all valid",
+    "declaredDependencies": "all byte-identical; no originalUTC mutation"
+  },
+  "acceptance": "Only exact C1-01 guest/auth pageopening accepted. Not wholeC1, otherproviderreturn, missing-roledefault, no-flash/firstpaint/device/authfailure/security/prod.",
+  "effects": "No UI/auth/DB/application/source/test commands. Shared proof retains originaleffects; ordinary historicaltelemetry unenumerated, notzero TOTAL writes.",
+  "countsBefore": {
+    "S1Accepted": 16,
+    "S1Remaining": 9,
+    "S2Accepted": 1,
+    "S2Remaining": 69,
+    "productAccepted": 17,
+    "productRemaining": 299
+  },
+  "countsAfter": {
+    "S1Accepted": 16,
+    "S1Remaining": 9,
+    "S2Accepted": 2,
+    "S2Remaining": 68,
+    "productAccepted": 18,
+    "productRemaining": 298,
+    "newLiveExecutions": 0,
+    "newFixes": 0
+  },
+  "next": "C47 next independent sign-in provider hierarchy/field validation C1-02: define finite visible UI provider/optional-feature states without account creation, OTP/messages or unknownYandexcredential actions; reuse exact matching provider controls where possible. CurrentC1-03otherproviderhandoff/C1-04missingroles/coldS1/visual/build/production blockers remain open. No repeat32returncases, deadline21Oct05UTC unchanged."
+}

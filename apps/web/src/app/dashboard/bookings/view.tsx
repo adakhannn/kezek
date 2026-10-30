@@ -82,11 +82,11 @@ export default function AdminBookingsView({
                     meta={
                         <div className="grid gap-2 text-sm text-[var(--text-muted)] sm:grid-cols-3">
                             <div className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-3 py-3">
-                                <p className="type-label text-[var(--text-secondary)]">Today</p>
+                                <p className="type-label text-[var(--text-secondary)]">{t('bookings.desk.today', 'Сегодня')}</p>
                                 <p className="type-caption mt-1">{t('bookings.workspace.summary.today', 'Откройте календарь, чтобы увидеть смены и ближайшие окна по мастерам.')}</p>
                             </div>
                             <div className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-3 py-3">
-                                <p className="type-label text-[var(--text-secondary)]">History</p>
+                                <p className="type-label text-[var(--text-secondary)]">{t('bookings.workspace.summary.historyTitle', 'История')}</p>
                                 <p className="type-caption mt-1">{t('bookings.workspace.summary.history', 'Список помогает быстро искать прошлые и текущие бронирования по клиенту, ID и статусу.')}</p>
                             </div>
                             <div className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-3 py-3">

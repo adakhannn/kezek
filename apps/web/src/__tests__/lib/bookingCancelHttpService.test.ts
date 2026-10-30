@@ -34,7 +34,6 @@ describe('bookingCancelHttpService', () => {
         expect(runBookingCancelRoute).toHaveBeenCalledWith({
             supabase: expect.any(Object),
             bookingId: 'booking-id',
-            requestUrl: 'http://localhost/api/bookings/booking-id/cancel',
         });
         expect(response.status).toBe(200);
         expect(body.ok).toBe(true);

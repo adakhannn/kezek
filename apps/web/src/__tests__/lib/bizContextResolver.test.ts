@@ -2,6 +2,7 @@ import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/sup
 import { resolveBizContextForManagers } from '@/lib/bizContextResolver';
 import { BizAccessError } from '@/lib/authDiagnostics';
 import { MANAGER_ROLE_KEYS } from '@/lib/authContext';
+import { AuthSessionMissingError } from '@supabase/supabase-js';
 
 jest.mock('@/lib/supabaseHelpers', () => ({
     createSupabaseServerClient: jest.fn(),
@@ -261,6 +262,24 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
             code: 'SERVICE_UNAVAILABLE',
             message: 'AUTH_SERVICE_UNAVAILABLE',
         });
+    });
+
+    test('redirects a normally signed-out guest instead of claiming a network failure', async () => {
+        const missingSession = new AuthSessionMissingError();
+        expect(missingSession.status).toBe(400);
+        (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
+            data: {user: null}, error: missingSession,
+        });
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({code: 'NOT_AUTHENTICATED'});
+        expect(createSupabaseAdminClient).not.toHaveBeenCalled();
+    });
+
+    test('does not treat an arbitrary Auth400 response as a missing session', async () => {
+        (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
+            data: {user: null}, error: {message: 'provider configuration error', status: 400},
+        });
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({code: 'SERVICE_UNAVAILABLE'});
+        expect(createSupabaseAdminClient).not.toHaveBeenCalled();
     });
 
     test('считает отклонённую сервером сессию неавторизованной', async () => {

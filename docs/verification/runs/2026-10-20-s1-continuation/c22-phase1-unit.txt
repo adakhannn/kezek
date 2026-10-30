@@ -1,0 +1,17 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+PASS src/__tests__/lib/performanceStatsHttpService.test.ts
+PASS src/__tests__/api/admin/performance-stats.test.ts
+PASS src/__tests__/lib/performanceStatsService.test.ts
+--------------------------------|---------|----------|---------|---------|-------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------------------------|---------|----------|---------|---------|-------------------
+All files                       |     100 |      100 |     100 |     100 |                   
+ performanceStatsHttpService.ts |     100 |      100 |     100 |     100 |                   
+ performanceStatsService.ts     |     100 |      100 |     100 |     100 |                   
+--------------------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 3 passed, 3 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        4.288 s
+Ran all test suites within paths "src/__tests__/lib/performanceStatsHttpService.test.ts", "src/__tests__/lib/performanceStatsService.test.ts", "src/__tests__/api/admin/performance-stats.test.ts".

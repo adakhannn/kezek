@@ -1,0 +1,36 @@
+{
+  "id": "C156",
+  "type": "bounded readonly history/effect review",
+  "completedBeforeUtc": "2026-10-25T21:20:42Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "history": "OriginalNight09Oct05:18+06 known-SA user search/globalstatcounts, C82 source securityprotections, C155 name-draft/reentry do not execute status dropdown filters. Focused stage/result/review search found no actual users status-filter proof. Do not rerun search or count all-list setup as newPASS.",
+  "source": "UsersClient status onChange only local setStatus then250ms router.push with status/page1/perPage. Server fetchList uses read-only GET; stats independently reads all. Route all/active/blocked filters mapped suspension flags, no mutation. Existing multi-page filtering approximation is source limitation, NOT new runtimebug or covered by this8-row scenario. No page/bulk/checkbox/security/role command.",
+  "independentExpected": "With observed all-list8 IDs all active incl oneSuper and globally8active0blocked, active filter must retain same8IDs, blocked must be empty; both keep global8/8/0/1 stats. Stop if actualbaseline differs or pending/error; no fixture creation to force nonemptyblocked.",
+  "credit": "0newUI/fix/accepted",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c155-result.json",
+      "sha256": "d870e1f2a8dc94573dbf5aeff4ca076b30b18e2b758d5ee80a48a1da4751b916"
+    },
+    {
+      "path": "apps/web/src/app/admin/users/UsersClient.tsx",
+      "sha256": "e6b322212b5734352ddcb3b1c82bc2840d877e80afc65b1c57b0f7b27cad6297"
+    },
+    {
+      "path": "apps/web/src/app/admin/users/page.tsx",
+      "sha256": "a989ac4529f1e6a85b1fdb4edd415edede523cc83adf64e610064fbfeea669fe"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/users/list/route.ts",
+      "sha256": "27b65e48e8e1141f7c9217cfcb331acb935e681f522d779815d0f2f40330548e"
+    },
+    {
+      "path": "apps/web/src/lib/adminUserStats.ts",
+      "sha256": "7148bfaafa6d0f38ad776a22be6a4d1711007d9cffbd6c6180196fee9d5067b2"
+    }
+  ]
+}

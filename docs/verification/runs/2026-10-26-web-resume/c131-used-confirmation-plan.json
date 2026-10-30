@@ -1,0 +1,65 @@
+{
+  "id": "C131",
+  "caseId": "S26-M501-used-category-confirmation-cancel",
+  "requirementIds": [
+    "M5-01"
+  ],
+  "savedBeforeUiUtc": "2026-10-25T20:00:37Z",
+  "status": "NOT_RUN",
+  "timeBudgetMinutes": 5,
+  "role": "Existing protected known-SA local session, actual role/header freshly observed",
+  "environment": "DEV localhost:3000 RU existing human tab2 only",
+  "target": {
+    "id": "0851842b-feca-4cda-97a5-37b7ffe971ae",
+    "name": "Женская парикмахерская",
+    "slug": "zhenskaya-parikmaherskaya",
+    "active": true,
+    "usage": 1
+  },
+  "baseline": {
+    "rows": [
+      {
+        "id": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+        "name": "LIVE TEST NIGHT09OCT CATEGORY EDITED",
+        "slug": "live-test-night09oct-category",
+        "active": false,
+        "usage": 0
+      },
+      {
+        "id": "85157ef2-b18e-4be3-88f7-04c41fd02e5b",
+        "name": "Барбершоп",
+        "slug": "barbershop",
+        "active": true,
+        "usage": 2
+      },
+      {
+        "id": "0851842b-feca-4cda-97a5-37b7ffe971ae",
+        "name": "Женская парикмахерская",
+        "slug": "zhenskaya-parikmaherskaya",
+        "active": true,
+        "usage": 1
+      }
+    ],
+    "summary": {
+      "total": 3,
+      "active": 2,
+      "usage": 3,
+      "popular": "Барбершоп/2"
+    }
+  },
+  "expected": "For category used by one known business, warning must identify exact category and expose the also-remove-from-1-business checkbox UNCHECKED. Cancel must preserve category/activity/usage and list summaries after ordinary reload. This is a distinct dependency warning branch, not another unused-category repetition.",
+  "steps": [
+    "Clock; observed Categories link from protected admin. Check exact three baseline rows/IDs/activity/usage3/active2; women target usage1. Mismatch ->BLOCKED no repair/replacement.",
+    "Clock; click only women row list Delete once. Expect exact name/irreversibility and checkbox Также убрать категорию из 1 бизнеса, UNCHECKED. NEVER toggle/check/force/Enter/dialog Delete.",
+    "Click ONLY Отмена; expect warning gone and baseline retained. Clock; one ordinary reload, verify original three IDs/name/slug/activity/usage and summaries.",
+    "Clock; observed return to protected /admin/Admin-panel/Anonymized/RU/Business3; mark handoff. Unexpected warning ->Cancel/Close cleanup only, classify/no retry."
+  ],
+  "effects": "Local warning/Cancel/navigation/reload only; no persisted app mutation or deletion; ordinary auth/telemetry unenumerated.",
+  "excluded": "Actual Delete/force/rejection/cascade, checkbox toggle, membership changes, fixture/auth/role/config/Save/visual/cache/focus/device/no-flash checks.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/categories/DeleteCategoryButton.tsx": "3c3b0f43412307ce5230de8d7d376ecf961f023cf13ef6d9db80008df1401232",
+    "apps/web/src/components/ui/ConfirmDialog.tsx": "1ec577bf6b472799a6d70f14a6e370bafa05a0a33f415605196f69305b609bfb",
+    "apps/web/src/components/ui/Dialog.tsx": "18198988ea80785df83f313a2169ca18c961e8444e9e7bae47666c4514439db4",
+    "apps/web/src/app/admin/categories/page.tsx": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+  }
+}

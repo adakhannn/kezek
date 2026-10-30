@@ -15,11 +15,15 @@ import {
 
 setupApiTestMocks();
 
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client,
+}));
+
 describe('/api/auth/telegram/mobile/callback', () => {
     const previousSecret = process.env.TELEGRAM_MOBILE_BOT_SECRET;
     const previousFlag = process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH;
 
-    afterEach(() => {
+    afterEach(async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = previousSecret;
         process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH = previousFlag;
         __resetNonceProbeProtectionForTests();
@@ -75,7 +79,7 @@ describe('/api/auth/telegram/mobile/callback', () => {
 
     test('handles cancel decision', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -105,11 +109,11 @@ describe('/api/auth/telegram/mobile/callback', () => {
 
     test('returns conflict when cancel requested by different telegram account', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
-        attachTelegramMobileAuthAttemptTelegramContext({
+        await attachTelegramMobileAuthAttemptTelegramContext({
             nonce: started.nonce,
             telegramId: 77777,
             chatId: 77777,

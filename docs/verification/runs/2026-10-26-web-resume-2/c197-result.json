@@ -1,0 +1,31 @@
+{
+  "id": "C197",
+  "status": "PASS_KNOWN_OWNER_DIRECT_SELECTOR",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "plan": "c197-owner-selector-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T09:11:30Z",
+    "2026-10-26T09:13:23Z"
+  ],
+  "restoredBeforeRecordedUtc": "2026-10-26T09:15:08Z",
+  "actual": "OrdinaryknownownerGooglelogin ->select-business twochoices, business2alreadyCurrent. Continuecurrent ->actualownerbusiness2/dashboard. ONEdirect/select-cabinet ->Каквыхотитезайти, EXACTCabinetbusiness+Mybookingsbuttons, noAdmin/staff. Rememberinitialchecked, ordinaryuncheck ->AX0. ONEBusinessbuttonclick ->afterpendingactual/dashboard/h1Тестовыйбизнес2/businessIDc28c8109/ownerheader. No chooser/loop onthisexplicitselectorreturn.",
+  "restoration": "Ordinaryownerlogout ->knownkezekkgGoogle ->actualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30bookings/TodayCancelled1; markHandoff.",
+  "oldC67": "Original21Oct09:31:19Z stoppedatbusinesschooser beforedirectselector; originalBLOCKEDretained in certificationHistory/c67-result immutable. C196 actualownbusinesscontext/newroutineautonomy unblockedsetup, not sourcebugfix.",
+  "effects": "TwoordinaryknownGooglelogins/twologouts includingrestore; Continuealreadycurrentbusiness2 plus transientRememberunchecked/explicitcabinetchoice. No storage/cookieinspection or remembered-choicewriteintent; ordinaryauth/preferences/telemetryeffects unenumerated. No dataSave/entity/securitygrant/booking/slot/payment/source/test/build/server action.",
+  "credit": {
+    "newUi": 1,
+    "newWindowUiBefore": 4,
+    "newWindowUiAfter": 5,
+    "newFix": 0,
+    "newAccepted": 0,
+    "F103": {
+      "passed": 5,
+      "blocked": 2,
+      "total": 7
+    },
+    "accepted": 24,
+    "remaining": 292
+  },
+  "limits": "OnlyF1-03owner variant; manager/multirolefixturesBLOCKED retained, wholeF1-03partial. NotpermissionAPI/security/locale/headernavigationcertification.",
+  "recordingCorrection": "Authoring placeholder09:14:15 replaced beforefinalization by actualclock09:15:08Z; no executionUTC or historicalC67UTC changed."
+}

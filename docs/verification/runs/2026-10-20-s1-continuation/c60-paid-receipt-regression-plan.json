@@ -1,0 +1,21 @@
+{
+  "id":"C60",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "caseId":"S42-C59-paid",
+  "requirement":"E1-02",
+  "timeboxMinutes":12,
+  "reasonNotDuplicate":"L03013Oct ownpaidreceipt precedes actual14OctG014/WB182 BookingLayoutClient+bookingCalendarDate deterministicKYformat change. G014 same-live covered confirmed19Octreceipt and cancelledHistorycard, not ownpaid12Octreceipt. C57fontdelivery alsochangedsharedlayout. This exact changed formatting dependency justifies targetedpaidreceiptregression, not blanketrepeat or counting L030 asnewaction.",
+  "dependencyChangeEvidence":"apps/web/test-results/global-2026-10-14/stage-G014-card-date-after.json",
+  "oldPaidEvidence":"apps/web/test-results/live-2026-10-13/stage-030-client-package-review.json",
+  "fixture":{"id":"03469725-c5ba-4978-abfe-2179f19caeab","status":"paid","dateBishkek":"2026-10-12T17:00","service":"ExistingLIVE TESTService31","master":"Адахан Осоров","packageAndReview":"Known1of2remaining/11Nov,paidpackage200som/3starreview; no mutation or financialcertification"},
+  "role":"OrdinaryknownGooglelow.fade.osh -> actualLIVE TEST CLIENT12OCT/Клиент; restoreSAkezekkg/admin",
+  "observations":[
+    {"key":"ru-entry-reload","expected":"ActualownHistoryOpen link -> samefullpaidID/#03469725/Выполнена/12октября2026в17:00/service/master; fullreloadretainsdetails, no mutationaction"},
+    {"key":"ky-toggle-reload","expected":"VisibleКыргызча button -> paidstatuslocalized and date2026-ж.,12-октябрь17:00 withoutreload, then normalreloadsameID/paid/date/time; no RUmonthfallback"},
+    {"key":"en-toggle-reload","expected":"VisibleEnglish button -> Completed/dateOctober12,2026at05:00PM/transliteratedmaster; fullreloadsameID/status/instant. RestoreRU beforeclosingownpopup"}
+  ],
+  "steps":["Freshinventory/currentSA; clockbeforelogout,knownclientGoogleordinaryentry","PersonalHistory onlysetup/notnewC56credit; clickexactobservedpaidOpenanchor -> legitimateownreceiptpopup","ObserveRU andnormalreload; clockbeforeKY/EN/RUlocalechanges, no provider/notificationpreferences","Closeownreceiptpopup; clockbeforeordinarylogout/knownSArestore, verifyactualadmin/handoff"],
+  "effects":"Twoordinarylogouts/twoGoogleloginsincludingrestore, UIlocalechangesRU-KY-EN-RU. No pay/package/review/Repeat/cancel/status/bookingcreate/shift/role/grant/SQL/APIprobe. No newfixtures; f821/closed909256untouched. Ordinaryauth/telemetryunenumerated,notzeroTOTALwrites.",
+  "acceptance":"One newpaidreceiptentrycase withthree localeobservations, not3independentexecutions. Update existingnotrunpaid slot onlyifactualPASS. Fullstatusmatrix then4PASS1holdBLOCKED/5; nofixturecreation or denominatorremoval. E1-02stillpartial, notwholelocale/security/visualPASS.",
+  "stop":"Unexpectedidentity/fixture/error/CAPTCHA/password/device/block preserveexactresult andrestoreeffectswhenpossible; no authbypass/rawcallback/evaluatefetch/deniedtab retry. No sourcefixfromcodealone."
+}

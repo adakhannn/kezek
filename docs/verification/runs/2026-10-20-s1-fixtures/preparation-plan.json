@@ -1,0 +1,19 @@
+{
+  "plannedUtc": "2026-10-20T07:05:11Z",
+  "userAuthorization": "Да, заходи под суперадмином и начинай подготовку отдельных тестовых данных.",
+  "execution": "Interactive current chat only; no automation resume or inherited18Oct deadline extension",
+  "environment": "localhost3000 / approved DEV Supabase beulnmftzbmtbdlgurht",
+  "candidateId": "dev-20261018-S1-0cc81561faf0",
+  "sourceFingerprint": "0cc81561faf0c47d8dbd4b993204d9cfb40e5e2ac339473a21121310c479364e",
+  "baseline": {"acceptedS1":16,"remainingS1":9,"passedCases":56,"remainingCases":23,"preparationNotLiveAcceptance":true},
+  "preflight": {"oldTabsAbsent":true,"newProvider":"browser-use:e03cd732-23aa-4d7d-91fa-d2c54e68fd41","notOldDeniedProvider":true,"old14216Absent":true,"port3000InitiallyNoListener":true,"startedOwnedDevPid":24840,"ownedSession":7794,"readySeconds":26.6,"firstNavigationTimedOutBeforeReady":true,"sameNewTabRecoveredAfterReadyNoRepeatNavigation":true,"ordinaryAuth":"ownerlogout -> existingGooglekezekkg -> actualadminpanel","existingBusinessCount":2,"existingBranchCount":2,"existingStaffCount":1,"existingServiceCount":4,"existingBookingCount":30},
+  "fixtures": [
+    {"name":"S1 TEST 20261020 Branch Availability","slug":"s1-test-20261020-branch-availability","businessApproved":true,"branchLimit":2,"category":"barbershop","owner":null,"contacts":"none","branches":[{"name":"S1 TEST INACTIVE BRANCH","active":false},{"name":"S1 TEST ACTIVE CONTROL","active":true}],"purpose":"Isolated inactivebranch negative with activeparent and activebranchcontrol. DEVcatalog will temporarily gain one explicitly named testbusiness."},
+    {"name":"S1 TEST 20261020 Business Availability","slug":"s1-test-20261020-business-availability","businessApprovedAfterPreparation":false,"branchLimit":1,"category":"barbershop","owner":null,"contacts":"none","branches":[{"name":"S1 TEST BUSINESS ACTIVE BRANCH","active":true}],"purpose":"Inactivebusiness with existingactivebranch. After this case, may become known-deletedslug fixture ONLY after specific action-time deletion approval."}
+  ],
+  "writeBoundary": "Only ordinary UI formsubmit under actualadmincaller. No agentdirectSDK/SQL/HTTP, extractedcookies/keys or service-role impersonation. Application existingserverserviceclient afternormalcallercheck is not agentimpersonation.",
+  "businessCreationEffectsReviewed": "Insertbusiness(owner_id=null,is_approved=true,admin_manual,created_by) and creationauditcontext; no owners/members/jobs assigned by applicationservice. Existing service has rollbackdelete of just-createdbusiness on auditfailure; record failure and never blindlyresubmit.",
+  "stopConditions": ["Any accountpassword/CAPTCHA/device handoff", "Unexpected owner/member/rights assignment", "Possibleduplicate response: inspect actualresult beforeanyretry", "Ambiguoussubmit outcome: inspect list/returnedID, no blindrecreation", "Permanentdelete or securitysensitivegrant: exact action-time confirmation required"],
+  "unchangedTargets": ["Existingbusiness35e5b36c-a967-4708-ba4d-7d3fc24b89f4","Existingbusinessc28c8109-bedc-4f9e-bbc2-30f4b549131e","all existingbookings/shifts/payments/users/jobs/roles"],
+  "retention": "Keep preparedentities with fullIDs/effects in fixture registry. No automatic cleanup; no new services/staff/bookings/payments/messages. Ordinaryauth/telemetry writes not enumerated, no zeroTOTALDBwrites claim."
+}

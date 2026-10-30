@@ -11,6 +11,7 @@ type BookingSummaryProps = {
     branchName: string | null;
     dayLabel: string | null;
     staffCurrent: Staff | null;
+    staffId?: string;
     serviceCurrent: Service | null;
     servicesSelected?: Service[];
     branchId: string | null;
@@ -28,6 +29,7 @@ export function BookingSummary({
     branchName,
     dayLabel,
     staffCurrent,
+    staffId,
     serviceCurrent,
     servicesSelected,
     branchId,
@@ -57,13 +59,15 @@ export function BookingSummary({
         { label: t('booking.summary.branch', 'Филиал'), value: branchName, done: Boolean(branchName) },
         {
             label: hasMultiple ? t('booking.summary.services', 'Услуги') : t('booking.summary.service', 'Услуга'),
-            value: hasMultiple ? `${selectedServices.length} выбрано` : serviceLabel,
+            value: hasMultiple ? t('booking.summary.selectedCount', 'Выбрано: {count}').replace('{count}', String(selectedServices.length)) : serviceLabel,
             done: hasMultiple ? selectedServices.length > 0 : Boolean(serviceLabel),
         },
         {
             label: t('booking.summary.master', 'Специалист'),
-            value: staffCurrent ? formatName(staffCurrent.full_name) : null,
-            done: Boolean(staffCurrent),
+            value: staffId === 'any'
+                ? t('booking.step3.anyMaster', 'Любой мастер')
+                : staffCurrent ? formatName(staffCurrent.full_name) : null,
+            done: staffId === 'any' || Boolean(staffCurrent),
         },
         { label: t('booking.summary.day', 'День'), value: dayLabel, done: Boolean(dayLabel) },
         {
@@ -86,7 +90,7 @@ export function BookingSummary({
                         </h2>
                     </div>
                     <div className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-                        {`Шаг ${step}`}
+                        {t('booking.summary.step', 'Шаг {step}').replace('{step}', String(step))}
                     </div>
                 </div>
 

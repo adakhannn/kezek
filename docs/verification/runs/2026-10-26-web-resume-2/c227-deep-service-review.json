@@ -1,0 +1,46 @@
+{
+  "id": "C227",
+  "status": "READONLY_REVIEW_COMPLETE_ONE_UNCOVERED_SAFE_SERVICE_ELIGIBILITY_GUARD",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "reviewAfterUtc": "2026-10-26T12:06:39Z",
+  "requirementIds": [
+    "D2-02",
+    "D2-04"
+  ],
+  "history": [
+    {
+      "file": "apps/web/test-results/global-2026-10-16/stage-G090-service-selection-navigation.json",
+      "sha256": "2228fd85d336a325ca5316dcf150a7f7d4e49cceace94f62d9d49ab84948f5ca",
+      "originalUtc": "2026-10-15T23:34:14Z",
+      "scope": "Valid single selection/deselect and wizard Back/Forward/branch clear, not direct query containing existing unassigned service."
+    },
+    {
+      "file": "apps/web/test-results/global-2026-10-16/stage-G091-deep-date-recovery.json",
+      "sha256": "52ebcb39dc6971da8340817ac0767ad5f6c6b429b9d6fbc6dbde63a3f8c0e7f2",
+      "originalUtc": "2026-10-15T23:48:47Z",
+      "scope": "Offday/pastdate query recovery, not service eligibility."
+    },
+    {
+      "file": "docs/verification/runs/2026-10-26-web-resume-2/c196-result.json",
+      "sha256": "f83ca822c25465c9d24ce849378f1d9db7ef8454bb99e3cba52862b959d12fd1",
+      "scope": "Two eligible services while specifically new association existed; that association subsequently removed/restoration journal frozen. Not unavailable-service query."
+    },
+    {
+      "file": "docs/verification/runs/2026-10-26-web-resume-2/c222-result.json",
+      "sha256": "7db3bb0ef0316d9d713a366b1822169bb6dc5312e031bdbfff9be4d0a31e1867",
+      "scope": "Known existing99 active1min0–300, branch1checked/staffunchecked restored after invaliddraft. Negative arguments only; no assignment."
+    }
+  ],
+  "contract": "URL query restoration filters against overall services. useBookingFlowDerived after selectionReady prunes serviceIds against servicesFiltered; filterServicesForStaff limits by branch/staff relation. useBookingSteps Step4 requires nonempty all-valid services, staffavailable/dayinrange. Summary totals derive filtered selected services. This source is independent expected logic, not LIVE. Existing99activebranch1 but unassignedknown1bfd is real valid-catalog yet ineligible-service precondition. No configuration edit needed.",
+  "dependencyHashes": {
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts": "cd7b1a69c595a2055dfcdd3881543fc26f86d8f08cf65140caae787b48a3613f",
+    "apps/web/src/app/b/[slug]/hooks/useServicesFilter.ts": "1fa9c4f3a64b31f48a495a1bc8df2cbd6d83580b60b15f3e8c8c6d2eac0a8201",
+    "apps/web/src/app/b/[slug]/components/BookingFormSections.tsx": "5b42b8700581cbe1c4dae3664dc29e94392e2ed519b982ff2fb7957c11e15be6"
+  },
+  "decision": "One genuinely new finite directStep4 unassigned-service query rejection/recovery case, matched current positive5157 calibration. G090/C196 controls not newcredit. No browser/UI/entity/auth/source/test/build/server/DB/API/SDK/storage action in review."
+}

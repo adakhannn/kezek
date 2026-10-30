@@ -1,0 +1,26 @@
+{
+  "id": "S1.2-SSR-source-observation",
+  "plannedUtc": "2026-10-18T11:45:56Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "case": "S12-SSR",
+  "reason": "Post-hydration DOM does not prove original HTML. Attempt ordinary browser View Source of known public route; no browser fetch/evaluate network or shell HTTP.",
+  "routes": [
+    "/terms",
+    "/privacy",
+    "/auth/sign-in",
+    "/"
+  ],
+  "steps": [
+    "One supported goto to view-source of known public terms URL",
+    "Observe actual source-view page URL and visible source text only; require literal rendered main heading tag, not serialized client props",
+    "If supported, repeat declared4publicroutes, redact/no output auth or secret material",
+    "Return original owner/currentbusiness2/RU"
+  ],
+  "stop": "If scheme denied/unsupported or source view unavailable, no workaround/rawHTTP/CDP/newbrowser; record blocker. A1-02 still open without separate initial visual proof.",
+  "doesNotCount": [
+    "post-hydration DOM",
+    "built static file as liveSSR",
+    "text found only in client JS or Flight serialized props",
+    "visual/no-blank/device proof"
+  ]
+}

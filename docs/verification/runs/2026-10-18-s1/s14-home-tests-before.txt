@@ -1,0 +1,66 @@
+Captured Jest output before Home runtime patch.
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:29856) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/HomeBranchAvailability.test.tsx
+  × offers booking only for a business with active branches in ru (182 ms)
+  × offers booking only for a business with active branches in en (40 ms)
+  × offers booking only for a business with active branches in ky (49 ms)
+
+  ● offers booking only for a business with active branches in ru
+
+    expect(received).toBeNull()
+
+    Received: <a class="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-[var(--motion-base)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]" href="/b/empty/booking">Записаться<span aria-hidden="true" class="ml-1.5">→</span></a>
+
+      43 |     render(await Home({ searchParams: Promise.resolve({}) }));
+      44 |     const [empty, ready] = screen.getAllByRole('article');
+    > 45 |     expect(within(empty).queryByRole('link', { name: dictionary['home.card.book'], exact: false })).toBeNull();
+         |                                                                                                     ^
+      46 |     expect(empty.querySelector('a[href="/b/empty/booking"]')).toBeNull();
+      47 |     expect(within(empty).getByText(dictionary['booking.step1.noBranches'])).toBeTruthy();
+      48 |     expect(empty.querySelector('a[href="/b/empty"]')).toBeTruthy();
+
+      at toBeNull (src/__tests__/components/HomeBranchAvailability.test.tsx:45:101)
+
+  ● offers booking only for a business with active branches in en
+
+    expect(received).toBeNull()
+
+    Received: <a class="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-[var(--motion-base)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]" href="/b/empty/booking">Book now<span aria-hidden="true" class="ml-1.5">→</span></a>
+
+      43 |     render(await Home({ searchParams: Promise.resolve({}) }));
+      44 |     const [empty, ready] = screen.getAllByRole('article');
+    > 45 |     expect(within(empty).queryByRole('link', { name: dictionary['home.card.book'], exact: false })).toBeNull();
+         |                                                                                                     ^
+      46 |     expect(empty.querySelector('a[href="/b/empty/booking"]')).toBeNull();
+      47 |     expect(within(empty).getByText(dictionary['booking.step1.noBranches'])).toBeTruthy();
+      48 |     expect(empty.querySelector('a[href="/b/empty"]')).toBeTruthy();
+
+      at toBeNull (src/__tests__/components/HomeBranchAvailability.test.tsx:45:101)
+
+  ● offers booking only for a business with active branches in ky
+
+    expect(received).toBeNull()
+
+    Received: <a class="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-[var(--motion-base)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]" href="/b/empty/booking">Жазылуу<span aria-hidden="true" class="ml-1.5">→</span></a>
+
+      43 |     render(await Home({ searchParams: Promise.resolve({}) }));
+      44 |     const [empty, ready] = screen.getAllByRole('article');
+    > 45 |     expect(within(empty).queryByRole('link', { name: dictionary['home.card.book'], exact: false })).toBeNull();
+         |                                                                                                     ^
+      46 |     expect(empty.querySelector('a[href="/b/empty/booking"]')).toBeNull();
+      47 |     expect(within(empty).getByText(dictionary['booking.step1.noBranches'])).toBeTruthy();
+      48 |     expect(empty.querySelector('a[href="/b/empty"]')).toBeTruthy();
+
+      at toBeNull (src/__tests__/components/HomeBranchAvailability.test.tsx:45:101)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 3 total
+Snapshots:   0 total
+Time:        1.795 s
+Ran all test suites within paths "src/__tests__/components/HomeBranchAvailability.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

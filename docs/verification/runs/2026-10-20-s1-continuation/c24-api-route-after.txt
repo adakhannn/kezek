@@ -1,0 +1,13 @@
+Completion output only from owned test process session75455; no initial helper-source prefix copied.
+PASS src/__tests__/api/admin/health-check.test.ts (18.771 s)
+  /api/admin/health-check
+    Авторизация
+      √ должен вернуть 401 если пользователь не авторизован (80 ms)
+      √ должен вернуть 403 если пользователь не суперадмин (12 ms)
+    Успешная проверка здоровья
+      √ должен успешно вернуть результаты проверки здоровья (194 ms)
+Test Suites: 1 passed, 1 total
+Tests: 3 passed, 3 total
+Snapshots: 0 total
+Time: 20.899 s
+Ran all test suites within paths "src/__tests__/api/admin/health-check.test.ts".

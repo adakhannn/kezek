@@ -1,0 +1,406 @@
+{
+  "id": "KEZEK_WEB_2026_10_21_UNTIL_1100_FINAL",
+  "status": "FINAL_PAUSED_NOT_READY",
+  "finalizedUtc": "2026-10-21T04:43:26Z",
+  "scope": "WEB Kezek only; DEV localhost plus declared isolated local production-mode history, not deployed production",
+  "authorization": {
+    "evidence": "docs/verification/runs/2026-10-20-s1-continuation/c32-authorization.json",
+    "observedStartUtc": "2026-10-20T23:05:05Z",
+    "deadlineUtc": "2026-10-21T05:00:00Z",
+    "deadlineLocal": "2026-10-21T11:00:00+06:00",
+    "finishReason": "Authorized early safe winddown: current wake after04:35 and next15minute wake would cross04:45. No extension/no automatic resume.",
+    "continuity": "Actual observations and gaps retained; no claim of uninterrupted autonomous work."
+  },
+  "candidate": {
+    "id": "dev-20261020-S1-4e13384124d3",
+    "sourceFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+    "fileCount": 1677,
+    "currentSourceBoundary": {
+      "pathsFile": "docs/verification/runs/2026-10-20-s1-continuation/c39-source-paths.json",
+      "sha256": "169fdc4c2fa556f950e756cdea99854824d88481573e834feca2c7d807ba2a3f",
+      "fileCount": 1677
+    },
+    "buildStatus": "UNEXECUTED_C39; priorC15FontsFAILunresolved/permissionexpired/no assetsPASS"
+  },
+  "currentCounts": {
+    "S1": {
+      "accepted": 16,
+      "total": 25,
+      "remaining": 9,
+      "primaryCases": {
+        "passed": 62,
+        "total": 79,
+        "remaining": 17,
+        "rule": "Unique current S1 requirement.caseIds; original before-fix evidence and supplemental controls retained separately",
+        "review": "docs/verification/runs/2026-10-20-s1-continuation/c50-s1-case-accounting-review.json"
+      },
+      "packages": [
+        {
+          "id": "S1.1",
+          "accepted": 1,
+          "total": 8
+        },
+        {
+          "id": "S1.2",
+          "accepted": 7,
+          "total": 9
+        },
+        {
+          "id": "S1.3",
+          "accepted": 8,
+          "total": 8
+        }
+      ]
+    },
+    "S2": {
+      "accepted": 3,
+      "total": 70,
+      "remaining": 67
+    },
+    "product": {
+      "accepted": 19,
+      "total": 316,
+      "remaining": 297,
+      "releaseReady": false,
+      "decision": "NOT_READY"
+    },
+    "fullAtomicProgress": "Undefined: all mandatory product case matrices not yet frozen; not development completion percent."
+  },
+  "windowDelta": {
+    "newVerifiedFixes": 1,
+    "newVerifiedFixIds": [
+      "S1-F012"
+    ],
+    "inheritedLogicalRunFixes": 8,
+    "logicalRunVerifiedFixes": 9,
+    "newAcceptedRequirements": [
+      "C1-01",
+      "C3-01"
+    ],
+    "S1Requirements": "17->13 after dependency staleness;2 owner regressions restore3 parents ->16; owner cold-load remains stale. Not four new bugs or erased history.",
+    "S2Requirements": "1->3 by acceptance of current existing live proof; C46/C48 add no new executions.",
+    "productRequirements": "18->19 net; two newly accepted S2 cards offset one remaining stale S1 parent.",
+    "caseAccounting": "C40 historical checkpoint61/79 retained. C50 corrected current linked matrix to62/79: original pre-fix failed variant replaced by its already accepted live after-proof; no new live PASS/denominator reduction."
+  },
+  "completedWindow": [
+    {
+      "id": "C33-C37",
+      "scope": "F4-02 page entry modes",
+      "result": "48PASS16BLOCKED0notrun/64;33new actions plus15reused dated observations. Available roles complete, full requirement still partial. No API/RLS/no-flash/security certificate."
+    },
+    {
+      "id": "C38-C39",
+      "scope": "Existing-session safe return F012",
+      "result": "Real stuck sign-in reproduced; minimal coalesced existing-session redirect hook fix. SAME-LIVE safe control and bounded8/8subset;7 earlier prototype observations retained with applicability review, not fresh retimed. 21 scoped UNIT PASS/typecheck0/lint0/hook scoped coverage100, not whole baseline."
+    },
+    {
+      "id": "C40",
+      "scope": "Owner dependency regressions",
+      "result": "2real UI regressions PASS;1cold case stale pending current DevTools/Disablecache confirmation; restore known SA observed then, not current C49 session."
+    },
+    {
+      "id": "C41",
+      "scope": "Generic role defaults",
+      "result": "4PASS3BLOCKED/7;3new observations plus1reused owner; missing businessadmin/manager/one-business-owner contexts retained."
+    },
+    {
+      "id": "C42-C45",
+      "scope": "Known Google and page return handling",
+      "result": "32/32 bounded subset after fresh safe/unsafe callbacks, precedence and normalization checks plus explicitly reused existing evidence. Not32new actions in last package or whole provider/auth certificate."
+    },
+    {
+      "id": "C46",
+      "scope": "C1-01 sign-in opening accepted",
+      "result": "5current certified observations reused with originalUTC,0new UI actions."
+    },
+    {
+      "id": "C47",
+      "scope": "Provider semantic UI/error-display subset",
+      "result": "7PASS1visualBLOCKED/8 from5distinct page observations; public error query display is not a real provider refusal."
+    },
+    {
+      "id": "C48",
+      "scope": "C3-01 real Google login accepted",
+      "result": "4known identities with actual C42 Google chooser/callback proof reused at originalUTC,0new UI actions."
+    },
+    {
+      "id": "C49",
+      "scope": "Actual Google chooser abandonment",
+      "result": "Back and guest reload2PASS; retry1BLOCKED after delayed account selection/expiredOAuthstate -> unavailabledomain/browserpolicy. Cause confounded by elapsed agent/tool/context gap; not a proven new application defect. No blocked-document bypass."
+    },
+    {
+      "id": "C50",
+      "scope": "Primary S1 counting correction",
+      "result": "62/79PASS17remaining using current requirement links;0new UI/fix/accepted requirement. OriginalFAIL and previous reports unchanged."
+    }
+  ],
+  "remainingS1Groups": [
+    {
+      "kind": "deployed-domain cases user deferred until end",
+      "count": 8
+    },
+    {
+      "kind": "current candidate build and four asset cases stale; previous font connection FAIL retained, compiler permission expired",
+      "count": 5
+    },
+    {
+      "kind": "original pre-hydration SSR and initial visual proof unavailable",
+      "count": 2
+    },
+    {
+      "kind": "owner cold-load precondition unconfirmed after changed hook",
+      "count": 1
+    },
+    {
+      "kind": "original transient failed request classification lacks response/timing evidence",
+      "count": 1
+    }
+  ],
+  "remainingS1Cases": [
+    {
+      "id": "A2-01-S1-03",
+      "status": "blocked",
+      "requirementIds": [
+        "A2-01"
+      ]
+    },
+    {
+      "id": "A2-01-S1-04",
+      "status": "blocked",
+      "requirementIds": [
+        "A2-01"
+      ]
+    },
+    {
+      "id": "A2-01-S1-05",
+      "status": "blocked",
+      "requirementIds": [
+        "A2-01"
+      ]
+    },
+    {
+      "id": "A2-03-S1-01",
+      "status": "blocked",
+      "requirementIds": [
+        "A2-03"
+      ]
+    },
+    {
+      "id": "A2-03-S1-02",
+      "status": "blocked",
+      "requirementIds": [
+        "A2-03"
+      ]
+    },
+    {
+      "id": "A2-04-S1-01",
+      "status": "blocked",
+      "requirementIds": [
+        "A2-04"
+      ]
+    },
+    {
+      "id": "A2-04-S1-02",
+      "status": "blocked",
+      "requirementIds": [
+        "A2-04"
+      ]
+    },
+    {
+      "id": "A3-01-S1-01",
+      "status": "stale",
+      "requirementIds": [
+        "A3-01"
+      ]
+    },
+    {
+      "id": "A3-02-S1-01",
+      "status": "stale",
+      "requirementIds": [
+        "A3-02"
+      ]
+    },
+    {
+      "id": "A3-02-S1-02",
+      "status": "stale",
+      "requirementIds": [
+        "A3-02"
+      ]
+    },
+    {
+      "id": "A3-02-S1-03",
+      "status": "stale",
+      "requirementIds": [
+        "A3-02"
+      ]
+    },
+    {
+      "id": "A3-02-S1-04",
+      "status": "stale",
+      "requirementIds": [
+        "A3-02"
+      ]
+    },
+    {
+      "id": "A3-03-S1-02",
+      "status": "blocked",
+      "requirementIds": [
+        "A3-03"
+      ]
+    },
+    {
+      "id": "A3-04-S1-01",
+      "status": "blocked",
+      "requirementIds": [
+        "A3-04"
+      ]
+    },
+    {
+      "id": "S12-SSR",
+      "status": "blocked",
+      "requirementIds": [
+        "A1-02"
+      ]
+    },
+    {
+      "id": "S12-INITIAL-VISUAL",
+      "status": "blocked",
+      "requirementIds": [
+        "A1-02"
+      ]
+    },
+    {
+      "id": "S12-cold-2",
+      "status": "stale",
+      "requirementIds": [
+        "A1-01"
+      ]
+    }
+  ],
+  "remainingS1Requirements": [
+    {
+      "id": "A1-01",
+      "status": "partial",
+      "requirement": "cold-load `/`, `/auth/sign-in`, `/terms`, and `/privacy`;"
+    },
+    {
+      "id": "A1-02",
+      "status": "blocked",
+      "requirement": "verify server-rendered content appears without a blank shell;"
+    },
+    {
+      "id": "A2-01",
+      "status": "partial",
+      "requirement": "verify expected Supabase, API, auth callback, webhook, and public origin behavior;"
+    },
+    {
+      "id": "A2-03",
+      "status": "blocked",
+      "requirement": "verify production pages do not depend on localhost resources;"
+    },
+    {
+      "id": "A2-04",
+      "status": "blocked",
+      "requirement": "inspect failed network requests for wrong hosts, mixed content, CORS, and certificate errors."
+    },
+    {
+      "id": "A3-01",
+      "status": "failed",
+      "requirement": "test `next build` output or deployed production build, not only `next dev`;"
+    },
+    {
+      "id": "A3-02",
+      "status": "partial",
+      "requirement": "verify static assets, fonts, chunks, and images load after a fresh cache;"
+    },
+    {
+      "id": "A3-03",
+      "status": "partial",
+      "requirement": "test a hard refresh on nested dynamic routes;"
+    },
+    {
+      "id": "A3-04",
+      "status": "partial",
+      "requirement": "verify old chunks do not produce a broken page after deployment."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "BROWSER_SESSION",
+      "owner": "Human ordinary browser sign-in restoration",
+      "state": "C49 local session unknown after normal logout and expired Google retry; original usertab5 blocked error document, NOT restoredSA. One request sent, unanswered. Do not retry/rebind/route via another tab or HTTP."
+    },
+    {
+      "id": "COLD_OWNER",
+      "owner": "Human current precondition confirmation",
+      "state": "S12-cold-2 stale after changed auth hook. One current Disablecache+DevTools-open question unanswered; ordinary reload not cold PASS."
+    },
+    {
+      "id": "SSR_VISUAL",
+      "owner": "Browser evidence capability/manual coordinated proof",
+      "state": "Original pre-hydration/initial visual evidence unavailable; no unchanged screenshots/zoom/viewport retries; DOM not visual/device/screenreader/no-flash PASS."
+    },
+    {
+      "id": "CURRENT_BUILD_ASSETS",
+      "owner": "Build environment and fresh specific permission",
+      "state": "Current candidate build/assets unexecuted/stale; prior actual GoogleFonts connection FAIL retained; old compiler network permission expired20Oct12:30UTC, no unchanged retry/renewal inferred."
+    },
+    {
+      "id": "DOMAIN_PRODUCTION",
+      "owner": "Deferred by user",
+      "state": "8S1 cases remain, not excluded. No deployed domain/prod claim."
+    },
+    {
+      "id": "TRANSIENT_NETWORK",
+      "owner": "Future natural recurrence with permitted evidence",
+      "state": "Original failed request lacks response/timing classification; do not invent CORS/TLS diagnosis."
+    },
+    {
+      "id": "F005_AND_NAV",
+      "owner": "Future permitted natural SAME-LIVE failure path",
+      "state": "F005 fixed_pending_verification; M1-03 16PASS2FAIL1BLOCKED/19. Monitoring/deniedmetrics must not open; original business-app failure cause unknown/unreproduced."
+    },
+    {
+      "id": "ROLE_AND_PROVIDER_SCOPE",
+      "owner": "Specific future human authorization/readiness",
+      "state": "Missing businessadmin/manager/etc fixtures not created; F4-02 16blocked remain. Explicit Google consent-refusal, Yandex/other provider handoff/cancel, API/RLS/IDOR/CSRF/full session replay not certified."
+    }
+  ],
+  "effectsAndPreservation": {
+    "window": "Only normal authorized identity logins/logouts and declared UI reads; ordinary authsync/telemetry unenumerated, notzeroTOTALwrites. No new account/role/grant/job/business/booking/payment commands in this new window.",
+    "C49": "One normal SA logout; second chooser known account selected once, local restoration unknown. No token/cookie/authcode extraction or blocked-page retry.",
+    "fixtures": "A retained; B and sole branch deleted earlier C03 after exact confirmation, not this window; no recreate/redelete. Existing bookings including f821dd52 untouched.",
+    "workspace": "Dirty user-owned staged/unstaged changes preserved. No commit/push/deploy/stage/reset. No native/mobile/subagents/new chats. User tabs preserved; no fresh success/role/server-health claim at final."
+  },
+  "automation": {
+    "id": "C51_AUTOMATION_PAUSE",
+    "automationId": "kezek",
+    "status": "PAUSED",
+    "configReadback": true,
+    "readbackUtc": "2026-10-21T04:41:54Z",
+    "configUpdatedAtEpochMs": 1792557701261,
+    "configUpdatedUtc": "2026-10-21T04:41:41.261Z",
+    "preservedFields": [
+      "id",
+      "kind",
+      "name",
+      "prompt",
+      "rrule",
+      "target_thread_id"
+    ],
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "reason": "Authorized early winddown: this wake after04:35, next15min wake would cross04:45; no autonomous extension or new scenarios.",
+    "deadlineUtc": "2026-10-21T05:00:00Z",
+    "nextAutomaticResumeAuthorized": false,
+    "evidence": "docs/verification/runs/2026-10-20-s1-continuation/c51-automation-paused.json"
+  },
+  "verification": {
+    "ledgerValid": true,
+    "ledgerErrors": [],
+    "countsDerived": true,
+    "sourceFingerprintRecomputed": true,
+    "finalArtifactReadbackStillRequired": true,
+    "notReleaseCertificate": true
+  },
+  "next": "No automatic resume. On new explicit authorization and human restored permitted local browser, establish actual role then finish C49 retry safely within a new bounded plan. Reuse done cases. For S1 prioritize current cold precondition, separately scoped build permission/environment, permitted SSR/visual proof; domain/production last. Do not treat old expired Google state as product fix authorization."
+}

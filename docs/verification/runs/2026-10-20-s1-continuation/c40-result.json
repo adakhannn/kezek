@@ -1,0 +1,41 @@
+{
+  "id": "C40",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "plan": "c40-owner-regression-plan.json",
+  "method": "Actual CUA document navigation/reload/Back/Forward; no screenshots or device/visual/no-flash claim",
+  "observationWindowUtc": ["2026-10-21T00:34:58Z", "2026-10-21T00:37:38Z"],
+  "identity": "Ordinary Google owner osorovadahan04@gmail.com selected from observed chooser; actual Владелец/Аккаунт владельца and two-business selector, business2 current",
+  "cases": [
+    {
+      "id": "S12-owner-route-2",
+      "status": "passed",
+      "observationWindowUtc": ["2026-10-21T00:35:49Z", "2026-10-21T00:36:28Z"],
+      "actual": "From actual owner /privacy, document goto /auth/sign-in initially rendered sign-in controls, then settled at /select-business. Two businesses; business2 still Текущий. Reload ACTUAL /select-business showed loading then the same two-business selector/owner. Filtered error logs hydration=[] and Server Component=[]. No click of business selectors. No claim of absent login flash or reloading hidden original URL.",
+      "steps": ["Verify owner/two-business context after ordinary Google login", "Observe privacy history baseline", "Document goto /auth/sign-in and wait for legitimate selector", "Reload actual selector and wait for useful content", "Inspect only hydration/Server Component error log filters"]
+    },
+    {
+      "id": "S12-owner-history",
+      "status": "passed",
+      "observationWindowUtc": ["2026-10-21T00:36:28Z", "2026-10-21T00:36:50Z"],
+      "actual": "Back from actual selector reached http://localhost:3000/privacy with privacy heading and owner account. Forward showed selector loading then settled /select-business, Владелец/Аккаунт владельца, two businesses and business2 current. No missing-content/error screen. No business selection or preference change.",
+      "steps": ["Ordinary Back from result of sign-in/reload", "Observe privacy heading and owner account, verify privacy URL", "Ordinary Forward", "Wait for selector heading and verify final URL/context"]
+    },
+    {
+      "id": "S12-cold-2",
+      "status": "stale",
+      "executed": false,
+      "reason": "Current Disable cache + DevTools-open confirmation requested once at00:30, no answer by completion. Old confirmation is not current proof. Normal reload not credited as cold-cache.",
+      "remaining": true
+    }
+  ],
+  "matrix": {"passed":2,"failed":0,"blockedPrecondition":1,"total":3},
+  "restore": "Ordinary owner logout and known kezekkg Google login. Initial short URL wait timed out; subsequent observed state and bounded heading wait proved actual Admin-panel/Anonymized, /admin overview3businesses4branches1staff4services30bookings before00:37:38UTC. No repeated login or new role.",
+  "effects": "Two ordinary authorized logouts and two Google identity logins, same shared-cookie tabs; ordinary auth/telemetry IDs unenumerated, not zero TOTAL writes. No business/booking/role/grant/save/create/cancel/pay commands, no source changes, no fixture changes. Original user tabs2/5 retained; no new tabs.",
+  "fixCredit": {"newDistinct":0,"newVerified":0,"logicalRunVerified":9,"newUntil11WindowVerified":1},
+  "countsBeforeReportedCheckpoint": {"acceptedS1":13,"remainingS1":12,"primaryPassed":60,"primaryTotal":79,"productAccepted":14,"productTotal":316},
+  "accountingCorrection": "C40 strict count assertion refused expected62primaryPASS. Read-only enumeration found81 S1-mapped rows with61PASS beforeC40; BOTH supplemental S14-F001-empty/positive arePASS. Excluding both yields59/79 primaryPASS beforeC40, not prior checkpoint60. Two executed regressions give61/79,18remaining. Previous artifacts unchanged; no case result altered to satisfy counts. Requirement16/25/product17/316 independently valid.",
+  "countsAfterValidated": {"acceptedS1":16,"remainingS1":9,"primaryPassed":61,"primaryRemaining":18,"productAccepted":17,"productRemaining":299},
+  "limits": "Dependency regressions restore prior accepted scope, not two new features/fixes. Cold/visual/production/build/security blockers retained. F4-02 remains48PASS16BLOCKED with no unchanged retest.",
+  "next": "Do not repeat owner regression without dependency change. Await cold-cache condition separately; next independent S2 finite authenticated return-path role subset, reuse completed SA and default-owner evidence instead of retesting. Full C1/P4 caseplan must remain partial until all required variants defined and executed."
+}

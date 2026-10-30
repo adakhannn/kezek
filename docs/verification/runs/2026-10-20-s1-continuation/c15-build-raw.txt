@@ -1,0 +1,70 @@
+{"event":"prepared","startedUtc":"2026-10-20T12:03:48.866Z","dest":"C:\\projects\\kezek\\test-results\\closure-s1-20261020-f005-fontread-v2\\build","copiedFiles":1663,"copyFingerprint":"1c0013b28e404ff2c414bb44c9f1d27a0dd63f00cdf1695bfad54f84b5ded46a","noEnvFiles":true,"primarySourceConfigUnchanged":true,"coldNextCache":true,"limitations":"Dummy nonproduction config; Node network restriction not OS firewall; not live or release PASS."}
+{"event":"spawned","pid":19912}
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\projects\kezek\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\projects\kezek\test-results\closure-s1-20261020-f005-fontread-v2\build\apps\web\pnpm-lock.yaml
+   * C:\projects\kezek\test-results\closure-s1-20261020-f005-fontread-v2\build\pnpm-lock.yaml
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+   ▲ Next.js 16.0.11 (Turbopack)
+   - Experiments (use with caution):
+     · clientTraceMetadata
+     · optimizePackageImports
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Turbopack build encountered 2 warnings:
+[next]/internal/font/google/geist_a71539c9.module.css
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/geist_a71539c9.module.css
+    [next]/internal/font/google/geist_a71539c9.js
+    ./test-results/closure-s1-20261020-f005-fontread-v2/build/apps/web/src/app/layout.tsx
+
+
+[next]/internal/font/google/geist_mono_8d43a2aa.module.css
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/geist_mono_8d43a2aa.module.css
+    [next]/internal/font/google/geist_mono_8d43a2aa.js
+    ./test-results/closure-s1-20261020-f005-fontread-v2/build/apps/web/src/app/layout.tsx
+
+
+
+> Build error occurred
+Error: Turbopack build failed with 2 errors:
+[next]/internal/font/google/geist_a71539c9.module.css
+next/font: error:
+Failed to fetch `Geist` from Google Fonts.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/geist_a71539c9.module.css
+    [next]/internal/font/google/geist_a71539c9.js
+    ./test-results/closure-s1-20261020-f005-fontread-v2/build/apps/web/src/app/layout.tsx
+
+
+[next]/internal/font/google/geist_mono_8d43a2aa.module.css
+next/font: error:
+Failed to fetch `Geist Mono` from Google Fonts.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/geist_mono_8d43a2aa.module.css
+    [next]/internal/font/google/geist_mono_8d43a2aa.js
+    ./test-results/closure-s1-20261020-f005-fontread-v2/build/apps/web/src/app/layout.tsx
+
+
+    at ignore-listed frames
+{"event":"finished","startedUtc":"2026-10-20T12:03:48.866Z","finishedUtc":"2026-10-20T12:04:49.373Z","exitCode":1,"signal":null,"timedOut":false,"pid":19912,"dest":"C:\\projects\\kezek\\test-results\\closure-s1-20261020-f005-fontread-v2\\build"}

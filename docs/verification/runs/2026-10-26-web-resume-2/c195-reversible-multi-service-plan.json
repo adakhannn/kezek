@@ -1,0 +1,41 @@
+{
+  "id": "C195",
+  "status": "PLANNED_BASELINE_REQUIRED_BEFORE_ANY_TOGGLE",
+  "preparedUtc": "2026-10-26T08:44:55Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D2-01",
+    "D2-02",
+    "D2-04"
+  ],
+  "objective": "Provide a reversible second existingservice association for same existingstaff, then complete the genuinely uncovered multi-service local-selection matrix and restore exact original association.",
+  "authority": "Human latest direct full-access/no-further-routine-questions steering, recorded working-tab-and-autonomy-authority.json. This ordinaryDEV service capability link doesnot create a user/account/role/securitygrant/job/financial command. No bookings/notifications or unrelated entities are authorized by thisplan.",
+  "staffId": "1bfd0e3b-6fce-42a1-b439-6313af27112f",
+  "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+  "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+  "timeboxMinutes": 12,
+  "sourceEffects": "StaffServicesEditor toggles immediately: unchecked->insert service_staff{service_id,staff_id,is_active:true}; checked->remove that relation. UI checkbox can reliably restore/recreate an association, so only create a previously absent link and remove ONLY that newlink later. No globalSave needed; do not accidentallytoggleexisting60minlink.",
+  "steps": [
+    "One ordinarydocument entry to existing staffdetail /dashboard/staff/1bfd...; requireactualprotected business2 context/name/branch1. Wrongcontext/404/autherror ->stopreadonly, no business/role/security mutation toforceaccess.",
+    "Inspect actualactive-servicecheckboxes, exact1minservice and60minservice, existingcheckedstates. Need knowninitial60minchecked and1minunchecked; recordvisiblebaseline/identities throughordinaryservicehref ifpresent. Do not infer IDs or statefromsource.",
+    "Before anytoggle, append a separate effects journal baseline with specificserviceID/staffID/currentcheckboxes and pending=true. If identity/reversibility unclear ->BLOCKED/no mutation.",
+    "Toggle ONLYthe existing1minservice once throughnormalUI. Verifycheckedthenordinaryreentry/reloadpersistence. Neverduplicatetoggle aftertimeout; firstfreshstate.",
+    "Ordinarypublicbookingcurrent samebranch/staff/day. Require2actualeligiblechoices; independently record durations/prices. Selectboth, partialdeselect leaves1/Nextenabled, lastdeselect clearsall/Nextdisabled. No slot/ChooseTime/Confirm/booking command.",
+    "Return exactstaffeditor; freshreadknownnew1minlinkchecked; uncheckONLYnewlink once; verifyunchecked+ordinaryreload and60minlinkstillchecked. Confirmpubliceligiblelistbacktoone onlyasrestoration0credit, thenprotectedadmin/RU/markHandoff.",
+    "Append finaljournal pendingfalse onlyafteractualrecovery. If anyuncertainwrite, stopnewcasesandresolveonlyexactownnewlinkthroughordinaryUI; neverblindrollback."
+  ],
+  "independentOracle": "Two distinct eligible services produce matchingcount/identities/summed duration/min-maxprice; removingone keepsvalidremainingchoice, removinglastblocksNext. Originalserviceassignment restored aftertest.",
+  "stopRules": [
+    "No newperson/user/role/credentials/securitygrant/create-service/delete-service/bookings/shifts/packages/payments.",
+    "Existing60minassociation neverremoved; no broadcleanup.",
+    "No rawHTTP/SDK/SQL/token/storage or native/CDP workaround.",
+    "UIcontext/access/fixturefailure ->concreteBLOCKED, not productbug inferred fromtool."
+  ],
+  "creditRule": "At mostONEcompoundmulti-serviceUI case; setup/linkpersistence/restoration arenot extraPASS. No wholeD2claim unlessfullfinitevariants proved.",
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/staff/[id]/StaffServicesEditor.tsx": "25f06c522511f8375c2013d858e890a917fa9d39929415635552e40cd29e8406",
+    "apps/web/src/app/dashboard/staff/[id]/page.tsx": "557a6f34b8b4d7d58485504bffa450ff0f51004b4cfae5290de8e578b654bf50",
+    "apps/web/src/app/dashboard/staff/[id]/StaffDetailPageClient.tsx": "3fbe35f9a37a5836d5b3a8deeae58685a894c2701f9e5771ba48a1e57c43956c",
+    "apps/web/src/app/dashboard/services/[id]/ServiceMastersEditor.tsx": "5c9afd71d0b8d0bb8fec111718cda419e552bace9511656d065bcd26c865b167"
+  }
+}

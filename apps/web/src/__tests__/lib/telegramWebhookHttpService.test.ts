@@ -31,14 +31,24 @@ jest.mock('@/lib/telegramAuthAuditLogService', () => ({
         mockWriteTelegramAuthAuditEvent(...args),
 }));
 
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client,
+}));
+
 describe('telegramWebhookHttpService', () => {
-    afterEach(() => {
+    const previousWebhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    beforeEach(() => {
+        process.env.TELEGRAM_WEBHOOK_SECRET = 'fixture-webhook-secret';
+    });
+    afterEach(async () => {
         jest.clearAllMocks();
-        __resetTelegramMobileAuthAttemptsForTests();
+        await __resetTelegramMobileAuthAttemptsForTests();
+        if (previousWebhookSecret === undefined) delete process.env.TELEGRAM_WEBHOOK_SECRET;
+        else process.env.TELEGRAM_WEBHOOK_SECRET = previousWebhookSecret;
     });
 
     test('handles /start payload and sends approval message with source details', async () => {
-        const attempt = createTelegramMobileAuthAttempt({
+        const attempt = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
             source: {
@@ -52,6 +62,7 @@ describe('telegramWebhookHttpService', () => {
         const response = await runTelegramWebhookPostHttp(
             new NextRequest('http://localhost/api/webhooks/telegram', {
                 method: 'POST',
+                headers: { 'x-telegram-bot-api-secret-token': 'fixture-webhook-secret' },
                 body: JSON.stringify({
                     update_id: 1,
                     message: {
@@ -102,7 +113,7 @@ describe('telegramWebhookHttpService', () => {
     });
 
     test('passes cancel callback payload to mobile callback route', async () => {
-        const attempt = createTelegramMobileAuthAttempt({
+        const attempt = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -119,6 +130,7 @@ describe('telegramWebhookHttpService', () => {
         const response = await runTelegramWebhookPostHttp(
             new NextRequest('http://localhost/api/webhooks/telegram', {
                 method: 'POST',
+                headers: { 'x-telegram-bot-api-secret-token': 'fixture-webhook-secret' },
                 body: JSON.stringify({
                     update_id: 2,
                     callback_query: {
@@ -166,7 +178,7 @@ describe('telegramWebhookHttpService', () => {
     });
 
     test('passes approve callback payload to mobile callback route', async () => {
-        const attempt = createTelegramMobileAuthAttempt({
+        const attempt = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -183,6 +195,7 @@ describe('telegramWebhookHttpService', () => {
         const response = await runTelegramWebhookPostHttp(
             new NextRequest('http://localhost/api/webhooks/telegram', {
                 method: 'POST',
+                headers: { 'x-telegram-bot-api-secret-token': 'fixture-webhook-secret' },
                 body: JSON.stringify({
                     update_id: 3,
                     callback_query: {
@@ -227,5 +240,13 @@ describe('telegramWebhookHttpService', () => {
             messageId: 78,
             text: 'Вход подтвержден. Вернитесь в приложение Kezek, авторизация завершится автоматически.',
         });
+    });
+    test('rejects a missing webhook secret without sending or approving anything', async () => {
+        const response = await runTelegramWebhookPostHttp(new NextRequest('http://localhost/api/webhooks/telegram', {
+            method: 'POST', body: JSON.stringify({ update_id: 99 }),
+        }));
+        expect(response.status).toBe(403);
+        expect(mockSendTelegramBotMessage).not.toHaveBeenCalled();
+        expect(mockRunTelegramMobileCallbackRoute).not.toHaveBeenCalled();
     });
 });

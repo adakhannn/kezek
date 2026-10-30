@@ -1,0 +1,9 @@
+{
+  "id": "C171_PRE_SUBMIT_OBSERVATION_ADDENDUM",
+  "observedAfterUtc": "2026-10-25T22:52:23Z",
+  "phase": "After first syntheticfill; BEFORE any Submit",
+  "originalPlan": "c171-nondigit-contact-plan.json",
+  "observation": "Exact ordinary fill argument INVALID PHONE TEST succeeded; AX changed phone blank to redacted/nonempty and Saveenabled. No DOMvalue, token, password, storage or unmask read attempted. Redaction is a tool observation boundary, not productbug.",
+  "refinement": "Known synthetic exact fill payload plus nonempty AXredaction/Saveenabled establishes test stimulus for rejection test. Do not claim independently observed exact value echo; expected field-specific rejection/persistedblank/unchangedbaseline is unchanged. Same rule only if WhatsAppAXredacted. No real contact identifiers, no repeatedfill for counts, no permission broadening.",
+  "credit": "0UI/fix/accepted from addendum"
+}

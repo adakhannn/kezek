@@ -1,0 +1,43 @@
+{
+  "id": "C179_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-25T23:39:26Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "0c3d0589a8fc3f1b3f73bf33efb7a62eeb79883251d114e60fa2f6c43421a85e",
+    "latestPromptCheckpoint": "C179"
+  },
+  "sourceUnchangedSinceC172": true,
+  "priorFinalUnchanged": true,
+  "fixtureRegistryOriginalUnchanged": true,
+  "pendingFixtureEffects": false,
+  "fixtureEffectsEvidence": "c179-result.json",
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 23,
+    "observedAfterClockUtc": "2026-10-25T23:24:46Z"
+  },
+  "fullCollectedCoverageSupport": {
+    "statements": "585/615 =95.12195%",
+    "functions": "75/76 =98.68421%",
+    "branches": "275/316 =87.02532%",
+    "source": "apps/web/test-results/c172-full-coverage/coverage-final.json",
+    "scope": "Repository configured collectedcoveragefiles; notallapplication/functionalacceptance. Fullcoverage command stillFAIL11tests."
+  },
+  "countsReference": "c173-result.json/c179-result.json",
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 21,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "releaseDecision": "NOT_READY",
+  "next": "C180 boundedreadonly B4-05 publicmap missingcoordinates/providererror history/dependency/effects review beforefiniteplan. Adminbranchmapnotice notpublicmaperror proof; no map/location/permission/provider/networkfault/HTTP/SDK action or unchangedmap/wizardrepeat.",
+  "effects": "Existingautomation continuationprompt/readback only after completedC179threevariantinheritance matrix and exactly5ordinaryfixtureupdates/originalvisible-restoration; journalpendingfalse. Currentbuildoutput/ownedruntimestop remainunchanged. Main18368/userTab2preserved/no activecompiler/runtime/networklease. No product/source/test/build/server/UI/DB/entity command from administrativecheckpoint; oldfinals immutable/no continuityclaim."
+}

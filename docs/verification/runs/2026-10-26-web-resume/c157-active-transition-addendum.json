@@ -1,0 +1,9 @@
+{
+  "id": "C157_ADDENDUM",
+  "savedBeforeAdditionalUiUtc": "2026-10-25T21:22:11Z",
+  "originalPlan": "c157-user-filter-plan.json",
+  "observed": "Firstactive selection/query completed withsame8visiblebaseline rows; no distinct datatransition observed, not yet credited. Blockedselection21:21:47UTC subsequently produced actualemptyfeedback/all8rowsremoved, globalstatsunchanged.",
+  "refinement": "From this NEW independentlyobserved emptyblocked precondition selectActive ONCE and require explicit datatransition empty->same8IDs/activequery/selectedvalue/globalstats8/8/0/1. Then restoreAll/verify8/adminreturn. This completes original activecase with changedprecondition; firstactive0credit, no duplicatecase/newrequirement. No unchangedselectretry/errorloop/rawHTTP/networkproof.",
+  "timeBudget": "Within original5minUIbudget",
+  "effects": "Same original noentity/account/security/auth commands; selectquerynavigation only"
+}

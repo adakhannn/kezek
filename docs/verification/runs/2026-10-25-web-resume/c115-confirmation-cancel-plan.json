@@ -1,0 +1,27 @@
+{
+  "id": "C115",
+  "requirementIds": [
+    "M2-05"
+  ],
+  "caseId": "S25-M205-inactive-branch-confirmation-cancel",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "savedBeforeUiUtc": "2026-10-25T09:30:08Z",
+  "timeboxMinutes": 5,
+  "targetBusiness": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "targetBranch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+  "expected": "Exact retained inactive S1 TEST INACTIVE BRANCH opens named irreversible warning with Отмена and Удалить. Click ONLY Отмена; dialog closes, both known branch cards/IDs and 2/2 limit unchanged. One ordinary reload retains inactivefa5 and active057 controls, no deletion-success message. Restore protected admin/Anonymized/Business3/RU and handoff. One complete Cancel case only.",
+  "steps": [
+    "Clock/fresh samehumanTab protectedadmin. Navigate observed fixtureA then its Филиалы. Verify two original branches and exact inactive editlink/association before selecting its list Удалить. If ambiguity stop without click.",
+    "Clock click inactive card list Удалить ONCE to open warning only; inspect exact target and title Удалить филиал, irreversible text, Отмена/Удалить. NEVER click modal Удалить or press Enter. Unexpected state ->no retry/confirm, safely close only.",
+    "Click modal Отмена ONCE. Verify dialog absent/two original branch cards/count2/2/states, no success banner. Clock one ordinary reload ->same known links/names/states/count. No further opening/repeat/other dismissal paths.",
+    "Clock return adminroot via ordinary UI, protectedheading/Anonymized/Business3/RU, markHandoff. Stop command ->close pending modal only/PAUSED readback/newfinal."
+  ],
+  "effects": "Only local modal open/cancel, ordinary navigation/reload. No planned application mutation/delete/Save/role/booking/payment command; ordinary auth/telemetry unenumerated, no zeroTOTALwrites or transport audit claim.",
+  "accounting": "Atbest1 new functional UI PASS25Oct1->2;0fix/0accepted. Whole destructive lifecycle/dependency M2-05 partial and casePlanComplete false.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/DeleteBranchButton.tsx": "fa364bf70ade8a7c89b31eb86615da59c34f865568660c63d4bd81c190fa585d",
+    "apps/web/src/components/ui/ConfirmDialog.tsx": "1ec577bf6b472799a6d70f14a6e370bafa05a0a33f415605196f69305b609bfb",
+    "apps/web/src/components/ui/Dialog.tsx": "18198988ea80785df83f313a2169ca18c961e8444e9e7bae47666c4514439db4",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+  }
+}

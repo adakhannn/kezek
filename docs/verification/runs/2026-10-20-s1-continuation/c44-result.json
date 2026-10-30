@@ -1,0 +1,22 @@
+{
+  "id":"C44",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint":"4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "plan":"c44-unsafe-callback-plan.json",
+  "role":"KnownSA kezekkg / Anonymized, ordinary Google chooser; sameauthorized identity, no new account",
+  "cases":[
+    {"key":"redirect-absolute","observationWindowUtc":["2026-10-21T01:33:09Z","2026-10-21T01:34:00Z"],"actual":"Signed-out redirect=http://127.0.0.1:3000/terms form exposed normalized WhatsApp fallback /; ordinaryGoogle knownSA then actual localhost:3000/admin, Панель администратора, Админ-панель/Anonymized/Выйти. No alternateorigin/terms."},
+    {"key":"redirect-network","observationWindowUtc":["2026-10-21T01:34:00Z","2026-10-21T01:35:02Z"],"actual":"Signed-out redirect=//127.0.0.1:3000/terms -> normalGoogle knownSA -> exact localhost:3000/admin, adminheading and Anonymized. No networkpath destination."},
+    {"key":"redirect-backslash","observationWindowUtc":["2026-10-21T01:35:02Z","2026-10-21T01:36:14Z"],"actual":"Signed-out mixedslash redirect=/\\127.0.0.1:3000/terms -> normalGoogle knownSA -> exact localhost:3000/admin and adminheading/Anonymized. Account-selection/snapshot call timed out, freshDOM proved completed success; no second account click/login."},
+    {"key":"next-absolute","observationWindowUtc":["2026-10-21T01:36:14Z","2026-10-21T01:37:07Z"],"actual":"Signed-out next=http://127.0.0.1:3000/terms -> normalGoogle knownSA -> exact localhost:3000/admin and adminheading, authenticated Admin-panel/Anonymized. No alternateorigin/terms."},
+    {"key":"next-network","observationWindowUtc":["2026-10-21T01:37:07Z","2026-10-21T01:38:14Z"],"actual":"Signed-out next=//127.0.0.1:3000/terms -> normalGoogle knownSA -> exact localhost:3000/admin and adminheading/Admin-panel/Anonymized. Networkpath rejected."},
+    {"key":"next-backslash","observationWindowUtc":["2026-10-21T01:38:14Z","2026-10-21T01:41:34Z"],"actual":"Signed-out mixedslash next=/\\127.0.0.1:3000/terms -> normalGoogle knownSA -> exact localhost:3000/admin and visible adminheading/Admin-panel/Anonymized. Longer observation window retained honestly; no continuous-work or exact intermediate completion timestamp claim."}
+  ],
+  "matrixAfter":{"passed":6,"newLivePass":6,"reused":0,"failed":0,"blocked":0,"notRun":0,"total":6,"remaining":0},
+  "googlePageSubset":{"passed":28,"notRun":4,"total":32,"remaining":4,"note":"22existingC39/C42/C43 original-date cases +6newfreshnegativeGooglecallbacks; not28newthisstage or wholeC1-03."},
+  "effects":"Six ordinary logouts and six Google knownSA logins. App auth/notification metadata sync/telemetry IDs unenumerated, NEVERzeroTOTALDBwrites. No agent business/job/role/grant/currentbusiness/booking/save/hold/cancel/pay commands, source/test changes, settings changes or newfixtures/accounts. No rawcallbackcode/token/cookie/storage/log extraction or networkbypass. Originaluser2/5 retained/handoff, no newtab/capture retry.",
+  "restore":"Last planned case itself ends in originalknownSA/admin, actualheading/Anonymized before01:41:34UTC; noextraauthrestoration required.",
+  "countsUnchanged":{"S1Accepted":16,"S1Remaining":9,"S1PrimaryPASS":61,"S1PrimaryRemaining":18,"S2Accepted":1,"S2Remaining":69,"productAccepted":17,"productRemaining":299,"newFixes":0},
+  "limits":"Only six controlled different-local-origin rejection classes through ordinaryGoogle UI; no arbitraryopenredirectfuzz/API/RLS/IDOR/CSRF/visual/no-flash/production certificate. Otherproviderreturnhandoff unverified, so fullC1-03/P4 remainpartial. OldC39negatives notrerun.",
+  "next":"C45 only four planned remainingGoogle/page variants: freshcallback safequery/hash; existingSA trimvalidpath and nonpathfallback; freshknownpureclient explicit/adminreturn must stilldeny. Define exactplan beforeactions; reuse existing28proofs originalUTC. C1-03mustremainpartial for unverifiedYandex/Telegram/WhatsAppreturnhandoff, no silentGoogle-onlyscope. Then independent C1-01 finiteguest/authpageopening reuse review, not more unchangedreturnmatrix. ColdownerstillSTALE awaitingcurrenthumancondition; deadline21Oct05UTC/04:35draft/04:45PAUSED unchanged."
+}

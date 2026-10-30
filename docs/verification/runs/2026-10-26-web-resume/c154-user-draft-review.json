@@ -1,0 +1,33 @@
+{
+  "id": "C154",
+  "type": "bounded readonly history/effect review",
+  "completedBeforeUtc": "2026-10-25T21:07:36Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "requirementId": "M3-01",
+  "history": "Night09Oct original2026-10-09T05:18:00+06:00 proves known-user search/statistics, not own-user local name draft discard. C82 original23Oct01:16:38..01:19:28UTC source protection review proves no runtime self/last-admin transaction and does not cover local-name draft. Ledger M3-01 currently has no concrete cases; focused review of available result/review/plan records found no admin own-user draft/discard proof. Do not repeat known search or profile draft as new proof.",
+  "source": "UserBasicForm name onChange only setFullName; changed compares initial. Only form submit validates and sends update-basic POST containing name/email/phone. No autosave/useEffect writer and no Cancel/reset control. Parent provides Back to list link; reentry should create fresh state from unchanged server data. UserPageRedirect only redirects absent user. This is source support, not LIVE PASS.",
+  "refinement": "Proposed Cancel is absent in source; no bug inferred. C155 uses actual Back to list then reopens same known own-SA card, with no submit/security input. No account-save or security-command authority inferred.",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c82-protection-review.json",
+      "sha256": "db376a529e5518cec69afa107f26f7ae65d25014c90bca57a52b390f455f2b83"
+    },
+    {
+      "path": "apps/web/src/components/admin/users/UserBasicForm.tsx",
+      "sha256": "fe991b224262b4793e5c26ba882e008c43ef011cf4b969da5ba2f7426e7d9c19"
+    },
+    {
+      "path": "apps/web/src/components/admin/users/UserPageRedirect.tsx",
+      "sha256": "fa399acbe47702a9f46db0532e43619f878ea2c66039071844a860f51491117f"
+    },
+    {
+      "path": "apps/web/src/app/admin/users/[id]/page.tsx",
+      "sha256": "28c2c4d1a38959f01995e2e02aeeed83fe465cc35c27a6adef290a26317e7a94"
+    }
+  ],
+  "credit": "0newUI/fix/accepted"
+}

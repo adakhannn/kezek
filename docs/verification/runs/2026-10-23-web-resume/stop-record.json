@@ -1,0 +1,22 @@
+{
+  "id": "USER_STOP_2026_10_23",
+  "request": "сделай логическое завершение",
+  "firstClockAfterReceiptUtc": "2026-10-22T23:59:59Z",
+  "firstClockBishkek": "2026-10-23T05:59:59+06:00",
+  "timeSemantics": "First tool clock AFTER receiving stop, not exact human message timestamp or proof it arrived after clock.",
+  "recordedAfterClockUtc": "2026-10-23T00:03:32Z",
+  "newScenariosAfterStop": 0,
+  "productInputsAfterStop": 0,
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateConfirmedBeforeUtc": "2026-10-23T00:00:59Z",
+    "exactPromptAndStatusReadbackBeforeUtc": "2026-10-23T00:01:17Z",
+    "sameNameCadenceTarget": true
+  },
+  "browser": "Read-only freshinventory+AX: samehumanTab2/provider9330166e on/admin/Anonymized/protectedheading/Business3, no form or unsaved draft. MarkHandoff only; no navigation/input/logout/login afterstop. Ambient cabinet URL was not used as actualstate.",
+  "ownedProcesses": "No compiler or temporary isolatedruntime launched in this resumed window. Ownmain Next dev session47667 previouslyrunning/localUIhealthy left unchanged available for user; not a continuing autonomous test. No stop/restart/kill/cleanup commanded at finalization.",
+  "permissionRevocation": "Prospective until-stop testing and any task-scoped compiler/font-download authority end here. No compiler/download permission granted or used this resumed window; oldC54lease expired and priorrevocations preserved. Append-only stop record; hashed old permission evidence NOT edited; no protection/firewall/network setting changed.",
+  "effects": "Administrative pause/report/evidence writes and read-onlyhandoff only afterstop, no product/test/build/source/auth/business/role/grant/booking/shift/payment/DB actions. Existing ordinaryauth/telemetry unenumerated, not zeroTOTALwrites.",
+  "resume": "Explicit NEW human authorization required. C75review/C76possiblecase are saved next steps, NOT authorization or ongoingwork. No automatic resumption from stale heartbeat."
+}

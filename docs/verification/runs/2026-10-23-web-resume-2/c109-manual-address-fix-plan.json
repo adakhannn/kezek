@@ -1,0 +1,24 @@
+{
+  "id": "C109",
+  "finding": "S1-F015",
+  "fromCandidate": "dev-20261023-WEB-b876ccbde0a8",
+  "scope": "Only bind ordinary address onChange to existing setAddress in admin BranchForm. No changes to map/coordinates, payload, validation, API/auth/security/DB/save/schedule behavior. One new focused component test file. Remove misleading map-only setter comment if needed; no redesign.",
+  "implementation": [
+    "Preserve exact original BranchForm and old source fingerprint before edit.",
+    "Add focused real-admin-BranchForm unit tests with mocked map and fetch UNIT-only. Manual address retention+blur/change flag/clear-back-to-baseline; existing name input unaffected; map callback still fills address/coords. Run new regression before runtimefix and preserve FAIL. No unit result is LIVE.",
+    "Add onChange only. Focused tests/typecheck/scoped lint; full lint/test existing failures retained, full rerun deferred if bounded budget prevents it, no greenclaim. No external Playwright/rawHTTP or network download.",
+    "New exact candidate including new test; preserve all old UTC/proofs. Explicit impacted dependency review and A3-01 stale pending genuinelynew build. Do not blanketpromote visual/cache/map evidence."
+  ],
+  "livePlan": {
+    "caseId": "S23-M202-branch-manual-address-draft-discard",
+    "steps": [
+      "Fresh clock/candidate/knownSA samehumanTab2. Open exactA inactivefa5 branch via observedlinks; originalemptyaddress/allfields/Savechangesdisabled; mapunavailable notice if stillpresent, no retry.",
+      "Clock same ordinaryfill C108 UNSAVED ADDRESS 23OCT once, Tab once. Exactdraft persists, Savechangesenabled, originalname/coords/inherit/active/contacts unchanged. NoSave/Enter.",
+      "Clock clear address toempty; Savechangesdisabled/nochanges. Clock edit name to C109 UNSAVED NAME then clearbackoriginal; existing name editing stillworks and returnsnochanges. These are addressed regressions within same case, not artificial extraPASS.",
+      "Clock leave list/reenter exactbranch ->originalname/emptyaddress/allotherbaseline/disabledSave. Root restoreknownSAAnonymizedBusiness3/RU/handoff. Never Submit/mapretry/schedule/active/contact/newfixture/DB/securitycommands. Unexpectedstate/auth/interruption ->stop no retry."
+    ],
+    "effects": "Unsaved local synthetic drafts only; noSubmit/Save or appDB command, ordinary auth/mapmount/telemetry unenumerated/notzeroTOTALwrites."
+  },
+  "accounting": "At best1SAME-LIVE newlypassedcase20->21 and1verifiedfix window1->2/logical10->11 ONLY after actualUI. Original C108FAIL/UTC retained, not erased. WholeM2-02 incomplete; build gate may lower21->20 untilnewcandidatebuild. No save persistence/map loading/visual/globalgreen claim.",
+  "savedBeforeSourceEditUtc": "2026-10-23T06:26:26Z"
+}

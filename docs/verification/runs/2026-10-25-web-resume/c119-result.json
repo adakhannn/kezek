@@ -1,0 +1,13 @@
+{
+  "id": "C119",
+  "caseId": "S25-M501-inactive-category-slug-draft-cancel",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "status": "FAIL_initial_editor_rewrites_existing_slug_without_input",
+  "startedAfterUtc": "2026-10-25T09:57:57Z",
+  "actual": "FreshknownSA/admin->Categories actual3total2active3usage. Retainedtestc7cef81b row LIVE TEST NIGHT09OCT CATEGORY EDITED, sluglive-test-night09oct-category, Выключена,0business. Exactobservededitlinkclickedonce; waitForURLtimedout, nextfreshAX actualcorrecteditor. Before ANYfill/Tab/Save, Name originalEDITED, Address alreadylive-test-night09oct-category-edited, availabilityunchecked, Savechangesenabled. Clock09:58:44 read-onlyDOMvalue samewrongslug and isEnabledtrue. No input/retry/submit. Отмена ->list retains originallive-test-night09oct-category/EDITED/inactive0usage/all3categories. Rootadminprotected/Anonymized/Business3/RU restored/handoff. The planned draft sequence stopped before typing due realinitialstatefailure, not fixtureabsence.",
+  "expected": "Opening existingcategory edit with savedcustomslug must preserve exact persistedslug and show no changes/disabledSave before any userinput. Originalname differstransliteratedslug intentionally since oldrename; should not resetmanualslug.",
+  "cause": "CategoryForm initializes slugDirtyfalse, mountuseEffect calls setSlugDirtytrue for edit+initialslug but continuesusing oldfalseclosure, then setSlug(makeSlug(nameRu)) overwritesinitialslug. Source explains observedinitialdraft only; no successfulSave/propagation/data corruption alleged.",
+  "effects": "Navigation and oneCancel only, zero typedfields/no Save/Enter/availability/delete/propagation/authtransition commands. Ordinaryauth/telemetry unenumerated/notzeroTOTALwrites. No directHTTP/SDK/DB/secret/prod/domainprobe.",
+  "credit": "0PASS/0fix/0accepted. Newwindow3UIPASS unchanged; F016OPEN. InitialFAIL immutable after retest.",
+  "completedBeforeUtc": "2026-10-25T10:00:39Z"
+}

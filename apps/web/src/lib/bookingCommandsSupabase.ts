@@ -2,7 +2,8 @@ import type { BookingCommandsPort } from '@core-domain/booking';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 
-import { logDebug, logError } from './log';
+import { logDebug, logError, logWarn } from './log';
+import { bookingCommandError, BookingSlotConflictError } from './bookingSlotConflict';
 
 type BookingCommandsContext = {
     userId?: string;
@@ -38,13 +39,15 @@ export function createSupabaseBookingCommands(
             });
 
             if (error) {
-                logError('BookingCommandsSupabase', 'hold_slot RPC error', {
+                const mappedError = bookingCommandError(error);
+                const logger = mappedError instanceof BookingSlotConflictError ? logWarn : logError;
+                logger('BookingCommandsSupabase', 'hold_slot RPC error', {
                     message: error.message,
                     code: error.code,
                     details: error.details,
                     hint: error.hint,
                 });
-                throw new Error(error.message);
+                throw mappedError;
             }
 
             if (typeof rpcData !== 'string' || !rpcData) {
@@ -83,13 +86,15 @@ export function createSupabaseBookingCommands(
             });
 
             if (error) {
-                logError('BookingCommandsSupabase', 'hold_complex_slot RPC error', {
+                const mappedError = bookingCommandError(error);
+                const logger = mappedError instanceof BookingSlotConflictError ? logWarn : logError;
+                logger('BookingCommandsSupabase', 'hold_complex_slot RPC error', {
                     message: error.message,
                     code: error.code,
                     details: error.details,
                     hint: error.hint,
                 });
-                throw new Error(error.message);
+                throw mappedError;
             }
 
             if (typeof rpcData !== 'string' || !rpcData) {

@@ -1,0 +1,163 @@
+{
+  "status": "PAUSED_BY_USER_NOT_READY",
+  "authorization": "тогда можешь начинать автономную работу пока я тебя сам не останавлю",
+  "authorizationEvidence": "authorization.json",
+  "firstClockAfterResumeUtc": "2026-10-26T07:18:35Z",
+  "timezone": "Asia/Bishkek",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "sourceFileCount": 1687,
+  "accepted": 27,
+  "remaining": 289,
+  "total": 316,
+  "S1": {
+    "accepted": 17,
+    "total": 25,
+    "primaryPassed": 63,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 5,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 3,
+    "total": 47
+  },
+  "S6": {
+    "accepted": 2,
+    "total": 29
+  },
+  "verifiedFixesLogicalRun": 17,
+  "newWindowLiveFixes": 1,
+  "newWindowAcceptedRequirements": 4,
+  "newWindowPassedCases": 19,
+  "reusedPriorProofCasesThisWindow": 0,
+  "refreshedExistingCasesThisWindow": 0,
+  "refreshedHistoricalFunctionalCasesThisWindow": 1,
+  "activeSubpackage": "PAUSED_AFTER_C236",
+  "lastCheckpoint": "HumanSTOP13:30:50UTC; existingkezekPAUSED/fullconfigreadbackverified; currentwindowfinalsaved27of316/289left/UI19/fix1F021/logical17/4accepted/current5387/1687/NOT_READY. No pendingeffects/activeowncompiler-runtime-networklease; main19968andtabretainedforuser. C237 savednextonly/noautonomousresume fromqueuedheartbeat.",
+  "checkpointAfterClockUtc": "2026-10-26T13:38:29Z",
+  "automation": {
+    "id": "kezek",
+    "kind": "heartbeat",
+    "status": "PAUSED",
+    "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+    "previousTargetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "intervalMinutes": 15,
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configSHA256": "6a45487971cbbb620ee61b6758a1a898e57c29e9ff152ba614684cc62a5a9dbe",
+    "oldPromptPreserved": true,
+    "noDuplicate": true,
+    "evidence": "pause-20261026-133050.json"
+  },
+  "priorCompletedWindow": "docs/verification/runs/2026-10-26-web-resume/final-report.json",
+  "priorFinalSHA256": "43e73d1c1b4b6fe22e44dda03608262c3799492be749667647f3c1cc1eb0b127",
+  "priorWindowArchived": {
+    "newUiPass": 23,
+    "newVerifiedFixes": 4,
+    "newAcceptedRequirements": 2,
+    "notAddedToThisWindow": true
+  },
+  "continuousObservationAcrossPause": false,
+  "releaseReady": false,
+  "autonomousResumeAllowed": false,
+  "currentBuild": {
+    "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+    "plan": "docs/verification/runs/2026-10-26-web-resume-2/c206-build-plan.json",
+    "destination": "test-results/closure-web-20261026-c206-5387d70d6af1/build",
+    "rawLog": "docs/verification/runs/2026-10-26-web-resume-2/c206-build-raw.txt",
+    "priorPass": "C174/C175immutable",
+    "ownedCompilerPid": 15532,
+    "ownedSession": 97991,
+    "startedUtc": "2026-10-26T09:59:10.287Z",
+    "watchdogSeconds": 240,
+    "finishedUtc": "2026-10-26T10:00:54.152Z",
+    "exitCode": 0,
+    "timedOut": false,
+    "buildEvidence": "docs/verification/runs/2026-10-26-web-resume-2/c206-result.json",
+    "ownedRuntimePid": 30352,
+    "ownedRuntimeSession": 51705,
+    "runtimeStartedUtc": "2026-10-26T10:01:57.237Z",
+    "runtimeStopped": true,
+    "runtimeWatchdogSeconds": 300,
+    "runtimeFinishedUtc": "2026-10-26T10:03:20.209Z",
+    "executionEvidence": "docs/verification/runs/2026-10-26-web-resume-2/c207-result.json"
+  },
+  "technicalGates": {
+    "evidence": "c204-technical-checks.json",
+    "typecheck": "PASS",
+    "targeted7": "PASS",
+    "fullLint": "FAIL52errors167warnings",
+    "sourceUnit": "FAIL11/PASS2554",
+    "fullCoverage": "EXECUTED_FULL_FAILED_GATE_RETAINED",
+    "currentBuild": "C206_C207_SCOPED_PASS"
+  },
+  "pendingFixtureEffects": {
+    "subpackage": "C211",
+    "pending": false,
+    "phase": "ORIGINAL_BUSINESS2_ACTUAL_DASHBOARD_RELOAD_RESTORED",
+    "recoveryJournal": "docs/verification/runs/2026-10-26-web-resume-2/c211-effects-03-restored.json"
+  },
+  "browser": {
+    "status": "PRESERVED_FOR_USER_NO_FINALIZATION_UI_TEST",
+    "browserId": "2",
+    "workingTabId": "1",
+    "workingProvider": "browser-use:7fe026e5-ed6e-4d0c-a429-0aeed508dd8f",
+    "handle": "kezekWorkingTab",
+    "actualRole": "Knownkezekkg actual/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1",
+    "userTabHandoff": true,
+    "preservation": "markDeliverable metadataonly",
+    "lastProductObservationBeforeUtc": "2026-10-26T12:53:02Z"
+  },
+  "server": {
+    "meaning": "Actual stopped local Next runtime established and one normal start completed. This is a changed runtime condition, not a new-date justification or proof of prior cause.",
+    "checks": "Get-NetTCPConnection no3000/3107; no next node processes; independent IPGlobalProperties listener inventory empty; own PowerShell visible via CIM, node13 processes visible. No kill/restart of an existing process.",
+    "firstStartClockUtc": "2026-10-26T07:26:05Z",
+    "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "cwd": "C:/projects/kezek/apps/web",
+    "sessionId": 43364,
+    "launcherPid": 6696,
+    "listenerPid": 19968,
+    "verifiedListener": "127.0.0.1:3000",
+    "verifiedAfterClockUtc": "2026-10-26T07:26:44Z",
+    "health": "LISTENER_ONLY_NOT_UI_HEALTH",
+    "leftAvailableForUser": true,
+    "finalizationReadOnlyCheck": {
+      "pendingFixtureEffects": false,
+      "knownOwnedCompiler15532": "NOT_RUNNING",
+      "knownOwnedRuntime30352": "NOT_RUNNING",
+      "knownOwnedRuntimeChild30040": "NOT_RUNNING",
+      "temporary3107Listener": false,
+      "main3000Listener": "127.0.0.1:3000 PID19968 retained for user/no continuing test process",
+      "readOnlyProcessCheckWindowUtc": [
+        "2026-10-26T13:36:00Z",
+        "2026-10-26T13:38:29Z"
+      ],
+      "stoppedProcessesAtFinalization": [],
+      "activeTemporaryNetworkCompilerLease": false,
+      "permissionHistory": "No renewal; appendthisstoprecord only, old permission evidence/finals/journals unchanged."
+    }
+  },
+  "constraints": "WEB/local only. No native/mobile/subagents/new chats/commit/push/deploy. No direct DB/SQL/RPC/SDK/HTTP, secrets/storage extraction, forbidden providers/endpoints or permission bypass. No new identities/roles/jobs/fixtures/booking commands/payments/irreversible delete without specific action-time authority. No unchanged DONE/tool/auth/catalogue/F013/profileSave/cache/visual/provider retry. Old journals/finals/UTC immutable.",
+  "casePlan": "c236-inactive-booking-matrix-review.json",
+  "additionalAuthorization": "working-tab-and-autonomy-authority.json",
+  "buildRefreshEventsThisWindow": 1,
+  "distinctBuildCasesRefreshedThisWindow": 1,
+  "nextReview": "C237boundedreadonlybusiness-slug-invalid-collision history/guards/payload/effects beforefiniteUI",
+  "lastCompletedSubpackage": "C236",
+  "lastProductCheckpointBeforePause": {
+    "utc": "2026-10-26T13:24:25Z",
+    "text": "C236 D1-04 accepted by3existingcurrentcertifiedUIcaseassociations (inactive service/branch/business) afterexacthash+primaryreview/original20OctUTC retained; no UIreplay/newcase/reusecredit/fix. Product26->27of316/289left/S4=3of47; windowUI19/fix1F021logical17/newaccepted4, candidate5387/1687/buildC206C207 unchanged/NOT_READY. C235positivehourlyaggregateBLOCKED/C233timecommitBLOCKED/C221calendar/C77/F013/F005/C189/alltechnical11testFAIL/lint52errors167warnings retained. Existingtab/mainserver not rehealthclaimed byreadonlyreview; observationgap12:59:50->13:24:25 recorded/no continuityclaim. NextC237 ONLYboundedREADONLY I6-02 exactknownfixtureA existingbusiness slug invalid/collision validation history/currentedit payload+guard/effects review BEFOREfiniteUIplan. DistinguishC84localmanualslugCancel/C89emptyname from genuinelyuncovered invalidsyntax and knownbusiness1slugcollision; no blindvalidslugwrite. No browser/edit/Save/owner/category/approval/contact/quota/newentity/role/security/SQL/API/SDK/storage/source/test/build/serveractionfromreview; completeknownbaseline+rejection-before-mutation required, else exactblocker+independentpriority."
+  },
+  "pause": {
+    "request": "сделай логическое завершение и на паузу",
+    "firstActualClockUtc": "2026-10-26T13:30:50Z",
+    "evidence": "pause-20261026-133050.json",
+    "resumeRequiresExplicitHuman": true
+  },
+  "finalReport": "final-report.json",
+  "finalReportSHA256": "802d4e256b960fb95e65e72d01e5faf2ba7c1da1e998adc019537e04d9f8a280"
+}

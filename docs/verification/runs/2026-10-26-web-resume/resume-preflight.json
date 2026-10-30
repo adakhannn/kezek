@@ -1,0 +1,55 @@
+{
+  "id": "RESUME26_PREFLIGHT",
+  "completedBeforeUtc": "2026-10-25T19:44:09Z",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "sourceFileCount": 1685,
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "ledgerValid": true,
+  "closureValid": true,
+  "accepted": 21,
+  "remaining": 295,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "existingAutomation": true,
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "configurationReadback": true,
+    "configSHA256": "dd3a56f1a96bd0eaac7fe58cda647d1860477b55caa5bc0ca038c43e4d0d0352",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "nameAndCadencePreserved": true
+  },
+  "browser": {
+    "inventory": "IAB2 tabs[] at initial inventory and after verified main-server startup",
+    "previousHumanProvider": "browser-use:9330166e-02eb-4317-b88d-df1476284c6a",
+    "previousHandleAbsent": true,
+    "actualRole": "UNKNOWN/no current document",
+    "ambientUrlNotActualUiEvidence": true,
+    "noBindingNavigationNewTabOrWorkaround": true,
+    "actionNeeded": "Human manually open healthy localhost:3000/admin in IAB; one non-blocking request already made, no unchanged repeated repair question."
+  },
+  "server": {
+    "before": "No 3000/3107 listener and no Next or owned compiler/runtime process in scoped read-only check; exact project/package/Next binary verified.",
+    "clockBeforeStartUtc": "2026-10-25T19:39:17Z",
+    "oneNormalStart": true,
+    "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "cwd": "C:/projects/kezek/apps/web",
+    "sessionId": 60432,
+    "pid": 18368,
+    "parentPid": 12676,
+    "listen": "127.0.0.1:3000",
+    "verifiedBeforeUtc": "2026-10-25T19:40:00Z",
+    "status": "LISTENER_CONFIRMED_NOT_ACTUAL_UI_HEALTH",
+    "noRestartLoopInstallOrFullOauthLog": true
+  },
+  "git": {
+    "dirtyEntries": 619,
+    "unrelatedActorUnknownChangesPreserved": true,
+    "noCommitPushStageReset": true
+  },
+  "credit": "Setup/recovery/read-only review=0 new UI/fix/accepted. No new app/DB/auth commands; ordinary previous auth/telemetry unenumerated, not zero TOTAL writes.",
+  "network": "No active temporary compiler/runtime/network lease renewed; existing local-font build proof retained/no rebuild."
+}

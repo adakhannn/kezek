@@ -1,0 +1,36 @@
+{
+  "id": "C167",
+  "status": "READONLY_COMPLETE_PRECISE_RUNTIME_MEASUREMENT_BLOCKED",
+  "startedAfterUtc": "2026-10-25T22:39:52Z",
+  "completedBeforeUtc": "2026-10-25T22:41:59Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "history": "B3-01 review references WB-017 documented-only/no located primary; G024 actual2026-10-14T03:42:59Z confirms settled business query/category/empty/reset, not timestamps or cancelled intermediate requests. G027 actual2026-10-14T04:14:02Z confirms punctuation behavior; its debounce tests are support, not LIVE timing. C79/C166 functional field/URL observations are not timing evidence and are not repeated.",
+  "source": "Current HomeHeader local state onChange, normalized query comparison, window.setTimeout router.replace at500ms with clearTimeout cleanup. Source sequencing supports intended behavior but does not prove observed runtime latency or request counts.",
+  "capabilityObservation": "Existing resume26HumanTab.capabilities.list returned only pageAssets and webmcp. Documented tab APIs offer input/snapshot/URL waits and console logs, no correlated input/request event timeline. RPC elapsed time includes tool overhead; final URL settlement cannot isolate500ms debounce. No instrumentation, fake clock, performance globals, request interception, rawHTTP, storage/token access, new tab or pageAssets bundle used.",
+  "independentOracle": "Runtime debounce requires a correlated last-input timestamp, absence of intermediate discovery updates during the debounce interval, one resulting update and correct final query. Input echo/settled URL alone is insufficient.",
+  "blocker": "PERMITTED_CUA_HAS_NO_CORRELATED_INPUT_REQUEST_TIMELINE; runtime debounce/request-count/latency variants remain unexecuted. No source change or UNIT imitation. This does not assert a product performance failure.",
+  "effects": "Capability metadata only; no page navigation/input/auth or entity action.",
+  "credit": "0newUI/0fix/0accepted",
+  "dependencyHashes": {
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00"
+  },
+  "hashes": [
+    {
+      "path": "docs/verification/reviews.jsonl",
+      "sha256": "2b227b5c22cc06d83160aa0ed36856d26f0ef48f21971771c783947a46d6f1f8"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G024-catalog-search.json",
+      "sha256": "1d305ccf78f7e81917b73ac8dc9dcd3c123bd3882de4440ea0b0a2377cc63ee9"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G027-catalog-punctuation-after.json",
+      "sha256": "c9847e0571dfe69fa01a570e60f91f02f7eb81381f76aa7ed2fddba0c2faff45"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c166-result.json",
+      "sha256": "c25d8a7ed444c06b8a5b4f3fa0f6db3807531822663679c3a15ef0c3fce375fc"
+    }
+  ],
+  "next": "Independent existing inactive-branch website validation/persistence effects review C168; no search replay."
+}

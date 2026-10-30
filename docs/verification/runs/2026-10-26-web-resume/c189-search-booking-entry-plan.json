@@ -1,0 +1,35 @@
+{
+  "id": "C189",
+  "savedBeforeUiUtc": "2026-10-26T01:13:49Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "caseId": "S26-D101-filtered-search-booking-cta-entry",
+  "requirementIds": [
+    "D1-01"
+  ],
+  "timeBudgetMinutes": 6,
+  "variant": "entry-method:filtered-search-result-Book",
+  "target": {
+    "business": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "slug": "testovyy-biznes-2",
+    "publicName": "Тестовый бизнес 2",
+    "query": "Тестовый бизнес 2"
+  },
+  "expected": "Activating Book on the sole matched business2 result must reach that same business booking route and identifiable settledwizard rather than genericmarketing, wrongbusiness, authredirect or error. GenericCTA has no explicitbranch/choice override; an existing validlocaldraft mayrestorechoices. Do not demand fabricatedblankstate or clearstorage/advancewizard to manufactureone. This certifies entryonly, not completebookingmetadata/availability.",
+  "steps": [
+    "Clock/freshknownSA humanTab2/admin/RU/Anonymized/Business3. Observedbrand ->cleanpublicroot/blankquery/3businesses. Unexpectedexistingfilter ->onlyordinaryvisibleReset firstasrecovery0credit; no storedstateextraction. Mismatch/error/blockednavigation ->BLOCKED/no restart/auth/newtab/retry.",
+    "Clock fillknownbusiness2 exactname inobservedpublicsearch textbox; waitsettledqURL+visiblequery+singlematchingcard/businessname+itsuniqueBookCTA. This issetup0credit, NOTnewsearch/filter/debounce/PASS. No category/history/reloadvariant. Sourcehrefnotcountedactivatedyet.",
+    "ClockclickONLYthatsolematchingcard Записаться once. Expectexact /b/testovyy-biznes-2/booking andidentifiablebookingwizard/samebusiness; waitinitialloadingnormally, oneboundedfreshAXifnavigationlags/no duplicateclick. Recordactualstep/validretainedselectionifany; no manualbranch/date/staff/service/slot/Next/Confirm/Enter/hold/create/clearstorage or newbooking. Wrongmarketing/business/auth/error ->FAILorblockasobserved, no forceddirectgoto tofakehandoff.",
+    "Clockordinaryobservedbrand tocleanroot; requireblankquery/3businesses/originalRU. Restoreprotected/admin/RU/Anonymized/Business3 throughobservedheaderorallowedknown/admin fromdifferentroute; markHandoff. Rootcleanup/admincontrols0credit. No repeatedsearch history/reload/map/businessCTA/directentrycases."
+  ],
+  "effects": "Onlypublicquerynavigation+oneBookCTAentry/cleanroot/adminreturn; no entity/booking/hold/slot/selection/permission/auth command. Appdraft/auth/analytics/telemetryunenumerated, notzeroTOTALwrites.",
+  "limits": "OneNEWentrymethod onlyifactualactivation+settledcorrectwizard+restorationcomplete. WholeD1-01partial until direct/publicbusinessmethodsappropriatelycertified; notAPI/RLS/security/visual/cache/timing/bookingcreation/otherroles proof.",
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+  }
+}

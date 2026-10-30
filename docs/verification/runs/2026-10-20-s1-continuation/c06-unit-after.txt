@@ -1,0 +1,20 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:28820) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx
+PASS src/__tests__/components/ErrorBoundaryNavigation.test.tsx (5.911 s)
+-----------------------|---------|----------|---------|---------|-------------------
+File                   | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-----------------------|---------|----------|---------|---------|-------------------
+All files              |     100 |       75 |     100 |     100 |                   
+ components            |     100 |    68.75 |     100 |     100 |                   
+  ErrorBoundary.tsx    |     100 |    68.75 |     100 |     100 | 40-41,66-68       
+ lib                   |     100 |      100 |     100 |     100 |                   
+  chunkLoadRecovery.ts |     100 |      100 |     100 |     100 |                   
+-----------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 2 passed, 2 total
+Tests:       17 passed, 17 total
+Snapshots:   0 total
+Time:        9.452 s
+Ran all test suites matching /src\\__tests__\\components\\ErrorBoundaryChunkRecovery.test.tsx|src\\__tests__\\components\\ErrorBoundaryNavigation.test.tsx/i.

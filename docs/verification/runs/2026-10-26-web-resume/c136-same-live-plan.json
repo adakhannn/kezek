@@ -1,0 +1,16 @@
+{
+  "id": "C136",
+  "caseId": "S26-M103-today-cancelled-summary",
+  "savedBeforeUiUtc": "2026-10-25T20:10:57Z",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "status": "NOT_RUN_SAME_LIVE",
+  "timeBudgetMinutes": 5,
+  "expected": "Same actual26Oct one cancelled09:00–10:00 row displays Отменено; chip Отменено1, Hold0/Confirmed0; loaded Today rows remain one and overall bookings30. Protected admin/RU retained. Business-count fetch failures remain independent unresolved; no Today-query error allowed.",
+  "steps": [
+    "Clock; ONE ordinary current user tab2 /admin reload after source fix. Read actual date/Today section/table/chips and warnings. No Todayerror/auth barrier/date or fixturechange; otherwiseBLOCKED/no retry.",
+    "Verify exact same row time/business2/branch1 and user-facing Отменено, Cancelled1/Hold0/Confirmed0. Observe totalbookings30/admin controls baseline; do not touch any booking or config.",
+    "Read protected settled header/RU, markHandoff. Record separate business-count warning/recovery honestly, never count it as fix. No extra reload or full auth repetition."
+  ],
+  "effects": "Reload/AX read only; no app persisted command, ordinary telemetry unenumerated.",
+  "excluded": "Actual booking mutation, false date/fixture, query/auth/security/network fix, pixel/cache/deployed-production/fullproject acceptance"
+}

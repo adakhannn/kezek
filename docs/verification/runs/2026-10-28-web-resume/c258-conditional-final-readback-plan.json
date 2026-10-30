@@ -1,0 +1,47 @@
+{
+  "id": "C258_CONDITIONAL_FINAL_READBACK_ONLY",
+  "status": "BLOCKED_UNTIL_GENUINE_OWNER_SERVICES_AVAILABILITY_CONDITION",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "caseId": "S28-I203-service-localized-name-length-rejection-discard",
+  "priorEvidence": "docs/verification/runs/2026-10-28-web-resume/c256-result.json",
+  "expected": "Original99all3names/1min/visiblelist0–300/branch1only/active/staffunchecked established inknownownerBusiness2; ONEordinaryreloadstilloriginal; knownSAadminrestore/handoff. NOnameinput/Save/invalidvariantreplay. Onlythencompleteexistingcompoundcase/F022verification ifallC256depsexactmatch.",
+  "knownTarget": {
+    "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+    "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+    "originalNames": {
+      "ru": "LIVE TEST Service 31 Рус",
+      "ky": "LIVE TEST Service 31 Кыргыз",
+      "en": "LIVE TEST Service 31 Еng"
+    },
+    "duration": 1,
+    "priceFrom": 0,
+    "priceTo": 300,
+    "branch1": true,
+    "branch2": false,
+    "active": true,
+    "staff": false
+  },
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "ea08d8678e4574ed7f947241eb8993bb97fd23521f298f2bbbb5263708196353",
+    "apps/web/src/lib/serviceUpdateHttpService.ts": "593f4840a1ab042ca8c5b4d492f2b910aa8a46d5fbda954e104da92ba359c175",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28",
+    "apps/web/src/app/dashboard/services/[id]/page.tsx": "8ece808ba3e5509051baa9eb6ebb325af88cf780f6709c965797cdd3fc4eff75",
+    "apps/web/src/app/dashboard/services/[id]/EditServicePageClient.tsx": "2b31863251c1cbe415cb17a9ed2f8d5366a03e8a291b26e9b84910a41575b657",
+    "apps/web/src/lib/validation.ts": "1fbd74cb490998dc7d887a82d53e19f57c3447cef539ee3cc9662334428f9d54",
+    "packages/shared-client/src/validation.ts": "69190403d42d96f5c946d0341364385e4cc92400d0f51304a65084897c432298",
+    "apps/web/src/app/_components/i18n/dictionaries/services.ru.ts": "c76e0ff556b63a7ea1f74f7cf2bdcf951c83661ee5772148d3d8d3f0d1d98748",
+    "apps/web/src/app/_components/i18n/dictionaries/services.en.ts": "2386c94ea1763318b8b30ce5a6b2f3c66887c9da259ddf6deb84d976543ab868",
+    "apps/web/src/app/_components/i18n/dictionaries/services.ky.ts": "389dead11c3016bff2d49e2e8063977e23cb458f3be29488ba6f9139ab175454"
+  },
+  "entry": "Mustfirstrecordgenuinelynewowner-servicesavailability evidence, e.g.precisehumanreportaftermanualordinaryUIrecovery/changedrelevantdependency. CurrentSAhealthy/rootcatalogue/publiccompiledprivacyPASS isNOTowner-servicesproof. DoNOTauthswitch/requery/reload/Retryserverloop justtoseekentrycondition.",
+  "timeboxMinutesIncludingRestore": 10,
+  "steps": [
+    "Freshclock/usage/currentprogress/newavailabilitycondition+exactcurrentC256dependencyhashes; ifnoactualcondition waitquiet/no UI/source/test/build/auditstage.",
+    "OrdinaryknownownerGoogle/currentBusiness2Continueonly/Servicesexactknown99. IfsameAUTH_SERVICE_UNAVAILABLE oruncertainentry ->ONEfreshAXaftertimeout andstop/noRetry/reload/requery/rebind/newtab/source/config/authfix.",
+    "Positive99listroworiginal1min0–300/branch1active ->ONEedit; verify3names/1min/price300/branch1only/active/staffunchecked, noinput. Ifunexpectedvaluestop/no blindwrite/cleanup.",
+    "ONEordinaryreloadoriginaleditor/allbaseline+staffunchecked. RestoreknownSAadmin/RU/Anonymized/Business3/handoff. NoSave/newentity/association/booking/financial/review/message/security/API/SDK/SQL/storagecommands.",
+    "Completeexistingcaseonlyifallmandatoryreadbackpassed; retainC251FAIL/C253BLOCKED/C2566feedback+finalauthBLOCKED/originalUTC. CountONEcompoundNEWUI/ONEverifiedF022not6; notfullI2-03/P1-02closure."
+  ],
+  "limits": "C256sixfeedbackvariantsDONEforcurrentdeps; doNOTrepeat fordate/newchat/counts. Anychangedrelevantsource invalidates bridge andrequiresnewreview/finiteplan, notautomaticreuse. Ordinaryauth/preferences/telemetryunenumerated; nozeroTOTALwrites."
+}

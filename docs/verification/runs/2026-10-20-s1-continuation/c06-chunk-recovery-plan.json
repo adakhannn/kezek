@@ -1,0 +1,18 @@
+{
+  "id":"C06",
+  "caseId":"A3-04-S1-02",
+  "candidateId":"dev-20261020-S1-ed0bdd7faf24",
+  "purpose":"Finite independent unexecuted recovery-after-stale-chunk case; NOT deployed old-document lifecycle acceptance",
+  "environment":"Existing exact C04 isolated local production artifact, dummy invalid backend, outbound Node network denied, owned temporary port3104; no real credentials",
+  "role":"guest; no sign-in submission",
+  "browser":"Same allowed IAB2; one task-owned temporary test tab, not a replacement/recovery/bypass tab. Leave user's localhost:3000 tab for pending zoom check; close own test tab after recovery before temporary server stop.",
+  "target":"C:/projects/kezek/test-results/closure-s1-20261020-f003-fontread-v2/build/apps/web/.next/static/chunks/a3ede8c22273d7ed.js",
+  "expectedSha256":"2fd1f6ce351100e8508c3f6e480b85fbedf315f7f0de8446f0aaec17ce62ff2e",
+  "targetBasis":"Actual auth/sign-in client-reference manifest contains chunk; actual privacy assets inventory does not. Reconfirm absent from loaded resources before applying fault.",
+  "fault":"Recoverable rename of that ONE self-generated artifact to .c06-backup; no byte edits, no source/DB mutation, no mainDEV changes. Auto-restore90s guard; explicit early restore before UI recovery.",
+  "steps":["Start isolated existing output, fresh test-origin privacy, verify guest/document and chunk not loaded", "Clock then lease exact generated chunk unavailable once", "Open menu and actual sign-in link without submitting auth; observe genuine chunk failure via UI and scoped browser error log", "Restore exact chunk and verify hash", "Use visible recovery action or ordinary reload, verify working sign-in UI and hydration", "Close own tab; stop exact owned process; ensure mainDEV/user tab preserved"],
+  "expected":"A genuinely observed missing-chunk failure is recoverable once bytes are restored, without persistent stuck/error loop. No pass if failure not induced or merely inferred from file rename.",
+  "stopConditions":["Target preloaded", "Hash/source mismatch", "Any unrelated dependency/write", "Browser policy denial/control interruption", "No genuine failed-load observation", "Restore ambiguity"],
+  "budgetMinutes":10,
+  "limits":"No HTTP/CDP/Playwright outside CUA, no token/cookie extraction, no production/domain/device/SSR inference. Existing visual blocker unchanged. No product fix based on code alone."
+}

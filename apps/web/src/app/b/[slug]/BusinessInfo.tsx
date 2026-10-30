@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { resolvePublicContacts } from '@/lib/businessContacts';
+import { bookingCountForm } from '@/lib/bookingCountForm';
 import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -49,6 +50,8 @@ export default function BusinessInfo({ data }: { data: Data }) {
     const { biz, branches, services, staff, promotions = [] } = data;
     const { t, locale } = useLanguage();
     const queryClient = useQueryClient();
+    const hasActiveBranches = branches.length > 0;
+    const noBranchesMessage = t('booking.empty.noBranches', 'У этого бизнеса нет активных филиалов. Пожалуйста, вернитесь позже.');
 
     const handlePrefetchBookingData = () => {
         const branchIds = branches.map((branch) => branch.id);
@@ -96,6 +99,8 @@ export default function BusinessInfo({ data }: { data: Data }) {
     };
 
     const formatName = (name: string): string => formatStaffName(name, locale);
+    const countLabel = (count: number, key: string, fallback: string): string =>
+        t(`${key}.${bookingCountForm(count, locale)}`, t(key, fallback));
     const ratedBranches = branches.filter((branch) => typeof branch.rating_score === 'number').length;
     const ratedStaff = staff.filter((person) => typeof person.rating_score === 'number').length;
 
@@ -116,8 +121,10 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                 {promotions.length} {t('business.hero.promotions', 'акции')}
                                             </Badge>
                                         ) : null}
-                                        <Badge variant="info">
-                                            {t('business.hero.bookable', 'Онлайн-запись доступна')}
+                                        <Badge variant={hasActiveBranches ? 'info' : 'neutral'}>
+                                            {hasActiveBranches
+                                                ? t('business.hero.bookable', 'Онлайн-запись доступна')
+                                                : t('booking.step1.noBranches', 'Нет активных филиалов.')}
                                         </Badge>
                                     </div>
                                 }
@@ -137,7 +144,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                         <PublicContactActions contacts={resolvePublicContacts(biz)} compact />
                                     </div>
                                 }
-                                actions={
+                                actions={hasActiveBranches ? (
                                     <div className="flex flex-col gap-2 sm:items-end">
                                         <Link
                                             href={`/b/${biz.slug}/booking`}
@@ -164,7 +171,11 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                 : t('business.hero.secondaryFallback', 'Выбрать филиал')}
                                         </Link>
                                     </div>
-                                }
+                                ) : (
+                                    <p role="status" className="type-body max-w-sm text-[var(--text-secondary)]">
+                                        {noBranchesMessage}
+                                    </p>
+                                )}
                             />
 
                             <div className="grid gap-3 sm:grid-cols-3">
@@ -187,7 +198,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                             </div>
                         </div>
 
-                        <Card variant="elevated" padding="lg" className="self-start">
+                        {hasActiveBranches ? <Card variant="elevated" padding="lg" className="self-start">
                             <SectionHeader
                                 title={t('business.trust.title', 'Почему можно идти дальше к записи')}
                                 description={t(
@@ -218,7 +229,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     )}
                                 />
                             </div>
-                        </Card>
+                        </Card> : null}
                     </div>
                 </section>
 
@@ -234,7 +245,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                                            {branches.length} {t('business.info.branchesCount', 'локаций')}
+                                            {branches.length} {countLabel(branches.length, 'business.info.branchesCount', 'локаций')}
                                         </span>
                                     }
                                 />
@@ -275,8 +286,8 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                     {([
                                                         ['instagram', 'Instagram'],
                                                         ['two_gis', '2ГИС'],
-                                                        ['google_maps', 'Google Карты'],
-                                                        ['yandex_maps', 'Яндекс Карты'],
+                                                        ['google_maps', t('business.apply.links.googleMaps', 'Google Карты')],
+                                                        ['yandex_maps', t('business.apply.links.yandexMaps', 'Яндекс Карты')],
                                                     ] as const).map(([key, label]) => branch.directory_links?.[key] ? (
                                                         <a key={key} href={branch.directory_links[key] ?? '#'} target="_blank" rel="noreferrer" className="rounded-full border border-[var(--border-subtle)] px-3 py-1 text-xs text-[var(--accent-primary)] hover:bg-[var(--surface-emphasis)]">
                                                             {label}
@@ -300,7 +311,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                                            {services.length} {t('business.info.servicesCount', 'услуг')}
+                                            {services.length} {countLabel(services.length, 'business.info.servicesCount', 'услуг')}
                                         </span>
                                     }
                                 />
@@ -365,7 +376,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                                            {staff.length} {t('business.info.staffCount', 'специалистов')}
+                                            {staff.length} {countLabel(staff.length, 'business.info.staffCount', 'специалистов')}
                                         </span>
                                     }
                                 />
@@ -489,11 +500,13 @@ export default function BusinessInfo({ data }: { data: Data }) {
                     <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
                         <Card variant="elevated" padding="lg">
                             <SectionHeader
-                                title={t('business.cta.title', 'Готовы перейти к записи')}
-                                description={t(
+                                title={hasActiveBranches
+                                    ? t('business.cta.title', 'Готовы перейти к записи')
+                                    : t('booking.step1.noBranches', 'Нет активных филиалов.')}
+                                description={hasActiveBranches ? t(
                                     'business.cta.description',
                                     'Следующий шаг уже в booking flow: там выбираются филиал, услуга, сотрудник, дата и время.',
-                                )}
+                                ) : noBranchesMessage}
                             />
                             <div className="mt-4 grid gap-3">
                                 <BusinessMetric
@@ -506,7 +519,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                 />
                             </div>
                             <div className="mt-5 flex flex-col gap-2">
-                                <Link
+                                {hasActiveBranches ? <Link
                                     href={`/b/${biz.slug}/booking`}
                                     onMouseEnter={handlePrefetchBookingData}
                                     onFocus={handlePrefetchBookingData}
@@ -517,7 +530,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     })}
                                 >
                                     {t('business.info.bookButton', 'Записаться')}
-                                </Link>
+                                </Link> : null}
                                 <Link
                                     href="/"
                                     className={buttonStyles({

@@ -1,0 +1,27 @@
+{
+  "id": "C151",
+  "startedAfterUtc": "2026-10-25T20:49:46Z",
+  "completedBeforeUtc": "2026-10-25T20:53:25Z",
+  "status": "READONLY_REVIEW_COMPLETE_LIVE_BLOCKED",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "history": "Night09Oct primary certifies server duplicate slug rejection and retained inactive category creation/rename, not whitespace-name or min-length local validation. C150 localdraft/Cancel did not submit; CategoryForm tests are mocked support only. No old original proof retimed/repeated as new.",
+  "expected": "Whitespace-only category name and one-character address must be rejected without persisting a new category.",
+  "source": "CategoryForm requiredName HTML attribute plus submit preventDefault: trim-empty name and invalid slug throw before fetch. This is code-only sequencing, not actual LIVE rejection proof or transport audit.",
+  "blocker": "Current explicit continuation boundary grants no Create/Save/Enter/newentity action from this review. Reproducing submit-time guards requires activation of Create; do not infer authorization from source or replace LIVE with UNIT. No submit, newfixture, newtest, source fix or repeated permission question performed.",
+  "next": "Independent permitted priority: C152 exact admin category warning alternate dismiss methods, previously excluded C129; finite C153 plan before UI. No deletion/confirm.",
+  "credit": "0UI/PASS/fix/accepted",
+  "hashes": [
+    {
+      "path": "apps/web/src/components/admin/categories/CategoryForm.tsx",
+      "sha256": "e0bbc27c43198e471d2590b9edff4652b9e92a1e2ab2e72d67b23fdfbdbed585"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c150-result.json",
+      "sha256": "322191c95f6d92912f14eb54ad328a4bcc68f9945425fa987d6de2db4fffee8e"
+    }
+  ]
+}

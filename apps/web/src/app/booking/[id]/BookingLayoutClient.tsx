@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { formatBookingDateTime } from '@/lib/bookingCalendarDate';
 import { TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
@@ -67,6 +68,10 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
 
     function getStatusLabel(status: string): { text: string; className: string } {
         const statusMap: Record<string, { textKey: string; className: string }> = {
+            no_show: {
+                textKey: 'booking.status.noShow',
+                className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+            },
             confirmed: { 
                 textKey: 'booking.status.confirmed', 
                 className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' 
@@ -98,23 +103,7 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
     // Format master name with transliteration for English locale
     const formattedMasterName = locale === 'en' ? transliterate(masterName) : masterName;
     
-    // Format date in human-readable format
-    const localeMap: Record<string, string> = {
-        ky: 'ru-KG',
-        ru: 'ru-RU',
-        en: 'en-US',
-    };
-    
-    const dateFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: TZ,
-    });
-    
-    const formattedDate = dateFormatter.format(startAt);
+    const formattedDate = formatBookingDateTime(startAt, TZ, locale);
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center px-4">

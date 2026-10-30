@@ -1,0 +1,20 @@
+{
+  "id":"C65",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "requirementIds":["F1-03"],
+  "timeboxMinutes":6,
+  "reasonNotDuplicate":"F1-03historicalreviewreferencesNcabinet-stage butprimaryonlyclientbookingpluralization. No directselect-cabinetcase incurrentrunresults. Explicitrouteoptions/choice distinctfromC1defaultsign-in redirects, notredoGooglelogins.",
+  "matrix":[
+    {"key":"superadmin","status":"planned_now","expected":"KnownSAkezekkg direct/select-cabinet showsКаквыхотитезайти withAdmin-panel+Mybookingsonly, no business/staff privilege fromglobalSAalone. UncheckRemember beforechoosingAdmin; returnsprotected/admin/Anonymized, no loop."},
+    {"key":"client","status":"not_run","expected":"Knownpureclient onlyonecabinet directentry redirectsroot, notprivilegedoptions"},
+    {"key":"owner","status":"not_run","expected":"Knownowner business+personal options, noAdmin/staff optionswithoutownjob"},
+    {"key":"staff","status":"not_run","expected":"Knownstaff staff+personal options, noAdmin/business optionswithoutmanagergrant"},
+    {"key":"guest","status":"not_run","expected":"Unauthenticateddirectentry redirectsroot, no privilegedoptions"},
+    {"key":"manager","status":"blocked","reason":"No independentknownmanagerfixture; nonewroles/users","expected":"Onlyassignedallowedcabinetoptions"},
+    {"key":"multirole","status":"blocked","reason":"Noindependentknownmultirolefixture; no newgrants/jobs","expected":"Exactauthorizedunion, no unwantedpriority/loop"}
+  ],
+  "steps":["Freshinventory/currentSAadmin control", "Clock; ordinarydirect/select-cabinet documententry", "Readtitle/options andRemember checkedstate", "Clock; unchecktransientRemember, thenexplicitAdminchoice, no persistentpreferencecookieinspection/write", "Actual/adminprotectedheading/Anonymized andhandofforiginal2/18"],
+  "effects":"Onlyordinarypage navigation andlocaluncheckedformstate; noauthtransition/newtab/role/business/grant/booking/shift/payment/provider/security/storage/APIcommands. Ordinaryauthlookup/telemetryunenumerated.",
+  "stop":"Unexpectedauth/options/error stoprecordactual; no retryloop orblindfix. F013staffremainopen/noretest.",
+  "acceptance":"Only1SAvariant executednow, 4notrun2blocked remainin7denominator. FullF1-03partial/caseplanincompleteforrememberedpersistence/otherroles/visual/security; no acceptedrequirementorfixcredit."
+}

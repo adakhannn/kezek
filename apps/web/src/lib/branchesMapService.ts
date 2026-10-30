@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { buildApprovedBusinessesQuery } from '@/lib/branches/buildApprovedBusinessesQuery';
+import { loadPublicCategoryLabels } from '@/lib/publicCategoryLabels';
 
 type BranchRow = {
     id: string | number;
@@ -109,6 +110,8 @@ export async function listBranchesMap({
     for (const business of businesses) {
         businessById.set(String(business.id), business);
     }
+    const categoryLabels = await loadPublicCategoryLabels(supabase, categoryId
+        ? [categoryId] : businesses.flatMap(business => business.categories ?? []));
 
     return {
         ok: true,
@@ -117,7 +120,6 @@ export async function listBranchesMap({
             const categories = business?.categories ?? null;
 
             let resolvedCategoryId: string | null = null;
-            let categoryName: string | null = null;
 
             if (categoryId) {
                 resolvedCategoryId = categoryId || null;
@@ -135,7 +137,8 @@ export async function listBranchesMap({
                 lat: typeof branch.lat === 'number' ? branch.lat : Number(branch.lat ?? 0),
                 lon: typeof branch.lon === 'number' ? branch.lon : Number(branch.lon ?? 0),
                 categoryId: resolvedCategoryId && resolvedCategoryId.length ? resolvedCategoryId : null,
-                categoryName,
+                categoryName: resolvedCategoryId && Object.hasOwn(categoryLabels, resolvedCategoryId)
+                    ? categoryLabels[resolvedCategoryId] : null,
             };
         }),
     };

@@ -1,0 +1,43 @@
+{
+  "id": "C228",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-D2-deep-unassigned-service-cleared-guard",
+  "requirementIds": [
+    "D2-02",
+    "D2-04"
+  ],
+  "variants": [
+    "wizard:deep-unassigned-service-cleared-summary-next-disabled"
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts": "cd7b1a69c595a2055dfcdd3881543fc26f86d8f08cf65140caae787b48a3613f",
+    "apps/web/src/app/b/[slug]/hooks/useServicesFilter.ts": "1fa9c4f3a64b31f48a495a1bc8df2cbd6d83580b60b15f3e8c8c6d2eac0a8201",
+    "apps/web/src/app/b/[slug]/components/BookingFormSections.tsx": "5b42b8700581cbe1c4dae3664dc29e94392e2ed519b982ff2fb7957c11e15be6"
+  },
+  "timeboxMinutes": 7,
+  "routes": {
+    "positive": "http://localhost:3000/b/testovyy-biznes-2/booking?step=4&branch=fe1dde50-c04a-4b48-b215-bde72aa60625&staff=1bfd0e3b-6fce-42a1-b439-6313af27112f&service=51571512-66c0-47db-91ab-cb89d61aa97b&day=2026-10-26",
+    "negative": "http://localhost:3000/b/testovyy-biznes-2/booking?step=4&branch=fe1dde50-c04a-4b48-b215-bde72aa60625&staff=1bfd0e3b-6fce-42a1-b439-6313af27112f&service=99c03a5d-1919-44cf-8de7-f86bc209e561&day=2026-10-26",
+    "recovery": "http://localhost:3000/b/testovyy-biznes-2/booking"
+  },
+  "expected": "KnownSA publicviewer. Fresh positiveStep4 samebranch/currentworkingMonday/staff shows exactlyeligible60minservice5157 checked/1selected60min100–300/Nextenabled. Negative differs ONLY service99query: known1minactivebutunassigned service mustnot remain selected/summaryorallowadvance; original60mineligiblepositiveoption remains availableunchecked, summaryNotselected/Nextdisabled. No service99phantomtotal1min/0–300. Ifstaff/day/catalogpositiveabsent, BLOCKEDbeforecausalityclaim. RecoverbaseStep1/no dependentchoices andSAadmin.",
+  "steps": [
+    "Clock/freshSAadminbaseline; ONE positiveURLdocumententry. Wait hydration/eligibility settle, inspect positivecheckedservice/summary/Nextenabled, do notclickNext/checkbox. Positivecalibration0newcredit.",
+    "ONE negativeURLdocumententry changingonlyserviceID. Waitknownpositive60minoption visible plus settledunchecked/no selectedsummary/Nextdisabled. No Next/Time/slot/hold/booking commands or API/storage extraction. Uncertaincatalog ->BLOCKED/no requery.",
+    "ONE baseRecoveryURL ->Step1/branchchoicecleared/dependentchoicesnone; observedbrand/Adminmenu->Adminpanel/RU/Anonymized/Business3,markHandoff."
+  ],
+  "effects": "Localwizard URL/selection only; no Save/assignment/schedule/price/duration/active/entity/booking/status/authchange. Ordinaryauth/read/telemetryunenumerated.",
+  "stopRules": [
+    "No Step5/Next activation/ChooseTime/slot/Confirm/hold/booking/cancel/payment.",
+    "No unknownID/newfixture/association/validSave/API/SDK/SQL/storage/fakeclock.",
+    "Navigationtimeout ->ONEfreshAX/no duplicategoto. Ifwrongeligibilitystopnegative/recordBLOCKED.",
+    "UnexpectedNextenabledwithphantomservice =>UIFAILrecordonly/no advancing."
+  ],
+  "credit": "AtmostONEcompoundNEWfunctionalcase, no newrequirement/fullD2/serversecurity/visualcertificate."
+}

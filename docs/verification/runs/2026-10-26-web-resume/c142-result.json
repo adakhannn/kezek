@@ -1,0 +1,36 @@
+{
+  "id": "C142",
+  "status": "PASS_TWO_SAME_LIVE",
+  "plan": "c142-same-live-plan.json",
+  "candidate": "dev-20261026-WEB-1f5ebe44a70f",
+  "sourceFingerprint": "1f5ebe44a70fd6663c10c1a53c595e077c6c9cee581c76da4a4983889577d3e3",
+  "observationWindowUtc": [
+    "2026-10-25T20:27:17Z",
+    "2026-10-25T20:28:50Z"
+  ],
+  "cases": [
+    {
+      "id": "S26-O303-admin-today-en",
+      "locale": "en",
+      "afterClockUtc": "2026-10-25T20:27:17Z",
+      "actual": "English selected/server Admin Panel/English table headings. Same09:00–10:00 business2/branch1 row now Cancelled; summary Pending0/Confirmed0/Cancelled1. Authored names retained, no rawRussianstatus."
+    },
+    {
+      "id": "S26-O303-admin-today-ky",
+      "locale": "ky",
+      "afterClockUtc": "2026-10-25T20:27:30Z",
+      "actual": "Кыргызча selected/server Администратор панели/KY table headings. Same row now Жокко чыгарылган; summary Күтүүдө0/Ырасталган0/Жокко чыгарылган1. Authored names retained."
+    }
+  ],
+  "restore": {
+    "afterClockUtc": "2026-10-25T20:27:42Z",
+    "actual": "Русский selected/Панель администратора/Admin-panel/Anonymized/RU/Business3/Booking30, Today Ожидание0/Подтверждено0/Отменено1 and rowОтменено; handoff marked.",
+    "credit": "Addressed RU/F017 regression control only, not new case/PASS."
+  },
+  "effects": "Only ordinary locale preference/automatic apprefresh, no booking/auth/config/DB command; ordinary telemetry unenumerated.",
+  "newUiPass": 2,
+  "newVerifiedFix": 1,
+  "newAccepted": 0,
+  "limits": "F018 exactsystemstatuscopy only. Not wholeO3/adminlocale/visual/device/no-flash/SSRlocale/cache/currentbuild/fulltechnical PASS; EnglishescapedTodayheading remains separate incidental observation.",
+  "next": "C142 EN/KY exactsame-live statuslabels PASS, RUoriginallabels/count1 restored,5NEWUI/2fix/logical14.20of316296left/S116primary62 pending freshbuild. Before final newcandidatebuild, next C143 bounded readonly original English Today-title escaping history/oracle review then finite C144 heading-only proof if uncovered; incidental C140/C142 backslash retained/notyetbugcredit. Do not rerun statuslocale/general switch/oldbuild/assetbundle/cache/auth/fixtures."
+}

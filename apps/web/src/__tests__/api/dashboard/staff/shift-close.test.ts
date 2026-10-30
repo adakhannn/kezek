@@ -60,6 +60,7 @@ function createAdminQueryResult({
         delete: jest.fn(),
         insert: jest.fn(),
         update: jest.fn(),
+        then: jest.fn(),
     };
 
     query.select.mockReturnValue(query);
@@ -92,6 +93,9 @@ function createAdminQueryResult({
         data: null,
         error: null,
     });
+    query.then.mockImplementation((resolve: (value: unknown) => unknown) =>
+        Promise.resolve({data:listData,error:null}).then(resolve),
+    );
 
     return query;
 }
@@ -398,6 +402,9 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
     });
 
     test('closes dashboard shift with items payload', async () => {
+        const savedLedger = createAdminQueryResult({listData:[{
+            id:'test-saved-item',service_amount:1000,consumables_amount:100,booking_id:null,
+        }]});
         admin.from
             .mockReturnValueOnce(
                 createAdminQueryResult({
@@ -436,6 +443,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
                 }),
             );
 
+        admin.from.mockReturnValueOnce(savedLedger);
         admin.rpc.mockResolvedValue({
             data: {
                 ok: true,
@@ -481,5 +489,8 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
         const data = await expectSuccessResponse(res, 200);
 
         expect(data.data.shift.status).toBe('closed');
+        expect(savedLedger.eq).toHaveBeenCalledWith('shift_id','shift-id');
+        expect(savedLedger.delete).not.toHaveBeenCalled();
+        expect(savedLedger.insert).not.toHaveBeenCalled();
     });
 });

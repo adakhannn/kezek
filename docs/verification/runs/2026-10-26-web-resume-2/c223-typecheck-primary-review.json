@@ -1,0 +1,27 @@
+{
+  "id": "C223",
+  "status": "READONLY_TECHNICAL_PRIMARY_REVIEW_COMPLETE_COMMAND_PROVENANCE_BLOCKED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "afterClockUtc": "2026-10-26T11:39:53Z",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "fileCount": 1687,
+  "requirementId": "Q1-01",
+  "finiteTechnicalCriterion": "ActualWEBtsccommand/projectconfigcwd+normalexit0+currentcandidatebridge; nonLIVEtechnicalexecutiononly.",
+  "primary": {
+    "receipt": "docs/verification/runs/2026-10-26-web-resume-2/c204-technical-checks.json",
+    "sha256": "c937b65dc1c4ac82b5212635fa7bf79c2d816fdbce08f2790b28e194482cc77e",
+    "originalCompletedBeforeUtc": "2026-10-26T09:56:23Z",
+    "typecheck": {
+      "exitCode": 0,
+      "log": "apps/web/test-results/c204-types.log"
+    },
+    "rawLogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rawLogBytes": 0,
+    "packageScriptNow": "tsc -p tsconfig.json --noEmit",
+    "candidateReceipt": "docs/verification/runs/2026-10-26-web-resume-2/c204-candidate-review.json",
+    "candidateReceiptOriginalUtc": "2026-10-26T09:53:07.842Z"
+  },
+  "decision": "Retainoriginaltypesexit0support/currentfingerprintunchanged. FoundreceiptdeclaresTypecheckexit0butemptylogdoesnotpreserveactualargv/cwd/config; currentpackageScriptcannotretroactivelyestablishwhichexactcommandwasrun. No executiondatedcommandmanifestlocatedinboundedC204evidence/scriptssearch. Do notsubstituteC206buildtypesorotheroldcandidatecommands. Q1-01 remainsBLOCKEDatdocumentationcriterion/notclaimtscfailedorneverran. No unchangedrerun.",
+  "effects": "Localread/hash/accountingonly; no newUI/unit/command/test/build/server/auth/DBaction/newaccepted/newfix. HashbridgeisnotLIVEfunctionalproof.",
+  "next": "C224independentunsavedprofileEmailrecipientrequiredclientvalidation withknownSA/noauthswitch/finiteplan below; C77validSaveblockedretained."
+}

@@ -26,6 +26,7 @@ type Failure = {
     status: 400 | 404 | 500;
     error: 'validation' | 'not_found' | 'internal';
     message: string;
+    details?: { field: string };
 };
 
 type Success<T> = {
@@ -178,6 +179,7 @@ function validatePromotionUpdate({
                     status: 400,
                     error: 'validation',
                     message: 'Количество визитов должно быть больше 0',
+                    details: { field: 'params.visit_count' },
                 };
             }
         }
@@ -195,6 +197,7 @@ function validatePromotionUpdate({
                     status: 400,
                     error: 'validation',
                     message: 'Процент скидки должен быть от 1 до 100',
+                    details: { field: 'params.discount_percent' },
                 };
             }
         }

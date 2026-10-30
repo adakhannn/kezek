@@ -1,0 +1,139 @@
+{
+  "id": "S1.3-20261018-result",
+  "observedThroughUtc": "2026-10-18T08:17:09Z",
+  "candidateId": "dev-20261018-S1-452faff676ef",
+  "provenance": "Structured transcription of actual CUA DOM observations; not screenshots or direct DB SELECT. Same-candidate S1.1/S1.2 observations referenced without duplicate testing.",
+  "environment": "DEV localhost:3000; RU; owner, plus guest home/header from S1.2",
+  "home": {
+    "hero": true,
+    "searchEntry": true,
+    "categoryLinks": true,
+    "twoBusinessCards": true,
+    "footerLinks": true,
+    "ownerHeader": "Владелец / Аккаунт владельца / Личный кабинет / Выйти",
+    "guestHeader": "Войти, no owner controls (S1.2)",
+    "search": {
+      "query": "s13-no-match-20261018",
+      "empty": "0 вариантов / Найдено:0 / Ничего не найдено / Сбросить",
+      "reset": "clicked Сбросить -> settled two businesses; query gone"
+    },
+    "loading": "No dedicated initial home loading assertion; preserved old content during client navigation is not proof of loading design",
+    "controlledError": "S1.1 isolated production-mode home showed Каталог временно недоступен with guarded dummy backend, not a live DEV outage"
+  },
+  "cta": [
+    {
+      "caseId": "B1-02-S13-1",
+      "origin": "home card1 Подробнее",
+      "destination": "/b/testovyy-biznes-1",
+      "actual": "Business1 h1, contacts and zero metrics"
+    },
+    {
+      "caseId": "B1-02-S13-2",
+      "origin": "home card2 Подробнее",
+      "destination": "/b/testovyy-biznes-2",
+      "actual": "Business2 h1, 2 branches, 3 services"
+    },
+    {
+      "caseId": "B1-02-S13-3",
+      "origin": "home card1 Записаться",
+      "destination": "/b/testovyy-biznes-1/booking",
+      "actual": "Correct business first step; Филиалы:0; нет активных филиалов; Далее disabled. Route/empty handling works, but BusinessInfo availability promise separately FAIL S1-F001."
+    },
+    {
+      "caseId": "B1-02-S13-4",
+      "origin": "home card2 Записаться",
+      "destination": "/b/testovyy-biznes-2/booking?step=1&day=2026-10-18",
+      "actual": "Correct business first step; Филиалы:2; both branch choices shown; nothing selected, Далее disabled"
+    },
+    {
+      "caseId": "B1-02-S13-5",
+      "origin": "home Подключить бизнес",
+      "destination": "/business/apply",
+      "actual": "Подключить бизнес к Kezek; existing profile fields populated by app; business/category/comment fields; Отправить заявку untouched"
+    },
+    {
+      "caseId": "B1-02-S13-6",
+      "origin": "home Присоединиться к команде",
+      "destination": "/business/role-apply",
+      "actual": "Какой доступ вам нужен? Existing owner/staff application entry links; no request submitted"
+    },
+    {
+      "caseId": "B1-02-S13-7",
+      "origin": "home Посмотреть места на карте",
+      "destination": "/map",
+      "actual": "Initial loading0 -> settled2 branch cards with addresses and branch-specific booking links; no geolocation action and no map visual assertion"
+    }
+  ],
+  "businesses": [
+    {
+      "slug": "testovyy-biznes-1",
+      "entry": "card CTA followed by full document reload of exact business URL",
+      "h1": "Тестовый бизнес 1",
+      "branches": 0,
+      "services": 0,
+      "staff": 0,
+      "promotions": 0,
+      "phone": "+996500574029",
+      "booking": "No active branches; next disabled"
+    },
+    {
+      "slug": "testovyy-biznes-2",
+      "entry": "direct goto from other business; later separate home Подробнее CTA",
+      "h1": "Тестовый бизнес 2",
+      "branches": 2,
+      "services": 3,
+      "staff": 1,
+      "promotions": 0,
+      "phone": "+996500574029",
+      "branchNames": [
+        "Филиал 1 Бизнеса 2",
+        "Филиал 2 Бизнеса 2"
+      ],
+      "serviceRows": [
+        "LIVE TEST Service 31 Еng repeated-name row / branch1 /60min/100–300",
+        "same repeated-name row /branch2/60min/100–300",
+        "LIVE TEST Service 31 Рус /branch1/1min/0–300"
+      ],
+      "booking": "Two branch choices; no selection/hold/create"
+    }
+  ],
+  "negativeSlugs": [
+    {
+      "url": "/b/s13-missing-business-20261018",
+      "result": "Бизнес не найден / Повторить / В каталог"
+    },
+    {
+      "url": "/b/s13%20invalid%20slug",
+      "result": "Бизнес не найден / Повторить / В каталог"
+    }
+  ],
+  "finding": {
+    "id": "S1-F001",
+    "status": "open",
+    "requirementIds": [
+      "B2-03"
+    ],
+    "expected": "A business with no active branches must not claim that online booking is available.",
+    "actual": "Business1 page renders Онлайн-запись доступна alongside0 active branches/services/staff; booking first step confirms no active branches and disabled Далее.",
+    "steps": [
+      "Open /b/testovyy-biznes-1 from observed catalogue card",
+      "Reload exact business URL; observe availability badge and zero metrics",
+      "Click its Записаться CTA; read settled booking no-branches status",
+      "Independently click home card1 Записаться; same no-branches result"
+    ],
+    "sourceSupport": "BusinessInfo.tsx renders business.hero.bookable badge unconditionally. Source read supports observed cause, does not replace live repro.",
+    "effect": "Misleading availability promise and dead-end booking entry. No booking creation, privilege leak or data mutation demonstrated.",
+    "retest": "Not fixed; no SAME-LIVE-after claimed",
+    "historicalDedup": "No exact match found in targeted historical-defect descriptions; separate current finding ID avoids renumbering/rewriting old WB history."
+  },
+  "limits": [
+    "B2-02 visible projection recorded, not full independent data/promotion oracle; no full PASS",
+    "B2-03 existing inactive service absence alone does not prove all inactive branch/business boundaries; no new fixtures",
+    "B2-04 no known deleted slug; retained BLOCKED",
+    "No image capture/visual/device/screenreader proof",
+    "Map CTA is entry only, not full map/geolocation acceptance"
+  ],
+  "effects": "Read-only navigation and URL search filter only. No field edits to business/requests, no submit/Save, no branch/service/day/slot selection, hold/create/cancel/pay, database cleanup, deploy or new rights. Query reset; owner/current business2 preserved from S1.2. Normal telemetry writes not enumerated.",
+  "handoff": "Tab3 settled owner home with two businesses; markHandoff set. Other tabs unchanged.",
+  "runtimeFixes": 0
+}

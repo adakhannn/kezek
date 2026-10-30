@@ -1,0 +1,37 @@
+{
+  "id": "C197",
+  "status": "FINITE_OWNER_SELECTOR_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "F1-03"
+  ],
+  "caseId": "S21-F103-DIRECT-owner",
+  "reason": "C196 established actual existingowner business2 context and ordinarycurrentbusinesscontinuation underlatestfull task-scoped humanpermission. C67 ownercase neverexecuted select-cabinet becauseolderplanstoppedbeforebusinesschoice. This genuinechangedsetupcondition permits ONEnewownerselector case; SA/client/guest/staff DONE notrerun.",
+  "historicalEvidence": {
+    "path": "docs/verification/runs/2026-10-20-s1-continuation/c67-result.json",
+    "originalUtc": "2026-10-21T09:31:19Z",
+    "sha256": "5e22652960435cd7f9bc84f9656fe8f487962a304bff04fb50819f248d1a15b7",
+    "oldBlockedNotErased": true
+  },
+  "independentExpectation": "Knownowner onlyBusinesscabinet+Mybookings options; noAdmin/staff. UncheckRememberbeforeexplicitBusinesschoice. Returntoauthorizedbusiness2dashboard; ifchooserappearscontinueONLYalreadycurrentbusiness2/no contextchange/newrole. Actualownworkspace demonstratesrouting, notfullsecurityAPIproof.",
+  "steps": [
+    "CurrentSAprotectedadmin baseline. Ordinarylogout/localGoogleknownownerlogin; onlyosorovadahan04, password/device/CAPTCHAmanualhandoff.",
+    "Ifchooser, verifyexistingbusiness2markedcurrentthenordinaryContinue. Wrongcontext/accesserror ->stopboundednotloop.",
+    "ONE direct/select-cabinet entry, waitactualtitle/readalloptions. RequireBusiness+personalonly.",
+    "UncheckRememberonce andrequirevisibleunchecked; explicitBusinesscabinetchoice. Verifyactualbusiness2/dashboard/name/ownerheader withoutoperationalcommands.",
+    "Ordinaryownerlogout/knownkezekkg GoogleSArestore; protectedadmin/RU/Anonymized/Business3;markHandoff."
+  ],
+  "timeboxMinutes": 10,
+  "effects": "Authtransitions/ordinarycurrentbusinesscontinuation/localuncheckedRemember androutingonly; no dataSave/role/grant/newentity/serviceassignment/booking/slot/payment/privatecontact/message/storage/HTTP action.",
+  "credit": "AtmostONEnewownerfunctionalcase; F1-03manager/multiroleblocks retained; no fullrequirementacceptance.",
+  "dependencyHashes": {
+    "apps/web/src/app/select-cabinet/page.tsx": "9bbfc83aca79f1e1d4f7d23560780109b6518850c23676f64096d07612b6f448",
+    "apps/web/src/app/select-cabinet/SelectCabinetClient.tsx": "f1f821ffbc6c9c44f79fab3085b0e1a593fdb0a64d84b4b8bc5553aac15e4954",
+    "apps/web/src/lib/userRoleProfile.ts": "da7d9661dc2775c1cc6961dda0670dc330168fd7b305af6c2bb27b9425665f19",
+    "apps/web/src/lib/cabinetAccess.ts": "b596373270bfc48acf31fe086e330d94cfa091bf38b437cac2622e00ce8109e1",
+    "apps/web/src/lib/authContext.ts": "cf772432ab7eaaefc4aa112597f2649233fecc3551266289574b84bcf88e4dd9",
+    "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b",
+    "apps/web/src/app/layout.tsx": "e90e3606f09bbf02315130df0f0ce4be109d05fbd47ee88c472d8fd2b892bc2f"
+  },
+  "independentD2Review": "G090 original23:34:14Z alreadycoverswizardBack/Forwardandsamebranch2->1reset; L040original13Oct10:35:10Zreloadselection, G091date-recovery. No replay/newcredit. Prioritizingnewlyunblockedowner rolebeforeanybroaderD2audit."
+}

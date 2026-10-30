@@ -1,0 +1,25 @@
+{
+  "id": "C162_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-25T21:57:47Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "318784f8e09c483ccf7d2dd58b17e60f262c04679bfa4aec9006a195c60ff815",
+    "latestPromptCheckpoint": "C162"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "countsReference": "c162-result.json",
+  "accepted": 22,
+  "remaining": 294,
+  "releaseDecision": "NOT_READY",
+  "next": "C163 read-only B4-04 exacthistoricalbranchhandoff/dependencyreview; no unchangedUIreplay, no addedauthority",
+  "effects": "Existingautomation continuationprompt updated/readback only. No product/source/test/build/server/UI/DB/entity effect afterC162verification. Oldfinals immutable/no continuity claim."
+}

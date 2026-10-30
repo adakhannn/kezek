@@ -1,0 +1,8 @@
+{
+ "id":"C20","parent":"C13/M1-03","caseId":"S21-M103-funnel-analytics","candidateId":"dev-20261020-S1-1c0013b28e40","afterClockUtc":"2026-10-20T12:35:32Z",
+ "scope":"One final short actual admin menu destination Воронка. Source preflight only GET/admin/api/funnel-analytics on load, global layout caller, no selected business needed; no prohibited metrics or command.",
+ "steps":"Actual menu link, settled page observation, ONE planned full reload then settled observation. No date/filter/retry clicks, no source edit or new diagnostic loops.",
+ "expected":"Functional authorized funnel page on entry/reload; error staysFAIL, loading notPASS. Numeric/conversion/model/analytics completeness not independently verified.",
+ "budgetMinutes":4,"stop":"No new scenarios after this pair and never after12:45; inventory/control failure retained without bypass. No auth/DB/token/API direct actions.",
+ "finalizePauseFromUtc":"2026-10-20T12:50:00Z","deadlineUtc":"2026-10-20T13:00:00Z"
+}

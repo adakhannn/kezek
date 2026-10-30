@@ -1,0 +1,17 @@
+{
+  "id": "AUTOMATION_C238_CHECKPOINT_REFRESH",
+  "recordedAfterUtc": "2026-10-28T08:52:41Z",
+  "automationId": "kezek",
+  "status": "ACTIVE",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "updateToolSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "configSHA256": "3d97563b89c3828c575981a73135a9cebe31941a29a32660a67bc9bb87ac755b",
+  "previousExactConfiguration": "automation-before-c238-checkpoint.toml",
+  "previousSHA256": "d6965d299390402d6a2840230b13b8015c31184548d5ee46bd5072bf7972bf2d",
+  "checkpoint": "C238_COMPLETE_NEW_WINDOW_ONE_UI_ZERO_FIX_ACCEPTED",
+  "next": "C239_READONLY_OWNER_VS_ADMIN_SLUG_CONTRACT_APPLICABILITY_REVIEW",
+  "noDuplicate": true,
+  "productCreditFromRefresh": 0
+}

@@ -6,6 +6,7 @@ import {
 } from '@/lib/telegramMobileAuthAttemptService';
 import { __resetTelegramMobileBotRequestReplayStoreForTests } from '@/lib/telegramMobileBotRequestAuth';
 import { __resetNonceProbeProtectionForTests } from '@/lib/telegramMobileNonceProbeProtection';
+import type { TelegramMobileAuthAttempt } from '@/lib/telegramMobileAuthAttemptService';
 import {
     createTelegramMobileSignedHeaders,
     createMockRequest,
@@ -15,13 +16,55 @@ import {
 
 setupApiTestMocks();
 
+// The route keeps real signature/replay/validation handling. Persistence is a
+// deterministic async fixture: these tests must not call the development DB or
+// treat a Promise as the old synchronous in-memory attempt record.
+const mockAttempts = new Map<string, TelegramMobileAuthAttempt>();
+let mockAttemptCounter = 0;
+jest.mock('@/lib/telegramMobileAuthAttemptService', () => ({
+    createTelegramMobileAuthAttempt: jest.fn(async ({ ttlMs = 60_000 }: { ttlMs?: number }) => {
+        const nonce = `fixture-${++mockAttemptCounter}`;
+        const attempt: TelegramMobileAuthAttempt = {
+            nonce, status: 'pending', createdAt: Date.now(), expiresAt: Date.now() + ttlMs,
+        };
+        mockAttempts.set(nonce, attempt);
+        return { nonce, botDeepLink: `https://t.me/kezek_auth_bot?start=${nonce}`, expiresAt: attempt.expiresAt };
+    }),
+    getTelegramMobileAuthAttempt: jest.fn(async (nonce: string) => mockAttempts.get(nonce) ?? null),
+    attachTelegramMobileAuthAttemptTelegramContext: jest.fn(async ({ nonce, telegramId }: { nonce: string; telegramId: number }) => {
+        const attempt = mockAttempts.get(nonce);
+        if (attempt) attempt.expectedTelegramId = telegramId;
+    }),
+    consumePendingTelegramMobileAuthAttempt: jest.fn(async (nonce: string) => {
+        const attempt = mockAttempts.get(nonce);
+        if (!attempt) return { ok: false, error: 'not_found' };
+        if (attempt.expiresAt <= Date.now()) return { ok: false, error: 'expired' };
+        if (attempt.status !== 'pending') return { ok: false, error: 'consumed' };
+        attempt.status = 'consumed';
+        return { ok: true, attempt };
+    }),
+    markTelegramMobileAuthAttemptApproved: jest.fn(),
+    markTelegramMobileAuthAttemptFailed: jest.fn(),
+}));
+
 describe('/api/auth/telegram/mobile/confirm', () => {
     const previousSecret = process.env.TELEGRAM_MOBILE_BOT_SECRET;
     const previousFlag = process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH;
+    const previousRollout = process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH_ROLLOUT_PERCENT;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockAttempts.clear();
+        mockAttemptCounter = 0;
+        process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH = 'true';
+        delete process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH_ROLLOUT_PERCENT;
+    });
 
     afterEach(() => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = previousSecret;
         process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH = previousFlag;
+        if (previousRollout === undefined) delete process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH_ROLLOUT_PERCENT;
+        else process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH_ROLLOUT_PERCENT = previousRollout;
         __resetNonceProbeProtectionForTests();
         __resetTelegramMobileBotRequestReplayStoreForTests();
     });
@@ -172,7 +215,7 @@ describe('/api/auth/telegram/mobile/confirm', () => {
 
     test('returns 410 for expired pending nonce', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 1,
         });
@@ -200,11 +243,11 @@ describe('/api/auth/telegram/mobile/confirm', () => {
 
     test('returns 409 when nonce is bound to another telegram account', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
-        attachTelegramMobileAuthAttemptTelegramContext({
+        await attachTelegramMobileAuthAttemptTelegramContext({
             nonce: started.nonce,
             telegramId: 77777,
             chatId: 77777,
@@ -232,11 +275,11 @@ describe('/api/auth/telegram/mobile/confirm', () => {
 
     test('returns 409 when nonce is already consumed', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
-        const consumed = consumePendingTelegramMobileAuthAttempt(started.nonce);
+        const consumed = await consumePendingTelegramMobileAuthAttempt(started.nonce);
         expect(consumed.ok).toBe(true);
 
         const body = {

@@ -1,0 +1,197 @@
+{
+  "id": "C48",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "reviewedUtc": "2026-10-21T02:18:36Z",
+  "plan": "c48-google-login-reuse-plan.json",
+  "method": "Applicability review of real existing Google login evidence, no new live executions",
+  "matrix": {
+    "passed": 4,
+    "reused": 4,
+    "newLivePass": 0,
+    "blocked": 0,
+    "notRun": 0,
+    "total": 4,
+    "remaining": 0
+  },
+  "review": [
+    {
+      "id": "S21-C103-CALLBACK-SA-redirect",
+      "observedUtc": "2026-10-21T01:03:35Z",
+      "observationWindowUtc": [
+        "2026-10-21T01:02:30Z",
+        "2026-10-21T01:03:35Z"
+      ],
+      "actual": "After ordinary logout, sign-in?redirect=%2Fterms -> Google chooser exact kezekkg -> actual localhost:3000/terms, Пользовательское соглашение heading, Админ/Anonymized/Выйти. Short URL wait timed out; fresh actual terms DOM and benignURL verified, not repeated login.",
+      "role": "knownSA kezekkg@gmail.com",
+      "steps": [
+        "Ordinary logout and verify no authenticated app identity",
+        "Open planned safe redirect/next sign-in document",
+        "Choose Google button and exact authorized account via observed chooser",
+        "Wait for terms heading, inspect final benign URL/selected identity; no code/token read"
+      ],
+      "evidenceIds": [
+        "S1-EV-281",
+        "S1-EV-282"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/auth/sign-in/useSignInSubmitActions.ts": "f6c6237a3c77f1dc19b037d75babe677d7392d0c6de59a3dd58fc7038a0bb6f2",
+        "apps/web/src/lib/googleOAuthRedirect.ts": "2a594e9efa2e85b836b6c9307ce1a97f51f0a811d5337b5fc8b9105887822fae",
+        "apps/web/src/lib/localAuthPublicOrigin.ts": "464682850b4008efcdf969509d60f4cfba8b122e0613082fdedf541f8de3baf7",
+        "apps/web/src/app/auth/callback/google/route.ts": "746c55a54a7b3c3ea7f90d2de87eb932f82456f1a00a2310b0c8a70022f935b2",
+        "apps/web/src/app/auth/callback/page.tsx": "6e3815a6da1b6c3353a20fdee3bde9f08e590bc0c3c10ef8f9663f826c322354",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/app/terms/page.tsx": "3d8bf956d0c4232e26499fd7a08a69038d5ca9ce9c8e9b937d8dc84e4acab757",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b"
+      }
+    },
+    {
+      "id": "S21-C103-CALLBACK-CLIENT-redirect",
+      "observedUtc": "2026-10-21T01:05:23Z",
+      "observationWindowUtc": [
+        "2026-10-21T01:04:28Z",
+        "2026-10-21T01:05:23Z"
+      ],
+      "actual": "After normal logout, redirect=%2Fterms and exact low.fade Google -> terms heading and exact /terms, Клиент/LIVE TEST CLIENT12OCT/Выйти. Short heading wait timed out before settled terms, fresh DOM confirmed success. Telegram prompt not clicked.",
+      "role": "pureclient low.fade.osh@gmail.com",
+      "steps": [
+        "Ordinary logout and verify no authenticated app identity",
+        "Open planned safe redirect/next sign-in document",
+        "Choose Google button and exact authorized account via observed chooser",
+        "Wait for terms heading, inspect final benign URL/selected identity; no code/token read"
+      ],
+      "evidenceIds": [
+        "S1-EV-281",
+        "S1-EV-282"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/auth/sign-in/useSignInSubmitActions.ts": "f6c6237a3c77f1dc19b037d75babe677d7392d0c6de59a3dd58fc7038a0bb6f2",
+        "apps/web/src/lib/googleOAuthRedirect.ts": "2a594e9efa2e85b836b6c9307ce1a97f51f0a811d5337b5fc8b9105887822fae",
+        "apps/web/src/lib/localAuthPublicOrigin.ts": "464682850b4008efcdf969509d60f4cfba8b122e0613082fdedf541f8de3baf7",
+        "apps/web/src/app/auth/callback/google/route.ts": "746c55a54a7b3c3ea7f90d2de87eb932f82456f1a00a2310b0c8a70022f935b2",
+        "apps/web/src/app/auth/callback/page.tsx": "6e3815a6da1b6c3353a20fdee3bde9f08e590bc0c3c10ef8f9663f826c322354",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/app/terms/page.tsx": "3d8bf956d0c4232e26499fd7a08a69038d5ca9ce9c8e9b937d8dc84e4acab757",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b"
+      }
+    },
+    {
+      "id": "S21-C103-CALLBACK-STAFF-redirect",
+      "observedUtc": "2026-10-21T01:07:01Z",
+      "observationWindowUtc": [
+        "2026-10-21T01:06:08Z",
+        "2026-10-21T01:07:01Z"
+      ],
+      "actual": "After normal logout, redirect=%2Fterms and exact Образ Google -> terms heading and exact localhost:3000/terms, Сотрудник/Адахан Осоров/Кабинет сотрудника link/Выйти. No staff workspace substituted for explicit public return.",
+      "role": "known active staff obraz.osh@gmail.com",
+      "steps": [
+        "Ordinary logout and verify no authenticated app identity",
+        "Open planned safe redirect/next sign-in document",
+        "Choose Google button and exact authorized account via observed chooser",
+        "Wait for terms heading, inspect final benign URL/selected identity; no code/token read"
+      ],
+      "evidenceIds": [
+        "S1-EV-281",
+        "S1-EV-282"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/auth/sign-in/useSignInSubmitActions.ts": "f6c6237a3c77f1dc19b037d75babe677d7392d0c6de59a3dd58fc7038a0bb6f2",
+        "apps/web/src/lib/googleOAuthRedirect.ts": "2a594e9efa2e85b836b6c9307ce1a97f51f0a811d5337b5fc8b9105887822fae",
+        "apps/web/src/lib/localAuthPublicOrigin.ts": "464682850b4008efcdf969509d60f4cfba8b122e0613082fdedf541f8de3baf7",
+        "apps/web/src/app/auth/callback/google/route.ts": "746c55a54a7b3c3ea7f90d2de87eb932f82456f1a00a2310b0c8a70022f935b2",
+        "apps/web/src/app/auth/callback/page.tsx": "6e3815a6da1b6c3353a20fdee3bde9f08e590bc0c3c10ef8f9663f826c322354",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/app/terms/page.tsx": "3d8bf956d0c4232e26499fd7a08a69038d5ca9ce9c8e9b937d8dc84e4acab757",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b"
+      }
+    },
+    {
+      "id": "S21-C103-CALLBACK-OWNER-redirect",
+      "observedUtc": "2026-10-21T01:08:40Z",
+      "observationWindowUtc": [
+        "2026-10-21T01:07:49Z",
+        "2026-10-21T01:08:40Z"
+      ],
+      "actual": "After normal logout, redirect=%2Fterms and exact osorovadahan04 Google -> terms heading and exact localhost:3000/terms, Владелец/Аккаунт владельца/Выйти. No business selector click or preference change.",
+      "role": "known owner osorovadahan04@gmail.com",
+      "steps": [
+        "Ordinary logout and verify no authenticated app identity",
+        "Open planned safe redirect/next sign-in document",
+        "Choose Google button and exact authorized account via observed chooser",
+        "Wait for terms heading, inspect final benign URL/selected identity; no code/token read"
+      ],
+      "evidenceIds": [
+        "S1-EV-281",
+        "S1-EV-282"
+      ],
+      "dependencyHashes": {
+        "apps/web/src/app/auth/sign-in/SignInPage.tsx": "22bf7b6f79ffb52d52a30e6b07c0019a5c50027153acbb007e974fd73cbd2d4d",
+        "apps/web/src/app/auth/sign-in/page.tsx": "1a204a6303e905bbbd7d21018739691c34edccdf10c3b6627b06f857c657e0c1",
+        "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "770d36570e419fd90ad32d9bcaeb6f8668d6f1403f995822569dfb1204041fc8",
+        "apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts": "762acc0429e9e01a8ebff6a88981ebe07212c80c2c6738648abcac7f14e137de",
+        "apps/web/src/lib/authReturnUrl.ts": "bba8fc39053f32553be3f20cff63bedb106fc4eaa2e28d493ec85571cd8b865f",
+        "apps/web/src/lib/signInRedirectLogic.ts": "3197c718e8b484d198d8ef1501bda22cd87da47a56427572ec6024477efd1125",
+        "apps/web/src/lib/supabaseClient.ts": "8da4e144cc6a132c5d1289da6196bf24b9e32a06e68c94ef737da74402a74198",
+        "apps/web/src/app/auth/sign-in/useSignInSubmitActions.ts": "f6c6237a3c77f1dc19b037d75babe677d7392d0c6de59a3dd58fc7038a0bb6f2",
+        "apps/web/src/lib/googleOAuthRedirect.ts": "2a594e9efa2e85b836b6c9307ce1a97f51f0a811d5337b5fc8b9105887822fae",
+        "apps/web/src/lib/localAuthPublicOrigin.ts": "464682850b4008efcdf969509d60f4cfba8b122e0613082fdedf541f8de3baf7",
+        "apps/web/src/app/auth/callback/google/route.ts": "746c55a54a7b3c3ea7f90d2de87eb932f82456f1a00a2310b0c8a70022f935b2",
+        "apps/web/src/app/auth/callback/page.tsx": "6e3815a6da1b6c3353a20fdee3bde9f08e590bc0c3c10ef8f9663f826c322354",
+        "apps/web/src/app/_components/AppShellHeader.tsx": "9addb87da5c6ffc855d91c831c6332385a6ece51bb78daf735520114c1857c94",
+        "apps/web/src/app/_components/AuthStatusWrapper.tsx": "0f6068353d631f9ec63bbe12f5bb717b0584fe06398f23b5beecaddb608a5609",
+        "apps/web/src/app/terms/page.tsx": "3d8bf956d0c4232e26499fd7a08a69038d5ca9ce9c8e9b937d8dc84e4acab757",
+        "apps/web/src/middleware.ts": "a801acd12123d956f4ca9d5907c10a40ab60e630b20d017350c48597af20595b"
+      }
+    }
+  ],
+  "sourceChecks": {
+    "currentFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+    "validatorBeforeValid": true,
+    "evidenceHashes": "all valid",
+    "declaredDependencies": "all byte-identical; originalUTC preserved"
+  },
+  "acceptance": "Existing-account success only; user forbids new users/credentials, none created. New-account provisioning, Google/Yandex cancel/refusal, Yandexsuccess, roledefault+reload/sessionpersistence, replay/idempotency and fullC3area remain separate and OPEN underC3-02..05/otheridentityrequirements. No assertion exactlyone backend session row or absentfuturebugs.",
+  "effects": "No UI/auth/application/DB/source/test commands. Original sourcecases retain their authsync/telemetry effects unenumerated; not zero TOTAL writes.",
+  "countsBefore": {
+    "S1Accepted": 16,
+    "S1Remaining": 9,
+    "S2Accepted": 2,
+    "S2Remaining": 68,
+    "productAccepted": 18,
+    "productRemaining": 298
+  },
+  "countsAfter": {
+    "S1Accepted": 16,
+    "S1Remaining": 9,
+    "S2Accepted": 3,
+    "S2Remaining": 67,
+    "productAccepted": 19,
+    "productRemaining": 297,
+    "newLiveExecutions": 0,
+    "newFixes": 0
+  },
+  "next": "C49 new bounded actual Google chooser abandonment with browserBack: finite guestsignin+safeinternalreturn -> Googlechooser -> ordinaryBack -> useful sign-in stillguest/no accidentalsession; preserve distinction from explicit provider access_denied/cancelcallback. No choosing unknownaccounts or grants/credentials. ActualGoogleproviderdeny/Yandexcancel remainseparateblocked/unverified; do not replay rawcallbacktokens or repeat32returnmatrix. RestoreknownSA normally. Deadline21Oct05UTC/04:35draft/04:45PAUSED unchanged."
+}

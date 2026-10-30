@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "exitCode": 0,
+  "result": {
+    "checks": 16,
+    "passed": 16,
+    "networkRequests": 0,
+    "scope": "Compiler guard preflight only,not product/livePASS"
+  },
+  "permission": "c54-font-permission.json",
+  "syntaxChecks": "Both compiler harness and Node guard node --check exit0",
+  "limits": "No real requests; only guardpolicy/no product test credit"
+}

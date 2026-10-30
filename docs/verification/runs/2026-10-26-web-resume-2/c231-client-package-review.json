@@ -1,0 +1,42 @@
+{
+  "id": "C231",
+  "status": "READONLY_PACKAGE_HISTORY_RECEIVER_REVIEW_COMPLETE_RUNTIME_FIXTURE_METHOD_BLOCKED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "completedBeforeUtc": "2026-10-26T12:22:00Z",
+  "requirementIds": [
+    "E3-01",
+    "E3-04"
+  ],
+  "primary": [
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-030-client-package-review.json",
+      "sha256": "c412af1b4d87e854a49b967e2a9a2b081beb2db892f8f93585e5af2ef002bf5d",
+      "scope": "Knownlow.fade authenticated own package1/2valid11Nov/historyreceipt/review. No secondclient/isolation/expired/depleted."
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-028-package-attendance.json",
+      "sha256": "84f31b71f7013dbab666472f196e4fa71ee59dc88e07fadb9bd25c1c4a3640fc",
+      "scope": "Historicalownerattendance034/recordedpackagee4852->1. Preservebefore/after/originalreporttimes, no attendance/payment/reversal/cancel repeated."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G134-owner-package-projection.json",
+      "sha256": "ed56eb6592098f25cc6ef21fb300f4c5b62a17f1123ff180c0e64517127d0b3e",
+      "originalWindowUtc": [
+        "2026-10-17T03:43:20Z",
+        "2026-10-17T03:45:20Z"
+      ],
+      "scope": "Ownerpackage1/2valid11Nov/activebranch1positive,branch2andexpiredfiltersEMPTY. Explicit no wrong-client/expired/depletedfixture or securityproof; not current clientexecution bridge."
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/cabinet/components/MyVisitPackagesBlock.tsx": "85cc85e3339a6fb9e58f78bc1885ce96177e328933b0572c7712eeaf18786b56",
+    "apps/web/src/app/cabinet/ClientCabinet.tsx": "7c6218fa44420ed584389979b0ab499b066aaa7e3917a99ded090034ddcf8e89",
+    "apps/web/src/app/api/me/visit-packages/route.ts": "f86afc3c9a12ee0ea279b6bb0555065bd0f324d4e00db22cc9e3a9054c43829e",
+    "apps/web/src/lib/meVisitPackagesHttpService.ts": "de77da62ba95448fda076539d902359c6236a384a2e94f3b960c2390ab3934ed",
+    "apps/web/src/lib/meVisitPackagesService.ts": "4c5d2d7909d2356cac7184049325fe53b44907e421570d79ed343477a0b967d7"
+  },
+  "sourceBoundary": "Ordinary MyVisitPackagesBlock requests own me endpoint after clientmount. Endpoint normal getUser, service selects client_id=user.id then planname projection. Caller-scoping source only, not runtime API/RLS proof. Component renders null for packages.length0 and maps returned error/catch to empty array; therefore absentblock alone cannot distinguish no-package from failed request. This source behavior is not an observed runtime defect and no speculativefix made.",
+  "decision": "No exact matching historical secondunprivilegedclient positive/negative package isolation proof, no executiondated complete dependency bridge for a newcurrent promotion. Knownfouridentities include ONEpureclient, otherthree have SA/owner/staff roles; do not substitute privileged roles for isolated other-client authority. No secondpureclient/newroles permitted. Actual expired/depleted fixture not established; frozen existingpackage must not consume/expire/edit/sell/purchase. E3-01remains partial/E3-04BLOCKED,0newUI/fix/acceptance/reuse. Do not repeat knownactive/empty package view for counts.",
+  "effects": "Read/hash only. No browser/auth/packageUI/entity/booking/attendance/usage/purchase/payment/foreignID/SQL/API/SDK/storage/source/test/build/server commands. Currenttab/mainserver left untouched, no freshUIhealthclaim from review.",
+  "next": "C232boundedREADONLY existinginactiveA branchweeklyhours localdraft/Cancel history/currentonChange+validation/effects review beforefiniteUIplan. No schedulepersist/Save/timecontrols/toggle/UI action fromreview; originalsevenclosed days retained, no bookings/shifts."
+}

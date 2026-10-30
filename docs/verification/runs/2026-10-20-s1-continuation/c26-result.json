@@ -1,0 +1,63 @@
+{
+  "id": "C26",
+  "findingId": "S1-F011",
+  "status": "VERIFIED_TARGETED_GLOBAL_OVERVIEW_EMPTY_READ",
+  "before": "Same knownSA menu Analytics -> Ошибка загрузки обзора / HTTP500. Current source required manager currentbiz context; exact serverexception not traced. Human explicitly chose all-business report, so no arbitrary business selection.",
+  "fix": "Global-superadmin cookiecaller check via existing user_id+globalrole helper before cache/client. Thin validated route delegates paginated business_daily_stats read, stable date+biz primarykey order, groups same-day businesses once and computes totals/ratio from sums. Unsupported biz/branch query rejected rather than ignored. Global overview removes misleading branch selector/fetch; dates retained; owner/dashboard services/authresolver unchanged. No SQL/privilege/jobs.",
+  "sameLive": "Actual sameSA fullreload then menu Главная->Аналитика and final fullreload settled successfully: explicit all-business scope, both dateinputs 2026-09-21..2026-10-21, zero KPIcards and three distinct emptytrend states/noHTTP500. This certifies successful EMPTY aggregate read/navigation only. DEV daily aggregates were not independently reconciled with 30 sourcebookings; displayedzeros are NOT proof actualbusinessfinancialtotals/ETL completeness/numericmodel correctness. Multi-biz nonempty aggregation is UNIT-only. CurrentSA actualproof, negative callers UNIT-only/not realHTTP/RLS.",
+  "observationWindowUtc": {
+    "after": "2026-10-20T22:33:23Z",
+    "before": "2026-10-20T22:36:55Z"
+  },
+  "prototypeIssues": [
+    "First UI transformation unintentionally omitted both dateinputs; freshDOM caught it, exactbranch-only block restored before acceptance and a new two-dateinputs regression added. Initial lint fourunusedwarnings+twoignoredtestwarnings preserved.",
+    "Menu locator wait reported selector deadline; one freshDOM showed completed successful overview. No repeatedclick/reauth/restart/HTTPbypass."
+  ],
+  "checks": {
+    "before": {
+      "suites": 1,
+      "passed": 1,
+      "failed": 10,
+      "exitCode": 1,
+      "raw": "c26-unit-before.txt",
+      "limit": "Independent newglobalcontract with business-contextmock failing. Not proof10distinctlivebugs."
+    },
+    "after": {
+      "suites": 5,
+      "passed": 23,
+      "failed": 0,
+      "exitCode": 0,
+      "raw": "c26-unit-after.txt",
+      "coverage": "3 changed server files97.43statements92.59branches100functions100lines >=60; notwholebaseline"
+    },
+    "types": {
+      "exitCode": 0,
+      "raw": "c26-types-after.txt"
+    },
+    "lint": {
+      "exitCode": 0,
+      "ruleErrors": 0,
+      "ruleWarnings": 0,
+      "raw": "c26-lint-after.txt",
+      "notice": "LegacyESLintIgnoreWarning retained, explicitno-ignore; initial6warnings retained separately"
+    }
+  },
+  "matrixAfter": {
+    "passed": 16,
+    "failed": 2,
+    "blocked": 1,
+    "notRun": 0,
+    "total": 19,
+    "remaining": 3
+  },
+  "counts": {
+    "S1": "17/25accepted8left;63/79PASS16left",
+    "S2": "1/70accepted69left",
+    "product": "18/316accepted298leftNOT_READY",
+    "newVerifiedFixesThisRun": 7,
+    "pendingSameLive": "F005",
+    "open": "F007 actionrenderer"
+  },
+  "effects": "4 existingfiles changed,2newservicefiles+3newtestfiles. Read navigation/reload only, dates auto-defaulted21Oct after HMR; no agentmanualdate/branchfilter change or businesspreference grant. Existingbranchselection settings elsewhere preserved. Noauthtransition/recalc/job/SQL/fixtures/DBbusinesscommands. Ordinarytelemetryunenumerated, notzeroTOTALwrites. Tab5knownSAglobaloverview, tab2untouched; screenshot blocker unchanged/no retry.",
+  "next": "Navigation16PASS2FAIL1BLOCKED/19; next F007 render-only buttons with no recalc invocation, then oldbusinessapplications transientclassification/F005 realerrorpath. M1-03notaccepted; missingroles/deniedmonitoring unchanged. Domain/production last; Fontsapprovalexpired/buildunexecuted."
+}

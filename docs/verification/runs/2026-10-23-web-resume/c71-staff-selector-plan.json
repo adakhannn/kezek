@@ -1,0 +1,14 @@
+{
+  "id":"C71",
+  "caseId":"S21-F103-DIRECT-staff",
+  "requirementId":"F1-03",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "timeboxMinutes":12,
+  "reason":"Last available not_run directselector role variant. SA/client/guest alreadyPASS and ownerblocked at businesschooser are not repeated. Independent of F013 ownstaff Past reload failure; no staff/bookings entry/reload or unchanged diagnostic.",
+  "role":"Only known Google staff obraz.osh@gmail.com, aliasadakhannn@yandex.com, NOT pureclient. Normal logout/sign-in only; CAPTCHA/password/device/expiredOAuth handoff, no bypass/replay.",
+  "expected":"Actual staff identity control then one direct /select-cabinet document entry. Selector offers exactly Кабинет сотрудника and Мои записи; no Admin/business choices. Remember checked by default must be visibly unchecked BEFORE choosing Мои записи; actual own personal cabinet reached. No preference persistence/cookie inspection. Staff result is ONE case, not per option/input/navigation.",
+  "steps":["Clock; ordinary currentSA logout then local signin/Google; immediately choose only known staff account from actual chooser", "Verify actual staff name/role in visible UI; if unexpected identity/destination/business chooser stop rather than select business", "Clock; one direct observed/source-grounded localhost/select-cabinet entry, read exact options/remember state", "Clock; ordinary uncheck Remember then observe unchecked", "Clock; choose only own Мои записи, verify personal cabinet heading/identity without business commands or staff route/reload", "Clock; ordinary logout/knownSA Google restore/admin protectedheading/Anonymized, preserve human tab/handoff"],
+  "stop":"One bounded unexpected auth/navigation failure ->fresh observation only, no duplicate providerclick/reload/URL guesses or deniedtab/newtab workaround. Missing staff option or wrongprivileged option is actualFAIL but no speculative fix until safe cause. No productfix from tooltimeout. Stop if proposed UI route itself would invoke forbidden endpoint.",
+  "effects":"Ordinaryauthtransitions/reads plus transient unchecked Remember only. No roles/jobs/fixtures/grants/persistentpreference/business/booking/shift/payment/review changes; never Save/recalc/POST configuration. Auth/telemetry unenumerated. No cookie/token/storage/clipboard/rawHTTP/SDK/native inspection.",
+  "denominator":"F1-03 before3PASS3BLOCKED1not_run/7; at best4PASS3BLOCKED/7. Owner/manager/multirole blockers retained; not whole F1/security acceptance. No old PASS retiming, no newfix from successful ordinary entry."
+}

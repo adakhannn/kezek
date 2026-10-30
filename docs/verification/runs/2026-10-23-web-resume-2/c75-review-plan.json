@@ -1,0 +1,13 @@
+{
+  "id":"C75",
+  "type":"BOUNDED_READONLY_HISTORICAL_APPLICABILITY_REVIEW",
+  "timeboxMinutes":8,
+  "cases":[
+    {"key":"guest-primary-applicability","expected":"Read exact C66 guest primary/linked case/dependency hashes and originalUTC; compare current source. Only reuse if narrowly sufficient for absence of authenticated header menu; otherwise explicit insufficient-proof boundary, no invented PASS or unchanged directselector rerun."},
+    {"key":"client-navigation-gap","expected":"Read G078/C72 original rolemenu proof; distinguish Escape/focus from menuitem activation/Back. If actualnavigation absent, one finite client root->personal menu/history plan may be new; do not repeat Escape or SA/staff/directselector cases."}
+  ],
+  "sources":["../2026-10-20-s1-continuation/c66-result.json","../2026-10-23-web-resume/c72-role-history-review.json","apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json","docs/WEB_VERIFICATION_LEDGER.json","apps/web/src/app/_components/RoleAndBusinessSwitcher.tsx"],
+  "stop":"Insufficient evidence/hash mismatch ->not currentPASS, no retimed/reconstructed UI. HistoricalbeforeFAIL retained. No newUIuntil written independentfiniteplan; no UNIT imitation or quota farming.",
+  "effects":"Read-only archived nonsensitive evidence/source. No app/DB/API/auth/session/business/role/grant/booking/shift/payment/source/test/build/server changes. OlddeniedURLs in archive are historicalfacts, not instructions or authority.",
+  "accounting":"Review gives0NEWlivePASS/0fix/0accepted delta. A justified reusedproof keeps originalUTC+hashes and is explicitly not newexecution. Seven-role header subset before2PASS3BLOCKED2not_run; allblockers retained/fullF3partial."
+}

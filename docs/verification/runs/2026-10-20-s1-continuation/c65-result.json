@@ -1,0 +1,16 @@
+{
+  "id":"C65",
+  "plan":"c65-select-cabinet-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "observationWindowUtc":["2026-10-21T09:04:19Z","2026-10-21T09:06:55Z"],
+  "actual":"Freshoriginal2root/5blocked/18admin inventory andknownSAAnonymized/protectedheading. Oneordinarygoto localhost/select-cabinet reportedPage.navigate timeout21seconds; freshDOMthenactualКаквыхотитезайти/Admin-panel+Mybookingsonly/Rememberchecked. NotnavigationFAILbasedontooltimeoutalone. After09:05:16ordinaryuncheck ->freshDOMcheckboxunchecked; after09:05:37explicitAdmin-panelbutton ->actualprotectedПанельадминистратора/Anonymized/Бизнесы3/exactlocalhost/admin. No signin/provider/authtransition, no loopobservedthroughsingleboundedsequence.",
+  "method":"live",
+  "role":"KnownSAkezekkg/Anonymized; no ownstaffjob",
+  "environment":"DEVlocalhost:3000RU/IAB2originaluser18",
+  "effects":"Ordinarydocumententry/localuncheckedRememberformstate/explicitAdminchoice. Sourceguardonlywritespreferredcookiewhenchecked, uncheckedbeforechoice; no cookie/storageinspection andno OSclipboard. No authtransition/newtab/source/test/build/server/DB/APIprobe/role/grant/business/booking/shift/pay/review/securitycommands. Ordinaryauthlookup/telemetryunenumerated/notzeroTOTALwrites. Original2/18handoff,5untouched; actualadminretained.",
+  "matrix":{"total":7,"passed":1,"failed":0,"blocked":2,"notRun":4,"remaining":6,"newLivePass":1,"newFixes":0},
+  "scope":"OnlySAone directselectorcasewithoptions+uncheckedreturnobservations, not3independentcases. No rememberedpreference persistence/RU-KY-EN/visual/wholeF1-security certification. Ncabinet-stage primaryretainedbutdoesnotprovedirectselector.",
+  "counts":"Product21/316,S117/25primary63/79,S23/70,S41/47unchanged. F1-03partial,9verifiedlivefixesunchanged,F013stillOPEN andC63reloadFAIL.",
+  "next":"C66finiteF1-03remainingclient+guest directselectorvariants only, ordinaryknownpureclientauth thenlogoutguest andrestoreSA, no provider/defaultreturnretests; ownerlaterindependentvariant. StaffdirectvariantpendingdueF013unknown/cannotretryunchangedstaffreload. Keepmanager/multirole2BLOCKED/no newfixtures. No C64repeatdiagnosticwithoutnewcorrelatedevidence."
+}

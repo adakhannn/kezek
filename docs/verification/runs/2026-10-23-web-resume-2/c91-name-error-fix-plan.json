@@ -1,0 +1,50 @@
+{
+  "id": "C91",
+  "finding": "S1-F014",
+  "requirementIds": [
+    "O3-03"
+  ],
+  "fromCandidate": "dev-20261020-S1-40a5aef0e785",
+  "scope": "Only name cannot be empty presentation in BusinessCardEdit; three additive dictionary keys, one component regression file. No server/API/validation/auth/schema/permissions/payload changes or refactor.",
+  "expectedMessages": {
+    "ru": "Введите название бизнеса",
+    "ky": "Бизнестин аталышын киргизиңиз",
+    "en": "Enter the business name"
+  },
+  "implementation": [
+    "Capture original four runtime files before editing and reconstruct exact old source fingerprint.",
+    "Add focused component regression using real BusinessCardEdit and dictionaries; mocked fetch for UNIT only. Show expected locale-specific message for known empty-name rejection, unchanged invalid payload/single submit, editor retained and Cancel restores original. Also protect success refresh and other-error behavior. Run before minimal runtime fix, preserve FAIL rather than rewrite.",
+    "For exact payload.error name cannot be empty only, map to t(admin.businessDetail.error.nameRequired); preserve existing other-error/generic/network behavior. Add RU/KY/EN entries above. No client-side validation shortcut replacing server rejection.",
+    "Run scoped tests, full local web typecheck/lint/test as safely feasible; no external Playwright or live API/DB test scripts. No package install/pnpm EPERM retry. Keep failures/limitations honest, no threshold lowering.",
+    "Create new exact candidate source paths including new test, preserve old candidate evidence/finals and original UTC. Review narrow effects on old cases; do not promote current build/assets without fresh proof. No blanket visual, release or O3 acceptance."
+  ],
+  "livePlan": {
+    "target": "Existing A fe2d412c-21c6-40ef-b5d3-23f49f550610 only, same human Tab2/knownSA",
+    "cases": [
+      {
+        "locale": "ru",
+        "caseId": "S23-O303-name-error-ru",
+        "expected": "Введите название бизнеса"
+      },
+      {
+        "locale": "ky",
+        "caseId": "S23-O303-name-error-ky",
+        "expected": "Бизнестин аталышын киргизиңиз"
+      },
+      {
+        "locale": "en",
+        "caseId": "S23-O303-name-error-en",
+        "expected": "Enter the business name"
+      }
+    ],
+    "steps": [
+      "Fresh same admin/identity/tab and candidate; clock observed A link, verify original name/slug/blank address/phones/approved Barbershop/owner unassigned/2branches/0staff/services/bookings/limit2.",
+      "For each planned locale, ordinary language switch while clean; clock Edit, baseline original nonsensitive fields and blank contacts. Clock clear Name only ->empty Name/autoslug business; clock immediately before ONE ordinary Save. Observe exact expected localized name-required error and editor retained; no retry.",
+      "Clock Cancel; original slug/address/category restored. Do not count repeat functional no-empty behavior as a fourth new case. No valid Save, new fixture or source-driven error injection.",
+      "After final Cancel, restore RU and ordinary reload, confirm exact baseline; clock Admin link, protected admin/Anonymized/Business3, markHandoff. Any unknown/masked baseline, unexpected mutation/auth challenge/interruption stops scenario, no blind submit/newtab/bypass."
+    ],
+    "effects": "At most3 ordinary invalid Saves on retained A. Normal auth/role/business reads/telemetry unenumerated, no zeroTOTALwrites claim. No new entities/roles/owner/publication/category/contact/branch/validSave/payment/booking/profile/notification/security commands."
+  },
+  "counts": "Before observation linked at original C89 UTC, not new execution. At best3new locale UI variants/1new verified narrow fix only after same-live and regressions;0whole requirement acceptance. Build gate may temporarily reduce accepted count; preserve old PASS historically. Existing F013 and all other blockers unchanged.",
+  "savedBeforeSourceEditUtc": "2026-10-23T02:20:33Z"
+}

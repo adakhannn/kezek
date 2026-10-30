@@ -1,0 +1,25 @@
+{
+  "id": "C166_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-25T22:30:24Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "31dc3e38e1d016b4e77a7adaf4cbe783410abd538293adcb9f06b3a3df099841",
+    "latestPromptCheckpoint": "C166"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "countsReference": "c166-result.json",
+  "accepted": 23,
+  "remaining": 293,
+  "releaseDecision": "NOT_READY",
+  "next": "C167 boundedread-only B3-01 actualinput/debounce measurementfeasibility review; no unchangedqueryrepeat or addedauthority",
+  "effects": "Existingautomation continuationprompt/readback only after completedC166verification. No product/source/test/build/server/UI/DB/entity command fromthis administrativecheckpoint; oldfinals immutable/no continuityclaim."
+}

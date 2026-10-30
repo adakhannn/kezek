@@ -1,9 +1,6 @@
-import { addDays } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { loadWorkLocations } from '@/lib/scheduling/locationsClient';
-import { TZ } from '@/lib/time';
+import { loadWorkLocationSnapshot, type WorkLocation } from '@/lib/scheduling/locationsClient';
 
 type TemporaryTransfer = {
     staff_id: string;
@@ -17,72 +14,35 @@ type Staff = {
 };
 
 /**
- * Хук для загрузки и управления временными переводами сотрудников
- * Временные переводы определяются через staff_schedule_rules, где branch_id отличается от домашнего филиала сотрудника
+ * Load only the selected day's minimal effective work locations. Legacy responses
+ * explicitly remain transfer-only; never infer a working day from a home branch.
  */
 export function useTemporaryTransfers(params: {
     branchId: string;
     bizId: string;
     staff: Staff[];
+    dayStr: string;
 }) {
-    const { branchId, bizId, staff } = params;
-    const [temporaryTransfers, setTemporaryTransfers] = useState<TemporaryTransfer[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const { branchId, bizId, staff, dayStr } = params;
+    const key = `${bizId}|${branchId}|${dayStr}`;
+    const enabled = !!branchId && !!bizId && !!dayStr;
+    const [snapshot, setSnapshot] = useState<{
+        key: string; locations: WorkLocation[]; complete: boolean; error: string | null;
+    } | null>(null);
 
     useEffect(() => {
         let ignore = false;
 
         (async () => {
-            if (!branchId || !bizId || staff.length === 0) {
-                setTemporaryTransfers([]);
-                setLoading(false);
-                return;
-            }
-
-            setLoading(true);
-            setError(null);
+            if (!enabled) return;
 
             try {
-                // Загружаем временные переводы для всех будущих дат (в пределах 60 дней)
-                const now = new Date();
-                const maxDate = addDays(now, 60);
-                const minDateStr = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
-                const maxDateStr = formatInTimeZone(maxDate, TZ, 'yyyy-MM-dd');
-
-                // Создаем мапку staff_id -> home branch_id для определения временных переводов
-                const staffHomeBranches = new Map<string, string>();
-                for (const s of staff) {
-                    staffHomeBranches.set(s.id, s.branch_id);
-                }
-
-                // Загружаем все правила расписания для всех сотрудников этого бизнеса на нужный период
-                // Важно: загружаем для ВСЕХ филиалов, а не только для выбранного, чтобы корректно определить временные переводы
-                const data = await loadWorkLocations(bizId, minDateStr, maxDateStr);
-
-                if (ignore) return;
-
-                // Фильтруем: временный перевод = branch_id в правиле отличается от домашнего филиала сотрудника
-                const transfers = (data ?? [])
-                    .filter((rule: { staff_id: string; branch_id: string; date_on: string }) => {
-                        const homeBranchId = staffHomeBranches.get(rule.staff_id);
-                        return homeBranchId && rule.branch_id !== homeBranchId;
-                    })
-                    .map((rule: { staff_id: string; branch_id: string; date_on: string }) => ({
-                        staff_id: rule.staff_id,
-                        branch_id: rule.branch_id,
-                        date: rule.date_on,
-                    }));
-
-                setTemporaryTransfers(transfers);
+                const result = await loadWorkLocationSnapshot(bizId, dayStr, dayStr);
+                if (!ignore) setSnapshot({ key, ...result, error: null });
             } catch (err) {
                 if (!ignore) {
-                    setError(err instanceof Error ? err.message : 'Unknown error');
-                    setTemporaryTransfers([]);
-                }
-            } finally {
-                if (!ignore) {
-                    setLoading(false);
+                    setSnapshot({ key, locations: [], complete: false,
+                        error: err instanceof Error ? err.message : 'Unknown error' });
                 }
             }
         })();
@@ -90,8 +50,17 @@ export function useTemporaryTransfers(params: {
         return () => {
             ignore = true;
         };
-    }, [branchId, bizId, staff]);
+    }, [bizId, dayStr, enabled, key]);
 
-    return { temporaryTransfers, loading, error };
+    const current = enabled && snapshot?.key === key ? snapshot : null;
+    const locations = useMemo<TemporaryTransfer[]>(() => (current?.locations ?? []).map(row => ({
+        staff_id: row.staff_id, branch_id: row.branch_id, date: row.date_on,
+    })), [current]);
+    const temporaryTransfers = useMemo(() => {
+        const home = new Map(staff.map(member => [member.id, member.branch_id]));
+        return locations.filter(row => home.has(row.staff_id) && home.get(row.staff_id) !== row.branch_id);
+    }, [locations, staff]);
+    return { temporaryTransfers, workingLocations: current?.complete ? locations : undefined,
+        loading: enabled && current === null, error: current?.error ?? null };
 }
 

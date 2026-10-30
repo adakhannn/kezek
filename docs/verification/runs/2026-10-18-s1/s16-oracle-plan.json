@@ -1,0 +1,26 @@
+{
+  "id": "S1.3-independent-projection-oracle",
+  "plannedUtc": "2026-10-18T10:55:08Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "requirements": [
+    "B2-02"
+  ],
+  "cases": [
+    "B2-02-S13-1",
+    "B2-02-S13-2"
+  ],
+  "reason": "Prior public DOM is not independent oracle; compare existing owner read surfaces against public projection, no new fixtures",
+  "steps": [
+    "Use current known owner and inspect existing business selector",
+    "Read branches, services, staff, promotions and contacts without editing",
+    "If switching owned business preference required, check clock, record2->1->2 and restore",
+    "Compare active public rows with owner source facts; distinguish name groups from branch rows",
+    "Record any unavailable oracle as incomplete rather than countPASS"
+  ],
+  "boundaries": [
+    "No Save/submit/approve/grants/booking creation or fixture changes",
+    "No backend HTTP/raw cookies/service-role impersonation",
+    "No branch/business deactivation for testing",
+    "Public display only; not RLS/authorization or visual/device acceptance"
+  ]
+}

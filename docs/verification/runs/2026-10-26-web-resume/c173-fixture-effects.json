@@ -1,0 +1,29 @@
+{
+  "id": "C171_C173_FIXTURE_EFFECTS_APPEND_ONLY",
+  "originalRegistry": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+  "originalRegistrySHA256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca",
+  "businessId": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "branchId": "fa5f1017-d987-40c8-90ca-b042898c694f",
+  "activeControl": "057447c8-b200-4403-b056-49e3c250840f",
+  "beforeFix": {
+    "ordinarySaveAttempts": 2,
+    "afterClocksUtc": [
+      "2026-10-25T22:53:05Z",
+      "2026-10-25T22:53:40Z"
+    ],
+    "effect": "Both unexpectedly accepted/dropped syntheticnondigitinput; readbackcontactsblank/allbaseline. No additionalrestoreSave."
+  },
+  "afterFix": {
+    "ordinarySaveAttempts": 2,
+    "afterClocksUtc": [
+      "2026-10-25T23:00:31Z",
+      "2026-10-25T23:01:01Z"
+    ],
+    "effect": "Both visiblyrejected, ordinarylocaldiscard/reentryblank; no successfulupdate intended."
+  },
+  "visibleBaselineRestored": true,
+  "pendingEffects": false,
+  "actualContactRead": false,
+  "privateContactOrMessageCommand": false,
+  "limits": "No unmask/readsecret/rawDB/transport audit; null-emptyrepresentation/auth/telemetrywrites unenumerated, neverzeroTOTALwrites. Originalregistry/hashedolderproofs untouched."
+}

@@ -1,0 +1,47 @@
+{
+  "id": "C171",
+  "savedBeforeUiUtc": "2026-10-25T22:51:29Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "caseId": "S26-I102-nondigit-phone-whatsapp-rejection",
+  "requirementIds": [
+    "I1-02",
+    "M2-02"
+  ],
+  "timeBudgetMinutes": 7,
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "branch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+    "branchName": "S1 TEST INACTIVE BRANCH",
+    "active": false,
+    "control": "057447c8-b200-4403-b056-49e3c250840f",
+    "staffServicesBookings": 0
+  },
+  "variants": [
+    {
+      "field": "Телефон",
+      "value": "INVALID PHONE TEST",
+      "expected": "Укажите телефон в международном формате"
+    },
+    {
+      "field": "WhatsApp",
+      "value": "INVALID WHATSAPP TEST",
+      "expected": "Укажите WhatsApp в международном формате"
+    }
+  ],
+  "expected": "Each nonempty no-digit marker must show its field-specific validation message and retain editor/input. Ordinary leave/reentry must preserve original blank persisted contacts, unchanged inactivebranch/allbundledfields. A success navigation with marker silently gone is FAIL, not acceptable normalization. One compoundcase if both variants PASS; no extra credit from baseline/discard controls.",
+  "steps": [
+    "Clock; actualcurrenthumanTab2protectedSA/admin/RU/Anonymized ->observedA ->branches ->exactinactivefa5. RequireA2branches0staff/services/bookings/originalname; branchoriginalname, address/fourlinks/fourcontactsblank/unmasked, coords—/—, inherittrue, activefalse,7daysclosed/disabledSave. Mismatch ->BLOCKED/no input.",
+    "Clock fill ONLYТелефон exactsynthetic marker. Verify textretained/allothersbaseline. ClockimmediatelybeforeONEordinarySavechanges click, noEnter. Captureactualmessage OR navigation. Ifeditorerror expectedPASSsubvariant; ifnavigates/fielddropped preserveFAIL. No retry/injection/sourcefix yet. OrdinaryBacklistifneeded/reenterexactfa5 toreadoriginalblank/allfields. Unexpectednonemptypersistedvalue ->oneplannedclearSave restoreonly, thenstopothercasevariant/report; no blindwrite.",
+    "Clock repeat distinct WhatsApp field with its exactmarker and ONEordinarySave only, sameindependentexpectation and readback/discard. Bothvariants planned beforeUI; a phoneFAIL doesnotjustify skipping WhatsAppclassificationwhen safeoriginalblankbaseline freshlyrestored. No validcontactvalue entered.",
+    "Clockrestore/admin/Anonymized/RU/Business3 andmarkHandoff, chooser1untouched/no newtabs/auth. IfrealUIFAIL, preservebeforeevidence then boundedsourceclassification/minimalfix only for observablecause; SAME-LIVE finiteplan before retest. IfbothPASS nofix/sourcechange."
+  ],
+  "effects": "Ordinary existinginactiveA form only; bundledpayload and existing auth checks reviewed C168/C169. Validating supplied publiccontact text has no send/call/email/OTP side effect in update path. Synthetic no-digit markers are not private contact details or reachable destinations. Atmost2invalid Save attempts plus exactplannedclearrestore only if unexpected nonempty persistence. No actualphone/email/WhatsApp recipient, notification, map, schedule, activation, ownership, newentity or security command.",
+  "limits": "Onlynondigitrejection/blankrecovery foradminexistingbranchphone+WhatsApp. Notprivatecontact/validnumberformatting, ownerdashboard, email, inheritance, timezone, publicrendering, security/rawtransport, wholeI1-02/M2-02 acceptance.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+  }
+}

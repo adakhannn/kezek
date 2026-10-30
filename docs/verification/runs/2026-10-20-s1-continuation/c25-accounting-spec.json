@@ -1,0 +1,101 @@
+{
+  "id": "C25",
+  "fromCandidate": "dev-20261020-S1-9101a79da5f7",
+  "resultFile": "c25-result.json",
+  "originalFile": "c25-original-boundaries.json",
+  "newPaths": [
+    "apps/web/src/lib/ratingsAdminReadService.ts",
+    "apps/web/src/__tests__/components/RatingsStatusCallerRead.test.tsx",
+    "apps/web/src/__tests__/lib/ratingsAdminReadService.test.ts"
+  ],
+  "reviewEvidenceId": "S1-EV-226",
+  "reviewBasis": "Exactprior1667filefingerprint reconstructed from3savedexistingboundaries excluding3newfiles. OnlyratingsstatusSSR/HTTPwire+sharedreadonlyloader changed; purestatus/jobsservices and adminAccess/layout/authhelpers/otherareas unchanged. Everypassedcase dependencyhash verified; originaldates retained, notfreshblanketretiming. HealthCheck C24 unaffected. Currentnewbuild/assets unexecuted, priorFontsFAILunresolved.",
+  "caseId": "S21-M103-ratings-status",
+  "observationUpperUtc": "2026-10-20T22:19:16Z",
+  "dependencies": [
+    "apps/web/src/app/admin/layout.tsx",
+    "apps/web/src/lib/adminAccess.ts",
+    "apps/web/src/app/admin/ratings-status/page.tsx",
+    "apps/web/src/lib/ratingsAdminReadService.ts",
+    "apps/web/src/lib/ratingsAdminHttpService.ts",
+    "apps/web/src/lib/ratingsStatusService.ts",
+    "apps/web/src/lib/ratingsJobsService.ts"
+  ],
+  "caseEvidenceIds": [
+    "S1-EV-219",
+    "S1-EV-220",
+    "S1-EV-225"
+  ],
+  "finding": {
+    "id": "S1-F010",
+    "requirementIds": [
+      "M1-03"
+    ],
+    "caseIds": [
+      "S21-M103-ratings-status"
+    ],
+    "title": "Ratings status SSR self-HTTP fails despite authorized caller",
+    "expected": "CurrentglobalSA readonlypage rendersstatus by sameauthorizedreadasHTTP, no relative selfrequest/credentialforwarding; deniedcallers failclosed",
+    "steps": [
+      "FreshknownSA menu ratingsstatuspersistenterror",
+      "Directsharedrequest-contextstatus/jobsread andHTTPthinadapters",
+      "SameSA fullreload+menu metriccardsPASS, nojobcommands"
+    ],
+    "observedUtc": "2026-10-20T22:15:53Z",
+    "evidenceIds": [
+      "S1-EV-220"
+    ],
+    "fixEvidenceIds": [
+      "S1-EV-219",
+      "S1-EV-221",
+      "S1-EV-222",
+      "S1-EV-223",
+      "S1-EV-224",
+      "S1-EV-225"
+    ]
+  },
+  "evidence": [
+    [
+      219,
+      "c25-plan.json"
+    ],
+    [
+      220,
+      "c25-before.json"
+    ],
+    [
+      221,
+      "c25-unit-before.txt"
+    ],
+    [
+      222,
+      "c25-unit-after.txt"
+    ],
+    [
+      223,
+      "c25-types-after.txt"
+    ],
+    [
+      224,
+      "c25-lint-after.txt"
+    ],
+    [
+      225,
+      "c25-result.json"
+    ]
+  ],
+  "newFixCount": 6,
+  "verifiedFixIds": [
+    "S1-F003",
+    "S1-F004",
+    "S1-F006",
+    "S1-F008",
+    "S1-F009",
+    "S1-F010"
+  ],
+  "label": "ratingsstatussharedcallerread",
+  "planFile": "c25-plan.json",
+  "page": "/admin/ratings-status",
+  "browserState": "three metricreadcards afterfullreload+menu, nojobtable; notmodel/jobcountcertification",
+  "completion": "C25ratingsstatus actualfullreload+menu metriccardsPASS;26unitPASS/scoped2servicecoverage100/types0/lint0. JobsabsenceNOTcertifiedempty/nojobsrun. Nav15PASS3FAIL1BLOCKED/19; M1-03stillnotaccepted."
+}

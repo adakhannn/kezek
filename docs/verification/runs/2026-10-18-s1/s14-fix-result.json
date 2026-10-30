@@ -1,0 +1,105 @@
+{
+  "id": "S1-F001-R2",
+  "observedThroughUtc": "2026-10-18T10:35:26Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "provenance": "Structured transcription of actual CUA observations in this turn; screenshot capture remains unavailable and was not retried unchanged.",
+  "before": {
+    "captureWindowUtc": "2026-10-18T10:09:05Z through10:10:09Z",
+    "role": "owner",
+    "page": "/b/testovyy-biznes-1",
+    "actual": "Online-booking available badge, two booking links and choose-branch CTA despite all zero metrics. Home card1 also offered booking. Earlier booking entry and current control establish no active branches."
+  },
+  "change": {
+    "runtimeFiles": [
+      "apps/web/src/app/b/[slug]/BusinessInfo.tsx",
+      "apps/web/src/app/page.tsx"
+    ],
+    "rule": "Only offer booking entry when the existing read result contains at least one active branch. This is a necessary branch prerequisite, not a claim of free slots.",
+    "implementation": "BusinessInfo shares one hasActiveBranches condition across availability badge, hero/aside booking CTAs and trust invitation. Existing localized no-branches copy and catalog link used. Home derives its flag from the already-fetched active branches, preserving Details and hiding empty-business booking; no new database query or command."
+  },
+  "sameLive": {
+    "ownerBusiness1": {
+      "ru": "Нет активных филиалов.; localized no-branches status; no booking or choose-branch links; contact +996500574029 and catalog recovery preserved; reload confirmed",
+      "en": "No active branches.; no booking links",
+      "ky": "Активдүү филиалдар жок.; no booking links",
+      "finalLocale": "ru"
+    },
+    "ownerCatalogue": {
+      "ru": true,
+      "en": true,
+      "ky": true,
+      "emptyBusinessBookingAbsent": true,
+      "emptyBusinessDetailsPresent": true,
+      "activeBusinessBookingPresent": true,
+      "reload": true,
+      "localeRefresh": "Immediate EN snapshot retained old server card labels until normal refresh settled; settled EN/KY verified, not flash-free"
+    },
+    "guest": {
+      "ordinaryLogout": true,
+      "homeAndReload": "guest Войти, 2 cards, no card1 booking, card2 booking present",
+      "detailsClickAndReload": "card1 Подробнее -> correct business1, no branches status/contact, no booking links"
+    },
+    "positive": {
+      "business2": "2 active branches/3 services/1 staff, existing booking actions intact",
+      "homeCardBooking": "clicked current home card2 Записаться -> first step Филиалы:2, both branches available, no selection",
+      "homeCardDetails": "clicked current home card2 Подробнее -> correct h1/2 branches/3 services"
+    },
+    "otherRegression": {
+      "emptySearch": "s14-no-match-20261018 -> Ничего не найдено/0; Сбросить ->2",
+      "public404Recovery": "current missing URL ->404; На главную ->settled owner home2 with no dead-end card1",
+      "devErrorsAfterReturn": [],
+      "captureScope": "captured browser error buffer since10:24:24UTC, not whole network/console guarantee"
+    }
+  },
+  "automated": {
+    "newCases": 7,
+    "beforeBusiness": {
+      "pass": 21,
+      "fail": 4,
+      "exitCode": 1,
+      "transcript": "s14-business-tests-before.txt (tool-truncated)"
+    },
+    "beforeHome": {
+      "pass": 0,
+      "fail": 3,
+      "exitCode": 1,
+      "transcript": "s14-home-tests-before.txt"
+    },
+    "after": {
+      "suites": 6,
+      "pass": 69,
+      "fail": 0,
+      "exitCode": 0
+    },
+    "typesExitCode": 0,
+    "explicitLint": {
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 1,
+      "existingWarning": "BusinessInfo native img at line398; legacy ESLintIgnoreWarning also emitted"
+    },
+    "overlappingSuitesNotAddedAsCoverage": true
+  },
+  "build": {
+    "startedUtc": "2026-10-18T10:18:27.579Z",
+    "finishedUtc": "2026-10-18T10:20:12.581Z",
+    "pid": 25708,
+    "exitCode": 0,
+    "compiledSeconds": 49,
+    "staticPages": "36/36",
+    "copiedFiles": 1657,
+    "sourceFingerprint": "8734fceeb50b3060277c844a0e59d35ad15d629874db6cc9116bed9bc5bd8bd3",
+    "sourceComparison": {
+      "checked": 1644,
+      "changedOrAdded": [
+        "apps/web/src/__tests__/components/BusinessInfoTranslations.test.tsx",
+        "apps/web/src/__tests__/components/HomeBranchAvailability.test.tsx",
+        "apps/web/src/app/b/[slug]/BusinessInfo.tsx",
+        "apps/web/src/app/page.tsx"
+      ]
+    },
+    "scope": "No .env/real credentials copied, unchanged product build config, new isolated folder; dummy .invalid backend and bounded Node network denial"
+  },
+  "effects": "Two product files and two regression test files changed; ordinary owner->guest->owner Google transitions and locale changes RU->EN->KY->RU. Original owner and current business2 restored. No business preferences selected, no Save/booking/slot/hold/pay/cancel/grants/SQL/deploy. Ordinary auth/telemetry writes not enumerated.",
+  "closure": "One current live defect fixed and SAME-LIVE verified. B2-03 remains partial until inactive service/branch/business variants are accepted. Current source candidate supersedes R1 through dependency review and targeted live checks; archived R1 proof remains."
+}

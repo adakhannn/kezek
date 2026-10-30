@@ -26,6 +26,40 @@ describe('businessContacts', () => {
         if (!result.ok) expect(result.field).toBe('website_url');
     });
 
+    it.each(['contact_phone', 'contact_whatsapp'] as const)(
+        'rejects nonempty %s text that contains no phone digits',
+        (field) => {
+            for (const value of ['INVALID CONTACT TEST', '() -']) {
+                expect(validatePublicContacts({ [field]: value })).toMatchObject({
+                    ok: false,
+                    field,
+                });
+            }
+        },
+    );
+
+    it.each(['contact_phone', 'contact_whatsapp'] as const)(
+        'rejects too-short %s digits',
+        (field) => {
+            expect(validatePublicContacts({ [field]: '+1' })).toMatchObject({
+                ok: false,
+                field,
+            });
+        },
+    );
+
+    it('allows empty optional contacts', () => {
+        expect(validatePublicContacts({ contact_phone: '  ', contact_whatsapp: null })).toEqual({
+            ok: true,
+            value: {
+                contact_phone: null,
+                contact_whatsapp: null,
+                contact_email: null,
+                website_url: null,
+            },
+        });
+    });
+
     it('uses branch overrides and business fallbacks per field', () => {
         expect(
             resolvePublicContacts(

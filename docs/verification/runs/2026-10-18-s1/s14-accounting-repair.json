@@ -1,0 +1,23 @@
+{
+  "id": "S14-accounting-repair",
+  "scope": "Registry integrity, not product/live coverage",
+  "firstRun": {
+    "passed": 60,
+    "failed": 1,
+    "total": 61,
+    "exitCode": 1,
+    "error": "Changed/missing dependency: A3-03-S1-01 -> apps/web/src/app/page.tsx"
+  },
+  "cause": "Ambiguous context3 patch deletion affected A3-02-S1-01 instead of intended A3-03-S1-01 dependencyHashes. Source unchanged.",
+  "repair": "Compared all81 case objects against independently reconstructed pre-R2+explicit updates; exactly2 dependency-only mismatches. Applied whole-case uniquely ID-anchored replacements.",
+  "finalRun": {
+    "passed": 61,
+    "failed": 0,
+    "total": 61,
+    "exitCode": 0,
+    "durationMs": 25394.5679
+  },
+  "accountingPublishedOnlyAfterValidation": true,
+  "productSourceChangedByRepair": false,
+  "previousEvidenceRetained": true
+}

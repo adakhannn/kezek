@@ -1,0 +1,28 @@
+{
+  "license": "OFL-1.1",
+  "licenseFile": "OFL.txt",
+  "upstream": "https://github.com/vercel/geist-font",
+  "distribution": "https://github.com/google/fonts",
+  "retrievedUtc": "2026-10-21T07:00:32Z",
+  "unmodifiedBinaries": true,
+  "fonts": [
+    {
+      "file": "Geist.ttf",
+      "family": "Geist",
+      "version": "1.800",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/geist/Geist%5Bwght%5D.ttf",
+      "gitBlobSha": "f63f0afc6390323715972b6645115485f37cc9f4",
+      "sha256": "73894e0448cae90a92b6c2f8732b7bb9acb7b94c418bff559dad4a18e1de9659"
+    },
+    {
+      "file": "GeistMono.ttf",
+      "family": "Geist Mono",
+      "version": "1.701",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/geistmono/GeistMono%5Bwght%5D.ttf",
+      "gitBlobSha": "173867dce0580ea751e4b9c558740d34f20ce549",
+      "sha256": "d00e590b8eb3a59acc329b2d044fd143ae935090b7da33199ebee27cc7de8196"
+    }
+  ],
+  "parity": "Same family/version, vertical metrics and checked Latin advances as the exact Google WOFF2 files emitted by C54. Full variable files include RU/KY glyphs and weight100..900; no font upgrade or subsetting.",
+  "verification": "docs/verification/runs/2026-10-20-s1-continuation/c57-local-fonts-plan.json"
+}

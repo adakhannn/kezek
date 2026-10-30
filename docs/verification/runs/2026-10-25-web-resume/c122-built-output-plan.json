@@ -1,0 +1,31 @@
+{
+  "id": "C122",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "existingCaseId": "A3-01-S1-01",
+  "scope": "A3-01 currentcandidate productionbuild output execution. NewC120runtime makes oldC110/C111 historical; C121compile0 alone insufficient. Only finite actualcompiledprivacyentry/reload. No C93assetbundle retry/newtab/newassetbinary/freshcache/visualcertificate; A3-02blockers retained.",
+  "runtime": {
+    "harness": "scripts/closure-web-built-runtime-c122-20261025.mjs",
+    "host": "127.0.0.1",
+    "port": 3107,
+    "watchdogSeconds": 300,
+    "rawLog": "c122-runtime-raw.txt",
+    "outbound": "SameC121NodeTCP/fetchdeny/exactPostCSSIPC/dummy.invalid/no.env/no realkeys; notOSfirewall"
+  },
+  "timeboxMinutes": 5,
+  "expected": "Actual defaultbuilt /privacy at127.0.0.1:3107 shows Политика конфиденциальности/nine numberedsections; Menu guestВойти; oneordinaryreload retainscompleteguestdocument/noerroroverlay. Localcompiledoutputonly, notdeployedproduction/DEVintegration/allroutes/visual/no-flash.",
+  "steps": [
+    "VerifyC121rawFINISHEDexit0/no timeout/exact1685source beforestart; onlyexpectedNextgenerateddeclarationdifference inisolatedcopy. Syntaxcheckharness/port3107free/noexistingC122log. Saveplan/harnesshashes beforestart; actualclockoneownedruntime.",
+    "Computer-use/cua_replONLY samealreadyhealthyhumanTab2/resume25HumanTab/admin. Actualclock once navigate explicitindependentcompiledprivacy http://127.0.0.1:3107/privacy. NOT deniederrorpage rescue/alternatebypass: currentallowedlocalhostadminhealthy beforeplan. No newtab/auth/cookie/storage/API/termsacceptance/forms. Readactualheading/nine numberedsections; ifMenu exposesguestВойти verifywithoutclickingauth.",
+    "ActualclockONEordinaryreload ->samecompleteguestdocument/nooverlay. Noassetbundle/export/HTTP/SDK/pagefetch/evaluatefetch/screenshot/viewport/cachecontrol. NoC93retry or source/localfonts fetch. No newbrowserassetbinarycertificate.",
+    "Actualclock directreturn previouslyobservedhttp://localhost:3000/admin; knownSAprotectedheading/Anonymized/Business3/RU/handoff. No logout/relogin. RawexactownedPID/path andread-onlyprocessmatchbefore stoppingONLYit; verify3107listenergone/main3000PID23304preserved. Retainallfiles/nocleanup.",
+    "Denial/interruption/uncertainstate/startupfail ->stop/no retries/newtab/alternatebrowser/port/URL/securityconfigfix/rebuild. Stoponlyownedruntime. Humanstop safefinalization/PAUSEDexistingkezek/readback/new25Octfinal, oldfinalsimmutable."
+  ],
+  "effects": "One isolateddummy nextstart/temporarypublicnavigation+reload/return inexistinghumanTab. No newtab/DEVDBbusiness/roles/bookings/payment/profile/messages/authtransition/persistentfixtures/securitycommands. Ordinarymainappauth/telemetryunenumerated/notzeroTOTALwrites.",
+  "accounting": "Atbestrefresh existing A3-01 case/currentacceptance20->21/S116->17/primary62->63, notNEWfunctionalUI/fix.25Oct4NEWUI/1fix/logical12 unchanged. SecondrefreshEVENTthiswindow ofsameexistingcase after genuinelynewsource, not2distinctrequirements/cases. No asset/cache/visual/fulltechnicalgreen.",
+  "savedBeforeRuntimeUtc": "2026-10-25T10:13:19Z",
+  "harnessHashes": {
+    "scripts/closure-web-built-runtime-c122-20261025.mjs": "caee925437fabe51a4f5d0aac1e4e582be650d31aac4bcefb177ebb43aa0eb5d",
+    "scripts/closure-web-offline-guard-c121-20261025.cjs": "4799c03d469f052a32038bc48189d6208ae323d9c7b8fd5cb124d00299afb092"
+  }
+}

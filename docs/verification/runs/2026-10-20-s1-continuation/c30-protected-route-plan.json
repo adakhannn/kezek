@@ -1,0 +1,17 @@
+{
+  "id": "C30",
+  "requirement": "F4-01",
+  "purpose": "Protected PAGE settled access underwrongrole; not API/RLS/HTMLsecret/visualflashcertification",
+  "contract": "Management cabinet requires own owner/admin/manager or explicitSAcurrentbusiness; staffcabinet requires activeownstaffrecord (globalrolealone notenough); personalcabinet is shared by authenticatedroles, so onlyguest is wrongrole there; adminrequiresglobalSA.",
+  "matrixTotal": 16,
+  "reuse": ["4knownidentity/guest adminroot negatives from C11 unchangeddependencies, preserveoriginaltimestamps", "2missingadmin/manager adminroot blocks fromC16"],
+  "newCases": ["guest:/dashboard", "guest:/staff", "guest:/cabinet/bookings", "pureclient:/dashboard", "pureclient:/staff", "staff:/dashboard", "owner:/staff", "superadmin:/staff", "businessadmin-without-staff:/staff BLOCKEDnofixture", "manager-without-staff:/staff BLOCKEDnofixture"],
+  "currentExecution": ["Ordinarylogout then guestdirectdashboard/staff/cabinet read", "OrdinaryknownpureclientGooglelogin; personalcabinetcontrol", "Pureclientdirectdashboard/staff read; deny no foreignbusiness/staff workspace", "RestoreknownSA ordinaryGoogle andadminroot"],
+  "remainingAfterThisRunIfAllPass": "9PASS4BLOCKED3notrun/16 (4originaladminnegativePASS+5new pagecases). WholeF4-01 remains partial; no newroles/fixture/grants. Missingroles remaindenominator.",
+  "expectedGuest": "Signin or explicitunauthorizedprompt with no protectedbusiness/staff/clientdata in settled DOM",
+  "expectedClient": "Recognizedlow.fade.osh identity canopenpersonalaccess, cannotopenmanagement/staffrecords; no accidentalguestnegativecredit",
+  "noFlashClaim": "SettledDOM cannot certify no sensitiveflash before redirect. F4-04 separateopenvisual requirement.",
+  "effects": "Ordinarylogout/login only, no create/Save/commands/settings/currentbizselection/staffassignment; knownpureclient has noactivejob, do not createone",
+  "budgetMinutes": 20,
+  "stopCondition": "Unexpectedstaff/job access investigate actualidentity/role first, no speculativefix; CAPTCHA/password/device humanhandoff; no deniedmetrics/APIprobe/newtabs/native"
+}

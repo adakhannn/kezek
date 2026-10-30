@@ -1,0 +1,51 @@
+{
+  "id": "C249",
+  "status": "READONLY_COMPLETE_DUPLICATE_NAME_MUTATION_UNSAFE_WITHOUT_CONTRACT_AND_GROUP_RECOVERY",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "reviewStartedAfterClockUtc": "2026-10-28T12:46:34Z",
+  "recordedAfterClockUtc": "2026-10-28T12:49:47Z",
+  "requirementId": "I2-03",
+  "history": [
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G005-service-lifecycle-after.json",
+      "sha256": "741afd9072a71df3f8e8ec3419f06fcc59766f7559f0a541caa8ec4b73c98911",
+      "originalCheckpointUtc": "2026-10-14T00:53:44Z",
+      "scope": "WB179 actualhidden-service edit/activate/deactivate on e215 with differentchosenname/duration/prices and originalbranch2, not collision/duplicate-name test. Primary explicitly leaves name-basedlogicalidentity/partiallyactivecopies architecturalverification open. Do notrerun orrelabeloldPASS."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume-2/c217-result.json",
+      "sha256": "20eeec90dd72ced81d2feb26481d2d76ff19697ade1f7348e1816a34410e9eca"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c248-result.json",
+      "sha256": "01bb035ee0ce5e064003acef256a83cecfd512ed06b56dc484c7c0986bf5bc1c"
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/services/page.tsx": "929c666b43d1dc049f19dada790a00ee0a47af964d869ade5be21dd3e5ba7a99",
+    "apps/web/src/app/dashboard/services/ServicesListClient.tsx": "7ee3cfb00fb1cc6f470e964e429d395bf5c11d2335de31af7daa92807e9a4ddc",
+    "apps/web/src/app/dashboard/services/[id]/page.tsx": "8ece808ba3e5509051baa9eb6ebb325af88cf780f6709c965797cdd3fc4eff75",
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "b778953aa764cc3277969010b8077dbed68357d33341bec6b8c3188edb112fd8",
+    "apps/web/src/lib/serviceCreateRouteService.ts": "6ee8e86f76831c589cb2006f414f8c177b24c75111299445499c4cecd13c96fd",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28"
+  },
+  "findings": [
+    "Management list logicallygroups byname_ru; editloads samebusiness/sameoriginalname branchcopies. This is not independent unique logical ID contract.",
+    "Update validates ordinary fields/resourcebusiness/branchmembership thenselects existingServices byoriginal svc.name_ru. It computesbranchadd/update/remove; updatecanrenameallmatchedbranchcopies, insertmissingbranches, andremove/soft-hideoldcopies subjecttobookingconstraints. No separatelyobserved duplicate-target-name rejection contract in reviewed chain.",
+    "Create preparesone rowperbranch theninsert; reviewedhandlerdoesnotpreflightduplicate-name query. Repo index declarations are not actualDB/schema/uniqueness proof; source guardabsence is not a demonstratedruntimebug.",
+    "Renaming known99 toexisting60min groupname is an intentionalvalidupdate with possibleUIgroupmerge/ambiguity. A later reverse-name Save could select the merged name group and affect unrelatedexistingrecords; originalname/duration readback alone is not safe group-wide recovery. No such write attempted."
+  ],
+  "blocker": {
+    "status": "BLOCKED_CONTRACT_AND_SAFE_EFFECT_ORACLE",
+    "owner": "Service logical-identity/duplicate-name contract and exact reversible test authority",
+    "exit": "Define duplicate semantics within samebranch/acrossbranches (reject/merge/allowdistinct) and establish complete group-ID/dependency baseline/recovery before any validrename/create. Current boundaries forbidnewfixture/unknownentity or duplicate-name trial Save merely expectingreject. No taskstop or permissionquestion implied."
+  },
+  "decision": "I2-03partial; duplicate-name branch remains BLOCKED/unaccepted. Preserve C217/C222/C248 narrowvalidationPASS, no newUI/reuse/fix. No speculativeguard/sourcechange/API bypass. Independentnextpriority K3-03 exacthistorical finance summary-vs-row arithmetic/dependencybridge review, with no money/hours/status mutation.",
+  "effects": "Read-only local source/history/hash and repositoryindexsnippet only; no SQL execution/schema inspection/DB/API/SDK/storage/browser/auth/Save/rename/create/delete/association/booking/source/test/build/server action. No runtime/currentDBuniqueness claim.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}

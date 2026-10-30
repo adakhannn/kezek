@@ -1,0 +1,19 @@
+{
+  "executable": "C:\\Program Files\\nodejs\\node.exe",
+  "argv": [
+    "node_modules/jest/bin/jest.js",
+    "--runInBand",
+    "--runTestsByPath",
+    "src/__tests__/components/ServiceForm.test.tsx",
+    "src/__tests__/lib/validation.test.ts",
+    "--json",
+    "--outputFile=C:/projects/kezek/docs/verification/runs/2026-10-28-web-resume/c252-targeted-tests.json"
+  ],
+  "cwd": "C:/projects/kezek/apps/web",
+  "config": "apps/web/jest.config.js",
+  "startedUtc": "2026-10-28T13:51:57.436Z",
+  "finishedUtc": "2026-10-28T13:52:08.251Z",
+  "exitCode": 0,
+  "signal": null,
+  "log": "c252-targeted-tests.log"
+}

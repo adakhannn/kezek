@@ -1,0 +1,22 @@
+Exit code: 1
+
+C:\projects\kezek\apps\web\src\__tests__\components\BookingBranchStepBoundary.test.tsx
+  0:0  warning  File ignored because of a matching ignore pattern. Use "--no-ignore" to disable file ignore settings or use "--no-warn-ignored" to suppress this warning
+
+C:\projects\kezek\apps\web\src\app\b\[slug]\view.tsx
+  238:9  error  Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+C:\projects\kezek\apps\web\src\app\b\[slug]\view.tsx:238:9
+  236 |         }
+  237 |         const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+> 238 |         window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;
+      |         ^^^^^^^^^^^^^^^ value cannot be modified
+  239 |     }
+  240 |
+  241 |     const stepFromUrl = searchParams.get('step');  react-hooks/immutability
+
+✖ 2 problems (1 error, 1 warning)
+
+

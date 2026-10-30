@@ -4,6 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { BranchOption, Period, StaffStat, TotalStats } from './allStaffFinanceStatsTypes';
+import { financePeriodDate } from './financePeriodDate';
 
 import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
@@ -28,7 +29,7 @@ export function useAllStaffFinanceStatsData({
         try {
             const params = new URLSearchParams({
                 period,
-                date,
+                date: financePeriodDate(period, date),
             });
             if (branchId !== 'all') {
                 params.set('branchId', branchId);
@@ -42,27 +43,29 @@ export function useAllStaffFinanceStatsData({
                 message?: string;
                 error?: string;
                 details?: unknown;
-                branches?: { id: string; name: string }[];
-                staffStats?: StaffStat[];
-                totalStats?: TotalStats | null;
+                data?: {
+                    branches?: { id: string; name: string }[];
+                    staffStats?: StaffStat[];
+                    totalStats?: TotalStats | null;
+                };
             };
 
-            if (!json.ok) {
+            if (!response.ok || !json.ok || !json.data) {
                 const errorMessage = json.message || json.error || t('finance.loading', 'Не удалось загрузить статистику');
                 const errorDetails = json.details ? ` (${JSON.stringify(json.details)})` : '';
                 throw new Error(errorMessage + errorDetails);
             }
 
-            const apiBranches: BranchOption[] = Array.isArray(json.branches)
-                ? json.branches.map((branch) => ({
+            const apiBranches: BranchOption[] = Array.isArray(json.data.branches)
+                ? json.data.branches.map((branch) => ({
                       id: String(branch.id),
                       name: String(branch.name),
                   }))
                 : [];
 
             setBranches(apiBranches);
-            setStaffStats(json.staffStats || []);
-            setTotalStats(json.totalStats || null);
+            setStaffStats(json.data.staffStats || []);
+            setTotalStats(json.data.totalStats || null);
         } catch (value) {
             const message = value instanceof Error ? value.message : String(value);
             setError(message);

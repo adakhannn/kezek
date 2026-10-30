@@ -1,0 +1,22 @@
+{
+  "id":"C47",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint":"4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "plan":"c47-provider-ui-plan.json",
+  "cases":[
+    {"key":"provider-order","observationWindowUtc":["2026-10-21T02:08:34Z","2026-10-21T02:10:36Z"],"actual":"Actual guestRU signin semanticDOM lists enabled Google then enabledYandex then WhatsApp link, then Telegram other-account control. Google/Yandex isEnabled=true, WhatsApphref=/auth/whatsapp?redirect=%2F. No visual placement/prominence or Telegram integration claim."},
+    {"key":"social-only-fields","sharedObservation":"provider-order","observationWindowUtc":["2026-10-21T02:08:34Z","2026-10-21T02:10:36Z"],"actual":"Same actualguest document: app main input/textarea/select count0, email/password input count0. Social-only field surface, notOTP/provider-page validation or authentication safety proof."},
+    {"key":"cancel-message","observationWindowUtc":["2026-10-21T02:10:36Z","2026-10-21T02:10:52Z"],"actual":"Ordinary document ?error=access_denied&redirect=%2Fterms shows alert Вход отменён. Попробуйте снова или выберите другой способ входа., useful Google/Yandex/WhatsApp controls stillpresent. Public query display state only, NOT real Google cancellation/failure."},
+    {"key":"return-link-with-error","sharedObservation":"cancel-message","observationWindowUtc":["2026-10-21T02:10:36Z","2026-10-21T02:10:52Z"],"actual":"Samecancel-message document visible WhatsApphref exactly /auth/whatsapp?redirect=%2Fterms, verified via href attribute. No WhatsApp click/OTP/message or callback certificate."},
+    {"key":"error-redaction","observationWindowUtc":["2026-10-21T02:10:52Z","2026-10-21T02:11:07Z"],"actual":"Benign unknownerror marker URL displays only Не удалось завершить вход. Попробуйте снова или выберите другой способ входа. Unknownmarker/internalstack absent from visibleDOM; Google/Yandex isEnabled=true. Not backenderror injection or actualerrorleak test."},
+    {"key":"error-reload","observationWindowUtc":["2026-10-21T02:11:07Z","2026-10-21T02:11:20Z"],"actual":"Normalreload of unknownerror signin preserves friendlygeneric alert and useful providercontrols. No false logged-in/success state; no marker echoed."},
+    {"key":"error-recovery","observationWindowUtc":["2026-10-21T02:11:20Z","2026-10-21T02:11:36Z"],"actual":"Ordinarygoto clean/auth/sign-in removes erroralert, preserves useful Google/Yandex/WhatsApp/Telegramotheraccount surface; Google/Yandex isEnabled=true. No provideraction needed to clearpublicerrorstate."}
+  ],
+  "blocked":[{"key":"visual-hierarchy","reason":"Knownscreenshotfailure/invalidnormalviewport unresolved; no fresh recovery signal, no unchangedretry. SemanticDOMorder is not visualprimaryprominence ordevicePASS."}],
+  "matrixAfter":{"passed":7,"blocked":1,"failed":0,"notRun":0,"total":8,"remaining":1,"newLiveAssertions":7,"distinctPageObservations":5,"note":"Providerorder+no-fields share oneobservation; cancellation+returnlink share one. Not7independent executions. Publicerrorquery states not actualprovider failure/cancel events."},
+  "effects":"One ordinarySA logout and knownkezekkg Google restore. Appauth/notificationsync/telemetry IDs unenumerated, NEVERzeroTOTALDBwrites. No account/link/grant/role/job/business/currentbusiness/booking/save/hold/cancel/pay/settings/source/test changes, OTP/messages or networkinterception. Originaluser2/5 preserved/handoff, no createdtabs/capture/viewport retry.",
+  "restore":"NormalGoogle knownkezekkg -> exact/admin, visibleПанель администратора/Admin-panel/Anonymized before02:12:19UTC. Originaluser2/5 retained.",
+  "countsUnchanged":{"S1Accepted":16,"S1Remaining":9,"S1PrimaryPASS":61,"S1PrimaryRemaining":18,"S2Accepted":2,"S2Remaining":68,"productAccepted":18,"productRemaining":298,"newFixes":0},
+  "limits":"C1-02partial, currentRUcontrols only; visualhierarchy, otherlocales/configvariants/provider-pagefields notcertified. No wholeC1/security/integration/no-flash/productionpass. No actualnewproductfailure orruntimefix.",
+  "next":"C48 independent C3-01 complete realGoogle login: define finite knownexisting4identity success acceptance, reuse exactC42 ordinary signed-outGoogle callback observations originalUTC+currentdependencyhashes, not additionalOAuthloops. Keep separate C3-02Yandex/C3-03realcancel/C3-04role/sessionpersistence/C3-05replay, C1missingroles/otherprovider/visual andS1cold/build/domain blockers. No newusers/credentials/fixtures. Deadline21Oct05UTC+cutoffs unchanged."
+}

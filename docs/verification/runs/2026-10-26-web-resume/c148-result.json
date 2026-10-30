@@ -1,0 +1,39 @@
+{
+  "id": "C148",
+  "existingCaseId": "A3-01-S1-01",
+  "plan": "c148-built-output-plan.json",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "status": "PASS_ACTUAL_COMPILED_DOCUMENT",
+  "live": {
+    "observationWindowUtc": [
+      "2026-10-25T20:37:09Z",
+      "2026-10-25T20:38:01Z"
+    ],
+    "entry": "Existing human tab2 from freshly confirmed protected healthy localhostadmin navigated127.0.0.1:3107/privacy. Actual privacyheading/nine numberedsections/full publicdocument. Menu open showed guestВойти, RU selected; onlyClose, no auth.",
+    "reloadAfterClockUtc": "2026-10-25T20:37:33Z",
+    "reload": "One ordinary reload retains complete privacydocument/nine sections, no error overlay.",
+    "returnAfterClockUtc": "2026-10-25T20:37:42Z",
+    "return": "Actual localhost:3000/admin/protectedheading/settled Admin-panel/Anonymized/RU/Business3/Branch4/Staff1/Service4/Booking30, correctedTodayCancelled1. User tab2 marked handoff. No newtab/auth/deniedpage rescue."
+  },
+  "runtime": {
+    "pid": 24964,
+    "session": 94431,
+    "spawnedUtc": "2026-10-25T20:36:55.788Z",
+    "ready": "1581ms",
+    "stoppedAfterClockUtc": "2026-10-25T20:38:01Z",
+    "finished": {
+      "event": "finished",
+      "utc": "2026-10-25T20:38:02.026Z",
+      "pid": 24964,
+      "exitCode": 4294967295,
+      "signal": null
+    },
+    "classification": "Intentional stop after completed planned UI proof and safe adminreturn, not runtime crash/functionalFAIL. Exact PID/fullownedbuildpath/port validated before Stop-Process.",
+    "readback": "Only main127.0.0.1:3000PID18368 listening;3107listener and owned24964 absent."
+  },
+  "effects": "Owned isolateddummy nextstart and temporary public document entry/reload/return only. No DEVDB/booking/payment/role/message/persistentfixture/appauth transition. Ordinary auth/telemetry unenumerated.",
+  "accounting": "0newfunctionalUI/fix/newaccepted; secondrefreshEVENT of existing A3-01/currentwindow1distinctcase. Restored21of316, S117primary63.26Oct6NEWUI/3fix/logical15. Fulltest11FAIL/fullLint52errors and all blocked/stale retained.",
+  "limits": "No assetbinarybundle/freshcache/visual/device/no-flash/deployedproduction/allroutes/security/fulltechnical green. Priorbuilds/finals/UTC immutable.",
+  "next": "C147+C148 finalcurrentcandidate exact1686build/types36prerenders and actualcompiledprivacyentry/reload PASS restore existingA3-01 accepted20->21/S117primary63.26Oct6NEWUI/3fix/logical15 unchanged;2refreshEVENTS/1distinctexistingcase, notnewUI. Onlyownedruntime24964stopped/3107gone/main18368retained, usertab2/adminRUrestored. NextC149 boundedreadonly remaining category-create draft history/dependency review before any finite UI plan; do not repeat if original9Octcreate proofs already cover it. No newcategory/Save/Delete/entity/role/booking command or unitimitation; preserve all blockers and until-human-stop authority."
+}

@@ -1,0 +1,14 @@
+{
+  "id": "C109",
+  "plan": "c109-manual-address-fix-plan.json",
+  "caseId": "S23-M202-branch-manual-address-draft-discard",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "status": "passed",
+  "observationWindowUtc": ["2026-10-23T06:30:16Z", "2026-10-23T06:32:25Z"],
+  "actual": "SAME-LIVE same knownSA/humanTab2/exact inactiveA branch/currentcandidate. Originalemptyaddress/allblanklinks+contacts/coords—/—/inherittrue/activefalse and disabledSave verified. Map-unavailable notice stillpresent, no mapretry. At06:31:00 same ONEordinary Address.fill(C108 UNSAVED ADDRESS 23OCT)+Tab now retained exactdraft in AX+readonlyDOM, Savechangesenabled. At06:31:09 clear ->emptyaddress/Savechangesdisabled/Нетизменений. At06:31:18 name C109 UNSAVED NAME accepted/saveenabled then originalname restored/save disabled, address stillblank. At06:31:31 leave list ->2originalbranches/inactive+activecontrol; normal reentry originalname/emptyaddress/allbaselinefields/nochanges/disabledSave. At06:32:05 rootreturn initiated; freshDOM adminAnonymizedBusiness3/RU/4branches1staff4services30bookings confirmed before06:32:25; handoff. No Save/Enter/schedule/mapcommands. One complete functionalcase, not multiplePASS for regressioncontrols or map-loading/persistedaddress proof.",
+  "effects": "Only synthetic unsaved address/name input and ordinarynavigation; noSubmit/Save/appDBcommand. Normal mapmount/auth/telemetry unenumerated/notzeroTOTALwrites. No mapretry/keys/network/SDK/storage/security/newfixture/active/contact/schedule/role/booking/payment commands.",
+  "toolNotes": "Before SAME-LIVE c70HumanTab binding absent after runtime reset. Fresh inventory showed exact same permitted userTab2/provider9330166e at/admin; reacquired that tab only/no newtab/browser or deniedprovider. Ordinary navigation waits sometimes elapsed during Rendering; fresh DOM showed completedrequestedpage without repeatclick/login/serverrestart. Setup recovery0executioncredit.",
+  "counts": "NEW functionalUIPASS20->21, newwindowverifiedlivefix1->2/logical10->11. OriginalC108FAIL/b876candidate/UTC preserved. Accepted21->20 solely currentproductionbuildSTALE on new1685file88d5candidate; remaining296/316. S116/25primary62/79; S23/70/S41/47 unchanged. M2-02 remainspartial/incompletematrix; F013OPEN/allblocked cases retained, NOT_READY.",
+  "next": "C110 bounded finite genuinelynewcandidate offline defaultNext/Turbopack build and separateactualexecutionplan BEFOREprocess. Review existing C92 guard/harness and C93 tooloverrun, use new ownedoutput/rawlogs/watchdog/alloutboundNodeblocked/dummyenv/no.env/localfonts, no networkpermissionrenewal. Do not repeat unchanged C93assetbundle/screenshot/coldcache/fullhugeJest/auth/F013/manualdate/profileSave. Record current full lint/test gates not rerun/priorfailures; no fullgreen. No validbranchSave/persistedaddress/maploading credit."
+}

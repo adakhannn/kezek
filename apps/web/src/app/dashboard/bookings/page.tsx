@@ -41,7 +41,7 @@ export default async function Page() {
         // Клиентский компонент сам реализует пагинацию и загружает данные по мере необходимости
         const { data: bookings } = await supabase
             .from('bookings')
-            .select('id,status,start_at,end_at,services(name_ru,name_ky),staff(full_name)')
+            .select('id,status,start_at,end_at,client_id,client_name,client_phone,services(name_ru,name_ky),staff(full_name)')
             .eq('biz_id', bizId)
             .order('start_at', { ascending: false })
             .limit(30); // Начальная загрузка для SSR, клиентский компонент загрузит остальное

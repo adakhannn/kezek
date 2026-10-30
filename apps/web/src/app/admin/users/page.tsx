@@ -10,6 +10,8 @@ import UsersClient from './UsersClient';
 
 import { getT } from '@/app/_components/i18n/server';
 import {Button} from '@/components/ui/Button';
+import { collectAdminUserStats, type AdminUserStats } from '@/lib/adminUserStats';
+import { logWarn } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,45 +77,13 @@ async function fetchList(search: string, page: number, perPage: number, status: 
     return json;
 }
 
-async function fetchStats(): Promise<{ total: number; active: number; blocked: number; super: number }> {
-    const h = await headers();
-    const proto = h.get('x-forwarded-proto') ?? 'http';
-    const host = h.get('x-forwarded-host') ?? h.get('host');
-    if (!host) throw new Error('Host header is missing');
-    const base = `${proto}://${host}`;
-
-    const cookieStore = await cookies();
-    const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join('; ');
-
-    // Получаем все пользователи для статистики (без пагинации)
-    const res = await fetch(`${base}/admin/api/users/list?page=1&perPage=10000&status=all`, {
-        cache: 'no-store',
-        headers: {
-            cookie: cookieHeader,
-            accept: 'application/json',
-        },
-    });
-
-    let json: ListOk | ListErr | null = null;
-    const ct = res.headers.get('content-type') ?? '';
-    if (ct.includes('application/json')) {
-        json = (await res.json()) as ListOk | ListErr;
-    } else {
-        const text = await res.text();
-        throw new Error(text.slice(0, 1500));
+async function fetchStats(): Promise<AdminUserStats | null> {
+    try {
+        return await collectAdminUserStats((page, perPage) => fetchList('', page, perPage, 'all'));
+    } catch (error) {
+        logWarn('AdminUsers', 'User statistics are unavailable', error);
+        return null;
     }
-
-    if (!res.ok || !json || json.ok !== true) {
-        return { total: 0, active: 0, blocked: 0, super: 0 };
-    }
-
-    const items = json.items;
-    return {
-        total: items.length,
-        active: items.filter((u) => !u.is_blocked).length,
-        blocked: items.filter((u) => u.is_blocked).length,
-        super: items.filter((u) => u.is_super).length,
-    };
 }
 
 export default async function UsersListPage(

@@ -1,0 +1,19 @@
+{
+  "id": "C54_FONT_PERMISSION",
+  "status": "ACTIVE",
+  "humanAnswer": "да давай",
+  "question": "Fresh isolated compiler only public GET fonts.googleapis.com/fonts.gstatic.com until userstop; no accounts/DEV Supabase/keys",
+  "observedAfterUtc": "2026-10-21T06:19:08Z",
+  "authorizationDuration": "Until explicit humanstop; compiler attempt separately capped",
+  "compilerLeaseExpiresUtc": "2026-10-21T06:50:00Z",
+  "hosts": [
+    "fonts.googleapis.com",
+    "fonts.gstatic.com"
+  ],
+  "methods": [
+    "GET"
+  ],
+  "paths": "Public Geist css2 and /s/geist*/woff2 only",
+  "excluded": "Other Node outbound inclDEVDB/account/authorization/cookie/body, all real environment files and keys",
+  "limitations": "Node network restriction and exactPostCSS IPC, not OS firewall or universal native-process confinement. No security certificate; telemetry/Sentry disabled and compiler env allowlisted/dummy."
+}

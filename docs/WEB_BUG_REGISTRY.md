@@ -1,6 +1,6 @@
 # WEB BUG REGISTRY
 
-Last updated: 2026-07-17
+Last updated: 2026-10-17
 Owner: User + Codex  
 Status: Active
 
@@ -29,6 +29,851 @@ The web testing scope and execution status are maintained in
 
 ## Bug template
 
+### WB-203 — Business contact settings ignore EN/KY locale
+
+- 17Oct G129 / P2 / G2-O3. Actual owner business2 -> Settings -> EN/KY: server title, public-contact labels, ownership/sign-in separation explanation and Save button all Russian despite translated shell. Values unchanged. Expected selected UI language, authored business name untouched.
+- Minimal existing server getT + client useLanguage and 18 business keys per RU/EN/KY; no ACL, query, POST, validation, response precedence, SQL or auth changes. Generic/success/network fallback messages localized too; these paths checked with mocks only.
+- SAME-LIVE same owner/business2 KY localized header/form, EN settled header/form and normal reload, RU restored. Phone +996500574029/other three empty fields retained; no live typing/Save.
+- Before genuine8FAIL5PASS after correcting undefined fixture (first9FAIL4PASS retained); final4s24PASS/typesPASS/scoped7filelint0/0. First extended regression4legacytests lacked language context; preserved then setup uses real RU t, assertions unchanged. Old G116coverage/G123lint failures remain.
+- Separate contacts-settings surface/cause from WB140 finance and WB093 server error precedence. Component draft/error/ACL tests not live security or save proof. Oddscale screenshot not device/screenreader PASS; intermediate RSC header language lag acknowledged. Evidence apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json. Source 55d631e1a66787d939855d8d5dd1b25a0c8a3a6d4e12d1ab811c7b2dec2d547f.
+- Status: verified targeted SAME-LIVE; global17 distinct5/inherited2+10/whole0/NOT_READY.
+
+### WB-202 — Profile first paint advertises an empty unlinked identity before data loads
+
+- 17Oct G123 / P2 / E2-O3-P1 initial loading. Actual staff obraz own profile: normal RU reload briefly shows empty Name, All changes saved, active Google/Yandex Connect controls although loaded account has a name and three connected providers. G122 KY initial captured the same state. No linking action or persisted identity corruption was exercised/proven.
+- Expected: until profile/identity data is known, show the existing loading boundary, not invented empty/unlinked states or actionable provider controls.
+- Minimal fix: ProfileForm initial loading false -> true, reusing its existing localized loader and unchanged effect/fetch/finally. No auth/provider command, permission, query, validation, dictionary or schema changes.
+- SAME-LIVE: same staff normal reload RU/EN/KY initial native AX now Loading/Загрузка/Жүктөлүүдө with no form fields/link buttons; settled same name, Google obraz, three connected providers, unchanged notifications, deletion blocked 1 role + 1 card, Save/Reset disabled. RU restored. Additional JPEG shows loaded profile, not the transient loading frame.
+- Checks: genuine before 3FAIL/1PASS (both before files preserved; an unreached dictionary-key typo corrected before product edit); after 3 suites/13PASS, types PASS. Scoped lint FAIL retains the same two pre-existing no-require-imports errors (171/221 -> 172/222); new test lint 0/0, no rule suppression. Not whole green/coverage.
+- Boundaries/data: successful initial-loading display only, not error/expiry/concurrent identity or full auth/security/device/E2 PASS. No Save/link/unlink/OTP/notification/delete/login/SQL/business entity or financial command. Ordinary telemetry unenumerated. Source 2c1f8335; evidence apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json.
+- Status: verified targeted SAME-LIVE; global17 distinct4, inherited16two+15ten, wholeareas0/NOT_READY.
+
+### WB-201 — Staff statistics deduct the hourly top-up twice from a closed business share
+
+- date: 2026-10-17 Bishkek; severity: P0 (incorrect financial aggregate); status: verified targeted SAME-LIVE G116, not whole-finance PASS.
+- Real staff obraz/card1bfd -> Finance -> Statistics -> Day/native calendar13Oct: services600/staff600/business-190/late516. Expected final saved business share50, matching retained closed13Oct control; all-time business-21 instead219. Fresh UI/AX/JPEG saved before source changes.
+- Cause: close_staff_shift_safe receives finalSalonShare and separate topup metadata; useShiftStats and getShiftData.stats subtracted topup240 again. Minimal two deductions removed; no stored ledger/SQL/auth/permission/command change. Negative saved shares are not clamped and guarantee semantics beyond this double deduction are unchanged.
+- SAME-LIVE same13Oct RU50, initialEN50, explicitKYday13 reselected50; all-timeKY/RU219 with services901/staff781/closed3/late516 unchanged. Locale refresh resets statistics tab/date: separately pending, NOT fixed or retention PASS. FinalRUStatsAll; no shift open/close/reopen/hours/item/payment action.
+- Genuine6FAIL2PASS before product patch ->3suites22PASS/typecheckPASS/scoped3filelint0errors1preexistingdependencywarning+legacyESLintIgnoreWarning. Separate coverage run22PASS but exit1: branches41.66percent below60; retained, no threshold weakening/wholegreen claim.
+- Evidence: apps/web/test-results/global-2026-10-17/stage-G116-closed-stats-topup-after.json. Sourcee450164f; newrun17distinct3WB199–201/inherited16two+15ten/whole0/NOT_READY. Exactshift909/item2e5 IDs inherited, not freshly SELECT-verified; telemetryunenumerated/notzeroTOTALDBwrites. OddscaleJPEG not device proof.
+
+### WB-200 — Authenticated booking step asks the current client to sign in again
+
+- date: 2026-10-17 Bishkek; severity: P2; status: verified targeted SAME-LIVE G110.
+- Actual pureclient low.fade / LIVE TEST CLIENT12OCT -> existing14c108 Repeat preview -> explicit19Oct/Step5: headerClient and own5bookings banner, yet RU/EN/KY top instruction asks sign-in or guest. G109 observation confirmed settled before patch; loading transient excluded. Expected guidance matches already-authenticated identity.
+- Minimal BookingFormSections Step5 description uses existing isAuthed and existing localized booking.summary.selectSlotFirst, matching BookingSummary. Guest text/dictionaries/auth/commands/SQL unchanged.
+- SAME-LIVE RU/EN/KY same day19/master/service31/12unselected14:15–17 slots/own5warning/disabledTime; now confirmation guidance, no repeated-login instruction. RU restored, nativeBack originalclientUpcoming5/package1of2until11Nov. No slot/hold/create/cancel/pay/authswitch.
+- Genuine6FAIL0PASS before product patch ->3suites36PASS/typesexit0/scopedlint0errors2preexistingunusedwarnings plus legacyprocessnotice. Guest/identitytransition controls are component-only, not freshguestlive/authmatrix/wholeBOOK04/security/device/wholegreen PASS. Fresh oddscaleJPEG not phone/tablet proof.
+- Evidence: apps/web/test-results/global-2026-10-17/stage-G110-step5-auth-guidance-after.json. Newrun17distinct2WB199+WB200; inherited16two+15ten/whole0; source0ddcd0ef. Ordinary telemetry not enumerated/notzeroTOTALDBwrites; retainedfixtures unchanged.
+
+### WB-199 — Calendar loses selected day and branch after opening a receipt
+
+- G117 17Oct finance-context follow-up (not new distinct): actual staff StatsDay13Oct/600-600-50 -> EN immediate retains then settledCurrentShift17off. Existing tab session persistence races with default write; period/date were only local. Scoped ownstaff server biz:staff view metadata now retains only tab/period/date/month/year through useSyncExternalStore/sessionStorage, validating fields; operationdate/items/edit/auth state not serialized. Existing getStaffContext gate unchanged, no staffId impersonation or data query changes. SAME-LIVE settledEN/KY/RU and reload retain StatsDay13/600-600-50/late516; SSRinitialCurrent17 before hydration explicitly notflashfree. First4FAIL2PASS -> effectprototype21PASS butlint1ERROR (retained/superseded) -> final3s24PASS/types/scoped4filelint0/0/hook60coveragePASS69/71statements54/62branches19/20functions. G116servicecoverage41.66branchFAIL remains, notwholegreen. Scope/legacyowner/corrupt/storagefailure controls component-only; no realfinancial/shift/auth/SQLcommands. Source9156e177; global17/stage-G117-finance-view-context-after.json; newrunfix3 unchanged.
+
+- G114 17Oct staff-history follow-up (not new distinct): actual staff Past22 -> known034 receipt -> Back resets Upcoming5. Final minimal staff list uses Next useSearchParams/router.replace for scoped read-only staffList/past+business/staff URL; creates no booking and does not restore creation form. Server queries/auth/ACL unchanged. SAME-LIVE final EN/KY refresh ->034receipt->Back22sameorderedIDs, RUrefresh+reload22; explicitUpcoming restores5/cleanURL. Earlier raw-history, mounted-selection, native-URL prototypes failed live despite unit greens; all artifacts retained and not accepted. Original4FAIL4PASS ->final3s36PASS/types0/lint0errors1existingunusedstaffwarning+legacyprocessnotice. Own-staff UI only, not foreignscope/API/RLS/fullBOOK04/device/wholegreen. Source6c1b707a; global17/stage-G114-staff-history-context-after.json; newrunfix2 unchanged.
+
+- date: 2026-10-17 Bishkek; severity: P2; status: verified targeted SAME-LIVE G106.
+- Actual owner/business2: native calendar19Oct/branch1/five links -> existing14c108 receipt -> browserBack resets17Oct/All/defaultemptytoday. Expected selected context retained per BOOK04 contract; G105 tentative observation confirmed before product patch.
+- Minimal client useCalendarHistory stores only biz/date/branch on current history entry, preserving Next metadata; useSyncExternalStore/popstate and validated currentbusiness/branch/date. No auth/session extraction, URL/permission/query/SQL/businesscommand change.
+- SAME-LIVE same14c108: Back19branch1/fiveIDs-times; Forwardreceipt/Back retained; settledreload19branch1; EN/KY/RU preserved; branch2NoStaff -> restoreAll/five. Initial reload SSR17All then hydrated19branch1 observed: not flash-free/fullreload/device/security or whole BOOK04/H1/G2 PASS.
+- Genuine prepatch3FAIL3PASS; final3s29PASS/types/scoped4filelint0errors0warnings+legacyprocessnotice. Firstpost12FAIL15PASS preserved: own unstable mockt timeouts and independent fixture history contamination repaired, not extra productbugs; no broad test exclusion. No fullgreen/coverage/native changes.
+- Evidence: apps/web/test-results/global-2026-10-17/stage-G106-calendar-context-after.json and g106-calendar-after.jpg (oddscale, actualCSS not measured). Newrun17 one distinct fix; inherited16two+15ten/whole0/source9f9b8c4d. No businessentities/commands/SQL/cancel/pay/authswitch; telemetryunenumerated.
+
+### WB-198 — Owner calendar accessible control names remain Russian in EN/KY
+
+- G102 targeted fallback-tooltip follow-up (not new distinct): fresh actual EN/KY same Calendar19Oct/All/five links still had title Открыть бронь #ID. Existing localized BookingPill now supplies title ?? translated existing bookings.calendar.openBooking plus shortID; shared BookingCard and authored service summaries unchanged. SAME-LIVE allfive KY Брондоону ачуу / EN Open booking / original RU, same hrefs/time ranges/day19/All across HMR and locale switches. Before2FAIL13PASS completed before patch ->3s39PASS/types/scopedlint0/0 plus legacy process notice. Authored service-summary preservation covered in3locale unit controls, not fresh live service fixture. Resolves G101 recorded tooltip remainder only; no receipt/cancel/create/status/export/payment/SQL command; no extra distinct bug/fullarea/device/screenreader PASS. Evidence apps/web/test-results/global-2026-10-16/stage-G102-calendar-tooltip-after.json; sourceaddf6dd7/newrunfix2/inherited15fix10/whole0.
+- date: 2026-10-16; severity: P2; status: verified targeted same-live G101 (two field labels only).
+- Reproduced actual owner/business2/calendar19Oct/branch1: five known booking IDs and time ranges match history; EN/KY main copy translates but branch combobox remains Фильтр по филиалу and date input Дата календаря. Native OS popup language and authored branch/staff names are not this defect.
+- Existing CalendarDaySection already calls t for bookings.calendar.branchFilter/date; added exactly six values to the three existing booking dictionaries. No component, query, command, permission or DB change.
+- SAME-LIVE: KY Филиал боюнча чыпка / Календардын датасы, EN Branch filter / Calendar date, original RU labels; day19/branch1/five receipt links retained across locale changes. Dictionary HMR remounted calendar to16/All; native picker explicitly restored19 before repeat, not claimed HMR draft persistence. Final RU/Allbranches/day19/five links retained; no row/cancel/create/status/export/pay command.
+- True before6FAIL3PASS completed before product patch; after3s32PASS/types/scopedlint0errors0warnings plus old eslintignore process notice. DOM/native AX proves accessible names, not an actual screenreader or phone/tablet PASS. Fresh oddscale JPEG records context only.
+- Remaining: actual EN/KY BookingPill fallback tooltip Открыть бронь #ID stays Russian; separately recorded for targeted WB198 follow-up, not fixed by these two keys. Whole calendar/localization/accessibility/security areas stay open.
+- Evidence: apps/web/test-results/global-2026-10-16/stage-G101-owner-calendar-labels-after.json, g101-calendar-en-after.jpg. Second distinct new-run16 fix; inherited15 ten unchanged, zero whole areas closed; source0d27ae99.
+
+### WB-197 — Past restored day incorrectly allows the next booking step
+
+- date: 2026-10-16 Bishkek (actual UTC 2026-10-15 23:00–23:11); area: D1/D2/O3; severity: P2; status: verified (targeted UI).
+- before: ordinary business2/branch1 booking URL with day=2026-10-15 while Bishkek day=16 displayed past15 selected/disabled but Next enabled; real Next entered Staff with a technical error. Default day16 and disabled past calendar buttons were already correct.
+- fix: pass existing business-calendar minimum/maximum into useBookingSteps; reject out-of-range forward transitions and explain recovery in RU/KY/EN. Preserve the intended date until the user explicitly selects a valid one; no silent clamp or backend/SQL change.
+- SAME-LIVE: past15 Next disabled in RU/EN/KY and after reload; selecting16 enables Next, enters expected NoStaff Friday state. Final RU16 Step2; no staff/service/slot or booking/hold command.
+- support: genuine prepatch 7FAIL/4PASS; postpatch 5 suites/54PASS; types PASS; scoped lint FAIL 1 pre-existing error/2 warnings. Not whole-web coverage/security PASS.
+- limits: no proof of past booking creation/API/RPC/RLS vulnerability or fix; deep step5, full OAuth restoration, max-date live boundary and midnight-held-tab matrix remain unverified. No whole area closed.
+- evidence: apps/web/test-results/global-2026-10-16/stage-G088-day-range-after.json and g088-past-day-blocked-ru.jpg. First new distinct fix in run16; historical WB187 map followup is separate.
+
+### WB-196 — Escape from cabinet menu item loses keyboard focus
+
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G078`.
+- Actual known pure client: Enter headerMyBookings menu, nativeTab to soleMyBookings menuitem, nativeEscape closes/expandedfalse but focus becomes BODY/AXWebArea. No role/menu navigation activated.
+- Minimal fix: existing trigger button ref; after Escape close restore focus only when focus was inside this component. Outsidepointer/outsideEscape controls keep external focus. No role source/auth event/cache/permission/API or sharedDialog changes; distinct from WB184 role-staleness and WB192 rawmodal semantics.
+- SAME-LIVE RU/EN/KY Enter→nativeTab→Escape returns original localized trigger; actualoutsideclickEnglish closesmenu and leavesfocusEnglish, RU restored. ExistingHistory3/review3stars/package1of2 retained; both tabs handed off. No account/role change or business command.
+- True before3FAIL6PASS completed before product edit; after3s18PASS/types/scopedlint0/0. Existing mockedaccountchange/businessselector controls retained, not live foreignrole/security matrix proof. Fresh actualPNG captured once at oddscale4087×5503, CSS1277×1651/DPR≈.45, notphone-tablet/responsive/screenreader/fullF3O4 PASS. Stage-G078 before/after/focus/DOM/PNG artifacts. Global15 ten/day seven/whole areas zero, no grants/deletion/SQL/newentities.
+
+### WB-195 — existing-session redirect leaves stale signed-out server UI
+
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G076`.
+- Actual root after prior cabinet reload showed SignIn while client menu said Client. Two ordinary clicks SignIn briefly opened sign-in then returned root still SignIn; provider button disappeared before attempted click, no Google navigation. Owned server log had AuthRetryableFetchError/status0; underlying network cause or token expiry not proven.
+- Minimal fix: existing-session redirect decision now calls router.refresh after router.replace, like the existing callback path, to invalidate stale server-rendered auth state. No redirect-target policy, credentials, session clearing, auth-status initial/token policy, middleware, API or authorization change.
+- SAME-LIVE same rootSignIn -> settled actual LIVE TEST CLIENT12OCT/PersonalCabinet/SignOut. Ordinary own cabinet links return all5priorconfirmed IDs/times/package1of2; actualreload preserves them. History3/paid034/200som/originalreview3stars+text remain. No newOAuth/providerchooser, business commands or final cancellation; f821 untouched.
+- True before2FAIL1PASS completed before edit; after3s19PASS/types/scopedlint0/0. Not full provider/expiry/replay/security matrix or repair of transient network failure. Screenshotfailed/noPNG; stage-G076 before/after/actualDOM evidence. Global15 nine/day six/whole areas zero; no credentials/grants/deletions/DBbusinesscommands, ordinarytelemetry unenumerated.
+
+### WB-194 — booking cancellation confirmation uses identical labels for opposite actions
+
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G075`.
+- Actual pure client, first confirmed14c108 booking: EN confirmation contains Cancel/Cancel; KY contains Жокко чыгаруу/Жокко чыгаруу. One closes preview, the other would cancel the booking. No final confirmation activated; no actual mistaken cancellation claimed.
+- Minimal fix: two explicit confirmation-action keys in existing RU/EN/KY cabinet dictionaries and two BookingCard label props. Keep booking vs Cancel booking; Оставить запись vs Отменить запись; Жазылууну сактап калуу vs Жазылууну жокко чыгаруу. Card trigger, shared dialog, cancellation handler/API/policy unchanged.
+- SAME-LIVE same14c108 preview in all3locales: distinct labels; only keep-booking action byEnter closes/restores trigger. EN actual nativeTab/Return verified; original5upcoming shown before reload/RU restored. Reload then required sign-in, cause unproven; persisted statuses not freshly reverified afterward. f821 pending final cancellation untouched.
+- True before6FAIL3PASS completed before product edit; after3s24PASS/types/scoped4filelint0errors0warnings. Unit fetch mocked, no live cancellation/API/security/wholearea PASS. Screenshot attempts failed/noPNG.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G075-cancel-labels-before.json`, `stage-G075-cancel-labels-after.json`, actual DOM/focus artifacts. Global15 eight/day five/whole areas zero; no explicit review/booking/payment/package command, entities, grants or deletion. Ordinary telemetry not enumerated.
+
+### WB-193 — switching profile language silently replaces unsaved fields
+
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G071`.
+- Actual pure client/profile: invalid phone draft RU→EN disappears after loading; ordinary valid name draft EN→KY is replaced by stored name. Form then incorrectly looks clean/All changes saved despite neither Save nor Reset. Immediate KY draft was present; settled state proved the loss. Not persisted profile corruption.
+- Minimal fix: per-form-instance initial-load guard; locale updates translate current state rather than call loadProfile again. Explicit identity-action reloads and callback copy remain unchanged. No API/schema/permission/validation or LanguageProvider change.
+- SAME-LIVE fresh form: name and invalid phone survive RU→EN→KY→RU, localized error/Save disabled/Reset enabled retained. Explicit Reset restores initial name/empty phone/clean state; final RU reload shows original profile and same notification preferences. No Save, link/unlink, OTP or notification-setting command.
+- Support: genuine before3FAIL3PASS completed before product edit; final4s15PASS/typesPASS. Same2 existing ProfileForm no-require-imports lint errors before/after, scoped lint remains FAIL. Own harness setup/alert-selector failures retained and not counted as product failure. Added remount control only in final7-case component suite, not claimed part of six-case before.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G071-profile-draft-before.json`, `stage-G071-profile-draft-after.json`, exact DOM/local field state and regression artifacts. Screenshot failed/no PNG; no visual-responsive/full-profile/identity-security PASS. Global15 seven/day four/whole areas zero. Synthetic drafts reset; f821 untouched, no DB business command/entities/grants/deletions.
+
+### WB-192 — booking map overlay leaks keyboard focus to background actions
+
+- G074 same-root follow-up, not a new distinct defect: existing paid03469725/revieweb51acab editor also used raw overlay. Actual native Tab escaped to background Repeat, Escape failed and rating lacked a label. Reuse existing Dialog plus associated existing labels fixes SAME-LIVE RU/EN/KY named modal, settled focus, native wrap, Escape/trigger restoration and Cancel. Local comment draft cancelled; original3stars/text restored, RU restored. No Update/Create/Repeat command. True before6FAIL3PASS →6s24PASS/types/lint0/0; stage-G074 before/after/DOM/native-focus artifacts. Screenshot failed/no PNG; not visual-responsive/screenreader/whole review-security PASS. Global15 seven/day four/whole areas zero remain unchanged.
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G070`.
+- Actual pure client, first known14c108 booking: Enter on На карте opens raw overlay without dialog semantics. Tab reaches background Отменить, Escape does not close, visible map Close leaves BODY focus. Cancel was never activated. Expected: named modal, trapped keyboard focus, Escape and trigger-focus restoration.
+- Minimal fix: reuse existing shared WEB Dialog around unchanged map host/loader; title and address become accessible name/description. No shared Dialog rewrite, map transport, permission, API, DB or dictionary change.
+- SAME-LIVE: settled focus enters Close; native Tab and Shift+Tab remain inside; Escape closes and restores first original map trigger. English Close dialog and Kyrgyz Терезени жабуу controls close only map. Russian restored, five confirmed bookings retained. Initial before-RAF focus observation preserved, not called synchronous focus success.
+- Support: true pre-patch6FAIL3PASS; after3s24PASS/typesPASS/scoped lint0errors0warnings. Map transport mocked pending in unit tests, not actual provider rendering. Screenshot failed/no PNG; no visual-responsive, screenreader or whole O4 PASS.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G070-map-dialog-before.json`, `stage-G070-map-dialog-after.json`, native focus/DOM artifacts. New distinct defect: global15 six/day three/whole areas zero. No booking status commands, DB entities, grants or deletions; ordinary telemetry possible; f821 cancellation untouched.
+
+### WB-191 — selection summary drops the chosen any-master mode
+
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G069`.
+- Actual pure client/business2/branch1/19Oct: select AnyMaster, Service31, reach Time without selecting a slot. The selected card and URL `staff=any` are correct, but summary says `Мастер: Не выбран` with incomplete indicator, despite12 available starts. Expected: summary represents the explicitly selected any-master mode; unselected/concrete modes stay distinct.
+- Minimal fix: pass the existing staffId into BookingSummary; handle the existing `any` sentinel using the existing localized AnyMaster label and complete indicator. No availability, permission, selection, assignment, routing, creation or DB change.
+- SAME-LIVE: same draft shows Любой мастер/checkmark; concrete selection changes summary to Adakhan and back to AnyMaster. Same Time step has12 unselected14:15–17:00 starts and60min100–300; EN Any master/KY Ар кандай кызматкер/RU Любой мастер, RU restored. Day20 still NoStaff/Next disabled despite retained draft; no time/hold/booking command.
+- Support: true before3FAIL6PASS completed before product patch; after3s36PASS/typesPASS; scoped2files0errors3existingwarnings. New display-state defect, not WB151 in-flight command navigation, WB188 branch reset or WB190 availability. Global15 five distinct fixes/daywindow two; no whole-area PASS.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G069-any-master-summary-before.json`, `stage-G069-any-master-summary-after.json`, exact UI DOM G068/G069 and regression JSON. Screenshot failed/no fabricated PNG/visual-responsive PASS. No DB commands/entities/deletions/grants; ordinary telemetry possible, f821 cancellation untouched.
+
+### WB-190 — booking specialist choice ignores the published off-day
+
+- G077 same-root follow-up/notnewdistinctbug: actual paid034 Repeat restoredServiceStep4/current15Octoffday with selectedservice/Visitassembled but Nextblocked/genericFinishcurrentstep. Step3 proved actualNoStaff. Display-only empty-authoritative-projection condition now reuses existing NoStaff/chooseanotherday translations on blockedStep4, not loading/error. SAME-LIVE sameRepeat RUENKY clearreason/Nextdisabled;19Oct workingcontrol retains master/service and readyNextenabled. No gate/filter/selectionreset/SQL/command change. Truebefore3FAIL9PASS →3s38PASS/types/scopedlint0/0. Original5confirmed/History3/review3stars/package1of2 preserved, draftabandoned/RUrestored. Screenshotfailed/noPNG/notwholebooking-security-responsivePASS. Stage-G077 before/after/DOM; global9/day6/whole0 unchanged.
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G062, current explicit schedule mode`.
+- Anonymous business2: branch1/19Oct choose master1bfd/service5157 → BackDay →20Oct →Staff. UI still offers AnyMaster/Adakhan and keeps his selected state despite copy promising date-based availability.
+- Fresh addressed read-only effective schedule: same master/branch19Oct09–18;20Oct intervals empty. Final Time step correctly returns no slots and disables ChooseTime; returning19 restores12 starts14:15–17:00. No time/hold/booking command clicked and no outside-schedule booking or authorization leak demonstrated.
+- Expected: the specialist list advertised as available on the chosen date respects authoritative published effective day/absence/location. Current derived list filters branch/transfers only. Retaining previous choices is an observation, not another distinct bug or a reason for blind reset.
+- G062 fix: existing three-field `read_staff_work_locations` includes home working days; same signature/owner/config/service-only ACL/range guard. Existing approved-business API marks complete explicit-day data; public consumer loads one day, separates transfers, handles loading/error/stale responses, filters date/branch and gates Next without blind draft reset. No new grant, full/private schedule read, role or endpoint. One addressed dev function change applied with exact-old-definition/ACL transaction guards; reviewed migration retained, no old migrations replayed.
+- SAME-LIVE: same anonymous20Oct shows no masters/Next disabled;19Oct restores master/Service31 and12starts14:15–17:00. Return20 with retainedstaff/service and reload remainsblocked; EN/KY/RU availability consistent, RU restored. No time/hold/booking command. EN/KY empty-state title remains Russian: WB189 follow-up below, not a language PASS or another distinct bug.
+- Support: real before6FAIL2PASS completedbeforeproductpatch; after5suites31PASS/typesPASS/three-module60%coveragegatePASS97.14statements83.92branches100functions100lines. Scopedlint1existingimmutabilityerror3existingwarningsFAIL; historicalfullG04453/167 and G0433metadataFAIL retained, notcurrentfullgreen. Broader legacy/transfer/absence/caller/role/viewport matrix and wholeareas not closed.
+- Evidence G062: `apps/web/test-results/global-2026-10-15/stage-G062-staff-day-availability-after.json`, exact UI DOM before/after/working-slots/reload, raw-DOM deployed definitions/ACL, guarded SQL. First hash guard stopped before mutation because rendered `innerText` collapsed SQL indentation; raw `textContent` hash matches server and guarded retry succeeded. Kezek screenshots failed; no visual/responsive proof claimed. Only SQL-function definition changed; no business entities/settings/deletions/native changes.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G039-date-availability.json`; actual live AX followed by known-fixture read-only schedule result. No new entities/settings/deletions/native changes.
+
+### WB-189 — early booking wizard guidance and calendar captions stay Russian
+
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G037`.
+- Anonymous business2 booking Step1/2: switch EN/KY; main step title changes, but flow guidance, kickers, branch statuses/count and calendar static ARIA/caption/legends remain Russian. Expected all product-owned static copy follows language without losing branch/date.
+- Minimal fix: missing13 wizard and4 date-picker keys per locale; branch counter uses a neutral localized count template. No query, selection, availability, timezone or booking command change. Separate missing-copy root, not extra duplicate WB187 counter bug.
+- Same-live EN/KY both steps now translated; branch2/day19 retained; RU restored. Dynamic KY calendar day ARIA still Russian and remains WB182 follow-up, not silently claimed fixed.
+- Support:6FAIL9PASS before completed before patch; after3suites26PASS/types/scoped5fileslint0errors0warnings. Overlapping tests do not close full language coverage.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G037-early-copy-before.json`, `stage-G037-early-copy-after.json`, `early-copy-after.png`. Wide screenshot is not phone/tablet proof; no new domain entities/commands/grants.
+- G063 follow-up verified: G062 actual EN/KY off-day empty title stayed Russian while body localized. Add only the missing `booking.empty.noStaffTitle` key to the three existing dictionaries. Same anonymous branch1/20Oct/Step3 now shows EN/KY/RU title and body correctly; Next stays disabled and branch/day/staff/service draft retained, RU restored. Real before2FAIL16PASS completed before dictionary edit; after18PASS/typesPASS/3dictionary lint0errors0warnings. Evidence `apps/web/test-results/global-2026-10-15/stage-G063-empty-title-after.json` and exact before/after DOM. Screenshot capture failed, no visual/responsive/full-language PASS. Follow-up of WB189, not fifth distinct global15 bug; global4/day1 unchanged, no DB commands/entities this stage.
+
+### WB-188 — changing booking branch keeps an unavailable staff selection
+
+- date: `2026-10-15`; severity: `P1`; status: `verified targeted same-live G036`.
+- Anonymous business2 booking: branch1/day19Oct/staff1/service5157 → visible BacktoBranch → branch2 → Staff step. UI says no available specialists but keeps Adakhan in summary and `Далее` enabled. No slot or final command was clicked.
+- Expected: another branch invalidates the staff and services dependent on the old branch; no available staff means Next is disabled. Same branch does not erase the draft.
+- Minimal fix in selection-owner hook: user branch callback batches reset of staff/services for a different branch; internal raw setter still restores URL/OAuth choices. Date reset behavior not changed or claimed fixed.
+- Same-live repeat: same branch retains chosen staff/service; switch branch2 clears both, preserves19Oct and disables Next; settled URL has no staff/service; reload preserves that state after hydration. No booking, hold, payment, grant or security/RPC fix claim.
+- Support: before regression1FAIL/4PASS completed before patch; after3suites15PASS/types/scopedlint0errors. Targeted selection-hook coverage91.52%statements/76.92%branches/100%functions/92.07%lines passes60%gate. Its5tests overlap15; not fullcoverage/fullareaPASS.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G036-branch-reset-before.json`, `stage-G036-branch-reset-after.json`, `branch-reset-after.png`. Screenshot backend scaling is not responsive proof.
+
+### WB-187 — public section counters always use plural nouns
+
+- G098 16Oct status-count follow-up (not new distinct): actual RU business/staff summary 3 закрыта; replaced numbered state captions with 6 neutral RU/EN/KY open/closed templates in existing business and staff presentation. SAME-LIVE business Month/Year Закрытые: 3, Closed: 3, Жабык: 3; staff RU Открытые: 0 • Закрытые: 3. Both surfaces retain 1000 turnover=901services+99materials/781employee219business/3closed. Before9format-contractFAIL18PASS ->5s47PASS/types/scopedlint0/0 plus existing process notice; no financial logic/commands/SQL. Positive open-row fixtures and whole locale/finance matrix remain unverified. Separate static-RU All-branches/business prefix observed EN/KY is pending G099, not fixed here. Evidence apps/web/test-results/global-2026-10-16/stage-G098-finance-status-counts-after.json; source1e089fde/newrunfix1/inherited15fix10/whole0.
+- G096 16Oct finance follow-up (not a new distinct bug): live RU 1 Клиенты / 1 Смен, EN 1 Clients / 1 Shifts, KY 1 Кардарлар / 1 Сменалар; reused existing count helper for two numbered finance labels and added 18 finance forms. SAME-LIVE 1 клиент / 1 смена, 1 client / 1 shift, 1 кардар / 1 смена; date13/expanded closed card/hours2/base360/guarantee600/topup240/650-600-50 retained through locale changes; RU restored. True pre-patch18FAIL9PASS ->5s48PASS/types/scopedlint0/0 (legacy eslintignore process notice separate). No financial calculation/commands/SQL changed. Unit0/1/2/5/11/21 are not all live fixtures; full finance/locale/device scope open. Evidence apps/web/test-results/global-2026-10-16/stage-G096-finance-counts-after.json; source0998e1d2/newrunfix1/inherited15fix10/whole0.
+- date: `2026-10-15`; severity: `P2`; status: `verified targeted same-live G032`.
+- Anonymous public business2: RU sections show `2 локаций`, `3 услуг`, `1 специалистов`; switch EN on the same page shows `1 specialists`. Expected nouns agree with the actual count and locale.
+- Minimal fix: existing count-form helper selects dictionary one/few/many forms for the three public section counters. KY retains its numeral+noun forms. Data, links, metric cards, queries, booking commands and permissions unchanged.
+- Same-live: same business2 EN `1 specialist`; RU `2 локации` / `3 услуги` / `1 специалист`; KY `2 жайгашкан жер` / `3 кызмат` / `1 адис`. Section counters only; hero/home counters and full language/responsive coverage remain open.
+- Support: two suites36tests PASS, typecheck PASS, scoped lint0errors/1existing image warning. The artifact named counts-before-tests.json completed after source edits, so it is NOT a valid pre-fix failing comparison; live before AX is the reproduction proof.
+- Evidence: `apps/web/test-results/global-2026-10-15/stage-G032-counts-before.json`, `stage-G032-counts-after.json`, `counts-after.png`. No new entities, deletion, grants, commit/push/deploy or native changes.
+- G067 home/hero follow-up verified (explicitly excluded from G032): actual before RU `2 вариантов / 2 мест`, single-result RU `1 вариантов / 1 мест`, EN `1 options / 1 places`; exact DOM saved before product edit. Reuse existing count helper for two counters and add dictionary one/few/many forms RU/KY/EN. SAME-LIVE now RU `1 вариант / 1 место`, `2 варианта / 2 места`; EN `1 option / 1 place` and zero plurals; KY0/1/2 numeral+noun unchanged. Query/data preserved then emptyquery/RU restored. True pre-edit4FAIL14PASS ->3s35PASS/typesPASS/scoped4filelint0/0; unit0/1/2/5/11/21 boundaries, not all live fixtures. `apps/web/test-results/global-2026-10-15/stage-G067-home-counts-after.json`; screenshot capture failed/no visual-responsive/full-language PASS. Not a fifth distinct bug: global4/day1 unchanged; no search-contract change or DB commands/entities.
+
+### WB-186 — ordinary comma in catalogue search breaks the filter
+
+- date: `2026-10-14`; severity: `P1`; status: `verified targeted same-live G027`.
+- Loggedout catalogue RU, search `Ош, улица` -> Cataloguetemporarilyunavailable alert; paired`Ош улица` -> normalempty. Existingname/address filter interpolates unquotedtext intoPostgRESTOR grammar, not a generalnetworkoutage inthiscase.
+- Minimalfix: scoped app/lib publicBusinessSearchFilter; quote/escape wholeoperands, preservingtrim100/LIKEliteral escapes. Samecomma nowempty/noerror; quotes+parentheses+colon+dot validempty; knownbusiness2name still1correct. No DB/RPC/grants/service-searchfeature/native-product change.
+- Primary syntax reference: [PostgREST reserved characters](https://docs.postgrest.org/en/v16/references/api/url_grammar.html#reserved-characters). Transportescaping staysapp-layer, no newdomainrule.
+- Support:6newformatcasesFAILbefore,2suites8PASSafter/scopedhelpercoveragegate. Types/scopedlint savedstageproof. Full482G025precededthisfix, not currentbaseline afteredit; no wholeB1/securityexploit/phone/tablet PASS. Missingservice search staysGAP-PUBLIC-SERVICE-SEARCH, not hiddenbycopy.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G027-catalog-punctuation-before.json` / `stage-G027-catalog-punctuation-after.json`.
+
+### WB-185 — loaded schedule draft status keeps previous language after switch
+
+- date: `2026-10-14`; severity: `P2`; status: `verified targeted same-live G020`.
+- Ordinary owner2/staff1bfd schedule KY -> load existing plan -> switchEN: allcontrols/headings become English, successnotice stays Kyrgyz. EarlierRU->KY retainedRU likewise; loaded09–18draft/currentcalendar unchanged.
+- Root: translated success string stored in componentstate at action time. Fix: store existing translationkey/fallback for knownsuccessstates, render currentlocale; preserve rawserver/error text. No businessrule/endpoint/RPC/permission change.
+- Same-live: KYreload/load -> ENwithoutreload nowENnotice -> RUoriginalnotice; draftMonday09–18/branch1 preserved, no publication/reset/absence command. RUrestored.
+- Support: additionalregression1FAIL/1PASSbefore; final3suites34PASS/types/scoped2prodFileslint0errors0warnings. Counts overlapG019/helpertests, notwholebaseline. Otherappnotices/rawerrors andallSET03publication scenarios remainopen; no phone/tablet/visualPASS.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G020-schedule-notice-before.json` / `stage-G020-schedule-notice-after.json`.
+
+### WB-184 — header retains old account's cabinet options after cross-tab login
+
+- date: `2026-10-14`; severity: `P2`; status: `verified targeted same-live G016`, not a proven authorization leak.
+- Keep owner-loaded publictab9; logout/login known pure client in another tab. Header updates name to LIVE TEST CLIENT12OCT but still says Owner/Ээси with BusinessCabinet menuitem. Selecting it correctly reaches serverDenied; hardreload then shows Client/onlyMyBookings.
+- Cause: RoleAndBusinessSwitcher loads role/currentbusiness only once on mount, while name/RSC refresh can update without remounting this client state.
+- Fix: meaningfulauthchange subscription clears old roles/openmenu immediately; defer SDK reload out of auth callback; requestgeneration blocks stale prioraccount results; unsubscribe/clear timer on cleanup. No backend/RPC/grant change.
+- Same-live: publicneighbor client->anon->ordinaryGoogleowner->openownermenu->signoutother6 clearsowneroptions->ordinaryclientlogin updatesneighbor to Client/onlyMyBookings without manualreload. Ordinaryknownaccounts only/no impersonation.
+- Supporting:3new casesFAILbefore +2oldPASS;4suites10PASS/types42374exit0/scopedlint0errors0warnings; rolecomponent scoped84.21statement/69.69branch/83.33function/89.24line percent. No full role/RLS/API/multi-business/revocation/mobile-layout closure.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G016-role-menu-before.json` / `stage-G016-role-menu-after.json`, `role-menu-after.jpg`. No domain/entity/grant writes, normal auth sessions only.
+
+### WB-183 — own bookings ARIA tabs lack keyboard navigation
+
+- date: `2026-10-14`; severity: `P2`; status: `verified targeted same-live G013`.
+- Pure client -> own bookings RU -> focus selected Предстоящие tab -> ArrowRight. Focus remains Предстоящие/selected true; both tabs lack roving tabindex. Mouse История works and shows3 history records.
+- Expected: horizontal ARIA tablist supports ArrowLeft/Right and Home/End with one tab stop, consistent tab/panel relationship. No booking status/permission write involved.
+- Root: shared Tabs buttons only handle click; ClientCabinet sections lack tabpanel linkage. Do not alter navigation-link behavior or claim all shared consumers verified.
+- Fix after480source-stable diagnostic completed: shared buttonTabs rovingfocus/ArrowLeftRight wrapandskipdisabled/HomeEnd; optional tab/panelIDs and ownClientCabinet labelledpanels. NavigationLink behavior retained.
+- Same-live: original RUArrowRight nowfocus/selectsHistory; Home/End/Left/Rightwrap andKYArrowRight also pass;5future/3history/package1of2 unchanged, no booking/review command. Other shared consumers notliveclosed.
+- Supporting: new4cases3FAIL1PASSbefore; final consolidated8suites58PASS/types61437exit0/scoped5fileslint0errors1oldwarning. No fullaccessibility/responsive/globalbaseline PASS.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G013-tabs-before.json` / `stage-G013-tabs-after.json`.
+
+### WB-182 — Kyrgyz booking receipt formats date in Russian
+
+17Oct G130 follow-up (not new distinct): actual owner branch1 KY weekly schedule showed seven Russian weekday headings. BranchScheduleEditor now reuses existing deterministic formatBookingWeekday; state/save/SQL unchanged. SAME-LIVE native UI AX KY seven corrected names, EN/RU controls, Mon09–18/contacts unchanged; 4 suites35PASS/typesPASS/scoped2filelint0/0. Blank snapshots retained, not visual/device/screenreader PASS. Evidence global17/stage-G130-branch-weekdays-after.json; count remains5/whole0/NOT_READY.
+
+- date: `2026-10-14`; severity: `P2`; status: `verified targeted same-live G011`.
+- Ordinary pure client -> own future card #f821dd52 -> Open receipt -> Кыргызча: status/help/labels localized but date remains `19 октября 2026 г. в 13:15`.
+- Expected: actual Kyrgyz date locale, same booked instant/Bishkek timezone. Cause: receipt explicitly maps `ky` to `ru-KG`.
+- Initial Intl ky-KG mapping fixed server reload only: deeper G014 client EN->KY toggle still produced RU date, both receipt and own history card. Preserve G011 as limited historical evidence, not final client-path closure.
+- Final minimal fix: reuse existing bookingCalendarDate deterministic KY presentation (numeric business-zone parts + Kyrgyz month names), same prior RU/EN Intl format. Receipt and card share helper, no RPC/grants/booking/status/timezone change. Exact browser ICU support not directly probed; SSR/client divergence was observed live.
+- Same-live: same receipt reload in KY shows `2026-ж., 19-октябрь 13:15`; EN/RU retain prior dates, same ID/status/service/master. RU restored. Screenshot `receipt-ky-after.jpg`; no mobile/tablet PASS.
+- Final same-live G014: receipt EN->KY without reload and KYreload match19Oct13:15; same cancelled historya427 EN->KY yields26Oct09:00–10:00; RUrestored. No data changes or extra rootbug counted. Final screenshot attempts unavailable; initial screenshot is limited reload evidence.
+- Supporting: consolidated8suites58PASS includes date/status/history/count/tab/navigation regressions;27datehelpercases scoped100%coverage/types61437exit0/scopedlint0errors1oldwarning. Whole receipt context/branch/duration/contact and language coverage remain open.
+- Evidence: G011before/after retained, final `apps/web/test-results/global-2026-10-14/stage-G014-card-date-before.json` / `stage-G014-card-date-after.json`.
+- G019 same-root extension: live owner/staff schedule KG still rendered seven Russian weekday headings; existing deterministic weekday formatter now shared with ScheduleEditor. Same draftMonday09–18/branch1, EN->KY all7correct/no publication; new regressionFAILbefore,3suites33PASS/types/scopedlintPASS. No extra distinctbug counted, no newstaff/fullSET03 closure. Evidence `stage-G019-schedule-weekdays-before.json` / `stage-G019-schedule-weekdays-after.json`; screenshot unavailable.
+- 15OctG038 same-root calendar follow-up: actual KY publiccalendar day19 ARIA Russian despite correctKYsummary/weekdaycolumns. Existing deterministic day label now reused after converting calendar fields to the business-zone instant; RU/EN long labels unchanged. Same-live19->20->19 correctKYweekday/date/pressed state andRUEN switches; RUrestored. Before1KYFAIL2RUENPASS completedbeforepatch; after3s45PASS/types/lint0errors1existingcalendarEndwarning. No fourthdistinctnewbug, no domaincommand/fulllanguage/responsivePASS. Evidence `apps/web/test-results/global-2026-10-15/stage-G038-calendar-ky-before.json` / `stage-G038-calendar-ky-after.json`, `calendar-ky-after.png` wide/oddscale.
+
+### WB-181 — manual staff-add safety guidance stays Russian and lookup hint has double parentheses
+
+- date: `2026-10-14`; severity: `P2`; status: `verified targeted same-live G007`.
+- Ordinary owner -> Staff -> Addstaff untouched form -> EN/KY: form/sidebar translate but warning title/message remain Russian; RU/EN/KY identifier hint has two pairs of parentheses. Fresh current DOM evidence, no account selected or role granted.
+- Root: missing manualOverride title/message dictionary keys; dictionary hints already include parentheses and JSX adds another pair.
+- Fix: two existing domain keys in RU/KY/EN, render hint once with parenthesized fallback. No search/API/role-grant or security changes.
+- Same-live: same blankformKYreload and EN/RUswitch show localized safety guidance and single hint parentheses; original RU text retained, actualownerRU restored. No lookup/submission/account/staff/grants mutations.
+- Supporting:3new regressions fail before; final4suites30PASS with existingWB178 guard/service/HTTP cases retained (27overlappingcases not added as coverage); finaltypesPASS/scopedprodFileslint0errors0warnings. Functional AX proof only; no screenshot/mobile/tablet/accessibility whole-area PASS.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G007-staff-guidance-before.json` / `stage-G007-staff-guidance-after.json`.
+
+### WB-180 — public business landing uses Russian fallback copy on EN/KY
+
+- date: `2026-10-14`; severity: `P2`; status: `verified targeted same-live G006`, not full-language/public area PASS.
+- Existing public business2 page -> select English -> select Кыргызча. Locale buttons/ratings/service names/units change, but verified-business badge, online-booking badge, booking/branch CTA, headings, descriptions, trust points, counts, branch/staff hints and bottom CTA remain Russian. Map-link product labels also remain literal Russian.
+- Expected: product UI copy follows locale; user-provided names/addresses remain stored data. Root: BusinessInfo already requests translation keys, but visible landing keys are absent from all three business dictionaries; map labels are literals.
+- Fix:33 visible landing keys in existing RU/KY/EN dictionaries, reuse existing business map-label translations; no DB/profile/booking/security/layout changes. Remaining conditional promo/empty/more-card branches not silently declared verified.
+- Same-live: reload sameKYpage thenENswitch shows translated product headings/actions/explanations/hints/labels/mapactions; booking destinations unchanged, stored names/addresses intact. RU restored, public still3active services; retained G005 service stays hidden.
+- Supporting: new tests6FAIL before, final3suites14PASS (including6new component/dictionary/language-switch/link checks), typesPASS; scopedlint0errors/1preexistingimgwarning. No screenshot/realnarrowviewport proof, no visual/responsive PASS.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G006-public-copy-before.json` / `stage-G006-public-copy-after.json`. Count grammar e.g.EN`1 specialists` remains separate observed gap. Header`Аккаунт владельца` is user profile full_name according to AuthStatusServer projection, not a literal caption to translate; no profile rename.
+
+### WB-179 — hidden services disappear from owner management and lose saved branch selection
+
+- date: `2026-10-14`; severity: `P1`; status: `verified targeted same-live G005`, not whole service-management PASS.
+- Ordinary owner business2 -> Add service -> new marked LIVE TEST SERVICE 14OCT G005, duration30/prices150–250/only branch2 -> uncheck Active -> Save. Returned management list has only prior active rows, no new row/filter/edit action. Addressed read-only Supabase UI confirms persisted hidden ID `e21565db-8dc1-41df-b6e3-0dc9d16b040a`. Direct normal edit page additionally leaves saved branch2 unchecked.
+- Expected: hidden service remains manageable with its saved branch; public availability remains active-only. Root: list drops all inactive rows; edit loads active branch copies even for a hidden selected service.
+- Minimal fix: retain fully hidden logical name groups in owner management; preserve existing branch selection of partially active groups (name-based update semantics), load edit copies matching selected visibility. No public query/RLS/grant changes; no broad service-identity rewrite.
+- Same-live: original hidden ID now visible/editable with branch2 checked; edit name/duration45/prices150–275 stays hidden. Activate -> public page includes exact new values and EN/KY service names; deactivate -> public page excludes fixture and returns3active services, owner row remains manageable. Final fresh SELECT confirms sameID/branch2/activefalse/45/150/275. No staff assigned, booking, payment or original fixture mutation.
+- Supporting: final5suites20testsPASS, scoped changed-page coverage list31/35statements4/4functions24/33branches, edit26/31statements2/2functions9/14branches (60gatePASS); scoped productlint0errors; finaltypecheckPASS (tsc --noEmit exit0). Screenshot unavailable; DOM/AX proof only, no responsive/visual PASS.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G005-service-lifecycle-before.json` and `stage-G005-service-lifecycle-after.json`. Retained fixture final name `LIVE TEST SERVICE 14OCT G005 EDITED`, inactive, no slot/finance effect. Mixed-visibility/name-identity/atomic-edit risks remain separate.
+
+### WB-178 — blank staff-user lookup exposes the platform account directory
+
+- severity: `P1`; status: `verified targeted same-live14OctG004; broader privacy scope remains open`.
+- Ordinary owner business2 -> advertised `/dashboard/staff/new` -> leave search blank -> click `Найти` -> settled table lists7 platform identities with names/email, including4 nonfixture profiles. No row selected, employee created or role granted.
+- Expected: request an identifier, no account directory or privileged Auth listing for a missing/whitespace query.
+- Root: optional query schema, service returns all mapped Auth users for blank query, UI sends blank search. Fix must protect UI plus server/service, preserve existing access checks and canonical profile-name lookup.
+- Evidence: `apps/web/test-results/global-2026-10-14/stage-G004-empty-search-before.json`; unrelated personal values intentionally masked in saved evidence. Nonblank scope remains a separate unverified privacy boundary.
+- Minimal fix: mandatory trimmed HTTP query; direct-service blank short circuit before privileged Auth listing; local form guard clears rows and stale selection. Typed local-validation error follows locale changes. Existing authorization and canonical profile-name search preserved.
+- Same-live repeat: blank/whitespace now show readable RU/EN/KY guidance and no account rows; exact known client lookup still returns one correct identity. No employee/account/role created. Initial stored error language was refined after an actual EN-switch observation; final error follows EN/KY/RU without another request.
+- Supporting before3suites12FAIL/10PASS, final4suites27PASS; typesPASS; scopedlint0errors/1oldanywarning; servicecoverage29/30statements,8/8functions,32/43branches (60%gatePASS), notall-service/schema/release coverage. Evidence `stage-G004-empty-search-after.json`.
+
+### WB-177 — monitoring statistics fail with a nested PostgreSQL aggregate
+
+- severity: `P1`; status: `open`, live13Octstage050.
+- NormalglobalSuperAdmin -> `/admin/monitoring` defaultStatistics afterendpointrepair shows `aggregate function calls cannot be nested`. Metricsandlogstabs separatelywork.
+- Root confirmed: fresh read-only Supabase UI SELECT from pg_proc at12:32–12:33UTC13Oct confirmed deployed `get_api_metrics_stats(text,integer,text)`, SECURITYDEFINER, nests `count(*)` inside `jsonb_object_agg` for status_codes. End-to-end fix remains unverified; no SQL-function/grants/migration changes made.
+- Further risk: metrics/statistics/finance-log APIhandlers lackexplicitcurrentuserguard in source; directloggedoutbrowserAPIattemptstage051 blocked `ERR_BLOCKED_BY_CLIENT`, NOT liveproof ofunauthorizedaccess. Do not call this riskfixed orreapplyoldmigration. FixstatisticalRPC only withverifiedsecurityboundary andaddresseddeployment/regressions.
+
+### WB-176 — administrative monitoring text is mojibake
+
+- severity: `P1`; status: `verified targeted RU`, stage050.
+- Livebefore: authenticatedSuperAdmin monitoringheader/tabs/all3forms/empty/errorcopy unreadable Cyrillic bytecorruption.
+- Minimal mechanicalrepair51affectedlines from reversibleWindows1251/UTF8sequences; functions/payloads/data content unchanged. No newdecoder/runtime dependency.
+- Same-live after: properRussianheader, Statistics/API metrics/Operationlogs tabs, filtersandtablesloaded/readable. FullKY/ENmonitoring notclaimed.
+- Evidence: stage050; AdminDiagnosticClients failbefore/passafter; types/scopedlint0errors1oldwarning.
+
+### WB-175 — diagnostic clients call nonexistent administrative API paths
+
+- severity: `P1`; status: `verified targeted path repair`, stage050.
+- Before: healthpageHTTP404 evenRetry; Monitoringall3tabs parseHTML404asJSON. Calls`/api/admin/...`, routehandlersactually`/admin/api/...`, norewrite.
+- Fix: useexistingcanonicalprotected-area paths, no newaliases/handler/grant/query changes.
+- Same-live after: Systemhealth panelactualdata, Monitoringmetricstablerowsandoperationlogs actual13Octtestentries insteadof404. StatsrequestnowrevealsseparateSQLWB177, notfullmonitoringPASS. Authflowcardnot independentlyliveverified.
+- Supporting3suites6tests/typesPASS; browserloggedoutAPIverificationBLOCKEDstage051, serverhandlercallercheck remainscode-onlyrisk.
+
+### WB-174 — global super-admin diagnostic pages wrongly require tenant membership
+
+- severity: `P1`; status: `verified targeted same-live`, stage050.
+- NormalGoogleknownSuperAdmin successfullyenters/admin; advertisedSystemhealthclickanddirectsameURL andMonitoring silentlyredirect/admin. Bothpages incorrectlycallbusiness-manager context.
+- Minimalfix: client-onlyplatformpagesdelegate toexisting/sharedAdminLayout scopedcurrent-userglobalSuperAdmingate, asotheradminpages. No removedAPIguard, newrole orpermissiongrant.
+- Same-live positive: globalSuperAdmin reachesbothpages; same-live negative: normalGoogleownerbothURLsremainNeedsSuperAdmin/nodiagnostics. BackendAPIboundaryseparate andblocked, notclaimedsecure.
+- `admin-diagnostics-before.json2FAIL`, `admin-clients-after.json3suites6PASS`, types24691PASS, E2EordinaryCUA positive/negative.
+
+### WB-173 — package sale terms stay Russian under English and Kyrgyz UI
+
+- severity: `P2`; status: `verified same-live EN/KY/RU`, stage04913Oct.
+- Ordinaryowner/business2 QuickDesk selects knownclient61f -> Sell package -> English: translateddialog but option/selectedsummary `2 визитов,30 дн./срок,скидка`. Expected localized count/validity/discount labels, no change to user-authored planname.
+- Minimal fix: one shared in-component plan-terms formatter for options andsummary,4keys inRU/KY/EN; fixed-price properly labeledpricepervisit ratherthanpercentage discount. No payload/role/query/sale changes.
+- Same-live sameclient/plan47ada: ENVisits/Validity(days)/Discount, KYВизиттер/Мөөнөтү(күн)/Арзандатуу, RUВизиты/Срок(дней)/Скидка2/30/0%; Cancelcloses, no purchase/sale submitted, RUrestored.
+- `stage-049-package-sale-copy.json`, pretests3FAIL, post3suites9PASS/types/scopedlintPASS. Fixed-price componentcoverageonly, no separatelivefixture; other packagepages/names languages stillpartial.
+
+### WB-172 — hourly guarantee is presented as the top-up and obscures the original base
+
+- severity: `P1`; status: `verified targeted same-live` (13Octstage046).
+- Live before: ownerbusiness2 exactclosed13Octshift, service600/materials50/master60%. At0.02hours/rate300, guarantee6<base360 but headline/flag says top-up6. At2hours, guarantee600/base360/actualtopup240 but headline says600; expandedcard mislabeledfinal600 as base.
+- Fix: additive per-shift and aggregate top-up projection (`max(0, guarantee-base)`), preserve fullguarantee separately; summary/flags consume true top-up; card uses original base_master_share. No payment, storedledger/schema/grant changes fromfix.
+- Same-live after: sameclosedshift2h shows topup240/base360/guarantee600; repeat0.02h showsguarantee6/topup0/no guaranteeflag. RestoredstaffhourlyNULL andschedules; final2h fixture retained.
+- Evidence: `apps/web/test-results/live-2026-10-13/stage-046-hourly-finance.json`, freshSupabaseSQL909e4eb8 topup240/guarantee600.
+- Support: directJest4suites18PASS/typecheckPASS/scopedproductionlintclean, servicecoverage116/144statements15/16functions77/119branchpaths(gate60PASS), notfullsystemPASS. Hoursaudit/guarantee-exceedsreceipts remain gaps.
+
+### WB-171 — employee statistics exclude material receipts from turnover and payout percentages
+
+- severity: `P1`; status: `verified targeted same-live` (13Octstage046).
+- Steps: ordinaryownerbusiness2 -> new13Octclosed testshift with LIVE TEST FINANCE13OCT service600/materials50 -> employeeStats.
+- Before: workspace650, Stats headline/card600; employee360/business290 ratios60%/48.3%, or after2h600/50 ratios100%/8.3%, misleading commonbasis.
+- Expected/after: displayturnover650 includingmaterialreceipts; at2h600/50 ratios92.3%/7.7%; at0.02h360/290 ratios55.4%/44.6%. RawAPI serviceamount semantics remain600; no doublecount/change ofpercentagebase.
+- Fix: summarycommonbasis service+materials, samecardtotal; existing allstaff/currentworkspaceconsistent.
+- Evidence/support: same stage046 and `finance-money-verified.json`; retainedclosedshift909e4eb8/item2e5ed7f4, settings restored. No realtransaction.
+
+### WB-170 — application boundary intercepts Next's not-found control signal
+
+- area/severity: P2,F2/F4/A4,13Oct17:14–17:21Bishkek.
+- live before: Ownercontextbusiness1 copiedstaff2card/schedule correctlydenied but displays NEXT_HTTP_ERROR_FALLBACK;404 instead of normal404. No staff/contact/form/review data exposed.
+- fix: SharedReactboundary uses publicNextnavigation unstable_rethrow forframeworksignals; ordinaryerrorfallback/monitoring remain. No privateNextimports/digestparsing or accessguardchanges. PublicAPI markedunstable upstream, pinnedcurrentNext16.0.11; upgrade requires regression.
+- same-live: Samewrongcontextcard/schedule now friendly404. Restorebusiness2 viaordinarypicker: sameemployee/review/graph available, originalpreference2/RU restored, no entitywrites.
+- supporting: Before3FAIL3PASS;3suites16PASS/types/scopedlintPASS; scopedcoverage21/22statements4/5functions10/15branches meets60%, not100%. IncludesactualNextnotFound/redirect/cause andordinaryerrorfallback tests.
+- evidence: live-2026-10-13/stage-045-current-business-staff-guard.json; framework-boundary-before/after.json; [official control-signal API](https://nextjs.org/docs/app/api-reference/functions/unstable_rethrow).
+- status: verified targeted; fullforeignrole/API matrix and404locale matrix notPASS.
+
+### WB-169 — staff detail crashes for a unique review relation
+
+- area/severity: P1,I3/J4/L3,13Oct16:57–17:02Bishkek.
+- live before: Ordinary owner/business2→Сотрудники→Открыть staff1bfd: errorboundary booking.reviews.forEach is not a function; sameRetryfails. Prevents reaching schedule/settings.
+- fix: Narrow PostgRESTadapter supports to-one review object, legacyarrays and null; preserves booking/service context and newest-first sorting. Existing managercontext/bizguard/queryscope untouched; no access expansion.
+- same-live: SamepageRetry now employee/branch/active/schedulelinks render and one retainedreview rating3/editedmarker, avg3.0. No DBdatawrites orentities.
+- supporting: Exactbefore1FAIL2PASS;3suites14PASS/types/adapter100% scopedcoverage; lint0errors1oldunusedwarning. Foreignstaffguard test verifies no privilegedreviewload forwrongbiz. NotfulltenantAPIproof.
+- evidence: live-2026-10-13/stage-043-staff-details-review.json; staff-detail-before/after.json.
+- status: verified targeted.
+
+### WB-168 — conflict recovery refreshes slots but leaves stale own-visit count
+
+- area/severity: P2,D6/E1,13Oct16:43–16:49Bishkek.
+- live before: Two ordinary pureclient tabs select12:15; first creates06458033, second staleconfirm stayswizard/no duplicate visible and refreshes slots13:15+, but warning remains3 vsfreshowncabinet4.
+- fix: Shared availability refresh lifecycle refetches current authenticated own-bookings query with slots on conflict/success/retry; guests do notforce disabledprivatequery. No polling/countfaking/auth/grants/schema changes.
+- same-live: Repeatidentical two-tabsworkflow onnext13:15; firstcreatesf821dd52, second rejects with localizedbusytoast, modalcloses, count4→5 withoutreload, slotsnow14:15+. Freshcabinet5uniqueconfirmedcards, originalsunchanged/package1unchanged.
+- data:06458033 19Oct12:15–13:15 andf821dd52 13:15–14:15 retained peruser, eachblocks60min; no actualpayment.
+- supporting:3suites15PASS/types/refreshhookscoped100%coverage; hooklintclean, oldviewimmutabilityerror unchanged. SameaccountstaleUIonly, notmultiuser/load/fullRPC/databaseproof.
+- evidence: live-2026-10-13/stage-042-stale-slot-conflict.json; stale-count-after.json.
+- status: verified targeted.
+
+### WB-167 — specialist/service selection guidance and states remain Russian
+
+- area/severity: P2,D6/O2,13Oct16:36–16:40Bishkek.
+- live before: KYstep3/4 headings translated but guidance, card available/selected ARIA+badges, estimated price, totals, ready/pending summary labels Russian.
+- fix: Missing existing shared dictionary keys RU/KY/EN; no selection, availability, price, permission or stored business-name changes.
+- same-live: KYselected/unselected service and staff/Any statuses correct, totals60min100–300 unchanged; English same selectedstaff/service guidance+summary localized; RU service unchanged. Originalstaff/service restored, no booking created.
+- supporting: Before3FAIL6PASS; after4suites33PASS/types/scopeddictionarylintPASS. Wholewizard/phone/tablet notPASS.
+- evidence: live-2026-10-13/stage-041-selector-copy.json; selector-copy-before/after.json.
+- status: verified targeted.
+
+### WB-165 / WB-166 — step5 localized copy and Kyrgyz weekday
+
+- area/severity: P2, D6/O2,13Oct16:19–16:32Bishkek; live before preserved stage038/039.
+- WB165 before: EN/KY final-summary title/loading hint Russian, selected-date duplicate colon. Added shared locale keys and removed redundant punctuation. Same EN/KY/RU title/date, actual KY/RU loading hint correct; EN loading hint rendering-tested, not separately captured afterfix.
+- WB166 before: KY19Oct date/summary Russian Monday. Initial Intl solution passed Node but still failed settled browser, not counted. Deterministic KY weekday uses business-timezone ISO weekday, existing RU/EN/date-fns object formatting retained. Same KY summary/selecteddate/confirmation now дүйшөмбү, ENMonday/RUпонедельник unchanged. No slot/date command changes.
+- supporting:4suites30PASS, typesPASS, helper100% statements/functions/branches; scoped view lint1preexisting immutability error confirmed HEAD. Not wholeprojectPASS.
+- data: confirmation closed without creating booking; RU restored, fixtures retained. Further step3/4 mixed copy and reload selection loss observations remain open, not included as repaired.
+- evidence: live-2026-10-13/stage-039-slot-copy.json; slot-copy-before/after.json.
+- status: verified targeted.
+
+### WB-164 — existing-visit warning drops the count and uses a Russian title
+
+- area/severity: P2, D6/O2,13Oct16:08–16:13Bishkek.
+- live before: Repeat futuree911 on19Oct with two existing visits: RU message «У вас уже есть активных записей…» misses count; EN header/flow translated but warningtitle Russian.
+- fix: Localized warningtitle RU/KY/EN and exact{count} replacement in plural message, preserve zero/single branches. No booking/availability/auth changes.
+- same-live: Samewizard count2/title correct RU/KY/EN; after normal repeatcreates thirdbooking, reloadwarning shows3 correctly.
+- supporting: Before5FAIL4PASS;3suites14tests/types/scopedlintPASS. Does not prove full stale/race/API conflicts.
+- evidence: live-2026-10-13/stage-038-repeat-slots.json; existing-visits-before/after.json.
+- status: verified targeted.
+
+### WB-163 — saved language starts in Russian before hydration
+
+- area/severity: P2, O2/SSR,13Oct15:50–16:00Bishkek.
+- live before: Pureclient/profile selectsEnglish and waits for loadedName; ordinary reload without codechanges starts Russian, then settles English. Preference is not permanently lost.
+- fix: Pass RootLayout existing validated serverlocale into optional LanguageProvider initialLocale; initialize shared state with it. Existing standaloneRU/cookie/storage/browser fallback unchanged.
+- same-live: Same EN and KY reloads first AX already shows selected locale/title/body/loadingcopy; no initialRussian in this same observation path. Not frame-level timing or full responsiveproof.
+- supporting: SSRbefore2FAIL2PASS; after5suites43PASS/typesPASS. Scopedlint has identical3errors1warning on gitHEAD baseline and modified provider; no rule disabled.
+- evidence: live-2026-10-13/stage-036-initial-locale.json; initial-locale-before/after.json.
+- status: verified targeted.
+
+### WB-162 — profile account-link guidance and Telegram help stay Russian
+
+- area/severity: P2, E2/O2,13Oct15:51–15:56Bishkek.
+- live before: Settled English profile has Russian connected-account explanation and Telegram secondary button; opening actual help reveals entirely Russian dialog/instructions/actions.
+- fix: Add missing explanation key RU/KY/EN and use shared translations throughout TelegramAccountSwitchHelp. Provider/link URLs, callbacks and permissions unchanged.
+- same-live: Reopen sameprofilehelp EN/KY/RU, translated paragraph/button/dialog/help/actions; Escape closes without linking/refresh. Restore RU before next stage.
+- supporting: Before5FAIL1PASS;4suites19PASS/types/scopedlintPASS. Shared login-label tests support regression but not a new full live login claim.
+- evidence: live-2026-10-13/stage-035-profile-language.json; profile-copy-before/after.json.
+- status: verified targeted.
+
+### WB-161 — staff access denial ignores selected English/Kyrgyz
+
+- area/severity: P2, F4/O2,13Oct15:40Bishkek.
+- live before: Pure client follows /staff denial then selects English; header changes but heading/help/home/account-change remain Russian.
+- fix: Add missing NO_STAFF_RECORD dictionary keys RU/KY/EN. No authorization or data changes.
+- same-live: Same /staff denied, EN and KY full help/actions translated, RU restored; /staff/finance also denies correctly.
+- supporting: Before2FAIL5PASS, final3suites29PASS/typesPASS; scopedlint0errors1old unusedcontextwarning. Not full role/API matrix.
+- evidence: live-2026-10-13/stage-034-client-boundaries.json, staff-denial-before.json, client-boundary-regression.json.
+- status: verified targeted.
+
+### WB-160 — management access denial gives database-edit instructions to clients
+
+- area/severity: P2, F4/user-facing recovery,13Oct15:36Bishkek.
+- live before: Pure client ordinary Google login then /dashboard/bookings is correctly denied, but body instructs changing user_roles/businesses.owner_id and checking server logs; development diagnostics JSON visible. No secret leak or privilege escalation claimed.
+- fix: Replace the technical tutorial with account/business-owner help in RU/KY/EN; omit development JSON for NO_BIZ_ACCESS. Authentication, grants and schema unchanged.
+- same-live: Same denied page ordinary reload and RU/KY/EN switch show plain localized help without table instructions or JSON. Copied ownerfinance link remains denied with correct help.
+- supporting: Before3FAIL1PASS;2suites16PASS then consolidated3suites29PASS/typesPASS. Intermediate typo in new Kyrgyz link test corrected, evidence retained.
+- evidence: live-2026-10-13/stage-034-client-boundaries.json; access-copy-before/after/verified.json.
+- status: verified targeted.
+
+### WB-159 — business listbox ignores Escape
+
+- area/severity: P2, navigation/accessibility, 13 October 2026.
+- live before: Owner business2 QuickDesk opens the sidebar business listbox; Escape on the active trigger leaves it open with aria-expanded=true. The same keyboard path closes the header role menu normally.
+- fix: Open-only Escape listener with cleanup and trigger refocus; no business-selection requests, authorization or data changes.
+- same-live: Reopen and Escape from trigger, then reopen and Escape from business1 option: both close and restore focus to business2 trigger; selected business stays unchanged.
+- supporting: Before2FAIL2PASS; after3suites10tests/types/scoped component lintPASS. Full accessibility matrix not claimed.
+- evidence: live-2026-10-13/stage-032-navigation-responsive.json; business-escape-before/after.json.
+- status: verified targeted.
+
+### WB-158 — client search ignores the name saved in the profile
+
+- area/severity: P1, H4/E2, 13Oct05:45–05:52Bishkek.
+- live before: OwnerQuickDesk existingclient query LIVE TESTCLIENT returned no results; sameemail low.fade found OAuthAdaханOsorov although canonicalprofile61f nameLIVE TESTCLIENT12OCT was intact. No profile overwrite claimed.
+- fix: Batchload only canonical id/full_name for existing authorized Authpage IDs, prefer nonblankprofile name, preserve provider/email fallback, businessstaff exclusion and existing auth/contact/pagination rules. NoRLS/grant/schema or account changes.
+- same-live: Samequery now finds LIVE TESTCLIENT12OCT; emailshows samecanonicalidentity. No new entity created.
+- supporting: Before3FAIL5PASS;4suites18tests/targetedsourcecoverage/typesPASS;scopedlint0errors1oldanywarning. Scope beyond current authpage and fulltenant/role matrix remains open.
+- evidence: live-2026-10-13/stage-031-profile-name-search.json; profile-search-before/after.json.
+- status: verified targeted.
+
+### WB-157 — existing-review summary uses English copy in Russian and Kyrgyz
+
+- area/severity: P2, E4/O2, 13Oct05:30–05:37Bishkek.
+- live before: After actual reviewcreate on paid03469725, RU summary says «Доступное действие Edit review» while edit button and surrounding UI are Russian; missing `actions.editReviewShort` key.
+- fix: Add short-edit key RU/KY/EN; no behavior, schema, authorization or review writes in fix.
+- same-live: Samecard after actualreviewupdate3stars shows Редактировать отзыв; KYПикирди түзөтүү, ENEditreview, RUrestored. Sameone revieweb51acab remains3stars, package1 unaffected.
+- supporting: Before2failed/7passed;6targetedsuites27tests/types/dictionarylintPASS. General tests OOM and general lint72errors remain separate gaps.
+- evidence: live-2026-10-13/stage-030-client-package-review.json and review-regression.json.
+- status: verified targeted in3locales.
+
+### WB-156 — linked existing clients appear as anonymous walk-ins in owner history
+
+- severity/area: P2, H/QuickDesk client identity; 13Oct05:02–05:23Bishkek.
+- live before: Owner business2 history exact03469725 rendered «Клиент у стойки». Primary read confirms registered client61f and NULL snapshot; canonical profile name LIVE TEST CLIENT12OCT. Legacy internalRPC intentionally stores names only for non-account walk-ins. Profiles remain self-only via RLS.
+- fix: Narrow authenticated manager endpoint resolves only profile names for current-business, caller-readable, requested booking IDs. Stored snapshots take precedence; registered missing-name fallback is generic Client, not anonymous walk-in. No expanded profiles policy, grants, schema/RPC or snapshot writes.
+- same-live: Same old03469725 now LIVE TEST CLIENT12OCT; local name search finds it. Ordinary new QuickDesk19Oct10–11 existing61f producede9111890, intentional snapshotNULL yet ownerhistory resolves correct profile name. Both IDs/statuses and package1 retained. No real payment.
+- supporting: 5suites33tests, targeted newservices coverage above60%, typesPASS. Scopedlint0errors2existinghookwarnings. Initial test parameter/type failures retained and corrected; wholeproject/E2E/fulltenant matrix not claimed.
+- evidence: live-2026-10-13/stage-029-client-identity.json; new fixture e9111890-d6e9-4dc9-a400-f32067fc0cf4 retained per user.
+- status: verified targeted.
+
+### WB-155 — receipt body keeps a separate, stale language context
+
+- area/severity: P2, receipt locale; discovered while completingWB154 before17:00 stop.
+- live before: Sameeaa3f7e5 Englishheaderpressed but bodyБронь/Неявка Russian; KYheader also didnotupdatebody.
+- fix: Remove redundant nested LanguageProvider from authenticated/fallback/missing receipt branches; shared rootprovider owns selectedlocale. Data/RLS/RPC unchanged.
+- same-live: SamepageEnglishBooking/No-show thenRUБронь/Неявка restored.2suites12tests/typesPASS; fullKY/visualmatrixnotclaimed.
+- evidence: stage-027-no-show-presentation.json.
+- status: verified (RU/EN targeted).
+
+### WB-154 — client projection omits terminal no-show status
+
+- area/severity: P1, D/E; actualownerNoShoweaa3f7e5 afterstart.
+- live before: Primaryno_show/package2 unchanged. Receipt rawno_show; clientUpcomingcount3 includesNoShow/EnglishNoShow/emptyprogress/Cancel.
+- fix: Existing domainstatus/cancellationrule; ownupcominghold/confirmed, terminalhistoryregardlessscheduledend; localizedNoShowlabels/timeline/receipt, reviewpaidonly. No permission/schema/commandchanges.
+- same-live: Reload beforeend: Upcoming2/History2; sameNoShowlocalizedНеявка/noCancelReview/RepeatOpen; receiptНеявка. Package2of2 retained.
+- supporting: Before10FAIL;5suites25tests/typesPASS, extended26testspass buttargetedcoverageFAIL(54.14branches/48functions). Scopedother10productfileslint0errors1oldwarning; existingBookingCardquoteerrorsremain.
+- evidence: stage-027-no-show-presentation.json.
+- status: verified targeted; wholeclient/financial/notification matrix incomplete.
+
+### WB-153 — business error Retry replays the cached server failure
+
+- severity/area: P1, B/D resilience;12Oct15:24–15:30Bishkek.
+- live before: Wizardstep5→step2 triggers transientSupabaseDNSfailure; ordinaryRetry afterDNSlookup recovers stillshowsunavailable. Serveroutputno newGET. Previousstage020manualfullreload recoveredsameclassfailure.
+- expected: Retry requests a fresh serverpayload and clears boundary without requiring browserreload.
+- fix: Reacttransition router.refresh plus optionalboundaryreset; sharedmanual/reconnectpath, offlineclick stilldefers. No network/DBchanges.
+- same-live repeat: SameerrorretainedafterHMR→Retry235→actualbusiness/calendar restoredwithbranch/date withoutmanualreload. Laterstepvalidationclearedstaff/service, notfullwizarddraftPASS.
+- supporting: Before2FAIL/2PASS;2suites7tests/targetedcoverage/types/scopedlintPASS. Evidence stage-023-business-retry.json.
+- limits: DNSexternalfaultnotfixed; no responsive/offlineOSnetworkmanipulation or fullresiliencematrixclaim.
+- status: verified.
+
+### WB-152 — cancellation of a future booking disappears from the client cabinet
+
+- severity/area: P2, E/D cancellation history;12Oct14:58–15:15Bishkek.
+- live before: Pureclient cancelled26Octa4278f13 normally; Upcomingcount2→1, Pastcount0/empty. PrimarySELECT proves same ownrowcancelled, no deletion.
+- expected: Cancellation remains discoverable with status/receipt/repeat in own history.
+- fix: Existing client_id-guarded history query includes end_at<now OR cancelled; localized History/count/empty labels explain future cancellations. No schema/permission/status changes.
+- same-live repeat: Fullreload→RUИсторияcount1/samea4278f13Отменена; KYТаржымал/ENHistory samecancelledcard. Upcomingstillone14c108f6. Exact26Octwizard now09:00enabled/noalreadybookedblock: slot released, auditretained.
+- supporting: Before1FAIL;4suites14tests/types/scopedquery+dictionarieslintPASS. Evidence stage-022-client-cancellation-history.json; fulltimezone/locale/tenantRPCmatrixnotPASS.
+- limits: KYdateRussianmonth remains observedcopygap; no visualclaim or realpayments. No entities deleted.
+- status: verified.
+
+### WB-151 — any-master confirmation navigates away while the command is in flight
+
+- severity/area: P1, D/E;12Oct14:32–14:54Bishkek.
+- live before: Dedicated pureclient19Oct09:00/any/60min confirmation changed wizard URL to a concrete staff UUID before the command finished. Failed RSC request fell back to hard navigation; no receipt, wizard said already booked. Owncabinet/primarySELECT confirmed14c108f6 belongs to client61f7237b, correct staff/branch/09–10.
+- expected: Resolve command staff without navigating away from in-flight creation; show resulting receipt.
+- fix: Remove unnecessary parent staff-selection mutation from creation hook. Actual staff is local command input; guest auth-choice retains its separate resume-selection callback. No API/DB/auth changes.
+- same-live repeat: Actualcalendar26Oct→Любоймастер→60min→09:00→confirm; pendingURL remainedany, then automatic confirmed receipt a4278f13 with actualstaff/date. Testauditsretained.
+- supporting: Before2FAIL/2PASS; after4suites17tests/typesPASS. ScopedlintFAIL unchangedHEADview.tsxwindow.location.href rule; no fullsuite/lint/coverage claim. Evidence stage-021-any-staff-command.json.
+- limits: Initial Supabase DNS ENOTFOUND external; error-boundary Retry recovery observation unresolved, not fixed here. Not simultaneous-conflict/fullbookingmatrixPASS.
+- status: verified.
+
+### WB-150 — absent daily analytics presented as calculated zeros
+
+- severity/area: P1, G4/O2;12Oct13:38–13:50Bishkek.
+- live before: Business2 Analytics shows0created/confirmedpaid/revenue for13Sep–12Oct despitepaidfixture. Readonlyprimary dailytablecount0/latestdateNULL confirms absent aggregates, notcalculatedzero.
+- fix: EmptybyDay notice instead of dailyKPI/trend zero claims; localizedRU/KY/EN. Computedrowsincludingzero andfilters/hourly/errorhandling unchanged; no API/DB/cron mutation.
+- same-live repeat: Sameperiod/business RU/KY/EN explicitnotcalculatedexplanation, no dailyKPIzero.5suites18tests/types/scopedlintPASS; evidence stage018.
+- limits: Missingaggregation/backfill/cron remains separate operational gap. Not a fix of live propagation or numericalanalytics/fullG4PASS.
+- status: verified (presentation).
+
+### WB-149 — complex cabinet labels untranslated
+
+- severity/area: P2, E/O2.
+- live before: After full historical complex hydration, RU31a39be7 card AX56/62 shows «Services in visit» and «Total:61мин».
+- expected: Selected-locale section and total labels.
+- fix: Two missing section/total keys in RU/KY/EN cabinet dictionaries, no data changes.
+- same-live repeat: Same31a39be7 RUУслуги визита/Всего:61мин, KYВизиттин кызматтары/Жалпы:61мин, ENServicesinvisit/Total:61min.3suites8tests/types/dictionarylintPASS; stage-017-complex-copy.json. Not fullcabinet/visualaudit.
+- status: verified.
+
+### WB-148 — cabinet loses complex services and historical duration
+
+- severity/area: P1, D6/E1;12Oct13:21–13:25Bishkek.
+- live before: Same31a39be7 cabinet60min/one service versus receipttwo services60+1=61. Repeat carriedoneID.
+- fix: Existing visit-service snapshots joined in both ownclient_id guarded reads; pure normalizer supplies allservices/historicaldurations, primaryFK onlylegacyfallback. No schema/RLS changes.
+- same-live repeat: Fullreloadcabinet>Past sameID61min,bothservices60/1 andrepeatURLtwoIDs. Single-servicecardsstill60. Currentcompetencevalidationunchanged.
+- supporting:7suites25testsPASS,2purehelpers100%coveredstatements/functions/branches,typesPASS; scopedlintnotPASS2oldquoteerrors/1oldunusedwarning. Evidence stage-016-cabinet-complex.json.
+- status: verified (targeted past complex; notfullclient/upcomingmatrix).
+
+### WB-147 — Repeat opens business landing instead of booking flow
+
+- severity/area: P1, D6/E1;12Oct13:08–13:16Bishkek.
+- live before: ClientcabinetPast>31a39be7>Repeat navigated/b/testovyy-biznes-2 genericlanding; no bookingselection.
+- fix: Semanticdirect /booking link withcontextIDs andserviceparams, no obsolete date/slot; clearoldbusinessdraftonordinaryclick. PureURLbuilder; same bookingvalidation/auth unchanged.
+- same-live repeat: Samecard opens loadedstep4branch/master/selectedservice/currentbusinessday. WithWB148 complexlinkretains both historicalIDs, currentcompetencefiltersunavailableoption.
+- supporting:Beforetest1FAIL;7suites25testsPASS/types/targetedhelpercoveragePASS. Existingcomponentlint2quoteerrorsremain. Evidence stage-015-repeat-booking.json.
+- limits: Newrepeatbookingnot submitted/pureclientmissing; notfullD6PASS.
+- status: verified.
+
+### WB-146 — explicit staff schedule heading ignores locale
+
+- severity/area: P2, J1/O2; 12Oct12:11Bishkek.
+- live before: `/staff/schedule` KY/EN selected, AX59 heading «Моё расписание» remained Russian while calendar loading/navigation localized.
+- fix: Client presentation wrapper resolves existing staff.schedule.title; server retains staff/business authorization, branches and feature switch, calendar endpoint unchanged.
+- same-live repeat: RU «Расписание», KY «Менин графигим», EN «My Schedule». Existing data loaded; no schedule mutation.
+- supporting: Before6targetedlocale assertionsfail (combinedWB145/146), after4suites21testsPASS, typesPASS, scopedlint0errors1existingwarning. Evidence stage-012-staff-workspace-locale.json.
+- status: verified.
+
+### WB-145 — staff sidebar mixed untranslated workspace labels
+
+- severity/area: P2, J/O2; 12Oct12:09–12:16Bishkek.
+- live before: Staff schedule RU/KY «Staff Workspace»/«Разделы workspace»; EN also Russian sectionlabel; KY schedule/finance links Russian.
+- fix: Missing staff sidebar dictionary entries RU/KY/EN; KY navigation labels «График»/«Каржы». Existing shared shell unchanged.
+- same-live repeat: RU «Кабинет сотрудника»/«Разделы кабинета»; KY «Кызматкердин кабинети»/«Кабинеттин бөлүмдөрү», localizedlinks; EN «Staff workspace»/«Workspace sections». RUrestored.
+- supporting:4suites21testsPASS/typesPASS. No responsive/all-copy audit claim; evidence stage-012-staff-workspace-locale.json.
+- status: verified.
+
+### WB-144 — live-2026-10-12 summary localization
+
+- severity/area: P2, K3/O2.
+- before: Staff finance summary on KY and EN still showed Russian title «Сводка по смене», export button/help. Live AX observed before code changes.
+- fix: Explicit RU/KY/EN summary title, export label and help dictionary entries; existing component resolves selected locale.
+- same-live repeat: RU «Сводка по смене»/«Экспорт»; KY «Сменанын жыйынтыгы»/«Экспорт» and KY help; EN «Shift summary»/«Export» and EN help. RU restored.
+- supporting: Before2locale failures, after5suites21testsPASS including monetary contracts; types/scoped6productfileslintPASS. Evidence stage-011-summary-revenue.json.
+- limits: Does not claim staff sidebar or CSV headers fully translated.
+- status: verified.
+
+### WB-143 — live-2026-10-12 continuation observation
+
+- date/build/environment: 2026-10-12 11:28–11:34 Bishkek; staff finance, one LIVE TEST row251service/49consumables.
+- severity/area: P2, K3/K5 financial summary basis clarity.
+- steps: Staff Current shift > Summary > Show details, before and after closing same single-row shift.
+- expected: Overall-turnover headline identifies its basis consistently with detailTotal and displayed payout split.
+- actual: Headline «Общий оборот»251, detail Services251+Consumables49=Total300, payout151+149=300. Persisted service_total251 and shares are correct; no engine formula bug claimed.
+- evidence: stage-010-finance-save-duplicate.json actualAX61 and64/67 plus primaryread-onlySQL; separate observation from duplicatefix.
+- fix: Shared pure presentation helper computes services+consumables once for summary card and summaryCSV; explicit components shown. Storage/service-basis input and payout engine unchanged.
+- same-live repeat: Open summary RU/KY/EN300=251+49, employee151/business149. Actual RU CSV has total300/service251/cons49/split151149. Ordinary close, freshSQL and fullreload preserve the same closed summary and single item. New marked row eb63528d deleted with explicit approval; final shift closed/items0/allamounts0.
+- supporting: Before3locale failures; after5suites21testsPASS, helper targeted100%coverage, types/scoped6productfileslint/whitespacePASS. Evidence stage-011-summary-revenue.json; no hourly/formula/full-project green claim.
+- status: verified.
+
+### WB-142 — live-2026-10-12 continuation-001
+
+- date/build/environment: 2026-10-12 10:57–11:37 Bishkek; localhost staff finance, empty address-specific test shift.
+- severity/area: P0, J3/K1 persisted duplicate financial entry/totals.
+- steps: One Addclient, nameLIVE TESTFINANCE12OCT, assignedservice251/cons49; one Save; wait autosave/refetch; reload.
+- expected: One intended financial row persists once across manual/automatic saves.
+- actual before: Two rows with distinct IDs/timestamps20sec apart, same contents; persisted502service/98consumables instead251/49. ActualUI and read-onlySQL confirmed before edits.
+- fix: Stable draftUUIDclientId carried by optionalstrictAPIfield, serverpersistsit once thenupdateswithinshift. Repeatinsertignoreconflict, foreignID/collisionlookuprejectbeforewrites. UIreconcilesbyidentity rather than content and ignoresservercreatedtimeforwrite-dirtysignature. No schema migration or permission expansion; intentional duplicates retain distinct keys.
+- same live repeat: After explicitly authorized deletion, sameoneAdd/oneSave/elapsedautosave/reload yields exactlyone rowc8de7268. Closing preservesID andcreated05:26:22.075UTC. Open/closedpercentage60/40 split151/149 correct for251service+49consumables underexistingwhole-som rounding.
+- supporting:6suites45testsPASS; targeted2modulecoveragePASS (76.10%lines/statements,61.48%branches,98.18%methods), typesPASS; scoped4productfileslint0errors16existingwarnings. No thresholdlowered or guardsremoved.
+- limits: LegacyclientswithoutclientId not retry-idempotent claim; full concurrentdifferent-payload/versioning, otherfinancialmodels andtenantRPCmatrix unverified. Not whole-projectgreen.
+- cleanup: Userexplicitlyapproved removing onlycreatedtestrows; all3testledgerrowsdeletedordinaryUI, unrecoverablethroughUI. FinalfreshSQL11:37shiftclosed/items0/allamounts0; no realpayment/coreaccount/businessdelete. Evidence stage-010-finance-save-duplicate.json.
+- status: verified.
+
+### WB-141 — live-2026-10-11-008
+
+- date/build/environment: 2026-10-12 05:08–05:11 Bishkek; localhost, owner individual staff finance statistics.
+- severity/area: P2, O3 accessible names for financial inputs.
+- steps: Inspect period input; expand closed12Oct shift and Adjust hours; inspect accessible name.
+- expected: Date and hours fields have localized accessible names.
+- actual before: Native datefield only value, unassociated visible label; hour stepper only0 with no name, aria-labelnull.
+- fix: Existing visible date label/input linked with ReactuseId; hours aria-label uses existing localized editHoursPrompt. No data/validation/calculation changes.
+- same live repeat: Date/hours names RU Дата периода/Введите фактическое количество отработанных часов; KY Мезгилдин датасы/Иштелген сааттардын натыйжалуу санын киргизиңиз; EN Reference date/Enter actual hours worked.
+- supporting: Before3newnameassertionsFAIL; after3suites17testsPASS, typesPASS, scoped2productfileslintPASS. Evidence stage-007-finance-accessible-fields.json actualAX.
+- limits/cleanup: Not screenreader/whole keyboard audit; editor cancelled, RUrestored, no data writes.
+- status: verified.
+
+### WB-140 — live-2026-10-11-007
+
+17Oct G131 narrow static business-context follow-up (not new distinct): actual owner branch edit EN showed Russian Бизнес before authored name. Two existing branches.edit keys lacked dictionary values; six RU/EN/KY values only added. Same native UI AX ENBusiness/KYБизнес/RUБизнес, unchanged authored name/contacts/hours; missing-name fallback component-only. Before6FAIL3PASS ->3s12PASS/typesPASS/scoped4filelint0/0. Screenshot capture unavailable; not visual/device/security/fulllocale PASS. Evidence global17/stage-G131-branch-business-context-after.json. Count remains5/whole0/NOT_READY.
+
+- G120 17Oct MonthPicker follow-up (not new distinct): G120 WB140monthpickerlocaleFOLLOWUP/notnewdistinct: actualownstaffMonthNovember2026 RU dropdownEnglishNovember+Englishdategrid; EN/KYcontrolsRussianМесяц/Год. MinimalMonthPickerPopover locale=enUSorru sameexistingDatePickerKY->RUfallback +4existingdatePickerlabelkeys; no dictionaries/calendarbehavior/query/financialcommandchange. SAME-LIVE RUноябрь/RUdates; ENMonth-Year; KYАй-ЖылwithdocumentedRussiandatefallback; clicking2NovKYretainsNovzero andcloses; RUday13/600-600-50/516restored. Genuinebefore5FAIL1PASS aftercorrectingoneharnessmatcher(earlier6FAILretained) ->3s21PASS/types/scopedexplicit2filelint0/0. Englishselectedsuffix/fullKYcalendar/oddscalelayout remainOPEN—notfullO3/a11y/device/FINPASS. Newrunstill3/inherited2+10/whole0/source933418f5. Evidence apps/web/test-results/global-2026-10-17/stage-G120-month-picker-locale-after.json. No financial/booking/auth/SQL commands or new entities; existing KY->RU date fallback deliberately not presented as full Kyrgyz translation. English library selected suffix and actual oddscale layout remain unclosed.
+
+- G099 16Oct business-finance copy follow-up (not new distinct): actual EN/KY All-branches option remains Russian and EN business-prefix remains Бизнес. Both existing components already call t; finance.branch.all and finance.biz.context missing from all three dictionaries. Added exactly6values/no component-query-finance changes. SAME-LIVE EN Business / All branches, KY Бардык филиалдар; authored business/branch names unchanged; branch2 empty -> All restores Year2026 totals1000/781/219; RU restored. Truebefore2FAIL1PASS ->3s14PASS/types/scopedlint0/0 plus existing eslintignore process notice. Resolves G098 static-copy observation only; not whole finance/localization/device/security PASS. Evidence apps/web/test-results/global-2026-10-16/stage-G099-finance-static-labels-after.json; sourcee5f30d57/newrunfix1/inherited15fix10/whole0.
+- date/build/environment: 2026-10-12 about04:57–05:07 Bishkek; localhost, owner, individual employee finance statistics.
+- severity/area: P2, K3/O2 observed finance copy localization.
+- steps: RU header > employee Finance > Statistics > expand closed12Oct shift > Adjust hours.
+- expected: Headings, period, table labels and Save use selected locale.
+- actual before: Money/Guarantees/Audit, Finance filters/Reference date, summary/description English fallbacks, rawday/min, Closed, tableCLIENT/SERVICE/AMOUNT/CREATED, empty-table message and Save English.
+- fix: RU/KY/EN finance keys plus common.save, t-based hardcoded metadata headings and period/minute units. Existing dictionary/provider architecture, no finance calculation/API change.
+- same live repeat: Same stats/card/editor RU/KY/EN; labels and period translated, correct closed04:48 preserved. Editor cancelled, RU restored, no writes to hours.
+- supporting:4suites23testsPASS (6new locale and populated-state tests), typesPASS; scoped8productfileslintPASS after routine HEAD-existing require→staticlogError import repair, not extra productbug.
+- limits/evidence: stage-006-finance-translations.json actualAX before/after. FinalRU native screenshot now succeeded, no saved artifact or responsive-size PASS. Only observed normal/empty-shift page claimed; populated guarantee flags unit-supported and API-error surfaces unverified.
+- cleanup: No new entities/data writes; retained previously closed empty test audit shift untouched.
+- status: verified (observed copy).
+
+### WB-139 — live-2026-10-11-006
+
+- date/build/environment: 2026-10-12 04:31–04:48 Bishkek; localhost web, owner, empty closed LIVE TEST shift.
+- severity/area: P1, K2 manual hours correction.
+- steps: Employee finance statistics > expand closed shift > edit hours > clear field > Save.
+- expected: Blank is rejected without writing; explicit zero remains valid.
+- actual before: Empty value coerced to0, successfully saved and editor closed. Read-only SQL confirmed hours0 replaced null. Negative-1 and25 correctly rejected.
+- fix: Trim input and reject empty before numeric conversion; existing0–24 bounds and API/permissions unchanged.
+- same live repeat: Same blank Save displays invalid-hours message and retains editor; persisted hours remain null. Explicit2 saves and UI/SQL show2.
+- supporting: Finance12suites/64testsPASS, web typesPASS, scoped product lint0errors/8existing warnings. Initial focused regression7failed/21passed; repaired stale happy-route ledger fixture without weakening409 guard.
+- limits: Fixture has zero turnover and percentage model; hourly guarantee/top-up, rounding and correction audit not live verified. Targeted whole-service coverage remains below threshold (51.95% statements/lines,19.07% branches); not coveragePASS.
+- cleanup/evidence: stage-005-finance-hours.json. Ordinary reopen/close restores hoursnull; closed empty audit row256a0610-676a-450b-b909-0ecccccd5edc retained, all amounts0/items0. Screenshot capture unavailable; actualAX and read-only SQL recorded.
+- status: verified.
+
+### WB-138 — live-2026-10-11-005
+
+- date/build/environment: 2026-10-12 04:31–04:48 Bishkek; localhost web, owner current-shift workflow.
+- severity/area: P1, J2/K3 manual close timestamp.
+- steps: Employee finance > Current shift > Open > Close shortly after opening > Statistics > expand same shift.
+- expected: Closure timestamp is the actual manual-close instant, consistent with calculation clock.
+- actual before: Opened04:31, card Closed00:00; read-only SQL showed closed2026-10-13T00:00:00 for manual close on12Oct shortly after04:31.
+- fix: Both owner/staff manual-close services pass now.toISOString() to existing close RPC, removing duplicated tomorrow-midnight conversion. No migration, ledger recreation, formula or permission change.
+- same live repeat: Reopen/close same shift; owner card Closed04:41; SQL opened2026-10-12T04:41:17.086 and closed2026-10-12T04:41:49.36 Bishkek. Final cleanup reclose04:48:34.955 also correct.
+- supporting: Twelve finance suites/64testsPASS include both services' three instant/timezone boundary cases; web typesPASS; scoped product lint0errors/8existing warnings; whitespacePASS.
+- limits: Staff-provider UI not repeated this stage; its callsite supported by regressions. No bulk rewrite of historical timestamps. Whole-service coverage threshold not met, not full financePASS.
+- cleanup/evidence: stage-005-finance-hours.json; retained empty closed test audit row, no client rows or money. Screenshots unavailable, actualAX plus read-only SQL.
+- status: verified.
+
+### WB-137 — live-2026-10-11-004
+
+- date/build/environment: 2026-10-12 about04:15–04:30 Bishkek, localhost web, owner, inactive LIVE TEST promotion.
+- severity/area: P2, N/O rejected promotion input feedback.
+- steps: Branch1 > edit existing inactive promotion N4 > enter-1 > Save.
+- expected: Rejected unsaved field with understandable localized explanation.
+- actual before: Rejection correct, but toast text `validation`; user cannot see the reason.
+- evidence: `stage-004-promotion-errors.json`; native tab8 AX602–604 before edits.
+- fix: Existing validation supplies stable `details.field`; HTTP forwards it; UI maps fields to localized messages. No validation/authorization/status rule changes; no matching server message strings.
+- same live repeat: SameN-1 rejected RU/KY/EN with explanatory count message and form retained; cancelled form and fresh reload confirm inactiveN4/title/usage0.
+- supporting: Combined8suites/38testsPASS; typesPASS. Targeted5module coverage passed configured60%threshold after adding ownership/no-write/boundary contracts, not full coverage.
+- limits: Scoped lint notPASS due HEAD-existing Toast set-state-in-effect error and5warnings; no suppression/unconfirmed product rewrite. Full delivery/payment/promotion-redemption not verified.
+- cleanup: No new entity; invalid requests unsaved, RU restored, unchanged-save timestamps may change but values retained.
+- status: verified.
+
+### WB-136 — live-2026-10-11-003
+
+- date/build/environment: 2026-10-12 about04:15–04:30 Bishkek, localhost web, owner.
+- severity/area: P2, O3 notification accessibility/localization.
+- steps: Rejected promotion SaveN-1 underRU; inspect toast close action. Independently observed earlier on cancelled booking success.
+- expected: Close accessible name follows selected language.
+- actual before: `Close notification` beside Russian message.
+- fix: Shared Toast uses common.closeNotification through existing LanguageProvider; labelsRU/KY/EN. Existing timing/live region unchanged.
+- same live repeat: Same rejected promotion request RU `Закрыть уведомление`, KY `Билдирүүнү жабуу`, EN `Close notification`.
+- supporting: New3locale regressions include assertive error alert and dismissal callback timing; combined8suites/38testsPASS; typesPASS. Scoped lint existing Toast error remains.
+- evidence/cleanup: `stage-004-promotion-errors.json`, actualAX before/after; no screenshot available. Existing inactive promotion restored/read after reload, RU restored.
+- status: verified.
+
+### WB-135 — live-2026-10-11-002
+
+- date/build/environment: 2026-10-12 about 04:00–04:15 Bishkek, localhost web, owner, Cancelled booking history.
+- severity/area: P1, H1 history search query reactivity.
+- steps: With20cancelledrows type short/full ID4e30608a; press Enter; explicit Refresh; replace with nonexistent LIVE TEST NO MATCH12OCT.
+- expected: Loaded results follow the typed query and clearing restores the page without undisclosed manual refresh.
+- actual before: Query/mode changed but20rows stayed; Refresh yielded1matchingrow; subsequent nonexistent query still showed that row.
+- evidence: `stage-003-history-search.json`, actual tab8 AX before edits, no screenshot available.
+- fix: Keep fetched unfiltered page; memoized pure search derives visible rows on query change. No per-keystroke network traffic or changes to tenant/status queries/RLS.
+- same live repeat: Same filter short/fullID→1row, no-match→0, clear→20, without Refresh.
+- supporting: Before2FAIL, after3suites/11testsPASS; new helper targeted100%coverage, types PASS; scoped lint0errors/2existing hook warnings; diff whitespace PASS.
+- limits: **Search beyond the loaded page is not fixed or live verified**. Dataset20/page30; global historical search/pagination remains an explicit separate gap.
+- cleanup: No additional data created; prior test booking remains cancelled.
+- status: verified (query reactivity).
+
+### WB-134 — live-2026-10-11-001
+
+- date/build/environment: 2026-10-12 about 03:50 Bishkek, localhost web, owner Test business 2, in-app browser 2.
+- severity/area: P2, O3 accessibility/localization of shared dialogs.
+- steps: History > Cancel future test booking 4e30608a; inspect close control; dismiss and repeat.
+- expected: Accessible close name follows selected Russian language.
+- actual before: `Close dialog` in an otherwise Russian confirmation, repeated twice before edits.
+- evidence: `stage-002-booking-cancel.json`; actual native AX274–282. Screenshot capture failed, no visual proof claimed.
+- fix: Shared Dialog resolves common.closeDialog through existing LanguageProvider, RU/KY/EN dictionary keys. Confirmation logic and permissions unchanged.
+- same live repeat: Same confirmation RU `Закрыть окно`, KY `Терезени жабуу`, EN `Close dialog`; dismissal preserves confirmed status; RU restored.
+- supporting: Regression initially 2 FAIL/4 PASS; after fix 4 suites/22 tests PASS, web types PASS, scoped product-file lint PASS.
+- cleanup: Address-specific LIVE TEST booking cancelled normally; persisted cancelled row verified. No active test booking remains.
+- status: verified.
+
+### WB-133 — night-web-051
+
+- date/build/environment: 2026-10-09 08:46–08:48 Bishkek; localhost web, Windows in-app Chromium, guest after normal logout.
+- severity/area: P1, F4/C6 missing-session classification.
+- steps: Direct open /dashboard/bookings without session.
+- expected: Normal sign-in redirect; no owner data and no false network-outage claim.
+- actual before: Stable «Нет соединения с сервисом» page. Server getUser returns SDK AuthSessionMissingError400/no code, wrongly treated as service failure.
+- evidence: guest-dashboard-guard-stage.json actualAX13/15 and server diagnostics; fresh tab8 screenshot unavailable, not claimed.
+- fix: SDK isAuthSessionMissingError recognizes the missing-session type; no message-string matching, no treating every400 as sign-out, no role/tenant guard removal.
+- same live repeat: Reload same protected page →/auth/sign-in?redirect=/dashboard with normal provider actions, no failure page or owner data.
+- supporting:12 business-context regressionsPASS including typed400missing-session, arbitrary400provider failure, network failure and role guards;2new tests. No whole-tenant security matrix PASS claim.
+- cleanup: No business/booking/account mutations.
+- status: verified.
+### WB-132 — night-web-050
+
+- date/build/environment: 2026-10-09 08:37–08:42 Bishkek; localhost web, guest, Windows in-app Chromium.
+- severity/area: P2, D4/O3 guest form instructions and validation feedback.
+- steps: Actual KY header →publicbranch1/12Oct/staff60min →09:00 →guest; inspect hints; submit empty name, one-letterL, markedname/emptyphone, abcphone, own validphone/invalid-email.
+- expected: Named field/context explanations and validation messages use selected language; invalid forms create no booking and retain entered values.
+- actual before: Five explanatory fields stayed Russian. All five invalid cases correctly rejected but with Russian validation messages.
+- evidence: guest-form-language-stage.json actual AX333/335/338/341/344 and AX348 errors, before change. No screenshot capture claimed.
+- fix: Existing booking guest keys populated in RU/EN/KY; hook uses localized field message after unchanged shared validators reject. No validation bypass/rule/API/server change.
+- same live repeat: Same KY guest09:00 form has five KY explanations; exact five invalid cases return KY messages, form stays open with values, no receipt. Cancel resets form and RU restored.
+- supporting: Real form/hook18 regressions across three locales PASS; types PASS. No provider-delivery or whole-app translation PASS claim.
+- cleanup: No booking created, contacts not submitted to API; local form cancelled.
+- status: verified.
+
+### WB-131 — night-web-049
+
+- date/build/environment: 2026-10-09 08:34–08:36 Bishkek; localhost web, guest, Windows in-app Chromium.
+- severity/area: P2, D4/O3 booking-method dialog copy.
+- steps: Public branch1/12Oct/staff/60min step5 →actual EN header →09:00.
+- expected: Selected-time label, account/guest badges, their explanatory hints and footer use English.
+- actual before: Title/actions English, six named fields Russian (AX540,543,545,547,549,550).
+- evidence: booking-auth-choice-language-stage.json exact before/after AX. Tab7 screenshot unavailable, not claimed.
+- fix: Six missing existing booking.authChoice keys in each RU/EN/KY dictionary; existing actions/guards unchanged.
+- same live repeat: Same EN09:00 dialog shows all named fieldsEnglish; actual KY switch →same09:00 shows KY; Cancel closes without creating a booking.
+- supporting: Three locale and unchanged-action component tests PASS. Keyboard live Tab/ShiftTab wrap, Escape close and slot focus restore PASS only for this dialog.
+- cleanup: No booking or personal data submitted.
+- status: verified.
+
+### WB-130 — night-web-048
+
+- date/build/environment: 2026-10-09 08:20–08:31 Bishkek, localhost web, Windows in-app Chromium, guest.
+- severity/area: P2, D2/O3 common booking wizard and step5 localization.
+- steps: Public business2 branch1/12Oct/staff/60min step5; use actual header EN then KY.
+- expected: Common headings, step statuses, back-step accessible labels, selected-count/total and time-selection hints use selected locale.
+- actual before: Those fields stayed Russian in both EN and KY. Stored service names are user data and not included in this defect.
+- evidence: booking-wizard-language-stage.json; booking-wizard-ky-mixed-before.jpg; actual EN/KY AX.
+- fix: Typed three-locale bookingFlow dictionary in existing translation provider; BookingSteps/BookingSummary consume it. No duplicate locale state or booking rule changes.
+- same live repeat: Same step5 after reload → actual KY, EN, RU switches translate the named fields, counts and navigation. KY Тандалды:1/5-кадам/Жалпы; EN Selected:1/Step5/Total; RU restored.
+- supporting: Three locale component regressions PASS; types PASS. Steps1–4-specific descriptions/date weekdays/provider dialogs are not claimed covered.
+- cleanup: Read-only UI language changes; no new booking or schedule mutation.
+- status: verified.
+
+### WB-129 — night-web-047
+
+- date/build/environment: 2026-10-09 08:20–08:31 Bishkek, localhost web, Windows in-app Chromium, normal owner logout → guest.
+- severity/area: P2, D4 guest booking discovery.
+- steps: Public business2 branch1/12Oct/staff/60min step5; read authentication notice; select09:00.
+- expected: Explain both available account and guest paths.
+- actual before: Notice claimed registration/sign-in required, although actual slot dialog offered booking without registration.
+- evidence: guest-choice-stage.json; guest-choice-copy-before.jpg; actual dialog AX.
+- fix: Only booking.needAuth in existing RU/KY/EN dictionaries, describing both paths and guest name/phone requirement.
+- same live repeat: All three header language controls show correct notice; same RU09:00 opens account/guest choice, Cancel returns to unselected slot without a write.
+- supporting: Three dictionary regressions PASS; types PASS.
+- cleanup: No booking created; language returned to RU.
+- status: verified.
+
+### WB-128 — night-web-046
+- date/build/environment: 2026-10-09 08:03 Bishkek; localhost web dev, guest in-app Chromium Windows.
+- severity/area: P1, D guest booking/I4 temporary work location.
+- steps: Owner temporarily opens branch2 Monday09-18, publishes staff19Oct branch2/day09-18/break13-14; normal logout; public branch2 service60min →12:00 →As guest →LIVE TEST name/authorized ownphone →Book.
+- expected: One guest confirmed12-13 visit at published temporary branch, home/regularbranch1 unchanged.
+- actual: Guest form remains open; toast209 staff not found or inactive Details:[object Object]; no receipt. Valid26slots reflect published schedule.
+- evidence: tab7 live AX209 before change; guest-transfer-stage.json. Deployed hold_slot_guest definition still requires staff.branch_id=p_branch_id.
+- fix: Forward20261009110000 replaces homebranch predicate with shared schedule_contains_booking and same-business active staff; deployed two-minute hold, expired-hold handling, trimmedguestcontacts, grants and serialized scheduling triggers preserved. Applied+registered once.
+- same live repeat: Same guestform12:00 Book →confirmedreceipt42aa38a2-d0db-4920-9759-6838d46be7d4 on19Oct12:00,60min. Screenshot guest-transfer-confirmed.jpg.
+- supporting: Disposable PostgreSQL old homebranch rejection →new allows temporarybranch exactbreakboundary; rejects liveholdoverlap/break/wrongbranch/foreigntenant/emptycontacts/inactivestaff; expiredhold frees slot; homebranchunchanged. No simultaneous-race PASS claim.
+- cleanup: Normal UI exactbooking cancellation/day RestoreRegular/branch Monday interval removal. ReadonlySQL confirms cancelled, effective19Octsourceweek/homebranch1 09-18, branch2sevenclosed days. No purge/permanenttransfer.
+- status: verified.
+
+### WB-127 — night-web-045
+- date/build/environment: 2026-10-09 07:50–08:00 Bishkek; localhost web dev, Windows in-app Chromium, guest after normal owner logout.
+- severity/area: P2, D guest multi-service receipt.
+- steps: Public branch1/12Oct/staff select60+1 minute services →09:00 →continue as guest →LIVE TEST name and authorized own phone →submit →receipt dba70dc9-e061-4a3e-8e54-413f9999c884.
+- expected: Receipt shows both selected services and total61min, as authenticated receipt does.
+- actual: Confirmed receipt shows only primary service and no total duration. Live Supabase read-only proof confirms both booking_services rows60+1 and booking end10:01: no booking data loss.
+- evidence: tab7 live receipt AX; Supabase table proof {minutes:61,services:[primary60,secondary1]}; complex-stage.json.
+- diagnosis: Guest RLS fallback booking_view_public returns only primary service_name; FallbackBooking constructs one service with null duration.
+- fix: New narrow booking_receipt_public(uuid) returns ordered localized names and snapshot durations, keeping existing legacy RPC unchanged. Explicit empty search_path, no contacts/client ID/internal notes/ledger, anon direct table reads remain denied. Fallback uses this receipt composition.
+- same live repeat: Normal owner logout →same guest receipt reload →both60+1 services and total61 visible. Main-tab screenshot guest-complex-receipt.jpg. Forward20261009105000 applied and registered once.
+- supporting: Disposable PostgreSQL ordered two-service/localized/single/cancelled/unknown-ID/no-PII/direct-table-denied checks PASS; guest receipt component3tests PASS.
+- cleanup: Normal owner exact-ID CancelConfirm; Supabase read-only status cancelled. Original competency restored: primary60 checked, temporary1min unchecked. No record purge.
+- status: verified.
+
+### WB-126 — night-web-044
+- date/build/environment: 2026-10-09, localhost web dev based on7f5c8ae; Windows in-app Chromium, normal Google owner acting as client.
+- severity/area: P1, D authenticated multi-service booking.
+- steps: Temporarily assign existing1min service to active staff, preserving60min. Publicbranch1/12Oct →staff →both services →61min/100–600 →09:00 →reviewbothnames →Confirm.
+- expected: Oneconfirmed09:00–10:01 booking, ordered composition retained, identity email and profile contacts.
+- actual before: No receipt; confirmation remains open, toast column email does not exist Details:[object Object] Code:internal; quick-hold500. Exact liveAX toast301, complex-stage.json.
+- diagnosis/fix: Deployedhold_complex_slot selects nonexistent profiles.email. Forward20261009104000 only replaces clientcontact query with profiles join auth.users/currentauth.uid; keeps profile requirement, holds, services/order, validation, triggers and existing privileges. Applied and registered once.
+- same live repeat: Same pending09:00 review →Confirm →confirmedreceipt31a39be7-f730-45e7-9833-577943017c79; bothservices60+1 andtotal61 visible,12Oct09:00. Tab7screenshot unavailable, liveAX retained.
+- supporting: Disposable PostgreSQL firstreproduces missingcolumn then verifies identityemail/profilecontacts/61min/orderedcomposition/holdexpiry; rejects overlap/break/foreignservice/emptycomposition/anonymouscaller. Not a multiconcurrency claim.
+- cleanup: Both authenticated and guest complex visits cancelled normally; original secondary competency restored unchecked; primary60min preserved. Seecomplex-stage.json.
+- status: verified.
+
+### WB-125 — night-web-043
+- date/build/environment: 2026-10-09, localhost web dev based on 7f5c8ae; Windows in-app Chromium, normal Google owner acting as client.
+- severity/area: P1, D booking / J effective schedule work location.
+- steps: Publish only19Oct09–18/break13–14 in branch2 (temporarily open Monday branch2), preserving regular branch1. Public branch2 →19Oct →active Adahan →branch2 60-minute service →12:00 →review →Confirm.
+- expected: Published date-specific work location permits one booking12–13 without permanently transferring the employee.
+- actual before: Review and26 slots correct; confirmation remains open, staff not found or inactive /not_found, no receipt.
+- evidence: transfer-stage.json exact AX steps; transfer-published.jpg owner publication. Public-tab screenshots unavailable; not claimed.
+- fix: Forward migration20261009103000 only authenticated hold_slot; validate active staff in same business and whole interval through shared schedule_contains_booking instead of permanent home branch. Keep identity/contact/confirmed contracts, privileges and serialized trigger unchanged. Guest deployed function differs from repository baseline and was not overwritten based on suspicion.
+- same live repeat: Pending12:00 review →Confirm →confirmed receipt de87ce82-9d93-44c6-a514-bdcbe2fcebdf19Oct12:00; owner history shows branch2 and12–13. Screenshot transfer-booking-confirmed.jpg.
+- supporting: Disposable PostgreSQL reproduces old rejection and verifies new transfer, break boundary, regular day; duplicate, break, wrong branch, absence, foreign business, inactive staff and anonymous caller rejected. Existing schedule/reset scripts PASS. Single-session tests are not a multi-session concurrency claim.
+- cleanup: Normal owner cancelled exact booking; restored19Octregular branch1 and removed only temporaryMondaybranch2 hours. Supabase read-only query confirms cancelled and restored effective regular schedule/all seven branch2 days closed. Audit retained.
+- status: verified.
+
 ```markdown
 ### WB-001
 - id: `WB-001`
@@ -52,6 +897,423 @@ The web testing scope and execution status are maintained in
 - owner: `Codex + User`
 
 ```
+
+## Ночной живой прогон 2026-10-09 — новые проверенные исправления
+
+Начальный блок ночи перенесён из stage-файлов без повторной выдуманной проверки. Для WB-115–124: Windows, встроенный браузер, localhost:3000, commit `7f5c8ae` + ночные изменения; date `2026-10-09`, status `verified`. Точные исходные наблюдения/повторы — в указанных stage-файлах.
+
+### WB-115 — night-web-001
+- area: `G1 / O2`; severity: `P2`; title: Счётчик готовности русского кабинета показывает «1 open».
+- steps: владелец → главная кабинета → блок готовности → RU/KY/EN.
+- expected: локализованная подпись оставшегося шага; actual before: английское open в RU.
+- fix: существующие словари dashboard; live after: «Осталось:1» / «Калды:1» / «Remaining:1».
+- evidence: progress.json liveResults, owner-dashboard-before.jpg; supporting: 4 компонентных теста PASS.
+
+### WB-116 — night-web-002
+- area: `I2 / O2`; severity: `P2`; title: Длительность услуги сотрудника отображается испорченной кодировкой.
+- steps: владелец → сотрудник Адахан → компетенции; expected: читаемая локализованная длительность; actual before: `60 РјРёРЅ`.
+- fix: использовать существующий ключ duration; live after: после обновления `60 мин`, `1 мин`.
+- evidence: owner-stage.json; supporting: 1 компонентная регрессия PASS.
+
+### WB-117 — night-web-003
+- area: `L3 / O2`; severity: `P2`; title: Период рейтинга сотрудника выводит шаблон {days}.
+- steps: владелец → сотрудник → рейтинг; expected: текущий настроенный период; actual before: буквальный `{days}`.
+- fix: подставить ratingWeights.windowDays; live after: 30 дней после обновления.
+- evidence: owner-stage.json; supporting: регрессия с нестандартными45 днями PASS.
+
+### WB-118 — night-web-004
+- area: `C3 / D2`; severity: `P1`; title: Google-вход из записи теряет явное место возврата и отправляет в кабинет роли.
+- steps: гость → бизнес2/запись/шаг5 12.10 →09:00 → Через аккаунт → Google obraz.osh.
+- expected: тот же поток записи; actual before: `/staff` вместо переданного безопасного next.
+- fix: единая существующая логика выбора безопасного явного внутреннего назначения перед ролью; исключить дублирование callback-решения.
+- live after: тот же Google возвращает шаг5/день/филиал/сотрудника. Сервисное восстановление отдельно WB-119.
+- evidence: client-stage.json; supporting: 3 набора19 тестов PASS, небезопасные next и роль по умолчанию включены. Аккаунт реально связан с сотрудником, не объявлен чистым клиентом.
+
+### WB-119 — night-web-005
+- area: `D2`; severity: `P1`; title: Асинхронный старт записи удаляет корректную услугу из URL.
+- steps: открыть/обновить сохранённый step5 URL бизнеса2 с филиалом1, 12.10, сотрудником и60-минутной услугой.
+- expected: сохранить услугу до загрузки каталога; actual before: услуга исчезает, длительность0, нет слотов.
+- fix: не записывать пустой первоначальный render в URL, дождаться восстановления и каталогов перед отсевом ID.
+- live after: тот же URL восстанавливает60 минут, слоты09–17 и диалог подтверждения.
+- evidence: client-stage.json; supporting: 3 hook-регрессии/типы PASS.
+
+### WB-120 — night-web-006
+- area: `E2 / O2`; severity: `P2`; title: Сводка, история и отмена клиентской записи смешивают языки.
+- steps: реальная подтверждённая запись → кабинет/брони → RU/KY/EN → отмена.
+- expected: текущий язык; actual before: английские Date and time/Duration/Next action в RU, русская история в EN/KY, Cancel booking? в RU.
+- fix: недостающие ключи существующих словарей; live after: сводка/история трёх языков, RU «Отменить запись?».
+- evidence: client-stage.json; supporting: 3 регрессии PASS. Общий KY Intl ru-KG формат дат не объявлен полной языковой проверкой.
+
+### WB-121 — night-web-007
+- area: `J3`; severity: `P2`; title: В выходной сотруднику предлагают открыть недоступную смену без объяснения.
+- steps: опубликованный выходной09.10 → сотрудник/финансы → текущая смена → клиенты → текущая смена.
+- expected: явное объяснение запрета; actual before: «Смена не открыта», клиенты отправляют к отсутствующей кнопке.
+- fix: сделать существующее объяснение выходного достижимым; блокировать изменение до загрузки авторитетной доступности.
+- live after: тот же день «Сегодня у вас выходной», открыть нельзя.
+- evidence: staff-stage.json, staff-day-off-before.jpg; supporting: 5 компонентных регрессий PASS.
+
+### WB-122 — night-web-008
+- area: `J4 / O3`; severity: `P2`; title: Название выбранной даты/месяца содержит {value}.
+- steps: сотрудник/финансы → статистика → День →12.10 → Месяц.
+- expected: доступное имя с выбранным значением; actual before: «Выбранная дата/месяц:{value}» в живом AX.
+- fix: интерполировать ключи picker; сохранить стабильный порядок hooks при смене языка.
+- live after: RU/EN/KY доступные имена с датой/месяцем без шаблона.
+- evidence: staff-stage.json; supporting: 6 picker-регрессий PASS.
+
+### WB-123 — night-web-009
+- area: `J3 / O2`; severity: `P2`; title: Подсказка имени клиента ручной смены показывает {name}.
+- steps: открытая смена → Клиенты → Добавить, затем редактировать сохранённую позицию.
+- expected: ясное объяснение редактируемого имени по умолчанию; actual before: буквальный{name}.
+- fix: корректная формулировка существующих словарей трёх языков, без изменения сохранения.
+- live after: повторно открытая форма содержит объяснение без шаблона, тестовое имя сохранено.
+- evidence: staff-stage.json; supporting: 3 регрессии реальной формы PASS.
+
+### WB-124 — night-web-010
+- area: `J3 / K5`; severity: `P1`; title: Сохранённые клиенты исчезают из закрытой смены сотрудника.
+- steps: открыть смену → сохранить300/50 → изменить301/49 → обновить → закрыть → Клиенты(1).
+- expected: сохранённый список только для чтения; actual before: предлагает открыть смену вместо списка, хотя счётчик1 и суммы сохранены.
+- fix: не считать закрытую смену с позициями отсутствующей, разрешить чтение и запретить add/edit/delete.
+- live after: тот же закрытый список виден, без редактирования и удаления.
+- evidence: staff-stage.json, closed-shift-items-before.jpg; supporting: 4 регрессии PASS. Сохранение ledger ID при закрытии отдельно WB-083/WB-107.
+
+### WB-114 — night-web-042
+- date: `2026-10-09`; area: `D3 / G3 / N3`; severity: `P2`; status: `verified`
+- title: Успешная гостевая запись отсутствует на последнем шаге публичной воронки.
+- steps: после восстановления хранилища пройти обычную гостевую запись до подтверждённой квитанции; суперадмин → Воронка → Public; сверить сохранённые события через read-only SQL UI.
+- expected: успешная гостевая команда создаёт `booking_success` в той же анонимной сессии, без персональных контактных данных.
+- actual before: две подтверждённые гостевые квитанции, 7 событий шагов, но 0 успешных записей/0% конверсии.
+- fix: после успешной команды гостевой hook использует существующий трекер с фактическими ID услуги/сотрудника/брони и общей session ID. `keepalive` защищает отправку при немедленном переходе к квитанции; успех не блокируется аналитикой. Старые события не выдумываются задним числом.
+- live verification: тот же гостевой сценарий создал `bb896eb9`; квитанция подтверждена, SQL показывает одну строку `booking_success/public` с тем же ID. Обычный вход суперадмина → Воронка показывает просмотры1/успех1/100%/10 событий.
+- evidence: `funnel-stage.json`, `admin-funnel-data-after.jpg` до исправления, `admin-funnel-guest-success-after.jpg` после.
+- supporting: 5 наборов / 13 тестов PASS, типы PASS; guest hook scoped lint PASS. Две прежние ошибки no-console в funnelEvents.ts не объявлены новым продуктовым багом или общим lint PASS.
+- cleanup: обычная отмена владельцем завершена07:17, active0/toast; SQL statuscancelled/guesttrue. История сохранена, guest-stage.json/guest-final-cancelled.jpg.
+
+### WB-112 — night-web-040
+- date: `2026-10-09`; area: `G3 / N3 / Q1`; severity: `P1`; status: `verified`
+- title: Гранулярная воронка не имеет своей таблицы событий в основной базе разработки.
+- steps: суперадмин → Воронка → Повторить после исправления адреса API; обычный публичный поток записи → проверить события и страницу аналитики.
+- expected: события сохраняются, аналитика читает их без 500.
+- actual before: HTTP500 на странице; сервер public.funnel_events not found, SQL to_regclass NULL.
+- fix: две новые forward-миграции создают отдельную гранулярную модель с RLS, серверным доступом и ограничением существующей maintenance-функции. Не смешивалась с coarse analytics_events; история задним числом не выдумывалась.
+- security: API отдельно проверяет текущую глобальную роль суперадмина до использования server client; гостевой/обычный пользователь не получает доступ к сырой таблице. SQL подтвердил anon/authenticated SELECT/INSERT/retention EXECUTE false, service_role true. API negative unit401/403/503 PASS, прямой live API blocked browser policy, не выдан за live PASS.
+- live verification: обычный вход суперадмина → тот же переход → 7 событий/1 сессия, SQL группировка совпадает; фильтр Public7, QuickDesk0. Необходимость гостевого success-события отдельно night-web-042.
+- evidence: `funnel-stage.json`, `admin-funnel-schema-before.jpg`, `admin-funnel-data-after.jpg`.
+- supporting: 6 наборов / 15 тестов PASS, типы PASS, scoped lint без ошибок/один прежний warning.
+- migration: `20261009100000_create_funnel_events.sql`, `20261009101000_restrict_funnel_retention.sql` применены и зарегистрированы один раз. Старые миграции не переигрывались; не запускалась удаляющая maintenance-функция.
+
+### WB-113 — night-web-041
+- date: `2026-10-09`; area: `D3 / N1`; severity: `P1`; status: `verified`
+- title: Гостевая запись создаётся, но внутренний запрос отправки уведомления теряет авторизацию.
+- steps: выйти обычным способом → публичная запись бизнеса 2 → филиал 1, сотрудник Адахан, услуга 60 минут → 12.10 09:00 → «Как гость» → тестовые имя/разрешённый номер без email → отправить; проверить квитанцию и открытый Kezek Auth Bot.
+- expected: квитанция подтверждена, включённые уведомления владельцу/сотруднику отправлены.
+- actual before: `76d7470f` подтверждена, внутренний `/api/notify` отвечает 401, Telegram не получает подтверждение.
+- fix: приватный адаптер после успешной гостевой команды проверяет точное соответствие сохранённой гостевой записи ID/бизнесу/филиалу/сотруднику/времени/статусу. Общий механизм доставки читает участников сервером без создания/подмены пользовательской сессии. Защита публичного `/api/notify` не ослаблена; HTTP-запрос к самому себе устранён.
+- live verification: тот же гостевой сценарий создал `e8d0c8e3`; квитанция подтверждена, Telegram-сообщение с тем же ID пришло 06:57. WhatsApp API принял отправку владельцу; чтение/доставка на устройство отдельно не подтверждены. Email 403 — известный неоплаченный домен.
+- evidence: `guest-stage.json`, `guest-notification-before.jpg`, `guest-notification-after.jpg`, server10568.
+- supporting: 5 наборов / 33 теста PASS; типы/scoped lint PASS; scoped coverage 92.3% statements, 81.81% branches, 100% functions. Это не весь notification retry/idempotency набор.
+- cleanup: обе тестовые записи подлежат обычной отмене владельцем с сохранением аудита; актуальное состояние в guest-stage.json.
+
+### WB-111 — night-web-039
+- date: `2026-10-09`; area: `G3 / Q1`; severity: `P1`; status: `verified`
+- title: Клиент глобальной воронки обращается к несуществующему адресу API.
+- steps: суперадмин → Разделы → Воронка → Повторить.
+- expected: запрос к существующему обработчику `/admin/api/funnel-analytics`.
+- actual before: видимая HTTP 404, запрос к `/api/admin/funnel-analytics`.
+- fix: исправлен адрес клиентского запроса без создания дублирующей маршрутизации.
+- live verification: тот же Retry достигает правильного обработчика; 404 исчезает. Следующая 500 из-за отсутствующей таблицы отдельно night-web-040, не выдавалась за успешную загрузку данных.
+- evidence: `funnel-stage.json`, `admin-funnel-route-before.jpg`, `admin-funnel-schema-before.jpg`.
+- supporting: 2 новых клиентских регрессии PASS; глобальная страница и role helper также PASS.
+
+### WB-110 — night-web-038
+- date: `2026-10-09`; area: `F1 / G3`; severity: `P1`; status: `verified`
+- title: Глобальная аналитика суперадмина требует выбранный бизнес и перенаправляет обратно.
+- steps: обычный Google-вход kezekkg → `/admin` без бизнес-роли → Разделы → Воронка.
+- expected: доступна глобальная воронка платформы для суперадмина.
+- actual before: возвращает `/admin`, сервер NO_BIZ_ACCESS.
+- fix: убрана вложенная проверка бизнес-контекста; неизменённая глобальная проверка `/admin/layout` сохраняется.
+- live verification: тот же пункт открывает заголовок и фильтры `/admin/funnel-analytics`, без перенаправления. Обычный владелец через штатный вход получает отказ NeedSuperAdminRole.
+- evidence: `funnel-stage.json`, `admin-funnel-redirect-before.jpg`, `admin-funnel-owner-denied.jpg`.
+- supporting: тест страницы и два теста глобального доступа PASS. Прямой live API negative заблокирован browser policy; не заявляется как выполненный.
+
+### WB-109 — night-web-037
+- date: `2026-10-09`; area: `D2 / G3`; severity: `P1`; status: `verified`
+- title: После переключения бизнеса клиентская страница сохраняет данные и фильтры предыдущего бизнеса.
+- steps: аналитика бизнеса 2 → переключатель бизнеса → бизнес 1 → дождаться исчезновения загрузчика; сравнить фильтр филиалов с каталогом филиалов бизнеса 1.
+- expected: после смены контекста показываются только данные и фильтры выбранного бизнеса.
+- actual before: заголовок/ID показывают бизнес 1, аналитика продолжает предлагать два филиала бизнеса 2; у бизнеса 1 филиалов нет.
+- fix: ключ бизнес-идентичности на границе содержимого кабинета, разрешённой серверным контекстом. Смена бизнеса пересоздаёт содержимое и очищает старые данные/черновики; обновление того же бизнеса их сохраняет. Авторизация/БД не менялись.
+- live verification: тот же переход 2→1 оставляет только «Все филиалы», обратный 1→2 загружает правильные два филиала.
+- evidence: `business-scope-stage.json`, `analytics-business-switch-before.jpg`, `analytics-business-switch-after.jpg`.
+- supporting: 3 набора / 6 тестов PASS, типы и scoped layout lint PASS.
+- remaining: проверялись два законно доступных владельцу бизнеса; это не полная проверка неавторизованных границ или нескольких вкладок с общей cookie.
+
+### WB-108 — night-web-017
+- date: `2026-10-09`; area: `K3 / K5`; severity: `P2`; status: `verified`
+- title: Финансовый обзор использует разные основания суммы и процентов, создавая видимость выплаты 116.2%.
+- steps: владелец → финансы → день 09.10, все филиалы → отмеченная закрытая смена 301 услуг + 49 расходников → сравнить общую сумму и доли.
+- expected: ясно различаются услуги, расходники и общая сумма; обе доли используют одну базу.
+- actual before: оборот 301, сотруднику 181 (60.1%), бизнесу 169 (56.1%). Суммы движка правильны для общей суммы 350, но представление смешивает основания.
+- fix: общий итог 350 с отдельной разбивкой 301/49, проценты 51.7%/48.3% от 350; столбец 301 назван «Услуги». Расчёты выплат, API и БД не менялись.
+- live verification: тот же день/смена RU, EN, KY; пустой филиал 2 после загрузки показывает 0/0% без NaN; возврат к общему обзору. Переоткрытие/закрытие и SQL ранее подтвердили базовые суммы, не всю расчётную матрицу.
+- evidence: `finance-stage.json`, `owner-finance-percent-before.jpg`, `owner-finance-basis-after.jpg`, `owner-shift-stage.json`.
+- supporting: 3 набора / 15 тестов PASS, типы и scoped lint PASS.
+- remaining: гарантии, часовая ставка, no-show, акции, пакетные списания и конкурентные команды не подтверждены.
+
+### WB-107 — night-web-036
+- date: `2026-10-09`; area: `J3 / K4 / K5`; severity: `P1`; status: `verified`
+- title: Закрытие смены владельцем пересоздаёт сохранённые позиции клиентов.
+- steps: опубликован временный рабочий день 09.10 → владелец переоткрывает отмеченную смену → Клиенты с временем 03:40 → закрывает → снова Клиенты и тот же SELECT в Supabase SQL UI.
+- expected: завершение не меняет ID и время сохранённых позиций.
+- actual before: время стало 06:15; ID `aea93e72` заменён на `9c8a0a7f`, created_at изменился с 21:40:54 предыдущего UTC-дня на 00:15:21 текущего. Смена и суммы 301/49/181/169 сохранены.
+- fix: общая чистая нормализация/сверка сохранённого финансового снимка используется обоими путями закрытия. Владелец читает сохранённые позиции своей смены, отказывает 409 при устаревшем/несохранённом снимке до RPC; считает от сохранённых строк. Удаление/повторная вставка позиций устранены. Серверная проверка бизнеса и SQL-ограничения не менялись.
+- live verification: повторное переоткрытие/закрытие сохраняет `9c8a0a7f` и created_at 00:15:21; UI остаётся 06:15. SQL и UI совпадают, смена закрыта. Более ранняя позиция была заменена уже во время воспроизведения старого кода и не подделывалась ручным восстановлением. Временные часы филиала/дня сотрудника восстановлены, понедельник 09–18 сохранён.
+- evidence: `owner-shift-stage.json`, `owner-shift-open-before.jpg`, `owner-shift-item-time-before.jpg`, `owner-shift-item-time-after.jpg`, полные JSON-строки SQL UI.
+- supporting: 5 наборов / 22 теста PASS и ещё 3 проверки общей сверки; 100% scoped coverage чистого helper, типы PASS, scoped lint без ошибок.
+- remaining: одновременное сохранение/закрытие, пустые legacy-смены с суммой без позиций, no-show/package/promotion и расширенные часовые расчёты не подтверждены этим исправлением.
+
+### WB-106 — night-web-035
+- date: `2026-10-09`; area: `J3 / K3 / O4`; severity: `P2`; status: `verified`
+- title: Список клиентов смены сохраняет русские подписи и пояснение запрета в EN/KY.
+- steps: владелец → финансы сотрудника → Клиенты(1) закрытой отмеченной смены → EN → KY.
+- expected: экспорт, время заполнения, ручной клиент и причина недоступности добавления переведены.
+- actual before: «Экспорт», «ВРЕМЯ ЗАПОЛНЕНИЯ», «Вручную» и русский tooltip закрытой смены остаются на обоих языках.
+- fix: недостающие ключи трёх словарей; существующая проверка прав возвращает ключ причины, а её представление получает переводчик. Проверки разрешений и серверные границы не менялись.
+- live verification: тот же закрытый список в EN показывает Export CSV / Entered at / Walk-in / английскую причину; KY — соответствующие переводы. RU восстановлен. Экспорт загрузил CSV с одной отмеченной строкой 301/49/350 и прежним временем 03:40.
+- evidence: `owner-shift-stage.json`, `owner-shift-clients-en-before.jpg`, `owner-shift-clients-en-after.jpg`, загруженный `clients_2026-10-09.csv`.
+- supporting: вместе с WB-105 два набора / 10 тестов PASS; типы PASS; scoped lint 0 ошибок, четыре прежних предупреждения.
+- remaining: язык содержимого CSV и остальные недоступные действия не проверены этим исправлением.
+
+### WB-105 — night-web-034
+- date: `2026-10-09`; area: `K3 / O4`; severity: `P2`; status: `verified`
+- title: Заголовок финансов сотрудника у владельца содержит английскую навигацию в RU.
+- steps: RU общие финансы → Детали сотрудника → заголовок.
+- expected: локализованные переход к сотруднику и название кабинета.
+- actual before: Back to staff / Staff Finance Workspace рядом с русскими заголовками.
+- fix: два недостающих ключа staff.finance в RU/KY/EN.
+- live verification: исходный RU сценарий показывает «К сотруднику» / «Финансы сотрудника»; язык переключён EN → KY → RU с правильными подписями.
+- evidence: `owner-shift-language-before.jpg`, `owner-shift-clients-en-after.jpg`, `owner-shift-stage.json`, AX.
+- supporting: три компонентные регрессии; входят в 10 тестов WB-106, типы PASS.
+
+### WB-104 — night-web-033
+- date: `2026-10-09`; area: `D4 / D5 / P1`; severity: `P1`; status: `verified`
+- title: Ожидаемый конфликт занятого слота показан как техническая ошибка без восстановления формы.
+- steps: владелец как клиент → две вкладки с 12.10 09:00 → выбрать одно время в обеих → подтвердить первую → подтвердить вторую без обновления.
+- expected: второй запрос получает понятный конфликт; форма удаляет недоступное время; двойной брони нет.
+- actual before: второй запрос 500; английский текст `time slot is already booked Details: [object Object]`, ошибка разработчика, старое подтверждение/слоты доступны для повторения. Двойная бронь не создана уже до исправления.
+- fix: известное отклонение пересечения распознаётся на границе Supabase-адаптера и передаётся типизированной ошибкой; HTTP 409 со стабильным кодом; клиент переводит код, закрывает устаревшее подтверждение и обновляет слоты. Остальные ошибки не маскируются; SQL-писатель и ограничения не менялись.
+- live verification: тот же сценарий, первая бронь `629e5c4d`; вторая вкладка получает русский отказ, диалог закрыт, список начинается с 10:00 вместо 09:00. SQL-проверка показывает ровно одну активную строку данного времени. Обе брони `3117ad85` и `629e5c4d` отменены через кабинет; SQL затем показывает ноль активных строк и 09:00 снова доступно, аудит сохранён.
+- evidence: `booking-conflict-stage.json`, `booking-slot-conflict-after.jpg`, AX и SQL UI.
+- supporting: 6 наборов / 22 теста PASS (API без подтверждения/уведомления при конфликте, маппинг, сохранение кода, восстановление hook и 3 языка); типы PASS, scoped 7 файлов lint PASS. Неизменённая строка auth redirect в view имеет прежнюю ошибку нового lint-правила.
+- remaining: настоящий параллельный запрос разных пользователей, потеря сети после сохранения и идемпотентные повторы не подтверждены этим последовательным сценарием двух вкладок.
+
+### WB-103 — night-web-032
+- date: `2026-10-09`; area: `I4 / O4`; severity: `P1`; status: `verified`
+- title: Подпись активности акции переключает активность филиала.
+- steps: владелец → филиал 1 → редактировать неактивную тестовую акцию → нажать текст «Активна (отображается клиентам)».
+- expected: изменяется флажок акции, филиал остаётся активным.
+- actual before: флажок филиала выключается, флажок акции не меняется; два одинаковых ID `is_active` связывают обе подписи с первым полем.
+- fix: уникальный React useId для флажка и подписи каждой формы акции.
+- live verification: тот же клик переключает только акцию; DOM подтверждает разные ID и правильные подписи. Ошибочный черновик филиала восстановлен без сохранения; тестовая акция в итоге неактивна.
+- evidence: `promotions-stage.json`, `promotion-activity-label-before.jpg`, `promotion-activity-label-after.jpg`, AX/DOM.
+- supporting: 3 составных регрессии, включая клик подписи рядом с формой филиала; типы PASS, scoped lint без ошибок (прежнее предупреждение зависимостей hook).
+
+### WB-102 — night-web-031
+- date: `2026-10-09`; area: `I4 / L1`; severity: `P1`; status: `verified`
+- title: Сохранённые акции не появляются в кабинете владельца.
+- steps: филиал 1 → создать неактивную отмеченную акцию с N=3 → дождаться загрузки → обновить страницу.
+- expected: сохранённая карточка доступна для редактирования и включения.
+- actual before: «Акций пока нет» при POST/GET 200 и существующей неактивной строке в базе.
+- fix: чтение `data.promotions` стандартного ответа API вместо отсутствующего верхнего поля; сервер и права не менялись.
+- live verification: исходное обновление показывает N3 и карточку; редактирование N4/имени сохраняется. Активация показывает акцию клиенту; деактивация снова скрывает. Тестовая строка оставлена неактивной, без покупок и необратимого удаления.
+- evidence: `promotions-stage.json`, `promotions-empty-before.jpg`, AX/SQL UI.
+- supporting: 3 набора / 6 тестов PASS до дополнительной регрессии WB-103; типы PASS.
+
+### WB-101 — night-web-030
+- date: `2026-10-09`; area: `E1 / O3`; severity: `P2`; status: `verified`
+- title: Неверная форма количества записей в пустом кабинете клиента.
+- steps: владелец как клиент → создать отмеченную запись → отменить → открыть пустые предстоящие записи.
+- expected: «У вас 0 предстоящих записей»; число не меняется при переводе.
+- actual before: «У вас 0 предстоящие записи».
+- fix: общий выбор формы через `Intl.PluralRules` выбранного языка; единичные формы словарей тоже подставляют фактическое число.
+- live verification: исходный пустой кабинет → правильный RU текст; фактическое переключение KY и EN сохраняет ноль и соответствующий перевод; возврат RU.
+- evidence: `cabinet-stage.json`, AX вкладки 7. Захват скриншота этой вкладки недоступен; не выдаётся за полученное доказательство.
+- supporting: 15 граничных модульных и 6 составных тестов кабинета PASS; типы PASS, scoped lint без ошибок. Числа 21/22 проверены регрессиями, не отдельными живыми записями.
+
+### WB-100 — night-web-029
+- date: `2026-10-09`; area: `N1`; severity: `P2`; status: `verified`
+- title: Совмещение владельца и клиента дублирует одинаковое Telegram-уведомление.
+- steps: владелец как клиент → подтвердить бронь → отменить → открыть разрешённый KezekAuthBot.
+- expected: одно сообщение каждого события в одном чате.
+- actual before: по два одинаковых сообщения подтверждения и отмены записи `7b223019`; DOM подтверждает отдельные сообщения, не артефакт дерева доступности.
+- fix: сначала проверяются настройки/допустимость получателя, затем устраняются повторные Telegram chat ID внутри одного события. Правила подтверждения клиентского аккаунта сохранены; WhatsApp/email не менялись.
+- live verification: повторить создание и отмену `80f1b8bf` → одно подтверждение 05:37 и одна отмена 05:38; два соответствующих якоря сообщения.
+- evidence: `notifications-stage.json`, `notification-confirm-after.jpg`, `notification-cancel-after.jpg`, `notification-deduplicated-after.jpg`.
+- supporting: 3 набора / 17 тестов PASS, включая разные получатели, отказ по настройкам, проверку аккаунта и последующее другое событие; scoped helper coverage 100%, типы и lint PASS. Идемпотентность повторных HTTP-команд/ретраев не заявляется.
+
+### WB-099 — night-web-028
+- date: `2026-10-09`; area: `D4 / E2 / N1`; severity: `P1`; status: `verified`
+- title: Публичная запись и клиентская отмена сохраняются без Telegram-уведомлений.
+- steps: обычный вход владельца → записаться как клиент в бизнес 2 на 12.10 09:00 → подтверждение → отмена в кабинете → проверить разрешённый Telegram-чат.
+- actual before: бронь `0a182b5c` сохранена, но новых сообщений нет; внутренний запрос к `/api/notify` теряет авторизацию и получает 401, хотя журнал говорит об успешной отправке.
+- fix: серверный адаптер напрямую вызывает существующую службу уведомлений с исходным проверенным клиентом Supabase запроса. Проверка текущего пользователя и прав на конкретную бронь остаётся обязательной; публичный endpoint не ослаблен. Ошибка доставки не отменяет уже совершённую бизнес-команду и журналируется честно.
+- live verification: тот же путь для `7b223019` → сообщения подтверждения 05:34 и отмены 05:35; 401 исчез. Дубли отдельно устранены в WB-100. Все три тестовые брони отменены, история сохранена.
+- evidence: `notifications-stage.json`, `notification-missing-before.jpg`, `notification-confirm-after.jpg`, `notification-cancel-after.jpg`, журнал сервера.
+- supporting: расширенные 7 наборов / 31 тест PASS; регрессии исходного auth-контекста, запрета чужой брони и неавторизованного клиента; scoped helper coverage 100%, типы и lint PASS.
+- remaining: гостевой quick-book и старый `/booking/[id]/cancel` имеют отдельные пути, живьём ещё не проверены; email заблокирован известным неоплаченным доменом, это не исправление DNS.
+
+### WB-098 — night-web-027
+- date: `2026-10-09`; area: `M4`; severity: `P2`; status: `verified`
+- title: Сводка пользователей показывает ложные нули.
+- steps: суперадмин → пользователи → семь строк → поиск разрешённого аккаунта суперадмина.
+- actual before: все счётчики нулевые при семи строках, включая одного суперадмина; запрос статистики `perPage=10000` отклонён ограничением 200 и замаскирован нулями.
+- fix: ограниченный сбор всех страниц по 200 с дедупликацией; фильтр списка не влияет на глобальные счётчики; ошибка загрузки показывается как недоступность, не как нулевой результат.
+- live verification: прежний поиск → 7/7/0/1, одна строка; сброс → семь строк и те же счётчики.
+- evidence: `admin-stage.json`, `admin-users-count-before.jpg`, `admin-users-count-after.jpg`.
+- supporting: тесты нескольких страниц, дедупликации, ошибок и предела; типы и scoped coverage PASS. Большая пользовательская база живьём не создавалась.
+
+### WB-097 — night-web-026
+- date: `2026-10-09`; area: `M3`; severity: `P1`; status: `verified`
+- title: Сохранение категории не работает из-за неразрешённых параметров Next.js.
+- steps: создать неактивную отмеченную тестовую категорию → изменить имя → сохранить.
+- expected: имя сохранено, категория остаётся неактивной, остальные категории не меняются.
+- actual before: `invalid input syntax for type uuid: "undefined"`; обработчик читает ID из Promise без `await`.
+- fix: типизированные асинхронные route params и проверка UUID после проверки суперадмина; бизнес-логика slug и разрешения сохранены.
+- live verification: тот же ввод и сохранение → имя EDITED, выключенный статус; обновление страницы подтверждает сохранение.
+- evidence: `admin-stage.json`, `admin-category-edit-before.jpg`, `admin-category-edit-after.jpg`.
+- supporting: 12 API-регрессий; совместный набор со статистикой 15 PASS, scoped coverage 95.06% строк / 80.85% ветвей / 66.66% функций, типы PASS. Тестовая категория оставлена неактивной, удаление не выполнялось.
+
+### WB-096 — night-web-025
+- date: `2026-10-09`; area: `M2 / O3`; severity: `P2`; status: `verified`
+- title: Модерация показывает внутренние risk-флаги и непереведённые статусы.
+- steps: обычный Google-вход суперадмина → заявки бизнеса; заявки доступа → «Все».
+- actual before: `repeat_applicant`, `high_submission_volume`, `approved`, `cancelled` в русском интерфейсе.
+- fix: общий компонент нейтральной раскрываемой истории и переведённого статуса с RU/KY/EN; неизвестные технические метки не раскрываются. Решения/права/данные заявок не менялись.
+- live verification: исходные экраны, раскрытие истории, английский и кыргызский статусы после загрузки; счётчики истории сохранены.
+- evidence: `admin-stage.json`, `admin-risk-flags-before.jpg`, `admin-role-status-before.jpg`, `admin-risk-flags-after.jpg`, `admin-role-status-after.jpg`.
+- supporting: 5 регрессий, проверка типов PASS; scoped lint без ошибок, 2 прежних предупреждения.
+
+### WB-095 — night-web-024
+- date: `2026-10-09`; area: `B4 / D1`; severity: `P2`; status: `verified`
+- title: Переход с выбранного филиала карты теряет выбор филиала.
+- steps: карта → выбрать второй филиал бизнеса 2 → «Записаться» в выбранной карточке.
+- expected: форма записи сохраняет выбранный филиал, не пропуская обязательные шаги.
+- actual before: URL без филиала; на первом шаге оба филиала не выбраны.
+- fix: единая безопасно кодируемая ссылка с параметром `branch` для списка, выбранной карточки и метки; существующее восстановление формы проверяет принадлежность филиала бизнесу.
+- live verification: тот же переход → второй филиал выбран, сводка соответствует ему, «Далее» доступна.
+- evidence: `public-stage.json`, `map-branch-context-before.jpg`, `map-branch-context-after.jpg`.
+- supporting: 2 компонентные регрессии PASS; путь метки использует тот же помощник, но отдельно живьём не пройден.
+
+### WB-094 — night-web-023
+- date: `2026-10-09`; area: `B1 / B4`; severity: `P2`; status: `verified`
+- title: Вместо названий категорий каталог и карта показывают технические slug.
+- steps: главная → категории/карточки → карта → список категорий.
+- actual before: `barbershop`, `zhenskaya-parikmaherskaya` вместо названий.
+- fix: единое чтение названий из справочника; фильтры и URL сохраняют canonical slug. Добавлена адресная миграция `20261009050000_public_active_category_labels`: анонимное чтение только активных публичных категорий; RLS и запрет записи сохранены. Применена и зарегистрирована в основной базе разработки, повторять не нужно.
+- live verification: названия на главной и карте, фильтр женской парикмахерской и сброс; после обычного выхода гостевые названия тоже доступны.
+- evidence: `public-stage.json`, `home-category-before.jpg`, `home-category-after.jpg`, `map-category-before.jpg`, `map-category-after.jpg`; SQL-проверка политики и версии миграции.
+- supporting: регрессии справочника/карты; ограниченное покрытие 100% строк и 91.8% ветвей, не покрытие всего проекта. Справочник имеет только `name_ru`: несуществующие переводы не выдумывались.
+
+### WB-093 — night-web-022
+- date: `2026-10-09`; area: `G2 / P1`; severity: `P2`; status: `verified`
+- title: В настройках контактов вместо причины отказа показан код `validation`.
+- steps: владелец бизнеса 2 → настройки → сайт `http://example.invalid` → сохранить → дождаться ответа.
+- expected: понятное требование корректной HTTPS-ссылки, возможность исправить поле.
+- actual before: один машинный код `validation`, сообщение сервера проигнорировано.
+- fix: чтение человекочитаемого `message` из стандартного ответа; поддержан прежний вложенный формат, машинные коды не выводятся пользователю.
+- live verification: тот же HTTP-адрес → «Сайт должен быть корректной HTTPS-ссылкой» → очистка адреса → успешное сохранение исходных контактов. Телефон сохранён исходный, остальные контакты пустые.
+- evidence: `settings-stage.json`, `contacts-validation-before.jpg`, `contacts-validation-after.jpg`, `contacts-restored.jpg` в каталоге ночного прогона.
+- supporting: 4 компонентные регрессии PASS. Остальные настройки/наследование контактов ещё не проверены полностью.
+
+### WB-090 — night-web-019
+- date: `2026-10-09`; area: `G3 / O3`; severity: `P2`; status: `verified`
+- title: Аналитика не использует выбранный язык.
+- steps: владелец → `/dashboard/analytics` → English; localhost/in-app Chromium/Windows, бизнес 2.
+- expected: системные заголовки, фильтры и показатели на английском.
+- actual before: вся аналитика по-русски при английском кабинете и футере.
+- fix: единый модуль словарей аналитики RU/KY/EN, форматирование чисел/валют по локали, доступные подписи полей.
+- live verification: исходный английский сценарий, затем KY/RU; заголовки, фильтры, показатели, загрузка по часам переведены. Пользовательские названия сохранены.
+- evidence: `analytics-stage.json`, `analytics-language-before.jpg`, `analytics-language-after.jpg` в каталоге ночного прогона.
+- supporting: языковые компонентные регрессии; это не вся языковая матрица проекта.
+
+### WB-091 — night-web-020
+- date: `2026-10-09`; area: `G3 / P1`; severity: `P1`; status: `verified`
+- title: Ошибка даты аналитики удаляет фильтры и не позволяет восстановиться.
+- steps: аналитика → 7 дней → начало `20260-10-02` → дождаться HTTP 400.
+- actual before: только «Overview HTTP 400» и повтор того же запроса; дата и быстрый выбор исчезли.
+- expected: возможность исправить период; неверные/устаревшие показатели не показаны.
+- fix: фильтры остаются при ошибке; клиентская проверка формата, календарной даты, порядка и заполненности; локализованное сообщение, скрытие устаревших результатов при загрузке/ошибке.
+- live verification: та же дата вызывает понятную ошибку с доступными полями; 7 дней восстанавливает данные. Обратный диапазон отклонён; 30 дней восстанавливает данные.
+- evidence: `analytics-error-before.jpg`, `analytics-error-after.jpg`, `analytics-stage.json`.
+- supporting: компонент/хук проверяют восстановление и неотправку некорректного запроса. Серверная проверка порядка/календаря отдельно не изменялась и живьём не проверена.
+
+### WB-092 — night-web-021
+- date: `2026-10-09`; area: `G3`; severity: `P2`; status: `verified`
+- title: Быстрые периоды аналитики включают лишний день.
+- steps: 9 октября выбрать «7 дней».
+- actual before: 2–9 октября — восемь дат, оба конца включены в запрос агрегатов.
+- expected: 3–9 октября — семь дат.
+- fix: единый расчёт начальной даты `1 - days`, включая начальный период 30 дней.
+- live verification: 7 → 3 октября; 30 → 10 сентября; 90 → 12 июля; окончание 9 октября, данные загружаются.
+- evidence: `analytics-stage.json`, AX-снимки полей до/после.
+- supporting: всего по аналитике 5 наборов / 15 тестов PASS, включая 11 новых; проверка типов PASS, локальный линт изменённой аналитики без ошибок.
+
+### WB-085 — night-web-014
+- date: `2026-10-09`; area: `H1-H2`; severity: `P0`; status: `verified`
+- title: QuickDesk не позволяет создать запись: отсутствуют параметры визита, статус постоянно загружается.
+- environment: localhost, in-app Chromium, Windows, владелец тестового бизнеса 2.
+- steps: открыть `/dashboard/bookings` → QuickDesk → дождаться загрузки → выбрать режим клиента.
+- expected: выбор филиала, даты, сотрудника, услуги, свободного времени; создание валидной записи.
+- actual before: этих полей нет, филиал всегда пустой, «Создать» отключено, панель статуса никогда не заканчивает загрузку.
+- fix: отдельная поверхность полей на существующих механизмах расписаний/слотов/команд; фильтрация сотрудников по рабочему филиалу на выбранную дату; фактическая доступность вместо фиктивных счётчиков.
+- live verification: филиал 1, 12.10, сотрудник Адахан, услуга 60 мин → создание 09:00–10:00 → подтверждённая карточка/календарь/история → отмена. Занятые пересекающиеся интервалы исключены; после отмены снова доступны.
+- evidence: `apps/web/test-results/night-2026-10-09/operations-stage.json`, `quickdesk-missing-controls-before.jpg`, `quickdesk-created-calendar.jpg`.
+- supporting: 6 составных тестов QuickDesk; временный перевод проверен только модульным тестом, конкурентные запросы/hold/создание с клиентом ещё не проверены живьём.
+
+### WB-086 — night-web-013
+- date: `2026-10-09`; area: `O3 / H1`; severity: `P2`; status: `verified`
+- title: Рабочее место броней смешивает английский, русский и кыргызский тексты.
+- steps: открыть брони/QuickDesk/историю; переключить RU/KY/EN.
+- actual before: Today/History в RU, Walk-in в KY/RU, action bar в подсказке; в EN/KY описания рабочего места и фильтров остаются русскими.
+- expected: системные подписи соответствуют выбранному языку; пользовательские названия не переводятся автоматически.
+- fix: общие словари трёх языков для наблюдавшихся заголовков/описаний/фильтров; исправлен ключ no-show.
+- live verification: переключение трёх языков в QuickDesk и истории отменённой тестовой записи. Это не полный языковой аудит проекта.
+- evidence: `operations-stage.json`, `bookings-russian-before.jpg`, `bookings-english-before.jpg`, `bookings-history-english-before.jpg`, `quickdesk-english-after.jpg`, `quickdesk-cancelled-history-after.jpg` в каталоге ночного прогона.
+- supporting: 6 компонентных языковых тестов.
+
+### WB-087 — night-web-015
+- date: `2026-10-09`; area: `H2`; severity: `P1`; status: `verified`
+- title: QuickDesk сохраняет запись, но не показывает результат пользователю.
+- steps: выбрать валидные параметры → «Создать запись» → дождаться завершения.
+- expected: видимое подтверждение или ошибка, ссылка/номер результата.
+- actual before: форма молча сбрасывается; существование записи видно только после самостоятельного поиска в календаре.
+- fix: подключён существующий ToastContainer к состоянию уведомлений QuickDesk.
+- live verification: повтор того же создания показывает «Создана запись #dbcb3cf6»; история подтверждает сохранение. Обе тестовые записи отменены.
+- evidence: `operations-stage.json`, `quickdesk-confirmation-after.jpg`.
+- supporting: составные тесты успеха и ошибки; ошибка создания пока проверена только модульно.
+
+### WB-088 — night-web-016
+- date: `2026-10-09`; area: `H4`; severity: `P1`; status: `verified`
+- title: После изменения поиска QuickDesk сохраняет невидимого ранее выбранного клиента.
+- steps: выбрать известный аккаунт из поиска → изменить запрос на несуществующий → дождаться исчезновения результатов.
+- expected: прежний выбор сброшен, создание недоступно до нового явного выбора.
+- actual before: результаты/индикатор исчезают, но создание активно со старым ID клиента.
+- fix: синхронная инвалидация выбора при новом запросе; проверка ID в актуальных результатах; отмена и игнорирование устаревших ответов; очистка при смене режима.
+- live verification: тот же поиск/выбор разрешает создание; новый запрос сразу отключает кнопку и убирает выбор, после завершения поиска кнопка остаётся отключённой. Запись на неверного клиента не отправлялась.
+- evidence: `operations-stage.json`, `quickdesk-stale-client-before.jpg`, `quickdesk-stale-client-after.jpg`.
+- supporting: 4 теста состояния поиска, включая гонку запоздавших ответов.
+
+### WB-089 — night-web-018
+- date: `2026-10-09`; area: `K3`; severity: `P1`; status: `verified`
+- title: Месячный фильтр финансов отправляет дневную дату и блокирует отчёт ошибкой.
+- environment: localhost, in-app Chromium, Windows, владелец бизнеса 2.
+- steps: открыть финансы за 09.10 → выбрать «Месяц» → дождаться ответа.
+- expected: видимый октябрь и валидный запрос `YYYY-MM`; при ошибке фильтры доступны для исправления.
+- actual before: поле месяца пустое, запрос отправляет `YYYY-MM-DD` и получает 400; фильтры исчезают, повторная попытка повторяет неверный запрос. Годовой путь имеет тот же неподходящий формат в коде и отдельно проверен после исправления.
+- fix: один адаптер точности даты для API и полей; в состоянии сохраняется локальная дата-якорь; смена месяца/года преобразуется обратно в дату; фильтры сохраняются в состоянии ошибки.
+- live verification: тот же день → месяц в пустом филиале; месяц/год всех филиалов показывают 301/181/169 и одну закрытую смену после завершения запроса. Год `20` отклонён, исправление на `2026` в сохранившемся поле восстанавливает отчёт; возврат к 09.10 также прошёл.
+- evidence: `apps/web/test-results/night-2026-10-09/finance-stage.json`, `finance-month-filter-before.jpg`, `finance-month-filter-after.jpg`, `finance-error-controls-after.jpg`.
+- supporting: 6 новых регрессий плюс 3 прежних теста финансового ответа; проверка типов и точечная проверка стиля пройдены.
+- remaining: гонки запоздавших ответов, пустая дата, границы часового пояса и экспорт не проверены; денежные расчёты не менялись.
 
 ## Open bugs
 
@@ -2852,7 +4114,40 @@ The web testing scope and execution status are maintained in
   - Focused edit-page test confirms the map key and all four business contact fields are passed with the business-scoped branch data.
   - Combined branch map/edit/loader suites passed `3/3`; TypeScript validation passed.
 - status: `fixed locally; authenticated visual confirmation pending`
+- Follow-up14OctG005: actual owner new form clear -> live input.value empty -> type30 -> live value30; isolated hidden creation persisted30. Targeted authenticated functional confirmation complete; screenshot unavailable, no visual/mobile PASS. Historical fix is not a new14Octfix.
 - owner: `Codex`
+
+### WB-083 — ночной прогон 2026-10-09, night-web-011
+
+- area: `J2 shift close / K4 audit preservation`
+- severity: `P1`
+- status: `fixed and live verified — staff close only`
+- environment: Windows, in-app Chromium, localhost:3000, main 7f5c8ae plus night changes; authorized staff profile.
+- steps: save a marked manual client (301 service + 49 consumables), inspect fill time; close the shift; reopen and close it again. Read item ID/created_at via authorized Supabase SQL UI before and after.
+- expected: closing finalizes the saved shift without replacing client records or resetting their original creation time.
+- actual before fix: fill time changed 03:30 → 03:40; the same shift's item ID changed b048d612-150e-4678-8345-f3f941c327ac → aea93e72-25a2-4e65-a85b-7dbeecf9c7fc. SQL confirmed creation time reset.
+- root cause: staff close service deleted every saved position and reinserted the submitted snapshot after committing the close RPC.
+- fix: finalize the persisted, shift-scoped ledger; reject stale/unsaved financial snapshots before closing; remove post-close item replacement. No DB migration or permission change.
+- live retest: reopened and closed the same shift at 03:42; item ID aea93e72-25a2-4e65-a85b-7dbeecf9c7fc and created_at 2026-10-08T21:40:54.460942Z remained unchanged. Clients stayed visible read-only; amounts 301/49 and shares 181/169 unchanged.
+- evidence: apps/web/test-results/night-2026-10-09/staff-stage.json; shift-close-preserved-time.jpg (ignored local evidence).
+- supporting checks: 8 service regressions and web typecheck passed; scoped service lint has no errors (four existing any warnings).
+- gaps: owner's separate close path, concurrent item save versus close, package/no-show cases and aggregate consistency after repeated reopen are not yet verified. This entry does not certify all finance functionality.
+
+### WB-084 — ночной прогон 2026-10-09, night-web-012
+
+- area: `K3 owner finance / K5 staff-owner consistency`
+- severity: `P1`
+- status: `fixed and live verified — simple closed shift`
+- environment: Windows, in-app Chromium, localhost:3000, main 7f5c8ae plus night changes; authorized owner of Test business 2.
+- steps: close the marked staff shift with 301 service / 49 consumables; sign in as owner, select that business, open /dashboard/finance, wait, explicitly refresh and wait again.
+- expected: one closed shift and matching staff/business amounts, branch and period controls.
+- actual before fix: persistent “Пока нет данных” after successful load and refresh; no filters or saved shift totals.
+- root cause: API returns `{ok:true,data:{staffStats,totalStats,branches}}`; the client hook read these fields at the response root and discarded them.
+- fix: read the standard nested data envelope; reject failed HTTP or missing payload instead of showing a false empty ledger.
+- live retest: the same page displays 1 closed shift, turnover 301, staff 181, business 169, matching staff summary and employee row; date and both branch options restored.
+- evidence: owner-finance-empty-before.jpg / owner-finance-after.jpg and owner-stage.json under apps/web/test-results/night-2026-10-09 (ignored local evidence).
+- supporting checks: three hook regressions and web typecheck passed.
+- gaps: expanded filter periods, exports, package/promo finance and percentage presentation still need live verification.
 
 ### WB-081
 - id: `WB-081`

@@ -1,0 +1,4 @@
+Final after date-input restoration/newUI test: pnpm -C apps/web typecheck
+> web@0.1.0 typecheck C:\projects\kezek\apps\web
+> tsc -p tsconfig.json --noEmit
+Exit 0

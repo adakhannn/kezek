@@ -3,6 +3,7 @@
 import type { BookingStep } from '../types';
 
 import { Card } from '@/components/ui/Card';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 type StepMeta = {
     id: BookingStep;
@@ -26,6 +27,7 @@ export function BookingSteps({
     goToStep,
     stepIndicatorText,
 }: BookingStepsProps) {
+    const { t } = useLanguage();
     const progress = totalSteps > 0 ? Math.max(0, ((step - 1) / totalSteps) * 100) : 0;
 
     return (
@@ -41,13 +43,13 @@ export function BookingSteps({
                         </h2>
                         <p className="type-caption mt-2 text-[var(--text-secondary)]">
                             {canGoNext
-                                ? 'Текущий шаг заполнен достаточно, чтобы двигаться дальше.'
-                                : 'Закончите текущий выбор, и поток автоматически станет понятнее на следующем шаге.'}
+                                ? t('booking.nav.readyHint', 'Можно переходить к следующему шагу.')
+                                : t('booking.steps.incompleteHint', 'Закончите текущий выбор, и поток автоматически станет понятнее на следующем шаге.')}
                         </p>
                     </div>
 
                     <div className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                        {`Шаг ${step} из ${totalSteps}`}
+                        {stepIndicatorText}
                     </div>
                 </div>
 
@@ -75,7 +77,7 @@ export function BookingSteps({
                                     disabled={!isCompleted}
                                     onClick={() => goToStep(item.id)}
                                     aria-current={isActive ? 'step' : undefined}
-                                    aria-label={isCompleted ? `Вернуться к шагу ${index + 1}: ${item.label}` : undefined}
+                                    aria-label={isCompleted ? t('booking.steps.backLabel', 'Вернуться к шагу {step}: {label}').replace('{step}', String(index + 1)).replace('{label}', item.label) : undefined}
                                     className={[
                                         'h-full w-full rounded-[22px] border px-4 py-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-canvas)]',
                                         isActive
@@ -114,7 +116,7 @@ export function BookingSteps({
                                                         : 'bg-[var(--surface-emphasis)] text-[var(--text-muted)]',
                                             ].join(' ')}
                                         >
-                                            {isActive ? 'Сейчас' : isCompleted ? 'Готово' : isUpcoming ? 'Дальше' : ''}
+                                            {isActive ? t('booking.steps.current', 'Сейчас') : isCompleted ? t('booking.steps.done', 'Готово') : isUpcoming ? t('booking.steps.next', 'Дальше') : ''}
                                         </span>
                                     </div>
 
@@ -122,10 +124,10 @@ export function BookingSteps({
                                         <div className="type-label text-[var(--text-primary)]">{item.label}</div>
                                         <p className="type-caption mt-1 text-[var(--text-secondary)]">
                                             {isCompleted
-                                                ? 'Нажмите, чтобы вернуться к этому шагу.'
+                                                ? t('booking.steps.completedHint', 'Нажмите, чтобы вернуться к этому шагу.')
                                                 : isActive
-                                                    ? 'Сделайте один понятный выбор и двигайтесь дальше.'
-                                                    : 'Откроется после текущего выбора.'}
+                                                    ? t('booking.steps.currentHint', 'Сделайте один понятный выбор и двигайтесь дальше.')
+                                                    : t('booking.steps.upcomingHint', 'Откроется после текущего выбора.')}
                                         </p>
                                     </div>
                                 </button>

@@ -1,0 +1,368 @@
+Initial prefix baseline-browser-mapping notice, preserved failure:   console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at Object.<anonymous> (src/__tests__/api/admin/globalOverview.test.ts:28:46)
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:36:20
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:36:20
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:36:20
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:36:20
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:41:11
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:41:11
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:41:11
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at src/__tests__/api/admin/globalOverview.test.ts:41:11
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at Object.<anonymous> (src/__tests__/api/admin/globalOverview.test.ts:45:20)
+
+  console.error
+    [AdminAnalyticsOverview] API error {}
+
+      54 |             // eslint-disable-next-line no-console
+      55 |             if (sanitized !== undefined) {
+    > 56 |                 console.error(`[${scope}] ${message}`, sanitized);
+         |                         ^
+      57 |             } else {
+      58 |                 console.error(`[${scope}] ${message}`);
+      59 |             }
+
+      at error (../../packages/shared-client/src/log.ts:56:25)
+      at handleApiError (src/lib/apiErrorHandler.ts:84:13)
+      at handleApiError (src/lib/apiErrorHandler.ts:164:16)
+      at Object.<anonymous> (src/__tests__/api/admin/globalOverview.test.ts:50:11)
+
+FAIL src/__tests__/api/admin/globalOverview.test.ts (11.158 s)
+  × global SA needs no business preference and receives an explicit all-business scope (34 ms)
+  × denies caller before global cache/client (4 ms)
+  × denies caller before global cache/client (3 ms)
+  × denies caller before global cache/client (2 ms)
+  × denies caller before global cache/client (5 ms)
+  × rejects unsupported/invalid scope or window: branchIds=branch (3 ms)
+  × rejects unsupported/invalid scope or window: bizId=550e8400-e29b-41d4-a716-446655440000 (4 ms)
+  × rejects unsupported/invalid scope or window: startDate=2026-02-30 (3 ms)
+  × rejects unsupported/invalid scope or window: startDate=2026-10-20&endDate=2026-10-01 (3 ms)
+  √ read failure is not a successful empty report and is not cached (3 ms)
+  × cache is global-version/window scoped but still checked only after authorization (3 ms)
+
+  ● global SA needs no business preference and receives an explicit all-business scope
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 500
+
+      27 | test('global SA needs no business preference and receives an explicit all-business scope', async () => {
+      28 |   const filters = caller(); const response = await request(); const body = await response.json();
+    > 29 |   expect(response.status).toBe(200); expect(body.data.scope).toBe('all_businesses');
+         |                           ^
+      30 |   expect(body.data.byDay).toEqual([]); expect(filters).toEqual({ user_id: 'current', role_key: 'super_admin', biz_id: null });
+      31 |   expect(stats.gte).toHaveBeenCalledWith('date', '2026-10-01'); expect(stats.lte).toHaveBeenCalledWith('date', '2026-10-20');
+      32 |   expect(stats.order).toHaveBeenCalledWith('biz_id', { ascending: true });
+
+      at Object.toBe (src/__tests__/api/admin/globalOverview.test.ts:29:27)
+
+  ● denies caller before global cache/client
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 401
+    Received: 500
+
+      34 | test.each([[null, 'current', null, null, 401], ['current', 'other', null, null, 403], ['current', 'current', 'biz', null, 403], ['current', 'current', null, new Error('private role detail'), 400]])('denies caller before global cache/client', async (user, rowUser, scope, error, status) => {
+      35 |   caller(user as string | null, rowUser as string, scope as string | null, error);
+    > 36 |   const response = await request(); expect(response.status).toBe(status);
+         |                                                             ^
+      37 |   expect(getCached).not.toHaveBeenCalled(); expect(getServiceClient).not.toHaveBeenCalled();
+      38 |   expect(JSON.stringify(await response.json())).not.toContain('private role detail');
+      39 | });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:36:61)
+
+  ● denies caller before global cache/client
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 500
+
+      34 | test.each([[null, 'current', null, null, 401], ['current', 'other', null, null, 403], ['current', 'current', 'biz', null, 403], ['current', 'current', null, new Error('private role detail'), 400]])('denies caller before global cache/client', async (user, rowUser, scope, error, status) => {
+      35 |   caller(user as string | null, rowUser as string, scope as string | null, error);
+    > 36 |   const response = await request(); expect(response.status).toBe(status);
+         |                                                             ^
+      37 |   expect(getCached).not.toHaveBeenCalled(); expect(getServiceClient).not.toHaveBeenCalled();
+      38 |   expect(JSON.stringify(await response.json())).not.toContain('private role detail');
+      39 | });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:36:61)
+
+  ● denies caller before global cache/client
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 500
+
+      34 | test.each([[null, 'current', null, null, 401], ['current', 'other', null, null, 403], ['current', 'current', 'biz', null, 403], ['current', 'current', null, new Error('private role detail'), 400]])('denies caller before global cache/client', async (user, rowUser, scope, error, status) => {
+      35 |   caller(user as string | null, rowUser as string, scope as string | null, error);
+    > 36 |   const response = await request(); expect(response.status).toBe(status);
+         |                                                             ^
+      37 |   expect(getCached).not.toHaveBeenCalled(); expect(getServiceClient).not.toHaveBeenCalled();
+      38 |   expect(JSON.stringify(await response.json())).not.toContain('private role detail');
+      39 | });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:36:61)
+
+  ● denies caller before global cache/client
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 500
+
+      34 | test.each([[null, 'current', null, null, 401], ['current', 'other', null, null, 403], ['current', 'current', 'biz', null, 403], ['current', 'current', null, new Error('private role detail'), 400]])('denies caller before global cache/client', async (user, rowUser, scope, error, status) => {
+      35 |   caller(user as string | null, rowUser as string, scope as string | null, error);
+    > 36 |   const response = await request(); expect(response.status).toBe(status);
+         |                                                             ^
+      37 |   expect(getCached).not.toHaveBeenCalled(); expect(getServiceClient).not.toHaveBeenCalled();
+      38 |   expect(JSON.stringify(await response.json())).not.toContain('private role detail');
+      39 | });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:36:61)
+
+  ● rejects unsupported/invalid scope or window: branchIds=branch
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 500
+
+      39 | });
+      40 | test.each(['branchIds=branch', 'bizId=550e8400-e29b-41d4-a716-446655440000', 'startDate=2026-02-30', 'startDate=2026-10-20&endDate=2026-10-01'])('rejects unsupported/invalid scope or window: %s', async query => {
+    > 41 |   expect((await request(query)).status).toBe(400); expect(getServiceClient).not.toHaveBeenCalled();
+         |                                         ^
+      42 | });
+      43 | test('read failure is not a successful empty report and is not cached', async () => {
+      44 |   range.mockResolvedValue({ data: null, error: { message: 'private DB detail' } });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:41:41)
+
+  ● rejects unsupported/invalid scope or window: bizId=550e8400-e29b-41d4-a716-446655440000
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 500
+
+      39 | });
+      40 | test.each(['branchIds=branch', 'bizId=550e8400-e29b-41d4-a716-446655440000', 'startDate=2026-02-30', 'startDate=2026-10-20&endDate=2026-10-01'])('rejects unsupported/invalid scope or window: %s', async query => {
+    > 41 |   expect((await request(query)).status).toBe(400); expect(getServiceClient).not.toHaveBeenCalled();
+         |                                         ^
+      42 | });
+      43 | test('read failure is not a successful empty report and is not cached', async () => {
+      44 |   range.mockResolvedValue({ data: null, error: { message: 'private DB detail' } });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:41:41)
+
+  ● rejects unsupported/invalid scope or window: startDate=2026-02-30
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 500
+
+      39 | });
+      40 | test.each(['branchIds=branch', 'bizId=550e8400-e29b-41d4-a716-446655440000', 'startDate=2026-02-30', 'startDate=2026-10-20&endDate=2026-10-01'])('rejects unsupported/invalid scope or window: %s', async query => {
+    > 41 |   expect((await request(query)).status).toBe(400); expect(getServiceClient).not.toHaveBeenCalled();
+         |                                         ^
+      42 | });
+      43 | test('read failure is not a successful empty report and is not cached', async () => {
+      44 |   range.mockResolvedValue({ data: null, error: { message: 'private DB detail' } });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:41:41)
+
+  ● rejects unsupported/invalid scope or window: startDate=2026-10-20&endDate=2026-10-01
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 500
+
+      39 | });
+      40 | test.each(['branchIds=branch', 'bizId=550e8400-e29b-41d4-a716-446655440000', 'startDate=2026-02-30', 'startDate=2026-10-20&endDate=2026-10-01'])('rejects unsupported/invalid scope or window: %s', async query => {
+    > 41 |   expect((await request(query)).status).toBe(400); expect(getServiceClient).not.toHaveBeenCalled();
+         |                                         ^
+      42 | });
+      43 | test('read failure is not a successful empty report and is not cached', async () => {
+      44 |   range.mockResolvedValue({ data: null, error: { message: 'private DB detail' } });
+
+      at toBe (src/__tests__/api/admin/globalOverview.test.ts:41:41)
+
+  ● cache is global-version/window scoped but still checked only after authorization
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 500
+
+      48 | test('cache is global-version/window scoped but still checked only after authorization', async () => {
+      49 |   (getCached as jest.Mock).mockReturnValue({ scope: 'all_businesses', byDay: [] });
+    > 50 |   expect((await request()).status).toBe(200); expect(getCached).toHaveBeenCalledWith('admin_global_overview:v1:2026-10-01:2026-10-20');
+         |                                    ^
+      51 |   expect(getServiceClient).not.toHaveBeenCalled();
+      52 | });
+      53 |
+
+      at Object.toBe (src/__tests__/api/admin/globalOverview.test.ts:50:36)
+
+Test Suites: 1 failed, 1 total
+Tests:       10 failed, 1 passed, 11 total
+Snapshots:   0 total
+Time:        12.368 s
+Ran all test suites within paths "src/__tests__/api/admin/globalOverview.test.ts".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

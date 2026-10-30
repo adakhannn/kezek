@@ -1,0 +1,42 @@
+{
+  "id": "C210",
+  "status": "READONLY_METHOD_REVIEW_DIRECT_CHOOSER_ALTERNATIVE_SELECTION_UNEXECUTED",
+  "reviewWindowUtc": [
+    "2026-10-26T10:24:47Z",
+    "2026-10-26T10:28:04Z"
+  ],
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "historical": [
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-033-business-selection.json",
+      "originalUtc": "2026-10-13T09:23:13Z–09:25:00Z",
+      "sha256": "c714b6a9bcd465b52f7994f5fe740d2c7d59f0c1c1a517952eb32e73cc1effb5",
+      "method": "Dashboard/bookingssidebarBusinessSwitcher2->1->2/reload/history exclusion; direct/select-businesspage notexecuted."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G107-owned-business-calendar-context.json",
+      "originalUtc": "2026-10-16T23:08:34Z..23:11:17Z",
+      "sha256": "db74559db90d8f92f03101a87b9a1545d1211ba984ddd6479fc249e0259e51cc",
+      "method": "DashboardBusinessSwitcher/calendarmetadatachanged-dependencyregression; notdirectchoice-screen alternative."
+    }
+  ],
+  "currentProof": "C67stoppedatchooser;C196/C197/C209onlyContinuealreadyCurrentbusiness2 forsetup. Neitherdirectroutefromhealthydashboardnorselectingnoncurrentbusiness1throughchoice-screen certified. Do notrerunoldsidebarcalendar/historyforcounts.",
+  "sourceEffects": "SelectBusinessPage ownGETlistsallowedbusinesses; handleSelect ONEPOST/api/me/current-business updatesownuser_current_business{user_id,biz_id} androuter.replace/dashboard. OrdinaryUIonly. Doesnotgrantroles/changebusinessentities/bookings. Existingmembershipcheckedsource, notruntimepermissioncertificate. InternalPOSTnotdirecttoolAPIauthority.",
+  "decision": "OnecompoundUI caseforfinitecurrenttwo-owned-business chooser selections+reloads cancoverF2-02coremultiple-choice andF2-04reloadpersistence. F2-01zero/singlebusinessbranches unproved; F2-03APIpayloadcallsunobserved; F2-05revocationnotauthorized; retainpartial/notrun. Otherroleauth/security/localesownedbyseparateF1/C4/O2requirements, notsilentlyclosed.",
+  "dependencyHashes": {
+    "apps/web/src/app/select-business/page.tsx": "05ecf5066b72c8964e1eb19fe0e8df11d8bd8de215f08bdcb13ee48dece4da7d",
+    "apps/web/src/app/dashboard/components/BusinessSwitcher.tsx": "45ca644edd007bbe25415af64525a08427cf0152064e763a0e22a186d6db4d88",
+    "apps/web/src/app/api/me/current-business/route.ts": "53394b94cd0b203344c40058558ba25103fcb4c276e7954572b8ad2bd1dd559a",
+    "apps/web/src/lib/currentBusinessHttpService.ts": "2b5d4c3924047e6247f147c221a65ceca5b5950520bc1e14e9ae0b7040eaad95",
+    "apps/web/src/lib/currentBusinessService.ts": "b6d7e264c2b58f61dd79fe03170d336565dfbe3f5bdfffdf43238fa13fe65691",
+    "apps/web/src/app/dashboard/layout.tsx": "0c02a3f458300606108f583579feaf75e8dad62120f5be1be20db91499cc7255",
+    "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616"
+  },
+  "effects": "Read-onlysource/history, no UI/auth/preference/source/test/build/serveraction.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}

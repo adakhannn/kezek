@@ -1,0 +1,40 @@
+{
+  "id": "C175",
+  "status": "PASS_ACTUAL_COMPILED_DOCUMENT",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "plan": "c175-built-output-plan.json",
+  "existingCaseId": "A3-01-S1-01",
+  "live": {
+    "observationWindowUtc": [
+      "2026-10-25T23:05:19Z",
+      "2026-10-25T23:05:52Z"
+    ],
+    "entry": "SameexistinghumanTab2 actualprotectedlocalhostadmin ->planned127.0.0.1:3107/privacy, completeprivacyheading/9numberedsections. Observedmenuopen ->guestВойти/RUselected, noauthlinkactivation.",
+    "reloadAfterClockUtc": "2026-10-25T23:05:31Z",
+    "reload": "ONEordinaryreload retains complete9sectiondocument/no erroroverlay.",
+    "returnAfterClockUtc": "2026-10-25T23:05:37Z",
+    "return": "localhost:3000/admin ->protectedheading/settledAdmin-panel/Anonymized/RU/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1; markHandoff/chooser1untouched/no newtabs/auth."
+  },
+  "runtime": {
+    "pid": 14212,
+    "session": 77169,
+    "spawnedUtc": "2026-10-25T23:05:02.502Z",
+    "ready": "2.3s",
+    "stoppedAfterClockUtc": "2026-10-25T23:05:52Z",
+    "finished": {
+      "event": "finished",
+      "utc": "2026-10-25T23:05:53.286Z",
+      "pid": 14212,
+      "exitCode": 4294967295,
+      "signal": null
+    },
+    "classification": "IntentionalStopProcess after exactownedPID/uniqueC174buildpath/start/3107 commandidentity check, successfulUI andsafeadminreturn. Exit4294967295 is intentionalstop notruntimecrash.",
+    "readbackAfterClockUtc": "2026-10-25T23:06:03Z",
+    "readback": "Only127.0.0.1:3000PID18368 listener; no3107, no14212runtime/no23980compiler. No mainrestart/cleanup."
+  },
+  "effects": "Owned isolateddummy nextstart and temporary public document entry/reload/return only. No DEVDB/booking/payment/role/message/persistentfixture/appauth transition. Ordinary auth/telemetry unenumerated.",
+  "accounting": "ExistingA3-01restored22->23/S117primary63/293remaining. ThirdbuildrefreshEVENTcurrentwindow/ONEdistinctexistingcase;0NEWfunctionalUI/fix/requirement.19NEWUI/4fix/logical16/2newacceptedrequirements/3historicalreuses/2historicalfunctionalrefreshevents unchanged.",
+  "limits": "Compiledoutputdocumentonly; noassetbinarybundle/freshcache/visual/device/SSRflash/deployedproduction/allroutes/security/fulltechnicalgreen. Originalbuildfailures/finals/UTC preserved.",
+  "next": "C175complete: F020 malformedpublicphone/WhatsApp validationfix actualSAME-LIVE2variantsPASS(C173),19windowNEWUI/4verifiedfix/logical16. Candidate82c7088de609/1686 C174colddefaultTurbopack40.0s/types36prerenders exit0+C175actualcompiledprivacy9sections/guestmenu/reload/adminrestore PASS. A3-01restored22->23of316293left/S117primary63; thirdbuildrefreshEVENT/ONEdistinctexistingcase, notNEWfunctionalUI/fix/requirement. OriginalC171FAIL andtestoraclecorrection/fullgates preserved:540suites534PASS6FAIL,2558tests2547PASS11FAIL/samefailedidentitiesasC135,lint52errors167warnings/samediagnostics. NotwholeGREEN/NOT_READY. Ownruntime14212stopped/3107gone/compiler23980finished/main3000PID18368retained. UserTab2/admin/RU/Anonymized/Business3 restored/noauth/newtab/privatecontact/unmask/message/fixture/security action. NextC176 ONLYboundedreadonly exact remaining publicemail validation/normalization UI history/dependency/effect review before finiteplan; C170broadmatrix DONE/no repeat audit. Use only independentlysafe synthetic nonrecipient data iflaterplanned, noemail/message/OTP/send/foreigncontact authority. Existingwebsite/nondigit/name/address DONE/no unchangedreplay. All old F013/F005/M1intermittent/role/fixture/profileSave/cache/visual/technical/security/domainlast blockers remain; no unchangedbuild/fonts/C93bundle/authdiagnostic/repairquestion."
+}

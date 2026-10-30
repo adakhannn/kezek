@@ -1,0 +1,48 @@
+{
+  "id": "S1.2-successful-recovery",
+  "recordedUtc": "2026-10-18T11:39:56Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "plan": "s18-recovery-plan.json",
+  "authorization": "Direct human user explicitly allowed only public DEV read test;18Oct2026 latest request until18:40Bishkek.",
+  "method": "Actual CUA application UI and normal application server requests on unchanged production-mode source; not synthetic SDK/mocked API success",
+  "origin": "http://127.0.0.1:3103",
+  "server": {
+    "pid": 18872,
+    "startedUtc": "2026-10-18T11:33:12.958Z",
+    "ready": "36s",
+    "stoppedUtc": "2026-10-18T11:38:32.493Z",
+    "stop": "Validated exact owned build/next start3103 command before Stop-Process; listener absent. Network permission marker removed. Primary14216/3000 untouched."
+  },
+  "serverRetry": {
+    "before": "Known business2 actual dynamic render -> Не удалось загрузить бизнес/generic connection text/Повторить/В каталог. Guard diagnostic S18_PUBLIC_READ_BLOCKED digest3454291244.",
+    "faultRemovedAfterClock": "2026-10-18T11:35:45Z",
+    "action": "Click same mounted Повторить; no full navigation/reload used to substitute recovery.",
+    "after": "Settled Тестовый бизнес2, correct2branch names/addresses,3active services,1staff,0active promotions, expected phone and booking CTA.",
+    "normalPublicReads": "Actual200 business/branches/services/staff/promotions after click11:35:58.951–11:36:00.003UTC."
+  },
+  "apiRetry": {
+    "before": "After reintroducing guard fault, actual /map normal client request ends at Не удалось загрузить филиалы.../Попробовать снова.",
+    "faultRemovedAfterClock": "2026-10-18T11:36:51Z",
+    "action": "Click same mounted Попробовать снова -> actual Загрузка... -> settled branch list.",
+    "after": "2места, correct2branchcards for business2, names/exact addresses, categoryЖенскаяпарикмахерская, branch-specific booking hrefs; prior fetch error absent.",
+    "normalPublicReads": "Actual200 businesses11:36:58.200/branches11:36:58.358/categories11:36:58.533UTC."
+  },
+  "safety": {
+    "network": "Only validated exact-project HTTPS anonymous public GET; allowed public column sets/approved or active filters. Otherhost/port,Auth/RPC/private table,write methods,cookie,user/service bearer,redirect rejected; service-role env empty; no user credentials/session copied.",
+    "keys": "Existing public URL/anon key read locally into child memory only; key value not written to artifact or output. No persistent credentials created.",
+    "harnessTests": "21/21 policy UNIT tests PASS,syntax checks0; separate harness proof, not product/security/RLS coverage.",
+    "logs": "Server sequence field in concurrent requests is completion-time counter, duplicates retained; not unique request IDs or business DB-write count."
+  },
+  "browser": {
+    "navigationTimeout": "Initial Page.navigate timeout while server starting; no repeat goto. After Ready state changed, fresh DOM showed actual map fault; control continued.",
+    "console": "Expected controlled server render/map-fetch errors; Yandex Maps init failure in isolated env recorded. Successful list retry does not prove map canvas/geolocation/integration.",
+    "restored": "Fresh CUA owner/Аккаунт владельца/currentbusinessc28c8109/Тестовый бизнес2/RU/dashboard/settings after return. No auth switch or preference selection; markHandoff."
+  },
+  "effects": "No business fields/Save/booking/hold/create/cancel/pay/grants/SQL/deploy/native/new tabs. Only read-only public DEV GET via normal app and ephemeral harness flag transitions; normal telemetry effects not enumerated.",
+  "limits": [
+    "A4-03 finite404home alreadyS14 + serverretry + APIretry now complete",
+    "No deployed domain/CDN/authcallback/webhook/TLS-browser-production or RLS/security proof",
+    "A3-03 deployed nested route remains deferred, not silently replaced by local recovery"
+  ],
+  "productRuntimeChanged": false
+}

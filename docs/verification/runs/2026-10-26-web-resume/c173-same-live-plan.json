@@ -1,0 +1,28 @@
+{
+  "id": "C173",
+  "savedBeforeUiUtc": "2026-10-25T22:59:29Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "caseId": "S26-I102-nondigit-phone-whatsapp-rejection",
+  "timeBudgetMinutes": 6,
+  "expected": "Same exact two nondigitfillarguments now visibly rejected on sameeditor with respectiveexisting internationalformatmessage; no successfulnavigation. Fieldknownsyntheticargument/AXredactednonempty only, no unmask/value extraction. Leave/reentry originalblank/allbaseline for each; finaladmin/RU/Business3. OnecompoundUI PASS/oneF020fix onlyifbothPASS.",
+  "variants": [
+    {
+      "field": "Телефон",
+      "value": "INVALID PHONE TEST",
+      "error": "Укажите телефон в международном формате"
+    },
+    {
+      "field": "WhatsApp",
+      "value": "INVALID WHATSAPP TEST",
+      "error": "Укажите WhatsApp в международном формате"
+    }
+  ],
+  "steps": [
+    "Clock; existinghumanTab2/admin/RU/Anonymized/Business3 ->observedA2branches0staff/services/bookings ->branches ->exactinactivefa5. Freshoriginalname/blankaddress+fourlinks+fourcontacts/coords—/—/inherittrue/inactive/SaveDisabled/7daysclosed. MismatchBLOCKED/noSubmit.",
+    "Clock fillONLYТелефон sameknownsyntheticargument; AXredactednonempty/Saveenabled. ClockONEordinarySave; expect exacttelephonevalidationerror/sameeditor/retainedinputstate. No retry. LeaveobservedBacklist/reenter ->alloriginalblank/SaveDisabled/errorgone.",
+    "Clock distinctWhatsApp sameknownsyntheticargument; clockONEordinarySave; expectexactWhatsAppvalidationerror/sameeditor. Leave/reenteroriginalblank/allbaseline. No validphone/privatecontact/OTP/message/call/unmask or rawHTTP. Unexpectedsuccess ->preserveFAIL and only exactknownsafeoriginalblank restoration, no speculativeadditionalfix.",
+    "ClockobservedАдминка restoreprotected/admin/RU/Anonymized/Business3, markHandoff/userchooser1untouched/no newtabs/auth. No othercase rerun/newfixture/mappermission/activation/schedule/source/build command."
+  ],
+  "effects": "TwoexpectedrejectedordinarySaveattempts and localdraft discard/reentry. No intendedpersistentcontactmutation; actualauth/telemetryunenumerated, neverzeroTOTALwrites.",
+  "limits": "OnlyF020 malformednondigitphone+WhatsApp serverguardintegration; no wholecontacts/inheritance/timezone/owner/security/visual/fulltechnicalPASS."
+}

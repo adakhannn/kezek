@@ -15,6 +15,7 @@ import { getResendApiKey } from '@/lib/env';
 import { BookingDataService } from '@/lib/notifications/BookingDataService';
 import { NotificationOrchestrator } from '@/lib/notifications/NotificationOrchestrator';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
+import { runNotifyBooking } from '@/lib/notifyBookingService';
 
 jest.mock('@/lib/env', () => ({
     getResendApiKey: jest.fn(() => 'test-resend-key'),
@@ -242,5 +243,31 @@ describe('/api/notify', () => {
         );
         expect(orchestratorMock.sendNotifications).toHaveBeenCalledWith(mockBooking, 'cancel');
         expect(data.sent).toBe(2);
+    });
+
+    test('direct dispatch uses request auth instead of an empty cookie client', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+        const requestClient = createMockSupabase();
+        requestClient.auth.getUser.mockResolvedValue({ data: { user: { id: CLIENT_ID } }, error: null });
+        const result = await runNotifyBooking({ type: 'confirm', booking_id: BOOKING_ID }, requestClient);
+        expect(result.ok).toBe(true);
+        expect(requestClient.auth.getUser).toHaveBeenCalled();
+        expect(mockSupabase.auth.getUser).not.toHaveBeenCalled();
+        expect(NotificationOrchestrator).toHaveBeenCalledWith(requestClient, mockAdmin, expect.any(Object));
+    });
+
+    test('direct dispatch still denies an unauthenticated request client', async () => {
+        const requestClient = createMockSupabase();
+        requestClient.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+        expect(await runNotifyBooking({ type: 'cancel', booking_id: BOOKING_ID }, requestClient)).toMatchObject({ ok: false, status: 401 });
+        expect(orchestratorMock.sendNotifications).not.toHaveBeenCalled();
+    });
+
+    test('direct dispatch still enforces the booking business boundary', async () => {
+        const requestClient = createMockSupabase();
+        requestClient.auth.getUser.mockResolvedValue({ data: { user: { id: MANAGER_ID } }, error: null });
+        (checkBookingBelongsToBusiness as jest.Mock).mockResolvedValue({ belongs: false });
+        expect(await runNotifyBooking({ type: 'confirm', booking_id: BOOKING_ID }, requestClient)).toMatchObject({ ok: false, status: 403 });
+        expect(orchestratorMock.sendNotifications).not.toHaveBeenCalled();
     });
 });

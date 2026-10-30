@@ -12,6 +12,7 @@ import { buttonStyles } from '@/components/ui/buttonStyles';
 export const dynamic = 'force-dynamic';
 
 type BizRow = { id: string; name: string; slug: string; created_at: string };
+type Translate = Awaited<ReturnType<typeof getT>>;
 
 type DashboardWarning = {
     title: string;
@@ -189,7 +190,7 @@ export default async function AdminHomePage() {
     }, {});
     const holdCount = statusCounts.hold ?? 0;
     const confirmedCount = statusCounts.confirmed ?? 0;
-    const canceledCount = statusCounts.canceled ?? 0;
+    const cancelledCount = (statusCounts.cancelled ?? 0) + (statusCounts.canceled ?? 0);
 
     const checks = [
         { ok: !!process.env.SUPABASE_SERVICE_ROLE_KEY, label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY задан') },
@@ -322,9 +323,9 @@ export default async function AdminHomePage() {
                         description={`${label} (Asia/Bishkek)`}
                         action={
                             <div className="flex flex-wrap gap-2">
-                                <StatusCountChip status="hold" count={holdCount} />
-                                <StatusCountChip status="confirmed" count={confirmedCount} />
-                                <StatusCountChip status="canceled" count={canceledCount} />
+                                <StatusCountChip status="hold" count={holdCount} t={t} />
+                                <StatusCountChip status="confirmed" count={confirmedCount} t={t} />
+                                <StatusCountChip status="cancelled" count={cancelledCount} t={t} />
                             </div>
                         }
                         className="mb-6"
@@ -375,7 +376,7 @@ export default async function AdminHomePage() {
                                             <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{b.staff}</td>
                                             <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{b.client}</td>
                                             <td className="whitespace-nowrap px-4 py-3">
-                                                <StatusChip status={b.status} label={bookingStatusLabel(b.status)} />
+                                                <StatusChip status={b.status} label={bookingStatusLabel(b.status, t)} />
                                             </td>
                                         </tr>
                                     ))}
@@ -481,12 +482,13 @@ export default async function AdminHomePage() {
     );
 }
 
-function bookingStatusLabel(status: string) {
+function bookingStatusLabel(status: string, t: Translate) {
     const labels: Record<string, string> = {
-        confirmed: 'Подтверждено',
-        hold: 'Ожидание',
-        canceled: 'Отменено',
-        paid: 'Выполнено',
+        confirmed: t('admin.home.bookingsToday.status.confirmed', 'Подтверждено'),
+        hold: t('admin.home.bookingsToday.status.hold', 'Ожидание'),
+        canceled: t('admin.home.bookingsToday.status.cancelled', 'Отменено'),
+        cancelled: t('admin.home.bookingsToday.status.cancelled', 'Отменено'),
+        paid: t('admin.home.bookingsToday.status.paid', 'Выполнено'),
     };
     return labels[status] ?? status;
 }
@@ -530,10 +532,10 @@ function MetricCard({
     );
 }
 
-function StatusCountChip({ status, count }: { status: string; count: number }) {
+function StatusCountChip({ status, count, t }: { status: string; count: number; t: Translate }) {
     return (
         <div className="inline-flex items-center gap-2">
-            <StatusChip status={status} label={bookingStatusLabel(status)} />
+            <StatusChip status={status} label={bookingStatusLabel(status, t)} />
             <span className="rounded-full bg-[var(--surface-emphasis)] px-2.5 py-1 text-sm font-semibold text-[var(--text-primary)]">
                 {count}
             </span>

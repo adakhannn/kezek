@@ -1,0 +1,71 @@
+{
+  "id": "C131",
+  "caseId": "S26-M501-used-category-confirmation-cancel",
+  "plan": "c131-used-confirmation-plan.json",
+  "status": "PASS_SCOPED_LIVE",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "observationWindowUtc": [
+    "2026-10-25T20:00:52Z",
+    "2026-10-25T20:02:00Z"
+  ],
+  "baseline": {
+    "rows": [
+      {
+        "id": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+        "name": "LIVE TEST NIGHT09OCT CATEGORY EDITED",
+        "slug": "live-test-night09oct-category",
+        "active": false,
+        "usage": 0
+      },
+      {
+        "id": "85157ef2-b18e-4be3-88f7-04c41fd02e5b",
+        "name": "Барбершоп",
+        "slug": "barbershop",
+        "active": true,
+        "usage": 2
+      },
+      {
+        "id": "0851842b-feca-4cda-97a5-37b7ffe971ae",
+        "name": "Женская парикмахерская",
+        "slug": "zhenskaya-parikmaherskaya",
+        "active": true,
+        "usage": 1
+      }
+    ],
+    "summary": {
+      "total": 3,
+      "active": 2,
+      "usage": 3,
+      "popular": "Барбершоп/2"
+    }
+  },
+  "observations": [
+    {
+      "clockUtc": "2026-10-25T20:01:01Z",
+      "action": "Only women row list Delete",
+      "actual": "Удалить категорию / Это действие нельзя отменить. / Категория «Женская парикмахерская» будет удалена. Checkbox Также убрать категорию из 1 бизнеса Value0, Cancel and Delete present."
+    },
+    {
+      "action": "ONLY Отмена",
+      "actual": "Dialog removed, original category/list retained, checkbox never changed."
+    },
+    {
+      "clockUtc": "2026-10-25T20:01:11Z",
+      "action": "One ordinary reload",
+      "actual": "All baseline row IDs/names/slugs/activity/usage unchanged; total3/active2/usage3/popularBarber2."
+    },
+    {
+      "clockUtc": "2026-10-25T20:01:21Z",
+      "action": "Observed В админку",
+      "actual": "Actual /admin protected heading/Admin-panel/Anonymized/RU/Logout, Business3/Branch4/Staff1/Service4/Booking30; human tab2 marked handoff."
+    }
+  ],
+  "actual": "Exact used category warning exposed unchecked remove-from-one-business checkbox. ONLY Cancel closed it; ordinary reload preserved all baseline rows/activity/usage and summary counts. Protected admin restored.",
+  "effects": "Local warning/Cancel/navigation/reload only, no checkbox toggle/Delete/Confirm/Enter/force/Save/activation/business membership/booking/payment/config/role command. Ordinary auth/telemetry unenumerated, not zero TOTAL writes.",
+  "newUiPass": 1,
+  "newVerifiedFix": 0,
+  "newAccepted": 0,
+  "limits": "Not actual deletion/dependency rejection/force/RPC or membership audit/visual/cache/focus/device/no-flash/screensreader PASS.",
+  "next": "C129 unused and C131 used category warning-Cancel/reload two NEW UI PASS/0fix/0accepted. C131 positive-usage warning checkbox observed unchecked; never toggled/confirmed. All three original categories and total3/active2/usage3 retained, protected human tab2/admin restored. Next C132 bounded readonly history/dependency/oracle review of admin Today chips versus visible row after actual Bishkek date rollover26Oct; incidental cancelled row with Cancelled0 is not yet planned case/bug. No booking changes/reload loop/speculative fix; retain all blockers."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "C28",
+  "target": "S21-M103-business-applications",
+  "basis": "Unclosed C13 actual fetchfailed then reload recovered. This is ONE bounded diagnostic after completing other failures, not repeated green navigation credit.",
+  "steps": ["CurrentknownSA menu Заявки бизнеса, waitsettlement", "One fullreload and settlement", "If failure recurs capture exactUI; no HTTP/logcredentials/SDK probes", "If both succeed classify nonreproducedcauseunknown, do NOT call fixed or silently promote C13failedcase"],
+  "expected": "Read-only threehistoricalapplicationcards, no falseempty/error; no moderation actions",
+  "stopAfterMinutes": 5,
+  "noChangeIfUnreproduced": "No speculative retry/sourcepatch/DBchange; retain failure and rootcause blocker; next independent S2.1 F4 protected-route matrix after caller-contract inventory (businessdirectory is not S2.1, corrected before execution)",
+  "countsBefore": "Nav16PASS2FAIL1BLOCKED/19; S117/25accepted8left; S21/70accepted69left"
+}

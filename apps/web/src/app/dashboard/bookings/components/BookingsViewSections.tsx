@@ -4,13 +4,13 @@ import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { BookingItem as BookingViewItem, BranchRow as BookingViewBranchRow, StaffRow as BookingViewStaffRow, TabKey as BookingViewTabKey } from './bookingsViewTypes';
+import { useCalendarHistory } from './useCalendarHistory';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { BookingCard } from '@/components/dashboard';
 import { Tabs } from '@/components/ui/Tabs';
 import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { todayStringInTz } from '@/lib/time';
 
 
 export function BookingsViewTabs({
@@ -68,6 +68,8 @@ function BookingPill({
     timezone: string;
     title?: string;
 }) {
+    const { t } = useLanguage();
+
     return (
         <BookingCard
             id={id}
@@ -76,7 +78,7 @@ function BookingPill({
             status={status}
             timezone={timezone}
             href={`/booking/${id}`}
-            title={title}
+            title={title ?? `${t('bookings.calendar.openBooking', 'Открыть бронь')} #${id.slice(0, 8)}`}
         />
     );
 }
@@ -93,8 +95,7 @@ export function CalendarDaySection({
     timezone: string;
 }) {
     const { t, locale } = useLanguage();
-    const [date, setDate] = useState<string>(() => todayStringInTz(timezone));
-    const [selectedBranchId, setSelectedBranchId] = useState<string>('all');
+    const { date, setDate, selectedBranchId, setSelectedBranchId } = useCalendarHistory(bizId, timezone, branches);
     const [items, setItems] = useState<
         { id: string; staff_id: string; start_at: string; end_at: string; status: BookingViewItem['status']; servicesSummary?: string }[]
     >([]);

@@ -1,0 +1,35 @@
+{
+  "id": "C229",
+  "status": "READONLY_REVIEW_COMPLETE_SAFE_LOCAL_LIMIT_GUARDS_UNCOVERED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "startedAfterUtc": "2026-10-26T12:14:48Z",
+  "requirementId": "M2-01",
+  "history": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+      "sha256": "09eac23bdae938278aff4aa5668cc321c669727dfdc8a3c789e94bb2cc9474f7",
+      "scope": "23Oct name/slug localdraft/Cancel, explicitly no branchlimit edit."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c86-result.json",
+      "sha256": "71a10aece9605ab4549d94ace5e156f2a4669cea7f84ee20e7d3bcb2671969d5",
+      "scope": "Address persistence/restore, limit2 baseline only, no limit commands."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c96-manual-create-review.json",
+      "sha256": "c60188109c2d697e75fc5a4355a0758025751689fedf4b738eb9c7a99284f683",
+      "scope": "Manual CREATE guard contract/blanklimit1, different component/command from existing business BranchLimitEditor."
+    }
+  ],
+  "source": "Separate BranchLimitEditor holds limit locally; onChange parseInt only/setLimit, no effect auto-save. Button type=button/save POST only onClick, disabled for unchanged/<currentCount/<1/>1000. Input min=max(1,currentCount), max1000. Serverauth+SA then integer1..1000, counts currentbranches and rejects lowerthan currentcount before update. Source only/not runtime APIguard proof; valid Save would alter quota, must neverclick in this case. No owner/permissions/branchentity edits needed.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BranchLimitEditor.tsx": "e16f060cdd7f099c9d8d3c290a29f66c233bd84b881115dfe5b9b43f6cef0c1c",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/app/admin/api/businesses/[id]/branch-limit/route.ts": "cdaa42904250d890f507d8f189edb98c694196bacc7371dbe919c108638e97b9",
+    "apps/web/src/components/ui/Input.tsx": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf",
+    "apps/web/src/components/ui/Button.tsx": "22abf97e9365202361506207cdac3b41029a493a32f8856a32f65ba2760dab5f"
+  },
+  "independentOracle": "Known retainedA owns2knownbranches and originalquota2. Existing branch allocation must not allow quota below count; stated servercontract 1..1000 bounds. Calibrate lower1/0 and upper1001 disabled versus allowed1000 enabled locally, restore2 unchangeddisabled/reload2/2. Actualbaseline mustmatchbeforeediting.",
+  "decision": "One genuinely uncovered local existing-business quota guard matrix; no need quotaPOST, entitycreate, assignment or securitychange. FiniteC230 before any UI.",
+  "effects": "Read/hash only; no browser/auth/entity/DB/API/SDK/SQL/source/test/build/server action, 0UI/fix/accepted."
+}

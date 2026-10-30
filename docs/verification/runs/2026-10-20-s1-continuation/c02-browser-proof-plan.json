@@ -1,0 +1,8 @@
+{
+  "reason":"Fresh state after userrestart: screenshots now produce bytes, but padded oddscale. One bounded assessment of whether current supported APIs can satisfy remainingS1browserproof; not repetition of old390/768falseoverrides.",
+  "budgetMinutes":8,
+  "cases":"S12cold1-8/SSR/INITIAL-VISUAL remain mandatory; diagnostic itself closesnone",
+  "supportedInventory":"Browservisibility/viewport; tabpageAssets/webmcp. No cold-cache disable/clear or originalresponse-inspection capability advertised. Priorview-sourcepolicydenial not retried or bypassed.",
+  "action":"One declared desktop1280x900 override, inspect actualCSS/DPR and one fresh screenshot, then reset. IfreportedCSS notrequested, stopdevicepath. No repeatedphone390/tablet768/DPR hacks or CSSchanges.",
+  "acceptanceBoundary":"Viewport request alone notPASS. Need actualCSS+faithfulfreshimage; even viewport success doesnotprove coldcache/prehydrationSSR/initialframe timing. No network/CDP/rawHTTP/storagecredential access. No DB commands."
+}

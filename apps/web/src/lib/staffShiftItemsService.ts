@@ -5,7 +5,7 @@ import { TZ, formatDateInTz } from '@/lib/time';
 
 type SaveShiftItemsResult =
     | { ok: true }
-    | { ok: false; statusCode: number; errorType: 'validation' | 'internal' | 'not_found'; message: string };
+    | { ok: false; statusCode: number; errorType: 'validation' | 'internal' | 'not_found' | 'forbidden'; message: string };
 
 type SaveShiftItemsParams = {
     supabase: any;
@@ -275,11 +275,12 @@ async function upsertShiftItems(params: {
     shiftId: string;
     items: any[];
     promotionMap: Map<string, number>;
+    existingItemIds: Set<string>;
 }) {
-    const { writeClient, shiftId, items, promotionMap } = params;
+    const { writeClient, shiftId, items, promotionMap, existingItemIds } = params;
 
-    const existingItems = items.filter((item) => !!item.id);
-    const newItems = items.filter((item) => !item.id);
+    const existingItems = items.filter((item) => existingItemIds.has(item.id ?? item.clientId));
+    const newItems = items.filter((item) => !existingItemIds.has(item.id ?? item.clientId));
 
     if (existingItems.length > 0) {
         await Promise.allSettled(
@@ -299,7 +300,8 @@ async function upsertShiftItems(params: {
                         consumables_amount: Number(item.consumablesAmount ?? item.consumables_amount ?? 0) || 0,
                         booking_id: bookingId,
                     })
-                    .eq('id', item.id);
+                    .eq('id', item.id ?? item.clientId)
+                    .eq('shift_id', shiftId);
 
                 if (error) {
                     logError('StaffShiftItemsService', `Error updating item ${item.id}`, error);
@@ -317,6 +319,7 @@ async function upsertShiftItems(params: {
                     : Number(item.serviceAmount ?? item.amount ?? 0) || 0;
 
             return {
+                ...(item.clientId ? { id: item.clientId } : {}),
                 shift_id: shiftId,
                 client_name: (item.clientName ?? item.client_name ?? '').trim() || null,
                 service_name: (item.serviceName ?? item.service_name ?? '').trim() || null,
@@ -338,7 +341,15 @@ async function upsertShiftItems(params: {
         return { ok: true as const };
     }
 
-    const { error } = await writeClient.from('staff_shift_items').insert(cleanItems);
+    const stableItems = cleanItems.filter((item) => item.id);
+    const legacyItems = cleanItems.filter((item) => !item.id);
+    const stableResult = stableItems.length
+        ? await writeClient.from('staff_shift_items').upsert(stableItems, { onConflict: 'id', ignoreDuplicates: true })
+        : { error: null };
+    const legacyResult = !stableResult.error && legacyItems.length
+        ? await writeClient.from('staff_shift_items').insert(legacyItems)
+        : { error: null };
+    const error = stableResult.error || legacyResult.error;
     if (error) {
         logError('StaffShiftItemsService', 'Error inserting items', error);
         return {
@@ -363,8 +374,9 @@ async function deleteRemovedItems(params: {
 
     const newItemIds = new Set<string>();
     for (const item of items) {
-        if (item.id) {
-            newItemIds.add(item.id);
+        const id = item.id ?? item.clientId;
+        if (id) {
+            newItemIds.add(id);
         }
     }
 
@@ -500,11 +512,14 @@ export async function runSaveStaffShiftItems(params: SaveShiftItemsParams): Prom
     }
 
     const shiftId = shiftResolution.shiftId;
-    const { data: existingItemsData } = await writeClient
+    const { data: existingItemsData, error: existingItemsError } = await writeClient
         .from('staff_shift_items')
         .select('id')
         .eq('shift_id', shiftId);
 
+    if (existingItemsError) {
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Не удалось проверить позиции смены' };
+    }
     const existingItemIds = new Set<string>();
     if (existingItemsData) {
         for (const item of existingItemsData) {
@@ -525,6 +540,21 @@ export async function runSaveStaffShiftItems(params: SaveShiftItemsParams): Prom
         admin = supabase;
     }
 
+    if (items.some((item) => item.id && !existingItemIds.has(item.id))) {
+        return { ok: false, statusCode: 403, errorType: 'forbidden', message: 'Позиция не принадлежит этой смене' };
+    }
+    const draftIds = [...new Set<string>(items.filter((item) => !item.id).map((item) => item.clientId).filter((id): id is string => !!id))]
+        .filter((id) => !existingItemIds.has(id));
+    if (draftIds.length > 0) {
+        const { data: collisions, error } = await admin.from('staff_shift_items').select('id, shift_id').in('id', draftIds);
+        if (error) {
+            return { ok: false, statusCode: 500, errorType: 'internal', message: 'Не удалось проверить позиции смены' };
+        }
+        if ((collisions || []).some((row: { shift_id: string }) => row.shift_id !== shiftId)) {
+            return { ok: false, statusCode: 403, errorType: 'forbidden', message: 'Позиция не принадлежит этой смене' };
+        }
+    }
+
     await updateBookingStatusesToPaid({ admin, bookingIds: allBookingIds });
     const promotionMap = await buildPromotionMap(supabase, items);
 
@@ -534,6 +564,7 @@ export async function runSaveStaffShiftItems(params: SaveShiftItemsParams): Prom
             shiftId,
             items,
             promotionMap,
+            existingItemIds,
         });
         if (!upsertResult.ok) {
             return upsertResult;

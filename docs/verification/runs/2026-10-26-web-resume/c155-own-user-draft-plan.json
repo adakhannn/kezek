@@ -1,0 +1,24 @@
+{
+  "id": "C155",
+  "savedBeforeUiUtc": "2026-10-25T21:07:36Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "caseId": "S26-M301-own-sa-name-draft-discard",
+  "requirementId": "M3-01",
+  "timeBudgetMinutes": 5,
+  "role": "Existing known SA kezekkg / protectedadmin / Anonymized / RU",
+  "independentOracle": "Editing only the own-SA visible name without submission must remain local. Save is disabled on pristine form, enables on changed draft, header identity stays original. Back to list and reopening same account must show original name again with pristine Save disabled. No account/profile persistence or access change.",
+  "steps": [
+    "Clock; fresh actual existing human tab2 protectedadmin/RU. Use ordinary Users link, identify exactly known kezekkg@gmail.com own-SA row without search. If not currently visible/identity ambiguous, stop BLOCKED; no search/pagination/newuser/auth workaround.",
+    "Open only that observed existing row. Require known email/own identity and ordinary Basic data/Name plus Back to list, pristine Save disabled. Capture ONLY visible original Name string for cleanup; never read/unmask password/email/phone/storage or credentials. If form differs, stop before editing.",
+    "Clock; fill ONLY Name with synthetic C155 LOCAL DRAFT, ordinary Tab blur. Observe draft/Save enabled/header still original. Never Enter/Save/password/email/phone/security/role/suspension/link/message/Delete. On uncertainty no blind retry; leave via observed Back to list.",
+    "Clock; observed Back to list, reopen same observed own-account row once. Expect original Name/pristine Save disabled, no draft persisted. This navigation is discard, not Save validation or security protection proof.",
+    "Restore observed adminroot via existing link, protectedRU/Admin-panel/Anonymized/Business3; markHandoff/preserve both usertabs. If reentry unexpectedly shows draft persisted, preserveFAIL and do not save speculative cleanup."
+  ],
+  "effects": "Local name draft and ordinary existing-account navigation only. No Save/Create/Delete/Enter/security/account/role/credential/booking/payment/auth command, no newentity/fixture. Ordinary telemetry unenumerated, not zeroTOTALwrites.",
+  "limits": "One compound unsaved own-SA form case only; no persisted user update, server validation, last-admin protection, foreign account/roles, visual/focus/accessibility or wholeM3 acceptance.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/users/UserBasicForm.tsx": "fe991b224262b4793e5c26ba882e008c43ef011cf4b969da5ba2f7426e7d9c19",
+    "apps/web/src/components/admin/users/UserPageRedirect.tsx": "fa399acbe47702a9f46db0532e43619f878ea2c66039071844a860f51491117f",
+    "apps/web/src/app/admin/users/[id]/page.tsx": "28c2c4d1a38959f01995e2e02aeeed83fe465cc35c27a6adef290a26317e7a94"
+  }
+}

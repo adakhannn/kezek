@@ -1,0 +1,69 @@
+{
+  "id": "C24",
+  "findingId": "S1-F009",
+  "status": "VERIFIED_TARGETED_HEALTHCHECK_CALLER_AND_SERVER_READ",
+  "before": "Fresh C24 actualSA menuHealthCheck -> /auth/sign-in?redirect=/admin/health-check despite Anonymized/Выйти header and previouslyactualadmin. C21 priorsamefailure preserved. SSRselfHTTP doesnotcarrycaller and flatresponseassumption incompatible standardenvelope.",
+  "fix": "Extract existing privilegedhealth read wiring into33line sharedreadservice: cookiecurrentuser -> sharedcurrentglobalSA helper -> existingunchangedpurehealthdataread. HTTP adapter preservesstandard response/errorstatus; SSR page calls sameauthorizedread directly rather than selfHTTP/no credentialsforwarded/domain. Rolecheck now includes currentuserId; isolated foreignroleunitgapfixed, NOTliveforeignHTTPleakproof. Rolequeryerror400 genericmessage insteadofrawerror. No scopes/grants widened.",
+  "sameLive": "ActualsameSA aftersourcepatch /admin recovered afteroneCUAnavigatetimeout; freshAXconfirmedcompletedadmin/no reauth. ActualmenulinkHealthCheck -> HealthCheckсистемы andshifts/ratings/promotions panels; ONEplannedfullreload yields samefunctionalpage and actualAdmin-panel/Anonymized, no signin/auth/crash. UIshows0olderopenshifts,lastmetrics19Oct,0activepromotions/never, healthylabel. These areobservedlabels only, notindependentlyreconciled model/allcomponentshealth/cron/emaildeliveryPASS. Existing09UTC=14Bishkekcopy retainedasunclosedtimezoneinformationfollowup, no silentcopyfix.",
+  "observationTimeBoundary": {
+    "afterClockUtc": "2026-10-20T13:55:11Z",
+    "nextClockUtc": "2026-10-20T22:09:08Z",
+    "exactSuccessTimestampNotCaptured": true,
+    "publicationAfterUtc": "2026-10-20T22:10:30Z",
+    "continuity": "No continuousworkproof across13:55->22:09; no retroactive timingclaim. Untilhumanstop authorization remainsprospective/no fixeddeadline. At22:09freshinventory+AXshows samehealthpage/Admin-panel, notnewreloadPASS."
+  },
+  "checks": {
+    "initial": "Mixed initialrun retained: pageharnessmissingvirtualmodule + HTTPforeigncaller1FAIL5PASS, notcleanproductbaseline",
+    "before": {
+      "passed": 5,
+      "failed": 7,
+      "exitCode": 1,
+      "raw": "c24-unit-before.txt",
+      "note": "Newreadloader existed but oldpage/HTTPstillunusedit; trueoldcaller/selfHTTPcontracts fail."
+    },
+    "after": {
+      "suites": 4,
+      "passed": 15,
+      "failed": 0,
+      "exitCode": 0,
+      "raw": "c24-unit-after.txt",
+      "coverage": "2changedread/HTTPservicefiles100statements/branches/functions/lines; notwholebaseline"
+    },
+    "route": {
+      "suites": 1,
+      "passed": 3,
+      "exitCode": 0,
+      "raw": "c24-api-route-after.txt",
+      "timing": "Ownedrouteprocess launched aroundnextactual22:09, completed22:10; no8hourtestexecutionclaim"
+    },
+    "types": {
+      "exitCode": 0,
+      "raw": "c24-types-after.txt"
+    },
+    "lint": {
+      "exitCode": 0,
+      "errors": 0,
+      "ruleWarnings": 0,
+      "raw": "c24-lint-after.txt",
+      "notice": "LegacyESLintIgnoreWarningretained/explicit--no-ignore"
+    }
+  },
+  "matrixAfter": {
+    "passed": 14,
+    "failed": 4,
+    "blocked": 1,
+    "notRun": 0,
+    "total": 19,
+    "remaining": 5
+  },
+  "counts": {
+    "S1": "17/25accepted8left;63/79PASS16left",
+    "S2": "1/70accepted69left",
+    "product": "18/316accepted298leftNOT_READY",
+    "newVerifiedFixesThisRun": 5,
+    "pendingSameLive": "F005",
+    "otherOpen": "F007ratingsrenderer"
+  },
+  "effects": "Twoexistingruntimefiles+one33line newreadservice,oneexistingtestmodified+one newpageunitfile. Existingbusinessdatareadonly; noSDKbyagent/service-roleimpersonation/directAPIprobe/credentialextraction/newgrant/authtransition/fixtures/jobs/SQL/email/messages/pay/cleanup. Ordinarytelemetryunenumerated, notzeroTOTALwrites. No screenshotretry. MainuserTab5 knownSAhealthcheckRU/handoff/tab2untouched.",
+  "next": "Proceed remainingfailures: ratings-status,analytics-overview,businessapplications transient,roleapplicationsF005failurepath. Monitoring remainsprohibitedblocked. Preflight andfinitecaseplans beforeeach; no credentialsforwarding/selfHTTP patchusingtokens. F007renderonly later,no recalc. Untilexplicitstop, no expiredFontspermissionrenewal."
+}

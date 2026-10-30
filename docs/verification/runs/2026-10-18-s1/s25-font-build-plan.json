@@ -1,0 +1,12 @@
+{
+  "plannedUtc": "2026-10-18T12:22:43Z",
+  "directUserApproval": "Да, только публичные GET Google Fonts",
+  "purpose": "Recheck reopened current default build/assets gates with real unmodified font configuration, not font fixture",
+  "sourceFingerprint": "0cc81561faf0c47d8dbd4b993204d9cfb40e5e2ac339473a21121310c479364e",
+  "copyFiles": 1659,
+  "compiler": "Existing defaultNext16Turbopack; no mock font hook or webpack override",
+  "networkScope": "Compiler public anonymous GET fonts.googleapis.com/fonts.gstatic.com only; Nodeguard no auth/cookies/APIkey/body/write/otherhost. Not OSfirewall/native-network isolation proof. No Supabase key in build env and no service-role",
+  "runtime": "Separate next start with original all-data-network-blocked dummy environment; public/privacy DOM and shared fresh-origin assets only",
+  "bounded": "New exact f002-fontread folder, build180s/server300s automaticstop, no starts after12:34, human deadline12:40UTC",
+  "policyTests": "15memorycasesPASS, no actual HTTP or product security/RLS inference"
+}

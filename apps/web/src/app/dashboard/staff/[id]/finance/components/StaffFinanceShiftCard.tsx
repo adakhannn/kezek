@@ -3,6 +3,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { useState } from 'react';
 
+import { bookingCountForm } from '@/lib/bookingCountForm';
 import type { StaffFinanceStatsShift } from '@/lib/finance/types';
 import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
@@ -39,7 +40,7 @@ export function StaffFinanceShiftCard({
     async function saveEditedHours() {
         const raw = hoursInput.trim().replace(',', '.');
         const nextValue = Number(raw);
-        if (!Number.isFinite(nextValue) || nextValue < 0 || nextValue > 24) {
+        if (!raw || !Number.isFinite(nextValue) || nextValue < 0 || nextValue > 24) {
             setInlineError(t('finance.staffStats.editHoursInvalid', 'Invalid hours value'));
             return;
         }
@@ -92,7 +93,7 @@ export function StaffFinanceShiftCard({
                                 : t('finance.staffStats.status.closed', 'Closed')}
                         </span>
                         <span className="type-caption text-[var(--text-muted)]">
-                            {shift.items.length} {t('finance.staffStats.clients', 'clients')}
+                            {shift.items.length} {t(`finance.staffStats.clientCount.${bookingCountForm(shift.items.length, locale === 'en' || locale === 'ky' ? locale : 'ru')}`, 'clients')}
                         </span>
                     </div>
 
@@ -103,7 +104,7 @@ export function StaffFinanceShiftCard({
                 </div>
 
                 <div className="min-w-[220px] space-y-1 text-right">
-                    <p className="type-label text-[var(--text-primary)]">{formatMoney(shift.total_amount, locale)}</p>
+                    <p className="type-label text-[var(--text-primary)]">{formatMoney(shift.total_amount + shift.consumables_amount, locale)}</p>
                     <p className="type-caption text-[var(--text-muted)]">
                         {t('finance.staffStats.consumables', 'Consumables')}: {formatMoney(shift.consumables_amount, locale)}
                     </p>
@@ -130,7 +131,7 @@ export function StaffFinanceShiftCard({
                     <div className="grid gap-3 sm:grid-cols-3">
                         <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                             <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.baseShare', 'Base share')}</p>
-                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.master_share, locale)}</p>
+                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.base_master_share ?? shift.master_share, locale)}</p>
                         </div>
                         <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                             <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.guaranteedAmount', 'Guarantee')}</p>
@@ -163,6 +164,7 @@ export function StaffFinanceShiftCard({
                                     <>
                                         <input
                                             type="number"
+                                            aria-label={t('finance.staffStats.editHoursPrompt', 'Enter actual hours worked')}
                                             inputMode="decimal"
                                             min={0}
                                             max={24}

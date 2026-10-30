@@ -1,0 +1,10 @@
+{
+  "before":{"suites":1,"passed":4,"failed":5,"exitCode":1,"raw":"c14-unit-before.txt","pnpmFooter":"Legacy misleading jest-not-found footer retained after actual9test execution; not reclassified as successful run"},
+  "after":{"suites":1,"passed":9,"failed":0,"exitCode":0,"raw":"c14-unit-after.txt"},
+  "types":{"exitCode":0,"raw":"c14-types-after.txt"},
+  "lint":{"exitCode":0,"errors":0,"warnings":1,"raw":"c14-lint-after.txt","note":"load dependency warning in existing useEffect dependency array retained; no suppression or unrelated hook rewrite; no claim zero warnings"},
+  "coverage":"Not collected for this component presentation-only patch; not service/route/domain coverage or whole baseline gate",
+  "sourceDelta":"Only successful list-read state flag/invalidation/success assignment and empty/row gates in admin component; no API/auth/commands/schema or owner RoleApplicationsClient change",
+  "effects":"All UNIT requests in-memory mocks; no real SDK/service-role/network/fault injection. New testdata not DEV fixtures.",
+  "sameLive":"Actual postpatch reads succeeded, so error-path SAME-LIVE remains pending; do not count F005 verified"
+}

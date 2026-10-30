@@ -13,9 +13,11 @@ type StaffSelectorProps = {
     selectedStaffId: string;
     onSelect: (staffId: string) => void;
     dayStr: string | null;
+    loading?: boolean;
+    error?: boolean;
 };
 
-export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: StaffSelectorProps) {
+export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loading, error }: StaffSelectorProps) {
     const { t, locale } = useLanguage();
 
     const formatName = (name: string): string => formatStaffName(name, locale);
@@ -29,6 +31,9 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
             />
         );
     }
+
+    if (loading) return <BookingEmptyState type="loading" message={t('common.loading', 'Загрузка...')} />;
+    if (error) return <BookingEmptyState type="error" message={t('booking.error.technical', 'Не удалось загрузить данные. Перезагрузите страницу.')} />;
 
     if (staff.length === 0) {
         return (

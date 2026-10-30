@@ -1,0 +1,17 @@
+{
+  "id": "C25",
+  "parent": "M1-03",
+  "candidateId": "dev-20261020-S1-9101a79da5f7",
+  "reason": "C17actualratingsstatus persistenterror; source SSRrelative selfHTTP URLs failonserver/lackcaller and expectflatresponse. Existingstatus+jobservices onlyselect data; no recalc. Newdependentcallerreadcontract, not unchangedretest.",
+  "expected": "KnowncurrentglobalSA actual menu+reload ratingsstatus renders metriccards and read-only jobhistory ifpresent, no incorrectsignin/error. Page+API share currentcallerreadnot selfHTTP; currentuserId/globalroleNULL requiredbeforeprivilegedqueries. Underlyingmodel/NULLratings/jobs executionnotcertified.",
+  "matrix": [
+    "actualbeforeknownSA",
+    "unitpage successfulstatus+jobs/empty",
+    "unitpagedenials/throw/statusfailure/jobsfailure",
+    "unitsharedcaller guest/foreign/business/error/status/jobs",
+    "existingpureService+HTTPcontrols",
+    "actualafterknownSA menu+reload"
+  ],
+  "scope": "One boundedreadonly fix chain; newsharedreadloader, thinHTTPdelegation, SSRdirectread. Nocredentialsforwarded, nojobs/recalc/SQL/metricsendpoint/directAPIprobe/newroles. Type/scopedlint/coverage>=60. RetaininitialFAIL/harness. No screenshots/devicePASS.",
+  "budgetMinutes": 25
+}

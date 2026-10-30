@@ -1,4 +1,13 @@
 export const authRu = {
+    'auth.telegramSwitch.login': 'Войти с другого Telegram-аккаунта',
+    'auth.telegramSwitch.link': 'Подключить другой Telegram-аккаунт',
+    'auth.telegramSwitch.title': 'Telegram запомнил аккаунт в браузере',
+    'auth.telegramSwitch.step1': 'Откройте управление входом Telegram.',
+    'auth.telegramSwitch.step2': 'Нажмите текущий профиль и выберите Log out.',
+    'auth.telegramSwitch.step3': 'Вернитесь сюда и обновите кнопку — Telegram предложит другой номер.',
+    'auth.telegramSwitch.appHint': 'В приложении: Настройки → Конфиденциальность → Боты и сайты.',
+    'auth.telegramSwitch.open': 'Открыть Telegram',
+    'auth.telegramSwitch.refresh': 'Обновить кнопку',
     'auth.loading.description': 'Проверяем безопасное подключение и открываем способы входа.',
     'auth.loading.hint': 'Обычно это занимает всего несколько секунд',
     'auth.loading.title': 'Готовим вход',

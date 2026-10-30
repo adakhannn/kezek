@@ -1,0 +1,38 @@
+{
+  "id": "C183_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-26T00:17:10Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "bf3763f235b89f8be3b577646b0cfdad566d53f044db204c2df148a5de9fba98",
+    "latestPromptCheckpoint": "C183"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 26,
+    "observedAfterClockUtc": "2026-10-26T00:10:48Z"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "c179JournalImmutable": true,
+  "c183JournalNowImmutable": true,
+  "pendingFixtureEffects": false,
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 22,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "newUiFromC183": 1,
+  "newFixFromC183": 0,
+  "newAcceptedFromC183": 0,
+  "releaseDecision": "NOT_READY",
+  "next": "C184 bounded readonly existingfixtureA business-deletion-warning history/handler/effects review before finiteUIplan only; no Delete/finalConfirm/Enter/force/typedconfirmation/newentity/cleanup authority.",
+  "effects": "Administrative continuation only after C183exactly2ordinaryupdates and originalvisibleeditor/publicrestoration. No extra product/browser/auth/DB/entity/source/test/build/server command. Main server/user tab preserved, no active temporary compiler/runtime/networklease. Ordinary auth/telemetry/emptyrepresentations unenumerated, never zeroTOTALwrites."
+}

@@ -1,0 +1,145 @@
+{
+  "id": "2026-10-26-web-resume-final",
+  "status": "PAUSED_BY_USER",
+  "request": "сделай логическое завершение и на паузу",
+  "firstActualStopClockUtc": "2026-10-26T01:27:50Z",
+  "finalizedUtc": "2026-10-26T01:29:27Z",
+  "windowResumeFirstClockUtc": "2026-10-25T19:37:40Z",
+  "continuousObservation": false,
+  "noContinuityAcrossHistoricalPauses": true,
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "sourceFileCount": 1686,
+  "readiness": "NOT_READY",
+  "accepted": 23,
+  "remaining": 293,
+  "total": 316,
+  "S1": {
+    "accepted": 17,
+    "total": 25,
+    "primaryPassed": 63,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 3,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 1,
+    "total": 47
+  },
+  "S6": {
+    "accepted": 2,
+    "total": 29
+  },
+  "newWindowPassedFunctionalUiCases": 23,
+  "newWindowVerifiedLiveFixes": 4,
+  "verifiedFixesLogicalRun": 16,
+  "newWindowFirstAcceptedRequirements": 2,
+  "reusedPriorProofCasesThisWindow": 3,
+  "refreshedExistingCaseEventsThisWindow": 3,
+  "distinctRefreshedExistingCasesThisWindow": 1,
+  "refreshedHistoricalFunctionalCasesThisWindow": 2,
+  "priorWindowArchived": {
+    "newUiPass": 5,
+    "newVerifiedFixes": 1,
+    "notAddedToThisWindow": true
+  },
+  "fixes": [
+    {
+      "id": "S1-F017",
+      "status": "verified",
+      "scope": "Admin Today canonical cancelled count and RU label."
+    },
+    {
+      "id": "S1-F018",
+      "status": "verified",
+      "scope": "Admin Today EN/KY system status copy."
+    },
+    {
+      "id": "S1-F019",
+      "status": "verified",
+      "scope": "English Today title stray backslash removed."
+    },
+    {
+      "id": "S1-F020",
+      "status": "verified",
+      "scope": "Nonempty nondigit phone/WhatsApp validation: actual before FAIL retained, minimal WEB guard and SAME-LIVE rejection/recovery verified."
+    }
+  ],
+  "acceptedRequirementsThisWindow": [
+    "B4-01",
+    "B3-02"
+  ],
+  "accounting": "Inherited21 accepted ->23;2 first accepted requirements. Reuses/functional refresh/build refresh do not add NEW UI cases or fixes. Latest C188 review/C189 blocked add0.",
+  "currentBuild": {
+    "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+    "pid": 23980,
+    "ownedSession": 25359,
+    "startedUtc": "2026-10-25T23:03:23.215Z",
+    "finishedUtc": "2026-10-25T23:04:38.101Z",
+    "exitCode": 0,
+    "timedOut": false,
+    "rawLog": "c174-build-raw.txt",
+    "buildEvidence": "c174-result.json",
+    "executionEvidence": "c175-result.json",
+    "ownedRuntimePid": 14212,
+    "runtimeStopped": true
+  },
+  "technicalGates": {
+    "evidence": "c172-technical-checks.json",
+    "typecheck": "PASS",
+    "targeted10": "PASS",
+    "scopedLint": "0errors/1ignoredtestwarning",
+    "fullLint": "FAIL52errors167warnings",
+    "sourceUnit": "FAIL11/PASS2547",
+    "fullCoverage": "EXECUTED_FULL_FAILED_TEST_GATE_RETAINED",
+    "currentBuild": "C174_C175_SCOPED_PASS"
+  },
+  "latestProductOrReviewEvidence": "S1-EV-628 / c189-result.json",
+  "blockers": [
+    "C189 actual public catalogue temporarily unavailable before query/Book CTA; cause unknown. No unchanged retry or speculative source/auth fix.",
+    "F013 OPEN, F005 live verification pending, M1 business-count intermittent read failure unresolved.",
+    "Role/fixture/owner/profile Save/cache/visual/security/technical and timezone/provider/runtime booking proof blockers retained.",
+    "Full WEB test gate retains11 failed assertions; full lint52errors167warnings. Scoped successful checks/build do not establish whole green.",
+    "Domain/deployed production deferred; NOT_READY."
+  ],
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configurationSHA256": "3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b",
+    "name": "Kezek WEB — до команды остановиться",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "existingAutomationNoDuplicate": true,
+    "preservedScheduleThreadName": true
+  },
+  "effectsAndProcesses": {
+    "newTemporaryProcessesStarted": false,
+    "stopOrRestartCommandsIssued": false,
+    "activeTemporaryNetworkPermission": false,
+    "compilerAndTemporaryRuntime": "C174/C175 recorded finished/stopped; no later temporary process started in this window.",
+    "mainServer": {
+      "lastRecordedPid": 18368,
+      "leftUnmodifiedForUser": true,
+      "continuingTestProcess": false,
+      "currentHealth": "Not established. Scoped normal process/listener checks at finalization returned no rows; prior sandbox visibility limitations retained, not proof of server failure. No restart or recovery attempted."
+    }
+  },
+  "uiAndWrites": "Administrative finalization only. No new product/UI/auth/DB/source/test/build/server action after stop. No pending fixture effects per frozen C179/C183 journals. User Tab2 preserved without new browser manipulation; last actual C189 handoff restored protected admin/RU/Anonymized/Business3 before01:16:32UTC. No fresh UI health claim. Prior ordinary auth/telemetry/normalization writes unenumerated, never zero TOTAL writes.",
+  "pendingFixtureEffects": false,
+  "immutableJournals": [
+    "S1-EV-607",
+    "S1-EV-616"
+  ],
+  "priorFinal": {
+    "path": "../2026-10-25-web-resume/final-report.json",
+    "sha256": "59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676",
+    "unchanged": true
+  },
+  "savedNextOnly": "C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged.",
+  "resumeRequires": "NEW direct human authorization, then fresh clock/usage/progress/source/UI and all prior safety boundaries. C190 saved review is NOT authorized while paused."
+}

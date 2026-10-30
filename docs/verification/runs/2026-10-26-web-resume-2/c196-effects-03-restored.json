@@ -1,0 +1,17 @@
+{
+  "id": "C196_EFFECTS_RESTORED",
+  "recordedUtc": "2026-10-26T09:08:14Z",
+  "immutableAppendOnly": true,
+  "baseline": "c196-effects-01-baseline.json",
+  "linked": "c196-effects-02-linked.json",
+  "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+  "staffId": "1bfd0e3b-6fce-42a1-b439-6313af27112f",
+  "recovery": "Fresh exact ownerstaffeditor showed both checked/count2of2. ONE click on exact1mincheckbox removed only ownnewrelation; count1of2. ONE ordinary reload confirmed1minunchecked/60minstillchecked/count1of2. Public samebusiness/branch/staff/defaultday Step4 again lists ONLY original60min100-300 service/unchecked/Nextdisabled. Basebookingdocument reentry resetsStep1/bothbranchesunchecked/no staff/service/Nextdisabled.",
+  "explicitAssociationCommands": {
+    "insert": 1,
+    "removeOwnNewLink": 1
+  },
+  "pending": false,
+  "authRecovery": "Ordinary ownerLogout, knownkezekkg Googlelogin, actualprotected/admin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1; markHandoff before09:08:14Z.",
+  "limits": "Normal UI removal is reversible via samecheckbox; no pre-existing relation removed, no other profile/globalSave/role/serviceentity/booking/slot/payment change. Not bit-identical DB/auth rollback; ordinary auth/analytics/telemetry/draft effects unenumerated."
+}

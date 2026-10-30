@@ -1,0 +1,20 @@
+{
+  "id":"C10-GUEST",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "startedAfterClockUtc":"2026-10-20T10:27:34Z",
+  "finishedBeforeClockUtc":"2026-10-20T10:28:33Z",
+  "status":"4_PASS_0_FAIL",
+  "environment":"DEV localhost:3000 RU, existing IAB2 usertab5/provider c6f744b5-18d3-4b56-9132-c301225c7e66",
+  "prerequisite":"Human explicitly enabled Disable cache and left developer tools open; selectedTab5 confirmed through CUA. Manual operator evidence, not agent cache API, no cookie/storage reset. Accepted only for functional document loading, not first-paint/visual/SSR or performance benchmark.",
+  "actualRole":"Guest: fresh AX header Войти on home and subsequent public documents",
+  "results":[
+    {"caseId":"S12-cold-5","requested":"/","actual":"/","action":"intentional full reload","status":"passed","observed":"Найдите место и запишитесь онлайн; catalogue3 with fixtureA/business1/business2, search and footer, guest Войти"},
+    {"caseId":"S12-cold-6","requested":"/auth/sign-in","actual":"/auth/sign-in","action":"direct document goto","status":"passed","observed":"Kezek sign-in form, Продолжить с Google/Яндекс/WhatsApp and guidance; guest Войти, useful form while header briefly says Загружаем доступные кабинеты"},
+    {"caseId":"S12-cold-7","requested":"/terms","actual":"/terms","action":"direct document goto","status":"passed","observed":"Пользовательское соглашение, sections1–8, last update20October2026, return-home links and footer; no error boundary"},
+    {"caseId":"S12-cold-8","requested":"/privacy","actual":"/privacy","action":"direct document goto","status":"passed","observed":"Политика конфиденциальности, sections1–9 incl information/rights/cookies/contacts, return-home links and footer; guest header; no error boundary"}
+  ],
+  "evidenceMethod":"Actual CUA AX observations after each full document action, inspected individually. User explicitly requested no screenshots; no capture attempted. No automatic cache-flag inspection or request/header extraction claimed.",
+  "effects":"Four ordinary document loads only, no login or business/booking command yet. Ordinary telemetry unenumerated, not zero total DB writes. Existing tabs and human DevTools retained.",
+  "countsAfter":{"acceptedS1":18,"remainingS1":7,"passedCases":64,"remainingCases":15},
+  "next":"Four owner cases then accept A1-01 only if all eight pass; no domain/SSR/visual promotion"
+}

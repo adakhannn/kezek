@@ -1,0 +1,25 @@
+{
+  "id": "C23",
+  "parent": "M1-03",
+  "candidateId": "dev-20261020-S1-2c13893d5d3d",
+  "reason": "C21 actual knownSA promotions-debug redirected to /dashboard denied; unlike adminlayout it uses separate legacy joined role query. Existing shared helper verifies samecurrent caller/globalnullscope, no newgrants.",
+  "expected": "Known current globalSA sees blank manual promotion lookup form by actualmenu+fullreload, no query submitted. Guest redirectedsignin; anotheruser role/business-scoped admin/role read error cannot authorize. Sourceonly consistency notlivePASS.",
+  "matrix": [
+    "actual allowedSA menu",
+    "actual allowedSA fullreload",
+    "unit currentglobalrole",
+    "unit gueststop",
+    "unit foreign-globalrole",
+    "unit business-scoped-role",
+    "unit role-read-error"
+  ],
+  "steps": [
+    "Regression on existing old page before patch retaining actual4xx/redirect proofC21",
+    "Reuse existing current-user globalrole helper rather than independent legacy joinedquery; no factory/session/deployment/SQL or grants change",
+    "Same actualSA page menu/reload success required",
+    "Scopedunit/types/lint; helperbranchcoverage60 gate, mocks not realHTTP/RLS"
+  ],
+  "sideEffects": "OrdinaryactualUIreads only; leave all lookup fields empty/noLoad/noPOST/recalc/messages/deletion. No screenshotretry. MainSA handoff maintained.",
+  "budgetMinutes": 20,
+  "stop": "If no success after minimal patch, retainfailureanddo notcountverifiedfix; do notweakenrolecheck orcreatefixtures"
+}

@@ -1,0 +1,16 @@
+{
+  "id":"C67",
+  "plan":"c67-owner-selector-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-21T09:28:57Z",
+  "restoredBeforeUtc":"2026-10-21T09:33:21Z",
+  "cases":[{"key":"owner","existingCaseId":"S21-F103-DIRECT-owner","status":"blocked","classification":"PLAN_SETUP_STOP_NOT_PRODUCT_DEFECT","observationWindowUtc":["2026-10-21T09:28:57Z","2026-10-21T09:31:19Z"],"actual":"OrdinarySAlogout/localGooglebutton09:29:27/knownosorovadahan04choice09:30:06. FreshDOMactualВладелец/Выйти andВыберитебизнесдляработы/Доступныебизнесы; visibleТестовыйбизнес2Текущий/Продолжить. C67stopconditionselect-businessgatesatisfied: no businessbuttonclicked, no directselect-cabinetentry orRemember/choice/reloadexecuted. CaseBLOCKEDatplanprecondition, NOTproductFAIL/defaultloop orproofselectoritselfinaccessible."}],
+  "scopeDecision":"C67plan requiredownerworkspacecontrol andspecifiedstopwhenbusiness-selectiongateappeared; obeyedwithoutfittingdata/changingbusiness. This isplan/scope blocker, not missingownerfixture/newbug/securitybarrierclaim. DirectselectorpagewasNOTtested; cannotclaimitsfailureorPASS. No unchangedownerloginretry/plansilentrelaxation.",
+  "restore":"After09:31:19 ordinaryownerlogout/localform; Googlebutton09:31:46/knownSAkezekkgchoice09:32:03. ActualAnonymized/protectedПанельадминистратора/Бизнесы3/exactlocalhost/adminbefore09:33:21, original2/18handoff,5untouched. Within12minuteUIwindow.",
+  "effects":"2ordinarylogouts+2knownGoogleloginsincludingrestore; no businessselection orselectorRemember/choice commands. No newtabs/cookie-storage-authcodeinspection/source/test/build/server/DB/APIprobe/role/grant/booking/shift/payment/review/securitycommands. Existingapplicationauthlookup/telemetryunenumerated/notzeroTOTALwrites; f821/closed909256untouched.",
+  "matrix":{"total":7,"passed":3,"failed":0,"blocked":3,"notRun":1,"remaining":4,"newLivePass":0,"newFixes":0,"note":"Ownernot_run->BLOCKEDatC67setup; SA/client/guest3originalPASSnotrerun; staffnot_run,manager/multirolefixtureBLOCKEDstillretained."},
+  "counts":"Product21/316,S117/25primary63/79,S23/70,S41/47unchanged;9verifiedlivefixesunchanged;F013OPEN/no newfix.",
+  "independentPriorityReview":"M3-01search hasNadmin/G004historicalproof, notrepeatforcounts. M6-02actualmanualdatefiltervariants notyetproved: C26effects explicitlyauto-defaultdates/no agentmanualchange; onlyemptyoverviewnavigation/reloadpassed. M6-02historyL050/WB177notcurrentglobalcustomfilterproof. ChooseboundedglobalSAdatefilterUI contract, no newbusinessselection/numericreconciliation/monitoring.",
+  "next":"C68finiteM6-02globaloverviewdatefilterplan BEFOREUI: inspectcurrentdatecontrols/expectations, onevalidcustomrange+invalidrangebehavior asofferedbyactualUI; separatepartialfailure/retryBLOCKEDwithoutnaturalrepro, no APIinjection. No repeatC26defaultempty/reloadforcredit, nofinancialETL/numericaccuracyclaim. NEVERopenmonitoring/metrics; currentglobalreportonly, no jobs/recalc. RestoreadminandleaveuntilhumanstopACTIVE."
+}

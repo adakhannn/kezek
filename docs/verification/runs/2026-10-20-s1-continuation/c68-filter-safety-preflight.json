@@ -1,0 +1,10 @@
+{
+  "id":"C68-preflight",
+  "reviewBeforeUtc":"2026-10-21T09:36:28Z",
+  "method":"SOURCE_ONLY_NOT_LIVE",
+  "source":"apps/web/src/app/admin/analytics/overview/useAdminAnalyticsOverviewData.ts andpage.tsx",
+  "facts":["Datechangestriggerordinaryoverviewread andpersistAnalyticsFilters; notzeroapplicationwrites becausebrowserfilterpreferencespersistimplicitly.","Page returnsAdminAnalyticsOverviewError instead offiltercontrols whenerror occurs; retryuses samecurrentdates. Do not intentionallypersistinvalidrange unlessactualUIofferssafeeditable recovery."],
+  "safeNext":"C68finitevalidfilterplanonly: captureoriginalvisible dates/preset/globalcontext; onevalidcustomrangeinsideoriginalinterval andoneavailablepreset asdistinctcontrolvariants, restoreoriginalvisiblefilters throughordinaryUI. Deriveexactrangeexpectationsbeforeinput, neverhardcodefutureemptydata claim. Keepemptydatareading/no numericcertification.",
+  "blocked":"Invalidrange/partialAPIerror/retry certification remainBLOCKEDwithoutsafeUIrecovery/naturalrepro. No rawstorage/cookie/APIprobe/injection/queryworkaround/newtabs torepair intentionallyinvalidpreference.",
+  "acceptance":"No caseexecuted orproductbugconfirmedbythissourcepreflight; notnewPASS/fix. Registerwithnextfiniteplan/result ifused."
+}

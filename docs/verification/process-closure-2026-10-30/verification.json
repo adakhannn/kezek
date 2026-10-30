@@ -1,0 +1,96 @@
+{
+  "id": "WEB-DOCUMENTATION-CLOSURE-2026-10-30",
+  "scope": "Closure of the broad autonomous manual process and documentation handoff only",
+  "preparedAfterActualClockUtc": "2026-10-30T12:23:20Z",
+  "humanRequest": "ты очень не эффективен в ручном тестировании, нужно как то завершить общий процесс и позаниматься с документами чтобы следующие агенты не запутались",
+  "processStatus": "MANUAL_CAMPAIGN_CLOSED_NOT_READY",
+  "product": {
+    "accepted": 28,
+    "total": 316,
+    "remaining": 288,
+    "releaseReady": false,
+    "candidate": "dev-20261028-WEB-60022ce29b32",
+    "factsObservedOn": "2026-10-28",
+    "freshProductExecution": false
+  },
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "configurationReadOn": "2026-10-30",
+    "configurationChanged": false,
+    "resumeAuthorized": false,
+    "configurationSHA256": "c953a74e1a80d540fed8e1eebfe4f9cc4fa19f76a571ed27198bbb4dec707648"
+  },
+  "handoff": "docs/WEB_AGENT_HANDOFF.md",
+  "entryPoint": "AGENTS.md",
+  "checks": {
+    "ledger": {
+      "valid": true,
+      "errors": [],
+      "accepted": 28,
+      "applicable": 316,
+      "releaseReady": false
+    },
+    "closure": {
+      "valid": true,
+      "errors": [],
+      "accepted": 28,
+      "remaining": 288
+    },
+    "activeDocsLinks": {
+      "exitCode": 0,
+      "files": 10,
+      "broken": 0
+    },
+    "extendedLocalLinks": {
+      "checkedBeforeReceipt": 118,
+      "unexpectedBroken": 0,
+      "receiptWasOnlyPendingTarget": true,
+      "finalCheck": "See final-check.json"
+    },
+    "preservedEvidenceAndAcceptance": {
+      "comparedAgainst": "before.json",
+      "hashesMatched": true,
+      "ledgerSectionsUnchanged": [
+        "candidate",
+        "requirements",
+        "cases",
+        "fixes",
+        "evidence",
+        "currentFindings",
+        "releaseGates"
+      ],
+      "filesMatched": [
+        "docs/verification/runs/2026-10-28-web-resume/final-report.json",
+        "docs/verification/runs/2026-10-28-web-resume/progress.json",
+        "docs/verification/runs/2026-10-26-web-resume-2/final-report.json",
+        "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+        "docs/verification/KEZEK_WEB_HANDOFF_2026-10-26.txt",
+        "docs/verification/runs/2026-10-26-web-resume/c179-effects-journal.json",
+        "docs/verification/runs/2026-10-26-web-resume/c183-effects-journal.json",
+        "C:/Users/AdaX/.codex/automations/kezek/automation.toml",
+        ".git/index"
+      ]
+    },
+    "historicalNextBatch": "previous-next-batch.json"
+  },
+  "actions": {
+    "browser": false,
+    "auth": false,
+    "appSource": false,
+    "tests": false,
+    "build": false,
+    "server": false,
+    "fixtures": false,
+    "db": false,
+    "gitStageResetCommitPush": false,
+    "documentationAndReadOnlyAccountingValidation": true
+  },
+  "limitations": [
+    "F022 remains fixed_pending_verification; C256 final original service99 baseline readback and ONE reload remain blocked.",
+    "Old UI handles, roles and server PIDs have not been probed and are not current health claims.",
+    "This closure is not product acceptance or permission for a new autonomous run."
+  ],
+  "originalFinalPreserved": "docs/verification/runs/2026-10-28-web-resume/final-report.json",
+  "originalFinalSHA256": "c4177a632b879a65ab4359c042b754942862795317726c35dc77955a9bcc07a5"
+}

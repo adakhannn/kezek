@@ -12,6 +12,27 @@ function createDeps(overrides: Partial<SignInRedirectDeps> = {}): SignInRedirect
     };
 }
 describe('signInRedirectLogic', () => {
+    test.each(['staff', 'owner', 'superadmin'])('preserves explicit booking destination for %s', async (role) => {
+        const deps = createDeps({
+            fetchIsSuper: jest.fn().mockResolvedValue(role === 'superadmin'),
+            fetchOwnsBusiness: jest.fn().mockResolvedValue(role === 'owner'),
+            fetchActiveStaff: jest.fn().mockResolvedValue(role === 'staff'),
+        });
+        const destination = '/b/test-business/booking?step=5&day=2026-10-12&service=1';
+        await expect(decideSignInRedirect(deps, destination, 'user-1')).resolves.toBe(destination);
+        expect(deps.fetchIsSuper).not.toHaveBeenCalled();
+        expect(deps.fetchCurrentBusinessState).not.toHaveBeenCalled();
+    });
+
+    test('does not treat an unsafe fallback as an explicit destination', async () => {
+        const deps = createDeps({ fetchActiveStaff: jest.fn().mockResolvedValue(true) });
+        await expect(decideSignInRedirect(deps, '//evil.example/path', 'user-1')).resolves.toBe('/staff');
+    });
+
+    test('preserves the sanitized mobile callback path', async () => {
+        const deps = createDeps();
+        await expect(decideSignInRedirect(deps, '/auth/callback-mobile?state=1', 'user-1')).resolves.toBe('/auth/callback-mobile?state=1');
+    });
     test('returns admin route for super admin', async () => {
         const deps = createDeps({
             fetchIsSuper: jest.fn().mockResolvedValue(true),

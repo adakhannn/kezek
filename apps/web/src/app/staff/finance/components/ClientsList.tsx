@@ -82,7 +82,7 @@ export function ClientsList({
     }, [onDuplicateItem]);
 
     // Условный UI после всех хуков
-    if (!staffId && (!shift || !isOpen)) {
+    if (!staffId && !shift) {
         return (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
                 {t('staff.finance.clients.shiftNotOpen', 'Чтобы добавлять клиентов, необходимо сначала открыть смену на вкладке «Текущая смена».')}
@@ -135,7 +135,7 @@ export function ClientsList({
                 // Используем стабильный ключ для элемента списка
                 const itemKey = getItemKey(item, idx);
 
-                if (isExpanded) {
+                if (isExpanded && isOpen && !isReadOnly) {
                     return (
                         <ClientEditForm
                             key={itemKey}

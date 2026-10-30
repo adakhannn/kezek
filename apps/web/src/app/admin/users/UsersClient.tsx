@@ -11,6 +11,8 @@ import { AdminPagination } from '../_components/AdminPagination';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import type { AdminUserStats } from '@/lib/adminUserStats';
 
 type UserListItem = {
     id: string;
@@ -30,12 +32,7 @@ type UsersClientProps = {
     initialTotal: number;
     initialSearch: string;
     initialStatus: string;
-    stats: {
-        total: number;
-        active: number;
-        blocked: number;
-        super: number;
-    };
+    stats: AdminUserStats | null;
 };
 
 function formatLastSeen(value: string | null) {
@@ -58,6 +55,7 @@ export default function UsersClient({
     initialStatus,
     stats,
 }: UsersClientProps) {
+    const { t } = useLanguage();
     const router = useRouter();
     const searchParams = useSearchParams();
     const [search, setSearch] = useState(initialSearch);
@@ -165,11 +163,12 @@ export default function UsersClient({
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard label="Всего пользователей" value={stats.total} />
-                <StatCard label="Активных" value={stats.active} tone="success" />
-                <StatCard label="Заблокированных" value={stats.blocked} tone="danger" />
-                <StatCard label="Super Admin" value={stats.super} tone="accent" />
+                <StatCard label="Всего пользователей" value={stats?.total ?? '—'} />
+                <StatCard label="Активных" value={stats?.active ?? '—'} tone="success" />
+                <StatCard label="Заблокированных" value={stats?.blocked ?? '—'} tone="danger" />
+                <StatCard label="Super Admin" value={stats?.super ?? '—'} tone="accent" />
             </div>
+            {!stats && <p role="status" className="text-sm text-[var(--text-muted)]">{t('admin.users.statsUnavailable')}</p>}
 
             <AdminFilterBar title="Фильтры пользователей" description="Единая плотность, фильтрация и поведение списка.">
                 <div className="grid gap-3 md:grid-cols-[1fr_180px_160px]">
@@ -241,7 +240,7 @@ function StatCard({
     tone = 'default',
 }: {
     label: string;
-    value: number;
+    value: number | string;
     tone?: 'default' | 'success' | 'danger' | 'accent';
 }) {
     const valueClassName =
@@ -260,4 +259,3 @@ function StatCard({
         </Card>
     );
 }
-

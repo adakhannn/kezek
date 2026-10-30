@@ -8,18 +8,25 @@ import { logDebug } from '@/lib/log';
 type UseBookingStepsParams = {
     branchId: string;
     dayStr: string;
+    minDayStr?: string;
+    maxDayStr?: string;
     staffId: string;
+    staffAvailable?: boolean;
     serviceIds: string[];
     servicesFiltered: Service[];
     t: (key: string, fallback?: string) => string;
     initialStep?: number;
+    initialBranchValid?: boolean;
     onStepChange?: (step: BookingStep) => void;
 };
 
 export function useBookingSteps(params: UseBookingStepsParams) {
-    const { branchId, dayStr, staffId, serviceIds, servicesFiltered, t, initialStep, onStepChange } = params;
+    const { branchId, dayStr, minDayStr, maxDayStr, staffId, staffAvailable = true, serviceIds, servicesFiltered, t, initialStep, initialBranchValid = true, onStepChange } = params;
+    // Restored URL/OAuth dates must obey the same business-day bounds as the calendar.
+    const dayInRange = !!dayStr && (!minDayStr || dayStr >= minDayStr) && (!maxDayStr || dayStr <= maxDayStr);
 
-    const [step, setStep] = useState<BookingStep>((Math.min(5, Math.max(1, initialStep ?? 1)) as BookingStep));
+    const [step, setStep] = useState<BookingStep>(initialBranchValid
+        ? Math.min(5, Math.max(1, initialStep ?? 1)) as BookingStep : 1);
     const totalSteps: BookingStep = 5;
 
     const stepsMeta = useMemo(
@@ -35,6 +42,8 @@ export function useBookingSteps(params: UseBookingStepsParams) {
 
     const canGoNext = useMemo(() => {
         if (step >= totalSteps) return false;
+        if (!branchId) return false;
+        if (step >= 2 && !dayInRange) return false;
 
         // Шаг 1 -> 2: должен быть выбран филиал
         if (step === 1) return !!branchId;
@@ -43,11 +52,11 @@ export function useBookingSteps(params: UseBookingStepsParams) {
         if (step === 2) return !!dayStr;
 
         // Шаг 3 -> 4: должен быть выбран мастер
-        if (step === 3) return !!staffId;
+        if (step === 3) return !!staffId && staffAvailable;
 
         // Шаг 4 -> 5: выбрана хотя бы одна услуга и все выбранные входят в servicesFiltered
         if (step === 4) {
-            if (!staffId) return false;
+            if (!staffId || !staffAvailable) return false;
             if (serviceIds.length === 0) return false;
 
             const filteredIds = new Set(servicesFiltered.map((s) => s.id));
@@ -65,7 +74,7 @@ export function useBookingSteps(params: UseBookingStepsParams) {
         }
 
         return true;
-    }, [step, totalSteps, branchId, dayStr, staffId, serviceIds, servicesFiltered]);
+    }, [step, totalSteps, branchId, dayStr, dayInRange, staffId, staffAvailable, serviceIds, servicesFiltered]);
 
     const canGoPrev = step > 1;
 
@@ -95,6 +104,6 @@ export function useBookingSteps(params: UseBookingStepsParams) {
         });
     };
 
-    return { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, goToStep, totalSteps };
+    return { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, goToStep, totalSteps, dayInRange };
 }
 

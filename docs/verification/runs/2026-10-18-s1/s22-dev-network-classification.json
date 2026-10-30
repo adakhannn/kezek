@@ -1,0 +1,72 @@
+{
+  "id": "S1.1-DEV-failed-request-classification",
+  "recordedUtc": "2026-10-18T11:57:36Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "sources": [
+    "S17 transient main service-connection error and manual refresh recovery",
+    "S18 expected controlled network-denial business/map faults",
+    "S19 current expected primary origins and empty scoped browser error buffer",
+    "Read-only historically owned primary Next14216/session10418 output"
+  ],
+  "observations": {
+    "sessionId": 10418,
+    "source": "Historically owned primary Next14216 session",
+    "sanitizedRelevantLines": [
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead.",
+      "Error while requesting resource",
+      "Error while requesting resource",
+      "Failed to download `Geist` from Google Fonts. Using fallback font instead.",
+      "Failed to download `Geist Mono` from Google Fonts. Using fallback font instead."
+    ]
+  },
+  "classification": [
+    {
+      "signal": "S18 guarded public-fetch failures",
+      "classification": "intentional test isolation, not wrong app host/CORS/certificate proof"
+    },
+    {
+      "signal": "S18 Yandex Maps init failure",
+      "classification": "isolated build lacks real Yandex configuration; successful branch-list retry does not prove external mapintegration"
+    },
+    {
+      "signal": "Primary server Google Fonts fetch failure/fallback messages",
+      "classification": "Untimestamped backlog, no reliable link to current interval; no new product bug or currentfontfailure claim"
+    },
+    {
+      "signal": "S17primaryserviceconnectionerror",
+      "classification": "Recovered after humanrefresh; exact failing request/cause not captured, cannot label wronghost/CORS/TLS or authlogout"
+    }
+  ],
+  "result": "BLOCKED: original transient main-service request remains unclassified; current supported inventory has origins but not HTTP response/TLS/network details. No network endpoint replay or browser policy bypass.",
+  "acceptedDelta": 0
+}

@@ -166,6 +166,7 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                 label="Адрес"
                 placeholder="Адрес будет заполнен автоматически при выборе на карте"
                 value={address}
+                onChange={(e) => setAddress(e.target.value)}
                 name="branch_address"
                 autoComplete="street-address"
                 helperText="Адрес можно выбрать на карте или ввести вручную"

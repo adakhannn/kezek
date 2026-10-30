@@ -1,0 +1,52 @@
+{
+  "id": "C179",
+  "savedBeforeUiUtc": "2026-10-25T23:29:16Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "caseId": "S26-I103-public-website-inheritance-matrix",
+  "requirementIds": [
+    "I1-02",
+    "I1-03"
+  ],
+  "timeBudgetMinutesIncludingRestore": 12,
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "slug": "s1-test-20261020-branch-availability",
+    "branch": "057447c8-b200-4403-b056-49e3c250840f",
+    "branchName": "S1 TEST ACTIVE CONTROL",
+    "inactiveUntouched": "fa5f1017-d987-40c8-90ca-b042898c694f"
+  },
+  "markers": {
+    "parent": "https://c179-parent.example.invalid/",
+    "branch": "https://c179-branch.example.invalid/"
+  },
+  "variants": [
+    "public-website:business-fallback",
+    "public-website:branch-override",
+    "public-website:inheritance-disabled"
+  ],
+  "expected": "Onecompoundpublicpropagation matrix: withonlybusinesswebsiteP, hero+activebranch eachСайт hrefP; branchwebsiteB overrides onlybranch href whileheroremainsP; clearbranchwebsiteanddisableinheritance ->heroP/branchnoSite. Re-enableinherittrue/blankbranch restoresfallback asrecoverycontrol. Clearingparentwebsite thenfullyrestoresbothforms/publicnoSitebaseline. Exactactivebranch andbusiness names/IDs/counts/approval/categories/activity/schedule unchanged. No externalSite click. OneNEWfunctionalUI caseonlyifall3variants+restoration PASS; wholeI1-02/I1-03partial.",
+  "steps": [
+    "ClockknownSA/humanTab2/admin/RU ->observedA; requireoriginalname/slug/approvedbarber/ownerunassigned/2branches0staff/services/bookings/limit2. ParentEdit readoriginalname/slug/category/approved/address+phones+fourcontactsblank/unmasked; Cancel. Branches ->exactACTIVE057 editor; requireoriginalname/blankaddress+fourlinks+fourcontacts/coords—/—/inherittrue/activeTRUE/7closed days/disabledSave. DoNOTchangeactivity. Backlist/business/publicURL(fromobservedlink; ordinarysameTabgoto iflinktargetblank) requireH1A/exactoneactivecontrol/noinactivefa5/noSite. Anyunknown/nonblank/masked ->BLOCKEDbeforewrite/no extraction. Setup0credit.",
+    "ClockreturnexactA/Edit/recheckbaseline. Recordpendingfixtureeffects BEFORE FIRSTwrite. FillONLYparentWebsiteP, fullAXexactP/otherfieldsunchanged; clockONEordinarySave. Verifyeditorclosed; reentrywebsiteP thenCancel. OrdinarysameTabpublicentry ->heroP+activebranchP/exacttwoSite hrefP, noB. Runtimepublicread0auth/externalclick. Variantfallback.",
+    "ClockexactACTIVE057 editor/recheckallbaseline exceptparentP outsideform. FillONLYbranchWebsiteB/inherittrue/activitytrue. ClockONEordinarySave ->original2branches. ReentryexactB/otherbaseline/disabledSave. Ordinarypublicentry ->heroSiteP/branchSiteB/exactoneeach. Variantoverride.",
+    "ClockACTIVE057 editor ->clearONLYWebsiteB anduncheckONLYinherit_business_contacts. KeepactivityTRUE/everyotherfieldoriginal. ClockONEordinarySave; reentryblankwebsite/inheritfalse/activeTRUE. Publicentry ->heroSiteP, NO branchSite/noB. Variantdisabled. UnexpectedreadFAIL stopnormalmatrix; recordactual andperformonlyknownplannedrollback. No speculativefix whileeffects pending.",
+    "ClockACTIVE057 editor ->websiteblank/inheritfalse/activeTRUE exactstate; checkONLYinherittrue. ClockONEordinarySave rollbackbranch. Reentryoriginalbranchallblank/inherittrue/activeTRUE/disabledSave/7closed days; publicentryheroP+branchP ascleanupcontrol0credit.",
+    "ClockA/Edit ->onlyWebsitePclear; originalname/slug/categories/approved/addressphonescontacts retained. ClockONEordinarySave rollbackparent. Reentrywebsiteblank/allparentbaseline thenCancel. Publicentry ->originalA/oneactivecontrol/noSite/no marker. Bothbranch/editorbaselines mustalreadyconfirmed. Clearpendingfixtureeffects onlyafter exactfinalreadback. No sixthnormalSave/cleanup.",
+    "Clock/adminrestoreprotectedRU/Anonymized/Business3 andhandoff. AnyuncertainSave: no repeatedclick; onefreshUIsettlingread, then onlyexactknownrollback branchblank/inherittrue andparentblank usingordinaryforms ifsafe. Atmost2rollbackcommands insteadofremainingnormalsteps. Unknownrestore/auth/toolbarrier ->preservependingstates/report; no rawHTTP/SDK/deniedpage recovery. Humanstop safelyfinish onlyknownplannedrollbackthenPAUSED/readback/newfinal."
+  ],
+  "effects": "Fiveordinaryupdates atmostnormalflow: parentwebsiteP, branchwebsiteB, branchblank+inheritfalse, branchblank+inherittrue, parentblank. Twoexistingisolatedrecords only; originalnullable/emptyrepresentations/auth/telemetryunenumerated. No actualrecipient/send/call/mailto/provider/externalURLactivation/newfixture/role/security/booking/payment/schedule/coords/publication/activity command.",
+  "limits": "No originalbusiness1/2 or inactivefa5 mutation; no actualphone/email/privatecontact; no mapmarker/coords/permission, activation/publication/owner/role/schedule/booking change. WholeI1-03 stillneedsmappropagation andotherbranchlifecycle; no partialmatrixclaimedwhole.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "de60a1526da8b49cde543fac99d3e9e76fded3a0e4b813b151bb0b9b9e95c257",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+    "apps/web/src/app/b/[slug]/page.tsx": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6",
+    "apps/web/src/app/b/[slug]/BusinessInfo.tsx": "d3a8e198cfb7e90c276387c5bfb049d540896715dc6eddb8de3a5d8cd0faa906",
+    "apps/web/src/components/business/PublicContactActions.tsx": "a56ae2f56d08cc19df552e26ab959c85f14cc606e96cc18d20100b36a297626f",
+    "apps/web/src/lib/businessContacts.ts": "9d8d54d9187e8235823eb5c6e599bc4f805bd6776f03ab1bcb92841a5877ff4f"
+  }
+}

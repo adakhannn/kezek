@@ -1,0 +1,71 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/lib/performanceStatsHttpService.test.ts
+  performanceStatsHttpService
+    × delegates success result to api response (15 ms)
+    √ maps auth errors to api response (5 ms)
+    × preserves forbidden response for an authenticated non-super-admin (10 ms)
+    × does not fall back to privileged client when request context fails (6 ms)
+
+  ● performanceStatsHttpService › delegates success result to api response
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      35 |     const body = await response.json();
+      36 |
+    > 37 |     expect(createSupabaseServerClient).toHaveBeenCalledTimes(1);
+         |                                        ^
+      38 |     expect(getPerformanceStatsSnapshot).toHaveBeenCalledWith({ caller: 'request-cookie-context' });
+      39 |     expect(getServiceClient).not.toHaveBeenCalled();
+      40 |     expect(response.status).toBe(200);
+
+      at Object.toHaveBeenCalledTimes (src/__tests__/lib/performanceStatsHttpService.test.ts:37:40)
+
+  ● performanceStatsHttpService › preserves forbidden response for an authenticated non-super-admin
+
+    expect(jest.fn()).not.toHaveBeenCalled()
+
+    Expected number of calls: 0
+    Received number of calls: 1
+
+    1: called with 0 arguments
+
+      64 |     expect(response.status).toBe(403);
+      65 |     expect((await response.json()).error).toBe('forbidden');
+    > 66 |     expect(getServiceClient).not.toHaveBeenCalled();
+         |                                  ^
+      67 |   });
+      68 |
+      69 |   test('does not fall back to privileged client when request context fails', async () => {
+
+      at Object.toHaveBeenCalled (src/__tests__/lib/performanceStatsHttpService.test.ts:66:34)
+
+  ● performanceStatsHttpService › does not fall back to privileged client when request context fails
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: {Symbol(state): {"aborted": false, "body": {"length": null, "source": null, "stream": {Symbol(kType): "ReadableStream", Symbol(kState): {"controller": {Symbol(kType): "ReadableByteStreamController", Symbol(kState): {"autoAllocateChunkSize": undefined, "byobRequest": null, "cancelAlgorithm": [Function nonOpCancel], "closeRequested": false, "highWaterMark": 0, "pendingPullIntos": [], "pullAgain": false, "pullAlgorithm": [Function anonymous], "pulling": false, "queue": [], "queueTotalSize": 0, "started": true, "stream": [Circular]}}, "disturbed": false, "reader": undefined, "state": "readable", "storedError": undefined, "transfer": {"port1": undefined, "port2": undefined, "promise": undefined, "writable": undefined}}, Symbol(nodejs.webstream.isClosedPromise): {"promise": {}, "reject": [Function anonymous], "resolve": [Function anonymous]}, Symbol(nodejs.webstream.controllerErrorFunction): [Function anonymous]}}, "cacheState": "", "headersList": {"cookies": null, Symbol(headers map): Map {"content-type" => {"name": "content-type", "value": "application/json"}}, Symbol(headers map sorted): null}, "rangeRequested": false, "requestIncludesCredentials": false, "status": 403, "statusText": "", "timingAllowPassed": false, "timingInfo": null, "type": "default", "urlList": []}, Symbol(headers): {}, Symbol(internal response): {"cookies": {"_headers": {}, "_parsed": Map {}}, "url": undefined}}
+
+      69 |   test('does not fall back to privileged client when request context fails', async () => {
+      70 |     (createSupabaseServerClient as jest.Mock).mockRejectedValue(new Error('context unavailable'));
+    > 71 |     await expect(runPerformanceStatsHttp()).rejects.toThrow('context unavailable');
+         |           ^
+      72 |     expect(getPerformanceStatsSnapshot).not.toHaveBeenCalled();
+      73 |     expect(getServiceClient).not.toHaveBeenCalled();
+      74 |   });
+
+      at expect (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:113:15)
+      at Object.expect (src/__tests__/lib/performanceStatsHttpService.test.ts:71:11)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 1 passed, 4 total
+Snapshots:   0 total
+Time:        0.966 s, estimated 1 s
+Ran all test suites within paths "src/__tests__/lib/performanceStatsHttpService.test.ts".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

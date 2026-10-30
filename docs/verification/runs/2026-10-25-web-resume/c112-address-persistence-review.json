@@ -1,0 +1,66 @@
+{
+  "id": "C112",
+  "type": "bounded readonly M2-02 address persistence history/effect review",
+  "startedAfterUtc": "2026-10-25T09:10:17Z",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "history": "Bounded exact M2-02/currentrun/historicalreview search found C106nameinvaliddraft and C108FAIL/C109fixedmanualdraft-only. C86is businessaddress differententity/component. No targeted current branchaddress Save/reentry/restore proof identified in reviewed sources; not globalabsenceclaim. No C109draft repetition credited.",
+  "independentOracle": "Editable address with Savechanges must appear unchanged in list and server-rendered edit after successful Save+ordinaryreload. Clearing and saving must restore empty visible address. One complete persisted-edit/recovery case, not3PASS for Save/read/rollback.",
+  "target": {
+    "businessId": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "branchId": "fa5f1017-d987-40c8-90ca-b042898c694f",
+    "name": "S1 TEST INACTIVE BRANCH",
+    "active": false,
+    "staffServicesBookings": 0,
+    "branchCountLimit": "2/2",
+    "activeControl": "057447c8-b200-4403-b056-49e3c250840f"
+  },
+  "effectsReview": "BranchForm submit sendsname/address/active/lat/lon/fourlinks/fourcontacts/inheritance. APIvalidatePublicContacts runs before branchesupdate scoped bothbranch+business; nullcoords remainsnull, address trim/null, contacts normalizeempty->null, links serializefouremptystrings, inheritance !==false ->true. Scheduleeditor separate/notincluded. Application usesordinarySA authorization, no agentSDK/service-role impersonation. No newentity/role/publication/booking/payment command. No independent rawDB/transport/writecount audit.",
+  "authorityAndRecovery": "Normal reversible ordinaryUI edit of existing isolated inactive testbranch is within continuing DEVWEBtestscope; not newfixture creation, irreversibledelete/accessgrant/payment requiringnew specificapproval. ONLY freshbaseline allunmaskedblankcontacts/links/address, coords—/—, inherittrue, activefalse, originalname, no staff/services/bookings allowsfirstSave. Null-vs-empty original rawrepresentation is not observable: normalformmay normalizeemptycontact/link/coord/inheritrepresentations, and no bit-identical rawDBrollback is claimed. Recovery restores user-visibleblankaddress/otherfields usingoneordinaryclearSave. Unknown/masked/nonemptybaseline ->BLOCKED/noSubmit, no lowerlevelprobe.",
+  "evidencePaths": [
+    "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c106-result.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c109-result.json",
+    "apps/web/src/components/admin/branches/BranchForm.tsx",
+    "apps/web/src/lib/businessContacts.ts",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx"
+  ],
+  "credit": "0UI/0fix/0accepted review only.",
+  "next": "C113 finite twoSave synthetic address persistence/reentry/reload/visiblebaseline restoration plan BEFOREUI. No other field/control/newfixture/active/schedule/map/auth/source/build commands; ifunsafe keepBLOCKED. M2-02 whole CRUD incomplete.",
+  "completedBeforeUtc": "2026-10-25T09:13:23Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "sha256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c106-result.json",
+      "sha256": "eb08f4dc4059ef7f5a6a8441ede48e229eca18a3d406b0733896c9ee0cb5534b"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c109-result.json",
+      "sha256": "aa60c7c70b71640c9bfebbdf91f7aa59014d947a9997d0ef7010ca1cd20f6a0b"
+    },
+    {
+      "path": "apps/web/src/components/admin/branches/BranchForm.tsx",
+      "sha256": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655"
+    },
+    {
+      "path": "apps/web/src/lib/businessContacts.ts",
+      "sha256": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts",
+      "sha256": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx",
+      "sha256": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/branches/page.tsx",
+      "sha256": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+    }
+  ]
+}

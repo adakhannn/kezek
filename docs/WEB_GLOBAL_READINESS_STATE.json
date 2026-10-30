@@ -1,0 +1,3175 @@
+{
+  "documentationClosure": {
+    "closedOn": "2026-10-30",
+    "processStatus": "MANUAL_CAMPAIGN_CLOSED_NOT_READY",
+    "handoff": "docs/WEB_AGENT_HANDOFF.md",
+    "verification": "docs/verification/process-closure-2026-10-30/verification.json",
+    "scope": "Documentation closure only; no product execution or acceptance changes",
+    "newDirectHumanTaskRequired": true,
+    "historicalNestedStatusesAreNotCurrentAuthorization": true
+  },
+  "progressAccounting": {
+    "method": "docs/WEB_VERIFICATION_METHOD.md",
+    "ledger": "docs/WEB_VERIFICATION_LEDGER.json",
+    "report": "docs/WEB_VERIFICATION_REPORT.md",
+    "baselineId": "WEB-ACCEPTANCE-1",
+    "migrationStatus": "available_history_complete_2477_files_204_defect_records_316_applicable_requirements_reviewed",
+    "historicalReview": "docs/WEB_EVIDENCE_REVIEW.md",
+    "historicalDefects": "docs/WEB_HISTORICAL_DEFECTS.md",
+    "historyCompletionIsNotProductCompletion": true,
+    "legacyTaskAndAreaStatusesAreNotCompletionPercent": true,
+    "automationResumeAuthorizedByAccountingChange": false,
+    "latestFixturePreparation": "docs/verification/runs/2026-10-20-s1-fixtures/progress.json",
+    "latestFixtureRegistry": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+    "fixturePreparationNote": "20Oct user-authorized ordinary superadmin UI:2 isolated S1 TEST businesses/3branches prepared, no new access grants/staff/services/bookings; preparation adds0acceptance closures. Prior acceptance final below remains historical, not a retest on modified DEV data. No automation resume.",
+    "currentInteractiveRun": "docs/verification/runs/2026-10-28-web-resume/progress.json",
+    "currentPlan": "docs/WEB_CLOSURE_PLAN.json",
+    "countsAuthority": "Run checkpoint and ledger supersede legacy execution/task statuses for current acceptance; historical fields below remain unchanged",
+    "currentCandidate": "dev-20261028-WEB-60022ce29b32",
+    "acceptedRequirements": 28,
+    "remainingRequirements": 288,
+    "acceptedS1": 17,
+    "remainingS1": 8,
+    "latestCheckpointUtc": "2026-10-28T15:00:31.755Z",
+    "latestCheckpointEvidence": "S1-EV-816",
+    "releaseDecision": "NOT_READY",
+    "currentInteractiveStatus": "paused_by_user",
+    "autonomousResumeAllowed": false,
+    "priorInteractiveFinal": "docs/verification/runs/2026-10-26-web-resume-2/final-report.json",
+    "currentAuthorization": "остановись до нового запуска",
+    "authorization": "сделай логическое завершение и на паузу",
+    "finalReportFile": "docs/verification/runs/2026-10-28-web-resume/final-report.json",
+    "automationStatus": "PAUSED",
+    "automationReadback": "docs/verification/runs/2026-10-28-web-resume/pause-20261028-145640.json",
+    "authorizationEvidence": "docs/verification/runs/2026-10-28-web-resume/authorization.json",
+    "priorFinalReport": "docs/verification/runs/2026-10-20-s1-continuation/final-report-2026-10-21-1100.json",
+    "priorInteractiveFinal21Oct": {
+      "report": "docs/verification/runs/2026-10-20-s1-continuation/final-report-until-stop-2026-10-21.json",
+      "status": "paused_by_user_not_ready"
+    },
+    "priorInteractiveFinal23Oct": {
+      "report": "docs/verification/runs/2026-10-23-web-resume/final-report.json",
+      "status": "paused_by_user_not_ready"
+    },
+    "newWindowPassedCases": 3,
+    "finalReportSHA256": "c4177a632b879a65ab4359c042b754942862795317726c35dc77955a9bcc07a5",
+    "currentAuthorizationBefore28OctStop": "можешь продолжить, пока я сам не попрошу остановиться"
+  },
+  "previousRun18Execution": {
+    "run": "global-2026-10-18",
+    "status": "finished_not_ready_paused",
+    "progress": "apps/web/test-results/global-2026-10-18/progress.json",
+    "finalReport": {
+      "file": "final-report.json",
+      "sha256": "7696ff3b1fcfead3ac3a2ab67a22c479b2f921d0a414ee37ae7c7931181a7fde",
+      "status": "FINAL_NOT_READY",
+      "finalizedUtc": "2026-10-18T01:30:32Z",
+      "verification": "g149-final-verification.json"
+    },
+    "deadlineUtc": "2026-10-18T02:00:00Z",
+    "actualPauseUtc": "2026-10-18T01:30:18.069Z",
+    "finalVerification": "apps/web/test-results/global-2026-10-18/g149-final-verification.json",
+    "timely": true,
+    "immutablePriorFinalSHA256": "7696ff3b1fcfead3ac3a2ab67a22c479b2f921d0a414ee37ae7c7931181a7fde"
+  },
+  "schemaVersion": 1,
+  "updatedOn": "2026-10-17",
+  "timezone": "Asia/Bishkek",
+  "scope": "Existing WEB product including phone/tablet web; native mobile excluded",
+  "executionStatus": "paused_not_ready",
+  "plan": "docs/WEB_GLOBAL_READINESS_PLAN.md",
+  "goal": "Verified candidate of existing Kezek WEB for a closed pilot, followed by deployed smoke and explicit GO/NO-GO",
+  "planningCompleted": true,
+  "documentChecks": {
+    "latestRun17G123": "G123 WB202 NEWtargetedfirstpaintfix: actualstaffpersonalprofile reloadRU showsblankName/Allchangessaved/activeGoogle-YandexConnectbeforeloadedactualsameidentity3connectedproviders; corroboratesG122KYinitial. MinimalProfileFormloadinginitialtrue reusesexistinglocalizedloader; no auth-fetch-command-SQL-providerlogicchange. SAME-LIVE ordinaryreloadRU/EN/KYfirstnativeAXshowslocalizedLoading/noinput-linkcontrols ->settledsameАдахан/Googleobraz/3connected/notificationstates/blockeddeletion1role1card/SaveResetdisabled; finalRU. Genuinebefore3FAIL1PASS ->3s13PASS/types0; scopedlintFAILsame2preexistingrequireerrors/no newerrors/suppression. Newrun4WB199-202/inherited2+10/whole0/NOT_READY/source2c1f8335. No profileSave/link-unlink/OTP/notification/delete/authswitch/businesscommands/SQL/entities.",
+    "latestRun17G122": "G122 actualstaffobrazpersonalprofile read-onlyRUENKY/reload: loadednameАдаханОсоров/knownGoogleobrazvisible, existingGoogle-Yandex-Telegramconnected/WhatsAppdisabledunconnected; selectednotificationstatesunchanged, no Save/Reset/link/unlink/OTP/delete/settingscommand. Staffaccountdeletionblockedby1role+1staffcard withdisabledconfirmation/request inRUENKY. ReloadKYsettledrestoresactualvalues/connectedstates/guards; RUrestored/profilehandoff. Initialreloadtransientblankname/unconnectedactiveConnectbuttons recordedpendingfirstpaintassessment, notnewbug/fixyet. Source933418f5unchanged/newrun3/whole0/no code-tests-SQL-businessentities/authswitch.",
+    "latestRun17G121": "G121 realstaffobraz/card1bfd normalPersonalCabinetentry -> /cabinet/bookings Upcoming0/History1existingcancelled5c10f40612Oct09-10. Workingstaff5Upcoming/22Past notdisplayedasownpersonalbookings. Openexistingowncancelledreceipt createsnormaltargetblanktab4/fullsameID-status-master-time; originaltab3retainsHistory1withoutBack; onlyagent-openedtemporarytab4closed. VisibleStafflink ->samecard1bfd/branch1/service1/5Upcoming22Past ->FinancereturnsettledRUStatsDay13/600-600-50/late516/globalclosed3 retained. Newrole-contextread-onlypositivecontrol/notindependentforeignrole/API/RLS/fullsecurity/BOOK04closure. Source933418f5unchanged/newrunfix3/inherited2+10/whole0/no code-tests-SQL-businesscommands/entities/authswitch.",
+    "latestRun17G120": "G120 WB140monthpickerlocaleFOLLOWUP/notnewdistinct: actualownstaffMonthNovember2026 RU dropdownEnglishNovember+Englishdategrid; EN/KYcontrolsRussianМесяц/Год. MinimalMonthPickerPopover locale=enUSorru sameexistingDatePickerKY->RUfallback +4existingdatePickerlabelkeys; no dictionaries/calendarbehavior/query/financialcommandchange. SAME-LIVE RUноябрь/RUdates; ENMonth-Year; KYАй-ЖылwithdocumentedRussiandatefallback; clicking2NovKYretainsNovzero andcloses; RUday13/600-600-50/516restored. Genuinebefore5FAIL1PASS aftercorrectingoneharnessmatcher(earlier6FAILretained) ->3s21PASS/types/scopedexplicit2filelint0/0. Englishselectedsuffix/fullKYcalendar/oddscalelayout remainOPEN—notfullO3/a11y/device/FINPASS. Newrunstill3/inherited2+10/whole0/source933418f5.",
+    "latestRun17G119": "G119 administrativeearlyNONFINALdraftonly/no newproductscenario: refreshedexistingkezekACTIVEsame17Oct05UTCschedule/targetthread/criticalboundaries withG118checkpoint; actualTOMLverified. Threecurrentrun targetedfixesWB199-201/whole0/NOT_READY, old16/15deadlineMISSEDretainedimmutable. Draftnotfinal/notpause/notcontinuousworkproof; financialservicecoverageFAIL41.66retained despiteG117hookPASS. Productsource9156e177unchanged/no tests-UI-DB-financial-authcommands.",
+    "latestRun17G118": "G118 ownstaff readonlychangeddependencyregression afterG117: MonthNovember2026/0 retainedRU->ENsettled; Year2025/0 retainedEN->KYsettled andnormalreloadhydrated(afterSSRCurrent17); yearrestored2026/901services781staff219business/late516. ReturningMonth retainedNovember/0 independently, Dayretained13Oct/600-600-50/516; RUrestored/menusclosed. Globalclosed3remainsglobal. No newbug/fix/code-tests-SQL-financial-authcommands. Source9156e177/newrunfix3/whole0. MonthpickerRUinternalEnglishlabels pendinglocalizationassessment/notnewfix.",
+    "latestRun17G117": "G117 WB199 financecontextfollowup/notnewdistinct: repeatactualstaffStatisticsDay13Oct600/600/50 ->ENimmediatecorrect then settledCurrent17off. Existingtabpersistenceoverwritesrestoreddefault/filterslocalonly. FinalboundeduseSyncExternalStore/sessionUIview onlytab-period-date-month-year; serverauthorizedbiz:staff viewScope passedwithoutstaffIdimpersonation/querychange; operationdate/items/editstateNOTstored. SAME-LIVEEN13 ->KYsettled13/50 ->RUsettled13/50 ->reloadinitialCurrent17thenhydratedStatsDay13/50; notflashfree. Truebefore4FAIL2PASS; firsteffect21PASSbutlint1ERRORretained/superseded; final3s24PASS/types/scoped4filelint0/0/hookcoverage69of71statements54of62branches19of20functionsPASS60. G116servicecoverageFAILstillretained. Source9156e177/newrunfix3/inherited2+10/whole0/no financial-SQL-authcommands.",
+    "latestRun17G116": "G116 WB201 newtargetedfinancialstatsfix: actualstaffobraz/StatisticsDay13Oct showedbusiness-190 vsretainedfinal50, staff600/services600/late516. SourceclosedRPCsavesfinalsalon_share; hookandSSRstatssubtractedtopup240again. Minimalremove2duplicate deductions/noledger-command-auth-SQLchange. SAME-LIVEday13RU50/EN50/KYexplicitreselected13shows50; alltimeRU+KY219instead-21,services901/staff781/closed3/late516unchanged. LocaleNextrefreshresetsstats->current17off observed/pendingNOTfixed; no retentionclaim. Truebefore6FAIL2PASS->3suites22PASS/types0/lint0errors1preexistingwarning. Separatecoverage22PASSbutexit1branches41.66<60 retained/NOTwholegreen. Sourcee450164f/newrunfix3WB199-201/inherited2+10/whole0/no booking-shift-pay-SQL-businessentitycommands.",
+    "latestRun17G115": "G115 actualstaffobraz/card1bfd read-onlyschedule current17–30Oct displays19+26Mon09–18branch1/other12off/AsiaBishkek. Next14 ->31Oct–13Nov displays2+9NovMon09–18/other12off. ENKYretain14dates/intervals/branch-authoredname; Previous14KYreturns17–30/RUrestored. Loadingstatesseparatedfromsettledproof. No daycard/edit/hours/publish/save/shift/booking/auth/SQLcommands; source6c1b707a unchanged/newrunfix2/inherited2+10/whole0. Boundedexistingstaffpublishedplanread notunconfiguredstaff/publication/transfer/absence/allconsumers/API-RLS/multijob/device/fullareaPASS.",
+    "latestRun17G114": "G114 WB199 staff-history follow-up/notnewdistinct: actualstaffPast22->known034receipt->nativeBack resetUpcoming5. FinalminimaluseStaffBookingListHistory usesNextuseSearchParams/router.replace scopedread-only staffList/past+biz/staff URL; creationformlocal/notrestored; serverqueries/auth/permissions unchanged. FinalSAME-LIVE scopedPast22 EN->KYrefresh ->same034receipt ->BackPast22sameorderedIDs; RUrefresh+ordinaryreloadretain22; explicitUpcomingrestores5/cleanURL. Earlierrawhistory andnativeURL prototypes failedlive refresh/Back despiteunitgreens, ALLretained/notaccepted. Originalbefore4FAIL4PASS; final3suites36PASS/types0/lint0errors1existingunusedstaffwarning+legacyprocessnotice. Newrunfix2/inherited2+10/whole0/source6c1b707a; no booking/SQL/businessentity/authcommands.",
+    "latestRun17G113": "G113 currentactualstaffobraz/ownstaffcard1bfd UpcomingfirstDetails14c108 ->settledread-onlyreceipt fullsameID/confirmed/master/19Oct09:00 RUENKY(KY2026-ж.,19-октябрь09:00). No bookingmutationcontrolpresent/clicked. RUrestored/nativeBack ->staffbookingsUpcoming5sameorderedIDs-status-times/Past22button/currentstaff/menusclosed. Rolechangeddependencyvspriorowner/clientreceipt; notforeignobject/API/RLS/fullsecurity/wholeBOOK04/J1/locale/devicePASS. UpcomingdefaultBackonly—notPastselectionretention. Source0ddcd0efunchanged/newrunfix2/inherited2+10/whole0/no code-tests-SQL/businesscommands/entities/authswitch.",
+    "latestRun17G112": "G112 actualstaffobraz/card1bfd read-onlybookings: Upcoming5matchesfiveknown19OctIDs/times/statusconfirmed; ENKYRUretain5 andlocalizedstaticstatus/time/client/branch/businesslabels. Pasttab22rendereduniquereceiptlinks; KY->EN->RUretainexactordered22IDs, known034/eaa/1308present. ReturnUpcomingRUrestores5sameIDs/time. No Details/Create/status/cancel/attend/pay/shift/schedule action; no source-test-SQL/newentities/authswitch. Boundedownstafflist/locale/tabnavigation only, notglobalDB/foreignstaff/API/RLS/fullJ1/wholeBOOK04/wholelocalePASS. Newrunfix2/inherited2+10/whole0/source0ddcd0ef unchanged.",
+    "latestRun17G111": "G111 actualclientSignOut ->guestroot; normalGooglechooser4 ->knownobraz00:09:08 withoutpassword-CAPTCHA-device-newrights ->actualstaff /staff/card1bfd0e3b/branch1business2/service31one60min100–300/Upcoming5Past22. Normalreloadretainsstaff; rolemenuStaff+Mybookings/noowner/Escapeclosed. Oneordinaryknown/dashboardPAGE ->settledroleStaff/Нетдоступа; visibleStafflinkreturnsown/staff. No API/RLS/foreignstaff/multijob/fullauthmatrix/wholeareaPASS. Source0ddcd0efunchanged/newrunfix2/inherited2+10/whole0/no code-tests-SQL/businesscommands/entities; standardauthtransition/telemetryaccounted.",
+    "latestRun17G110": "G110 WB200 targetedSAME-LIVE: actualauthenticatedpureclientStep5 RU/EN/KY incorrectlyrequests signin/guest; confirmedsettledcurrentClient+own5banner beforepatch. MinimalBookingFormSections description now branches on existingisAuthed/reusesexistinglocalizedsummary.selectSlotFirst; guestdescription/auth/commands/dictionariesunchanged. SameStep5RUENKYnowconfirmationguidance/day19/master/service/12unselectedslots/count5/disabledSelectTime retained; RUrestored/Backsameclient5/pkg1of2. Genuinebefore6FAIL0PASS ->3suites36PASS/typesexit0/scopedlint0errors2preexistingunusedwarnings+legacyprocessnotice. Newrun17distinct2WB199+200/inherited2+10/whole0/source0ddcd0ef. No slot/hold/create/cancel/pay/authswitch/SQL/businessentities.",
+    "latestRun17G109": "G109 actualpureclient Repeat14c108 preview: prefilledbranch1/master/service31, no oldday-time; current17OctSaturday no specialists/Nextdisabled. Explicit19Oct ->same master/service60min100–300 ->Step5ownactivebookingwarning5 and12unselectedslots14:15–17. ENKYRU retainday/choices/count5/disabledSelectTime; no slot clicked/hold/create. One nativeBack ->cabinetUpcoming5sameIDs-times-status/pkg1of2expiry11Nov. Boundedrepeat-previewonly/notfinalrepeat/fullBOOK04/security/devicePASS. No product-test-SQL/businesscommands/entities/authswitch; source9f9b8c4d unchanged/newrunfix1/inherited2+10/whole0.",
+    "latestRun17G108": "G108 actual owner logout ->guestroot ->one nativeBack /auth/sign-in?redirect=/dashboard/no ownerworkspace. Real Google chooser listed4knownaccounts; selectedlow.fade23:24:10 withoutpassword-CAPTCHA-device-newrights; callbackpreservednextdashboard ->actualclient/LIVE TEST CLIENT12OCT/Нетдоступа. OwnМоизаписи ->cabinet/bookings5knownconfirmed19Oct+pkg1of2до11Nov; normalreloadretainsclient/5/pkg. PAGEdenial+ownpositivecontrol only, notHTTP/API/RLS/allrole/callbackreplay/securitymatrix. No sourcefix/newbug/tests/businesscommands/SQL/entities; authsignout-login accounted. Newrun1/inherited2+10/whole0/source9f9b8c4d unchanged.",
+    "latestRun17G107": "G107 WB199 supporting same-owner active-business regression only: originalbiz2/19Oct/branch1/five -> existingownedbiz1 ID35e5b36c/default17Oct/no branchcontrol/NoStaff/no five links ->restorebiz2IDc28c8109/default17All -> explicitly native-reset19All/five for handoff. No crossbusiness oldfilters displayed at settled stage. Does NOT prove hookguardmechanism (history state not inspected), perbusiness rememberedfilters, independentforeignowner/API/RLS security or wholearea. No newbug/fix/code/tests; source9f9b8c4d unchanged/newrun1/inherited2+10/whole0.",
+    "latestRun17G106": "G106 WB199 targeted SAME-LIVE verified:19Octbranch1->existing14c108receipt->Back formerly17All; minimal history-entry filter store now19branch1/fiveknownIDs. Forward/Back, settledreload, ENKYRU and branch2NoStaff->Allfive controls. Newrun17distinct1/inherited16two+15ten/whole0. No auth/session-copy/DBcommand/entity. Source9f9b8c4d. Genuinebefore3FAIL3PASS, final3s29PASS/types/scopedlint0errors0warnings+legacyprocessnotice; firstpost harness12FAIL15PASS preserved separately/notproduct count. Initial SSR17All then hydration19branch1 acknowledged/notflashfree. Firstpost harness failures retained.",
+    "latestRun17G105": "G105 healthyhumannewtab3/ownerbusiness2/read-only14c108receiptRUENKYsameID-confirmed19Oct09/BackroutePASS-date17resetpendingcontract/notnewbug/newfix0/inherited2+10/whole0/addf6unchanged/no businesscommands-SQL. Oldblockedtab1untouched; actualCSSnotmeasured.",
+    "latestRun16Final": "G103lateadministrativefinal/newfix2WB197WB198/inherited15fix10/whole0/sourceaddf6dd7/NOT_READY. Lastproductwork02:35:31->nextactualclock05:12:15; existingkezekPAUSED05:13:37.408/deadline05NOTmet. G102publicationlateexplicit—notcontinuouswork/backdated. No newscenario/product-test-DBwritesafterexpiredclock.",
+    "latestReportingCheckpointG081":"G081NONFINAL1900draft prepared/source13cae4d1/global10/day7/whole0/8openitems; local51result-fix-followup-DBrefs0missing/62stageJSONparse/69directfilehashes, notproduct-security-testPASS. ActualRUknownclientHistory3/034200review3pkg1of2/bothhandoff/noUIcommands/noSQL. ExistingkezekpromptG081updated/same15min-13UTCschedule/ACTIVE-notpausedyet. MorningfinalSHA2a967848 preserved/olddeadlineNOTmet. No sourcefix/newbug/testcount/indexchange.",
+    "latestReadonlyRecheckG080":"G080actualpureclientcabinet nativekeyboard RUENKY targetedPASS: Left-Right-wrap/Home-End/Tabactivepanel/ShiftTabactiveTab; reciprocalARIA/oneTabstop/known5upcoming3history preserved.17DOMobservations(1seed16nativekeys), not17tests/screenreader/fullkeyboard/wholeareaPASS. No sourcefix-newbug-countchange/global10/day7/whole0/hash13cae4d1. RUhistory034200/review3stars-text/pkg1of2/bothhandoff; screenshotfailed/noPNG/no businesscommands-SQL-rolechange.",
+    "latestProductRecheckG079":"G079WB189followup actualKYpaid034 RussianfinalAmount -> oneKYdictionarykey -> SAME-LIVE Жыйынтык сумма:200сом/EN200KGS/RU200сом/history3/review3stars-text/pkg1of2retained-RUrestored. Truebefore4FAIL8PASS ->3s22PASS/types/lint0/0. No financiallogic/amount/status/commands/SQL change. Screenshot2failed/noPNG/actualCSS1277x1648DPR.375/notvisual-devicePASS. Notnewbug/global10/day7/whole0/source13cae4d1.",
+    "latestProductRecheckG068G069":"G068AnyMaster19Service31/12unselectedstarts14:15–17/20NoStaff-Nextdisabled targetPASS. NewWB191 actualAnyMasterpressed/staff=any butsummaryНе выбран ->existingstaffIdprop+localizedlabel ->SAME-LIVE RUENKY/concretecontrol/20stillblocked/12startsunchanged. Realbefore3FAIL6PASS->3s36PASS/types/scoped0errors3oldwarnings; sourcef7a65c7c/global5/day2/zeroareas. NoTime-hold-booking/DBcommands/entities/indexchange; screenshotfailed/DOMsaved/notvisualresponsive-fullbooking-securityPASS. CurrentRUclient19AnyService31Step5/SQL2untouched.",
+    "latestProductRecheckG067":"WB187homecounterfollowup SAME-LIVE RU1вариант1место/2варианта2места; EN1option1place/0plural; KY0-1-2preserved/queryretainedthenresetRUroot. Existinghelper2counters/3localeforms; realbefore4FAIL14PASS->3s35PASS/types/scoped4fileslint0/0. Source723756bb/global4/day1/zeroareas/notnewbug/searchfeature. Screenshotfailed/DOMsaved/notvisual-responsivePASS; noDBcommand/entity/indexchange. G066homeOPEN historicalnowaddressed.",
+    "latestRecheckG066":"ActualknownGooglepureclient low.fade currentcandidate6cf39f39: /staff/schedule,/staff/finance,/dashboard PAGEdenials; allowed/cabinet/bookings5knownconfirmed/pkg1of2positivecontrol. NotHTTP/API/RPC/RLS/privileged-order/fullmatrix/flashproof. No sourcefix/newbug/global4/day1/zeroareas. Screenshotfailed/DOMsaved/currentRUclient; WB187homecounts2вариантов2местpendingG067/no searchcontractchange. Index137/7367observeddifferent/preserved/no agentstage.",
+    "latestRecheckG064G065":"G064tablet768 request actual3072/DPR.25/Ctrl0noeffect/resetrestoreddefault, environmentblocked/notCSSdefect/visualPASS. G065actualnativeEnterSpace day19/service31off-on/Nextdisabled-enabled/return20NoStaffdisabled PASStargetedonly; locator-seededfocus/notfullTab-focus-screenreader. No sourcefix/global4/day1/zeroareas/current6cf39f39 unchanged. Bothstages artifacts/progress; guestRUoriginaldraftrestored/SQL2SELECTuntouched.",
+    "latestProductRecheckG063":"WB189emptytitle ENKY followup SAME-LIVE verified/RUrestored; sameguest20Octbranch1Step3NoStaff/Nextdisabled/draftretained.3dictionarykeys/realbefore2FAIL16PASS->18PASS/types/scoped3fileslint0/0. Notnewdistinctbug/global4/day1/zeroareas/source6cf39f39. Screenshotfailed/DOMsaved/notresponsivePASS; noDBcommands thisstage. Ownprogress trailingcomma repaired/strictNodeJSON.parse verified; notproductbug. PreviousG062OPENbelow historicalnowaddressed.",
+    "latestProductRecheckG062":"WB190targetedsame-liveverifiedcurrentexplicitmode:20offNoStaff/Nextdisabled inclrestoredstaff-service/reload;19master+12slots preserved. Existing3fieldprojectiononlyDDL/sameACL/owner/signature/range; noadditionalprivilegedread/grants/DML.5s31PASS/types/3file60coveragegatePASS97.14/83.92/100/100;scoped1olderror3warningsFAIL/notcurrentfullgreen. Source80d825b8/day1/global4/zeroareas. ENKYnoStaffTitle remainsRU:WB189followup/notnewbug. Kezekscreenshotfailed/actualDOMsaved/noresponsivePASS.",
+    "latestProductRecheckG061":"WB190supportingreview: ordinarySupabaseUI SELECTactualwork-location3field/service-only/transfers-only; excludeshome workingdays whilepublicDerived includesallhome staff/bothtransferhooks drophome. Configflagtrue/approvedbusinessroute/range62 reviewed/noRPCexec/DDL/grants/sourcefix/livecallerPASS. Nextboundedexistingprojection+consumercontract/error/loading/legacy handling; localowner2tab1/Supabase2ownSELECTdraft. Day0/zeroareas/WB177held.",
+    "latestProductRecheckG060":"ActualknownGoogleowner recovered/business2dashboard; priorstaffschedule/adminPAGEdenied/no stale staff schedule. G058–060 all4knownGoogle sessions observed, narrowenvironment recovery notfullauth/API/RPC/securityclosure. CurrentRUowner/tab1business2; WB177SQLheld/WB190OPEN/no sourcefix/day0/zeroareas.",
+    "latestProductRecheckG059":"ActualknownGoogle staff1bfd login recovered; own5bookings+14c108detail/schedule read,15Octdayoff finance no-open display, admin/owner pages deny inclownerreload. ExistinglinkedGoogleobraz+primaryYandexalias visibleprofile, no link/write. Currenttab1RUstaff/schedule. Three known Google roles now actual, ownerpending; PAGE/display checks notcommand/API/RPC/securityclosure. Source906cunchanged/day0fixes/zeroareas; G058 belowhistoricalcurrentrole.",
+    "latestProductRecheckG058":"Newhumanwindowuntil19Bishkek/13UTC; priorfinalreport preserved/lateclosehonest. ActualhealthyUI+ordinaryGoogleadmin/clientlogin/logout recovered; adminmonitoringstillWB177, guestredirect/clientdeniedsamePAGE targetedPASSnotdirectAPI/RPC. Currentclientlow.fade/tab1/RU; no sourcefix/day0fixes,3priornightfixes187–189/WB182followup/zeroarea closures. Phone/tablet unproved. Historicalchecks belowretain oldscope/time, not currentwholePASS.",
+    "jsonParse": "PASS finalstate/report/progress parsed;33packages/82areas retained",
+    "areaMapping": "PASS 82 unique catalogue areas; all81 relevant areas mapped to tasks",
+    "taskDependencies": "PASS 33 unique work packages; no missing dependency or cycle",
+    "planLinks": "PASS all local links in master plan exist",
+    "repositoryDocsLinks": "PASS scripts/check-doc-links.mjs checked10 active documents",
+    "diffWhitespace": "PASS git diff --check after repair",
+    "productRecheck": "15OctG031–054:3same-liveWB187–189/WB182followup/WB190OPEN. G043485snapshot483sPASS2FAIL/2061tPASS3FAIL beforeG044const;lint53/167FAIL/core26file60coveragegate25s251PASSnotallweb. Isolatedbuild/start/canary/logging checks notactualprod/live/GO. G0508/G0514negativecaller unitFAIL retained/notliveleak. G05497refs/120directfiles80JSONaccounting/current906c matches; oldbaseline differs. InheritedfixtureIDs retained, normalUItelemetryIDs unenumerated/notzero-totalDBwrites. UIempty/manualrootpending/zeroarea closure."
+  },
+  "wholeProjectPass": false,
+  "releaseDecision": "NOT_READY_EVIDENCE_INCOMPLETE",
+  "statusDefinitions": {
+    "needs_verification": "No closure on the current release candidate; prior evidence may exist",
+    "in_progress": "Current scope started; mandatory cases remain",
+    "blocked": "Named dependency prevents verification",
+    "failed": "Confirmed scenario fails",
+    "verified_current_candidate": "All mandatory cases have evidence on same declared candidate",
+    "out_of_scope": "Explicit product decision with reason"
+  },
+  "inventory": {
+    "catalogueAreas": 82,
+    "relevantAreas": 81,
+    "outOfScopeAreas": 1,
+    "cataloguePriorities": {
+      "P0": 39,
+      "P1": 32,
+      "P2": 11
+    },
+    "plannedWorkPackages": 33,
+    "verifiedCurrentCandidateAreas": 0,
+    "note": "Zero current-candidate closures is not zero implemented features or zero historical live tests. No readiness percentage inferred."
+  },
+  "historicalRuns": [
+    {
+      "run": "night-2026-10-09",
+      "recordedTargetedLiveFixes": 51,
+      "recordedRelatedTests": 301,
+      "wholeProjectPass": false
+    },
+    {
+      "run": "live-2026-10-11",
+      "recordedTargetedLiveFixes": 22,
+      "bugs": "WB134–155",
+      "wholeProjectPass": false
+    },
+    {
+      "run": "live-2026-10-13",
+      "recordedTargetedLiveFixes": 21,
+      "bugs": "WB156–176",
+      "latestTargetedRegression": {
+        "suites": 11,
+        "tests": 40,
+        "result": "PASS"
+      },
+      "wholeProjectPass": false
+    }
+  ],
+  "previousExecution": {
+    "lastVerifiedStop": "2026-10-13T12:41:12Z",
+    "automation": "kezek",
+    "lastVerifiedAutomationStatus": "PAUSED",
+    "report": "apps/web/test-results/live-2026-10-13/final-report-1900.md",
+    "note": "Historical13Octplanningstop. Subsequent14Octstoppedrun preserved inpreviousGlobalExecution; new15Octdirectuserwindow activeRun supersedes thisoperationalstop. No release/DBgrant execution inferred."
+  },
+  "openItems": [
+    {
+      "id": "G042-UI-ENVIRONMENT",
+      "classification": "environment_blocker",
+      "status": "recovered_G057_G060_targeted_actual_UI_and_four_known_Google_roles",
+      "priority": "P1",
+      "scope": "FreshCUAruntimegetStateIAB2tabs[] afterpluginupdate; projectserverstopped8152restoredReady7512/listener3000",
+      "next": "G057actualUI/G058–060all4knownGoogle roles recovered, currentownerbusiness2dashboard. Fullprovider/caller/viewport checks stillpending. G043completed/do not relaunch. No policybypass/newroles.",
+      "evidence": ["apps/web/test-results/global-2026-10-15/stage-G042-environment-recovery.json"]
+    },
+    {
+      "id": "WB-190",
+      "classification": "live_confirmed_defect",
+      "status": "verified_targeted_G062_current_explicit_mode",
+      "priority": "P2",
+      "scope": "HistoricalWB190offdaymasteroffered. G062currentexplicitmode20offNoStaff/Nextdisabled/staledraftreload; working19master+12slots unchanged. Targetedfix/notoutside-schedulebooking/callersecurity/wholematrixPASS",
+      "next": "G062targetedfix/G063emptytitle+G077repeatoffdayfollowups verified; doNOTreapplyprojection. Fulllegacy-transfer-absence-date-role-commandmatrix stillunverified/noarea closure.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G039-date-availability.json",
+        "apps/web/test-results/global-2026-10-15/stage-G061-effective-day-projection-review.json",
+        "apps/web/test-results/global-2026-10-15/stage-G062-staff-day-availability-after.json"
+      ]
+    },
+    {
+      "id": "WB-177",
+      "classification": "live_confirmed_defect",
+      "status": "open",
+      "priority": "P1",
+      "scope": "MonitoringStats nested PostgreSQL aggregate",
+      "next": "Verify administrative caller boundary, scoped function fix, regression and same-live repeat"
+    },
+    {
+      "id": "RISK-ADMIN-API",
+      "classification": "source_risk_not_live_leak",
+      "status": "live_verification_blocked",
+      "priority": "P0_review",
+      "scope": "G050exactcopiedmetrics/stats/auth-flow/finance-logs exports:8negativeunitcontractFAIL/status200/mockprivilegedcalls/authmockconsumption0;7validation/guardedfunnelcontrolsPASS.9sourceSHA copiesmatch;source906c396c unchanged. Middleware sourceonlyrefresh/errorheaders, notuser/role denial. Not liveHTTP/deployedleak or proven realnonadminsession.",
+      "next": "Permitted live negative caller verification only afterhealthyUI/policyallowance. G050/G051source and middlewarecalibration completed; don'trepeat or labelthemHTTPproof. No policybypass/handlerfixclaim/WB177SQLfirst.",
+      "evidence":["apps/web/test-results/global-2026-10-15/stage-G051-middleware-caller-calibration.json (4negativeFAIL1protectedcontrolPASS, mockedSSR/sourcefunctioncomposition notactualNextHTTPpipeline)","apps/web/test-results/global-2026-10-15/stage-G050-admin-caller-harness.json","apps/web/test-results/global-2026-10-15/g050-caller-tests.json","apps/web/test-results/global-2026-10-15/g050-caller-observations.json"]
+    },
+    {
+      "id": "RISK-LEGACY-RPC",
+      "classification": "deployed_code_and_permission_risk_live_effect_unverified",
+      "status": "deployed_metadata_confirmed_effect_pending",
+      "priority": "P0_review",
+      "scope": "14Octactual7/9argSECDEF anon+authenticatedEXECUTE/9argdirectinsert.15OctG033–034actualpostgresownerBYPASSRLS;RLStrue/forcefalse;2BEFOREguards+4delegatesfullbodyavailabilitynotcallercheck;singlecolumnFK/no_overlap. UnauthorizedRPC/caller effects NOT executed.",
+      "next": "Addressed read-only deployed definition/grants and permitted caller tests",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G003-rpc-boundaries.json"
+      ]
+    },
+    {
+      "id": "WB-054",
+      "classification": "historical_source_risk_live_pending",
+      "status": "needs_verification",
+      "priority": "P1",
+      "scope": "Active staff records across businesses and maybeSingle context",
+      "next": "Actualknownstaff has1active/totaljob only; independent multi-employment fixture unavailable. No newjobs/grants or repeatedaccountrequest; realmulti-job context stillunverified.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G017-known-staff-fixture.json"
+      ]
+    },
+    {
+      "id": "GLOBAL-BASELINE",
+      "classification": "saved_check_failure",
+      "status": "needs_repair_and_full_recheck",
+      "priority": "P0",
+      "scope": "HistoricalG043485source-stable483sPASS2FAIL/2061PASS3FAIL/hashd389, G0441052filelint53errors167warningsFAIL beforedayfixes. CurrentG081source13cae4d1 differs; latestscopedG0793s22PASS/types/lintboth0/0 notcurrentwholewebgreen. 3Telegrammobile-sourceFAILretained/no nativefix/skip. No repeatedhugeJest/build.",
+      "next": "Bounded485suite accounting already completed G043 withoutOOM/skips; keep3metadataFAIL and53lintErrors visible. No blind hugeJest rerun/nativefix forgreen. Scope-aware lint repairs/currentcandidate checks only with reason; freeze/release stillpending.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G044-slot-loader-const.json",
+        "apps/web/test-results/global-2026-10-15/stage-G045-core-coverage.json",
+        "apps/web/test-results/global-2026-10-15/stage-G043-current-baseline.json",
+        "apps/web/test-results/global-2026-10-15/baseline-g041-batches/final-summary.json",
+        "apps/web/test-results/global-2026-10-15/g040-full-lint.json",
+        "apps/web/test-results/global-2026-10-14/stage-G028-current-baseline.json",
+        "apps/web/test-results/global-2026-10-14/baseline-g028-batches/final-summary.json",
+        "apps/web/test-results/global-2026-10-14/lint-after-g028.json"
+      ]
+    },
+    {
+      "id": "RESPONSIVE",
+      "classification": "environment_blocker",
+      "status": "blocked",
+      "priority": "P1",
+      "scope": "Requested CSS viewport differs from actual",
+      "next": "Proven real widths and visual evidence"
+    },
+    {
+      "id": "DOMAIN",
+      "classification": "external_dependency",
+      "status": "blocked",
+      "priority": "release_scope_decision",
+      "scope": "Unpaid email domain and deferred Yandex callback",
+      "next": "Restore environment or explicitly decide pilot exclusions"
+    },
+    {
+      "id": "GAP-PUBLIC-SERVICE-SEARCH",
+      "classification": "live_confirmed_advertised_functionality_absent",
+      "status": "open_product_gap",
+      "priority": "P1_before_pilot",
+      "scope": "G024 catalogpromisesservicessearch; knownactiveLIVE TESTService31 query0, samecurrentpublicbiz2shows3matchingservices. Implementedquerybusiness.name/address only.",
+      "next": "Set explicit v1 searchcontract/service locales/activebranch/service boundaries; implement approvedboundedpath then same-livepositive/negative tests. Don'tremoveclaimtohidegap ormarkB1closed.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G024-catalog-search.json"
+      ]
+    },
+    {
+      "id": "AUTH-LIVE-RECOVERY",
+      "classification": "environment_blocker_not_code_bug",
+      "status": "recovered_four_known_Google_sessions_only_not_full_auth_area",
+      "priority": "P1",
+      "scope": "HistoricalG022failure retained; humanrepair + G058–060actual4knownGoogle sessions. G076sameknownpureclient existing-session serverlayout refresh/reload recovered. CurrentG081pureclientlow.fadeRUHistory3; notwholeprovider-link-replay-expiry-history-SEC04PASS.",
+      "next": "Continueonlypermittedcases; oldblockedtabs/metricsAPI neverretry-bypass. Knownstaffonejob andindependentrolefixturegapsremain. At12:40winddown/PAUSEDby13.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G022-staff-login-blocked.json",
+        "apps/web/test-results/global-2026-10-15/stage-G059-staff-page-object-checks.json",
+        "apps/web/test-results/global-2026-10-15/stage-G060-owner-recovery-page-boundaries.json"
+      ]
+    }
+  ],
+  "productDecisions": [
+    {
+      "id": "DEC-FINANCE-GUARANTEE",
+      "status": "pending_when_boundary_tested",
+      "question": "How should guaranteed payout exceeding receipts be accounted for?",
+      "proposedPrinciple": "Show external cost/liability explicitly; do not silently reinterpret revenue"
+    },
+    {
+      "id": "DEC-RESCHEDULE",
+      "status": "needs_product_inventory",
+      "question": "Is self-service/operator reschedule required in WEB v1 if absent?",
+      "proposedPrinciple": "Do not count repeat or cancel/recreate as verified transfer"
+    },
+    {
+      "id": "DEC-PILOT-SCOPE",
+      "status": "pending_before_release",
+      "question": "Which social providers, notifications, browsers and environment must the pilot support?",
+      "proposedPrinciple": "Explicit exclusions and external blockers; no untested enabled critical feature"
+    },
+    {
+      "id": "DEC-CATALOG-SEARCH",
+      "status": "pending_before_pilot",
+      "question": "Define advertised service search v1 contract: matching active service names/locales and business/branch address fields; implement or explicitly decide pilot scope.",
+      "proposedPrinciple": "Current name/category/empty/reset worked but service search is absent. Don't call this fullPASS or remove UIpromise tohide missingbehavior."
+    },
+    {
+      "id": "DEC-CATEGORY-LOCALES",
+      "status": "pending_before_pilot",
+      "question": "Must public category reference names have authored KY/EN translations for WEB v1, and who maintains them? Current supported data path is name_ru only.",
+      "proposedPrinciple": "Keep canonical slug identities and source names; do not invent translations, add blind DB columns/grants, or mask the gap with UI copy. Any localized reference contract is a scoped product decision before implementation.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json"
+      ]
+    }
+  ],
+  "nextTaskIds": [
+    "BASE-01",
+    "BASE-02",
+    "BASE-03",
+    "SEC-01",
+    "SEC-02",
+    "SEC-03",
+    "SEC-04"
+  ],
+  "tasks": [
+    {
+      "id": "BASE-01",
+      "phase": 0,
+      "priority": "P0",
+      "title": "Нормализовать актуальный кандидат и сценарии",
+      "status": "in_progress",
+      "areaIds": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "Q1",
+        "Q2",
+        "Q4"
+      ],
+      "dependsOn": [],
+      "doneWhen": "У каждого обязательного сценария есть build, ожидаемый результат, доказательства и остатки; исторические статусы отделены.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G001-preflight.json",
+        "apps/web/test-results/global-2026-10-14/stage-G012-baseline-final-diagnostic.json full480source-stableinventorycompleted478PASS2FAIL/noOOM/no skips; configuredlint70errors167warnings0fatal. Latercandidate481/targeted8s58/types, notwholebaseline/frozenrelease.",
+        "G028 actualsourcefingerprint9ab2fba5 matchesbefore/end during483configuredtestrecheck; dirty326entries preserved/unfrozenGit, not versioned/deployedcandidate.",
+        "15OctG0352const/G04012quoteentities technicalonly/no productbugcount; G040fullvisiblemain3169samehash/4testsPASSbeforeafter/types/page12lintErrors->0. Freshconfigured1052files54errors167warningsFAIL, fullcandidateJest/build/coverage pending. Evidenceglobal15/stage-G040-technical-quotes.json"
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "BASE-02",
+      "phase": 0,
+      "priority": "P0",
+      "title": "Подготовить независимые роли и данные",
+      "status": "in_progress",
+      "areaIds": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "I5",
+        "M4",
+        "Q3"
+      ],
+      "dependsOn": [],
+      "doneWhen": "Настоящие сессии независимых ролей и бизнесов; никакой подмены роли; новые права только с конкретным подтверждением.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G002-preparation.json",
+        "apps/web/test-results/global-2026-10-14/stage-G017-known-staff-fixture.json freshaddressedSELECT knownstaff linkeduser55072889 exactly1active/1totalemployment; second-job fixture unavailable/WB054notclosed/no newrolegrant oraccountrequest.",
+        "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json"
+      ],
+      "relatedBugs": [],
+      "fixtureGap": "User instructed usepreviousknownaccounts only; fourrole identities authorized, independentmanager/foreignowner/secondstaff unprepared; no fabricatedscope orpermissiongrant."
+    },
+    {
+      "id": "BASE-03",
+      "phase": 0,
+      "priority": "P0",
+      "title": "Подтвердить инструменты и учёт среды",
+      "status": "in_progress",
+      "areaIds": [
+        "A2",
+        "O2",
+        "Q3"
+      ],
+      "dependsOn": [],
+      "doneWhen": "Фактический viewport и разрешённые UI/API/DB проверки; каталог сохранённых LIVE TEST данных.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G001-preflight.json",
+        "G027fullscreenshot failed, documentedclip succeeded/save/maininspection; actualDOMwide5058x2880/clip1600x1100 returned6400x4400. No newoverride/no phone/tablet/layoutPASS; roleSSOrecoveryG022blocked."
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "SEC-01",
+      "phase": 1,
+      "priority": "P0",
+      "title": "Проверить административные API отдельно от страниц",
+      "status": "blocked",
+      "areaIds": [
+        "F4",
+        "M1",
+        "M3",
+        "M4",
+        "M6",
+        "P4"
+      ],
+      "dependsOn": [
+        "BASE-01",
+        "BASE-02",
+        "BASE-03"
+      ],
+      "doneWhen": "Ролевой отказ до привилегированного чтения/записи; browser-policy не обходится.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G050-admin-caller-harness.json isolated8negativeFAIL7controlsPASS, noauthconsumption/privilegedmockcalls;sourcecopySHA9match/noHTTP/liveleak/fixclaim",
+        "apps/web/test-results/global-2026-10-14/stage-G003-rpc-boundaries.json"
+      ],
+      "relatedBugs": [],
+      "blocker": "Browserpolicy blocks negative directAPI response; no bypass/repeat. Sourceaudit/supporttests notliveendpointguardproof."
+    },
+    {
+      "id": "SEC-02",
+      "phase": 1,
+      "priority": "P0",
+      "title": "Проверить RPC RLS grants и legacy команды",
+      "status": "in_progress",
+      "areaIds": [
+        "F4",
+        "H2",
+        "I5",
+        "M4",
+        "P4"
+      ],
+      "dependsOn": [
+        "BASE-01",
+        "BASE-02",
+        "BASE-03"
+      ],
+      "doneWhen": "Прямые команды не расширяют права инициатора; фактические определения и grants сверены адресно.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G003-rpc-boundaries.json",
+        "15OctG033 readonlyactualbookingsRLStrue/forcefalse/postgresownerbypass;9argRPCownerpostgresbypass/SECDEF;20policies/4triggers. Bodiessafety/callereffectsunverified, noRPCexecution/securityfix/PASS.",
+        "15OctG034 full2guard+4delegatebodyreview/SHA confirmsavailability+locking+branch/time bounds, nointernalcallercheck; actualsinglecolumnFK/no_overlap. NoRPCexec/DBwrites/grants/impersonation/exploit/securityPASS. Evidenceglobal15/stage-G034-guard-callgraph.json"
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "SEC-03",
+      "phase": 1,
+      "priority": "P0",
+      "title": "Закрыть матрицу роли бизнеса объекта и действия",
+      "status": "in_progress",
+      "areaIds": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "E1",
+        "E3",
+        "I5",
+        "J1",
+        "M1",
+        "M3",
+        "M4"
+      ],
+      "dependsOn": [
+        "SEC-01",
+        "SEC-02"
+      ],
+      "doneWhen": "Чужие объекты недоступны, отзыв доступа и смена контекста не сохраняют чужие данные.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G004-empty-search-after.json",
+        "apps/web/test-results/global-2026-10-14/stage-G008-client-boundaries.json loggedout/currentpureclient ownerform/serviceedit/staff/admin normalpage denial; independenttenant/API/RPCgap remains",
+        "apps/web/test-results/global-2026-10-14/stage-G016-role-menu-after.json WB184cross-tabownerlogout/clientlogin oldmenu cleared/freshcurrentroles withoutreload, serveralreadyDeniedbeforefix;4suites10PASS/types/scopedlint/60gate. No fullAPI/RPC/RLS/matrix closure.",
+        "apps/web/test-results/global-2026-10-14/stage-G018-owned-business-context.json sameownerbothbiz2->1:list1empty/knownservice2href404->restore2correcteditor. Activecontext filter only; independentforeignowner/manager/API/RLSgap remains.",
+        "apps/web/test-results/global-2026-10-15/stage-G066-client-workspace-page-boundaries.json currentpureclient3workspacePAGEdenials/own5confirmed+pkgcontrol; no API/RPC/fullmatrixPASS/sourcefix",
+        "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G121-staff-personal-workspace-boundary.json — ownstaffpersonal-workspacepositivecontrolonly/no securityclosure"
+      ],
+      "relatedBugs": [
+        "WB-184"
+      ]
+    },
+    {
+      "id": "SEC-04",
+      "phase": 1,
+      "priority": "P0",
+      "title": "Проверить социальную идентичность и сессию",
+      "status": "in_progress",
+      "areaIds": [
+        "C1",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "E2",
+        "F1",
+        "P4"
+      ],
+      "dependsOn": [
+        "BASE-02",
+        "BASE-03"
+      ],
+      "doneWhen": "Одна корректная идентичность, безопасные callbacks/linking/logout/replay; без секретов в истории/логах.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G076-existing-session-after.json Targetedexisting-sessionstaleserverauthUIrecoverySAME-LIVE; no newOAuth/credential/cookieinspection/securitymatrix closure.",
+        "apps/web/test-results/global-2026-10-15/stage-G072-unlink-preview.json ActualknownpureclientGooglepreview-only/RUENKYCancel-Escape/nativeTab-focus/portaloutsideform; no unlink-link-confirm/lastmethodexecution/API/RPC/busy/securityclosure. G058–060fourknownGoogle sessions recovered; oldblockedAPI remainsuntouched.",
+        "apps/web/test-results/global-2026-10-15/stage-G053-callback-log-contracts.json syntheticDOM actualwebcallback/hash-PKCE logging5PASS/canonicalsharedlogger/6sourcesmatch/no realBrowserOAuth/session/history/replay/link/providerproof orsourcefix. NotSEC04closure.",
+        "apps/web/test-results/global-2026-10-14/stage-G008-client-boundaries.json normalownerlogout/knownGooglepureclientcallback/profileidentity; providerlink/replay/expiry stillunverified",
+        "apps/web/test-results/global-2026-10-14/stage-G016-role-menu-after.json WB184cross-tabownerlogout/clientlogin oldmenu cleared/freshcurrentroles withoutreload, serveralreadyDeniedbeforefix;4suites10PASS/types/scopedlint/60gate. No fullAPI/RPC/RLS/matrix closure.",
+        "G022 historicalordinaryGoogleauthorize interruptednetwork-change beforechooser, data-error pagepolicyblocked; G058–060 normalfourrole recoverylaterobserved; doesnotunblockoldAPI/providerendpoint orprovefullmatrix. Existingcross-sessionWB184 proof retained, no bypass/provider/security change.",
+        "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G124-owner-legacy-finance-regression.json — changeddependencyownownerread-only/ordinaryknownloginonly/notwholeclosure"
+      ],
+      "relatedBugs": [
+        "WB-184",
+        "WB-195"
+      ]
+    },
+    {
+      "id": "SET-01",
+      "phase": 2,
+      "priority": "P1",
+      "title": "Пройти филиалы услуги и публичные связи",
+      "status": "in_progress",
+      "areaIds": [
+        "B2",
+        "B4",
+        "I1",
+        "I2",
+        "I6"
+      ],
+      "dependsOn": [
+        "SEC-03"
+      ],
+      "doneWhen": "Правильные цена/длительность/доступность, деактивация не ломает историю.",
+      "evidence": [
+        "global-2026-10-14 G005 targeted isolated service lifecycle before/after; WB082 functional followup; same hiddenID manage/edit/activate/publicRUENKY/deactivate. Security prerequisite SEC03 not fully closed: only available ordinary owner fixture scope tested. No whole area closure.",
+        "apps/web/test-results/global-2026-10-14/stage-G018-owned-business-context.json hiddenG005service actualhref/context1denial/context2positive unchanged45/150-275/branch2inactive;3currentexistingservices/context suites25PASS; no domainwrite/preference2restored.",
+        "G023 actualpublicmap2branches/card2selection/list+overlaybranch2href/wizard2selected ->Mon19nostaff/Nextdisabled; changebranch1samemonshowsownstaff. Branchidentity/read-only context only, no geolocation/tiles/foreignAPI/alllifecycle closure."
+      ],
+      "relatedBugs": [
+        "WB-179"
+      ]
+    },
+    {
+      "id": "SET-02",
+      "phase": 2,
+      "priority": "P1",
+      "title": "Пройти жизненный цикл сотрудника",
+      "status": "in_progress",
+      "areaIds": [
+        "I3",
+        "J1",
+        "J5",
+        "F2",
+        "F3"
+      ],
+      "dependsOn": [
+        "SEC-03"
+      ],
+      "doneWhen": "Связывание/увольнение/восстановление и несколько мест работы сохраняют историю и определённый контекст.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G004-empty-search-after.json",
+        "apps/web/test-results/global-2026-10-14/stage-G007-staff-guidance-after.json presentationonly/notlifecycleclosure",
+        "apps/web/test-results/global-2026-10-17/stage-G112-staff-booking-lists.json"
+      ],
+      "relatedBugs": [
+        "WB-054",
+        "WB-178",
+        "WB-181"
+      ],
+      "fixtureGap": "ActualUIlinks existinguser withstaffrole; no unlinkedcreation offered. Userpreviousaccountsonly/no newprivileges; no staffrolecreated."
+    },
+    {
+      "id": "SET-03",
+      "phase": 2,
+      "priority": "P0",
+      "title": "Проверить явную публикацию графика",
+      "status": "in_progress",
+      "areaIds": [
+        "I4",
+        "J4",
+        "D1",
+        "D2"
+      ],
+      "dependsOn": [
+        "SET-01",
+        "SET-02"
+      ],
+      "doneWhen": "Новый сотрудник без опубликованного графика не доступен; все потребители дают одинаковые слоты.",
+      "evidence": [
+        "G019–021 currentowner/staff calendar/read-onlyload/preview(noPublish)/blankintervalguard targeted; weekdays/status localization same-live. Newunconfiguredstaff/publication/allconsumers criteriaremainopen.",
+        "G021blankdraftinterval blocksPublish; reloadclearsdraft/currentMon19+26Oct09–18only unchanged. Reversedtime Cua filldidnotretainReactstate, notlivePASS. StaffconsumercompareG022blockedOAuthnetwork; fullpublication/no-unconfiguredfixture/allconsumers criteria remainopen.",
+        "apps/web/test-results/global-2026-10-17/stage-G115-staff-schedule-read.json — existingknownpublishedstaffread/periodlocaleonly; newunconfiguredstaff/publication/allconsumerscriteriaremainopen."
+      ],
+      "relatedBugs": [
+        "WB-182",
+        "WB-185"
+      ]
+    },
+    {
+      "id": "SET-04",
+      "phase": 2,
+      "priority": "P0",
+      "title": "Проверить отсутствие переводы и конфликты графика",
+      "status": "queued",
+      "areaIds": [
+        "I3",
+        "I4",
+        "J4",
+        "H5"
+      ],
+      "dependsOn": [
+        "SET-03"
+      ],
+      "doneWhen": "Изменения атомарны, не удаляют существующую бронь молча; дата/филиал разрешены.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "SET-05",
+      "phase": 2,
+      "priority": "P1",
+      "title": "Пройти заявки и модерацию",
+      "status": "in_progress",
+      "areaIds": [
+        "I3",
+        "I5",
+        "M2",
+        "M4",
+        "M5"
+      ],
+      "dependsOn": [
+        "SEC-03"
+      ],
+      "doneWhen": "Допустимые статусы, антидубли, терминальные состояния и права после решения.",
+      "evidence": [
+        "G029 actualguestbusinessApplygate/signinrequired; roleApplynormalredirectpreservesreturntarget. No provider/submit/Terms/grant; onlypage-entryproof, actualapplications/moderation/API/lifecycle stillunverified."
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "BOOK-01",
+      "phase": 3,
+      "priority": "P0",
+      "title": "Пройти все входы создания записи",
+      "status": "in_progress",
+      "areaIds": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "H1",
+        "H2",
+        "H4"
+      ],
+      "dependsOn": [
+        "SET-03",
+        "SEC-04"
+      ],
+      "doneWhen": "Одна правильная бронь, клиент, филиал, сотрудник и длительность; совпадение UI/receipt/БД.",
+      "evidence": [
+        "G023 actualmap entry preselectsbranch2; same-date branch-specific empty vsavailablestaff controlled. No slotchosen/hold/newbooking/command; creationentry partial only, notfullBOOK01."
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "BOOK-02",
+      "phase": 3,
+      "priority": "P0",
+      "title": "Проверить статусную машину и повторы команд",
+      "status": "in_progress",
+      "areaIds": [
+        "D5",
+        "D6",
+        "H2",
+        "H3",
+        "H5",
+        "P1"
+      ],
+      "dependsOn": [
+        "BOOK-01"
+      ],
+      "doneWhen": "Правильные переходы и ровно один зависимый эффект при double-submit/timeout/retry.",
+      "evidence": ["apps/web/test-results/global-2026-10-14/stage-G009-cancel-confirmation.json modal/back only; finalcancellation awaiting action-time answer; bookingstillconfirmed"],
+      "relatedBugs": []
+    },
+    {
+      "id": "BOOK-03",
+      "phase": 3,
+      "priority": "P0",
+      "title": "Проверить перенос и конкуренцию разных контекстов",
+      "status": "queued",
+      "areaIds": [
+        "D3",
+        "D6",
+        "H3",
+        "H5"
+      ],
+      "dependsOn": [
+        "BOOK-01"
+      ],
+      "doneWhen": "Нет двойной занятости/потери старой брони; отсутствие функции требует продуктового решения.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "BOOK-04",
+      "phase": 3,
+      "priority": "P1",
+      "title": "Проверить повтор историю receipt и состояние браузера",
+      "status": "in_progress",
+      "areaIds": [
+        "D2",
+        "D6",
+        "E1",
+        "E2",
+        "G1",
+        "G2",
+        "H1",
+        "P2"
+      ],
+      "dependsOn": [
+        "BOOK-01",
+        "BOOK-02"
+      ],
+      "doneWhen": "Согласованные счётчики/действия/история, освобождение слота, сохранение контекста.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G011-receipt-after.json same-ID confirmedreceipt KYdate fixed/RUENpreserved; receiptbranch/context/slotrelease stillgap",
+        "apps/web/test-results/global-2026-10-14/stage-G014-card-date-after.json finalWB182receipt+cardKYdeterministicSSR/clienttoggle; G013keyboardpanelrelationships targetedPASS;5future/3history/pkg1of2; cancellation/repeat/context gaps remain.",
+        "15OctG036WB188 userbranchswitch clearsoldstaff/services/samebranchpreserves/daypreserved/reloadstableURL. ActualNoStaffNextdisabled;3s15PASS/types/scopedlint/hookcoverage60gate. No bookingcommand/fullBOOK04closure. Evidenceglobal15/stage-G036-branch-reset-after.json",
+        "15OctG039day20offdaystaffstillofferedWB190OPEN;freshreadonlyeffective_day20intervals[]/19week09–18. FinalNoSlots/ChooseTimeddisabled20 and12startsreturn19 PASStargeted/noTimecommand. Evidenceglobal15/stage-G039-date-availability.json",
+        "apps/web/test-results/global-2026-10-17/stage-G106-calendar-context-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G109-client-repeat-preview.json",
+        "apps/web/test-results/global-2026-10-17/stage-G110-step5-auth-guidance-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G112-staff-booking-lists.json",
+        "apps/web/test-results/global-2026-10-17/stage-G113-staff-receipt-entry.json",
+        "apps/web/test-results/global-2026-10-17/stage-G114-staff-history-context-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G117-finance-view-context-after.json — WB199ownstafffinancecontextfollowup/no wholearea closure.",
+        "apps/web/test-results/global-2026-10-17/stage-G121-staff-personal-workspace-boundary.json — ownstaffpersonal-workspacepositivecontrolonly/no securityclosure"
+      ],
+      "relatedBugs": [
+        "WB-182",
+        "WB-183",
+        "WB-188",
+        "WB-190",
+        "WB-199"
+      ]
+    },
+    {
+      "id": "FIN-01",
+      "phase": 4,
+      "priority": "P0",
+      "title": "Проверить смену и устойчивость финансовых строк",
+      "status": "queued",
+      "areaIds": [
+        "J2",
+        "J3",
+        "K1",
+        "K5",
+        "P1"
+      ],
+      "dependsOn": [
+        "BOOK-02"
+      ],
+      "doneWhen": "Один цикл смены, устойчивые ID позиций, сохранённый снимок и время закрытия.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "FIN-02",
+      "phase": 4,
+      "priority": "P0",
+      "title": "Сверить формулы выплаты и все финансовые поверхности",
+      "status": "queued",
+      "areaIds": [
+        "K1",
+        "K3",
+        "K5"
+      ],
+      "dependsOn": [
+        "FIN-01"
+      ],
+      "doneWhen": "Независимая таблица формул совпадает с доменом/RPC/API/UI/CSV; превышение гарантии имеет согласованную семантику.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G116-closed-stats-topup-after.json — singleknownclosedshare/readstatsdoubletopupfix only/fullformula-API-RPC-CSVmatrixincomplete.",
+        "apps/web/test-results/global-2026-10-17/stage-G124-owner-legacy-finance-regression.json — changeddependencyownownerread-only/ordinaryknownloginonly/notwholeclosure",
+        "apps/web/test-results/global-2026-10-17/stage-G125-owner-closed-snapshot-regression.json — ownownerpositiveclosedshare/yearonly/notfullformula-CSV-audit-securityclosure"
+      ],
+      "relatedBugs": [
+        "WB-201"
+      ]
+    },
+    {
+      "id": "FIN-03",
+      "phase": 4,
+      "priority": "P0",
+      "title": "Проверить исправление часов споры и аудит",
+      "status": "queued",
+      "areaIds": [
+        "K2",
+        "K4",
+        "K5"
+      ],
+      "dependsOn": [
+        "FIN-02"
+      ],
+      "doneWhen": "Одно изменение с актором/до/после/причиной; ставки не переписывают закрытую историю.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "VAL-01",
+      "phase": 5,
+      "priority": "P1",
+      "title": "Закрыть полный жизненный цикл пакетов",
+      "status": "queued",
+      "areaIds": [
+        "D5",
+        "E3",
+        "L2",
+        "L4"
+      ],
+      "dependsOn": [
+        "BOOK-02",
+        "FIN-02"
+      ],
+      "doneWhen": "Владение/остаток/срок/последнее посещение/повторы/возврат корректны; без реальных платежей.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "VAL-02",
+      "phase": 5,
+      "priority": "P1",
+      "title": "Закрыть все поддерживаемые акции",
+      "status": "queued",
+      "areaIds": [
+        "D5",
+        "L1",
+        "L4"
+      ],
+      "dependsOn": [
+        "BOOK-02",
+        "FIN-02"
+      ],
+      "doneWhen": "Одна eligibility и сумма на всех поверхностях; ограничения и сочетания проверены.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "VAL-03",
+      "phase": 5,
+      "priority": "P1",
+      "title": "Проверить отзывы и агрегаты рейтингов",
+      "status": "queued",
+      "areaIds": [
+        "E4",
+        "L3",
+        "M5"
+      ],
+      "dependsOn": [
+        "BOOK-02",
+        "SEC-03"
+      ],
+      "doneWhen": "Права и независимые агрегаты допустимых отзывов согласованны.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "VAL-04",
+      "phase": 5,
+      "priority": "P1",
+      "title": "Исправить WB177 и сверить аналитику",
+      "status": "queued",
+      "areaIds": [
+        "G1",
+        "G3",
+        "G4",
+        "M6"
+      ],
+      "dependsOn": [
+        "SEC-01",
+        "SEC-02",
+        "FIN-02"
+      ],
+      "doneWhen": "Same-live статистика без вложенного SQL агрегата; суммы соответствуют данным; нет ложных нулей.",
+      "evidence": [],
+      "relatedBugs": [
+        "WB-177"
+      ]
+    },
+    {
+      "id": "INT-01",
+      "phase": 6,
+      "priority": "P1",
+      "title": "Проверить доставку уведомлений",
+      "status": "queued",
+      "areaIds": [
+        "E5",
+        "G4",
+        "N1"
+      ],
+      "dependsOn": [
+        "BOOK-02"
+      ],
+      "doneWhen": "Правильный тестовый адресат/язык/ссылка и один эффект, реальные чужие сообщения исключены.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "INT-02",
+      "phase": 6,
+      "priority": "P0",
+      "title": "Проверить webhooks и OTP интеграции",
+      "status": "queued",
+      "areaIds": [
+        "C4",
+        "C5",
+        "N2",
+        "N3",
+        "P4"
+      ],
+      "dependsOn": [
+        "SEC-04"
+      ],
+      "doneWhen": "Подпись/replay/дубли/порядок событий не изменяют чужую идентичность.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "INT-03",
+      "phase": 6,
+      "priority": "P1",
+      "title": "Проверить cron фоновые эффекты и внешние блокеры",
+      "status": "queued",
+      "areaIds": [
+        "A2",
+        "G3",
+        "G4",
+        "N1",
+        "N4"
+      ],
+      "dependsOn": [
+        "FIN-03",
+        "VAL-01",
+        "VAL-03"
+      ],
+      "doneWhen": "Повтор задач безопасен, влияние и журнал согласованы; email/Yandex решены явно.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "UX-01",
+      "phase": 7,
+      "priority": "P1",
+      "title": "Пройти реальную мобильную планшетную и desktop вёрстку",
+      "status": "in_progress",
+      "areaIds": [
+        "O1",
+        "O2",
+        "O5"
+      ],
+      "dependsOn": [
+        "BASE-03",
+        "BOOK-04"
+      ],
+      "doneWhen": "Подтверждённый CSS viewport и визуальные доказательства; все критические действия доступны.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G013-tabs-after.json WB183same-livebuttonTabsfocus/selectionHomeEndLeftRightwrap+owntabpanelIDsRU/KY; no wholeaccessibility/otherconsumers/phone/tabletPASS."
+      ],
+      "relatedBugs": [
+        "WB-183"
+      ]
+    },
+    {
+      "id": "UX-02",
+      "phase": 7,
+      "priority": "P1",
+      "title": "Закрыть весь RU KY EN",
+      "status": "in_progress",
+      "areaIds": [
+        "O3",
+        "B1",
+        "B2",
+        "C1"
+      ],
+      "dependsOn": [
+        "BOOK-04"
+      ],
+      "doneWhen": "Переводы/даты/суммы/состояния и контент БД; сохранение языка и черновиков.",
+      "evidence": [
+        "G006 targeted public business2 visible landing copy same-live EN/KY/RU, centraldomain dictionary and link-preservation checks. Available isolated UI scope only: dependency BOOK04 not fully closed; all languages/screens/conditional cases remain unverified.",
+        "G019WB182same-root7weekdays deterministicKY EN->KY/reload; G020WB185draftnoticefollowsKY->EN->RU with09–18preserved. NotwholeRU/KY/ENclosure.",
+        "G024 B1 currentname/q+category/empty/reset targetedPASS, servicequery0 despitepublicactive3; missingadvertisedservice search productgapOPEN, not fullB1closure.",
+        "G027 WB186 existingname/addressquery comma causesCatalogUnavailable vsno-commaempty before; quotedtransporthelper samecomma/quotesparenscolonDot/%literal/namepositive/reset verified, no service-searchfeature. G026NoRecordUUID0localizedRUENKY/recovery only.",
+        "15OctG032 samepublicbiz2 EN1specialists→1specialist/RU2локации3услуги1специалист/KYnumeralnounpreserved WB187targeted;wholeUX02pending.",
+        "15OctG037 WB189 earlywizard Step1/2staticcopy EN/KY same-live corrected;branch2/day19/RU restored,3s26PASS/types/scopedlint0/0. Evidenceglobal15/stage-G037-early-copy-after.json",
+        "15OctG038 historicalWB182calendarfollowup: KYdayARIA usesexistingdeterministichelper; same-live19->20->19/RUENpreserved,3s45PASS/types/lint0errors1oldwarning. Notnewdistinctbug/wholeUX02. Evidenceglobal15/stage-G038-calendar-ky-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G117-finance-view-context-after.json — WB199ownstafffinancecontextfollowup/no wholearea closure.",
+        "apps/web/test-results/global-2026-10-17/stage-G120-month-picker-locale-after.json — boundedWB140localecontrols/fallbackremainsopen/no wholeclosure",
+        "apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json — WB202firstpaintonly/notfullerror-auth-deviceclosure",
+        "apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json — WB203settingscopyonly/notfullUX02"
+      ],
+      "relatedBugs": [
+        "WB-180",
+        "WB-182",
+        "WB-185",
+        "WB-186",
+        "WB-187",
+        "WB-189",
+        "WB-203"
+      ]
+    },
+    {
+      "id": "UX-03",
+      "phase": 7,
+      "priority": "P1",
+      "title": "Пройти доступность устойчивость нагрузку и браузеры",
+      "status": "queued",
+      "areaIds": [
+        "B3",
+        "O4",
+        "P1",
+        "P2",
+        "P3",
+        "P5"
+      ],
+      "dependsOn": [
+        "BOOK-04",
+        "FIN-03"
+      ],
+      "doneWhen": "Keyboard/focus, измеренный объём, безопасный offline/retry и поддерживаемые браузеры.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json — WB202firstpaintonly/notfullerror-auth-deviceclosure"
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "REL-01",
+      "phase": 8,
+      "priority": "P0",
+      "title": "Восстановить полный автоматический baseline",
+      "status": "in_progress",
+      "areaIds": [
+        "Q1"
+      ],
+      "dependsOn": [
+        "SEC-03",
+        "FIN-03",
+        "VAL-04"
+      ],
+      "doneWhen": "Все web suites/typecheck/lint/заявленный60%coverage, явные skips; нет скрытых исключений/OOM как PASS.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-14/baseline-batches/final-summary.json full479inventory bounded diagnostic471PASS/1FAIL/7unresolvedOOM/1963PASS1FAIL/no skips; sourceunchangedonlyduringrun; stalequickguesttest repaired4PASS afterward; lint/coverage/build/fullgreen open",
+        "apps/web/test-results/global-2026-10-14/stage-G012-baseline-final-diagnostic.json actual480boundedcompleted478PASS2FAIL/1997PASS3FAIL0skips/OOM/sourceheld; latercandidate481 and58targeted/types/helper100coverage, global70lintErrors remain. Nativeauthmetadata assertionsNOTrelaxed/skipped; CI monolithic/build/fullcoverage stillopen.",
+        "G028 current483fullconfiguredbounded completed481suitesPASS2FAIL/2031PASS3FAIL/0skips/crashes/source-stable9ab2fba5; fullLint1052files68errors167warnings0fatal. Same3metadataassertions retainedFAIL/nativeproduct untouched. Old480/482reports preserved/notadditive, no fullgreen/release/build/coverage claim."
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "REL-02",
+      "phase": 8,
+      "priority": "P0",
+      "title": "Зафиксировать кандидат и проверить production сборку",
+      "status": "queued",
+      "areaIds": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "Q1"
+      ],
+      "dependsOn": [
+        "REL-01"
+      ],
+      "doneWhen": "Manifest/миграции, воспроизводимые build/start, разрешённые commit/deploy только по запросу.",
+      "evidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G047-compile-after-ipc.json defaultTurbocompilePASS/copiedSentrydisable/dummyenv/strictNodeguard;notactualproductionprofile",
+        "apps/web/test-results/global-2026-10-15/stage-G048-full-build-probe.json fullnextbuild/types/36prerendersPASSinwarmisolatedcopy;primarysource906c396c/config518a6abd unchanged;notfreeze/coldreproducibility/GO",
+        "apps/web/test-results/global-2026-10-15/stage-G049-production-boot-probe.json isolatedstartReady/listenerPASS/ownedshutdownverified/noHTTP/role/dynamicUIchecks;REL01notgreen/releasegate remainsqueued",
+        "apps/web/test-results/global-2026-10-15/stage-G052-cold-canary-build.json newcoldisolatednextbuildtypes36prerenderPASS/153client-static-prerenderbytefiles2publiccontrolspositive4privatecanaries0matches/no actualsecretuse;1618sourcefilespostbuild0primarychanges/copiednext-envgeneratedonly. Not actualprodprofile/live/deployed/REL02orGOclosure."
+      ],
+      "relatedBugs": []
+    },
+    {
+      "id": "REL-03",
+      "phase": 8,
+      "priority": "P0",
+      "title": "Пройти smoke кандидата и развёрнутой версии",
+      "status": "queued",
+      "areaIds": [
+        "Q2"
+      ],
+      "dependsOn": [
+        "REL-02",
+        "UX-01",
+        "UX-02",
+        "UX-03",
+        "INT-03"
+      ],
+      "doneWhen": "Одна версия доказательств для ролей/размеров; smoke после deploy и rollback.",
+      "evidence": [],
+      "relatedBugs": []
+    },
+    {
+      "id": "REL-04",
+      "phase": 8,
+      "priority": "P0",
+      "title": "Учесть данные окружения и принять GO или NO GO",
+      "status": "queued",
+      "areaIds": [
+        "Q3",
+        "Q4"
+      ],
+      "dependsOn": [
+        "REL-03"
+      ],
+      "doneWhen": "Нет незакрытых обязательных P0/P1 или неоценённых серьёзных рисков; данные/границы/восстановление и решение пользователя.",
+      "evidence": [],
+      "relatedBugs": []
+    }
+  ],
+  "areas": [
+    {
+      "id": "A1",
+      "title": "Public boot and server rendering (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "verified",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-01",
+        "REL-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "A2",
+      "title": "Environment and service wiring (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-01",
+        "BASE-03",
+        "INT-03",
+        "REL-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "A3",
+      "title": "Production build and deploy smoke (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "verified",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-01",
+        "REL-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "A4",
+      "title": "Error boundaries and not-found behavior (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "verified",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-01",
+        "REL-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "B1",
+      "title": "Public home composition (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "Currentname/category/empty/reset andliteralpunctuationfilter targetedPASS (WB186 fixedsame-live); advertisedservice searchGAP stillOPEN, no currentwholeB1closure.",
+      "taskIds": [
+        "UX-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-14/stage-G024-catalog-search.json",
+        "apps/web/test-results/global-2026-10-14/stage-G027-catalog-punctuation-after.json"
+      ]
+    },
+    {
+      "id": "B2",
+      "title": "Business page by slug (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "verified",
+      "releaseStatus": "in_progress",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G092currentpublic2branches/3servicecards/1staff/0offersRUENKY + KYgenericCTA->samebusinessStep1/locale-clientretained/no selections; informationalservices/no per-serviceCTA. Notinactive/externalcontacts/wholematrixPASS. G093onecurrentmissingbusinessslugRUENKY/retry/catalogrecoveryonly; notHTTPstatus/deleted-malformed-inactive/wholematrixPASS. G133 boundedreadonlycurrentcandidateowner/publicserviceconsistency: ownerAll3namegroups(hiddene21545min150-275+2activegroups); branch1twoactivegroups51560min100-300+99c031min0-300/nohidden; branch2hiddene215+active08160min100-300. Publicsamebusiness3activeperbranchcards60+60+1min/sameprices/nohiddenfixture; normalBackretainsownerbranch2URL; explicitAllrestoredRU/business2. Groupedmanagement2activegroupsvs3publicrowsnotmismatch. No create-edit-delete-active-toggle/booking/contacts-SQL-authcommands/source-tests. Sourceeb65unchanged/newrun5/inherited2+10/whole0/NOT_READY. FreshnativeCUAscreenshotfailed/notvisual-devicePASS.",
+      "taskIds": [
+        "SET-01",
+        "UX-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G092-public-business-entry.json",
+        "apps/web/test-results/global-2026-10-16/stage-G093-missing-business-recovery.json",
+        "apps/web/test-results/global-2026-10-17/stage-G133-owner-service-public-consistency.json"
+      ]
+    },
+    {
+      "id": "B3",
+      "title": "Search, filters, and discovery (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "verified",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "UX-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "B4",
+      "title": "Map and nearby branches (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "verified",
+      "releaseStatus": "in_progress",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G085WB187mapcountertargetedSAME-LIVE2RUENKY/categoryreset-branch2context; fullB4/geolocation-provider-device/wholelocalematrix notclosed. G086 public category name_ru-only contract gap classified DEC-CATEGORY-LOCALES pending; no schema/feature or full-locale PASS. G087 currentmap nativeTab-ShiftTab/Enter-Space and locale-selection preservation targetedPASS only;17DOMobservations/not17tests/fullkeyboard-screenreader-device-geolocation matrix remains unverified.",
+      "taskIds": [
+        "SET-01"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+        "apps/web/test-results/global-2026-10-16/stage-G087-map-keyboard.json"
+      ]
+    },
+    {
+      "id": "C1",
+      "title": "Sign-in UI and redirect decisions (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G076 existing-session stale-server-auth SignIn loop targeted SAME-LIVE fixed; fullroles/provider/error/returnURL/expiry/replay matrix incomplete/no wholeareaPASS",
+      "taskIds": [
+        "SEC-04",
+        "UX-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G076-existing-session-after.json"
+      ]
+    },
+    {
+      "id": "C2",
+      "title": "Email/OTP and password recovery (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not applicable",
+      "releaseStatus": "out_of_scope",
+      "reason": "Social-only auth policy accepted2026-07-03; email delivery is a distinct integration",
+      "taskIds": [],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "C3",
+      "title": "Google and Yandex OAuth (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "verified",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G108 currentownerlogout/oneBacksignin; realknownGooglelow.fade clientlogin withoutprompt/dashboarddenied/own5pkg+reloadpositive. Fourchooseroptionsnot4sessions; notfullOAuth/security/matrix/frameflash or wholearea proof.",
+      "taskIds": [
+        "SEC-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json"
+      ]
+    },
+    {
+      "id": "C4",
+      "title": "Telegram authentication and linking (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SEC-04",
+        "INT-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "C5",
+      "title": "WhatsApp authentication (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SEC-04",
+        "INT-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "C6",
+      "title": "Session restoration and sign-out (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G108 currentownerlogout/oneBacksignin; realknownGooglelow.fade clientlogin withoutprompt/dashboarddenied/own5pkg+reloadpositive. Fourchooseroptionsnot4sessions; notfullOAuth/security/matrix/frameflash or wholearea proof. G111 realknownGoogleobrazstafflogin/reloadowncard1bfd/branch1/service31/count5+22; rolemenuStaff+Mybookings/noowner andordinary/dashboardPAGEdenial/ownStaffrecovery. No API/RLS/foreignstaff/multijob/WB054/fullmatrix/wholeareaPASS.",
+      "taskIds": [
+        "SEC-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json"
+      ]
+    },
+    {
+      "id": "D1",
+      "title": "Booking entry and data loading (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G077 current-candidate paidRepeat entry/localdraft restore/offday blockedreason RUENKY andworkingdayNext control only; no slot/hold/creation/cancellation/fullretry-conflict-status-securitymatrix PASS G088WB197pastURL Day->Staffblocked/SAME-LIVE RUENKY+reload/explicittoday16recovery; no pastbooking/API/deepstep5/fulltimezone/device/wholematrixPASS. G089RUliveupper15Decinclusive/16Decblocked/explicitrecovery only; no staff-slot-bookability/security/wholematrixPASS. G092currentpublic2branches/3servicecards/1staff/0offersRUENKY + KYgenericCTA->samebusinessStep1/locale-clientretained/no selections; informationalservices/no per-serviceCTA. Notinactive/externalcontacts/wholematrixPASS.",
+      "taskIds": [
+        "SET-03",
+        "BOOK-01"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G077-repeat-offday-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G088-day-range-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G089-upper-date-range.json",
+        "apps/web/test-results/global-2026-10-16/stage-G092-public-business-entry.json"
+      ]
+    },
+    {
+      "id": "D2",
+      "title": "Booking step transitions (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G077 current-candidate paidRepeat entry/localdraft restore/offday blockedreason RUENKY andworkingdayNext control only; no slot/hold/creation/cancellation/fullretry-conflict-status-securitymatrix PASS G088WB197pastURL Day->Staffblocked/SAME-LIVE RUENKY+reload/explicittoday16recovery; no pastbooking/API/deepstep5/fulltimezone/device/wholematrixPASS. G089RUliveupper15Decinclusive/16Decblocked/explicitrecovery only; no staff-slot-bookability/security/wholematrixPASS. G090single-serviceBackForward/toggle-requiredguard/slotlistonlyRU; multi-servicefixturegap(only1available), no hold-booking/nativehistory/wholePASS. G091deepStep5past/offdayNoSlotsconfounded/notserverdateguardPASS; explicitDay19recoveryretainschoices/restores12unselectedslots, onlyRUtargeted. G109 actualpureclientRepeat14c108 prefill/current17offdayguard/explicit19Step5own5warning12unselectedtimes/ENKYRU/Backsame5pkg. No Time-hold-create-cancel-pay; boundedpreviewnotwholearea. Staticauthinstructionpending/notnewbug. G110 WB200 authenticatedtopStep5guestinstruction correctedviaexistingisAuthed+existinglocalizedselectSlotFirst; SAME-LIVE RUENKYsame19Octdraft/5own/12unselected/disabledTime. Componentguestcontrolonly; no authsecurity/fullarea closure. 36scopedPASS/types/lint0errors2existingwarnings.",
+      "taskIds": [
+        "SET-03",
+        "BOOK-01",
+        "BOOK-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G077-repeat-offday-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G088-day-range-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G089-upper-date-range.json",
+        "apps/web/test-results/global-2026-10-16/stage-G090-service-selection-navigation.json",
+        "apps/web/test-results/global-2026-10-16/stage-G091-deep-date-recovery.json",
+        "apps/web/test-results/global-2026-10-17/stage-G109-client-repeat-preview.json",
+        "apps/web/test-results/global-2026-10-17/stage-G110-step5-auth-guidance-after.json"
+      ]
+    },
+    {
+      "id": "D3",
+      "title": "Authenticated booking completion (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BOOK-01",
+        "BOOK-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "D4",
+      "title": "Guest booking (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BOOK-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "D5",
+      "title": "Promotions and packages in booking (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BOOK-02",
+        "VAL-01",
+        "VAL-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "D6",
+      "title": "Booking cancellation, attendance, and repeat (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G077 current-candidate paidRepeat entry/localdraft restore/offday blockedreason RUENKY andworkingdayNext control only; no slot/hold/creation/cancellation/fullretry-conflict-status-securitymatrix PASS G109 actualpureclientRepeat14c108 prefill/current17offdayguard/explicit19Step5own5warning12unselectedtimes/ENKYRU/Backsame5pkg. No Time-hold-create-cancel-pay; boundedpreviewnotwholearea. Staticauthinstructionpending/notnewbug.",
+      "taskIds": [
+        "BOOK-02",
+        "BOOK-03",
+        "BOOK-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G077-repeat-offday-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G109-client-repeat-preview.json"
+      ]
+    },
+    {
+      "id": "E1",
+      "title": "Cabinet home and booking lists (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G079 KYfinal-amountlabel SAME-LIVE200unchanged/RUENcontrols pluspriorproof. Presentationonly; fullownership-command-payment-refund-locale matrix incomplete/no wholeareaPASS. G080actualnativecabinetTab/Arrow/HomeEnd/panelassociationcontrolsRUENKY only; no screenreader/fullmatrix/wholeareaPASS. G108 currentownerlogout/oneBacksignin; realknownGooglelow.fade clientlogin withoutprompt/dashboarddenied/own5pkg+reloadpositive. Fourchooseroptionsnot4sessions; notfullOAuth/security/matrix/frameflash or wholearea proof. G109 actualpureclientRepeat14c108 prefill/current17offdayguard/explicit19Step5own5warning12unselectedtimes/ENKYRU/Backsame5pkg. No Time-hold-create-cancel-pay; boundedpreviewnotwholearea. Staticauthinstructionpending/notnewbug. G121 actualstaffpersonalCabinetUpcoming0/History1cancelled5c10f406ownreceiptnewtab; originalHistory1retained; returnworkingstaff1bfd/5Upcoming22Past/Finance13-600-600-50 preserved. Read-onlysameidentitypositivecontrol/no API-RLS-foreignrole/security/wholearea closure.",
+      "taskIds": [
+        "SEC-03",
+        "BOOK-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G073-client-history-checkpoint.json",
+        "apps/web/test-results/global-2026-10-15/stage-G075-cancel-labels-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G076-existing-session-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G079-final-amount-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G080-cabinet-tabs-keyboard.json",
+        "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G109-client-repeat-preview.json",
+        "apps/web/test-results/global-2026-10-17/stage-G121-staff-personal-workspace-boundary.json"
+      ]
+    },
+    {
+      "id": "E2",
+      "title": "Client profile (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G071profiledraft-localvalidation-reset+G072unlinkpreviewonly targetedSAME-LIVE; validsave/servererrors/identity-lastmethodexecution/fullpersistence incomplete/no wholeareaPASS G084knownpureclientblocked5deletionpanelRUENKY/disabledguard/nativeTabskip only. No eligible/pending/cancel/delete/anonymization/APIcaller/otherrole/fullmatrixPASS. G123 WB202initialprofileloadingfalse->true same-liveRUENKYnormalreloadlocalizedloader/noemptyidentitycontrols thenactualstaffprofile; no authprovidercommands/securityclosure. 13scopedPASS/types0/scopedlintFAILsame2oldrequireerrors; wholeareaopen. G127WB202supportingactualownOWNERRUreloadinitialLoading/noemptyidentitycontrols ->own4connected/profile/guard2business2roles/SaveResetdisabled; no auth-provider-setting-deletecommands/newfix/fullE2closure. G141 WB202supportingUNIT-onlymissingfailureboundary: addedoneNEW11caseProfileLoadFailureBoundarytest, no runtimechange. Three safetyassertionsFAIL afterprofile-readerror/authrejection/no-user: editableemptyname renderedoncefinallyclearsloading. EightnewcontrolsPASS (RUENKYauthpending/profilepending/notificationpending/3optionalnotificationfailures); existing11controlsPASS =>3s19PASS3FAIL/exit1 preserved. Typecheck0/newfileexplicitlint0errors0warnings+legacyprocessnotice. No real auth/network/failureinjection ornewconfirmedlivebug; G139currenttabcontrolstillblocked/userrefreshpending. Newrunfix0/inherited5+2+10/whole0/NOT_READY; source2570eb4e tests-only.",
+      "taskIds": [
+        "SEC-04",
+        "BOOK-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G071-profile-draft-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G072-unlink-preview.json",
+        "apps/web/test-results/global-2026-10-16/stage-G084-deletion-guard.json",
+        "apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G127-owner-profile-loading-regression.json",
+        "apps/web/test-results/global-2026-10-18/stage-G141-profile-load-unit-boundary.json"
+      ]
+    },
+    {
+      "id": "E3",
+      "title": "Client packages and payments presentation (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G079 KYfinal-amountlabel SAME-LIVE200unchanged/RUENcontrols pluspriorproof. Presentationonly; fullownership-command-payment-refund-locale matrix incomplete/no wholeareaPASS. G134 boundedreadonlycurrentOWNERbusiness2packageprojection: plansshowexisting47adaactive2visits30days0percent/service1branch andlegacy5cedinactive4visits21daysfixed100. SoldActiveAllbranchesoneknownclient/package1of2/expiry11Nov/purchased12Oct agreeswithG108clientpresentation. Expiredfilterempty; Activebranch2empty/branch1same1of2; restoreActiveAllRU samebalance-date. No planEdit/active-toggle/Create/sell/redeem/cancel/refund/Save/auth-SQLcommands/source-tests. Sourceeb65unchanged/newrun5/inherited2+10/whole0/NOT_READY; no expired-depletedfixture or lifecycle-security-visualPASS.",
+      "taskIds": [
+        "SEC-03",
+        "VAL-01"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G073-client-history-checkpoint.json",
+        "apps/web/test-results/global-2026-10-15/stage-G079-final-amount-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G134-owner-package-projection.json"
+      ]
+    },
+    {
+      "id": "E4",
+      "title": "Reviews and feedback (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "VAL-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "E5",
+      "title": "Client reminders and preferences (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "INT-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "F1",
+      "title": "Default role routing (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G108 currentownerlogout/oneBacksignin; realknownGooglelow.fade clientlogin withoutprompt/dashboarddenied/own5pkg+reloadpositive. Fourchooseroptionsnot4sessions; notfullOAuth/security/matrix/frameflash or wholearea proof. G111 realknownGoogleobrazstafflogin/reloadowncard1bfd/branch1/service31/count5+22; rolemenuStaff+Mybookings/noowner andordinary/dashboardPAGEdenial/ownStaffrecovery. No API/RLS/foreignstaff/multijob/WB054/fullmatrix/wholeareaPASS. G121 actualstaffpersonalCabinetUpcoming0/History1cancelled5c10f406ownreceiptnewtab; originalHistory1retained; returnworkingstaff1bfd/5Upcoming22Past/Finance13-600-600-50 preserved. Read-onlysameidentitypositivecontrol/no API-RLS-foreignrole/security/wholearea closure. G124actualknownownerGooglelogin/legacyFinancePagechangeddependencyread-onlyClients-ShiftRUENKY/reloadretainedsettled; SSRinitialClientsnotflashfree/no financialcommands/securityclosure/newfix.",
+      "taskIds": [
+        "BASE-02",
+        "SEC-03",
+        "SEC-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G121-staff-personal-workspace-boundary.json",
+        "apps/web/test-results/global-2026-10-17/stage-G124-owner-legacy-finance-regression.json"
+      ]
+    },
+    {
+      "id": "F2",
+      "title": "Business selection and persistence (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G107 current sameowner2->1->2 calendar context regression afterWB199 only; active preference restored2, business1default17/no oldrows; return2default17 then explicit19All restore. Not hookmechanism/perbusinessmemory/foreigntenant/API/RLS/fullscope proof.",
+      "taskIds": [
+        "BASE-02",
+        "SEC-03",
+        "SET-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G107-owned-business-calendar-context.json"
+      ]
+    },
+    {
+      "id": "F3",
+      "title": "Role switcher UX (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G078 actualpureclientmenu Escape/triggerfocus RUENKY andoutsidepointer controlonly; role-data/foreignroles/contextrevocation/APIsecurity/fullArrow-key matrix incomplete/no wholeareaPASS",
+      "taskIds": [
+        "BASE-02",
+        "SEC-03",
+        "SET-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json"
+      ]
+    },
+    {
+      "id": "F4",
+      "title": "Unauthorized access guards (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-02",
+        "SEC-01",
+        "SEC-02",
+        "SEC-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "G1",
+      "title": "Dashboard entry and overview (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BOOK-04",
+        "VAL-04"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "G2",
+      "title": "Dashboard navigation (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G100ownerhistory8loadedrows/confirmed5/branch2empty/combinedf821querybranch1/ENKYRUretention/Allfiltersrestore8. PartialH1-G2navigationonly/notwholeQuickDesk-globalhistorypagination-security-devicePASS. G101WB198ownercalendar2accessiblelabelsENKYcorrectafter6dictionaryvalues;19OctfiveIDs-times/branch2empty/branch1same/locale19retention. No fullcalendar-language-screenreader-device-securityPASS; BookingPilltooltipRussianpending/notfixed. G102WB198observedfallbacktooltippendingresolvedtargeted:ENOpenbooking/KYБрондоонуачуу/RUunchangedsame5hrefs-times19OctAll. Authoredsummarypreservationunitonly/notwholecalendar-language-screenreader-securityPASS. G105 own-existingreceipt14c108 read-onlyRUENKYsameIDconfirmed19Oct09; Backrouteworks/date17defaultpendingcontract. Not whole BOOK04/H1/G2/security/device PASS. G106 WB199 targeted history-entry date/branch context fixed SAME-LIVE19branch1 receiptBack/Forward/settledreload/locale; SSRdefault acknowledged, no whole scope closure. G107 current sameowner2->1->2 calendar context regression afterWB199 only; active preference restored2, business1default17/no oldrows; return2default17 then explicit19All restore. Not hookmechanism/perbusinessmemory/foreigntenant/API/RLS/fullscope proof. G129 WB203 NEWtargetedbusinesscontactsettingslocale: actualOWNERbusiness2/settings wholeform+pageheaderRussianinsettledENKY. MinimalexistingclientuseLanguage/servergetT+18businesskeysperRUENKY, unchangedACL-query-POST-payload-errorprecedence/authornames. SAME-LIVEKYlocalizedallstaticlabels ->ENsettledserverheader+form/reload ->RUrestored; phone+996500574029/threeemptyfieldsretained/NOinputorSave. Genuinebefore8FAIL5PASS(afteronefixtureharnesscorrection) ->4s24PASS/types0/scoped7filelint0/0; firstextended4legacycontextFAILretained/fixedtestsetupnotweakenedassertions. Newrun5WB199-203/inherited2+10/whole0/NOT_READY. G133 boundedreadonlycurrentcandidateowner/publicserviceconsistency: ownerAll3namegroups(hiddene21545min150-275+2activegroups); branch1twoactivegroups51560min100-300+99c031min0-300/nohidden; branch2hiddene215+active08160min100-300. Publicsamebusiness3activeperbranchcards60+60+1min/sameprices/nohiddenfixture; normalBackretainsownerbranch2URL; explicitAllrestoredRU/business2. Groupedmanagement2activegroupsvs3publicrowsnotmismatch. No create-edit-delete-active-toggle/booking/contacts-SQL-authcommands/source-tests. Sourceeb65unchanged/newrun5/inherited2+10/whole0/NOT_READY. FreshnativeCUAscreenshotfailed/notvisual-devicePASS.",
+      "taskIds": [
+        "BOOK-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G100-owner-history-filters.json",
+        "apps/web/test-results/global-2026-10-16/stage-G101-owner-calendar-labels-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G102-calendar-tooltip-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G105-ui-recovery-receipt.json",
+        "apps/web/test-results/global-2026-10-17/stage-G106-calendar-context-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G107-owned-business-calendar-context.json",
+        "apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G133-owner-service-public-consistency.json"
+      ]
+    },
+    {
+      "id": "G3",
+      "title": "Dashboard analytics (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "VAL-04",
+        "INT-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "G4",
+      "title": "Integration status and warnings (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "VAL-04",
+        "INT-01",
+        "INT-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "H1",
+      "title": "QuickDesk baseline (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G100ownerhistory8loadedrows/confirmed5/branch2empty/combinedf821querybranch1/ENKYRUretention/Allfiltersrestore8. PartialH1-G2navigationonly/notwholeQuickDesk-globalhistorypagination-security-devicePASS. G101WB198ownercalendar2accessiblelabelsENKYcorrectafter6dictionaryvalues;19OctfiveIDs-times/branch2empty/branch1same/locale19retention. No fullcalendar-language-screenreader-device-securityPASS; BookingPilltooltipRussianpending/notfixed. G102WB198observedfallbacktooltippendingresolvedtargeted:ENOpenbooking/KYБрондоонуачуу/RUunchangedsame5hrefs-times19OctAll. Authoredsummarypreservationunitonly/notwholecalendar-language-screenreader-securityPASS. G105 own-existingreceipt14c108 read-onlyRUENKYsameIDconfirmed19Oct09; Backrouteworks/date17defaultpendingcontract. Not whole BOOK04/H1/G2/security/device PASS. G106 WB199 targeted history-entry date/branch context fixed SAME-LIVE19branch1 receiptBack/Forward/settledreload/locale; SSRdefault acknowledged, no whole scope closure. G107 current sameowner2->1->2 calendar context regression afterWB199 only; active preference restored2, business1default17/no oldrows; return2default17 then explicit19All restore. Not hookmechanism/perbusinessmemory/foreigntenant/API/RLS/fullscope proof.",
+      "taskIds": [
+        "BOOK-01",
+        "BOOK-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G100-owner-history-filters.json",
+        "apps/web/test-results/global-2026-10-16/stage-G101-owner-calendar-labels-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G102-calendar-tooltip-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G105-ui-recovery-receipt.json",
+        "apps/web/test-results/global-2026-10-17/stage-G106-calendar-context-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G107-owned-business-calendar-context.json"
+      ]
+    },
+    {
+      "id": "H2",
+      "title": "Quick booking and hold (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SEC-02",
+        "BOOK-01",
+        "BOOK-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "H3",
+      "title": "Booking edits and status transitions (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BOOK-02",
+        "BOOK-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "H4",
+      "title": "Client search and creation (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BOOK-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "H5",
+      "title": "Concurrency and conflict handling (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SET-04",
+        "BOOK-02",
+        "BOOK-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "I1",
+      "title": "Branch management (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G130 WB182weekdayFOLLOWUP/notnewdistinct: actualownerbranch1readonlycontactsinheritphone+996500574029/threeempty/checkedinheritRUENKY; Mon09-18othersclosed. KYbranchscheduleall7headingsRussianbefore; minimalBranchScheduleEditorexistingformatBookingWeekday replacesIntlkyICUonly/noschedule-state-save-DBchange. SameactualUIAXafter7KYweekdayscorrect/ENMonday-Sunday/RUrestored/09-18andcontactsunchanged. Genuinebefore1FAIL2PASS->4s35PASS/types0/scoped2filelint0/0. BlankoddscaleJPEGcaptureNOTvisualproof/devicePASS; functionalnativeAXonly. Newrunstill5/inherited2+10/whole0/NOT_READY. G131 WB140staticbusiness-contextFOLLOWUP/notnewdistinct: freshactualOWNERbranch1ENstillБизнесprefix; existing2branches.editkeysabsentfromRUENKY. Addedonly6dictionaryvalues/no component-query-auth-POSTchange. SameactualbranchENBusiness/KYБизнес/RUБизнес/authoredbizname-phone-inherit-Mon09-18unchanged; missingnamefallbackcomponentONLY. Genuinebefore6FAIL3PASS ->3s12PASS/types0/scoped4filelint0/0. CUAviewport screenshotfailedUnabletocapture; no visual-device-screenreaderPASS. Newrunstill5/inherited2+10/whole0/NOT_READY.",
+      "taskIds": [
+        "SET-01"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G130-branch-weekdays-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G131-branch-business-context-after.json"
+      ]
+    },
+    {
+      "id": "I2",
+      "title": "Service management (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G133 boundedreadonlycurrentcandidateowner/publicserviceconsistency: ownerAll3namegroups(hiddene21545min150-275+2activegroups); branch1twoactivegroups51560min100-300+99c031min0-300/nohidden; branch2hiddene215+active08160min100-300. Publicsamebusiness3activeperbranchcards60+60+1min/sameprices/nohiddenfixture; normalBackretainsownerbranch2URL; explicitAllrestoredRU/business2. Groupedmanagement2activegroupsvs3publicrowsnotmismatch. No create-edit-delete-active-toggle/booking/contacts-SQL-authcommands/source-tests. Sourceeb65unchanged/newrun5/inherited2+10/whole0/NOT_READY. FreshnativeCUAscreenshotfailed/notvisual-devicePASS.",
+      "taskIds": [
+        "SET-01"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G133-owner-service-public-consistency.json"
+      ]
+    },
+    {
+      "id": "I3",
+      "title": "Staff management (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G139 attemptedfirstcurrentcandidateOWNERrole-applicationsREADONLY: visiblelinkclickleftPACKAGEStree; oneordinarygotoobservedURLtimedoutPage.navigate, subsequentnativeAXandoneCUAdocumentedDOMalternativebothfocus-emulationtimeout. Freshinventorymetadataavailablebutactualapplicationspage/status/localesNOTverified; g139-applications-ru.txt isoldPACKAGEStree—notPASS. AddressedownNext14216node/projectstart-serverRespondingtrue/3000listening; no HTTPhealthproof/no restart/newtab/oldtab1-adminmetricsretry. NeedmanualhealthyTab3refreshforlivecontrol; sourceeb65unchanged/newrun0/inherited5+2+10/whole0/NOT_READY. No moderation/roles/entities/DB-auth-businesscommands/code-tests. G144 newboundedUNITreadonlyrole-applicationsGETcontract (G139UIblocked/unclosedlistcase): oneNEWtestfile9PASS +6existingheader-history-branchcontrols =>4s15PASS/scopedGETcoverage24of26statements4of4functions12of12branchesPASS60/types0/newfileexplicitlint0errors0warnings+legacyprocessnotice. Mockresolverrejectstopssuppliedprivilegedclientconstruction; staff/currentbiz/activebranches/100limit/order/blockscope-dedup-map/error-vs-emptynullcontrols verified onlyinmemory. NO actualauthresolver/HTTP/RLS/foreignroleproof/moderation/rights/DBfixture/sourcefix. ProductGET/authBizSHAunchanged; sourceexcludingonlynewtest=prior2570eb4e/current13763129. G139controlblock unchanged/no browserretry; G1413redUNITsafetycasesretained. Newrunfix0/inherited5+2+10/whole0/NOT_READY. G145 UNIT-onlyunclosedRoleApplicationsClientread-state: oneNEW10casetest7PASS3FAIL +6existingcontrols =>4s13PASS3FAILexit1 preserved. Networkreject/HTTPerror/JSONparsefailure eachshowscorrecterroralert BUTalsofalseconfirmedemptytitle; 3safetyassertionsFAIL/notnewconfirmedlivebug/no runtimefix. Pendingreadhidesactions-empty; successfulwith/withoutbranch; fourstatuses/pending-onlycontrols/no-branchdisabled/fallbackidentity/literaltextcontrolsPASS. Types0/newfileexplicitlint0errors0warnings+legacyprocessnotice. ProductclientSHAf7740d65unchanged; excludingonlynewtest=prior13763129/currentbd8bc839. ALLrequests mockedGET/no approval-reject-unblock/grants/sourcefix/realHTTP-DB/browserretry. Newrunfix0/inherited5+2+10/whole0/NOT_READY; G1413redprofilecasesalso retained.",
+      "taskIds": [
+        "SET-02",
+        "SET-04",
+        "SET-05"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-18/stage-G139-applications-control-block.json",
+        "apps/web/test-results/global-2026-10-18/stage-G144-role-applications-read-unit.json",
+        "apps/web/test-results/global-2026-10-18/stage-G145-role-applications-client-read-state.json"
+      ]
+    },
+    {
+      "id": "I4",
+      "title": "Schedule management (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G130 WB182weekdayFOLLOWUP/notnewdistinct: actualownerbranch1readonlycontactsinheritphone+996500574029/threeempty/checkedinheritRUENKY; Mon09-18othersclosed. KYbranchscheduleall7headingsRussianbefore; minimalBranchScheduleEditorexistingformatBookingWeekday replacesIntlkyICUonly/noschedule-state-save-DBchange. SameactualUIAXafter7KYweekdayscorrect/ENMonday-Sunday/RUrestored/09-18andcontactsunchanged. Genuinebefore1FAIL2PASS->4s35PASS/types0/scoped2filelint0/0. BlankoddscaleJPEGcaptureNOTvisualproof/devicePASS; functionalnativeAXonly. Newrunstill5/inherited2+10/whole0/NOT_READY.",
+      "taskIds": [
+        "SET-03",
+        "SET-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G130-branch-weekdays-after.json"
+      ]
+    },
+    {
+      "id": "I5",
+      "title": "Members and permissions (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-02",
+        "SEC-02",
+        "SEC-03",
+        "SET-05"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "I6",
+      "title": "Business identity and public card (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SET-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "J1",
+      "title": "Staff cabinet baseline (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G111 realknownGoogleobrazstafflogin/reloadowncard1bfd/branch1/service31/count5+22; rolemenuStaff+Mybookings/noowner andordinary/dashboardPAGEdenial/ownStaffrecovery. No API/RLS/foreignstaff/multijob/WB054/fullmatrix/wholeareaPASS. G112 actualstaffownbookingsUpcoming5known19IDs-times-confirmed/Past22uniquerenderedlinks/localeENKYRUretainsrespectiveorderedIDs/returnRUUpcoming5. Read-onlylists only; notglobalhistoryDB/pagination/foreignstaff/security/commands/wholeareaPASS. G113 currentactualstaffassigned14c108readonlyreceiptRUENKYsameID-confirmed19Oct09/master/nativeBackdefaultUpcoming5sameIDs-times. Notforeignobject/API/RLS/fullBOOK04/J1/device/historynondefaultcontextPASS. G114 WB199followupactualstaffPast22->034receipt->BackformerlyUpcoming5; finalNext-ownedscopedUIURLfilterretains22afterENKYrefresh/Back/RUreload; restoreUpcoming5cleanURL. Earlier3prototypeLIVEfailures+unitgreen retained, notaccepted. No newdistinct/fullarea/security/devicePASS. G115 existingactualstaffread-only17–30OctMon19+26 09–18/other12off; Next14 31Oct–13NovMon2+9 09–18; ENKYretainrange/Previousreturns/RUrestored. No publication/unconfiguredstaff/absence/transfer/command/API-RLS/multijob/device/fullareaPASS. G117 WB199financecontextfollowup scopedserverbiz-staffUIviewmetadataonly; settledENKYRU/reloadkeepStatsDay13/600-600-50/late516; initialSSRCurrent17beforehydrationnotflashfree. No financialcommands/auth/SQLchange; otherrole/scopeguardscomponentonly/no fullareaPASS. Final24scopedPASS/types/lint0/0/hookcoveragePASS60; G116servicecoverageFAILretained. G121 actualstaffpersonalCabinetUpcoming0/History1cancelled5c10f406ownreceiptnewtab; originalHistory1retained; returnworkingstaff1bfd/5Upcoming22Past/Finance13-600-600-50 preserved. Read-onlysameidentitypositivecontrol/no API-RLS-foreignrole/security/wholearea closure.",
+      "taskIds": [
+        "SEC-03",
+        "SET-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json",
+        "apps/web/test-results/global-2026-10-17/stage-G112-staff-booking-lists.json",
+        "apps/web/test-results/global-2026-10-17/stage-G113-staff-receipt-entry.json",
+        "apps/web/test-results/global-2026-10-17/stage-G114-staff-history-context-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G115-staff-schedule-read.json",
+        "apps/web/test-results/global-2026-10-17/stage-G117-finance-view-context-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G121-staff-personal-workspace-boundary.json"
+      ]
+    },
+    {
+      "id": "J2",
+      "title": "Shift open/close (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G116 WB201 actualstaff13Octbusiness-190 ->50 byremovingdouble240topupdeductionfromfinalsavedshare/hook+SSRstats; alltime-21->219/services901-staff781-late516unchanged. Noledgerwrites. 22scopedPASS/types/lint0errors1existingwarning; coveragebranch41.66FAIL. Fullfinancial/security/devicegateopen. G117 WB199financecontextfollowup scopedserverbiz-staffUIviewmetadataonly; settledENKYRU/reloadkeepStatsDay13/600-600-50/late516; initialSSRCurrent17beforehydrationnotflashfree. No financialcommands/auth/SQLchange; otherrole/scopeguardscomponentonly/no fullareaPASS. Final24scopedPASS/types/lint0/0/hookcoveragePASS60; G116servicecoverageFAILretained.",
+      "taskIds": [
+        "FIN-01"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G116-closed-stats-topup-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G117-finance-view-context-after.json"
+      ]
+    },
+    {
+      "id": "J3",
+      "title": "Shift item editing and retry (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "FIN-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "J4",
+      "title": "Staff schedule and bookings (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G115 existingactualstaffread-only17–30OctMon19+26 09–18/other12off; Next14 31Oct–13NovMon2+9 09–18; ENKYretainrange/Previousreturns/RUrestored. No publication/unconfiguredstaff/absence/transfer/command/API-RLS/multijob/device/fullareaPASS.",
+      "taskIds": [
+        "SET-03",
+        "SET-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G115-staff-schedule-read.json"
+      ]
+    },
+    {
+      "id": "J5",
+      "title": "Staff profile and avatar (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SET-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "K1",
+      "title": "Shift calculation baseline (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "in_progress",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G094actualowner13Octsingleclosed-dayaggregate650=600+50/employee600-business50/all=branch1/branch2zero. Notfreshclosedrate-hours-topupdetail/DB/multimodel/month-year/API/security/wholePASS. G095singleclosed13OctcontrolstaffUI2hours/base360/guarantee600/topup240/600employee50business/late516 andexistingrateaudittwochangesmatchhistory; exactshift-ID/ratesnapshotDBnotfreshverified. Partialonly/fullFINgatesnotclosed. G116 WB201 actualstaff13Octbusiness-190 ->50 byremovingdouble240topupdeductionfromfinalsavedshare/hook+SSRstats; alltime-21->219/services901-staff781-late516unchanged. Noledgerwrites. 22scopedPASS/types/lint0errors1existingwarning; coveragebranch41.66FAIL. Fullfinancial/security/devicegateopen. G125WB201supportingownowner13Oct650-600-50/topup240/base360/closed2hguarantee600/currentrateempty; Year1000-781-219/materials99/3closed/late516rowsreconcile/no financialcommands/newfix/fullmodelauditsecurityclosure.",
+      "taskIds": [
+        "FIN-01",
+        "FIN-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G094-owner-finance-filters.json",
+        "apps/web/test-results/global-2026-10-16/stage-G095-closed-shift-snapshot.json",
+        "apps/web/test-results/global-2026-10-17/stage-G116-closed-stats-topup-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G125-owner-closed-snapshot-regression.json"
+      ]
+    },
+    {
+      "id": "K2",
+      "title": "Hours worked correction (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "FIN-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "K3",
+      "title": "Finance pages and filters (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G094actualowner13Octsingleclosed-dayaggregate650=600+50/employee600-business50/all=branch1/branch2zero. Notfreshclosedrate-hours-topupdetail/DB/multimodel/month-year/API/security/wholePASS. G095singleclosed13OctcontrolstaffUI2hours/base360/guarantee600/topup240/600employee50business/late516 andexistingrateaudittwochangesmatchhistory; exactshift-ID/ratesnapshotDBnotfreshverified. Partialonly/fullFINgatesnotclosed. G096WB187finance-numberedlabels SAME-LIVEoneclient/oneshiftRUENKY/date13expandedclosed-snapshotretention; presentationonly/notallcounts-live/fullfinance-localePASS. G097RUownstaffOctober-month/2026-year1000-781-219/materials99/3closed2clients sumvisible3cards;2025empty->2026recovery. UIarithmeticonly/notDB-crosssurface/allmodels/fullFINgates. G098WB187neutralstatuscountSAME-LIVEbusinessRUENKYclosed3/staffRU0open3closed; month-yearUIcrosssurface1000-781-219/services901materials99 unchanged. StaticRUAllbranches-BusinessprefixENKYpendingG099; no wholeFIN/locale/API-DB/devicePASS. G099WB1402existingfinanceUIkeysSAME-LIVEBusiness-AllbranchesEN/БардыкфилиалдарKY/RUrestored; branch2empty-All1000-781-219retained. G098staticcopyobservationresolvedtargeted/notfullfinance-locale/DBsecurity-devicePASS. G124actualknownownerGooglelogin/legacyFinancePagechangeddependencyread-onlyClients-ShiftRUENKY/reloadretainedsettled; SSRinitialClientsnotflashfree/no financialcommands/securityclosure/newfix. G125WB201supportingownowner13Oct650-600-50/topup240/base360/closed2hguarantee600/currentrateempty; Year1000-781-219/materials99/3closed/late516rowsreconcile/no financialcommands/newfix/fullmodelauditsecurityclosure. G126ownownerStatsENlocale13retained/fullreload17currentdefaultobserved(date-amountconsistent); DEC-OWNER-STATS-RELOAD-CONTEXTpendingnotnewbug/fix; explicit13restored/nochangetofinancialdata.",
+      "taskIds": [
+        "FIN-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G094-owner-finance-filters.json",
+        "apps/web/test-results/global-2026-10-16/stage-G095-closed-shift-snapshot.json",
+        "apps/web/test-results/global-2026-10-16/stage-G096-finance-counts-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G097-finance-period-controls.json",
+        "apps/web/test-results/global-2026-10-16/stage-G098-finance-status-counts-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G099-finance-static-labels-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G124-owner-legacy-finance-regression.json",
+        "apps/web/test-results/global-2026-10-17/stage-G125-owner-closed-snapshot-regression.json",
+        "apps/web/test-results/global-2026-10-17/stage-G126-owner-stats-reload-contract.json"
+      ]
+    },
+    {
+      "id": "K4",
+      "title": "Disputes and audit logs (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "FIN-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "K5",
+      "title": "Cross-surface finance consistency (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "in_progress",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G095singleclosed13OctcontrolstaffUI2hours/base360/guarantee600/topup240/600employee50business/late516 andexistingrateaudittwochangesmatchhistory; exactshift-ID/ratesnapshotDBnotfreshverified. Partialonly/fullFINgatesnotclosed. G097RUownstaffOctober-month/2026-year1000-781-219/materials99/3closed2clients sumvisible3cards;2025empty->2026recovery. UIarithmeticonly/notDB-crosssurface/allmodels/fullFINgates. G098WB187neutralstatuscountSAME-LIVEbusinessRUENKYclosed3/staffRU0open3closed; month-yearUIcrosssurface1000-781-219/services901materials99 unchanged. StaticRUAllbranches-BusinessprefixENKYpendingG099; no wholeFIN/locale/API-DB/devicePASS. G116 WB201 actualstaff13Octbusiness-190 ->50 byremovingdouble240topupdeductionfromfinalsavedshare/hook+SSRstats; alltime-21->219/services901-staff781-late516unchanged. Noledgerwrites. 22scopedPASS/types/lint0errors1existingwarning; coveragebranch41.66FAIL. Fullfinancial/security/devicegateopen. G125WB201supportingownowner13Oct650-600-50/topup240/base360/closed2hguarantee600/currentrateempty; Year1000-781-219/materials99/3closed/late516rowsreconcile/no financialcommands/newfix/fullmodelauditsecurityclosure.",
+      "taskIds": [
+        "FIN-01",
+        "FIN-02",
+        "FIN-03"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G095-closed-shift-snapshot.json",
+        "apps/web/test-results/global-2026-10-16/stage-G097-finance-period-controls.json",
+        "apps/web/test-results/global-2026-10-16/stage-G098-finance-status-counts-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G116-closed-stats-topup-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G125-owner-closed-snapshot-regression.json"
+      ]
+    },
+    {
+      "id": "L1",
+      "title": "Promotion management (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "VAL-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "L2",
+      "title": "Visit package management (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G134 boundedreadonlycurrentOWNERbusiness2packageprojection: plansshowexisting47adaactive2visits30days0percent/service1branch andlegacy5cedinactive4visits21daysfixed100. SoldActiveAllbranchesoneknownclient/package1of2/expiry11Nov/purchased12Oct agreeswithG108clientpresentation. Expiredfilterempty; Activebranch2empty/branch1same1of2; restoreActiveAllRU samebalance-date. No planEdit/active-toggle/Create/sell/redeem/cancel/refund/Save/auth-SQLcommands/source-tests. Sourceeb65unchanged/newrun5/inherited2+10/whole0/NOT_READY; no expired-depletedfixture or lifecycle-security-visualPASS.",
+      "taskIds": [
+        "VAL-01"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G134-owner-package-projection.json"
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "Ratings and reviews (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G074 existing review preview/cancel/modal-keyboard-labels RUENKY targeted SAME-LIVE only; no create/update command or aggregate/configuration/authorization/full scope PASS",
+      "taskIds": [
+        "VAL-03"
+      ],
+      "currentCandidateEvidence": ["apps/web/test-results/global-2026-10-15/stage-G074-review-dialog-after.json"]
+    },
+    {
+      "id": "L4",
+      "title": "Edge conditions (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "VAL-01",
+        "VAL-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "M1",
+      "title": "Admin entry and shell (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SEC-01",
+        "SEC-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "M2",
+      "title": "Businesses, branches, and owners (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SET-05"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "M3",
+      "title": "Users and security actions (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SEC-01",
+        "SEC-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "M4",
+      "title": "Roles and memberships (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-02",
+        "SEC-01",
+        "SEC-02",
+        "SEC-03",
+        "SET-05"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "M5",
+      "title": "Categories and system configuration (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SET-05",
+        "VAL-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "M6",
+      "title": "Monitoring, analytics, and health (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SEC-01",
+        "VAL-04"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "N1",
+      "title": "Notification delivery (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "INT-01",
+        "INT-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "N2",
+      "title": "Telegram webhook and linking (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "INT-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "N3",
+      "title": "WhatsApp webhook and OTP integration (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "INT-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "N4",
+      "title": "Cron and background jobs (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "INT-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "O1",
+      "title": "Desktop responsive baseline (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "UX-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "O2",
+      "title": "Mobile and tablet web (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-03",
+        "UX-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "O3",
+      "title": "RU/KY/EN localization (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G079 KYfinal-amountlabel SAME-LIVE200unchanged/RUENcontrols pluspriorproof. Presentationonly; fullownership-command-payment-refund-locale matrix incomplete/no wholeareaPASS. G084knownpureclientblocked5deletionpanelRUENKY/disabledguard/nativeTabskip only. No eligible/pending/cancel/delete/anonymization/APIcaller/otherrole/fullmatrixPASS. G085WB187mapcountertargetedSAME-LIVE2RUENKY/categoryreset-branch2context; fullB4/geolocation-provider-device/wholelocalematrix notclosed. G086 public category name_ru-only contract gap classified DEC-CATEGORY-LOCALES pending; no schema/feature or full-locale PASS. G088WB197pastURL Day->Staffblocked/SAME-LIVE RUENKY+reload/explicittoday16recovery; no pastbooking/API/deepstep5/fulltimezone/device/wholematrixPASS. G096WB187finance-numberedlabels SAME-LIVEoneclient/oneshiftRUENKY/date13expandedclosed-snapshotretention; presentationonly/notallcounts-live/fullfinance-localePASS. G098WB187neutralstatuscountSAME-LIVEbusinessRUENKYclosed3/staffRU0open3closed; month-yearUIcrosssurface1000-781-219/services901materials99 unchanged. StaticRUAllbranches-BusinessprefixENKYpendingG099; no wholeFIN/locale/API-DB/devicePASS. G099WB1402existingfinanceUIkeysSAME-LIVEBusiness-AllbranchesEN/БардыкфилиалдарKY/RUrestored; branch2empty-All1000-781-219retained. G098staticcopyobservationresolvedtargeted/notfullfinance-locale/DBsecurity-devicePASS. G101WB198ownercalendar2accessiblelabelsENKYcorrectafter6dictionaryvalues;19OctfiveIDs-times/branch2empty/branch1same/locale19retention. No fullcalendar-language-screenreader-device-securityPASS; BookingPilltooltipRussianpending/notfixed. G102WB198observedfallbacktooltippendingresolvedtargeted:ENOpenbooking/KYБрондоонуачуу/RUunchangedsame5hrefs-times19OctAll. Authoredsummarypreservationunitonly/notwholecalendar-language-screenreader-securityPASS. G110 WB200 authenticatedtopStep5guestinstruction correctedviaexistingisAuthed+existinglocalizedselectSlotFirst; SAME-LIVE RUENKYsame19Octdraft/5own/12unselected/disabledTime. Componentguestcontrolonly; no authsecurity/fullarea closure. 36scopedPASS/types/lint0errors2existingwarnings. G112 actualstaffownbookingsUpcoming5known19IDs-times-confirmed/Past22uniquerenderedlinks/localeENKYRUretainsrespectiveorderedIDs/returnRUUpcoming5. Read-onlylists only; notglobalhistoryDB/pagination/foreignstaff/security/commands/wholeareaPASS. G113 currentactualstaffassigned14c108readonlyreceiptRUENKYsameID-confirmed19Oct09/master/nativeBackdefaultUpcoming5sameIDs-times. Notforeignobject/API/RLS/fullBOOK04/J1/device/historynondefaultcontextPASS. G115 existingactualstaffread-only17–30OctMon19+26 09–18/other12off; Next14 31Oct–13NovMon2+9 09–18; ENKYretainrange/Previousreturns/RUrestored. No publication/unconfiguredstaff/absence/transfer/command/API-RLS/multijob/device/fullareaPASS. G117 WB199financecontextfollowup scopedserverbiz-staffUIviewmetadataonly; settledENKYRU/reloadkeepStatsDay13/600-600-50/late516; initialSSRCurrent17beforehydrationnotflashfree. No financialcommands/auth/SQLchange; otherrole/scopeguardscomponentonly/no fullareaPASS. Final24scopedPASS/types/lint0/0/hookcoveragePASS60; G116servicecoverageFAILretained. G120 WB140MonthPickerfollowup: realstaffRUinternalEnglishmonths correctedbydate-fnslocale, ENKYmonth-yearcontrolsuseexistingkeys; KY->RUdatefallback/Englishselectedsuffix explicitlyremain/notfullO3. 3s21PASS/types/scopedexplicit2filelint0/0; oldfailedharnessandbefore5FAIL1PASSretained. G123 WB202initialprofileloadingfalse->true same-liveRUENKYnormalreloadlocalizedloader/noemptyidentitycontrols thenactualstaffprofile; no authprovidercommands/securityclosure. 13scopedPASS/types0/scopedlintFAILsame2oldrequireerrors; wholeareaopen. G129 WB203 NEWtargetedbusinesscontactsettingslocale: actualOWNERbusiness2/settings wholeform+pageheaderRussianinsettledENKY. MinimalexistingclientuseLanguage/servergetT+18businesskeysperRUENKY, unchangedACL-query-POST-payload-errorprecedence/authornames. SAME-LIVEKYlocalizedallstaticlabels ->ENsettledserverheader+form/reload ->RUrestored; phone+996500574029/threeemptyfieldsretained/NOinputorSave. Genuinebefore8FAIL5PASS(afteronefixtureharnesscorrection) ->4s24PASS/types0/scoped7filelint0/0; firstextended4legacycontextFAILretained/fixedtestsetupnotweakenedassertions. Newrun5WB199-203/inherited2+10/whole0/NOT_READY. G130 WB182weekdayFOLLOWUP/notnewdistinct: actualownerbranch1readonlycontactsinheritphone+996500574029/threeempty/checkedinheritRUENKY; Mon09-18othersclosed. KYbranchscheduleall7headingsRussianbefore; minimalBranchScheduleEditorexistingformatBookingWeekday replacesIntlkyICUonly/noschedule-state-save-DBchange. SameactualUIAXafter7KYweekdayscorrect/ENMonday-Sunday/RUrestored/09-18andcontactsunchanged. Genuinebefore1FAIL2PASS->4s35PASS/types0/scoped2filelint0/0. BlankoddscaleJPEGcaptureNOTvisualproof/devicePASS; functionalnativeAXonly. Newrunstill5/inherited2+10/whole0/NOT_READY. G131 WB140staticbusiness-contextFOLLOWUP/notnewdistinct: freshactualOWNERbranch1ENstillБизнесprefix; existing2branches.editkeysabsentfromRUENKY. Addedonly6dictionaryvalues/no component-query-auth-POSTchange. SameactualbranchENBusiness/KYБизнес/RUБизнес/authoredbizname-phone-inherit-Mon09-18unchanged; missingnamefallbackcomponentONLY. Genuinebefore6FAIL3PASS ->3s12PASS/types0/scoped4filelint0/0. CUAviewport screenshotfailedUnabletocapture; no visual-device-screenreaderPASS. Newrunstill5/inherited2+10/whole0/NOT_READY.",
+      "taskIds": [
+        "UX-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G075-cancel-labels-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G079-final-amount-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G084-deletion-guard.json",
+        "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+        "apps/web/test-results/global-2026-10-16/stage-G088-day-range-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G096-finance-counts-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G098-finance-status-counts-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G099-finance-static-labels-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G101-owner-calendar-labels-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G102-calendar-tooltip-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G110-step5-auth-guidance-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G112-staff-booking-lists.json",
+        "apps/web/test-results/global-2026-10-17/stage-G113-staff-receipt-entry.json",
+        "apps/web/test-results/global-2026-10-17/stage-G115-staff-schedule-read.json",
+        "apps/web/test-results/global-2026-10-17/stage-G117-finance-view-context-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G120-month-picker-locale-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G130-branch-weekdays-after.json",
+        "apps/web/test-results/global-2026-10-17/stage-G131-branch-business-context-after.json"
+      ]
+    },
+    {
+      "id": "O4",
+      "title": "Keyboard and screen reader (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "in progress",
+      "releaseStatus": "in_progress",
+      "reason": "G070/G072/G074dialogs+G078role-menu nativekeyboard targeted only; oneoddscaledPNGnotrealphone-tablet/screenreader/otherroles/fullkeyboardmatrixPASS G080actualnativecabinetTab/Arrow/HomeEnd/panelassociationcontrolsRUENKY only; no screenreader/fullmatrix/wholeareaPASS. G084knownpureclientblocked5deletionpanelRUENKY/disabledguard/nativeTabskip only. No eligible/pending/cancel/delete/anonymization/APIcaller/otherrole/fullmatrixPASS. G087 currentmap nativeTab-ShiftTab/Enter-Space and locale-selection preservation targetedPASS only;17DOMobservations/not17tests/fullkeyboard-screenreader-device-geolocation matrix remains unverified. G101WB198ownercalendar2accessiblelabelsENKYcorrectafter6dictionaryvalues;19OctfiveIDs-times/branch2empty/branch1same/locale19retention. No fullcalendar-language-screenreader-device-securityPASS; BookingPilltooltipRussianpending/notfixed. G102WB198observedfallbacktooltippendingresolvedtargeted:ENOpenbooking/KYБрондоонуачуу/RUunchangedsame5hrefs-times19OctAll. Authoredsummarypreservationunitonly/notwholecalendar-language-screenreader-securityPASS.",
+      "taskIds": [
+        "UX-03"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-15/stage-G065-keyboard-booking-smoke.json",
+        "apps/web/test-results/global-2026-10-15/stage-G070-map-dialog-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G072-unlink-preview.json",
+        "apps/web/test-results/global-2026-10-15/stage-G074-review-dialog-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G075-cancel-labels-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json",
+        "apps/web/test-results/global-2026-10-15/stage-G080-cabinet-tabs-keyboard.json",
+        "apps/web/test-results/global-2026-10-16/stage-G084-deletion-guard.json",
+        "apps/web/test-results/global-2026-10-16/stage-G087-map-keyboard.json",
+        "apps/web/test-results/global-2026-10-16/stage-G101-owner-calendar-labels-after.json",
+        "apps/web/test-results/global-2026-10-16/stage-G102-calendar-tooltip-after.json"
+      ]
+    },
+    {
+      "id": "O5",
+      "title": "Visual regression (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "UX-01"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "P1",
+      "title": "API error and retry behavior (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G123 WB202initialprofileloadingfalse->true same-liveRUENKYnormalreloadlocalizedloader/noemptyidentitycontrols thenactualstaffprofile; no authprovidercommands/securityclosure. 13scopedPASS/types0/scopedlintFAILsame2oldrequireerrors; wholeareaopen.",
+      "taskIds": [
+        "BOOK-02",
+        "FIN-01",
+        "UX-03"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G123-profile-initial-loading-after.json"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Browser state and interruption recovery (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G114 WB199followupactualstaffPast22->034receipt->BackformerlyUpcoming5; finalNext-ownedscopedUIURLfilterretains22afterENKYrefresh/Back/RUreload; restoreUpcoming5cleanURL. Earlier3prototypeLIVEfailures+unitgreen retained, notaccepted. No newdistinct/fullarea/security/devicePASS.",
+      "taskIds": [
+        "BOOK-04",
+        "UX-03"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-17/stage-G114-staff-history-context-after.json"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Performance and heavy data (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "UX-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "P4",
+      "title": "Security and privacy (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "SEC-01",
+        "SEC-02",
+        "SEC-04",
+        "INT-02"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "P5",
+      "title": "Browser compatibility (`P2`)",
+      "priority": "P2",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "UX-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "Q1",
+      "title": "Automated baseline (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G140 WB201supportingUNIT-onlycoveragefollowup/notnewproductbug: freshunchangedbaseline3s22PASS butcoveragebranches41.66<60exit1 retained. Added18tests(twoNEWtestfilesonly) forshiftreadfailure-vs-empty, optionalerrors/defaults, mockedserviceclientfallback, explicit/legacydayoff, servicejoins/itemidentity-sorting/openhours, nullableclosedaggregates andhookempty/zero/guarantee. Final5s40PASS/scopedtwofilecoverage184of184statements40of40functions161of168branches95.83PASS60/types0/explicit2filelint0errors0warnings+legacyprocessnotice. Product2files/Jestconfig-setupSHAunchanged; fullfingerprintexcludingonly2newtests equalsprior eb65, current6eb714b4. NO productioncode/query/auth/SQL/ledgerchanges/liveAPI-RLSproof; G139browsercontrolstillblocked/userrefreshneeded. Newrunfix0/inherited5+2+10/whole0/NOT_READY; historicalG116coverageFAILnotrewritten/fullbaseline-notgreen. G141 WB202supportingUNIT-onlymissingfailureboundary: addedoneNEW11caseProfileLoadFailureBoundarytest, no runtimechange. Three safetyassertionsFAIL afterprofile-readerror/authrejection/no-user: editableemptyname renderedoncefinallyclearsloading. EightnewcontrolsPASS (RUENKYauthpending/profilepending/notificationpending/3optionalnotificationfailures); existing11controlsPASS =>3s19PASS3FAIL/exit1 preserved. Typecheck0/newfileexplicitlint0errors0warnings+legacyprocessnotice. No real auth/network/failureinjection ornewconfirmedlivebug; G139currenttabcontrolstillblocked/userrefreshpending. Newrunfix0/inherited5+2+10/whole0/NOT_READY; source2570eb4e tests-only. G144 newboundedUNITreadonlyrole-applicationsGETcontract (G139UIblocked/unclosedlistcase): oneNEWtestfile9PASS +6existingheader-history-branchcontrols =>4s15PASS/scopedGETcoverage24of26statements4of4functions12of12branchesPASS60/types0/newfileexplicitlint0errors0warnings+legacyprocessnotice. Mockresolverrejectstopssuppliedprivilegedclientconstruction; staff/currentbiz/activebranches/100limit/order/blockscope-dedup-map/error-vs-emptynullcontrols verified onlyinmemory. NO actualauthresolver/HTTP/RLS/foreignroleproof/moderation/rights/DBfixture/sourcefix. ProductGET/authBizSHAunchanged; sourceexcludingonlynewtest=prior2570eb4e/current13763129. G139controlblock unchanged/no browserretry; G1413redUNITsafetycasesretained. Newrunfix0/inherited5+2+10/whole0/NOT_READY. G145 UNIT-onlyunclosedRoleApplicationsClientread-state: oneNEW10casetest7PASS3FAIL +6existingcontrols =>4s13PASS3FAILexit1 preserved. Networkreject/HTTPerror/JSONparsefailure eachshowscorrecterroralert BUTalsofalseconfirmedemptytitle; 3safetyassertionsFAIL/notnewconfirmedlivebug/no runtimefix. Pendingreadhidesactions-empty; successfulwith/withoutbranch; fourstatuses/pending-onlycontrols/no-branchdisabled/fallbackidentity/literaltextcontrolsPASS. Types0/newfileexplicitlint0errors0warnings+legacyprocessnotice. ProductclientSHAf7740d65unchanged; excludingonlynewtest=prior13763129/currentbd8bc839. ALLrequests mockedGET/no approval-reject-unblock/grants/sourcefix/realHTTP-DB/browserretry. Newrunfix0/inherited5+2+10/whole0/NOT_READY; G1413redprofilecasesalso retained.",
+      "taskIds": [
+        "BASE-01",
+        "REL-01",
+        "REL-02"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-18/stage-G140-finance-read-unit-coverage.json",
+        "apps/web/test-results/global-2026-10-18/stage-G141-profile-load-unit-boundary.json",
+        "apps/web/test-results/global-2026-10-18/stage-G144-role-applications-read-unit.json",
+        "apps/web/test-results/global-2026-10-18/stage-G145-role-applications-client-read-state.json"
+      ]
+    },
+    {
+      "id": "Q2",
+      "title": "Manual release smoke (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-01",
+        "REL-03"
+      ],
+      "currentCandidateEvidence": []
+    },
+    {
+      "id": "Q3",
+      "title": "Data cleanup and side-effect audit (`P1`)",
+      "priority": "P1",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate G084knownpureclientblocked5deletionpanelRUENKY/disabledguard/nativeTabskip only. No eligible/pending/cancel/delete/anonymization/APIcaller/otherrole/fullmatrixPASS.",
+      "taskIds": [
+        "BASE-02",
+        "BASE-03",
+        "REL-04"
+      ],
+      "currentCandidateEvidence": [
+        "apps/web/test-results/global-2026-10-16/stage-G084-deletion-guard.json"
+      ]
+    },
+    {
+      "id": "Q4",
+      "title": "Final GO/NO-GO (`P0`)",
+      "priority": "P0",
+      "declaredCatalogueStatus": "not started",
+      "releaseStatus": "needs_verification",
+      "reason": "Historical/targeted evidence does not close full scope on a current declared release candidate",
+      "taskIds": [
+        "BASE-01",
+        "REL-04"
+      ],
+      "currentCandidateEvidence": []
+    }
+  ],
+  "maintenanceRules": [
+    "Record role/build/environment/actualviewport/steps/expected/actual/evidence/dataeffects per case",
+    "Live before productfix, same-live after and supporting regression",
+    "Never count source-only risks as live exploits or automated checks as live proof",
+    "Retain approved LIVE TEST fixtures; restore temporary settings; no automatic deletion",
+    "No commit/push/deploy/permission expansion inferred from plan",
+    "Do not change historical run evidence or count test totals across overlapping runs"
+  ],
+  "previousGlobalExecution": {
+    "run": "global-2026-10-14",
+    "startedUtc": "2026-10-13T23:53:18Z",
+    "deadlineUtc": "2026-10-14T05:00:00Z",
+    "winddownUtc": "2026-10-14T04:40:00Z",
+    "progress": "apps/web/test-results/global-2026-10-14/progress.json",
+    "automation": "kezek",
+    "verifiedAutomationStatus": "PAUSED",
+    "checkpointUtc": "2026-10-14T04:54:30Z",
+    "accountPolicy": "Usepreviousknownaccounts only; no newroles; independentfixture gaps remain",
+    "lastStage": "G030",
+    "currentRunLiveFixCount": 9,
+    "currentRunLiveFixes": [
+      "WB-178",
+      "WB-179",
+      "WB-180",
+      "WB-181",
+      "WB-182",
+      "WB-183",
+      "WB-184",
+      "WB-185",
+      "WB-186"
+    ],
+    "currentRunSupportingChecks":"Historical14Octrun only:9same-liveWB178–186/G019WB182followupnot10th. G028483suites481PASS2FAIL/2031testsPASS3FAIL/no skips-crashes/OOM/source9ab2fba5; lint68errors167warningsFAIL/types-scopedchecksPASS. See apps/web/test-results/global-2026-10-14/final-report.json; notcurrent15OctPASS. G073removedmisplacedG069currentsummary; originalexactfieldbytesnotclaimedrestored.",
+    "environment": "FinalG030:9distinct same-liveWB178–186, no wholearea/projectPASS. FreshaddressedreadonlySQLservicee215activefalse/45min150–275/branch23a0;5confirmed19Oct unchanged,034paid/pkg1. No deletion/newbooking/shift/absence/rights; onlyG005newhiddenservice retained. G029anonymousapplicationentrygates only/no submit/roles. Healthy9rootRUloggedout/2biz/emptyquery,4readonlySQLunsaved/10receipt handedoff;6OAuthnetworkdataerrorpolicyblocked/manualstaffrecoverypending. Finalsourcehash9ab2fba5at04:54matchesG028, Gitdirty326preserved/no commit/push/deploy. Stopnew04:40/kezekPAUSEDverified04:46:57before05. Resumeonlynewuserrequest/deadline; API/RPC/roles/177/narrowviewports/service-search/fullbaseline/build remainopen.",
+    "status": "stopped_with_gaps",
+    "automationPausedUtc": "2026-10-14T04:46:57Z",
+    "stoppedNewScenariosUtc": "2026-10-14T04:40:00Z",
+    "finalReport": "apps/web/test-results/global-2026-10-14/final-report.json",
+    "finalSourceFingerprint": "9ab2fba5e4c5ec35439732232b8c27ed8235d9d7a4932a9eb237da6aa286c027",
+    "finalSourceMatchesG028": true
+  },
+  "previousDayExecution15Oct": {
+    "run": "global-2026-10-15",
+    "startedUtc": "2026-10-14T21:50:38Z",
+    "deadlineUtc": "2026-10-15T13:00:00Z",
+    "winddownUtc": "2026-10-15T12:40:00Z",
+    "progress": "apps/web/test-results/global-2026-10-15/progress.json",
+    "automation": "kezek",
+    "verifiedAutomationStatus": "PAUSED",
+    "checkpointUtc": "2026-10-15T21:42:51Z",
+    "accountPolicy": "Usepreviousknownaccounts only; no newroles; independentfixture gaps remain",
+    "lastStage": "G082",
+    "lastGitObservation": {
+      "utc": "2026-10-15T12:19:35Z",
+      "dirtyEntries": 366,
+      "index": "147files7948insertions unchanged/preserved/noagentstage",
+      "sourceMatchesCurrent": true
+    },
+    "completedStageWorkLog": {
+      "stage": "G082",
+      "status": "late_admin_closed",
+      "completedUtc": "2026-10-15T21:42:51Z",
+      "evidence": "apps/web/test-results/global-2026-10-15/stage-G082-late-day-finalization.json"
+    },
+    "previousWindow": {
+      "deadlineUtc": "2026-10-15T05:00:00Z",
+      "finalReport": "apps/web/test-results/global-2026-10-15/final-report.json",
+      "finalizedUtc": "2026-10-15T06:57:10.565Z",
+      "pausedUtc": "2026-10-15T06:55:54.560Z",
+      "deadlineMet": false,
+      "preserved": true
+    },
+    "currentWindow": {
+      "id": "15Oct_day_until1900",
+      "resumedUtc": "2026-10-15T07:00:26Z",
+      "newLiveFixes": [
+        "WB-190",
+        "WB-191",
+        "WB-192",
+        "WB-193",
+        "WB-194",
+        "WB-195",
+        "WB-196"
+      ],
+      "newVerifiedFixCount": 7,
+      "finalReportTarget": "apps/web/test-results/global-2026-10-15/final-report-1900.json"
+    },
+    "lastQuietPreflight": {
+      "utc": "2026-10-15T03:51:22Z",
+      "ordinaryUsageAllowed": true,
+      "usedPercent": 41,
+      "iabTabs": 0,
+      "mcpAppTabs": 0,
+      "listener3000Pid": 7512,
+      "sourceUnchanged": true,
+      "newScenarioOrProductResult": false
+    },
+    "reportDraft": {
+      "file": "apps/web/test-results/global-2026-10-15/final-report.draft.json",
+      "preparedUtc": "2026-10-15T01:22:09.827Z",
+      "status": "nonfinal_execution_active",
+      "finalizeAfterRealChecksAtWinddown": true
+    },
+    "dayReportDraft": {
+      "file": "apps/web/test-results/global-2026-10-15/final-report-1900.draft.json",
+      "preparedUtc": "2026-10-15T12:17:57.992Z",
+      "evidenceThroughStage": "G080",
+      "stage": "G081",
+      "status": "NONFINAL_execution_active",
+      "sourceFingerprint": "13cae4d1746da29d3163bf37e289c84a1043bea8fb8242f1feb023ffd677e158",
+      "finalTarget": "final-report-1900.json",
+      "finalizeAfterActualWinddownAndPause": true
+    },
+    "latestEvidenceAudit": {
+      "stage": "G081",
+      "artifact": "apps/web/test-results/global-2026-10-15/g081-evidence-audit.json",
+      "references": 51,
+      "missing": 0,
+      "stageJSONParsed": 62,
+      "directFilesHashed": 69,
+      "notProductSecurityPass": true
+    },
+    "evidenceAudit": {
+      "stage": "G054",
+      "artifact": "apps/web/test-results/global-2026-10-15/g054-evidence-audit.json",
+      "references": 97,
+      "missing": 0,
+      "directFiles": 120,
+      "parsedJson": 80,
+      "notWholeAreaPass": true,
+      "normalUITelemetryIdsUnenumerated": true
+    },
+    "isolatedLogHarness": {
+      "stage": "G053",
+      "result": "apps/web/test-results/global-2026-10-15/g053-callback-log-tests.json",
+      "passed": 5,
+      "failed": 0,
+      "pending": 0,
+      "notLiveOAuthOrHistoryProof": true,
+      "sourceFixed": false
+    },
+    "syntheticArtifactBoundary": {
+      "stage": "G052",
+      "result": "apps/web/test-results/global-2026-10-15/g052-canary-scan.json",
+      "files": 153,
+      "publicControlsInClientJS": true,
+      "privateMatches": 0,
+      "targetedPass": true,
+      "actualSecretsUsed": false,
+      "notLiveOrReleasePass": true
+    },
+    "isolatedMiddlewareHarness": {
+      "stage": "G051",
+      "result": "apps/web/test-results/global-2026-10-15/g051-middleware-resolved-tests.json",
+      "failed": 4,
+      "passed": 1,
+      "pending": 0,
+      "notActualHTTPPipeline": true,
+      "notLiveLeak": true,
+      "sourceFixed": false,
+      "doNotDuplicate": true
+    },
+    "isolatedSecurityHarness": {
+      "stage": "G050",
+      "result": "apps/web/test-results/global-2026-10-15/g050-caller-tests.json",
+      "failed": 8,
+      "passed": 7,
+      "pending": 0,
+      "notConfiguredWebBaseline": true,
+      "notLiveLeak": true,
+      "sourceFixed": false,
+      "doNotDuplicate": true
+    },
+    "runningBuildProbe": {
+      "session": 92264,
+      "status": "G047compilePASS/G048fullbuildPASS_in_dummy_env",
+      "exitCode": 0,
+      "stage": "apps/web/test-results/global-2026-10-15/stage-G048-full-build-probe.json",
+      "doNotDuplicate": true,
+      "actualProductionPass": false
+    },
+    "runningStartProbe": {
+      "session": 86999,
+      "childPid": 18820,
+      "status": "completed_Ready_listener_and_owned_shutdown_verified",
+      "runnerExitCode": 0,
+      "stage": "apps/web/test-results/global-2026-10-15/stage-G049-production-boot-probe.json",
+      "doNotDuplicate": true,
+      "actualProductionSmokePass": false
+    },
+    "currentSourceFingerprint": "13cae4d1746da29d3163bf37e289c84a1043bea8fb8242f1feb023ffd677e158",
+    "technicalDbChanges": [
+      {
+        "stage": "G062",
+        "target": "public.read_staff_work_locations(uuid,date,date)",
+        "appliedUtc": "2026-10-15T07:57:40Z",
+        "effect": "Existingminimalprojectionincludeshomeworkingdays/sameACL/owner/signature/config/rangeguard/noGRANT/DML",
+        "evidence": "apps/web/test-results/global-2026-10-15/g062-projection-deployed-after.json",
+        "definitionSha256": "c2e1ec5ed245f5b12ee86d06299f8f4148b072bc70172d37482be64703813c1c"
+      }
+    ],
+    "runningBaseline": {
+      "status": "completed_inventory",
+      "session": 33050,
+      "plannedSuites": 485,
+      "processExit": 1,
+      "checkpoint": "apps/web/test-results/global-2026-10-15/baseline-g041-batches/final-summary.json",
+      "initialFinalFingerprint": "d38977b0bd8737f1d30285f33679171dae3ad783c1700198c535a00ffe4e63e8",
+      "fullPass": false,
+      "doNotRelaunch": true
+    },
+    "historicalFollowups": [
+      {
+        "bug": "WB-182",
+        "stage": "G038",
+        "evidence": "apps/web/test-results/global-2026-10-15/stage-G038-calendar-ky-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "bug": "WB-189",
+        "stage": "G063",
+        "evidence": "apps/web/test-results/global-2026-10-15/stage-G063-empty-title-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "bug": "WB-187",
+        "stage": "G067",
+        "evidence": "apps/web/test-results/global-2026-10-15/stage-G067-home-counts-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "bug": "WB-192",
+        "stage": "G074",
+        "evidence": "apps/web/test-results/global-2026-10-15/stage-G074-review-dialog-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "bug": "WB-190",
+        "stage": "G077",
+        "evidence": "apps/web/test-results/global-2026-10-15/stage-G077-repeat-offday-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "bug": "WB-189",
+        "stage": "G079",
+        "evidence": "apps/web/test-results/global-2026-10-15/stage-G079-final-amount-after.json",
+        "notNewDistinctBug": true
+      }
+    ],
+    "currentRunLiveFixCount": 10,
+    "currentRunLiveFixes": [
+      "WB-187",
+      "WB-188",
+      "WB-189",
+      "WB-190",
+      "WB-191",
+      "WB-192",
+      "WB-193",
+      "WB-194",
+      "WB-195",
+      "WB-196"
+    ],
+    "currentRunSupportingChecks": "G079WB189followup actualKYpaid034 RussianfinalAmount -> oneKYdictionarykey -> SAME-LIVE Жыйынтык сумма:200сом/EN200KGS/RU200сом/history3/review3stars-text/pkg1of2retained-RUrestored. Truebefore4FAIL8PASS ->3s22PASS/types/lint0/0. No financiallogic/amount/status/commands/SQL change. Screenshot2failed/noPNG/actualCSS1277x1648DPR.375/notvisual-devicePASS. Notnewbug/global10/day7/whole0/source13cae4d1. G07818PASS/G07738PASS/G07619PASS historical-nonadditive/G0433metadataFAIL-G04453lintErrors unresolved/notcurrentfullgreen.",
+    "latestFollowup": {
+      "stage": "G079",
+      "bug": "WB-189",
+      "summary": "G079WB189followup actualKYpaid034 RussianfinalAmount -> oneKYdictionarykey -> SAME-LIVE Жыйынтык сумма:200сом/EN200KGS/RU200сом/history3/review3stars-text/pkg1of2retained-RUrestored. Truebefore4FAIL8PASS ->3s22PASS/types/lint0/0. No financiallogic/amount/status/commands/SQL change. Screenshot2failed/noPNG/actualCSS1277x1648DPR.375/notvisual-devicePASS. Notnewbug/global10/day7/whole0/source13cae4d1.",
+      "evidence": "apps/web/test-results/global-2026-10-15/stage-G079-final-amount-after.json",
+      "notNewDistinctBug": true
+    },
+    "latestProduct": {
+      "stage": "G078",
+      "summary": "G078WB196 actualrole-menu Enter-nativeTab-Escape closesbutfocusBODY -> triggerRef/Escapeinsideonly -> SAME-LIVE RUENKYoriginaltriggerrestored/outsideclickENnoFocusSteal/RUrestored. Truebefore3FAIL6PASS ->3s18PASS/types/scopedlint0/0/noRoleAccountMenuNavigationDBcommands. FreshPNG4087x5503oddscale CSS1277x1651DPR.45/notphone-tablet-responsive-screenreader-wholePASS. Global10/day7/whole0/source9e5e49e8; KYRussianfinalAmountcopyobservedpending",
+      "evidence": "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json"
+    },
+    "latestUiSafetyCheck": {
+      "stage": "G072",
+      "summary": "G072actualpureclientGoogleunlinkpreviewonly/namedmodal/nativeTabShiftTab/Escape-triggerrestore/ENKYCancelEnter/RUrestored/Googleconnected-cleanprofile. Existing2s7PASS mockcontracts notliveunlink-lastmethod-API-RPC-busyproof. No sourcefix-newbug-countchange/global7/day4/whole0/sourceb6afba3f; screenshotfailed/notresponsive-screenreader-fullSEC04PASS/noDBcommands",
+      "evidence": "apps/web/test-results/global-2026-10-15/stage-G072-unlink-preview.json"
+    },
+    "pendingObservedFollowups": [],
+    "latestReadonlyCase": {
+      "stage": "G080",
+      "summary": "G080actualpureclientcabinet nativekeyboard RUENKY targetedPASS: Left-Right-wrap/Home-End/Tabactivepanel/ShiftTabactiveTab; reciprocalARIA/oneTabstop/known5upcoming3history preserved.17DOMobservations(1seed16nativekeys), not17tests/screenreader/fullkeyboard/wholeareaPASS. No sourcefix-newbug-countchange/global10/day7/whole0/hash13cae4d1. RUhistory034200/review3stars-text/pkg1of2/bothhandoff; screenshotfailed/noPNG/no businesscommands-SQL-rolechange.",
+      "evidence": "apps/web/test-results/global-2026-10-15/stage-G080-cabinet-tabs-keyboard.json"
+    },
+    "latestReportingRepairAudit": {
+      "stage": "G081",
+      "verifiedUtc": "2026-10-15T12:19:35Z",
+      "scope": "Local51refs/62stageJSON/69hashes/draft/no productPASS",
+      "evidence": "apps/web/test-results/global-2026-10-15/stage-G081-day-report-checkpoint.json"
+    },
+    "automationCheckpointMaintenance": {
+      "stage": "G081",
+      "status": "ACTIVE",
+      "updatedAt": 1792066630673,
+      "scheduleAndDeadlineUnchanged": true,
+      "evidence": "apps/web/test-results/global-2026-10-15/g081-evidence-audit.json"
+    },
+    "environment": {
+      "gitHead": "7f5c8ae90a2d1e7e533867a728f39ca7504eb570",
+      "dirtyEntriesBefore": 326,
+      "server": "Owneddev7512/session8466; actualhealthyUI/all4Google G058–060; G062anonymousavailabilitysame-live/no production/APIsecurityPASS",
+      "browserId": "2",
+      "currentUserTab": "G080IAB2tab1RUknownpureclientlow.fade/cabinet/bookings/History3/034200som-review3stars-originaltext/pkg1of2/menusdialogsclosed. TargetednativeTab-ArrowcontrolsPASS; ENKYrestoredRU/bothhandoff/no commands.",
+      "usableSupabaseTab": "G062IAB2tab2g061DbTab ownSELECTonlydrafte8b470fa/postDDLmetadata/sameACL; no executableDDLleft/markHandoff/notold4",
+      "blockedTabs": [],
+      "historicalBlockedTabs": [
+        "1",
+        "5",
+        "6",
+        "7"
+      ],
+      "authRecovery": "G058–060fourknownGoogle recoveredhistorically; G076sameexistingpureclientlow.fade recoveredstaleserverauthUI viaordinarySignIn/navigationrefresh/noOAuthchooser. Currentknownclientconfirmed/own5bookings+reload/history3originalreview. Fullprovider-link-replay-expiry-securitymatrix unverified; oldblockedtabs untouched.",
+      "responsive": "G064requested768x1024 actual3072x4096/DPR.25/resetcleared; unchangedoverride not retried. G078 freshactualPNG captured4087x5503oddscale actualCSS1277x1651/client1226/DPR.4500000179. Screenshotcapture now succeeded once, viewportoverride not repaired/phone-tablet-layout-screenreader stillunverified. Evidence stage-G078-role-menu-after.json/g078-actual-viewport.json G079twofreshcapturesfailed/noPNG/actualCSS1277x1648DPR.375; G078imagehistorical/notG079proof."
+    },
+    "status": "stopped_with_gaps_late_finalization",
+    "finalReport": {
+      "file": "apps/web/test-results/global-2026-10-15/final-report-1900.json",
+      "finalizedUtc": "2026-10-15T21:42:51Z",
+      "deadlineMet": false,
+      "pausedUtc": "2026-10-15T21:42:14.792Z"
+    }
+  },
+  "previousRun16Execution": {
+    "run": "global-2026-10-16",
+    "startedUtc": "2026-10-15T21:45:36.645Z",
+    "deadlineUtc": "2026-10-16T05:00:00Z",
+    "winddownUtc": "2026-10-16T04:40:00Z",
+    "progress": "apps/web/test-results/global-2026-10-16/progress.json",
+    "automation": "kezek",
+    "verifiedAutomationStatus": "PAUSED",
+    "checkpointUtc": "2026-10-16T05:17:05Z",
+    "lastStage": "G103",
+    "currentSourceFingerprint": "addf6dd790ec8fd5194f73709cea46c666a0a5954315e741d3885342214abb6f",
+    "currentRunLiveFixCount": 2,
+    "currentRunLiveFixes": [
+      "WB-197",
+      "WB-198"
+    ],
+    "inheritedCandidate": {
+      "sourceFingerprint": "13cae4d1746da29d3163bf37e289c84a1043bea8fb8242f1feb023ffd677e158",
+      "global15DistinctFixes": 10,
+      "day15DistinctFixes": 7,
+      "wholeAreasClosed": 0,
+      "evidence": "apps/web/test-results/global-2026-10-15/final-report-1900.json",
+      "notNewPassOrFixCount": true,
+      "previousFinalSHA256": "a0d1348f3eb779a1b51c4652208dddb1617f64ace8559bd1c65f12488bd00408"
+    },
+    "technicalDbChanges": [],
+    "historicalFollowups": [
+      {
+        "bug": "WB-187",
+        "stage": "G085",
+        "evidence": "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "stage": "G096",
+        "bug": "WB-187",
+        "evidence": "apps/web/test-results/global-2026-10-16/stage-G096-finance-counts-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "stage": "G098",
+        "bug": "WB-187",
+        "evidence": "apps/web/test-results/global-2026-10-16/stage-G098-finance-status-counts-after.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "stage": "G099",
+        "bug": "WB-140",
+        "evidence": "apps/web/test-results/global-2026-10-16/stage-G099-finance-static-labels-after.json",
+        "notNewDistinctBug": true
+      }
+    ],
+    "pendingObservedFollowups": [
+      {
+        "stage": "G086",
+        "surface": "public category reference localization",
+        "classification": "known_contract_content_gap_not_new_distinct_bug",
+        "status": "pending_product_scope",
+        "decisionId": "DEC-CATEGORY-LOCALES",
+        "observation": "The current public category lookup and admin form support name_ru only. Actual EN/KY system UI is translated while canonical category label remains Russian. Historical WB094 explicitly documented name_ru-only; no missing translations invented. This does not close whole O3.",
+        "evidence": "stage-G086-category-contract.json"
+      },
+      {
+        "stage": "G098",
+        "surface": "Business finance EN/KY static UI labels",
+        "observation": "Settledg098-business-year-en/ky DOM showsRussianВсе филиалыoption andБизнесprefix whilefinancialUItranslated. Authoredbusiness-branch-staffnamesnotcountedasmissingUItranslation.",
+        "status": "resolved_targeted_G099",
+        "evidence": [
+          "g098-business-year-en.txt",
+          "g098-business-year-ky.txt"
+        ],
+        "notFixedThisStage": true,
+        "resolution": {
+          "bug": "WB-140",
+          "stage": "G099",
+          "evidence": "stage-G099-finance-static-labels-after.json",
+          "scope": "2existingUIkeys/notwholelocale"
+        }
+      },
+      {
+        "stage": "G101",
+        "bug": "WB-198",
+        "surface": "Ownercalendarbookingfallbacktooltip",
+        "status": "resolved_targeted_G102",
+        "observation": "ActualENKYlinks haveRussian titleОткрыть бронь #ID. Twofieldlabelsaddressedonly; existingBookingCardfallbacknotlocalized. Reprobeforeanynextpatch/preserveauthoredservicetitle.",
+        "evidence": [
+          "g101-calendar-en.txt",
+          "g101-calendar-ky-before.txt"
+        ],
+        "resolution": {
+          "bug": "WB-198",
+          "stage": "G102",
+          "evidence": "stage-G102-calendar-tooltip-after.json",
+          "scope": "Observedowner-calendarfallbackonly/sharedotherconsumersnotclaimed"
+        }
+      }
+    ],
+    "status": "closed_late_deadline_not_met",
+    "next": "STOPPED_WINDOW_EXPIRED; nextG103plannedreceiptcaseNOTstarted. Newhumanpermissionrequired; existingkezekPAUSED/no autonomousextension.",
+    "automationWindow": {
+      "id": "kezek",
+      "status": "PAUSED",
+      "verifiedUtc": "2026-10-16T05:17:05Z",
+      "updatedAt": 1792127617408,
+      "deadlineUtc": "2026-10-16T05:00:00Z",
+      "winddownUtc": "2026-10-16T04:40:00Z",
+      "sameThread": true,
+      "sameNameKind": true,
+      "intervalMinutes": 15,
+      "promptSHA256": "a583bcc2ad39f6fb548535c91c74a9fe0ce1e0f866740808ae23ef35843025cd",
+      "scope": "ExistingautomationreactivatedonlyafteroldG082actualpause/final; newexplicit16Octhumanpermission/notretroactive",
+      "pausedUtc": "2026-10-16T05:13:37.408Z",
+      "deadlineMet": false,
+      "preservedSameIdNameKindThreadPromptSchedule": true
+    },
+    "environment": {
+      "gitHead": "7f5c8ae90a2d1e7e533867a728f39ca7504eb570",
+      "browser": "ActualG102IAB2tab1RUknownownerbusiness2/dashboard/bookingsCalendar19Oct/Allbranches/5knownlinks/no dialogs/bothhandoff",
+      "git": "151indexfiles8134insertionsunchanged;dirty371->372reflectsnewunstagedcomponentedit/preserved/no stage-reset-commit-push-deploy.",
+      "server": "Existingdev7512/session8466/coldmapcompilethenactualrender/no restart/no externalHTTP",
+      "supabase": "Actualinventorytab2/providerbrowser-use0321005f-a173-4ef0-a164-cebc1366efa5 nowdashboard/sign-in returnTo ownoldSQL/e8b470fa; sessionexpired/no UIlogin orSQLinteraction thisstage. OldSELECTdraft notassumedcurrentlyopen; no g062ProjectionSql replay.",
+      "browserEvidence": "g102-ru-restored.txt",
+      "visual": "FreshG102ENJPEG4257x2333oddscaleCSS1277x1651DPR.45/notdevice-tooltipvisualPASS",
+      "finalAdministrativeInventory": "IAB2tab1/dashboard/bookings andtab2Supabasesign-in observed05:14; no newbodyaction. BothkeptmarkHandoff."
+    },
+    "completedStageWorkLog": {
+      "stage": "G103",
+      "status": "administrative_late_close_only",
+      "preparedUtc": "2026-10-16T05:17:05Z",
+      "evidence": "apps/web/test-results/global-2026-10-16/stage-G103-late-administrative-close.json"
+    },
+    "latestReadonlyCase": {
+      "stage": "G100",
+      "summary": "G100 routineownerhistoryH1/G2: actual8activehistoryrows ->Confirmed5known19OctIDs/times ->branch2empty ->queryf821branch1onecorrectrow. EN/KY/RU retainsquery/status/branch/historytab/exactf82113:15–14:15; clearsearchrestores5, Allbranches+Allactive8restored. Only8loaded/page30—NOTglobalhistorysearch/paginationPASS ornewWB135fix. No row/cancel/create/status/payment/SQL/code/tests/newbug; sourcee5f30d57unchanged/newrunfix1/inherited15fix10/whole0. FinalRUownerbusiness2/historyemptyquery/Allfilters/closedmenus/bothhandoff.",
+      "evidence": "apps/web/test-results/global-2026-10-16/stage-G100-owner-history-filters.json"
+    },
+    "latestFollowup": {
+      "stage": "G102",
+      "bug": "WB-198",
+      "summary": "G102 WB198followup(notnewdistinct): actualENKYcalendar19Oct/All/fiveknownlinksRussianОткрыть бронь #ID ->BookingPillcallerexistingopenBookingtranslationfallbackonly/title??preservesauthoredservices/sharedBookingCardunchanged. SAME-LIVEKYБрондоону ачуу #ID/ENOpen booking #ID/RUОткрыть бронь #ID onallfive; day19/All/hrefs/timesretainedthroughHMR/locales. Before2FAIL13PASS->3s39PASS/types/scopedlint0/0+legacyprocessnotice. No receiptactivation/cancel/create/status/export/pay/SQL/entities; RUrestored/bothhandoff/sourceaddf6dd7/newrunfix2/inherited15fix10/whole0. ResolvesonlyG101observedtooltipremaining/notwholeaccessibility-locale-calendarPASS.",
+      "evidence": "apps/web/test-results/global-2026-10-16/stage-G102-calendar-tooltip-after.json",
+      "notNewDistinctBug": true,
+      "checks": "3s39PASS/types/scopedlint0/0+legacyprocessnotice/nonadditive"
+    },
+    "latestProduct": {
+      "stage": "G101",
+      "bug": "WB-198",
+      "summary": "G101 WB198ownercalendaraccessiblecopy: actual19OctAll/branch1fiveknownIDs-timesmatchhistory/branch2NoStaff; ENKYbranch/dateaccessiblelabelsRussian despite translatedcalendar. Existingtkeysabsent ->6dictionaryvaluesonly(no component-querychange). SAME-LIVEKYФилиал боюнча чыпка-Календардын датасы/ENBranch filter-Calendar date/RUunchanged; date19+branch1+fivebookingsretainedthroughlocalechanges. HMRreset16All explicitlyrecoverednativecalendar—notdraftpersistenceclaim. Before6FAIL3PASS ->3s32PASS/types/scopedlint0/0+legacyprocessnotice. No booking/status/export/pay/SQL/businesswrites. Newrunfix2 WB197+WB198/inherited15fix10/whole0/source0d27ae99. BookingPillRussianfallbacktooltipremainsrecordednotfixed.",
+      "evidence": "apps/web/test-results/global-2026-10-16/stage-G101-owner-calendar-labels-after.json",
+      "checks": "3s32PASS/types/scopedlint0/0+legacyprocessnotice/nonadditive"
+    },
+    "currentRunSupportingChecks": "G1023s39PASS/types/scopedlint0/0+legacyprocessnotice/nonadditive/notfullgreen",
+    "currentRunFollowups": [
+      {
+        "bug": "WB-197",
+        "stage": "G089",
+        "evidence": "stage-G089-upper-date-range.json",
+        "notNewDistinctBug": true
+      },
+      {
+        "stage": "G091",
+        "bug": "WB-197",
+        "evidence": "stage-G091-deep-date-recovery.json",
+        "notNewDistinctBug": true,
+        "limitation": "PastdateStep5NoSlots confoundedbyoffday; onlyUIrecoveryverified."
+      },
+      {
+        "stage": "G102",
+        "bug": "WB-198",
+        "evidence": "stage-G102-calendar-tooltip-after.json",
+        "notNewDistinctBug": true
+      }
+    ],
+    "fixtureGaps": [
+      {
+        "stage": "G090",
+        "area": "D2",
+        "case": "Multiple-service selection/duration andprice sum/combinedslotlength",
+        "actual": "Onlyone service available forauthorizedexistingstaff/branch",
+        "status": "unverified_fixture_gap_no_new_data_or_assignment",
+        "evidence": "stage-G090-service-selection-navigation.json"
+      }
+    ],
+    "latestActualIdentity": {
+      "stage": "G094",
+      "role": "owner",
+      "googleAccount": "osorovadahan04@gmail.com",
+      "business": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+      "evidence": "g094-owner-select-business.txt",
+      "noImpersonation": true
+    },
+    "lastProductStage": "G102",
+    "finalReport": "apps/web/test-results/global-2026-10-16/final-report.json",
+    "timing": {
+      "deadlineUtc": "2026-10-16T05:00:00Z",
+      "newScenariosCutoffUtc": "2026-10-16T04:40:00Z",
+      "lastProductWorkClockUtc": "2026-10-16T02:35:31Z",
+      "nextActualClockUtc": "2026-10-16T05:12:15Z",
+      "gap": "02:35:31→05:12:15: no claim of continuous work/what happened externally during gap",
+      "deadlineMet": false,
+      "winddownCompletedByDeadline": false,
+      "lateReason": "Next actual clock after G102 live/check work already exceeded05UTC. Failed to finalize/pause bydeadline; no retrospective extension.",
+      "g102AdministrativeReportPublishedAfterDeadline": true,
+      "g102ReportedClockUtc": "2026-10-16T05:12:15Z",
+      "pauseActualUtc": "2026-10-16T05:13:37.408Z",
+      "administrativeReportPreparedUtc": "2026-10-16T05:17:05Z",
+      "postDeadlineAgentActions": "Only existingautomationpause/readonlyinventory-hashes/audit and report-state-doc metadata. No product-source/test/DB/UIbusinesscommand/newscenario after observing expired clock. G103 administrative only, not extra productPASS.",
+      "prior15MorningDeadlineMissed": true,
+      "prior15DayDeadlineMissed": true,
+      "noBackdating": true
+    }
+  },
+  "activeRun": {
+    "run": "global-2026-10-18-extension-1",
+    "status": "finished_not_ready_paused",
+    "startedUtc": "2026-10-18T02:08:35Z",
+    "checkpointUtc": "2026-10-18T02:58:20Z",
+    "deadlineUtc": "2026-10-18T03:08:35Z",
+    "draftTargetUtc": "2026-10-18T02:43:00Z",
+    "earlyWinddownTargetUtc": "2026-10-18T02:50:00Z",
+    "winddownUtc": "2026-10-18T02:55:00Z",
+    "automation": {
+      "id": "kezek",
+      "kind": "heartbeat",
+      "name": "Ночной живой прогон веб-версии Kezek",
+      "status": "PAUSED",
+      "rrule": "FREQ=MINUTELY;INTERVAL=15;UNTIL=20261018T030835Z",
+      "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+      "updatedAt": 1792292168081,
+      "promptSHA256": "32b1cd456cd34c84c09872fd07176f1ce2eedb50550c96a44ea2bfa1bcd65c1d",
+      "actualResumeUtc": "2026-10-18T02:10:44.326Z",
+      "verifiedUtc": "2026-10-18T02:58:20Z",
+      "deadlineUtc": "2026-10-18T03:08:35Z",
+      "actualPauseUtc": "2026-10-18T02:56:08.081Z",
+      "explicitPaused": true,
+      "otherFieldsPreservedOnPause": true,
+      "onlyStatusAndUpdatedAtChanged": true
+    },
+    "timezone": "Asia/Bishkek",
+    "authorization": {
+      "request": "можешь продолжить еще час",
+      "firstObservedActualUtc": "2026-10-18T02:08:35Z",
+      "deadlineLocal": "2026-10-18 09:08:35 Asia/Bishkek",
+      "doesNotRetroactivelyExtendPriorDeadline": true
+    },
+    "previousRun": "apps/web/test-results/global-2026-10-18/final-report.json",
+    "previousFinalSHA256": "7696ff3b1fcfead3ac3a2ab67a22c479b2f921d0a414ee37ae7c7931181a7fde",
+    "previousRunTimely": true,
+    "globalPlan": "docs/WEB_GLOBAL_READINESS_PLAN.md",
+    "globalState": "docs/WEB_GLOBAL_READINESS_STATE.json",
+    "lastStage": "G155",
+    "currentSourceFingerprint": "004e2b56c9ab0187d14038a779cf8caa0eabb269fdd99aee9bde96683d92d228",
+    "activeTasks": [
+      "BASE-01",
+      "BASE-02",
+      "BASE-03",
+      "SEC-01",
+      "SEC-02",
+      "SEC-03",
+      "SEC-04",
+      "available_unclosed_dependencies"
+    ],
+    "verifiedNewFixCount": 0,
+    "newLiveFixes": [],
+    "wholeAreasClosed": 0,
+    "inheritedCandidate": {
+      "sourceFingerprint": "eb65eb4d555a5594a0edbcc61a06a08bf2b738c8ee18d5186fc02cf5de360a99",
+      "run17DistinctFixes": 5,
+      "run16DistinctFixes": 2,
+      "run15DistinctFixes": 10,
+      "wholeAreasClosed": 0,
+      "notCountedAsNew": true,
+      "prior15And16DeadlinesMissed": true
+    },
+    "inheritedRun18": {
+      "newLiveFixes": 0,
+      "newTestFiles": 5,
+      "sourceFingerprint": "bd8bc839e5700f68e267e75340dc0c5dfa13fb858da75d8e529ffca4a40c38a3",
+      "sixUnitFailuresPendingLive": true
+    },
+    "results": [
+      {
+        "stage": "G150",
+        "result": "G150 new explicit one-hour authorization from actual02:08:35UTC to03:08:35UTC/09:08:35Bishkek18Oct. ExistingkezekPAUSED->ACTIVE/same15min/newUNTIL/readbackverified; prior main18 timely finalSHA7696ff3b preserved, new separate extension-1. Fresh inventory sameIAB2oldDenied1+known3Packages/sameprovider metadata only/no recovery signal/no bind-content-retry. New extension livefix0/wholeareas0/NOT_READY; prior6UNITfailures pendinglive/runtimebd8bc839 unchanged. Next bounded new parent profile-route auth-boundary contract, not product fix/live proof.",
+        "evidence": "stage-G150-extension-preflight.json"
+      },
+      {
+        "stage": "G151",
+        "result": "G151 supporting WB202/E2 new parent-route UNIT contract:9new +4existing initial-loading controls =>2s13PASS/types0/newfilelint0errors0warnings, legacy process notices retained. Server initial no-user redirects, cookie-client-auth rejection propagates, pending guards and read-only cookie adapter pass. Valid SSR returns shell with empty props, not loaded identity; client reads independently/root event updater does not inspect profile-read errors. G1413FAIL+G1453FAIL remain pending real UI, NOT new livebug/fix/wholeareaPASS. Only one NEWtest, exactexclude restorespriorbd8bc839/current22f1565a; all inspected runtime/Jest hashes unchanged. UI control blocked/no browser retry/auth/DB commands. Git170staged9679insertions398dirty actorunknown/noagentstage-reset/preserved.",
+        "evidence": "stage-G151-profile-server-auth-contract.json"
+      },
+      {
+        "stage": "G152",
+        "result": "G152 new supporting F4/SEC03 dashboard-parent UNIT contract for applications page:10new+2existing business-contextcontrols=>2s12PASS/types0/newfilelint0errors0warnings/legacy notices retained. Real pureBizAccessError class, supplied resolver unauth/denial/service/generic/pending cases; redirect-or-error prevents child/private content, allowed syntheticcontext rendersproperbizsidebar. NO realresolver/role/HTTP/RLS/flashproof or G145fix. One NEWtest only/exactexclude=>prior22f1565a/current004e2b56;7runtime/configSHAsunchanged. G1413red+G1453red retained pendinglive/UIcontrolstillblocked/no retry/auth/DBcommands. Git171staged9779insertions399dirty actorunknown/noagentstage-reset. Newextensionlivefix0/whole0/NOT_READY.",
+        "evidence": "stage-G152-dashboard-parent-access-contract.json"
+      },
+      {
+        "stage": "G153",
+        "result": "G153 early NONFINAL extension-1 published actualmtime2026-10-18T02:30:54.635Z BEFORE02:43UTC, archivedg153/SHA4827ead1. Administrativeaudit3G150-152manifests7extensionraw31inheritedmain18raw5priorfinals hashesmatch; prior main18progress/finalverification unchanged. Current004e2b56 exact2extensiontestexcluded=>main18bd8bc839 and exact7combined=>run17runtimeeb65. No new testexecution/runtime/browser/auth/SQL/DBcommands. Newextension0livefix/whole0/NOT_READY; G1519new13PASS/G15210new12PASS narrowunit-only, sixpriorredassertionspendinglive. ExistingkezekACTIVE perG150lastactualreadback; no freshconfig/pauseclaim. DraftNOTfinal/notPAUSED; next02:40refresh then explicitPAUSED from02:50/finalbefore03:08:35/noextension.",
+        "evidence": "stage-G153-early-nonfinal-audit.json"
+      },
+      {
+        "stage": "G154",
+        "result": "G154 requiredNONFINALrefresh published actualmtime2026-10-18T02:41:56.542Z BEFORE02:43UTC/hash771cd98b/archiveg154; originalg153archivekept. Audit4stage manifests10extensionraw31inheritedmainraw5priorfinals match/source004e2b56 unchanged/exact2->bd8/exact7->eb65 calibrationretained. FreshactualkezekconfigreadbackACTIVE/samecorrect03:08:35UTCdeadline/name-target-createdAt-prompt/no configwrite; explicitPAUSED notyetdone. No newscenario/test/source/browser/auth/SQL/DBcommands. Newextension0/whole0/NOT_READY/old6redUNITassertionspendinglive/old15-16MISSEDunchanged. G155NEXTfinalizationONLY about02:55: actualclock/usage, explicitPAUSED+final+verify BEFORE03:08:35; noextension.",
+        "evidence": "stage-G154-required-nonfinal-refresh.json"
+      },
+      {
+        "stage": "G155",
+        "result": "G155 extension-1 FINAL administrative closure: existing kezek explicitly PAUSED 2026-10-18T02:56:08.081Z, config readback verified/status+updatedAt only changed. Hard deadline03:08:35UTC; actual final mtime/deadline proof saved separately in g155-final-verification.json. NOT_READY/new extension live fixes0/whole areas0; 2newtest files only, G1519new+4controls13PASS and G15210new+2controls12PASS/types0/new lint0/0, not additive coverage/live/API-RLS proof. Product runtime unchanged/current004e2b56/exact2->main18bd8/exact7->run17eb65. Six inherited red UNIT assertions remain pending live; G139 browser control blocked/no recovery or current-role proof. NF refreshed02:41:56.542 before02:43; 5prior finals/old main18progress-verification immutable; old15-16MISSED untouched. No new scenario/test/source/browser/auth/SQL/DB command during finalization; no continuous work claim/no autonomous resume.",
+        "evidence": "stage-G155-final-closure.json"
+      }
+    ],
+    "pendingObservedFollowups": [
+      {
+        "stage": "G086",
+        "surface": "public category reference localization",
+        "classification": "known_contract_content_gap_not_new_distinct_bug",
+        "status": "pending_product_scope",
+        "decisionId": "DEC-CATEGORY-LOCALES",
+        "observation": "The current public category lookup and admin form support name_ru only. Actual EN/KY system UI is translated while canonical category label remains Russian. Historical WB094 explicitly documented name_ru-only; no missing translations invented. This does not close whole O3.",
+        "evidence": "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json"
+      },
+      {
+        "stage": "G120",
+        "surface": "MonthPicker date locale/accessibility remainder",
+        "status": "known_unclosed_locale_scope",
+        "bug": "WB-140",
+        "observation": "ExistingDatePickerconventionKY->Russiandate-fnsfallback explicitlyretained; fullKYcalendartranslationnotimplemented. ReactDayPickerdefault selectedsuffix remainsEnglish inRU/KYnativeAX. OddscaleverticaldaylayoutobservedbutactualCSSviewportunmeasured/noCSSchangeornative-devicePASS.",
+        "evidence": [
+          "g120-picker-after-ru.txt",
+          "g120-picker-after-ky.txt",
+          "g120-picker-after-ru.jpg"
+        ]
+      },
+      {
+        "stage": "G126",
+        "surface": "Owner separate individual financial statistics full-reload filter context",
+        "status": "pending_product_scope",
+        "classification": "observed_default_reset_not_confirmed_product_bug",
+        "decisionId": "DEC-OWNER-STATS-RELOAD-CONTEXT",
+        "observation": "Day13positive retainedRU->ENsettled; ordinaryENfullreload defaultDay17zero withdate17clearlyshownandmatchingzeros. Localhookusesday+todaydefault. DistinctfromG117actualstafflocale-refreshlossofexistingtabpersistence. Whetherfullreloadmustrestorelastperiod/datevsdocumentedcurrentdaydefaultrequirescontractdecision; no newfeature/code/fixcount. RUexplicit13restored.",
+        "evidence": [
+          "g126-owner-en-settled.txt",
+          "g126-owner-reload-settled-en.txt",
+          "g126-owner-restored-ru.txt"
+        ]
+      },
+      {
+        "stage": "G141",
+        "surface": "Profile unknown identity after load failure",
+        "status": "unit_failure_pending_live_repro",
+        "classification": "unit_only_safety_gap_not_confirmed_live_bug",
+        "observation": "Mock profile error/auth rejection/no user expose editable blank name after finally; 3 red tests retained. No runtime fix/new live count; UI control unavailable.",
+        "evidence": "apps/web/test-results/global-2026-10-18/stage-G141-profile-load-unit-boundary.json"
+      },
+      {
+        "stage": "G145",
+        "surface": "Owner role-applications failed list read shows confirmed-empty title",
+        "status": "unit_failure_pending_live_repro",
+        "classification": "unit_only_error_empty_state_conflict_not_confirmed_live_bug",
+        "observation": "Mock network/HTTP/JSON failures show error alert together with confirmed empty title; 3 safety assertions red, no runtime patch or new distinct count. Real UI still inaccessible.",
+        "evidence": "apps/web/test-results/global-2026-10-18/stage-G145-role-applications-client-read-state.json"
+      }
+    ],
+    "environment": {
+      "browserInventory": "G15002:09 inventory sameIAB2tabs1+3/sameproviderIDs/PackagesURL/apps[]/MCPApps1empty METADATA ONLY no UI recovery or fresh role",
+      "browserPolicy": "Oldtab1/adminmetricsdeniedneverretry/bypass; onlysameuserhealthy3nativeCUA",
+      "server": "G139 projectNext14216/3000listening/Respondingtrue (process-only, not freshHTTPhealth); no restart",
+      "git": {
+        "head": "7f5c8ae90a2d1e7e533867a728f39ca7504eb570",
+        "observedUtc": "2026-10-18T02:57:04Z",
+        "dirty": 399,
+        "staged": "171 files changed,9779 insertions",
+        "unstaged": "271 files changed,7105 insertions,1979 deletions",
+        "indexChangeActorUnknown": true,
+        "noAgentStageReset": true,
+        "instructions": "CONTRIBUTING.md"
+      },
+      "currentUI": "No fresh UI recovery signal/content observation. G150 inventory metadata only; last actualOWNER G139 before timeout. No browser actions G151-G154.",
+      "actualRole": "UNKNOWN currently; last actual OWNER G139 before timeout",
+      "screenshotCapture": "HistoricalG130blank/G131-133Unabletocapture; no unchangedretry/no newcapture ordevicePASS"
+    },
+    "environmentBlock": {
+      "id": "current-tab-control-timeout",
+      "observedUtc": "2026-10-17T22:25:55Z",
+      "scope": "No new recovery signal/no content retry",
+      "action": "Await real manual recovery; unchanged/old denied endpoint retries remain prohibited",
+      "notProductRootCause": true
+    },
+    "retainedData": {
+      "inheritedFullIdsAndEffects": "apps/web/test-results/global-2026-10-17/final-report.json",
+      "newBusinessEntitiesRecorded": [],
+      "explicitBusinessCommandsRecorded": [],
+      "telemetryUnenumerated": true,
+      "pendingFinalCancel": "f821specificactiontimeconfirmationrequired/NEVERcancel",
+      "priorG062DDLAlreadyApplied": true
+    },
+    "technicalDbChanges": [],
+    "preferenceWrites": [],
+    "authTransitions": [],
+    "sessionAvailability": {
+      "currentFreshUIRole": null,
+      "fourKnownIdentitiesAuthorized": true,
+      "fourSimultaneousSessionsNotClaimed": true,
+      "superadminLoginCurrentRunUnverified": true,
+      "currentFreshRoleVerified": false,
+      "lastActualRole": "owner",
+      "lastActualStage": "G139-before-timeout"
+    },
+    "next": "Stopped. Existing kezek PAUSED; no autonomous resume. Further work needs new user direction and genuine existing-tab control recovery before live reproduction; no unchanged retry or denied endpoint bypass.",
+    "finalizationCompleted": true,
+    "autonomousResumeAllowed": false,
+    "progress": "apps/web/test-results/global-2026-10-18-extension-1/progress.json",
+    "verifiedAutomationStatus": "PAUSED",
+    "automationWindow": {
+      "id": "kezek",
+      "kind": "heartbeat",
+      "name": "Ночной живой прогон веб-версии Kezek",
+      "status": "PAUSED",
+      "rrule": "FREQ=MINUTELY;INTERVAL=15;UNTIL=20261018T030835Z",
+      "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+      "updatedAt": 1792292168081,
+      "promptSHA256": "32b1cd456cd34c84c09872fd07176f1ce2eedb50550c96a44ea2bfa1bcd65c1d",
+      "actualResumeUtc": "2026-10-18T02:10:44.326Z",
+      "verifiedUtc": "2026-10-18T02:58:20Z",
+      "deadlineUtc": "2026-10-18T03:08:35Z",
+      "actualPauseUtc": "2026-10-18T02:56:08.081Z",
+      "explicitPaused": true,
+      "otherFieldsPreservedOnPause": true,
+      "onlyStatusAndUpdatedAtChanged": true
+    },
+    "completedStageWorkLog": {
+      "stage": "G155",
+      "status": "finished_not_ready_paused",
+      "preparedUtc": "2026-10-18T02:58:20Z",
+      "evidence": "apps/web/test-results/global-2026-10-18-extension-1/stage-G155-final-closure.json"
+    },
+    "latestReadonlyVerification": {
+      "stage": "G155",
+      "status": "finished_not_ready_paused",
+      "result": "G155 extension-1 FINAL administrative closure: existing kezek explicitly PAUSED 2026-10-18T02:56:08.081Z, config readback verified/status+updatedAt only changed. Hard deadline03:08:35UTC; actual final mtime/deadline proof saved separately in g155-final-verification.json. NOT_READY/new extension live fixes0/whole areas0; 2newtest files only, G1519new+4controls13PASS and G15210new+2controls12PASS/types0/new lint0/0, not additive coverage/live/API-RLS proof. Product runtime unchanged/current004e2b56/exact2->main18bd8/exact7->run17eb65. Six inherited red UNIT assertions remain pending live; G139 browser control blocked/no recovery or current-role proof. NF refreshed02:41:56.542 before02:43; 5prior finals/old main18progress-verification immutable; old15-16MISSED untouched. No new scenario/test/source/browser/auth/SQL/DB command during finalization; no continuous work claim/no autonomous resume.",
+      "evidence": "stage-G155-final-closure.json"
+    },
+    "supportingChecks": {
+      "administrativeOnly": true,
+      "newTestExecution": false,
+      "newProductWork": false,
+      "wholeGreen": false,
+      "explicitPauseVerified": true,
+      "otherAutomationFieldsPreserved": true,
+      "oldSixUnitSafetyFailuresPendingLive": true
+    },
+    "nonfinalDraft": {
+      "file": "final-report.draft.json",
+      "status": "NONFINAL_DRAFT",
+      "preparedUtc": "2026-10-18T02:41:55Z",
+      "throughStage": "G154",
+      "sourceFingerprint": "004e2b56c9ab0187d14038a779cf8caa0eabb269fdd99aee9bde96683d92d228",
+      "sha256": "771cd98bf577ac1773540f32766759a1352005ed2da2ace046556e64ea43deab",
+      "archive": "final-report.draft-g153.json",
+      "archiveSHA256": "4827ead1b284442a4ac13083aed51061afd58c83b91af154d9021fafb2d4275b",
+      "mustRefreshByUtc": "2026-10-18T02:43:00Z",
+      "notFinalOrPaused": true,
+      "refreshedBeforeTarget": true,
+      "latestArchive": "final-report.draft-g154.json",
+      "latestArchiveSHA256": "771cd98bf577ac1773540f32766759a1352005ed2da2ace046556e64ea43deab"
+    },
+    "finalizedUtc": "2026-10-18T02:58:20Z",
+    "finalReport": {
+      "file": "final-report.json",
+      "sha256": "f2089ca26ca17d5c2b5c86fe0ec171cbf883cb3ca21a2d1bde35c4c6f32762bd",
+      "status": "FINAL_NOT_READY",
+      "finalizedUtc": "2026-10-18T02:58:20Z",
+      "verification": "g155-final-verification.json"
+    }
+  }
+}

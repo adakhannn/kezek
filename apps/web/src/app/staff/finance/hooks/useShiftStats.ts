@@ -91,9 +91,10 @@ export function useShiftStats({
         const totalMaster = filtered.reduce((sum, s) => {
             return sum + (s.guaranteed_amount > s.master_share ? s.guaranteed_amount : s.master_share);
         }, 0);
-        // Бизнес получает долю от выручки, но вычитает доплату владельца
+        // Закрытие уже сохраняет итоговую долю бизнеса с учётом доплаты.
+        // topup_amount — отдельные метаданные, не повторное списание.
         const totalSalon = filtered.reduce((sum, s) => {
-            return sum + s.salon_share - s.topup_amount;
+            return sum + s.salon_share;
         }, 0);
         const totalLateMinutes = filtered.reduce((sum, s) => sum + s.late_minutes, 0);
         

@@ -1,0 +1,10 @@
+{
+ "id":"C20","caseId":"S21-M103-funnel-analytics","candidateId":"dev-20261020-S1-1c0013b28e40","status":"PASS_NAVIGATION_ONLY",
+ "actual":"Actual observed menu Воронка -> /admin/funnel-analytics with known admin shell, heading Аналитика воронки, readonly period/source controls, KPI and six-step funnel. ONE planned reload loading then same functional page, no error alert. Refresh button/date/source controls not clicked/changed.",
+ "numericBoundary":"Observed17views/10success/58.82%/187events; relative step rates include120% and166.67%. Session/cohort/dedup/expected telemetry contract NOT independently reconciled. Retain as S6analytics followup observation, no confirmed distinct bug/fix or numerical correctness claim. Historical test effects/telemetry not reset or cleaned.",
+ "matrixAfter":{"passed":9,"failed":4,"blocked":1,"notRun":5,"total":19},
+ "effects":"Read-only actual UI nav/reload only; no new auth/grants/entities/settings/booking/pay/SQL/jobs/direct API probe. Ordinary telemetry unenumerated, not zero TOTAL DBwrites. User tab5 remains superadmin /admin/funnel-analytics RU, tab2 untouched, handoff retained.",
+ "counts":{"S1":"17/25accepted8left;63/79PASS16left","S2":"1/70accepted69left","product":"18/316accepted298leftNOT_READY"},
+ "next":"No new product scenarios; prepare verified finalization, explicitPAUSED12:50/readback/finalbefore13UTC.",
+ "deadlineUtc":"2026-10-20T13:00:00Z"
+}

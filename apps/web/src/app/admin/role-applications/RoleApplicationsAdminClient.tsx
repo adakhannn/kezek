@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { useLanguage, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
+import { ApplicationReviewHistory, ApplicationReviewStatus } from '@/components/admin/ApplicationReviewHistory';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -57,6 +58,7 @@ export function RoleApplicationsAdminClient() {
     const [items, setItems] = useState<ApplicationRow[]>([]);
     const [status, setStatus] = useState<StatusFilter>('pending');
     const [loading, setLoading] = useState(true);
+    const [hasLoaded, setHasLoaded] = useState(false);
     const [actionId, setActionId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -64,6 +66,7 @@ export function RoleApplicationsAdminClient() {
 
     async function load(nextStatus = status) {
         setLoading(true);
+        setHasLoaded(false);
         setError(null);
         try {
             const url = new URL('/admin/api/role-applications', window.location.origin);
@@ -74,6 +77,7 @@ export function RoleApplicationsAdminClient() {
                 throw new Error(!payload.ok ? payload.message || t('admin.roleApplications.error.load') : t('admin.roleApplications.error.load'));
             }
             setItems(payload.items);
+            setHasLoaded(true);
         } catch (loadError) {
             setError(loadError instanceof Error ? loadError.message : t('admin.roleApplications.error.load'));
         } finally {
@@ -134,14 +138,14 @@ export function RoleApplicationsAdminClient() {
 
             {loading ? <Card padding="lg">{t('admin.roleApplications.loading')}</Card> : null}
 
-            {!loading && !items.length ? (
+            {!loading && hasLoaded && !items.length ? (
                 <EmptyState
                     title={t('admin.roleApplications.empty.title')}
                     description={t('admin.roleApplications.empty.description')}
                 />
             ) : null}
 
-            {!loading && items.map((application) => {
+            {!loading && hasLoaded && items.map((application) => {
                 const business = Array.isArray(application.businesses)
                     ? application.businesses[0] ?? null
                     : application.businesses;
@@ -165,9 +169,7 @@ export function RoleApplicationsAdminClient() {
                                 <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
                                     {t(roleLabelKeys[application.requested_role])}
                                 </span>
-                                <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
-                                    {application.status}
-                                </span>
+                                <ApplicationReviewStatus status={application.status} t={t} />
                             </div>
                         </div>
 
@@ -198,16 +200,7 @@ export function RoleApplicationsAdminClient() {
                             </div>
                         ) : null}
 
-                        {application.prior_submission_count > 0 || application.risk_flags.length ? (
-                            <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-700 dark:text-amber-300">
-                                    {t('admin.roleApplications.previousCount').replace('{count}', String(application.prior_submission_count))}
-                                </span>
-                                {application.risk_flags.map((flag) => (
-                                    <span key={flag} className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">{flag}</span>
-                                ))}
-                            </div>
-                        ) : null}
+                        <ApplicationReviewHistory count={application.prior_submission_count} flags={application.risk_flags ?? []} t={t} />
 
                         {isPending && isStaffRequest ? (
                             <AlertBanner

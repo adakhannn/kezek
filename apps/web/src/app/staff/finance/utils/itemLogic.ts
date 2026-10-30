@@ -3,13 +3,12 @@ import type { ShiftItem } from '../types';
 export function serializeShiftItems(items: ShiftItem[]): string {
     return JSON.stringify(
         items.map((it) => ({
-            id: it.id ?? null,
+            id: it.id ?? it.clientId ?? null,
             clientName: it.clientName ?? '',
             serviceName: it.serviceName ?? '',
             serviceAmount: it.serviceAmount ?? 0,
             consumablesAmount: it.consumablesAmount ?? 0,
             bookingId: it.bookingId ?? null,
-            createdAt: it.createdAt ?? null,
         })),
     );
 }
@@ -55,7 +54,7 @@ export function mergeShiftItemsWithServer(
 ): ShiftItem[] {
     const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
     const localItemsById = new Map(
-        currentLocalItems.filter((item) => item.id).map((item) => [item.id!, item]),
+        currentLocalItems.filter((item) => item.id || item.clientId).map((item) => [item.id ?? item.clientId!, item]),
     );
     const mergedItems: ShiftItem[] = [];
 
@@ -83,7 +82,7 @@ export function mergeShiftItemsWithServer(
                     serverItem.consumablesAmount ??
                     0,
                 bookingId: localItem.bookingId ?? serverItem.bookingId ?? null,
-                createdAt: localItem.createdAt || serverItem.createdAt || null,
+                createdAt: localItem.id ? (localItem.createdAt || serverItem.createdAt || null) : (serverItem.createdAt || null),
             });
             continue;
         }
@@ -92,6 +91,12 @@ export function mergeShiftItemsWithServer(
     }
 
     for (const localItemWithoutId of localItemsWithoutId) {
+        if (localItemWithoutId.clientId) {
+            if (!serverItems.some((serverItem) => serverItem.id === localItemWithoutId.clientId)) {
+                mergedItems.push(localItemWithoutId);
+            }
+            continue;
+        }
         const isOnServer = serverItems.some((serverItem) => {
             if (!serverItem.id) return false;
 
@@ -126,6 +131,14 @@ function buildStableTimestamp(
     return new Date(nowMs + timeOffset).toISOString();
 }
 
+function createDraftId(): string {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export function createNewClientShiftItem(
     existingItems: ShiftItem[],
     clientLabel: string,
@@ -140,6 +153,7 @@ export function createNewClientShiftItem(
     }
 
     return {
+        clientId: createDraftId(),
         clientName: `${clientLabel} ${nextIndex}`,
         serviceName: '',
         serviceAmount: 0,
@@ -155,6 +169,7 @@ export function duplicateShiftItem(
     nowMs = Date.now(),
 ): ShiftItem {
     return {
+        clientId: createDraftId(),
         clientName: sourceItem.clientName || '',
         serviceName: sourceItem.serviceName || '',
         serviceAmount: sourceItem.serviceAmount ?? 0,

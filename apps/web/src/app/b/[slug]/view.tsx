@@ -1,7 +1,5 @@
 'use client';
 
-import { enGB } from 'date-fns/locale/en-GB';
-import { ru } from 'date-fns/locale/ru';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -13,6 +11,7 @@ import { BookingSteps } from './components/BookingSteps';
 import { GuestBookingModal } from './components/GuestBookingModal';
 import { PromotionsList } from './components/PromotionsList';
 import { useBookingCreation } from './hooks/useBookingCreation';
+import { useBookingAvailabilityRefresh } from './hooks/useBookingAvailabilityRefresh';
 import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
 import { useBookingFlowDerived } from './hooks/useBookingFlowDerived';
 import { useBookingSelectionState } from './hooks/useBookingSelectionState';
@@ -46,12 +45,7 @@ export default function BookingForm({ data }: { data: Data }) {
 
     const formatBranchName = (name: string) => formatStaffName(name, locale);
 
-    const dateLocale = useMemo(() => {
-        if (locale === 'en') {
-            return enGB;
-        }
-        return ru;
-    }, [locale]);
+    const dateLocale = locale;
 
     const { isAuthed } = useBookingViewerMeta(biz.id);
 
@@ -59,6 +53,9 @@ export default function BookingForm({ data }: { data: Data }) {
         branchId,
         day,
         dayStr,
+        todayStr,
+        maxStr,
+        restoredFromStorage,
         serviceId,
         serviceIds,
         servicesByBranch,
@@ -104,10 +101,11 @@ export default function BookingForm({ data }: { data: Data }) {
 
     const businessTz = getBusinessTimezone(biz.tz);
 
-    const { temporaryTransfers } = useTemporaryTransfers({
+    const { temporaryTransfers, workingLocations, loading: transfersLoading, error: transfersError } = useTemporaryTransfers({
         branchId,
         bizId: biz.id,
         staff,
+        dayStr,
     });
 
     const staffForSchedule = useMemo(
@@ -125,7 +123,7 @@ export default function BookingForm({ data }: { data: Data }) {
         temporaryTransfers,
     });
 
-    const { data: clientBookingsCount = null, isLoading: clientBookingsLoading } = useClientBookings(
+    const { data: clientBookingsCount = null, isLoading: clientBookingsLoading, refetch: refetchClientBookings } = useClientBookings(
         biz.id,
         dayStr || null,
         isAuthed,
@@ -146,6 +144,8 @@ export default function BookingForm({ data }: { data: Data }) {
         temporaryTransfers,
     });
 
+    const refreshAvailability = useBookingAvailabilityRefresh({ isAuthed, refreshSlots, refetchClientBookings });
+
     const {
         dayLabel,
         selectedServicesForStep4,
@@ -157,6 +157,7 @@ export default function BookingForm({ data }: { data: Data }) {
         totalPriceFromStep4,
         totalPriceToStep4,
     } = useBookingFlowDerived({
+        selectionReady: restoredFromStorage && !serviceStaffLoading && !transfersLoading && !transfersError,
         branchId,
         businessTz,
         day,
@@ -172,6 +173,8 @@ export default function BookingForm({ data }: { data: Data }) {
         staffByBranch,
         staffId,
         temporaryTransfers,
+        workingLocations,
+        staffAvailabilityReady: !transfersLoading && !transfersError,
     });
 
     const guestBooking = useGuestBooking({
@@ -182,7 +185,7 @@ export default function BookingForm({ data }: { data: Data }) {
         t,
         feedback: toast,
         onBookingCreated: () => {
-            refreshSlots();
+            refreshAvailability();
         },
     });
 
@@ -199,6 +202,10 @@ export default function BookingForm({ data }: { data: Data }) {
         isAuthed,
         t,
         feedback: toast,
+        onSlotUnavailable: () => {
+            setPendingBooking(null);
+            refreshAvailability();
+        },
         onAuthChoiceRequest: (slotTime, slotStaffId) => {
             setSelectedSlotTime(slotTime);
             setSelectedSlotStaffId(slotStaffId || null);
@@ -207,11 +214,8 @@ export default function BookingForm({ data }: { data: Data }) {
             }
             setAuthChoiceModalOpen(true);
         },
-        onStaffIdChange: (newStaffId) => {
-            setStaffId(newStaffId);
-        },
         onBookingCreated: () => {
-            refreshSlots();
+            refreshAvailability();
         },
     });
 
@@ -240,17 +244,24 @@ export default function BookingForm({ data }: { data: Data }) {
         return Number.isFinite(parsed) ? Math.min(5, Math.max(1, parsed)) : 1;
     }, [stepFromUrl]);
 
-    const { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, goToStep, totalSteps } = useBookingSteps({
+    const { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, goToStep, totalSteps, dayInRange } = useBookingSteps({
         branchId,
         dayStr,
+        minDayStr: todayStr,
+        maxDayStr: maxStr,
         staffId,
+        staffAvailable: !transfersLoading && !transfersError && (staffId === 'any'
+            ? staffFiltered.length > 0 : staffFiltered.some(member => member.id === staffId)),
         serviceIds,
         servicesFiltered,
         t,
         initialStep,
+        initialBranchValid: !searchParams.get('branch') || branches.some(branch => branch.id === searchParams.get('branch')),
     });
 
     useEffect(() => {
+        // Do not overwrite the return URL with the initial empty render.
+        if (!restoredFromStorage) return;
         const next = new URLSearchParams();
         next.set('step', String(step));
         if (branchId) next.set('branch', branchId);
@@ -261,7 +272,7 @@ export default function BookingForm({ data }: { data: Data }) {
         }
         const query = next.toString();
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    }, [step, branchId, dayStr, staffId, serviceIds, pathname, router]);
+    }, [restoredFromStorage, step, branchId, dayStr, staffId, serviceIds, pathname, router]);
 
     const stepIndicatorText = useMemo(
         () =>
@@ -433,6 +444,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     day={day}
                     dayLabel={dayLabel}
                     dayStr={dayStr}
+                    dayInRange={dayInRange}
                     formatBranchName={formatBranchName}
                     goNext={goNext}
                     goPrev={goPrev}
@@ -450,6 +462,8 @@ export default function BookingForm({ data }: { data: Data }) {
                     staff={staff}
                     staffCurrent={staffCurrent}
                     staffFiltered={staffFiltered}
+                    staffLoading={transfersLoading}
+                    staffError={!!transfersError}
                     staffId={staffId}
                     step={step}
                     t={t}
@@ -462,7 +476,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     onServiceToggle={handleServiceToggle}
                     onSlotSelect={handleSlotSelect}
                     onStaffSelect={handleStaffSelect}
-                    onRetrySlots={refreshSlots}
+                    onRetrySlots={refreshAvailability}
                 />
             </div>
 

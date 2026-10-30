@@ -18,7 +18,7 @@ export async function POST(req: Request, ctx: unknown) {
     try {
         const params =
             typeof ctx === 'object' && ctx !== null && 'params' in ctx
-                ? (ctx as { params: Record<string, string> }).params
+                ? await (ctx as { params: Promise<Record<string, string>> | Record<string, string> }).params
                 : {};
         const userId = params.id;
         if (!userId) {

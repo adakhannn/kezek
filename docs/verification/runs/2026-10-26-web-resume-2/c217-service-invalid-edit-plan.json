@@ -1,0 +1,45 @@
+{
+  "id": "C217",
+  "status": "FINITE_PLAN_BEFORE_UI_BASELINE_REQUIRED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-I203-existing-service-invalid-edit-rejection-discard",
+  "requirementIds": [
+    "I2-03"
+  ],
+  "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+  "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+  "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+  "role": "Knownownerosorovadahan04/currentBusiness2/RU",
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "b778953aa764cc3277969010b8077dbed68357d33341bec6b8c3188edb112fd8",
+    "apps/web/src/lib/serviceUpdateHttpService.ts": "593f4840a1ab042ca8c5b4d492f2b910aa8a46d5fbda954e104da92ba359c175",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28",
+    "apps/web/src/app/dashboard/services/[id]/page.tsx": "8ece808ba3e5509051baa9eb6ebb325af88cf780f6709c965797cdd3fc4eff75",
+    "apps/web/src/app/dashboard/services/[id]/EditServicePageClient.tsx": "2b31863251c1cbe415cb17a9ed2f8d5366a03e8a291b26e9b84910a41575b657",
+    "apps/web/src/lib/validation.ts": "1fbd74cb490998dc7d887a82d53e19f57c3447cef539ee3cc9662334428f9d54"
+  },
+  "variants": [
+    "service-invalid-edit:blank-RU-name",
+    "service-invalid-edit:duration-zero",
+    "service-invalid-edit:negative-price",
+    "service-invalid-edit:reversed-positive-price-range"
+  ],
+  "independentExpectation": "Freshknownservice99editorbaseline1min/0-300som/originalnames/originalbranch1checked/activeunchanged. For eachONEinvalidfieldargument+ONEordinarySaveclick: remainexacteditor, localizedsummaryandfield-specificerror, no success/listnavigation; allotherfieldsbaseline. Then ordinaryBack-to-servicesdiscard+reentry baselinebefore next. AtendONEreloadbaseline. UIproofonly/notresponse/no-writeaudit/fullI2.",
+  "steps": [
+    "FreshSAadminbaseline ->ordinarylogout/localGoogleknownowner, ContinuealreadyCurrent2only ->ownDashboard2, Serviceslink. Locateexact99editlinkfromactualUI; do notnewservice/Delete/staffassociation.",
+    "Capturefullvisibleeditorbaseline(nonsensitiveauthorednames/duration/prices/branchcheckboxes/active) BEFOREdraft. RequireexactknownID and1min/0-300 baseline/branch1checked. Unexpectedgroupcontext/values->stopreadonly, no guessingrestoration.",
+    "OneRUnamefillwhitespace ->ONEordinarySave ->expectedНазваниеобязательно/fixfields+sameeditor. Discardviaobservedbacklist+reentryexact99; assertallbaseline.",
+    "OneDurationfill0 ->ONEordinarySave ->expectedintegeratleast1minuteerror/sameeditor. Discard/reenterbaseline.",
+    "OnePriceFromfill-1 ->ONEordinarySave ->expectednonnegativepriceerror/sameeditor. Discard/reenterbaseline.",
+    "OnePriceFromfill301withbaselinePriceTo300 ->ONEordinarySave ->expectedmincannotexceedmax/sameeditor. Discard/reenterbaseline; ONEreloadallbaseline.",
+    "RestoreknownSAordinarylogout/Googlekezekkg/protectedadminRU/Anonymized/Business3;markHandoff."
+  ],
+  "stopRules": [
+    "NevervalidSave/Create/Enter/activation/branchselection/assignment/booking/slot/hold/payment. ExactlyfourinvalidSaveattemptsmax/no duplicateclickafterwaittimeout; firstfreshAX.",
+    "Unexpectedsuccess/navigationafterinvalidSave ->stopsequence/recordFAIL; inspectordinaryeditorbaselineonly, no blindvalidrewrite/namegroupcleanup. No API/SQL/SDK/storage/workaround.",
+    "Masked/unobservablevalueorwrongrole/fixture ->BLOCKED, no extractionornewfixture."
+  ],
+  "timeboxMinutes": 10,
+  "effects": "Fourlocalinvaliddrafts/fourordinarySavevalidationattemptsmax, discardedreentries/oneReload; no intentionalvalidupdate. Ordinaryauth/read/telemetryunenumerated. Existingserviceattributes/stafflink/bookingentitiesmustunchanged.",
+  "credit": "AtmostONEcompoundNEWUIcaseforall4variants. I2-03partial(duplicates/servercasesnotcomplete), no wholeI2/newfixfromexpectedvalidation."
+}

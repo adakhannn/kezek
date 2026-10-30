@@ -1,0 +1,34 @@
+{
+  "id": "S1.1-config-followup",
+  "plannedUtc": "2026-10-18T10:46:14Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "sourceBuild": "test-results/closure-s1-20261018-f001/build",
+  "origin": "http://127.0.0.1:3103",
+  "cases": [
+    {
+      "id": "A2-02-S1-01",
+      "variant": "controlled local missing config safe failure",
+      "runtimeConfig": "NEXT_PUBLIC_SUPABASE_URL and ANON_KEY empty; no .env files; dummy built client configuration remains explicit limitation",
+      "steps": [
+        "Start owned built server with missing runtime server config and existing network guard",
+        "Open home and known business path through CUA",
+        "Verify generic actionable errors; capture server validation diagnostic to prove missing-config path",
+        "Open legal page/reload to test unaffected route",
+        "Return original owner tab and stop exact owned process"
+      ]
+    },
+    {
+      "id": "A2-02-S1-02",
+      "variant": "controlled local invalid config safe failure",
+      "runtimeConfig": "NEXT_PUBLIC_SUPABASE_URL=s15-invalid-url; ANON_KEY=dummy; no .env files",
+      "steps": [
+        "Start same built server with invalid runtime URL and network guard",
+        "Repeat bounded public config error and legal control checks",
+        "Verify validation diagnostic rather than attributing a fetch guard error to config validation",
+        "Restore original origin; stop owned process"
+      ]
+    }
+  ],
+  "limits": "Tests runtime server configuration boundary on current production-mode build. Does not prove build-time missing NEXT_PUBLIC client variables, all missing config combinations, real production origins, callback or webhook. A2-02 finite plan previously declared these two local safe-failure variants; no domain checks excluded.",
+  "deadlineUtc": "2026-10-18T12:40:00Z"
+}

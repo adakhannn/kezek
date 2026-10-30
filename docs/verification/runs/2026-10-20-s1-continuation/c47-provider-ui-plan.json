@@ -1,0 +1,22 @@
+{
+  "id":"C47",
+  "plannedAfterUtc":"2026-10-21T02:01:33Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementIds":["C1-02"],
+  "scope":"Guest RU provider controls and social-only field surface, plus public sign-in error-code display states. No real provider cancel/failure/expiry, no backend fault injection or SDK call. Shared page observations may support two assertions, not separate executions.",
+  "cases":[
+    {"key":"provider-order","entry":"http://localhost:3000/auth/sign-in","expected":"Useful sign-in: enabled Google button before Yandex button before WhatsApp link in semantic DOM, Telegram either visible control or explicit localhost limitation. This is semantic order, NOT visual prominence/screenreaderPASS."},
+    {"key":"social-only-fields","sharedObservation":"provider-order","expected":"No app email/password or text-entry sign-in fields on current social-only screen. C2email/password remains excluded; OTP/provider-page fieldvalidation not silently certified here."},
+    {"key":"cancel-message","entry":"http://localhost:3000/auth/sign-in?error=access_denied&redirect=%2Fterms","expected":"Friendly cancellation message, useful provider controls remain enabled. Public query display only, NOT actual provider cancellation."},
+    {"key":"return-link-with-error","sharedObservation":"cancel-message","expected":"Visible WhatsApp entry retains exact /auth/whatsapp?redirect=%2Fterms despite error display; no click/OTP/message request or WhatsAppcallbackcertificate."},
+    {"key":"error-redaction","entry":"http://localhost:3000/auth/sign-in?error=c47-private-diagnostic-marker","expected":"Generic friendly failure text, no raw unknown marker, stack or internal details in visible app. Synthetic benign query marker is not private data or real provider error."},
+    {"key":"error-reload","action":"Reload actual unknown-error sign-in document","expected":"Useful same generic error and enabled providers after normal reload; no successful-login claim or loss of recovery controls."},
+    {"key":"error-recovery","entry":"http://localhost:3000/auth/sign-in","expected":"Ordinary clean sign-in document clears error banner and retains useful enabled provider controls; then restore knownSA normally."},
+    {"key":"visual-hierarchy","status":"blocked","expected":"Actual visual prominence/placement hierarchy verified with correct viewport and fresh image","reason":"Known screenshot failure persists with no recovery signal; no unchanged retry, no DOM-as-visual substitution. C1-05 device behavior also remains separate/open."}
+  ],
+  "budgetMinutes":10,
+  "effects":"One normalSA logout and eventualordinarySA Google restore. No new accounts/roles/links/OTP/passwords/messages, appbusiness/job/grant/currentbusiness/booking/save/cancel/pay/source commands or network-interception/injection. Authsync/telemetry IDs unenumerated, notzeroTOTALwrites.",
+  "restore":"Knownkezekkg Google -> /admin; preserve originaluser2/5/handoff. Locale RU unchanged, no browser settingchange.",
+  "acceptance":"Finite8assertions,7functional available+1visualblocked; C1-02 stayspartial. Otherlocales/provider configuration variants and OTP/integration fields not certified; no project whole-green/security/production claim.",
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

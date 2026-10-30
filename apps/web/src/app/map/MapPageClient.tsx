@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { bookingCountForm } from '@/lib/bookingCountForm';
 import { logError } from '@/lib/log';
 import { loadYandexMaps } from '@/lib/yamaps';
+import { branchBookingHref } from './branchBookingHref';
 
 type BranchItem = {
     id: string;
@@ -35,7 +37,7 @@ const NEARBY_ZOOM = 14;
 type Props = { yandexMapsApiKey?: string | null };
 
 export default function MapPageClient({ yandexMapsApiKey }: Props) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
     const mapRef = useRef<HTMLDivElement>(null);
     const ymapsMapRef = useRef<YMap | null>(null);
     const placemarksRef = useRef<unknown[]>([]);
@@ -156,7 +158,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                         `<div class="font-semibold">${escapeHtml(b.branchName)}</div>`,
                         b.address ? `<div class="text-sm text-gray-600 mt-1">${escapeHtml(b.address)}</div>` : '',
                         b.businessSlug
-                            ? `<a href="/b/${encodeURIComponent(b.businessSlug)}/booking" class="inline-block mt-2 text-indigo-600 font-medium">${escapeHtml(t('common.map.book', 'Записаться'))}</a>`
+                            ? `<a href="${escapeHtml(branchBookingHref(b.businessSlug, b.id))}" class="inline-block mt-2 text-indigo-600 font-medium">${escapeHtml(t('common.map.book', 'Записаться'))}</a>`
                             : '',
                         `</div>`,
                     ].join(''),
@@ -248,7 +250,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                 <div className="max-w-2xl">
                     <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-primary)] shadow-[var(--shadow-xs)]">
                         <span className="h-2 w-2 rounded-full bg-[var(--status-success)]" aria-hidden="true" />
-                        {displayList.length} {t('common.map.places', 'мест для записи')}
+                        {displayList.length} {t(`common.map.places.${bookingCountForm(displayList.length, locale)}`, 'мест для записи')}
                     </div>
                     <h1 className="type-page-title text-[var(--text-primary)]">
                         {t('common.map.title', 'Карта филиалов')}
@@ -419,7 +421,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                                                     </button>
                                                     {branch.businessSlug ? (
                                                         <Link
-                                                            href={`/b/${branch.businessSlug}/booking`}
+                                                            href={branchBookingHref(branch.businessSlug, branch.id)}
                                                             className="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 text-sm font-semibold text-[var(--text-inverse)] shadow-[var(--shadow-xs)]"
                                                         >
                                                             {t('common.map.book', 'Записаться')}
@@ -475,7 +477,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                                 </button>
                                 {selectedBranch.businessSlug ? (
                                     <Link
-                                        href={`/b/${selectedBranch.businessSlug}/booking`}
+                                        href={branchBookingHref(selectedBranch.businessSlug, selectedBranch.id)}
                                         className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 text-sm font-semibold text-[var(--text-inverse)]"
                                     >
                                         {t('common.map.book', 'Записаться')}

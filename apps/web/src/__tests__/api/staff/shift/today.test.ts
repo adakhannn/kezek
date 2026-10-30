@@ -21,6 +21,7 @@ function createAwaitableBuilder(
     const counters = { eq: 0, gte: 0, order: 0, maybeSingle: 0 };
     const query: Record<string, jest.Mock> = {};
     query.select = jest.fn(() => query);
+    query.is = jest.fn(() => query);
     query.eq = jest.fn(() => {
         counters.eq += 1;
         return finalMethod === 'eq' && counters.eq === finalCallIndex

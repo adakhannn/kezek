@@ -1,0 +1,28 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/components/PerformanceResponseEnvelope.test.tsx
+  ● Test suite failed to run
+
+    Cannot find module '@testing-library/jest-dom' from 'src/__tests__/components/PerformanceResponseEnvelope.test.tsx'
+
+      4 | import { render, screen } from '@testing-library/react';
+      5 | import PerformanceClient from '@/app/admin/performance/PerformanceClient';
+    > 6 |
+        | ^
+      7 | class RenderBoundary extends Component<React.PropsWithChildren, { failed: boolean }> {
+      8 |   state = { failed: false };
+      9 |   static getDerivedStateFromError() { return { failed: true }; }
+
+      at Resolver._throwModNotFoundError (../../node_modules/.pnpm/jest-resolve@29.7.0/node_modules/jest-resolve/build/resolver.js:427:11)
+      at Object.<anonymous> (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:6:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        2.922 s
+Ran all test suites within paths "src/__tests__/components/PerformanceResponseEnvelope.test.tsx".
+(node:29732) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

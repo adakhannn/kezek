@@ -1,0 +1,26 @@
+{
+  "id": "C133",
+  "caseId": "S26-M103-today-cancelled-summary",
+  "requirementIds": [
+    "M1-03"
+  ],
+  "savedBeforeUiUtc": "2026-10-25T20:04:03Z",
+  "status": "NOT_RUN",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "timeBudgetMinutes": 5,
+  "role": "Protected existing SA/Admin-panel/Anonymized/RU session",
+  "environment": "DEV localhost:3000/admin, actual Bishkek26Oct",
+  "expected": "On actual current local day2026-10-26, visible Today table with one cancelled09:00–10:00 row must have Cancelled1, Hold0/Confirmed0 and a user-facing Russian cancelled label. Oracle is visible status-row enumeration, not source-derived numeric constant. Exactly one row and no warning required; no 20-row limit overflow assumption.",
+  "steps": [
+    "Clock; one ordinary /admin reload for fresh current-day document. Observe protected header/RU and date2026-10-26, absence of data warnings. If auth barrier/read error/changedday/zero or >1 row ->BLOCKED and preserve actual; no reload loop.",
+    "Read only Today table. Enumerate status of each visible row, verify one cancelled09:00–10:00 at known business2/branch1. Independent counts Cancelled1/Hold0/Confirmed0; exact rowStatus should show Отменено. Compare with summary and classify PASS/FAIL. No row/business/status action.",
+    "Preserve root admin and mark handoff. A true reproducible mismatch permits minimal page presentation fix, meaningful component regression using dummy mocked data, then SAME-LIVE before accepting fix. Never claim old intermittent failure repaired or whole M1-03 accepted."
+  ],
+  "effects": "One ordinary reload and AX read only; no booking/business/auth/config/fixture command, ordinary telemetry unenumerated.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/page.tsx": "3cf6b7d0aa1fb7eeac62e50283a9d10211586536ca5f30f7fbdae381d24391e6",
+    "apps/web/src/components/ui/StatusChip.tsx": "22bfa2bbbafe90432079a60635a48a88964c712f5343d88ccff5f85c1f538cd5",
+    "apps/web/src/types/supabase.ts": "e832078b52acf1ae6eeebe0825e045d69621f5b7e7a9df48cc15d776c0dcb005"
+  },
+  "fixBoundary": "Only after actual planned UI FAIL; align cancelled spelling in count/label presentation, no query/auth/schema/security/date/data change. Retain original before failure and old candidate proofs."
+}

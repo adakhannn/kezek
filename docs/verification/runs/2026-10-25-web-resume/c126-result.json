@@ -1,0 +1,39 @@
+{
+  "id": "C126",
+  "caseId": "S25-M501-existing-category-name-persist-restore-regression",
+  "plan": "c126-category-save-plan.json",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "status": "PASS_fresh_historical_functional_regression_after_F016_dependency_change",
+  "startedAfterUtc": "2026-10-25T10:42:02Z",
+  "actual": "FreshsameknownSA/humanTab2/admin ->Categoriesoriginal3total2active3uses. Exactc7cef81b markedtestoriginalnameLIVE TEST NIGHT09OCT CATEGORY EDITED/customsluglive-test-night09oct-category/inactive0usage. Exacteditororiginalfields/uncheckedavailability/nochangesdisabled. Clock10:42:30 ONLYNamefillC126 TEST CATEGORY NAME 25OCT ->samecustomslug/uncheckedavailability/Saveenabled. Actualclock10:42:36 ONEordinarySave ->listtemporaryname/originalslug/inactive0usage/all3categories2active3references. Clock10:42:49 reentry samepersistedmarker/customslug/inactive/disabledSave; clock10:43:02 ONEordinaryreload retainedsamevalues. ONLYNamefilloriginal; clock10:43:19 secondandlastordinarySave ->listoriginalname/customslug/inactive0usage/summariesunchanged. Clock10:43:36 reentryoriginalfields/disabledSave; clock10:43:48 ONEordinaryreload retainedexactoriginalfields/nochangesdisabled. Cancelsolelycleanup/listoriginalallbaseline. Clock10:44:05 rootreturn ->protectedheading/Anonymized/collapsedАдмин-панель/RU/Business3/4branches1staff4services30bookings andhandoff. No duplicateSave/retry/thirdSave/slug/availability/othercategory input.",
+  "effects": "Exactly2ordinaryUIcategoryUPDATEcommands on retainedinactive0usage testcategory: temporaryname thenoriginal. Bundledoriginalslug/is_active submittedunchanged; existingpropagateSlug:true condition sourcepredicts nocat_replace_slug whenunchanged. No independentruntimeRPC/trigger/audit/physicalDBrollback/writecount audit or claimzeroTOTALwrites. Visiblebaseline restored, notbit-identicalrawDBrollback. Ordinaryauth/telemetryunenumerated. No newcategory/fixture/roles/activation/deletion/actualslugmutation/businesscategorycommand/job/payment/booking/profile/message/source/test/build/server/security/rawHTTP/SDK/SQL/secret/storage commands.",
+  "limits": "Addressed persistedname/customslug regression after changed CategoryForm only; original9Octproof originalUTC unchanged/no newcasecredit. WholeM5-01create/delete/propagation/dependency/security/visual/fulltechnicalgates incomplete; C119/F016beforeFAIL remains and originalverifiedUTC retained. No hypotheticalactualSave corruption or false noforeignDBwrites assertion.",
+  "fixtureEffects": {
+    "categoryId": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+    "ordinaryUpdateCommands": 2,
+    "visibleOriginalNameRestored": true,
+    "visibleOriginalSlugRetained": true,
+    "inactiveRetained": true,
+    "visibleUsage": 0,
+    "noNewFixtures": true
+  },
+  "counts": {
+    "newFunctionalUiCaseCredit": 0,
+    "refreshedHistoricalFunctionalCases": 1,
+    "newWindowPassedCasesBefore": 5,
+    "newWindowPassedCasesAfter": 5,
+    "newLiveFixes": 0,
+    "newWindowLiveFixes": 1,
+    "logicalVerifiedFixes": 12,
+    "acceptedDelta": 0,
+    "accepted": 21,
+    "remaining": 295
+  },
+  "next": "C127 boundedreadonly M5-02 servicescategory contract/history/source review beforeanyfurtherUI. Determine what requirement means in current WEB/service schema/UI withoutrawDB/SDK/SQL or unsupportedfeatureimplementation; do notsilentlyexclude servicevariant or callsourceLIVE. Ifmissingcontract/fixtures needsdecision retainexactblocker and choose independentavailableunfinishedpriority. C126persistedcategoryregression/C119draft/C124businessusage/build/auth DONE/no unchangedrepeat; no newcategory/fixture/roles/delete/slugpropagation/activation/job/payment or profileSave/security command. Allolderblocked/stale gates remain.",
+  "completedBeforeUtc": "2026-10-25T10:45:04Z",
+  "observationWindowUtc": [
+    "2026-10-25T10:42:02Z",
+    "2026-10-25T10:45:04Z"
+  ]
+}

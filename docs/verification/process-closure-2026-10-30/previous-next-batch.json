@@ -1,0 +1,70 @@
+{
+  "kind": "historical_next_batch_snapshot_not_executable",
+  "archivedOn": "2026-10-30",
+  "reason": "Human requested closure of broad manual process and clear documentation for subsequent agents.",
+  "source": "docs/WEB_VERIFICATION_LEDGER.json#nextBatch",
+  "nextBatch": {
+    "status": "PAUSED_BY_USER",
+    "objective": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN LAUNCH. Human28Oct: остановись до нового запуска. ExistingkezekPAUSED/readbackverified; mainserver/tab preserved. SavedremainingONLYconditionalC258finaloriginalservice99readback+ONEreload aftergenuineownerServicesavailabilitycondition; C256sixfeedbackvariantsDONE/currentdeps/noreplay. F022fixed_pending_verification/AUTH_SERVICE_UNAVAILABLEunknown. Product28of316/288left/NOT_READY/current60022ce29b32/1687/buildC254C257PASS; Q1-01accepted, allotherfailedgates/blockersretained. No automaticresume fromheartbeat/oldauthorization.",
+    "run": "docs/verification/runs/2026-10-28-web-resume",
+    "authorization": "остановись до нового запуска",
+    "deadlineUtc": null,
+    "automationResumeAuthorized": false,
+    "policyBeforeHumanPause": {
+      "status": "S1_continuation_active",
+      "objective": "C70finite remainingratingdraftboundaryplan BEFOREUI: sum101 viaoneArrowRight plusdays366invalid/1valid/365valid, Resetaftereach, NEVERSave/Enter/recalc/POST/persistconfiguration. C69sum99/days0 alreadyPASSoriginalUTC/notrepeat. Planned4newUIboundaryvariants not4financialexecutions; server/dependencyremainBLOCKED/fullM5partial. No C68dateinputrepair orC67owner/F013unchangedretest.",
+      "run": "docs/verification/runs/2026-10-20-s1-continuation/progress.json",
+      "authorization": "какой сейчас прогресс? хочу дальше тебя запустить тебе до 11часов утра автономно, можешь начинать сразу после моего сообщения; harddeadline21Oct05UTC, noautonomousresumeafter; no newprivileges/networkpermission",
+      "deadlineUtc": "2026-10-21T05:00:00Z",
+      "automationResumeAuthorized": true
+    },
+    "resumeRequiresExplicitUserAuthorization": true,
+    "previousHumanPausedPolicy": {
+      "status": "PAUSED_BY_USER_NOT_READY",
+      "run": "docs/verification/runs/2026-10-20-s1-continuation/progress.json",
+      "authorization": "нужно сделать логическое завершение и процесс поставить на паузу потом продожим",
+      "finalReport": "docs/verification/runs/2026-10-20-s1-continuation/final-report-until-stop-2026-10-21.json",
+      "objective": "DO NOT EXECUTE UNTIL EXPLICIT HUMAN RESUME. Saved next: C70finite remainingratingdraftboundaryplan BEFOREUI: sum101 viaoneArrowRight plusdays366invalid/1valid/365valid, Resetaftereach, NEVERSave/Enter/recalc/POST/persistconfiguration. C69sum99/days0 alreadyPASSoriginalUTC/notrepeat. Planned4newUIboundaryvariants not4financialexecutions; server/dependencyremainBLOCKED/fullM5partial. No C68dateinputrepair orC67owner/F013unchangedretest."
+    },
+    "policyBefore23OctHumanPause": {
+      "status": "ACTIVE_UNTIL_USER_STOP",
+      "objective": "C75 boundedreadonlyhistoricalapplicabilityreview for remaining client/guest header variants BEFOREUI. C66guest original21Oct09:20:34..09:20:56 source40a5 and actualrootВойти/noaccount may support narrowguestmenuabsence with hashes+originalUTC, not newexecution; verify exact evidence. G078client Escape had NOmenuitemactivation/navigation, so do not repeatEscape but identify whether client root->personal menu+Back remains genuinelyuncovered. Onlyafterfiniteplan C76 oneclientnavigationcase ifneeded. No SA/staffheader/directselector/rating/receipt/profile/build/F013repeat; owner/manager/multiroleBLOCKED retained.",
+      "authorization": "можешь продолжить пока я сам не попрошу остановиться",
+      "run": "docs/verification/runs/2026-10-23-web-resume/progress.json"
+    },
+    "previous23OctPausedPolicy": {
+      "status": "PAUSED_BY_USER_NOT_READY",
+      "run": "docs/verification/runs/2026-10-23-web-resume/progress.json",
+      "authorization": "сделай логическое завершение",
+      "finalReport": "docs/verification/runs/2026-10-23-web-resume/final-report.json",
+      "objective": "DO NOT EXECUTE UNTIL NEW EXPLICIT HUMAN RESUME. Saved next: C75 boundedreadonlyhistoricalapplicabilityreview for remaining client/guest header variants BEFOREUI. C66guest original21Oct09:20:34..09:20:56 source40a5 and actualrootВойти/noaccount may support narrowguestmenuabsence with hashes+originalUTC, not newexecution; verify exact evidence. G078client Escape had NOmenuitemactivation/navigation, so do not repeatEscape but identify whether client root->personal menu+Back remains genuinelyuncovered. Onlyafterfiniteplan C76 oneclientnavigationcase ifneeded. No SA/staffheader/directselector/rating/receipt/profile/build/F013repeat; owner/manager/multiroleBLOCKED retained."
+    },
+    "previousObjectiveBeforePause": "C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged.",
+    "autonomousResumeAllowed": false,
+    "pauseEvidence": "docs/verification/runs/2026-10-28-web-resume/pause-20261028-145640.json",
+    "finalReport": "docs/verification/runs/2026-10-28-web-resume/final-report.json",
+    "policyBefore26OctResume": {
+      "status": "PAUSED_BY_USER",
+      "run": "docs/verification/runs/2026-10-25-web-resume/progress.json",
+      "finalReport": "docs/verification/runs/2026-10-25-web-resume/final-report.json",
+      "objective": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN RESUME. Saved next only: C128 bounded readonly history/effect review of retained inactive test category destructive-confirmation Cancel before any new UI plan. Determine whether exact category Cancel/reload has original proof; reuse only if applicable with original UTC/no new PASS. If genuinely uncovered, save finite C129 warning-open/Cancel/reload plan for exact c7cef81b only; NEVER dialog Confirm/Delete/Enter/force checkbox or actual deletion. No new category/fixture, service-category implementation, unchanged C119/C124/C126/build/auth/F013 retry. M5-02 services contract remains explicitly BLOCKED until clarified; all older safety/stale gates retained."
+    },
+    "authorizationEvidence": "docs/verification/runs/2026-10-28-web-resume/authorization.json",
+    "policyBefore26OctResume2HumanPause": {
+      "status": "ACTIVE",
+      "objective": "C236 D1-04 accepted by3existingcurrentcertifiedUIcaseassociations (inactive service/branch/business) afterexacthash+primaryreview/original20OctUTC retained; no UIreplay/newcase/reusecredit/fix. Product26->27of316/289left/S4=3of47; windowUI19/fix1F021logical17/newaccepted4, candidate5387/1687/buildC206C207 unchanged/NOT_READY. C235positivehourlyaggregateBLOCKED/C233timecommitBLOCKED/C221calendar/C77/F013/F005/C189/alltechnical11testFAIL/lint52errors167warnings retained. Existingtab/mainserver not rehealthclaimed byreadonlyreview; observationgap12:59:50->13:24:25 recorded/no continuityclaim. NextC237 ONLYboundedREADONLY I6-02 exactknownfixtureA existingbusiness slug invalid/collision validation history/currentedit payload+guard/effects review BEFOREfiniteUIplan. DistinguishC84localmanualslugCancel/C89emptyname from genuinelyuncovered invalidsyntax and knownbusiness1slugcollision; no blindvalidslugwrite. No browser/edit/Save/owner/category/approval/contact/quota/newentity/role/security/SQL/API/SDK/storage/source/test/build/serveractionfromreview; completeknownbaseline+rejection-before-mutation required, else exactblocker+independentpriority.",
+      "run": "docs/verification/runs/2026-10-26-web-resume-2",
+      "authorization": "тогда можешь начинать автономную работу пока я тебя сам не останавлю",
+      "autonomousResumeAllowed": true
+    },
+    "policyBefore28OctHumanResume": {
+      "status": "PAUSED_BY_USER",
+      "objective": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN RESUME. C237 is saved readonly slug-validation review only, not authorized while paused. See current final-report.json; all productcounts/source/build/blockers unchanged.",
+      "run": "docs/verification/runs/2026-10-26-web-resume-2",
+      "authorization": "сделай логическое завершение и на паузу",
+      "finalReport": "docs/verification/runs/2026-10-26-web-resume-2/final-report.json",
+      "pauseEvidence": "docs/verification/runs/2026-10-26-web-resume-2/pause-20261026-133050.json"
+    },
+    "authorizationBefore28OctHumanStop": "можешь продолжить, пока я сам не попрошу остановиться"
+  }
+}

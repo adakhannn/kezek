@@ -55,7 +55,7 @@ export function ClientsListHeader({
     };
     const permissions = checkPermissions(permissionContext);
     const canAdd = permissions.canAdd;
-    const addMessage = getPermissionMessage('add', permissionContext);
+    const addMessage = getPermissionMessage('add', permissionContext, t);
 
     const handleExport = () => {
         exportClientsToCSV(items, shift, shiftDate);

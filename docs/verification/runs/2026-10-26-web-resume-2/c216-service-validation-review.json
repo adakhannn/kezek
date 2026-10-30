@@ -1,0 +1,19 @@
+{
+  "id": "C216",
+  "status": "READONLY_REVIEW_COMPLETE_FOUR_UNCOVERED_INVALID_EDIT_VARIANTS",
+  "afterClockUtc": "2026-10-26T10:54:45Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "requirementId": "I2-03",
+  "history": "G00514Oct00:53:44Z originalexistinge215hiddenservice validedit/active/publiclifecycle, WB082emptyduration->typed30 validpersistence; notzero-invalid/negative-price/reversedrange/blanknamerejection. G133 excludesfullvalidationduplicates. C196ownnewstafflink+restoration/selectiondifferentmethod. No repetition/currentpromotionofthoseoldPASS.",
+  "source": "ServiceForm noValidate onSubmit: trimRUnameRequired, integerduration>=1, finiteprices>=0, positiveboundsordered, branchesnonempty ->fieldErrors+returnBEFOREsaving/fetch. Invalidscalar guardalsoprecedesDBlookup/writes inrunServiceUpdateFlow. ValidSavebundlesallfields/namegroupcopy reconciliation; NOTauthorizedforthiscase. SourceclassificationnotLIVE/no-networkmeasurement.",
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "b778953aa764cc3277969010b8077dbed68357d33341bec6b8c3188edb112fd8",
+    "apps/web/src/lib/serviceUpdateHttpService.ts": "593f4840a1ab042ca8c5b4d492f2b910aa8a46d5fbda954e104da92ba359c175",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28",
+    "apps/web/src/app/dashboard/services/[id]/page.tsx": "8ece808ba3e5509051baa9eb6ebb325af88cf780f6709c965797cdd3fc4eff75",
+    "apps/web/src/app/dashboard/services/[id]/EditServicePageClient.tsx": "2b31863251c1cbe415cb17a9ed2f8d5366a03e8a291b26e9b84910a41575b657",
+    "apps/web/src/lib/validation.ts": "1fbd74cb490998dc7d887a82d53e19f57c3447cef539ee3cc9662334428f9d54"
+  },
+  "authority": "Task-scopedroutineautonomy allows ordinaryinvalidUIvalidationtest onexistingnamednonproductiontestservice. No newentity, validserviceupdate, association, activation, deletion, bookingorfinancialaction.",
+  "effects": "Localreads/reportonly0UI/fix/accepted."
+}

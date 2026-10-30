@@ -1,0 +1,81 @@
+{
+  "id": "C80",
+  "type": "bounded read-only B3-04 completeness review",
+  "startedAfterUtc": "2026-10-23T01:01:40Z",
+  "requirementId": "B3-04",
+  "originalRequirement": "verify query state across navigation and reload where expected.",
+  "decision": "Keep partial, not accepted. C79 proved four populated-result variants; empty-result persistence and pagination state remain applicable. Freeze the eight-variant matrix before any further UI.",
+  "originalContext": {
+    "path": "docs/WEB_LIVE_TESTING_AREAS_CATALOG.md",
+    "section": "B3 and historical 2026-06-29 B3 record",
+    "facts": "Original steps explicitly include hard reload of no-results query and business-detail Back/Forward. The referenced June b3-postfix.json is absent; historical prose is not a current PASS. Existing ledger provenance remains unchanged.",
+    "missingPrimary": "apps/web/test-results/live-b3-search-2026-06-29/b3-postfix.json"
+  },
+  "matrix": {
+    "total": 8,
+    "passed": 4,
+    "notRun": 2,
+    "blocked": 2,
+    "remaining": 4,
+    "existingPassedCaseIds": [
+      "S23-B304-query-reload",
+      "S23-B304-query-history",
+      "S23-B304-query-category-reload",
+      "S23-B304-query-category-history"
+    ],
+    "newCases": [
+      {
+        "key": "empty-query-reload",
+        "caseId": "S23-B304-empty-query-reload",
+        "status": "not_run",
+        "expected": "A committed no-match q URL survives a normal reload with the exact decoded field, no-results state and no catalogue failure."
+      },
+      {
+        "key": "empty-query-history",
+        "caseId": "S23-B304-empty-query-history",
+        "status": "not_run",
+        "expected": "From committed no-match search, ordinary public Privacy navigation then Back/Forward/Back restores the same q/field/no-results state, without manufacturing a business-card match."
+      },
+      {
+        "key": "paginated-query-reload",
+        "caseId": "S23-B304-paginated-query-reload",
+        "status": "blocked",
+        "expected": "With actual multi-page results, a visible page-2 link retains committed q and any selected cat; reload preserves page/query/filter and correct second-page membership.",
+        "blocker": "C79 actual catalog has only 3 businesses (page size 9), matching query only 1. No real page-2 control/data. No new fixtures or guessed page=2 URL to imitate pagination."
+      },
+      {
+        "key": "paginated-query-history",
+        "caseId": "S23-B304-paginated-query-history",
+        "status": "blocked",
+        "expected": "With actual multi-page results, ordinary page-2/detail/history roundtrip retains page/q/any selected cat and second-page membership.",
+        "blocker": "Same missing multi-page public dataset. Keep in denominator until a genuinely new allowed data condition; do not create businesses or change page size."
+      }
+    ]
+  },
+  "boundary": "This finite B3-04 matrix concerns committed URL-backed query states (populated, q+category, empty, paginated) across reload/history. Uncommitted debounce drafts belong B3-01; category-only reset B3-02; search-service semantics and request failure B3-03/DEC-CATALOG-SEARCH; device/language/engine matrices remain O-series/S7 and production gates remain A/Q. No exclusions remove the two applicable blocked pagination cases.",
+  "effects": "Files/source/history only; no new browser or app/DB actions, product fix, tests or build. No new/reused live credit; C79 timestamps stay original.",
+  "next": "Execute only the two newly planned C81 empty-query variants. Never repeat C79 four PASS without changed dependency. Pagination remains BLOCKED; no acceptance promotion from 6/8. Profile Save awaits its human decision, no repeated question.",
+  "completedBeforeUtc": "2026-10-23T01:04:04Z",
+  "sourceHashes": [
+    {
+      "path": "docs/WEB_LIVE_TESTING_AREAS_CATALOG.md",
+      "sha256": "94ab076fb44eb3d232f8c6a6c94c0618368b8e3e7d7269fb55bd8ec95bdb3e88"
+    },
+    {
+      "path": "docs/WEB_CLOSURE_PLAN.json",
+      "sha256": "f619441fd25eecc1535a3527ad394bb0baf466ccb3ec6f2312f665d913fb6bdc"
+    },
+    {
+      "path": "apps/web/src/app/page.tsx",
+      "sha256": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a"
+    },
+    {
+      "path": "apps/web/src/app/_components/HomeClientComponents.tsx",
+      "sha256": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00"
+    },
+    {
+      "path": "apps/web/src/__tests__/components/HomeHeader.test.tsx",
+      "sha256": "376cbd348d47e3b5cb60d46586d5bf9b31ea49184448243cca5812b5e7073f75"
+    }
+  ]
+}

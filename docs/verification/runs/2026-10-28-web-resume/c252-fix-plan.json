@@ -1,0 +1,12 @@
+{
+  "id": "C252",
+  "status": "FIX_PLAN_AFTER_ACTUAL_UI_REPRO_BEFORE_SOURCE_EDIT",
+  "findingId": "S1-F022",
+  "beforeEvidence": "docs/verification/runs/2026-10-28-web-resume/c251-continuation-before-fail.json",
+  "scope": "Onlyserviceform localizedname validationfeedback. Existingtrimmed2..100validator/optionalKYENblank behavior unchanged. ReplaceeachnameInvalidcopy andfallback withfullrange2..100 inRU/EN/KY. No schema/API/ACL/persistence/session/compilerconfigchanges.",
+  "regressions": "ExistingServiceFormdurationcontrols retained; actualcomponenttests usingrealRU/EN/KYservice dictionaries, all3namefields length1/101, correct2..100range/summary/editorretained/no mockedfetch/routerpush. Fallbackrange tests too. Firstrunbeforefixmustfail101feedbackassertions, preservelog/argv/cwd/exit. Thenminimalfix/targetedtests/typecheck/lint/fulltests+coverage perCONTRIBUTING; retainexistingfailedgates/no whole-green.",
+  "sameLive": "Prospectiveall6originalarguments onexisting99/currentownerBusiness2 beforeanyvalidSave: short1/long101RU/KY/EN, expectedreadablerange2..100, ONEinvalidSave each/discard-reentryaftereach/ONEfinalreload/allbaseline/staffunchecked/SArestore. NewUIonlyONEcompoundifall6PASS; baselinecontrolsnotseparatecredit.",
+  "candidate": "Anyproductedit=>newmanifest/candidate; preserveoriginalFAIL/UTC. Explicitperfiledependencyreview: unchangedpasses cancarrywithoriginalUTC/exactdeps; changeddependenciesrequiresemanticapplicabilitybridgeorSTALE. A3-01buildSTALE untilnewproperofflinebuild+actualexecution; no repeatunchangedoldbuild.",
+  "build": "Useexistingisolatedofflineguard/harness mechanics forNEWsourcecandidate only, exactfiles+dummynonnetworkenv/no.env/no renewedfontslease/no mainserverrestart. Newfinitebuild/runtimeplans beforelaunch.",
+  "limits": "No borrowedidentity/newentity/fixture/review/financial/access/booking/role commands. Stoponnewhumanstop; preservemainserver/tab. Recoverycompletedbeforecodework."
+}

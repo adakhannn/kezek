@@ -1,0 +1,10 @@
+{
+  "finding": "Existing S1-F007",
+  "observationAfterUtc": "2026-10-20T22:38:17Z",
+  "role": "Actual sameSA Admin-panel/Anonymized",
+  "steps": ["Overview -> Разделы -> Диагностика рейтингов", "wait actual ratings-debug document, do not click actions"],
+  "actual": "Eight literal [object Object] cells:1staff4branches3businesses. No Пересчитать row buttons. Stable IDs preserved in existing fixture registry and actual DOM.",
+  "expected": "Eight real existing row action buttons; primitive/null text unchanged",
+  "effects": "Only normal GET navigation; no recalc/POST/job/SQL. Ordinary telemetry unenumerated.",
+  "limits": "DOM not screenshot/device/numericmodel proof"
+}

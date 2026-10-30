@@ -1,0 +1,19 @@
+{
+  "id":"C08",
+  "caseId":"S12-INITIAL-VISUAL",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "status":"BLOCKED_AFTER_ONE_CHANGED_STATE_PREFLIGHT_0_CLOSURES",
+  "trigger":"Human answered Сбросил до100% to Ctrl+0 request",
+  "actualRole":"Guest header Войти, no session change",
+  "actualPage":"http://localhost:3000/",
+  "action":"One intentional reload after user repair; fresh DOM, viewport and ONE screenshot attempt",
+  "document":"Actual header/catalogue3 retained businesses/CTA/footer visible in DOM; no app blank conclusion",
+  "viewport":{"width":2661,"height":2096,"dpr":0.375},
+  "screenshot":"Unable to capture screenshot; no image saved, not a visual or device PASS",
+  "diagnosisBoundary":"Ctrl0 repair did not restore this existing tab's capture. Prior per-site zoom inference NOT confirmed. Task-created temporary C06/C07 tabs had actual1280x720/DPR1.5 and working screenshots. Root cause of old tab capture not established; no application CSS fix inferred.",
+  "stopApplied":"No unchanged capture/viewport retry, no native/CDP/HTTP workaround, no agent replacement tab created for this blocker",
+  "requiredAction":"One new distinct human repair request: manually open a new IAB tab http://localhost:3000/ while retaining old tab; await response/new state before binding/testing. Do not ask Ctrl0 again unchanged.",
+  "counts":{"requirementsPassed":18,"requirementsRemaining":7,"casesPassed":60,"casesRemaining":19},
+  "sideEffects":"One ordinary mainDEV document reload and DOM read; no source/config/role/auth/business/booking commands; ordinary telemetry unenumerated",
+  "scopeLimits":"Four-route owner/guest visual matrix not run after failed preflight. Original prehydration response and eight cold-cache cases remain separate blockers. No source bug claimed from screenshot failure."
+}

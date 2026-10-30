@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {updateJson} from './json-evidence-patch.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation',j=p=>JSON.parse(fs.readFileSync(p)),sha=b=>createHash('sha256').update(b).digest('hex'),a=j(run+'/c32-authorization.json');
+const p=j(run+'/progress.json'),l=j('docs/WEB_VERIFICATION_LEDGER.json'),s=j('docs/WEB_GLOBAL_READINESS_STATE.json'),d=j(run+'/nonfinal-draft.json');
+if(l.evidence.some(e=>e.id==='S1-EV-253'))throw Error('Alreadyapplied');
+p.priorUntilStopAuthorization={status:p.status,authorization:p.authorization,supersededProspectivelyAtUtc:a.observedStartUtc};
+Object.assign(p,{status:'ACTIVE_UNTIL_2026_10_21_1100_BISHKEK',authorization:a.human+'; harddeadline21Oct05UTC, noautonomousresumeafter; no newprivileges/networkpermission',deadlineUtc:a.deadlineUtc,draftByUtc:a.draftByUtc,noNewLongScenarioAfterUtc:a.shortOnlyFromUtc,finalizeAndPauseFromUtc:a.finalizeAndPauseFromUtc,noNewScenarioAfterUtc:a.noNewScenarioAfterUtc,finalReportFile:a.finalReportFile,finalizationStillRequiredByDeadline:true,authorizationEvidence:run+'/c32-authorization.json'});p.automation.untilUtc=a.deadlineUtc;p.automation.explicitPauseRequiredOnHumanStop=true;p.automation.explicitPauseRequiredByDeadline=true;
+l.evidence.push({id:'S1-EV-253',path:run+'/c32-authorization.json',sha256:sha(fs.readFileSync(run+'/c32-authorization.json'))});l.nextBatch.authorization=p.authorization;l.nextBatch.deadlineUtc=a.deadlineUtc;l.purpose='Evidence-backed WEB acceptance; historicalimportretained; latest21OctBishkekhuman authorizes WEB autonomy until21Oct11:00Bishkek/05UTC';
+Object.assign(s.progressAccounting,{currentInteractiveStatus:'active_until_2026_10_21_1100_bishkek',deadlineUtc:a.deadlineUtc,authorization:p.authorization,finalReportFile:run+'/'+a.finalReportFile});
+Object.assign(d,{deadlineUtc:a.deadlineUtc,draftByUtc:a.draftByUtc,scope:'WEBonly until21Oct11:00Bishkek/05UTC; timeboxc32; no newprivileges/expiredFontsrenewal',authorizationEvidence:run+'/c32-authorization.json'});d.finalization={trigger:'humanstop or usageunavailable or21Oct04:45UTC winddown',explicitPausedReadbackRequired:true,finalBeforeUtc:a.deadlineUtc,finalReportFile:a.finalReportFile};
+process.stdout.write('*** Begin Patch\n'+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+updateJson(run+'/nonfinal-draft.json',d,3,true)+'*** End Patch\n');

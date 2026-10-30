@@ -1,0 +1,31 @@
+{
+  "id": "C208",
+  "status": "READONLY_REVIEW_DONE_NO_UNCHANGED_LIFECYCLE_REPLAY",
+  "reviewWindowUtc": [
+    "2026-10-26T10:09:49Z",
+    "2026-10-26T10:14:55Z"
+  ],
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "historical": {
+    "path": "apps/web/test-results/global-2026-10-14/stage-G005-service-lifecycle-after.json",
+    "sha256": "741afd9072a71df3f8e8ec3419f06fcc59766f7559f0a541caa8ec4b73c98911",
+    "originalUtc": "2026-10-14T00:53:44Z",
+    "scope": "Exactretainedhiddene21565db/branch2 lifecycleEdit+active/public4->inactive/public3 done. No newUIfromdate/known99replacement. HistoricalG005notcurrentexecution-sourcebridgeornewtimestamp."
+  },
+  "currentEffects": "No isolatedlistcheckboxfound; normalServiceFormSavebundlesnames/duration/price/active/branch_ids. Receiverreconcilesname-groupbranchcopies:update/insert/removeorhidecopies. Review grantsno Save/toggle, no currentknownbaselineforgroupcopiesorserviceStaffeligibility. Changing99wouldrepeatdonepubliclifecycleunlessanindependentnewinactive-direct-URLmethodestablished.",
+  "newVariantBoundary": "InactiveService deepURLguardnotprovedbyG005publiclanding. Existinginactivee215branch2hasno currentknowneligiblepositiveworkingstaffcontrol; known99branch1unassignedafterC196. Missingassignment/branchavailabilitywouldconfoundinactiveexclusion. No speculativeUIpreparation/groupSave/fixturechange now.",
+  "decision": "D1-04partial retained; no currentPASS/reusecredit/bug/fix fromsource/hash. Do not repeatunchangedinactive-service audit orpubliclifecycle. Independentnewlyunblockedownerheader-historycase next.",
+  "sourceHashes": {
+    "apps/web/src/app/dashboard/services/ServicesListClient.tsx": "7ee3cfb00fb1cc6f470e964e429d395bf5c11d2335de31af7daa92807e9a4ddc",
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "b778953aa764cc3277969010b8077dbed68357d33341bec6b8c3188edb112fd8",
+    "apps/web/src/lib/serviceUpdateHttpService.ts": "593f4840a1ab042ca8c5b4d492f2b910aa8a46d5fbda954e104da92ba359c175",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28"
+  },
+  "effects": "No browser/UI/auth/data/source/test/build/serveraction inC208. Priorjournals/mainserver/tab preserved/no freshUIhealthclaim.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}

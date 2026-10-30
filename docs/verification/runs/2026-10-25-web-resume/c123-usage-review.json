@@ -1,0 +1,57 @@
+{
+  "id": "C123",
+  "type": "bounded readonly M5-02 business-category use cross-surface oracle/history/dependency review",
+  "startedAfterUtc": "2026-10-25T10:25:13Z",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "history": "M5-02 historicalWB094/public-stage/G086 covers publicnames/filter/guest and name_ru-only contentcontract, not current adminreference count reconciledagainstallbusinesscategorymemberships. Nightadmin-stage covers categorycreation/rename/duplicate and usersstats, not this comparison. Bounded exact stage/currentcase search found no targeted cross-surface categoryusage oracleproof. C119/C120rowcounts were baseline controls, not independentusage acceptance; they are not recycled asnewPASS. No globalabsenceclaim or repeatpublictaxonomy/G086.",
+  "independentOracle": "Each category UI count labelled businesses should equal the number of distinct visible businesses whose full categoryset contains its canonicalslug. Sum counts acrossallcategories equals totalbusiness-categoryreferences, not necessarily businesscount ifmulticategory. Mostpopular must have maximalcount. For current known3business universe and3categories, baselinehistorical/categorycontrols suggest2barbershop/1women/0inactive, but independently derive expectedcounts from freshlyobserved allbusinesses BEFORE reading actualcategorycounts. Do not assume onecategoryperbusiness or force expected3 ifdatachanged.",
+  "sourceBoundary": "Businesslist reads businesses id/categories directly, no filters/pagination; displays up to3slugs and +N ifmore. Categories page separately RPCcategories_with_usage_v2 ->usage_count andbusinesslabels; totalUsage sum/mostUsedmax. RPCdefinition notlocated in boundedlocalmigrationsearch; no freshSQL/schema/deployeddefinition claim. OrdinaryUI reconciliation stillchecks declaredhumanbusiness-count semantics, not exactRPCimplementation/RLS/security.",
+  "authority": "Read-only existingSA scope/threeknownbusinesses and referencecategories. No entity/contact/owner/role data edits, publiclink or externaldomain, no Save/Enter/delete/categoryassignment/propagation/newfixture/API/SQL/SDK/secret/storageprobe. RecordonlybusinessIDs/categoryslugs/counts, notcontactvalues. Baselinechanged/missing/truncated+N/unknownslug/error ->BLOCKED oneboundedsettlingread/no diagnosticloop.",
+  "evidencePaths": [
+    "docs/verification/reviews.jsonl",
+    "apps/web/test-results/night-2026-10-09/admin-stage.json",
+    "apps/web/test-results/night-2026-10-09/public-stage.json",
+    "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+    "docs/verification/runs/2026-10-25-web-resume/c119-result.json",
+    "docs/verification/runs/2026-10-25-web-resume/c120-result.json",
+    "apps/web/src/app/admin/businesses/page.tsx",
+    "apps/web/src/app/admin/categories/page.tsx"
+  ],
+  "credit": "0UI/0fix/0accepted review only. Servicescategoryuse/mutations/propagation/dependencyreject remain outside case; wholeM5-02partial/casePlanCompletefalse/no inventedfullatomicdenominator.",
+  "next": "C124 one finite businesscategory-reference counts/summary reconciliation case, no writes or repeated closedcategorydraft/build/auth/publictaxonomy.",
+  "completedBeforeUtc": "2026-10-25T10:26:53Z",
+  "hashes": [
+    {
+      "path": "docs/verification/reviews.jsonl",
+      "sha256": "2b227b5c22cc06d83160aa0ed36856d26f0ef48f21971771c783947a46d6f1f8"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/public-stage.json",
+      "sha256": "3aae02af3db95877e9d5cd153c9f5ba326a5787981c1b04d7099b1c739bce6e3"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+      "sha256": "c17d0059a7b5b5d28588fb3d213ef0b3ac3f819f22c3dd0c9c8def49383864c2"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c119-result.json",
+      "sha256": "7ade15f523a450d1e9760b2de9fdc536748b33996912dcc2de18b09fd17cc5e9"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c120-result.json",
+      "sha256": "2a03c120ad7dee5bdf3b99c39e8d6e3ca5c56f84b9a560f9a7fdb150254c1493"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/page.tsx",
+      "sha256": "35547cb30cad77e62e3976476889cabb9f334cb3c710d849176411b0d080bbfd"
+    },
+    {
+      "path": "apps/web/src/app/admin/categories/page.tsx",
+      "sha256": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+    }
+  ]
+}

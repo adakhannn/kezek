@@ -1,0 +1,25 @@
+{
+  "id": "S1.1-DEV-origin-project",
+  "plannedUtc": "2026-10-18T11:43:01Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "cases": [
+    {
+      "id": "A2-01-S1-01",
+      "variant": "DEV own-origin authenticated API read",
+      "steps": [
+        "Confirm current owner/business2",
+        "Open observed Заявки доступа sidebar link",
+        "Observe genuine loaded list/status with no write action",
+        "Use documented pageAssets inventory to identify normal application fetch own-origin; do not invoke endpoint directly",
+        "Inspect scoped console and preserve result"
+      ]
+    },
+    {
+      "id": "A2-01-S1-02",
+      "variant": "Supabase expected project/environment",
+      "reuse": "S18 normal app public GET200 through exact beulnmftzbmtbdlgurht.supabase.co guard and known fixture names/IDs agree with fresh primary owner/public observations; no duplicate query"
+    }
+  ],
+  "limits": "No API denial/security/RLS claim; no approve/refuse/grants. Overall A2-01 still cannot close without user-deferred deployed public/API/authcallback/webhook origins.",
+  "restore": "Owner/RU/business2, no role or business preference changes."
+}

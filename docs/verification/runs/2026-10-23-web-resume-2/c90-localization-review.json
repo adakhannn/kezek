@@ -1,0 +1,54 @@
+{
+  "id": "C90",
+  "type": "bounded classification of an actual observed mixed-language error",
+  "startedAfterUtc": "2026-10-23T02:16:48Z",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "requirementId": "O3-03",
+  "originalRequirement": "inspect missing keys, mixed languages, overflow, dates, money, and plurals;",
+  "primary": "c89-result.json",
+  "originalObservationWindowUtc": [
+    "2026-10-23T02:09:08Z",
+    "2026-10-23T02:09:25Z"
+  ],
+  "independentExpected": "With Russian selected, user-facing name-required feedback should be understandable Russian, not an unlocalized English API sentence. This is distinct from C89's functional no-empty-name oracle; C89 functional PASS remains at its original UTC.",
+  "actual": "The ordinary invalid-name Save on existing A displayed name cannot be empty while Русский was selected. C89 recorded this exact UI observation, not an inferred code failure. C90 performs no new UI execution or reused-PASS promotion.",
+  "cause": "BusinessCardEdit.save throws payload.error first, so the English name cannot be empty returned by update/route.ts bypasses the existing translated generic-save fallback. Exact matching of that one stable error at the presentation boundary can localize it without changing transport/API/validation/auth/data behavior.",
+  "scope": "S1-F014 confirmed narrow mixed-language runtime finding, RU baseline only. KY/EN outputs require planned tests, not assumed broken or already passed. Other raw API errors remain outside this minimal fix; O3-03 and M2-01 stay incomplete. Old C88 planner precondition stop and F013 auth defect remain unchanged.",
+  "reviewedFiles": [
+    "docs/verification/runs/2026-10-23-web-resume-2/c89-result.json",
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.ru.ts",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.ky.ts",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.en.ts"
+  ],
+  "effects": "Read-only classification;0newUI/0newfix/0accepted delta. Actual source/DB/UI unchanged in C90.",
+  "next": "C91 minimal exact empty-name error presentation mapping plus RU/KY/EN dictionary entries and focused component regression. Record before failure/original source, test before/after, update candidate/dependency applicability honestly, then CUA same-live RU plus KY/EN/Cancel-reload preservation. Do not call fixed until required live checks complete. New candidate production build/assets gate must become stale until fresh bounded proof; no unchanged old build retry or renewed network permission.",
+  "completedBeforeUtc": "2026-10-23T02:20:33Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c89-result.json",
+      "sha256": "7cc90846c05e9ee2a855d3c693d5fa698e62d1c5b2d35f6f5a1f10e6ff48864e"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+      "sha256": "3c34f87e772554f134220aad060c038f0e763c6c26c734055a1b9cd6f06b2756"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+      "sha256": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c"
+    },
+    {
+      "path": "apps/web/src/app/_components/i18n/dictionaries/admin.ru.ts",
+      "sha256": "3775f430f1f739d8c0db054a10728ea95184922d7ec430c61344d8a61f1d2ddc"
+    },
+    {
+      "path": "apps/web/src/app/_components/i18n/dictionaries/admin.ky.ts",
+      "sha256": "001325ff12ebc2e45366516064ffea03d6cf42e131c521a7cf4084085d392e38"
+    },
+    {
+      "path": "apps/web/src/app/_components/i18n/dictionaries/admin.en.ts",
+      "sha256": "e3c862a68c7335578379e9c1be17004b48f54e5553b71b35dbd741a2e355dd21"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "C205_EFFECTS_RESTORED",
+  "recordedUtc": "2026-10-26T09:56:23Z",
+  "immutableAppendOnly": true,
+  "baseline": "c203-effects-01-baseline.json",
+  "retestBaseline": "c205-effects-01-baseline.json",
+  "persisted": "c205-effects-02-persisted.json",
+  "targetUserId": "125e60ab-eb79-4d92-bc6d-d84ae534eeee",
+  "actual": "ONLYName restoredАдаханОсоров, ONEordinaryrestoreSave ->Сохранено. Sameownrecordreentry originalName/heading/SaveDisabled/Нетизменений, ONEreloadagainexactoriginal/pristine/SuperAdminchecked1/Active/globalAnonymized. Maskedemailandphone/securitycontrolsuntouched. Adminlink->protectedadmin/RU/Anonymized/Business3/4branch1staff4service30bookings/TodayCancelled1;markHandoff.",
+  "explicitSaveAttempts": {
+    "beforeFailure": 1,
+    "afterFixTemporaryName": 1,
+    "afterFixOriginalRestore": 1
+  },
+  "pending": false,
+  "limits": "VisiblesemanticNamebaseline restored; notbitidenticalAuthmetadata timestamp/DBrollback/zeroTOTALwrites. Ordinary auth/analytics/telemetry/normalizationeffects unenumerated."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "C203_BEFORE_FAILURE_AND_RECOVERY",
+  "recordedUtc": "2026-10-26T09:45:50Z",
+  "status": "ACTUAL_UI_FAIL_MISSING_USER_ID",
+  "immutableAppendOnly": true,
+  "observationWindowUtc": [
+    "2026-10-26T09:45:03Z",
+    "2026-10-26T09:45:50Z"
+  ],
+  "targetUserId": "125e60ab-eb79-4d92-bc6d-d84ae534eeee",
+  "expected": "OwnAuthmetadataName validSave persists toexactUserBasicForm/reentry/reload; originalName canrestorethroughsameUI; originalSuperAdmin/status/contactsnotedited. Onecompoundcase, notE2canonicalprofileorrole/securityproof.",
+  "actual": "NameONLYfilledC203 OWN NAME TEST, Saveenabled. ONEordinarySaveclick ->pendingbuttonremovedthenactualsameeditor visible missing user id. No Saved/persistenceclaim/duplicateSave. OrdinaryКспискуthenexactownrowreentry ->originalNameАдаханОсоров/headingoriginal/SaveDisabled/Нетизменений/SuperAdminchecked1/Active/globalAnonymized, contactsuntouched. markHandoff onbaselineeditor.",
+  "pending": false,
+  "recovery": "Draftdiscardandownrecordreentrybaselineverified; no persistedownnamechangeobserved, no restoreSave required beforefix. No claimzeroTOTALwrites or rawtransportstatus.",
+  "classification": "RuntimeUIerror matchesroute readingparams.id synchronously whileNext16 supplies promisedparams. Sourceindependentlyshowsmissing-IDreturnbeforeauth/datawrite. Minimalawaitparamsplanrequired; no inferredDB/auth/networkcause.",
+  "effects": "OneordinarySaveattemptandlocalNameinput/discard/reentry; no contact/security/role/Magiclink/message/entity/bookingcommand.",
+  "credit": {
+    "newUiPassed": 0,
+    "newFix": 0,
+    "newAccepted": 0
+  }
+}

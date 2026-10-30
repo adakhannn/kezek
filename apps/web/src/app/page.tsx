@@ -14,6 +14,8 @@ import { getT, getServerLocale, type I18nKey } from './_components/i18n/server';
 import { Badge } from '@/components/ui/Badge';
 import { HomeViewTracker } from '@/lib/analyticsTrackEvent';
 import { logWarn } from '@/lib/log';
+import { publicBusinessSearchFilter } from '@/lib/publicBusinessSearchFilter';
+import { loadPublicCategoryLabels, publicCategoryLabel, type PublicCategoryClient } from '@/lib/publicCategoryLabels';
 import { generateAlternates } from '@/lib/seo';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -49,6 +51,7 @@ type Business = {
     categories: string[] | null;
     rating_score: number | null;
     promotions_count?: number;
+    has_active_branches?: boolean;
 };
 
 type BranchSummary = {
@@ -72,6 +75,7 @@ export default async function Home({
     let pages = 1;
     let typedBusinesses: Business[] = [];
     let categoriesAvailable: string[] = [];
+    let categoryLabels: Record<string, string> = {};
     let serviceUnavailable = false;
 
     try {
@@ -83,9 +87,7 @@ export default async function Home({
             .eq('is_approved', true);
 
         if (q) {
-            const safeQ = q.trim().slice(0, 100).replace(/[%_\\]/g, (char) => `\\${char}`);
-            const searchPattern = `%${safeQ}%`;
-            query = query.or(`name.ilike.${searchPattern},address.ilike.${searchPattern}`);
+            query = query.or(publicBusinessSearchFilter(q));
         }
 
         if (cat) {
@@ -124,6 +126,10 @@ export default async function Home({
             }
 
             const branches = (branchesData ?? []) as BranchSummary[];
+            const businessesWithBranches = new Set(branches.map(branch => branch.biz_id));
+            typedBusinesses.forEach(business => {
+                business.has_active_branches = businessesWithBranches.has(business.id);
+            });
 
             if (branches.length > 0) {
                 const branchIds = branches.map((branch) => branch.id);
@@ -167,6 +173,7 @@ export default async function Home({
                     .filter(Boolean),
             ),
         ).sort();
+        categoryLabels = await loadPublicCategoryLabels(supabase as unknown as PublicCategoryClient, [...categoriesAvailable, cat]);
 
     } catch (error) {
         serviceUnavailable = true;
@@ -182,13 +189,14 @@ export default async function Home({
                         q={q}
                         cat={cat}
                         categories={categoriesAvailable}
+                        categoryLabels={categoryLabels}
                         totalResults={total}
                     />
                 </HomeHero>
 
                 <section className="space-y-6">
                     <div className="space-y-5">
-                        <HomeResultsHeader totalResults={total} q={q} cat={cat} />
+                        <HomeResultsHeader totalResults={total} q={q} cat={cat} categoryLabels={categoryLabels} />
 
                         {typedBusinesses.length > 0 ? (
                             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -200,6 +208,7 @@ export default async function Home({
                                         query={q}
                                         index={index}
                                         t={t}
+                                        categoryLabels={categoryLabels}
                                     />
                                 ))}
                             </section>
@@ -234,12 +243,14 @@ function MarketplaceBusinessCard({
     query,
     index,
     t,
+    categoryLabels,
 }: {
     business: Business;
     activeCategory: string;
     query: string;
     index: number;
     t: Translator;
+    categoryLabels: Record<string, string>;
 }) {
     const hasRating = typeof business.rating_score === 'number';
     const initial = business.name.trim().charAt(0).toUpperCase() || 'K';
@@ -305,15 +316,17 @@ function MarketplaceBusinessCard({
                                 : 'border-[var(--border-default)] bg-[var(--surface-base)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]'
                         }`}
                     >
-                        {category}
+                        {publicCategoryLabel(categoryLabels, category)}
                     </Link>
                 ))}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[16px] bg-[var(--surface-emphasis)] px-3 py-2.5 text-xs text-[var(--text-secondary)]">
                 <span className="inline-flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[var(--status-success)]" aria-hidden="true" />
-                    {t('home.card.onlineBooking', 'Онлайн-запись')}
+                    <span className={`h-2 w-2 rounded-full ${business.has_active_branches ? 'bg-[var(--status-success)]' : 'bg-[var(--text-muted)]'}`} aria-hidden="true" />
+                    {business.has_active_branches
+                        ? t('home.card.onlineBooking', 'Онлайн-запись')
+                        : t('booking.step1.noBranches', 'Нет активных филиалов.')}
                 </span>
                 {business.contact_phone ? (
                     <span className="min-w-0 truncate">{business.contact_phone}</span>
@@ -328,13 +341,13 @@ function MarketplaceBusinessCard({
                     >
                         <HomeAboutButtonText />
                     </Link>
-                    <Link
+                    {business.has_active_branches ? <Link
                         href={`/b/${business.slug}/booking`}
                         className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-[var(--motion-base)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]"
                     >
                         <HomeBookButtonText />
                         <span className="ml-1.5" aria-hidden="true">→</span>
-                    </Link>
+                    </Link> : null}
                 </div>
             </div>
         </article>

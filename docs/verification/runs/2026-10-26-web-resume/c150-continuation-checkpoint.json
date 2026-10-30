@@ -1,0 +1,86 @@
+{
+  "id": "C150_ACTIVE_CONTINUATION_CHECKPOINT",
+  "completedBeforeUtc": "2026-10-25T20:48:12Z",
+  "isFinal": false,
+  "status": "ACTIVE_UNTIL_NEW_HUMAN_STOP",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "files": 1686,
+  "sourceUnchangedAfterBuildAndC150": true,
+  "counts": {
+    "accepted": 21,
+    "total": 316,
+    "remaining": 295,
+    "S1": {
+      "accepted": 17,
+      "total": 25,
+      "primaryPassed": 63,
+      "primaryTotal": 79
+    },
+    "S2": {
+      "accepted": 3,
+      "total": 70
+    },
+    "S4": {
+      "accepted": 1,
+      "total": 47
+    },
+    "windowNewUiPass": 7,
+    "windowNewVerifiedFixes": 3,
+    "windowNewAccepted": 0,
+    "logicalVerifiedFixes": 15,
+    "existingBuildRefreshEvents": 2,
+    "distinctRefreshedExistingCases": 1
+  },
+  "fixes": [
+    "S1-F017",
+    "S1-F018",
+    "S1-F019"
+  ],
+  "technical": {
+    "targetedCurrent": 6,
+    "typecheck": "PASS",
+    "scopedLint": "PASS",
+    "currentBuild": "C147 defaultcoldbuild/types36prerenders exit0 +C148actualcompiledprivacy/reload PASS",
+    "latestFull": "C135 full540suites534PASS6FAIL/2550tests2539PASS11FAIL;lint52errors167warnings; later copy deltas scopedtested, full not rerun."
+  },
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewToolSuccess": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "name": "Kezek WEB — до команды остановиться",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "65b6b99b081bc324fa143103bfdde516da43247c7dc3c96b810536b79f8a6f7d",
+    "latestPromptCheckpoint": "C150"
+  },
+  "environment": {
+    "readbackAfterClockUtc": "2026-10-25T20:47:07Z",
+    "mainListener": "127.0.0.1:3000PID18368/session60432 retained for user",
+    "temporaryRuntime3107": "ABSENT",
+    "ownedC147Compiler": "FINISHED exit0",
+    "ownedC148Runtime": "24964 deliberately stopped after UI/adminreturn; absent",
+    "activeTemporaryCompilerRuntimeOrNetworkLease": false,
+    "browser": "ExistinghumanTab2/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba/resume26HumanTab/admin/protectedheading/Admin-panel/Anonymized/RU/Business3/TodayCancelled1 lastactualC150;handoff marked. UserGooglechooser1 untouched. No newtab/auth transition or forbiddenprovider binding.",
+    "dirtyGitEntries": 630,
+    "actorUnknownChangesPreserved": true
+  },
+  "priorFinalsUnchanged": [
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/final-report.json",
+      "sha256": "59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/final-report.json",
+      "sha256": "84c42de6d4edeac2a811f038e987a9fb946cc446359287d1766fd7faa7119e6b"
+    }
+  ],
+  "ledgerValid": true,
+  "closureValid": true,
+  "releaseReady": false,
+  "next": "C150create-mode unsaved localdraft auto/manual/clear/Cancel/reentry one NEWUI PASS, no entity/source/build change.26Oct7NEWUI/3verifiedfixesF017F018F019/logical15;21of316295left/S117primary63/S23/S41/NOT_READY. Current c1111686C147/C148build/output done,2refreshEVENTS/1distinctexistingcase; no repeat. NextC151 bounded readonly M5-04 remaining create-form negativevalidation history/effects review BEFORE any finiteUIplan. No Create/Save/Enter/entity command inferred; only if source can establish invalid-local-input prevents app mutation and variant genuinelyuncovered, else exactblocker+independent remainingpriority. No newfixture/user/role/job/booking/payment/security actions, no unitimitation; all prior constraints retained.",
+  "boundaries": "No newfixture/categoryentity/role/job/booking/payment/authgrant/security/sourceoutsidefourruntimefiles+onetest, no commit/push/stage/reset/deploy. Locale preference writes and normal auth/telemetry unenumerated; never zeroTOTALwrites. Old failed/blocked/stale evidence/UTC retained. No continuity or whole-green claim; new stop requires explicit PAUSED/readback and new26Octfinal, older finals immutable."
+}

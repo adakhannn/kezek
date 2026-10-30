@@ -1,0 +1,684 @@
+{
+  "id": "C245",
+  "status": "READONLY_SKIP_INVENTORY_COMPLETE_RUNTIME_E2E_SKIP_PROOF_BLOCKED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "requirementId": "Q1-06",
+  "reviewStartedAfterClockUtc": "2026-10-28T09:31:53Z",
+  "recordedAfterClockUtc": "2026-10-28T09:34:37Z",
+  "goal": "Record exact declared WEB E2E skip sites/conditions and policy-unrun specs while distinguishing actual runtime skips; no runner/browser/environment-secret action.",
+  "sourceInventory": {
+    "specCount": 15,
+    "staticDeclarationCount": 70,
+    "skipAnnotationCallSites": 17,
+    "skipSitesInsideSpecs": 16,
+    "helperCallSites": 15,
+    "helperGuardedSpecCount": 13,
+    "configuredProjects": [
+      "chromium"
+    ],
+    "otherBrowserExecution": "NOT_CONFIGURED_OR_EXECUTED_IN_THIS_REVIEW",
+    "specs": [
+      {
+        "path": "apps/web/e2e/booking-flow.spec.ts",
+        "sha256": "5727ebd98e12aead5f5beb7593a6adde2ec278f862b3815b787f74a90a713555",
+        "staticTestDeclarationCount": 4,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/branch-map.spec.ts",
+        "sha256": "ad5889a6fb90c31c997d9ae0055ec6cb5e0d70cbc9a58bbe2f546519d2390e09",
+        "staticTestDeclarationCount": 1,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/error-recovery.spec.ts",
+        "sha256": "ef2982f25f3f3ed22c1024e2498b54e37e5f3ee0d7fd43b2295284c7593487b3",
+        "staticTestDeclarationCount": 3,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/finance-disputes-verification.spec.ts",
+        "sha256": "fbf8db230f7b1d16a0db025f50fdfb34e7b3f46babd786ce2d621ff853145006",
+        "staticTestDeclarationCount": 2,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/hours-worked-recalculation.spec.ts",
+        "sha256": "8631a93fd59940eb32b764d5c489d7938e8994322c2844f4ed5a00f6df1c558d",
+        "staticTestDeclarationCount": 4,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/promotion-application.spec.ts",
+        "sha256": "82a68067b3106c54622601f23b30183ee4e035e32d59b2e495a7723b832b0f94",
+        "staticTestDeclarationCount": 10,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/quickdesk.spec.ts",
+        "sha256": "4c517af3cb8310f23318b2dd61cd56c73864ad70d50b15f10c0d4c9355693108",
+        "staticTestDeclarationCount": 10,
+        "packageGroups": [
+          "test:e2e:auth-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/ratings-admin-flow.spec.ts",
+        "sha256": "4bdd154e43dbae9717679d3b22be574b9ff7582b83edb104361c3ef57b54cb44",
+        "staticTestDeclarationCount": 1,
+        "packageGroups": [
+          "test:e2e:auth-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/role-switching.spec.ts",
+        "sha256": "e6950c1b42ca75d9bbe58c80bea163be987b053b27299bcef385c3319d8544b4",
+        "staticTestDeclarationCount": 2,
+        "packageGroups": [
+          "test:e2e:auth-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/shift-management.spec.ts",
+        "sha256": "7faa887d0689400098b960e36606eb667f0f845865ab796b58829995fec58586",
+        "staticTestDeclarationCount": 1,
+        "packageGroups": [
+          "test:e2e:auth-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/smoke-public.spec.ts",
+        "sha256": "10b81fc4ae8fc628e5ae4f6f650ed05d06277d81d522a8b2656b8cecf8f9b065",
+        "staticTestDeclarationCount": 4,
+        "packageGroups": [
+          "test:e2e:smoke"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/staff-finance-pages.spec.ts",
+        "sha256": "763fa3edf276b4cc4d4c2244a3c0c5f0f8429e1dc52708a6cb0b6583c4827b84",
+        "staticTestDeclarationCount": 14,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/visit-packages-flow.spec.ts",
+        "sha256": "6b88b8e2b824eade38f73491d56d0d976f36ed37a2f6e7fc3bddb4565e55d17d",
+        "staticTestDeclarationCount": 2,
+        "packageGroups": [
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/visual-regressions.spec.ts",
+        "sha256": "7add0ebaab6e3eb3591d73be9903e164b89449a66909a4730c60f9b1a0485715",
+        "staticTestDeclarationCount": 11,
+        "packageGroups": [
+          "test:e2e:visual",
+          "test:e2e:seed-required",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      },
+      {
+        "path": "apps/web/e2e/whatsapp-webhook.spec.ts",
+        "sha256": "664c3d3eaaaed0231c169391bbc0135ccecebc0cce661ec510a42f6d31d1aa06",
+        "staticTestDeclarationCount": 1,
+        "packageGroups": [
+          "test:e2e:http",
+          "test:e2e:full-seeded"
+        ],
+        "defaultGroup": "test:e2e discovers e2e spec files; configured chromium only",
+        "executionThisWindow": "NOT_RUN_POLICY",
+        "reason": "External Playwright/CDP/native/HTTP test-runner browser control prohibited; permitted actual CUA cases do not constitute execution of these specs. No actual environment values/credentials inspected and no fixtures/entities/roles/financial/message effects authorized by this source inventory."
+      }
+    ],
+    "skipCalls": [
+      {
+        "path": "apps/web/e2e/booking-flow.spec.ts",
+        "line": 268,
+        "enclosingDeclaredTest": "комплекс услуг: выбор нескольких услуг → слот → гостевой визит → успех",
+        "call": "test.skip(true, 'Нужно минимум 2 услуги у мастера для теста комплекса')",
+        "branchConditions": [
+          {
+            "expression": "count < 2",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/booking-flow.spec.ts",
+        "line": 322,
+        "enclosingDeclaredTest": "комплекс услуг: выбор нескольких услуг → слот → бронь → отображение в кабинете (требует E2E_TEST_CLIENT_EMAIL)",
+        "call": "test.skip(true, 'Проверка кабинета требует E2E_TEST_CLIENT_EMAIL')",
+        "branchConditions": [
+          {
+            "expression": "!clientEmail",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/booking-flow.spec.ts",
+        "line": 334,
+        "enclosingDeclaredTest": "комплекс услуг: выбор нескольких услуг → слот → бронь → отображение в кабинете (требует E2E_TEST_CLIENT_EMAIL)",
+        "call": "test.skip(true, 'Страница входа недоступна')",
+        "branchConditions": [
+          {
+            "expression": "!(await emailInput.isVisible({ timeout: 5000 }))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/booking-flow.spec.ts",
+        "line": 383,
+        "enclosingDeclaredTest": "комплекс услуг: выбор нескольких услуг → слот → бронь → отображение в кабинете (требует E2E_TEST_CLIENT_EMAIL)",
+        "call": "test.skip(true, 'Нужно минимум 2 услуги у мастера')",
+        "branchConditions": [
+          {
+            "expression": "(await serviceCards.count()) < 2",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/branch-map.spec.ts",
+        "line": 108,
+        "enclosingDeclaredTest": "создание и редактирование филиала с координатами",
+        "call": "test.skip()",
+        "branchConditions": [
+          {
+            "expression": "!createdBranchesUrl",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/finance-disputes-verification.spec.ts",
+        "line": 276,
+        "enclosingDeclaredTest": "должен проверить историю изменений в логах при корректировке hours_worked",
+        "call": "test.skip()",
+        "branchConditions": [
+          {
+            "expression": "!(await closedShift.isVisible({ timeout: 5000 }))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/hours-worked-recalculation.spec.ts",
+        "line": 46,
+        "enclosingDeclaredTest": "должен обновить hours_worked и пересчитать guaranteed_amount",
+        "call": "test.skip()",
+        "branchConditions": [
+          {
+            "expression": "await closedShift.isVisible({ timeout: 5000 })",
+            "branch": "else"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/hours-worked-recalculation.spec.ts",
+        "line": 74,
+        "enclosingDeclaredTest": "должен обновить hours_worked и пересчитать guaranteed_amount",
+        "call": "test.skip()",
+        "branchConditions": [
+          {
+            "expression": "await hoursInput.isVisible({ timeout: 3000 })",
+            "branch": "else"
+          },
+          {
+            "expression": "await editButton.isVisible({ timeout: 5000 })",
+            "branch": "else"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/hours-worked-recalculation.spec.ts",
+        "line": 167,
+        "enclosingDeclaredTest": "должен проверить валидацию hours_worked (отрицательное значение)",
+        "call": "test.skip()",
+        "branchConditions": [
+          {
+            "expression": "!(await closedShift.isVisible({ timeout: 5000 }))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/hours-worked-recalculation.spec.ts",
+        "line": 200,
+        "enclosingDeclaredTest": "должен проверить валидацию hours_worked (слишком большое значение)",
+        "call": "test.skip()",
+        "branchConditions": [
+          {
+            "expression": "!(await closedShift.isVisible({ timeout: 5000 }))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/hours-worked-recalculation.spec.ts",
+        "line": 257,
+        "enclosingDeclaredTest": "должен проверить, что нельзя изменить hours_worked для открытой смены",
+        "call": "test.skip()",
+        "branchConditions": [
+          {
+            "expression": "await openShift.isVisible({ timeout: 5000 })",
+            "branch": "else"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/staff-finance-pages.spec.ts",
+        "line": 178,
+        "enclosingDeclaredTest": "владелец: открыть смену сотруднику и добавить клиента (если разрешено)",
+        "call": "test.skip(true, 'Нет кнопки добавления клиента (возможно, смена не открыта/нет доступа)')",
+        "branchConditions": [
+          {
+            "expression": "!(await addClientBtn.isVisible({ timeout: 5000 }).catch(() => false))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/staff-finance-pages.spec.ts",
+        "line": 548,
+        "enclosingDeclaredTest": "владелец: выбор периода, обновление, исправление часов (если есть закрытые смены)",
+        "call": "test.skip(true, 'Нет закрытых смен с hours_worked для редактирования')",
+        "branchConditions": [
+          {
+            "expression": "!(await editHoursBtn.isVisible({ timeout: 5000 }).catch(() => false))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/testEnv.ts",
+        "line": 31,
+        "enclosingDeclaredTest": null,
+        "call": "test.skip(true, formatMissingEnvMessage(scope, missing))",
+        "branchConditions": [
+          {
+            "expression": "missing.length > 0",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/visit-packages-flow.spec.ts",
+        "line": 106,
+        "enclosingDeclaredTest": "полный сценарий: создание плана, продажа пакета, бронь, отметка посещения, проверка остатка",
+        "call": "test.skip(true, 'Клиент не выбран или кнопка «Продать пакет» недоступна — нужен существующий клиент в тестовых данных')",
+        "branchConditions": [
+          {
+            "expression": "!(await sellPackageBtn.isVisible({ timeout: 3000 }))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/visit-packages-flow.spec.ts",
+        "line": 203,
+        "enclosingDeclaredTest": "в кабинете клиента отображается «Оплачено пакетом» (при наличии E2E_TEST_CLIENT_EMAIL)",
+        "call": "test.skip(true, 'E2E_TEST_CLIENT_EMAIL не задан — проверка кабинета клиента пропущена')",
+        "branchConditions": [
+          {
+            "expression": "!clientEmail",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      },
+      {
+        "path": "apps/web/e2e/visit-packages-flow.spec.ts",
+        "line": 211,
+        "enclosingDeclaredTest": "в кабинете клиента отображается «Оплачено пакетом» (при наличии E2E_TEST_CLIENT_EMAIL)",
+        "call": "test.skip(true, 'Форма входа недоступна')",
+        "branchConditions": [
+          {
+            "expression": "!(await emailInput.isVisible({ timeout: 3000 }))",
+            "branch": "then"
+          }
+        ],
+        "classification": "DECLARED_CONDITIONAL_SKIP_NOT_OBSERVED_RUNTIME_SKIP"
+      }
+    ],
+    "envGates": [
+      {
+        "path": "apps/web/e2e/booking-flow.spec.ts",
+        "line": 9,
+        "scope": "booking-flow.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_BUSINESS_SLUG"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/branch-map.spec.ts",
+        "line": 22,
+        "scope": "branch-map.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_SUPERADMIN_EMAIL",
+          "E2E_TEST_BUSINESS_ID"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/error-recovery.spec.ts",
+        "line": 14,
+        "scope": "error-recovery.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_MANAGER_EMAIL",
+          "E2E_TEST_BUSINESS_SLUG"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/finance-disputes-verification.spec.ts",
+        "line": 14,
+        "scope": "finance-disputes-verification.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_MANAGER_EMAIL",
+          "E2E_TEST_STAFF_EMAIL",
+          "E2E_TEST_STAFF_ID"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/hours-worked-recalculation.spec.ts",
+        "line": 15,
+        "scope": "hours-worked-recalculation.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_MANAGER_EMAIL",
+          "E2E_TEST_STAFF_ID"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/promotion-application.spec.ts",
+        "line": 9,
+        "scope": "promotion-application.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_BUSINESS_SLUG",
+          "E2E_TEST_MANAGER_EMAIL",
+          "E2E_TEST_BRANCH_ID"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/quickdesk.spec.ts",
+        "line": 14,
+        "scope": "quickdesk.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_MANAGER_EMAIL"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/ratings-admin-flow.spec.ts",
+        "line": 18,
+        "scope": "ratings-admin-flow.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_SUPER_ADMIN_EMAIL"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/role-switching.spec.ts",
+        "line": 18,
+        "scope": "role-switching.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_MULTI_ROLE_EMAIL"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/shift-management.spec.ts",
+        "line": 10,
+        "scope": "shift-management.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_STAFF_EMAIL",
+          "E2E_TEST_STAFF_PASSWORD"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/staff-finance-pages.spec.ts",
+        "line": 12,
+        "scope": "staff-finance-pages.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_MANAGER_EMAIL",
+          "E2E_TEST_STAFF_ID"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/visit-packages-flow.spec.ts",
+        "line": 16,
+        "scope": "visit-packages-flow.spec.ts",
+        "requiredVariableNames": [
+          "E2E_TEST_MANAGER_EMAIL",
+          "E2E_TEST_CLIENT_SEARCH"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/visual-regressions.spec.ts",
+        "line": 60,
+        "scope": "visual-regressions.spec.ts (public)",
+        "requiredVariableNames": [
+          "E2E_TEST_BUSINESS_SLUG"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/visual-regressions.spec.ts",
+        "line": 111,
+        "scope": "visual-regressions.spec.ts (workspace)",
+        "requiredVariableNames": [
+          "E2E_TEST_MANAGER_EMAIL",
+          "E2E_TEST_STAFF_ID"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      },
+      {
+        "path": "apps/web/e2e/visual-regressions.spec.ts",
+        "line": 206,
+        "scope": "visual-regressions.spec.ts (staff cabinet)",
+        "requiredVariableNames": [
+          "E2E_TEST_STAFF_EMAIL"
+        ],
+        "actualEnvironmentPresence": "NOT_INSPECTED",
+        "runtimeSkipped": "UNKNOWN_NOT_RUN"
+      }
+    ]
+  },
+  "actualRuntimeClassification": {
+    "currentJest": {
+      "primary": {
+        "path": "apps/web/test-results/c204-full-jest.json",
+        "sha256": "37afeba8f7bf4b1fdd8f04e87e92593f034fa81c24ce0d7c3fe7972e84b7186c"
+      },
+      "originalWindowUtc": [
+        "2026-10-26T09:50:22.026Z",
+        "2026-10-26T09:54:23.287Z"
+      ],
+      "pendingTests": 0,
+      "pendingSuites": 0,
+      "todoTests": 0,
+      "scope": "Only actual existing Jest report; not E2E skipped-spec count."
+    },
+    "currentE2E": {
+      "executed": false,
+      "observedRuntimeSkipCount": null,
+      "reason": "No authorized external Playwright execution/current runner results. Do not call15unexecuted specs15runtime skips, or17skip statements17skipped tests."
+    }
+  },
+  "historicalPrimary": [
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G043-current-baseline.json",
+      "sha256": "304914a8588a13ace656ed32a8d81e9d9aea154defc18efcdc130a46861a040a"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G044-slot-loader-const.json",
+      "sha256": "381dfeacc646ab81a446e55af34eb10203aad79c11c9c105463566a1d017c0d0"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G048-full-build-probe.json",
+      "sha256": "4df53555410b2b65f339e8af38b41fa0b16857b0640d1559cfcd6e45aecc6080"
+    }
+  ],
+  "historicalBoundary": "G043 original14Oct23:07:45.315..23:15:27.304Z Jest485suites/0pending/0todo/3FAIL on oldfingerprint; G044 scopedlint cleanup and oldbaseline stale; G048 isolatedaltered build. None provides current E2E runtime skip identities. OriginalUTC/hash/candidate exclusions preserved/no current credit.",
+  "dependencyHashes": {
+    "apps/web/package.json": "2e0a61f64bd602035cd59591a1f3177c062a2b1707887c78fa50f71264e4d2de",
+    "apps/web/playwright.config.ts": "b2e479d00322c03285fda20bf48db98e2b15e0a061979f12d5cb518a2936e831",
+    "apps/web/e2e/testEnv.ts": "1c56e9a6f401146f5867958da151c5b311530a3e248fea53422df5c123cc4f39",
+    "apps/web/e2e/booking-flow.spec.ts": "5727ebd98e12aead5f5beb7593a6adde2ec278f862b3815b787f74a90a713555",
+    "apps/web/e2e/branch-map.spec.ts": "ad5889a6fb90c31c997d9ae0055ec6cb5e0d70cbc9a58bbe2f546519d2390e09",
+    "apps/web/e2e/error-recovery.spec.ts": "ef2982f25f3f3ed22c1024e2498b54e37e5f3ee0d7fd43b2295284c7593487b3",
+    "apps/web/e2e/finance-disputes-verification.spec.ts": "fbf8db230f7b1d16a0db025f50fdfb34e7b3f46babd786ce2d621ff853145006",
+    "apps/web/e2e/hours-worked-recalculation.spec.ts": "8631a93fd59940eb32b764d5c489d7938e8994322c2844f4ed5a00f6df1c558d",
+    "apps/web/e2e/promotion-application.spec.ts": "82a68067b3106c54622601f23b30183ee4e035e32d59b2e495a7723b832b0f94",
+    "apps/web/e2e/quickdesk.spec.ts": "4c517af3cb8310f23318b2dd61cd56c73864ad70d50b15f10c0d4c9355693108",
+    "apps/web/e2e/ratings-admin-flow.spec.ts": "4bdd154e43dbae9717679d3b22be574b9ff7582b83edb104361c3ef57b54cb44",
+    "apps/web/e2e/role-switching.spec.ts": "e6950c1b42ca75d9bbe58c80bea163be987b053b27299bcef385c3319d8544b4",
+    "apps/web/e2e/shift-management.spec.ts": "7faa887d0689400098b960e36606eb667f0f845865ab796b58829995fec58586",
+    "apps/web/e2e/smoke-public.spec.ts": "10b81fc4ae8fc628e5ae4f6f650ed05d06277d81d522a8b2656b8cecf8f9b065",
+    "apps/web/e2e/staff-finance-pages.spec.ts": "763fa3edf276b4cc4d4c2244a3c0c5f0f8429e1dc52708a6cb0b6583c4827b84",
+    "apps/web/e2e/visit-packages-flow.spec.ts": "6b88b8e2b824eade38f73491d56d0d976f36ed37a2f6e7fc3bddb4565e55d17d",
+    "apps/web/e2e/visual-regressions.spec.ts": "7add0ebaab6e3eb3591d73be9903e164b89449a66909a4730c60f9b1a0485715",
+    "apps/web/e2e/whatsapp-webhook.spec.ts": "664c3d3eaaaed0231c169391bbc0135ccecebc0cce661ec510a42f6d31d1aa06"
+  },
+  "blocker": {
+    "owner": "Permitted execution method and prepared exact environment/effect authority",
+    "exit": "A separately allowed current-candidate runner report with actual skipped spec IDs and reasons, or a clarified technical acceptance contract for documented policy-unrun groups. No new permission/credential/fixture/runner execution inferred from this review."
+  },
+  "decision": "Q1-06 remains unaccepted/blocked with supporting NONLIVE source inventory. Zero new UI/fix/accepted/reuse/execution. No more skip/source audit absent changed config/result/contract. C243 bounded CUA inconsistency diagnostic remains final until genuine new tool condition; no repeated diagnostic or replacement tab. Await meaningful new condition instead of generating stages for activity.",
+  "effects": "Read-only WEB source/config/archived structured evidence only. No browser/test-runner/server/build/source edit, env/secrets/storage/clipboard/SDK/API/SQL/HTTP, role/fixture/entity/booking/message/payment command. Ordinary prior app effects not reclassified or claimed zero.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newExecution": 0,
+    "newReuse": 0
+  },
+  "sourceBoundaryLimitation": {
+    "outsideProductBuildManifest": [
+      "apps/web/playwright.config.ts",
+      "apps/web/e2e/testEnv.ts",
+      "apps/web/e2e/booking-flow.spec.ts",
+      "apps/web/e2e/branch-map.spec.ts",
+      "apps/web/e2e/error-recovery.spec.ts",
+      "apps/web/e2e/finance-disputes-verification.spec.ts",
+      "apps/web/e2e/hours-worked-recalculation.spec.ts",
+      "apps/web/e2e/promotion-application.spec.ts",
+      "apps/web/e2e/quickdesk.spec.ts",
+      "apps/web/e2e/ratings-admin-flow.spec.ts",
+      "apps/web/e2e/role-switching.spec.ts",
+      "apps/web/e2e/shift-management.spec.ts",
+      "apps/web/e2e/smoke-public.spec.ts",
+      "apps/web/e2e/staff-finance-pages.spec.ts",
+      "apps/web/e2e/visit-packages-flow.spec.ts",
+      "apps/web/e2e/visual-regressions.spec.ts",
+      "apps/web/e2e/whatsapp-webhook.spec.ts"
+    ],
+    "meaning": "Current E2E source/config inventoried and independently hashed28Oct, outside the1687-file product-build boundary. This is not an execution-dated E2E source bridge for C204 or a new product candidate. No test import/runner/environment inspection."
+  }
+}

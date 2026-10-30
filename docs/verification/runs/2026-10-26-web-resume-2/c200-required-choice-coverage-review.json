@@ -1,0 +1,86 @@
+{
+  "id": "C200",
+  "status": "BOUNDED_READONLY_MATRIX_ONE_SAFE_GAP_IDENTIFIED",
+  "reviewedAfterClockUtc": "2026-10-26T09:33:49Z",
+  "completedAfterClockUtc": "2026-10-26T09:37:19Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "matrix": [
+    {
+      "family": "branch-required",
+      "proof": "CurrentC192finiteinitialentry explicitlyexpectstwounselectedbranches/Nextdisabled andactualsame; sourcecandidateunchanged. C191/C194/C196recoverycontrolsnotextracases.",
+      "status": "CURRENT_PROOF_AVAILABLE_NO_REPLAY",
+      "credit": 0
+    },
+    {
+      "family": "valid-day-required",
+      "proof": "G088 original15Oct23:11:32Z Step2lowerguard3locales/reload/recovery; G08923:23:37Z inclusive60/calendarupperguard. KeeporiginalUTC/DONE. C198/C199 currentdeepStep4bounds supplemental currentproof.",
+      "status": "HISTORICAL_STEP2_BRIDGE_NOT_COMPLETED_CURRENT_STEP4_PASSED",
+      "credit": 0
+    },
+    {
+      "family": "staff-required-with-options-available",
+      "proof": "G090 starts fromexistingselection; G062offdayNoStaff denialdifferentprecondition. G069explicitlystatesunselectedunitcontrols/no newliveclear-selection. CurrentC194/C196initialstaffAXissetup/control0credit, notretrospectiveindependenttest. Onegenuinelyuncoveredexplicitstaff-noneLIVEguard identified.",
+      "status": "UNEXECUTED_FINITE_VARIANT_SAFE_C201",
+      "credit": 0
+    },
+    {
+      "family": "service-required",
+      "proof": "CurrentC196 lastdeselectexplicitplannedassertion/Nextdisabled; single-serviceG065/G090DONE, do notrerun.",
+      "status": "CURRENT_COMPOUND_CASE_PASSED",
+      "credit": 0
+    },
+    {
+      "family": "time-required",
+      "proof": "G090originalg090-slot-list-no-selection actualTimeStep/12unselectedslots/Выбратьвремяdisabled. ReviewedcurrentformalsoStep5canGoNextfalse/slotbuttonsseparatecommands. Sourcealone notLIVE; completeexecutiondatedreceiverbridge notestablishedhere, no brandnewTimecaseorbookingauthority.",
+      "status": "HISTORICAL_METHOD_ONLY_CURRENT_DEPENDENCY_BRIDGE_PENDING",
+      "credit": 0
+    }
+  ],
+  "primaryHashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G088-day-range-after.json",
+      "sha256": "da926328803a48922709cc3520d7e8d51517395a773261add483a17d8a4fa87e"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G089-upper-date-range.json",
+      "sha256": "047dc86d33b65e1e321519d934196ee09cb24ffe1040e2432199c9a20a190410"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G090-service-selection-navigation.json",
+      "sha256": "2228fd85d336a325ca5316dcf150a7f7d4e49cceace94f62d9d49ab84948f5ca"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/g090-service-options-before.txt",
+      "sha256": "0bcf2e7abcd2f861695b28f14d864e7d3dcb6b5c24665f3ca892254fc2128e11"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/g090-slot-list-no-selection.txt",
+      "sha256": "3bdd12ba7dd76b5708f7f82084ba4bd9a359e79876c6e5511c6c1e92b0055072"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G062-staff-day-availability-after.json",
+      "sha256": "6f271f2670873ea5271120ead7ddab3a51cbd5f8fd229610e47cb4afc47fec7c"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G065-keyboard-booking-smoke.json",
+      "sha256": "2367f6fb20821ec0847896ca185ecefbd671a0feffd79e1809b359685afaa245"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G068-any-master-availability.json",
+      "sha256": "4b3924afa347aec848ff8dad4bcaf41d453ec3af32e2cb45fd5f54a14ab36903"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G069-any-master-summary-after.json",
+      "sha256": "92355519e35ec7975ce72fcd715155b7e39e2b6faf6a81eae113656199797b98"
+    }
+  ],
+  "notRepeated": "G069AnyMaster/concrete-switchand3localesalreadyDONE, no newAnyMastertest. G090BackForward/branchclear/L040reload/calendarG088G089DONE. No missing-sourcebridgeguessedfromoldPASS.",
+  "next": "C201onlyexplicitunselectedstaffStep3guardwithavailablechoices, positiveexistingconcretechoice control; no Nextorservice/slot/booking action. WholeD2-02remains partial untilallmandatoryproof/methoddependencies.",
+  "effects": "No browser/UI/auth/DB/entity/source/test/build/serveractionfromreview; ordinarypreviouscontextpreserved/no freshUIhealthclaim.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}

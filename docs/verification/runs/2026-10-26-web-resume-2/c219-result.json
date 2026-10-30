@@ -1,0 +1,31 @@
+{
+  "id": "C219",
+  "status": "PASS_ONE_COMPOUND_OWNER_DASHBOARD_LOGOUT_BACK_GUEST_RELOAD_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c219-owner-logout-back-plan.json",
+  "caseId": "S26-C604-owner-dashboard-logout-back-reload",
+  "observationWindowUtc": [
+    "2026-10-26T11:12:15Z",
+    "2026-10-26T11:13:16Z"
+  ],
+  "logoutAfterClockUtc": "2026-10-26T11:12:15Z",
+  "backAfterClockUtc": "2026-10-26T11:12:23Z",
+  "reloadAfterClockUtc": "2026-10-26T11:12:58Z",
+  "actual": "HealthyknownownerDashboard2/h1name/IDc28c/currentBusiness2 positivecontrol. OrdinaryВыйти ->settledguestroot/Войти/no account/Logout. ONEnativeBack actual/dashboard/guestheader/loading ->settled/auth/sign-in?redirect=/dashboard/Googlebutton/no ownerDashboardbody/sidebar/identity. ONEordinaryreloadsameauthgate, waitroleloadinghidden->guestВойти/no privatebody. ProtectedhistorytargetconfirmedbyactualBack/dashboard beforeautomaticredirect, no historyhunt/forcedgoto.",
+  "effects": "OnepreparationSAlogout+knownownerGoogle; ContinuealreadyCurrent2setupmayupsertsamepreference; ONEactualownerlogout+ONEBack+ONEguestreload; knownkezekkgGoogle+observedAdminheaderitemrestore. Ordinaryauth/read/analytics/telemetryunenumerated. No manualstorage/cookie/token/clipboard/HTTP/SDK/SQL/newtab/native/security/booking/slot/hold/payment/profile/notification/source/test/build/server action.",
+  "restoredBeforeClockUtc": "2026-10-26T11:14:56Z",
+  "restoration": "SAGooglecallbackhonorednext/dashboard ->AdminAnonymized/Noaccessmanagement/no ownerdata. ExpectedAdminpanelbuttonwaitnotmatchbecauseactualheaderlabelАдмин; ONEfreshAX thenobservedАдминmenu->Админ-панель ->actualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1/markHandoff. No duplicateGoogle/auth/refresh toforceflow.",
+  "toolNotes": "OwnerchooserwaitRuntime.evaluate deadline ->ONEfreshAXcompletedCurrent2; Continueonce. Tooltiming/labeldifference notproductfailure. Existingnext/dashboard destinationisplannednormalreturn, notnewroutingbug.",
+  "limits": "SettledpageUIproofonly. No no-flash/frame/BFCache/allengines/tokeninvalidity/API/RLS/expiry/multitab/allrolesecuritycertificate. G108oldcalendarBack-only notnewreuse/retimed; thisonecurrentDashboardlogout-Back-guestreload sequence. C6-04remainspartial/mandatoryotherboundariesnotexcluded.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 13,
+    "windowUiAfter": 14,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

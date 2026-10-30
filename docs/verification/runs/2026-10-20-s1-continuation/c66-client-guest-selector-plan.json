@@ -1,0 +1,17 @@
+{
+  "id":"C66",
+  "plannedAfterUtc":"2026-10-21T09:12:39Z",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "requirementIds":["F1-03"],
+  "parentPlan":"c65-select-cabinet-plan.json",
+  "timeboxMinutes":12,
+  "cases":[
+    {"key":"client","existingCaseId":"S21-F103-DIRECT-client","expected":"KnownGooglelow.fade.osh pureclient actualLIVE TEST CLIENT12OCT/Клиент control. Directlocalhost/select-cabinet redirectsroot withpublicheading andauthenticatedpersonalaccess, no selector orAdmin/business/staff options. NotnewdefaultloginPASS."},
+    {"key":"guest","existingCaseId":"S21-F103-DIRECT-guest","expected":"AfterordinarylogoutrootactualВойти/noaccount; directlocalhost/select-cabinet redirectsroot withpublicheading/no selector/privilegedoptions. No serverdata/APIsecurityclaim."}
+  ],
+  "reason":"Twoexistingnot_run7-rolevariant slots, primarydirectselectorproofnotlocatedC64. No repeatedSAcase/C1default/provider flows counted; authsolelysetup. C63staffreloadunrelatednotrepeated.",
+  "steps":["Freshinventory/currentknownSA control", "Clockbeforeordinarylogout/localGoogleknownpureclientsetup, actualidentitycontrol", "Clock; onedirect/select-cabinet entry ->actualroot/publicheading/authpersonalaccess/no selector", "Clockbeforeordinarylogout, actualguestroot", "Clock; onedirect/select-cabinet entry ->actualguestroot/no selector", "ClockbeforeGoogleknownSArestore; protectedadmin/Anonymized andhandofforiginal2/18"],
+  "effects":"2ordinarylogouts+2knownGoogleloginsincludingSArestore; documentnavigationsonly. No selectorchoice/Remember/persistentpreference/storage/cookie/authcodeinspection,newtabs,source/test/build/server/DB/APIprobe/role/grant/business/booking/shift/payment/reviewcommands. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites.",
+  "stop":"Unexpectedidentity/options/errorrecordthenstopcasechain/restoreSA, no retryloop/blindfix/newfixture; CAPTCHA/password/device handoff. NoF013repeat.",
+  "acceptance":"Only2newrolecases eligible. C65SAretainsoriginalUTC; owner/staffnot_run, manager/multiroleBLOCKED retained. FullF1-03partial; no acceptedrequirement/newfix fromsubset."
+}

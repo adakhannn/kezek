@@ -1,0 +1,23 @@
+{
+  "id": "C201",
+  "status": "PASS_REQUIRED_STAFF_CHOICE_WITH_ELIGIBLE_OPTIONS",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "plan": "c201-unselected-staff-next-guard-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T09:37:19Z",
+    "2026-10-26T09:39:18Z"
+  ],
+  "actual": "ONEordinarydeepStep3entry branchfe1/day26Oct/nostaff/service. InitialhydrationemptyNoStaffnotaccepted. SettledactualAnyMasterandАдаханОсоровavailable,bothcheckboxValue0/summaryMasterНе выбран/Nextdisabled; documentedisEnabledfalse. ONEclickonlyconcreteАдаханОсоров ->namedcheckboxValue1/AnyMasterstill0/summaryactualname/Nextenabled; documentedisEnabledtrue. NoNextactivation/AnyMaster/DONEswitch/service/Timecase.",
+  "restoration": "BasebookingdocumentStep1/bothbranchesunchecked/no master/service/Nextdisabled/day26Oct; ordinarybrandroot3businesses->Adminmenu->protected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1;markHandoff.",
+  "credit": {
+    "newUi": 1,
+    "newWindowUiBefore": 7,
+    "newWindowUiAfter": 8,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292
+  },
+  "effects": "Localwizardselection/navigationonly; no authtransition/configSave/serviceassociation/entity/Next/slot/ChooseTime/Confirm/hold/booking/payment/API/SDK/SQL/storage/source/test/build/serveraction. Ordinaryauth/analytics/telemetry/draftwritesunenumerated; notzeroTOTALwrites.",
+  "limits": "Onecompoundinitialstaff-requiredguard+positivecontrol, notAnyMaster/distribution/time/booking/security/visual/no-flash/fullD2proof. OldG069unselectedUNITcontrols notpromoted. FullD2-02 remains partial; exactday/timehistoricaldependencygaps retained."
+}

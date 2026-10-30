@@ -1,0 +1,19 @@
+{
+  "recordedUtc": "2026-10-18T12:29:10.1555191Z",
+  "timestampBasis": "Original file creationUTC verified read-only; not the later correction mtime",
+  "candidateId": "dev-20261018-S1-0cc81561faf0",
+  "notNewLiveTests": true,
+  "requirements": {"accepted":16,"remaining":9,"total":25},
+  "cases": {"passed":56,"remaining":23,"total":79},
+  "fixes": {"newVerified":2,"ids":["S1-F001","S1-F002"],"open":0,"historicalNotAddedAgain":true},
+  "unlockGroups": [
+    {"priority":1,"group":"Browser evidence capabilities","requirementIds":["A1-01","A1-02"],"caseCount":10,"cases":["S12-cold-1","S12-cold-2","S12-cold-3","S12-cold-4","S12-cold-5","S12-cold-6","S12-cold-7","S12-cold-8","S12-SSR","S12-INITIAL-VISUAL"],"prerequisite":"Supported cold-cache control with owner+guest context, original prehydration response inspection and working actual screenshot. Existing navigation/reload/AX are not substitutes; explicit view-source policy denial cannot be bypassed.","stop":"No unchanged screenshot retries, rawHTTP/CDP/source-view alternatives, or authreset"},
+    {"priority":2,"group":"Existing negative data prerequisites","requirementIds":["B2-03","B2-04"],"caseCount":3,"cases":["B2-03-S13-2","B2-03-S13-3","B2-04-S13-3"],"prerequisite":"Known existing inactive branch/inactive business/deleted-slug oracle; current2branches active and otherbusinesshas0branches. Active-service/hidden-service/no-branches controls alreadyPASS, not repeated.","stop":"Do not fabricate deleted state, create new role/job/user fixtures, disable booked branches or delete coredata without specific new authority and safe restoration"},
+    {"priority":3,"group":"Original transient failure diagnostic","requirementIds":["A2-04"],"caseCount":1,"cases":["A2-04-S1-01"],"prerequisite":"Real recurrence with timestamped failing request/response correlation using supported observation. Historicaluntimestampedfontwarnings are not original failure cause.","stop":"No invented CORS/TLS diagnosis, deniedendpoint replay or unchangedlogdraining"},
+    {"priority":4,"group":"Domain/deployment last, explicitly deferred","requirementIds":["A2-01","A2-03","A2-04","A3-03","A3-04"],"caseCount":9,"cases":["A2-01-S1-03","A2-01-S1-04","A2-01-S1-05","A2-03-S1-01","A2-03-S1-02","A2-04-S1-02","A3-03-S1-02","A3-04-S1-01","A3-04-S1-02"],"prerequisite":"Declareddeployedcandidate/domain/public-privateorigins/callback/webhook targets and olddocument/newdeploymentartifact forstalechunkrecovery","stop":"No deploy/domainpurchase or relabelinglocalhostasdeployedPASS. Remain in denominator until available"}
+  ],
+  "countRule": "Group caseIDs disjoint and cover all23 remaining activeS1cases. RequirementA2-04 appears in diagnostic+deployedgroups but counted once in9remainingrequirements. No partial credit or duplicatedtests as percentages.",
+  "nextAcceptanceMilestones": [{"if":"browser10cases allPASS","then":"18/25requirements,7remaining"},{"if":"negative3cases also allPASS","then":"20/25requirements,5remaining"},{"if":"allremainingdiagnostic+deployedcasesPASS","then":"25/25S1only; not wholeproduct/releasePASS"}],
+  "deadlineUtc": "2026-10-18T12:40:00Z",
+  "autonomousResume": false
+}

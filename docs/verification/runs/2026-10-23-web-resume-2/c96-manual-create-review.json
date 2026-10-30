@@ -1,0 +1,46 @@
+{
+  "id": "C96",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "startedAfterUtc": "2026-10-23T05:11:37Z",
+  "type": "bounded read-only manual business creation effect/history review",
+  "history": "M2-01 current four cases cover existing-A edits only. C87 original historical audit/20Oct fixture plan explicitly classify earlier creation as setup, not acceptance. Missing WB046 primary not interchangeable. No current creation-form guard/Cancel proof found in reviewed requirement cases; no retrospective acceptance or changed original UTC.",
+  "source": "ManualBusinessCreateForm starts blank name/slug/phone/reason/categories/acknowledgment, branchlimit1. Name updates local autoslug; form fields/category/acknowledgment local state only. canSubmit needs name>=2/nonempty slug/category>=1/reason>=10/acknowledged; categoriesLoadError disables separately. Ordinary Submit or Enter triggers POST; duplicate override button can create and must never be used. Back/Cancel navigate to businesses list. Page reads active categories; route normal auth+SA, service validations then duplicate reads then businesses insert and audit insert, with delete rollback on audit failure. Thus real create/override/auditfailure is not authorized; C97 will NEVER submit or press Enter. No source-only runtime bug/security or all-writes claim.",
+  "independentOracle": "Manual-creation UI explicitly requires name, category, reason and acknowledgment; missing each should prevent submission. A complete local draft should permit the control without executing it. Cancel/re-entry should not retain unsaved draft or create business. This checks UI prevention only, not server rejection or successful creation.",
+  "evidencePaths": [
+    "docs/verification/runs/2026-10-23-web-resume-2/c87-completeness-review.json",
+    "docs/verification/runs/2026-10-20-s1-fixtures/preparation-plan.json",
+    "apps/web/src/app/admin/businesses/new/page.tsx",
+    "apps/web/src/app/admin/businesses/new/ManualBusinessCreateForm.tsx",
+    "apps/web/src/app/admin/api/businesses/create/route.ts",
+    "apps/web/src/lib/manualBusinessCreationService.ts"
+  ],
+  "effects": "Read-only source/history only, no UI/DB/source/test/runtime change.0newexecutioncredit.",
+  "next": "C97 one finite compound local manual-create guard/Cancel case with independently varied missing reason/name/category/acknowledgment and valid control. NEVER Submit/Enter/override or newfixture; Cancel/re-entry/reset then restore known SA admin. Whole M2-01 remains partial.",
+  "completedBeforeUtc": "2026-10-23T05:13:21Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c87-completeness-review.json",
+      "sha256": "3436c4405a5d75bf6e785cafe01aa3049b9d54411137f29bed59bd28e43248b4"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/preparation-plan.json",
+      "sha256": "6ff4ea7e56ca5879fe9c4ec12537817d7848ebb765af683fd7ed3f44c09a6821"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/new/page.tsx",
+      "sha256": "37ed95c633023ba66c110c37113c753fa56c74f87c125f759f1b9f03e327f071"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/new/ManualBusinessCreateForm.tsx",
+      "sha256": "570cd62c8e2ecf611a4b84dd50fed6488c6b951253d899d279b4d34a5672a11a"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/create/route.ts",
+      "sha256": "89ae4eab5a681bcd15f01df590be6921397e193170806c6bd783c8d8e73cb036"
+    },
+    {
+      "path": "apps/web/src/lib/manualBusinessCreationService.ts",
+      "sha256": "ac857b53240fefd374695a964094846e932943f8a1ec580061cf62876d8a3ce7"
+    }
+  ]
+}

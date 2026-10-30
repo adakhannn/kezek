@@ -1,0 +1,20 @@
+{
+  "id": "C30",
+  "candidate": "dev-20261020-S1-6b8b3bf85fe5",
+  "status": "FIVE_NEW_SETTLED_PAGE_DENIAL_PASS_PARTIAL_REQUIREMENT",
+  "cases": [
+    {"key":"guest-dashboard","path":"/dashboard","role":"guest","afterUtc":"2026-10-20T22:49:19Z","beforeUtc":"2026-10-20T22:49:42Z","actual":"Actualsigninredirect=/dashboard, no managementworkspace in settledDOM"},
+    {"key":"guest-staff","path":"/staff","role":"guest","afterUtc":"2026-10-20T22:49:42Z","beforeUtc":"2026-10-20T22:50:00Z","actual":"Explicit Требуется авторизация, no staffworkspace"},
+    {"key":"guest-cabinet","path":"/cabinet/bookings","role":"guest","afterUtc":"2026-10-20T22:50:00Z","beforeUtc":"2026-10-20T22:50:47Z","actual":"Войдите, чтобы посмотреть записи prompt/no clientbookings; navigationcommandtimeout then ONE freshDOM provedcompletedprompt, notblankapp/newnavigation"},
+    {"key":"client-dashboard","path":"/dashboard","role":"pureclient low.fade.osh@gmail.com","afterUtc":"2026-10-20T22:51:56Z","beforeUtc":"2026-10-20T22:52:31Z","actual":"ActualКлиент/LIVE TEST CLIENT12OCT then Нет доступа к кабинету управления; no foreignmanagementworkspace"},
+    {"key":"client-staff","path":"/staff","role":"pureclient low.fade.osh@gmail.com","afterUtc":"2026-10-20T22:52:31Z","beforeUtc":"2026-10-20T22:54:03Z","actual":"Нет доступа к кабинету сотрудника / notlinkedactiveemployee; clientheaderrecognized, no staffworkspace"}
+  ],
+  "positiveControl": "KnownexistingGooglelow.fade.osh selected, actualLIVE TEST CLIENT12OCT/Клиент. Personalcabinet Мои записи rendered ownupcomingempty; no Telegramprompt action/history/bookingcommands. Control proves authenticatedcontext, not numericalhistory/bookingmodel.",
+  "restoration": "Ordinaryclientlogout+knownkezekkgGooglelogin, actualAdmin-panel/Anonymized andadminroot by22:55:43. OAuthwaitreportedtimeoutbutONEfreshDOMprovedcompletedadmin; norepeatlogin/callbackinspection. Tab2rootsharedsessionnormalupdates, notindependentsession.",
+  "matrix": {"passed":9,"blocked":4,"notRun":3,"failed":0,"total":16,"remaining":7,"newLivePass":5,"reusedPass":4},
+  "reuse": "ExistingC11fourguest/client/staff/owneradminroot negatives, originalUTC/evidence/dephashesretained; no doubleexecutionsummed. ExistingC16businessadmin/manageradminrootblocked reused. Twoadditionalnostaff-affiliation missing-role cases explicitlyBLOCKED.",
+  "limits": "SettledpageDOMonly; no visualflash/SSRoriginalHTML/network/realAPInegative/RLS/CSRF/IDORcertification. Missingroles4blockedremain;3availablecontextcasesnotrun. F4-01partial, no newacceptedrequirement. No sourcefix.",
+  "counts": {"S1":"17/25accepted8left;63/79PASS16left","S2":"1/70accepted69left","navigation":"16PASS2FAIL1BLOCKED/19","product":"18/316accepted298leftNOT_READY","newVerifiedFixesThisLogicalRun":8},
+  "effects": "OrdinarySAlogout/clientlogin/clientlogout/SAlogin. No user/role/job/stafffixtures, no staff-positiveentry to autosync, no businesspreference/Save/moderation/booking/SQL/recalc/payments. Ordinaryauth/telemetryIDsunenumerated/notzeroTOTALwrites. Existing5adminroot restored,2root sharedSA; no newtabs/native/screenshots.",
+  "next": "Nextfinitepass: remaining F4 staff:/dashboard,owner:/staff,superadmin:/staff with explicit affiliationcontext and knownGoogle ordinaryauth; restoreSA. Missingbusinessadmin/managerfixtures stayblocked/no creation. Do not repeatC28/C29orclosedchains unchanged; F005realerrorpending/businessapptransientcauseunknown/deniedmonitoring retained."
+}

@@ -1,0 +1,31 @@
+{
+  "id": "C148",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "existingCaseId": "A3-01-S1-01",
+  "savedBeforeRuntimeUtc": "2026-10-25T20:36:33Z",
+  "scope": "Final c1115361a3b4 current output after C141+C145 locale/punctuation source. C147 compile alone insufficient. ExistinghealthyhumanTab2 only; one publicprivacyentry/reload/adminreturn. No repeated C93assetbundle/newtab/cache/visual/domain check.",
+  "runtime": {
+    "harness": "scripts/closure-web-built-runtime-c148-20261026.mjs",
+    "host": "127.0.0.1",
+    "port": 3107,
+    "watchdogSeconds": 300,
+    "rawLog": "c148-runtime-raw.txt",
+    "outbound": "Same C147 Node TCP/fetch deny except exact owned PostCSS IPC, dummy.invalid/no.env/no realkeys; not OS firewall"
+  },
+  "timeBudgetMinutes": 5,
+  "expected": "Actual built /privacy at127.0.0.1:3107 renders Политика конфиденциальности/nine numbered sections and guest Войти; one reload retains complete document/no error overlay. No app auth/sign-in command.",
+  "steps": [
+    "Require finished C147 exit0/no timeout/exact1686 copy+current source, only expected generated Next declaration difference. Syntaxchecked harness, fresh3107free/noexistingruntime/log. Clock one owned launch only.",
+    "Computer-use/cua_repl same human tab2/resume26HumanTab; verify healthy current localhostadmin before navigation. Clock direct independent compiled privacy http://127.0.0.1:3107/privacy. This is separate planned compiled-output test, never denied-page recovery. Read heading/nine numberedsections/guest sign-in only; no forms/auth.",
+    "Clock one ordinary reload, same complete public document/no overlay. No assetbundle/HTTP/SDK/evaluatefetch/token/storage/clipboard/capture/viewport/cache workaround.",
+    "Clock return observed http://localhost:3000/admin, protected Admin-panel/Anonymized/Business3/RU and corrected TodayCount1 if unchanged. Mark handoff. Verify exactownedPID/path then stopONLYruntime; confirm3107gone/main3000PID18368 preserved. Retain files/no cleanup.",
+    "Denial/interruption/uncertain state/startupFAIL ->stop no alternate/newtab/retry/configrepair/rebuild. Humanstop safe effects +PAUSEDexistingkezek/readback/new26Octfinal."
+  ],
+  "effects": "Owned isolateddummy nextstart and temporary public document entry/reload/return only. No DEVDB/booking/payment/role/message/persistentfixture/appauth transition. Ordinary auth/telemetry unenumerated.",
+  "accounting": "At best restore existingA3-01 accepted20->21/S116->17/primary62->63;0NEWfunctionalUI/fix/newrequirement.26Oct6NEWUI/3fix/logical15 unchanged. Second build refreshEVENTthiswindow, ONEdistinctexistingcase. FulltechnicalFAIL/blockers remain.",
+  "harnessHashes": {
+    "scripts/closure-web-built-runtime-c148-20261026.mjs": "4e5cee18b98a237a3fdceeca514bfbda8e9ac0a37e379bb62e485239c5d0d5bb",
+    "scripts/closure-web-offline-guard-c147-20261026.cjs": "d6ae65cb321ae37405348691e10c616ff3a0c48e2e479503b07f18fc94838203"
+  }
+}

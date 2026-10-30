@@ -1,0 +1,26 @@
+{
+  "id": "C257",
+  "status": "FINITE_NEW_RUNTIME_ATTEMPT_AFTER_BOUND_HANDLE_RECOVERY",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "sourceFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+  "buildResult": "docs/verification/runs/2026-10-28-web-resume/c254-result.json",
+  "script": "scripts/closure-web-built-runtime-c257-20261028.mjs",
+  "scriptSHA256": "5a657182bec784c1776a6452d89774a1243fcaf217cf452e5d57987ce63308fd",
+  "origin": "http://127.0.0.1:3107",
+  "target": "/privacy",
+  "role": "Guestisolateddummybackend, existingSAadmin mainrestore",
+  "watchdogSeconds": 300,
+  "expected": "Actualstandardbuiltprivacydocument inSAMEpermittedworkingtab rendersninepolicysections/guestВойти/no erroroverlay; ONEreloadrenderretained; ordinaryreturnmainlocalhost3000/admin/protectedRU/Anonymized/Business3; exactownruntimePIDtree stopped/3107gone/main3000PID30212preserved. OnlyexistingA3buildcaserefresh, noNEWfunctionalUI/fix/firstaccept.",
+  "steps": [
+    "Verifycurrent1687sourcehash/builtcopy exceptexactgeneratednext-envdeclaration, successfulC254/noexisting3107listener/log; syntaxchecknewruntimeharness. ONEownednormalNextstart127.0.0.1:3107 only.",
+    "Requireexistingknownworkingprovider0777; actualmainSAadminalreadyrestored14:07:43. SAMEtabordinarygotoexactownedcompiled/privacy forindependentA3outputcase; no newtab/rebind/deniedprovider/serviceeditorretry or publicbookingloadretry.",
+    "AftertimeoutONEfreshAX/no repeatnavigation; ifdocumentnotobserved stop/BLOCKED andreturnmainonlyifsafe/needed. No screenshots/assets/fetch/HTTP/native/proxy/providerworkaround.",
+    "Onlyifinitialactualdocumentcomplete: ONEordinaryreload thenactualdocumentverify; thenreturnmain/admin/protectedRU/Anonymized/Business3 andmarkHandoff.",
+    "VerifyrecordedownedPIDcommandlineexactbuiltpath beforeStopProcess/tree. Keepallbuild/raw/evidence; no cleanup/mainrestart."
+  ],
+  "boundaries": "IndependentNEWcompiledcandidateoutput—notC253serviceeditorrepair; C253remainsBLOCKEDuntilgenuinecondition. No DEVDB/booking/financial/role/fixture/message/authtransition/source/test/configcommands fromruntimecase. Ordinarymainauth/telemetryunenumerated; nozeroTOTALwrites. Full11testFAIL/lint52errors167warnings remain.",
+  "priorAttempt": "docs/verification/runs/2026-10-28-web-resume/c255-result.json",
+  "newCondition": "C255referenceerroroccurredbeforegoto/thenboundedCuaresetrecoveryEV807originaltab1handlekezekRecoveredTabbound. C256actualowner6fieldfeedbackchain andSArestore14:34:42 demonstratecurrentboundmethod; oldC255hadNONE. Newmethodcondition, no unchangedruntime/page retry or sourcebuildrerun. C256finalowner-servicesAUTH_SERVICE_UNAVAILABLEnotretried/repairedbythisindependentcompiledprivacycase.",
+  "rawLog": "docs/verification/runs/2026-10-28-web-resume/c257-runtime-raw.txt",
+  "mainServer": "Normal3000PID30212/session34957 preserved; oldPID6060absentbeforeauthorizedONEnormalrestart. UpdateoldC255mainPIDexpectationto30212."
+}

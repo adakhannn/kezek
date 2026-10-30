@@ -1,0 +1,7 @@
+{
+  "oldFingerprintReconstructed": "21112eeec996cdf4a0c0ee7e981a67273325ea0301fd308994559356f7250404",
+  "original": {
+    "apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts": "'use client';\r\n\r\nimport { useEffect } from 'react';\r\n\r\nimport { supabase } from '@/lib/supabaseClient';\r\n\r\ntype UseExistingSessionRedirectOptions = {\r\n    redirectParam: string;\r\n    decideAndGo: (fallback: string) => Promise<void>;\r\n};\r\n\r\nexport function useExistingSessionRedirect({\r\n    redirectParam,\r\n    decideAndGo,\r\n}: UseExistingSessionRedirectOptions) {\r\n    useEffect(() => {\r\n        supabase.auth.getUser().then(({ data }) => {\r\n            if (data.user) void decideAndGo(redirectParam);\r\n        });\r\n        const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {\r\n            if (session?.user) void decideAndGo(redirectParam);\r\n        });\r\n        return () => {\r\n            active = false;\r\n            sub.subscription.unsubscribe();\r\n        };\r\n    }, [decideAndGo, redirectParam]);\r\n}\r\n"
+  },
+  "prototypeFingerprint": "78ee13c3e4331cba92f82a442116a090c84dc4e165d1140db3e68819d069e029"
+}

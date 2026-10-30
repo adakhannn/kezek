@@ -1,0 +1,91 @@
+{
+  "id": "C27",
+  "fromCandidate": "dev-20261020-S1-0c66ea0f463f",
+  "resultFile": "c27-result.json",
+  "originalFile": "c27-original-boundaries.json",
+  "newPaths": [
+    "apps/web/src/__tests__/components/RatingsDebugActionsRender.test.tsx"
+  ],
+  "reviewEvidenceId": "S1-EV-244",
+  "reviewBasis": "Exactprior1675filefingerprint reconstructed fromone savedUIfile excludingonenewtest. OnlyRatingsDebug cellrendererchanged; existinghandlers/services/auth/layout unchanged. PreviouslyPASSnavtarget excludedfrompreserved and actuallyretested; priorobservation retained. Otherpasseddep hashes reviewed withoutfreshretime. Currentbuild/assetsstale/priorC15FAIL/Fontspermissionexpired.",
+  "caseId": "S21-M103-ratings-debug",
+  "retestPreviouslyPassedTarget": true,
+  "updateExistingFinding": true,
+  "observationUpperUtc": "2026-10-20T22:41:31Z",
+  "dependencies": [
+    "apps/web/src/app/admin/layout.tsx",
+    "apps/web/src/lib/adminAccess.ts",
+    "apps/web/src/app/admin/ratings-debug/page.tsx",
+    "apps/web/src/app/admin/ratings-debug/RatingsDebugClient.tsx",
+    "apps/web/src/lib/ratingsDebugEntitiesHttpService.ts",
+    "apps/web/src/lib/ratingsDebugEntitiesService.ts"
+  ],
+  "caseEvidenceIds": [
+    "S1-EV-236",
+    "S1-EV-237",
+    "S1-EV-243"
+  ],
+  "finding": {
+    "id": "S1-F007",
+    "fixEvidenceIds": [
+      "S1-EV-236",
+      "S1-EV-237",
+      "S1-EV-238",
+      "S1-EV-239",
+      "S1-EV-240",
+      "S1-EV-241",
+      "S1-EV-242",
+      "S1-EV-243"
+    ]
+  },
+  "evidence": [
+    [
+      236,
+      "c27-plan.json"
+    ],
+    [
+      237,
+      "c27-before.json"
+    ],
+    [
+      238,
+      "c27-unit-before.txt"
+    ],
+    [
+      239,
+      "c27-types-initial.txt"
+    ],
+    [
+      240,
+      "c27-unit-after.txt"
+    ],
+    [
+      241,
+      "c27-types-after.txt"
+    ],
+    [
+      242,
+      "c27-lint-after.txt"
+    ],
+    [
+      243,
+      "c27-result.json"
+    ]
+  ],
+  "newFixCount": 8,
+  "verifiedFixIds": [
+    "S1-F003",
+    "S1-F004",
+    "S1-F006",
+    "S1-F008",
+    "S1-F009",
+    "S1-F010",
+    "S1-F011",
+    "S1-F007"
+  ],
+  "label": "existingratingsactionrenderer",
+  "planFile": "c27-plan.json",
+  "page": "/admin/ratings-debug",
+  "browserState": "8rowbuttons0objectcells afterfullreload, NOrowactioninvoked",
+  "completion": "C27existingF007renderonlyclosed actual8buttons/0objectcells afterfullreload;23scopedUNITPASS/types0/lint0. No recalc executed/claimed. Nav16/19unchanged/S1countsunchanged;8newverifiedfixeslogicalrun, no newdistinctfinding."
+}

@@ -1,0 +1,63 @@
+{
+  "id": "C179",
+  "status": "PASS_THREE_VARIANT_COMPOUND_PUBLIC_WEBSITE_INHERITANCE",
+  "plan": "c179-public-inheritance-plan.json",
+  "review": "c178-public-inheritance-review.json",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "caseId": "S26-I103-public-website-inheritance-matrix",
+  "observationWindowUtc": [
+    "2026-10-25T23:29:43Z",
+    "2026-10-25T23:36:51Z"
+  ],
+  "baseline": "KnownSA/RU/samehumanTab2/admin ->Aoriginalname/slug/approvedbarber/ownerunassigned/2branches0staff/services/bookings/limit2. Parenteditalladdress/phones/fourcontactsblank/unmasked thenCancel. ExactACTIVE057 originalname/blankaddress+links+contacts/coords—/—/inherittrue/activeTRUE/7daysclosed/SaveDisabled. Inactivefa5untouched. Publicinitialexactoneactivecontrol/noSite/noinactivebranch.",
+  "variants": [
+    {
+      "name": "public-website:business-fallback",
+      "saveAfterClockUtc": "2026-10-25T23:31:22Z",
+      "actual": "OnlyparentwebsiteP savedonce; editorclosed/reentryexacthttpsP/allotherbaseline thenCancel. PublicheroСайт andnamedactivebranchСайт bothhref EXACThttps://c179-parent.example.invalid/ verifiedordinarylinkgetAttributehref; no linkactivation."
+    },
+    {
+      "name": "public-website:branch-override",
+      "saveAfterClockUtc": "2026-10-25T23:32:16Z",
+      "actual": "Onlyactive057websiteB savedonce, inherittrue/activitytrue unchanged; reentryexacthttpsB/otherbaseline/SaveDisabled. PublicheroSitehrefP/namedactivebranchSitehrefB independentlyreadnormalhrefattributes, exactoneeach/noinactivebranch."
+    },
+    {
+      "name": "public-website:inheritance-disabled",
+      "saveAfterClockUtc": "2026-10-25T23:33:02Z",
+      "actual": "Onlyactive057websitecleared andinheritfalse savedonce, activityTRUE retained; reentryblanksite/inheritfalse/SaveDisabled. PublicheroSiteP remains, namedactivebranch hasNO Site/contactcontainer/noB. No hiddenvalue read; completeAX showsnamedbranch andnextsection."
+    }
+  ],
+  "restoration": {
+    "branchSaveAfterClockUtc": "2026-10-25T23:33:51Z",
+    "branch": "Onlyinherittrue restored, websiteblank/activityTRUE/allotheroriginalfields. ReentrySaveDisabled/7closed days. PublicheroP+branchP ascleanupcontrol0newcredit.",
+    "parentSaveAfterClockUtc": "2026-10-25T23:34:39Z",
+    "parent": "OnlyparentwebsitePcleared; editorclosed/reentrywebsiteblank/originalname/slug/addressphonesothercontacts/category/approval thenCancel. FinalpublicentryexactoriginalA/oneactivecontrol/noSite/noparentorbranchmarker, before23:35:09clock. Journalmarkedrestored/pendingfalse.",
+    "adminAfterClockUtc": "2026-10-25T23:35:09Z",
+    "admin": "localhost/admin ->protectedheading/settledAdmin-panel/Anonymized/RU/Business3/4branches1staff4services30bookings/TodayCancelled1/handoff. Userchooser1untouched/noauth/newtabs."
+  },
+  "toolArtifacts": "Branch Save headingwait deadlines followedbyonefreshAX showedcompletedexpectedlist; eachSave exactlyonce/no duplicatewrite. Tooltiming notproductbug/causeproof. No mapSDKretry or oldcapture/bundle workaround.",
+  "effects": {
+    "journal": "c179-effects-journal.json",
+    "ordinaryUpdates": 5,
+    "parentUpdates": 2,
+    "activeBranchUpdates": 3,
+    "pending": false,
+    "originalRegistry": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+    "originalRegistrySHA256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca",
+    "scope": "Fiveordinaryupdates atmostnormalflow: parentwebsiteP, branchwebsiteB, branchblank+inheritfalse, branchblank+inherittrue, parentblank. Twoexistingisolatedrecords only; originalnullable/emptyrepresentations/auth/telemetryunenumerated. No actualrecipient/send/call/mailto/provider/externalURLactivation/newfixture/role/security/booking/payment/schedule/coords/publication/activity command.",
+    "restoration": "Originalvisiblebaselines+publicabsence restored; rawnull/empty/updatedtimestamps/audit/auth/telemetryeffects unenumerated, notbit-identicalDBrollback orzeroTOTALwrites."
+  },
+  "credit": {
+    "newFunctionalUiPass": 1,
+    "variants": 3,
+    "beforeWindowUi": 20,
+    "afterWindowUi": 21,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 23,
+    "remaining": 293
+  },
+  "limits": "No originalbusiness1/2 or inactivefa5 mutation; no actualphone/email/privatecontact; no mapmarker/coords/permission, activation/publication/owner/role/schedule/booking change. WholeI1-03 stillneedsmappropagation andotherbranchlifecycle; no partialmatrixclaimedwhole.",
+  "next": "C179 full3variantpublicwebsiteinheritance matrix ONEcompoundNEWUI PASS: businessP fallback heroP/activebranchP; branchBoverride heroP/branchB; clearB+inheritfalse heroP/noBranchSite. Exactly5ordinaryupdates onretainedfixtureAparent+active057, then originalbothwebsitesblank/inherittrue/activeunchanged/allotherfields/publicnoSite/adminRUrestored; journalpendingfalse/no pendingeffects.20->21windowNEWUI/4fix/logical16/23of316293left unchanged/NOT_READY. No externalSiteactivation/privatecontact/messages/newfixture/role/security/coords/schedule/booking/source/test/build command. Candidate82c7088de609/1686/currentC174C175build unchanged, no repeats. WholeI1-02/I1-03partial/mapboundaryretained. NextC180 ONLYboundedREADONLY B4-05 missingcoordinates/mapprovidererror historicalproof/currentdependency/effect review before anyfiniteUIplan: exactoriginalpublicmap proofs+currentC179activeAcoords—, no new map/provider/location/permission/networkfault/SDK/HTTP interaction fromreview. Adminbranchmap-unavailable notice is not publicmaperror proof. Reuseonlycomplete matching method/dependency, otherwise exactblocker+independentunfinishedpriority; no unchangedmap/wizard/providerretry or unitimitation. Allold F013/F005/M1intermittent/role/fixture/profileSave/cache/visual/security/technical/domainlast blockers retained."
+}

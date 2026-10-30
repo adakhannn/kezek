@@ -1,0 +1,30 @@
+{
+  "id": "25Oct-resume-preflight",
+  "actualClockUtc": "2026-10-25T08:53:13Z",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "fileCount": 1685,
+  "sourceUnchanged": true,
+  "ledgerValid": true,
+  "dirtyGitEntries": 608,
+  "dirtyChanges": "Existing actorunknown changes preserved. No AGENTS.md found via scoped rg; CONTRIBUTING/method constraints retained. Source unchanged by exact ordered boundary hash, not git cleanliness.",
+  "priorFinal": {
+    "path": "docs/verification/runs/2026-10-23-web-resume-2/final-report.json",
+    "sha256": "84c42de6d4edeac2a811f038e987a9fb946cc446359287d1766fd7faa7119e6b",
+    "unchanged": true
+  },
+  "browser": "Freshinventory: sameIAB2humanTab2/provider9330166e atlocalhost/admin titlecannotaccesssite, no newbinding/input/tab yet. AmbientURLnothealthyUIproof.",
+  "server": "Read-onlyGetNetTCPConnection3000/3107 returnednone; filterednodeNext/closureprocesses none. OldmainPID29340 notassumedalive. No currentNextprocess/listener; project/source verified before scoped normalstart.",
+  "recoveryPlan": [
+    "One normal existingpackage-script-equivalent node nextdev--turbopack --hostname127.0.0.1 in C:/projects/kezek/apps/web; no pnpmshimretry/packageinstall/restartloop/source/config/security changes.",
+    "Confirmlistener/project/PID with readonlycheck, startup-only output/no fullOAuthlogs. SamehumanTab2 normalreload once afterserverhealthy is allowednewcondition; if actual browserpolicydenial/interruption ->stop/no workaround/newtab/alternateURL.",
+    "Fresh actualrole fromUI; no automaticnewroles/loginretries. PreservehumanTab/admin/handoff. Recovery0PASS/fix. Then C110 finite newcandidatebuildplan beforecompiler, no unchanged C92/C93 or bundle retries."
+  ],
+  "effects": "Read-only setup/review only sofar; no appDB/product mutations. Auth/telemetry unenumerated notzeroTOTALwrites.",
+  "automationReadback": {
+    "status": "ACTIVE",
+    "id": "kezek",
+    "configSha256": "aa20b3d96e5459f46757ca2a256f5b44a37394b7f9249a0f229dcd203399f806",
+    "utc": "2026-10-25T08:54:39Z"
+  }
+}

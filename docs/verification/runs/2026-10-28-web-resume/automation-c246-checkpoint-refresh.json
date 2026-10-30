@@ -1,0 +1,19 @@
+{
+  "id": "C246_AUTOMATION_READBACK",
+  "recordedAfterClockUtc": "2026-10-28T12:21:07Z",
+  "automationId": "kezek",
+  "kind": "heartbeat",
+  "status": "ACTIVE",
+  "name": "Kezek WEB — до команды остановиться",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "rrule": "FREQ=MINUTELY;INTERVAL=15",
+  "beforeSHA256": "beaf4606b87a6d4755b3f5174ef1ddb7d3c2b6f0b4f4192de95c2102a8a026f5",
+  "configSHA256": "44c550cddc388088d8c98b83e49a505f7b465682a1e6bea9b63b7dfff6c74c83",
+  "backup": "automation-before-c246-checkpoint.toml",
+  "toolUpdateSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "originalPromptPreservedAsSuffix": true,
+  "noDuplicate": true,
+  "change": "Prepend currentC246 manual-refresh recovery+ONEfirstactualdirtyreloadPASS+nextC247readonlyscope. SupersedespriorC245waitingonlyforrestoredchain/preservesallconstraints/ACTIVEintervalandchat; no newprivilege/network/build authority."
+}

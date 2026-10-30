@@ -1,0 +1,15 @@
+{
+  "id":"C64",
+  "plan":"c64-f013-classification-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "startedAfterUtc":"2026-10-21T08:57:39Z",
+  "completedBeforeUtc":"2026-10-21T09:02:21Z",
+  "classification":"RUNTIME_CAUSE_UNRESOLVED_OBSERVABILITY_BLOCKER",
+  "established":["resolveStaffContext maps every returned getUser error OR missinguser to NOT_AUTHENTICATED; staff/layout maps thatcode toUNAUTHORIZED. No status/code logged onthatbranch. Staffrowmissing mapsdifferentNO_STAFF_RECORD, soC63genericunauthorizedisnotproof ofmissingstaffrole.","AuthStatusServer independentlycallsgetUser andrendersSignIn forabsentuser/nonmissingerror; role switcher andalreadyrenderedrootTab2 aredifferentobservations, notindependentfreshsessionproof.","middleware refreshesnormalcookies andonlyclearsinvalidrefreshtoken condition; C63didnotcapturewhetherthisbranchran. Servercomponentcookieadapterhasno-opset/remove, sourcefactnotproof ofC63cookieexpiry.","Managerbusinessresolver alreadydistinguishesrejected/missingauth fromotherauthserviceerrors. Stafftestfile coversmissinguser/roles/return/ensure butnotruntimeC63response. No testsrun/no newmockscreated."],
+  "notEstablished":["WhetherC63getUserreturnednetworkretryableerror,401/403,missinguser,expiredrefresh,threw,orotherrequestcontextcondition","Exactresponse/status/code/timing/correlation forC63reload","WhetherrootTab2activeheaderwouldsurvivefreshSSR; didnotreloadit"],
+  "decision":"KeepS1-F013OPEN andC63reloadFAIL. No source/auth/securityfix fromunprovennetwork/cookiecause. No unchangedauth/reloadloop. A futurecause-specificfixneedssafe correlatedstatus/code withouttokens/PII, underseparatefiniteplan; unavailableinexistingevidence.",
+  "diagnosticSearchLimits":"Windowsliteralglobsearchinitialos123/missingguessedHeaderpaths retainedasdiagnostic, correctedtorg-g/discoveredactualAppShellHeader/AuthStatusServer; notproductfail. No fullserverlog/privatevalueinspection.",
+  "independentPriorityReview":"J2-05historicalclosedread-only alreadycoveredG095/Nstaff; notrerunforcounts/no reopen. F1-03reviewNcabinet-stage actuallycontainspluralizedclienthistory, notdirectselect-cabinetproof. CurrentexplicitSAselectorvariant hasno locatedprimaryevidence; chooseC65directselect-cabinet boundedreadonlySAcase, no authtransition orbusinesspreference command.",
+  "effects":"Repositoryread-onlydiagnostic andevidencewritesonly. NoUIinput/auth/reload/source/test/build/server/DB/APIcommands; 0newlivecases/fixes/acceptedrequirements. ExistingSArestoredC63unchanged, no newcontinuityclaim.",
+  "next":"C65onlyknownSA direct/select-cabinet options andexplicitreturn/admin withRememberunchecked toavoidpersistentpreference. Finitematrix7roles keeps2missingfixturesBLOCKED/other4notrun. No F013staffretest/authloop, no repeatedreceipts/profile/build/domain."
+}

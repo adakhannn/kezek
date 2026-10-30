@@ -1,0 +1,67 @@
+{
+  "id": "C164",
+  "caseId": "S26-B404-accessible-map-branch-handoff",
+  "status": "PASS_COMPOUND_ACCESSIBLE_SURFACES_ONLY",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "plan": "c164-map-branch-handoff-plan.json",
+  "review": "c163-branch-handoff-review.json",
+  "observationWindowUtc": [
+    "2026-10-25T22:09:16Z",
+    "2026-10-25T22:12:28Z"
+  ],
+  "subvariants": [
+    {
+      "clockUtc": "2026-10-25T22:09:36Z",
+      "variant": "list-CTA:branch1",
+      "actual": "Actualbranch1LISTBook click ->exactbusiness2URL withbranchfe1d; settledstep1selectedbranch1/branch2unselected, contactsandchoicesummarybranch1, service/masterunselected/timeclosed.",
+      "credit": "Genuinelyuncoveredsubvariant withinONEcompoundcase"
+    },
+    {
+      "clockUtc": "2026-10-25T22:09:54Z",
+      "variant": "list-CTA:branch2-changed-receiver-refresh",
+      "actual": "Mapreturn thenactualbranch2LISTBook ->branch23a0; settledstep1selectedbranch2/branch1unselected, contactsandchoicesummarybranch2, no stalepriorbranch1selection.",
+      "credit": "ONEhistoricalfunctionalrefreshEVENT afterchangedbookingview/useBookingStepsboundary; originalG02314Oct03:36:49UTC retained, not separateNEWUI"
+    },
+    {
+      "clockUtc": "2026-10-25T22:10:12Z",
+      "variant": "selected-overlay-CTA:branch1",
+      "actual": "Mapreturn/actualbranch1listcardselection exposes selectedoverlayname/address; click ONLY overlaynewBookcontrol ->branchfe1dURL/selectedbranch1/summary/contact1.",
+      "credit": "Genuinelyuncoveredsubvariant withinONEcompoundcase"
+    },
+    {
+      "clockUtc": "2026-10-25T22:10:34Z",
+      "variant": "selected-overlay-CTA:branch2",
+      "actual": "Mapreturn/actualbranch2listcardselection exposes selectedoverlayname/address; click ONLY overlaynewBookcontrol ->branch23a0URL/selectedbranch2/summary/contact2. InitialdevRendering then boundedwaitgone/normalizedstep1-dayURL; no prematureloadingPASS.",
+      "credit": "Genuinelyuncoveredsubvariant withinONEcompoundcase"
+    }
+  ],
+  "restoration": {
+    "clockUtc": "2026-10-25T22:11:15Z",
+    "actual": "ObservedAdminheader->Админ-панель; actualprotected/admin/RU/Anonymized/Logout/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1 restored, markHandoff. UserGooglechooser1untouched/no newtabs/auth."
+  },
+  "actual": "All4planned accessible branchCTA combinations reached correctbusiness2/correctbranchselected in actualwizard, summary and contact. OnecompoundscopedUI PASS with3newsubvariants+one changed-dependency historicalrefresh. Does not close wholeB4-04: providerballoon2variants remainBLOCKED, not simulated throughsource/helpertests.",
+  "effects": "Ordinarymapselection and read-onlybookingentry/adminreturn only; no day/service/staff/slot/Next/hold/Confirm/create/cancel/retime/payment/role/provider/location command. Appbookingdraftstorage/auth/telemetryunenumerated, neverzeroTOTALwrites; no extractionor forcedclear.",
+  "counts": {
+    "newCompoundUiPass": 1,
+    "newVerifiedFix": 0,
+    "newAccepted": 0,
+    "historicalFunctionalRefreshEvents": 1,
+    "reusedCurrentCases": 0,
+    "windowUi": 14,
+    "windowFix": 3,
+    "logicalFix": 15,
+    "accepted": 22,
+    "remaining": 294
+  },
+  "matrix": {
+    "passedAccessibleSubvariants": 4,
+    "blockedProviderBalloonSubvariants": 2,
+    "total": 6,
+    "caseRowsPassed": 1,
+    "caseRowsBlocked": 1,
+    "wholeRequirementAccepted": false
+  },
+  "limits": "Onecompoundaccessible-surfaceintegration case with4subvariants:3genuinelyuncovered +1historicalfunctionalrefresh. Countatmost1NEWcompoundUI and1refreshEVENT, no newfixwithoutrepro/minimalfix/SAME-LIVE. WholeB4-04 remains partial whileproviderballoon2variantsBLOCKED; no marker/visual/permission/APIsecurity/fullbooking proof.",
+  "next": "C164accessiblemap->bookinghandoff compound1NEWUI PASS,4subvariantscorrectbranch/business/selectedcard/summary/contact. Includes1namedhistoricalG023branch2listREFRESH afterchangedview/stepsreceiver, not an extraNEWPASS; originalUTC preserved. Providerballoon2variantsBLOCKEDretained, B4-04stillpartial(4of6variants/1compoundcasePASS+1blockedcase). No slot/Next/date/staff/service/hold/create/cancel/retime/payment command. SAadmin/RU/Anonymized/Business3 restoredwithoutauth/newtab.26Oct14NEWUI/3fix/logical15/1historicalfunctionalrefresh/1reusedcase; accepted22of316294left/S117primary63/S23/S41/S6 1of29 unchanged/NOT_READY. NextC165 ONLYboundedREADONLY B3-02 publiccategory/all-clear-reset history and exactcurrentrootsearch/category-link/data dependencies review. Identifyfinite independentcategory/reset variants and reuseonlymatchingprimaryproofs/originalUTC; no repeatknownM3usersearch, rootheader/cards, unchangedpublicquery/reload controls forcounts. Ifmissingproof/dependency retainexactblocker and finitegenuinelyuncoverednextplan beforeUI. No source/test/build/auth/entity/location/provider/booking action fromreview; no unchangedF013/cache/visual/owner/manualdate retries."
+}

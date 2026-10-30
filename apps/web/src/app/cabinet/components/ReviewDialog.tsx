@@ -1,10 +1,11 @@
 // apps/web/src/app/cabinet/components/ReviewDialog.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Dialog } from '@/components/ui/Dialog';
 
 type ReviewDialogProps = {
     bookingId: string;
@@ -17,6 +18,8 @@ export default function ReviewDialog({
                                          bookingId, onClose, existingReview, onReviewCreated,
                                      }: ReviewDialogProps) {
     const { t } = useLanguage();
+    const ratingId = useId();
+    const commentId = useId();
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [busy, setBusy] = useState(false);
@@ -93,45 +96,23 @@ export default function ReviewDialog({
     }
 
     return (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 sm:px-6">
-            {/* Клик по фону закрывает модалку */}
-            <div
-                className="absolute inset-0"
-                onClick={onClose}
-                aria-hidden="true"
-            />
-
-            <div className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900 space-y-4">
-                {/* Заголовок */}
-                <div className="flex items-start justify-between gap-3">
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {existingReview ? t('cabinet.review.edit', 'Редактировать отзыв') : t('cabinet.review.create', 'Оставить отзыв')}
-                        </h2>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {t('cabinet.review.description', 'Оцените визит и, при желании, напишите пару слов для владельца.')}
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="inline-flex items-center justify-center rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                        aria-label={t('cabinet.review.close', 'Закрыть')}
-                    >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
+        <Dialog
+            open
+            onClose={onClose}
+            title={existingReview ? t('cabinet.review.edit', 'Редактировать отзыв') : t('cabinet.review.create', 'Оставить отзыв')}
+            description={t('cabinet.review.description', 'Оцените визит и, при желании, напишите пару слов для владельца.')}
+            size="sm"
+        >
+            <div className="space-y-4">
                 {err ? <AlertBanner variant="danger" message={err} compact /> : null}
 
                 {/* Оценка */}
                 <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                    <label htmlFor={ratingId} className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                         {t('cabinet.review.rating', 'Оценка')}
                     </label>
                     <select
+                        id={ratingId}
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         value={rating}
                         onChange={(e) => setRating(Number(e.target.value))}
@@ -146,10 +127,11 @@ export default function ReviewDialog({
 
                 {/* Комментарий */}
                 <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                    <label htmlFor={commentId} className="block text-sm font-medium text-gray-800 dark:text-gray-200">
                         {t('cabinet.review.comment', 'Комментарий')} <span className="text-gray-400 text-xs">({t('cabinet.review.optional', 'опционально')})</span>
                     </label>
                     <textarea
+                        id={commentId}
                         className="min-h-[96px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
@@ -185,7 +167,7 @@ export default function ReviewDialog({
                     </button>
                 </div>
             </div>
-        </div>
+        </Dialog>
     );
 }
 

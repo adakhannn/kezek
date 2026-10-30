@@ -1,0 +1,29 @@
+{"event":"cold-types-start","startedUtc":"2026-10-20T09:03:48.087Z","pid":29064,"reason":"C04 compilation succeeded but fresh build type-check stage timed out; distinguish cold checker from build-only stall","noNetworkOrCredentials":true}
+Files:                         2997
+Lines of Library:             53140
+Lines of Definitions:        248108
+Lines of TypeScript:         127650
+Lines of JavaScript:              0
+Lines of JSON:                    0
+Lines of Other:                   0
+Identifiers:                 511190
+Symbols:                    1014327
+Types:                       288103
+Instantiations:             1583485
+Memory used:               1144834K
+Assignability cache size:    136163
+Identity cache size:          10588
+Subtype cache size:            2926
+Strict subtype cache size:     3424
+I/O Read time:                4.74s
+Parse time:                   2.83s
+ResolveTypeReference time:    0.07s
+ResolveModule time:           1.36s
+ResolveLibrary time:          0.08s
+Program time:                 9.79s
+Bind time:                    1.16s
+Check time:                  20.75s
+printTime time:               0.00s
+Emit time:                    0.00s
+Total time:                  31.70s
+{"event":"cold-types-finished","startedUtc":"2026-10-20T09:03:48.087Z","finishedUtc":"2026-10-20T09:04:20.736Z","exitCode":0,"signal":null,"timedOut":false,"pid":29064}

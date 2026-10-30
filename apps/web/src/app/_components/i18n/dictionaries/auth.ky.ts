@@ -1,4 +1,13 @@
 export const authKy = {
+    'auth.telegramSwitch.login': 'Башка Telegram аккаунту менен кирүү',
+    'auth.telegramSwitch.link': 'Башка Telegram аккаунтун туташтыруу',
+    'auth.telegramSwitch.title': 'Telegram браузердеги аккаунтту эстеп калды',
+    'auth.telegramSwitch.step1': 'Telegram кирүүлөрүн башкарууну ачыңыз.',
+    'auth.telegramSwitch.step2': 'Учурдагы профилди басып, Log out тандаңыз.',
+    'auth.telegramSwitch.step3': 'Бул жакка кайтып, баскычты жаңылаңыз — Telegram башка номерди сунуштайт.',
+    'auth.telegramSwitch.appHint': 'Тиркемеде: Жөндөөлөр → Купуялык → Боттор жана сайттар.',
+    'auth.telegramSwitch.open': 'Telegram ачуу',
+    'auth.telegramSwitch.refresh': 'Баскычты жаңылоо',
     'auth.loading.description': 'Коопсуз туташууну текшерип, кирүү ыкмаларын ачып жатабыз.',
     'auth.loading.hint': 'Адатта бул бир нече секундду гана алат',
     'auth.loading.title': 'Кирүүнү даярдап жатабыз',

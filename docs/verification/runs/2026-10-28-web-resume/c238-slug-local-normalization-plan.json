@@ -1,0 +1,38 @@
+{
+  "id": "C238",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S28-I602-business-slug-raw-normalization-discard",
+  "requirementIds": [
+    "I6-02"
+  ],
+  "variants": [
+    "business-slug:unicode-punctuation-fallback-local-normalization-discard"
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "de60a1526da8b49cde543fac99d3e9e76fded3a0e4b813b151bb0b9b9e95c257",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+  },
+  "timeboxMinutes": 7,
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "name": "S1 TEST 20261020 Branch Availability",
+    "slug": "s1-test-20261020-branch-availability",
+    "original": "approvedBarber/ownerunassigned/limit2/2branches0staffservicesbookings/blankaddress-phone4contacts"
+  },
+  "expected": "EditexactA/onlyURLdraft; raw C238 Өнөр Үңкүр !!! withouterspaces+ordinaryblur becomesc238-onor-ungkur/helpermatchingpublicpath/nameunchanged. Raw!!! ->business fallback(helper/business), no Save. ClearURL+blur ->originalname-deriveds1-test-20261020-branch-availability. Cancel ->readonlyoriginal; reentry+ONEreload originalname/slug/category/approved/addresscontacts/counts. No normalizedslugeverpersisted.",
+  "steps": [
+    "FreshknownSAadmin ->observedexactA; requireoriginalallknownbaseline/no maskedunknowncontacts. EditonlyURLfield/nameunchanged.",
+    "Fill URL exactly \" C238 Өнөр Үңкүр !!! \" thenordinaryTab; requirecanonicalvisiblevalueandpreview. Ifcommituncertainstop/Cancel/noforcedevents.",
+    "Fill!!!+Tab ->business. ClearURL+Tab ->originalname-derivedslug. NeverSave/Enter/tryinvalidserverpayload.",
+    "Cancel/readoriginal; reentry+ONEreload originalknownvalues; Cancelonceifeditremains. ObservedAdminlink ->protectedadmin/RU/Anonymized/Business3/current28Oct/handoff."
+  ],
+  "effects": "OnlylocalURLdrafts/Cancel/reentry/oneReload andreadnavigation; noSave/PATCH/entity/slugpersistence/owner/category/approval/contacts/quota/role/booking/payment/authtransition/source/test/build/serverchanges. Ordinaryread/auth/analytics/telemetryunenumerated.",
+  "stopRules": [
+    "No Save/Enter/validslugpersistence/directAPI/rawDOMevents/storage/secret/otherbusiness edit.",
+    "Unexpectedbaseline/masking/uncertainordinarycommit ->BLOCKED/localCancel, no workaround.",
+    "Navigationtimeout ->ONEfreshAX/no duplicateclick/goto."
+  ],
+  "credit": "AtmostONEcompoundNEWUI case. ExistingcollisionC95zeroexecution/reusecredit. No allslug/serverRLS/concurrency/SEO/wholeI6 acceptance."
+}

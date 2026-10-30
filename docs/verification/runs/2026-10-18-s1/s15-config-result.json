@@ -1,0 +1,43 @@
+{
+  "id": "S1.1-runtime-config",
+  "observedUtc": "2026-10-18T10:52:34Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "origin": "http://127.0.0.1:3103",
+  "plan": "s15-config-plan.json",
+  "method": "Actual CUA navigation against current built production-mode application; not unit or HTTP harness",
+  "missing": {
+    "pid": 21640,
+    "startedUtc": "2026-10-18T10:47:09.348Z",
+    "stoppedUtc": "2026-10-18T10:51:21.639Z",
+    "runtime": "NEXT_PUBLIC_SUPABASE_URL and ANON_KEY empty",
+    "home": "Normal home shell with Каталог временно недоступен; static generated output, not proof of runtime config",
+    "business": "Actual dynamic /b/testovyy-biznes-1 -> Не удалось загрузить бизнес; generic connection text, Повторить, В каталог",
+    "diagnostic": "NEXT_PUBLIC_SUPABASE_URL must be a valid URL",
+    "digests": [
+      "104581892",
+      "3339729535"
+    ],
+    "diagnosticOffset": 172,
+    "privacy": "Visible heading and section9; reload preserved legal content"
+  },
+  "invalid": {
+    "pid": 23152,
+    "startedUtc": "2026-10-18T10:51:23.595Z",
+    "readyMs": 1562,
+    "stoppedUtc": "2026-10-18T10:52:34.106Z",
+    "runtime": "NEXT_PUBLIC_SUPABASE_URL=s15-invalid-url; dummy anon key",
+    "home": "Same normal shell and catalogue error; no runtime config inference from static home",
+    "business": "Same safe dynamic business error boundary and actions",
+    "diagnostic": "NEXT_PUBLIC_SUPABASE_URL must be a valid URL",
+    "digests": [
+      "2975312770",
+      "3358412409"
+    ],
+    "diagnosticOffset": 299,
+    "privacy": "Visible legal heading and section9 before and after reload"
+  },
+  "safety": "UI did not display configuration names, server stack, paths or credentials. Server validation diagnostic precedes guarded fetch, distinct compiled missing/invalid branches.",
+  "restoration": "Existing tab3 returned localhost:3000 RU actual Аккаунт владельца and catalogue2. Both exact owned command lines validated before stop;3103 listener absent. Primary14216/3000 untouched.",
+  "limits": "Runtime server URL missing/invalid finite variants only; missing anon key branch not independently reached. Built client public vars remain dummy. No claim of all config combinations, build-time client vars, deployed production, auth/RLS, device or screenshot proof.",
+  "effects": "No business commands/DB fixtures/Save/booking or real credentials. Ordinary telemetry/auth effects not enumerated."
+}

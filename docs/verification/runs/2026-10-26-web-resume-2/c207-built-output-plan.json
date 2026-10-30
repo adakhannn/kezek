@@ -1,0 +1,38 @@
+{
+  "id": "C207",
+  "status": "FINITE_COMPILED_EXECUTION_PLAN_CONDITIONAL_ON_C206_EXIT0",
+  "savedAfterClockUtc": "2026-10-26T10:00:29Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "existingCaseId": "A3-01-S1-01",
+  "reason": "NewC204routefixcandidate5387d70d6af1/1687; oldC174/C175proofimmutableSTALE. Newbuildaloneisnotactualexecution. OnlyafterC206exit0/no timeout/exactcopy+sourceverify.",
+  "runtime": {
+    "harness": "scripts/closure-web-built-runtime-c207-20261026.mjs",
+    "rawLog": "docs/verification/runs/2026-10-26-web-resume-2/c207-runtime-raw.txt",
+    "host": "127.0.0.1",
+    "port": 3107,
+    "watchdogSeconds": 300,
+    "dummyBackend": true,
+    "noEnvFiles": true,
+    "outbound": "C206NodeTCP/fetchdeny/exactownedPostCSSIPC; notOSfirewall"
+  },
+  "expected": "Actualfreshcompiled/privacy127.0.0.1:3107 renders Политикаконфиденциальности/nine numberedsections andguestВойти; oneordinaryreloadretainscompletepublicdocument/nooverlay. No auth/form/booking or assetbundlecommand.",
+  "steps": [
+    "RequireC206finishedexit0/no timeout; current1687fingerprint andbuiltcopyhashverifyexceptexactgeneratednext-envdeclarationdifference. Fresh3107listenerabsent/no existingruntime/log; oneownnextstartlaunchonly.",
+    "ActualmainlocalhostSAadminbaseline beforeCUAentry; samecurrentworkingtab1 only. Ordinarydirectindependentcompiled/privacyentry, verifytitle/nine sections/guestaccess. Neverdeniedpage/providerrecovery or alternateURLbypass.",
+    "ONEordinaryreloadsamecompiledprivacydocument;verifycomplete/nooverlay. No screenshots/viewport/cache/assetbundle/font/providerpermission/authstep.",
+    "Returnobservedlocalhost3000/admin/protectedRU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1/markHandoff.",
+    "VerifyexactownruntimePIDandcommandpaththenstopONLYthatPIDtree;3107gone/main3000PID19968preserved. Keepallartifacts/no cleanup."
+  ],
+  "stopRules": [
+    "C206failureoruncertaincopy->do notlaunchruntime/rebuildunchanged.",
+    "UI/providerpolicydenial->no alternate/newtab/browser/rawHTTP/nativeworkaround.",
+    "Humanstop->finishonlyowncurrenteffects/stoponlyowncompiler-runtime/PAUSEDexistingkezek/readback/newfinal."
+  ],
+  "effects": "Ownedisolateddummycompileroutputruntime/tempnavigation/reload/adminreturnonly; no DEVDB/data/entity/role/booking/payment/message/appauthtransition. Ordinarymainauth/telemetryunenumerated.",
+  "accounting": "AtbestrestoreexistingA3-01accepted23->24/S116->17/primary62->63. OnebuildrefreshEVENTthiswindow/ONEdistinctexistingcase;0NEWfunctionalUI/fix/newrequirement. Current9NEWUI/1fix/logical17 remain; fulltechnical11FAIL/lint52errors167warnings retained.",
+  "harnessHashes": {
+    "scripts/closure-web-built-runtime-c207-20261026.mjs": "eb055401c8531608dd315c38cef5275c0d5b167657455bf321f75a3c6f6e4221",
+    "scripts/closure-web-offline-guard-c206-20261026.cjs": "9dcf071ee12494659524cbdf802ec8b88c423173be30f5fa046893ecae2c7549"
+  }
+}

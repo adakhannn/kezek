@@ -1,0 +1,54 @@
+{
+  "id": "C226",
+  "status": "PASS_ONE_GUEST_KNOWN_CLIENT_RECEIPT_RENDERED_PROJECTION",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c226-guest-receipt-plan.json",
+  "caseId": "S26-D405-guest-public-receipt-projection",
+  "observationWindowUtc": [
+    "2026-10-26T12:02:42Z",
+    "2026-10-26T12:03:40Z"
+  ],
+  "restoredBeforeUtc": "2026-10-26T12:04:50Z",
+  "actual": "Fresh SA admin shows known client LIVE TEST CLIENT 12OCT in protected Today row (read-only setup). Ordinary logout ->settled root guest Войти/no account. ONE direct known cancelled receipt a4278f13 ->loading then full ordinary AX: Бронь #a4278f13/full a4278f13-11b1-490e-b1bd-51154a1a545f, Отменена, LIVE TEST Service 31 Еng repeated three times as existing baseline (60 мин), public master Адахан Осоров, 26 октября 2026 г. в 09:00, contact-salon explanatory text, На главную. Header remains Войти; only normal public footer links. No client identity/contact/email fields or values, client cabinet/package/internal notes/ledger or booking mutation controls in observed complete AX. No receipt reload/action.",
+  "publicReceiptProjection": {
+    "header": [
+      "КЕЗЕК CRM СИСТЕМА",
+      "Кыргызча0/Русский1/English0",
+      "Войти"
+    ],
+    "body": [
+      "Бронь #a4278f13",
+      "Подтверждение записи и основные детали визита",
+      "СТАТУС/Отменена",
+      "ID:a4278f13-11b1-490e-b1bd-51154a1a545f",
+      "Услуга/LIVE TEST Service 31 Еng LIVE TEST Service 31 Еng LIVE TEST Service 31 Еng (60 мин)",
+      "Мастер/Адахан Осоров",
+      "Дата и время/26 октября 2026 г. в 09:00",
+      "If change/cancel needed, contact salon via business page channels (text only)",
+      "На главную"
+    ],
+    "footer": [
+      "Подключить бизнес",
+      "Заявка в бизнес",
+      "Карта филиалов",
+      "Политика конфиденциальности",
+      "Пользовательское соглашение",
+      "Удаление данных"
+    ]
+  },
+  "effects": "One ordinary SA logout/knownSA Google login restoration; known receipt read only. No slot/hold/booking/confirm/cancel/repeat/review/pay/newentity/fixture/role/security/send/SQL/API/SDK/storage/secret/source/test/build/server commands. Ordinary auth/analytics/telemetry writes unenumerated, not zero TOTAL writes.",
+  "restoration": "Ordinary observed Войти ->Google ->knownkezekkg ->automatic local/admin; actual protected Панель администратора/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1. markHandoff; no pending effects.",
+  "toolObservation": "During restoration an attempted wait used wrong button text Войти через Google and timed out with no match. ONE fresh AX showed actual Продолжить с Google; clicked observed button once. Not a product failure or repeated auth/navigation.",
+  "limits": "Intentional public UUID receipt visit details, not IDOR merely because readable. PASS only rendered guest projection for one existing client receipt. No hidden network payload/API/RLS/deployed SQL/promotion/all-client-data security certificate; D4-05 remains partial. C59 original authenticated proof associated with unchanged dependencies/originalUTC, no new client status execution or reuse credit.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 16,
+    "windowUiAfter": 17,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

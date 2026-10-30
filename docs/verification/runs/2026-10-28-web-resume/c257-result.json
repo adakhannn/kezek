@@ -1,0 +1,37 @@
+{
+  "id": "C257",
+  "status": "PASS_ACTUAL_CURRENT_COMPILED_OUTPUT_EXECUTION_RESTORED_STOPPED",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "sourceFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+  "startedUtc": "2026-10-28T14:36:04.275Z",
+  "completedBeforeClockUtc": "2026-10-28T14:37:11Z",
+  "plan": "docs/verification/runs/2026-10-28-web-resume/c257-runtime-plan.json",
+  "runtimeEvents": [
+    {
+      "event": "spawned",
+      "utc": "2026-10-28T14:36:04.275Z",
+      "pid": 26792,
+      "candidate": "dev-20261028-WEB-60022ce29b32",
+      "sourceFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+      "host": "127.0.0.1",
+      "port": 3107,
+      "watchdogMs": 300000,
+      "noEnvFiles": true,
+      "dummyBackend": true,
+      "generatedDeclarationOnly": true
+    },
+    {
+      "event": "finished",
+      "utc": "2026-10-28T14:37:09.346Z",
+      "pid": 26792,
+      "exitCode": 1,
+      "signal": null
+    }
+  ],
+  "rawLog": "docs/verification/runs/2026-10-28-web-resume/c257-runtime-raw.txt",
+  "rawSHA256": "61471396724c2488ddbe28cf0b14fc764f6fddc7722e7eba7b98cedc126385f5",
+  "actual": "ONEownNextstart3107Ready2.8s/PID26792 onexactC254built1687snapshot. Actualsameworkingtab1/0777boundkezekRecoveredTab goto127.0.0.1:3107/privacy ->Политика конфиденциальности title/heading/all9policysectionheadings/body/nooverlay. ONEordinaryМеню opensguestВойти/noaccountidentity. ONEordinaryreload retainscompletepolicy/title/body/menuclosed. Ordinarygoto mainlocalhost3000/admin ->actualprotectedSA/RU/Anonymized/Business3/4branches1staff4services30bookings/28OctToday0-0-0; markHandoff.",
+  "stop": "VerifiedPID26792 exactCommandLine C254build/apps/web/node_modules/next/dist/bin/nextstart3107; intentionaltaskkillONLY26792+child2812. Final3107absent/main3000PID30212preserved, noownedtemporaryruntime/compilerleasepending. Rawexit1reflectsintentionalstop, notapplicationcheckFAIL.",
+  "scope": "RefreshSAMEexistingA3-01buildcaseONLY becauseactualsourcecandidatechangedC252; 0NEWfunctionalUI/0fix/0firstaccepted. C255before-navigationBLOCKEDretained/originalUTC. Notvisual/device/cache/assetbundle/deployedproduction/wholegatePASS; no serviceeditor/C256authunavailablefix.",
+  "effects": "OwnedisolateddummyNextstart/publiccompiledprivacy/menu/reload/adminreturn/ownruntimekillonly. No DEVDB/entity/booking/payment/role/message/authtransition/newtab/HTTP/API/SDK/storagecommand. Ordinarymainauth/telemetryunenumerated; nozeroTOTALwrites."
+}

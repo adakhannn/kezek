@@ -1,0 +1,14 @@
+{
+  "id":"C05",
+  "caseId":"S12-INITIAL-VISUAL",
+  "reason":"NEW actual state: C04 screenshot now succeeds and actual CSS451x413/DPR1.8, unlike prior oversized capture failures. Not an unchanged screenshot retry or viewport override loop.",
+  "candidateId":"dev-20261020-S1-ed0bdd7faf24",
+  "environment":"Existing mainDEV localhost:3000 RU tab; no viewport override",
+  "finiteMatrix":{"roles":["actual guest","existing authorized owner"],"routes":["/","/auth/sign-in","/terms","/privacy"]},
+  "method":"Direct document navigation, fresh actual CSS viewport and immediate saved screenshot per route, inspect pixels and settled route state. Ordinary owner Google login only; no credentials extraction.",
+  "acceptance":"All eight actual frames show useful page or legitimate loading/redirect content, not blank shell. Owner sign-in may legitimately redirect and must be recorded. Qualitative first captured document frame only; no claim about every paint or pre-hydration HTML.",
+  "separateGates":"S12-SSR still requires original prehydration response. Eight cold-cache cases still require supported cache proof. Neither inferred from screenshot, DOM, new origin or reload. Device/locale matrix not promoted.",
+  "stopConditions":["Any capture failure: retain partial, no unchanged retry", "Any wrong viewport/pixel mapping: no visual PASS", "CAPTCHA/password/device prompt: user handoff; do available guest cases", "Unknown page outcome or browser policy denial"],
+  "timeBudgetMinutes":15,
+  "sideEffects":"Navigation and ordinary permitted auth only; no business/role/booking/hold/create/cancel/pay/settings changes"
+}

@@ -1,0 +1,13 @@
+{
+  "id":"C07",
+  "findingId":"S1-F004",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "case":"A3-04-S1-02",
+  "reason":"New minimal runtime fix after real C06 UI failure; new output required, not repeat of unchanged build",
+  "build":"Fresh exact1662-file copy, canonical certified order/fingerprint; default next build/types enabled; no env/real credentials; only user-approved public font GET;240s configured owned-child limit, actual duration separately recorded",
+  "sameLive":"Fresh origin/privacy/guest; actual auth chunk absent from loaded resources; recoverable exact generated chunk rename with restore guard; click observed sign-in; require same actual chunk failure; restore same bytes; click actual Попробовать снова ONCE and require document reload and usable sign-in UI WITHOUT separate manual refresh",
+  "regressions":"No auto reload on failure while chunk absent; normal privacy render and sign-in/hydration; ordinary application reset and Next routing/fallback/monitoring controls in17 targeted unit cases; no auth submission/DB/commands",
+  "closure":"F004 only after actual UI recovery. A3-04 requirement still awaits deployed old-document lifecycle. New build/assets acceptance separately required; prior C04 raw evidence immutable.",
+  "stop":"No blind repeat; restore chunk on any interruption, close only task tab, stop only own server; main localhost tab preserved for user's100% zoom reset. If current candidate fails build, retain FAIL and do not mark fix live verified.",
+  "timeBudgetMinutes":15
+}

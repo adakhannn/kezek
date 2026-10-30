@@ -1,0 +1,180 @@
+{
+  "id": "C180",
+  "status": "READONLY_COMPLETE_NO_HISTORICAL_B405_PROMOTION",
+  "observationWindowUtc": [
+    "2026-10-25T23:42:37Z",
+    "2026-10-25T23:44:55Z"
+  ],
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirement": "B4-05",
+  "history": [
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G023-public-map-context.json",
+      "originalUtc": "2026-10-14T03:36:49Z",
+      "scope": "Existing public map two known business2 branches and branch2 booking handoff; not an independently planned missing-coordinate or provider-failure test."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+      "originalUtc": "2026-10-15T22:26:25Z",
+      "scope": "Two existing branches/count copy/category/selection. Explicit notProven Providerfailureorfullmapmarkerinteraction. Final AX has two business2 cards and provider attribution, no provider-unavailable alert. No coordinate-less control precondition."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G087-map-keyboard.json",
+      "originalUtc": "2026-10-15T22:49:53Z",
+      "scope": "Keyboard selection/locale/hrefs and settled reload. Explicit geolocation/nearby/error-retry exclusion; not provider-failure or coordinate-less control proof."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c162-result.json",
+      "originalUtc": "2026-10-25T21:54:10Z..21:56:33Z",
+      "scope": "Direct map entry/list two known branch IDs; explicitly excludes B4-05 providererrors/missingcoords. Do not retroactively promote incidental list absence into a planned assertion."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c179-result.json",
+      "originalUtc": "2026-10-25T23:29:43Z..23:36:51Z",
+      "scope": "Fresh approved fixtureA and ACTIVE057 coordinates—/—, one active branch on public business page. This establishes an available both-coordinates-missing precondition only, not its public /map exclusion or marker behavior."
+    }
+  ],
+  "historicalDocuments": "WB-008 is controlled branches-GET500 failure/retry, distinct from map-provider initialization; WB-019 is controlled blank-key public provider failure, with cited primary files missing in this checkout. WB-049 production admin branch-map configuration failure and WB-079 branch-editor/shared-loader recovery are different surfaces; neither is a current public-map provider failure. Existing WEB_EVIDENCE_REVIEW correctly records documented_only_primary_missing. Original registry/finals/UTC remain unchanged.",
+  "missingPrimary": [
+    {
+      "path": "apps/web/test-results/live-b4-map-2026-06-30/b4-before-fix.json",
+      "exists": false
+    },
+    {
+      "path": "apps/web/test-results/live-b4-map-2026-06-30/provider-error-before-fix.png",
+      "exists": false
+    },
+    {
+      "path": "apps/web/test-results/live-a4-error-boundaries-2026-06-27/a4-live.json",
+      "exists": false
+    }
+  ],
+  "sourceClassification": "listBranchesMap builds approved-business query, excludes null lat and null lon before mapping, and defaults to active branches. Client fetchMap failure sets mapLoadFailed and renders branchesFetchError+Retry. Separately loadYandexMaps rejection sets mapError; provider-unavailable alert displays localized safe copy while branch list is independent. Source proves implementation paths, not execution, API/RLS/security, provider health or non-exposure of secrets.",
+  "fixtureViability": "C179 ACTIVE057 approved business/active branch/bothcoordinates— is an independently observed positive eligibility control, with no new fixture/coordinates write needed for that narrow future assertion. No historical missing-only-lat or missing-only-lon control was established. C162/G085 list count2 is not complete finite B4-05 evidence. No unchanged map entry/list replay performed in this review.",
+  "blocker": "Real public provider initialization failure with usable-list fallback has no matching current primary evidence. Controlled missing-key/runtime/env change or network interception/fault/SDK/HTTP is outside current permitted effects; admin picker fallback is a different surface. Do not change key/security/source, retry provider, rebuild, manufacture a fixture, or replace LIVE with mocked tests. Both-null current public-map assertion remains not executed, not falsely certified or falsely described as a tool failure.",
+  "decision": "No historical case reused and no new UI/PASS/fix/acceptance credit. Keep whole B4-05 incomplete. Record provider failure as blocked; missing-coordinate runtime assertion remains unexecuted pending a genuinely justified finite plan, with no unchanged map/wizard retry from this review.",
+  "dependencyComparison": [
+    {
+      "path": "apps/web/src/app/map/page.tsx",
+      "currentSha256": "0ab9da2291bfd94ad0750ce7e43785547cb0e70b1822317826d8f562186991a5",
+      "originalSha256": "0ab9da2291bfd94ad0750ce7e43785547cb0e70b1822317826d8f562186991a5",
+      "identical": true,
+      "originalSource": "G052 copy manifest"
+    },
+    {
+      "path": "apps/web/src/app/map/MapPageClient.tsx",
+      "currentSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+      "originalSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+      "identical": true,
+      "originalSource": "G085 saved ESLint source"
+    },
+    {
+      "path": "apps/web/src/app/api/branches/map/route.ts",
+      "currentSha256": "8e37853d835e95ff07adda6fd441adbfe58368b3aea4cdd20a38dfe39dd8c938",
+      "originalSha256": "8e37853d835e95ff07adda6fd441adbfe58368b3aea4cdd20a38dfe39dd8c938",
+      "identical": true,
+      "originalSource": "G052 copy manifest"
+    },
+    {
+      "path": "apps/web/src/lib/branchesMapHttpService.ts",
+      "currentSha256": "bf441dc2e9d722ddc859f7534cffba03cc885179a2d6121202591684981da8e8",
+      "originalSha256": "bf441dc2e9d722ddc859f7534cffba03cc885179a2d6121202591684981da8e8",
+      "identical": true,
+      "originalSource": "G052 copy manifest"
+    },
+    {
+      "path": "apps/web/src/lib/branchesMapService.ts",
+      "currentSha256": "a6bc3d4410f334e86c7c312917233f44673a754bec33da21636171a0b96bf43e",
+      "originalSha256": "a6bc3d4410f334e86c7c312917233f44673a754bec33da21636171a0b96bf43e",
+      "identical": true,
+      "originalSource": "G052 copy manifest"
+    },
+    {
+      "path": "apps/web/src/lib/branches/buildApprovedBusinessesQuery.ts",
+      "currentSha256": "1c75ae4b07d1f67f28fd55ddfda068f53bfeb6f209f9f1dcdb1de6f7af0d8a69",
+      "originalSha256": "1c75ae4b07d1f67f28fd55ddfda068f53bfeb6f209f9f1dcdb1de6f7af0d8a69",
+      "identical": true,
+      "originalSource": "G052 copy manifest"
+    },
+    {
+      "path": "apps/web/src/lib/publicCategoryLabels.ts",
+      "currentSha256": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f",
+      "originalSha256": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f",
+      "identical": true,
+      "originalSource": "G052 copy manifest"
+    },
+    {
+      "path": "apps/web/src/lib/yamaps.ts",
+      "currentSha256": "407b15f2aabf256c568ff4aec039b79ea43ae0a0037e5a2c3ff4682bdb3c9d57",
+      "originalSha256": "407b15f2aabf256c568ff4aec039b79ea43ae0a0037e5a2c3ff4682bdb3c9d57",
+      "identical": true,
+      "originalSource": "G052 copy manifest"
+    }
+  ],
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "reusedCase": 0,
+    "accepted": 23,
+    "remaining": 293,
+    "windowUi": 21,
+    "windowFixes": 4
+  },
+  "effects": "Repository evidence/source reads and accounting documents only. No browser bind/navigation, map/provider/location/permission/network fault, auth, source/test/build/server/DB/entity/contact/flag/booking command. Existing C179 journal remains immutable pendingfalse; user tab/admin and main server untouched. No claim of zero total background writes.",
+  "next": "C181 ONLY bounded read-only I1-02 timezone contract/original history/receiver review: identify whether timezone belongs to business or branch, the exact current UI control and booking/display consumers, and an independent acceptance oracle. C170 noted no branch-form control but did not establish full semantics. No timezone/date/clock/schedule/business/branch setting write, fake clock, booking action, auth or source implementation from review. If no safe executable control/contract, retain exact blocker and select another unfinished priority; do not invent a feature or repeat contacts/map/provider/build/F013.",
+  "hashes": [
+    {
+      "path": "docs/WEB_EVIDENCE_REVIEW.md",
+      "sha256": "7a969bcc5cc904ac00ac5c2b3d720c4ca9edc44de618f2234ca5af744de13715"
+    },
+    {
+      "path": "docs/WEB_BUG_REGISTRY.md",
+      "sha256": "1d36236397e7ecd48f35725b97214d719a46323df933cec2b2653c7f9713c5a0"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json",
+      "sha256": "3da860aca21ee2cdcdf76cc862d09a9ee06e99f0ae6879dd0658d0ee17263abf"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/g085-map-count-lint.json",
+      "sha256": "6a47c333954cf7893c0091908bb8e2de11fdde729fa4e91a757ca6fa9c851eba"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/g085-map-final-ru.txt",
+      "sha256": "3c8b401ba8a026adadf00797385b360d4670f6062de18fc04d7d8ca84b686694"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/g087-map-final-ru.txt",
+      "sha256": "0e650df0147996dad88451d8199ede9470c2e6e35114aee2d4df1f6a02ff98dd"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G023-public-map-context.json",
+      "sha256": "cec624ecbd90f2bc1d40c78186668c0be6b8bbcca21f0c4584df06d7e1bf7f26"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+      "sha256": "d0d3d79072c1e44b15d9e87927b2b13b7c35308f934993bd0eaaed8d7789d2e6"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G087-map-keyboard.json",
+      "sha256": "71ad3b4953fbe840752bd73443c10ad09c69bedf417681a173d3452ac628c696"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c162-result.json",
+      "sha256": "776038ccbc90475d5e8785d447c720f8b41188ee073a1660bfd44682b7b9d8d6"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c179-result.json",
+      "sha256": "0d074afbdf0e09a90db82aad6f8001ecae520c10baf9e2d41eae8e0ca0ed99d2"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c170-contact-matrix-review.json",
+      "sha256": "8f7d0a8af4b8b8149b689ac2490fee61d1d90984ea35fc8ce2d5c82139141ffa"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c179-effects-journal.json",
+      "sha256": "e21c37affe22a3bb46924e00ab774b59744323d7cbe15feb3c7cfe9a34a366ce"
+    }
+  ]
+}

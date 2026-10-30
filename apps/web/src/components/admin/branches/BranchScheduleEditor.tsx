@@ -6,6 +6,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { TimeRangesEditor } from '@/components/scheduling/TimeRangesEditor';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import { formatBookingWeekday } from '@/lib/bookingCalendarDate';
 import { validateScheduleDay, type ScheduleDay } from '@/lib/scheduling/model';
 
 type Row = ScheduleDay & { day_of_week: number };
@@ -55,8 +56,7 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
         </div>
         <fieldset disabled={saving} className="grid min-w-0 gap-4 lg:grid-cols-2 disabled:opacity-60">
             {days.map((day, index) => {
-                const label = new Intl.DateTimeFormat(locale === 'ky' ? 'ky-KG' : locale, { weekday: 'long', timeZone: 'UTC' })
-                    .format(new Date(Date.UTC(2026, 0, 4 + day.day_of_week)));
+                const label = formatBookingWeekday(new Date(Date.UTC(2026, 0, 4 + day.day_of_week)), 'UTC', locale);
                 return <section key={day.day_of_week} aria-label={label} className="min-w-0 space-y-4 rounded-xl border border-slate-500/30 p-4">
                     <h4 className="font-semibold capitalize">{label}{!day.intervals.length && ` — ${t('scheduling.closed')}`}</h4>
                     <TimeRangesEditor label={t('scheduling.work')} ranges={day.intervals}

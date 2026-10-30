@@ -1,0 +1,14 @@
+{
+  "id":"C67",
+  "plannedAfterUtc":"2026-10-21T09:27:43Z",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "parentPlan":"c65-select-cabinet-plan.json",
+  "timeboxMinutes":12,
+  "requirementIds":["F1-03"],
+  "cases":[{"key":"owner","existingCaseId":"S21-F103-DIRECT-owner","expected":"KnownGoogleosorovadahan04 owner actualownbusinessworkspace control. Directlocalhost/select-cabinet showsКаквыхотитезайти withКабинетбизнеса+Моизаписиonly, notAdmin/staff. UncheckRemember beforeexplicitКабинетбизнеса choice ->authorizedown/dashboard withoutbusinessselection/change orloop. Ifselect-businessappearsstop/no choice."}],
+  "reasonNotDuplicate":"Remainingnot_run directselectorrole inC65finite7-roleplan; distinctfromoldownerauthdefault/ownerhistory cases. C65SA+C66client/guest remainoriginalUTC/unrepeated. No blanketownerregression.",
+  "steps":["Freshinventory/knownSAadmincontrol", "Clockbeforeordinarylogout/localGoogleknownownerlogin; actualownerworkspace no businessselection", "Clock; onedirect/select-cabinet andreadexacttitle/options", "Clock; transientuncheckRemember ->freshuncheckedstate", "Clock; explicitBusinesscabinetchoice ->actualown/dashboard no loop; nobusinesspreferencechange", "Clockbeforeordinarylogout/GoogleSArestore ->protectedadmin/Anonymized/handofforiginal2/18"],
+  "effects":"2ordinarylogouts+2knownGoogleloginsincludingSArestore, ordinarydocumententry/uncheckedselectorchoiceonly. No newtabs/cookie-storage-authcodeinspection/businessselection/source/test/build/server/DB/APIprobe/role/grant/booking/shift/payment/review/securitycommands. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites.",
+  "stop":"Unexpectedidentity/options/autherror/select-business gate ->recordexactactualandstopchain; no newgrant/businesschoice/retryloop/blindfix. CAPTCHA/password/device humanhandoff. F013staffnotretested.",
+  "acceptance":"Oneownerdirectcaseonly. IfPASS currentmatrix4PASS1staffnotrun2missingfixtureBLOCKED/7, fullF1-03partial/rememberedpersistence/visual/securitynotcertified. No acceptedrequirement/newfixcredit."
+}

@@ -1,0 +1,24 @@
+{
+  "id":"C10-OWNER",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "authAfterClockUtc":"2026-10-20T10:29:52Z",
+  "startedAfterClockUtc":"2026-10-20T10:30:26Z",
+  "finishedBeforeClockUtc":"2026-10-20T10:31:37Z",
+  "status":"4_PASS_0_FAIL_A1_01_ALL8_PASS",
+  "environment":"DEV localhost:3000 RU, same IAB2 usertab5/provider c6f744b5-18d3-4b56-9132-c301225c7e66",
+  "prerequisite":"Same human-operated Disable cache/DevTools-open tab as guest group. Not an agent cache API, no claim of independently inspected flag or response metadata. No cookie/storage reset, no screenshot or viewport manipulation.",
+  "auth":"Ordinary Google chooser selected ONLY known owner osorovadahan04@gmail.com; no credential/permission changes, password or CAPTCHA. Returned /select-business: actual Владелец, Аккаунт владельца, two owned businesses, business2 marked Текущий. No business select/Продолжить command performed, no preference save initiated.",
+  "results":[
+    {"caseId":"S12-cold-1","requested":"/","actual":"/","action":"direct document goto","status":"passed","observed":"Owner account header/Личный кабинет/Выйти; meaningful home catalogue3/search/footer, no error boundary"},
+    {"caseId":"S12-cold-2","requested":"/auth/sign-in","actual":"/auth/sign-in","action":"direct document goto and settled DOM inspection","status":"passed","observed":"Owner header Владелец/Аккаунт владельца preserved and useful sign-in form remains. No redirect observed or claimed. Google/Yandex/WhatsApp controls present. Existing Telegram localhost domain restriction shown; not Telegram integration PASS or a new defect in document loading."},
+    {"caseId":"S12-cold-3","requested":"/terms","actual":"/terms","action":"direct document goto","status":"passed","observed":"Owner account header; Пользовательское соглашение sections1–8, last update20October2026, return-home links/footer; no error boundary"},
+    {"caseId":"S12-cold-4","requested":"/privacy","actual":"/privacy","action":"direct document goto","status":"passed","observed":"Owner account header; Политика конфиденциальности sections1–9, last update20October2026, return-home links/footer; no error boundary"}
+  ],
+  "evidenceMethod":"Actual CUA AX after each document navigation, settled DOM inspected for owner identity and sign-in destination. No visual/SSR/every-paint/device/locale/production or network-error-free claim.",
+  "effects":"One ordinary Google owner login/authorization callback, unenumerated auth/telemetry writes; no business/booking/slot/hold/cancel/pay commands. No new entities or source changes. Existing user tabs retained and tab5 marked handoff.",
+  "handoff":"Owner account, current business2 unchanged, tab5 at /privacy in RU. DevTools/Disable cache left under human control. Old usertab2 remains open, no active role claim for its document.",
+  "countsAfter":{"acceptedS1":19,"remainingS1":6,"passedCases":68,"remainingCases":11},
+  "remaining":{"deployedDomain":8,"originalPrehydrationSSR":1,"fourRouteVisual":1,"originalTransientRequestClassification":1},
+  "newFixesThisSubpackage":0,
+  "notReady":true
+}

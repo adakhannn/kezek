@@ -1,0 +1,19 @@
+{
+  "id":"C45",
+  "plannedAfterUtc":"2026-10-21T01:46:34Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementIds":["C1-03"],
+  "scope":"Last4 planned Google/page subset variants;3newactualcases plus1exacthistorical action reuse, no duplicated closed flow. Full C1 multi-provider return handoff still unverified.",
+  "cases":[
+    {"key":"trimmed-internal","mode":"existing-session","entry":"http://localhost:3000/auth/sign-in?redirect=%20%2Fterms%20","expectedUrl":"http://localhost:3000/terms","expectedHeading":"Пользовательское соглашение","expected":"Trim surrounding whitespace on internalreturn; keep knownSA session, terms heading, no rawspace/failure."},
+    {"key":"nonpath-fallback","mode":"existing-session","entry":"http://localhost:3000/auth/sign-in?next=terms","expectedUrl":"http://localhost:3000/admin","expectedHeading":"Панель администратора","expected":"Non-root-relative input is not accepted as return; safeSA generic default /admin, no /auth/terms relative redirect."},
+    {"key":"callback-query-hash","mode":"freshGoogle","entry":"http://localhost:3000/auth/sign-in?redirect=%2Fterms%3Fc45%3Dreturn%23section","expectedUrl":"http://localhost:3000/terms?c45=return#section","expectedHeading":"Пользовательское соглашение","expected":"Normal logout and knownSA Google login preserve exact benign query/hash across callback, not just existing-session decision."},
+    {"key":"client-protected-return","mode":"reused","sourceCaseId":"S21-M102-client-root","sourceEvidenceIds":["S1-EV-159","S1-EV-160","S1-EV-274"],"originalObservedUtc":"2026-10-20T10:47:48.309Z","expected":"Explicit local protected return through ordinary pureclient Google still denies /admin, no globaladmin content/rights","basis":"C11primaryresult expressly records ordinarylow.fade Google -> protected/admin from existinglocalreturn, actualglobal-super-admin-required denial +reload. C39currentcandidate review preservedexactcase, current declaredadmin/middleware dependencies match. Callback return normalization remains shared/currentpositives C42 and negatives C44, genericrole guard C39 change doesnotmount on callback. This certifies narrowdestinationguard assertion, not preciseoldalias/latency, no newclientlogin or originalUTCretiming."}
+  ],
+  "budgetMinutes":8,
+  "steps":["Freshinventory/knownSA", "Execute two planned existing-session document inputs and inspect exactfinal benignURL/heading", "NormalLogout and verify root", "Open safequery/hash planned URL, normalGoogle knownSA entry", "Inspect exacttermsURL/heading/identity", "Restore/admin withoutreauth; preserveuser2/5"],
+  "matrixBefore":{"passedReused":1,"notRun":3,"total":4,"googlePagePassedAfterReuse":29,"googlePageTotal":32},
+  "effects":"Only ordinary UI read/navigation plus one normalSA logout/login. No client replay, newroles/fixtures, appbusiness/job/grant/currentbusiness/booking commands. Authsync/telemetry IDs unenumerated, notzeroTOTALwrites. No callbackcodes/token/cookie/storage/serverlogs read.",
+  "limits":"Three newcases, one reused proof originalUTC; no fullC1-03/API-RLS/IDOR/CSRF/device/visual/no-flash/production PASS. Otherproviderreturnhandoffs remainunverified; C1-03caseplanComplete staysfalse.",
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

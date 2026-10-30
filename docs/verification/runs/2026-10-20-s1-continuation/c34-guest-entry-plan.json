@@ -1,0 +1,15 @@
+{
+  "id": "C34",
+  "parent": "F4-02 existing64caseplan",
+  "target": "12remainingguestentrymodecases:admin,dashboard,staff,cabinet xreload,newtab,copied-address",
+  "before": "18PASS16BLOCKED30notrun/64; guestdirect4alreadyPASSnotnewexecution",
+  "expected": "Guestadmin/dashboard sign-inredirect; gueststaff explicitunauthorized; guestcabinet loginprompt. Reload of redirected signinform verifies guardedlandingstaysdenied, NOT reload ofhiddenprotectedURL. No staff/business/clientrecords in settledDOM.",
+  "method": "OrdinarySAlogout; legitimate temporarynewtab pernamedentrycase, no captureworkaround. Observeprotectedtargetaddressbeforeentry, use only benignexactpath/root for transferredURL; no unrelatedclipboard/token/cookie/HTTPAPI/evaluatefetch. Fullreload once percase; no retriesunchanged.",
+  "proofLimit": "PAGEsettledDOM only, notvisualflash/HTML/originalSSR/API/RLS/CSRF/independentsessions/OSclipboardPASS",
+  "redirectedAddressRule": "For admin/dashboard guestentry redirects, transferredaddress mustremain exactprotectedtarget previouslyobserved in currentcandidate/basecase (/admin prelogout currentinventory and /dashboard C30/C31), NOT signinlandingURL. Addresscarried asbenignstring viaordinarygoto; no claim OSclipboardcopy or currentprotectedaddressbar afterredirect.",
+  "restore": "Closeonlyown temporarycase tabs, restoreknownSA viaordinaryGoogle, original2/5usertabs retained+handoff. AuthtelemetryunenumeratednotzeroTOTALwrites.",
+  "budgetMinutes": 15,
+  "stop": "Controlfailureonefreshstatecheck, no bypass/newreplacementtab; recordremainingblocked/notrun. CAPTCHA/password/devicehumanhandoff. Clockbeforeeachnewscenario/authwrite and afterlongactions, hardstop21Oct05UTC.",
+  "afterIfAllPass": "30PASS16BLOCKED18notrun/64; no newacceptedrequirement untilallrequiredincludingblockedpass",
+  "next": "Client8 thenowner5 thenstaff5 remainingentrymodes, groupknownidentity/restoreSA; nofixturecreation"
+}

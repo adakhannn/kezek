@@ -1,0 +1,19 @@
+{
+  "id":"C36",
+  "candidate":"dev-20261020-S1-6b8b3bf85fe5",
+  "status":"FIVE_NEW_OWNER_ENTRY_MODE_CASES_PASS",
+  "identityControl":"KnownSA ordinarylogout after23:44:12; Google osorovadahan04@gmail.com selected after23:44:47. Actual Аккаунт владельца, business chooser2/currentbusiness2 without clicking any business selection. Root selector Владелец and admin-denial canonical email osorov@sportsoft.ru independently match knownowner.",
+  "cases":[
+    {"key":"owner-root-newtab","afterUtc":"2026-10-20T23:45:08Z","beforeUtc":"2026-10-20T23:45:19Z","actual":"Own legitimate newtab-case Tab14 /admin displays Доступ ограничен / Нужны права супер-админа; current canonical account osorov@sportsoft.ru, required global super_admin. No administrator workspace or records."},
+    {"key":"owner-root-copied-address","afterUtc":"2026-10-20T23:45:19Z","beforeUtc":"2026-10-20T23:45:35Z","actual":"Read benign current /admin URL; На главную to root with Владелец/Аккаунт владельца, ordinary navigation back to same observed target. Explicit superadmin-required denial, no admin workspace. Existing owner-admin reload was not repeated."},
+    {"key":"owner-staff-newtab","afterUtc":"2026-10-20T23:45:35Z","beforeUtc":"2026-10-20T23:45:48Z","actual":"Own legitimate newtab-case Tab15 /staff displays Нет доступа к кабинету сотрудника; account not linked to active staff; Аккаунт владельца authenticated. No staff workspace or records."},
+    {"key":"owner-staff-reload","afterUtc":"2026-10-20T23:45:48Z","beforeUtc":"2026-10-20T23:46:00Z","actual":"Full /staff document reload retains explicit no-active-staff-access denial. Owner authority alone does not enter staff workspace."},
+    {"key":"owner-staff-copied-address","afterUtc":"2026-10-20T23:46:00Z","beforeUtc":"2026-10-20T23:46:17Z","actual":"Read benign current /staff URL, На главную to root with Владелец/Аккаунт владельца, normal document navigation back to observed address. Same no-active-staff-access denial, no staff records."}
+  ],
+  "matrix":{"passed":43,"blocked":16,"notRun":5,"failed":0,"total":64,"remaining":21,"newLivePassThisSubpackage":5,"newLivePassSinceC33":28,"reusedPass":15},
+  "proofLimits":"Settled PAGE DOM/AX only, not screenshot/device/no-flash/originalSSR/API/RLS/CSRF/IDOR/independent-session or OSclipboard certification. Copied-address is safe observed URL carried as string, no system clipboard read. Existing direct and admin-reload evidence preserved at original UTC. Shared-cookie tabs not independent sessions.",
+  "effects":"Ordinary known-SA logout, known-owner Google login, owner logout after23:46:26, known-SA Google restoration after23:48:30. Ordinary auth/telemetry effects IDs unenumerated, never zero TOTAL writes. Business chooser currentbusiness2 observed only, no selection/save/currentbiz/business/role/grant/staff/job/recalc/booking/payment/shift/SQL commands. Own legitimate caseTabs14/15 created then closed, no capture-recovery tabs. Original user2root/5admin retained, markedhandoff; inventory only those two.",
+  "restoration":{"beforeUtc":"2026-10-20T23:48:53Z","actual":"Known Google kezekkg@gmail.com restored; /admin Админ-панель/Anonymized/Панель администратора with3businesses/4branches/1staff/4services/30bookings. No commands clicked.","secondary":"Original user2root shares same session; not independent account"},
+  "counts":{"S1":"17/25accepted8left63/79PASS16left","S2":"1/70accepted69left","product":"18/316accepted298leftNOT_READY","verifiedFixesLogicalRun":8,"newWindowFixes":0},
+  "next":"F4-02 ONLYremaining5 executable staff modes: admin newtab/copied-address and dashboard newtab/reload/copied-address. Keep16missing-businessadmin/manager blocks, no newfixtures. KnownGoogle staff ordinarylogin, inspect currentstaff control, no staff/businesscommands, restoreSA. Harddeadline21Oct05UTC/draft04:35/short04:40/finalpause04:45/no-new04:50; finalize04:35ifnextwakecouldskip04:45."
+}

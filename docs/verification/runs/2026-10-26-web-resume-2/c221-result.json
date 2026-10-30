@@ -1,0 +1,27 @@
+{
+  "id": "C221",
+  "status": "BLOCKED_AT_POSITIVE_CALENDAR_ELIGIBILITY_BEFORE_VIEW_SWITCH",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c221-calendar-list-roundtrip-plan.json",
+  "startedAfterClockUtc": "2026-10-26T11:27:42Z",
+  "actualAfterClockUtc": "2026-10-26T11:29:18Z",
+  "actual": "ActualknownownerBusiness2/IDc28c/Calendarselected/Allbranches/date26Oct/knownstaffdashgrid. ONEordinaryDatefill19Oct+Tab visibleAXdate19committed. Known14c108hrefvisibilitywaitdeadline; ONEfreshAXnochange/stilldashgrid/no knownfivehrefs. No listactivation/roundtripstimulus executed. Notfreshnetwork/response/timing/DBoracleproof; no empty-calendarPASS/newdistinctbug/rootcause.",
+  "recovery": "ONEordinaryDatefill26Oct+Tab actualAX26Oct/Allbranches/Calendarselected restored. No reload/requery/date/nativepicker/provider/log/API workaround. Currentknownownerrole retainedbrieflyforindependentC222beforeSArestore; no outstandingdataeffect.",
+  "classification": "BLOCKED atmandatorypositiveoracle. Calendarquerysource onerror setItems[] withoutindependentUIerror; this sourcebranchdoesnotestablishactualerror orcatalogue/F013samecause. No speculativecode/auth/securityfix.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "reuse": 0,
+    "windowUi": 14,
+    "accepted": 26,
+    "remaining": 290
+  },
+  "effects": "Onlyordinaryknownauth/ContinuealreadyCurrent2, Calendarentry and2localUI-datehistorychanges/restored. No row/slot/hold/booking/status/cancel/payment/source/test/build/server action. Ordinaryauth/read/telemetryunenumerated.",
+  "blockedVariants": [
+    "view-switch:calendar-to-list",
+    "view-switch:list-to-calendar",
+    "view-switch:list-second-entry-consistent"
+  ],
+  "nextIndependent": "C222sameknownownerexisting99servicezero-selected-branchesclientguard; differentrequirement/method fromCalendarloading; finiteplanbeforeUI."
+}

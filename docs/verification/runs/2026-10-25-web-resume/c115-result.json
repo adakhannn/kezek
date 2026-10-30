@@ -1,0 +1,14 @@
+{
+  "id": "C115",
+  "caseId": "S25-M205-inactive-branch-confirmation-cancel",
+  "plan": "c115-confirmation-cancel-plan.json",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "status": "PASS_functional_live_cancel_only",
+  "observationWindowUtc": ["2026-10-25T09:30:24Z", "2026-10-25T09:31:56Z"],
+  "actual": "Fresh samehumanTab2 protectedadmin/Anonymized/Business3/RU ->existingfixtureA 2branches0staff0services0bookings ->Филиалы. Actual exactinactivefa5 editlink and active057 control, originalnames/statuses,2of2. Clock09:30:51 one inactive card listУдалить opens headingУдалитьфилиал and exact text Удалить филиал «S1 TEST INACTIVE BRANCH»? Это действие необратимо., Отмена/Удалить/Закрытьокно. ONLY Отмена clicked; modal disappears, focus returns to original listbutton, bothcards remain. Clock09:31:01 oneordinaryreload retains exact2knownbranch editlinks/originalnames/inactive+active/2of2, no deletionsuccess. Clock09:31:11 adminrootreturn; protectedheading/Anonymized/collapsedАдмин-панель/RU/Business3/4branches/1staff/4services/30bookings observed and humanTab markedHandoff before next actualclock09:31:56. No app command/Confirm/Enter clicked.",
+  "effects": "One local confirmation open/Cancel plus ordinarynavigation/reload. No planned or issued delete/Save/activation/schedule/map/role/booking/payment command, no newentity/fixture or auth transition. This is actual UI retention after Cancel, not transport audit/rawDB proof or zeroTOTALwrites; ordinary auth/telemetry unenumerated.",
+  "limits": "One Cancel path only. No Escape/backdrop/Close/focus/visual/device/no-flash/screenreader certificate. Destructive execution/cascades/dependency rejection/business confirmation not tested; exact action-time consent absent. Whole M2-05 remains partial/casePlanComplete false. Original C03business deletion UTC/effect preserved, not reused/newcredit.",
+  "counts": {"newUiCases":1,"newWindowPassedCasesBefore":1,"newWindowPassedCasesAfter":2,"newLiveFixes":0,"acceptedDelta":0,"accepted":21,"remaining":295,"verifiedFixesLogicalRun":11},
+  "next": "C116 bounded readonly M2 lifecycle history/remaining-variant inventory before next independent finiteUIplan, not repeated S2 sweep or completed branchCancel/address/name/build/auth/history. Only genuinelyuncovered reversible draft or read-only cases under existingauthority; no newfixture/actualdelete/activation/schedule/role/payment commands or whole requirement promotion. Retain F013/profileSave/cache/visual/rolefixtures/security/fulltechnicalgate blockers."
+}

@@ -1,0 +1,57 @@
+{
+  "id": "C125",
+  "type": "bounded readonly F016-dependent persisted category-name regression effect/history review",
+  "startedAfterUtc": "2026-10-25T10:40:02Z",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "history": "Night09Oct existinginactivec7cef81b categoryrename/reload passed after oldasyncparamsfix, originalUTC unchanged. C120changed CategoryForm initialstate forF016 and onlyprovedunsaveddraft. Newdependencyjustifies freshintegratedSave customslug-invariant/recovery regression; not unchangedhistoricalrepeatforcounts or newbug. C124freshzero-usage/referencebaselineiscontrolonly, notpersistededitproof.",
+  "independentOracle": "Changing only categorydisplayname must not alter its savedcustomslug/availability or businessreferences. Name mustpersist acrossordinaryreentry/reload. Restoring originalname byordinaryformSave mustrestorevisiblebaseline with samecustomslug/inactive/0usage. One complete integratedregression, notseparatePASSperSave/read/recovery.",
+  "effects": "CategoryForm explicitSubmit sends name_ru trim, slug normalized, is_active,propagateSlug:true. No otherfields/contacts/role/securitypayload. Update handler checks auth/is_super_admin, exactUUID/row; rejectsinvalidname/slug; calls cat_replace_slug ONLY ifnormalizedslug differsfromcurrent. Withsameoriginal live-test-night09oct-category slug, sourcepredicts no propagation; this is not independent runtimeRPC/trigger/audit/writecount proof. Ordinary categoryUPDATE maytouchstandardtimestamps/audit/triggers, unenumerated. No claimbit-identicalrawDBrollback or zeroTOTALwrites. Inactive0usage means no plannedpublic/businesscategorydependencychange; exactfreshUIbaseline required beforeeachcommand.",
+  "authority": "Within continuingDEVWEB workflow normal reversible nameedit of retainedmarkedinactivecategory, not newcategory/fixture/accessgrant/irreversibledelete/payment/securitysettings. No activecategory/publication/slugmutation, no actualpropagationcommand authorized. Ifbaselineunknown/active/nonzero-usage/slugs mismatch/error/uncertaincommand ->STOPnoSave/retry/SDK/HTTPworkaround. RecoveryatmostoneplannedsecondSave onlywhen exacttemporaryname+unchangedslug/inactiveindependentlyvisible; failurekept/reported, no blindthirdSave.",
+  "evidencePaths": [
+    "apps/web/test-results/night-2026-10-09/admin-stage.json",
+    "docs/verification/runs/2026-10-25-web-resume/c119-result.json",
+    "docs/verification/runs/2026-10-25-web-resume/c120-result.json",
+    "docs/verification/runs/2026-10-25-web-resume/c124-result.json",
+    "apps/web/src/components/admin/categories/CategoryForm.tsx",
+    "apps/web/src/app/admin/api/categories/[id]/update/route.ts",
+    "apps/web/src/app/admin/categories/[id]/page.tsx",
+    "apps/web/src/app/admin/categories/page.tsx"
+  ],
+  "credit": "Review0UI/0fix/0accepted. Atmostfreshhistorical-functional-regression event, NOincrementnewWindowPassedCases5 or newfix1/logical12. M5-01wholepartial/create/delete/dependencies/security/visualremain.",
+  "next": "C126 finite2Save existinginactivecategory namepersist/customslug preservation/visiblebaseline restore regression. SaveplanbeforeUI; nocategorycreation/slug/activation/delete/propagation/role/money/source/buildcommands.",
+  "completedBeforeUtc": "2026-10-25T10:41:50Z",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c119-result.json",
+      "sha256": "7ade15f523a450d1e9760b2de9fdc536748b33996912dcc2de18b09fd17cc5e9"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c120-result.json",
+      "sha256": "2a03c120ad7dee5bdf3b99c39e8d6e3ca5c56f84b9a560f9a7fdb150254c1493"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c124-result.json",
+      "sha256": "88fa9bc422ad07999fcbdd5c0c88a478496a46f556a9b3aab34a631c4a92d7ba"
+    },
+    {
+      "path": "apps/web/src/components/admin/categories/CategoryForm.tsx",
+      "sha256": "e0bbc27c43198e471d2590b9edff4652b9e92a1e2ab2e72d67b23fdfbdbed585"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/categories/[id]/update/route.ts",
+      "sha256": "1a7504a8a83c1e5aa8be04b966b35582e8ebeb09406ee24df161f38c31e2ff16"
+    },
+    {
+      "path": "apps/web/src/app/admin/categories/[id]/page.tsx",
+      "sha256": "155695f88fd25d8657775acc8b6fa6e64ec9588e3278eff165b37ce36fb02d7b"
+    },
+    {
+      "path": "apps/web/src/app/admin/categories/page.tsx",
+      "sha256": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+    }
+  ]
+}

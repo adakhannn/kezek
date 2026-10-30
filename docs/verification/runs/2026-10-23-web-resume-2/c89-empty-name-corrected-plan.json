@@ -1,0 +1,30 @@
+{
+  "id": "C89",
+  "amendsPlan": "c88-empty-name-plan.json",
+  "preparationStop": "c88-precondition-stop.json",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "caseId": "S23-M201-empty-name-reject-cancel",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "timeboxMinutes": 6,
+  "target": "Existing isolated A fe2d412c-21c6-40ef-b5d3-23f49f550610 only",
+  "expected": "A business must not acquire an empty name. After clearing Name and one ordinary Save, UI must reject the invalid draft with an explicit name-related error, keep editor open and preserve all original persisted business fields. Cancel then ordinary reload shows exact original name/slug/empty address/approved Barbershop/owner unassigned/2branches/0staff/services/bookings/limit2. Same ONE original rejection-and-recovery case, no new duplicate case. No HTTP status/DB total-write/translation/visual claim from DOM.",
+  "correction": "C88 incorrectly required both Name and autoslug blank. Source and actual UI show empty-name fallback slug business. Corrected preparation expects empty Name, URL business; independent empty-name-rejection oracle unchanged. No Save occurred under C88 and no manual URL fix permitted. Original plan/stop immutable evidence.",
+  "steps": [
+    "Use same currently clean A page after C88 Cancel, no new navigation/auth/tab. Fresh current state and clock Edit; verify exact original S1 TEST 20261020 Branch Availability / s1-test-20261020-branch-availability, all address/contact inputs blank, Barbershop checked, other category unchecked, approved checked; baseline mismatch ->Cancel and stop.",
+    "Clock clear Name only; fresh state must show Name blank and URL/preview business from normal fallback, all other fields untouched. No manual URL change/Enter. Any other outcome ->Cancel and stop.",
+    "Clock immediately before exactly ONE ordinary Save. Expect explicit name-empty rejection and editor retained. No second submit, even if outcome delayed/ambiguous; one bounded current-state read permitted.",
+    "Clock Cancel and ordinary reload. Confirm original exact name/slug/empty address/approval/category/owner/counts/limit. Clock Admin root and markHandoff. If invalid state persisted mark FAIL and stop for safe precise recovery review, no speculative valid save."
+  ],
+  "effects": "One planned invalid ordinary UI Save/PATCH on existing A sends empty name and slug business, unchanged other bundled fields. Reviewed route rejects name before business UPDATE/slug conflict lookup; this is not independently observed HTTP/DB proof. No new entities/valid business saves/owner/publication/category/contact/branch/security/role/grant/delete/payment/booking/profile/notification/OTP/message commands or fault injection. Auth/role/business reads and normal telemetry/audit unenumerated, not zeroTOTALwrites.",
+  "accounting": "Same planned case, at best1newUI/currentwindow10->11/0fix/0accepted delta. M2-01 partial/casePlanCompletefalse. C88 stopped preparation not a new failed product case or erased block.",
+  "savedBeforeUiUtc": "2026-10-23T02:08:24Z",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "3c34f87e772554f134220aad060c038f0e763c6c26c734055a1b9cd6f06b2756",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+  }
+}

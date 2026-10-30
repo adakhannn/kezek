@@ -1,0 +1,32 @@
+{
+  "id": "C40",
+  "plannedAfterUtc": "2026-10-21T00:34:09Z",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "reason": "C39 changed existing-session sign-in guard; only three affected owner cases became stale. Dependency regression, not new features or distinct cases.",
+  "method": "live CUA ordinary UI, no screenshot/visual claim",
+  "budgetMinutes": 12,
+  "identity": "Known Google owner osorovadahan04@gmail.com; canonical osorov@sportsoft.ru; no business selection",
+  "cases": [
+    {
+      "id": "S12-owner-route-2",
+      "precondition": "Actual owner session and two-business selector; no business change",
+      "steps": ["Observe /privacy as history baseline", "Document navigation to observed /auth/sign-in", "Observe settled destination", "Reload actual destination and inspect content", "Read only filtered hydration/Server Component error logs"],
+      "expected": "Existing owner session reaches legitimate /select-business with two businesses/current business2; reload actual selector retains useful content. No no-flash or hidden-original-URL reload claim."
+    },
+    {
+      "id": "S12-owner-history",
+      "steps": ["From result of sign-in document, ordinary Back", "Observe privacy with owner", "Forward and observe settled destination"],
+      "expected": "Back shows privacy; Forward settles at legitimate two-business selector, owner remains. No authorization bypass or business selection."
+    },
+    {
+      "id": "S12-cold-2",
+      "plannedStatus": "blocked_precondition_pending",
+      "reason": "One current human confirmation requested at 00:30; no answer yet. Old Disable-cache confirmation does not establish present DevTools-open/cache-disabled state.",
+      "expected": "Execute only if current human confirmation arrives before action; ordinary reload alone is not cold-cache proof."
+    }
+  ],
+  "effects": "Ordinary authorized logout/login and navigation only; no business/booking/role/grant writes. Auth and telemetry unenumerated, not zero TOTAL writes.",
+  "restore": "Known superadmin via ordinary Google; preserve original user tabs2/5 and mark handoff.",
+  "countsBefore": {"acceptedS1":13,"remainingS1":12,"primaryPassed":60,"primaryTotal":79,"productAccepted":14,"productTotal":316},
+  "deadlineUtc": "2026-10-21T05:00:00Z"
+}

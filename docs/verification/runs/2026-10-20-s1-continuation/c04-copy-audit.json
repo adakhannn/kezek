@@ -1,0 +1,9 @@
+{
+  "utc": "2026-10-20T08:56:37.136Z",
+  "fileCount": 1660,
+  "fingerprint": "ed0bdd7faf246271380613feebb1b5dbd48b573ea00e635dc10bcddcf137590b",
+  "mismatches": [],
+  "diagnosis": "C01 preserved original ordered boundary then appended one new test; directory-copy traversal inserts that test alphabetically. Compare same exact set using certified order, not a different traversal order.",
+  "compilerSpawned": false,
+  "noSourceChanges": true
+}

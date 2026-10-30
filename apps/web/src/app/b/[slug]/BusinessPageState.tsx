@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
@@ -25,8 +25,13 @@ export default function BusinessPageState({ kind, onRetry }: BusinessPageStatePr
             return;
         }
 
-        if (onRetry) onRetry();
-        else router.refresh();
+        // Boundary reset alone replays a cached server failure. Refresh its payload too.
+        wasOffline.current = false;
+        setIsOffline(false);
+        startTransition(() => {
+            router.refresh();
+            onRetry?.();
+        });
     }, [onRetry, router]);
 
     useEffect(() => {
@@ -40,9 +45,7 @@ export default function BusinessPageState({ kind, onRetry }: BusinessPageStatePr
             }
 
             if (wasOffline.current) {
-                wasOffline.current = false;
-                if (onRetry) onRetry();
-                else router.refresh();
+                retry();
             }
         };
 
@@ -54,7 +57,7 @@ export default function BusinessPageState({ kind, onRetry }: BusinessPageStatePr
             window.removeEventListener('offline', syncNetworkState);
             window.removeEventListener('online', syncNetworkState);
         };
-    }, [onRetry, router]);
+    }, [retry]);
 
     const unavailable = kind === 'unavailable' || isOffline;
     const title = unavailable ? t('business.unavailable.title') : t('business.notFound.title');

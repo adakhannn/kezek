@@ -1,0 +1,127 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/lib/adminHealthCheckHttpService.test.ts
+  ● adminHealthCheckHttpService › does not authorize from another users global role
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      103 |     (runAdminHealthCheck as jest.Mock).mockResolvedValue({ok:true,data:{ok:true}});
+      104 |     const response=await runAdminHealthCheckHttp();
+    > 105 |     expect(response.status).toBe(403);expect(filters.user_id).toBe('current-user');
+          |                             ^
+      106 |     expect(getServiceClient).not.toHaveBeenCalled();expect(runAdminHealthCheck).not.toHaveBeenCalled();
+      107 |   });
+      108 |   test('preserves role read error before any privileged read',async()=>{
+
+      at Object.toBe (src/__tests__/lib/adminHealthCheckHttpService.test.ts:105:29)
+
+FAIL src/__tests__/components/HealthCheckCallerRead.test.tsx (15.278 s)
+  ● HealthCheck server page uses authorized request read, not self HTTP › renders successful read directly with no credential forwarding or internal HTTP
+
+    redirect:/auth/sign-in?redirect=/admin/health-check
+
+       5 | jest.mock('@/lib/adminHealthCheckReadService',()=>({readAdminHealthCheckForCaller:jest.fn()}));
+       6 | jest.mock('@/app/_components/i18n/server',()=>({getT:async()=> (_key:string,fallback:string)=>fallback}));
+    >  7 | jest.mock('next/navigation',()=>({redirect:(url:string)=>{throw new Error('redirect:'+url);}}));
+         |                                                                 ^
+       8 |
+       9 | describe('HealthCheck server page uses authorized request read, not self HTTP',()=>{
+      10 |   const originalFetch=global.fetch;
+
+      at redirect (src/__tests__/components/HealthCheckCallerRead.test.tsx:7:65)
+      at HealthCheckPage (src/app/admin/health-check/page.tsx:53:17)
+      at Object.<anonymous> (src/__tests__/components/HealthCheckCallerRead.test.tsx:16:37)
+
+  ● HealthCheck server page uses authorized request read, not self HTTP › renders degraded report as report, not auth failure
+
+    redirect:/auth/sign-in?redirect=/admin/health-check
+
+       5 | jest.mock('@/lib/adminHealthCheckReadService',()=>({readAdminHealthCheckForCaller:jest.fn()}));
+       6 | jest.mock('@/app/_components/i18n/server',()=>({getT:async()=> (_key:string,fallback:string)=>fallback}));
+    >  7 | jest.mock('next/navigation',()=>({redirect:(url:string)=>{throw new Error('redirect:'+url);}}));
+         |                                                                 ^
+       8 |
+       9 | describe('HealthCheck server page uses authorized request read, not self HTTP',()=>{
+      10 |   const originalFetch=global.fetch;
+
+      at redirect (src/__tests__/components/HealthCheckCallerRead.test.tsx:7:65)
+      at HealthCheckPage (src/app/admin/health-check/page.tsx:53:17)
+      at Object.<anonymous> (src/__tests__/components/HealthCheckCallerRead.test.tsx:22:37)
+
+  ● HealthCheck server page uses authorized request read, not self HTTP › keeps denied caller redirect for 401
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      27 |     (readAdminHealthCheckForCaller as jest.Mock).mockResolvedValue({ok:false,statusCode,errorType:'auth',message:'Denied'});
+      28 |     await expect(HealthCheckPage()).rejects.toThrow('redirect:/auth/sign-in?redirect=/admin/health-check');
+    > 29 |     expect(readAdminHealthCheckForCaller).toHaveBeenCalledTimes(1);
+         |                                           ^
+      30 |   });
+      31 |   test.each([400,500])('renders read failure inline for %s, never as a healthy report',async statusCode=>{
+      32 |     (readAdminHealthCheckForCaller as jest.Mock).mockResolvedValue({ok:false,statusCode,errorType:'internal',message:'Read unavailable'});
+
+      at toHaveBeenCalledTimes (src/__tests__/components/HealthCheckCallerRead.test.tsx:29:43)
+
+  ● HealthCheck server page uses authorized request read, not self HTTP › keeps denied caller redirect for 403
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      27 |     (readAdminHealthCheckForCaller as jest.Mock).mockResolvedValue({ok:false,statusCode,errorType:'auth',message:'Denied'});
+      28 |     await expect(HealthCheckPage()).rejects.toThrow('redirect:/auth/sign-in?redirect=/admin/health-check');
+    > 29 |     expect(readAdminHealthCheckForCaller).toHaveBeenCalledTimes(1);
+         |                                           ^
+      30 |   });
+      31 |   test.each([400,500])('renders read failure inline for %s, never as a healthy report',async statusCode=>{
+      32 |     (readAdminHealthCheckForCaller as jest.Mock).mockResolvedValue({ok:false,statusCode,errorType:'internal',message:'Read unavailable'});
+
+      at toHaveBeenCalledTimes (src/__tests__/components/HealthCheckCallerRead.test.tsx:29:43)
+
+  ● HealthCheck server page uses authorized request read, not self HTTP › renders read failure inline for 400, never as a healthy report
+
+    redirect:/auth/sign-in?redirect=/admin/health-check
+
+       5 | jest.mock('@/lib/adminHealthCheckReadService',()=>({readAdminHealthCheckForCaller:jest.fn()}));
+       6 | jest.mock('@/app/_components/i18n/server',()=>({getT:async()=> (_key:string,fallback:string)=>fallback}));
+    >  7 | jest.mock('next/navigation',()=>({redirect:(url:string)=>{throw new Error('redirect:'+url);}}));
+         |                                                                 ^
+       8 |
+       9 | describe('HealthCheck server page uses authorized request read, not self HTTP',()=>{
+      10 |   const originalFetch=global.fetch;
+
+      at redirect (src/__tests__/components/HealthCheckCallerRead.test.tsx:7:65)
+      at HealthCheckPage (src/app/admin/health-check/page.tsx:53:17)
+      at src/__tests__/components/HealthCheckCallerRead.test.tsx:33:37
+
+  ● HealthCheck server page uses authorized request read, not self HTTP › renders read failure inline for 500, never as a healthy report
+
+    redirect:/auth/sign-in?redirect=/admin/health-check
+
+       5 | jest.mock('@/lib/adminHealthCheckReadService',()=>({readAdminHealthCheckForCaller:jest.fn()}));
+       6 | jest.mock('@/app/_components/i18n/server',()=>({getT:async()=> (_key:string,fallback:string)=>fallback}));
+    >  7 | jest.mock('next/navigation',()=>({redirect:(url:string)=>{throw new Error('redirect:'+url);}}));
+         |                                                                 ^
+       8 |
+       9 | describe('HealthCheck server page uses authorized request read, not self HTTP',()=>{
+      10 |   const originalFetch=global.fetch;
+
+      at redirect (src/__tests__/components/HealthCheckCallerRead.test.tsx:7:65)
+      at HealthCheckPage (src/app/admin/health-check/page.tsx:53:17)
+      at src/__tests__/components/HealthCheckCallerRead.test.tsx:33:37
+
+Test Suites: 2 failed, 2 total
+Tests:       7 failed, 5 passed, 12 total
+Snapshots:   0 total
+Time:        16.497 s
+Ran all test suites within paths "src/__tests__/components/HealthCheckCallerRead.test.tsx", "src/__tests__/lib/adminHealthCheckHttpService.test.ts".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

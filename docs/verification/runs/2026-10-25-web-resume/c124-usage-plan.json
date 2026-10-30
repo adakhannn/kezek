@@ -1,0 +1,32 @@
+{
+  "id": "C124",
+  "requirementIds": [
+    "M5-02"
+  ],
+  "caseId": "S25-M502-category-business-reference-counts",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "timeboxMinutes": 5,
+  "expected": "Fresh allbusinesslist exactknown3IDs/fullvisiblecanonicalcategorysets; independentlyaggregate eachdistinctbusinessslugmembership. Categoryreference page perrowcounts matchderivedcounts incl retainedinactivezero, totalUsage=sumreferences, mostpopularmax. Original3categories/2active and no changes. Onecompletecross-surfacereconciliationcase; no per-row/count/controlcredit and notservices/CRUD/securitycertificate. Restoreprotectedadmin/Anonymized/Business3/RU/handoff.",
+  "knownBusinessIds": [
+    "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "35e5b36c-a967-4708-ba4d-7d3fc24b89f4"
+  ],
+  "knownCategories": {
+    "85157ef2-b18e-4be3-88f7-04c41fd02e5b": "barbershop",
+    "0851842b-feca-4cda-97a5-37b7ffe971ae": "zhenskaya-parikmaherskaya",
+    "c7cef81b-2959-47eb-92b8-98ec82490d1c": "live-test-night09oct-category"
+  },
+  "steps": [
+    "Clock/freshsamehumanTab2/admin/knownSA. ObservedБизнесы3 link ->allbusinesslist count3 with exact3knownIDs and fullcanonicalcategorylabels; no filters/Edit/owner/publiclinks. Ifextra/missing/truncated+N/unknownslug ->BLOCKED/no hiddenDOM/datafetch/guessedpagination. RecordonlyID->categoryset then computeoraclecounts beforeopeningactualcategorypage.",
+    "ClockreturnadminviaobservedАдминка; freshobservedCategories3link ->actual3knowncategories. Compareperrowbusinessusagecount incl0, totalreferencesstat andmostpopular to independentoracle. NoEdit/Delete/Newcategory/checkbox/Save/Enter/role/DBcommand. Error/mismatch recordactual/no speculativefix or auth/reloadloop.",
+    "ClockreturnviaВадминку ->protectedheading/Anonymized/collapsedАдмин-панель/RU/Business3/handoff. No unnecessaryreload/publictaxonomy/otherlocale/role/receipt/draft/build repeats."
+  ],
+  "effects": "Ordinaryauthorizedreadonlynavigation toexistinglists only, no plannedapplicationmutation or authtransition; ordinaryauth/telemetryunenumerated/notzeroTOTALwrites. No transport/SQL/schema/securityaudit or secret/contactextraction.",
+  "accounting": "Atbest1NEWfunctionalUI25Oct4->5/0fix/0accepted;21/316295left/logical12unchanged. M5-02wholepartial/casePlanCompletefalse; services/dependencyvariants retained.",
+  "savedBeforeUiUtc": "2026-10-25T10:26:53Z",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/page.tsx": "35547cb30cad77e62e3976476889cabb9f334cb3c710d849176411b0d080bbfd",
+    "apps/web/src/app/admin/categories/page.tsx": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+  }
+}

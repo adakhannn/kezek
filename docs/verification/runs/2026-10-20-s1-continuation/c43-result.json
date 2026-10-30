@@ -1,0 +1,21 @@
+{
+  "id":"C43",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint":"4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "plan":"c43-return-precedence-plan.json",
+  "role":"KnownSA kezekkg / Anonymized; existing session, no reauth",
+  "cases":[
+    {"key":"both-safe","observationWindowUtc":["2026-10-21T01:17:42Z","2026-10-21T01:18:00Z"],"actual":"Bothredirect=/terms,next=/privacy: initial signin controls then exactlocalhost:3000/terms and Пользовательское соглашение, Админ/Anonymized. Primary wins."},
+    {"key":"empty-primary","observationWindowUtc":["2026-10-21T01:18:00Z","2026-10-21T01:18:19Z"],"actual":"Emptyredirect withnext=/privacy: initialsignin then exactlocalhost:3000/admin, Панель администратора, Админ-панель/Anonymized. No secondary-next selection."},
+    {"key":"invalid-primary","observationWindowUtc":["2026-10-21T01:18:19Z","2026-10-21T01:18:40Z"],"actual":"Primarydifferent-local-origin http://127.0.0.1:3000/terms withnext=/privacy rejected; settledexactlocalhost:3000/admin and adminheading/Anonymized. No alternateorigin orprivacy page."},
+    {"key":"duplicate-primary","observationWindowUtc":["2026-10-21T01:18:40Z","2026-10-21T01:19:01Z"],"actual":"Duplicateredirect=/terms then/privacy: finalexactlocalhost:3000/terms, termsheading, sameAdmin/Anonymized. Firstvalue retained."},
+    {"key":"duplicate-alias","observationWindowUtc":["2026-10-21T01:19:01Z","2026-10-21T01:19:23Z"],"actual":"Duplicatenext=/terms then/privacy: finalexactlocalhost:3000/terms, termsheading, sameAdmin/Anonymized. Firstvalue retained."},
+    {"key":"query-hash","observationWindowUtc":["2026-10-21T01:19:23Z","2026-10-21T01:19:41Z"],"actual":"Internalreturn /terms?c43=return#section preserved exacthttp://localhost:3000/terms?c43=return#section, termsheading andAdmin/Anonymized. Query/hash not dropped; no layout/anchor position claim."}
+  ],
+  "matrixAfter":{"passed":6,"newLivePass":6,"reused":0,"failed":0,"blocked":0,"notRun":0,"total":6,"remaining":0},
+  "effects":"Ordinary documentnavigation/read-only authlookup and unenumeratedtelemetry only. No login/logout/providerbuttons, agentbusiness/job/role/grant/currentbusiness/booking/hold/cancel/pay/save/settings/source commands. NEVERzeroTOTALDBwrites. Originaluser2/5 preserved/handoff; no createdtabs or screenshot/viewport retry.",
+  "restore":"Ordinarygoto known/admin, visible Панель администратора and Anonymized; no reauth. Originaltabs remain.",
+  "countsUnchanged":{"S1Accepted":16,"S1Remaining":9,"S1PrimaryPASS":61,"S1PrimaryRemaining":18,"S2Accepted":1,"S2Remaining":69,"productAccepted":17,"productRemaining":299,"newFixes":0},
+  "limits":"Six new compatibility/pagecases, not newfixes/wholeC1 orP4. Not rawHTTP/callback-negative/no-flash/visual/API-RLS/security/production proof. ExistingC39 controls notrepeated.",
+  "next":"C44 first define complete finite Google C1-03 return contract using existing22cases(originalUTC) plus remaining unsafe freshcallback and safe query/normalization/destination-guard variants. Execute bounded remaining subset; don't silently certify full C1-03 until all mandatorycases accounted. Only known identities/ordinaryUI, no new roles or denied endpoints."
+}

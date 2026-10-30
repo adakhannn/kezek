@@ -7,6 +7,9 @@ import {
 } from './testHelpers';
 
 setupApiTestMocks();
+jest.mock('@/lib/bookingNotificationDispatch', () => ({ dispatchBookingNotification: jest.fn() }));
+
+import { dispatchBookingNotification } from '@/lib/bookingNotificationDispatch';
 
 const { createClient } = require('@supabase/supabase-js');
 const { createServerClient } = require('@supabase/ssr');
@@ -88,6 +91,8 @@ describe('/api/quick-hold', () => {
 
         expect(data.data.booking_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
         expect(data.data.confirmed).toBe(true);
+        expect(dispatchBookingNotification).toHaveBeenCalledWith(mockSupabase, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'confirm');
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 
     test('returns mapped validation error when branch is missing', async () => {
@@ -114,6 +119,19 @@ describe('/api/quick-hold', () => {
         );
 
         expect(data.details.kind).toBe('NO_ACTIVE_BRANCH_FOR_BIZ');
+    });
+
+    test('maps an overlap writer rejection to 409 without confirming or notifying', async () => {
+        mockSupabase.from.mockReturnValueOnce({ select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(), order: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: { id: '22222222-2222-4222-8222-222222222222' }, error: null }) });
+        mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: { message: 'time slot is already booked', code: 'P0001' } });
+        const data = await expectErrorResponse(await POST(createMockRequest('http://localhost/api/quick-hold', {
+            method: 'POST', body: validPayload,
+        })), 409, 'booking_slot_unavailable');
+        expect(data.details).toBeUndefined();
+        expect(mockSupabase.rpc).toHaveBeenCalledTimes(1);
+        expect(dispatchBookingNotification).not.toHaveBeenCalled();
     });
 
     test('supports bearer auth requests', async () => {
@@ -149,5 +167,6 @@ describe('/api/quick-hold', () => {
         const data = await expectSuccessResponse(await POST(req));
         expect(data.data.booking_id).toBe('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
         expect(createClient).toHaveBeenCalled();
+        expect(dispatchBookingNotification).toHaveBeenCalledWith(mockSupabase, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'confirm');
     });
 });

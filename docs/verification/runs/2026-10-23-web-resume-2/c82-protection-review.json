@@ -1,0 +1,91 @@
+{
+  "id": "C82",
+  "type": "bounded read-only history, source and effect review",
+  "startedAfterUtc": "2026-10-23T01:16:38Z",
+  "requirementIds": [
+    "M3-03"
+  ],
+  "plan": "C81 saved next action before this review: no user security commands or fixture changes",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "history": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "verdict": "Known-SA sign-in/list search/global statistics and moderation/category work only. No runtime self/last-admin protection transaction. Historical stats super1 is NOT a current last-admin count or permission to demote."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G004-empty-search-after.json",
+      "verdict": "WB178 blank directory search in owner staff-add flow; no admin-user lifecycle. Do not repeat known-user search for credit."
+    }
+  ],
+  "source": [
+    {
+      "path": "apps/web/src/app/admin/api/users/[id]/suspend/route.ts",
+      "facts": "Authenticated me.id===targetId returns400 before command; a global-superadmin target is also rejected. Actual block path deletes target user_roles, deactivates/detaches staff, records suspension and attempts session invalidation. This is not a harmless flag-toggle test; unblocking does not restore those roles."
+    },
+    {
+      "path": "apps/web/src/app/admin/api/users/[id]/delete/route.ts",
+      "facts": "Source rejects current user and global-superadmin target before deletion chain. Other targets can lose profile/roles/business and booking associations before Auth deletion finishes. No live call or deletion confirmation was performed."
+    },
+    {
+      "path": "apps/web/src/app/admin/api/users/[id]/toggle-super/route.ts",
+      "facts": "Inspected route authenticates/global-role checks then inserts/deletes target global user_role. No explicit actor-target self check or remaining-global-admin count in this route. Source risk only: deployed DB triggers/constraints and runtime outcome are not established."
+    },
+    {
+      "path": "apps/web/src/components/admin/users/UserSecurityActions.tsx",
+      "facts": "Toggle and suspend controls invoke POST directly on change/click; only loading/blocked state disables them, not actor identity/last-admin count. No separate confirmation for role toggle/suspend; delete has confirmation. Therefore do not click to inspect or assume a guard will reject."
+    },
+    {
+      "path": "apps/web/src/app/admin/users/[id]/page.tsx",
+      "facts": "UserSecurityActions receives target userId/isSuper/isBlocked, not current actor or remaining-admin count. Merely inspecting enabled controls would not prove server protection, and is unnecessary for new PASS credit."
+    }
+  ],
+  "classification": "Unverified source-level self-demotion/last-admin safety risk, not a newly reproduced product bug, exploit, failed runtime protection or proven missing deployed DB guard. No speculative fix, UNIT imitation, RLS/grant change or role mutation.",
+  "runtimeBoundary": {
+    "selfSuspendDelete": "BLOCKED: no action-time authority to submit potentially destructive account commands; source checks are support, not LIVE PASS.",
+    "selfDemote": "BLOCKED: current known SA must not be used to test possibly successful self-demotion/loss of authorized access.",
+    "lastAdmin": "BLOCKED: current admin cardinality is unmeasured; no approved isolated last-admin fixture or recovery control. Do not create a second admin, remove other roles, or assume old super1 is current.",
+    "exitCondition": "Separately authorized isolated security-test environment/fixture and recovery procedure, with exact action-time permission. Do not ask to risk the current account or repeat this unchanged review."
+  },
+  "effects": "Files/source reads only. No browser input, account lookup, auth transition, suspend/restore, role toggle, password/link/OTP/message, deletion, DB probe, service-role impersonation, fixture, product/source/test/build/server change. Running-app telemetry is unenumerated; no zeroTOTALwrites claim.",
+  "counts": {
+    "newUiCases": 0,
+    "reusedProofCases": 0,
+    "newLiveFixes": 0,
+    "acceptedDelta": 0,
+    "accepted": 21,
+    "remaining": 295,
+    "newWindowPassedCases": 8
+  },
+  "next": "C83 bounded read-only history/effect review M2-01 existing retained fixtureA fe2d412c admin edit form before any UI plan: look for a genuinely uncovered reversible local draft validation case only, no Save/owner/publication/branch/role mutation, no new fixture. C01-C03 history and current form source first; if covered or onChange writes, retain blocker and do not execute. No C82 command/unchanged diagnostic, no C79/C81 search repeat, no profile Save without pending exact human decision.",
+  "completedBeforeUtc": "2026-10-23T01:19:28Z",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G004-empty-search-after.json",
+      "sha256": "a6c3627799c38491691ec6c38cfbe44075e00248be0c9099bc525597905f2c65"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/users/[id]/suspend/route.ts",
+      "sha256": "78dff26a0040c3e7447172ad1b02df3a590fc124c29226d127c15e9726022d15"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/users/[id]/delete/route.ts",
+      "sha256": "5e76d1dfaeb3f3451cfb0aedb0a1e60ee7c0f67ba5583de0d6a2c5844818a4f9"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/users/[id]/toggle-super/route.ts",
+      "sha256": "7e8c4ca4f9c9eb4af9bd8c98554faf28084f7096b22c00b8f5021d88d95e3fe5"
+    },
+    {
+      "path": "apps/web/src/components/admin/users/UserSecurityActions.tsx",
+      "sha256": "d97fea03c035b7a26c6fe60ac73dde5320a4a0b86093b8a5f948d7407d0a14c7"
+    },
+    {
+      "path": "apps/web/src/app/admin/users/[id]/page.tsx",
+      "sha256": "28c2c4d1a38959f01995e2e02aeeed83fe465cc35c27a6adef290a26317e7a94"
+    }
+  ]
+}

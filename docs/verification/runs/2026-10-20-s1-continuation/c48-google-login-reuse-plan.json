@@ -1,0 +1,17 @@
+{
+  "id":"C48",
+  "plannedAfterUtc":"2026-10-21T02:16:34Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementId":"C3-01",
+  "frozenRequirement":"complete real Google login",
+  "method":"Current evidence applicability review, zero new UI/auth/test executions",
+  "finiteAcceptance":"For all4authorized existing Google accounts, signed-out useful signin -> actual Google account chooser -> selecting exact authorized existing account -> useful authenticated app page showing expected identity. Explicit safe publicreturn is legitimate destination, not forced role-default requirement here. No auth token/code reads required or permitted.",
+  "sourceCaseIds":["S21-C103-CALLBACK-SA-redirect","S21-C103-CALLBACK-CLIENT-redirect","S21-C103-CALLBACK-STAFF-redirect","S21-C103-CALLBACK-OWNER-redirect"],
+  "expectedIdentities":["kezekkg@gmail.com / Anonymized","low.fade.osh@gmail.com / LIVE TEST CLIENT12OCT","obraz.osh@gmail.com / Адахан Осоров staff","osorovadahan04@gmail.com / Аккаунт владельца"],
+  "reviewBeforeAcceptance":["All4existing sourcecases currentlypassed/currentcandidate4e with exact realGoogle steps and originalUTC", "Actual chosenidentity and authenticated finalapp content recorded, not source/UNITonly", "All sourceevidence hashes and declareddependencies match candidate", "Preserve case dates/steps/effects and reuse same rows, no extra execution/fix count", "C42 siblingnext cases are supporting duplicateflow context, not new4successes"],
+  "scopeBoundary":"Existing-account success only; user forbids new users/credentials, none created. New-account provisioning, Google/Yandex cancel/refusal, Yandexsuccess, roledefault+reload/sessionpersistence, replay/idempotency and fullC3area remain separate and OPEN underC3-02..05/otheridentityrequirements. No assertion exactlyone backend session row or absentfuturebugs.",
+  "budgetMinutes":4,
+  "countsBefore":{"S1Accepted":16,"S1Remaining":9,"S2Accepted":2,"S2Remaining":68,"productAccepted":18,"productRemaining":298},
+  "expectedDeltaOnlyIfValid":{"acceptedRequirement":"C3-01","S2Accepted":3,"S2Remaining":67,"productAccepted":19,"productRemaining":297,"newLiveExecutions":0,"newFixes":0},
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

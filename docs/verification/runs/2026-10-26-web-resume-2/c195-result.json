@@ -1,0 +1,22 @@
+{
+  "id": "C195",
+  "status": "BLOCKED_READONLY_AT_EXISTING_SUPERADMIN_MANAGEMENT_CONTEXT",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "plan": "c195-reversible-multi-service-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T08:47:45Z",
+    "2026-10-26T08:49:10Z"
+  ],
+  "actual": "One normal entry existing /dashboard/staff/1bfd0e3b-6fce-42a1-b439-6313af27112f showed Нет доступа к кабинету управления / кабинет доступен владельцам и сотрудникам с правами управления. No servicecheckbox baseline accessible; no toggle/Save/role/grant/business-context workaround. This is an access/precondition result, not a proven new productbug or securityPASS.",
+  "restoration": "Ordinaryknown/admin entry ->protectedadmin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1, markHandoff.",
+  "pendingFixtureEffects": false,
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292,
+    "newWindowUi": 3
+  },
+  "effects": "Navigation/read-only only; no serviceassociation or businessentity changes. Backgroundauth/telemetry unenumerated."
+}

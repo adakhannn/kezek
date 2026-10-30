@@ -1,0 +1,31 @@
+{
+  "id": "C103",
+  "requirementIds": [
+    "C6-04"
+  ],
+  "caseId": "S23-C604-staff-home-logout-back-reload",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "timeboxMinutesIncludingRestore": 9,
+  "expected": "Only if existing staffrole visiblyconfirmed beforelogin: knownobraz/adakhannn existingstaff1bfd HOME positivecontrol; ordinarylogout then ONEBack to/staff must show guest Тре�уется авторизация (normalauthorizationdenial) with no oldstaffprofile/branch/services/bookings/identity/Logout. ONE normalreload remainsguestdenial. Same/staff URL not leak. RestoreknownSAadminBusiness3. One settled-page case; not F013Past/authdiagnosis/no-flash/API/RPC/RLS/token/BFCache/securitycertificate.",
+  "steps": [
+    "ClockfreshsamehumanTab2knownSAadmin. ReadonlyobservedТестовый бизнес2rootlink ->detailУчастники ->actualbusinesslabel/memberlist. Confirmknownaliasadakhannn@yandex.com row hasexistingСотрудник role inthatbusiness. DoNOTclickgrant/revoke/demote/add/invite/delete/phone/unmask. Ifmissing/ambiguous/error ->BLOCKED/returnAdmin/no stafflogin. Preflight0newPASS.",
+    "Clockonlyafterroleconfirmed: ONEordinarySAlogout thenvisibleВойти/Google ->onlyknownobraz.osh existingidentity immediately. Actual/staffknownАдаханОсоров/card1bfd HOME required. Normaldefaultlandinghistoryentry used; no newtab or directselector, no Past/bookings/schedule/finance/profile or servicecommands. Ifheader/sitepending oneboundedfreshstate, no duplicatedauth. Existingassignmentexpectednotnewgrant; anynewroleevidence ->stop/report.",
+    "Clockimmediatelybefore ONEstaffВыйти; guestroot/Войти/nooldidentity. ClockONEBack ->actualrecent/staff. ExpectUNAUTHORIZEDguestheading/signincontrol/noprivatestaffbody/account/Logout. Wronghistorytarget ->BLOCKED/no moreBackhunting. Privatebodyretained ->FAIL/oneboundedreadonlyclassification/noretestloop.",
+    "Ifguestdenialobserved clockONE ordinaryreload ofGUEST/staffHOME only, verifydenial/nooldstaffdata. This is NOT authenticatedstaffreload or Past/F013retry. No storage/token/HTTP/SDKprobe or syntheticfailure.",
+    "ClockvisibleВойтивсистему/Google ->knownkezekkg once/immediately; restoredlocaladminknownSAAnonymized/Business3/RU andhandoff. Authchallenge/policyinterruption ->humanhandoff/no bypass/newtab/relogin. IflandingstaffdenialunderSA, onlyobservedAdminheaderlinknormalnavigation to restore, no newrights/businesschoice/Remember/preference."
+  ],
+  "effects": "Readonlyexistingbusiness2members preflight thenatmost2ordinarylogouts+2knownGooglelogins/ONEBack/ONEguestHOMEreload. No explicitgrant/revoke/newrole/newfixture/business/booking/shift/package/payment/profile/preferences/jobs/message/security/credentials/source/build/servercommands. Conditionalautomaticstaff-role-insertpathrecognized: no staffentryunlessexistingroleconfirmed; runtimeauth/telemetry/automaticreadsideeffects unenumerated/notzeroTOTALwrites. No native/rawHTTP/SDK/storage/secrets/clipboard/screenshotprobes.",
+  "stop": "Existingroleunconfirmed ->BLOCKED/no stafflogin. Wrongaccount/ownstaffHOMEbaseline/authchallenge/unknowncommand/browserinterruption ->stop/no duplicatedauth orsourcefix. No Past/authenticatedreload/F013diagnostic. Anyhumanstop ->safeeffects/PAUSEDreadback/newfinal; usertabneverclosed.",
+  "accounting": "Atbest1NEWUIPASS18->19,0newfix/0accepteddelta. WholeC6-04partial/matrixincomplete; SA/clientdone/no repeat, owneroriginalG108notretimed/reused, manager/multiroleblocked. No grant/security/production/visual/tokeninvaliditycertificate.",
+  "savedBeforeUiUtc": "2026-10-23T05:51:03Z",
+  "dependencyHashes": {
+    "apps/web/src/app/_components/SignOutButton.tsx": "bd94ea2f25c39ddd30d0d146e95b468114794381c7c2448a05ff1af128546524",
+    "apps/web/src/app/auth/sign-out/page.tsx": "b15e268e4c2c70c294c47632e667e2bc4175f7caf42135661113dab20e8e4c4b",
+    "apps/web/src/app/staff/page.tsx": "11aef009139d0873c3a05f7eba851a8b3e1ed8a28e38d5559841252f07a75ffa",
+    "apps/web/src/app/staff/layout.tsx": "46be5252e22ecb3967e9badbfb245c3edba9f338afc8728086c4560c8b53dae8",
+    "apps/web/src/lib/staffRoleSync.ts": "f20610aec14385e1db6a6840a76818bfd27eaab98182542350720b7293cd4036",
+    "apps/web/src/app/_components/ErrorDisplay.tsx": "76c6a39b6f6e5144bf9ac72cb8bee6ce67cd37a52fb33725db689a6ee1e23936",
+    "apps/web/src/app/admin/businesses/[id]/members/MembersClient.tsx": "2a724f87c67c35167ffbf85329566417674024a5072dfc85e5a3c889f76ed34d",
+    "apps/web/src/app/admin/api/businesses/[id]/members/list/route.ts": "860a55371aaf2f1760a5a8082c810e09289ffd694c0c05f87a0d72b3182efab1"
+  }
+}

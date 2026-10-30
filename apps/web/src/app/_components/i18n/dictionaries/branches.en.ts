@@ -75,6 +75,9 @@ export const branchesEn = {
     'branches.promotions.error.delete': 'Error deleting promotion',
     'branches.promotions.error.load': 'Error loading promotions',
     'branches.promotions.error.save': 'Error saving promotion',
+    'branches.promotions.validation.visitCount': 'The number of visits must be greater than 0',
+    'branches.promotions.validation.discount': 'The discount percentage must be between 1 and 100',
+    'branches.promotions.validation.general': 'Check the promotion settings and try again',
     'branches.promotions.error.update': 'Error updating promotion',
     'branches.promotions.everyNthFree': 'Every {n}th service is free',
     'branches.promotions.isActive.label': 'Active (shown to clients)',
@@ -144,4 +147,6 @@ export const branchesEn = {
     'branches.table.name': 'Name',
     'branches.table.status': 'Status',
     'branches.title': 'Branches',
+    'branches.edit.bizContext': 'Business',
+    'branches.edit.bizDefaultName': 'Your business in Kezek',
 } as const;

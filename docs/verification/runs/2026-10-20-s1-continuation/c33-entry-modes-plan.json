@@ -1,0 +1,16 @@
+{
+  "id": "C33",
+  "parent": "F4-02",
+  "purpose": "Protected pageentry transportmodes under alreadydefinedwrong-role/affiliationcontexts; not API/RLS/visualflash/devicePASS",
+  "candidate": "dev-20261020-S1-6b8b3bf85fe5",
+  "finiteMatrix": "F4-01sixteenrole/routepairs x4modes =64. DirectURL12PASS reused withoriginalUTC/evidence anddependencychecks,4blocked reused; reload/newtab/copied-address for12availablepairs =36newcases. Missing4pairs xall4modes =16BLOCKED, neverremoved.",
+  "modes": ["direct URL existingproof", "full documentreload", "normal newtab samebrowsersharedsession", "copy visible nonsensitive pageaddress into navigation from anotherpage"],
+  "copiedLinkLimit": "Observed /admin,/dashboard,/staff,/cabinet/bookings address reused exactly. No unrelatedsystemclipboard read, no authURL/token extraction. This tests transferredURL guard, NOT OSclipboard implementation or independentcookiejar.",
+  "firstBoundedSubpackage": "SamecurrentknownSA /staff newtab ->deny; fullreload->deny; transferobservedstaffaddress fromanotherpage->deny. Only3NEW cases; directSAstaff proof C31reused notfreshdoublecredit.",
+  "newTabReason": "A legitimate mandatory newtab entrycase, NOT recovery/replacementforcapture or bypass ofdeniedtarget. SamepermittedIAB2. Agentowns thisone temporarytesttab; closeaftercase, donotcloseuser2/5. No screenshot/viewport/HTTPworkaround.",
+  "expected": "KnownSA stillrequires ownactive staffrecord; eachentrymode shows explicitNoStaffAccess withoutstaffworkspace. No recalc/job/Save/grant.",
+  "budgetMinutes": 10,
+  "countsBefore": "F4-02 initial12reusedPASS16BLOCKED36notrun/64. F4-01doneavailable12PASS4BLOCKED/16. S1/S2acceptedunchanged.",
+  "reuseReviewBeforeLedgerCertification": "Further sourceproof review of C11 owner/client/staff /admin actuals explicitly includes fullreload; reuse these3additionalreloadactions atoriginalUTC/hash, not rerun/newexecution. Guestoldrepeatentry expresslyNOTreload, so not reused asreload. Thus before3newC33:15reusedPASS16BLOCKED33notrun; after3new:18PASS16BLOCKED30notrun/64. Initialplannedcount retained above as supersededbythisprimaryproofreview.",
+  "next": "Then samefiniteentrymodes forremainingavailableguest/client/owner/staffpairs withordinaryknownGoogle only, batchingwithinrole; restoreSA beforehandoff. Domainlast; no newmissingroles. Finalpause before21Oct05UTC."
+}

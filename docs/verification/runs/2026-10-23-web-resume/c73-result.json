@@ -1,0 +1,18 @@
+{
+  "id":"C73",
+  "plan":"c73-header-roundtrip-plan.json",
+  "review":"c72-role-history-review.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-22T23:38:21Z",
+  "restoredAfterUtc":"2026-10-22T23:40:02Z",
+  "restoredBeforeUtc":"2026-10-22T23:41:23Z",
+  "restoreTimeBoundaryNote":"Final link clicked after23:40:02; successful finalAX precedes report clock, recorded separately as observationWindow end. Do not infer exact action completion UTC.",
+  "role":"KnownSAkezekkg restored C71/Anonymized/samehumanTab2/provider9330166e; no auth transition C72/C73",
+  "case":{"role":"superadmin","status":"passed","actual":"Initial/admin triggerАдмин-панель; exact2menuitems Моизаписи href/cabinet currentnull andАдмин-панель href/admin currentpage. 23:38:28 ordinarypersonalmenuitem ->/cabinet thennormal/cabinet/bookings, triggerМоизаписи/personalheading/ownUpcoming0/Personalnav; adminheadingcount0, onlypersonal aria-currentpage. Back23:38:50 ->/admin/protectedheading/Business3/triggerAdmin/currentAdmin marker. Forward23:39:09 ->samepersonal/triggerPersonal/currentPersonal marker. ExplicitAdminmenuitem23:39:26 ->/admin/correcttrigger andmarker. Back23:39:45 ->personal/triggerPersonal/currentPersonal marker. FinalAdminrestore clickedafter23:40:02 ->actual/admin/Anonymized/Business3/protectedheading/menuclosed/handoff. One complete scoped roundtrip case, not extraPASS peredge/Back/marker. No stale adminoverview in settled personal DOM; not transient no-flash, cross-account data isolation or API proof."},
+  "observationDetails":"Header menu remained expanded during BrowserBack/Forward while currentroute/label/aria-current updated. Plan did not require history events to close menu; not treated as bug. All explicit Link selections closed menu. No navigation retry/goto/hardreload/error; normalized/cabinet/bookings was explicitly allowed beforeUI.",
+  "effects":"Readonly sameidentity Link/Back/Forward navigation and transient localmenu only. No newtab/authtransition/localechange/Remember/preference/businessselection/configSave/recalc/POST/jobs/roles/grants/fixtures/booking/shift/payment/review/source/test/build/server/DB/APIprobe commands. Ordinaryauthlookup/telemetry unenumerated/notzeroTOTALwrites. DOM/AX attributes not visual/device/screenreader/security/RLS/model certification.",
+  "matrix":{"scope":"seven-role scoped header/currentlabel/history tracking, NOT full F3 acceptance","total":7,"passed":1,"failed":0,"blocked":3,"notRun":3,"remaining":6,"newLivePass":1,"newFixes":0},
+  "counts":"Accepted21/316/S117of25 primary63of79/S23of70/S41of47/9logicalverifiedlivefixes unchanged. New23Octwindow6NEWUIcases/0newfix/0accepted delta. C72readonlyreview adds0PASS. OldG016/G078/C65-C71 originalUTC/proofs untouched, no duplicate same-live credit; F3-03 remainsuncertified.",
+  "next":"C74 only remaining staff header-roundtrip variant after a finite plan BEFOREUI: ordinaryknownstaffGoogle, ownstaff+personal menu/route labels/Back, no staff/bookings Past/reload/F013diagnostic. Use /staff landing only and ownpersonal; no businesschoice/preference/grant. RestoreknownSA. Client/guest firsthistoricalapplicabilityreview before any newexecution; owner/manager/multiroleBLOCKED retained. No repeat SAheader/directselector/rating/receipt/profile/build/Escape/cross-taboldPASS unchanged."
+}

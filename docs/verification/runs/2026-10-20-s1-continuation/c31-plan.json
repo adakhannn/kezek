@@ -1,0 +1,11 @@
+{
+  "id": "C31",
+  "parent": "F4-01 C30finite16case matrix",
+  "cases": ["ExistingknownSA:/staff with no activeownstaffrecord mustdeny", "Knownowner:/staff with no activeownstaffrecord mustdeny", "Knownstaff:/dashboard with no managementmembership mustdeny"],
+  "before": "9PASS4BLOCKED3notrun/16; no newrequirements or repeatedadminnegativecases",
+  "expectationBasis": "Activeownstaffrecord is required evenforowner/SA; globalrole is not a staffimpersonation entitlement. Staffrolealone cannotgrantmanagementbusiness. If actualaffiliations differ, classifyfixturecontextbeforecallingbug; do not create/delete/changejobs/roles.",
+  "steps": "SameSAreadstaff; ordinaryknownownerGooglelogin andreadstaff; ordinaryknownstaffGooglelogin andreadmanagement; restoreknownSA. AuthenticationUI mayroute existingowncabinet; no workspacesettings/commands/memberwrite/recalc/SQL. CAPTCHA/password/devicehumanhandoff.",
+  "afterIfAllPass": "12PASS4BLOCKED0notrun/16, F4-01partial due4missingrolecases; S2acceptedunchanged",
+  "budgetMinutes": 15,
+  "restore": "SameSAadminroot/tab5, sharedrootTab2; ordinaryauth/routingtelemetry notzeroTOTALDBwrites"
+}

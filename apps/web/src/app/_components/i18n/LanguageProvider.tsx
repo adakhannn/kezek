@@ -42,8 +42,11 @@ const fallbackContextValue: LanguageContextValue = {
     t: (key, fallback) => fallback ?? (typeof key === 'string' ? key : ''),
 };
 
-export function LanguageProvider({children}: {children: React.ReactNode}) {
-    const [locale, setLocaleState] = useState<Locale>(defaultLocale);
+export function LanguageProvider({children, initialLocale = defaultLocale}: {
+    children: React.ReactNode;
+    initialLocale?: Locale;
+}) {
+    const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;

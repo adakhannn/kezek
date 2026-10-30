@@ -1,0 +1,59 @@
+{
+  "id": "C128",
+  "type": "bounded readonly category destructive confirmation Cancel history/effect review",
+  "completedBeforeUtc": "2026-10-25T19:44:09Z",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "history": "Jul31 category list note establishes server render/typecheck and explicitly unsubmitted delete confirmation, not a targeted exact warning-open/Cancel/reload primary UI proof. Night09Oct admin-stage certifies category create/rename and deliberately retained inactive fixture, not Cancel deletion. C03 is approved irreversible business B deletion; C115 is branch confirmation Cancel. C119/C120 are category edit draft Cancel, C126 persisted name regression. None is the selected category destructive-warning Cancel case; original UTC retained, no recycled PASS. Bounded current M5-01 case inventory plus selected sources only, not global archive absence claim.",
+  "independentOracle": "Warning must name the exact retained test category and disclose irreversibility; Cancel must close without deletion and preserve original category ID/name/slug/inactive/usage0 and list summaries, including one ordinary reload.",
+  "sourceEffects": "List DeleteCategoryButton only sets local confirmOpen. Cancel/onClose only clears dialog/force/error local state. Only dialog onConfirm invokes destructive POST. For usage0 no force-removal checkbox is rendered. Do not click dialog Delete/Enter or force, no API/DB probe. Source supports safe planned Cancel effect boundary; not LIVE proof.",
+  "authority": "Warning open and Cancel are reversible local UI only. No actual deletion permission inferred; exact action-time human confirmation would be required for irreversible deletion and is absent.",
+  "limits": "M5-01 stays partial/casePlanComplete false; actual delete/dependency/cascade/visual/security paths not certified. M5-02 services-contract blocker retained separately.",
+  "hashes": [
+    {
+      "path": "docs/WEB_LIVE_TESTING_AREAS_CATALOG.md",
+      "sha256": "94ab076fb44eb3d232f8c6a6c94c0618368b8e3e7d7269fb55bd8ec95bdb3e88"
+    },
+    {
+      "path": "docs/verification/reviews.jsonl",
+      "sha256": "2b227b5c22cc06d83160aa0ed36856d26f0ef48f21971771c783947a46d6f1f8"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c03-result.json",
+      "sha256": "23f2d389f3224d6d5f5f857f97739781224132d8c34a8795d5e9a1991ba33436"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c115-result.json",
+      "sha256": "b6d613b961d5c062abc9fd8fb8f4f6c9f08ef6b47eee18f6f715bd93ac26c0b3"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c118-category-review.json",
+      "sha256": "1c1b3cc16c3afad50cec93c8177f31678bcb01d1a1b1e9d053566e2ef583eb0b"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c126-result.json",
+      "sha256": "89076a1d934508ff5a1968f60f22a786ebd7bc792e7574be713fb787cf2fa47f"
+    },
+    {
+      "path": "apps/web/src/components/admin/categories/DeleteCategoryButton.tsx",
+      "sha256": "3c3b0f43412307ce5230de8d7d376ecf961f023cf13ef6d9db80008df1401232"
+    },
+    {
+      "path": "apps/web/src/components/ui/ConfirmDialog.tsx",
+      "sha256": "1ec577bf6b472799a6d70f14a6e370bafa05a0a33f415605196f69305b609bfb"
+    },
+    {
+      "path": "apps/web/src/components/ui/Dialog.tsx",
+      "sha256": "18198988ea80785df83f313a2169ca18c961e8444e9e7bae47666c4514439db4"
+    },
+    {
+      "path": "apps/web/src/app/admin/categories/page.tsx",
+      "sha256": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+    }
+  ],
+  "credit": "0 UI/fix/accepted",
+  "next": "C129 finite Cancel-only case saved before UI; current execution blocked by missing user tab, not product FAIL."
+}

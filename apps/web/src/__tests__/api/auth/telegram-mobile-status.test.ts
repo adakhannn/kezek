@@ -14,10 +14,14 @@ import { __resetNonceProbeProtectionForTests } from '@/lib/telegramMobileNoncePr
 
 setupApiTestMocks();
 
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client,
+}));
+
 describe('/api/auth/telegram/mobile/status', () => {
     const previousFlag = process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH;
 
-    afterEach(() => {
+    afterEach(async () => {
         process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH = previousFlag;
         __resetNonceProbeProtectionForTests();
     });
@@ -35,7 +39,7 @@ describe('/api/auth/telegram/mobile/status', () => {
     });
 
     test('returns pending for active nonce', async () => {
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -64,11 +68,11 @@ describe('/api/auth/telegram/mobile/status', () => {
     });
 
     test('returns exchangeCode when nonce is approved', async () => {
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
-        __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved', {
+        await __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved', {
             exchangeCode: 'ABC123',
         });
 
@@ -85,7 +89,7 @@ describe('/api/auth/telegram/mobile/status', () => {
     });
 
     test('returns expired for timed out nonce', async () => {
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 1,
         });
@@ -103,11 +107,11 @@ describe('/api/auth/telegram/mobile/status', () => {
     });
 
     test('returns pending when nonce is in consumed state', async () => {
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
-        const consumed = consumePendingTelegramMobileAuthAttempt(started.nonce);
+        const consumed = await consumePendingTelegramMobileAuthAttempt(started.nonce);
         expect(consumed.ok).toBe(true);
 
         const request = createMockNextRequest(

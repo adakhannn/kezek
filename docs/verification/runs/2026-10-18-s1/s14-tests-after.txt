@@ -1,0 +1,17 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:204) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/components/HomeBranchAvailability.test.tsx
+PASS src/__tests__/components/BookingWizardTranslations.test.tsx
+PASS src/__tests__/components/BusinessInfoTranslations.test.tsx
+PASS src/__tests__/components/HomeCountTranslations.test.tsx
+PASS src/__tests__/components/BusinessPageState.test.tsx
+PASS src/__tests__/components/PublicCategoryLabels.test.tsx
+
+Test Suites: 6 passed, 6 total
+Tests:       69 passed, 69 total
+Snapshots:   0 total
+Time:        9.154 s, estimated 26 s
+Ran all test suites within paths "src/__tests__/components/BusinessInfoTranslations.test.tsx", "src/__tests__/components/HomeBranchAvailability.test.tsx", "src/__tests__/components/BusinessPageState.test.tsx", "src/__tests__/components/BookingWizardTranslations.test.tsx", "src/__tests__/components/HomeCountTranslations.test.tsx", "src/__tests__/components/PublicCategoryLabels.test.tsx".
+
+Typecheck exit0. Explicit ESLint exit0, 0 errors/1 pre-existing img warning plus process ESLintIgnoreWarning. Test file explicitly included with --no-ignore.

@@ -1,0 +1,22 @@
+{
+  "id":"C14",
+  "findingId":"S1-F005",
+  "status":"REAL_UI_REPRO_BEFORE_FIX_NOT_VERIFIED",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "relatedRequirement":"M1-03",
+  "relatedArea":"M5 read-state, not G145 owner component closure",
+  "actualRole":"Authorized known Google superadmin kezekkg; actual protected admin shell; after kernel recovery header shows kezekkg@gmail.com",
+  "route":"/admin/role-applications",
+  "repro":"C13 actual menu Заявки доступа -> successful empty state; one planned full reload -> CUA execution timeout/kernel reset. Fresh inventory same usertab5/provider; rebound only because handles discarded. Initial fresh actual AX contains error banner auth and heading Заявок нет simultaneously.",
+  "observedAfterClockUtc":"2026-10-20T11:14:10Z",
+  "sourceInspectedAtClockUtc":"2026-10-20T11:22:03Z",
+  "expected":"A failed read cannot assert a confirmed empty list. Closing a visible error alone must not certify successful read. No stale moderation controls from a previously successful different filter may be presented as current data after read failure.",
+  "actual":"AlertBanner auth with Close banner PLUS Заявок нет / В выбранном статусе пока нет заявок на роли в бизнесах. Admin role not changed; no moderation command performed.",
+  "impact":"Misleading absence of applications during read/auth error; not unauthorized disclosure or backend loss of rows proved.",
+  "causeBoundary":"Read/empty rendering uses only loading=false and initial items=[] after catch. Underlying auth error cause/status/session expiry NOT established or to be patched. Similar G145 owner-unit issue is a DIFFERENT component and remains open.",
+  "fixPlan":"Track successful list-read state independent of dismissible error banner. Gate empty/rows on successful read; invalidate confirmation at new load; no auth/transport/role/command/schema behavior change.",
+  "sameLivePlan":"Before live modification confirm retained actual auth+false-empty state. After minimal source change use Fast Refresh only if it retains the genuine current error state; inspect error without false empty. If refresh instead issues a successful read, SAME-LIVE failure-path remains pending (do not fabricate fault). Then ordinary read-only status-filter success recovery control if available.",
+  "regressionPlan":"Fresh targeted admin tests: pending, successful empty/rows, network/http/json failure, banner dismiss, failed next filter after loaded rows, recovery. Owner G145 unchanged; no real SDK/network/failure injection.",
+  "effects":"Only prior C13 reload/read-only observations. No API direct calls, mutations, grants, bookings, SQL, cookies/tokens or screenshots. Ordinary telemetry unenumerated.",
+  "deadlineUtc":"2026-10-20T13:00:00Z"
+}

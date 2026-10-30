@@ -1,0 +1,18 @@
+{
+  "id":"C66",
+  "plan":"c66-client-guest-selector-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-21T09:13:58Z",
+  "restoredBeforeUtc":"2026-10-21T09:22:47Z",
+  "setup":"Freshoriginal2root/5blocked/18knownSAadmin. Ordinarylogoutafter09:13:58 timedoutwaitingroot, freshDOMactualroot/signin thenlocalform. Googlebuttonafter09:15:27/choosertimeout followedbyfreshactualchooser; knownlow.fadechosenafter09:16:31. ActualLIVE TEST CLIENT12OCT/Клиент/Выйти; settledrootpublicheading. No repeatedproviderclick/defaultlogincredit.",
+  "cases":[
+    {"key":"client","existingCaseId":"S21-F103-DIRECT-client","status":"passed","observationWindowUtc":["2026-10-21T09:17:36Z","2026-10-21T09:19:24Z"],"actual":"Oneordinarydirectlocalhost/select-cabinet entry. Initialpendingdocumentnotaccepted; awaitpublicheadingthenexactlocalhostroot/Nayditemesto heading/LIVE TEST CLIENT12OCT/Клиент/Личныйкабинет/Выйти. No selectorheading orAdmin/business/staff optionbuttons. Currentclientidentityretained."},
+    {"key":"guest","existingCaseId":"S21-F103-DIRECT-guest","status":"passed","observationWindowUtc":["2026-10-21T09:20:34Z","2026-10-21T09:20:56Z"],"actual":"Afterordinaryclientlogout09:19:24 oneRuntime.evaluate timeout; freshDOMroot/Войти/noВыйти/account. Oneordinarydirectlocalhost/select-cabinet ->exactroot/publicheading/Войти. No selectorheading, privilegedoptionbuttons oraccount. No authAPI/securitycertification."}
+  ],
+  "restore":"LocalrootВойти after09:20:56; Googlebuttonafter09:21:21/knownSAkezekkgchoiceafter09:21:45. OneheaderwaitRuntime.evaluatetimeout, freshDOMactualAnonymized/protectedПанельадминистратора/Бизнесы3/exactlocalhost/adminbefore09:22:47. Original2/18handoff,5untouched, no newtabs. Safelywithin12minuteUIwindow.",
+  "effects":"2ordinarylogouts+2knownGoogleloginsincludingrestore; documentnavigationsonly. No selectorchoice/Remember/persistentpreference/storage/cookie/authcodeinspection,newtabs,source/test/build/server/DB/APIprobe/role/grant/business/booking/shift/payment/reviewcommands. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites. f821/closed909256untouched; noF013staffretest.",
+  "matrix":{"total":7,"passed":3,"failed":0,"blocked":2,"notRun":2,"remaining":4,"newLivePass":2,"reusedC65Pass":1,"newFixes":0},
+  "counts":"Product21/316,S117/25primary63/79,S23/70,S41/47unchanged;9verifiedlivefixesunchanged. FullF1-03partial; owner/staffnotrun andmanager/multiroleBLOCKED retained. Current3PASSnot3newthisstage.",
+  "next":"C67onlyremainingknownowner directselect-cabinet case: finiteplan beforeUI, actualownercontrol/business+personaloptions/noAdminstaff, uncheckedRemember beforeownDashboardreturn; no businessselection/change. RestoreSA. Staffvariantnotrun/F013open,cause-specificretestrequiresnewcondition. Do notrepeatSA/client/guestselectorpassedcases, receipts/profile/build/C64diagnosticwithoutnewdependency."
+}

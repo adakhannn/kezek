@@ -1,0 +1,25 @@
+{
+  "id": "C220",
+  "status": "READONLY_REVIEW_COMPLETE_FULL_VIEW_SWITCH_ROUNDTRIP_NOT_ESTABLISHED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "afterClockUtc": "2026-10-26T11:24:51Z",
+  "historyHashes": {
+    "apps/web/test-results/night-2026-10-09/operations-stage.json": "e088477d0ca181d9672947ae8651c5c53ab5e4022109ebd834fb33b8b7752ea6",
+    "apps/web/test-results/global-2026-10-16/stage-G100-owner-history-filters.json": "33fbff22ad2ac1c407433e1ff1df69a8fe09b47830094e72936292acafdb9065",
+    "apps/web/test-results/global-2026-10-17/stage-G106-calendar-context-after.json": "735e85b3f57dbf76a51454d36010cadde582f5d7cecc5f631a827b4957e707c6",
+    "apps/web/test-results/global-2026-10-17/stage-G107-owned-business-calendar-context.json": "db74559db90d8f92f03101a87b9a1545d1211ba984ddd6479fc249e0259e51cc"
+  },
+  "history": "09Octoperations QuickDeskcreation/calendar/read/historydifferentmethod. G10016Oct02:01:20Calendar->02:02:04Historyandsearch8knownrows+filtercontrols, no roundtripbackCalendar inperformedsteps. G10616Oct22:49:13..23:07:00 receiptBack/Forward/calendarreload/locale/datebranchretention, no listtabactivation. G10716Oct23:08:34..23:11:17 businesspickercontexts, nottabroundtrip. AlloriginalUTC/FAIL retained; no completeexecution-sourcebridge/newreusetimestamp inferred.",
+  "contract": "H1-02actualavailablecalendar/listactivation; H1-04contextsseparate. Currentview localtab controlsconditionallymountCalendarDaySectionorDashboardBookingsListSection. Calendarhistoryhookrestoresownentrybiz/date/branch; listfiltersindependentlocaldefaultall/noncancelled (allactive), excludescancelled. No impliedsharedlist-datefilter. Tabactivationonlylocalstate; calendar/listfetchordinaryreads+clientidentityprojectionPOSTread; rowcommandsseparate.",
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/bookings/view.tsx": "80e0e16c465fa71deae5ffe334591da2fdafb649dfd7999cf0c03c2e4460ee68",
+    "apps/web/src/app/dashboard/bookings/components/BookingsViewSections.tsx": "619bce04bc93d75ea48bc2db950beef357e1beb05a5d3a116a2b7206c55434f2",
+    "apps/web/src/app/dashboard/bookings/components/useCalendarHistory.ts": "2e0522b39b4daac141dad21a48d7fa72c0b832973713ce34d25c371c6d0e7e56",
+    "apps/web/src/app/dashboard/bookings/components/DashboardBookingsListSection.tsx": "ad50db8451daf56580e13983c67a216633c63c62ba29f10f88985b06ed3dae99",
+    "apps/web/src/app/dashboard/bookings/components/useDashboardBookingsListController.ts": "8b22d7a22a1a676dc1aada95847a3f49de8090212b1757f9132e03d4a9168aea",
+    "apps/web/src/app/dashboard/bookings/components/BookingsList.tsx": "8df18baab1432103a6be037228ca600e46732622ec5233f6b7a6f0791b07d3e0",
+    "apps/web/src/app/dashboard/bookings/page.tsx": "ababb0a000e84d82862f0bc9aeeb86a826bc60ce494c36eca58ed567da77719f"
+  },
+  "oracle": "Knownfiveconfirmed19Oct09:00,10:00,11:15,12:15,13:15 andthree12OctpastIDs fromG100, no newbookingcommandsauthorizedsince; needfreshUIeligibilitybeforeassertions. Datecontrolordinaryonefill+Tabmaysetup19Oct; ifnotcommitted/knownfiveabsent ->BLOCKEDno dateworkaround ornetworkcause inference. No current26Octemptygrid-as-fetchsuccess.",
+  "effects": "Readonlyhistory/source/accounting0UI/fix/accepted/reuse"
+}

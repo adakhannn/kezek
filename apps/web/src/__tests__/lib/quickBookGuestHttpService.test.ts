@@ -13,10 +13,14 @@ jest.mock('@/lib/supabaseHelpers', () => ({
 jest.mock('@/lib/quickBookGuestService', () => ({
     runQuickBookGuest: jest.fn(),
 }));
+jest.mock('@/lib/guestBookingNotificationDispatch', () => ({
+    dispatchCreatedGuestBookingNotification: jest.fn().mockResolvedValue(undefined),
+}));
 
 const { validateRequest } = require('@/lib/validation/apiValidation');
 const { createSupabaseAnonClient } = require('@/lib/supabaseHelpers');
 const { runQuickBookGuest } = require('@/lib/quickBookGuestService');
+const { dispatchCreatedGuestBookingNotification } = require('@/lib/guestBookingNotificationDispatch');
 
 describe('quickBookGuestHttpService', () => {
     const validBody = {
@@ -111,5 +115,17 @@ describe('quickBookGuestHttpService', () => {
         );
 
         expect(res.status).toBe(400);
+    });
+
+    test('dispatches only the command result directly with its validated guest scope', async () => {
+        validateRequest.mockResolvedValue({ success: true, data: validBody });
+        createSupabaseAnonClient.mockReturnValue({ mocked: true });
+        runQuickBookGuest.mockImplementation(async (deps: { notifyGuestBooking: (payload: { bookingId: string; type: string }) => Promise<void> }) => {
+            await deps.notifyGuestBooking({ bookingId: 'created-id', type: 'confirm' });
+            return { bookingId: 'created-id', confirmed: true };
+        });
+        await runQuickBookGuestHttp(new Request('http://localhost/api/quick-book-guest', { method: 'POST' }));
+        expect(dispatchCreatedGuestBookingNotification).toHaveBeenCalledWith('created-id', 'confirm', expect.objectContaining(validBody));
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 });

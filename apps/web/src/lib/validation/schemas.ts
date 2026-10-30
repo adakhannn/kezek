@@ -107,6 +107,8 @@ export const dateStringSchema = z.string().regex(
  */
 export const shiftItemSchema = z.object({
     id: z.string().uuid().optional().nullable(),
+    // Stable draft identity: retries persist the same row rather than creating a new one.
+    clientId: z.string().uuid().optional(),
     clientName: z.union([
         z.string().max(200, 'Client name too long (maximum 200 characters)'),
         z.literal(''),
@@ -212,7 +214,7 @@ export const telegramAuthDataSchema = z.object({
  * Схема для поиска пользователей
  */
 export const usersSearchSchema = z.object({
-    q: z.string().optional(),
+    q: z.string().trim().min(1),
     page: z.number().int().optional().default(1),
     perPage: z.number().int().optional().default(50),
 }).strict();

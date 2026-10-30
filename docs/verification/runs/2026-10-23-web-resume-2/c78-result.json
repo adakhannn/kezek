@@ -1,0 +1,120 @@
+{
+  "id": "C78",
+  "type": "bounded_readonly_history_dependency_fixture_review",
+  "startedAfterUtc": "2026-10-23T00:46:39Z",
+  "reviewClockUtc": "2026-10-23T00:48:15Z",
+  "plan": "C77 saved next action in current progress before this review",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "requirementIds": [
+    "E3-01",
+    "E3-03"
+  ],
+  "history": [
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-028-package-attendance.json",
+      "verdict": "Historical exact paid booking034/packagee485 attendance2->1, original command/effect retained; not permission to re-attend."
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-030-client-package-review.json",
+      "verdict": "Historical own client package1of2/11Nov matches retained attendance; do not repeat."
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-048-package-plan-sale-status.json",
+      "verdict": "Historical plan deactivation/reactivation kept sold balance1/2; not expired/depleted lifecycle and not permission to repeat plan writes."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G134-owner-package-projection.json",
+      "originalCompletedUtc": "2026-10-17T03:45:20Z",
+      "verdict": "Owner active/allbranch1row package1/2 until11Nov; expired filter0, branch2empty, branch1same; narrow cross-surface read. Empty expired filter is not actual expired or depleted data."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c56-result.json",
+      "verdict": "Client package1/2/11Nov already unscored read/control, not a new reason to repeat."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c76-result.json",
+      "verdict": "Same package1/2 visible as unscored control only; no new execution credit."
+    }
+  ],
+  "sourceReview": "MyVisitPackagesBlock and current-user route/service scope own rows; active means future-or-today expiry and remaining>0; expired combines true expiry/depletion. Component renders null for both real-empty and failed/invalid fetch, so absence of package block alone is NOT independent proof of no packages. SoldPackagesListClient has explicit error state. No new runtime defect inferred or code changed.",
+  "remaining": [
+    {
+      "variant": "active",
+      "decision": "Existing historical1/2 proof and current control already observed; no unchanged repeat or fresh PASS promotion without original dependency map."
+    },
+    {
+      "variant": "expired",
+      "decision": "BLOCKED: no known allowed actual expired package. Known retained package valid until11Nov, actual23Oct has not crossed boundary. Do not create/mutate dates or use mocked clock."
+    },
+    {
+      "variant": "depleted",
+      "decision": "BLOCKED: no known allowed0-visit package; do not consume remaining visit, purchase or create fixture."
+    },
+    {
+      "variant": "absent",
+      "decision": "BLOCKED for certification: no independent current empty-set proof in allowed evidence; hidden block alone also represents fetch failure. No raw API/DB probe or new identity."
+    },
+    {
+      "variant": "cross-surface",
+      "decision": "Known owner/client comparison already historicalG134; owner stops at business-selection boundaryC67. Do not reselect business or repeat known balance for counts."
+    }
+  ],
+  "effects": "Read-only files/source; no browser package visit, purchase/sale/attendance/deduction/plan toggle/expiry edit/new fixture/auth/SQL/source/test/build action. Auth/telemetry of running app unenumerated; no zeroTOTALwrites claim.",
+  "counts": {
+    "newUiCases": 0,
+    "reusedProofCases": 0,
+    "newFixes": 0,
+    "acceptedDelta": 0,
+    "accepted": 21,
+    "remaining": 295,
+    "newWindowPassedCases": 2
+  },
+  "next": "Independent C79 public search URL-state matrix after pre-UI plan and history review. E2 Save awaits exact human decision; no repeat question, no inferred assent. Package variants blocked until genuinely new allowed evidence/fixture condition, no unchanged package retest.",
+  "completedBeforeUtc": "2026-10-23T00:50:30Z",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-028-package-attendance.json",
+      "sha256": "84f31b71f7013dbab666472f196e4fa71ee59dc88e07fadb9bd25c1c4a3640fc"
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-030-client-package-review.json",
+      "sha256": "c412af1b4d87e854a49b967e2a9a2b081beb2db892f8f93585e5af2ef002bf5d"
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-048-package-plan-sale-status.json",
+      "sha256": "eb9d31a7f9ab7e6d2a69c2eac124764280c31d42be0143c48c0110f7bdde80a0"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G134-owner-package-projection.json",
+      "sha256": "ed56eb6592098f25cc6ef21fb300f4c5b62a17f1123ff180c0e64517127d0b3e"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c56-result.json",
+      "sha256": "986cf6795bb1c3be976f17d283533ae3613429e89c39b4d358da51e9147e61e3"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c76-result.json",
+      "sha256": "e9a42adef1d087df921b96af6d237a5a3ee832e3f7fad7c4b6effcc4a2209f78"
+    },
+    {
+      "path": "apps/web/src/app/cabinet/components/MyVisitPackagesBlock.tsx",
+      "sha256": "85cc85e3339a6fb9e58f78bc1885ce96177e328933b0572c7712eeaf18786b56"
+    },
+    {
+      "path": "apps/web/src/lib/meVisitPackagesService.ts",
+      "sha256": "4c5d2d7909d2356cac7184049325fe53b44907e421570d79ed343477a0b967d7"
+    },
+    {
+      "path": "apps/web/src/lib/meVisitPackagesHttpService.ts",
+      "sha256": "de77da62ba95448fda076539d902359c6236a384a2e94f3b960c2390ab3934ed"
+    },
+    {
+      "path": "apps/web/src/app/dashboard/visit-packages/SoldPackagesListClient.tsx",
+      "sha256": "1c16d3b62046ee51d413770acd383a8516dfdc304784f760d6bdff919debae51"
+    },
+    {
+      "path": "apps/web/src/lib/visitPackagesService.ts",
+      "sha256": "5295fb4e4de22cbb779b299434479ef48b35454fa4747f049015ac6dba7a4250"
+    }
+  ]
+}

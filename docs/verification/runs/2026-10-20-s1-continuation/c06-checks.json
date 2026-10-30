@@ -1,0 +1,11 @@
+{
+  "checkpointClockUtc":"2026-10-20T09:25:21Z",
+  "scope":"Targeted ErrorBoundary chunk retry fix after real C06 UI failure; not whole baseline",
+  "unitBefore":{"suites":1,"pass":7,"fail":4,"exitCode":1,"raw":"c06-unit-before.txt"},
+  "unitAfter":{"suites":2,"pass":17,"fail":0,"exitCode":0,"raw":"c06-unit-after.txt","overlappingRunsNotSummed":true},
+  "coverage":{"files":["src/components/ErrorBoundary.tsx","src/lib/chunkLoadRecovery.ts"],"statements":100,"branches":75,"functions":100,"lines":100,"threshold":60,"exitCode":0,"errorBoundaryBranches":68.75,"helperBranches":100},
+  "typecheck":{"command":"pnpm -C apps/web typecheck","session":77426,"exitCode":0,"scope":"WEB current source; new file excluded by existing tsconfig test excludes as before"},
+  "lint":{"command":"pnpm -C apps/web exec eslint --no-ignore src/lib/chunkLoadRecovery.ts src/components/ErrorBoundary.tsx src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx","session":11023,"exitCode":0,"notice":"Existing ESLintIgnoreWarning retained; scoped only, not wholegreen"},
+  "sourceFix":"Pure Next chunk failure classifier plus user-triggered current-document reload; ordinary error in-place reset, routing signal rethrow/custom fallback/monitoring preserved by controls. No automatic reload loop.",
+  "sameLive":"PENDING fresh current-candidate build and exact C06 real missing-chunk retry scenario; unit PASS not live closure"
+}

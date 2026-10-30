@@ -1,0 +1,34 @@
+{
+  "id": "C218",
+  "status": "READONLY_REVIEW_COMPLETE_OWNER_LOGOUT_BACK_AND_GUEST_RELOAD_SEQUENCE_NOT_FULLY_PROVED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "afterClockUtc": "2026-10-26T11:09:54Z",
+  "history": {
+    "path": "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+    "sha256": "f44f31588d263db6c304130dd977b0480ad1e297d50d96d63e1c648d5c88ee6a",
+    "originalWindowUtc": [
+      "2026-10-16T23:23:21Z",
+      "2026-10-16T23:27:19Z"
+    ],
+    "logoutUtc": "2026-10-16T23:23:32Z",
+    "scope": "Actualownercalendarlogout->guestroot->ONEnativeBacksigninredirectDashboard/noownerbody. Followingreloadwasafterlow.fadeGooglelogin/onclientcabinet; notguestreloadafterownerlogout. NotrelabelledcurrentBack+reloadproof/no newreusecredit.",
+    "other": "G06015Octownerrecovery+wrongrolepageboundaries noownerlogoutBack/reload. C99/C101/C103 knownSA/client/staffcompoundcasesDONE/currentcertified; notrerun. F013staffPastnotpartofcase."
+  },
+  "source": "SignOutButtonordinaryclientlogout+navigationtoauth/sign-out; pageordinarysignoutflowthenrootreplace; DashboardLayoutnot-authenticated redirects to signin?redirect=/dashboard. No manualstorage/cookies/tokeninspection/clearing/injection; theseareapplicationimplementation/sourceonlynotLIVE.",
+  "dependencyHashes": {
+    "apps/web/src/app/_components/SignOutButton.tsx": "bd94ea2f25c39ddd30d0d146e95b468114794381c7c2448a05ff1af128546524",
+    "apps/web/src/app/auth/sign-out/page.tsx": "b15e268e4c2c70c294c47632e667e2bc4175f7caf42135661113dab20e8e4c4b",
+    "apps/web/src/app/api/auth/sign-out/route.ts": "da1a3c7ededcb019b3e94e14561a5de83323054eb0f259da3a628389b6051cc7",
+    "apps/web/src/lib/authSignOutService.ts": "8d65e2b2902d43c370463494f27b9cd7b7f334d75dff97f9513a7be65360c4b9",
+    "apps/web/src/app/dashboard/layout.tsx": "0c02a3f458300606108f583579feaf75e8dad62120f5be1be20db91499cc7255",
+    "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616",
+    "apps/web/src/app/dashboard/page.tsx": "37a1af442547c4a4b505951930ff4300a2766199571974e34ac462ddb82297ea"
+  },
+  "decision": "NewC219 finiteownerDashboard positive->ordinarylogout->ONEBack->guestreload->SArestore. Onecompoundcurrentrole/page/reloadcase, NOTnewBack-onlyG108credit. Completehistoricalmethod/dependencybridge unavailable; sourceidentitynotguessed. No sourcefix/testing/serveraction.",
+  "credit": {
+    "newUi": 0,
+    "newReuse": 0,
+    "newAccepted": 0,
+    "newFix": 0
+  }
+}

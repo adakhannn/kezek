@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { logError } from '@/lib/log';
 
 export default function StaffFinanceStatsPageClient({
     id,
@@ -45,19 +46,19 @@ export default function StaffFinanceStatsPageClient({
                     meta={
                         <div className="grid gap-2 sm:grid-cols-3">
                             <Card variant="outlined" padding="sm">
-                                <p className="type-label text-[var(--text-secondary)]">Money</p>
+                                <p className="type-label text-[var(--text-secondary)]">{t('finance.meta.moneyTitle', 'Money')}</p>
                                 <p className="type-caption mt-1 text-[var(--text-muted)]">
                                     {t('finance.meta.money', 'Turnover and split between employee and business.')}
                                 </p>
                             </Card>
                             <Card variant="outlined" padding="sm">
-                                <p className="type-label text-[var(--text-secondary)]">Guarantees</p>
+                                <p className="type-label text-[var(--text-secondary)]">{t('finance.meta.guaranteesTitle', 'Guarantees')}</p>
                                 <p className="type-caption mt-1 text-[var(--text-muted)]">
                                     {t('finance.meta.guarantees', 'Base share versus guaranteed top-ups and edited hours.')}
                                 </p>
                             </Card>
                             <Card variant="outlined" padding="sm">
-                                <p className="type-label text-[var(--text-secondary)]">Audit</p>
+                                <p className="type-label text-[var(--text-secondary)]">{t('finance.meta.auditTitle', 'Audit')}</p>
                                 <p className="type-caption mt-1 text-[var(--text-muted)]">
                                     {t('finance.meta.audit', 'Who changed percentages and hourly settings, and when.')}
                                 </p>
@@ -70,7 +71,6 @@ export default function StaffFinanceStatsPageClient({
             <Card variant="default" padding="lg">
                 <ErrorBoundary
                     onError={(error, errorInfo) => {
-                        const { logError } = require('@/lib/log');
                         logError('StaffFinanceStatsPage', 'StaffFinanceStats error', { error, errorInfo });
                     }}
                     fallback={

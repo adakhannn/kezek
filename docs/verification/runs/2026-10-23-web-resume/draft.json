@@ -1,0 +1,19 @@
+{
+  "status": "FINALIZED_PAUSED_BY_USER",
+  "startedAfterClockUtc": "2026-10-22T23:04:14Z",
+  "baselineAccepted": 21,
+  "total": 316,
+  "newWindowAccepted": 0,
+  "newWindowVerifiedLiveFixes": 0,
+  "completed": [
+    "C70fournewUIboundaryvariantsPASS, exactReset35/25/20/20/days30/noSave/recalc/persist; M5-04subset6PASS2BLOCKED incl2C69originalPASS; no requirement/fix delta.",
+    "C71knownstaffdirectselector1NEWPASS ->F1-03matrix4PASS3BLOCKED/7; Rememberunchecked/personalreturn/SArestored. NoF013PastReload/repeatedoldPASS/newfix/accepted delta.",
+    "C72readonlyhistoryreview0PASS; C73SAheader-roundtrip+Back1NEWPASS,7rolesubset1PASS3BLOCKED3notrun; final/admin restored, no wholeF3/F3-03 or newfix/requirementdelta.",
+    "C74knownstaffheader+Back1NEWPASS ->subset2PASS3BLOCKED2notrun/7, noPast/F013reload. SArestored/7newUIcaseswindow/0fix/0accepted delta."
+  ],
+  "next": "NEW explicit human resume required; savedC75notstarted.",
+  "priorFinalImmutable": "../2026-10-20-s1-continuation/final-report-until-stop-2026-10-21.json",
+  "updatedUtc": "2026-10-23T00:03:32Z",
+  "latestEvidence": "docs/verification/runs/2026-10-23-web-resume/c74-result.json",
+  "finalReport": "docs/verification/runs/2026-10-23-web-resume/final-report.json"
+}

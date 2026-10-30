@@ -1,0 +1,55 @@
+Owned10376/next start3103 ready4s. Captured public-fetch completion and stop chunks; sequence is not uniqueID. No credentials/headers recorded.
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+{"event":"s23-public-read-pending","delayMs":10000,"utc":"2026-10-18T12:13:57.534Z"}
+[FrontendMetrics] API error
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":1,"utc":"2026-10-18T12:14:08.550Z"}
+{"event":"s18-public-get","table":"branches","status":200,"sequence":2,"utc":"2026-10-18T12:14:08.865Z"}
+{"event":"s18-public-get","table":"branch_promotions","status":200,"sequence":3,"utc":"2026-10-18T12:14:09.114Z"}
+{"event":"s18-public-get","table":"categories","status":200,"sequence":4,"utc":"2026-10-18T12:14:09.405Z"}
+[AnalyticsTrackEvent] API error
+
+{"event":"s23-public-read-pending","delayMs":10000,"utc":"2026-10-18T12:15:06.952Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":5,"utc":"2026-10-18T12:15:17.171Z"}
+{"event":"s18-public-get","table":"branches","status":200,"sequence":6,"utc":"2026-10-18T12:15:17.455Z"}
+{"event":"s18-public-get","table":"branch_promotions","status":200,"sequence":7,"utc":"2026-10-18T12:15:17.657Z"}
+{"event":"s18-public-get","table":"categories","status":200,"sequence":8,"utc":"2026-10-18T12:15:19.472Z"}
+
+{"event":"s23-public-read-pending","delayMs":10000,"utc":"2026-10-18T12:15:32.188Z"}
+{"event":"s23-public-read-pending","delayMs":10000,"utc":"2026-10-18T12:15:32.202Z"}
+{"event":"s23-public-read-pending","delayMs":10000,"utc":"2026-10-18T12:15:32.214Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":11,"utc":"2026-10-18T12:15:42.502Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":14,"utc":"2026-10-18T12:15:42.527Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":14,"utc":"2026-10-18T12:15:42.531Z"}
+{"event":"s18-public-get","table":"branches","status":200,"sequence":18,"utc":"2026-10-18T12:15:42.694Z"}
+{"event":"s18-public-get","table":"services","status":200,"sequence":18,"utc":"2026-10-18T12:15:42.717Z"}
+{"event":"s18-public-get","table":"services","status":200,"sequence":18,"utc":"2026-10-18T12:15:42.768Z"}
+{"event":"s18-public-get","table":"staff","status":200,"sequence":18,"utc":"2026-10-18T12:15:42.771Z"}
+{"event":"s18-public-get","table":"branches","status":200,"sequence":19,"utc":"2026-10-18T12:15:42.898Z"}
+{"event":"s18-public-get","table":"branch_promotions","status":200,"sequence":19,"utc":"2026-10-18T12:15:42.937Z"}
+{"event":"s18-public-get","table":"staff","status":200,"sequence":19,"utc":"2026-10-18T12:15:43.068Z"}
+{"event":"s18-public-get","table":"staff","status":200,"sequence":19,"utc":"2026-10-18T12:15:43.078Z"}
+{"event":"s23-public-read-pending","delayMs":10000,"utc":"2026-10-18T12:15:57.496Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":20,"utc":"2026-10-18T12:16:07.851Z"}
+{"event":"s18-public-get","table":"branches","status":200,"sequence":21,"utc":"2026-10-18T12:16:08.049Z"}
+{"event":"s18-public-get","table":"branch_promotions","status":200,"sequence":22,"utc":"2026-10-18T12:16:08.209Z"}
+{"event":"s18-public-get","table":"categories","status":200,"sequence":23,"utc":"2026-10-18T12:16:08.782Z"}
+
+{"event":"s23-public-read-pending","delayMs":10000,"utc":"2026-10-18T12:16:40.677Z"}
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[AnalyticsTrackEvent] API error
+[FrontendMetrics] API error
+
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+[FrontendMetrics] API error
+{"event":"stopped","pid":10376,"utc":"2026-10-18T12:17:52.029Z","exitCode":4294967295,"signal":null}

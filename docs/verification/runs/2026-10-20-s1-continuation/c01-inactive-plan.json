@@ -1,0 +1,17 @@
+{
+  "plannedAfterClockUtc":"2026-10-20T08:19:38Z",
+  "subpackage":"S1.3",
+  "budgetMinutes":25,
+  "candidate":"dev-20261018-S1-0cc81561faf0",
+  "role":"Current existing superadmin on ordinary public UI; guest follow-up via ordinary logout if needed. Public data loaded by normal application; no admin preview workaround.",
+  "locale":"RU functional acceptance baseline; locale/device exhaustive cases remain O requirements",
+  "cases":[
+    {"id":"B2-03-S13-2","oracle":"A approved fe2d412c-21c6-40ef-b5d3-23f49f550610 has inactivefa5f1017-d987-40c8-90ca-b042898c694f and active057447c8-b200-4403-b056-49e3c250840f","steps":["Confirm actual adminbranch statuses from known A", "Open visible public A link and inspect branch list", "Open actual booking CTA and inspect branch options", "Open one declared stale branch URL /b/s1-test-20261020-branch-availability/booking?branch=fa5f1017-d987-40c8-90ca-b042898c694f&step=2", "Compare valid active branch URL with057447c8-b200-4403-b056-49e3c250840f and inspect selected branch/step", "Restore base/unselected then admin list"],"expected":"Inactive branch never offered or accepted as selected/bookable; active control remains displayed/selectable. Invalid preselection cannot advance with inactive ID. No time/hold/create submission. No staff/services on fixture: not a successful appointment/slot mechanism proof; exclusion from selector is the finite S1 functional contract, command authorization belongs S2/S4."},
+    {"id":"B2-03-S13-3","oracle":"B85adc551-249c-4931-a445-aa6f905f1bea approvalfalse with activechild e1eedc5a-5464-4add-989b-5accee455a99","steps":["Confirm actual adminhidden business and activechild", "Inspect publiccatalog exact fixture names", "Open declared public /b/s1-test-20261020-business-availability", "Open declared booking /b/s1-test-20261020-business-availability/booking with activechild branch preselection", "Compare approved A public availability and restore admin list"],"expected":"Unapproved B absent publiccatalog and not available via public detail or booking route even with real activechild ID. Must distinguish business-not-found from networkerror; no booking form or branch/time/create control."}
+  ],
+  "evidence":"Fresh CUA DOM/visible controls/IDs and actual timestamps; screenshot if available for context, odd scaling never devicePASS. Source inspection supports query construction only, not livePASS.",
+  "writes":"None: public navigation/selector URL only; ordinary telemetry unenumerated. No branch toggles/service/staff/booking commands. Keep all fixtures.",
+  "stop":"Timebudget exceeded, unexpected auth prompt, networkerror or unknown outcome => namedBLOCKED, no endpoint bypass/new tabs/repeated unchanged retries. Bug requires trueUIrepro then minimalfix/SAME-LIVE/addressedregression, not unit-only patch.",
+  "reusedEvidence":"Existing inactive service and no-activebranches passed cases retained with unchanged dependencies. New fixture data affects only new negative cases and catalog exact-count oracle; prior dates not relabelled fresh.",
+  "countRule":"Only if both finitecases PASS and all4 B2-03 variants valid does requirement close: expectedS1 17/25,8left;cases58/79,21left. No deleted-slug closure in this subpackage."
+}

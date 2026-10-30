@@ -52,10 +52,10 @@ export function validatePublicContacts(input: PublicContactFields): PublicContac
     const websiteInput = optionalText(input.website_url);
     const website_url = normalizeHttpsUrl(websiteInput);
 
-    if (contact_phone && !isE164(contact_phone)) {
+    if (optionalText(input.contact_phone) && (!contact_phone || !isE164(contact_phone))) {
         return { ok: false, field: 'contact_phone', message: 'Укажите телефон в международном формате' };
     }
-    if (contact_whatsapp && !isE164(contact_whatsapp)) {
+    if (optionalText(input.contact_whatsapp) && (!contact_whatsapp || !isE164(contact_whatsapp))) {
         return { ok: false, field: 'contact_whatsapp', message: 'Укажите WhatsApp в международном формате' };
     }
     if (contact_email && (!isEmail(contact_email) || contact_email.length > 254)) {

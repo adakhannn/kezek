@@ -1,0 +1,7 @@
+{
+  "id": "C214-localbaseline",
+  "afterClockUtc": "2026-10-26T10:41:25Z",
+  "actual": "KnownSAownprofile/RU/Anonymized. Emailmasterchecked1enabled; exactknownownkezekkgaddresschecked1enabled; WhatsApp0disabled/Telegram0disabled. SaveResetdisabled/Allchangessaved. NameAnonymized/phoneblank/WhatsAppblank untouched. No provider/deletioninteraction.",
+  "pendingLocalDraft": false,
+  "plan": "c214-notification-draft-plan.json"
+}

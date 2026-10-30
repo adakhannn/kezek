@@ -1,0 +1,12 @@
+{
+  "id": "C29",
+  "target": "S1-F005/S21-M103-role-applications",
+  "purpose": "Real stale-session failure boundary without fetch injection/network bypass; C14sourcefix pending same-live",
+  "finiteCases": ["SameknownSA existingtab5 roleapplications success/empty before", "ExistinguserrootTab2 normalUI logout, sharedsession effectexplicit", "Tab5 retainedSPA statusfilter triggers normalread afterlogout OR parentguard deniesbeforecomponent", "If realreaderrorreachable, alert without falseempty/staleitems; capture outcome", "Restore knownSA through ordinaryGoogle sign-in andreturn samepage one successfulread/reload"],
+  "expected": "An actual unauthenticated response mustnotshow Заявокнет. If parentredirectpreventsreachability, record boundarystillpending, do not fakeerror. No browserHTTP/evaluatefetch/cookie/token reads/networkintercept/newtab.",
+  "authority": "KnownGoogle ordinarylogout/login alreadyallowed. No credentials/grants/newusers/roles/fixtures. CAPTCHA/password/device humanhandoff ifneeded.",
+  "tabs": "Existing5rolepage and existing2root. Binding2 is deliberate shared-sessiontest, notreplacementforcapture/deniedtab. Record changedtab2state and restore appentry afterwards; neverclose usertabs.",
+  "effects": "Normal sharedsession logout/login and unenumeratedauthtelemetry; no DBbusinesscommands/moderation",
+  "budgetMinutes": 15,
+  "stopCondition": "Unexpectedaccount/permission/CAPTCHA/noexistingGoogle -> humanhandoff, no bypass; preserve bothtabs"
+}

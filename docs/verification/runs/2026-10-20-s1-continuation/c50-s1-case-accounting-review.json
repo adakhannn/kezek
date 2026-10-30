@@ -1,0 +1,19 @@
+{
+  "id":"C50",
+  "kind":"ACCOUNTING_CORRECTION_NO_NEW_UI_OR_FIX",
+  "reviewStartedAfterUtc":"2026-10-21T03:55:36Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint":"4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "problem":"C40 primary count filtered all cases by requirementIds and excluded BOTH S14-F001-empty and S14-F001-positive. This retained original pre-fix B2-03-S13-4 FAIL in remaining while excluding its accepted SAME-LIVE replacement S14-F001-empty. Both describe the same unavailable-business/zero-active-branches acceptance variant. Current B2-03.caseIds already correctly uses S14-F001-empty, not original FAIL.",
+  "correctRule":"Count distinct case IDs referenced by current S1 requirements.caseIds, not every historical row tagged with a S1 requirement. This keeps every current blocked/stale case. Original before FAIL and supplemental positive control remain in ledger/evidence unchanged and do not each occupy an additional primary acceptance slot.",
+  "sourceAssertions":{"S1Requirements":25,"taggedRows":81,"linkedPrimaryIds":79,"linkedPassed":62,"linkedRemaining":17,"unlinkedRows":[{"id":"B2-03-S13-4","status":"failed","classification":"original before-fix evidence, retained; replaced in current B2-03 matrix by S14-F001-empty"},{"id":"S14-F001-positive","status":"passed","classification":"supplemental positive regression control, retained"}]},
+  "unchangedProof":{"replacement":"S14-F001-empty","observedUtc":"2026-10-18T10:35:26Z","evidenceIds":["S1-EV-6","S1-EV-8"],"currentCertificationReview":"S1-EV-274","originalFailure":"B2-03-S13-4/S1-EV-5","noNewExecution":true},
+  "before":{"passedPrimaryS1":61,"remainingPrimaryS1":18,"totalPrimaryS1":79},
+  "after":{"passedPrimaryS1":62,"remainingPrimaryS1":17,"totalPrimaryS1":79},
+  "remainingGroups":[{"kind":"deployed-domain cases user deferred until end","count":8},{"kind":"current candidate build and four asset cases stale; previous font connection FAIL retained, compiler permission expired","count":5},{"kind":"original pre-hydration SSR and initial visual proof unavailable","count":2},{"kind":"owner cold-load precondition unconfirmed after changed hook","count":1},{"kind":"original transient failed request classification lacks response/timing evidence","count":1}],
+  "requirementsUnchanged":{"S1Accepted":16,"S1Remaining":9,"S2Accepted":3,"S2Remaining":67,"productAccepted":19,"productRemaining":297,"releaseDecision":"NOT_READY"},
+  "effects":"Only accounting review/derived checkpoint correction. No browser/app/DB/source/test action, no new PASS observation, no new bug/fix. Historical C40/C49 results and old finals unchanged; current ledger case statuses, dates, contents and evidence preserved.",
+  "browserBlock":"C49 retry-recovery still BLOCKED. Human normal local signin restoration requested once; no response yet, no retry/bind/new-tab/HTTP workaround.",
+  "usageRead":"03:52:52UTC lookup failed to return limits; one bounded retry at03:53:18UTC ordinaryUsageAllowed=true, weekly used28%. Not exhaustion, no purchase/reset.",
+  "next":"No new app/DB actions pending C49 human restoration. Prepare final current snapshot and explicit existing-kezek PAUSED/readback at window winddown; hard deadline21Oct05UTC, draft04:35/finalize04:45 unchanged."
+}

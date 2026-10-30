@@ -1,0 +1,16 @@
+{
+  "id": "AUTOMATION_C197_CHECKPOINT_REFRESH",
+  "recordedUtc": "2026-10-26T09:17:21Z",
+  "existingAutomation": "kezek",
+  "status": "ACTIVE",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "intervalMinutes": 15,
+  "previousConfigurationArchive": "docs/verification/runs/2026-10-26-web-resume-2/automation-before-c197-checkpoint.toml",
+  "previousConfigurationSHA256": "75ee31fe949f59e58f0afa76baee836c8060e8445e180a322ff4b7540d5c9185",
+  "currentConfigurationSHA256": "24af5777c49d574ee23bc96fec7fd8bfa106477cc0d8cb936c49f16891bd3554",
+  "toolUpdateSuccess": true,
+  "toolViewReadback": true,
+  "fullConfigurationMatched": true,
+  "noDuplicate": true,
+  "scope": "Onlycheckpoint/nextpriorityparagraph updated fromstaleC193/C194 tocompletedC196/C197 andpendingP0datedeep-linkreview; name/status/schedule/thread/safetybounds preserved."
+}

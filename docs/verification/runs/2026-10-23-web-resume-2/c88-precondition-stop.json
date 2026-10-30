@@ -1,0 +1,13 @@
+{
+  "id": "C88",
+  "status": "PREPARATION_STOPPED_ORACLE_PRECONDITION_CORRECTION_REQUIRED",
+  "plan": "c88-empty-name-plan.json",
+  "caseId": "S23-M201-empty-name-reject-cancel",
+  "actual": "Fresh same SA humanTab2/admin; observed A link after02:05:53Z, normal wait reached exact original A. Edit after02:06:29Z confirmed original name/slug/blank address and contacts/approved Barbershop/2branches0staff/services/bookings/limit2. Fill Name empty after02:06:38Z showed Name empty but automatic slug/preview business, not both blank as my plan required. No Save/Enter/submit. Cancel after02:07:06Z restored original readonly slug and empty address/category. Original C88 plan preserved unchanged.",
+  "classification": "Planner precondition was incorrect, NOT product failure, not input uncertainty and not an executed name-rejection test. No PASS/fix/accepted credit. Case remains not_run until corrected plan; original stop evidence retained, not erased or converted to success.",
+  "sourceFact": "businessSlug.ts explicitly returns slug || 'business'. This does not change independent requirement that an empty business name must reject before persistence. Corrected pre-UI plan must accept the actual deterministic slug fallback and never manually repair it or send a different name.",
+  "effects": "Local empty-name fill and Cancel only. No business Save/DB command/auth transition/new tab/source edit. Normal telemetry unenumerated, not zeroTOTALwrites.",
+  "next": "C89 corrected finite plan for same original empty-name rejection case, one ordinary invalid Save at most; preserve C88 plan and this stopped preparation. No extra case or repeat credit.",
+  "completedBeforeUtc": "2026-10-23T02:08:24Z",
+  "sourceHash": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+}

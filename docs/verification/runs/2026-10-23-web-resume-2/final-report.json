@@ -1,0 +1,101 @@
+{
+  "id": "2026-10-23-web-resume-2-final",
+  "status": "PAUSED_BY_USER",
+  "request": "давай пока что на паузу",
+  "firstActualStopClockUtc": "2026-10-23T06:34:23Z",
+  "finalizedUtc": "2026-10-23T06:36:18Z",
+  "windowResumeFirstClockUtc": "2026-10-23T00:13:06Z",
+  "continuousObservation": false,
+  "observationGapEvidence": "c93-observation-gap.json",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "sourceFileCount": 1685,
+  "readiness": "NOT_READY",
+  "accepted": 20,
+  "remaining": 296,
+  "total": 316,
+  "S1": {
+    "accepted": 16,
+    "total": 25,
+    "primaryPassed": 62,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 3,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 1,
+    "total": 47
+  },
+  "newWindowPassedFunctionalUiCases": 21,
+  "newWindowVerifiedLiveFixes": 2,
+  "verifiedFixesLogicalRun": 11,
+  "newWindowFirstAcceptedRequirements": 0,
+  "priorWindowArchivedUiCasesNotAdded": 7,
+  "reusedPriorProofCasesThisWindow": 0,
+  "refreshedExistingCasesThisWindow": 1,
+  "fixes": [
+    {
+      "id": "S1-F014",
+      "status": "verified",
+      "scope": "Exact empty-name error presentation RU/KY/EN; c91-result.json"
+    },
+    {
+      "id": "S1-F015",
+      "status": "verified",
+      "scope": "Manualbranchaddressdraft/blur/clear/name/discard; c109-result.json. NoSave/persistence/maploading claim."
+    }
+  ],
+  "latestEvidence": "S1-EV-444",
+  "latestResult": "c109-result.json",
+  "beforeFailPreserved": "c108-result.json/original b876candidate and UTC",
+  "currentBuild": {
+    "status": "UNEXECUTED_C109_NEW_SOURCE",
+    "priorPass": "c92-result.json/c93-result.json"
+  },
+  "technicalGates": {
+    "evidence": "c109-technical-checks.json",
+    "typecheck": "PASS",
+    "targeted5": "PASS",
+    "scopedLint": "PASS_COMPONENT_AND_EXPLICIT_TEST",
+    "fullLint": "NOT_RERUN_CURRENT/priorC91FAIL52errors167warnings",
+    "sourceUnit": "NOT_RERUN_CURRENT/priorC91FAIL11/PASS2530",
+    "currentBuild": "UNEXECUTED_C109_NEW_SOURCE"
+  },
+  "acceptedDeltaExplanation": "Windowbegan21/316; now20/316 solely A3-01 currentcandidatebuildSTALE after C109runtimeedit. C92/C93buildpass historicalandimmutable, no newbuild yet. No productrequirement deleted to alter denominator.",
+  "blockers": "F013OPEN/F005pending, mapunavailablecauseunknown, fullcurrentlint/test notrerun with prior52lint errors/11unitfails retained, fixtures/role/cache/visual/owner/profileSave/serverdependency/production/domain boundaries retained. M2-02matrixpartial; notwholeCRUD/absenceofallbugs.",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "configReadback": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSha256": "aa7ebbb251956eaf3fa12d9bd19f1442394b3612b81ade056716d21a49a89446"
+  },
+  "effectsAndProcesses": {
+    "readbackAtUtc": "2026-10-23T06:35:24Z",
+    "mainServer": {
+      "pid": 29340,
+      "parentPid": 23188,
+      "listen": "127.0.0.1:3000",
+      "leftAvailableForUser": true,
+      "continuingTestProcess": false
+    },
+    "priorTemporaryCompiler17020Absent": true,
+    "priorTemporaryRuntime15056Absent": true,
+    "port3107NoListener": true,
+    "newTemporaryCompilerOrRuntimeStarted": false,
+    "activeTemporaryNetworkPermission": false
+  },
+  "ui": "Administrativefinalizationonly; no product/UI/DB/newtest/build/source commands afterstop. C109drafts alreadycleared and originalbranch reentry/root restored beforestop. Browser not manipulated duringfinalization; lastactualUI at06:32:25Z/humanTab2/admin/knownSA/RU preserved. Ordinary priorauth/mapmount/telemetry unenumerated/notzeroTOTALwrites.",
+  "priorFinal": {
+    "path": "../2026-10-23-web-resume/final-report.json",
+    "sha256": "e703a0e29ccf7dfe408640557db163b2903e2c6b5fa423a7378422a2b8964cea",
+    "unchanged": true
+  },
+  "savedNextOnly": "C110 bounded finite genuinelynewcandidate offline defaultNext/Turbopack build and separateactualexecutionplan BEFOREprocess. Review existing C92 guard/harness and C93 tooloverrun, use new ownedoutput/rawlogs/watchdog/alloutboundNodeblocked/dummyenv/no.env/localfonts, no networkpermissionrenewal. Do not repeat unchanged C93assetbundle/screenshot/coldcache/fullhugeJest/auth/F013/manualdate/profileSave. Record current full lint/test gates not rerun/priorfailures; no fullgreen. No validbranchSave/persistedaddress/maploading credit.",
+  "resumeRequires": "NEW direct human authorization followed by freshclock/usage/progress/source/UI and all prior constraints. No test/build authority duringpause."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "C230",
+  "status": "PASS_ONE_COMPOUND_EXISTING_BUSINESS_LOCAL_QUOTA_BOUNDARY_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c230-branch-limit-draft-plan.json",
+  "caseId": "S26-M201-branch-limit-local-boundary-guards-restore",
+  "observationWindowUtc": [
+    "2026-10-26T12:16:47Z",
+    "2026-10-26T12:18:57Z"
+  ],
+  "restoredBeforeUtc": "2026-10-26T12:18:57Z",
+  "actual": "KnownSA existingA exactname/slug/approvedBarber/ownerunassigned/2branches0staffservicesbookings; branch quota badge2/2/input2/UpdateLimitdisabled. Ordinary inputfill+Tab each:1 ->value1/buttondisabled/isEnabledfalse;0 ->0/disabled/false;1001 ->1001/disabled/false;1000 ->1000/buttonenabled/isEnabledtrue (never clicked). Restoreinput2+Tab ->2/buttondisabled. ONEreloadexactA showsquota2/2/input2/buttondisabled andallbaselinebusinessfields/2branches0staffservicesbookings. No Save/UpdateLimit/Enter/submit ordelete activation.",
+  "effects": "Five local input fills (1,0,1001,1000,2) with ordinary Tab/oneReload and observednavigation only. No intentionalquotaPOST/businessedit/branchentity/create/delete/owner/category/approval/contact/role/security/booking/payment/authswitch/SQL/API/SDK/storage/source/test/build/server commands. Tab may focus later DeleteBusiness or UpdateLimit; neither was activated. Ordinaryappread/auth/analytics/telemetry effects unenumerated, not zero TOTAL writes.",
+  "restoration": "Quotaoriginal2 andunchangeddisabledstate/reload2/2; observedАдминка ->actualprotected/admin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1;markHandoff/no pendingeffects.",
+  "limits": "Client UI disabled guard plus localdraft recovery only; no actual lower-count/range serverrejection/persistedquota/allM2-01/API/RLS/security/visualPASS. C84/C86/C97oldproofs not rerun orretimed. No newfix.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 18,
+    "windowUiAfter": 19,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "C239",
+  "status": "READONLY_COMPLETE_OWNER_SLUG_METHOD_UNAVAILABLE_REQUIREMENT_REMAINS_PARTIAL",
+  "reviewedAfterClockUtc": "2026-10-28T09:00:38Z",
+  "completedAfterClockUtc": "2026-10-28T09:03:08Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "requirementId": "I6-02",
+  "originalRequirement": "verify slug collision and invalid values;",
+  "history": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/settings-stage.json",
+      "sha256": "541efe76f83c6c6059b82b6a2220766e8ad9a070fd7dd1453028c957623e7a81",
+      "originalStageMetadata": "2026-10-09T04:48:00+06:00",
+      "scope": "Owner business2 website HTTP validation/error-copy and original contacts restore only. Not slug editing/collision/invalid-slug execution; updatedAt is stage metadata, not exact submission UTC."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json",
+      "sha256": "304e771c8c5817b2ad4427d6785108b87df860499da5858dc0e5803002208c70",
+      "originalWindowUtc": [
+        "2026-10-17T03:10:26Z",
+        "2026-10-17T03:19:19Z"
+      ],
+      "scope": "Owner settings page+four contact controls localization, no input or Save. Not owner slug proof."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c237-slug-validation-review.json",
+      "sha256": "dd871a3ff0a7b758f48a4c94dd936f761075c2ed897591d6add1ca49308da1c1"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-28-web-resume/c238-result.json",
+      "sha256": "d411b22ac5f8ebdc29e1d2a16505d6df7ad5445468d3e7f62a572a369ca2dbe2"
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/settings/page.tsx": "c9f7f04e1a41eb7c9963246bbf38bcca4cc67b49526eb5f16aaf5c9336466940",
+    "apps/web/src/app/dashboard/settings/BusinessContactSettingsForm.tsx": "1270d845a6c103b57de1688b6e12b988cdf7ed8be790802489076281d7152da5",
+    "apps/web/src/app/api/dashboard/contact-settings/route.ts": "4f4c1edab16d04f3414ea9339fd9b1fef46ac41d0b0f67ca376932e3cd96144f",
+    "apps/web/src/lib/businessContactSettingsService.ts": "a6584b28df0bdfeaeac47722311603a9810236565543e52065fd62b24d64fa14",
+    "apps/web/src/lib/businessContacts.ts": "9d8d54d9187e8235823eb5c6e599bc4f805bd6776f03ab1bcb92841a5877ff4f",
+    "apps/web/src/app/dashboard/ui/DashboardNav.tsx": "3e05471d89dbd028f35a6839b4e26caba9339792ca52ffc3ddd0b3483664b446",
+    "apps/web/src/app/dashboard/components/MobileSidebar.tsx": "588fe26a3347429c61e53f870db5e0be2087c88ad99c1daddc6628ae7021d5a8"
+  },
+  "findings": [
+    "Current dashboard settings page reads four public contact fields and renders BusinessContactSettingsForm only; owner business name appears in the description, not an editable identity form. Dashboard navigation and mobile sidebar both point to /dashboard/settings; scoped dashboard source search located slug only for display/public links, not owner editing.",
+    "Form state/POST contains contact_phone,contact_whatsapp,contact_email,website_url. Receiver checks owner-or-superadmin and delegates contact validation/service. validatePublicContacts returns exactly those four normalized fields; service updates that validated object. No owner slug control or slug write in this reviewed chain. This is source classification, not a runtime security/DB/schema claim.",
+    "C95 admin collision rejection and C238 admin local slug canonicalization/discard remain valid narrow admin-consumer cases. They are not an actual owner settings invalid/collision matrix. No acceptance/reuse/new execution credit from relabeling them."
+  ],
+  "blocker": {
+    "status": "BLOCKED_OWNER_METHOD_AND_CONTRACT",
+    "owner": "Product contract/current owner UI capability",
+    "exit": "Clarify whether identity/slug editing is intended for owners or admin-only and the complete required invalid/collision matrix. A newly implemented/authorized owner method or explicit contract decision is needed before owner-specific acceptance. Do not add a feature or infer defect solely from missing control."
+  },
+  "decision": "Keep I6-02 partial and existing denominators. No owner login/Save/API spoofing or speculative feature fix. Independent unfinished priority: exact cross-business known-active branch deep-link scope/rewind guard, after a separate finite plan.",
+  "effects": "Read-only local evidence/source classification, no browser/auth/entity/role/SQL/API/SDK/storage/source edit/test/build/server command; no new UI/fix/accepted/reuse credit.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}
+

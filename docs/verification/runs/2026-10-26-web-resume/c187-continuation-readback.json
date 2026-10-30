@@ -1,0 +1,37 @@
+{
+  "id": "C187_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-26T00:58:45Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "2f70dce20458c9af83c6a6e42c3ec818290f60644fd1337f2044651698277092",
+    "latestPromptCheckpoint": "C187"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 27,
+    "observedAfterClockUtc": "2026-10-26T00:55:50Z"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "c179AndC183JournalsImmutable": true,
+  "pendingFixtureEffects": false,
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 23,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "newUiFromC187": 0,
+  "newFixFromC187": 0,
+  "newAcceptedFromC187": 0,
+  "releaseDecision": "NOT_READY",
+  "next": "C188 bounded readonly D1-01 direct/business/map/search entry-method primary/dependency review beforefiniteplan; no browser/wizard/booking/entity/Next/slot/confirm/API/SDK/storage commands or unchangedreplay.",
+  "effects": "Only readonly historicalconflict applicability and accounting/continuation records. No browser/auth/booking/DB/SQL/API/SDK/source/test/build/server action; userTab2/admin/mainserver untouched/no freshUIhealthclaim, frozenfixturejournals pendingfalse. Ordinarybackgroundauth/telemetryunenumerated."
+}

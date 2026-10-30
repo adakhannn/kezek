@@ -1,0 +1,79 @@
+{
+  "id": "C246",
+  "status": "FINITE_RESUMPTION_PLAN_AFTER_NEW_DIRECT_HUMAN_REFRESH",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "firstActualClockUtc": "2026-10-28T12:04:30Z",
+  "newCondition": {
+    "humanMessage": "Обновил, панель видна",
+    "interpretation": "Human confirmed requested manual refresh of current localhost/admin tab; one genuinely new observation condition, not blanket permission for repeated unchanged diagnostics or newtab/source/security actions.",
+    "baseline": "FreshAX protected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/Today28Oct0-0-0. Separate headinginnerText Панель администратора and sameprovider tabinventory/admin agree."
+  },
+  "timeboxMinutesIncludingRecovery": 7,
+  "readiness": {
+    "steps": [
+      "ONE observed A-card link click. Wait for exactA heading; ONE freshAX plus exactheadinginnerText/currenttabmetadata must agree on actualA detail before any branch navigation or field. No duplicateclick/goto/rebind/reload/native/providerworkaround.",
+      "If contradictions recur, preserve failure/bounded diagnostic result and markHandoff; no editor input or source/server/security fix. Initialadminagreement alone is recovery setup0productcredit."
+    ],
+    "expected": "After transition AX actualA detail URL/name and directvisibleheading agree. No stale/adminstate used to target fields."
+  },
+  "caseIfReady": {
+    "caseId": "S28-P201-admin-branch-unsaved-dirty-reload",
+    "originalPlan": "c243-unsaved-admin-branch-reload-plan.json",
+    "originalBlockedEvidence": "c243-result.json",
+    "requirementIds": [
+      "P2-01",
+      "P2-02"
+    ],
+    "variants": [
+      "admin-existing-branch:unsaved-name-address-direct-reload-discard"
+    ],
+    "knownTarget": {
+      "businessId": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+      "branchId": "fa5f1017-d987-40c8-90ca-b042898c694f",
+      "name": "S1 TEST INACTIVE BRANCH",
+      "address": "",
+      "active": false,
+      "inheritBusinessContacts": true,
+      "coords": "—/—",
+      "linksContacts": "allblank",
+      "schedule": "all7closed",
+      "branchCount": 2,
+      "limit": 2
+    },
+    "drafts": {
+      "name": "C243 UNSAVED BRANCH NAME 28OCT",
+      "address": "C243 UNSAVED ADDRESS 28OCT"
+    },
+    "expected": "Fresh exactinactivefa5 editor: originalknownname/blankaddress+4directorylinks+4publiccontacts/coords—/—/inherittrue/inactive/7closed, pristine disabled Save. Fill only two synthetic name+address drafts, ordinary Tab, require both exact visible values retained and Save enabled. NEVER Save/Enter. ONE direct reload WHILE dirty must return exact same branch editor with original persisted name/blankaddress/all other original fields and pristine disabled Save/nochanges; synthetic markers absent. Reentry via list then same observed branch confirms original; list retains both originalbranch identities/inactive-active/count2of2. No unsaved-data persistence/resurrection and no entity mutation command. Return protectedSAadmin/RU/Anonymized/Business3 and handoff. ONE compoundcase, not separate name/address/reload credits.",
+    "steps": [
+      "Clock/freshcurrentworkingtab protectedSAadmin. ObservedA ->branches ->exactinactivefa5 edit. Require all targetbaselines, no masked/unknown nonempty contact/data, otherwise BLOCKED/no input. No map/search/provider/location/coordinate/active/inheritance/schedule interaction.",
+      "Clock; fill ONLY name and address with exactsynthetic drafts, each ordinaryTab and freshAX; require both visible values/Save enabled. Input uncertainty ->discard via list/reentry, recordBLOCKED; no rawDOM/event/value/unmask workaround.",
+      "Clock; ONE tab.reload WHILE both drafts stilldirty; NEVER clickSave/Enter. Aftertimeout ONEfreshAX/no secondreload. Expectedexactoriginaleditor/nochanges/disabledSave/allbaseline. If applicationpersisted markers withoutSave, preserve realFAIL and stop; do not issue unplanned validSave to repair or assert DBcause.",
+      "Ordinary observed list ->two originalbranches2of2, reenterexactinactivebranch/readoriginal baseline. Return observedAdminlink->protectedadmin/RU/Anonymized/Business3,markHandoff. No authswitch/newtab."
+    ],
+    "stopRules": [
+      "No Save/create/delete/validupdate/active/contacts/coords/inheritance/schedule/role/booking/payment/entitycommands. No storage extraction/fakeclock/SDK/API/SQL/HTTP/source/test/build/serveractions.",
+      "Existing mapunavailable notice is not newprovider test/bug; no retry/mapinteraction.",
+      "C241/C189publiccatalogue failure is not retried; scenario stays on existingadmin branch.",
+      "Unexpected auth/readerror ->onefreshAX then exactBLOCKED/no authloop/restart."
+    ],
+    "dependencyHashes": {
+      "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+      "apps/web/src/components/admin/branches/BranchMapPickerYandex.tsx": "2ea6e90f39759778b9a414f574a1d405220fe2263010d7175dda67a5fdeda101",
+      "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+      "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+      "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+      "apps/web/src/components/ui/Input.tsx": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf"
+    },
+    "credit": "If full originalcompound mid-dirtyreload scenario genuinelypasses after newcondition, ONE first actual UI-PASS for thiscase only. Preserve originalC243 setupBLOCKED/UTC/evidence as priorattempt; no recovery or perfield credit. WholeP2 remains partial."
+  },
+  "effects": "Readiness only oneordinary read-link transition+observations. If ready, only exactplannedlocalname/addressdraft andONEintentionaldirtyreload plus list/reentry/adminrecovery; NEVER Save/Enter/newentity/auth/role/booking/HTTP/SDK/SQL/storage or server/build action. Ordinaryread/auth/telemetry unenumerated.",
+  "scope": "Humanrefresh/newbaseline isnotproductfix,notfulltoolrecoveryPASSbeforecrosspagecheck,notnewacceptedrequirement.",
+  "readinessCompletion": {
+    "afterClockUtc": "2026-10-28T12:11:00Z",
+    "actual": "ONEAcardclick->settled AX+directheading+inventory exactAURL/name agree, then observedbranches andinactivefa5editor originalknownbaseline; no field/reload/mutation yet.",
+    "timeboxAdjustmentBeforeFieldInput": "Original7minute setup/readiness budget ends12:11:30; the actualdirtyreloadcase has NOT started. Finitecase phase is separately limited6minutes from actual12:11:00, recoverypriority; no diagnosticrepeat or privilege extension. Bothlimitsrecordedprospectivelybeforeanyfieldinput.",
+    "casePhaseStartAfterClockUtc": "2026-10-28T12:11:00Z",
+    "casePhaseDeadlineUtc": "2026-10-28T12:17:00Z"
+  }
+}

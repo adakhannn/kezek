@@ -1,0 +1,64 @@
+{
+  "id": "HUMAN_STOP_20261028_145640",
+  "status": "PAUSED_BY_USER",
+  "request": "остановись до нового запуска",
+  "firstActualClockAfterStopUtc": "2026-10-28T14:56:40Z",
+  "firstActualClockAfterStopBishkek": "2026-10-28 20:56:40 Asia/Bishkek",
+  "configurationReadbackBeforeClockUtc": "2026-10-28T14:57:20Z",
+  "automation": {
+    "id": "kezek",
+    "kind": "heartbeat",
+    "status": "PAUSED",
+    "updatedUtc": "2026-10-28T14:57:05.904Z",
+    "configSHA256": "c953a74e1a80d540fed8e1eebfe4f9cc4fa19f76a571ed27198bbb4dec707648",
+    "beforeConfigSHA256": "26c7a0421b0ba3f7901f2a1d916b2ba038208997f16823ab92c3a8ff0be29c33",
+    "changedFields": [
+      "status",
+      "updated_at"
+    ],
+    "promptNameRuleTargetCreatedAtPreserved": true,
+    "toolUpdateSuccess": true,
+    "toolViewReadback": true,
+    "fullActualConfigurationReadback": true,
+    "noDuplicate": true,
+    "backup": "automation-before-human-stop-20261028-145640.toml"
+  },
+  "safety": {
+    "noProductWorkAfterStop": true,
+    "noKnownAcceptedFixtureMutationPending": true,
+    "pendingVerificationRecovery": {
+      "caseId": "S28-I203-service-localized-name-length-rejection-discard",
+      "status": "BLOCKED_OWNER_SERVICES_AUTH_SERVICE_UNAVAILABLE",
+      "required": [
+        "Originalservice99finalpositivepersistedbaseline/readback",
+        "ONEordinaryreloadbaseline/staffunchecked"
+      ],
+      "knownAcceptedFixtureMutationPending": false,
+      "noTotalWriteAudit": true
+    },
+    "ownedTemporaryCompilerAndRuntimePids": [
+      34524,
+      17028,
+      26792
+    ],
+    "ownedTemporaryPidsAbsent": true,
+    "listener3107Absent": true,
+    "mainDevserver": {
+      "listener": "127.0.0.1:3000",
+      "pid": 30212,
+      "sessionId": 34957,
+      "preserved": true
+    },
+    "browser": {
+      "browserId": "2",
+      "tabId": "1",
+      "provider": "browser-use:0777f06e-9992-423c-a911-193bae880c9c",
+      "handle": "kezekRecoveredTab",
+      "markHandoff": true,
+      "newPageProbe": false,
+      "lastActualUiBeforeClockUtc": "2026-10-28T14:37:11Z"
+    }
+  },
+  "resume": "No autonomous work until NEW direct human launch/resume. Old28Octresume authorization is history prospectively overridden by this stop; no repeatedheartbeat may override it.",
+  "effects": "OnlyexistingautomationPAUSED/configbackup/newstopandfinaldocuments/metadatahandoff. No new UI scenario/source/test/build/auth/DB/fixture/booking/payment/message/role command afterstop."
+}

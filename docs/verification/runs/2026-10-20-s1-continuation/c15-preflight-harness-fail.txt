@@ -1,0 +1,11 @@
+file:///C:/projects/kezek/scripts/closure-s1-isolated-build-f005-20261020.mjs:41
+if (entries.length !== 1663 || fingerprint !== 'bbc338182f704efa718188627ec1568f8a6711de35c67f33a6688e244eb465dd') throw Error('Candidate changed; do not build another source silently');
+                                                                                                                         ^
+
+Error: Candidate changed; do not build another source silently
+    at file:///C:/projects/kezek/scripts/closure-s1-isolated-build-f005-20261020.mjs:41:122
+    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.12.0

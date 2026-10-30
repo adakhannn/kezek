@@ -1,0 +1,35 @@
+{
+  "id": "C129",
+  "caseId": "S26-M501-inactive-category-confirmation-cancel",
+  "requirementIds": [
+    "M5-01"
+  ],
+  "savedBeforeUiUtc": "2026-10-25T19:44:09Z",
+  "executionStatus": "BLOCKED_USER_TAB_ABSENT_NOT_RUN",
+  "timeBudgetMinutes": 5,
+  "role": "Known SA kezekkg only, actual role must be freshly observed",
+  "environment": "DEV localhost:3000 RU, existing human IAB tab only",
+  "target": {
+    "id": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+    "name": "LIVE TEST NIGHT09OCT CATEGORY EDITED",
+    "slug": "live-test-night09oct-category",
+    "active": false,
+    "usage": 0
+  },
+  "expected": "Warning must name the exact retained test category and disclose irreversibility; Cancel must close without deletion and preserve original category ID/name/slug/inactive/usage0 and list summaries, including one ordinary reload.",
+  "steps": [
+    "After genuinely healthy human tab appears, observe protected admin/known SA/RU; use observed Categories navigation only. If actual role unknown/mismatch or auth barrier, stop/handoff, no duplicate login.",
+    "Observe exact retained category row via its edit href ID and original name/slug/inactive/usage0; record all current category IDs and summary counts. Baseline mismatch/ambiguous target/error ->BLOCKED, no replacement or repair.",
+    "Clock; open only that row list Delete button once. Observe dialog title/exact category name/irreversibility warning/Cancel and Delete, no force checkbox for usage0. NEVER dialog Delete/Enter/force.",
+    "ONLY click visible Cancel. Verify dialog closes and same row/list baseline retained. Clock; one ordinary reload then verify exact original IDs/name/slug/inactive/usage0/summaries. No network audit or visual claims.",
+    "Clock; ordinary observed admin return, protected heading/known SA/RU and markHandoff user tab. If warning mismatch, Cancel/Close solely cleanup and classify, no retry."
+  ],
+  "effects": "Local warning open/Cancel and navigation/reload only; no app delete/Save/activation/propagation/role/config/booking/payment/profile/message command, no fixture creation. Ordinary auth/telemetry unenumerated.",
+  "excluded": "Actual deletion, dependency rejection, force-removal, cascade/RPC audit, Escape/Close/backdrop/focus/visual/device/no-flash/screensreader certification.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/categories/DeleteCategoryButton.tsx": "3c3b0f43412307ce5230de8d7d376ecf961f023cf13ef6d9db80008df1401232",
+    "apps/web/src/components/ui/ConfirmDialog.tsx": "1ec577bf6b472799a6d70f14a6e370bafa05a0a33f415605196f69305b609bfb",
+    "apps/web/src/components/ui/Dialog.tsx": "18198988ea80785df83f313a2169ca18c961e8444e9e7bae47666c4514439db4",
+    "apps/web/src/app/admin/categories/page.tsx": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+  }
+}

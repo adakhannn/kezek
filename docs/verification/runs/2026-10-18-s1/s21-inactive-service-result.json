@@ -1,0 +1,36 @@
+{
+  "id": "S1.3-existing-inactive-service",
+  "recordedUtc": "2026-10-18T11:51:55Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "plan": "s21-inactive-service-plan.json",
+  "method": "Fresh actual CUA owner booking UI; no API invocation or mocked SDK",
+  "oracle": "S16 actual owner service list: e21565db-8dc1-41df-b6e3-0dc9d16b040a hidden, branch2,45min150–275; S16/S18 public page data omits row.",
+  "before": {
+    "step": 1,
+    "day": "2026-10-18",
+    "branch": "unselected",
+    "staff": "unselected",
+    "service": "unselected",
+    "next": "disabled"
+  },
+  "negativeBranch2": {
+    "input": "booking?step=4&branch=23a0ce35-5556-4e98-84ee-89ae067908fa&day=2026-10-19&service=e21565db-8dc1-41df-b6e3-0dc9d16b040a",
+    "actual": "After hydration, URL service removed; branch2/day19 retained; no staff/service selected, no available specialists and Nextdisabled. Requested step4 stays4 (not claimed step clamped). Hidden name/duration/price not offered."
+  },
+  "negativeValidContext": {
+    "input": "step4/branch1/day19/staff1bfd/hiddenservicee215",
+    "actual": "After settled load, valid branch1/day19/staffАдахан retained; hidden service removed from URL, summary Услуга:Не выбран, Nextdisabled. Only active60min100–300service is available. This is also cross-branch invalid-service rejection, not isolated proof of only the inactive flag mechanism."
+  },
+  "positive": {
+    "service": "51571512-66c0-47db-91ab-cb89d61aa97b",
+    "context": "Samebranch1/day19/staff1bfd/step4",
+    "actual": "Active service retained in URL; button Добавлено в визит pressed, selected1, total60min100–300, Nextenabled. Nextnotclicked; time unavailable until later step."
+  },
+  "restoration": "Full goto original booking base -> settled URLstep1/day18, no branch/staff/service, Nextdisabled, time unopened; then primary owner/dashboard/settings/business2/RU. No raw localStorage inspected; app URL state only.",
+  "effects": "Only ordinary read/URL-prefill UI transitions. No time/slot click, hold/create/confirm/cancel/pay/authredirect/Save/entity mutation. Known five19Octbookings left untouched. Business preference unchanged; ordinary app telemetry/read-related effects unknown.",
+  "limits": [
+    "Finite known hidden-service public absence and stale-link rejection; not RPC/booking command/RLS/security or inactive lifecycle mutation",
+    "Inactive branch/business and deleted slug fixtures absent; wholeB2-03/B2-04 remain partial",
+    "Initial SSR shows temporary empty choices before hydration; only settled state accepted, not flash-free/visual/device proof"
+  ]
+}

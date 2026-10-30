@@ -1,0 +1,15 @@
+{
+  "observedUtc": "2026-10-18T12:33:49Z",
+  "candidateId": "dev-20261018-S1-0cc81561faf0",
+  "accounting": {"suites":"web-verification-report/web-evidence-accounting/web-closure-plan","tests":61,"passed":61,"failed":0,"exitCode":0,"durationMs":28920.3816,"notProductCoverage":true},
+  "reporter": {"valid":true,"errors":[],"requirements":321,"applicable":316,"accepted":16,"remaining":300,"currentVerifiedFindings":2,"currentOpenFindings":0,"historicalTargetedFixes":121,"historicalPending":42,"historicalOpen":8,"evidenceFilesHashChecked":2552},
+  "s1": {"requirements":25,"accepted":16,"remaining":9,"activeCases":79,"passed":56,"remainingCases":23,"remainingPlanExactSetMatch":true,"remainingPlanDuplicateCaseIds":0,"packages":[{"id":"S1.1","accepted":3,"remaining":5},{"id":"S1.2","accepted":7,"remaining":2},{"id":"S1.3","accepted":6,"remaining":2}]},
+  "derivedReports": "BothWEB_VERIFICATION_REPORT.md andWEB_CLOSURE_PLAN.md byte-equivalent to current read-only generators after newline normalization",
+  "diffCheck": {"command":"git -c core.safecrlf=false diff --check","exitCode":0,"output":"empty","persistentGitConfigChanged":false,"earlierCombinedCommand":"emitted many CRLF notices; not used as independent exit proof"},
+  "json": {"runJsonFilesParsedAtCheckpoint":38,"allParsed":true,"evidenceIds":187,"uniqueEvidenceIds":187},
+  "timingClarification": {"S24":"recordedUtc12:18:00 is manually rounded administrative checkpoint, NOT an exact tool clock or filecreation. ActualS24filecreated12:18:42.643331Z; live through12:17:52.029 comes from owned-server stop event. Original evidence bytes retained; precision clarified here.","S25":"recordedUtc12:26:43.579 is actual live server-stop checkpoint; file created12:27:58.5242261Z; not a claim that report file already existed at stop time.","S26":"remainingplanoriginalcreation12:29:10.1555191Z; first manually estimated timestamp corrected explicitly beforefinal.","draft":"originalcreation12:32:52.1016362Z; first rounded12:32 timestamp corrected explicitly beforefinal."},
+  "git": {"observedUtc":"2026-10-18T12:30:54Z","stagedFiles":302,"indexSha256":"25707b8aff0051afa600fe06a5d07b359533c397afa544321a265ac702ce5d5e","actor":"unknown/user-owned","noAgentStageResetCommitPush":true,"indexByteUnchangedClaim":false,"note":"Earlier turn summaries/index counts differ; preserve currentindex, no actor inference or byte-preservation claim without matching initialhash"},
+  "automation": {"id":"kezek","status":"PAUSED","updatedAt":1792292168081,"readOnlyKnownPathVerified":true,"initialEnvPathLookup":"CODEX_HOME unset; first lookup failed, then known explicit path read succeeded. No automationwrite/resume."},
+  "sourceBoundary": {"fileCount":1659,"pathsFile":"s24-source-paths.json","pathsSha256":"51aaabdc2a1e37986c2ce1b56d5109408587ee0f54d7d7347cb544fb7e4bb328","fingerprint":"0cc81561faf0c47d8dbd4b993204d9cfb40e5e2ac339473a21121310c479364e"},
+  "limitations": "Not fullWEBJest/lint/coverage, production/deployed/security/visual/screenreader/device or continuous-work proof. Imported archives preserved by hash-checking; unrelated source failures not fixed for green."
+}

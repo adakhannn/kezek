@@ -101,15 +101,15 @@ export default function ServiceForm({
         if (!nameRu) {
             validationErrors.nameRu = t('services.form.error.nameRequired', 'Название обязательно');
         } else if (!validateName(nameRu).valid) {
-            validationErrors.nameRu = t('services.form.error.nameRuInvalid', 'Введите не менее 2 символов');
+            validationErrors.nameRu = t('services.form.error.nameRuInvalid', 'Введите от 2 до 100 символов');
         }
 
         if (nameKy && !validateName(nameKy, false).valid) {
-            validationErrors.nameKy = t('services.form.error.nameKyInvalid', 'Введите не менее 2 символов');
+            validationErrors.nameKy = t('services.form.error.nameKyInvalid', 'Введите от 2 до 100 символов');
         }
 
         if (nameEn && !validateName(nameEn, false).valid) {
-            validationErrors.nameEn = t('services.form.error.nameEnInvalid', 'Введите не менее 2 символов');
+            validationErrors.nameEn = t('services.form.error.nameEnInvalid', 'Введите от 2 до 100 символов');
         }
 
         if (!Number.isInteger(duration) || duration < 1) {

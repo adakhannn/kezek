@@ -52,7 +52,7 @@ export default function FunnelAnalyticsClient() {
             if (filters.endDate) params.set('endDate', filters.endDate);
             if (filters.source) params.set('source', filters.source);
 
-            const response = await fetch(`/api/admin/funnel-analytics?${params.toString()}`, {
+            const response = await fetch(`/admin/api/funnel-analytics?${params.toString()}`, {
                 cache: 'no-store',
             });
 

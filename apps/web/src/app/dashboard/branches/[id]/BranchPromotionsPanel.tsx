@@ -1,7 +1,7 @@
 // apps/web/src/app/dashboard/branches/[id]/BranchPromotionsPanel.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import {logError} from '@/lib/log';
+import { promotionSaveErrorMessage } from '@/lib/promotionSaveErrorMessage';
 
 type PromotionType = 'free_after_n_visits' | 'referral_free' | 'referral_discount_50' | 'birthday_discount' | 'first_visit_discount';
 
@@ -40,6 +41,7 @@ const PROMOTION_TYPE_KEYS: Array<{ value: PromotionType; labelKey: string; descK
 
 export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId: string; bizSlug?: string }) {
     const { t } = useLanguage();
+    const activityInputId = useId();
     const toast = useToast();
     const [promotions, setPromotions] = useState<Promotion[]>([]);
     const [loading, setLoading] = useState(true);
@@ -73,7 +75,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
             const res = await fetch(`/api/dashboard/branches/${branchId}/promotions`);
             const data = await res.json();
             if (data.ok) {
-                setPromotions(data.promotions || []);
+                setPromotions(data.data?.promotions || []);
             } else {
                 logError('BranchPromotions', 'Failed to load promotions', { error: data.error });
                 toast.showError(data.error || t('branches.promotions.error.load', 'Ошибка загрузки акций'));
@@ -123,7 +125,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
             const title_ru = formData.title_ru.trim() || (selectedTypeKey ? t(selectedTypeKey.labelKey, '') : '');
             
             // Устанавливаем значения по умолчанию, если они не указаны
-            let params = { ...formData.params };
+            const params = { ...formData.params };
             if (formData.promotion_type === 'free_after_n_visits' && !params.visit_count) {
                 params.visit_count = 7;
             }
@@ -156,7 +158,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 loadPromotions();
                 cancelForm();
             } else {
-                toast.showError(data.error || t('branches.promotions.error.save', 'Ошибка сохранения акции'));
+                toast.showError(promotionSaveErrorMessage(data, t));
             }
         } catch (error) {
             logError('BranchPromotions', 'Failed to save promotion', error);
@@ -355,12 +357,12 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                     <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                         <input
                             type="checkbox"
-                            id="is_active"
+                            id={activityInputId}
                             checked={formData.is_active}
                             onChange={(e) => setFormData((f) => ({ ...f, is_active: e.target.checked }))}
                             className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                         />
-                        <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                        <label htmlFor={activityInputId} className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                             {t('branches.promotions.isActive.label', 'Активна (отображается клиентам)')}
                         </label>
                     </div>

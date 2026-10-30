@@ -1,0 +1,32 @@
+{
+  "id": "C255",
+  "status": "BLOCKED_NO_BOUND_TAB_BEFORE_COMPILED_NAVIGATION",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "runtimeEvents": [
+    {
+      "event": "spawned",
+      "utc": "2026-10-28T14:21:21.796Z",
+      "pid": 17028,
+      "candidate": "dev-20261028-WEB-60022ce29b32",
+      "sourceFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+      "host": "127.0.0.1",
+      "port": 3107,
+      "watchdogMs": 300000,
+      "noEnvFiles": true,
+      "dummyBackend": true,
+      "generatedDeclarationOnly": true
+    },
+    {
+      "event": "finished",
+      "utc": "2026-10-28T14:22:27.534Z",
+      "pid": 17028,
+      "exitCode": 1,
+      "signal": null
+    }
+  ],
+  "rawLog": "docs/verification/runs/2026-10-28-web-resume/c255-runtime-raw.txt",
+  "rawSHA256": "7993657ae924f8371997c2e695062ed6b544bf5fb318b3ba40e60267ca30163c",
+  "actual": "ONEownedNextstart3107Ready1515ms/PID17028. CUAattemptreferencedundefinedresume28Tabbeforegoto; no compiledURLnavigationexecuted. ONEinventoryshowedIAB2tabs[] aftertoolruntimechanged. Prerequisiteboundexistingtabfailed, compiledprivacy/reloadNOTexecuted. No source/HTTP/native/providerworkaround/noA3PASS.",
+  "stop": "VerifiedPID17028CommandLineexactC254built/apps/web/node_modules/next/dist/bin/nextstart3107. IntentionallytaskkillONLY17028tree/child9080;3107absent/main3000PID30212preserved. Notruntimefailureproof; unknownexitdueintentionalstop.",
+  "limits": "0NEWUI/0fix/0accepted. ProperbuildC254PASSbutA3actualexecutionstillpending. OldC206/C207notcurrent. Anynewattemptrequiresgenuinelyrestoredboundworkingtab/newfiniteplan; no unchangedlease/retry."
+}

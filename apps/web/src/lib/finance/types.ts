@@ -28,6 +28,8 @@ export type StaffFinanceStatsShift = {
     consumables_amount: number;
     master_share: number;
     salon_share: number;
+    base_master_share?: number;
+    base_salon_share?: number;
     late_minutes: number;
     hours_worked: number | null;
     hourly_rate: number | null;
@@ -53,6 +55,7 @@ export type StaffFinanceStatsPayload = {
     totalBaseMasterShare: number;
     totalBaseSalonShare: number;
     totalGuaranteedAmount: number;
+    totalTopupAmount?: number;
     hasGuaranteedPayment: boolean;
     shifts: StaffFinanceStatsShift[];
 };

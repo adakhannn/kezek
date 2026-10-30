@@ -1,0 +1,11 @@
+{
+ "id":"C15","candidateId":"dev-20261020-S1-1c0013b28e40","status":"BUILD_FAIL_FONT_CONNECTION_ASSETS_NOT_RUN",
+ "fingerprint":"1c0013b28e404ff2c414bb44c9f1d27a0dd63f00cdf1695bfad54f84b5ded46a","copiedFiles":1663,
+ "preflight":"First generated copy retained, no Next spawned; expected SHA corrupted by accidental lowercase c07->c15 label replace inside hash. Exact SHA corrected, v2 fresh copy. Harness failure not product defect.",
+ "actualBuild":{"startedUtc":"2026-10-20T12:03:48.866Z","finishedUtc":"2026-10-20T12:04:49.373Z","pid":19912,"exitCode":1,"timedOut":false,"mode":"default fresh cold Turbopack, no skiptypes or mockedfonts","error":"Connection issue fetching Geist and Geist Mono from fonts.googleapis.com; exact underlying DNS/TLS/guard/provider reason not established"},
+ "permissions":"Existing compiler public GoogleFontsGET approval until12:30UTC only; unchanged host/method/header/path/expiry restrictions, exact new PostCSS worker-path exception. No real credentials/env/DEV Supabase access. Node guard not OS firewall proof.",
+ "disposition":"No unchanged build repeat/compiler switch/mock/skip for green. Current build requirement remains FAIL; old C07 successful candidate output retained historically, not substituted. No completed current BUILD_ID asserted, no isolated server or asset tab started.",
+ "counts":{"S1":"17/25accepted,8left;63/79PASS,16left (5build/asset cases reopened)","S2":"2/70accepted,68left","product":"19/316accepted,297left,NOT_READY","newVerifiedFixesToday":2,"pendingLiveFix":"S1-F005"},
+ "restoration":"Compiler exited; no owned temporary server started/left by C15. Generated failed copy/build retained for evidence, no cleanup/delete/primary server restart. User tabs and DEV data untouched; ordinary main telemetry unenumerated.",
+ "deadlineUtc":"2026-10-20T13:00:00Z"
+}

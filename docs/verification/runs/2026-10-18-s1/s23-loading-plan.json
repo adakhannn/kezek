@@ -1,0 +1,23 @@
+{
+  "id": "S1.3-controlled-public-home-pending",
+  "plannedUtc": "2026-10-18T11:57:36Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "case": "B1-04-S13-1",
+  "permission": "Same explicitly authorized public DEV anonymous GET only; added latency lowers access, no private/user/service-role/DBwrite or broader destination permission.",
+  "method": "Existing isolated built app; new pending wrapper delays permitted businesses GET10s before same strict read guard. Main app/source unchanged.",
+  "origin": "http://s1loading-20261018-115800.localhost:3103",
+  "steps": [
+    "Confirm guard policy tests/syntax, start owned pending-mode server; wait actualReady",
+    "Clock, enable same bounded public-read marker",
+    "Open independent privacy page, click actual home link before pending business read resolves",
+    "Observe visible pending UI, then correct2-business settled home; correlate pending/200 eventtimes",
+    "Return original ownerRUbiz2, stop owned child/remove marker"
+  ],
+  "acceptance": "Requires actual observable pending presentation and no false successful-empty/error with eventual correct catalogue. Previous page preservation alone is recorded but not silently promoted to a purposeful home loading design. If no explicit loading-state contract/proof, remainincomplete, not invent UX bug.",
+  "limits": [
+    "No cold-cache-document or pre-hydration-source/blankvisual/device proof",
+    "Public isolated loading; no signed-in role assertion",
+    "No application/runtime source fix from an unspecified loading-design expectation"
+  ],
+  "deadlineUtc": "2026-10-18T12:40:00Z"
+}

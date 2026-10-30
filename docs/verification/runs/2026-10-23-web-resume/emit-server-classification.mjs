@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {updateJson} from '../2026-10-20-s1-continuation/json-evidence-patch.mjs';
+import {summarize} from '../../../../scripts/web-verification-report.mjs';
+const run='docs/verification/runs/2026-10-23-web-resume', read=f=>fs.readFileSync(f), j=f=>JSON.parse(read(f)), sha=b=>createHash('sha256').update(b).digest('hex');
+const utc=process.argv[2], l=j('docs/WEB_VERIFICATION_LEDGER.json'), s=j('docs/WEB_GLOBAL_READINESS_STATE.json'), p=j(run+'/progress.json');
+if(!utc||l.evidence.some(e=>e.id==='S1-EV-358'))throw Error('Missing UTC/already applied');
+if(sha(JSON.stringify(j(l.candidate.sourceBoundary.pathsFile).map(f=>[f,sha(read(f))])))!==p.sourceFingerprint)throw Error('Source changed');
+if(sha(read(p.priorCompletedWindow.replace('../','docs/verification/runs/')))!==p.priorFinalSHA256)throw Error('Prior final changed');
+l.evidence.push({id:'S1-EV-358',path:run+'/c70-server-classification.json',sha256:sha(read(run+'/c70-server-classification.json'))});
+l.updatedUtc=utc; l.nextBatch.objective=p.lastCheckpoint;
+const v=summarize(l,read); if(!v.valid||v.counts.passed!==21)throw Error(JSON.stringify(v.errors));
+Object.assign(s.progressAccounting,{latestCheckpointUtc:utc,latestCheckpointEvidence:run+'/c70-server-classification.json'});
+process.stdout.write('*** Begin Patch\n'+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+'*** End Patch\n');

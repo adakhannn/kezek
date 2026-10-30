@@ -1,0 +1,64 @@
+{
+  "id": "C27",
+  "findingId": "S1-F007",
+  "status": "VERIFIED_EXISTING_RENDER_ONLY_FINDING",
+  "before": "FreshsameSA menu diagnosticsratings:8literal[object Object]cells and0rowbuttons; originalC21evidence retained, not newdistinctfinding.",
+  "fix": "One local3line renderCell helper preserves valid Reactelements, else existing String(value??—); Tablecalls helper. No changehandlers,queries,auth,jobs,model,recalcPOST.",
+  "sameLive": "ActualsameSA rendered8Пересчитать buttons and0literalobjectcells afterHMR; ONEfullreload+settlement still8buttons0objectcells, actualAdmin-panel. ExistingIDs/tables1staff4branch3biz unchanged. No rowaction clicked and no recalculation/job/SQL executed. This verifies buttonrendering only, NOT actualrecalcfunctional result or visualdevice layout. Originalnavigationreadcase alreadyPASS; no newnavigationcase/requirement credit.",
+  "observationWindowUtc": {
+    "after": "2026-10-20T22:39:52Z",
+    "before": "2026-10-20T22:41:31Z"
+  },
+  "checks": {
+    "before": {
+      "passed": 2,
+      "failed": 1,
+      "exitCode": 1,
+      "raw": "c27-unit-before.txt",
+      "note": "tooltruncated original7549tokens, artifactexplicitlymarks truncation; summaryretained"
+    },
+    "prototype": {
+      "raw": "c27-types-initial.txt",
+      "exitCode": 1,
+      "error": "TS2322 indexexpressionunknown notnarrowed; localvaluehelper fixes narrowing withoutcast"
+    },
+    "after": {
+      "suites": 3,
+      "passed": 23,
+      "failed": 0,
+      "exitCode": 0,
+      "raw": "c27-unit-after.txt",
+      "limit": "3newrendercontrols+20adjacenttests, mocksGETonly; no coverageclaim/no realjobexecution"
+    },
+    "types": {
+      "exitCode": 0,
+      "raw": "c27-types-after.txt"
+    },
+    "lint": {
+      "exitCode": 0,
+      "ruleErrors": 0,
+      "ruleWarnings": 0,
+      "raw": "c27-lint-after.txt",
+      "notice": "legacyESLintIgnoreWarningretained"
+    }
+  },
+  "matrixAfter": {
+    "passed": 16,
+    "failed": 2,
+    "blocked": 1,
+    "notRun": 0,
+    "total": 19,
+    "remaining": 3
+  },
+  "counts": {
+    "S1": "17/25accepted8left63/79cases16left",
+    "S2": "1/70accepted69left",
+    "product": "18/316accepted298leftNOT_READY",
+    "newVerifiedFixesThisRun": 8,
+    "newDistinctFindingCountDelta": 0,
+    "navigationAcceptedDelta": 0,
+    "pendingSameLive": "F005"
+  },
+  "effects": "OnlyoneexistingUIfile+onenewrenderUNITfile. ActualnormalGETnavigation+fullreload, no recalc/buttonclick/POST/job/SQL/DBbusinesscommands/authtransition/grants/cleanup. Ordinarytelemetryunenumerated/notzeroTOTALwrites. UserTab5knownSA ratingsdebugRU, tab2untouched; noscreenshotretry.",
+  "next": "F007renderonly closed; navigationstill16PASS2FAIL1BLOCKED/19. Next boundedbusinessapplications transientreadclassification; F005realerrorpath remains pending; monitoringdenied neveropen. No wholemodel/role/productionPASS and no fixeddeadline."
+}

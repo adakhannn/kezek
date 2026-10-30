@@ -1,0 +1,33 @@
+{
+  "id": "C234",
+  "status": "READONLY_REVIEW_COMPLETE_NEW_HOURLY_BRANCH_PARTITION_CASE_WITH_POSITIVE_ELIGIBILITY_REQUIRED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "startedAfterUtc": "2026-10-26T12:44:59Z",
+  "requirementId": "G3-02",
+  "history": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/analytics-stage.json",
+      "sha256": "f85ddce92a54d6f14f4279c05f8819c89975bef9dfe8f07ff2363a3f038112c0",
+      "stageMetadataLocal": "2026-10-09T04:42:00+06:00",
+      "scope": "Actualold7/30/90inclusivepresets/invaliddates/locale/errorcontrols DONE, not repeated because currentdate. Branch scope hint only, no actual branch1+branch2=All comparison."
+    },
+    {
+      "path": "apps/web/test-results/live-2026-10-11/stage-018-analytics-empty.json",
+      "sha256": "2112aa3c2c610d2ba3b7896ec49b521d95d01bf966255afe6e5e0ee31b342139",
+      "scope": "Missingdailyaggregates honestnotice/locales, not hourlybranchfilter activation orpartitionconsistency. Preserve original historical times/no currentcertification inferred."
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/analytics/page.tsx": "52d4b3235f2af1ae29ec8364ed40c62bcf398f96c87b1eaaa4866ce26fb80ff4",
+    "apps/web/src/app/dashboard/analytics/useDashboardAnalyticsPageData.ts": "fdfb1ec557ae06afe47111bee5ec8cdcae573b11bc168e6658a14bc33197ecf0",
+    "apps/web/src/app/dashboard/analytics/DashboardAnalyticsSections.tsx": "cbdf7fa5ce09ddba2e606515c7423d97ba012d041b742b2a88c1cedbd6cbf9a2",
+    "apps/web/src/app/dashboard/analytics/analyticsPeriod.ts": "4f3e82c45cfc41cb2882e7a5dd603589323b00cf0e9f889fc2a776938025f22d",
+    "apps/web/src/lib/dashboardAnalyticsHttpService.ts": "dcc008d2ffe0356627963c1c1ef3e08a0c7c563c5f197d46f0e69315bb59d364",
+    "apps/web/src/lib/dashboardAnalyticsLoadService.ts": "954b285b545cc4a8cb0aab441dfbe7daa70c643b2d6dcf71163b05eda8c559e3",
+    "apps/web/src/lib/dashboardAnalyticsOverviewService.ts": "b3dcf0065e4649939c33c057ea213e65290360533d0c78ac5b4879df3dbf66d5"
+  },
+  "currentReceiver": "Owneranalytics normalmanagercontext business scope; frontend default30/All localstate only, filtersordinaryGETreads/no preferencesPOST/storagepersistence inreviewedhook. Optionalbranchlist loadedbyordinaryapp. BranchId added ONLY loadrequest; overviewsame dates/business acrossbranches. Visible24hourtable sums booking andpromo counts. Loadservice scopedbiz+optionalbranch cached60s. Actualaggregationfreshness/DBcause notestablished, no cron/recalc authority.",
+  "oracle": "With exacttwoexistingeligiblebusiness2branches, for eachdisplayedhour Allbookings=branch1bookings+branch2bookings andAllpromo=branch1promo+branch2promo, atsameperiod. RequireatleastonepositiveAllcell/nonvacuous. Allbefore/Allafterequal orunstabledataBLOCKEDnotregression. Dailyoverview/emptyavailabilitysection mustremain same withunchangedperiod becausebranchfilteradvertisesonlyhourlyscope. No rawbooking/shift/financialETL/RLSproof inferred from partition.",
+  "decision": "C235finitegenuinelynewbranchpartitionfilter case. Do NOT repeat donepresets/manualdateinputs/C68globaloverview/C221calendar. Ifinitialhourlypositive/branches unavailable, stopbeforefilter/requery with exactblocker.",
+  "effects": "Read/hashonly/no browser/auth/filter/SQL/API/SDK/storage/cron/recalc/source/test/build/server action,0credit."
+}

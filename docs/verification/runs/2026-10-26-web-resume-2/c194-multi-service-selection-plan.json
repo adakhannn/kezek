@@ -1,0 +1,46 @@
+{
+  "id": "C194",
+  "status": "PLANNED",
+  "preparedUtc": "2026-10-26T08:38:18Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D2-01",
+    "D2-02",
+    "D2-04"
+  ],
+  "objective": "Genuinely unexecuted two-service selection and partial/final deselection guard; do not repeat existing single-service G090 proof for newcredit.",
+  "historicalBoundary": {
+    "path": "apps/web/test-results/global-2026-10-16/stage-G090-service-selection-navigation.json",
+    "sha256": "2228fd85d336a325ca5316dcf150a7f7d4e49cceace94f62d9d49ab84948f5ca",
+    "originalUtc": "2026-10-15T23:34:14Z",
+    "scope": "G090 single60minute service selection/back/forward/deselect/slotlist DONE. Its record explicitly excluded multi-service fixture. G088/G089 dateguards DONE, do not repeat."
+  },
+  "role": "knownsuperadmin asauthenticatedpublicviewer/RU, actualroleverify; security/identity rolematrix separate",
+  "timeboxMinutesAfterUiStart": 10,
+  "preconditions": "Existing business2 branch1 and existingstaff/day with eligible services. Public detail has60min100-300som service and1min0-300som samebranch, but that doesnot establish staffeligibility. Verify actual servicechoices first; no inventedfixture.",
+  "steps": [
+    "Enter observed existingbusiness2 booking route, onlyordinarywizardbranch/day/staff choices as setup0credit. Usecurrentdefaultvalidbusinessday ifstaffavailable; ifnone, oneordinaryvisiblefuturevalidday withindependentavailability clue, no dategrids/retryloops.",
+    "At Service step inspect actualeligible choices. If fewerthan2, STOP case beforeanyselection/slot/booking: concretefixturegap, no newcasePASS or hiddenAPI assignment. A separatefinite reversible UIconfiguration plan maylater use broadercurrenthumanpermission.",
+    "Capture twoeligible namedservices, durations andmin/maxprices independently fromvisibleUI. Beforeselection Nextdisabled. Selectboth, requirebothchecked/summarysameidentities/totaldurationsum+priceintervalsum/Nextenabled.",
+    "Uncheckone: remainingselection retained, summary/totalsexactoneleft/Nextenabled. Unchecklast: nonechecked/summarynotselected/Nextdisabled. These multi-service transitions are ONEcompoundcase, not multipleUIcredits.",
+    "Restore originalwizardselectionstate by ordinary Back/branchchange onlyifbaselineknown, thenprotectedadmin/RU andmarkHandoff. No persistententity effect intended."
+  ],
+  "noCommands": "Never activate any time/slot, ChooseTime, Confirm, hold, payment or finalbooking command. Source handleSlotSelect authenticated path opensmodal but guestpath directlyinvokescreateBooking; no slotactivation in eitherrole.",
+  "sourcePaths": [
+    "apps/web/src/app/b/[slug]/view.tsx",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts",
+    "apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts"
+  ],
+  "creditRule": "At most1NEWcompound multi-service functionalcase. No wholeD2requirementacceptance without complete mandatorymatrix; setup/date/single-service/history controls noextraPASS.",
+  "stopRules": [
+    "Missing2eligible services/staff/date ->exactBLOCKED; no arbitrarynewentity/grant/security/HTTP workaround.",
+    "No Save/config changes fromthisplan.",
+    "Toolpending ->onefreshstate, no duplicateaction.",
+    "No test/sourcefix withoutactual UIrepro."
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "HUMAN_PAUSE_20261023_063423",
+  "request": "давай пока что на паузу",
+  "firstActualClockUtc": "2026-10-23T06:34:23Z",
+  "firstActualClockBishkek": "2026-10-23 12:34:23 +06:00",
+  "completedBeforeUtc": "2026-10-23T06:36:18Z",
+  "authority": "Direct human stop prospectively supersedes all prior until-stop authorization. No automatic resume from stale heartbeat; NEW direct human authorization required.",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "configReadback": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSha256": "aa7ebbb251956eaf3fa12d9bd19f1442394b3612b81ade056716d21a49a89446"
+  },
+  "effects": "Administrativefinalizationonly; no product/UI/DB/newtest/build/source commands afterstop. C109drafts alreadycleared and originalbranch reentry/root restored beforestop. Browser not manipulated duringfinalization; lastactualUI at06:32:25Z/humanTab2/admin/knownSA/RU preserved. Ordinary priorauth/mapmount/telemetry unenumerated/notzeroTOTALwrites.",
+  "processes": {
+    "readbackAtUtc": "2026-10-23T06:35:24Z",
+    "mainServer": {
+      "pid": 29340,
+      "parentPid": 23188,
+      "listen": "127.0.0.1:3000",
+      "leftAvailableForUser": true,
+      "continuingTestProcess": false
+    },
+    "priorTemporaryCompiler17020Absent": true,
+    "priorTemporaryRuntime15056Absent": true,
+    "port3107NoListener": true,
+    "newTemporaryCompilerOrRuntimeStarted": false,
+    "activeTemporaryNetworkPermission": false
+  },
+  "savedNextOnly": "C110 bounded finite genuinelynewcandidate offline defaultNext/Turbopack build and separateactualexecutionplan BEFOREprocess. Review existing C92 guard/harness and C93 tooloverrun, use new ownedoutput/rawlogs/watchdog/alloutboundNodeblocked/dummyenv/no.env/localfonts, no networkpermissionrenewal. Do not repeat unchanged C93assetbundle/screenshot/coldcache/fullhugeJest/auth/F013/manualdate/profileSave. Record current full lint/test gates not rerun/priorfailures; no fullgreen. No validbranchSave/persistedaddress/maploading credit."
+}

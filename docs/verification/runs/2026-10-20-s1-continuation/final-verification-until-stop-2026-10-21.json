@@ -1,0 +1,19 @@
+{
+  "verifiedBeforeUtc": "2026-10-21T11:15:38Z",
+  "valid": true,
+  "errors": [],
+  "accepted": 21,
+  "applicable": 316,
+  "releaseReady": false,
+  "status": "PAUSED_BY_USER_NOT_READY",
+  "automation": "PAUSED",
+  "autonomousResumeAllowed": false,
+  "stateStatus": "paused_by_user_not_ready",
+  "acceptedS1": 17,
+  "remainingS1": 8,
+  "finalReportSHA256": "6149152f0e451d1c9594e285403cb294bf6a2c26627303ee10b3b2b94f846baf",
+  "historicalFinalSHA256": "0060cbd81a38c97bb529cb7b260802ae422f3b71e02b9d303c8409048d6b8e1d",
+  "explicitAutomationPausedReadback": true,
+  "noNewTestsAfterStop": true,
+  "resumeRequiresExplicitHumanRequest": true
+}

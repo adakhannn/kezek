@@ -110,6 +110,7 @@ describe('quickHoldClient', () => {
         ).rejects.toMatchObject<QuickHoldClientError>({
             message: 'conflict',
             status: 409,
+            code: 'conflict',
         });
     });
 

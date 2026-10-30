@@ -1,0 +1,18 @@
+{
+  "id":"C69",
+  "plannedAfterUtc":"2026-10-21T11:00:48Z",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "requirementIds":["M5-04"],
+  "timeboxMinutes":10,
+  "reasonNotDuplicate":"Nadmin-stage validatescategoryduplicate/UUID anduserssearch, notratingdraftsum/daybounds. C13rating-confignavigationonly; C27render-onlyratingsdebugnotconfigdraft. SourceRatingConfigClient onChangeLOCALstateonly/Resetlocal; SavePOST/recalcseparate NEVERinvoke.",
+  "cases":[
+    {"key":"weight-sum-unsaved","expected":"Capture4visibleintegerrangevalues summing100 andvaliddays. OneArrowLeft onfirstpositiveweight reducesexactly1, visiblelabel/total99confirmstatecommit andSavebecomesdisabled. Resetreturnsall4originalweights/originaldays/sum100/Savebaseline. IfkeynotcommittedBLOCKEDnotproductFAIL."},
+    {"key":"window-days-unsaved","expected":"Ordinarynumberinputfill0; visibleКоличество дней(0дней) confirmsstatecommit/inputrangeUnderflowtrue/Save disabled. Resetreturnsoriginal4weights/days/Savebaseline. NeverEnter/Submit. IfonlyDOMvaluechangedwithoutlabel/statecommitBLOCKED, noblindinputretry."},
+    {"key":"server-rejection-feedback","status":"blocked","expected":"Actualservervalidationfailurefeedbackandno unintendedconfigwrite","reason":"WouldrequireSavePOST/faultinjection; neitherinscopeforthisunsaveddraftcase."},
+    {"key":"persisted-dependencies","status":"blocked","expected":"Ratingconfigdependency/modelchangesreconcilewithoutunintendedrecalc","reason":"No persistedconfigchange/job/recalc/financialmodelcertificationauthorityinthiscase. Keepblockedslot."}
+  ],
+  "steps":["Freshinventory/knownSAadmin; clock, ordinaryrating-configpageentry afterobservedlink orfocusedknownroute", "Capture4visibleweights/days/labels/Saveenabledstate beforeinput; onlyvalidbaseline integerweights permitsone-steporacle", "Clock; ordinarysingleArrowLeft onpositivevisibleslider, verifylabel/total/Save thenclockReset+verifyoriginal", "Clock; ordinarydaysfill0/noEnter, verifylabel+validity/Save thenclockReset+verifyoriginal", "Clock; ordinaryreturnadmin/protectedheading/Anonymized/handofforiginal2/18"],
+  "effects":"Transientunsavedlocalformdraftonly; Resetlocalstate. NoSave/Enter/recalc/POST/configpersist/business/role/grant/source/test/build/server/DB/APIprobe/auth/newtabs/storage-cookie-tokeninspection. Ordinaryauthlookup/telemetryunenumerated/notzeroTOTALwrites.",
+  "stop":"Unexpectedidentity/invalidbaseline/inputuncertainty/error stopthatvariant withoutalternativeinputworkaround; resetviaUIandreturnadmin. Ifrestorationuncertain reportexacteffect,no sourcefixfromtoolissue.",
+  "acceptance":"Atmost2newUIvalidationvariants inONEdraftsession, Resetobservationsnotextraindependentcases. FullM5-04partial; server/dependency2BLOCKEDretained. No model/API/financialcalculation/security/visual PASS andno newfixwithoutUIproductrepro."
+}

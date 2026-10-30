@@ -10,26 +10,20 @@ import type {
     PeriodPreset,
 } from './types';
 
-import { addDaysToDateString, todayDateString } from '@/lib/time';
+import { todayDateString } from '@/lib/time';
+import { analyticsPresetStart, analyticsRangeError } from './analyticsPeriod';
 
 export function useDashboardAnalyticsPageData() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('30');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [endDate, setEndDate] = useState(() => todayDateString());
+    const [startDate, setStartDate] = useState(() => analyticsPresetStart(endDate, 30));
     const [branchId, setBranchId] = useState<string>('all');
     const [branches, setBranches] = useState<BranchOption[]>([]);
     const [data, setData] = useState<OverviewResponse['data'] | null>(null);
     const [loadData, setLoadData] = useState<LoadResponse['data'] | null>(null);
     const [reloadKey, setReloadKey] = useState(0);
-
-    useEffect(() => {
-        const endDefault = todayDateString();
-        const startDefault = addDaysToDateString(endDefault, -30);
-        setStartDate(startDefault);
-        setEndDate(endDefault);
-    }, []);
 
     useEffect(() => {
         let ignore = false;
@@ -57,7 +51,10 @@ export function useDashboardAnalyticsPageData() {
     }, []);
 
     useEffect(() => {
-        if (!startDate || !endDate) return;
+        if (analyticsRangeError(startDate, endDate)) {
+            setLoading(false);
+            return;
+        }
         let ignore = false;
 
         async function loadAll() {
@@ -139,7 +136,7 @@ export function useDashboardAnalyticsPageData() {
 
         const days = preset === '7' ? 7 : preset === '30' ? 30 : 90;
         const end = todayDateString();
-        const start = addDaysToDateString(end, -days);
+        const start = analyticsPresetStart(end, days);
         setStartDate(start);
         setEndDate(end);
     };
@@ -153,6 +150,7 @@ export function useDashboardAnalyticsPageData() {
     return {
         loading,
         error,
+        rangeError: analyticsRangeError(startDate, endDate),
         periodPreset,
         startDate,
         endDate,

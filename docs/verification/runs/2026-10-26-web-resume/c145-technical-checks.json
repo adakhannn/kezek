@@ -1,0 +1,27 @@
+{
+  "id": "C145-technical",
+  "completedBeforeUtc": "2026-10-25T20:32:21Z",
+  "before": {
+    "startedAfterUtc": "2026-10-25T20:30:57Z",
+    "passed": 5,
+    "failed": 1,
+    "report": "apps/web/test-results/c145-title-before.json"
+  },
+  "after": {
+    "startedAfterUtc": "2026-10-25T20:31:18Z",
+    "passed": 6,
+    "failed": 0,
+    "report": "apps/web/test-results/c145-title-after.json"
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "scopedLint": {
+    "exitCode": 0,
+    "files": [
+      "admin.en.ts",
+      "AdminHomeTodayStatuses.test.tsx"
+    ]
+  },
+  "fullGates": "Not rerun for one dictionary value; C135full11FAIL2539PASS/fullLint52errors167warnings retained historical. No check weakening or wholeGREEN; technical tests notLIVE."
+}

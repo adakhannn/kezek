@@ -1,0 +1,11 @@
+{
+  "id": "S1.2-SSR-source-observation",
+  "recordedUtc": "2026-10-18T11:48:28Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "attempt": "One CUA goto view-source of known public /terms",
+  "result": "Tool URL security policy rejected protocol; allowed http/https only. No source response or SSR acceptance obtained.",
+  "caseStatus": "blocked",
+  "policyRespected": "No alternate encoding, direct HTTP/pagefetch/CDP, browser surface replacement or other workaround attempted. Existing post-hydration DOM is not substituted.",
+  "acceptedDelta": 0,
+  "remainingS1": 10
+}

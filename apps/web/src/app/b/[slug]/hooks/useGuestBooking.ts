@@ -5,6 +5,7 @@ import type { Service } from '../types';
 import { fmtErr, isNetworkError, withNetworkRetry } from '../utils';
 
 import { logDebug, logError } from '@/lib/log';
+import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 import { createGuestBookingRequest } from '@/lib/quickBookGuestClient';
 import { TZ } from '@/lib/time';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
@@ -128,8 +129,9 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         const nameValidation = validateName(name, true);
         if (!nameValidation.valid) {
             feedback.showError(
-                nameValidation.error ||
-                    t('booking.guest.nameRequired', 'Р’РІРµРґРёС‚Рµ РІР°С€Рµ РёРјСЏ.'),
+                name
+                    ? t('booking.guest.nameInvalid', 'Введите имя длиной от 2 до 100 символов.')
+                    : t('booking.guest.nameRequired', 'Введите ваше имя.'),
             );
             return;
         }
@@ -137,11 +139,9 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         const phoneValidation = validatePhone(phone, true);
         if (!phoneValidation.valid) {
             feedback.showError(
-                phoneValidation.error ||
-                    t(
-                        'booking.guest.phoneRequired',
-                        'Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°.',
-                    ),
+                phone
+                    ? t('booking.guest.phoneInvalid', 'Введите телефон в международном формате, например +996555123456.')
+                    : t('booking.guest.phoneRequired', 'Введите номер телефона.'),
             );
             return;
         }
@@ -150,11 +150,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
             const emailValidation = validateEmail(email);
             if (!emailValidation.valid) {
                 feedback.showError(
-                    emailValidation.error ||
-                        t(
-                            'booking.guest.emailInvalid',
-                            'РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ email.',
-                        ),
+                    t('booking.guest.emailInvalid', 'Введите корректный email длиной не более 255 символов.'),
                 );
                 return;
             }
@@ -233,6 +229,20 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 () => createGuestBookingRequest(requestBody),
                 { retries: 1, delayMs: 700, scope: 'GuestBooking' },
             );
+
+            void trackFunnelEvent({
+                event_type: 'booking_success',
+                source: 'public',
+                biz_id: bizId,
+                branch_id: branchId,
+                service_id: services[0].id,
+                service_ids: services.map((service) => service.id),
+                services_count: services.length,
+                staff_id: actualStaffId,
+                slot_start_at: startISO,
+                booking_id: bookingId,
+                session_id: getSessionId(),
+            });
 
             logDebug('GuestBooking', 'Updating slots cache before redirect');
             if (onBookingCreated) {

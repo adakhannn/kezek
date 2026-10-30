@@ -1,0 +1,10 @@
+{
+  "id": "C120-technical",
+  "runtimeDelta": "CategoryForm slugDirty initialization false ->mode edit AND existinginitialslug. One runtime line only; originalcomponent/test preserved in c120-original-boundaries.json.",
+  "before": {"command":"node node_modules/jest/bin/jest.js src/__tests__/components/CategoryForm.test.tsx --runInBand --json --outputFile=test-results/c120-category-before.json","startedAfterUtc":"2026-10-25T10:01:53Z","observedFinishedBeforeUtc":"2026-10-25T10:03:03Z","exitCode":1,"passed":3,"failed":2,"boundary":"genuine customslug mount and StrictMode FAIL on original runtime, no expectation weakening"},
+  "after": {"command":"node node_modules/jest/bin/jest.js src/__tests__/components/CategoryForm.test.tsx src/__tests__/api/admin/category-update.test.ts --runInBand --json --outputFile=test-results/c120-category-after.json","startedAfterUtc":"2026-10-25T10:03:03Z","exitCode":0,"passed":17,"failed":0,"suites":2},
+  "typecheck": {"command":"node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit","exitCode":0},
+  "scopedLint": {"command":"node node_modules/eslint/bin/eslint.js src/components/admin/categories/CategoryForm.tsx src/__tests__/components/CategoryForm.test.tsx --no-ignore","exitCode":0,"diagnostic":"Legacy .eslintignore unsupported warning retained; no source/test lint errors"},
+  "warnings": "Stale baseline-browser-mapping and Node punycode deprecation retained; no install/config/lockfile cleanup.",
+  "fullGates": "Full lint/test/coverage/E2E NOT rerun; priorC91 full lint52errors167warnings/source11FAIL retained, no preexistingcausality or wholeGREEN claim. These scopedUNIT/type/lint results are not LIVE or successful categorysave/security/propagation proof. No externalPlaywright/native/HTTP/SDK/DB command."
+}

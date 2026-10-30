@@ -1,0 +1,1 @@
+{"event":"stopped","pid":22668,"utc":"2026-10-18T07:52:20.230Z","exitCode":null,"signal":"SIGTERM"}

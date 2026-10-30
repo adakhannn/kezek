@@ -72,7 +72,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
         .eq('key', 'owner')
         .maybeSingle();
 
-    let currentOwners: UserRow[] = [];
+    const currentOwners: UserRow[] = [];
     if (!roleErr && ownerRole) {
         const { data: ownerRoles, error: ownerRolesErr } = await admin
             .from('user_roles')

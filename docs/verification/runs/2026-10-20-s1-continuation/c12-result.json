@@ -1,0 +1,20 @@
+{
+  "id":"C12",
+  "stage":"S2.1",
+  "requirementId":"M1-01",
+  "caseId":"S21-M101-superadmin-root",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "startedAfterClockUtc":"2026-10-20T10:48:42Z",
+  "status":"PASS",
+  "auth":"Staff ordinary logout, then ONLY existing Google kezekkg@gmail.com selected after10:50:32UTC. Chooser initially not loaded; bounded wait produced actual account links, no duplicate login or password/CAPTCHA/device handling. No credential or permission change.",
+  "actual":"Callback completed to /admin. Actual Админ-панель/Anonymized header plus Админка navigation and Панель администратора. Full document reload showed loading first, then actual admin home again. No denial/Server Component error at final inspected state.",
+  "homeControl":"Actual counts3businesses/4branches/1staff/4services/30bookings/3categories; today20Oct zero bookings. These are observed aggregates, not independent ledger/model reconciliation. System status shows configured key NAMES only, not secret values.",
+  "childControl":"Actual Бизнесы link clicked once. URL waiter timed out; no repeat click. Later actual /admin/businesses with Всего3/Одобрено3, fixtureA and original businesses1/2. Deleted B remains absent. Successful final navigation, NOT a navigation latency/performance PASS.",
+  "roleControl":"Unlike owner/guest/client/staff C11, this authorized superadmin sees the actual shell/list. Google choice alone not considered session proof.",
+  "triageObservation":"Business2 card reports0staff while actual staff1bfd0e3b/branch1 business2 and admin global staff1 were observed. List source uses legacy staff.biz_id and ignores read errors. Count contract/model reconciliation not checked here: retained for S3.3 triage, NOT counted as confirmed distinct bug/fix and NOT asserted correct by M1-01.",
+  "method":"CUA AX/DOM, ordinary account flow and UI navigation only; no screenshots, direct HTTP/CDP, tokens/cookies, SDK/SQL, API/RPC probing or denied metrics endpoint",
+  "effects":"One staff logout and known superadmin login plus read-only page loads; unenumerated ordinary auth/telemetry writes. No business/grant/revoke/delete/save/create, payment or booking commands. Existing tabs retained; tab5 markedHandoff at/admin/businesses RU/superadmin.",
+  "limits":"M1-01 DEV page-entry only. No production/M1-04, entire admin-nav/M1-03, API/RLS/no-flash/secret-storage acceptance, measured speed, financial/global model correctness or new product fix.",
+  "counts":{"S1":"19/25;6left;68/79cases;11left","S2":"2/70;68left","S2.1":"2/12;10left","product":"21/316accepted;295left;NOT_READY"},
+  "deadlineUtc":"2026-10-20T13:00:00Z"
+}

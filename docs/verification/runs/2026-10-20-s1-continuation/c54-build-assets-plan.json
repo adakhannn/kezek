@@ -1,0 +1,20 @@
+{
+  "id": "C54",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "copiedFileCount": 1677,
+  "caseIds": [
+    "A3-01-S1-01",
+    "A3-02-S1-01",
+    "A3-02-S1-02",
+    "A3-02-S1-03",
+    "A3-02-S1-04"
+  ],
+  "buildExpectation": "Fresh cold exact currentcandidate defaultNext/Turbopack build exits0, types/prerenders enabled, nofontmock/compiler switch/skips. Sourcecopyenvexclusion+fingerprint+guardpreflight mustPASS before spawn.",
+  "assetExpectation": "Only if build0, separate finite liveasset plan and owned bounded nextstart dummyoffline noFonts permission reused at runtime. Actual CUA CSS/font/script/image observed delivery; no API/DB or screenshots/production promotion.",
+  "stop": "One currentcandidate cold attempt/watchdog240s; buildFAIL retainrealerror, no unchangedwarm/compiler-switch/skip-forgreen. PreserveoldC15failure/output, exactnewdir only, no cleanup/restartmainserver.",
+  "permission": "c54-font-permission.json; renewedexplicit21Octuntilstop with finite perattemptlease06:50UTC",
+  "effects": "New isolated generated sourcecopy/artifact/log and owncompilerprocess; no realenv/DEVkeys/account/DB or primarysourceconfigurationchange. Node-levelguard notOSfirewall.",
+  "counts": "Build alone neveracceptfourLIVEassetcases; no UNIT/compile asLIVE assetsPASS; deployeddomainlast.",
+  "budgetMinutes": 10
+}

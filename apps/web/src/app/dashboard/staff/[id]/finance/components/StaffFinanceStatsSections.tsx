@@ -1,10 +1,13 @@
 'use client';
 
+import { useId } from 'react';
+
 import { StaffFinanceShiftCard } from './StaffFinanceShiftCard';
 
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { bookingCountForm } from '@/lib/bookingCountForm';
 import type { StaffFinanceStatsPayload, StaffFinanceStatsPeriod } from '@/lib/finance/types';
 
 function formatMoney(value: number, locale: string) {
@@ -33,6 +36,7 @@ export function StaffFinanceStatsFilters({
     onRefresh: () => void;
     t: (key: string, fallback: string) => string;
 }) {
+    const dateInputId = useId();
     return (
         <Card variant="elevated" padding="md">
             <SectionHeader
@@ -70,10 +74,11 @@ export function StaffFinanceStatsFilters({
                 </div>
 
                 <div className="sm:col-span-2">
-                    <label className="type-caption mb-1 block text-[var(--text-secondary)]">
+                    <label htmlFor={dateInputId} className="type-caption mb-1 block text-[var(--text-secondary)]">
                         {t('finance.filters.dateLabel', 'Reference date')}
                     </label>
                     <input
+                        id={dateInputId}
                         type={period === 'year' ? 'number' : period === 'month' ? 'month' : 'date'}
                         value={period === 'year' ? date.split('-')[0] : period === 'month' ? (date.substring(0, 7) || date) : date}
                         disabled={loading}
@@ -119,7 +124,12 @@ export function StaffFinanceStatsSummary({
     locale: string;
     t: (key: string, fallback: string) => string;
 }) {
-    const guaranteeUsed = stats.totalGuaranteedAmount > 0;
+    // totalAmount remains the API's service-only amount. Material receipts are
+    // allocated to the business too, so include them in the displayed turnover.
+    const turnover = stats.totalAmount + stats.totalConsumables;
+    const topup = stats.totalTopupAmount ?? stats.shifts.reduce((sum, shift) =>
+        sum + (shift.topup_amount ?? Math.max(0, shift.guaranteed_amount - (shift.base_master_share ?? shift.master_share))), 0);
+    const guaranteeUsed = topup > 0;
     const reviewFlags = [
         stats.totalLateMinutes > 0
             ? `${t('finance.flags.late', 'Late minutes')}: ${stats.totalLateMinutes}`
@@ -128,7 +138,7 @@ export function StaffFinanceStatsSummary({
             ? `${t('finance.flags.consumables', 'Consumables')}: ${formatMoney(stats.totalConsumables, locale)}`
             : null,
         guaranteeUsed
-            ? `${t('finance.flags.guarantee', 'Guarantee top-up')}: ${formatMoney(stats.totalGuaranteedAmount, locale)}`
+            ? `${t('finance.flags.guarantee', 'Guarantee top-up')}: ${formatMoney(topup, locale)}`
             : null,
     ].filter((value): value is string => Boolean(value));
 
@@ -137,7 +147,7 @@ export function StaffFinanceStatsSummary({
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Card variant="default" padding="md">
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.staffStats.turnover', 'Turnover')}</p>
-                    <p className="type-metric mt-2 text-[var(--text-primary)]">{formatMoney(stats.totalAmount, locale)}</p>
+                    <p className="type-metric mt-2 text-[var(--text-primary)]">{formatMoney(turnover, locale)}</p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">{periodLabel}</p>
                 </Card>
 
@@ -145,7 +155,7 @@ export function StaffFinanceStatsSummary({
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.staffStats.toEmployee', 'Employee share')}</p>
                     <p className="type-metric mt-2 text-emerald-500">{formatMoney(stats.totalMaster, locale)}</p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
-                        {formatPercent(stats.totalMaster, stats.totalAmount)} • {t('finance.share.split', 'of turnover')}
+                        {formatPercent(stats.totalMaster, turnover)} • {t('finance.share.split', 'of turnover')}
                     </p>
                 </Card>
 
@@ -153,14 +163,14 @@ export function StaffFinanceStatsSummary({
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.staffStats.toBusiness', 'Business share')}</p>
                     <p className="type-metric mt-2 text-indigo-500">{formatMoney(stats.totalSalon, locale)}</p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
-                        {formatPercent(stats.totalSalon, stats.totalAmount)} • {t('finance.share.split', 'of turnover')}
+                        {formatPercent(stats.totalSalon, turnover)} • {t('finance.share.split', 'of turnover')}
                     </p>
                 </Card>
 
                 <Card variant="default" padding="md">
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.guarantees.title', 'Guarantee impact')}</p>
                     <p className="type-metric mt-2 text-amber-500">
-                        {guaranteeUsed ? formatMoney(stats.totalGuaranteedAmount, locale) : '0 сом'}
+                        {guaranteeUsed ? formatMoney(topup, locale) : '0 сом'}
                     </p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
                         {guaranteeUsed
@@ -185,7 +195,7 @@ export function StaffFinanceStatsSummary({
                         <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.shifts', 'Shifts')}</p>
                         <p className="type-section-title mt-1 text-[var(--text-primary)]">{stats.shiftsCount}</p>
                         <p className="type-caption text-[var(--text-muted)]">
-                            {stats.openShiftsCount} {t('finance.shifts.open', 'open')} • {stats.closedShiftsCount} {t('finance.shifts.closed', 'closed')}
+                            {t('finance.shifts.openCount', 'Open: {count}').replace('{count}', String(stats.openShiftsCount))} • {t('finance.shifts.closedCount', 'Closed: {count}').replace('{count}', String(stats.closedShiftsCount))}
                         </p>
                     </div>
                     <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
@@ -198,12 +208,12 @@ export function StaffFinanceStatsSummary({
                     </div>
                     <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                         <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.late', 'Late')}</p>
-                        <p className="type-section-title mt-1 text-[var(--text-primary)]">{stats.totalLateMinutes} min</p>
+                        <p className="type-section-title mt-1 text-[var(--text-primary)]">{stats.totalLateMinutes} {t('finance.minutes', 'min')}</p>
                     </div>
                     <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                         <p className="type-caption text-[var(--text-secondary)]">{t('finance.period.label', 'Period')}</p>
                         <p className="type-body mt-1 text-[var(--text-primary)]">{periodLabel}</p>
-                        <p className="type-caption text-[var(--text-muted)]">{period}</p>
+                        <p className="type-caption text-[var(--text-muted)]">{t(`finance.period.${period}`, period)}</p>
                     </div>
                 </div>
 
@@ -244,7 +254,7 @@ export function StaffFinanceStatsShifts({
                     'finance.staffStats.shiftsPeriodDesc',
                     'Shift-by-shift money flow, guarantee effects, and client-level entries with quick hour corrections.',
                 )}
-                badge={<Badge variant="neutral">{stats.shifts.length} {t('finance.staffStats.shifts', 'shifts')}</Badge>}
+                badge={<Badge variant="neutral">{stats.shifts.length} {t(`finance.staffStats.shiftCount.${bookingCountForm(stats.shifts.length, locale === 'en' || locale === 'ky' ? locale : 'ru')}`, 'shifts')}</Badge>}
             />
             <div className="mt-4 space-y-3">
                 {stats.shifts.map((shift) => (

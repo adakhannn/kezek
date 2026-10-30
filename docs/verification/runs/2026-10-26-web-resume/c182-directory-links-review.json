@@ -1,0 +1,39 @@
+{
+  "id": "C182",
+  "observationWindowUtc": [
+    "2026-10-26T00:10:48Z",
+    "2026-10-26T00:11:57Z"
+  ],
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "status": "READONLY_COMPLETE_EXISTING_BRANCH_EDIT_DISTINCT",
+  "history": "WB-045 document16July first-branch registration-link loss; claimed post-fix17July verifies approval/create-first-branch and public page for another synthetic entity. This is a different creation/onboarding path, not current retained ACTIVE057 edit/reload/clear. No matching primary file/current dependency certificate located in focused directory-link evidence search. Preserve original dates; do not create/approve another application/entity or count document as LIVE. C169 website_url and C179 businesscontact inheritance use different field/helper paths. C179 fourdirectorylinksblank was baseline only, not persistence/publicfourkey proof.",
+  "receiver": "AdminBranchForm tracks instagram/two_gis/google_maps/yandex_maps separately, type=url inputs; changed includes allfour. Ordinary submit bundles directory_links object with unchanged originalbranch fields. Update assigns directory_links object after normal superadmin/session checks; no external fetch/send/provider call in reviewed update. Public business loader selects directory_links for activebranches, BusinessInfo renders four corresponding labelled anchors with target_blank/rel_noreferrer. Reading knownsynthetic visible hrefs proves metadata only; never activate destinations.",
+  "authority": "Continuing DEVWEB authorization covers bounded reversible edit/restore on retained isolated fixtureA ACTIVE057, no new fixture/role/activation/security/owner/grant/booking/payment/message. No actualrecipient/privatecontact. Four knownsynthetic HTTPS example.invalid URLs are public metadata only. Unknown/nonblank/masked bundled baseline ->BLOCKED/noSave. Twoordinaryupdates only; fullform may normalize empty/null and timestamps/telemetry, no bit-identicalDBrollback or zeroTOTALwrites.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+    "apps/web/src/app/b/[slug]/page.tsx": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6",
+    "apps/web/src/app/b/[slug]/BusinessInfo.tsx": "d3a8e198cfb7e90c276387c5bfb049d540896715dc6eddb8de3a5d8cd0faa906"
+  },
+  "hashes": [
+    {
+      "path": "docs/WEB_BUG_REGISTRY.md",
+      "sha256": "1d36236397e7ecd48f35725b97214d719a46323df933cec2b2653c7f9713c5a0"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c179-result.json",
+      "sha256": "0d074afbdf0e09a90db82aad6f8001ecae520c10baf9e2d41eae8e0ca0ed99d2"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c179-effects-journal.json",
+      "sha256": "e21c37affe22a3bb46924e00ab774b59744323d7cbe15feb3c7cfe9a34a366ce"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "sha256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca"
+    }
+  ],
+  "credit": "0UI/fix/accepted/reuse"
+}

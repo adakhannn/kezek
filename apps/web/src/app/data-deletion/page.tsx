@@ -110,18 +110,18 @@ export default function DataDeletionPage() {
                                 <li className="flex items-start gap-3">
                                     <span className="flex-shrink-0 w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center font-semibold">2</span>
                                     <div>
-                                        <p className="font-medium mb-1">Перейдите в раздел "Профиль"</p>
+                                        <p className="font-medium mb-1">Перейдите в раздел &quot;Профиль&quot;</p>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            В личном кабинете найдите раздел "Профиль" или "Настройки аккаунта".
+                                            В личном кабинете найдите раздел &quot;Профиль&quot; или &quot;Настройки аккаунта&quot;.
                                         </p>
                                     </div>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <span className="flex-shrink-0 w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center font-semibold">3</span>
                                     <div>
-                                        <p className="font-medium mb-1">Найдите опцию "Удалить аккаунт"</p>
+                                        <p className="font-medium mb-1">Найдите опцию &quot;Удалить аккаунт&quot;</p>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            В настройках профиля найдите раздел "Опасная зона" или "Удаление аккаунта".
+                                            В настройках профиля найдите раздел &quot;Опасная зона&quot; или &quot;Удаление аккаунта&quot;.
                                         </p>
                                     </div>
                                 </li>

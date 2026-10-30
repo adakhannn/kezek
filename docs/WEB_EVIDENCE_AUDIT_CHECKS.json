@@ -1,0 +1,41 @@
+{
+  "verifiedUtc": "2026-10-18T07:23:09Z",
+  "scope": "Historical WEB evidence accounting only; no browser/live/product-test/DB execution",
+  "status": "PASS_ACCOUNTING_NOT_PRODUCT",
+  "archiveFilesVerified": 2477,
+  "requirementReview": {
+    "documented_only_primary_missing": 20,
+    "bounded_historical_evidence": 228,
+    "support_or_blocker_only": 29,
+    "no_targeted_evidence_located": 39
+  },
+  "defects": {
+    "historically_verified_targeted": 121,
+    "documented_historical_verified": 32,
+    "fixed_pending_verification": 42,
+    "historical_open_or_reopened": 8,
+    "retired_social_only": 1
+  },
+  "tests": {
+    "command": "node --test scripts/web-verification-report.test.mjs scripts/web-evidence-accounting.test.mjs",
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "firstRun": "29 PASS / 1 accounting-test FAIL: case-sensitive filename matcher G116 missed existing lowercase g116-tests-before.json. Matcher corrected to case-insensitive; no product change."
+  },
+  "checks": {
+    "allArchivedFileHashes": true,
+    "sourceSnapshotReconstruction": true,
+    "allFrozenHistoricalFinalsUnchanged": true,
+    "baseline321Applicable316Unchanged": true,
+    "noHistoricalPassPromotedToCurrentAcceptance": true,
+    "threeGeneratedMarkdownViewsInSync": true,
+    "scopedGitDiffCheck": "exit 0; only existing LF/CRLF notices"
+  },
+  "limitations": {
+    "missingLiteralJuneJulyFileReferences": 109,
+    "newLiveFixes": 0,
+    "releaseReady": false,
+    "productRemainingPercent": null
+  }
+}

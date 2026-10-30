@@ -1,0 +1,23 @@
+{
+  "id":"C11",
+  "stage":"S2.1",
+  "requirementId":"M1-02",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "reason":"Human authorized continuing to next block until19:00; S1 minimum functional baseline available while separate domain/SSR/visual/transient blockers remain",
+  "scope":"Non-admin rejection at admin root and a representative protected nested business page, full document entry plus reload. Not API/RPC/RLS, first-paint leak, all admin routes or production acceptance.",
+  "roles":[{"key":"owner","account":"osorovadahan04@gmail.com"},{"key":"guest","account":null},{"key":"client","account":"low.fade.osh@gmail.com"},{"key":"staff","account":"obraz.osh@gmail.com"}],
+  "routes":["/admin","/admin/businesses"],
+  "cases":["S21-M102-owner-root","S21-M102-owner-nested","S21-M102-guest-root","S21-M102-guest-nested","S21-M102-client-root","S21-M102-client-nested","S21-M102-staff-root","S21-M102-staff-nested"],
+  "variantRule":"Each case requires direct document entry and one ordinary reload at that requested protected URL. Guest redirect must be retried by direct protected entry after initial redirect rather than pretending a sign-in reload retests the guard. No new tab necessary; new-tab/copied-link requirement F4-02 remains separate.",
+  "expected":"Authenticated non-admin receives Доступ ограничен/Нужны права супер-админа with their own account and no actual admin navigation/business table/control. Guest reaches sign-in with safe local redirect, not admin content. Public/home or cabinet navigation still works afterwards, session role consistent.",
+  "independentContract":"Administrator pages reserved for global super_admin; business ownership/staff membership/client auth does not grant global admin rights. Read-only inspection found shared admin layout with auth.getUser plus global role query; source explains contract/dependency only, never live PASS.",
+  "matrixBoundary":"Four available non-admin identity classes (including guest), root plus child tests shared page-layout rejection. Manager/foreign-owner/second-staff/multijob combinations not created; separate role and API requirements remain open and are not accepted by this matrix. No role mutation/permission grant/revoke.",
+  "method":"Actual role/account from visible UI; CUA goto/reload+fresh AX/DOM. No screenshot attempt or visual/no-flash claim; stopped capture is a separate blocker.",
+  "forbidden":"No /admin/api/metrics?limit=1 or variant, old denied tabs, directHTTP/CDP/SDK/service-role impersonation, storage/token extraction, intentional API/RPC command, grant/delete/business save. Existing business/booking data untouched.",
+  "auth":"Only ordinary known Google selection/logouts; CAPTCHA/password/device handoff; no new accounts, credentials or permissions. Actual role/context proof each account, Google chooser not simultaneous sessions.",
+  "stop":"Unexpected allowed admin content -> retain real UI repro and stop unsafe exploration, no mutations. Control/policy failure -> one bounded diagnostic/no bypass. Unknown identity -> do not count case. Authchallenge -> human handoff/independent role cases retained.",
+  "budgetMinutes":25,
+  "handoff":"Final staff page/context recorded, user tab retained with markHandoff. No deliberate business preference update. Auth and ordinary telemetry effects unenumerated, never zero total DB writes.",
+  "report":"After each role pair show cases PASS/8 and pending; requirement M1-02 only accepted after all8 pass. S2 baseline0/70, S1 remains19/25/68of79 regardless of these S2 cases. Preserve total atomic denominators separately.",
+  "deadlineUtc":"2026-10-20T13:00:00Z"
+}

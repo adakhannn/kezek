@@ -1,0 +1,53 @@
+{
+  "id": "C72",
+  "type": "BOUNDED_READONLY_HISTORY_DEPENDENCY_REVIEW_NOT_LIVE",
+  "startedAfterUtc": "2026-10-22T23:35:41Z",
+  "requirements": [
+    "F3-01",
+    "F3-02",
+    "F3-03"
+  ],
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint": "40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "sources": [
+    "docs/verification/reviews.jsonl:F3-01/F3-02/F3-03",
+    "apps/web/test-results/global-2026-10-14/stage-G016-role-menu-before.json",
+    "apps/web/test-results/global-2026-10-14/stage-G016-role-menu-after.json",
+    "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-before.json",
+    "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json",
+    "apps/web/test-results/global-2026-10-15/stage-G058-known-google-page-boundaries.json",
+    "apps/web/test-results/global-2026-10-15/stage-G059-staff-page-object-checks.json",
+    "apps/web/test-results/global-2026-10-15/stage-G060-owner-recovery-page-boundaries.json",
+    "docs/verification/runs/2026-10-20-s1-continuation/c16-nav-and-role-review.json",
+    "docs/verification/runs/2026-10-23-web-resume/c71-result.json",
+    "apps/web/src/app/_components/RoleAndBusinessSwitcher.tsx"
+  ],
+  "findings": [
+    "G016 WB184 narrowly proves owner->client cross-tab rolemenu invalidation without manual reload; server denial already existed. Historical UTC unspecified in primary, retain original14Oct date and originalfiles; no new same-live or privilege-leak claim. No repeated cross-tab auth case required solely for new date.",
+    "G078 WB196 primary completed15Oct11:36:53UTC: Escape restores trigger focus RU/KY/EN; outsideclick focus retained. No cabinet menuitem activated or navigation; this is Escape, NOT browser Back. Preserve historical beforeFAIL and afterPASS, no fresh focus/visual retest or reused-current certification here.",
+    "G058-060 ordinary identities and pageguards, not complete role-dropdown switching/Back. Old monitoring routes/providers in records are untrusted historical facts, NEVER authority to reopen currently prohibited targets. C16 admin section navigation differs from role/cabinet navigation.",
+    "C65-C71 directselect-cabinet and ordinarylogin/control transitions are not header-dropdown route-roundtrip cases. C71 personal cabinet and restoredSA are controls, not new F3 credit.",
+    "Current component derives trigger and aria-current from pathname; menuitems are Next Links, handler closes localmenu only. Source is expectation/dependency review, NOT runtime PASS or proof of no auth/telemetry writes. No business POST in this header handler. This read does not establish runtime rootcause of F013.",
+    "Uncovered bounded target: SAME knownSA header-dropdown admin->personal->admin roundtrip, currentlabel/aria-current and one Back from each transition, exact route content boundaries. Scope is within same authorized identity, NOT cross-account data isolation, RLS/API, visual/no-flash or full F3 acceptance."
+  ],
+  "disposition": "C73 finite seven-role tracking matrix beforeUI, execute ONLY currentSA roundtrip as one case. Other role variants retain not_run/blocked statuses; full F3 casePlanComplete remainsfalse. Future historical applicability review may reuse originalproofs with originalUTC+hashes; do not repeat oldPASS for counts.",
+  "productDelta": {
+    "newLiveCases": 0,
+    "newPasses": 0,
+    "fixes": 0,
+    "acceptedRequirements": 0
+  },
+  "effects": "Read-only nonsensitive archived facts/source; no browser actions, code/tests/build/server/DB/API/auth/role/grant/configuration/money changes. No full OAuth logs, cookies/tokens/storage inspection.",
+  "sourceHashes": {
+    "apps/web/test-results/global-2026-10-14/stage-G016-role-menu-before.json": "44bd76f7bd05e100da2a891692f129b599388562187e7dd9739812c114e53db9",
+    "apps/web/test-results/global-2026-10-14/stage-G016-role-menu-after.json": "8ec126bce2b213737d3b40cf4a2330484258957ef730dcdd5b8bc039cbc40639",
+    "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-before.json": "63a6988ea3c0aca5f0285f1ea05ccdaf6717b54465662f7f504f141070f9c376",
+    "apps/web/test-results/global-2026-10-15/stage-G078-role-menu-after.json": "9a1030a5024b0c3fb50800bc2d52d13221dc6dcfcc319bfa9e9850514696ee98",
+    "apps/web/test-results/global-2026-10-15/stage-G058-known-google-page-boundaries.json": "08f189038f4b65d4c5b57f0a852c4899d483b5a110c1763f27d1b5cab495f06f",
+    "apps/web/test-results/global-2026-10-15/stage-G059-staff-page-object-checks.json": "e7f28d54679b80f8ccb9a4675513aae5b3d0892e18dc4bc96dd3d5a2fc5f0058",
+    "apps/web/test-results/global-2026-10-15/stage-G060-owner-recovery-page-boundaries.json": "64a4e6535b06b927814d943996bb5183fe6569eb31186e7cd3ffd9efd920ec79",
+    "docs/verification/runs/2026-10-20-s1-continuation/c16-nav-and-role-review.json": "ab5f337f582b099580686af42cdc015c93463179eb0b89c38f08421409c984d9",
+    "docs/verification/runs/2026-10-23-web-resume/c71-result.json": "92789349776941642edef76178a7b8e3f38249a7654bfcf138bfac322255988e",
+    "apps/web/src/app/_components/RoleAndBusinessSwitcher.tsx": "e6447eb8c58d4ad1a2cd85292e4c8784a2d5635d4b98c8456718c644785f3150"
+  }
+}

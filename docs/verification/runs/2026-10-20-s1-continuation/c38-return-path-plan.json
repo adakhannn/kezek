@@ -1,0 +1,20 @@
+{
+  "id":"C38",
+  "requirement":"P4-02",
+  "candidate":"dev-20261020-S1-6b8b3bf85fe5",
+  "scope":"Bounded existing-session sign-in PAGE redirect subset, not the whole P4-02 security requirement or full provider callback matrix",
+  "identity":"Already authenticated knownSA kezekkg/Anonymized, no login/logout or newroles required",
+  "matrix":"2 documented query aliases redirect/next x4 input classes =8",
+  "inputs":[
+    {"key":"safe","value":"/terms","expectedPath":"/terms","expected":"Keep explicit same-origin public destination; actual Пользовательское соглашение heading, session retained"},
+    {"key":"absolute","value":"http://127.0.0.1:3000/terms","expectedPath":"/admin","expected":"Reject absolute different-origin target; safe generic fallback resolves knownSA /admin, remain localhost3000"},
+    {"key":"network","value":"//127.0.0.1:3000/terms","expectedPath":"/admin","expected":"Reject network-path different-origin target; knownSA /admin, remain localhost3000"},
+    {"key":"backslash","value":"/\\127.0.0.1:3000/terms","expectedPath":"/admin","expected":"Reject mixed-slash browser-normalization target; knownSA /admin, remain localhost3000"}
+  ],
+  "steps":"Observe fresh inventory and actual knownSA role. Ordinary document navigation in permitted userTab5 to existing /auth/sign-in with one URL-encoded benign planned query at a time. Observe final safe URL plus heading/role, no providerbuttons clicked. Restore /admin; user2root/5admin handoff. No external third-party host used even on failure;127.0.0.1 alternateorigin is same local app, not a deployed destination.",
+  "independentOracle":"Application must not treat an untrusted return parameter as permission to leave current origin. Explicit valid in-app path is a positive control, expectedrole fallback is established by currentknownSA. Source inspection only maps paths/dependencies, not live proof.",
+  "limits":"Not login-with-new-session/Google-Yandex-Telegram-WhatsApp callback/next-redirectprecedence or exhaustive encoding fuzz; no API/RLS/IDOR/CSRF/mutation/visual/no-flash certificate. No cookie/token/storage/SDK/rawHTTP/evaluatefetch/native. Other P4-02 families remain explicitly unexecuted, casePlanComplete false.",
+  "budgetMinutes":12,
+  "stop":"If unexpected navigation, one freshstate, no continued external exploration or repeating samecase. If toolpolicyblocks, do not retry another surface. Clockbeforeeachcase andafterlongactions; harddeadline21Oct05UTC/cutoffsunchanged.",
+  "afterIfAllPass":"8PASS/8 defined existing-session redirect subset only. AcceptedS117/25,S21/70,product18/316 unchanged; F4-02 stays48PASS16BLOCKED."
+}

@@ -1,0 +1,56 @@
+{
+  "id": "C152_REVIEW_C153_PLAN",
+  "savedBeforeUiUtc": "2026-10-25T20:53:25Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "caseId": "S26-O401-admin-category-warning-dismiss-alternatives",
+  "review": {
+    "id": "C152",
+    "type": "bounded readonly historical dialog and current category wiring review0credit",
+    "history": "G070 actual15Oct09:41:08Z map dialog verifies Escape and translated Close; G074 actual15Oct10:40:35Z review dialog verifies Escape/Cancel and focus behavior. These are different map/review surfaces; retain original UTC/filehashes and do not promote to current category integration or claim current historical dependency equivalence. C129/current category warning certifies ONLY Cancel; explicitly excluded Escape/Close/backdrop/focus. No current O4-01 concrete case covers this category warning alternate-dismiss integration. One compound integration case with two subvariants, not two new generic shared-dialog PASS.",
+    "independentOracle": "Escape should dismiss a non-loading dismissible warning, and its visible Close window control should dismiss it. Each must leave the exact retained category and list intact. Opening same warning is a reused setup control, not new credit.",
+    "source": "List Delete sets local confirmOpen. ConfirmDialog passes onClose when not loading; Dialog Escape listener and Close window button call onClose. Category closeDialog resets local state only, actual POST occurs ONLY onConfirm. No force checkbox or Delete/Confirm/Enter activation. No focus restoration/screenreader/visual proof inferred.",
+    "originalPrimary": [
+      {
+        "path": "apps/web/test-results/global-2026-10-15/stage-G070-map-dialog-after.json",
+        "originalUtc": "2026-10-15T09:41:08Z",
+        "sha256": "41f53bcfe4b7434fa9ad052d98a83b80b71027a9eb9d2c58d472668000fe5a0e"
+      },
+      {
+        "path": "apps/web/test-results/global-2026-10-15/stage-G074-review-dialog-after.json",
+        "originalUtc": "2026-10-15T10:40:35Z",
+        "sha256": "d3e1c9bd194168d250273de8ac3fbe8bfb562d7b2c1fb5c0a53f9bb397699d17"
+      },
+      {
+        "path": "docs/verification/runs/2026-10-26-web-resume/c129-result.json",
+        "sha256": "96c50a46b1c7899c5b4d823b6411d0c3e840334044ded5bef8a8338a3f7f6764"
+      }
+    ],
+    "credit": "0newUI/fix/accepted"
+  },
+  "scenario": {
+    "id": "C153",
+    "timeBudgetMinutes": 5,
+    "role": "Existing protectedSA/Admin-panel/Anonymized/RU",
+    "target": {
+      "id": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+      "name": "LIVE TEST NIGHT09OCT CATEGORY EDITED",
+      "slug": "live-test-night09oct-category",
+      "active": false,
+      "usage": 0
+    },
+    "steps": [
+      "Clock; fresh actual currenthumanTab2/admin/RU, observed Categories ->exact target ID/name/slug/inactive0 and all originalthreeIDs/count3active2usage3. Mismatch/auth/readerror ->BLOCKED no replacement/retry.",
+      "Clock; target row list Delete once ONLY opens warning. Require named target/irreversibility/Close window/Cancel/Delete, no force checkbox. On observed Close window control send documented locator.press Escape only (focuses that control; not a Tab/focus-order proof). Expect warning gone and row/list retained. NEVER Enter/Confirm/Delete/force. Failure ->Cancel cleanup only, preserveFAIL/no repeatedEscape.",
+      "Clock; open same target warning once for different dismiss subvariant. Click ONLY observed Close window button. Expect warning gone/exact row/list. No Cancel-path retest credit.",
+      "Clock; one ordinary reload after both new dismiss effects ->all originalIDs/name/slug/activity/usage and summaries retained. Observed adminreturn/protectedRU/Admin-panel/Anonymized/Business3 and mark handoff. Any unexpected warning ->Cancel/Close cleanup only/no deletion."
+    ]
+  },
+  "effects": "Local warning open/Escape/Close and navigation/reload only; no categorySave/Create/Delete/Confirm/Enter/activation/role/fixture/booking/payment/auth command; ordinary telemetry unenumerated.",
+  "limits": "One compound functional admin keyboard/dismiss integration only. Not focus trap/order/restoration, screenreader, visual/layout/device/cache/no-flash, actual deletion/cascade/security or wholeO4/M5 acceptance.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/categories/DeleteCategoryButton.tsx": "3c3b0f43412307ce5230de8d7d376ecf961f023cf13ef6d9db80008df1401232",
+    "apps/web/src/components/ui/ConfirmDialog.tsx": "1ec577bf6b472799a6d70f14a6e370bafa05a0a33f415605196f69305b609bfb",
+    "apps/web/src/components/ui/Dialog.tsx": "18198988ea80785df83f313a2169ca18c961e8444e9e7bae47666c4514439db4",
+    "apps/web/src/app/admin/categories/page.tsx": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+  }
+}

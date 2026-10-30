@@ -16,6 +16,7 @@ export interface PermissionResult {
     canOpenShift: boolean;
     canCloseShift: boolean;
     reason?: string; // Причина, почему действие недоступно
+    reasonKey?: string;
 }
 
 /**
@@ -32,6 +33,7 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
             canDelete: false,
             canOpenShift: false,
             canCloseShift: false,
+            reasonKey: 'staff.finance.permissions.closed',
             reason: staffId 
                 ? 'Смена закрыта. Закрытые смены нельзя редактировать.'
                 : 'Смена закрыта. Закрытые смены нельзя редактировать.'
@@ -48,6 +50,7 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
                 canDelete: false,
                 canOpenShift: false,
                 canCloseShift: false,
+                reasonKey: 'staff.finance.permissions.closed',
                 reason: 'Смена закрыта. Закрытые смены нельзя редактировать.'
             };
         }
@@ -61,6 +64,7 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
             canDelete: isOpen,
             canOpenShift: !isOpen,
             canCloseShift: isOpen,
+            reasonKey: isOpen ? undefined : 'staff.finance.permissions.ownerNotOpen',
             reason: isOpen
                 ? undefined
                 : 'Смена не открыта. Сначала откройте смену, чтобы добавлять клиентов.'
@@ -76,6 +80,7 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
             canDelete: false,
             canOpenShift: !isClosed, // Может открыть, если смена не закрыта
             canCloseShift: false,
+            reasonKey: 'staff.finance.permissions.staffNotOpen',
             reason: 'Смена не открыта. Сначала откройте смену на вкладке «Текущая смена».'
         };
     }
@@ -96,24 +101,28 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
  */
 export function getPermissionMessage(
     action: 'edit' | 'add' | 'delete' | 'open' | 'close',
-    context: PermissionContext
+    context: PermissionContext,
+    translate?: (key: string, fallback?: string) => string,
 ): string | undefined {
     const permissions = checkPermissions(context);
+    const reason = permissions.reasonKey && translate
+        ? translate(permissions.reasonKey, permissions.reason)
+        : permissions.reason;
     
     switch (action) {
         case 'edit':
             if (!permissions.canEdit) {
-                return permissions.reason || 'Редактирование недоступно';
+                return reason || 'Редактирование недоступно';
             }
             break;
         case 'add':
             if (!permissions.canAdd) {
-                return permissions.reason || 'Добавление клиентов недоступно';
+                return reason || 'Добавление клиентов недоступно';
             }
             break;
         case 'delete':
             if (!permissions.canDelete) {
-                return permissions.reason || 'Удаление клиентов недоступно';
+                return reason || 'Удаление клиентов недоступно';
             }
             break;
         case 'open':

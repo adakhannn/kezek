@@ -18,12 +18,13 @@ export async function decideSignInRedirect(
     fallback: string,
     userId?: string,
 ): Promise<string> {
-    // Для mobile OAuth callback нельзя заменять целевой путь ролевыми редиректами.
-    if (fallback?.startsWith('/auth/callback-mobile')) {
-        return fallback;
-    }
-
     const safeFallback = sanitizeAuthReturnPath(fallback);
+
+    // An explicit in-app destination resumes the user's flow. Role defaults are
+    // only for generic sign-in; authorization remains the destination's job.
+    if (safeFallback !== '/') {
+        return safeFallback;
+    }
 
     if (await deps.fetchIsSuper()) {
         return '/admin';

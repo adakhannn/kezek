@@ -22,6 +22,7 @@ type BookingItem = {
     services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[];
     staff?: { full_name: string }[];
     client_name?: string | null;
+    client_id?: string | null;
     client_phone?: string | null;
     servicesSummary?: string;
 };
@@ -137,7 +138,7 @@ export function BookingsList({
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="min-w-[12rem]">
-                                            <p className="type-label text-[var(--text-primary)]">{booking.client_name || t('bookings.workspace.walkIn', 'Клиент у стойки')}</p>
+                                            <p className="type-label text-[var(--text-primary)]">{booking.client_name || (booking.client_id ? t('bookings.workspace.client', 'Клиент') : t('bookings.workspace.walkIn', 'Клиент у стойки'))}</p>
                                             {booking.client_phone ? (
                                                 <p className="type-caption mt-1 text-[var(--text-muted)]">{booking.client_phone}</p>
                                             ) : null}
@@ -205,7 +206,7 @@ export function BookingsList({
                             <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-3 py-3">
                                     <p className="type-caption text-[var(--text-secondary)]">{t('bookings.workspace.client', 'Клиент')}</p>
-                                    <p className="type-label mt-1 text-[var(--text-primary)]">{booking.client_name || t('bookings.workspace.walkIn', 'Клиент у стойки')}</p>
+                                    <p className="type-label mt-1 text-[var(--text-primary)]">{booking.client_name || (booking.client_id ? t('bookings.workspace.client', 'Клиент') : t('bookings.workspace.walkIn', 'Клиент у стойки'))}</p>
                                     {booking.client_phone ? (
                                         <p className="type-caption mt-1 text-[var(--text-muted)]">{booking.client_phone}</p>
                                     ) : null}

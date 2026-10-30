@@ -121,6 +121,7 @@ async function saveShiftItems(
         body: JSON.stringify({
             items: items.map((item) => ({
                 id: item.id,
+                clientId: item.clientId,
                 clientName: item.clientName,
                 serviceName: deduplicateServiceNameString(item.serviceName) || item.serviceName || '',
                 serviceAmount: item.serviceAmount,

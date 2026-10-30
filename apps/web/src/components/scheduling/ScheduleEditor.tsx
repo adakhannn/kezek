@@ -7,7 +7,8 @@ import { ScheduleDays, SchedulePeriodNav, useScheduleSnapshot } from './Schedule
 import TimeOffEditor from './TimeOffEditor';
 import { TimeRangesEditor as Ranges } from './TimeRangesEditor';
 
-import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useLanguage, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
+import { formatBookingWeekday } from '@/lib/bookingCalendarDate';
 import { emptyWeek, validatePublishSchedule, type ScheduleDay, type WeekPlan } from '@/lib/scheduling/model';
 
 const field = 'rounded-lg border border-slate-500/40 bg-transparent p-2 min-w-0';
@@ -26,7 +27,7 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
     const [saving, setSaving] = useState(false);
     const [reviewing, setReviewing] = useState(false);
     const [resetReview, setResetReview] = useState(false);
-    const [notice, setNotice] = useState('');
+    const [notice, setNotice] = useState<string | { key: I18nKey; fallback?: string }>('');
     const [conflicts, setConflicts] = useState<{ id: string; start_at: string }[]>([]);
     useEffect(() => { if (snapshot && !from) setFrom(snapshot.today); }, [snapshot, from]);
 
@@ -47,7 +48,7 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
                 throw new Error(payload.error === 'SCHEDULE_WEEK_REQUIRED'
                     ? t('scheduleForm.weekRequired') : payload.message || t('scheduleForm.saveError'));
             }
-            setResetReview(false); setReviewing(false); setNotice(t('scheduleForm.published')); await refresh();
+            setResetReview(false); setReviewing(false); setNotice({ key: 'scheduleForm.published' }); await refresh();
         } catch (cause) { setNotice(cause instanceof Error ? cause.message : t('scheduleForm.genericError')); }
         finally { setSaving(false); }
     }
@@ -63,8 +64,8 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
             setDays(payload.data.days);
             if (payload.data.branchId) setBranch(payload.data.branchId);
             setNotice(payload.data.source === 'unconfigured'
-                ? t('scheduleForm.draftEmpty', "Действующий план не назначен. Черновик пустой: задайте рабочие часы.")
-                : t('scheduleForm.draftLoaded', "Действующий план загружен в черновик. Изменения ещё не опубликованы."));
+                ? { key: 'scheduleForm.draftEmpty', fallback: "Действующий план не назначен. Черновик пустой: задайте рабочие часы." }
+                : { key: 'scheduleForm.draftLoaded', fallback: "Действующий план загружен в черновик. Изменения ещё не опубликованы." });
         } catch (cause) { setNotice(cause instanceof Error ? cause.message : 'Ошибка загрузки.'); }
         finally { setSaving(false); }
     }
@@ -79,7 +80,7 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
             if (!Array.isArray(rows) || !rows.length) throw new Error(t('scheduleForm.noBranchHours'));
             const draft = emptyWeek();
             for (const row of rows) draft[String(row.day_of_week === 0 ? 7 : row.day_of_week)] = { intervals: row.intervals ?? [], breaks: row.breaks ?? [] };
-            setDays(draft); setReviewing(false); setNotice(t('scheduleForm.branchCopied', "Заполнен только черновик. Проверьте дни и перерывы перед применением."));
+            setDays(draft); setReviewing(false); setNotice({ key: 'scheduleForm.branchCopied', fallback: "Заполнен только черновик. Проверьте дни и перерывы перед применением." });
         } catch (cause) { setNotice(cause instanceof Error ? cause.message : 'Ошибка загрузки.'); }
         finally { setSaving(false); }
     }
@@ -100,7 +101,7 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
                 if (Array.isArray(payload.details)) setConflicts(payload.details);
                 throw new Error(payload.message || t('scheduleForm.saveError', "График не сохранён."));
             }
-            setReviewing(false); setNotice(t('scheduleForm.published', "График опубликован.")); await refresh();
+            setReviewing(false); setNotice({ key: 'scheduleForm.published', fallback: "График опубликован." }); await refresh();
         } catch (cause) { setNotice(cause instanceof Error ? cause.message : t('scheduleForm.genericError', "Ошибка сохранения.")); }
         finally { setSaving(false); }
     }
@@ -133,7 +134,7 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
                     {resetReview && <button type="button" className="ml-3 underline" onClick={() => setResetReview(false)}>{locale === 'ru' ? 'Отмена' : locale === 'ky' ? 'Жокко чыгаруу' : 'Cancel'}</button>}
                 </div>}
                 {Object.entries(days).map(([key, day]) => <div key={key} className="rounded-xl border border-slate-500/30 p-4 space-y-3">
-                    <h3 className="font-semibold">{key === 'day' ? t('scheduleForm.selectedDay', 'Выбранный день') : new Intl.DateTimeFormat(locale === 'ky' ? 'ky-KG' : locale, { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 0, 4 + Number(key))))}{!day.intervals.length && ` — ${t('scheduling.off', 'Выходной')}`}</h3>
+                    <h3 className="font-semibold">{key === 'day' ? t('scheduleForm.selectedDay', 'Выбранный день') : formatBookingWeekday(new Date(Date.UTC(2026, 0, 4 + Number(key))), 'UTC', locale)}{!day.intervals.length && ` — ${t('scheduling.off', 'Выходной')}`}</h3>
                     <Ranges label={t('scheduling.work', 'Рабочее время')} ranges={day.intervals} change={intervals => changeDay(key, { ...day, intervals })} />
                     <Ranges label={t('scheduling.breaks', 'Перерывы')} ranges={day.breaks} change={breaks => changeDay(key, { ...day, breaks })} />
                 </div>)}
@@ -143,7 +144,7 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
                 {kind === 'week' && t('scheduleForm.overrideHint')}
                 <p>{t('scheduleForm.conflictHint', "При конфликте с существующими записями изменение не будет применено.")}</p>
             </div>}
-            {notice && <p role="status">{notice}</p>}
+            {notice && <p role="status">{typeof notice === 'string' ? notice : t(notice.key, notice.fallback)}</p>}
             {conflicts.length > 0 && <ul className="list-disc pl-5">{conflicts.map(c => <li key={c.id}>{t('scheduleForm.booking', 'Запись')} {new Date(c.start_at).toLocaleString(locale, { timeZone: snapshot?.timezone })} — {c.id.slice(0, 8)}</li>)}</ul>}
             <button disabled={saving || loading || !!error || !snapshot} className="rounded-xl bg-indigo-600 px-5 py-3 text-white disabled:opacity-50" type="submit">
                 {saving ? t('scheduleForm.save', "Сохраняем…") : reviewing ? t('scheduleForm.confirm', "Подтвердить и опубликовать") : t('scheduleForm.review', "Проверить изменения")}

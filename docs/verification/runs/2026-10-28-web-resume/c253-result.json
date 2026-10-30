@@ -1,0 +1,17 @@
+{
+  "id": "C253",
+  "status": "BLOCKED_BEFORE_FIELD_INPUT",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "plan": "docs/verification/runs/2026-10-28-web-resume/c253-same-live-plan.json",
+  "firstClockUtc": "2026-10-28T13:59:10Z",
+  "blockedBeforeClockUtc": "2026-10-28T14:04:27Z",
+  "restoredBeforeClockUtc": "2026-10-28T14:07:43Z",
+  "actual": "Ordinaryknownownerlogin/currentBusiness2Continue/Servicespositive99roworiginal1min0–300/branch1active. ONEobserved99Editclick thencheckboxwaitdeadline(CDPoperationbeforecommanddispatch); ONEfreshAXstill/dashboard/services/samelist/focusServices. EditorbaselineNOTestablished; no furtherEdit/goto/reload/rebind/retry. Stoppedbeforeallnamefieldinput/Save. No101echo/postfixfeedbackobserved.",
+  "variantsExecuted": [],
+  "variantPASS": 0,
+  "fixVerified": false,
+  "noProductCauseInferred": true,
+  "restoration": "Ordinaryobservedheaderlogout andknownGoogleSArestore. Finalprotected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/28OctToday0-0-0/handoff before14:07:43, within15min. No drafts/fixtureeffects created.",
+  "limits": "NotproofFixbad/good/no C243pastrewrite. No unchangedserviceentryretry/auth/server/provider/native/HTTP/URLworkaround. Needgenuinenewservice-entrytoolcondition/humanmanualrefresh beforeanotherC253attempt. Independentnewcandidatebuild/compiledpublicdocument isseparateA3requirement, notserviceeditorretry or toolrepair.",
+  "effects": "Ordinaryknownauth+reads only/no nameinput/Save/validwrite/booking/role/newentity; ordinaryauth/preferences/telemetryunenumerated."
+}

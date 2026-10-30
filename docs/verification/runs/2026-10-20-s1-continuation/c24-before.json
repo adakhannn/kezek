@@ -1,0 +1,9 @@
+{
+  "id": "C24-before",
+  "observationWindowUtc": {"after":"2026-10-20T13:47:39Z","before":"2026-10-20T13:50:58Z"},
+  "candidateId": "dev-20261020-S1-0800034a3a7e",
+  "actual": "CurrentknownSA Admin-panel/Anonymized atpromotions-debug. ObservedmenuHealthCheck -> actual /auth/sign-in?redirect=/admin/health-check withGoogle/Yandex buttons instead ofHealthCheck, sameheaderAnonymized/Выйти. Noauthaction performed.",
+  "evidence": "ActualCUA DOM/URL afterobservedmenu; noHTTPprobe/cookieextraction",
+  "expected": "Sameauthorizedcaller currentglobalrole getsHealthCheckreadsurface",
+  "sourceLimit": "Source selfHTTPwithoutcallercontext and mismatchedflatpayload supportsfixdirection; no responsebody/networktrace/authcode inspected."
+}

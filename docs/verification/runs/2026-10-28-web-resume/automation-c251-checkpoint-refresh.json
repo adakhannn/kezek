@@ -1,0 +1,21 @@
+{
+  "id": "C251_AUTOMATION_CHECKPOINT_REFRESH",
+  "observedAfterClockUtc": "2026-10-28T13:30:37Z",
+  "automationId": "kezek",
+  "status": "ACTIVE",
+  "checks": {
+    "id": true,
+    "name": true,
+    "prompt": true,
+    "kind": true,
+    "status": true,
+    "rrule": true,
+    "target": true
+  },
+  "priorConfigSHA256": "d640eb0287367fcc5fc69708c002692b9c368a4f103f58c6f28fc54d52d19a4b",
+  "configSHA256": "58033883a1fc81288447996ee9c7973ca1903d80a9925cb735ed84ab393ba254",
+  "originalConstraintSuffixPreserved": true,
+  "originalConstraintSuffixLength": 7545,
+  "backup": "automation-before-c251-checkpoint.toml",
+  "noDuplicate": true
+}

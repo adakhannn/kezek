@@ -5,6 +5,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import type { ShiftItem, Shift } from '../types';
+import { shiftSummaryAmounts } from './summaryAmounts';
 
 import { TZ } from '@/lib/time';
 
@@ -84,6 +85,7 @@ export function exportShiftSummaryToCSV(
     staffName?: string
 ): void {
     const headers = ['Параметр', 'Значение'];
+    const revenue = shiftSummaryAmounts(calculations);
     
     const rows = [
         ['Дата смены', formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')],
@@ -91,8 +93,9 @@ export function exportShiftSummaryToCSV(
         ['Статус', shift?.status === 'closed' ? 'Закрыта' : shift?.status === 'open' ? 'Открыта' : 'Не создана'],
         ['', ''],
         ['ОБОРОТ', ''],
-        ['Общий оборот (сом)', calculations.displayTotalAmount.toFixed(2)],
-        ['Расходники (сом)', calculations.totalConsumables.toFixed(2)],
+        ['Общий оборот (сом)', revenue.total.toFixed(2)],
+        ['Сумма услуг (сом)', revenue.services.toFixed(2)],
+        ['Расходники (сом)', revenue.consumables.toFixed(2)],
         ['', ''],
         ['РАСПРЕДЕЛЕНИЕ', ''],
         ['Сотруднику (сом)', calculations.masterShare.toFixed(2)],

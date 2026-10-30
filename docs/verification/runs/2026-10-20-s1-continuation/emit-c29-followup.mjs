@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import { createHash } from 'node:crypto';
+import { updateJson } from './json-evidence-patch.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation',read=p=>fs.readFileSync(p),j=p=>JSON.parse(read(p)),sha=b=>createHash('sha256').update(b).digest('hex');
+const utc=process.argv[2];if(!utc)throw Error('Actualclock required');
+const l=j('docs/WEB_VERIFICATION_LEDGER.json'),p=j(run+'/progress.json'),r=j(run+'/c29-result.json'),s=j('docs/WEB_GLOBAL_READINESS_STATE.json'),d=j(run+'/nonfinal-draft.json');
+if(l.evidence.some(e=>e.id==='S1-EV-247'))throw Error('Alreadyapplied');
+l.evidence.push(...[[247,'c29-session-error-plan.json'],[248,'c29-result.json']].map(([n,f])=>({id:'S1-EV-'+n,path:run+'/'+f,sha256:sha(read(run+'/'+f))})));
+const c=l.cases.find(c=>c.id==='S21-M103-role-applications');
+c.followupObservations=[...(c.followupObservations??[]),{observedAfterUtc:r.observationAfterUtc,observedBeforeUtc:utc,candidateId:r.candidate,method:'live',actual:r.actual,restoration:r.restoration,decision:r.decision,evidenceIds:['S1-EV-247','S1-EV-248']}];
+l.updatedUtc=utc;l.nextBatch.objective=r.next;
+Object.assign(p,{activeSubpackage:'C29boundedparentguardcompleted/F005stillpending',casePlan:'c29-session-error-plan.json',lastCheckpoint:r.next,checkpointAfterClockUtc:utc});p.browser.page='/admin/role-applications';p.browser.actualRole='C29knownSA ordinarylogout/login restored; actualsuccessfulempty menu+reload, NOTF005errorpathPASS';p.browser.secondaryTab='Existing2root intentionallyusedfornormalsharedsessionlogout; root andLogoutbuttonrestored';
+Object.assign(s.progressAccounting,{latestCheckpointUtc:utc,latestCheckpointEvidence:run+'/c29-result.json'});
+d.draftRefreshedUtc=utc;d.completed.push('C28oldbusinessapplicationsfailureunreproduced in one menu/reload; C29normalsharedsessionlogout caused parentredirectbeforeF005componenterror; knownSArestored. Zero case/fixcredit, exactblockers retained.');d.currentActualBrowser={tab:'5',role:'knownSAkezekkg',path:'/admin/role-applications',state:'successful empty read restored, no failurepath proof',secondaryTab:'2root restored afterordinarylogout/login'};
+process.stdout.write('*** Begin Patch\n'+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+updateJson(run+'/nonfinal-draft.json',d,3,true)+'*** End Patch\n');

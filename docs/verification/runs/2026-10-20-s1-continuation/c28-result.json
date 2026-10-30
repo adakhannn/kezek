@@ -1,0 +1,11 @@
+{
+  "id": "C28",
+  "status": "BOUNDED_DIAGNOSTIC_UNREPRODUCED_ORIGINAL_FAILURE_RETAINED",
+  "candidate": "dev-20261020-S1-6b8b3bf85fe5",
+  "observationWindowUtc": ["2026-10-20T22:43:42Z", "2026-10-20T22:44:07Z"],
+  "actual": "SameSA menu Заявки бизнеса and ONEfullreload bothrender3historicalcards:2approved1rejected, noerror. No moderate/linkexternal action. Source directserviceclient read can return rawfetchfailure but no rootcausetrace captured; not enough to label network/auth/DBcause.",
+  "decision": "OriginalC13FAIL retained. Currentreadsuccess is evidence of nonreproduction, NOT confirmed fix/no retry-loop/speculative patch. Explicitrootcause and reproducibleerror/recovery remains blocker. No case/requirement/fix credit.",
+  "counts": {"navigation":"16PASS2FAIL1BLOCKED/19", "S1":"17/25accepted8left;63/79PASS16left", "S2":"1/70accepted69left", "product":"18/316accepted298leftNOT_READY", "delta":0},
+  "effects": "Readnavigation+onefullreload; no source/runtime/auth/businesspreference/DBbusinesscommands/moderation/SQL/jobs. Ordinarytelemetryunenumerated/notzeroTOTALwrites. No screenshots/replacementtabs.",
+  "next": "F005realerrorpath cannotbeclaimedfromsuccessfulread; no syntheticbrowserfetch bypass. Define F4 protected-route finite matrix from actualguardcontract; reuse existingadminnegativeproof, missingroles remainblocked. No domain/buildpermissionrenewal."
+}

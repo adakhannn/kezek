@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {updateJson} from './json-evidence-patch.mjs';
+import {summarize} from '../../../../scripts/web-verification-report.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation',read=f=>fs.readFileSync(f),j=f=>JSON.parse(read(f)),sha=b=>createHash('sha256').update(b).digest('hex'),utc=process.argv[2];
+if(!utc)throw Error('ActualUTC required');
+const l=j('docs/WEB_VERIFICATION_LEDGER.json'),p=j(run+'/progress.json'),s=j('docs/WEB_GLOBAL_READINESS_STATE.json'),d=j(run+'/nonfinal-draft.json'),r=j(run+'/c43-result.json'),plan=j(run+'/'+r.plan);
+if(l.candidate.id!==r.candidate||l.evidence.some(e=>e.id==='S1-EV-283'))throw Error('Wrong candidate/already applied');
+const paths=j(l.candidate.sourceBoundary.pathsFile);if(sha(JSON.stringify(paths.map(f=>[f,sha(read(f))])))!==r.sourceFingerprint)throw Error('Changed source');
+const depPaths=[...new Set([...Object.keys(l.cases.find(c=>c.id==='S21-P402-SESSION-redirect-safe').dependencyHashes),'apps/web/src/app/terms/page.tsx','apps/web/src/app/privacy/page.tsx','apps/web/src/app/admin/page.tsx','apps/web/src/app/admin/layout.tsx','apps/web/src/app/_components/AppShellHeader.tsx','apps/web/src/app/_components/AuthStatusWrapper.tsx','apps/web/src/middleware.ts'])],deps=Object.fromEntries(depPaths.map(f=>[f,sha(read(f))]));
+const q=l.requirements.find(q=>q.id==='C1-03');
+for(const row of r.cases){const def=plan.cases.find(x=>x.key===row.key),id='S21-C103-PRECEDENCE-'+row.key,variant='knownSA:existing-session:precedence:'+row.key;l.cases.push({id,requirementIds:['C1-03'],status:'passed',requiresLive:true,requiresVisual:false,variants:[variant],expected:def.expected+' Exact URL '+def.expectedUrl,actual:row.actual,role:r.role,environment:'DEV localhost:3000 RU,IAB2user5',observedUtc:row.observationWindowUtc[1],observationWindowUtc:row.observationWindowUtc,candidateId:r.candidate,method:'live',steps:['Verify same existing knownSA session','Document goto exact planned input, not duplicate oldsingle-parametercontrols','Wait for expected public/admin heading and verify exact benign finalURL/identity'],sideEffects:r.effects,dependencyHashes:deps,evidenceIds:['S1-EV-283','S1-EV-284']});q.caseIds.push(id);q.expectedVariants.push(variant);}
+q.status='partial';q.casePlanComplete=false;
+l.evidence.push(...[[283,'c43-return-precedence-plan.json'],[284,'c43-result.json']].map(([n,f])=>({id:'S1-EV-'+n,path:run+'/'+f,sha256:sha(read(run+'/'+f))})));l.updatedUtc=utc;l.nextBatch.objective=r.next;
+const sum=summarize(l,read);if(!sum.valid)throw Error(JSON.stringify(sum.errors));
+Object.assign(p,{activeSubpackage:'C43returnPrecedence6newPASS',casePlan:r.plan,lastCheckpoint:r.next,checkpointAfterClockUtc:utc});p.S2.returnPrecedenceSubset={requirement:'C1-03',...r.matrixAfter,note:'6newexisting-session parsingcases; fullC1partial'};p.browser.actualRole='C43sameknownSA restored/admin withoutreauth, originaluser2root/5admin';
+Object.assign(s.progressAccounting,{latestCheckpointUtc:utc,latestCheckpointEvidence:run+'/c43-result.json'});d.draftRefreshedUtc=utc;d.latestCompleted='C43 sixNEWreturnprecedence/query/hashcasesPASS. No source/newfix/acceptedrequirementdelta; fullGoogle returncontractpartial.';d.completed.push(d.latestCompleted);d.currentActualBrowser={tab:'5',role:'knownSAkezekkg',path:'/admin',state:'restoredwithoutreauthafterC43',secondaryTab:'2root sharedcookie'};
+process.stdout.write('*** Begin Patch\n'+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+updateJson(run+'/nonfinal-draft.json',d,3,true)+'*** End Patch\n');

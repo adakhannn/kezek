@@ -1,0 +1,35 @@
+{
+  "id": "C224",
+  "status": "FINITE_PLAN_BEFORE_UI_KNOWN_SA_ELIGIBILITY_REQUIRED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-E202-profile-email-recipient-required-reject-reset",
+  "requirementIds": [
+    "E2-02"
+  ],
+  "variants": [
+    "profile-email:enabled-with-no-selected-recipient-rejection-and-reset"
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/cabinet/components/ProfileForm.tsx": "2f5afa0c883dd72e87b0a367a48fbc10bc127ebb05b56a9cc35508e4c1123fe9",
+    "apps/web/src/app/cabinet/profile/ProfilePageClient.tsx": "6fb211bded8c650e5fe2defd08b1f82e30a84a7de468787f659b2a641f682c77",
+    "apps/web/src/app/cabinet/profile/page.tsx": "6aa22170467b6f5d83c81b318960607441435042f2fda68867540a722103ce8c"
+  },
+  "timeboxMinutes": 7,
+  "historyBoundary": "C214localEmailmaster/recipienttoggle+Reset/readbackDONEexplicitlynoSave; C61invalidphonevariantsDONE. Neither tested Emailrecipient-requiredsubmit branch. C77validname/ProfileSavebundledwrites+unknownnotify_smsBLOCKED/no retry. Thisisgenuinelydifferentinvalidargument+specificpre-requestvalidation, notvalidpersistauthority.",
+  "sourceBoundary": "ProfileForm.handleSubmit: e.preventDefault thenisDirty/phonevalidation, selectedverifiedenabledemails; ifnotify_email&&notificationEmailsLoaded&&selected.length===0 =>setError(requiredEmailMessage);return BEFOREsetSaving/fetch profileupdate. OwnrecipientrenderrequiresnotificationEmailsLoaded. Master/childonChange+Resetlocalonly. Onlythisguard-negativeSaveauthorizedbyroutinevalidationtask; no validSave/persistence/deployedDBproof.",
+  "expected": "FreshknownSAownprofileloadedclean/EmailmasterON/EXACToneknownownkezekkgrecipientONandverifiedenabled/WhatsAppTelegramOFFdisabled/SaveResetdisabled. Unticksoleownrecipientonly ->masterON/recipientOFF/dirty. ONEordinarySaveclick mustremainownprofilewithreadableВыберитехотябыодинадресдляemail-уведомлений/unsavedstate/no saved-success/navigation. ONEResetrestoresallbaseline+clearsguarderror; ONEreloadsamecleanbaseline. ReturnSAadmin.",
+  "steps": [
+    "FreshknownSAadmin/RU ->observedPersonalCabinet/Profilelinks only/noauthswitch. Requireloadedcleanexactknownone-recipientbaseline; masterOFF/moreaddresses/unknownphoneerror/loading/challengemeansBLOCKEDbeforeedit,no unmask/newrecipient/providerchanges.",
+    "Recordvisiblebaseline; untickONLYsoleknownownrecipientcheckbox. InspectmasterstillON/childOFF/dirty. No Emailmastertoggle/phone/name/WhatsApp/Telegram/provideraction.",
+    "ONEordinarySaveclick inexactinvalidno-recipientstate; expectrequiredEmailerroronProfileForm/samepage/notprofileupdated. Ifunexpectedsubmit-success/navigationstop/recordFAIL/no blindvalidrestore/no secondSave/API/storage/SQL.",
+    "ONEordinaryReset ->alloriginalcheckboxstates/clean/SaveResetdisabled/errorcleared. ONEreloadwaitloadedsamebaseline. No validSave/Enter/email-SMS-OTPsend.",
+    "Observedalso-access/headerAdminpanellink ->actualprotectedadmin/RU/Anonymized/Business3;markHandoff."
+  ],
+  "effects": "Oneunsavedrecipientcheckboxoff+ONEclient-guard-negativeSaveattempt/oneReset/oneReload. No intentionalprofilePOST/notificationpersist/send/link-unlink/OTP/provider/credentials/security/booking/newentity/source/test/build/serveraction. Ordinaryread/auth/telemetryunenumerated, notindependentzero-network/DBaudit.",
+  "stopRules": [
+    "Wrongbaseline/unknownaddress/maskedcontrol->BLOCKEDno extractionorforcing.",
+    "Pendingnavigation->ONEfreshAX/no duplicateSave/checkbox.",
+    "Unexpectedacceptance->stopnotinferrollback/no repeatedProfileSave; onlylocalResetifstillavailable."
+  ],
+  "credit": "AtmostONEcompoundnewfunctionalUIcase; E2-02partial/serverfailure/phoneequalities/C77validSaveunresolved; Q1-01technicalBLOCKEDnotnewLIVE."
+}

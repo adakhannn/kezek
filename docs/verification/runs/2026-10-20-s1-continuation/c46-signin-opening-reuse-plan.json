@@ -1,0 +1,22 @@
+{
+  "id":"C46",
+  "plannedAfterUtc":"2026-10-21T01:51:56Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementId":"C1-01",
+  "frozenRequirement":"open /auth/sign-in as guest and authenticated users",
+  "method":"Evidence applicability review only. No new UI/test/application execution or new fix credit.",
+  "finiteAcceptance":"Guest status shows useful sign-in form; authenticated status opens sign-in then reaches useful authenticated destination without requiring another provider action. Exercise known authorized SA/owner/staff/pureclient as four positive identity controls; original observation dates kept. Role-default completeness, otherprovider lifecycle/return, visual/firstpaint/device and error/expiry are separate requirements, not certified here.",
+  "cases":[
+    {"sourceCaseId":"S12-guest-route-2","expected":"Guest plain document entry/reload shows useful provider sign-in controls, no active-owner header; pending initial snapshot alone not accepted."},
+    {"sourceCaseId":"S21-C104-DEFAULT-SA","expected":"Already-authenticated knownSA generic sign-in opens and settles useful authenticated admin page, no new provider action during case."},
+    {"sourceCaseId":"S21-C104-DEFAULT-OWNER2","expected":"Already-authenticated knownowner generic sign-in opens and settles useful two-business selector with retained currentbusiness, no selection."},
+    {"sourceCaseId":"S21-C104-DEFAULT-STAFF","expected":"Already-authenticated knownstaff generic sign-in opens and settles ownstaff workspace, no reauth/job/context command."},
+    {"sourceCaseId":"S21-C104-DEFAULT-CLIENT","expected":"Already-authenticated knownpureclient generic sign-in opens and settles useful publicroot with client identity, no new provider action."}
+  ],
+  "reviewBeforeAcceptance":["Exact frozen obligation matches page-opening observations, not inferred from UNIT", "All source cases currentcandidate/passed with actual originalUTC/steps/effects/evidence", "Current candidate fingerprint and every declareddependency match", "Sourceevidence hashes valid; C39 preserved guest null-user path while affected owner was actually retestedC40", "Do not clone/rerun cases or retime observations; add requirement link to same existing rows", "Five sharedcases are overlap withS1/C1-04, not5newexecutions or extra primaryS1cases"],
+  "roleBoundary":"No businessadmin/manager fixture is manufactured or silently removed from C1-04/F4/M1 denominators. C1-01 concerns guest-v-authenticated page opening; their distinct authorization/default-destination contracts remain blocked separately. Does not certify missing-role policy or every authfailure.",
+  "budgetMinutes":4,
+  "countsBefore":{"S1Accepted":16,"S1Remaining":9,"S2Accepted":1,"S2Remaining":69,"productAccepted":17,"productRemaining":299},
+  "expectedDeltaOnlyIfValid":{"acceptedRequirement":"C1-01","S2Accepted":2,"S2Remaining":68,"productAccepted":18,"productRemaining":298,"newLiveExecutions":0,"newFixes":0},
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

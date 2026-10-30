@@ -264,7 +264,7 @@ export default function StaffDetailPageClient({
                 <Card variant="elevated" padding="lg" className="border-amber-200/80 dark:border-amber-900/40">
                     <SectionHeader
                         title={t('staff.rating.title', 'Рейтинг сотрудника в Kezek')}
-                        description={t('staff.rating.subtitle', 'Общий балл формируется из отзывов, продуктивности, лояльности и дисциплины.')}
+                        description={t('staff.rating.subtitle', 'Общий балл формируется из отзывов, продуктивности, лояльности и дисциплины.').replace('{days}', String(ratingWeights.windowDays))}
                         badge={<Badge variant="warning">{t('staff.rating.window', 'Окно')}: {ratingWeights.windowDays}</Badge>}
                     />
                     <div className="mt-4 grid gap-4 md:grid-cols-2">

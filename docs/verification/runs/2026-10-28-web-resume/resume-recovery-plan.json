@@ -1,0 +1,35 @@
+{
+  "id": "RESUME28_RECOVERY_PLAN",
+  "status": "FINITE_SETUP_PLAN_BEFORE_SERVER_OR_NEW_TAB",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "recordedAfterUtc": "2026-10-28T08:39:24Z",
+  "source": {
+    "fingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+    "files": 1687,
+    "manifest": "docs/verification/runs/2026-10-26-web-resume-2/c204-source-paths.json",
+    "matchesPrior": true,
+    "ledgerValid": true,
+    "accepted": 27
+  },
+  "browser": {
+    "inventory": "IAB2selected/tabs[]",
+    "oldWorkingProvider": "browser-use:7fe026e5-ed6e-4d0c-a429-0aeed508dd8f",
+    "oldHandleNotAssumedValid": true,
+    "newEntry": "Onelegitimatehttp://localhost:3000/admin workingtab afterserverready; oldtababsent/no denial andpriorhumanoneworkingtab+fullroutineauthority/newdirectresume. Do notbindoldforbiddenproviders/createfallbackafterURLpolicydenial."
+  },
+  "server": {
+    "project": "C:/projects/kezek/apps/web",
+    "packageDevScript": "next dev --turbopack",
+    "checks": "Get-NetTCPConnection listeners3000/3107empty;13nodeprocesses/noNextdev/start; independentIPGlobalProperties listeners3000/3107empty; projectpath/binaryverified.",
+    "verifiedStopped": true,
+    "plannedOneStart": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "noPnpmShimRetryOrPackageInstall": true
+  },
+  "steps": [
+    "Oneordinarymainserverstart onlyafterfreshstopped+projectproof; firststartoutputonly/no fullOAuthlogpolls. Recordsession/PID/ready; no unchangedrestart.",
+    "Createatmostonelegitimateentrytablocalhostadmin inexistingIAB2. Readactualrole/health; priorSAcookies/sessionnotassumed. OrdinaryknownSAloginonlyifneeded, CAPTCHA/password/devicehumanhandoff/no bypass.",
+    "URLpolicy/navigationblock ->no sameproviderretry/back/reload/alternatetab/browser/URL/HTTP/nativeworkaround. Oneboundedreadonlydiagnostic thenindependentreadonlyC237.",
+    "Restoreactualprotectedadmin ifavailable/markHandoff; recovery0newUI/fix/accepted. ThenC237boundedreadonlyslugvalidationhistory/currentpayload/guard review beforefiniteproductUIplan."
+  ],
+  "effects": "Setup/mainlocalserver only andordinaryauth/telemetryifneeded; no newfixture/roles/booking/hold/slot/payment/SQL/API/SDK/storage/source/test/build/config/securitychanges. No networklease/fontauthorityrenewal."
+}

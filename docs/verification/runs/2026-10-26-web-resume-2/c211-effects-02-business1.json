@@ -1,0 +1,9 @@
+{
+  "id": "C211-effects-02",
+  "observation": "ONEdirectchooserchoice1 ->actualDashboard1/h135e5b36cID/name1+switcher1; ONEreloadretainsID/name1. Directchooseragainlists2choices/business1Current/business2available.",
+  "afterClockUtc": "2026-10-26T10:32:38Z",
+  "pending": true,
+  "phase": "BUSINESS1_CONFIRMED_BEFORE_RESTORE2",
+  "restoreBusinessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+  "explicitChoiceCommandsSoFar": 1
+}

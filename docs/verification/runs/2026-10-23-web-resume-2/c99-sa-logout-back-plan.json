@@ -1,0 +1,29 @@
+{
+  "id": "C99",
+  "requirementIds": [
+    "C6-04"
+  ],
+  "caseId": "S23-C604-SA-logout-back-reload",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "timeboxMinutesIncludingRestore": 7,
+  "expected": "After ordinary sign-out of known SA on existing A protected admin detail, settled guest root appears. ONE ordinary browserBack must not reopen an authenticated adminbusiness body; expected settled sign-in redirect=/admin with no A profile/Adminshell/account/Logout. Normalreload of that settled result remains unauthenticated/no protectedbody. Then ordinary knownkezekkg Google sign-in restores localadminBusiness3. One complete settled-page logout-history/reload case, not login/regression/page-denial repetitions as newcases; DOM cannot prove no transientflash/tokeninvalidity/API/RLS/BFCacheforallengines.",
+  "steps": [
+    "Clock freshsamehumanTab2/knownSAadmin; click exactobservedA link, waitactualprotectedprofile+name/originalslug/counts. No Edit or businesscommand. This prepares known recentprotectedhistoryentry without a newtab.",
+    "Clock immediately before ONE ordinary Выйти. Wait guestpublicroot/Войти/noaccount/Logout. No manualstorage/token/cookie/authcode reads or clearing: application ordinarysignout only.",
+    "Clock immediately before ONE tab.back(). Observe actualsettledroute/body. Expected signin?redirect=/admin/noAprofile/Adminshell/account/Logout. If returned history is not protectedA (e.gpublicroot/transitionaldocument), recordBLOCKEDhistoryprecondition, do not take moreBacks to hunt. If protectedbody remains, recordrealFAIL and boundedreadonlyclassification, not repeatedlogout/back/reloadloop.",
+    "If expecteddenial observed, clock ONE normalreload. Observe signin/noadminbody; no directAPI/monitoring/metrics or forbiddenproviders. Onecase only.",
+    "Clock ordinary visibleGooglebutton and immediately knownkezekkg existingaccountselection, no password/CAPTCHA/device/newgrant. Restore normal/admin usingobservedlink ifneeded; exactSAAnonymized/Business3/RU andmarkHandoff. Authchallenge/deniednavigation ->handoff/stopcurrentcase,no bypass/newtab/retry/callbackreplay. No secondlogin to forceexpectedoutcome."
+  ],
+  "effects": "One ordinary known-SA signout+one sameknownSA Google signin includingrestoration; authsession/telemetryeffects unenumerated/notzeroTOTALwrites. No business/booking/shift/payment/package/profile/preference/role/grant/credential/jobs/newfixture/messages/securitychanges, compiler/server/buildchanges or rawHTTP/SDK/storage/clipboard/native/screenshot probes. No ownerbusinessselection or Remembercommand.",
+  "stop": "Wrongbaseline/unknownrole, browserinterruption/authchallenge/navigationpolicy or uncertainlogout ->stop/no duplicatedauth; preserveuserTab. One boundedfreshobservation maysettle pendingnavigation; no repeatedcompletedscenario. Expectedhistorytargetunavailable ->BLOCKED, no alternatebrowser/tab/URLworkaround. Humanstop ->safeeffects/PAUSEDreadback/newfinal only.",
+  "accounting": "Atbest1NEWUIPASS16->17,0newfix/0accepted delta. C6-04 stayspartial/casePlanCompletefalse. All otherrole/context/server/security/visual/providergatesretained. RestoredGooglelogin issetup0newC3credit.",
+  "savedBeforeUiUtc": "2026-10-23T05:21:34Z",
+  "dependencyHashes": {
+    "apps/web/src/app/_components/SignOutButton.tsx": "bd94ea2f25c39ddd30d0d146e95b468114794381c7c2448a05ff1af128546524",
+    "apps/web/src/app/auth/sign-out/page.tsx": "b15e268e4c2c70c294c47632e667e2bc4175f7caf42135661113dab20e8e4c4b",
+    "apps/web/src/app/admin/layout.tsx": "4b4ee9ec52e896212de823533465bef3c75d1071761182fc6fafceae3e54c572",
+    "apps/web/src/lib/adminAccess.ts": "ece6868339302553337e024fd44ae8ac2e752a2594d56daf9821d8d991067eae",
+    "apps/web/src/lib/authSignOutService.ts": "8d65e2b2902d43c370463494f27b9cd7b7f334d75dff97f9513a7be65360c4b9",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id":"C43",
+  "plannedAfterUtc":"2026-10-21T01:16:32Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementIds":["C1-03"],
+  "method":"live CUA existing knownSA page navigation; no auth transition, SDK/HTTP probe, interception or new privileges",
+  "contractBasis":"Existing authReturnUrl helper and authReturnUrl.test.ts explicitly document redirect before next. This is compatibility verification, not new product behavior. Selected raw first parameter is sanitized once; invalid/empty explicit redirect falls back to safe generic role default, not secondarynext. No security claim based on test source alone.",
+  "cases":[
+    {"key":"both-safe","entry":"http://localhost:3000/auth/sign-in?redirect=%2Fterms&next=%2Fprivacy","expectedUrl":"http://localhost:3000/terms","expectedHeading":"Пользовательское соглашение","expected":"Canonical redirect=/terms takes precedence over legacy next=/privacy; sameknownSA."},
+    {"key":"empty-primary","entry":"http://localhost:3000/auth/sign-in?redirect=&next=%2Fprivacy","expectedUrl":"http://localhost:3000/admin","expectedHeading":"Панель администратора","expected":"Empty explicit redirect is sanitized to / and role-default /admin, not secondarynext. No privacy/external navigation."},
+    {"key":"invalid-primary","entry":"http://localhost:3000/auth/sign-in?redirect=http%3A%2F%2F127.0.0.1%3A3000%2Fterms&next=%2Fprivacy","expectedUrl":"http://localhost:3000/admin","expectedHeading":"Панель администратора","expected":"Unsafe different-local-origin primary rejected; knownSA safe roledefault, not externalorigin or secondarynext. Canary same local app only; no external data destination."},
+    {"key":"duplicate-primary","entry":"http://localhost:3000/auth/sign-in?redirect=%2Fterms&redirect=%2Fprivacy","expectedUrl":"http://localhost:3000/terms","expectedHeading":"Пользовательское соглашение","expected":"URLSearchParams.get first canonical value /terms preserved, laterduplicate not overriding."},
+    {"key":"duplicate-alias","entry":"http://localhost:3000/auth/sign-in?next=%2Fterms&next=%2Fprivacy","expectedUrl":"http://localhost:3000/terms","expectedHeading":"Пользовательское соглашение","expected":"First legacy next=/terms preserved, laterduplicate not overriding."},
+    {"key":"query-hash","entry":"http://localhost:3000/auth/sign-in?redirect=%2Fterms%3Fc43%3Dreturn%23section","expectedUrl":"http://localhost:3000/terms?c43=return#section","expectedHeading":"Пользовательское соглашение","expected":"Benign internal query and hash preserved exactly; useful terms content and sameknownSA. Not anchor layout/visual testing."}
+  ],
+  "budgetMinutes":8,
+  "steps":["Fresh inventory and knownSA identity", "For each named distinct input document goto exact planned URL", "Wait for expected known heading, inspect actual benign final URL and identity", "Do not replay C39 single-parameter negative controls", "Restore /admin without reauth, preserve usertabs2/5"],
+  "effects":"Navigation only; no source/business/role/job/grant/currentbusiness commands. Ordinary authlookup/telemetry unenumerated, notzeroTOTALwrites. No rawcallbackURL/cookie/token inspection.",
+  "limits":"Only knownSA existing-session precedence/query contract; full C1-03 remainspartial. No OAuth-negative callback/no-flash/visual/device/API-RLS/production PASS.",
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

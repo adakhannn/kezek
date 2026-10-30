@@ -1,0 +1,37 @@
+{
+  "id": "C185_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-26T00:29:50Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "301a924f4a6e46ff7202224b34f83f0676948241c9f77f3b154e4e6d68459e0f",
+    "latestPromptCheckpoint": "C185"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 26,
+    "observedAfterClockUtc": "2026-10-26T00:25:46Z"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "c179AndC183JournalsImmutable": true,
+  "pendingFixtureEffects": false,
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 23,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "newUiFromC185": 1,
+  "newFixFromC185": 0,
+  "newAcceptedFromC185": 0,
+  "releaseDecision": "NOT_READY",
+  "next": "C186 bounded readonly D3-02 double-submit historicalprimary/currentdependency review only; no submission/booking/hold/slot/confirm/cancel/newfixture/role/API/SDK/storage action or unchangedwizardreplay.",
+  "effects": "Administrative continuation only after completed businesswarningCancel/reload/retention. No actualDelete/entitywrite/Save/Enter/force/auth/source/test/build/server/DB command fromC185 orcheckpoint. Ordinaryauth/telemetryunenumerated; mainserver/userTab2preserved, no active temporary compiler/runtime/networklease."
+}

@@ -1,0 +1,14 @@
+{
+  "id": "C196_EFFECTS_LINKED",
+  "recordedUtc": "2026-10-26T08:56:00Z",
+  "immutableAppendOnly": true,
+  "baseline": "c196-effects-01-baseline.json",
+  "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+  "staffId": "1bfd0e3b-6fce-42a1-b439-6313af27112f",
+  "action": "ONE ordinary unchecked1minservice checkbox click. InitialAXstilluncheckedwhilepending; waitedvisiblecount2of2 withoutsecondclick.",
+  "proof": "Targetchecked/existing60minchecked/count2of2. ONEordinaryreload thenfreshsameeditor showsbothchecked/count2of2; exactpair association persisted.",
+  "explicitAssociationWriteCount": 1,
+  "pending": true,
+  "recovery": "Afterfinite localmulti-servicecase, returnexactstaffeditor/readtargetchecked/uncheckONLYown1minlink once; reloadmustshow1minunchecked/60minchecked/count1of2. No blindretry/globalSave/otherprofile/service/role/booking command.",
+  "limits": "UI persistence proof, not DBrowtimestamp/bitidenticalrollback/noTOTALwrites claim."
+}

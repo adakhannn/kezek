@@ -23,7 +23,7 @@ export async function runUpdateBranchPromotionHttp(
         });
 
         if (!result.ok) {
-            return createErrorResponse(result.error, result.message, undefined, result.status);
+            return createErrorResponse(result.error, result.message, result.details, result.status);
         }
 
         return createSuccessResponse(result.payload);

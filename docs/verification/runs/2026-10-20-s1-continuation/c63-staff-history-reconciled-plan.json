@@ -1,0 +1,26 @@
+{
+  "id": "C63",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "plannedAfterUtc": "2026-10-21T08:39:38Z",
+  "timeboxMinutes": 12,
+  "requirementIds": ["J1-01"],
+  "reason": "C62 initial expected27FAIL retained. Independent9Oct transfer/guest-transfer/final-cleanup audit identifies2 cancelled19Oct12:00-13:00 ownstaff records now ended; corrected29 oracle precedes new UI observation. Not productbug/fix or arbitrary adjustment to actual list.",
+  "oracle": {
+    "base": "c62-staff-elapsed-list-plan.json expectedPastIds, derivedfrom17Oct G112 notC62actual",
+    "independentSources": ["apps/web/test-results/global-2026-10-17/stage-G112-staff-booking-lists.json", "apps/web/test-results/night-2026-10-09/transfer-stage.json", "apps/web/test-results/night-2026-10-09/guest-transfer-stage.json", "apps/web/test-results/night-2026-10-09/final-cleanup-audit.json"],
+    "addAfterBaseIndex": 1,
+    "unorderedSameStartTie": ["42aa38a2-d0db-4920-9759-6838d46be7d4", "de87ce82-9d93-44c6-a514-bdcbe2fcebdf"],
+    "count": 29,
+    "order": "Base27 relativeorder unchanged; insert unorderedtie after06458033 befored730afd0. Exact29unique membership required; same-start tie has no secondarysort contract.",
+    "excluded": "a4278f13-11b1-490e-b1bd-51154a1a545f futurecancelled26Oct excludedfrombothstaffviews"
+  },
+  "cases": [
+    {"existingCaseId": "S-J1-C62-elapsed-history-27", "key": "reconciled-history-29", "expected": "Knownstaff ownPast29 uniquehrefs, exactindependentmembership and descendingrankgroups; tied12:00 pair unordered. No futurecancelled26Oct."},
+    {"existingCaseId": "S-J1-C62-past-reload-selection", "key": "past-reload-selection", "expected": "Ordinaryreload whilePastselected retainsPast29, exactmembership/rankgroups andselectedscope. No manuallyinventedqueryscope."}
+  ],
+  "reuse": "C62elapsed-empty-upcoming1PASS originalUTC unchanged; not reexecutedforcredit. Naturalreal-list-errorBLOCKED retained.",
+  "steps": ["Freshinventory and knownSA control; clock beforeordinarylogout andknownGoogleobrazstafflogin", "Actualownstaff1bfd andvisibleMyBookingslink", "Clock; ordinaryPastbutton, boundedDOMhref/count/rankgroups only", "Clock; ordinaryreload, readselectedview/count/IDs again", "ReturnUpcoming onlycleanup; clock andordinarylogout/knownGoogleSArestore, actualadmin/handoff"],
+  "effects": "Authtransitions/listselection only; no Details/Create/status/cancel/attend/pay/schedule/shift/role/grant/fixture/source/test/build/DB/APIprobes. No clientphone dump, no newtabs. Ordinaryauth/telemetryunenumerated.",
+  "stop": "Unexpectedidentity/membership/error -> retainactualandstopchain, no blindcode/datafix; CAPTCHA/password/device handoff, deniednavigation no bypass. RestoreSA safely.",
+  "acceptance": "Only2targetedcurrentcases; J1-01/J1-02remainpartial, acceptedcountsunchanged. PreserveC62FAIL/oldoracle/evidence/UTC inpriorResults andcaseplanhistory; permanentlegacy27caseID isnot29newtests."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "HUMAN_RESUME_20261026_BISHKEK",
+  "request": "можешь продолжить дальше пока я тебя сам не останавлю",
+  "firstActualClockUtc": "2026-10-25T19:37:40Z",
+  "firstActualClockBishkek": "2026-10-26 01:37:40 +06:00",
+  "authority": "Prospectively supersedes 25Oct pause only. WEB-only until new explicit human stop or unavailable usage; no deadline, new privileges, continuity claim, purchases or resets.",
+  "previousPauseImmutable": "docs/verification/runs/2026-10-25-web-resume/pause-20261025-110044.json",
+  "priorFinal": {
+    "path": "docs/verification/runs/2026-10-25-web-resume/final-report.json",
+    "sha256": "59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 14
+  },
+  "priorWindowArchived": {
+    "newUiPass": 5,
+    "newVerifiedFixes": 1,
+    "notAddedToThisWindow": true
+  },
+  "newWindow": {
+    "newUiPass": 0,
+    "newVerifiedFixes": 0,
+    "newAcceptedRequirements": 0
+  },
+  "allPriorSafetyBoundariesRetained": true
+}

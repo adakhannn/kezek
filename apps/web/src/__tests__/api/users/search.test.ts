@@ -37,7 +37,7 @@ describe('/api/users/search', () => {
     });
 
     describe('Успешный поиск', () => {
-        test('должен успешно вернуть список пользователей без фильтра', async () => {
+        test('должен вернуть совпавших пользователей и исключить сотрудников бизнеса', async () => {
             // Мокаем список пользователей из admin API
             mockAdmin.auth.admin.listUsers.mockResolvedValue({
                 data: {
@@ -76,6 +76,7 @@ describe('/api/users/search', () => {
             const req = createMockRequest('http://localhost/api/users/search', {
                 method: 'POST',
                 body: {
+                    q: 'user',
                     page: 1,
                     perPage: 50,
                 },
@@ -166,6 +167,7 @@ describe('/api/users/search', () => {
             const req = createMockRequest('http://localhost/api/users/search', {
                 method: 'POST',
                 body: {
+                    q: 'known',
                     page: 200, // Превышает максимум 100
                     perPage: 200, // Превышает максимум 100
                 },

@@ -1,0 +1,19 @@
+{
+ "id":"C16","candidateId":"dev-20261020-S1-1c0013b28e40","status":"OPERATIONAL_NAV_SUBGROUP_COMPLETE_WITH_FAILURES_AND_ROLE_MATRIX_CORRECTION",
+ "nav":{"total":19,"passed":6,"failed":2,"blocked":1,"notRun":10,"newPassKeys":["business-new","categories","users","roles"]},
+ "observations":{
+  "business-new":"Actual menu link and full reload show manual form with blank name/phone/slug/reason, branch limit1, two active category checkboxes unchecked, acknowledgement unchecked, create disabled. No input, checkbox, creation or business command performed.",
+  "categories":"Actual menu then document reload show3categories/2active/3uses; actual inactive old test category, barbershop2businesses and women'shair1business. No edit/delete click; UI route/reload only, not CRUD/model certification.",
+  "users":"Actual menu eventually /admin/users; aggregate8users/8active/0blocked/1SuperAdmin and table. Reload initially loading, then actual Пользователи heading/table9rows. Contacts/unknown-users not exported into report and no account command performed.",
+  "roles":"Actual menu and reload -> Роли,6system/0custom, table7rows includingheader. Actual keys admin/client/manager/owner/staff/super_admin. No create/edit/delete/grant/revoke; disabled system-delete controls merely observed, not action-time deletion test."
+ },
+ "M1_02Correction":{
+  "reason":"Agent initially certified overly narrow4availableidentity-class matrix, despite unavailable manager/business-admin fixtures. Actual six-role inventory confirms these missing non-admin classes. This is correction of incomplete acceptance, not a new requirement/version or application bug.",
+  "preserved":"C11 eight real owner/guest/client/staff root/nested denials remain current scoped PASS; historical C11primary result/hashes untouched, not relabeled as never tested.",
+  "additionalBlockedCases":["S21-M102-admin-root","S21-M102-admin-nested","S21-M102-manager-root","S21-M102-manager-nested"],
+  "disposition":"M1-02 reopened partial, full12-case matrix8PASS4BLOCKED. No new fixtures/users/roles/jobs created or requested again. Missing class tests belong to this non-admin rejection requirement, not silently displaced solely to S2.2."
+ },
+ "effects":"Read-only actual menu/load/reload, no fields submitted/changed, no creates/deletes/authswitches/grants, DBcommands or API/RPC direct probes. Ordinary telemetry unenumerated. Tab5 at/admin/roles, actual prior-known superadmin. Other usertab2 retained.",
+ "counts":{"S1":"17/25accepted8left;63/79PASS16left after current runtime candidate rebuild failure","S2":"1/70accepted69left","S2.1":"1/12accepted11left","product":"18/316accepted298leftNOT_READY","verifiedNewFixes":2,"fixedPendingLive":"S1-F005"},
+ "deadlineUtc":"2026-10-20T13:00:00Z"
+}

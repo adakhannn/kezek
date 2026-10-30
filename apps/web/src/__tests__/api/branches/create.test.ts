@@ -42,12 +42,14 @@ describe('/api/branches/create', () => {
             userId: 'user-id',
         });
         mockSupabase.maybeSingle.mockResolvedValue({ data: null, error: null });
+        // Directory inheritance reads the branch before performing the insert.
+        mockServiceClient.maybeSingle.mockResolvedValue({ data: { id: 'existing-branch' }, error: null });
 
         (getServiceClient as jest.Mock).mockReturnValue(mockServiceClient);
     });
 
     describe('Авторизация', () => {
-        test('должен вернуть 403 если пользователь не суперадмин', async () => {
+        test('должен вернуть 403 если пользователь не владелец и не суперадмин', async () => {
             mockSupabase.rpc.mockResolvedValueOnce({
                 data: false,
                 error: null,
@@ -111,19 +113,30 @@ describe('/api/branches/create', () => {
     });
 
     describe('Успешное создание', () => {
+        test('разрешает владельцу создавать филиал без роли суперадмина', async () => {
+            mockSupabase.rpc.mockResolvedValueOnce({ data: false, error: null });
+            mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { id: 'biz-id' }, error: null });
+            mockServiceClient.single.mockResolvedValueOnce({ data: { id: 'branch-id' }, error: null });
+
+            const res = await POST(createMockRequest('http://localhost/api/branches/create', {
+                method: 'POST', body: { name: 'Owner Branch' },
+            }));
+            const data = await expectSuccessResponse(res);
+
+            expect(data.data.id).toBe('branch-id');
+            expect(mockSupabase.eq).toHaveBeenCalledWith('owner_id', 'user-id');
+            expect(mockServiceClient.insert).toHaveBeenCalledWith(expect.objectContaining({ biz_id: 'biz-id', name: 'Owner Branch' }));
+        });
+
         test('должен успешно создать филиал без координат', async () => {
             mockSupabase.rpc.mockResolvedValueOnce({
                 data: true,
                 error: null,
             });
 
-            mockServiceClient.from.mockReturnValueOnce({
-                insert: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: { id: 'branch-id', name: 'Test Branch', biz_id: 'biz-id' },
-                    error: null,
-                }),
+            mockServiceClient.single.mockResolvedValueOnce({
+                data: { id: 'branch-id', name: 'Test Branch', biz_id: 'biz-id' },
+                error: null,
             });
 
             const req = createMockRequest('http://localhost/api/branches/create', {
@@ -144,13 +157,9 @@ describe('/api/branches/create', () => {
                 error: null,
             });
 
-            mockServiceClient.from.mockReturnValueOnce({
-                insert: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: { id: 'branch-id', name: 'Test Branch', biz_id: 'biz-id', coords: 'POINT(74.5 42.8)' },
-                    error: null,
-                }),
+            mockServiceClient.single.mockResolvedValueOnce({
+                data: { id: 'branch-id', name: 'Test Branch', biz_id: 'biz-id', coords: 'POINT(74.5 42.8)' },
+                error: null,
             });
 
             const req = createMockRequest('http://localhost/api/branches/create', {
@@ -173,13 +182,9 @@ describe('/api/branches/create', () => {
                 error: null,
             });
 
-            mockServiceClient.from.mockReturnValueOnce({
-                insert: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: { message: 'Database error' },
-                }),
+            mockServiceClient.single.mockResolvedValueOnce({
+                data: null,
+                error: { message: 'Database error' },
             });
 
             const req = createMockRequest('http://localhost/api/branches/create', {
@@ -188,7 +193,8 @@ describe('/api/branches/create', () => {
             });
 
             const res = await POST(req);
-            expect(res.status).toBeGreaterThanOrEqual(400);
+            const data = await expectErrorResponse(res, 400, 'validation');
+            expect(data.message).toBe('Database error');
         });
     });
 });

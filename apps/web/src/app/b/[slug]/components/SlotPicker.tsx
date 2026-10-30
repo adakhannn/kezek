@@ -74,7 +74,7 @@ export function SlotPicker({
             {dayStr ? (
                 <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3">
                     <div className="type-label text-[var(--text-primary)]">
-                        {t('booking.step5.selectedDate', 'Выбранная дата')}: {dayLabel}
+                        {t('booking.step5.selectedDate', 'Выбранная дата:')} {dayLabel}
                     </div>
                     <div className="type-caption mt-1 text-[var(--text-secondary)]">
                         {t('booking.step5.description', 'Остаётся выбрать удобное время. После этого поток продолжит подтверждение записи.')}
@@ -97,7 +97,8 @@ export function SlotPicker({
                     message={
                         clientBookingsCount === 1
                             ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
-                            : t('booking.existingBookings.warning.many', `У вас уже есть ${clientBookingsCount} активных записей в этом заведении на выбранный день.`)
+                            : t('booking.existingBookings.warning.many', 'Активных записей в этом заведении на выбранный день: {count}.')
+                                .replace('{count}', String(clientBookingsCount))
                     }
                 />
             ) : null}

@@ -1,0 +1,20 @@
+{
+  "id": "C22",
+  "status": "ACTUAL_UI_REPRODUCED_PLAN_BEFORE_FIX",
+  "candidateId": "dev-20261020-S1-1c0013b28e40",
+  "page": "/admin/performance",
+  "role": "known superadmin kezekkg",
+  "expected": "Same authenticated permitted caller sees performance report/true successful empty; guest401 and non-superadmin403 remain denied; caller context is request cookie client, never service-role client impersonation.",
+  "actual": "C21 entry+fullreload actual admin shell but alert Ошибка/auth and no report.",
+  "cause": "runPerformanceStatsHttp passes stateless getServiceClient into getPerformanceStatsSnapshot.auth.getUser; cookie-backed createSupabaseServerClient unused. Existing role/profile gate remains unchanged.",
+  "scope": "Replace auth-client construction only. No profile/role grants, DB data writes, endpoints broadened, auth tokens extracted, stats semantics changed.",
+  "steps": [
+    "Add cookie-context regression expectation and preserve genuine before FAIL output",
+    "Minimal existing helper replacement",
+    "Same actual SA page entry+fullreload functional report/error recorded honestly",
+    "Scoped guest/non-admin/unit route regressions + coverage>=60 for changed service; types and scoped lint"
+  ],
+  "effects": "Only ordinary authorized UI GET; no production, direct API probes, recalc, messages, auth role changes or fixtures. No screenshot retry.",
+  "sameLiveLimit": "Successful SA proof alone not real guestHTTP/RLS/fullsecurity acceptance; negative unit controls identified as unit.",
+  "deadline": "No fixeddeadline by latest human authority; stop on explicit human command."
+}

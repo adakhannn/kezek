@@ -1,0 +1,73 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:23400) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/ExistingSessionRedirectSignals.test.tsx
+  existing-session redirect signals
+    × coalesces the initial authenticated event and initial user lookup (15 ms)
+    × does not restart a pending navigation on repeated auth notifications (2 ms)
+    × does not navigate from a user lookup completed after unmount (2 ms)
+    √ keeps the guest on the sign-in form (2 ms)
+
+  ● existing-session redirect signals › coalesces the initial authenticated event and initial user lookup
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 2
+
+      32 |         renderHook(() => useExistingSessionRedirect({ redirectParam: '/terms', decideAndGo }));
+      33 |         await act(async () => { listener('INITIAL_SESSION', session); });
+    > 34 |         expect(decideAndGo).toHaveBeenCalledTimes(1);
+         |                             ^
+      35 |         expect(decideAndGo).toHaveBeenCalledWith('/terms');
+      36 |     });
+      37 |
+
+      at Object.toHaveBeenCalledTimes (src/__tests__/components/ExistingSessionRedirectSignals.test.tsx:34:29)
+
+  ● existing-session redirect signals › does not restart a pending navigation on repeated auth notifications
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 3
+
+      40 |         renderHook(() => useExistingSessionRedirect({ redirectParam: '/terms', decideAndGo }));
+      41 |         await act(async () => { listener('SIGNED_IN', session); listener('TOKEN_REFRESHED', session); });
+    > 42 |         expect(decideAndGo).toHaveBeenCalledTimes(1);
+         |                             ^
+      43 |     });
+      44 |
+      45 |     it('does not navigate from a user lookup completed after unmount', async () => {
+
+      at Object.toHaveBeenCalledTimes (src/__tests__/components/ExistingSessionRedirectSignals.test.tsx:42:29)
+
+  ● existing-session redirect signals › does not navigate from a user lookup completed after unmount
+
+    expect(jest.fn()).not.toHaveBeenCalled()
+
+    Expected number of calls: 0
+    Received number of calls: 1
+
+    1: "/terms"
+
+      50 |         unmount();
+      51 |         await act(async () => { resolveUser(userResult); });
+    > 52 |         expect(decideAndGo).not.toHaveBeenCalled();
+         |                                 ^
+      53 |         expect(unsubscribe).toHaveBeenCalledTimes(1);
+      54 |     });
+      55 |
+
+      at Object.toHaveBeenCalled (src/__tests__/components/ExistingSessionRedirectSignals.test.tsx:52:33)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 1 passed, 4 total
+Snapshots:   0 total
+Time:        2.205 s
+Ran all test suites within paths "src/__tests__/components/ExistingSessionRedirectSignals.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?
+

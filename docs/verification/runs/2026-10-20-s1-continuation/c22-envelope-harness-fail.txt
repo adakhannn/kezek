@@ -1,0 +1,113 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/components/PerformanceResponseEnvelope.test.tsx
+  PerformanceClient standardized response envelope
+    × renders a confirmed empty report from data.stats (10 ms)
+    × renders operations from nested data without changing their values (2 ms)
+    × retains forbidden as an error, not empty success (1 ms)
+    × keeps malformed success inline instead of crashing: {"ok":true} (1 ms)
+    × keeps malformed success inline instead of crashing: {"ok":true,"data":{"stats":null,"timestamp":123}}
+
+  ● PerformanceClient standardized response envelope › renders a confirmed empty report from data.stats
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      15 |   function respond(body: unknown) {
+      16 |     (global.fetch as jest.Mock).mockResolvedValue({ json: async () => body });
+    > 17 |     render(<RenderBoundary><PerformanceClient /></RenderBoundary>);
+         |           ^
+      18 |   }
+      19 |   test('renders a confirmed empty report from data.stats', async () => {
+      20 |     respond({ ok: true, data: { stats: [], timestamp: 123 } });
+
+      at render (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:256:5)
+      at respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:17:11)
+      at Object.respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:20:5)
+
+  ● PerformanceClient standardized response envelope › renders operations from nested data without changing their values
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      15 |   function respond(body: unknown) {
+      16 |     (global.fetch as jest.Mock).mockResolvedValue({ json: async () => body });
+    > 17 |     render(<RenderBoundary><PerformanceClient /></RenderBoundary>);
+         |           ^
+      18 |   }
+      19 |   test('renders a confirmed empty report from data.stats', async () => {
+      20 |     respond({ ok: true, data: { stats: [], timestamp: 123 } });
+
+      at render (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:256:5)
+      at respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:17:11)
+      at Object.respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:25:5)
+
+  ● PerformanceClient standardized response envelope › retains forbidden as an error, not empty success
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      15 |   function respond(body: unknown) {
+      16 |     (global.fetch as jest.Mock).mockResolvedValue({ json: async () => body });
+    > 17 |     render(<RenderBoundary><PerformanceClient /></RenderBoundary>);
+         |           ^
+      18 |   }
+      19 |   test('renders a confirmed empty report from data.stats', async () => {
+      20 |     respond({ ok: true, data: { stats: [], timestamp: 123 } });
+
+      at render (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:256:5)
+      at respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:17:11)
+      at Object.respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:30:5)
+
+  ● PerformanceClient standardized response envelope › keeps malformed success inline instead of crashing: {"ok":true}
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      15 |   function respond(body: unknown) {
+      16 |     (global.fetch as jest.Mock).mockResolvedValue({ json: async () => body });
+    > 17 |     render(<RenderBoundary><PerformanceClient /></RenderBoundary>);
+         |           ^
+      18 |   }
+      19 |   test('renders a confirmed empty report from data.stats', async () => {
+      20 |     respond({ ok: true, data: { stats: [], timestamp: 123 } });
+
+      at render (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:256:5)
+      at respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:17:11)
+      at respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:35:5)
+
+  ● PerformanceClient standardized response envelope › keeps malformed success inline instead of crashing: {"ok":true,"data":{"stats":null,"timestamp":123}}
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      15 |   function respond(body: unknown) {
+      16 |     (global.fetch as jest.Mock).mockResolvedValue({ json: async () => body });
+    > 17 |     render(<RenderBoundary><PerformanceClient /></RenderBoundary>);
+         |           ^
+      18 |   }
+      19 |   test('renders a confirmed empty report from data.stats', async () => {
+      20 |     respond({ ok: true, data: { stats: [], timestamp: 123 } });
+
+      at render (../../node_modules/.pnpm/_4fb512a4971c83f0bde1ddec20a6d431/node_modules/@testing-library/react/dist/pure.js:256:5)
+      at respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:17:11)
+      at respond (src/__tests__/components/PerformanceResponseEnvelope.test.tsx:35:5)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 5 total
+Snapshots:   0 total
+Time:        1.122 s
+Ran all test suites within paths "src/__tests__/components/PerformanceResponseEnvelope.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

@@ -1,0 +1,28 @@
+{
+  "id": "FINAL_VERIFICATION_2026_10_23",
+  "recordedAfterClockUtc": "2026-10-23T00:05:23Z",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "exactPromptReadback": true,
+    "readbackBeforeUtc": "2026-10-23T00:04:54Z"
+  },
+  "administrativeOnly": true,
+  "valid": true,
+  "errors": [],
+  "closureValid": true,
+  "closureErrors": [],
+  "accepted": 21,
+  "progressPaused": true,
+  "statePaused": true,
+  "ledgerPaused": true,
+  "newAuthorizationRequired": true,
+  "sourceUnchanged": true,
+  "oldFinalUnchanged": true,
+  "oldMorningFinalUnchanged": true,
+  "finalReportSHA256": "e703a0e29ccf7dfe408640557db163b2903e2c6b5fa423a7378422a2b8964cea",
+  "newWindowPassed": 7,
+  "newWindowFixes": 0,
+  "latestEvidence": "S1-EV-370",
+  "scope": "Administrative validation only, not additional live/UI/product tests. Main local app left available, no autonomous testing."
+}

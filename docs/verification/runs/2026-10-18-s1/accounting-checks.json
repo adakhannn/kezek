@@ -1,0 +1,22 @@
+{
+  "utc": "2026-10-18T08:22:22Z",
+  "kind": "accounting_tests_not_product_tests",
+  "command": "node --test scripts/web-verification-report.test.mjs scripts/web-evidence-accounting.test.mjs scripts/web-closure-plan.test.mjs",
+  "before": {
+    "tests": 58,
+    "pass": 57,
+    "fail": 1,
+    "exitCode": 1,
+    "failure": "web-evidence-accounting.test.mjs line36 assumed acceptancePercent=0 and cases.length=0 forever; actual new live-case acceptance2.8",
+    "action": "Replaced stale initial-import-only assertions with derived accepted count and explicit passing-child validation; preserved frozen history checks"
+  },
+  "after": {
+    "tests": 58,
+    "pass": 58,
+    "fail": 0,
+    "exitCode": 0,
+    "durationMs": 18280.4662
+  },
+  "addedTests": 6,
+  "scope": "Current findings separate from historical fixes; duplicate/missing evidence/missing repro/false verified/accepted affected requirement rejected. No product bug declared fixed from these tests."
+}

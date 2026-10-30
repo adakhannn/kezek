@@ -206,6 +206,7 @@
 
 - **Query**: `date=YYYY-MM-DD` (опционально)
 - **Body**: соответствует `closeShiftSchema` (см. `@/lib/validation/schemas`): `items?: ShiftItem[]`, `totalAmount?: number`, `consumablesAmount?: number`
+  Для сотрудника закрытие финализирует уже сохранённые позиции, не создаёт их повторно и сохраняет их ID/время добавления. Несовпадение переданного финансового снимка с сохранёнными позициями возвращает `409`: сначала сохранить клиентов и обновить смену. Ошибка чтения позиций не позволяет закрыть смену. Путь закрытия владельцем проверяется отдельно.
 - **Успех**: возвращает обновлённую смену в `data.shift`
 
 ### POST /api/staff/create
@@ -350,3 +351,10 @@ async function createStaff(data: StaffData) {
 
 См. `ERROR_HANDLING_GUIDE.md` для подробных инструкций по миграции.
 
+## Promotion validation feedback
+
+Promotion create/update failures keep the standard `{ ok: false, error: 'validation', message, details }` envelope and HTTP400. Known field metadata is `details.field: 'params.visit_count' | 'params.discount_percent'`. The web form localizes that stable field identifier; it never displays the machine `error` code or infers validation type from the human message. Unknown validation fields receive a localized general prompt; other save failures receive the localized save fallback. Server validation and ownership checks remain authoritative.
+
+## Shift item draft identity
+
+`POST /api/staff/shift/items` accepts optional UUID `items[].clientId` for a new draft. The web editor allocates it once, retains it across autosave/manual-save retries, and uses it as the persisted row ID. Existing `id` still denotes an acknowledged row of the current shift. Draft inserts ignore a repeated primary-key conflict instead of creating another row; acknowledged rows update within the shift. Foreign existing IDs or draft collisions return the standard HTTP403 `forbidden` envelope before financial writes; identity lookup failures return HTTP500. The response envelope is unchanged. Legacy callers without clientId remain supported but are not promised retry-idempotency. This is row identity, not a request-wide concurrency/versioning contract.

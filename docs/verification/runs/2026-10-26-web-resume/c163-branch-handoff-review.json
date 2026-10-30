@@ -1,0 +1,82 @@
+{
+  "id": "C163",
+  "type": "bounded readonly branchhandoff history/dependency/effect review",
+  "observationWindowUtc": [
+    "2026-10-25T22:05:02Z",
+    "2026-10-25T22:09:04Z"
+  ],
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "primary": {
+    "path": "apps/web/test-results/global-2026-10-14/stage-G023-public-map-context.json",
+    "originalUtc": "2026-10-14T03:36:49Z",
+    "actual": "Loggedoutmapbranch2cardselected; listBook activated -> branch2preselectedwizard/summary/contact. Then wizardmanuallyswitchedto branch1, not mapbranch1link. No slot/bookingcommand.",
+    "limits": "Only branch2listCTA actualhandoff. Not branch1maplistactivation, selected-overlayCTAactivation or providerballoonCTA. G085/G087selection/hrefs and C162visiblelinks are support, not newly activated paths."
+  },
+  "comparison": [
+    {
+      "path": "apps/web/src/app/map/MapPageClient.tsx",
+      "archived15Oct": "24d3bcec41528d7b21453f1e7b36bad9b4cff1a0dc98bb8d2862ce6ccfed29a3",
+      "current": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7"
+    },
+    {
+      "path": "apps/web/src/app/map/branchBookingHref.ts",
+      "archived15Oct": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+      "current": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e"
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/booking/page.tsx",
+      "archived15Oct": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+      "current": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952"
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx",
+      "archived15Oct": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+      "current": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00"
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/view.tsx",
+      "archived15Oct": "210695684170b3f39c77c5762d7a06aeaf952e95292f2a745daf28c7bd7b2617",
+      "current": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e"
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts",
+      "archived15Oct": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+      "current": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1"
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts",
+      "archived15Oct": "3ffd2169edb9aee1dc794a131635e0d4d1e27d7883c52d32f792c14deda72f1c",
+      "current": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+    }
+  ],
+  "decision": "Do NOT promote fullcurrentB4-04 from G023. Map/helper currentidentity establishedC161, but bookingview and useBookingSteps differ from saved15Octmanifest after G023, including currentinitialBranchValid/initialstep boundary. Branchreceiver equivalence incomplete; changedreceiver justifies ONE named refresh of originalbranch2list subvariant. No speculativebug/cause from source and no UNIT-asLIVE. Otherthree accessible combinations genuinelyuncovered. Providerballoon links are a distinct mandatorysurface not certified by accessiblelist/overlay.",
+  "effectReview": "Maplist/overlay CTA navigate through branchBookingHref; initialbookingdata loading/queryselection are ordinary reads and localstate. Bookingcommands require later slot/confirm interactions; plan prohibits those and all Next/date/service/staff/slot input. Automatic app localbookingstate/auth/telemetry may occur, unenumerated/no storageextraction.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "reusedCase": 0
+  },
+  "hashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json",
+      "sha256": "3da860aca21ee2cdcdf76cc862d09a9ee06e99f0ae6879dd0658d0ee17263abf"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G023-public-map-context.json",
+      "sha256": "cec624ecbd90f2bc1d40c78186668c0be6b8bbcca21f0c4584df06d7e1bf7f26"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+      "sha256": "d0d3d79072c1e44b15d9e87927b2b13b7c35308f934993bd0eaaed8d7789d2e6"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G087-map-keyboard.json",
+      "sha256": "71ad3b4953fbe840752bd73443c10ad09c69bedf417681a173d3452ac628c696"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c162-result.json",
+      "sha256": "776038ccbc90475d5e8785d447c720f8b41188ee073a1660bfd44682b7b9d8d6"
+    }
+  ]
+}

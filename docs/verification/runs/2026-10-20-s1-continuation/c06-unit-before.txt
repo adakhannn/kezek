@@ -1,0 +1,186 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:26556) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx
+  × user retry reloads the document for a cached chunk failure: Error: Failed to load chunk /_next/static/chunks/a3ede8c22273d7ed.js from module 168303
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:17:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34) (3 ms)
+  × user retry reloads the document for a cached chunk failure: Error [ChunkLoadError]: Loading chunk 123 failed.
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:18:19)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34) (1 ms)
+  × user retry reloads the document for a cached chunk failure: Error: Loading chunk 123 failed.
+(error: https://example.test/_next/static/chunks/123.js)
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:19:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34) (1 ms)
+  × user retry reloads the document for a cached chunk failure: Error: Loading CSS chunk 45 failed.
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:20:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34) (1 ms)
+  √ ordinary failure still uses in-place boundary reset without reload: Error: Application failure
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:31:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34) (1 ms)
+  √ ordinary failure still uses in-place boundary reset without reload: Error: Failed to fetch
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:32:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34) (1 ms)
+  √ ordinary failure still uses in-place boundary reset without reload: Error: Failed to load chunk of business records
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:33:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34)
+  √ ordinary failure still uses in-place boundary reset without reload: Error: Failed to load chunk /private/report.js from module 12
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:34:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34)
+  √ ordinary failure still uses in-place boundary reset without reload: Error: A chunk failed while saving data
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:35:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34) (1 ms)
+  √ ordinary failure still uses in-place boundary reset without reload: null
+  √ recognizing an error does not automatically reload before user retry
+
+  ● user retry reloads the document for a cached chunk failure: Error: Failed to load chunk /_next/static/chunks/a3ede8c22273d7ed.js from module 168303
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:17:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34)
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      24 |     const reset = jest.spyOn(boundary, 'setState').mockImplementation(() => {});
+      25 |     boundary.handleReset();
+    > 26 |     expect(reload).toHaveBeenCalledTimes(1);
+         |                    ^
+      27 |     expect(reset).not.toHaveBeenCalled();
+      28 | });
+      29 |
+
+      at toHaveBeenCalledTimes (src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx:26:20)
+
+  ● user retry reloads the document for a cached chunk failure: Error [ChunkLoadError]: Loading chunk 123 failed.
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:18:19)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34)
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      24 |     const reset = jest.spyOn(boundary, 'setState').mockImplementation(() => {});
+      25 |     boundary.handleReset();
+    > 26 |     expect(reload).toHaveBeenCalledTimes(1);
+         |                    ^
+      27 |     expect(reset).not.toHaveBeenCalled();
+      28 | });
+      29 |
+
+      at toHaveBeenCalledTimes (src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx:26:20)
+
+  ● user retry reloads the document for a cached chunk failure: Error: Loading chunk 123 failed.
+(error: https://example.test/_next/static/chunks/123.js)
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:19:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34)
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      24 |     const reset = jest.spyOn(boundary, 'setState').mockImplementation(() => {});
+      25 |     boundary.handleReset();
+    > 26 |     expect(reload).toHaveBeenCalledTimes(1);
+         |                    ^
+      27 |     expect(reset).not.toHaveBeenCalled();
+      28 | });
+      29 |
+
+      at toHaveBeenCalledTimes (src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx:26:20)
+
+  ● user retry reloads the document for a cached chunk failure: Error: Loading CSS chunk 45 failed.
+    at Object.<anonymous> (C:\projects\kezek\apps\web\src\__tests__\components\ErrorBoundaryChunkRecovery.test.tsx:20:5)
+    at Runtime._execModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1439:24)
+    at Runtime._loadModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:1022:12)
+    at Runtime.requireModule (C:\projects\kezek\node_modules\.pnpm\jest-runtime@29.7.0\node_modules\jest-runtime\build\index.js:882:12)
+    at jestAdapter (C:\projects\kezek\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+    at runTestInternal (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (C:\projects\kezek\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34)
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      24 |     const reset = jest.spyOn(boundary, 'setState').mockImplementation(() => {});
+      25 |     boundary.handleReset();
+    > 26 |     expect(reload).toHaveBeenCalledTimes(1);
+         |                    ^
+      27 |     expect(reset).not.toHaveBeenCalled();
+      28 | });
+      29 |
+
+      at toHaveBeenCalledTimes (src/__tests__/components/ErrorBoundaryChunkRecovery.test.tsx:26:20)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 7 passed, 11 total
+Snapshots:   0 total
+Time:        13.595 s
+Ran all test suites matching /src\\__tests__\\components\\ErrorBoundaryChunkRecovery.test.tsx/i.
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

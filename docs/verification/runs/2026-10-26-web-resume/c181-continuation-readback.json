@@ -1,0 +1,37 @@
+{
+  "id": "C181_CONTINUATION_READBACK",
+  "readbackAfterClockUtc": "2026-10-25T23:58:56Z",
+  "isFinal": false,
+  "automation": {
+    "id": "kezek",
+    "status": "ACTIVE",
+    "updateToolSuccess": true,
+    "viewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "nameCadenceTargetPreserved": true,
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "configSHA256": "df07d0be132baf77f26b73b0e93f21b3dbd8e9211c153d655013e23672682107",
+    "latestPromptCheckpoint": "C181"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 25,
+    "observedAfterClockUtc": "2026-10-25T23:55:47Z"
+  },
+  "sourceUnchanged": true,
+  "priorFinalUnchanged": true,
+  "c179JournalImmutable": true,
+  "pendingFixtureEffects": false,
+  "accepted": 23,
+  "remaining": 293,
+  "newWindowUi": 21,
+  "newWindowFixes": 4,
+  "logicalVerifiedFixes": 16,
+  "newUiFromC181": 0,
+  "newFixFromC181": 0,
+  "newAcceptedFromC181": 0,
+  "releaseDecision": "NOT_READY",
+  "next": "C182 bounded readonly exact directory_links history/receiver/effects review before finiteUIplan; no Save/externaldestination/provider/newentity authority from review.",
+  "effects": "Read-only timezone classification and accounting/continuation records only. No browser/auth/timezone/env/clock/schedule/business/branch/booking/DB/entity/source/test/build/server command. Current main server/user tab preserved, no fresh UI health claim; ordinary background auth/telemetry unenumerated."
+}

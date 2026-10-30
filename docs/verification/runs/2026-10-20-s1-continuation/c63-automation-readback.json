@@ -1,0 +1,11 @@
+{
+  "id":"kezek",
+  "readbackBeforeUtc":"2026-10-21T08:56:08Z",
+  "status":"ACTIVE",
+  "rrule":"FREQ=MINUTELY;INTERVAL=15",
+  "targetThreadId":"01a0a908-6eca-7fb1-a481-57f09516a2d1",
+  "exactPromptReadback":true,
+  "changed":"Onlyexistingprompt appendedC61-C63checkpoint; sameid/name/status/cadence/target preserved. No duplicateautomation/newchat.",
+  "next":"BoundedreadonlyF013classification, no unchangedauth/reloadloop. HumanstoprequiresexplicitPAUSED/readback/safeowned-effectfinalization.",
+  "verification":"c63result/evidence336-337 registered; ledgerreportvalidtrue/errors[]; accepted21/316 unchanged/NOT_READY. No code/test/build/appbusinesscommands."
+}

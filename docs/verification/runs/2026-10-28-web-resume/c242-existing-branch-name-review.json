@@ -1,0 +1,63 @@
+{
+  "id": "C242",
+  "status": "READONLY_COMPLETE_EXISTING_BRANCH_NAME_GUARD_ALREADY_CURRENT_CERTIFIED_NO_REPLAY",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "reviewedAfterClockUtc": "2026-10-28T09:17:17Z",
+  "completedAfterClockUtc": "2026-10-28T09:18:59Z",
+  "history": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c105-existing-branch-review.json",
+      "sha256": "86de0d1eb4fbbc6cde3f0ba303ab0bd7fbfc1a289738f0238351a6914933090d"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c106-result.json",
+      "sha256": "eb08f4dc4059ef7f5a6a8441ede48e229eca18a3d406b0733896c9ee0cb5534b",
+      "caseId": "S23-M202-existing-branch-whitespace-reject-discard",
+      "originalObservationWindowUtc": [
+        "2026-10-23T06:08:50Z",
+        "2026-10-23T06:10:29Z"
+      ],
+      "scope": "Exact retained inactivefa5 existing-branch whitespace name rejection, ONE invalid Save and leave/reentry original fields; already current certified. Not CREATE or business-name consumer."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c109-result.json",
+      "sha256": "aa60c7c70b71640c9bfebbdf91f7aa59014d947a9997d0ef7010ca1cd20f6a0b"
+    }
+  ],
+  "currentDependencies": [
+    {
+      "path": "apps/web/src/components/admin/branches/BranchForm.tsx",
+      "sha256": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+      "currentMatches": true
+    },
+    {
+      "path": "apps/web/src/components/admin/branches/BranchMapPickerYandex.tsx",
+      "sha256": "2ea6e90f39759778b9a414f574a1d405220fe2263010d7175dda67a5fdeda101",
+      "currentMatches": true
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/branches/page.tsx",
+      "sha256": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+      "currentMatches": true
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx",
+      "sha256": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+      "currentMatches": true
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts",
+      "sha256": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+      "currentMatches": true
+    }
+  ],
+  "classification": "BranchForm required input plus trim-name guard before fetch. Blank string invokes native browser required gate; exact3space case C106 already proves stronger local trim guard and recovery on same existingbranch. No duplicate invalid Save or native-empty variant merely for counts; no server/API/DB guard proof or defect inferred. Current C106 dependency hashes all match; originalUTC preserved, zero new reuse/execution credit.",
+  "decision": "Keep M2-02 partial; C106 DONE. Independent P2-01/P2-02 reload-mid-admin-edit method genuinely not present in C106/C109: both recover via leave/reentry only after local restoration, not a reload while marked dirty. New finite plan C243 required before UI.",
+  "effects": "Local source/history read/hash only, no browser/auth/Save/entity/API/SDK/SQL/storage/source change/test/build/server action.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}

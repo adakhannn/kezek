@@ -1,0 +1,18 @@
+[
+  {
+    "argv": [
+      "--check",
+      "scripts/closure-web-isolated-build-c254-20261028.mjs"
+    ],
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "argv": [
+      "--test",
+      "scripts/closure-web-offline-guard-c254-20261028.test.cjs"
+    ],
+    "exitCode": 0,
+    "output": "TAP version 13\n# Subtest: exact PostCSS IPC predicate permits only expected loopback worker (no connection)\nok 1 - exact PostCSS IPC predicate permits only expected loopback worker (no connection)\n  ---\n  duration_ms: 1.2046\n  ...\n# Subtest: deny DEV host without network\nok 2 - deny DEV host without network\n  ---\n  duration_ms: 0.1985\n  ...\n# Subtest: deny Google fonts without network\nok 3 - deny Google fonts without network\n  ---\n  duration_ms: 0.0922\n  ...\n# Subtest: deny GitHub without network\nok 4 - deny GitHub without network\n  ---\n  duration_ms: 0.1171\n  ...\n# Subtest: deny other loopback host without network\nok 5 - deny other loopback host without network\n  ---\n  duration_ms: 0.8273\n  ...\n# Subtest: deny IPv6 without network\nok 6 - deny IPv6 without network\n  ---\n  duration_ms: 0.1057\n  ...\n# Subtest: deny wrong port without network\nok 7 - deny wrong port without network\n  ---\n  duration_ms: 0.1663\n  ...\n# Subtest: deny main app port without network\nok 8 - deny main app port without network\n  ---\n  duration_ms: 0.0841\n  ...\n# Subtest: deny privileged port without network\nok 9 - deny privileged port without network\n  ---\n  duration_ms: 0.353\n  ...\n# Subtest: deny out of range without network\nok 10 - deny out of range without network\n  ---\n  duration_ms: 0.3342\n  ...\n# Subtest: deny wrong worker without network\nok 11 - deny wrong worker without network\n  ---\n  duration_ms: 0.1793\n  ...\n# Subtest: deny malformed port without network\nok 12 - deny malformed port without network\n  ---\n  duration_ms: 0.1335\n  ...\n# Subtest: deny positional connect without network\nok 13 - deny positional connect without network\n  ---\n  duration_ms: 0.0562\n  ...\n# Subtest: deny named pipe without network\nok 14 - deny named pipe without network\n  ---\n  duration_ms: 0.0795\n  ...\n# Subtest: ordinary Node TCP is denied before connection\nok 15 - ordinary Node TCP is denied before connection\n  ---\n  duration_ms: 1.7844\n  ...\n# Subtest: fetch is denied without reaching a host\nok 16 - fetch is denied without reaching a host\n  ---\n  duration_ms: 0.344\n  ...\n1..16\n# tests 16\n# suites 0\n# pass 16\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 108.5945\n"
+  }
+]

@@ -3,6 +3,8 @@
 import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface ToastProps {
@@ -13,6 +15,7 @@ interface ToastProps {
 }
 
 export function Toast({ message, type = 'info', duration = 5000, onClose }: ToastProps) {
+    const { t } = useLanguage();
     const [phase, setPhase] = useState<'visible' | 'closing'>('visible');
 
     useEffect(() => {
@@ -89,7 +92,7 @@ export function Toast({ message, type = 'info', duration = 5000, onClose }: Toas
                     setPhase('closing');
                     window.setTimeout(() => onClose?.(), 300);
                 }}
-                aria-label="Close notification"
+                aria-label={t('common.closeNotification', 'Закрыть уведомление')}
                 className="motion-interactive flex-shrink-0 text-current opacity-70 hover:opacity-100"
             >
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">

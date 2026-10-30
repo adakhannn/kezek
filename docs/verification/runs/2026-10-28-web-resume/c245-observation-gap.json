@@ -1,0 +1,8 @@
+{
+  "id": "C245_OBSERVATION_GAP",
+  "lastActualClockUtc": "2026-10-28T09:36:18Z",
+  "nextActualClockUtc": "2026-10-28T10:56:51Z",
+  "recordedAfterClockUtc": "2026-10-28T10:58:21Z",
+  "limits": "No continuous observation/work or precise intervening activities claimed for this gap. Source skip-count classification was observed before09:36:18; later configuration/accounting happened after10:56:51. Gap cause is not established. No fresh browser/server health claim from elapsed time.",
+  "afterGap": "Fresh usage ordinaryAllowed16%used; current authoritative run stillACTIVE/C244 checkpoint and automation config stillunchangedACTIVE before refresh. New C245 automation checkpoint updated/readback ACTIVE, no product/UI/DB/server/test/build effect or permission renewal from this administrative step."
+}

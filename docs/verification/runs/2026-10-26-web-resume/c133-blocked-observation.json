@@ -1,0 +1,10 @@
+{
+  "id": "C133",
+  "caseId": "S26-M103-today-cancelled-summary",
+  "status": "BLOCKED_PRECONDITION",
+  "clockBeforeReloadUtc": "2026-10-25T20:04:18Z",
+  "actual": "Planned one ordinary admin reload rendered protected admin, actual Bishkek2026-10-26, one today09:00–10:00 cancelled row, Hold0/Confirmed0/Cancelled0. Separate warning Не удалось загрузить часть статистики / Бизнесы: TypeError: fetch failed, Business0 while3 historical cards. Initial plan required no data warnings, so stopped without retry/fix.",
+  "classification": "Original C57 business-count intermittent FAIL recurred; cause still unknown, no new distinct fix/failure count for recurrence. Today raw cancelled/count0 mismatch retained as observation but not a completed C133 execution under initial global guard.",
+  "effects": "One reload only; no booking/business/auth/config/DB command. User tab2 remains admin and marked handoff. Ordinary telemetry unenumerated.",
+  "credit": "0 PASS/0 fix/0 accepted; no repeated reload"
+}

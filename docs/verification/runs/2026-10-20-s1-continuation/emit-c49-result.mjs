@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {updateJson} from './json-evidence-patch.mjs';
+import {summarize} from '../../../../scripts/web-verification-report.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation',read=f=>fs.readFileSync(f),j=f=>JSON.parse(read(f)),sha=b=>createHash('sha256').update(b).digest('hex'),utc=process.argv[2];
+if(!utc)throw Error('ActualUTC required');
+const l=j('docs/WEB_VERIFICATION_LEDGER.json'),p=j(run+'/progress.json'),s=j('docs/WEB_GLOBAL_READINESS_STATE.json'),d=j(run+'/nonfinal-draft.json'),r=j(run+'/c49-result.json'),plan=j(run+'/'+r.plan),q=l.requirements.find(q=>q.id==='C3-03');
+if(l.candidate.id!==r.candidate||l.evidence.some(e=>e.id==='S1-EV-295')||q.caseIds.length)throw Error('Wrong candidate/target/already applied');
+const paths=j(l.candidate.sourceBoundary.pathsFile);if(sha(JSON.stringify(paths.map(f=>[f,sha(read(f))])))!==r.sourceFingerprint)throw Error('Changed source');
+const deps=Object.fromEntries(Object.keys(l.cases.find(c=>c.id==='S21-C103-CALLBACK-SA-redirect').dependencyHashes).map(f=>[f,sha(read(f))]));
+for(const row of r.cases){const def=plan.cases.find(x=>x.key===row.key),id='S21-C303-ABANDON-'+row.key,variant='Google:chooser-abandonment:'+row.key;l.cases.push({id,requirementIds:['C3-03'],status:row.status,requiresLive:true,requiresVisual:false,variants:[variant],expected:def.expected,actual:row.actual,role:'guest; known SA only retry restoration',environment:'DEV localhost:3000,IAB2user5',observedUtc:row.observationWindowUtc[1],observationWindowUtc:row.observationWindowUtc,candidateId:r.candidate,method:'live',steps:plan.steps,sideEffects:r.effects,dependencyHashes:deps,evidenceIds:['S1-EV-295','S1-EV-296']});q.caseIds.push(id);q.expectedVariants.push(variant);}
+q.status='partial';q.casePlanComplete=false;
+l.evidence.push(...[[295,r.plan],[296,'c49-result.json']].map(([n,f])=>({id:'S1-EV-'+n,path:run+'/'+f,sha256:sha(read(run+'/'+f))})));l.updatedUtc=utc;l.nextBatch.objective=r.next;
+const sum=summarize(l,read);if(!sum.valid)throw Error(JSON.stringify(sum.errors));
+Object.assign(p,{activeSubpackage:'C49abandonment2PASS1retryBLOCKED',casePlan:r.plan,lastCheckpoint:r.next,checkpointAfterClockUtc:utc,pendingUserHelp:'One human ordinary signin restoration requested after C49 expiredGoogle state -> blocked error document. No repeated repair ask, no new tab/HTTP workaround. Prior coldDisablecache question unanswered.'});p.S2.googleAbandonmentSubset={requirement:'C3-03',...r.matrixAfter};p.browser.actualRole='C49 local session UNKNOWN after logout/expiredGoogle retry, NOT restoredSA';p.browser.page='blocked error document; do not retry/bind';p.pendingConfirmations=['Human ordinary local sign-in restoration requested C49'];
+Object.assign(s.progressAccounting,{latestCheckpointUtc:utc,latestCheckpointEvidence:run+'/c49-result.json'});d.draftRefreshedUtc=utc;d.latestCompleted='C49 realGooglechooser Back+guest reload2PASS; retryBLOCKED after delayed accountselection/expiredOAuthstate -> unavailabledomain/browserpolicy. No provennewbug/fix/requirementdelta; no bypass. Humanrestorationrequested.';d.completed.push(d.latestCompleted);d.currentActualBrowser=r.browserAfter;
+process.stdout.write('*** Begin Patch\n'+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+updateJson(run+'/nonfinal-draft.json',d,3,true)+'*** End Patch\n');

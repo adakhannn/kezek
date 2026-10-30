@@ -71,14 +71,14 @@ export default async function EditServicePage({
         return notFound();
     }
 
-    // Находим все активные услуги с таким же названием в этом бизнесе (это "копии" услуги в разных филиалах)
-    // Неактивные услуги (мягко удаленные) не должны показываться
+    // Load branch copies with the same visibility as the selected management row.
+    // A hidden service still needs its saved branch selection for safe editing.
     const { data: allServiceBranches } = await admin
         .from('services')
         .select('branch_id')
         .eq('biz_id', bizId)
         .eq('name_ru', svc.name_ru)
-        .eq('active', true); // Только активные услуги
+        .eq('active', !!svc.active);
 
     // Получаем список ID филиалов, где есть эта услуга
     const serviceBranchIds = new Set(

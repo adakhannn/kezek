@@ -1,0 +1,20 @@
+{
+  "id":"C68",
+  "plannedAfterUtc":"2026-10-21T09:42:51Z",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "requirementIds":["M6-02"],
+  "timeboxMinutes":10,
+  "preflight":"c68-filter-safety-preflight.json",
+  "reasonNotDuplicate":"C26certifieddefaultemptyglobalreport/navigation/reload; explicitlynomanualdatechange. CurrentmanualUIcustom/presetvariantshavenolocatedliveproof. HistoricalL050oldmetricsnotnewC26globalfiltercontract. No repeateddefaultemptycredit.",
+  "cases":[
+    {"key":"valid-custom-ui","expected":"CaptureoriginalvisibleISOdates. Ifstart<end, ordinarydateinputsetsstart+1dayinsideexistingrange, endunchanged; datesvalid, CustombuttonselectedDOM, globalscope/no branchselectorretained. ThiscertifiesUIcontrolmappingonly, notactualGETcompletion/responsefiltering/ETL/sums."},
+    {"key":"seven-day-preset-ui","expected":"Ordinary7daysbutton mapsend=todayBishkek21Oct2026/start14Oct2026;7daybuttonselectedDOM/globalscoperetained. No APIresponsecompletion/numericclaim."},
+    {"key":"invalid-range","status":"blocked","expected":"Invalidrangeisactionableandrecoverablewithoutlosingfilters","reason":"Sourceerrorviewhidescontrols/datepreferencespersist; no safeeditableUIrecoveryconfirmed. Do not intentionallypersistinvalidrange."},
+    {"key":"partial-api-failure","status":"blocked","expected":"Partialfailureidentifiednotfalseempty","reason":"No naturalrepro/authorizedfaultinjection; success/emptyisnoterrorPASS."},
+    {"key":"error-retry","status":"blocked","expected":"Actualerrorretryrecoverssamevalidrange","reason":"No naturalerrorandcorrelatedrequestproof; do notmanufactureerror/loop."}
+  ],
+  "steps":["Freshinventory/knownSAadmincontrol", "Clock; ordinarymenuAnalyticsglobaloverview, capturevisibleoriginaldatevalues+selectedpresetDOM; initialcontextnotnewPASS", "Clock; safeinside-rangecustomstartchangeviaordinarydateinput, freshDOMdates/preset/globalscope; stopifno safeinput", "Clock;7dayspreset, freshDOMmappeddates/preset", "Clock;restoreoriginalvisiblefiltersviaoriginalpresetifexactmatch elseorderedvaliddateinputrestoration; verifyvalues andreturn/admin/handoff"],
+  "effects":"Noauth/newtabs/business/role/grant/payment/job/recalc/source/test/build/server/DB/APIprobes. OrdinaryappdatefiltersDOimplicitlypersistbrowserpreferences andtriggerreadonlyoverviewGETs; capture/restoreoriginalvisiblevalues, no rawstorage/cookie/tokeninspection ormanualHTTP. Telemetry/authlookupunenumerated/notzeroTOTALwrites.",
+  "stop":"Unexpectedidentity/error/no editabledatecontrol ->recordactualandstop; no intentionallyinvalidrange/workaround orrepeatedcapture/settingsrepair. Ifprefsnotrestorable throughUIreportexacteffect/blocker, no storagebypass.",
+  "scope":"TwoUIcontrolvariantsinonesession, notindependentfinancialexecutions. No visual/API-RLS/fullM6/numericcertification. FullM6-02partial/incompletematrix,3blockedslotsretained. OriginalC26evidenceunchanged."
+}

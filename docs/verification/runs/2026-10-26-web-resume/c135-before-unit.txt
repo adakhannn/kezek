@@ -1,0 +1,46 @@
+(node:16516) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/AdminHomeTodayStatuses.test.tsx (5.86 s)
+  × counts the canonical cancelled booking and gives its row a Russian status label (107 ms)
+  √ retains legacy canceled status presentation (31 ms)
+  × combines cancellation spellings while preserving hold, confirmed and paid rows (29 ms)
+
+  ● counts the canonical cancelled booking and gives its row a Russian status label
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      54 | it('counts the canonical cancelled booking and gives its row a Russian status label', async () => {
+      55 |     const today = await renderToday(['cancelled']);
+    > 56 |     expect(today.getAllByText('Отменено').some(label => label.parentElement?.textContent === 'Отменено1')).toBe(true);
+         |                                                                                                            ^
+      57 |     expect(within(today.getByRole('table')).getByText('Отменено')).toBeTruthy();
+      58 |     expect(within(today.getByRole('table')).queryByText('cancelled')).toBeNull();
+      59 | });
+
+      at Object.toBe (src/__tests__/components/AdminHomeTodayStatuses.test.tsx:56:108)
+
+  ● combines cancellation spellings while preserving hold, confirmed and paid rows
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      68 |     const today = await renderToday(['cancelled', 'canceled', 'hold', 'confirmed', 'paid']);
+      69 |     for (const [label, count] of [['Отменено', 2], ['Ожидание', 1], ['Подтверждено', 1]] as const) {
+    > 70 |         expect(today.getAllByText(label).some(node => node.parentElement?.textContent === `${label}${count}`)).toBe(true);
+         |                                                                                                                ^
+      71 |     }
+      72 |     const table = within(today.getByRole('table'));
+      73 |     expect(table.getAllByText('Отменено')).toHaveLength(2);
+
+      at Object.toBe (src/__tests__/components/AdminHomeTodayStatuses.test.tsx:70:112)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 1 passed, 3 total
+Snapshots:   0 total
+Time:        20.08 s
+Ran all test suites within paths "src/__tests__/components/AdminHomeTodayStatuses.test.tsx".

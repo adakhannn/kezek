@@ -1,0 +1,17 @@
+{
+  "id": "C144",
+  "caseId": "S26-O303-admin-today-title-en",
+  "status": "FAIL_BEFORE",
+  "candidate": "dev-20261026-WEB-1f5ebe44a70f",
+  "sourceFingerprint": "1f5ebe44a70fd6663c10c1a53c595e077c6c9cee581c76da4a4983889577d3e3",
+  "observationWindowUtc": [
+    "2026-10-25T20:30:09Z",
+    "2026-10-25T20:30:44Z"
+  ],
+  "expected": "Today's Bookings",
+  "actualTitle": "Today\\'s Bookings",
+  "actual": "English selected, server Admin Panel settled. Fresh DOM-backed heading innerText contains a literal backslash U+005C before apostrophe; expected ordinary English possessive without slash. No language/statuscase newcredit. Русский restored after actual20:30:18 clock; protected Admin-panel/Anonymized/RU/Business3/Todaycount1 and usertabhandoff.",
+  "cause": "admin.en.ts Today title scalar overescaped backslash before apostrophe; no data or routing cause.",
+  "effects": "Ordinary locale controls/automaticrefresh only, RUrestore; no data/booking/role/auth/config command; ordinarytelemetry unenumerated.",
+  "credit": "0PASS/0fix/0accepted"
+}

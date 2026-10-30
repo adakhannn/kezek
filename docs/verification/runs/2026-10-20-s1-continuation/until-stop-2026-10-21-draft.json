@@ -1,0 +1,62 @@
+{
+  "status": "FINALIZED_PAUSED_BY_USER",
+  "authorization": "docs/verification/runs/2026-10-20-s1-continuation/c52-resume-authorization.json",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "counts": {
+    "S1": [
+      17,
+      25
+    ],
+    "S1primary": [
+      62,
+      79
+    ],
+    "S2": [
+      3,
+      70
+    ],
+    "product": [
+      21,
+      316
+    ],
+    "S4": [
+      1,
+      47
+    ]
+  },
+  "releaseDecision": "NOT_READY",
+  "inheritedLogicalRunFixes": 9,
+  "newCurrentWindowFixes": 0,
+  "completed": [
+    "C52human permitted tab18actualSArecovery/automationresume;0PASS",
+    "C53one immediate retryPASS, Googleabandonmentsubset3/3;fullC3-03partial",
+    "C54freshcurrentdefaultbuildFAIL publicfontbinaryconnection;0PASS/fix/requirementdelta, no assetsstarted.",
+    "C55one2hostprobe CSSconnecttimeout/onepublicbinary200; rootcauseunestablished,0productcredit.",
+    "C56own-client4newreadonlycasesPASS;E1-03accepted(S4),notS2. No newfix. SArestored, ownpopupclosed.",
+    "C57humanapprovedfontdeliveryimplemented; source/version/metrics/RU+KYverified, no newLIVE/requirement/fixcredit before buildandregression.",
+    "C57localfontdelivery buildPASS; C58actualbuiltprivacyreload/observedlocalfontsPASS; A3-01accepted+1, S1primary63/79. M1home intermittentreadFAIL preserved withnaturalrecovery/unknowncause. No newlivefunctionalfixcount.",
+    "C59twoNEWowncancelled/no-showreceiptsPASSentry+reload; confirmedC56reused, paidnotrun/holdblocked, E1-02partial,0requirement/fixdelta. SArestored, own21/22closed.",
+    "C60oneNEWpaidreceiptentrycaseRU/KY/EN+reloadPASS after identifiedG014datechange; statusmatrix4PASS1holdBLOCKED, no requirement/fixdelta. RUrestored/own23closed/SArestored.",
+    "C61threeNEWphoneformatdraftvariantsPASS; unsavedReset/reloadcleanup, maskedexactphonecomparison+realservererror2BLOCKED, noSave/OTP/profilePOST. E2-02partial/0requirementfixdelta. SArestored.",
+    "C62staffUpcoming0PASS, initialPast27expectationFAIL/actual29. Independentnight9Octauditresolves2knowncancelled19Octrows; no productbug/fixclaim. C63correctedplanthenretest+pendingreload, no retroPASS. SArestored.",
+    "C63targeted29historyPASS/reloadauthorizationFAIL(F013open/causeunknown), nofix. C62initial27oracleFAILretained, emptyPASSnotrepeated. Matrix2PASS1FAIL1BLOCKED/4; SArestored.",
+    "C64readonlyclassificationcomplete: exactgetUsertransport/sessioncause unavailable, F013open/no speculativefix. NextindependentdirectSAselect-cabinet missingprimaryproof; noJ2closedrepeat.",
+    "C65SAexplicitdirectselect-cabinet1newPASS options+uncheckedAdminreturn; matrix1PASS4notrun2BLOCKED/7, no rememberedpreferencewrite/authtransition/fix/acceptedrequirement. F013unchangedopen.",
+    "C66client+guestdirectselector2NEWPASS/root/no privilegedoptions; SArestored. Matrix3PASS2notrun2BLOCKED/7 incl1C65reusedoriginalUTC. Noacceptedrequirement/fixdelta/F013retest.",
+    "C67owner setupreachedselect-businessgate; planstopobeyed/nobusinesschoice/directselectorNOTexecuted. OwnerBLOCKEDnotproductFAIL; matrix3PASS3BLOCKED1notrun/7, SArestored/noacceptedfixdelta. NextindependentglobaloverviewmanualfiltersnotC26defaultrepeat.",
+    "C68one7daypresetUI mappingPASS; manualdatecommitunconfirmed+invalidrange/partialerror/retry4BLOCKED. Originaldatefiltersrestored/adminreturned; no financial/APIcompletion/visual/fixclaim.",
+    "C69sum99/days0draft2UIvariantsPASS, Resetexactoriginal35/25/20/20/days30, noSave/recalc/POST/configpersist. 2server/dependencyBLOCKED; no acceptedrequirementorfixdelta."
+  ],
+  "latestEvidence": "docs/verification/runs/2026-10-20-s1-continuation/c69-result.json",
+  "updatedUtc": "2026-10-21T11:14:58Z",
+  "browser": {
+    "tab": "18",
+    "path": "/admin",
+    "actual": "KnownSArestored;old5blockeduntouched"
+  },
+  "next": "Explicitresume required; C70notstarted.",
+  "oldFinalsUnchanged": true,
+  "explicitPauseOnHumanStopRequired": true,
+  "currentCandidate": "dev-20261020-S1-40a5aef0e785",
+  "finalReport": "docs/verification/runs/2026-10-20-s1-continuation/final-report-until-stop-2026-10-21.json"
+}

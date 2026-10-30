@@ -79,7 +79,7 @@ export default function SystemHealthClient() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch('/api/admin/system-health', {
+            const response = await fetch('/admin/api/system-health', {
                 cache: 'no-store',
             });
 

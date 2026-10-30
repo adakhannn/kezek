@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {updateJson} from './json-evidence-patch.mjs';
+import {summarize} from '../../../../scripts/web-verification-report.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation',read=f=>fs.readFileSync(f),j=f=>JSON.parse(read(f)),sha=x=>createHash('sha256').update(x).digest('hex'),utc=process.argv[2];
+const l=j('docs/WEB_VERIFICATION_LEDGER.json'),p=j(run+'/progress.json'),s=j('docs/WEB_GLOBAL_READINESS_STATE.json'),r=j(run+'/c53-result.json'),plan=j(run+'/'+r.plan),c=l.cases.find(c=>c.id===r.caseId),draftFile=run+'/until-stop-2026-10-21-draft.json';
+if(!utc||l.evidence.some(e=>e.id==='S1-EV-301')||c.status!=='blocked'||l.candidate.id!==r.candidate)throw Error('Wrongcandidate/alreadyapplied');
+if(sha(JSON.stringify(j(l.candidate.sourceBoundary.pathsFile).map(f=>[f,sha(read(f))])))!==r.sourceFingerprint)throw Error('Changedcandidate');
+c.priorResults??=[];c.priorResults.push({status:c.status,actual:c.actual,observedUtc:c.observedUtc,observationWindowUtc:c.observationWindowUtc,evidenceIds:c.evidenceIds});
+Object.assign(c,{status:'passed',actual:r.actual,expected:plan.expected,steps:plan.steps,observedUtc:r.observationWindowUtc[1],observationWindowUtc:r.observationWindowUtc,sideEffects:r.effects,environment:'DEVlocalhost:3000,IAB2humanUserTab18RU',dependencyHashes:Object.fromEntries(Object.keys(c.dependencyHashes).map(f=>[f,sha(read(f))])),evidenceIds:[...c.evidenceIds,'S1-EV-301','S1-EV-302']});
+l.evidence.push(...[[301,r.plan],[302,'c53-result.json']].map(([n,f])=>({id:'S1-EV-'+n,path:run+'/'+f,sha256:sha(read(run+'/'+f))})));l.updatedUtc=utc;l.nextBatch.objective=r.next;const v=summarize(l,read);if(!v.valid)throw Error(JSON.stringify(v.errors));
+Object.assign(p,{activeSubpackage:'C53retryPASSGoogleAbandonmentSubset3of3',checkpointAfterClockUtc:utc,lastCheckpoint:r.next});p.S2.googleAbandonmentSubset={requirement:'C3-03',...r.matrixAfter};p.browser.actualRole='KnownSA kezekkg ordinaryGoogle restored C53, Admin/Anonymized, protectedadminheading';p.browser.page='/admin';p.currentDraftFile=draftFile;
+Object.assign(s.progressAccounting,{latestCheckpointUtc:utc,latestCheckpointEvidence:run+'/c53-result.json'});
+const d={status:'NONFINAL_ACTIVE_UNTIL_USER_STOP',authorization:run+'/c52-resume-authorization.json',candidate:r.candidate,counts:{S1:[16,25],S1primary:[62,79],S2:[3,70],product:[19,316]},releaseDecision:'NOT_READY',inheritedLogicalRunFixes:9,newCurrentWindowFixes:0,completed:['C52human permitted tab18actualSArecovery/automationresume;0PASS','C53one immediate retryPASS, Googleabandonmentsubset3/3;fullC3-03partial'],latestEvidence:run+'/c53-result.json',updatedUtc:utc,browser:{tab:'18',path:'/admin',actual:'KnownSArestored;old5blockeduntouched'},next:r.next,oldFinalsUnchanged:true,explicitPauseOnHumanStopRequired:true};
+process.stdout.write('*** Begin Patch\n*** Add File: '+draftFile+'\n+'+JSON.stringify(d,null,2).split('\n').join('\n+')+'\n'+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+'*** End Patch\n');

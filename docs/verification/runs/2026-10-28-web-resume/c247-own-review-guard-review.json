@@ -1,0 +1,45 @@
+{
+  "id": "C247",
+  "status": "READONLY_COMPLETE_REVIEW_DRAFT_ALREADY_DONE_INVALID_RATING_NOT_REACHABLE_WITH_ALLOWED_UI",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "reviewStartedAfterClockUtc": "2026-10-28T12:25:32Z",
+  "recordedAfterClockUtc": "2026-10-28T12:27:50Z",
+  "requirementId": "E4-02",
+  "history": [
+    {
+      "path": "apps/web/test-results/live-2026-10-13/stage-030-client-package-review.json",
+      "sha256": "c412af1b4d87e854a49b967e2a9a2b081beb2db892f8f93585e5af2ef002bf5d",
+      "scope": "Knownpureclientlow.fade ownpaid03469725 created/updatedrevieweb51acab; final3stars/retainedcomment. Onlyknowncompletedeligiblevisit alreadyhasreview; oldactualcreate/update/UTC retained, not permission to resubmit."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G074-review-dialog-after.json",
+      "sha256": "d3e1c9bd194168d250273de8ac3fbe8bfb562d7b2c1fb5c0a53f9bb397699d17",
+      "originalCompletedUtc": "2026-10-15T10:40:35Z",
+      "scope": "Alreadyactualexisting-own-review unsavedtextarea LOCAL LIVE TEST DRAFT — NOT SAVED/Cancel/reopenoriginal3stars+comment, RU/EN/KY labels/focus/Escape. Draft/Cancel is ALREADYDONE, not justfocus; no newUI/reusecredit."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/g074-review-local-draft-after.txt",
+      "sha256": "6f05340f3da343c9b8fb7d7522ae289844631714f1fa8b591c278347195b0c54"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/g074-review-reopen-original-after.json",
+      "sha256": "0da2f30e5b8685eecd5e914c6f8658689c68cff156a4b1b432c06198c85c2dd4"
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/cabinet/components/ReviewDialog.tsx": "226faf74dba2ba0554f594acb40a68da3001e572a89b768df7ecfe4c6cc74ff5",
+    "apps/web/src/app/cabinet/components/BookingCard.tsx": "6779e048a504e36298c93ea2a2e2486140db3b9a0890853baa9ea5e4f96de944",
+    "apps/web/src/lib/reviewCreateService.ts": "eeac0e7231a80c2be5bb08fd7c57cfe6650fd3f34615aeacd3d4c13961326cac",
+    "apps/web/src/lib/reviewUpdateService.ts": "93c775aa71628170b9ee0f688a8ee64f4933bda0d477703b7d1cc19cde581298"
+  },
+  "contract": "ReviewDialog initializesrating5 (or existingrating); native select offers only5,4,3,2,1. No ordinaryempty/0/out-of-range option. onChange localsetState only, no autosave. Submitbuttondisabledonlybusy andcallscreate/updatePOST; clickingdefault5+emptyoptionalcomment would be a REALvalidreview command, not negativevalidation. Existingownreview3stars means initialcreate/required-empty variant lacks knownfixture anyway. No DOMinvalidoption/event/API workaround, newbooking/review or borrowedprivilegedidentity.",
+  "sourceBoundary": "Create/update source checks truthyrequiredrating; missingexplicitrangecheck in reviewedfunctions is source risk only, not LIVEinvalidratingacceptance/DBconstraintabsence/securityproof. Do notfixwithoutUIrepro or forbiddenAPItest.",
+  "decision": "KeepE4-02partial, no UI/auth/modal/draft/submit replay. Initial0-ratingnegativecaseBLOCKED unreachableordinaryallowedUI/no neweligibleunreviewedfixture or commandauthority. Independentgenuinelyuncovered I2-03 positivefractional duration1.5 clientvalidation on knownexisting99 requiresseparatefiniteplan.",
+  "effects": "Read-only local history/source/hash only; no browser/auth/ReviewSave/POST/rating/comment/message/booking/fixture/role/API/SQL/SDK/storage/source/test/build/server action.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0
+  }
+}

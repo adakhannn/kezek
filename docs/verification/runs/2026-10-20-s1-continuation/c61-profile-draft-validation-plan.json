@@ -1,0 +1,21 @@
+{
+  "id":"C61",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "requirement":"E2-02",
+  "role":"OrdinaryknownGooglepureclientlow.fade.osh, actualLIVE TEST CLIENT12OCT/Клиент; restoreSAkezekkg/admin",
+  "timeboxMinutes":12,
+  "scope":"NEW currentlynotrun visibleclient-side phone formatvalidation only in unsavedownprofiledraft. No profile POST/Save/OTP/providerlink/unlink/notificationtoggle. Real storedphone/name/identity remainunchanged. Initialprofileload is setup, notnewWB202credit.",
+  "precondition":"Actualknownclientprofileloaded; capture originalvisiblephoneinputvalue privately inCUAvariable, no token/storage/APIread. Expectedknownfull_nameLIVE TESTCLIENT12OCT; saveinitialdisabled. Ifdataunknown/loaderror/emptyunknownidentity, recordstopbeforeediting, notsafePASS.",
+  "contract":"ProfileForm currently normalizednonemptyphone requires /^\\+?[0-9\\s()-]{8,20}$/ and canSubmit excludesphoneValidationError. This is frontendformatcontract only, not validatedE164/server enforcement/identityownership.",
+  "cases":[
+    {"key":"letters","draft":"abc","expected":"Visiblephonefield draftinvalid, inlinecorrectphoneerror and Save disabled; no submit"},
+    {"key":"below-min","draft":"1234567","expected":"7characterdraft invalid, inlinecorrectphoneerror and Save disabled; no submit"},
+    {"key":"above-max","draft":"123456789012345678901","expected":"21characterdraft invalid or UIexplicitmaxLengthprevents21stchar; no silentlyacceptedinvaliddraft; Save disabled if21accepted"},
+    {"key":"restore-noop","expected":"Restoreexactoriginalphoneinput, inlineerrorclears and unchangedformSave disabled; normalreload originalknownname/phone/identity remain. NoSave orOTP operation"},
+    {"key":"real-server-error","status":"BLOCKED","expected":"Natural realserverfailure handledsafely, notUNITsubstitute","reason":"No authorized faultinjection/APIinterception/offline switch; naturalfailure only ifencountered, no falseerrorPASS"}
+  ],
+  "steps":["Freshinventory/SA; clockbeforeordinarylogout/Googleknownclientlogin","Ordinarypersonalprofile navigation; inspectloadeddataandvisiblephone/Save, captureoriginaldraft privately","ClockbeforeEACHdraftfill; observeactualerror/Saveenabledstate, no clickSave","Clockbeforeexactoriginalrestoration; reloadandcomparevisiblevalue/name tooriginal, notnewprofilepersistencewriteclaim","Clockbeforeclientlogout/knownSArestore; actualadmin/handoff, usertabsuntouched"],
+  "effects":"Onlyunsaveddraft3invalidvalues+exactrestore/reload, twoordinarylogouts/twoGoogleloginsincludingrestore. No realphonechange, payment/booking/role/grant/newcredential/profilePOST/notificationmessage. Ordinaryauthlookup/telemetryunenumerated/notzeroTOTALwrites.",
+  "acceptance":"4newfrontendvalidationcases possible, servererrorBLOCKEDretained. E2-02partial, no servervalidation/security/wholeprofilecertification. No runtimefixfromcode/UNITalone.",
+  "stop":"Unknownprofiledata/error/block/password/CAPTCHA/device: do notedit/save; no workaround/repeatedstaleauth. Ifunexpecteddraftstate, restoreoriginalwithoutsubmit whenpossible andrecordactualFAIL. Neverchangevalidphone/persistentidentity/notificationpreferences."
+}

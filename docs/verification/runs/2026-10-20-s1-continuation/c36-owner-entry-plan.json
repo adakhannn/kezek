@@ -1,0 +1,14 @@
+{
+  "id":"C36",
+  "parent":"F4-02 fixed64 role-route-entrymode cases",
+  "candidate":"dev-20261020-S1-6b8b3bf85fe5",
+  "before":"38PASS16BLOCKED10notrun/64",
+  "cases":["owner-root-newtab","owner-root-copied-address","owner-staff-newtab","owner-staff-reload","owner-staff-copied-address"],
+  "expected":"Known owner Google osorovadahan04@gmail.com, canonical alias osorov@sportsoft.ru; owner control, no global superadmin and no active own staff record. Admin requires global superadmin and exposes no workspace; staff explicit no-active-staff denial under newtab/reload/transferred address. Existing owner-admin reload C11 PASS stays original, not repeated.",
+  "steps":"Fresh inventory/knownSA; ordinary logout/knownGoogleowner login and actual role control. Legitimate temporary newtab per named route case, inspect denial; perform only remaining reload; root then ordinary navigation to safe observed exact target address. Close only owncase tabs, restore knownSA; user2/5 retained/handoff.",
+  "limits":"Settled PAGE DOM/AX only, not screenshot/no-flash/SSR/API/RLS/CSRF/IDOR/OSclipboard/independentsession PASS. No newroles/staff/jobs or business commands. Observed benign URL string only, no cookies/tokens/SDK/rawHTTP/native.",
+  "budgetMinutes":12,
+  "stop":"One fresh state for unknown outcome, no blindretry or bypass; CAPTCHA/password/device handoff. Clock before cases/authwrite and afterlongaction. Hardstop21Oct05UTC with04:35draft/04:45explicitPAUSED.",
+  "afterIfAllPass":"43PASS16BLOCKED5notrun/64 remaining21; no acceptedrequirementdelta",
+  "next":"Staff5 remaining executable F4-02 modes;16 missing-role blocks retained"
+}

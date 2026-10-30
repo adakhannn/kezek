@@ -1,0 +1,58 @@
+{
+  "id": "S1.2-production-errors-R2",
+  "observedUtc": "2026-10-18T10:24:23Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "origin": "http://127.0.0.1:3103",
+  "plan": "s14-production-error-plan.json",
+  "auth": "Public isolated origin; no signed-in identity assertion. Primary localhost owner session was preserved.",
+  "buildProof": {
+    "privacy": "opened legal page and reloaded; h1 and section9 present",
+    "roleNotAsserted": "Header had collapsed Меню; guest label not visible"
+  },
+  "serverFailure": {
+    "route": "/b/testovyy-biznes-1",
+    "fault": "Existing Node guard rejects backend fetch; actual Server Component render throws in built app",
+    "serverDigest": "836538931",
+    "rendered": "Не удалось загрузить бизнес / Проверьте интернет-соединение и попробуйте ещё раз. / Повторить / В каталог",
+    "retry": "clicked once; same safe error with fault retained",
+    "home": "В каталог -> normal home shell and Каталог временно недоступен alert"
+  },
+  "clientFailure": {
+    "route": "/map",
+    "request": "App's normal client fetch /api/branches/map",
+    "rendered": "Не удалось загрузить филиалы. Попробуйте обновить список. / Попробовать снова",
+    "retry": "clicked once; actual additional Fetch map failed console entry at10:23:39.669; safe error persists",
+    "notClaimed": "No successful recovery after removing fault; count0 header retained; no empty-success panel"
+  },
+  "safeContent": {
+    "serverUi": true,
+    "clientUi": true,
+    "notDisplayed": [
+      "server stack frames",
+      "source paths",
+      "S1_BUILD_NETWORK_DISABLED",
+      "credentials"
+    ],
+    "browserConsole": "Next production generic Server Components error with details omitted; BusinessPage digest log and MapPage generic fetch failure; not claimed console-error-free"
+  },
+  "server": {
+    "pid": 27764,
+    "startedUtc": "2026-10-18T10:21:12.077Z",
+    "readyMs": 1714,
+    "stoppedUtc": "2026-10-18T10:24:21.558Z",
+    "stop": "Exact owned command line validated then Stop-Process; wrapper reports4294967295 expected forced local stop, not crash",
+    "listenerAndProcessAbsent": true,
+    "primary3000Untouched": true
+  },
+  "restoration": "Returned existing tab3 to localhost:3000 owner catalogue2, later ordinary guest/owner regression completed. Isolated build retained.",
+  "canClose": [
+    "A4-02 finite server/client failure variants",
+    "A4-04 finite404/server/client rendered safety variants"
+  ],
+  "cannotClose": [
+    "A4-03 fault removal and successful retry recovery",
+    "real deployed production",
+    "security/RLS or actual service outage recovery"
+  ],
+  "effects": "No browser replacement/tab creation, raw HTTP/CDP bypass, real DB commands, credentials, role changes or real business mutation. Controlled process uses dummy invalid backend; app normal requests only."
+}

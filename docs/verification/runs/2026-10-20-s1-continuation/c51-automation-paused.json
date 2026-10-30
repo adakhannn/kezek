@@ -1,0 +1,21 @@
+{
+  "id": "C51_AUTOMATION_PAUSE",
+  "automationId": "kezek",
+  "status": "PAUSED",
+  "configReadback": true,
+  "readbackUtc": "2026-10-21T04:41:54Z",
+  "configUpdatedAtEpochMs": 1792557701261,
+  "configUpdatedUtc": "2026-10-21T04:41:41.261Z",
+  "preservedFields": [
+    "id",
+    "kind",
+    "name",
+    "prompt",
+    "rrule",
+    "target_thread_id"
+  ],
+  "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+  "reason": "Authorized early winddown: this wake after04:35, next15min wake would cross04:45; no autonomous extension or new scenarios.",
+  "deadlineUtc": "2026-10-21T05:00:00Z",
+  "nextAutomaticResumeAuthorized": false
+}

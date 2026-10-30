@@ -1,0 +1,16 @@
+{
+  "id": "C04",
+  "purpose": "Revalidate A3-01/A3-02 stale after current runtime fix S1-F003, not an unchanged full-build repeat",
+  "candidateId": "dev-20261020-S1-ed0bdd7faf24",
+  "fingerprint": "ed0bdd7faf246271380613feebb1b5dbd48b573ea00e635dc10bcddcf137590b",
+  "fileCount": 1660,
+  "isolatedDirectory": "test-results/closure-s1-20261020-f003-fontread-v2/build",
+  "preflightFollowup": "First copy preserved; no compiler spawned. Exact1660 file-byte comparison matched certified fingerprint; only traversal order differed. v2 compares certified ordered set.",
+  "authorization": "Human20Oct action-time yes: public GET only Google Fonts until18:30Bishkek",
+  "compilerNetwork": "HTTPS443 fonts.googleapis.com/css2 Geist and fonts.gstatic.com/s/geist or geistmono/*.woff2 GET only; no cookie/auth/apikey/body; redirects rejected; other Node network denied except exact build PostCSS local IPC",
+  "environment": "Whitelisted OS variables; no .env copy; dummy invalid public Supabase config; service-role/Sentry empty; no real SDK credentials",
+  "process": "Existing local Node/Next dependencies; default next build without webpack/font mocks;2GB heap;180s owned-child timeout; primary DEV3000 untouched",
+  "acceptance": "Actual bounded compiler exit0 and exact source fingerprint before A3-01. Fresh isolated production assets via CUA before A3-02. Local dummy config not deployed production/live DB/security PASS.",
+  "stopConditions": ["Source fingerprint changed", "Unexpected network requirement", "Timeout", "Unknown process ownership", "After12:15UTC new long-scenario cutoff"],
+  "sideEffects": "Generated files only in new exact isolated directory; no source configuration edits, DB, stage/reset/install/deploy"
+}

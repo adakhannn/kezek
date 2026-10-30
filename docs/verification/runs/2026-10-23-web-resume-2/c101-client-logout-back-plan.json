@@ -1,0 +1,29 @@
+{
+  "id": "C101",
+  "requirementIds": [
+    "C6-04"
+  ],
+  "caseId": "S23-C604-client-logout-back-reload",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "timeboxMinutesIncludingRestore": 8,
+  "expected": "Actualknownpureclient low.fade/LIVE TEST CLIENT12OCT owncabinetbookings beforelogout. Afterordinarylogout ONEbrowserBack to recentprotectedpersonalentry must show guestauthgate (Войдите, чтобы посмотреть записи, or equivalent sign-in denial) with no authenticatedidentity/Logout/ownbookings/privatepackage. SameURL/cabinetnavigation may remain and is not private-data leak. ONE normalreload keepsguestgate/no oldprivatecontent. KnownSArestorelocaladminBusiness3. One complete settled-page case, not new auth/header/receipt/package/visual/API/RLS/token-invalidity proof.",
+  "steps": [
+    "ClockfreshsamehumanTab2knownSAadmin. ONE ordinarySAlogout; localВойти/Google, chooseonlyexistinglow.fadeknownaccount immediately. No CAPTCHA/password/device/newrights; challenge ->humanhandoff/no bypass. Oneboundedwait/freshstate ifpending, no duplicatedlogin. Rootactualclientidentity required, no implicitowner/staffreuse.",
+    "ClockvisibleЛичныйкабинет or observedМоизаписи link ->actual/cabinet/bookings. Requireknownclientidentity and actualpersonalheading/tabs/ownpackage as positivecontrol only; no History/receipts/packagecommands/bookingcancel/profileSave/nudgechoices. This is newestprotectedhistoryentry.",
+    "Clockimmediatelybefore ONEordinaryclientВыйти; settlesguestroot/Войти/noidentity/Logout. ClockONEtab.back. Observe actualsettled route/body; requireguestgate and absenceof oldprivateidentity/bookings/package. Ifwronghistoryentry/no protectedpersonalattempt ->BLOCKED/no extraBacks. Ifprivatecontentretained ->FAIL/no rerunloop; oneboundedread-onlyclassification then safe restoration, no speculativeauthfix.",
+    "Ifexpectedguestgateobserved, clockONE normalreload; verifyguestgate/no oldprivatebody. Do not callguestAPI/prohibitedroutes or extractcookies/storage/tokens/codes.",
+    "ClocknormalvisibleВойти/Google; selectknownkezekkg once/immediately. Restorelocaladminviaobservedrolelink ifneeded, knownSA/Anonymized/Business3/RU andmarkHandoff. No extra accounts/tabs/relogin/ownerbusinesschoice/Remember/preferencechanges."
+  ],
+  "effects": "Atmost2ordinarylogouts+2knownGooglelogins includingsetup/SArestore, ONEBack+ONEreload; normalauth/telemetryunenumerated/notzeroTOTALwrites. No business/booking/shifts/payments/packages/reviews/profile/preferences/roles/grants/jobs/newfixture/messages/security/credentials/source/build/serverchanges. No native/rawHTTP/SDK/storage/secrets/clipboard/screenshot probes.",
+  "stop": "Wrongidentity/baseline/authchallenge/browserinterruption/policydenial/uncertaincommand ->stop/no duplicatedauth/newtab/alternateprovider/replay. Unexpectedprivatebody ->recordactualFAIL and source-onlyclassify without rawtransportprobes, no repeatback/reloadloop. Humanstop safeeffects+PAUSEDreadback/newfinalonly.",
+  "accounting": "Atbest1NEWUIPASS17->18,0newfix/0accepteddelta. C6-04partial/matrixincomplete; manager/multirolefixturesblocked and originalownerG108notretimed/currentreused. No wholecross-tab/cache/no-flash/API/securityclaim.",
+  "savedBeforeUiUtc": "2026-10-23T05:35:07Z",
+  "dependencyHashes": {
+    "apps/web/src/app/_components/SignOutButton.tsx": "bd94ea2f25c39ddd30d0d146e95b468114794381c7c2448a05ff1af128546524",
+    "apps/web/src/app/auth/sign-out/page.tsx": "b15e268e4c2c70c294c47632e667e2bc4175f7caf42135661113dab20e8e4c4b",
+    "apps/web/src/app/cabinet/layout.tsx": "762eec49475f83dca01a1b42fdccea7aa2d3bf7c536951854c312467d1bc69fe",
+    "apps/web/src/app/cabinet/bookings/page.tsx": "5ac49763f5eb0434edf6e9353f939dea86755c063f76f8c1f708b9c52e9a6336",
+    "apps/web/src/app/cabinet/bookings/BookingsPageClient.tsx": "9cf0c3a1a9baf5b42260517eb32b10c2254f18c75ceb0cdfc2c38666b346edca",
+    "apps/web/src/app/cabinet/ClientCabinet.tsx": "7c6218fa44420ed584389979b0ab499b066aaa7e3917a99ded090034ddcf8e89"
+  }
+}

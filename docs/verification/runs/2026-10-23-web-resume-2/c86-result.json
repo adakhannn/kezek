@@ -1,0 +1,24 @@
+{
+  "id": "C86",
+  "plan": "c86-address-persistence-plan.json",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint": "40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc": "2026-10-23T01:49:46Z",
+  "completedBeforeUtc": "2026-10-23T01:55:54Z",
+  "caseId": "S23-M201-address-save-reload-restore",
+  "status": "passed",
+  "observationWindowUtc": ["2026-10-23T01:50:27Z", "2026-10-23T01:52:28Z"],
+  "setup": "Same human Tab2/provider9330166e/knownSA/admin. Observed fixtureA link01:50:10 ->exact fe2d412c-21c6-40ef-b5d3-23f49f550610 detail. Original S1 TEST 20261020 Branch Availability / s1-test-20261020-branch-availability, approved Barbershop, owner unassigned,2branches/0staff/0services/0bookings/limit2. Address and phones Не указано. Edit01:50:27 confirmed blank address and all blank phone/contact/WhatsApp/email/site inputs, original name/slug/category/publication. No masked/nonempty contact state, other business or deletedB interaction.",
+  "actual": "Only Address filled01:50:47 with C86 TEST ADDRESS 23OCT - TEMPORARY, other fields unchanged. One ordinary Save after clock01:50:59; disabled saving state then editor closed and readonly marker observed before01:51:13. Ordinary reload01:51:13 retained exact marker and protected baseline values. Edit01:51:27 confirmed marker and unchanged blank contacts/name/slug/category/publication. Address alone cleared01:51:36; one restore Save after clock01:51:50, editor closed and Не указано observed before01:52:06. Ordinary reload01:52:06 confirmed restored empty address and protected baseline. Entire save/reload/restore/reload sequence ONE new case, not per-save/reload credit. Canonical null consistent with reviewed normal route, not an independent raw-DB equality proof.",
+  "commands": [
+    {"kind":"ordinary UI Save", "immediatelyBeforeUtc":"2026-10-23T01:50:59Z", "target":"existing fixtureA", "address":"C86 TEST ADDRESS 23OCT - TEMPORARY", "observedCompleteBeforeUtc":"2026-10-23T01:51:13Z", "persistentReloadCheckAfterClockUtc":"2026-10-23T01:51:13Z"},
+    {"kind":"ordinary UI Save restoration", "immediatelyBeforeUtc":"2026-10-23T01:51:50Z", "target":"same existing fixtureA", "address":"blank input / normal route null", "observedCompleteBeforeUtc":"2026-10-23T01:52:06Z", "persistentReloadCheckAfterClockUtc":"2026-10-23T01:52:06Z"}
+  ],
+  "restoration": {
+    "observationWindowUtc": ["2026-10-23T01:52:28Z", "2026-10-23T01:55:54Z"],
+    "actual": "Observed Админка link01:52:28 ->actual /admin/protected Панель администратора/Anonymized/3businesses/4branches/1staff/4services/30bookings/RU. Same human Tab2 markedHandoff, menus closed. Return completed after01:52:28 and before next actual clock01:55:54, no precise end-time or continuous observation claim. No auth transition/new tab."
+  },
+  "effects": "Exactly two ordinary UI Save commands on existing isolated fixtureA, no recovery retry. Whole-card payload resubmits original name/slug/categories/phones/contacts/approval unchanged; only address changed then restored. No owner/branch/limit/role/grant/new entity/delete/booking/payment/package/profile/notification/OTP/message commands, raw HTTP/SDK/SQL/API probes, source/test/build/server changes or auth transition. Normal audit/timestamp/auth/telemetry effects unenumerated; NOT zeroTOTALwrites or byte-perfect DB/audit rollback. No visual/device/screenreader/no-flash/security/financial PASS. Old fixture registry/history unchanged.",
+  "counts": {"newUiCases":1,"newWindowPassedBefore":9,"newWindowPassedAfter":10,"newLiveFixes":0,"acceptedBefore":21,"acceptedAfter":21,"acceptedDelta":0,"remaining":295,"wholeM201Accepted":false},
+  "next": "C87 bounded read-only M2-01 finite-matrix/completeness and dependency review against exact original requirement and creation/persistence history BEFORE any acceptance promotion or new UI plan. Reuse applicable original evidence/original UTC without new execution credit; distinguish creation/edit/validation/duplicates/errors/role variants and required effects/permission. C84 draft and C86 address persistence DONE/no unchanged repeat. Do not infer whole M2-01 acceptance from address happy path or plan completeness. E2 profile Save still awaiting exact human decision; heartbeat is not consent. F013/current-account security/owner/role fixtures/cache/visual/pagination/production blockers retained. Only genuinely uncovered, authorized finite variants may follow a saved independent plan."
+}

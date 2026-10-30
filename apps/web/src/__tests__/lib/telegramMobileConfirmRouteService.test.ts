@@ -5,25 +5,29 @@ import {
 } from '@/lib/telegramMobileAuthAttemptService';
 import { runTelegramMobileConfirmRoute } from '@/lib/telegramMobileConfirmRouteService';
 
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client,
+}));
+
 describe('telegramMobileConfirmRouteService', () => {
     const previousSecret = process.env.TELEGRAM_MOBILE_BOT_SECRET;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
-        __resetTelegramMobileAuthAttemptsForTests();
+        await __resetTelegramMobileAuthAttemptsForTests();
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = previousSecret;
     });
 
     test('returns same approved result for repeated confirm with same telegram_id', async () => {
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
 
-        __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved', {
+        await __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved', {
             telegramId: 12345,
             userId: 'user-1',
             exchangeCode: 'CODE1',
@@ -50,12 +54,12 @@ describe('telegramMobileConfirmRouteService', () => {
     });
 
     test('returns conflict for repeated confirm from different telegram_id', async () => {
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
 
-        __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved', {
+        await __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved', {
             telegramId: 77777,
             userId: 'user-1',
             exchangeCode: 'CODE1',

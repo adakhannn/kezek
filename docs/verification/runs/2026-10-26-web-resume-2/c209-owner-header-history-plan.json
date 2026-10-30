@@ -1,0 +1,52 @@
+{
+  "id": "C209",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "preparedAfterClockUtc": "2026-10-26T10:14:55Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S23-F3-HEADER-owner",
+  "requirementIds": [
+    "F3-01",
+    "F3-02"
+  ],
+  "reason": "OldownerheadercaseC72blockedbeforebusinesschoice. Newdirecthumanroutineautonomy plusC196/C197actualexistingownerbusiness2currentcontext unblocksONLYpreviouslyunexecutedownerheader/historymatrix. C197directselect-cabinetisotherentrymechanism; do notrepeatit. SA/staff/client/guestheaderDONEretained.",
+  "oldBlocked": {
+    "observedUtc": "2026-10-22T23:41:23Z",
+    "actual": "PreconditionBLOCKED/notexecuted: Business+personal context; known entry stopped at select-business C67, no new selection authority/unchanged retry.",
+    "evidenceIds": [
+      "S1-EV-363",
+      "S1-EV-364",
+      "S1-EV-365"
+    ]
+  },
+  "knownOwner": {
+    "google": "osorovadahan04@gmail.com",
+    "alias": "osorov@sportsoft.ru",
+    "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "businessName": "Тестовый бизнес 2"
+  },
+  "independentExpectation": "Ownerheader hasBusiness+personalonly/noAdmin/staff. Currentbusiness/dashboard ->Businesscurrent; ownpersonal ->Personalcurrent; BrowserBack/Forward andexplicitheadermenu followactualpage+exclusivearia-current withoutstaleothercabinetbody. No fullpermissionAPI/securityproof.",
+  "steps": [
+    "FreshknownSAadmin/RU. Ordinarylogout/localGoogleknownowner; ifbusinesschooser exactbusiness2alreadyCurrent ->Continuecurrentonly. Requireownerbusiness2/dashboard; no newrole/businesspreferencechange. Wrongcontext/accessorpassword/CAPTCHA/device ->boundedstop/handoffno bypass.",
+    "OpenactualheaderCabinetbusinessmenu. Inspectexactmenuitems/hrefs/currentmarker(ordinaryaria-currentattributeonly). ChooseownМоизаписи once, waitactualpersonalroute/UI/header; requirePersonalcurrentonly andnoownerDashboardmainheading. No profile/bookingrow action.",
+    "BrowserBackONCE ->actualownbusiness2dashboard/headerBusinesscurrent. BrowserForwardONCE ->actualpersonal/headerPersonalcurrent. No hardreload/goto as historysubstitute.",
+    "ExplicitheaderBusinesscabinetONCE ->actualownbusiness2dashboard/Businesscurrent. BrowserBackONCE ->personal/Personalcurrent. FinalexplicitheaderBusiness->ownDashboard. Onecompoundownerhistorycase, notperedge/marker/authcount.",
+    "Ordinaryownerlogout/knownkezekkgGoogleSArestore ->protectedadmin/RU/Anonymized/Business3/4branch1staff4service30bookings/TodayCancelled1;markHandoff."
+  ],
+  "timeboxMinutes": 12,
+  "stopRules": [
+    "Toolpending->onefreshAXbeforeretry; no duplicateclick/goto/relogin/historyspam.",
+    "Unexpectedbusinesschooseronmenu/history ->recordactual; atmostcontinuealreadyCurrentbusiness2ifnormalnecessaryforrecovery, do notpretenduninterruptedhistoryPASS.",
+    "No sourcefixuntilactualUIrepro; no unchangedF013/profileSave/provider/authdiagnosticloop."
+  ],
+  "effects": "Ordinaryknownauthtransitions/currentbusinesscontinuation andheader/historynavigationonly; no dataSave/profile/role/password/Remember/fixture/service/slot/booking/payment/OTP/message/API/SDK/SQL/storageprobe.",
+  "credit": "AtmostONEnewcompoundownerheaderhistorycase, updateexistingblockedcasepreservingoriginalUTC. Manager/multiroleblocks remain; wholeF3partial.",
+  "dependencyHashes": {
+    "apps/web/src/app/_components/RoleAndBusinessSwitcher.tsx": "e6447eb8c58d4ad1a2cd85292e4c8784a2d5635d4b98c8456718c644785f3150",
+    "apps/web/src/lib/authContext.ts": "cf772432ab7eaaefc4aa112597f2649233fecc3551266289574b84bcf88e4dd9",
+    "apps/web/src/lib/cabinetAccess.ts": "b596373270bfc48acf31fe086e330d94cfa091bf38b437cac2622e00ce8109e1",
+    "apps/web/src/app/cabinet/layout.tsx": "762eec49475f83dca01a1b42fdccea7aa2d3bf7c536951854c312467d1bc69fe",
+    "apps/web/src/app/admin/layout.tsx": "4b4ee9ec52e896212de823533465bef3c75d1071761182fc6fafceae3e54c572",
+    "apps/web/src/app/layout.tsx": "e90e3606f09bbf02315130df0f0ce4be109d05fbd47ee88c472d8fd2b892bc2f",
+    "apps/web/src/app/dashboard/layout.tsx": "0c02a3f458300606108f583579feaf75e8dad62120f5be1be20db91499cc7255"
+  }
+}

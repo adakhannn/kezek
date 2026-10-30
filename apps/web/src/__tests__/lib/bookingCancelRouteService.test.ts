@@ -1,4 +1,7 @@
 import { runBookingCancelRoute } from '@/lib/bookingCancelRouteService';
+import { dispatchBookingNotification } from '@/lib/bookingNotificationDispatch';
+
+jest.mock('@/lib/bookingNotificationDispatch', () => ({ dispatchBookingNotification: jest.fn() }));
 
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
@@ -45,7 +48,6 @@ describe('bookingCancelRouteService', () => {
         const result = await runBookingCancelRoute({
             supabase: mockSupabase as never,
             bookingId: 'booking-1',
-            requestUrl: 'http://localhost/api/bookings/booking-1/cancel',
         });
 
         expect(result).toEqual({
@@ -74,11 +76,6 @@ describe('bookingCancelRouteService', () => {
             error: null,
         });
 
-        const fetchImpl = jest.fn().mockResolvedValue({
-            ok: true,
-            json: jest.fn().mockResolvedValue({ ok: true }),
-        });
-
         (runServerCancelBooking as jest.Mock).mockImplementation(async (deps) => {
             await deps.notify?.({ bookingId: 'booking-1', type: 'cancel' });
         });
@@ -86,8 +83,6 @@ describe('bookingCancelRouteService', () => {
         const result = await runBookingCancelRoute({
             supabase: mockSupabase as never,
             bookingId: 'booking-1',
-            requestUrl: 'http://localhost/api/bookings/booking-1/cancel',
-            fetchImpl: fetchImpl as never,
         });
 
         expect(result).toEqual({ ok: true });
@@ -99,12 +94,7 @@ describe('bookingCancelRouteService', () => {
             }),
             'booking-1',
         );
-        expect(fetchImpl).toHaveBeenCalledWith(
-            new URL('/api/notify', 'http://localhost/api/bookings/booking-1/cancel'),
-            expect.objectContaining({
-                method: 'POST',
-            }),
-        );
+        expect(dispatchBookingNotification).toHaveBeenCalledWith(mockSupabase, 'booking-1', 'cancel');
     });
 
     test('allows manager access when booking belongs to manager business', async () => {
@@ -131,7 +121,6 @@ describe('bookingCancelRouteService', () => {
         const result = await runBookingCancelRoute({
             supabase: mockSupabase as never,
             bookingId: 'booking-1',
-            requestUrl: 'http://localhost/api/bookings/booking-1/cancel',
         });
 
         expect(result).toEqual({ ok: true });

@@ -1,0 +1,58 @@
+{
+  "id": "C221",
+  "status": "FINITE_PLAN_BEFORE_UI_POSITIVE_ELIGIBILITY_REQUIRED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-H102-calendar-list-roundtrip-positive-controls",
+  "requirementIds": [
+    "H1-02"
+  ],
+  "variants": [
+    "view-switch:calendar-to-list",
+    "view-switch:list-to-calendar",
+    "view-switch:list-second-entry-consistent"
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/bookings/view.tsx": "80e0e16c465fa71deae5ffe334591da2fdafb649dfd7999cf0c03c2e4460ee68",
+    "apps/web/src/app/dashboard/bookings/components/BookingsViewSections.tsx": "619bce04bc93d75ea48bc2db950beef357e1beb05a5d3a116a2b7206c55434f2",
+    "apps/web/src/app/dashboard/bookings/components/useCalendarHistory.ts": "2e0522b39b4daac141dad21a48d7fa72c0b832973713ce34d25c371c6d0e7e56",
+    "apps/web/src/app/dashboard/bookings/components/DashboardBookingsListSection.tsx": "ad50db8451daf56580e13983c67a216633c63c62ba29f10f88985b06ed3dae99",
+    "apps/web/src/app/dashboard/bookings/components/useDashboardBookingsListController.ts": "8b22d7a22a1a676dc1aada95847a3f49de8090212b1757f9132e03d4a9168aea",
+    "apps/web/src/app/dashboard/bookings/components/BookingsList.tsx": "8df18baab1432103a6be037228ca600e46732622ec5233f6b7a6f0791b07d3e0",
+    "apps/web/src/app/dashboard/bookings/page.tsx": "ababb0a000e84d82862f0bc9aeeb86a826bc60ce494c36eca58ed567da77719f"
+  },
+  "timeboxMinutes": 12,
+  "knownBusinessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+  "knownDate": "2026-10-19",
+  "knownCalendarIds": [
+    "14c108f6-64e6-4321-a085-e70804529d09",
+    "e9111890-d6e9-4dc9-a400-f32067fc0cf4",
+    "d730afd0-8757-4cf4-90ac-66abfc1746aa",
+    "06458033-beaa-4c11-b424-ebda39651ae7",
+    "f821dd52-5480-4178-96a9-620424b5a108"
+  ],
+  "knownListIds": [
+    "14c108f6-64e6-4321-a085-e70804529d09",
+    "e9111890-d6e9-4dc9-a400-f32067fc0cf4",
+    "d730afd0-8757-4cf4-90ac-66abfc1746aa",
+    "06458033-beaa-4c11-b424-ebda39651ae7",
+    "f821dd52-5480-4178-96a9-620424b5a108",
+    "03469725-c5ba-4978-abfe-2179f19caeab",
+    "eaa3f7e5-662b-4290-979e-3c04a2584e7c",
+    "1308c17b-67c0-4ab7-8944-3e8cd3cf951c"
+  ],
+  "expected": "ActualownerBusiness2/Calendardefault/date/branchbaseline captured. OrdinaryoneDatefill19Oct+Tab ->visiblecommitteddate19andfiveknowncalendarhrefs/times withAllbranches; ifnotno runtimePASS. Calendar->List: actualselectedtab/listheading/filtercontrols+settled8exactknownreceiptIDs/defaultAllactive/Allbranches/no calendargrid. List->Calendar: actualselectedCalendar/date19/All/fiveknownsamehrefs/times/noListfiltersection. Calendar->Listagain: same8IDset/defaultfiltersemantics,no stalecalendarbody. Restoreoriginaldate/branchUIandSAadmin. No expectedinheritanceofcalendar-datefilterintoList.",
+  "steps": [
+    "FreshSAadmin ->ordinaryknownownerGoogle/ContinuealreadyCurrent2/healthyDashboard2. ObservedBookingslinkonly ->actualCalendar, recordoriginaldate/branch/allviewsbaseline. No QuickDesk/row/export/create/statusaction.",
+    "ONEordinaryCUAfill toobservedDatecalendarinput with2026-10-19 plusTab, getAXvisiblecommitandfiveknownlinks09-10/10-11/11:15-12:15/12:15-13:15/13:15-14:15. Ifdate19alreadypresentnofill. OriginalbranchmustAll; unexpectedbranch/date/baselinecondition ->BLOCKEDbeforemutation orrestoreknownoriginalvisiblefilteronly. No rawDOMevents/fakeclock/repeateddatepickerrepair.",
+    "ActivateobservedListtabonce, settleloading; compareexact8knownIDset+business2+Allactive/Allbranches andexclusiveListbody. Unexpectedset/count ->oracleBLOCKED/notnewproductbug; no query/filterrefreshloops.",
+    "ActivateobservedCalendartabonce; settlefiveknownhrefs/date19/All/body. ActivateListonceagain; settleexactsame8IDset/defaultfiltersemantics/body. No row/cancel/attend/confirm/slot/booking/package/paymentcommand.",
+    "ReturnCalendar forcleanup0credit; restoreexactvisibleoriginaldateonlythroughoneordinaryfill+Tab, originalbranchunchanged. RestoreknownSAordinaryGoogle->actualprotectedadminRU/Anonymized/Business3;markHandoff."
+  ],
+  "effects": "Onlylocaltab/calendarhistoryUIdate/readqueries+ordinaryknownauth/ContinueCurrent2; no booking/slot/hold/Confirm/cancel/attend/financial/newentity/assignment/configSave/export/source/test/build/servercommand. Ordinaryread/auth/telemetryunenumerated.",
+  "stopRules": [
+    "OnefreshAXafterpendingwait/no duplicatetab/date/authaction.",
+    "Datecommituncertain/fiveknowneligibilitymissing ->BLOCKED/noUNITsimulation/newfixture/API/SQL/storage/DOMeventworkaround.",
+    "Otherrole/accesschallenge/newpermission ->stop/handoff/no bypass. PreserveoriginaldatefilteranduserTab."
+  ],
+  "acceptanceBoundary": "All3finitefunctionalview-switchvariantsPASSmaycloseH1-02only; onecompoundNEWUIcase not3credits. H1-01/03/04fullfilter/error/role/context areasnotclosed. HistoricalG100one-edge/g106receipt notnewreuse; no no-flash/device/API/securityclaim."
+}

@@ -1,0 +1,70 @@
+{
+  "id": "C172_TECHNICAL_CHECKS",
+  "completedBeforeUtc": "2026-10-25T22:59:29Z",
+  "targeted": {
+    "initialBefore": {
+      "passed": 6,
+      "failed": 4,
+      "report": "apps/web/test-results/c172-contacts-before.json",
+      "limits": "Two auxiliary +12 rejection expectations were wrong for existing permissiveE164 regex; these are test-oracle failures, not newproductbugs. Rawreport preserved."
+    },
+    "correctedBefore": {
+      "passed": 8,
+      "failed": 2,
+      "report": "apps/web/test-results/c172-contacts-before-corrected.json",
+      "correction": "Too-short auxiliaryinput+12 ->+1; sharedvalidator unchanged. Remaining2FAIL exactnewruntimebugfields."
+    },
+    "after": {
+      "passed": 10,
+      "failed": 0,
+      "report": "apps/web/test-results/c172-contacts-after.json",
+      "coverage": "apps/web/test-results/c172-contact-coverage/coverage-final.json",
+      "coverageCounts": {
+        "statements": "35/41",
+        "functions": "6/8",
+        "branches": "56/59"
+      }
+    }
+  },
+  "typecheck": {
+    "exitCode": 0,
+    "log": "apps/web/test-results/c172-types.log"
+  },
+  "scopedLint": {
+    "errors": 0,
+    "warnings": 1,
+    "warning": "Testfile ignored by repository eslint configuration; runtimehelper lintclean. No ignores/config changed."
+  },
+  "fullCoverage": {
+    "suites": 540,
+    "passedSuites": 534,
+    "failedSuites": 6,
+    "tests": 2558,
+    "passed": 2547,
+    "failed": 11,
+    "report": "apps/web/test-results/c172-full-jest.json",
+    "coverageDirectory": "apps/web/test-results/c172-full-coverage",
+    "sameFailedAssertionIdentitiesAsC135": true,
+    "failedNames": [
+      "/api/admin/ratings/jobs returns jobs payload",
+      "Staff cabinet pages basic render StaffBookingsView отображает вкладки и базовую информацию о бронированиях",
+      "does not advertise a confirmed empty list after a http failure",
+      "does not advertise a confirmed empty list after a json failure",
+      "does not advertise a confirmed empty list after a network failure",
+      "does not advertise an editable empty identity after authentication rejects",
+      "does not advertise an editable empty identity after the profile read fails",
+      "does not advertise an editable empty identity when authentication returns no user",
+      "telegramMobileAuthAttemptService binds telegram context to pending attempt",
+      "telegramMobileAuthAttemptService stores source metadata when start payload includes source info",
+      "telegramWebhookHttpService handles /start payload and sends approval message with source details"
+    ]
+  },
+  "fullLint": {
+    "errors": 52,
+    "warnings": 167,
+    "report": "apps/web/test-results/c172-full-lint.json",
+    "sameDiagnosticsAsC135": true
+  },
+  "E2E": "Actual CUA integration required C173. ExternalPlaywright forbidden by human; no test:e2e execution/green claim.",
+  "limits": "Unit/coverage/type/lint support only; fullfailed gates remainfailed, no runtimecause proof fromsamefailureidentities."
+}

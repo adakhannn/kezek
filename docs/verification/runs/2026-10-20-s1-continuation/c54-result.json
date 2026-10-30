@@ -1,0 +1,15 @@
+{
+  "id":"C54",
+  "plan":"c54-build-assets-plan.json",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "sourceFingerprint":"4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "copiedFiles":1677,
+  "status":"BUILD_FAILED_FONT_BINARY_CONNECTION_ASSETS_NOT_RUN",
+  "build":{"startedUtc":"2026-10-21T06:24:38.257Z","finishedUtc":"2026-10-21T06:25:52.373Z","exitCode":1,"pid":25396,"ownedSession":22227,"timedOut":false,"durationSeconds":74.116,"mode":"Fresh cold defaultNext16.0.11Turbopack, no mocks/skiptypes/compiler switch","actual":"11 public Geist/GeistMono WOFF2 requests to fonts.gstatic.com failed establishing connection; generated font CSS then reports unresolved internal font virtual modules. CSS definitions appear generated, not proof of every CSS GET. Exact DNS/TLS/transport/guard/native cause not established. Type/prerender completion not reached."},
+  "guardPreflight":"16/16 offline policyassertionsPASS,syntax0; no actualnetwork/productPASS",
+  "raw":"c54-build-raw.txt",
+  "effects":"Mechanical isolated generated copy/cache/log, compilerPID25396 exitednormally. No temporary runtime server/tab started, noprimaryrestart/sourceconfigedit/cleanup. Env allowlisted,dummybackend, real.env/credentials/DEVkeys omitted,Sentry/telemetrydisabled. Node-levelnetworkguard and exactPostCSSIPC, notOSfirewall/universalnativeconfinement. OrdinarymainUItelemetryunenumerated.",
+  "caseResults":[{"id":"A3-01-S1-01","status":"failed","newExecution":true},{"id":"A3-02-S1-01","status":"stale","newExecution":false},{"id":"A3-02-S1-02","status":"stale","newExecution":false},{"id":"A3-02-S1-03","status":"stale","newExecution":false},{"id":"A3-02-S1-04","status":"stale","newExecution":false}],
+  "delta":{"newPass":0,"newFixes":0,"acceptedRequirements":0,"S1Accepted":16,"S1Remaining":9,"primaryCasesPASS":62,"primaryCasesRemaining":17,"S2Accepted":3,"S2Remaining":67,"productAccepted":19,"productRemaining":297},
+  "next":"C55 one bounded<=10min compiler font-read diagnostic within explicitlyallowed publicGET hosts/path/method. Compare actual Node guard positivefontreads and observedbinary path, classify response/TLS/DNS/deny without credentials, rawUI/APIbypass, TLSdisable, mocks or compiler switch. No repeatcoldbuild absent newidentifiedchangedcondition. Then independentnamedcase if blocked."
+}

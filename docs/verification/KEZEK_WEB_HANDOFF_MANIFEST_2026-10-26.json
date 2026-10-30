@@ -1,0 +1,36 @@
+{
+  "status": "PAUSED_CONTEXT_TRANSFER_ONLY",
+  "sourceFinalSHA256": "43e73d1c1b4b6fe22e44dda03608262c3799492be749667647f3c1cc1eb0b127",
+  "files": [
+    {
+      "path": "C:/projects/kezek/docs/verification/KEZEK_WEB_HANDOFF_2026-10-26.txt",
+      "bytes": 49117,
+      "sha256": "b9b37b0854770d9e36dedf097c0e23bce02c4c48f9191fd90393914ebb95a60c"
+    },
+    {
+      "path": "C:/projects/kezek/docs/verification/runs/2026-10-26-web-resume/final-report.json",
+      "bytes": 7379,
+      "sha256": "43e73d1c1b4b6fe22e44dda03608262c3799492be749667647f3c1cc1eb0b127"
+    },
+    {
+      "path": "C:/projects/kezek/docs/verification/runs/2026-10-26-web-resume/progress.json",
+      "bytes": 7356,
+      "sha256": "a69ede796242f39fe335d601db50c5e408eac12aa9de7799577d56bed1a07a1f"
+    },
+    {
+      "path": "C:/projects/kezek/docs/verification/runs/2026-10-26-web-resume/pause-20261026-012750.json",
+      "bytes": 3849,
+      "sha256": "0731051ae4d64605981d1cc99b90273549f9131b9627bb91342634dc29cfff1d"
+    },
+    {
+      "path": "C:/projects/kezek/docs/WEB_VERIFICATION_METHOD.md",
+      "bytes": 21497,
+      "sha256": "f5da3552c65b202abaa383d33e2cb0d167953ddc52db11d6f5cc3be2cf1726d6"
+    },
+    {
+      "path": "C:/projects/kezek/docs/verification/KEZEK_WEB_HANDOFF_ARCHIVE_2026-10-26.txt",
+      "bytes": 187872,
+      "sha256": "ae804eb3aabcec635ec99c1953d012c02ae2fca67f9ce3a6e8a1522c42ee50ae"
+    }
+  ]
+}

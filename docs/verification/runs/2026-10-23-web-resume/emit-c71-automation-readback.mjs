@@ -1,0 +1,10 @@
+import fs from'node:fs';
+import {createHash} from'node:crypto';
+import {updateJson} from'../2026-10-20-s1-continuation/json-evidence-patch.mjs';
+import {summarize} from'../../../../scripts/web-verification-report.mjs';
+const run='docs/verification/runs/2026-10-23-web-resume',read=f=>fs.readFileSync(f),j=f=>JSON.parse(read(f)),l=j('docs/WEB_VERIFICATION_LEDGER.json'),p=j(run+'/progress.json'),s=j('docs/WEB_GLOBAL_READINESS_STATE.json'),f=run+'/c71-automation-readback.json',r=j(f);
+if(l.evidence.some(e=>e.id==='S1-EV-362')||r.status!=='ACTIVE'||!r.exactUpdatedPromptReadback)throw Error('Already applied/readback invalid');
+l.evidence.push({id:'S1-EV-362',path:f,sha256:createHash('sha256').update(read(f)).digest('hex')});l.updatedUtc=r.observedBeforeUtc;
+p.automation.evidence='c71-automation-readback.json';p.automation.readback=true;p.automation.status='ACTIVE';s.progressAccounting.automationReadback=f;
+const v=summarize(l,read);if(!v.valid||v.counts.passed!==21)throw Error(JSON.stringify(v.errors));
+process.stdout.write('*** Begin Patch\n'+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+'*** End Patch\n');

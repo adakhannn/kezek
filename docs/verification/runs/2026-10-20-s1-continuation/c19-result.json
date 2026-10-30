@@ -1,0 +1,8 @@
+{
+ "id":"C19","caseId":"S21-M103-analytics-system","candidateId":"dev-20261020-S1-1c0013b28e40","status":"PASS_NAVIGATION_ONLY",
+ "actual":"Actual observed menu Аналитика платформы ->/admin/analytics/system; known admin shell and Системная аналитика, period controls/default20Sep–20Oct, KPI cards/trendsection. ONE planned reload shows loading then same actual functional page, no alert/HTTPfailure. No filter or retry command.",
+ "numericBoundary":"UI shows0activebusinesses/0successfulbookings/0KGS/0average. These are observed values only, NOT independently reconciled data, finance correctness, expected-zero model, SQL/API/RLS proof or production acceptance.",
+ "matrixAfter":{"passed":8,"failed":4,"blocked":1,"notRun":6,"total":19},
+ "effects":"Read-only menu/load/reload. No period/date/preferences save, entities/roles/booking/financial/job/SQL commands or direct network probes. Ordinary telemetry unenumerated. Tab5superadmin at/admin/analytics/system retained/handoff; old usertab2 untouched.",
+ "deadlineUtc":"2026-10-20T13:00:00Z"
+}

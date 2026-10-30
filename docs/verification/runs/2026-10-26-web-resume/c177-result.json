@@ -1,0 +1,57 @@
+{
+  "id": "C177",
+  "status": "ONE_NEW_UI_PASS_ONE_VARIANT_BLOCKED",
+  "plan": "c177-public-email-plan.json",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "observationWindowUtc": [
+    "2026-10-25T23:13:08Z",
+    "2026-10-25T23:15:52Z"
+  ],
+  "baseline": "KnownSA/RU/existinghumanTab2/admin ->A2branches0staff/services/bookings ->exactfa5inactive. Nameoriginal/address+fourlinks+fourcontactsblank/coords—/—/inherittrue/activefalse/7daysclosed/SaveDisabled. Originalactivecontrol057 retained.",
+  "reject": {
+    "id": "S26-I102-public-email-invalid-reject-discard",
+    "status": "passed",
+    "fillAfterClockUtc": "2026-10-25T23:13:43Z",
+    "knownFillArgument": "INVALID EMAIL TEST",
+    "typeAttribute": "email",
+    "submitAfterClockUtc": "2026-10-25T23:13:49Z",
+    "actual": "ONEordinarySaveclick yields actualnativebrowservalidationcontainer: Адрес электронной почты должен содержать символ @, with knownsyntheticargument. Sameeditor/phonecontactsunchanged/publicemailAXredactednonempty/Saveenabled. No servererror or exacttransport behavior inferred. OrdinaryBacklist/reentry ->originalblankemail/allbaseline/SaveDisabled; completefunctionalvalidation-recoverycase.",
+    "method": "live"
+  },
+  "normalize": {
+    "id": "S26-I102-public-email-lowercase-persist-restore",
+    "status": "blocked",
+    "fillAfterClockUtc": "2026-10-25T23:14:19Z",
+    "knownFillArgument": "C177.TEST@EXAMPLE.INVALID",
+    "actual": "Ordinarysyntheticfill succeeded, AXpublicemail value redacted/nonempty/Saveenabled. Exactlowercasepersist/reload couldnotbeindependentlyobserved; stopped BEFORE validSave. No.value/getAttributevalue/DOMequality/unmask/storage/clipboard. OrdinaryBacklist/reentry ->originalblankallcontacts/allbaseline/SaveDisabled. Localdraft isnot normalizationPASS/newUIcredit.",
+    "blockedBy": "PUBLIC_EMAIL_INPUT_VALUE_REDACTED_NORMALIZATION_UNOBSERVABLE",
+    "method": "not_executed"
+  },
+  "restoration": {
+    "afterClockUtc": "2026-10-25T23:14:41Z",
+    "actual": "ObservedАдминка ->protected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1, handoffmarked. Userchooser1untouched/no newtabs/auth."
+  },
+  "effects": {
+    "businessId": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "branchId": "fa5f1017-d987-40c8-90ca-b042898c694f",
+    "originalRegistry": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+    "originalRegistrySHA256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca",
+    "ordinaryInvalidSaveClicks": 1,
+    "normalizationSaveCommands": 0,
+    "visibleOriginalBaselineRestored": true,
+    "pendingEffects": false,
+    "scope": "Nativeinvalidclick plus localdraft/input/navigation only. No validSave/restorewrite/newentity/message/email-send/OTP/privatecontact/unmask/map/schedule/activation/role/source/build commands. Actualordinaryauth/telemetrywrites unenumerated, notzeroTOTALwrites/rawDB-or-networkaudit."
+  },
+  "credit": {
+    "newFunctionalUiPass": 1,
+    "beforeWindowUi": 19,
+    "afterWindowUi": 20,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 23,
+    "remaining": 293
+  },
+  "limits": "Onlypublicemail rejected-input/recovery and(ifobservable) normalization/persistence onadminexistinginactivebranch. Notallcontacttypes/ownerform/inheritance/timezone/publicdisplay/APIsecurity/wholeM2/I1acceptance. Mandatoryblockednormalization retained, no unitimitation.",
+  "next": "C177 oneNEWpublicemail malformed-input rejection/discard PASS: browsernativeerror explicitlymissing@/sameeditor; no DOMvalue/validityprobe needed. Publicemailuppercase normalization/persist variantBLOCKED byAXredactedvalue before validSave; no unmask/DOMcomparison/validSave/clearwrite attempt. OriginalinactiveAallblankfields/activefalse/coords—inherittrue/sevenclosed days/disabledSave restoredordinaryreentry, protectedadmin/RU/Anonymized/Business3 restored/chooser1untouched/noauth/newtabs.26Oct19->20NEWUI/4fix/logical16/23of316293left unchanged/NOT_READY; candidate82c7088de609/1686/currentC174C175build unchanged/no rebuild. OneordinaryinvalidSaveclick/nativeconstraint only; ordinaryauth/telemetryunenumerated/notzeroTOTALwrites. No messages/email-send/OTP/privatecontact/newfixture/security/source/tests commands. NextC178 ONLYboundedreadonly exact public business contact inheritance history/receiver/source and retainedfixtureA viability review before any finiteUIplan. C170broadmatrix/C176emailreview DONE/no repeataudit. Need independentlysafe complete matrix(parentfallback/branchoverride/inheritdisabled) and exactvisible-restoration/effects; no parent/activecontrol/contact/flag write fromreview, no newfixture/mappermission/booking. Ifunsafe retainexactblocker+independentunfinishedpriority. All old F013/F005/M1intermittent/role/fixture/profileSave/cache/visual/security/technical/domainlast blockers retained."
+}

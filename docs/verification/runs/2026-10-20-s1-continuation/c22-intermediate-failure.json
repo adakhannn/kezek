@@ -1,0 +1,8 @@
+{
+ "id":"C22-intermediate","status":"FAILED_SAME_LIVE_NOT_ACCEPTED_FIX",
+ "observedUtc":"2026-10-20T13:07:17Z",
+ "minimalPrototype":"Only cookie-client factory replacement.9UNIT PASS/scoped2file coverage100/types0; first scopedlint ignored test warning retained.",
+ "actual":"Same known superadmin actual admin menu -> performance still fails, now Ошибка forbidden instead of auth. No report. This is NOT verifiedfix or closed navigationcase.",
+ "nextIndependentContract":"Existing shared admin layout checks current user's global super_admin row using checkCurrentUserIsSuperAdmin. Performance service instead checks legacy profiles.is_super_admin. Align this exact diagnostic caller with shared global role helper, preserving user_id + super_admin + biz_idNULL and fail-closed read errors. No new role grants, service-role fallback, or general auth rewrite.",
+ "plannedControls":"Unit: guest stopsrole/read, authenticated nonadmin denied, foreign globalrole denied by actual user_id query, business-scoped role denied by NULL scope, role read error denied, current globalrole allowed; immutable service data no writes. These mocks are not liveHTTP/RLS proof. SAME-LIVE sameSA menu+reload must actually succeed before verifiedfix count. No attempts on prohibited endpoint."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "C124",
+  "caseId": "S25-M502-category-business-reference-counts",
+  "plan": "c124-usage-plan.json",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "status": "PASS_live_business_category_reference_reconciliation_only",
+  "startedAfterUtc": "2026-10-25T10:27:04Z",
+  "completedBeforeUtc": "2026-10-25T10:29:31Z",
+  "observationWindowUtc": ["2026-10-25T10:27:04Z", "2026-10-25T10:29:31Z"],
+  "oracle": "c124-business-oracle.json savedbeforeactualcategorypage, afteractualclock10:27:36",
+  "actual": "KnownSA/humanTab2/admin->Бизнесы3. Fresh actualallbusinesslist Всего3/Одобрено3, nofilters/pagination/truncated+N: Afe2categorybarbershop, business2c28categoryzhenskaya-parikmaherskaya, business135ecategorybarbershop, exactknown3links/IDs. Independentmatrixwrittenbeforeopeningcategorypage ->expectedbusinessusagebarbershop2/women1/test0,totalreferences3,mostusedbarbershop2. Rootreturn; clock10:27:46 Categories3 ->actual3total2active3uses; retainedtestc7cef81b LIVE TEST NIGHT09OCT CATEGORY EDITED/live-test-night09oct-category/inactive0business,barbershop85157ef2active2business,women0851842bactive1business; MostpopularБарбершоп2. Allcounts matchoracle. Clock10:27:59 rootreturn; actualprotectedheading/Anonymized/collapsedАдмин-панель/RU/Business3/4branches1staff4services30bookings/handoff. No Detail/Edit/Delete/New/role/publiclink/reload/authtransition commands. One completecross-surfacecomparisoncase, not3perrowPASS or recreditedC119controls.",
+  "effects": "Onlyordinaryauthorizedreadonlylistnavigation; no product/source/test/build/server/DB/fixture/categoryassignment/propagation/activation/delete/role/booking/payment/profile/notification/message command. RecordedonlyIDs/categoryslugs/counts, notprivatecontactvalues. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites. No rawHTTP/SDK/SQL/secret/storage/transport/exploitprobe or newbrowserbinding/tab.",
+  "limits": "Current3businessreferenceuse only; notservicescategoryuse, mutations/dependencyreject/propagation/fulltaxonomy/locale/security/visual/fulltechnicalcertificate. RPCdefinitionnotfreshlyreadfromDB. M5-02partial/casePlanCompletefalse, allunexecutedrequirements retained.",
+  "counts": {"newUiCases":1,"newWindowPassedCasesBefore":4,"newWindowPassedCasesAfter":5,"newLiveFixes":0,"newWindowLiveFixes":1,"verifiedFixesLogicalRun":12,"acceptedDelta":0,"accepted":21,"remaining":295},
+  "next": "C125 boundedreadonly effect/dependency review of F016changed CategoryForm's persisted name-edit/customslug preservation on existinginactivec7cef81b/0usage before any Saveplan. Historical9Octrename proof is ORIGINALUTC; changeddependency mayjustify targeted freshSAVEregression but NOTnewbug/duplicatecasecredit or newfixture. Review exactbundledfields/updatepropagateSlug condition/originalbaseline/recovery and finite2Save ceiling; no source/DB/write yet. Ifunsafe retainblocker and selectindependentremainingcase; no activecategory/businesscategory/role/fixture/delete/permission/job/payment changes. C124usage/C119draft/build/auth/taxonomy DONE/no unchangedrepeat; allolderblockers remain."
+}

@@ -1,0 +1,45 @@
+{
+  "id": "C86",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "caseId": "S23-M201-address-save-reload-restore",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "timeboxMinutesIncludingRestore": 8,
+  "target": {
+    "id": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "name": "S1 TEST 20261020 Branch Availability",
+    "slug": "s1-test-20261020-branch-availability",
+    "address": null,
+    "category": "barbershop",
+    "approved": true,
+    "owner": null,
+    "branchLimit": 2,
+    "branches": 2,
+    "staff": 0,
+    "services": 0,
+    "bookings": 0,
+    "contacts": "none"
+  },
+  "temporaryAddress": "C86 TEST ADDRESS 23OCT - TEMPORARY",
+  "expected": "Existing A only: temporary address saves with same name/slug/category/publication/owner/dependencies, editor closes and readonly address changes; ordinary reload preserves temporary address. Then clear address and Save restores original Не указано/canonical null, ordinary reload confirms empty address and all protected baseline values. No new business/branch/role or other record change. ONE full persisted-edit/restoration case, not separate saves/reloads as PASS.",
+  "steps": [
+    "Fresh same human Tab2/known SA/admin; clock observed A link. Verify exact baseline name/slug/approved/category/owner/counts and original address Не указано; stop on mismatch.",
+    "Clock Edit; verify name/slug/category/publication unchanged, address blank and contact fields empty/unmasked as previously observed. If unknown/masked/nonempty baseline contact state, Cancel and BLOCKED; do not extract or type original contacts.",
+    "Clock fill only Address with exact marker; fresh UI verify all untouched baseline fields. Clock immediately before ONE ordinary Save; await actual closed editor/readonly marker. On ambiguous outcome do not resubmit: inspect once/normal reload to establish stored state.",
+    "Clock normal reload; verify marker persisted and exact protected business baseline. Do not enter public booking or branch/editor flows.",
+    "Clock Edit; clear Address only. Verify all other original fields unchanged; clock immediately before ONE ordinary Save restoring canonical null. Clock normal reload and verify original address/fields/counts; clock Admin root and handoff.",
+    "If restoration fails, one bounded fresh read to determine whether null or marker is stored. If marker is definitely still stored, at most one targeted restoration retry under the same fields/authority, clock first; never blind duplicate submit. If still blocked, preserve evidence, report exact retained address and request human recovery. On human stop, finish only safe restoration before explicit automation pause."
+  ],
+  "effects": "Two planned ordinary Save PATCH commands (temporary address and null restore), maximum one conditional recovery save only after failed restoration is independently visible. Bundled fields resubmitted unchanged; possible normal audit/timestamp/auth/telemetry effects unenumerated. No zeroTOTALwrites or exact raw-DB rollback claim. No payments/messages/roles/credentials/owner/approval/category/slug/contact changes, branch commands, new fixtures, deletes, API probes or direct DB/SDK/HTTP.",
+  "stop": "Baseline mismatch, unknown sensitive bundled state, unexpected role/owner/publication change, auth challenge, error or uncertain input ->stop current step and safe restoration only. No repair via new tabs/providers/raw HTTP/DOM events or security/config changes. No repeated old draft test for credit.",
+  "accounting": "At best1newUI case/current window10,0newfix/0fullyaccepted delta. M2-01 stays partial; this is one existing-fixture address happy path, not all edit/create/validation/errors/roles. Source/candidate unchanged.",
+  "savedBeforeUiUtc": "2026-10-23T01:49:46Z",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "3c34f87e772554f134220aad060c038f0e763c6c26c734055a1b9cd6f06b2756",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "C209",
+  "status": "PASS_ONE_COMPOUND_OWNER_HEADER_HISTORY_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "plan": "c209-owner-header-history-plan.json",
+  "caseId": "S23-F3-HEADER-owner",
+  "setupAfterClockUtc": "2026-10-26T10:14:55Z",
+  "observationWindowUtc": [
+    "2026-10-26T10:15:51Z",
+    "2026-10-26T10:17:43Z"
+  ],
+  "restoredBeforeClockUtc": "2026-10-26T10:19:56Z",
+  "setup": "OrdinaryknownSAlogout/localGoogleknownowner. Actualselect-businessbusiness2alreadyCurrent; Continuecurrentonly ->ownerownbusiness2/dashboard. This issetup0credit, not repeatedselectorbusinessdefaultacceptance/newroles.",
+  "actual": "ExactownerheaderBusiness+personalonly/noAdmin/staff. Businessdashboard/currentmarkerpage(personalnull) ->ordinaryheadermenuMybookings ->actual/cabinet/bookings/0upcoming/headerMybookings/personalcurrentpage/businessnull/noDashboardbody. BrowserBackonce ->ownbusiness2/dashboard/Businesscurrentpage; Forwardonce ->personal/Personalcurrentpage. ExplicitBusinessmenu ->ownDashboard/Businesscurrentpage; Backonce ->personal/Personalcurrentpage; finalexplicitBusiness->ownbusiness2Dashboard/currentBusinesspage. Allmarkersreadordinaryaria-current fromobservedmenuitems, no storage/API.",
+  "restoration": "Ordinaryownerlogout/localGoogleknownkezekkg ->restoreheadingwaitreportedRuntime.evaluate/locatorfailure; onefreshAXactualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30bookings/TodayCancelled1/markHandoff. No secondlogin/retry/providerreplay/newtab. NotproductauthFAIL.",
+  "effects": "Twoordinarylogouts+twoknownGoogleloginsincludingrestore, ContinuealreadyCurrentbusiness2 andheader/BrowserBackForward navigationonly. No profile/dataSave/role/password/Magiclink/Remember/currentbusinesschange/newfixture/service/time/slot/booking/payment/message/API/SDK/SQL/storage/native/source/test/build/server command. Ordinaryappauth/preferences/analytics/telemetryeffects unenumerated.",
+  "credit": {
+    "newUi": 1,
+    "newWindowUiBefore": 9,
+    "newWindowUiAfter": 10,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292,
+    "newWindowFixes": 1,
+    "logicalFixes": 17
+  },
+  "limits": "Ownerheader/currentlabel/history finitecase only; no APIpermission/cross-accountdataisolation/visual/no-flash/wholeF3proof. OtherDONErolesnotreplayed; manager/multiroleblockedretained. C208inactive-servicehistoricalmatrixnotpromoted/repeated."
+}

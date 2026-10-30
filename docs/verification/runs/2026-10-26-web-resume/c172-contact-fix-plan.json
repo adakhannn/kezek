@@ -1,0 +1,16 @@
+{
+  "id": "C172",
+  "savedBeforeEditUtc": "2026-10-25T22:54:27Z",
+  "beforeFinding": "S1-F020",
+  "scope": [
+    "apps/web/src/lib/businessContacts.ts",
+    "apps/web/src/__tests__/lib/businessContacts.test.ts"
+  ],
+  "expected": "Nonempty phone/WhatsApp text must normalize to validE164 or returnexistingfield-specific validationerror; blank/null/whitespace remain optional, existing formattednumber normalization preserved. No auth/schema/grant/provider/requestlayer or client form redesign.",
+  "steps": [
+    "Preserve bothoriginalsources exactly before tests/fix. Add regression assertions for no-digit letters/punctuation inbothfields, shortdigits invalid, blankcontacts allowed; runbefore toprove failure onoldvalidator. Existingformattedcontacts/inheritance/unsafewebsite regressions retained.",
+    "Minimal rawpresence+normalizedE164 check forphone andWhatsApp only. Targeted suite/coverage, types/scopedlint, fulltest:coverage and fulleslint required; known oldfailures retained/report exactdeltas. No unit-as-LIVE or technicalgateweakening. ExternalPlaywrightE2E prohibited; C173 actualCUA sameintegration retest only.",
+    "Newcandidate/evidence applicability review; currentC147/C148 build becomesSTALE, no blanketpromotion of changedhelperdependent proof. SaveC173 finite SAME-LIVE exacttwoinputrejections+blankreentry/adminrestore before execution. Fullnewcandidate offlinebuild separately planned once after functionalfix complete; no networkpermission renewal."
+  ],
+  "credit": "No verifiedfix/functionalPASS until actualSAME-LIVE. Ifsource/test mismatch stop no speculativeextrafix."
+}

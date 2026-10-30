@@ -1,0 +1,17 @@
+{
+  "id": "AUTOMATION_RESUME_20261028",
+  "recordedAfterUtc": "2026-10-28T08:42:39Z",
+  "automationId": "kezek",
+  "status": "ACTIVE",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "updateToolSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "configSHA256": "d6965d299390402d6a2840230b13b8015c31184548d5ee46bd5072bf7972bf2d",
+  "previousExactConfiguration": "automation-before-resume.toml",
+  "previousSHA256": "6a45487971cbbb620ee61b6758a1a898e57c29e9ff152ba614684cc62a5a9dbe",
+  "noDuplicate": true,
+  "priorPauseProspectivelySuperseded": true,
+  "priorFinalImmutable": true,
+  "productCredit": 0
+}

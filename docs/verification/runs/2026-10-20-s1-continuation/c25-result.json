@@ -1,0 +1,59 @@
+{
+  "id": "C25",
+  "findingId": "S1-F010",
+  "status": "VERIFIED_TARGETED_RATINGS_STATUS_SERVER_READ",
+  "before": "FreshactualknownSA menu ratings-status -> alert Ошибка статуса рейтингов / Не удалось получить состояние рейтинговой системы; no metriccards. Source hadSSRrelative status/jobs selfHTTP and expectedflatpayloads. NoHTTPtrace/body/token/SQL inspected.",
+  "fix": "Sharedrequest-contextread module currentuser -> existingcurrentglobalSAhelper -> unchanged status/jobs pure SELECT services; thinHTTPadapters preserve envelopestatus/errors_days; SSRdirectread avoids selfHTTP/domain/credentialforwarding and wrongflatpayload. No recalc/jobcreation/model/SQL/helperrolegrantchange. StatusAPI missingcallerId filter replacedwithsharedhelper; isolatednegativeonly, notrealforeignHTTPleakproof.",
+  "sameLive": "ActualsameSA ordinaryfullreload /admin/ratings-status renders Здоровье рейтинговой системы andthree metriccards, actualAdmin-panel/Anonymized/noerror. ActualГлавная -> observedmenuЗдоровьерейтингов returns samefunctionalreadcards. Observed lastmetrics19Oct06Bishkek, no last-ratingtime, NULLcounts1staff/4branch/3biz, errors0/7days. These are observedreadlabels, NOT independently reconciled metrics/NULLhealth/errors-zero/model/croncorrectness. Nojobtable rendered: absence is NOT certified zerojobhistory or independently confirmed jobsreadsuccess. Existing omissiononjobsreadfailure retained/open, noerrorinjection orSQL/jobcommand. Jobhistoryrender path onlymocktested.",
+  "observationWindowUtc": {
+    "after": "2026-10-20T22:17:35Z",
+    "before": "2026-10-20T22:19:16Z"
+  },
+  "checks": {
+    "before": {
+      "passed": 2,
+      "failed": 4,
+      "exitCode": 1,
+      "raw": "c25-unit-before.txt",
+      "note": "NewreadmoduleexistsbutoldSSRdoesnotuseit; trueoldselfHTTP contractfailure, notSDK/network"
+    },
+    "after": {
+      "suites": 5,
+      "passed": 26,
+      "failed": 0,
+      "exitCode": 0,
+      "raw": "c25-unit-after.txt",
+      "coverage": "2changedread/HTTPservicefiles100statements/branches/functions/lines; not wholebaseline"
+    },
+    "types": {
+      "exitCode": 0,
+      "raw": "c25-types-after.txt"
+    },
+    "lint": {
+      "exitCode": 0,
+      "errors": 0,
+      "ruleWarnings": 0,
+      "raw": "c25-lint-after.txt",
+      "notice": "LegacyESLintIgnoreWarningretained/explicit--no-ignore"
+    }
+  },
+  "unitLimits": "Page positive/emptyjob/history-row/error/denied/thrownread plus sharedcaller guest/foreign/businessscope/roleerror/status/jobs andstandardHTTP envelopecontrols. Allin-memorymocks, noactualSDK/service-roleimpersonation/HTTPnegative/RLS/realjobscompletion. Differentfinitecases26PASS not globalcoverage; existingpurestatus/jobs readerrorfallbackunchanged andnot livecertified.",
+  "matrixAfter": {
+    "passed": 15,
+    "failed": 3,
+    "blocked": 1,
+    "notRun": 0,
+    "total": 19,
+    "remaining": 4
+  },
+  "counts": {
+    "S1": "17/25accepted8left;63/79PASS16left",
+    "S2": "1/70accepted69left",
+    "product": "18/316accepted298leftNOT_READY",
+    "newVerifiedFixesThisRun": 6,
+    "pendingSameLive": "F005",
+    "open": "F007ratingsactionrenderer"
+  },
+  "effects": "Twoexistingruntimefiles+new27lineauthorizedreadmodule,oneexistingtestmodified+two newUNITfiles. Onlyactualreadonlynavigation+reload; nojob/recalc/crontrigger/SQL/businessdata/authtransition/grants/fixtures/messages/pay/cleanup. Ordinarytelemetryunenumerated/notzeroTOTALwrites. MainuserTab5 knownSA ratingsstatusRU/handoff/tab2untouched. No screenshotretry.",
+  "next": "Continue analytics-overviewHTTP500 cause next; business-applications oldtransient fetchfailed and role-applicationsF005failurepath remain, monitoringexplicitblocked. F007renderer separatelyopen; no clickrecalc. No fixeddeadline bylatesthuman; Fontsapproval remains expired/no buildretry."
+}

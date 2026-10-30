@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { isValidElement, useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
@@ -35,6 +35,10 @@ type DebugEntity = {
 type ApiResponse = { ok: boolean; error?: string; data?: DebugEntity };
 
 const DAYS_OPTIONS = [1, 3, 7, 14, 30, 90];
+
+function renderCell(value: unknown) {
+    return isValidElement(value) ? value : String(value ?? '—');
+}
 
 function Table({
     title,
@@ -73,7 +77,7 @@ function Table({
                         <tr key={i} className="border-b border-gray-100 dark:border-gray-800">
                             {columns.map((c) => (
                                 <td key={c.key} className="px-4 py-2 text-gray-800 dark:text-gray-200">
-                                    {String(row[c.key] ?? '—')}
+                                    {renderCell(row[c.key])}
                                 </td>
                             ))}
                         </tr>

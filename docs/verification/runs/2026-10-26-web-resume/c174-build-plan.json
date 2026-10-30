@@ -1,0 +1,32 @@
+{
+  "id": "C174",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "files": 1686,
+  "savedBeforeBuildUtc": "2026-10-25T23:02:21Z",
+  "reason": "C172 realF020 runtimevalidationfix+5regressiontests changescurrentcandidate after C147/C148 completed. One newexactcandidate colddefaultbuild, no unchanged retry.",
+  "harness": "scripts/closure-web-isolated-build-c174-20261026.mjs",
+  "guard": "scripts/closure-web-offline-guard-c174-20261026.cjs",
+  "guardTest": "scripts/closure-web-offline-guard-c174-20261026.test.cjs",
+  "destination": "test-results/closure-web-20261026-c174-82c7088de609/build",
+  "rawLog": "c174-build-raw.txt",
+  "timebox": {
+    "compilerSeconds": 240,
+    "preparationAndClassificationMinutes": 12,
+    "oneCompilerAttempt": true
+  },
+  "preflight": "Fresh23:02:21clock afterreadonlycheck: main3000PID18368 retained, no3107listener, C174destination/raw absent. MechanicalC147/C148 harnesscopy ONLYC174/C175/candidate/path tokens;16updatedofflinepolicychecksPASS/notproductPASS, bothharnesssyntaxexit0. Guard exactnewPostCSSworker restriction; no .env/keys/networkpermission renewal.",
+  "expected": "Fresh exact1686file cold defaultNext16.0.11Turbopack build exit0/types/prerenders, no mock/compiler-switch/checkskip/install. Copy rejects .env/symlinks/generatedcache, exact source/copy count+fingerprint. Env systemallowlist/dummy.invalid backend/no realkeys, Sentry+telemetryoff. NodeTCP/fetch denied except exact owned generatedPostCSS loopback argvport; not OS firewall/native-confinement claim, no renewed network/font/download permission.",
+  "steps": [
+    "Clock/source/progress/attempt absence then ONE harness launch. Preserve rawappend-only log/PID/UTC/exit/watchdog. No unchanged C121/C93retry/mainrestart/fullOAuthlogs.",
+    "FAIL/timeout preserve, no unchangedrerun or speculative config/security/source repair. Humanstop stop onlyexactowncompiler +PAUSEDexistingkezek/readback/new26Octfinal.",
+    "Exit0 is technicalBUILDonly/0UI/fix/accepted. Save separate finite compiledruntime/actualCUA publicdocument plan before A3-01promotion; no pageAssets.bundle/capture/cache/visual/auth repetition."
+  ],
+  "effects": "Own isolatedcopy/dependencyjunctions/compiler/cache/rawlog only. No envcopy/download/DEVDB/appfixture/booking/role/securityconfig command; ordinary mainauth/telemetry unenumerated.",
+  "accounting": "22of316294left/S116primary62,S23/S41/S62.26Oct19NEWUI/4verifiedfix/logical16. Buildalone0UI/fix/accepted; fulltests11FAIL/fullLint52errors167warnings retained/NOT_READY.",
+  "harnessHashes": {
+    "scripts/closure-web-isolated-build-c174-20261026.mjs": "3b070951eb3caa7b9d8e363363f124259c8b2414a5ec027a3e594129f19906d3",
+    "scripts/closure-web-offline-guard-c174-20261026.cjs": "0082fb00777fc54ba34f4dd09efc45f3550a3a36c5235b8056efc8c01ec0d9e7",
+    "scripts/closure-web-offline-guard-c174-20261026.test.cjs": "64eed192c2c1bbfe15dc46eedb00f6eba322e993b49b52001cd1d021c4a7aa88"
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "id": "C161",
+  "type": "bounded readonly originalmethod/source dependency review",
+  "observationWindowUtc": [
+    "2026-10-25T21:49:44Z",
+    "2026-10-25T21:53:54Z"
+  ],
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "requirement": "B4-01 only: open public /map directly and through public navigation",
+  "independentAcceptance": "A public route-entry obligation has two finite entry mechanisms: publicFooter navigation and direct URL initialdocument entry. Each must reach identifiable settled map/list page without genericerror/authredirect. Tile/marker/provider success, geolocation, categories/nearest, branchbooking, freshcache/visual and otherB4 obligations are separate and remainunaccepted.",
+  "history": [
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G070-map-dialog-after.json",
+      "originalUtc": "2026-10-15T09:41:08Z",
+      "decision": "NOT B4-01 proof: privatecabinet booking MapDialog, different surface. Never reuse as publicmap entry."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G023-public-map-context.json",
+      "originalUtc": "2026-10-14T03:36:49Z",
+      "decision": "Explicit loggedout business->footerMap->settled2branches; supportingnav history only, no directentry."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+      "originalUtc": "2026-10-15T22:26:25Z",
+      "decision": "Actualknownpureclient ordinaryfooter Картафилиалов ->currentmap/settled2branches, subsequentRUrestored. Selectedprimary for navcase. OriginalUTC is stagecompletion, not fabricatedexactclicktime. No current branchcount/marker claim from old2."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G087-map-keyboard.json",
+      "originalUtc": "2026-10-15T22:49:53Z",
+      "decision": "Existingmapandoneordinaryreload settle2branches/same73eeb604source. Supportsinitialdocumentroute but not explicit firstdirectURL input, so do not silently certifydirectcase."
+    }
+  ],
+  "equivalence": [
+    {
+      "path": "apps/web/src/app/_components/Footer.tsx",
+      "originalSha256": "25f3a3974aa8cb72fc9d4b9de98bb64648f103c345c0362090d504b23969df0a",
+      "currentSha256": "25f3a3974aa8cb72fc9d4b9de98bb64648f103c345c0362090d504b23969df0a",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/app/map/page.tsx",
+      "originalSha256": "0ab9da2291bfd94ad0750ce7e43785547cb0e70b1822317826d8f562186991a5",
+      "currentSha256": "0ab9da2291bfd94ad0750ce7e43785547cb0e70b1822317826d8f562186991a5",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/app/map/branchBookingHref.ts",
+      "originalSha256": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+      "currentSha256": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/app/api/branches/map/route.ts",
+      "originalSha256": "8e37853d835e95ff07adda6fd441adbfe58368b3aea4cdd20a38dfe39dd8c938",
+      "currentSha256": "8e37853d835e95ff07adda6fd441adbfe58368b3aea4cdd20a38dfe39dd8c938",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/lib/branchesMapService.ts",
+      "originalSha256": "a6bc3d4410f334e86c7c312917233f44673a754bec33da21636171a0b96bf43e",
+      "currentSha256": "a6bc3d4410f334e86c7c312917233f44673a754bec33da21636171a0b96bf43e",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/lib/branchesMapHttpService.ts",
+      "originalSha256": "bf441dc2e9d722ddc859f7534cffba03cc885179a2d6121202591684981da8e8",
+      "currentSha256": "bf441dc2e9d722ddc859f7534cffba03cc885179a2d6121202591684981da8e8",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/lib/publicCategoryLabels.ts",
+      "originalSha256": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f",
+      "currentSha256": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/lib/yamaps.ts",
+      "originalSha256": "407b15f2aabf256c568ff4aec039b79ea43ae0a0037e5a2c3ff4682bdb3c9d57",
+      "currentSha256": "407b15f2aabf256c568ff4aec039b79ea43ae0a0037e5a2c3ff4682bdb3c9d57",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/lib/branches/buildApprovedBusinessesQuery.ts",
+      "originalSha256": "1c75ae4b07d1f67f28fd55ddfda068f53bfeb6f209f9f1dcdb1de6f7af0d8a69",
+      "currentSha256": "1c75ae4b07d1f67f28fd55ddfda068f53bfeb6f209f9f1dcdb1de6f7af0d8a69",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/app/_components/i18n/LanguageProvider.tsx",
+      "originalSha256": "17b0b88e3cb5da54af4ff787bc51988e3f7f3810a11e33cd3bf07dd91ed6a744",
+      "currentSha256": "17b0b88e3cb5da54af4ff787bc51988e3f7f3810a11e33cd3bf07dd91ed6a744",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/lib/bookingCountForm.ts",
+      "originalSha256": "c707fbaff9ca67664828d8271a1bf361adf1b9aeeb68e701a7f7f4abccc5e271",
+      "currentSha256": "c707fbaff9ca67664828d8271a1bf361adf1b9aeeb68e701a7f7f4abccc5e271",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    },
+    {
+      "path": "apps/web/src/app/map/MapPageClient.tsx",
+      "originalSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+      "currentSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+      "identical": true,
+      "originalSource": "apps/web/test-results/global-2026-10-16/g085-map-count-lint.json",
+      "scope": "ESLint saved source bytes establish sourceidentity only, not LIVE proof; actualUI is G085/G087."
+    }
+  ],
+  "applicability": "Currentruntime mapclient source EXACTLY saved postG085 source; publicFooter/route/API/service/maploader/localeprovider/bookingcount helper exactly archived source entries; G086 independent service/API/publiclabel hashes corroborate. Originalfooter method works through same href and route code. Rootlayout/fontdelivery/admincopy differences reviewed as outside functionalFooter-target/mapentry dependency scope; no visual/cache/fullglobal equivalence claimed. KnownDEV publicmap role/path semantics unchanged; data-specific old2count not promoted to currentdata proof. Preserveoldrole/UTC. This supports ONE narrow historicalfooter method only; direct remainsplanned.",
+  "reusedProofCases": 1,
+  "newExecutionPass": 0,
+  "newFix": 0,
+  "newAccepted": 0,
+  "hashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json",
+      "sha256": "3da860aca21ee2cdcdf76cc862d09a9ee06e99f0ae6879dd0658d0ee17263abf"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/g085-map-count-lint.json",
+      "sha256": "6a47c333954cf7893c0091908bb8e2de11fdde729fa4e91a757ca6fa9c851eba"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+      "sha256": "c17d0059a7b5b5d28588fb3d213ef0b3ac3f819f22c3dd0c9c8def49383864c2"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G070-map-dialog-after.json",
+      "sha256": "41f53bcfe4b7434fa9ad052d98a83b80b71027a9eb9d2c58d472668000fe5a0e"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-14/stage-G023-public-map-context.json",
+      "sha256": "cec624ecbd90f2bc1d40c78186668c0be6b8bbcca21f0c4584df06d7e1bf7f26"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G085-map-count-after.json",
+      "sha256": "d0d3d79072c1e44b15d9e87927b2b13b7c35308f934993bd0eaaed8d7789d2e6"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G087-map-keyboard.json",
+      "sha256": "71ad3b4953fbe840752bd73443c10ad09c69bedf417681a173d3452ac628c696"
+    }
+  ]
+}

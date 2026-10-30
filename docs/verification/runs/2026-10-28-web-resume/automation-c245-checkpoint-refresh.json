@@ -1,0 +1,19 @@
+{
+  "id": "C245_AUTOMATION_READBACK",
+  "recordedAfterClockUtc": "2026-10-28T10:58:21Z",
+  "automationId": "kezek",
+  "status": "ACTIVE",
+  "kind": "heartbeat",
+  "name": "Kezek WEB — до команды остановиться",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "rrule": "FREQ=MINUTELY;INTERVAL=15",
+  "backup": "automation-before-c245-checkpoint.toml",
+  "beforeSHA256": "3d97563b89c3828c575981a73135a9cebe31941a29a32660a67bc9bb87ac755b",
+  "configSHA256": "beaf4606b87a6d4755b3f5174ef1ddb7d3c2b6f0b4f4192de95c2102a8a026f5",
+  "toolUpdateSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "originalPromptPreservedAsSuffix": true,
+  "noDuplicate": true,
+  "change": "Only prepend current C245 waiting-new-condition checkpoint, preserving all original constraints, 15-minute interval/current chat/name/ACTIVE status. No new autonomy/privilege/network permission. Existing C243 bounded diagnostic not repeated; quiet unchanged heartbeat."
+}

@@ -1,0 +1,19 @@
+{
+  "id":"C59",
+  "plan":"c59-own-terminal-receipts-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-21T07:26:02Z",
+  "completedBeforeUtc":"2026-10-21T07:35:50Z",
+  "setup":"Freshinventory user2root/5blocked/18admin and protectedSAheading. OrdinarySAlogout after07:26:23; ordinaryGoogle chooser/knownlow.fade.osh selected after07:29:30. ActualLIVE TEST CLIENT12OCT/Клиент then personalcabinet/history. Setup0additionalPASS; same8historyIDs and package1of2 merely control, notrepeatedC56acceptance.",
+  "toolTiming":"One wait for wrong Googlebutton label Войти черезGoogle timedout; freshDOM showed actual ПродолжитьсGoogle and normalentrycontinued. Locatorerror, not productFAIL. Firstcancelledpopupinventory before registration, nextinventory found21; no alternative/newcapturetabcreated.",
+  "cases":[
+    {"key":"cancelled","status":"passed","observationWindowUtc":["2026-10-21T07:31:05Z","2026-10-21T07:32:40Z"],"actual":"ClickactualownHistoryOpenanchor a4278f13 -> ownpopup21/provider6e5a49aa-71a7-4cc2-9d73-bacd7b4d888f. Actualreceiptfulla4278f13-11b1-490e-b1bd-51154a1a545f/#a4278f13/Отменена/26Oct202609:00/LIVE TESTService31/АдаханОсоров. Fullreloadretainsall. No Cancel/status/Repeat/review/paymentcontrolclicked; own21closedafterproof."},
+    {"key":"no-show","status":"passed","observationWindowUtc":["2026-10-21T07:32:40Z","2026-10-21T07:34:24Z"],"actual":"ClickactualownHistoryOpenanchor eaa3f7e5 -> ownpopup22/providerb376687f-8880-4ab6-a451-4fba897d07de. Actualreceiptfulleaa3f7e5-662b-4290-979e-3c04a2584e7c/#eaa3f7e5/Неявка/12Oct202616:15/LIVE TESTService31/АдаханОсоров. Fullreloadretainsall. No cancellation/review/statuscommand; own22closedafterproof."}
+  ],
+  "matrix":{"total":5,"passed":3,"newLivePass":2,"reusedCurrentPass":1,"notRun":1,"blocked":1,"failed":0,"remaining":2,"note":"Confirmed uses originalC56 observation, notnewexecution; paidL030 historicalonly/currentproofnotpromoted; hold noauthorizedownfixture. Onlystatusdimension, E1-02remains partial."},
+  "restore":{"observationWindowUtc":["2026-10-21T07:34:24Z","2026-10-21T07:35:50Z"],"actual":"Ordinaryclientlogout/Googlekezekkg selected immediatelyafter07:35:17. ActualАдмин-панель/Anonymized/protectedПанельадминистратора,3historicalbusinesscards, finalexacthttp://localhost:3000/admin, markhandoff18+2. No newauthboundaryPASScredit."},
+  "effects":"2ordinarylogouts+2Googlelogins includingrestore. Ownreceiptpopups21/22closed; user2/5/18retained, blocked5untouched. No create/cancel/reopen/repeat/review/pay/package/shift/role/grant/SQL/APIprobe/source/test/build/server commands. f821NEVERcancel/closed909256untouched. Ordinaryauthlookup/telemetryunenumerated,notzeroTOTALwrites.",
+  "counts":"0newfix/sourcechange/acceptedrequirementdelta. Product21/316,S1 17/25primary63/79,S2 3/70,S4 1/47 unchanged. Two freshLIVEcases only; no wholeE1-02/security/foreignobject/visual/devicePASS.",
+  "next":"Review remaining paidreceipt historical dependency boundary before any repeat; holdBLOCKED/no newfixture. Next independent priority can be bounded read-only clientprofile initial-data/identity fields and available navigation (E2), only after finiteplan and no redundantcase. No unchangedfontbuild/returnmatrix repeat."
+}

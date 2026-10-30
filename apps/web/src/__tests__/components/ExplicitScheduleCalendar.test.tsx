@@ -33,7 +33,7 @@ describe('explicit schedule screens', () => {
         const branchId = '00000000-0000-0000-0000-000000000001';
         const days = Object.fromEntries(Array.from({ length: 7 }, (_, i) => [i + 1, { intervals: i ? [] : [{ start: '10:00', end: '16:00' }], breaks: [] }]));
         global.fetch = jest.fn().mockImplementation((url: string) => Promise.resolve({ ok: true,
-            json: async () => ({ ok: true, data: url.includes('draftKind') ? { days, branchId, revision: 0, source: 'week' } : snapshot }) }));
+            json: async () => ({ ok: true, data: url.includes('/time-off') ? { items: [], today: snapshot.today } : url.includes('draftKind') ? { days, branchId, revision: 0, source: 'week' } : snapshot }) }));
         render(<ScheduleEditor staffId="staff" homeBranchId={branchId} branches={[{ id: branchId, name: 'Филиал' }]} />);
         await waitFor(() => expect((screen.getByLabelText('Действует с') as HTMLInputElement).value).toBe(snapshot.today));
         fireEvent.click(screen.getByRole('button', { name: 'Загрузить действующий план в черновик' }));
@@ -41,12 +41,14 @@ describe('explicit schedule screens', () => {
         expect((global.fetch as jest.Mock).mock.calls.every(([, init]) => !init.method)).toBe(true);
     });
     test('editing requires preview and explicit publication; no writes on mount', async () => {
-        global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, data: snapshot }) });
+        global.fetch = jest.fn().mockImplementation((url: string) => Promise.resolve({ ok: true,
+            json: async () => ({ ok: true, data: url.includes('/time-off') ? { items: [], today: snapshot.today } : snapshot }) }));
         render(<ScheduleEditor staffId="staff" homeBranchId="00000000-0000-0000-0000-000000000001" branches={[{ id: '00000000-0000-0000-0000-000000000001', name: 'Филиал' }]} />);
         await screen.findByText('График пока не назначен');
         await waitFor(() => expect((screen.getByLabelText('Действует с') as HTMLInputElement).value).toBe('2026-09-18'));
         fireEvent.click(screen.getByRole('button', { name: 'Проверить изменения' }));
         await waitFor(() => expect(screen.getByRole('button', { name: 'Подтвердить и опубликовать' })).not.toBeNull());
-        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect((global.fetch as jest.Mock).mock.calls.every(([, init]) => !init.method)).toBe(true);
     });
 });

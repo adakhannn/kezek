@@ -1,0 +1,112 @@
+{
+  "id": "C244",
+  "status": "READONLY_TECHNICAL_EXISTING_FULL_JEST_CORE_EXTENDED_MEMBERSHIP_FAILED_GATE_CLASSIFIED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c244-jest-group-review-plan.json",
+  "reviewAfterClockUtc": "2026-10-28T09:24:33Z",
+  "originalReportedExecutionWindowUtc": [
+    "2026-10-26T09:50:22.026Z",
+    "2026-10-26T09:54:23.287Z"
+  ],
+  "primary": {
+    "path": "apps/web/test-results/c204-full-jest.json",
+    "sha256": "37afeba8f7bf4b1fdd8f04e87e92593f034fa81c24ce0d7c3fe7972e84b7186c"
+  },
+  "support": {
+    "path": "docs/verification/runs/2026-10-26-web-resume-2/c204-technical-checks.json",
+    "sha256": "c937b65dc1c4ac82b5212635fa7bf79c2d816fdbce08f2790b28e194482cc77e"
+  },
+  "dependencyHashes": {
+    "apps/web/package.json": "2e0a61f64bd602035cd59591a1f3177c062a2b1707887c78fa50f71264e4d2de",
+    "apps/web/jest.config.js": "f62d27333d78a4e094ce65bf87b0bc2a9c7e1902cdd76903cc3fccf3f71b3c74",
+    "apps/web/jest.setup.js": "ebae8a3b840a5aea3891fcee423223fb067ad1590ce811b011cbe95cf3c94328",
+    "docs/verification/runs/2026-10-26-web-resume-2/c204-source-paths.json": "f067f3f15b569ed1dfa674c0e8cdd083ae2ceea4c0cff108608db843a5a96231"
+  },
+  "globalReported": {
+    "suites": 541,
+    "passedSuites": 535,
+    "failedSuites": 6,
+    "totalTests": 2565,
+    "passedTests": 2554,
+    "failedTests": 11,
+    "pendingSuites": 0,
+    "pendingTests": 0,
+    "todoTests": 0,
+    "success": false,
+    "wasInterrupted": false
+  },
+  "groups": [
+    {
+      "scriptSelector": "test:ci:core",
+      "script": "jest --coverage --watchAll=false --maxWorkers=50% src/__tests__/lib/financeDomain src/__tests__/lib/notifications src/__tests__/lib/authContext.test.ts src/__tests__/lib/bizContextResolver.test.ts src/__tests__/lib/bookingDashboardService.test.ts src/__tests__/lib/dashboardBookingsLogic.test.ts src/__tests__/lib/dateUtils.test.ts src/__tests__/lib/i18nHelpers.test.ts src/__tests__/lib/quickBookGuestClient.test.ts src/__tests__/lib/quickBookGuestService.test.ts src/__tests__/lib/quickHoldClient.test.ts src/__tests__/lib/quickHoldService.test.ts src/__tests__/lib/rateLimit.test.ts src/__tests__/lib/repositories.test.ts src/__tests__/lib/serverCancelBookingService.test.ts src/__tests__/lib/visitPackageLogic.test.ts src/__tests__/lib/whatsAppBookingActionService.test.ts src/__tests__/lib/withManagerContext.test.ts",
+      "actualScriptInvocationProven": false,
+      "expectedCurrentTestFileCount": 0,
+      "reportedSuiteCount": 25,
+      "unrepresentedCurrentTestFiles": [],
+      "unrepresentedScriptTargets": [],
+      "reportedSuiteStatus": {
+        "passed": 25
+      },
+      "reportedAssertionStatus": {
+        "passed": 251
+      },
+      "reportedSuitePathsSHA256": "eb5906a6b355ddd3a079ea1a60bd7a8ddd8e02cad552ac066137d807ba4fd8b0",
+      "failedSuites": []
+    },
+    {
+      "scriptSelector": "test:ci:extended",
+      "script": "jest --watchAll=false --maxWorkers=50% src/__tests__/lib src/__tests__/api",
+      "actualScriptInvocationProven": false,
+      "expectedCurrentTestFileCount": 0,
+      "reportedSuiteCount": 380,
+      "unrepresentedCurrentTestFiles": [],
+      "unrepresentedScriptTargets": [],
+      "reportedSuiteStatus": {
+        "failed": 3,
+        "passed": 377
+      },
+      "reportedAssertionStatus": {
+        "failed": 4,
+        "passed": 1682
+      },
+      "reportedSuitePathsSHA256": "bf69628a9fc162bf8a91ff78aed49d60c8481595deaa532618c409e7dc0e4708",
+      "failedSuites": [
+        {
+          "path": "src/__tests__/lib/telegramWebhookHttpService.test.ts",
+          "failedAssertionNames": [
+            "telegramWebhookHttpService handles /start payload and sends approval message with source details"
+          ]
+        },
+        {
+          "path": "src/__tests__/api/admin/ratings-jobs.test.ts",
+          "failedAssertionNames": [
+            "/api/admin/ratings/jobs returns jobs payload"
+          ]
+        },
+        {
+          "path": "src/__tests__/lib/telegramMobileAuthAttemptService.test.ts",
+          "failedAssertionNames": [
+            "telegramMobileAuthAttemptService stores source metadata when start payload includes source info",
+            "telegramMobileAuthAttemptService binds telegram context to pending attempt"
+          ]
+        }
+      ]
+    }
+  ],
+  "decision": "Current core selector membership is represented by25 PASS suites/251 PASS assertions; extended by380 suites/377PASS3FAIL with1682PASS4FAIL assertions. Groups overlap, NEVER add core+extended as distinct executions/totals. Full report remains541/535/6 and2565/2554/11. Q1-02 NOT accepted: attach ONE NONLIVE failed-gate evidence case to correct not_run-only accounting. Standalone core/extended script argv/cwd/config receipt absent from raw report and not inferred. No new execution, source change, rerun or runtime defect/fix.",
+  "limits": [
+    "Actual reported timestamps are original26Oct, not28Oct. Review timestamp is separate.",
+    "Raw C204 primary hash agrees with existing C204 metadata; entire current candidate boundary checked by ledger validator.",
+    "Report membership is not proof either package script ran as a separate command, nor per-script coverage threshold PASS.",
+    "Unit/mocked webhook/API tests are NONLIVE; no new Telegram/mobile flow, external message, booking, security or product UI claim.",
+    "Q1-02 whole matrix incomplete/failed evidence retained; full lint52errors167warnings and all11 full-report test failures unchanged."
+  ],
+  "effects": "Read-only local structured JSON/config/manifest classification only. No test runner, browser action, API/SDK/SQL, externalHTTP, source/test edit, build/server command. No new LIVE/fix/accepted/reuse credit.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newExecution": 0,
+    "technicalEvidenceMapping": 1
+  }
+}

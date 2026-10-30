@@ -1,0 +1,30 @@
+{
+  "id": "C169_FIXTURE_EFFECTS_APPEND_ONLY",
+  "originalRegistry": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+  "originalRegistrySHA256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca",
+  "originalRegistryUnchanged": true,
+  "businessId": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "branchId": "fa5f1017-d987-40c8-90ca-b042898c694f",
+  "activeControl": "057447c8-b200-4403-b056-49e3c250840f",
+  "ordinarySaveAttempts": [
+    {
+      "afterClockUtc": "2026-10-25T22:43:28Z",
+      "website": "http://c169-branch.example.invalid/",
+      "result": "Visible HTTPS validation rejection; same editor. List/reentry blank website/disabledSave; no direct database/transport or zero-write claim."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:43:57Z",
+      "website": "https://c169-branch.example.invalid/",
+      "result": "Success branchlist2/2; reentry exactHTTPS/disabledSave. Ordinaryreload after22:44:16 retainedsameHTTPS."
+    },
+    {
+      "afterClockUtc": "2026-10-25T22:44:32Z",
+      "website": "",
+      "result": "Success branchlist2/2; reentryblank/disabledSave. Ordinaryreload after22:44:49 completedoriginalblank and allbaseline."
+    }
+  ],
+  "visibleBaselineRestored": true,
+  "restoredBeforeUtc": "2026-10-25T22:45:30Z",
+  "remainingEffects": "No pending planned website mutation. Branch inactive throughout; original name/address/coords/links/othercontacts/inheritance and sevenclosed days retained. Raw null-vs-empty representations and application auth/telemetry writes unenumerated; not bit-identical DBrollback or zeroTOTALwrites.",
+  "noNewFixtureEntityOrMessage": true
+}

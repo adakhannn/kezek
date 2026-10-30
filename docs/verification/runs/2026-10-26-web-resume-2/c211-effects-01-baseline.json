@@ -1,0 +1,11 @@
+{
+  "id": "C211-effects-01",
+  "recordedAfterClockUtc": "2026-10-26T10:31:02Z",
+  "observation": "Actualdirect/select-business knownowner/RU/exacttwochoices; business2Current/business1available after healthyDashboard2. Before firstnoncurrentchoice.",
+  "ownerId": "9bd8fd88-7241-4c2c-9ef4-3c4a7135450c",
+  "originalBusinessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+  "temporaryBusinessId": "35e5b36c-a967-4708-ba4d-7d3fc24b89f4",
+  "pending": true,
+  "phase": "BASELINE_BEFORE_CHOICE1",
+  "recovery": "ordinarydirectchooser chooseexistingbusiness2once thenactualdashboard+oneReload; no API/storage/SQL"
+}

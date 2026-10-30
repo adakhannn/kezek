@@ -1,0 +1,88 @@
+{
+  "kind": "documentation_closure_final_check",
+  "valid": true,
+  "checkedUtc": "2026-10-30T12:23:53.448Z",
+  "pauseConsistent": true,
+  "preservedHashes": {
+    "docs/verification/runs/2026-10-28-web-resume/final-report.json": true,
+    "docs/verification/runs/2026-10-28-web-resume/progress.json": true,
+    "docs/verification/runs/2026-10-26-web-resume-2/final-report.json": true,
+    "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json": true,
+    "docs/verification/KEZEK_WEB_HANDOFF_2026-10-26.txt": true,
+    "docs/verification/runs/2026-10-26-web-resume/c179-effects-journal.json": true,
+    "docs/verification/runs/2026-10-26-web-resume/c183-effects-journal.json": true,
+    "C:/Users/AdaX/.codex/automations/kezek/automation.toml": true,
+    ".git/index": true
+  },
+  "ledgerSectionsUnchanged": {
+    "candidate": true,
+    "requirements": true,
+    "cases": true,
+    "fixes": true,
+    "evidence": true,
+    "currentFindings": true,
+    "releaseGates": true
+  },
+  "localLinks": {
+    "checked": 118,
+    "broken": []
+  },
+  "previousNextBatchArchived": true,
+  "newProductCases": 0,
+  "newAcceptedRequirements": 0,
+  "newVerifiedFixes": 0,
+  "files": {
+    "README.md": {
+      "beforeSHA256": "6bed0aec610f5af3250abf6788ef420d2add5836a68182607a412f32830c81d5",
+      "afterSHA256": "57a80966da3b72198afeb9055dd2a44ce61452e2e09e3aeb74b150ef41b9e480"
+    },
+    "docs/README.md": {
+      "beforeSHA256": "a865a19cd1be2fe3753611e5a9bbaca58643fead4f712d6c01af5137562f628f",
+      "afterSHA256": "b8fe7465731e0548e60c2db47e7502d1a443a9ddb7891c00b77dbf8cb918ac44"
+    },
+    "docs/MANUAL_TESTING_TRACKER.md": {
+      "beforeSHA256": "f7bf2e1406dfc47ba3bfda0b804c4981d863517e19fe956d360b14452036f69b",
+      "afterSHA256": "0df9a503300f62ba8286c13b1271565d208dcc284253ced493006c22944fed89"
+    },
+    "docs/WEB_GLOBAL_READINESS_PLAN.md": {
+      "beforeSHA256": "f223d66db7added614c34a9622c4ce513830631016fc9fa4b7ac4cca18b8df2f",
+      "afterSHA256": "ddfdee5accabf23c4b335e9e45a0b4341d45aa82caf51054010414df131deb4e"
+    },
+    "docs/WEB_VERIFICATION_METHOD.md": {
+      "beforeSHA256": "f5da3552c65b202abaa383d33e2cb0d167953ddc52db11d6f5cc3be2cf1726d6",
+      "afterSHA256": "a45e31a94aa003c017840d20c5128621d815c5c7d4073731c2fa086348f5ca1a"
+    },
+    "docs/verification/README.md": {
+      "beforeSHA256": "afea99ba11797de43faed226bccca9c34c52cdcb8cca16a0e0fe9a824377db23",
+      "afterSHA256": "763ec56e2a9075e63bb0780b156e78a35aaa701bdbc3b4d3ba91984c2857dcbf"
+    },
+    "docs/WEB_GLOBAL_READINESS_STATE.json": {
+      "beforeSHA256": "c5835982859f180f903645735be72d591ee5c853716cd485104c5281ccc0ddcb",
+      "afterSHA256": "45df3adce2d9f3f8e8d6bb56b1792f9bea140bbdd0b3ef4d1725698d416a913d"
+    },
+    "docs/WEB_VERIFICATION_LEDGER.json": {
+      "beforeSHA256": "b4938c67421ec07981cda72e7f83b55160aff68a3288bfd89b40c5c993896055",
+      "afterSHA256": "081d5b75e31e8b1b40e2d27bf04fe3517066e9c755a96b3fa80fcc6d21db258f"
+    },
+    "AGENTS.md": {
+      "beforeSHA256": null,
+      "afterSHA256": "57d13c544bb5cf39e0ceab295eed83fd49a0915445cb5ac6ce1b96654df97290"
+    },
+    "docs/WEB_AGENT_HANDOFF.md": {
+      "beforeSHA256": null,
+      "afterSHA256": "ab7b2c7ee5ef54a103a17788faec00edbb4ee0542791ae3977b94ddf603ea39e"
+    },
+    "docs/verification/process-closure-2026-10-30/before.json": {
+      "beforeSHA256": null,
+      "afterSHA256": "f1ac3363c367633ab5d5257f0c4749334081c2fb5ce43293fbfbfacd826cde70"
+    },
+    "docs/verification/process-closure-2026-10-30/previous-next-batch.json": {
+      "beforeSHA256": null,
+      "afterSHA256": "a90bc0e48a7dae5a469fa9e1f965c45569913725fe70bb33e1177ea0965357b7"
+    },
+    "docs/verification/process-closure-2026-10-30/verification.json": {
+      "beforeSHA256": null,
+      "afterSHA256": "30097b51c76105e9615b79e1f93bbb54d580ff6610266cfaf139af1df5c0137a"
+    }
+  }
+}

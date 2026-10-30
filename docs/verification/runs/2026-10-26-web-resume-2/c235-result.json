@@ -1,0 +1,27 @@
+{
+  "id": "C235",
+  "status": "BLOCKED_AT_POSITIVE_HOURLY_DATA_PRECONDITION_BEFORE_FILTER_ACTIVATION",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c235-analytics-branch-partition-plan.json",
+  "caseId": "S26-G302-hourly-branch-partition-consistency",
+  "observationWindowUtc": [
+    "2026-10-26T12:49:14Z",
+    "2026-10-26T12:53:02Z"
+  ],
+  "actual": "OrdinaryknownSAlogout/Googleknownowner/currentBusiness2Continue only ->actualDashboardc28c/Тестовый бизнес2. ObservedAnalyticslink once ->settledАналитика бизнеса/currentBusiness2. ActualdefaultAllbranches/optionsnamedbranch1+branch2, start2026-09-27/end2026-10-26/30daydefault. Dailysection Статистика ещё не рассчитана, with explicit no-calculated-data-does-not-mean-no-bookings-or-revenue explanation. Actual24hourrows0:00..23:00 eachbookings—/promo—, no positivecell. Therefore partitioneligibility NOTmet; nobranchselector/preset/datefilter activation, no numericadditivity/invariance assertion. Existinguncomputednotice not newbug/rootcause or truezero/timing/APIproof.",
+  "toolObservation": "Waitforguessedheading Обзор аналитики no_matches deadline; ONEfreshAX showed actualАналитика бизнеса/settlednotice+24rowtable. Wronglocatorlabel not productfailure/no duplicatenavigation.",
+  "effects": "Twoordinarylogouts+twoGooglelogins includingSArestore/currentBusiness2Continue setup (mayordinarypreferenceupsert; notbusinessswitchtest). ReportUIreadonly/filtersremainedoriginalAll30/no branches/presets/manualdates/Retry/reload/export/cron/recalc/job/SQL/API/SDK/storage/secret/entity/booking/hold/slot/shift/payment/source/test/build/server command. Auth/analytics/telemetry/preferenceeffects unenumerated, not zero TOTALwrites.",
+  "restoration": "OriginalownerreportAll30/27Sep..26Oct untouched. Ordinaryownerlogout/knownSA Google ->automaticprotected/admin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1;markHandoff before12:53:02UTC. No pendingfixture/drafteffects or active temporarycompiler/runtime/networklease.",
+  "limits": "Missingpositiveaggregate condition only. Do not infercronnotdeployed/notrun, returnedHTTPstatus, realabsenceofbookings, G3numericETL/security, samecauseasC221/C189/M1. Do not tryunchangederrorRetry/requery/alternateperiod or alteraggregates to manufacturePASS.",
+  "credit": {
+    "newUi": 0,
+    "windowUiBefore": 19,
+    "windowUiAfter": 19,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

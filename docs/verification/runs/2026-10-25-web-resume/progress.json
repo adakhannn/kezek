@@ -1,0 +1,186 @@
+{
+  "status": "PAUSED_BY_USER",
+  "authorization": "можешь продолжать пока сам не останавлю тебя",
+  "authorizationEvidence": "authorization.json",
+  "firstClockAfterResumeUtc": "2026-10-25T08:52:04Z",
+  "timezone": "Asia/Bishkek",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "sourceFileCount": 1685,
+  "accepted": 21,
+  "remaining": 295,
+  "total": 316,
+  "S1": {
+    "accepted": 17,
+    "total": 25,
+    "primaryPassed": 63,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 3,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 1,
+    "total": 47
+  },
+  "verifiedFixesLogicalRun": 12,
+  "newWindowLiveFixes": 1,
+  "newWindowAcceptedRequirements": 0,
+  "newWindowPassedCases": 5,
+  "reusedPriorProofCasesThisWindow": 0,
+  "prior23OctWindowNewPassedCases": 7,
+  "activeSubpackage": "C127_COMPLETE_HUMAN_PAUSED_C128_NOT_EXECUTED",
+  "casePlan": "c126-category-save-plan.json",
+  "lastCheckpoint": "DO NOT EXECUTE UNTIL NEW DIRECT HUMAN RESUME. Saved next only: C128 bounded readonly history/effect review of retained inactive test category destructive-confirmation Cancel before any new UI plan. Determine whether exact category Cancel/reload has original proof; reuse only if applicable with original UTC/no new PASS. If genuinely uncovered, save finite C129 warning-open/Cancel/reload plan for exact c7cef81b only; NEVER dialog Confirm/Delete/Enter/force checkbox or actual deletion. No new category/fixture, service-category implementation, unchanged C119/C124/C126/build/auth/F013 retry. M5-02 services contract remains explicitly BLOCKED until clarified; all older safety/stale gates retained.",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "readback": true,
+    "evidence": "pause-20261025-110044.json"
+  },
+  "browser": {
+    "browser": "2",
+    "currentTabId": "2",
+    "currentHumanProvider": "browser-use:9330166e-02eb-4317-b88d-df1476284c6a",
+    "workingHandle": "resume25HumanTab",
+    "actualRole": "ProtectedAdmin/Anonymized/Business3/RU/restoredC126",
+    "handoff": true,
+    "noNewTabOrBinding": true,
+    "blockedProvider": "browser-use:23011460-bc97-4219-918d-2e16e9c8c958",
+    "doNotRetryBlockedProvider": true
+  },
+  "server": {
+    "sessionId": 98607,
+    "pid": 23304,
+    "parentPid": 10168,
+    "listen": "127.0.0.1:3000",
+    "normalLaunchAfterVerifiedStopped": true,
+    "packageScriptEquivalent": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "startupWarning": "stale baseline-browser-mapping; no install/update attempted",
+    "status": "HEALTHY_LISTENER_CONFIRMED_25OCT",
+    "restartPerformed": true
+  },
+  "headerHistorySubset": {
+    "scope": "seven-role scoped header/currentlabel/history tracking, NOT full F3 acceptance",
+    "total": 7,
+    "passed": 4,
+    "failed": 0,
+    "blocked": 3,
+    "notRun": 0,
+    "remaining": 3,
+    "newC76Pass": 2,
+    "priorC73C74Pass": 2,
+    "newFixes": 0
+  },
+  "priorCompletedWindow": "../2026-10-23-web-resume-2/final-report.json",
+  "priorFinalSHA256": "84c42de6d4edeac2a811f038e987a9fb946cc446359287d1766fd7faa7119e6b",
+  "continuousObservationAcrossPause": false,
+  "releaseReady": false,
+  "fixedDeadline": null,
+  "autonomousResumeAllowed": false,
+  "finalReportFile": "final-report.json",
+  "constraints": "All prior WEB/knownidentity/safety constraints retained, no broadenedauthority/newnetworkapproval. ExistingF013OPEN/F005pending/fixture/cache/visual/role/serverdependency blockers unchanged. Explicitstop ->safeeffects+PAUSEDreadback+newfinal; neveroverwriteoldfinals or buy/reset limits.",
+  "checkpointAfterClockUtc": "2026-10-25T11:02:22Z",
+  "profileSaveBlocker": {
+    "evidence": "c77-result.json",
+    "status": "awaiting_specific_human_decision",
+    "repeatQuestion": false,
+    "noSaveUntilDecision": true
+  },
+  "publicSearchStateSubset": {
+    "scope": "B3-04 complete declared query-state matrix",
+    "total": 8,
+    "passed": 6,
+    "failed": 0,
+    "blocked": 2,
+    "notRun": 0,
+    "remaining": 2,
+    "newC81Pass": 2,
+    "priorC79Pass": 4,
+    "casePlanComplete": true,
+    "wholeRequirementAccepted": false,
+    "blocker": "Actual public dataset3 < page size9; two real pagination variants remain BLOCKED, no new fixture/page-size change/guessed page2 probe."
+  },
+  "adminProtectionBlocker": {
+    "evidence": "c82-protection-review.json",
+    "status": "no_current_account_security_commands_or_last_admin_fixture",
+    "noUnchangedRetry": true
+  },
+  "pendingLiveFinding": null,
+  "currentBuild": {
+    "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+    "pid": 19300,
+    "ownedSession": 57829,
+    "startedUtc": "2026-10-25T10:11:28.503Z",
+    "finishedUtc": "2026-10-25T10:12:48.920Z",
+    "exitCode": 0,
+    "timedOut": false,
+    "rawLog": "c121-build-raw.txt",
+    "buildEvidence": "c121-result.json",
+    "executionEvidence": "c122-result.json",
+    "ownedRuntimePid": 12932,
+    "runtimeStopped": true
+  },
+  "technicalGates": {
+    "evidence": "c120-technical-checks.json",
+    "typecheck": "PASS",
+    "targeted17": "PASS",
+    "scopedLint": "PASS_COMPONENT_AND_TEST",
+    "fullLint": "NOT_RERUN_CURRENT/priorC91FAIL52errors167warnings",
+    "sourceUnit": "NOT_RERUN_CURRENT/priorC91FAIL11/PASS2530",
+    "currentBuild": "C121_C122_SCOPED_PASS"
+  },
+  "refreshedExistingCasesThisWindow": 2,
+  "restoredPriorRequirementIds": [
+    "A3-01"
+  ],
+  "observationGapEvidence": "docs/verification/runs/2026-10-23-web-resume-2/c93-observation-gap.json",
+  "logoutBackRoleInventory": {
+    "scope": "Six-role coarse logoutBack coverage inventory ONLY, not completeatomicC6-04denominator",
+    "totalRoles": 6,
+    "currentNarrowPassed": 3,
+    "currentCases": [
+      "S23-C604-SA-logout-back-reload",
+      "S23-C604-client-logout-back-reload",
+      "S23-C604-staff-home-logout-back-reload"
+    ],
+    "historicalOnly": 1,
+    "historicalRole": "ownerG108original16OctUTC/no currentreuse",
+    "blocked": 2,
+    "blockedRoles": [
+      "manager:noapprovedfixture",
+      "multirole:noapprovedfixture"
+    ],
+    "wholeRequirementAccepted": false,
+    "casePlanComplete": false,
+    "newUiExecution": 0,
+    "reusedCurrentProofCases": 0
+  },
+  "prior23OctResume2Window": {
+    "newUiPass": 21,
+    "verifiedFixes": 2,
+    "refreshedExistingCases": 1,
+    "finalReport": "docs/verification/runs/2026-10-23-web-resume-2/final-report.json",
+    "sha256": "84c42de6d4edeac2a811f038e987a9fb946cc446359287d1766fd7faa7119e6b"
+  },
+  "latestFixtureEffects": {
+    "evidence": "c126-result.json",
+    "targetCategory": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+    "ordinaryUpdateCommands": 2,
+    "visibleBaselineRestored": true,
+    "noNewFixtures": true
+  },
+  "distinctRefreshedExistingCasesThisWindow": 1,
+  "refreshedHistoricalFunctionalCasesThisWindow": 1,
+  "serviceCategoryContractBlocker": {
+    "evidence": "c127-service-contract-review.json",
+    "status": "BLOCKED_CONTRACT_DECISION_REQUIRED",
+    "wholeM502Accepted": false,
+    "noFeatureExpansion": true
+  },
+  "pausedAtUtc": "2026-10-25T11:00:44Z",
+  "pauseRequest": "сделай логическое завершение и сделай паузу",
+  "pauseEvidence": "docs/verification/runs/2026-10-25-web-resume/pause-20261025-110044.json"
+}

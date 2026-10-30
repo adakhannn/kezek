@@ -1,0 +1,32 @@
+{
+  "id": "C84",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "caseId": "S23-M201-local-name-slug-cancel",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "timeboxMinutesIncludingRestore": 7,
+  "target": {
+    "id": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "name": "S1 TEST 20261020 Branch Availability",
+    "slug": "s1-test-20261020-branch-availability"
+  },
+  "expected": "In local draft, name C84 LOCAL DRAFT 23OCT produces c84-local-draft-23oct URL preview. Explicit URL c84-manual-slug-23oct then another name C84 SECOND LOCAL NAME leaves manual URL unchanged. Cancel without Save discards both; readonly card and reopened editor restore exact original name/slug, existing category/publication unchanged. One complete edit/override/cancel case, not separate field PASS.",
+  "steps": [
+    "Fresh same human Tab2/known SA/admin; clock click observed existing A admin link. Verify exact A name/slug, owner unassigned and existing counts/approved status; stop on mismatch.",
+    "Clock observed Edit for business profile. Capture only nonsensitive name/slug and category/publication states; leave contacts untouched/masked.",
+    "Clock fill Name C84 LOCAL DRAFT 23OCT; observe draft name, URL/preview c84-local-draft-23oct. Clock fill URL c84-manual-slug-23oct; clock fill Name C84 SECOND LOCAL NAME (ordinary blur from field change). Observe manual URL retained.",
+    "Clock Cancel; verify original readonly slug/name. Clock reopen editor, verify original exact name/slug and category/publication states; clock Cancel again, no Save/Enter.",
+    "Clock observed Admin root link ->original SA/admin protected heading/Anonymized/Business3. MarkHandoff same user tab."
+  ],
+  "stop": "No Save/Enter/form submit, contact fields, file uploads, category/publication/owner/branch limits/deletion, new fixture or auth change. If field mutation has unknown effect, stop/reobserve once, no blind retry/DOMevent/HTTP workaround. Cancel local draft if safely available; preserve user tab. No old forbidden providers/routes.",
+  "effects": "Only one transient local name+URL draft, local Cancel/reset, authorized read navigation. No PATCH/POST/business data command; ordinary auth/telemetry unenumerated, not zeroTOTALwrites. No validation/server-persistence/security/visual/device/full-M2 acceptance.",
+  "accounting": "At best ONE new local-edit UI variant, 0 fixes and accepted delta; overall21/316 remains. M2-01 remains partial with persistent edit/create/error boundaries open.",
+  "savedBeforeUiUtc": "2026-10-23T01:33:58Z",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "3c34f87e772554f134220aad060c038f0e763c6c26c734055a1b9cd6f06b2756",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806",
+    "apps/web/src/components/ui/Input.tsx": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "C206",
+  "status": "FINITE_NEW_CANDIDATE_BUILD_PLAN_BEFORE_COMPILER",
+  "preparedAfterClockUtc": "2026-10-26T09:59:03Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "files": 1687,
+  "reason": "RealC203F021UIbeforeFAIL ->C204awaitparamsfix+regression7PASS/types0 ->C205SAME-LIVEpersist+exactoriginalName restore. Newruntimecandidate invalidatesoldC174/C175build proof; onefreshattempt, notunchangedretry.",
+  "harness": "scripts/closure-web-isolated-build-c206-20261026.mjs",
+  "guard": "scripts/closure-web-offline-guard-c206-20261026.cjs",
+  "guardTest": "scripts/closure-web-offline-guard-c206-20261026.test.cjs",
+  "destination": "test-results/closure-web-20261026-c206-5387d70d6af1/build",
+  "rawLog": "docs/verification/runs/2026-10-26-web-resume-2/c206-build-raw.txt",
+  "watchdogSeconds": 240,
+  "compiler": "InstalleddefaultNext16.0.11Turbopack/types/prerender, no compiler-switch/mock/checkskip/install",
+  "preflight": "ExactC174harness/guard/test clone onlynewrun/C206/C207/candidate/path/1687tokens. Syntax0/16offlineguardchecksPASS (notproductPASS). Dest/rawabsent; onlymain127.0.0.1:3000PID19968/listener3107absent, no restart.",
+  "confinement": "Exactmechanical1687sourcecopy; reject.env/symlinks/caches; dummy.invalidbackend/no realkeys/no.envcopy; allowlistedOSenv; NodeTCP/fetchdenyexceptexactownedPostCSSloopbackIPC/argvport(notmain3000). NotOSfirewall/nativeconfinement. Localfonts only/no externalnetworkpermissionrenewal.",
+  "steps": [
+    "Clock/currentprogress/source/attemptabsence ->oneharnesslaunch;appendrawlogPID/UTC/exit/watchdog. No repeatonunchangedFAIL.",
+    "Ifexit0 recordtechnicalbuildonly0UI/fix/accepted. SeparateC207finiteownedcompiledruntime/privacyentry/reload/adminreturn beforeA3promotion. No C93assetbundle/capture/cache/visual/provider/authloop.",
+    "Humanstopstoponlyexactowncompiler/runtime; preserveallartifacts, mainserver/userTab; PAUSEDexistingkezek/readback/newfinal."
+  ],
+  "technical": "Full541suites535PASS6FAIL/2565tests2554PASS11FAIL; fullLint52errors167warnings/samediagnostics retained. No whole-green.",
+  "effects": "Ownedcopy/dependencyjunctions/compiler/generatedcache/rawlogonly; no DEVDB/fixture/role/booking/payment/message/authtransition/sourcechangefrombuild.",
+  "harnessHashes": {
+    "scripts/closure-web-isolated-build-c206-20261026.mjs": "14fc6e11e13f8ce7612a216b246c7f070318a19537727cfc0081df05911dcdb8",
+    "scripts/closure-web-offline-guard-c206-20261026.cjs": "9dcf071ee12494659524cbdf802ec8b88c423173be30f5fa046893ecae2c7549",
+    "scripts/closure-web-offline-guard-c206-20261026.test.cjs": "8d9584ea091960456c787d1a95536702d32971e5997702903e22eb4d4df6d982",
+    "apps/web/test-results/c206-guard-tests.log": "8a50bab905fa996e0e48e3cad10a713d6bed6f9824cbf72a459bb34c315afb53"
+  }
+}

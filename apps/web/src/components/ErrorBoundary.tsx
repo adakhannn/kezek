@@ -1,10 +1,12 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { unstable_rethrow } from 'next/navigation';
 
 import { ErrorDisplay } from './ErrorDisplay';
 
 import { reportErrorToMonitoring } from '@/lib/errorMonitoring';
+import { isRecoverableChunkError } from '@/lib/chunkLoadRecovery';
 
 interface Props {
     children: ReactNode;
@@ -28,6 +30,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     static getDerivedStateFromError(error: Error): State {
+        // Routing signals belong to Next's not-found/redirect boundaries.
+        unstable_rethrow(error);
         return { hasError: true, error };
     }
 
@@ -73,6 +77,10 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     handleReset = () => {
+        if (isRecoverableChunkError(this.state.error)) {
+            window.location.reload();
+            return;
+        }
         this.setState({ hasError: false, error: null });
     };
 

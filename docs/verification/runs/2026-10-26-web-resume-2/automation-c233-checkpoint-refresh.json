@@ -1,0 +1,17 @@
+{
+  "id": "AUTOMATION_C233_CHECKPOINT_REFRESH",
+  "recordedAfterUtc": "2026-10-26T12:38:07Z",
+  "automationId": "kezek",
+  "status": "ACTIVE",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "updateToolSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "configSHA256": "bf3da18ebbe76ee7ac9d9933110fc6afeed27b59f53f2957b9461467d0f2bcfc",
+  "previousExactConfiguration": "automation-before-c233-checkpoint.toml",
+  "previousSHA256": "265cc92905f0ce9ab2f6a77bfc61f5a93ce6df4700cffcc53dbaa637e9d1a84b",
+  "checkpoint": "C233_COMPLETE_BLOCKED_COMPOUND_NO_NEW_CREDIT",
+  "next": "C234_READONLY_OWNER_ANALYTICS_HISTORY_RECEIVER_REVIEW_BEFORE_FINITE_UI_PLAN",
+  "noDuplicate": true,
+  "administrativeUpdateAddsNoProductCredit": true
+}

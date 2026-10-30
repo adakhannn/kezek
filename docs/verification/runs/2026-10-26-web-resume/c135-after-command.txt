@@ -1,0 +1,16 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:21636) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/components/AdminHomeTodayStatuses.test.tsx
+FAIL src/__tests__/components/StatusChip.test.tsx
+  ● Test suite failed to run
+
+    ENOENT: no such file or directory, open 'C:\projects\kezek\apps\web\src\__tests__\components\StatusChip.test.tsx'
+
+      at runTestInternal (../../node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:170:27)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        1.839 s, estimated 6 s
+Ran all test suites within paths "src/__tests__/components/AdminHomeTodayStatuses.test.tsx", "src/__tests__/components/StatusChip.test.tsx".

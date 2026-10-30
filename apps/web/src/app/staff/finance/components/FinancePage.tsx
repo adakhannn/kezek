@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/useToast';
 
 interface FinancePageProps {
     staffId?: string;
+    viewScope?: string;
     showHeader?: boolean;
     /** Данные смены с сервера (SSR prefetch) — сразу отображаются без загрузки */
     initialData?: import('@/app/staff/finance/services/shiftDataService').FinanceResponsePayload;
@@ -45,7 +46,7 @@ interface FinancePageProps {
 /**
  * Оптимизированный компонент страницы финансов
  */
-export const FinancePage = memo(function FinancePage({ staffId, showHeader = true, initialData }: FinancePageProps) {
+export const FinancePage = memo(function FinancePage({ staffId, viewScope, showHeader = true, initialData }: FinancePageProps) {
     const { t } = useLanguage();
     const toast = useToast();
 
@@ -66,7 +67,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         setShowShiftDetails,
         previousTabRef,
         handleTabChange,
-    } = useFinancePageViewState({ staffId });
+    } = useFinancePageViewState({ staffId, viewScope });
 
     // Локальное состояние для items (для оптимистичных обновлений)
     const [localItems, setLocalItems] = useState<ShiftItem[]>([]);

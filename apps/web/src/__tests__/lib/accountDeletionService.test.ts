@@ -36,8 +36,8 @@ describe('accountDeletionService', () => {
         ]);
     });
 
-    test('requires the explicit Russian confirmation phrase', async () => {
-        const result = await requestAccountDeletion({} as never, 'user-id', 'удалить');
+    test('rejects an unrecognized confirmation phrase before accessing persistence', async () => {
+        const result = await requestAccountDeletion({} as never, 'user-id', 'подтвердить');
 
         expect(result).toEqual({
             ok: false,
@@ -46,4 +46,15 @@ describe('accountDeletionService', () => {
             code: 'confirmation_required',
         });
     });
+
+    test.each(['УДАЛИТЬ', ' удалить ', 'DELETE', 'delete', 'ӨЧҮРҮҮ', ' өчүрүү '])(
+        'accepts localized confirmation %s without bypassing ownership blockers', async (confirmation) => {
+            const admin = createAssessmentAdmin({ businesses: 1 });
+            const result = await requestAccountDeletion(admin as never, 'user-id', confirmation);
+
+            expect(result).toMatchObject({ ok: false, status: 409, code: 'deletion_blocked' });
+            expect(result).toHaveProperty('blockers', [expect.objectContaining({ code: 'owned_businesses', count: 1 })]);
+            expect(admin.from).not.toHaveBeenCalledWith('account_deletion_requests');
+        },
+    );
 });

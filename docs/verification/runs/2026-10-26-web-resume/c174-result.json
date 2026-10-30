@@ -1,0 +1,40 @@
+{
+  "id": "C174",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "files": 1686,
+  "status": "BUILD_PASS_NOT_LIVE",
+  "event": "finished",
+  "startedUtc": "2026-10-25T23:03:23.215Z",
+  "finishedUtc": "2026-10-25T23:04:38.101Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "pid": 23980,
+  "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261026-c174-82c7088de609\\build",
+  "ownedSession": 25359,
+  "copy": {
+    "event": "prepared",
+    "startedUtc": "2026-10-25T23:03:23.215Z",
+    "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261026-c174-82c7088de609\\build",
+    "copiedFiles": 1686,
+    "copyFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+    "noEnvFiles": true,
+    "coldNextCache": true,
+    "defaultCompiler": true,
+    "dummyBackend": true,
+    "limitation": "Node TCP/fetch restriction except exact PostCSS IPC; not OS firewall or LIVE/deployed-production PASS"
+  },
+  "rawLog": "c174-build-raw.txt",
+  "compile": "40.0s",
+  "typecheck": "PASS",
+  "prerenders": 36,
+  "policyTests": {
+    "passed": 16,
+    "failed": 0,
+    "scope": "UpdatedexactPostCSSIPCguard tests/notproductPASS"
+  },
+  "warnings": "Rootinference/multiplelockfiles/stale baseline mapping/middlewarewarning retained; no install/config/compiler/checkskip workaround.",
+  "effects": "Own isolatedcopy/dependencyjunctions/compiler/cache/rawlog only. No envcopy/download/DEVDB/appfixture/booking/role/securityconfig command; ordinary mainauth/telemetry unenumerated.",
+  "counts": "0newUI/fix/accepted;22of316 until actualnewcompiledoutput C175. Previousbuilds/finals/UTC and fulltechnicalFAIL retained."
+}

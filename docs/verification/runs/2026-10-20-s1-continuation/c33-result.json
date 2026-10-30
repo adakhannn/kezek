@@ -1,0 +1,17 @@
+{
+  "id": "C33",
+  "candidate": "dev-20261020-S1-6b8b3bf85fe5",
+  "status": "THREE_NEW_ENTRY_MODE_PAGE_DENIAL_PASS",
+  "baseCaseId": "S21-F401-superadmin-staff",
+  "cases": [
+    {"mode":"newtab","afterUtc":"2026-10-20T23:08:02Z","beforeUtc":"2026-10-20T23:08:24Z","actual":"One legitimate agent-created temporaryIAB2tab6 /staff shows Нет доступа к кабинету сотрудника, no activeownstaffrecord; Anonymized/logout visible, sameknownSA sharedsession."},
+    {"mode":"reload","afterUtc":"2026-10-20T23:08:24Z","beforeUtc":"2026-10-20T23:09:19Z","actual":"Fulltab6documentreload sameauthenticatedNoStaffAccess, no staffworkspace."},
+    {"mode":"copied-address","afterUtc":"2026-10-20T23:09:19Z","beforeUtc":"2026-10-20T23:09:45Z","actual":"Observednonsensitive tab6/staff address copiedin-memory, normalНаГлавную->actualroot/logoutAnonymized, then samecopiedaddress documentnavigation returnsNoStaffAccess. No systemclipboarddata read or OSclipboardcertification."}
+  ],
+  "reuse": "F4-01sixteenexistingrole-routepairs supply directURL:12PASS4BLOCKED atoriginalUTC/evidence/dephashes. C11owner/client/staff /admin actuals explicitlyinclude fullreload, so3additionalreloadactions reused withoriginalUTC, NOT3newexecutions. C11guest repeatedentry explicitlynotreload, remainsnotrunforreload.",
+  "matrix": {"passed":18,"blocked":16,"notRun":30,"failed":0,"total":64,"remaining":46,"newLivePass":3,"reusedPass":15},
+  "constraints": "64=16existingrole/routepairsx4entrymodes; blocked4pairs retainedacrossallmodes. Authenticatedpersonalaccessnotwrongrole; sharedcookie newtabnotindependentidentity/securitycontext. AX/DOMnotvisual/no-flash/SSR/API-RLS/OSclipboardPASS. WholeF4-02partial; no newacceptedrequirements/fixes.",
+  "effects": "No authentication/role/currentbiz/DBbusinesscommands/SQL/recalc/job/Save. Ordinarytelemetryunenumerated/notzeroTOTALwrites. Createdandclosed ONLY agenttemporaryTab6 aftercase; inventoryreturns originaluser2root/5admin, bothhandoff. No screenshot/viewport/replacementtabforcapture, no deniedprovider/endpoint.",
+  "counts": {"S1":"17/25accepted8left63/79PASS16left","S2":"1/70accepted69left","product":"18/316accepted298leftNOT_READY","wrongrole":"12PASS4BLOCKED/16","navigation":"16PASS2FAIL1BLOCKED/19","verifiedFixesLogicalRun":8},
+  "next": "F4-02remaining30:guest12,client8,owner5,staff5 entrymodecases. Batchwithinidentity ordinaryknownGoogle/logout and restoreSA. Only one legitimate temporarynewtab perentrycaseworkflow, nevercapture-recovery/bypass. Keep16missingroleblocks; no newfixtures. Deadline21Oct05UTC, draft04:35/short04:40/finalpause04:45/no-new04:50. Ifnext15minwakewouldmiss04:45, finalizealready04:35."
+}

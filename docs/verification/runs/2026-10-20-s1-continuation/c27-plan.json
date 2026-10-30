@@ -1,0 +1,11 @@
+{
+  "id": "C27",
+  "finding": "S1-F007 existing actual bug, not new distinct",
+  "parent": "M1-03",
+  "scope": "Ratingsdebug table render only; do NOT invoke any live recalc, POST, job, cron, SQL or change authorization/model",
+  "finiteCases": ["ActualsameSA8literalobjectcells/no rowbuttons before", "Controlled staff+branch+business React actionbuttons are real buttons, null/text/numeric tablecells preserved", "Error/empty and unchanged readonlyGET count controls", "SameSA actual rowbuttons count8 afterfix and fullreload; no clicks", "Types/explicitlint/scopedcomponentregression"],
+  "expected": "Render existing React action elements as elements, not stringify; existing handlers remain but no live execution accepted here",
+  "countsBefore": "Nav16PASS2FAIL1BLOCKED/19; S117/25accepted8left63/79cases16left; F007OPEN",
+  "budgetMinutes": 15,
+  "closureLimit": "Navigation alreadyPASS; renderer closure gives zero newacceptedrequirements/navigationcases. Actual recalculation workflow remains untested."
+}

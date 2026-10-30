@@ -1,0 +1,48 @@
+{
+  "id": "C173",
+  "status": "PASS_BOTH_SAME_LIVE_F020_VERIFIED",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "plan": "c173-same-live-plan.json",
+  "before": "c171-before-fail.json",
+  "caseId": "S26-I102-nondigit-phone-whatsapp-rejection",
+  "observationWindowUtc": [
+    "2026-10-25T22:59:55Z",
+    "2026-10-25T23:02:21Z"
+  ],
+  "baseline": "SameknownSA/RU/existinghumanTab2/A2branches0staff/services/bookings/fa5inactive/originalname/address+fourlinks+fourcontactsblank/coords—/—/inherittrue/activefalse/sevenclosed days/disabledSave. No mapretry/geolocation/auth.",
+  "variants": [
+    {
+      "field": "Телефон",
+      "fillAfterClockUtc": "2026-10-25T23:00:25Z",
+      "knownFillArgument": "INVALID PHONE TEST",
+      "submitAfterClockUtc": "2026-10-25T23:00:31Z",
+      "actual": "Exact existing internationalformaterror nowvisible; remains sameeditor/fieldAXredactednonempty/Saveenabled, no successnavigation. OrdinaryBacklist/reentry exactfa5 ->allcontactsblank/originalfields/SaveDisabled/errorgone. PASS."
+    },
+    {
+      "field": "WhatsApp",
+      "fillAfterClockUtc": "2026-10-25T23:00:56Z",
+      "knownFillArgument": "INVALID WHATSAPP TEST",
+      "submitAfterClockUtc": "2026-10-25T23:01:01Z",
+      "actual": "Exact existing WhatsAppinternationalformaterror nowvisible; remains sameeditor/AXredactednonempty/Saveenabled. OrdinaryBacklist/reentry ->blankallcontacts/allbaseline/SaveDisabled/errorgone. PASS."
+    }
+  ],
+  "restoration": {
+    "afterClockUtc": "2026-10-25T23:01:24Z",
+    "actual": "ObservedАдминка ->protected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1; handoffmarked/userchooser1untouched/no newtab/auth."
+  },
+  "effects": "TwoexpectedrejectedordinarySaveattempts and localdraft discard/reentry. No intendedpersistentcontactmutation; actualauth/telemetryunenumerated, neverzeroTOTALwrites.",
+  "credit": {
+    "newCompoundUiPass": 1,
+    "newVerifiedFix": 1,
+    "windowUiBefore": 18,
+    "windowUiAfter": 19,
+    "windowFixBefore": 3,
+    "windowFixAfter": 4,
+    "logicalVerifiedFixes": 16,
+    "newAccepted": 0,
+    "accepted": 22,
+    "remaining": 294
+  },
+  "limits": "OnlyF020 malformednondigitphone+WhatsApp serverguardintegration; no wholecontacts/inheritance/timezone/owner/security/visual/fulltechnicalPASS."
+}

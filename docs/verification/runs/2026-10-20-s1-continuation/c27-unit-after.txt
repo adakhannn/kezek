@@ -1,0 +1,12 @@
+[baseline-browser-mapping] The data in this module is over two months old. To ensure accurate Baseline data, please update: npm i baseline-browser-mapping@latest -D
+PASS src/__tests__/lib/ratingsAdminReadService.test.ts
+PASS src/__tests__/components/RatingsStatusCallerRead.test.tsx
+(node:10620) [DEP0040] DeprecationWarning: The punycode module is deprecated. Please use a userland alternative instead.
+PASS src/__tests__/components/RatingsDebugActionsRender.test.tsx
+
+Test Suites: 3 passed, 3 total
+Tests: 23 passed, 23 total
+Snapshots: 0 total
+Time: 2.611 s, estimated 8 s
+Ran all test suites within paths src/__tests__/components/RatingsDebugActionsRender.test.tsx, src/__tests__/lib/ratingsAdminReadService.test.ts, src/__tests__/components/RatingsStatusCallerRead.test.tsx.
+Exit0. No coverage change/gate claimed for renderer-only change.

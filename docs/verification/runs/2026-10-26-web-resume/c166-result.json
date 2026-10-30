@@ -1,0 +1,70 @@
+{
+  "id": "C166",
+  "status": "PASS_B302_FINITE_MATRIX_ACCEPTED",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "plan": "c166-public-category-reset-plan.json",
+  "historyReview": "c165-public-category-review.json",
+  "observationWindowUtc": [
+    "2026-10-25T22:24:49Z",
+    "2026-10-25T22:29:26Z"
+  ],
+  "baseline": "KnownSA/RU/noauth; ordinarypublicrootsettledblankq/nocat/3exactbusinesshrefs and2activecategorychoices. Baseline0newheader/cardcredit.",
+  "cases": [
+    {
+      "id": "S26-B302-category-only-membership-all",
+      "clockUtc": "2026-10-25T22:25:04Z",
+      "actual": "ObservedHomeHeaderBarberchip ->catbarbershop/2results EXACTfixtureA+business1, business2absent; All->cleanroot3. Womenchip->catzhenskaya-parikmaherskaya/1EXACTbusiness2, bothbarberabsent; All->root3. Queryblank/categorysummarycorrect/no catalogueerror.",
+      "newCompoundUi": 1
+    },
+    {
+      "id": "S26-B302-selective-query-category-clear",
+      "clockUtc": "2026-10-25T22:25:34Z",
+      "actual": "Barber+qТестовый бизнес1 settledonebusiness1; cleartextfield->URLcatonly/blankfield/2barbercards, womenabsent. Refillqueryassetup thenobservedAll->qonly/nocat/categorysummarygone/fieldandonebusiness1retained. InitialbroadURLwait matchedoldqcat; did NOTscore it, awaitedcategorysummaryhidden then actualqonlyAX. No repeatedclick/workaround. HeaderResetcleanup0newcredit.",
+      "newCompoundUi": 1
+    },
+    {
+      "id": "S26-B302-empty-category-reset-refresh",
+      "clockUtc": "2026-10-25T22:26:27Z",
+      "actual": "Women+qC166-NO-MATCH-26OCT ->ordinary0/no-results/visiblequeryandcategorysummary/no service-unavailableview. Actualempty-stateReset ->root/blankq/nocat/3originalbusinesscards. NamedG024functionalrefresh afterchangedHomeClient; old14Oct03:42:59UTC retained/notnewUI.",
+      "newCompoundUi": 0,
+      "historicalFunctionalRefreshEvents": 1
+    },
+    {
+      "id": "S26-B302-stale-unknown-category-reset",
+      "clockUtc": "2026-10-25T22:26:51Z",
+      "secondClockUtc": "2026-10-25T22:27:19Z",
+      "actual": "ONEordinarypublicgoto knowninactiveunusedcat live-test-night09oct-category ->0/normalno-results/referencecategoryname/blankfield/no serviceerror; observedReset->root3. ONEordinarygoto unknowncat c166-unknown-category-26oct ->settled0/normalno-results/nocatcreation/no serviceerror; observedReset->root3/blankq/nocat. InitialloadingnotPASS. Unknownrawsluglabel not claimedlocalized/contentqualityPASS.",
+      "newCompoundUi": 1
+    }
+  ],
+  "historicalReuse": {
+    "caseIds": [
+      "S23-B304-query-category-reload",
+      "S26-B302-header-reset-historical"
+    ],
+    "newExecutionCredit": 0,
+    "review": "C165 exact4C79dependencyhashes matchcurrent; sharedquerycategorycaseonlysupportsquerypreservation, notfreshcategorymembership. HeaderResetprimaryactualrestoration retained original23Octwindow; no retiming."
+  },
+  "restoration": {
+    "clockUtc": "2026-10-25T22:27:37Z",
+    "actual": "Cleanpublicrootall3, thenobservedAdminheader/Admin-panel ->actualprotected/admin/RU/Anonymized/Logout/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1, handoffmarked. UserGooglechooser1untouched/no newtabs/authtransition."
+  },
+  "effects": "PublicGETquery/categorynavigation and textfield/filter reset only. No entity/category/business/profile/security/role/booking/payment command, permission or fixture. Ordinaryappauth/analytics/telemetryunenumerated/notzeroTOTALwrites.",
+  "acceptance": {
+    "requirement": "B3-02",
+    "before": 22,
+    "after": 23,
+    "total": 316,
+    "remaining": 293,
+    "variants": 9,
+    "passedCaseRows": 6,
+    "newCompoundUiPass": 3,
+    "namedHistoricalFunctionalRefresh": 1,
+    "reusedHistoricalCases": 2,
+    "newVerifiedFix": 0,
+    "newAccepted": 1
+  },
+  "limits": "OnlyB3-02functionalcategory/reset finite9variants across6case rows incl2reusedcaseproofs. No service-name-search DEC-CATALOG-SEARCH decision, B3-01timing, B3-03networkfault, B3-04pagination/history, alltranslations/visual/APIsecurity acceptance.",
+  "next": "C166B3-02 finite9category/resetvariants across6case rows ALLPASS:3NEWcompoundUI+1namedG024emptyqcatResetREFRESH afterchangedHomeClient+2C79originalproofsREUSEDexactcurrentdeps/originalUTC. Accepted22->23of316293left/S6 2of29;26Oct17NEWUI/3fix/logical15/2historicalfunctionalrefreshEVENTS/3reusedcases/2newaccepted. Rootcleanblankq/nocat/all3 andSAadmin/RU/Anonymized/Business3 restored/no entity/auth/newtab/source/build change. WholeB3NOTaccepted: advertisedservice-searchDEC-CATALOG-SEARCH gap, preciseB3-01debounce, B3-03networkfault, B3-04pagination remain. NextC167 ONLYboundedREADONLY B3-01 historicalactualinput/measurement and currenteffect-boundary review before any plan: distinguish immediatefield echo/URLsettlement from proven500msdebounce/requestcounts/endtoendlatency. C166 ordinaryquerytyping is NOTtimingproof. No unchangedsearch/query/history rerun forcounts, no rawHTTP/storage/token/proxy/networkfault/native/newtab/clockfake; if sanctionedCUA cannotmeasure neededruntimecondition retainexactblocker and independentunfinishedpriority. Allold F013/F005/M1intermittent/role/fixture/cache/visual/security/technical/domainlast blockers remain."
+}

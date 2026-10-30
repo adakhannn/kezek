@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ApplicationStatusButton } from './ApplicationStatusButton';
 
 import { getServerLocale, getT, type I18nKey } from '@/app/_components/i18n/server';
+import { ApplicationReviewHistory } from '@/components/admin/ApplicationReviewHistory';
 import { Card } from '@/components/ui/Card';
 import { canModerateBusinessRegistrationApplication } from '@/lib/businessApplicationStatus';
 
@@ -153,18 +154,7 @@ export default async function BusinessApplicationsPage() {
                             )}
                         </p>
 
-                        {application.prior_submission_count > 0 || application.risk_flags.length ? (
-                            <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-700 dark:text-amber-300">
-                                    {t('admin.businessApplications.previousCount').replace('{count}', String(application.prior_submission_count))}
-                                </span>
-                                {application.risk_flags.map((flag) => (
-                                    <span key={flag} className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">
-                                        {flag}
-                                    </span>
-                                ))}
-                            </div>
-                        ) : null}
+                        <ApplicationReviewHistory count={application.prior_submission_count} flags={application.risk_flags ?? []} t={t} />
 
                         {application.created_business_id ? (
                             <Link

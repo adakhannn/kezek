@@ -1,0 +1,33 @@
+{
+  "id": "2026-10-26-web-resume-2-authorization",
+  "firstActualResumeClockUtc": "2026-10-26T07:18:35Z",
+  "timezone": "Asia/Bishkek",
+  "humanRequest": "тогда можешь начинать автономную работу пока я тебя сам не останавлю",
+  "automationAnswer": "Перенести и включить существующую automation",
+  "authority": "Direct current human resume prospectively supersedes pause. Prior action-specific safety boundaries remain. No continuity across pause.",
+  "priorPause": "docs/verification/runs/2026-10-26-web-resume/pause-20261026-012750.json",
+  "priorFinal": {
+    "path": "docs/verification/runs/2026-10-26-web-resume/final-report.json",
+    "sha256": "43e73d1c1b4b6fe22e44dda03608262c3799492be749667647f3c1cc1eb0b127"
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 7,
+    "observedAfterClockUtc": "2026-10-26T07:18:35Z"
+  },
+  "automation": {
+    "id": "kezek",
+    "kind": "heartbeat",
+    "status": "ACTIVE",
+    "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+    "previousTargetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "intervalMinutes": 15,
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configSHA256": "c8870f5d500d43d5251f7272d22d2b91e9bfe364720967f5c8ea615f51d69424",
+    "oldPromptPreserved": true,
+    "noDuplicate": true
+  },
+  "limits": "WEB/local only. No native/mobile/subagents/new chats/commit/push/deploy. No direct DB/SQL/RPC/SDK/HTTP, secrets/storage extraction, forbidden providers/endpoints or permission bypass. No new identities/roles/jobs/fixtures/booking commands/payments/irreversible delete without specific action-time authority. No unchanged DONE/tool/auth/catalogue/F013/profileSave/cache/visual/provider retry. Old journals/finals/UTC immutable."
+}

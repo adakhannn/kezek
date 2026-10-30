@@ -1,0 +1,45 @@
+{
+  "id": "C170",
+  "type": "bounded readonly I1-02 contact/inheritance/timezone history/effects review",
+  "startedAfterUtc": "2026-10-25T22:49:46Z",
+  "completedBeforeUtc": "2026-10-25T22:51:29Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "history": "C106 name rejection/C109 address draft/C113 address persistence and C169 HTTPS contract are complete; no unchanged replay. Reviewed current contact-related run records and I1-02 case inventory: website only current contact case, not proof for telephone/WhatsApp validation. Dashboard BranchFormContacts is mocked component support, not actual owner/admin integration.",
+  "remainingMatrix": {
+    "address": "Existing C113 persistence proof; originalUTC retained, no repeat forcredit.",
+    "coordinates": "Provider unavailable in current admin editor; no location/mapretry/permission or source-onlyPASS.",
+    "contacts": "Website complete C169. Phone/WhatsApp invalid text rejection not yet actualLIVE. Valid phone formatting, public email normalization, public contact rendering and inheritance fallback are separate unfinishedvariants, no privatephone/message authority inferred.",
+    "inheritance": "Helper distinguishes branchoverride/businessfallback/disabled; fixtureA parentcontactsblank means current blank display cannot prove positivefallback. Requires independentlysafe finite effect plan if pursued; no source/mock certification.",
+    "timezone": "Neither current admin nor dashboard branch form exposes timezone control in reviewed sources. Booking uses businessTz. Actual branch/business timezone semantics require separate dependency/oracle review; no date/timefake or schedulechange.",
+    "active": "Known inactivefa5/active057 controls retained; no activation change planned or new bookingavailabilitycredit."
+  },
+  "independentOracle": "Nonempty text containing no digits is not an international telephone/WhatsApp number. Save must reject it visibly rather than claim success and silently erase it. Optional empty contact fields remain allowed. This expected behavior derives from labelled phone inputs and existing validation contract, not a runtime bug claim from source.",
+  "effects": "Ordinary existinginactiveA form only; bundledpayload and existing auth checks reviewed C168/C169. Validating supplied publiccontact text has no send/call/email/OTP side effect in update path. Synthetic no-digit markers are not private contact details or reachable destinations. Atmost2invalid Save attempts plus exactplannedclearrestore only if unexpected nonempty persistence. No actualphone/email/WhatsApp recipient, notification, map, schedule, activation, ownership, newentity or security command.",
+  "authority": "Continuing DEVWEB scope permits bounded reversible existingfixture updates. No newfixture/account/credential/grant/irreversibledelete. New data values exclusively synthetic noncontact text. Unknown/nonblank/masked baseline ->BLOCKED/noSubmit.",
+  "credit": "0UI/0fix/0accepted",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767"
+  },
+  "hashes": [
+    {
+      "path": "apps/web/src/__tests__/lib/businessContacts.test.ts",
+      "sha256": "e923bfb0fa5eef285a715ef6fe95c37190ae8ea26e87ba6c62180bff0f786684"
+    },
+    {
+      "path": "apps/web/src/__tests__/components/BranchFormContacts.test.tsx",
+      "sha256": "03d9783938c5dc9f3a1016cf1f0d24d32999371207fb379c9ce7bad47e87a066"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c169-result.json",
+      "sha256": "c51a3ad745c77606cc3939dc289a7a58f73b89bd2e3cea41f872b4a8e0e789f0"
+    },
+    {
+      "path": "docs/verification/reviews.jsonl",
+      "sha256": "2b227b5c22cc06d83160aa0ed36856d26f0ef48f21971771c783947a46d6f1f8"
+    }
+  ]
+}

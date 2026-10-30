@@ -1,0 +1,26 @@
+{
+  "id": "C238",
+  "status": "PASS_ONE_LOCAL_RAW_BUSINESS_SLUG_NORMALIZATION_DISCARD_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c238-slug-local-normalization-plan.json",
+  "caseId": "S28-I602-business-slug-raw-normalization-discard",
+  "observationWindowUtc": [
+    "2026-10-28T08:48:11Z",
+    "2026-10-28T08:49:52Z"
+  ],
+  "actual": "ExactknownSA existingA originalname/slug/approvedBarber/ownerunassigned/limit2/2branches0staffservicesbookings/blankaddress-phone4contacts. EditonlyURL: raw \" C238 Өнөр Үңкүр !!! \"+ordinaryTab ->visiblec238-onor-ungkur+matching/b/c238-onor-ungkurpreview; nameunchanged. Raw!!!+Tab ->business+/b/business. ClearedURL+Tab ->originalname-deriveds1-test-20261020-branch-availability/helper. ONECancel ->readonlyoriginal. Reentryalloriginalfields/blankcontacts/category/approved;ONEreloadclosededitorandretainedoriginalname/slug/2of2/allbaselinereadonlyfields. No Save/Enter/persistedslugchange.",
+  "effects": "Three localURLfills+Tab, Cancel/reentry/ONEreload andreadnavigation. No Save/PATCH/DBentity/owner/category/approval/contact/quota/role/security/booking/hold/slot/payment/authswitch/source/test/build/servercommand in productcase. Ordinaryread/auth/analytics/telemetryunenumerated, not zero TOTALwrites. Recoverysetup separatelyzero productcredit.",
+  "restoration": "ObservedАдминка ->actualprotectedadmin/RU/Anonymized/Business3/4branches1staff4services30bookings/Today28Oct0-0-0/no bookings today;markHandoff. No pendingfixtureeffects/localdraft.",
+  "limits": "AdminBusinessCardEdit consumer only. Not owner-specificsettingsform/serverinvalidpayload/collisionretest/SQLuniqueness/concurrency/SEO/persistedslug/wholeI6-02/visual/securityPASS. AlreadycurrentC95collisionproofkeptoriginal23OctUTC/depsmatch; no repeat/newdistinctreusecredit. Determineowner-vs-adminmethod applicability before anywholeI6closure.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 0,
+    "windowUiAfter": 1,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 27,
+    "remaining": 289,
+    "windowLiveFixes": 0,
+    "logicalFixes": 17
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "S1.2-S1.1-production-error-followup",
+  "plannedUtc": "2026-10-18T10:20:42Z",
+  "origin": "http://127.0.0.1:3103",
+  "source": "isolated current-source production build f001, dummy .invalid configuration and existing Node network denial; no real credentials",
+  "deadlineUtc": "2026-10-18T12:40:00Z",
+  "cases": [
+    {
+      "id": "S14-built-privacy",
+      "parent": "A3-01",
+      "steps": [
+        "Start current-source built server",
+        "Open privacy document and reload",
+        "Verify legal content"
+      ]
+    },
+    {
+      "id": "S14-server-failure",
+      "parent": "A4-02",
+      "steps": [
+        "Open known business slug page in isolated dummy-backend origin",
+        "Observe actual Server Component boundary after fetch throws",
+        "Inspect safe rendered message and retry/home actions"
+      ]
+    },
+    {
+      "id": "S14-api-failure",
+      "parent": "A4-02",
+      "steps": [
+        "Open map in same isolated build",
+        "Wait for actual client GET failure and error UI",
+        "Inspect safe message, retry action and absence of misleading empty-success state"
+      ]
+    },
+    {
+      "id": "S14-server-safe",
+      "parent": "A4-04",
+      "steps": [
+        "Inspect rendered server-error UI for stack traces, exception details and secrets; browser/dev logs handled separately"
+      ]
+    },
+    {
+      "id": "S14-api-safe",
+      "parent": "A4-04",
+      "steps": [
+        "Inspect rendered client request failure UI for same unsafe details"
+      ]
+    },
+    {
+      "id": "S14-server-retry",
+      "parent": "A4-03",
+      "steps": [
+        "Click retry once with fault still present",
+        "Record preserved safe failure, not recovery PASS"
+      ]
+    },
+    {
+      "id": "S14-api-retry",
+      "parent": "A4-03",
+      "steps": [
+        "Click retry once with fault still present",
+        "Record preserved safe failure, not recovery PASS"
+      ]
+    }
+  ],
+  "restoration": "Return existing tab3 to localhost:3000; normal owner session remains on original origin. Stop only owned loopback server via bounded timer/known PID; keep isolated artifacts. No alternate access to forbidden tab/endpoint."
+}

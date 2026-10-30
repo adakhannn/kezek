@@ -4,26 +4,9 @@ import { redirect } from 'next/navigation';
 import { getT } from '@/app/_components/i18n/server';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { formatDateTime } from '@/lib/dateFormat';
+import { readRatingsStatusForCaller, readRatingsJobsForCaller } from '@/lib/ratingsAdminReadService';
 
 export const dynamic = 'force-dynamic';
-
-type RatingsStatusResponse = {
-    ok: boolean;
-    error?: string;
-    staff_last_metric_date: string | null;
-    branch_last_metric_date: string | null;
-    biz_last_metric_date: string | null;
-    staff_last_rating_recalculated_at?: string | null;
-    branch_last_rating_recalculated_at?: string | null;
-    biz_last_rating_recalculated_at?: string | null;
-    staff_without_rating: number;
-    branches_without_rating: number;
-    businesses_without_rating: number;
-    recent_errors_total?: number;
-    recent_errors_by_type?: Record<string, number>;
-    recent_errors_days?: number;
-    has_recent_errors?: boolean;
-};
 
 type RatingJob = {
     id: string;
@@ -66,18 +49,12 @@ function RatingsStatusErrorState({
 }
 
 export default async function RatingsStatusPage() {
-    // Вызов уже существующего API, который сам проверяет супер‑админа.
-    // Используем относительные URL, чтобы в проде не было сетевых ошибок из-за baseUrl.
-    let statusRes: Response;
-    let jobsRes: Response;
+    let statusRead: Awaited<ReturnType<typeof readRatingsStatusForCaller>>;
+    let jobsRead: Awaited<ReturnType<typeof readRatingsJobsForCaller>>;
     try {
-        [statusRes, jobsRes] = await Promise.all([
-            fetch('/api/admin/ratings/status', {
-                cache: 'no-store',
-            }),
-            fetch('/api/admin/ratings/jobs', {
-                cache: 'no-store',
-            }),
+        [statusRead, jobsRead] = await Promise.all([
+            readRatingsStatusForCaller(),
+            readRatingsJobsForCaller(),
         ]);
     } catch {
         const t = await getT();
@@ -92,14 +69,15 @@ export default async function RatingsStatusPage() {
         );
     }
 
-    if (statusRes.status === 401 || statusRes.status === 403 || jobsRes.status === 401 || jobsRes.status === 403) {
+    if ((!statusRead.ok && (statusRead.status === 401 || statusRead.status === 403)) ||
+        (!jobsRead.ok && (jobsRead.status === 401 || jobsRead.status === 403))) {
         // На всякий случай уводим на логин / ошибку доступа
         redirect('/auth/sign-in?redirect=/admin/ratings-status');
     }
 
     const t = await getT();
 
-    if (!statusRes.ok) {
+    if (!statusRead.ok) {
         return (
             <RatingsStatusErrorState
                 title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
@@ -111,39 +89,10 @@ export default async function RatingsStatusPage() {
         );
     }
 
-    let data: RatingsStatusResponse;
-    try {
-        data = (await statusRes.json()) as RatingsStatusResponse;
-    } catch {
-        return (
-            <RatingsStatusErrorState
-                title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
-                message={t(
-                    'admin.ratingsStatus.error.description',
-                    'Не удалось получить состояние рейтинговой системы.',
-                )}
-            />
-        );
-    }
-
-    const jobsJson = (await jobsRes.json().catch(() => ({ ok: false }))) as
+    const data = statusRead.data;
+    const jobsJson = (jobsRead.ok ? { ok: true, jobs: jobsRead.data.jobs } : { ok: false }) as
         | { ok: true; jobs: RatingJob[] }
         | { ok: false; error?: string };
-
-    if (!data.ok) {
-        return (
-            <RatingsStatusErrorState
-                title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
-                message={
-                    data.error ||
-                    t(
-                        'admin.ratingsStatus.error.description',
-                        'Не удалось получить состояние рейтинговой системы.',
-                    )
-                }
-            />
-        );
-    }
 
     const staffStale = isStale(data.staff_last_metric_date);
     const branchStale = isStale(data.branch_last_metric_date);

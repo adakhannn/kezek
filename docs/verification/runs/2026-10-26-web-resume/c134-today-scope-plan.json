@@ -1,0 +1,16 @@
+{
+  "id": "C134",
+  "caseId": "S26-M103-today-cancelled-summary",
+  "status": "NOT_RUN",
+  "planRefinement": "Preserve initial C133 BLOCKED observation. Narrow only the data-availability precondition to the Today query whose result feeds BOTH rows and chips. Separate business-count query warning cannot change today's row status/count reduction; old M1-03-home intermittent failure remains active separately. Same case/invariant, no additional case or duplicate credit.",
+  "savedAfterClockUtc": "2026-10-25T20:06:04Z",
+  "timeBudgetMinutes": 5,
+  "expected": "For the current loaded Today table with exactly one cancelled row, summary Cancelled must be1 and row label Отменено; Hold0/Confirmed0. No Today-query warning or auth barrier; unrelated Business-count warning retained separately.",
+  "steps": [
+    "Clock. Read existing rendered table with documented getByRole(table).innerText and cancelled chip parent DOM text. No reload/navigation/retry/HTTP. Validate date/header and one09:00–10:00 raw-cancelled row from fresh document-backed read. If Today error/changed rows/date/auth ->BLOCKED, no loop.",
+    "Compare independent row enumeration to chip. Mismatch is before-FAIL of same case; preserve C133 guard stop and all old failures. Only after this actualUI repro, minimal page presentation count/label spelling fix is allowed.",
+    "Addressed regression: mocked server component with canonical cancelled, legacy canceled and hold/confirmed/paid statuses; test is technical support, not LIVE. SAME-LIVE fresh render/reload of existing Today row after fix, no booking writes. Preserve original before evidence and mark handoff. No whole M1-03/build/visual/cache/security acceptance."
+  ],
+  "effects": "DOM-only read of existing UI, no reload or app mutation in before scenario. Any later source edit changes candidate and requires explicit dependency/build accounting.",
+  "excluded": "Booking mutation/new fixtures/time manipulation, Business-count networking fix, auth/roles/schema/security/config changes, rawHTTP/SDK/secrets, full OAuth logs, external browser automation"
+}

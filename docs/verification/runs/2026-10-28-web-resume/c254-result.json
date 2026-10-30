@@ -1,0 +1,55 @@
+{
+  "id": "C254",
+  "status": "PASS_TECHNICAL_BUILD_ONLY_ACTUAL_EXECUTION_PENDING",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "events": [
+    {
+      "event": "prepared",
+      "startedUtc": "2026-10-28T14:09:25.637Z",
+      "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261028-c254-60022ce29b32\\build",
+      "copiedFiles": 1687,
+      "copyFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+      "noEnvFiles": true,
+      "coldNextCache": true,
+      "defaultCompiler": true,
+      "dummyBackend": true,
+      "limitation": "Node TCP/fetch restriction except exact PostCSS IPC; not OS firewall or LIVE/deployed-production PASS"
+    },
+    {
+      "event": "spawned",
+      "pid": 34524,
+      "utc": "2026-10-28T14:09:25.654Z"
+    },
+    {
+      "event": "finished",
+      "startedUtc": "2026-10-28T14:09:25.637Z",
+      "finishedUtc": "2026-10-28T14:11:08.426Z",
+      "exitCode": 0,
+      "signal": null,
+      "timedOut": false,
+      "pid": 34524,
+      "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261028-c254-60022ce29b32\\build"
+    }
+  ],
+  "compileOutput": [
+    " ✓ Compiled successfully in 45s",
+    "   Running TypeScript ...",
+    "   Generating static pages using 7 workers (0/36) ...",
+    "   Generating static pages using 7 workers (9/36) ",
+    "   Generating static pages using 7 workers (18/36) ",
+    "   Generating static pages using 7 workers (27/36) ",
+    " ✓ Generating static pages using 7 workers (36/36) in 1985.1ms"
+  ],
+  "rawLog": "docs/verification/runs/2026-10-28-web-resume/c254-build-raw.txt",
+  "rawSHA256": "8f6fa4510fffb6b150577016defaf093b5948798901eac2ada0b14e3037c6be1",
+  "plan": "docs/verification/runs/2026-10-28-web-resume/c254-build-plan.json",
+  "preflight": {
+    "path": "docs/verification/runs/2026-10-28-web-resume/c254-preflight-checks.json",
+    "sha256": "9e44e60a08a665b61466d183590cc4d2b92d810ab57ab1e9720ed46d348686d6",
+    "syntaxExit0": true,
+    "guardAssertions16PASS": true,
+    "listener": "Prelaunch3000PID6060/3107absent"
+  },
+  "limits": "Buildtechnicalonly/0NEWUI/0fix/A3notyetPASS. No unchangedcompilerretry. Runtime/publiccompiledexecutionmustbeactualCUA notHTTP/source.",
+  "observationGap": "Lastactualbeforetoolupdate+heartbeat thenresumed14:19:15; log independentlyrecordsfinished14:11:08.426. No continuous-observation/intermediate-actionclaim."
+}

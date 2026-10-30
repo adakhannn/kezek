@@ -1,0 +1,95 @@
+{
+  "id": "C135-technical",
+  "completedBeforeUtc": "2026-10-25T20:13:38Z",
+  "before": {
+    "command": "node node_modules/jest/bin/jest.js --runInBand --watch=false --runTestsByPath src/__tests__/components/AdminHomeTodayStatuses.test.tsx",
+    "startedAfterUtc": "2026-10-25T20:07:27Z",
+    "exitCode": 1,
+    "passed": 1,
+    "failed": 2,
+    "raw": "c135-before-unit.txt"
+  },
+  "after": {
+    "startedAfterUtc": "2026-10-25T20:08:35Z",
+    "passed": 3,
+    "failedTests": 0,
+    "combinedCommandExit": 1,
+    "raw": "c135-after-command.txt",
+    "toolMistake": "Requested nonexistent StatusChip.test.tsx as second path; new actual page suite passed3. Preserved command failure; no nonexistent test claimed passed. Full actual WEB suite below proves new test suite passed again."
+  },
+  "typecheck": {
+    "exitCode": 0,
+    "command": "node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
+  },
+  "scopedLint": {
+    "exitCode": 0,
+    "command": "node node_modules/eslint/bin/eslint.js src/app/admin/page.tsx src/__tests__/components/AdminHomeTodayStatuses.test.tsx --no-ignore"
+  },
+  "fullTest": {
+    "startedAfterUtc": "2026-10-25T20:09:18Z",
+    "command": "node node_modules/jest/bin/jest.js --watch=false --maxWorkers=2 --json --outputFile=test-results/c135-full-jest.json",
+    "exitCode": 1,
+    "suites": 540,
+    "passedSuites": 534,
+    "failedSuites": 6,
+    "passed": 2539,
+    "failed": 11,
+    "report": "apps/web/test-results/c135-full-jest.json",
+    "failedSuiteTests": [
+      {
+        "path": "src/__tests__/api/admin/ratings-jobs.test.ts",
+        "tests": [
+          "/api/admin/ratings/jobs returns jobs payload"
+        ]
+      },
+      {
+        "path": "src/__tests__/components/ProfileLoadFailureBoundary.test.tsx",
+        "tests": [
+          "does not advertise an editable empty identity after authentication rejects",
+          "does not advertise an editable empty identity after the profile read fails",
+          "does not advertise an editable empty identity when authentication returns no user"
+        ]
+      },
+      {
+        "path": "src/__tests__/components/RoleApplicationsReadState.test.tsx",
+        "tests": [
+          "does not advertise a confirmed empty list after a http failure",
+          "does not advertise a confirmed empty list after a json failure",
+          "does not advertise a confirmed empty list after a network failure"
+        ]
+      },
+      {
+        "path": "src/__tests__/lib/telegramMobileAuthAttemptService.test.ts",
+        "tests": [
+          "telegramMobileAuthAttemptService binds telegram context to pending attempt",
+          "telegramMobileAuthAttemptService stores source metadata when start payload includes source info"
+        ]
+      },
+      {
+        "path": "src/__tests__/lib/telegramWebhookHttpService.test.ts",
+        "tests": [
+          "telegramWebhookHttpService handles /start payload and sends approval message with source details"
+        ]
+      },
+      {
+        "path": "src/app/staff/__tests__/StaffCabinetPages.test.tsx",
+        "tests": [
+          "Staff cabinet pages basic render StaffBookingsView отображает вкладки и базовую информацию о бронированиях"
+        ]
+      }
+    ],
+    "sameFailedSuiteAndAssertionNamesAsC91": true,
+    "priorReport": "apps/web/test-results/c91-src-unit-suite.json",
+    "scope": "Technical mocked source tests, NOT LIVE/no native/mobile application work or external browser automation."
+  },
+  "fullLint": {
+    "exitCode": 1,
+    "command": "node node_modules/eslint/bin/eslint.js . --format json --output-file test-results/c135-full-lint.json",
+    "errors": 52,
+    "warnings": 167,
+    "report": "apps/web/test-results/c135-full-lint.json",
+    "sameDiagnosticFingerprintAsC91": true,
+    "priorReport": "apps/web/test-results/c91-full-eslint.json"
+  },
+  "limits": "No full green or failure cause/remediation claimed. Same failure identities/diagnostics comparison does not prove all runtime causes. Coverage not required for page presentation-only patch; external Playwright prohibited by user, SAME-LIVE CUA used. No check disable/threshold/config/fixture/DB change."
+}

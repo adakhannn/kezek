@@ -58,3 +58,20 @@ describe('NotificationOrchestrator email recipients', () => {
         ]);
     });
 });
+
+test('Telegram dispatch sends one event per chat even when roles overlap', async () => {
+    const orchestrator = new NotificationOrchestrator({} as never, {} as never, { apiKey: 'test', from: 'test@example.com' });
+    const senders = { sendToClient: jest.fn().mockResolvedValue(true), sendToStaff: jest.fn().mockResolvedValue(true), sendToOwner: jest.fn().mockResolvedValue(true) };
+    const adapter = orchestrator as unknown as {
+        telegramService: typeof senders;
+        sendTelegramNotifications: (client: ParticipantData, staff: ParticipantData, owner: ParticipantData, details: never, type: 'confirm' | 'cancel') => Promise<number>;
+    };
+    adapter.telegramService = senders;
+    const recipient = participant({ telegramId: 123, notifyTelegram: true, telegramVerified: true });
+    expect(await adapter.sendTelegramNotifications(recipient, recipient, recipient, {} as never, 'confirm')).toBe(1);
+    expect(senders.sendToClient).toHaveBeenCalledTimes(1);
+    expect(senders.sendToStaff).not.toHaveBeenCalled();
+    expect(senders.sendToOwner).not.toHaveBeenCalled();
+    expect(await adapter.sendTelegramNotifications(recipient, recipient, recipient, {} as never, 'cancel')).toBe(1);
+    expect(senders.sendToClient).toHaveBeenCalledTimes(2);
+});

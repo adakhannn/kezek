@@ -1,0 +1,26 @@
+{
+  "id": "C26",
+  "parent": "M1-03",
+  "candidateId": "dev-20261020-S1-6965bd8726b8",
+  "userDecision": "Human explicitly chose «Сводный по всем бизнесам» for superadmin analyticsOverview. This prospectively authorizes global readonly report, not random selectedbiz/autoselection or businessrole grant.",
+  "scope": "Only global-superadmin overview. Owner/staff/business analytics routes and contexts unchanged. No general manager resolver weakening, no service-role impersonation by agent, no directAPI/RPC probes/SQL/migration/businesswrites.",
+  "problem": "ActualC18 overviewHTTP500. Code globaladminpagecalls/admin/api/analytics/overview but route requires getBizContextForManagers/currentbusiness. Source-onlylikelycontextcause; freshactualbefore and targetedunit needed. Underlyingtable/projections/modelcorrectness not assumed.",
+  "finiteCases": [
+    "ActualknownSA currentoverviewmenu/reload baseline",
+    "ExplicitcurrentglobalSA required beforeprivilegedglobalread/cache, guest/non-SA/foreign-globalrole/businessscope/readerror deny in mocks",
+    "Controlledmulti-businesssame-day rows aggregateeachday once and totals/ratesweightedfromsummedvalues; no across-day doublecount",
+    "Emptyreport/nullablevalues/readerror explicit, notfalsezeroSUCCESS",
+    "Datewindow andcache scopeseparation; no business preference changes",
+    "SuccessfulactualsameSA menu+reload currentglobalUI explicitlylabels allbusinesses; no numericalmodelreconciliation claim",
+    "Scopedservicecoverage60/types/lint; same-live before verifiedfix andnavclosure"
+  ],
+  "filterBoundary": "Existingbranchfilter route currentlyignoresbranchIds againstbusiness_daily_stats. Do NOTsilentlyreturnglobaltotals forrequestedbranch; defaultall-bizreport only for initialclosure. Explicitlyaccount unsupportedbranch filtering orimplementonlywithvalidatedexistingbranchstatscontract; no guessedtables/schema or silentfeaturepromise. bizIdquerycannotcauseforeignbusinessautoselection. Ownerbusinessanalyticsendpointunchanged.",
+  "steps": "Preflighttargetcaller+rowmodel+consumer; captureactualbefore; minimal thinroute/service separation; independentrowaggregationtests beforefix; actualSAME-LIVE orretainunclosedifDEVstats readfails; no DBfixtures/modelrecalc/cron; nohugebuild/Fonts networkrenewal.",
+  "budgetMinutes": 30,
+  "countsBefore": {
+    "S1": "17/25accepted8left;63/79PASS16left",
+    "S2": "1/70accepted69left",
+    "navigation": "15PASS3FAIL1BLOCKED/19"
+  },
+  "nextIfBlocked": "F007 render-onlyactioncells fix without invokingrecalc; oldbusinessapplicationstransient andF005errorpath remain open"
+}

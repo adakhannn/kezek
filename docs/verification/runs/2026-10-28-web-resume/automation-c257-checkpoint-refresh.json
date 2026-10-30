@@ -1,0 +1,22 @@
+{
+  "id": "C257_AUTOMATION_REFRESH",
+  "checks": {
+    "id": true,
+    "name": true,
+    "prompt": true,
+    "status": true,
+    "kind": true,
+    "rrule": true,
+    "target": true,
+    "createdAt": true
+  },
+  "automationId": "kezek",
+  "status": "ACTIVE",
+  "priorConfigSHA256": "58033883a1fc81288447996ee9c7973ca1903d80a9925cb735ed84ab393ba254",
+  "configSHA256": "26c7a0421b0ba3f7901f2a1d916b2ba038208997f16823ab92c3a8ff0be29c33",
+  "backup": "automation-before-c257-checkpoint.toml",
+  "originalConstraintSuffixPreserved": true,
+  "originalConstraintSuffixLength": 7545,
+  "noDuplicate": true,
+  "latestCheckpoint": "C257_COMPLETE_C258_BLOCKED_FINAL_READBACK_ONLY"
+}

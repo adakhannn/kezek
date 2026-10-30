@@ -1,5 +1,6 @@
 'use client';
 
+import { enUS, ru as ruLocale } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { useEffect, useRef, useState } from 'react';
@@ -83,7 +84,7 @@ export default function MonthPickerPopover({
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     const selected = value ? fromYmdLocal(value) : undefined;
-    const { locale } = useLanguage();
+    const { locale, t } = useLanguage();
     const MONTHS = MONTHS_BY_LOCALE[locale];
     const WEEKDAYS_SHORT = WEEKDAYS_SHORT_BY_LOCALE[locale];
 
@@ -120,7 +121,7 @@ export default function MonthPickerPopover({
     // Форматируем для отображения: месяц и год (например, "Январь 2026")
     const displayValue = selected
         ? `${MONTHS[selected.getMonth()]} ${selected.getFullYear()}`
-        : useLanguage().t('monthPicker.placeholder', 'Выберите месяц');
+        : t('monthPicker.placeholder', 'Выберите месяц');
 
     return (
         <div className={`relative ${className}`}>
@@ -132,8 +133,8 @@ export default function MonthPickerPopover({
                 aria-haspopup="dialog"
                 aria-label={
                     selected
-                        ? useLanguage().t('monthPicker.selected', `Выбранный месяц: ${displayValue}`)
-                        : useLanguage().t('monthPicker.open', 'Выбрать месяц')
+                        ? t('monthPicker.selected', 'Выбранный месяц: {value}').replace('{value}', displayValue)
+                        : t('monthPicker.open', 'Выбрать месяц')
                 }
                 className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[40px] sm:py-2 sm:text-sm touch-manipulation"
             >
@@ -177,11 +178,13 @@ export default function MonthPickerPopover({
                     ref={popoverRef}
                     role="dialog"
                     aria-modal="false"
-                    aria-label={useLanguage().t('monthPicker.dialogLabel', 'Выбор месяца')}
+                    aria-label={t('monthPicker.dialogLabel', 'Выбор месяца')}
                     className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-[#0b0b0d] sm:left-auto sm:right-0 sm:p-3 max-w-[calc(100vw-2rem)] sm:max-w-none"
                 >
                     <DayPicker
                         mode="single"
+                        // Match DatePickerPopover's existing Kyrgyz -> Russian date-locale fallback.
+                        locale={locale === 'en' ? enUS : ruLocale}
                         selected={selected}
                         onSelect={(d) => {
                             if (d) {
@@ -208,10 +211,10 @@ export default function MonthPickerPopover({
                             },
                         }}
                         labels={{
-                            labelMonthDropdown: () => 'Месяц',
-                            labelYearDropdown: () => 'Год',
-                            labelNext: () => 'Следующий месяц',
-                            labelPrevious: () => 'Предыдущий месяц',
+                            labelMonthDropdown: () => t('datePicker.monthLabel', 'Месяц'),
+                            labelYearDropdown: () => t('datePicker.yearLabel', 'Год'),
+                            labelNext: () => t('datePicker.nextMonth', 'Следующий месяц'),
+                            labelPrevious: () => t('datePicker.prevMonth', 'Предыдущий месяц'),
                         }}
                         classNames={{
                             root: 'w-full',

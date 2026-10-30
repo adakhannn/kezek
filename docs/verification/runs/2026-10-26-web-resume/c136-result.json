@@ -1,0 +1,19 @@
+{
+  "id": "C136",
+  "caseId": "S26-M103-today-cancelled-summary",
+  "status": "PASS_SAME_LIVE",
+  "plan": "c136-same-live-plan.json",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "sourceFingerprint": "f0dad7beb1d68eadee7fe8e88e9066fc26fb20f1d4584868bb5e15666b343a7c",
+  "observationWindowUtc": [
+    "2026-10-25T20:11:54Z",
+    "2026-10-25T20:12:22Z"
+  ],
+  "expected": "Same actual26Oct one cancelled09:00–10:00 row displays Отменено; chip Отменено1, Hold0/Confirmed0; loaded Today rows remain one and overall bookings30. Protected admin/RU retained. Business-count fetch failures remain independent unresolved; no Today-query error allowed.",
+  "actual": "Same user tab2 ordinary /admin reload after minimal fix: actual2026-10-26 one09:00–10:00 existing business2/branch1 row now Отменено; summary Отменено1/Hold0/Confirmed0. Total bookings30/categories3/Business3/Branch4/Staff1/Service4 and settled protected Admin-panel/Anonymized/RU/Logout. No Today or business warning in this observation; prior intermittent business-count failure still active, not repaired. Fresh DOM-backed read confirms row and chip; handoff marked.",
+  "effects": "Reload/AX read only; no app persisted command, ordinary telemetry unenumerated.",
+  "newUiPass": 1,
+  "newVerifiedFix": 1,
+  "newAccepted": 0,
+  "limits": "F017 exact count+RUlabel only. Old M1home intermittent/fetch cause, F013 and technical/cache/visual/fixtures/security blockers remain. No booking writes or whole M1-03 acceptance."
+}

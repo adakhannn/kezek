@@ -1,0 +1,52 @@
+{
+  "id": "C118",
+  "type": "bounded readonly M5-01/02 category history/dependency/effects review",
+  "startedAfterUtc": "2026-10-25T09:55:20Z",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "history": "Night09Oct admin-stage records retained inactive testcategory c7cef81b-2959-47eb-92b8-98ec82490d1c /live-test-night09oct-category, duplicatebarbershop slugrejection, originalupdateUUIDfailure and sameLIVEedit/reloadfix. Do not repeat those asnew. Public-stage WB094 alreadycovers publiccategoryname/filter/guestlabels. G08615Oct22:33:13UTC classified reference name_ru-only KY/ENcontentcontractgap withoutnewbug/fix; no repeatedtaxonomy/translation/schema change. ExactM5history/currentcase search found no targeted local slugdraft/manualoverride/Cancel case in reviewed sources; not globalabsenceclaim.",
+  "remaining": "Full successfulcreate/edit/delete lifecycle, categorydependencies/services/businessuse, translations and security/technical gates remain incomplete. No newcategory/deletion/propagation/job authority inferred. Reuse none asnewPASS; originalUTC preserved.",
+  "independentOracle": "Form tells user address is automatic from name and manually changeable. In editmode existingaddress should survive name-only edit; clearingaddress/blur should regenerate from currentname; manuallytypedaddress shouldnormalize and remainafter laternameedit. Cancel must discard all these localdrafts, leaving originalname/slug/inactive state on normalreentry. One complete localdraft/recovery case, not perfieldPASS.",
+  "effectsReview": "CategoryForm name/slug/state onChange and blur only localReactstate. Explicit submitPOST alone persists, editpayload propagateSlug:true; update route may call cat_replace_slug onbusinesscategories beforecategoryupdate. Therefore NEVER Save/Enter/activation/propagation. No creation needed; only retainedinactive markedtestcategory if actualpresent/ID+slug+inactive match, otherbaseline freshrecorded. Missing/mismatched ->BLOCKED without replacement/newfixture or guessedURLs. Cancel is ordinarycategorieslink. No publicaddresspreview/domainnavigation or reinterpretation of businessroute semantics inthiscase.",
+  "evidencePaths": [
+    "apps/web/test-results/night-2026-10-09/admin-stage.json",
+    "apps/web/test-results/night-2026-10-09/public-stage.json",
+    "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+    "apps/web/src/components/admin/categories/CategoryForm.tsx",
+    "apps/web/src/app/admin/categories/[id]/page.tsx",
+    "apps/web/src/app/admin/categories/page.tsx",
+    "apps/web/src/app/admin/api/categories/[id]/update/route.ts"
+  ],
+  "credit": "0UI/0fix/0accepted. No product/source/test/build/server/DB commands; ordinaryauth/telemetry unenumerated.",
+  "next": "C119 finite retainedinactivecategory localname/autoaddress/manualoverride/Cancel/reentry only. No Save/Enter/active/delete/newcategory/publicnavigation/auth transition. WholeM5-01/02 remain incomplete.",
+  "completedBeforeUtc": "2026-10-25T09:57:42Z",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/public-stage.json",
+      "sha256": "3aae02af3db95877e9d5cd153c9f5ba326a5787981c1b04d7099b1c739bce6e3"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G086-category-contract.json",
+      "sha256": "c17d0059a7b5b5d28588fb3d213ef0b3ac3f819f22c3dd0c9c8def49383864c2"
+    },
+    {
+      "path": "apps/web/src/components/admin/categories/CategoryForm.tsx",
+      "sha256": "5692f27d98f17fe17073f369df8fa967e4ca6f060a12a8c11ee2e928f342a5fe"
+    },
+    {
+      "path": "apps/web/src/app/admin/categories/[id]/page.tsx",
+      "sha256": "155695f88fd25d8657775acc8b6fa6e64ec9588e3278eff165b37ce36fb02d7b"
+    },
+    {
+      "path": "apps/web/src/app/admin/categories/page.tsx",
+      "sha256": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/categories/[id]/update/route.ts",
+      "sha256": "1a7504a8a83c1e5aa8be04b966b35582e8ebeb09406ee24df161f38c31e2ff16"
+    }
+  ]
+}

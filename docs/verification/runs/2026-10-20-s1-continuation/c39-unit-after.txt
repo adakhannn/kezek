@@ -1,0 +1,20 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:10908) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/components/ExistingSessionRedirectSignals.test.tsx
+PASS src/__tests__/components/ExistingSessionRedirectRefresh.test.tsx
+PASS src/__tests__/lib/signInRedirectLogic.test.ts
+-------------------------------|---------|----------|---------|---------|-------------------
+File                           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------------------|---------|----------|---------|---------|-------------------
+All files                      |     100 |      100 |     100 |     100 |                   
+ useExistingSessionRedirect.ts |     100 |      100 |     100 |     100 |                   
+-------------------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 3 passed, 3 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        2.415 s
+Ran all test suites within paths "src/__tests__/components/ExistingSessionRedirectSignals.test.tsx", "src/__tests__/components/ExistingSessionRedirectRefresh.test.tsx", "src/__tests__/lib/signInRedirectLogic.test.ts".
+
+exit_code: 0

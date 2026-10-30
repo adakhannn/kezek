@@ -1,0 +1,7 @@
+{
+ "id":"C19","parent":"C13/M1-03","caseId":"S21-M103-analytics-system","candidateId":"dev-20261020-S1-1c0013b28e40","afterClockUtc":"2026-10-20T12:32:17Z",
+ "scope":"One readonly current admin menu destination Аналитика платформы; source preflight GET/admin/api/system-analytics/overview only, no prohibited metrics/commands. Default dates are application state, no filter change by agent.",
+ "steps":"Actual menu link, inspect settled current UI; one full document reload and inspect. No retry loop, data mutation or new source fix. Known superadmin and same usertab5 retained.",
+ "expected":"Meaningful authorized page/data after entry/reload. Loading not PASS; real error retainedFAIL. No independent financial/aggregate/SQL/auth-RLS or production acceptance.",
+ "budgetMinutes":4,"noNewLongAfterUtc":"2026-10-20T12:45:00Z","finalizePauseFromUtc":"2026-10-20T12:50:00Z","deadlineUtc":"2026-10-20T13:00:00Z"
+}

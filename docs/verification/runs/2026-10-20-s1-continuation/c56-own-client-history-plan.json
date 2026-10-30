@@ -1,0 +1,21 @@
+{
+  "id":"C56",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementIds":["E1-01","E1-02","E1-03"],
+  "scope":"Pureclient own personalcabinet read-only date-boundary/history/detail/filter assertions. Not staff/owner management or newfixtures. Today21Oct all5knownconfirmed19Octvisits have ended; terminal26Octcancel remainsHistory even before scheduleddate.",
+  "reasonNotDuplicate":"G080 keyboard proof15Oct and L030paidreceipt13Oct preserved/no keyboard orpaidreceipt rerun. New finite elapsed-date boundary for5previouslyupcoming19Oct knownvisits and receiptentry from now-history; C30 emptyupcoming only was identitycontrol, not independent history/filter matrix.",
+  "role":"OrdinaryGooglelow.fade.osh@gmail.com, actualLIVE TEST CLIENT12OCT/Клиент; no roles/grants/newusers",
+  "expectedKnownHistoryIds":["a4278f13-11b1-490e-b1bd-51154a1a545f","f821dd52-5480-4178-96a9-620424b5a108","06458033-beaa-4c11-b424-ebda39651ae7","d730afd0-8757-4cf4-90ac-66abfc1746aa","e9111890-d6e9-4dc9-a400-f32067fc0cf4","14c108f6-64e6-4321-a085-e70804529d09","03469725-c5ba-4978-abfe-2179f19caeab","eaa3f7e5-662b-4290-979e-3c04a2584e7c"],
+  "expectationSources":["global-2026-10-17/g108-client-cabinet.txt five19OctconfirmedIDs/times", "global-2026-10-15/g080-final-history-ru.txt threeterminalIDs", "live-2026-10-13/stage-030-client-package-review.json paid034known3starreview retained", "cabinet/bookings/page.tsx: ownclient_id, upcominghold/confirmedend>=now, pastend<now ORterminal, chronologicalorder; ClientCabinetpastcanCancel=false"],
+  "cases":[
+    {"key":"elapsed-date-empty-upcoming","requirements":["E1-01"],"expected":"Useful ownedcabinet, upcomingempty becauseknown19Octvisitsended; no falsefuture19Octcards, helpfulfindserviceCTA, no error/loadingstuck. This doesnotprove everyempty/failure/loading variant."},
+    {"key":"history-boundary-and-terminal","requirements":["E1-01"],"expected":"History8knownIDs exactly, ordereddescstart:26Octcancel first then19Oct13:15->09:00 then12Oct17:00paid/16:15no-show. Paid/cancel/no-show statuses and known3starreview unchanged;5pastconfirmed now inHistory, noCancelbuttons onHistory. NoDB/cardinality/securityclaim beyondtheseownknownfixtures."},
+    {"key":"current-tab-filtering","requirements":["E1-03"],"expected":"SwitchUpcoming0/History8 andback retains correctselectedtab,matchingpanel/headingcount andsame8IDs; no hiddensearch/pagination expected because owncabinet currentsource renders completearrays. Onlypersonalclientlist filtering, notstaff/ownerhistoryfeatures."},
+    {"key":"history-receipt-entry","requirements":["E1-02"],"expected":"ClickactualOpen link scopedto ownf821historycard, retainbenignobservedURL. Receiptidentifiesf821dd52/confirmed/19Oct13:15/LIVE TESTService31/AдаханОсоров, survivesnormalreload. NoCancel/Repeat/Reviewactionclicked. Owncreatedreceipttabifpopup closeonlyafterproof, originalusertabsuntouched."}
+  ],
+  "steps":["Clock/logoutexistingSA; normalknownpureclientGoogle; verifyidentity", "Navigateobservedpersonalbookings; ownupcomingempty andHistoryassertions", "Switchtabsread-only andcheckexpectedIDs/order/counts", "Clock beforeclickOpen onf821only; inspectnewpopupinventoryorcurrentnavigation; no rawcallback/URLprobes", "Reloadreceiptandverifycontent,closeonlyownedpopup", "Clock beforeclientlogout/knownSA Google restore/admin/handoff"],
+  "budgetMinutes":10,
+  "effects":"Two ordinarylogouts/twoGooglelogins includingSArestore ifcompleted; localtabselection and ownreceiptpopup only. No create/cancel/reopen/review/Repeat/map/OTP/package/payment/status actions. f821 read-only NEVERcancel, closed909/256 untouched. Ordinaryauth/telemetryunenumerated,notzeroTOTALwrites.",
+  "acceptance":"E1-01partial until nonemptyupcoming/loading/error variants independentlycovered. E1-02 ownreceipt subset not all receiptclasses. E1-03 canaccept only declared currentpersonal-list filter/no-pagination matrix if livePASS and finite scope confirmed; no broadstaff/ownerfilterscertificate. No newfix unless actualUIrepro.",
+  "stop":"Unexpecteddata/error recordFAIL/uncertainty, do not mutatefixtures tofitexpectations. Password/CAPTCHA/device humanhandoff. Blockednavigation no workaround; boundeddiagnostic then independentcase."
+}

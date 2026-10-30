@@ -1,0 +1,14 @@
+{
+  "id": "C117",
+  "caseId": "S25-M204-isolated-empty-members-readonly-SA",
+  "plan": "c117-members-readonly-plan.json",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "status": "PASS_functional_live_readonly_empty_members_only",
+  "observationWindowUtc": ["2026-10-25T09:41:47Z", "2026-10-25T09:43:21Z"],
+  "actual": "Fresh knownSA samehumanTab2 protectedadmin/Anonymized/Business3/RU. OrdinaryobservedAclick followedby boundedread/wait(no duplicateclick) ->originalbusinessname/slug/ownerunassigned/2branches0staff0services0bookings/limit2. Clock09:42:11 ordinary Участники linkonce ->exactbusinessURL; actual Участники бизнеса/correctAname then Загрузка участников... settled Участников пока нет before09:42:31. No Добавитьучастника link/role grant/revoke/demote controls. EmptyState prose Добавьте первого участника... is not an action/authority and was not followed. Clock09:42:31 oneordinaryreload ->correctAname/settledemptylist/noerror/loading/no management controls. Clock09:42:46 rootreturn ->protectedheading/Anonymized/collapsedАдмин-панель/RU/Business3/4branches/1staff/4services/30bookings; handoff before nextactualclock09:43:21. One complete emptyreadonlyview/reloadcase, no newmember/role command.",
+  "effects": "Ordinarynavigation/mountlistGET/one reload only. No role/add/invite/revoke/demote/owner/Save/Enter/publicvisibility/contact/booking/payment/fixture/authtransition commands. No rawHTTP/SDK/SQL/secret/storage/networkprobe/source/test/build/server change. Ordinaryauth/telemetry unenumerated/notzeroTOTALwrites. UI absence/retention is not independent transport/DBrole cardinality or API/RLS certificate.",
+  "limits": "Known-SA noArole isolatedemptyfixture only. Nonemptymember identities/grouping/businessrole restrictions, rolegrant/revoke/owner lifecycle and publicvisibility matrix remain unaccepted. OriginalpublicS1proofs not repeated/reused for newcredit. No visual/device/screenreader/no-flash PASS. M2-04 partial/casePlanCompletefalse.",
+  "counts": {"newUiCases":1,"newWindowPassedCasesBefore":2,"newWindowPassedCasesAfter":3,"newLiveFixes":0,"acceptedDelta":0,"accepted":21,"remaining":295,"verifiedFixesLogicalRun":11},
+  "next": "C118 bounded readonly M5-01/02 category lifecycle/use history and currentdependency review before any finiteUIplan. Identify genuinelyuncovered authorized draft/read-only variant, not repeat historicalcategoryCRUD/ratingdraft/memberempty/address/Cancel/build/auth forcounts. No newcategory/role/fixture/persistentconfiguration/delete/job/notification/payment commands; directcategorywrites requireseparateeffect/authorityreview. Preserve M2remainingeffects/owner/membersnonempty/F013/profileSave/cache/visual/security/fulltechnicalgate blockers; no wholeacceptance promotion from controls."
+}

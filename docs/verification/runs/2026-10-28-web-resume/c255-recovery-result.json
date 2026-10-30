@@ -1,0 +1,34 @@
+{
+  "id": "C255_MAIN_AND_WORKING_TAB_RECOVERY",
+  "reason": "Fresh14:20:33UTC3000noListener/PID6060absent;previous31368nowconhostonly,34524compilerabsent. Causeunknown/nocontinuityclaim. Toolruntimealsoreset/resume28Tabundefined; firstinventoryempty.",
+  "projectProof": {
+    "path": "C:/projects/kezek/apps/web",
+    "package": "web",
+    "devScript": "next dev --turbopack",
+    "entry": "C:/projects/kezek/node_modules/.pnpm/_0e72f788072870741e1a6d93ec3d0b2e/node_modules/next/dist/bin/next"
+  },
+  "start": {
+    "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "cwd": "C:/projects/kezek/apps/web",
+    "sessionId": 34957,
+    "listenerPid": 30212,
+    "readySeconds": 7.2,
+    "onceOnly": true,
+    "previousSessionId": 31372,
+    "previousListenerPid": 6060,
+    "preflightFreshStoppedProof": true
+  },
+  "browser": {
+    "firstInventory": "IAB2tabs[]/oldhandleundefined afterinstrumentalsessionchange",
+    "oneCreate": "ONEworkingtabcreateadmin timedout; nextinventoryoldtab1provider0777ANDownnewtab2provider0d872361. Emptyinventorywastransient—notconfirmedpermanenttabloss.",
+    "cleanup": "BoundONLYnewowncreatedtab2/normaladmin thenclosedit; originaltab1neverclosed. Initialresume28Tabassignmentfailedbecausebindinguninitializedaftercreate rejection; getTabreadexecutedbutnodebindingfailed. Reboundoriginaltab1withNEWkezekRecoveredTab/actualprotectedadminRU/Anonymized/Business3/4branch1staff4service30booking/28OctToday0-0-0; markHandoff.",
+    "browserId": "2",
+    "tabId": "1",
+    "provider": "browser-use:0777f06e-9992-423c-a911-193bae880c9c",
+    "handle": "kezekRecoveredTab",
+    "ownTemporaryTabClosed": true,
+    "noRemainingDuplicateWorkingTab": true
+  },
+  "boundaries": "Notapplicationfix/noproductcredit/notglobaltoolhealthguarantee/notcauseproofC253. No forbiddenproviderbind/reload/URLpolicy/native/HTTP/auth/booking/rolecommands. Normalmainstartupautomaticallyreadsitsownconfiguration; agentdidnotread.env/secrets. Ordinaryread/auth/telemetryunenumerated.",
+  "observationGap": "Toolupdate/abortedcallbefore14:18heartbeat; nextactualclock14:19:15. C254logfinished14:11:08.426 independently; no exactintermediateactions/continuousworkclaimed."
+}

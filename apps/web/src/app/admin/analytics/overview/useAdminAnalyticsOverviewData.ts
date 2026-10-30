@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { loadPersistedAnalyticsFilters, persistAnalyticsFilters } from '../filterPersistence';
 
-import type { BranchOption, OverviewResponse, PeriodPreset, TrendChartData } from './types';
+import type { OverviewResponse, PeriodPreset, TrendChartData } from './types';
 
 import { addDaysToDateString, todayDateString } from '@/lib/time';
 
@@ -14,8 +14,6 @@ export function useAdminAnalyticsOverviewData() {
     const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('30');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [branchId, setBranchId] = useState<string>('all');
-    const [branches, setBranches] = useState<BranchOption[]>([]);
     const [data, setData] = useState<OverviewResponse['data'] | null>(null);
     const [reloadKey, setReloadKey] = useState(0);
 
@@ -26,34 +24,6 @@ export function useAdminAnalyticsOverviewData() {
 
         setStartDate(persisted.startDate ?? startDefault);
         setEndDate(persisted.endDate ?? endDefault);
-        if (persisted.branchId) {
-            setBranchId(persisted.branchId);
-        }
-    }, []);
-
-    useEffect(() => {
-        let ignore = false;
-
-        async function loadBranches() {
-            try {
-                const response = await fetch('/api/admin/branches/list', { cache: 'no-store' });
-                if (!response.ok) return;
-
-                const json = (await response.json()) as { ok?: boolean; data?: BranchOption[] };
-                if (!json.ok || !Array.isArray(json.data)) return;
-
-                if (!ignore) {
-                    setBranches(json.data);
-                }
-            } catch {
-                // Branch filter is optional; leave it empty on failure.
-            }
-        }
-
-        void loadBranches();
-        return () => {
-            ignore = true;
-        };
     }, []);
 
     useEffect(() => {
@@ -68,9 +38,6 @@ export function useAdminAnalyticsOverviewData() {
                 const params = new URLSearchParams();
                 params.set('startDate', startDate);
                 params.set('endDate', endDate);
-                if (branchId && branchId !== 'all') {
-                    params.set('branchIds', branchId);
-                }
 
                 const response = await fetch(`/admin/api/analytics/overview?${params.toString()}`, {
                     cache: 'no-store',
@@ -102,16 +69,15 @@ export function useAdminAnalyticsOverviewData() {
         return () => {
             ignore = true;
         };
-    }, [branchId, endDate, reloadKey, startDate]);
+    }, [endDate, reloadKey, startDate]);
 
     useEffect(() => {
         if (!startDate || !endDate) return;
         persistAnalyticsFilters({
             startDate,
             endDate,
-            branchId,
         });
-    }, [branchId, endDate, startDate]);
+    }, [endDate, startDate]);
 
     const trendChartData = useMemo<TrendChartData | null>(() => {
         if (!data) return null;
@@ -156,12 +122,9 @@ export function useAdminAnalyticsOverviewData() {
         periodPreset,
         startDate,
         endDate,
-        branchId,
-        branches,
         data,
         trendChartData,
         promoShare,
-        setBranchId,
         handlePresetChange,
         retry,
         setStartDateAndCustom: (value: string) => {

@@ -1,0 +1,12 @@
+{
+  "id": "kezek",
+  "status": "PAUSED",
+  "verifiedBeforeUtc": "2026-10-21T11:11:12Z",
+  "recordAfterClockUtc": "2026-10-21T11:14:58Z",
+  "promptUnchanged": true,
+  "rruleUnchanged": true,
+  "targetUnchanged": true,
+  "noDuplicateCreated": true,
+  "readback": "Appupdate returnedPAUSED; subsequentautomation.toml exactstatusPAUSED andexactpriorprompt/cadence matched.",
+  "noAutomaticResume": true
+}

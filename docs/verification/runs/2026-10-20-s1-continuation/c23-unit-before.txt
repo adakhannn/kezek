@@ -1,0 +1,34 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx
+  Promotions debug uses the shared current global superadmin boundary
+    × admits the same current global role as the admin layout (6 ms)
+    √ guest stops before any role query (7 ms)
+    √ rejects foreign global role (5 ms)
+    √ rejects business-scoped role (1 ms)
+    √ rejects role read error (1 ms)
+
+  ● Promotions debug uses the shared current global superadmin boundary › admits the same current global role as the admin layout
+
+    redirect:/dashboard
+
+       6 | jest.mock('@supabase/ssr', () => ({ createServerClient: jest.fn() }));
+       7 | jest.mock('next/headers', () => ({ cookies: jest.fn() }));
+    >  8 | jest.mock('next/navigation', () => ({ redirect: jest.fn((url: string) => { throw new Error('redirect:' + url); }) }));
+         |                                                                                  ^
+       9 | jest.mock('@/app/admin/promotions-debug/PromotionsDebugClient', () => ({ PromotionsDebugClient: () => null }));
+      10 |
+      11 | describe('Promotions debug uses the shared current global superadmin boundary', () => {
+
+      at src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx:8:82
+      at PromotionsDebugPage (src/app/admin/promotions-debug/page.tsx:36:17)
+      at Object.<anonymous> (src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx:31:12)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 4 passed, 5 total
+Snapshots:   0 total
+Time:        1.506 s
+Ran all test suites within paths "src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

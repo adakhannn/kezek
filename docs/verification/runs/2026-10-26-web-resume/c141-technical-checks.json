@@ -1,0 +1,24 @@
+{
+  "id": "C141-technical",
+  "completedBeforeUtc": "2026-10-25T20:26:48Z",
+  "before": {
+    "startedAfterUtc": "2026-10-25T20:24:48Z",
+    "passed": 3,
+    "failed": 2,
+    "report": "apps/web/test-results/c141-status-before.json"
+  },
+  "after": {
+    "startedAfterUtc": "2026-10-25T20:25:08Z",
+    "passed": 5,
+    "failed": 0,
+    "report": "apps/web/test-results/c141-status-after.json"
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "scopedLintFiveChangedFiles": {
+    "exitCode": 0
+  },
+  "fullGates": "Not rerun for this page-local translation delta; latest C135fullWEB540suites534PASS6FAIL/2550tests2539PASS11FAIL and lint52errors167warnings remain failed/historical, not currentwholeGREEN. Same6failedassertionidentities and lintdiagnosticfingerprints matched C91 in C135. Coverage not applicable to pagecopy-only change. External Playwright prohibited/user CUA same-live required.",
+  "limits": "Mocked server component/dummy data only, not LIVE; no DB/network/auth/booking command or test expectation weakening."
+}

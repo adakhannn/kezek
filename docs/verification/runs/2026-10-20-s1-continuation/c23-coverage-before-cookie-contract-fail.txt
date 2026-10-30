@@ -1,0 +1,23 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+PASS src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx
+PASS src/__tests__/lib/adminAccess.test.ts
+----------------------------|---------|----------|---------|---------|-------------------
+File                        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------------|---------|----------|---------|---------|-------------------
+All files                   |   95.23 |      100 |      40 |   95.23 |                   
+ app/admin/promotions-debug |   94.44 |      100 |      25 |   94.44 |                   
+  page.tsx                  |   94.44 |      100 |      25 |   94.44 | 15                
+ lib                        |     100 |      100 |     100 |     100 |                   
+  adminAccess.ts            |     100 |      100 |     100 |     100 |                   
+----------------------------|---------|----------|---------|---------|-------------------
+Jest: "global" coverage threshold for functions (60%) not met: 40%
+
+Test Suites: 2 passed, 2 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        3.273 s
+Ran all test suites within paths "src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx", "src/__tests__/lib/adminAccess.test.ts".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

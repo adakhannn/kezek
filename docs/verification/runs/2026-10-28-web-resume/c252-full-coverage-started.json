@@ -1,0 +1,18 @@
+{
+  "id": "full-coverage",
+  "executable": "C:\\Program Files\\nodejs\\node.exe",
+  "argv": [
+    "node_modules/jest/bin/jest.js",
+    "--coverage",
+    "--watchAll=false",
+    "--maxWorkers=2",
+    "--coverageDirectory=C:/projects/kezek/docs/verification/runs/2026-10-28-web-resume/c252-coverage",
+    "--json",
+    "--outputFile=C:/projects/kezek/docs/verification/runs/2026-10-28-web-resume/c252-full-tests.json"
+  ],
+  "cwd": "C:/projects/kezek/apps/web",
+  "config": "apps/web/jest.config.js",
+  "startedUtc": "2026-10-28T13:53:04.938Z",
+  "pid": 34800,
+  "watchdogMs": 480000
+}

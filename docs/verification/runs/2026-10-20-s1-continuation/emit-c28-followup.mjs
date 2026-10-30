@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import { createHash } from 'node:crypto';
+import { updateJson } from './json-evidence-patch.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation',read=p=>fs.readFileSync(p),j=p=>JSON.parse(read(p)),sha=b=>createHash('sha256').update(b).digest('hex');
+const l=j('docs/WEB_VERIFICATION_LEDGER.json'),p=j(run+'/progress.json'),r=j(run+'/c28-result.json');
+if(l.evidence.some(e=>e.id==='S1-EV-245'))throw Error('Alreadyapplied');
+l.evidence.push(...[[245,'c28-plan.json'],[246,'c28-result.json']].map(([n,f])=>({id:'S1-EV-'+n,path:run+'/'+f,sha256:sha(read(run+'/'+f))})));
+const c=l.cases.find(c=>c.id==='S21-M103-business-applications');
+c.followupObservations=[...(c.followupObservations??[]),{observedUtc:r.observationWindowUtc[1],candidateId:r.candidate,method:'live',actual:r.actual,decision:r.decision,evidenceIds:['S1-EV-245','S1-EV-246']}];
+l.updatedUtc=r.observationWindowUtc[1];l.nextBatch.objective=r.next;
+Object.assign(p,{activeSubpackage:'C28boundeddiagnosticcompleted/no credit',casePlan:'c28-plan.json',lastCheckpoint:r.next,checkpointAfterClockUtc:r.observationWindowUtc[1]});p.browser.page='/admin/business-applications';p.browser.actualRole='C28sameknownSA actual3historicalcards/noerror; oldfailureunreproduced/notfixed';
+process.stdout.write('*** Begin Patch\n'+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+'*** End Patch\n');

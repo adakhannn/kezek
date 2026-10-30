@@ -1,0 +1,65 @@
+{
+  "id": "C240",
+  "status": "READONLY_REVIEW_AND_FINITE_C241_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "requirementIds": [
+    "D1-02",
+    "D2-02"
+  ],
+  "caseId": "S28-D102-foreign-active-branch-query-rejected",
+  "variants": [
+    "wizard:known-active-foreign-business-branch-deep-link-rewinds-required-branch"
+  ],
+  "timeboxMinutes": 7,
+  "history": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c01-result.json",
+      "sha256": "d874c694309e6b47b8a3522cbf80258aca44ec48322b162a0d8878e39fcbbe39",
+      "scope": "Existing active057 query is SAME A positive control; inactivefa5 query rejection is a different precondition. No business2 query carrying approved active A branch in primary."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume-2/c200-required-choice-coverage-review.json",
+      "sha256": "1335fe3930eb9658862183882005debf2e21a3ee292b0a26faf195768ba74a12",
+      "scope": "Required branch-none and other choice guards; not cross-business active branch query."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume-2/c228-result.json",
+      "sha256": "3b1a12cfd17771990a1bc6a106e74bfd04dff7d21d350cba43da4d6d7f17bf3b",
+      "scope": "Unassigned service query pruning differs from business-scoped foreign active branch."
+    }
+  ],
+  "review": "Targeted primary stage/result/review search found no foreign-branch/cross-business branch navigation case. Exact branch=057 search matched only c01 same-A positive control. Ledger has no foreign/cross-business variant. Current booking page scopes branches to selected business and active=true; selection state accepts branch only from provided branches; view passes initialBranchValid to useBookingSteps, which rewinds invalid branch to step1. These are source expectations, not LIVE proof. No reuse or guard-fix inferred.",
+  "dependencyHashes": {
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+  },
+  "knownObjects": {
+    "business2Slug": "testovyy-biznes-2",
+    "matchingBranch": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+    "foreignBusinessA": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "foreignActiveBranch": "057447c8-b200-4403-b056-49e3c250840f"
+  },
+  "routes": {
+    "positive": "http://localhost:3000/b/testovyy-biznes-2/booking?step=2&branch=fe1dde50-c04a-4b48-b215-bde72aa60625&day=2026-10-28",
+    "negative": "http://localhost:3000/b/testovyy-biznes-2/booking?step=2&branch=057447c8-b200-4403-b056-49e3c250840f&day=2026-10-28",
+    "recovery": "http://localhost:3000/b/testovyy-biznes-2/booking"
+  },
+  "independentExpected": "Existing current business2 has two known public branches, not A. Positive URL settles day step2 with own branch1 selected/current day28Oct and Next enabled; no staff/service/slot requirement or Next click. Negative differs only branch ID: known active branch from another approved business must not be adopted or appear as business2 option/selected summary. Settle branch step1 with the same two own options unselected, no foreign A branch/name, Next disabled and invalid branch absent from settled URL. No dependent staff/service selection. Recovery base URL shows step1/no branch; admin SA/RU/Anonymized/Business3 restored. Positive calibration is not an additional case.",
+  "steps": [
+    "Actual clock and fresh existing working tab protected SA baseline. One positive direct URL, wait visible day step and inspect branch summary/Next; no Next activation. If loading/catalogue/eligibility or date commit uncertain, record BLOCKED before negative and recover normally without requery.",
+    "Clock; one negative URL differing only known branch ID. Wait step1/two own branches, inspect unselected/Next disabled/no foreign option/summary and settled URL. Any foreign adoption is UI FAIL; never advance or submit. Navigation timeout ->ONE fresh AX, no duplicate goto.",
+    "Clock; one base recovery URL; inspect step1/none. Observed brand/Admin menu ->protected admin/RU/Anonymized/Business3, markHandoff. No auth transition or new tab."
+  ],
+  "effects": "Ordinary known-local public document navigation and local wizard URL only. No Next/ChooseTime/slot/staff/service/date selection/hold/Confirm/booking/cancel/payment/Save/entity/association/role/API/SDK/SQL/storage extraction/fault. App auth/analytics/telemetry unenumerated; not zero TOTAL writes.",
+  "stopRules": [
+    "Use current working tab only; no forbidden provider/route or workaround.",
+    "No full D1/D2/security/API/RLS acceptance from this narrow UI guard.",
+    "Unchanged catalogue/auth/role/provider failure ->exact blocker, no retry loop.",
+    "No fixtures or guessed/unknown IDs: only existing two known business branches and active A control."
+  ],
+  "credit": "At most ONE NEW compound functional UI case if all assertions/recovery pass; zero accepted requirement/fix expected. All other required variants remain."
+}
+

@@ -1,0 +1,48 @@
+{
+  "id": "C177",
+  "savedBeforeUiUtc": "2026-10-25T23:12:45Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "timeBudgetMinutesIncludingRestore": 7,
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "branch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+    "branchName": "S1 TEST INACTIVE BRANCH",
+    "active": false,
+    "control": "057447c8-b200-4403-b056-49e3c250840f",
+    "staffServicesBookings": 0
+  },
+  "ids": {
+    "reject": "S26-I102-public-email-invalid-reject-discard",
+    "normalize": "S26-I102-public-email-lowercase-persist-restore"
+  },
+  "cases": [
+    {
+      "key": "reject",
+      "variant": "public-email:malformed-reject-discard",
+      "knownInput": "INVALID EMAIL TEST",
+      "expected": "OneordinarySave must reject non-email text on sameeditor with visible native browser validation or existing serveremailerror. Permittedread-only DOM input.type/validity.typeMismatch/validationMessage can establish browsercondition without value read. Leave/reentry originalblankcontact/allbaseline/SaveDisabled. No transport/no-write/security inference. Onefunctionalcase ifcomplete."
+    },
+    {
+      "key": "normalize",
+      "variant": "public-email:lowercase-persist-reload-clear",
+      "knownInput": "C177.TEST@EXAMPLE.INVALID",
+      "expected": "Onlyifsyntheticvalue independentlyreadable inordinaryAX: Save/reentry/oneordinaryreload show c177.test@example.invalid andSaveDisabled; clearSave/reentry/reload restoreblank/allbaseline. If anyredacted/opaquevalue BEFORE validSave, do NOTpersist; markBLOCKED exactnormalizationvisibility andordinarydiscard/reentry. No valueDOMunmask/comparison or serviceproviderworkaround."
+    }
+  ],
+  "steps": [
+    "Clock/currenthumanTab2/admin/RU/Anonymized ->observedA2branches0staff/services/bookings ->branches ->exactinactivefa5. Originalname/blankaddress/fourlinks/fourcontacts/unmaskedbaseline/coords—/—/inherittrue/activefalse/7closed days/disabledSave required. MismatchBLOCKED/no input/Save. No mapretry.",
+    "ClockfillONLY publicemail invalidsyntheticargument, captureAXnonempty/mask andSaveenabled. Readtype attribute fromobservedtextbox. ClockONEordinarySave(noEnter). Captureactualsameeditor/nativevalidation or exactserveremailerror; readonlyDOMvalidity/message only(no.value). If unsupported/unobservable ->BLOCKEDnotFAIL/no workaround. Unexpectedsuccess->FAIL; readonlyreentry, exactknownclearSaveonlyifnonemptypersistedvalue, thenstopothercase. OrdinaryBacklist/reentry exactbaseline.",
+    "ClockfillONLY publicemail uppercaseknownsyntheticargument. Ifredacted/opaque AX: recordnormalizationBLOCKED before any validSave, leaveordinaryBacklist/reentrybaseline. Do not extract.value/getAttributevalue/clipboard/storage or repeatfill. Iffullyvisible: freshclockONEordinarySave, reentry+clockONEreload expectedlowercase. ClearONLYemail andclockONErestoreSave; reentry+clockONEreload baselineblank. Unexpectedwriteoutcome ->no repeat/retainexactstate; onlyplannedknownrollbackifappropriate.",
+    "ClockobservedАдминка restoreprotected/admin/RU/Anonymized/Business3/handoff. Userchooser1untouched/no newtabs/auth, no privatecontact/message/email-send/OTP/map/schedule/activation/role/fixture/source/build commands."
+  ],
+  "effects": "Atmostone invalidSaveattempt plus2validupdatecommands ONLYifnormalizationinputfullyobservable: uppercase syntheticemail ->lowercasepersist ->emptyrestore. Nativeconstraint validation may preemptsubmit but notrawtransport/zeroTOTALwrites proof. Ordinaryauth/telemetry/emptyrepresentation writes unenumerated. No message/call/mailto/SMTP/privatecontact/newentity commands.",
+  "limits": "Onlypublicemail rejected-input/recovery and(ifobservable) normalization/persistence onadminexistinginactivebranch. Notallcontacttypes/ownerform/inheritance/timezone/publicdisplay/APIsecurity/wholeM2/I1acceptance. Mandatoryblockednormalization retained, no unitimitation.",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/lib/businessContacts.ts": "9d8d54d9187e8235823eb5c6e599bc4f805bd6776f03ab1bcb92841a5877ff4f",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+    "apps/web/src/components/ui/Input.tsx": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf"
+  }
+}

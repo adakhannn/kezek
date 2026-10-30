@@ -71,15 +71,18 @@ export default async function ServicesListPage({
     };
 
     const serviceMap = new Map<string, GroupedService>();
+    const activeServiceNames = new Set(
+        (services ?? []).filter((s: ServiceRow) => s.active).map((s: ServiceRow) => s.name_ru),
+    );
     
     (services ?? []).forEach((s: ServiceRow) => {
         // Применяем фильтр по филиалу
         if (branchFilter && s.branch_id !== branchFilter) return;
         
-        // Учитываем только активные услуги при группировке
-        // Неактивные услуги (мягко удаленные) не должны показываться в списке филиалов
-        if (!s.active) return;
-        
+        // Retain fully hidden services for editing/reactivation. When the logical
+        // service still has active copies, keep its existing active-only branch
+        // selection: update currently operates on the name group, not separate IDs.
+        if (!s.active && activeServiceNames.has(s.name_ru)) return;
         const key = s.name_ru;
         if (!serviceMap.has(key)) {
             serviceMap.set(key, {

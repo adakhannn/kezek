@@ -1,0 +1,117 @@
+{
+  "id": "C181",
+  "status": "READONLY_TIMEZONE_CONTRACT_CLASSIFIED_LIVE_BOUNDARY_BLOCKED",
+  "observationWindowUtc": [
+    "2026-10-25T23:55:47Z",
+    "2026-10-25T23:58:16Z"
+  ],
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirement": "I1-02 timezone subvariant only",
+  "model": "Generated repository Database type has businesses.tz nullable; branches Row/Insert/Update have no tz/timezone field. staff_schedule_rules.tz is a separate scheduling record, not a branch setting. This is source-model evidence only, not inspection of live database schema/rows.",
+  "uiAndReceiver": "Reviewed admin BranchForm and owner/dashboard BranchForm, business card editor and dashboard BusinessContactSettingsForm/settings page: no timezone control or timezone payload. Admin business PATCH whitelists name/slug/categories/address/phones/contacts/approval; branch update whitelists its existing fields/coords/links/contacts/inheritance/activity, no timezone assignment. No new setting, source fix, API call or hidden input is justified by the absence of a control.",
+  "consumer": "Public booking server selects businesses.tz and no branch timezone. view passes biz.tz into useBookingSelectionState and getBusinessTimezone; helper returns trimmed nonblank business timezone, otherwise NEXT_PUBLIC_TZ or Asia/Bishkek. Day/today/max date and toLabel/calendar labels consume businessTz. Current SQL source get_free_slots_service_day_v2 and schedule_effective_day read businesses.tz with Asia/Bishkek fallback; SQL files were read only, not executed or claimed deployed. JS environment fallback and SQL literal fallback are different source mechanisms; actual env values were not extracted and no runtime mismatch is proven.",
+  "history": [
+    {
+      "id": "WB-014",
+      "originalDate": "2026-06-27",
+      "scope": "Documented server/browser timezone hydration fix and forced TZ=UTC production probe. Cited postfix primary missing in checkout; do not promote document or repeat server TZ override/build for current LIVE.",
+      "primary": "apps/web/test-results/live-b2-business-page-2026-06-27-wb014-postfix/wb014-postfix.json",
+      "exists": false
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G088-day-range-after.json",
+      "originalUtc": "2026-10-15T23:11:32Z",
+      "scope": "Known current-day/past-date transition guards. Explicit held-tab midnight/DST/browser timezone exclusions; not all-zone/branch timezone acceptance."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G089-upper-date-range.json",
+      "originalUtc": "2026-10-15T23:23:37Z",
+      "scope": "Inclusive60day/beyond range calendar/recovery; explicitly excludes real midnight/alltimezones/DST."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G091-deep-date-recovery.json",
+      "originalUtc": "2026-10-15T23:48:47Z",
+      "scope": "Past/offday confounded; partial date recovery. Explicit alltimezones/midnight exclusion, not independent timezone proof."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json",
+      "originalUtc": "2026-10-17T03:10:26Z..03:19:19Z",
+      "scope": "Contactsettings locale/noinput/noSave, not a timezone setting or runtime zone boundary."
+    }
+  ],
+  "independentOracle": "A displayed appointment instant/calendar day should agree with the documented business-local timezone across branch selection and server/browser rendering, including near-midnight values. Observing a normal daytime label in one zone alone does not establish override/default behavior or timezone independence. Whether a separate branch timezone editor is required is a product-contract question, not an inferred bug from its absence.",
+  "blocker": "Current permitted UI has no branch/business timezone control in the reviewed forms and no independently certified nondefault-timezone fixture/value. FixtureA has no staff/services/bookings. Creating a zone fixture, editing business timezone through hidden API/DB, changing OS/browser/server timezone, fake clocks or schedule/booking writes is outside scope. Natural held-tab midnight and differing server/browser timezone proof were not obtained. No speculative timezone/date/security/source fix; no old date/wizard/receipt replay for counts.",
+  "decision": "I1-02 stays partial; timezone runtime subvariant is BLOCKED, no new UI/reuse/fix/accepted credit. Source mapping clarifies implementation only. Do not add a branch setting or reopen DONE contact/name/address/map tests.",
+  "dependencyHashes": {
+    "apps/web/src/types/supabase.ts": "e832078b52acf1ae6eeebe0825e045d69621f5b7e7a9df48cc15d776c0dcb005",
+    "apps/web/src/lib/time.ts": "cc86b6471996fd3f42d728a0a69e8a8dc1ae91b285e6a5ef446fa65c0c000d7b",
+    "apps/web/src/lib/bookingCalendarDate.ts": "f9d1771c4d430aa97c6b32b75ca8eb152e6e5d5ca098624faac1c91d84c79554",
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/app/dashboard/branches/BranchForm.tsx": "6ede4daa94720345173be4f0a96fa2e0d32aa2ecafc9f10f6b3f325b7b9ddd8f",
+    "apps/web/src/app/dashboard/settings/BusinessContactSettingsForm.tsx": "1270d845a6c103b57de1688b6e12b988cdf7ed8be790802489076281d7152da5",
+    "apps/web/src/app/dashboard/settings/page.tsx": "c9f7f04e1a41eb7c9963246bbf38bcca4cc67b49526eb5f16aaf5c9336466940",
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "de60a1526da8b49cde543fac99d3e9e76fded3a0e4b813b151bb0b9b9e95c257",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts": "cd7b1a69c595a2055dfcdd3881543fc26f86d8f08cf65140caae787b48a3613f",
+    "apps/web/src/app/b/[slug]/components/BookingFormSections.tsx": "5b42b8700581cbe1c4dae3664dc29e94392e2ed519b982ff2fb7957c11e15be6",
+    "apps/web/src/app/b/[slug]/components/BookingDateCalendar.tsx": "9430529a2015e88f2ab29dabd9d8a249e487baa1ab79851a152bb8a2667a7f21"
+  },
+  "sourceSqlOnly": [
+    {
+      "path": "supabase/migrations/20260918131000_explicit_schedule_booking_consumers.sql",
+      "sha256": "3ab854b72b268e7b702c6a45af4386a92ebc2017b59e2ee7e48b24ba035b8833",
+      "notExecuted": true
+    },
+    {
+      "path": "supabase/migrations/20261008065051_complete_schedule_operations.sql",
+      "sha256": "86b7a60372e9008bd8d090bc0179032d8b32bcef9df00b54c88cbaaead9824bb",
+      "notExecuted": true
+    }
+  ],
+  "hashes": [
+    {
+      "path": "docs/WEB_BUG_REGISTRY.md",
+      "sha256": "1d36236397e7ecd48f35725b97214d719a46323df933cec2b2653c7f9713c5a0"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c170-contact-matrix-review.json",
+      "sha256": "8f7d0a8af4b8b8149b689ac2490fee61d1d90984ea35fc8ce2d5c82139141ffa"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c180-public-map-boundaries-review.json",
+      "sha256": "3b84d64bccbabbed909b1ea7fe2cd3a88a21de3c8ffffe120a53bd4881808041"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G088-day-range-after.json",
+      "sha256": "da926328803a48922709cc3520d7e8d51517395a773261add483a17d8a4fa87e"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G089-upper-date-range.json",
+      "sha256": "047dc86d33b65e1e321519d934196ee09cb24ffe1040e2432199c9a20a190410"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G091-deep-date-recovery.json",
+      "sha256": "52ebcb39dc6971da8340817ac0767ad5f6c6b429b9d6fbc6dbde63a3f8c0e7f2"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json",
+      "sha256": "304e771c8c5817b2ad4427d6785108b87df860499da5858dc0e5803002208c70"
+    }
+  ],
+  "credit": {
+    "newUi": 0,
+    "reused": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 23,
+    "remaining": 293,
+    "windowUi": 21,
+    "windowFixes": 4
+  },
+  "effects": "Read-only repository history/source/contract classification and evidence/accounting records. No browser bind/navigation/auth, timezone/env/clock/schedule/branch/business/booking/DB/entity/source/test/build/server action. Existing C179 effects journal immutable pendingfalse; user tab/admin and main server preserved without fresh UI-health claim. Ordinary background auth/telemetry unenumerated.",
+  "next": "C182 ONLY bounded read-only exact branch directory_links history/current receiver/effects review before any finite UI plan. Establish original WB-045 first-branch onboarding proof versus an existing retained branch edit/public propagation, exact four-link shape and safe synthetic HTTPS data/restoration. Do not repeat genericwebsite/inheritance/contact cases. No application approval/newbranch/newentity, external Instagram/map destination activation, provider/location/permission, privatecontact/message, field Save or flag write from review. Reuse only complete matching original proof/dependencies/originalUTC; otherwise retain blocker and choose a genuinely uncovered permitted finite variant, no UNIT imitation."
+}

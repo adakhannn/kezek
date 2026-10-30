@@ -1,0 +1,18 @@
+{
+  "id":"C49",
+  "plannedAfterUtc":"2026-10-21T02:18:36Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementIds":["C3-03"],
+  "scope":"Actual user abandonment of ordinary Google chooser via browserBack, then retry recovery. NOT provider consent-refusal callback/access_denied, not synthetic errorquery C47, no raw callback replay.",
+  "cases":[
+    {"key":"chooser-back","expected":"After normalSAlogout, safe /auth/sign-in?redirect=%2Fterms -> Google chooser. OrdinaryBack without selecting account returns useful guest sign-in with safe internalreturn, no accidentalappsession/admin content."},
+    {"key":"reload-after-back","expected":"Normal reload of actual returned sign-in document retains useful guest form/Googlecontrol and safe internalreturn; no stuckcallback, no newauthenticatedappidentity."},
+    {"key":"retry-recovery","expected":"Retry observed Google button -> actual chooser -> exact knownSA selection -> safe http://localhost:3000/terms and authenticatedAnonymized/termsheading. Recovery from real abandonment, not duplicate action for closed success matrix; restore /admin without anotherlogin."}
+  ],
+  "unverifiedRequiredModes":["Explicit Google consent/access_denied callback: current known-account chooser has no decline action; no revoking consent/new account/credentials to manufacture it", "Yandex cancellation: external provider/callback readiness remainsunverified; no newaccount/password or bypass/domain changes"],
+  "budgetMinutes":8,
+  "steps":["Freshinventory/currentSA", "NormalLogout and verify guest", "Open exactsafe sign-in URL, click observedGoogle", "Observe chooser only, no accountselection", "BrowserBack, observe actualpage and guestidentity", "Reload actualreturnedpage and inspect usefulform/href", "RetryGoogle, choose only knownkezekkg, verifyterms/identity", "Restore/admin and handoff originaluser2/5"],
+  "effects":"One normalSAlogout and one finalnormalSA Googlelogin if retry succeeds. First providerentry abandoned beforeaccountselection. Authsync/telemetry IDs unenumerated, notzeroTOTALwrites. No role/grant/newaccount/consentrevocation/currentbusiness/business/booking/OTP/messages/source/test changes; no authcodes/token/cookie/clipboard reads.",
+  "limits":"Only3abandonment/recoverycases; fullC3-03 remainspartial with explicitrefusal/Yandexmodeunverified. BrowserBack not mislabelled actualproviderdenial. No sessioncardinality/API/visual/no-flash/production claim.",
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

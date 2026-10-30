@@ -1,0 +1,22 @@
+{
+  "id": "C09",
+  "caseId": "S12-INITIAL-VISUAL",
+  "candidateId": "dev-20261020-S1-bbc338182f70",
+  "observedAfterClockUtc": "2026-10-20T09:43:08Z",
+  "recordedAfterClockUtc": "2026-10-20T09:44:13Z",
+  "status": "BLOCKED_AFTER_HUMAN_NEW_TAB_PREFLIGHT_0_CLOSURES",
+  "trigger": "Human answered Открыл новую вкладку to the one manual repair request",
+  "inventory": "IAB2 old usertab2 retained; new usertab5/provider c6f744b5-18d3-4b56-9132-c301225c7e66 at http://localhost:3000/",
+  "action": "Bound exact newly observed human tab5, marked handoff; actual AX, read-only CSS viewport and ONE screenshot attempt. No navigation/reload/viewport override.",
+  "actualRole": "Guest: header Войти",
+  "document": "Catalogue3, retained fixtureA and existing businesses1/2, footer and navigation present in actual AX",
+  "viewport": {"width":2661,"height":2096,"dpr":0.375},
+  "screenshot": "Unable to capture screenshot; no image saved",
+  "conclusion": "New human tab did not recover capture. Root cause not established; neither blank application nor application CSS defect proved. Separate temporary isolated test tabs had working captures; cannot substitute their images for this visual matrix.",
+  "stopApplied": "Stopped after one changed-state attempt. No unchanged retry, native/CDP/HTTP workaround, agent-created replacement, repeated Ctrl0/newtab request or new product fix.",
+  "effects": "Read-only UI observation only; no auth/business/booking commands or data changes initiated; ordinary telemetry unenumerated, not zero total DB writes. Both user tabs remain open.",
+  "counts": {"requirementsPassed":18,"requirementsRemaining":7,"casesPassed":60,"casesRemaining":19},
+  "remaining": {"deployedDomain":8,"controlledColdCache":8,"originalPrehydrationSSR":1,"fourRouteVisual":1,"originalTransientRequestClassification":1},
+  "blockerExit": "Working documented capture on a genuinely changed browser state or an independently valid complete evidence path; no further repeated manual repair requested. Other gates remain separate, domain last.",
+  "deadlineUtc": "2026-10-20T12:30:00Z"
+}

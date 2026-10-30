@@ -1,0 +1,12 @@
+{
+  "id":"C93-observation-gap",
+  "lastActualClockBeforeBlockingCallUtc":"2026-10-23T03:05:52Z",
+  "firstActualClockAfterReturnUtc":"2026-10-23T04:56:34Z",
+  "operation":"CUA pageAssets.bundle of exactly5alreadyobserved local font/CSS resources, not an arbitrary URL fetch or API probe",
+  "reportedElapsedMs":6602381.4328000005,
+  "returned":{"requested":5,"downloaded":5,"failed":0},
+  "classification":"Tool call overran C93 ten-minute window; no new UI observations or continuous-work/activity claim during the interval. Exact per-file transfer times/root cause of delay unavailable. Do not repeat bundle, rebuild/restart or change security/browser/source config from this tool delay.",
+  "runtime":"Own PID15056 log ended03:14:22.430Z/exit1, consistent with configured600s watchdog from03:04:22.064Z. Later elevated read-only check04:57:42Z found0PID15056 and0port3107listeners. No agent manual stop or other actions claimed during blocked call.",
+  "proofBoundary":"Actual compiled privacy entry/reload and asset inventory observed before03:05:52. Returned file hashes verified only after04:56:34. Do not retime old UI PASS to the return time or claim runtime remained live through the gap. Tool overrun is not product build/runtime failure or new fixed bug.",
+  "cleanup":"Only own temporaryTab3 closed after04:57:42; close+follow-on observation had debugger detach, fresh inventory confirmed tab3gone without retrying close; one fresh mainTab2 observation/handoff confirmed existing SA/admin3. No usertab closed/newtab replacement/relogin/serverrestart/cleanup."
+}

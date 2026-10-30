@@ -1,0 +1,41 @@
+{
+  "id": "C147",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "files": 1686,
+  "status": "BUILD_PASS_NOT_LIVE",
+  "event": "finished",
+  "startedUtc": "2026-10-25T20:35:15.115Z",
+  "finishedUtc": "2026-10-25T20:36:11.976Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "pid": 32692,
+  "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261026-c147-c1115361a3b4\\build",
+  "ownedSession": 87947,
+  "copy": {
+    "event": "prepared",
+    "startedUtc": "2026-10-25T20:35:15.115Z",
+    "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261026-c147-c1115361a3b4\\build",
+    "copiedFiles": 1686,
+    "copyFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+    "noEnvFiles": true,
+    "coldNextCache": true,
+    "defaultCompiler": true,
+    "dummyBackend": true,
+    "limitation": "Node TCP/fetch restriction except exact PostCSS IPC; not OS firewall or LIVE/deployed-production PASS"
+  },
+  "rawLog": "c147-build-raw.txt",
+  "compile": "25.9s",
+  "typecheck": "PASS",
+  "prerenders": 36,
+  "policyTests": {
+    "passed": 16,
+    "failed": 0,
+    "networkRequests": 0,
+    "scope": "Finite guard tests/notproductPASS"
+  },
+  "warnings": "Multiple lockfiles/root inference, stale baseline mapping and middleware convention warning retained; no package/config cleanup/compiler switch.",
+  "effects": "Own isolatedcopy/dependencyjunctions/compiler/cache/rawlog only. No envcopy/download/DEVDB/appfixture/booking/role/securityconfig command; ordinary mainauth/telemetry unenumerated.",
+  "counts": "0newUI/fix/accepted;20of316 until actualcompiledoutput C148. Previousbuilds/finals/UTC and fulltechnicalFAIL retained."
+}

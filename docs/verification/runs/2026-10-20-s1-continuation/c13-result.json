@@ -1,0 +1,12 @@
+{
+  "id":"C13","status":"PARTIAL_INTERRUPTED_BY_REAL_ADMIN_READ_STATE_BUG_C14","candidateId":"dev-20261020-S1-bbc338182f70",
+  "matrixSize":19,"passed":["home","businesses"],"failed":["business-applications","role-applications"],"blocked":["monitoring"],"notRun":14,
+  "home":"Reused C12 exact current-candidate superadmin root+document reload, original date/evidence retained, not repeated as new action.",
+  "businesses":"C12 menu navigation plus C13 full reload. Locator wait timed out but ONE AX observation then proved actual admin shell/list3/approved3. Business2 staff count now1 versus earlier0; no product or DB command by agent; cause/other actors unknown. Count inconsistency not declared fixed.",
+  "business-applications":"Actual menu navigation yielded Не удалось загрузить заявки: TypeError: fetch failed. One planned reload then actual3historical applications with approved/rejected statuses and links. Failure retained, not silently promoted to clean PASS; cause/request status not captured. No moderation action.",
+  "role-applications":"Actual menu page initially pending-empty; planned reload caused CUA timeout/kernel reset. Inventory/rebind same exact usertab5 only after handles lost, fresh AX proves real auth alert PLUS false Заявок нет. Interrupted this chain for C14 minimal fix. No new tab or bypass.",
+  "monitoring":"Never opened: known source auto-fetches previously prohibited metrics endpoint; remain blocked.",
+  "effects":"Read-only menu navigation/reloads; no moderation/grant/revoke/save/create/delete/SQL/auth change in C13. Ordinary telemetry unenumerated, not zero total DB writes.",
+  "remainingRequirements":"S2 still2/70; M1-03 not accepted. S1 separate current counts depend on candidate build freshness. Other14destinations not_run, not excluded.",
+  "deadlineUtc":"2026-10-20T13:00:00Z"
+}

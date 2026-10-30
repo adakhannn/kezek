@@ -1,0 +1,66 @@
+{
+  "id": "C100",
+  "type": "bounded read-only client logoutBack history/effect review",
+  "startedAfterUtc": "2026-10-23T05:33:41Z",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "history": "C98 scoped audit identified clientpostlogoutBack gap. Exact G108 Back is OWNER before low.fade login, not clientBack. G111 clientlogout00:08:37Z then stafflogin has no Back action. C76 clientBack/Forward00:21:36/43Z is WHILEauthenticated; guestheaderonlyduringlogout. Existing F4guest direct/reloadpage cases are different entrycondition, not historyrestoration after authenticatedclientlogout. C99SAvariantdone/no repeat. OriginalUTC/proofs unchanged/no reusecredit.",
+  "source": "cabinet/bookings/page auth.getUser beforeown queries; no user returns BookingsPageClient, not adminredirect. BookingsPageClient displays Войдите, чтобы посмотреть записи/Авторизуйтесь, чтобы увидеть свои бронирования plus signinlink; surrounding CabinetLayout navigation is public shell, not privatebookingdata. Authenticated path renders ClientCabinet including MyVisitPackagesBlock. Source is independent expectation/effect support, not LIVEsecurity proof. SignOutordinaryappclearing/API/client+root unchanged. No agentstorage/secretinspection, syntheticexpiredsession or authcode replay.",
+  "scope": "One knownpureclient existing/cabinet/bookings recenthistory ->ordinarylogout ->ONEBack and ONEreload. Expectedguestgate/no oldpersonalidentity/bookings/package. Setupknownclientlogin/SArestore notnewC3/F3/receipt/package credit. No booking/history/receipt action/Telegramnudgechoice/notificationsave or profile/contactinspection.",
+  "evidencePaths": [
+    "docs/verification/runs/2026-10-23-web-resume-2/c98-s2-priority-review.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c76-result.json",
+    "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+    "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json",
+    "apps/web/src/app/cabinet/bookings/page.tsx",
+    "apps/web/src/app/cabinet/bookings/BookingsPageClient.tsx",
+    "apps/web/src/app/cabinet/layout.tsx",
+    "apps/web/src/app/_components/SignOutButton.tsx",
+    "apps/web/src/app/auth/sign-out/page.tsx"
+  ],
+  "counts": {
+    "newUiPass": 0,
+    "newFixes": 0,
+    "acceptedDelta": 0
+  },
+  "effects": "Read-only history/source only/noUIinput/auth/source/test/serverchange; normal runningapptelemetry unenumerated/notzeroTOTALwrites.",
+  "next": "C101 finite knownpureclient logoutBack/reload guestgate case; no assumedadminstyle redirect, no extraBack hunting, no newtab or F013staffscenario. RestoreknownSA and preservehumanTab. All wholeC6/roles/API/cache/visual/provider/profile blocks retained.",
+  "completedBeforeUtc": "2026-10-23T05:35:07Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c98-s2-priority-review.json",
+      "sha256": "4ab338d37f4ffcd3671be87b74a75444762d86d09aea4e91de62feb947e6daa4"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c76-result.json",
+      "sha256": "e9a42adef1d087df921b96af6d237a5a3ee832e3f7fad7c4b6effcc4a2209f78"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+      "sha256": "f44f31588d263db6c304130dd977b0480ad1e297d50d96d63e1c648d5c88ee6a"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G111-google-staff-session.json",
+      "sha256": "b828fa343c247a68212754db0c279543b38d77eb0162de4fcadc3d64ad340c9e"
+    },
+    {
+      "path": "apps/web/src/app/cabinet/bookings/page.tsx",
+      "sha256": "5ac49763f5eb0434edf6e9353f939dea86755c063f76f8c1f708b9c52e9a6336"
+    },
+    {
+      "path": "apps/web/src/app/cabinet/bookings/BookingsPageClient.tsx",
+      "sha256": "9cf0c3a1a9baf5b42260517eb32b10c2254f18c75ceb0cdfc2c38666b346edca"
+    },
+    {
+      "path": "apps/web/src/app/cabinet/layout.tsx",
+      "sha256": "762eec49475f83dca01a1b42fdccea7aa2d3bf7c536951854c312467d1bc69fe"
+    },
+    {
+      "path": "apps/web/src/app/_components/SignOutButton.tsx",
+      "sha256": "bd94ea2f25c39ddd30d0d146e95b468114794381c7c2448a05ff1af128546524"
+    },
+    {
+      "path": "apps/web/src/app/auth/sign-out/page.tsx",
+      "sha256": "b15e268e4c2c70c294c47632e667e2bc4175f7caf42135661113dab20e8e4c4b"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": "C230",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-M201-branch-limit-local-boundary-guards-restore",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "variants": [
+    "business-edit:quota-below-current-count-and-range-upper-draft-guards-restore"
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BranchLimitEditor.tsx": "e16f060cdd7f099c9d8d3c290a29f66c233bd84b881115dfe5b9b43f6cef0c1c",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/app/admin/api/businesses/[id]/branch-limit/route.ts": "cdaa42904250d890f507d8f189edb98c694196bacc7371dbe919c108638e97b9",
+    "apps/web/src/components/ui/Input.tsx": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf",
+    "apps/web/src/components/ui/Button.tsx": "22abf97e9365202361506207cdac3b41029a493a32f8856a32f65ba2760dab5f"
+  },
+  "timeboxMinutes": 7,
+  "target": {
+    "business": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "name": "S1 TEST 20261020 Branch Availability",
+    "originalLimit": 2,
+    "currentBranchCount": 2,
+    "retainedBranchIds": [
+      "fa5f1017-d987-40c8-90ca-b042898c694f",
+      "057447c8-b200-4403-b056-49e3c250840f"
+    ]
+  },
+  "expected": "FreshprotectedSA A namedbusiness/2branches/quota2/2/no other activity, input2/updatebuttondisabled. Ordinarynumberfield localdrafts1(below existing2),0(belowvalidmin),1001(overmax) must visiblycommit each and keepUpdateLimitdisabled. Allowedmaximum1000 draft mustvisiblycommit and enable button; NEVERclick. Restoreinput2 ->buttondisabled; ONEreloadoriginal2/2/knownbusiness/2branches/0staffservicesbookings. Returnadmin.",
+  "steps": [
+    "FreshsameworkingtabSAadmin ->observedknownA businesslink; requireexactname/slug/2branches/limit2 original/ownerunassigned/approvedBarber. Do notopenotheredit/owner/category/approval/delete/create. Recordoriginalfield2/buttondisabled.",
+    "Using ordinary fieldfill andTab:1 then0 then1001 then1000. Aftereachinspectvisiblevalue and UpdateLimitdisabled/enabled. No Save/UpdateLimit/Enter/submit; uncertainty ->stop/localrestore2, no forcedevents.",
+    "Restore2 byordinaryfill+Tab; unchangedbuttondisabled. ONEreloadsame2/2/detailsbaseline and no draft; observedAdminlink->admin/RU/Anonymized/Business3/markHandoff."
+  ],
+  "stopRules": [
+    "NO UpdateLimitclick/Save/Enter/POST/quota persist/newbranch/delete/security/owner/category/approval/rolebookingcommands.",
+    "Wrongcount/unknownbaseline ->BLOCKEDbeforefill/no baselineguess.",
+    "Navigationtimeout ->ONEfreshAX/no duplicateclick/reload.",
+    "Unexpectedbuttonenabled invalid ->recordUIFAIL withoutclicking; restoreoriginal2 locally."
+  ],
+  "effects": "Onlylocalnumberdrafts, restore2/oneReload/readnavigation; no intentionalquota/entityupdates. Ordinaryappauth/read/telemetryunenumerated, not zero TOTALwrites.",
+  "credit": "AtmostONEcompoundNEWUI case; no servervalidation/no new quota allocation/businesscreation/fullM2-01/visual/securityPASS."
+}

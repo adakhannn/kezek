@@ -1,0 +1,111 @@
+{
+  "id": "C166",
+  "savedBeforeUiUtc": "2026-10-25T22:24:30Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "requirementId": "B3-02",
+  "timeBudgetMinutes": 10,
+  "role": "ExistingknownSA/RU/publicroot; no authtransition",
+  "ids": {
+    "shared": "S23-B304-query-category-reload",
+    "reset": "S26-B302-header-reset-historical",
+    "categories": "S26-B302-category-only-membership-all",
+    "granularity": "S26-B302-selective-query-category-clear",
+    "empty": "S26-B302-empty-category-reset-refresh",
+    "stale": "S26-B302-stale-unknown-category-reset"
+  },
+  "variants": {
+    "shared": [
+      "category-select:preserves-existing-query"
+    ],
+    "reset": [
+      "header-reset:nonempty-q-and-cat"
+    ],
+    "categories": [
+      "category-only:barber-and-All",
+      "category-only:women-and-All"
+    ],
+    "granularity": [
+      "clear-query:retain-category",
+      "All-category:retain-query"
+    ],
+    "empty": [
+      "empty-q-and-category:reset-all"
+    ],
+    "stale": [
+      "stale-inactive-category:empty-reset",
+      "unknown-category:empty-reset"
+    ]
+  },
+  "knownData": {
+    "all": [
+      "/b/s1-test-20261020-branch-availability",
+      "/b/testovyy-biznes-1",
+      "/b/testovyy-biznes-2"
+    ],
+    "barber": [
+      "/b/s1-test-20261020-branch-availability",
+      "/b/testovyy-biznes-1"
+    ],
+    "women": [
+      "/b/testovyy-biznes-2"
+    ],
+    "inactiveUnusedSlug": "live-test-night09oct-category",
+    "unknownSlug": "c166-unknown-category-26oct",
+    "query": "Тестовый бизнес 1",
+    "noMatch": "C166-NO-MATCH-26OCT"
+  },
+  "cases": [
+    {
+      "id": "S26-B302-category-only-membership-all",
+      "variants": [
+        "category-only:barber-and-All",
+        "category-only:women-and-All"
+      ],
+      "expected": "BlankqueryBarber selects onlyexact2barberbusinesses/excludeswomen; Allrestores3. Womenselectsonlybiz2/excludesbarber; Allrestores3. CorrectcatURL/visiblecategorysummary, no catalogueerror.",
+      "credit": "1NEWcompoundUIifbothcategorypairsPASS"
+    },
+    {
+      "id": "S26-B302-selective-query-category-clear",
+      "variants": [
+        "clear-query:retain-category",
+        "All-category:retain-query"
+      ],
+      "expected": "Withbarber+qТестовый бизнес1 ->onebiz1. Clearingtextfield removesqbut retainsbarber/2barbercards. RefillqueryascontrolthenAllremovesonlycat, retainsqfield/URL/biz1 result; no forcedgoto to emulateclear.",
+      "credit": "1NEWcompoundUIifbothselectiveclearsPASS"
+    },
+    {
+      "id": "S26-B302-empty-category-reset-refresh",
+      "variants": [
+        "empty-q-and-category:reset-all"
+      ],
+      "expected": "Women+syntheticnomatchq ->normalempty/no serviceerror; actualempty-stateReset ->root/blankquery/nocat/all3.",
+      "credit": "ONEhistoricalfunctionalrefresh ofG024afterchangedHomeClient,0NEWUI"
+    },
+    {
+      "id": "S26-B302-stale-unknown-category-reset",
+      "variants": [
+        "stale-inactive-category:empty-reset",
+        "unknown-category:empty-reset"
+      ],
+      "expected": "Knowninactiveunusedcategory and distinctunknowncategory directpublicURLs each produceordinaryzeroresults/no cataloguefailure; observedReset returnsroot/blank/nocat/all3. No leakedbusinesses or categorycreation; no assertionunknownlabelmustbetranslated.",
+      "credit": "1NEWcompoundUIforbothnegativecategoryURLs"
+    }
+  ],
+  "steps": [
+    "Clock; freshprotectedadmin/RU/Anonymized/Business3 ->ordinarypublicrootlink. Requireknown3businessIDs/hrefs, blankquery/All and2activecategories. Baseline/setup0credit; changeddata ->BLOCKED no newfixtures/guesspage2.",
+    "Clock; execute categories case viaobservedHomeHeaderchipBarber/All/Women/All; settleactualURL ANDnamedcardmembership aftereach, not initialloadingoldcards. No new rootcard/headercertification.",
+    "Clock; chooseBarberasgranularitysetup. Ordinaryfill queryТестовый бизнес1/awaitqcat+onebiz1. Clearfield/awaitcatonly+2barber; refillqueryonlyassetup/awaitqcat1 thenobservedAll/awaitqonly+onebiz1. Querytyping isnot debounce timingPASS. HeaderResetascleanup0newcredit(reusedmethod).",
+    "Clock; Women thenfillC166-NO-MATCH-26OCT/awaitqcatnormalempty. ClickONLYactualempty-stateReset, root/all3 blank/nocat. Namedrefresh0NEWUI; oldG024retained.",
+    "Clock; ONEordinarygoto /?cat=live-test-night09oct-category (knowninactiveunusedfixture), settle0/normalempty thenobservedResetroot3. ONEordinarygoto /?cat=c166-unknown-category-26oct, sameempty/reset. ThesearepublicUIentryURLs, no rawHTTP/SDK/DBprobe, no UIcategorySave/Create/activation. No malformedsecuritypayload.",
+    "Clock; observedAdminheader->Админ-панель restoreprotectedRU/Anonymized/Business3; markHandoff/preserveuserGooglechooser1/currenttab/no newtabs/auth. Anyunexpectederror/mismatch ->preserveFAIL/stopremainingvariants, onlysafeadminreturn; no unchangedretry/DOMevent/storage/refreshworkaround."
+  ],
+  "effects": "PublicGETquery/categorynavigation and textfield/filter reset only. No entity/category/business/profile/security/role/booking/payment command, permission or fixture. Ordinaryappauth/analytics/telemetryunenumerated/notzeroTOTALwrites.",
+  "limits": "OnlyB3-02functionalcategory/reset finite9variants across6case rows incl2reusedcaseproofs. No service-name-search DEC-CATALOG-SEARCH decision, B3-01timing, B3-03networkfault, B3-04pagination/history, alltranslations/visual/APIsecurity acceptance.",
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/lib/publicBusinessSearchFilter.ts": "a298916c644ef93fb5c81c4d1eb970b48465566e6a7e9469cda047710d922f61",
+    "apps/web/src/app/layout.tsx": "e90e3606f09bbf02315130df0f0ce4be109d05fbd47ee88c472d8fd2b892bc2f",
+    "apps/web/src/lib/publicCategoryLabels.ts": "1538fded6b88e4f1193b7b8c4e0714cb6c9bfbdf864c90352276bdfa8b5e024f"
+  }
+}

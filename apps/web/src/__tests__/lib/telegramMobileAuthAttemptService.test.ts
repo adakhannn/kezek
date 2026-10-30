@@ -8,13 +8,17 @@ import {
     getTelegramMobileAuthStatus,
 } from '@/lib/telegramMobileAuthAttemptService';
 
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client,
+}));
+
 describe('telegramMobileAuthAttemptService', () => {
-    beforeEach(() => {
-        __resetTelegramMobileAuthAttemptsForTests();
+    beforeEach(async () => {
+        await __resetTelegramMobileAuthAttemptsForTests();
     });
 
-    test('creates pending auth attempt with nonce, bot link and expiresAt', () => {
-        const started = createTelegramMobileAuthAttempt({
+    test('creates pending auth attempt with nonce, bot link and expiresAt', async () => {
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -26,17 +30,17 @@ describe('telegramMobileAuthAttemptService', () => {
         );
         expect(started.expiresAt).toBeGreaterThan(Date.now());
 
-        const attempt = getTelegramMobileAuthAttempt(started.nonce);
+        const attempt = await getTelegramMobileAuthAttempt(started.nonce);
         expect(attempt).not.toBeNull();
         expect(attempt?.status).toBe('pending');
     });
 
-    test('generates unique nonce values with telegram-safe format', () => {
-        const first = createTelegramMobileAuthAttempt({
+    test('generates unique nonce values with telegram-safe format', async () => {
+        const first = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
-        const second = createTelegramMobileAuthAttempt({
+        const second = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -46,39 +50,39 @@ describe('telegramMobileAuthAttemptService', () => {
         expect(second.nonce).toMatch(/^[A-Za-z0-9_-]{20,128}$/);
     });
 
-    test('returns failed status for unknown nonce', () => {
-        const status = getTelegramMobileAuthStatus('unknown');
+    test('returns failed status for unknown nonce', async () => {
+        const status = await getTelegramMobileAuthStatus('unknown');
         expect(status.status).toBe('failed');
         expect(status.expiresAt).toBeNull();
     });
 
     test('returns expired status when ttl elapsed', async () => {
-        const started = createTelegramMobileAuthAttempt({
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 1,
         });
 
         await new Promise((resolve) => setTimeout(resolve, 5));
 
-        const status = getTelegramMobileAuthStatus(started.nonce);
+        const status = await getTelegramMobileAuthStatus(started.nonce);
         expect(status.status).toBe('expired');
         expect(status.expiresAt).not.toBeNull();
     });
 
-    test('returns approved status when attempt approved', () => {
-        const started = createTelegramMobileAuthAttempt({
+    test('returns approved status when attempt approved', async () => {
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
 
-        __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved');
+        await __setTelegramMobileAuthAttemptStatusForTests(started.nonce, 'approved');
 
-        const status = getTelegramMobileAuthStatus(started.nonce);
+        const status = await getTelegramMobileAuthStatus(started.nonce);
         expect(status.status).toBe('approved');
     });
 
-    test('stores source metadata when start payload includes source info', () => {
-        const started = createTelegramMobileAuthAttempt({
+    test('stores source metadata when start payload includes source info', async () => {
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
             source: {
@@ -88,7 +92,7 @@ describe('telegramMobileAuthAttemptService', () => {
             },
         });
 
-        const attempt = getTelegramMobileAuthAttempt(started.nonce);
+        const attempt = await getTelegramMobileAuthAttempt(started.nonce);
         expect(attempt?.source).toEqual({
             appName: 'Kezek Android',
             region: 'Bishkek',
@@ -96,13 +100,13 @@ describe('telegramMobileAuthAttemptService', () => {
         });
     });
 
-    test('marks nonce as consumed after first use and blocks second consume', () => {
-        const started = createTelegramMobileAuthAttempt({
+    test('marks nonce as consumed after first use and blocks second consume', async () => {
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
 
-        const first = consumePendingTelegramMobileAuthAttempt(started.nonce);
+        const first = await consumePendingTelegramMobileAuthAttempt(started.nonce);
         expect(first.ok).toBe(true);
         if (!first.ok) {
             return;
@@ -111,20 +115,20 @@ describe('telegramMobileAuthAttemptService', () => {
         expect(first.attempt.status).toBe('consumed');
         expect(typeof first.attempt.consumedAt).toBe('number');
 
-        const second = consumePendingTelegramMobileAuthAttempt(started.nonce);
+        const second = await consumePendingTelegramMobileAuthAttempt(started.nonce);
         expect(second).toEqual({
             ok: false,
             error: 'invalid_status',
         });
     });
 
-    test('binds telegram context to pending attempt', () => {
-        const started = createTelegramMobileAuthAttempt({
+    test('binds telegram context to pending attempt', async () => {
+        const started = await createTelegramMobileAuthAttempt({
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
 
-        const bound = attachTelegramMobileAuthAttemptTelegramContext({
+        const bound = await attachTelegramMobileAuthAttemptTelegramContext({
             nonce: started.nonce,
             telegramId: 12345,
             chatId: 54321,

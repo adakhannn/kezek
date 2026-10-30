@@ -1,0 +1,140 @@
+{
+  "id": "C87",
+  "type": "bounded read-only M2-01 coverage and dependency review",
+  "startedAfterUtc": "2026-10-23T02:01:37Z",
+  "requirementId": "M2-01",
+  "originalRequirement": "create/edit a test business;",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "evidence": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/preparation-plan.json",
+      "fact": "Independent preparation expectations and original authority for two isolated fixtures; not fresh action-time permission to create another fixture."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "fact": "A creation submitted after20Oct07:05:27Z, created detail approved/no owner/zero dependencies/limit2; both A/B were explicitly setup,0acceptance. Preserve original UTC and PREPARED_NOT_ACCEPTANCE_PASS, no retrospective credit. B deleted later, never recreate/redelete."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/preparation-verification.json",
+      "fact": "After20Oct07:12:36Z preparation IDs/statuses verified; explicitly no acceptance/regression. Not a new/current create test."
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "fact": "9Oct M2 moderation-read partial and category editing, not test-business create/edit proof."
+    },
+    {
+      "path": "docs/WEB_HISTORICAL_DEFECTS.md",
+      "fact": "WB-046 approval-created-business primary proof missing; not interchangeable with manual creation or current candidate acceptance."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+      "fact": "ONE original local name/autoslug/manual override/Cancel-reopen PASS23Oct01:34:32..01:35:28Z, not new/reused credit in C87."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c86-result.json",
+      "fact": "ONE original address Save/reload/restore/reload PASS23Oct01:50:27..01:52:28Z; two commands not two cases; not all edits."
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+      "fact": "Save typebutton explicitly invokes PATCH; required attribute alone does not establish rejection. Name local changes autoslug until manual override. Invalid Save displays error and keeps draft; Cancel resets original props."
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+      "fact": "Authenticated SA/business read precedes name-empty check; empty name returns name cannot be empty before business UPDATE. Slug conflict/categories/contact validation and actual update errors separate branches. Source is effect/dependency review, not LIVE proof."
+    },
+    {
+      "path": "apps/web/src/lib/manualBusinessCreationService.ts",
+      "fact": "Manual creation includes name/slug/category/branch-limit/reason/acknowledgment/duplicate checks and insert+audit context, possible rollback on audit error. Existing setup is not permission for fresh valid submission or duplicate override."
+    }
+  ],
+  "coverageInventory": [
+    {
+      "group": "manual creation happy path",
+      "status": "historical_setup_only",
+      "exit": "No new entity without specific action-time fixture authorization. Do not reclassify old setup as fresh PASS."
+    },
+    {
+      "group": "local name/slug and Cancel",
+      "status": "done_C84",
+      "exit": "No unchanged repeat."
+    },
+    {
+      "group": "persisted address and restoration",
+      "status": "done_C86",
+      "exit": "No unchanged repeat."
+    },
+    {
+      "group": "empty-name edit rejection and recovery",
+      "status": "genuinely_uncovered",
+      "exit": "C88 one finite independent normal-UI case, existing A only, one invalid Save expected to reject before UPDATE; Cancel/reload."
+    },
+    {
+      "group": "slug conflict/contacts/categories/name limits/other persisted edits",
+      "status": "not_certified",
+      "exit": "Separate bounded effect review and finite variants before commands; do not alter original businesses or publication/owner/security fields."
+    },
+    {
+      "group": "manual creation validation/duplicates/audit-error recovery",
+      "status": "not_certified",
+      "exit": "Need exact finite no-create-safe scenarios or specific fixture/failure authority; no forced failures/raw APIs/duplicate override."
+    },
+    {
+      "group": "transport failure or concurrent-edit recovery",
+      "status": "blocked",
+      "exit": "No authorized safe failure condition; do not disconnect/auth inject or overwrite concurrency."
+    }
+  ],
+  "scopeBoundary": "Owner assignment M2-03 and members/public visibility M2-04 are separate obligations, not silently tested or removed. Role/security/production/visual gates remain independently blocked. Current narrow RU functional test does not certify KY/EN localization or direct API security. This inventory is not the complete atomic denominator for M2-01; casePlanComplete remains false and status partial.",
+  "counts": {
+    "newUiCases": 0,
+    "newReusedProofCases": 0,
+    "newFixes": 0,
+    "acceptedDelta": 0,
+    "newWindowPassedCases": 10
+  },
+  "effects": "Read-only history/source review only, no UI/DB/source/test/server effects. No runtime bug inferred from source branches or old missing primary evidence.",
+  "next": "C88 only planned existing-A empty-name rejection/Cancel/reload case. Fresh baseline all bundled fields, stop on mismatch; one ordinary invalid Save immediately after clock, no retry/Enter/other changes. No whole-M2-01 promotion, no new fixtures or profile Save.",
+  "completedBeforeUtc": "2026-10-23T02:04:39Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/preparation-plan.json",
+      "sha256": "6ff4ea7e56ca5879fe9c4ec12537817d7848ebb765af683fd7ed3f44c09a6821"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "sha256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/preparation-verification.json",
+      "sha256": "b7a1ad061c65f880e3fa47a56f91e44455b1f8e0eda7dfbc3befc4c3de74b06f"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "docs/WEB_HISTORICAL_DEFECTS.md",
+      "sha256": "0f623b2a360cc32cd6f42d63dc67d755facf02bb820960a689972d59dba9a6a5"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+      "sha256": "09eac23bdae938278aff4aa5668cc321c669727dfdc8a3c789e94bb2cc9474f7"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c86-result.json",
+      "sha256": "71a10aece9605ab4549d94ace5e156f2a4669cea7f84ee20e7d3bcb2671969d5"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+      "sha256": "3c34f87e772554f134220aad060c038f0e763c6c26c734055a1b9cd6f06b2756"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+      "sha256": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c"
+    },
+    {
+      "path": "apps/web/src/lib/manualBusinessCreationService.ts",
+      "sha256": "ac857b53240fefd374695a964094846e932943f8a1ec580061cf62876d8a3ce7"
+    }
+  ]
+}

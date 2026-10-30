@@ -57,7 +57,7 @@ export async function runStaffFinanceRoute(req: Request): Promise<StaffFinanceRo
     let staffId: string;
     let bizId: string;
     let supabase: SupabaseClient;
-    let useServiceClient = true;
+    const useServiceClient = true;
     let userId: string | undefined;
 
     if (staffIdParam) {

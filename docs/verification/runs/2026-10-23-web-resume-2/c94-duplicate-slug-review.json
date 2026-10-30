@@ -1,0 +1,65 @@
+{
+  "id": "C94",
+  "type": "bounded read-only M2-01 duplicate public slug history/effect review",
+  "startedAfterUtc": "2026-10-23T05:03:43Z",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "history": "C87 inventory explicitly leaves slug conflict uncertified. C84 local autoslug/override/Cancel, C86 address persistence, C89 empty-name rejection and C91 localized name-required errors are different cases; none is duplicated or re-timed. Setup creation not acceptance. M2-01 atomic denominator incomplete/partial.",
+  "livePrecondition": {
+    "afterClockUtc": "2026-10-23T05:06:53Z",
+    "beforeClockUtc": "2026-10-23T05:07:36Z",
+    "actual": "Same retained human Tab2 localhost/admin known SA/Anonymized/RU/Business3; root visibly lists existing A s1-test-20261020-branch-availability and distinct Тестовый бизнес 2 testovyy-biznes-2 (c28c8109-bedc-4f9e-bbc2-30f4b549131e). No navigation/command in review; zero new execution credit."
+  },
+  "effectsReview": "BusinessCardEdit Save submits name/normalizedslug/categories/address/phones/4contacts/is_approved together. C95 changes only URL draft; baseline all bundled fields must be verified blank/known before invalid Save. Route normal auth+SA lookup -> read A -> nonempty name/valid slug -> read conflicting business id -> returns slug is already taken/409 before categories/contacts/business UPDATE. This is source order, not observed HTTP/DB proof; no direct request/probe. Conflict query errors are not explicitly handled, so source alone cannot guarantee every failure-mode no-write. Other business is only read for comparison and never an update target. Cancel resets props/error with no Save. One rejected Save plus Cancel/reload is one case, no valid Save authorized.",
+  "localization": "C91/F014 only maps name-required error. A raw-English slug conflict in RU is related known remaining error-localization surface, not automatically a second distinct defect/fix or whole O3 acceptance. Functional uniqueness and language quality stay separate.",
+  "evidencePaths": [
+    "docs/verification/runs/2026-10-23-web-resume-2/c87-completeness-review.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c86-result.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c89-result.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c91-result.json",
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+    "apps/web/src/lib/businessSlug.ts"
+  ],
+  "counts": {
+    "newUiPass": 0,
+    "newFixes": 0,
+    "acceptedDelta": 0
+  },
+  "next": "C95 one independently planned existing-A duplicate-slug rejection/recovery case only. No new fixture/other-business change/valid Save/owner/category/publication/contacts/security commands. Preserve all blocked gates.",
+  "completedBeforeUtc": "2026-10-23T05:08:49Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c87-completeness-review.json",
+      "sha256": "3436c4405a5d75bf6e785cafe01aa3049b9d54411137f29bed59bd28e43248b4"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c84-result.json",
+      "sha256": "09eac23bdae938278aff4aa5668cc321c669727dfdc8a3c789e94bb2cc9474f7"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c86-result.json",
+      "sha256": "71a10aece9605ab4549d94ace5e156f2a4669cea7f84ee20e7d3bcb2671969d5"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c89-result.json",
+      "sha256": "7cc90846c05e9ee2a855d3c693d5fa698e62d1c5b2d35f6f5a1f10e6ff48864e"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c91-result.json",
+      "sha256": "1dac41111928289c95b95c1cb725b81fb4b13b87140224d39f68cbcac561d4e3"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx",
+      "sha256": "de60a1526da8b49cde543fac99d3e9e76fded3a0e4b813b151bb0b9b9e95c257"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/update/route.ts",
+      "sha256": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c"
+    },
+    {
+      "path": "apps/web/src/lib/businessSlug.ts",
+      "sha256": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "C201",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "preparedAfterClockUtc": "2026-10-26T09:37:19Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D2-02"
+  ],
+  "objective": "Explicitrequiredstaff-choiceguardwithactualeligibleoptions, notAnyMaster/concretesummaryreplay.",
+  "route": "http://localhost:3000/b/testovyy-biznes-2/booking?step=3&branch=fe1dde50-c04a-4b48-b215-bde72aa60625&day=2026-10-26",
+  "independentExpectation": "ActualcurrentMondaybranch1 hasknownstaff1bfdplusAnyMasteroption. Beforechoicebothunchecked/summaryMasterNotselected/Nextdisabled. OneconcreteАдаханОсоровselection ->onlynamedcheckboxchecked/summarysameactualname/Nextenabled. Positivecontrol0extraUIcredit. NoclickNext orAnyMaster/DONEswitch/reload.",
+  "steps": [
+    "FreshcurrentSAadminbaseline; ordinaryONEdirectStep3routewithoutstaff/serviceparameters. Waitroles/availabilitysettled.",
+    "Requirebothactualeligibleoptionsandneitherselected, summaryNotselected, Nextdisabled/documentedbuttonenabledfalse. Missingoptions/auth/network/hydrationuncertainty ->exactBLOCKED, no dategrid/retry/fixturemutation.",
+    "Clickonlyknownconcreteexistingstaffonce, requireselected/actualname/Nextenabled; no Step4/Time/slot/creation command.",
+    "BasebookingdocumentStep1reset/nochoices/Nextdisabled; brandroot->Adminmenu->protectedadmin/RU/Anonymized/Business3/markHandoff."
+  ],
+  "timeboxMinutes": 8,
+  "role": "KnownkezekkgSA/authenticatedpublicviewer/RU",
+  "effects": "Localwizardselection/navigationonly; no authtransition/configSave/serviceassociation/entity/Next/slot/ChooseTime/Confirm/hold/booking/payment/API/SDK/SQL/storage/source/test/build/serveraction.",
+  "credit": "AtmostONEcompoundexplicitstaff-requiredcase. Oldunplannedsetup notcounted, positivecontrolnotadditionalcase, no wholeD2-02acceptance.",
+  "dependencyHashes": {
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts": "cd7b1a69c595a2055dfcdd3881543fc26f86d8f08cf65140caae787b48a3613f",
+    "apps/web/src/app/b/[slug]/components/StaffSelector.tsx": "04e413497f0e72e497272dd4ded36f563fba20877fc49f4cf37ecff73e1e7786",
+    "apps/web/src/app/b/[slug]/components/BookingSummary.tsx": "2913b46e20ca7059efc117baa3accf4356e2f0b8718201428a392ee96dca51a6",
+    "apps/web/src/app/b/[slug]/components/BookingFormSections.tsx": "5b42b8700581cbe1c4dae3664dc29e94392e2ed519b982ff2fb7957c11e15be6"
+  }
+}

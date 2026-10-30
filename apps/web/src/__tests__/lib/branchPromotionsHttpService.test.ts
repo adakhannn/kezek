@@ -31,6 +31,16 @@ describe('branchPromotionsHttpService', () => {
         );
     });
 
+    test('create returns stable field metadata without changing validation status', async () => {
+        (createBranchPromotion as jest.Mock).mockResolvedValue({ok:false,status:400,error:'validation',
+            message:'Количество визитов должно быть больше 0',details:{field:'params.visit_count'}});
+        const response = await runCreateBranchPromotionHttp(new Request('http://localhost/test',{
+            method:'POST',body:JSON.stringify({promotion_type:'free_after_n_visits',params:{visit_count:-1},title_ru:'LIVE TEST'})}),context);
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({ok:false,error:'validation',
+            message:'Количество визитов должно быть больше 0',details:{field:'params.visit_count'}});
+    });
+
     test('lists branch promotions through manager context', async () => {
         (listBranchPromotions as jest.Mock).mockResolvedValue({
             ok: true,

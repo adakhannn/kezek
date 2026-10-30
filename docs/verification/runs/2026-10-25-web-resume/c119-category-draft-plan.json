@@ -1,0 +1,26 @@
+{
+  "id": "C119",
+  "requirementIds": [
+    "M5-01"
+  ],
+  "caseId": "S25-M501-inactive-category-slug-draft-cancel",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "timeboxMinutes": 6,
+  "targetId": "c7cef81b-2959-47eb-92b8-98ec82490d1c",
+  "targetSlug": "live-test-night09oct-category",
+  "expected": "Retainedinactive markedcategory originalname/slug/unchecked availability/disabledSave captured. Name-only localdraft C119 Өнөр Үңкүр keeps existingmanualslug. Clear Address+Tab regenerates c119-onor-ungkur. Fill ONLYAddress ' C119 Manual URL '+Tab normalizes c119-manual-url. Subsequent name C119 SECOND LOCAL NAME keepsmanualaddress. NoSave/Enter. Cancel ->listoriginalname/slug/inactive; exactnormalreentry originalvalues/disabledSave; Cancel/rootadmin/handoff. Onecompoundlocaldraft/discardcase, notwholeCRUD/localecontent/propagation/visualproof.",
+  "steps": [
+    "Clock/fresh knownSA samehumanTab/admin ->observed Categories. Find exact retainedmarkedtestcategory editlinkID andslug/inactive; verify othercategories untouched, recordoriginalname/listcount. Ifmissing/mismatched/active ->BLOCKED/no otherfixture or directguess. Openexactobservededitlink, recordname/slug/uncheckedavailability/disabledSave.",
+    "Clock fillONLYName C119 Өнөр Үңкүр; inspectname/currentoriginalslug andSaveenabled. ClearONLYAddress then ordinaryTab; expectgeneratedc119-onor-ungkur. FillONLYAddress ' C119 Manual URL '+Tab; expectc119-manual-url. FillName C119 SECOND LOCAL NAME ->manualslugunchanged. No Submit/Save/Enter/availabilitytoggle/publiclink. Inputuncertainty ->stop/reobserve/no rawDOMevents.",
+    "ClickordinaryОтмена link once; expectoriginalmarkedrow/name/slug/inactive/count. Clock reenterexacteditlink ->baselineoriginalname+slug/inactive/disabledSave; Cancelagain solelycleanup. Clockrootadmin ->protectedheading/Anonymized/Business3/RU/handoff. Missingerror/changedpersistedstate preserveasactual notspeculativefix; no blindretry/write."
+  ],
+  "effects": "Local name/address draft and normalCancelnavigation only; no plannedapplication mutation/Save/Enter/newcategory/activation/deletion/businesspropagation/role/fixture/payment/authtransition commands. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites.",
+  "accounting": "Atbest1NEWfunctionalUIcase25Oct3->4/0fix/0accepted; M5-01wholepartial/casePlanCompletefalse. Original9OctCRUD andG086categorycontract notrerun/retimed/recredited.",
+  "savedBeforeUiUtc": "2026-10-25T09:57:42Z",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/categories/CategoryForm.tsx": "5692f27d98f17fe17073f369df8fa967e4ca6f060a12a8c11ee2e928f342a5fe",
+    "apps/web/src/app/admin/categories/[id]/page.tsx": "155695f88fd25d8657775acc8b6fa6e64ec9588e3278eff165b37ce36fb02d7b",
+    "apps/web/src/app/admin/categories/page.tsx": "7c991dcc8e1196396655b1b4f2f136279ec4d74d35a9c115905800863815780e",
+    "apps/web/src/app/admin/api/categories/[id]/update/route.ts": "1a7504a8a83c1e5aa8be04b966b35582e8ebeb09406ee24df161f38c31e2ff16"
+  }
+}

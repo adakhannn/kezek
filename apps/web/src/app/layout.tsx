@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 
 import './globals.css';
+import './fonts/fallbacks.css';
 import { AppShellHeader } from './_components/AppShellHeader';
 import { AuthStatusUpdater } from './_components/AuthStatusWrapper';
 import { Footer } from './_components/Footer';
@@ -13,14 +14,24 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PerformanceTracking } from '@/components/PerformanceTracking';
 import { ReactQueryProvider } from '@/lib/react-query';
 
-const geistSans = Geist({
+const geistSans = localFont({
+    src: './fonts/Geist.ttf',
     variable: '--font-geist-sans',
-    subsets: ['latin'],
+    weight: '100 900',
+    style: 'normal',
+    display: 'swap',
+    adjustFontFallback: false,
+    fallback: ['Geist Fallback'],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+    src: './fonts/GeistMono.ttf',
     variable: '--font-geist-mono',
-    subsets: ['latin'],
+    weight: '100 900',
+    style: 'normal',
+    display: 'swap',
+    adjustFontFallback: false,
+    fallback: ['Geist Mono Fallback'],
 });
 
 export const metadata: Metadata = {
@@ -49,7 +60,7 @@ export default async function RootLayout({
                 <ErrorBoundary>
                     <PerformanceTracking />
                     <ReactQueryProvider>
-                        <LanguageProvider>
+                        <LanguageProvider initialLocale={locale}>
                             <div className="relative flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.1),transparent_30%),linear-gradient(180deg,color-mix(in_srgb,var(--surface-base)_92%,white)_0%,var(--surface-base)_42%,var(--surface-base)_100%)]">
                                 <AppShellHeader />
                                 <AuthStatusUpdater />

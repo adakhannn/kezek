@@ -1,0 +1,73 @@
+{
+  "id": "C204_TECHNICAL_CHECKS",
+  "completedBeforeUtc": "2026-10-26T09:56:23Z",
+  "targeted": {
+    "before": {
+      "passed": 2,
+      "failed": 5,
+      "report": "apps/web/test-results/c204-before.json"
+    },
+    "after": {
+      "passed": 7,
+      "failed": 0,
+      "report": "apps/web/test-results/c204-after.json"
+    }
+  },
+  "typecheck": {
+    "exitCode": 0,
+    "log": "apps/web/test-results/c204-types.log"
+  },
+  "fullCoverage": {
+    "suites": 541,
+    "passedSuites": 535,
+    "failedSuites": 6,
+    "passed": 2554,
+    "failed": 11,
+    "report": "apps/web/test-results/c204-full-jest.json",
+    "coverage": "apps/web/test-results/c204-full-coverage/coverage-final.json",
+    "sameFailedAssertionIdentitiesAsC172": true,
+    "failedNames": [
+      "/api/admin/ratings/jobs returns jobs payload",
+      "Staff cabinet pages basic render StaffBookingsView отображает вкладки и базовую информацию о бронированиях",
+      "does not advertise a confirmed empty list after a http failure",
+      "does not advertise a confirmed empty list after a json failure",
+      "does not advertise a confirmed empty list after a network failure",
+      "does not advertise an editable empty identity after authentication rejects",
+      "does not advertise an editable empty identity after the profile read fails",
+      "does not advertise an editable empty identity when authentication returns no user",
+      "telegramMobileAuthAttemptService binds telegram context to pending attempt",
+      "telegramMobileAuthAttemptService stores source metadata when start payload includes source info",
+      "telegramWebhookHttpService handles /start payload and sends approval message with source details"
+    ]
+  },
+  "fullLint": {
+    "errors": 52,
+    "warnings": 167,
+    "report": "apps/web/test-results/c204-full-lint.json",
+    "sameDiagnosticsAsC172": true
+  },
+  "rawHashes": [
+    {
+      "path": "apps/web/test-results/c204-before.json",
+      "sha256": "6eb366f11fcc67642b760633c55e7a3bf2b92aad3b25d9b938c8d8ed7bd48d7d"
+    },
+    {
+      "path": "apps/web/test-results/c204-after.json",
+      "sha256": "1e60476d33b9531fcc9927a33aaeb8305116f5a3970513dc7e643e57b66adde0"
+    },
+    {
+      "path": "apps/web/test-results/c204-full-jest.json",
+      "sha256": "37afeba8f7bf4b1fdd8f04e87e92593f034fa81c24ce0d7c3fe7972e84b7186c"
+    },
+    {
+      "path": "apps/web/test-results/c204-full-lint.json",
+      "sha256": "58779eb800ea1a5ac2dc84d89bb4d99ffa139a29bf467ddacf15e789de2cfaf9"
+    },
+    {
+      "path": "apps/web/test-results/c204-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "E2E": "ActualCUA C203beforeFAIL+C205afterSave/persist/recover; externalPlaywrightforbidden/no test:e2egreenclaim.",
+  "limits": "FulltestgateFAIL11andlint52errors167warnings retained; sameidentitiesnotcauseproof, targeted/typesnotwholegreen. No source/security/config weakening/testskip/threshold change."
+}

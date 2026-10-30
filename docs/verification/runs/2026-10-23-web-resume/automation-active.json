@@ -1,0 +1,10 @@
+{
+  "id":"kezek",
+  "status":"ACTIVE",
+  "verifiedBeforeUtc":"2026-10-22T23:08:21Z",
+  "exactPromptReadback":true,
+  "cadenceUnchanged":true,
+  "targetThreadId":"01a0a908-6eca-7fb1-a481-57f09516a2d1",
+  "noDuplicateCreated":true,
+  "onHumanStop":"ExplicitPAUSED/readback/safeowned-effects/newfinal; priorfinalsimmutable."
+}

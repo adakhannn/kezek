@@ -1,0 +1,17 @@
+{
+  "id":"WEB_RESUME_2026_10_23",
+  "request":"можешь продолжить пока я сам не попрошу остановиться",
+  "firstClockAfterRequestUtc":"2026-10-22T23:04:14Z",
+  "firstClockBishkek":"2026-10-23T05:04:14+06:00",
+  "status":"AUTHORIZED_UNTIL_EXPLICIT_HUMAN_STOP",
+  "fixedDeadline":null,
+  "prospectiveOnly":true,
+  "priorFinal":"../2026-10-20-s1-continuation/final-report-until-stop-2026-10-21.json",
+  "priorFinalSHA256":"6149152f0e451d1c9594e285403cb294bf6a2c26627303ee10b3b2b94f846baf",
+  "priorStopAndPauseRemainHistory":true,
+  "noContinuousWorkClaimAcrossPause":true,
+  "scope":"WEBonly/C:/projects/kezek/DEVlocalhost. All prior safety boundaries remain. No purchases/resets/newfixtures/users/roles/grants/jobs/native/mobile/subagents/chats/commit/push/deploy/stage/reset. No token/cookie/authcode/password/storage extraction, rawHTTP/SDK/APIprobes, prohibitedmetrics/monitoring or olddeniedtab retries.",
+  "notRenewed":"Revoked/expired compilerGoogleFontsGET or other task-specific network approval; localfonts remain, no unchangedbuildretry. No new irreversible/UIdelete or payment authority.",
+  "onStop":"Safeowned-effectcompletion, explicitPAUSEDexistingkezek andreadback, appendnewfinal. No automaticresume afterward.",
+  "preflight":"Source40a5aef0e785/1683unchanged; ledger valid/errors[]/21accepted316/NOT_READY. No IABtabs in freshinventory, oldhandles absent, port3000notlistening/projectverified. NormalnewC70entrytab maybecreated aslegitimatecase setup, notcapture/denialworkaround."
+}

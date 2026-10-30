@@ -1,0 +1,12 @@
+{
+ "id":"C17","candidateId":"dev-20261020-S1-1c0013b28e40","status":"1_PASS_1_FAIL",
+ "results":[
+  {"key":"rating-config","status":"passed","route":"/admin/rating-config","actual":"Actual menu navigation and full reload show Settings/active config14Jan2026, weights35/25/20/20 sum100.00%, window30days. Form sliders/spinbutton/save/reset merely observed, not touched. No configuration/job command."},
+  {"key":"ratings-status","status":"failed","route":"/admin/ratings-status","actual":"Actual menu then one planned full reload both show Ошибка статуса рейтингов / Не удалось получить состояние рейтинговой системы. Admin shell/session retained, no data or job status proved. Source preflight notes server fetch with relative API URLs; possible cause not proved by runtime request response and not patched here."}
+ ],
+ "findingBoundary":"Persistent actual UI read failure retained for diagnosis/duplicate-history review; no new distinct fix claimed. No API/SQL calls by agent, no initialization or rating job trigger. No fake zero stats or success claimed.",
+ "matrixAfter":{"passed":7,"failed":3,"blocked":1,"notRun":8,"total":19,"requirement":"M1-03 still not accepted"},
+ "counts":{"S1":"17/25accepted8left;63/79PASS16left","S2":"1/70accepted69left","product":"18/316accepted298leftNOT_READY"},
+ "effects":"Read-only navigation/reloads under known superadmin, no settings/form/grants/entity/booking/DB commands. Ordinary telemetry unenumerated. User tab5 left/admin/ratings-status with actual error, oldtab2 retained/markHandoff.",
+ "deadlineUtc":"2026-10-20T13:00:00Z"
+}

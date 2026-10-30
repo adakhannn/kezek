@@ -1,0 +1,56 @@
+{
+  "id": "C192",
+  "status": "PLANNED",
+  "preparedUtc": "2026-10-26T08:26:05Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D1-01"
+  ],
+  "objective": "Finish the finite four-entry-method D1-01 requirement rather than accumulate unrelated UI cases.",
+  "reason": "C191 now supplies filtered-search Book proof. C188 identified no certified current positive direct entry, and historical G092 publicbusiness CTA lacks complete executiondated source bridge. These are current acceptance gaps. Existing current C164mapcase must not be rerun.",
+  "scope": [
+    {
+      "variant": "entry-method:direct-URL",
+      "method": "One same-tab ordinary direct document entry to already-observed existing /b/testovyy-biznes-2/booking from admin. Verify correct business and settled wizard. Normal step/day query or valid retained draft allowed. No choice/Next/slot/command."
+    },
+    {
+      "variant": "entry-method:public-business-CTA",
+      "method": "Current public business2 detail through already-observed href; activate visible generic primary booking CTA once, verify same correct wizard. Historical G092 remains originalUTC; current refresh counted separately from NEW UI."
+    },
+    {
+      "variant": "entry-method:public-map-CTA",
+      "method": "Associate existing C164 live map case only after all declared dependency hashes still match. Preserve original25Oct22:09:16..22:12:28UTC, no UI replay or extra new/reuse credit."
+    },
+    {
+      "variant": "entry-method:filtered-search-result-Book",
+      "method": "Use completed current C191 case, no repeat."
+    }
+  ],
+  "role": "knownsuperadmin publicentry/RU; role/security andlocale matrices separate requirements",
+  "timeboxMinutesAfterUiStart": 8,
+  "independentOracle": "Each named entry mechanism actually enters the same existing business booking wizard; sourcehref/loading or marketing page is insufficient. No booking command is needed.",
+  "restore": "Ordinary cleanroot and protectedadmin, RU, markHandoff. No storage manipulation or data cleanup.",
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+    "apps/web/src/app/b/[slug]/page.tsx": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6",
+    "apps/web/src/app/b/[slug]/BusinessInfo.tsx": "d3a8e198cfb7e90c276387c5bfb049d540896715dc6eddb8de3a5d8cd0faa906",
+    "apps/web/src/app/b/[slug]/BusinessPageState.tsx": "dfe00f6d886a1f88d622f14ecaa8dd6101c29a249723412678ad2d7fb01d3095",
+    "apps/web/src/lib/businessContacts.ts": "9d8d54d9187e8235823eb5c6e599bc4f805bd6776f03ab1bcb92841a5877ff4f"
+  },
+  "historicalSource": "apps/web/test-results/global-2026-10-16/stage-G092-public-business-entry.json",
+  "historicalSourceSha256": "c8ea312d51197fbd6071213f2369b0bc5377dac0f9f16624d49235ffd2ac3e7b",
+  "creditRule": "At most1 first current positive direct-method UI case and1 historical functional publicbusiness CTA refresh. No new map/search case credit. Accept D1-01 only if all four variants are assigned matching passed cases; retain unexecuted old blockers elsewhere.",
+  "stopRules": [
+    "Unexpected UI error ->record exact outcome, no forced shortcut tofake entry.",
+    "No branch/day/staff/service/slot/Next/hold/confirm/cancel/payment command.",
+    "No new source or tests absent actual repro.",
+    "One bounded fresh state after pendingaction; no duplicateclick/newtab loop."
+  ],
+  "nextIndependent": "B4-05 existing both-null active branch publicmap assertion as previously identified C180, after finite plan and actual eligibility verification."
+}

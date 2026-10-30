@@ -567,9 +567,8 @@ export async function getShiftData({
                 return sum + (guaranteed > masterShare ? guaranteed : masterShare);
             }, 0);
             const totalSalon = closed.reduce((sum, s) => {
-                const salonShare = s.salon_share;
-                const topup = s.topup_amount ?? 0;
-                return sum + salonShare - topup;
+                // salon_share is the final closed snapshot, already net of top-up.
+                return sum + s.salon_share;
             }, 0);
             const totalLateMinutes = closed.reduce((sum, s) => sum + s.late_minutes, 0);
 

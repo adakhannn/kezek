@@ -1,0 +1,47 @@
+{
+  "id": "HUMAN_STOP_20261026_133050",
+  "status": "PAUSED_BY_USER_NOT_READY",
+  "request": "сделай логическое завершение и на паузу",
+  "firstActualClockUtc": "2026-10-26T13:30:50Z",
+  "firstActualClockBishkek": "2026-10-26T19:30:50+06:00",
+  "recordedAfterUtc": "2026-10-26T13:38:29Z",
+  "authorization": "All prior until-stop authority revoked prospectively. RemainPAUSED untilNEWdirecthumanresume; queued/stale heartbeat is not permission.",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configSHA256": "6a45487971cbbb620ee61b6758a1a898e57c29e9ff152ba614684cc62a5a9dbe",
+    "readbackVerifiedBeforeClockUtc": "2026-10-26T13:36:00Z",
+    "previousExactConfiguration": "automation-before-pause-20261026-133050.toml",
+    "previousSHA256": "db4f1c4c1519c282275ee1a97bbd007e73b7923518c3e50fcbe90344da510542",
+    "noDuplicate": true
+  },
+  "safeEffects": {
+    "pendingFixtureEffects": false,
+    "knownOwnedCompiler15532": "NOT_RUNNING",
+    "knownOwnedRuntime30352": "NOT_RUNNING",
+    "knownOwnedRuntimeChild30040": "NOT_RUNNING",
+    "temporary3107Listener": false,
+    "main3000Listener": "127.0.0.1:3000 PID19968 retained for user/no continuing test process",
+    "readOnlyProcessCheckWindowUtc": [
+      "2026-10-26T13:36:00Z",
+      "2026-10-26T13:38:29Z"
+    ],
+    "stoppedProcessesAtFinalization": [],
+    "activeTemporaryNetworkCompilerLease": false,
+    "permissionHistory": "No renewal; appendthisstoprecord only, old permission evidence/finals/journals unchanged."
+  },
+  "browser": "Existingtab1 markedDeliverable metadata only to retain for user; no productUI/navigation/auth/test action during finalization. LastproductSAadmin/RU/Anonymized/Business3 observation before12:53:02UTC remains historical, not freshfinalizationhealth.",
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 32,
+    "notExhaustion": true,
+    "noPurchaseOrReset": true
+  },
+  "finalReport": "final-report.json",
+  "savedNextOnly": "C237boundedreadonlybusiness-slug-invalid-collision history/guards/payload/effects beforefiniteUI",
+  "nextExecutionAuthorized": false
+}

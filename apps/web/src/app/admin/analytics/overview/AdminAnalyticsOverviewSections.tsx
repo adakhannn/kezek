@@ -1,6 +1,6 @@
 'use client';
 
-import type { BranchOption, OverviewByDayPoint, OverviewSummary, PeriodPreset, TrendChartData } from './types';
+import type { OverviewByDayPoint, OverviewSummary, PeriodPreset, TrendChartData } from './types';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
@@ -63,9 +63,6 @@ export function AdminAnalyticsFiltersSection({
     endDate,
     onStartDateChange,
     onEndDateChange,
-    branchId,
-    onBranchIdChange,
-    branches,
 }: {
     periodPreset: PeriodPreset;
     onPresetChange: (preset: PeriodPreset) => void;
@@ -73,9 +70,6 @@ export function AdminAnalyticsFiltersSection({
     endDate: string;
     onStartDateChange: (value: string) => void;
     onEndDateChange: (value: string) => void;
-    branchId: string;
-    onBranchIdChange: (value: string) => void;
-    branches: BranchOption[];
 }) {
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
@@ -83,7 +77,7 @@ export function AdminAnalyticsFiltersSection({
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Период и филиал задают срез для всех метрик и трендов.
+                        Сводный обзор по всем бизнесам за выбранный период. Фильтр филиала здесь не применяется.
                     </p>
                 </div>
             </div>
@@ -136,23 +130,6 @@ export function AdminAnalyticsFiltersSection({
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-                        Филиал
-                    </label>
-                    <select
-                        value={branchId}
-                        onChange={(event) => onBranchIdChange(event.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                        <option value="all">Все филиалы</option>
-                        {branches.map((branch) => (
-                            <option key={branch.id} value={branch.id}>
-                                {branch.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
             </div>
         </section>
     );

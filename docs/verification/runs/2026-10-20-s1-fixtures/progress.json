@@ -1,0 +1,32 @@
+{
+  "checkpointUtc": "2026-10-20T07:11:40Z",
+  "status": "PREPARATION_COMPLETE_NOT_READY",
+  "scope": "Only isolated DEV test data preparation requested by user; no acceptance scenarios closed",
+  "plan": "preparation-plan.json",
+  "registry": "fixture-registry.json",
+  "account": "Existing superadmin kezekkg@gmail.com, ordinary Google login",
+  "createdBusinesses": 2,
+  "createdBranches": 3,
+  "newAccessGrants": 0,
+  "newStaffServicesBookingsPayments": 0,
+  "productSourceChanged": false,
+  "acceptedS1": 16,
+  "totalS1": 25,
+  "remainingS1": 9,
+  "passedCases": 56,
+  "activeCases": 79,
+  "remainingCases": 23,
+  "newCasesClosed": 0,
+  "candidate": "dev-20261018-S1-0cc81561faf0",
+  "priorAcceptanceNotRetested": true,
+  "dataOracleChanged": "DEV business count2->4, branch count2->5; do not reuse old exact catalog counts for new checks",
+  "nextCases": ["B2-03-S13-2 inactive branch", "B2-03-S13-3 inactive business", "B2-04-S13-3 deleted slug only after specific deletion confirmation"],
+  "remainingBoundaries": [
+    "Preparation does not prove public catalog or booking exclusion; active branch without staff/services is not a valid successful booking control",
+    "Known deleted-slug fixture not created: no deletion authorized at action time",
+    "Screenshot attempt on new provider failed; DOM confirmation is not visual/device acceptance",
+    "Domain/deployed checks remain deferred to end"
+  ],
+  "handoff": {"browser":"IAB2","tab":"1","provider":"browser-use:e03cd732-23aa-4d7d-91fa-d2c54e68fd41","page":"/admin/businesses","markHandoff":true,"ownedDevPid":24840,"ownedSession":7794,"serverLeftRunning":true,"automationResumed":false},
+  "retention": "Keep all new fixture entities and full IDs. No automatic cleanup. Original18Oct final reports and history unchanged."
+}

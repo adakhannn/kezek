@@ -1,0 +1,32 @@
+{
+  "id": "C110",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "files": 1685,
+  "reason": "F015 C109oneonChange runtimechange after C92/C93 b876build. New88d5candidate genuinelyneeds fresh build; calendarresume alone isnotreason. Originalbuild/FAIL/UTC immutable.",
+  "harness": "scripts/closure-web-isolated-build-c110-20261025.mjs",
+  "guard": "scripts/closure-web-offline-guard-c110-20261025.cjs",
+  "guardTest": "scripts/closure-web-offline-guard-c110-20261025.test.cjs",
+  "destination": "test-results/closure-web-20261025-c110-88d5303de67a/build",
+  "rawLog": "c110-build-raw.txt",
+  "preflight": "Destination/rawlog absent; mainserverPID23304 exists, leaveuntouched. Reviewed C92harness/guard/test and C93overrun: no retry of oldcompiler/assetbundle. C110paths/dummyenv/guardworkerupdated, originalcandidateIDdate retained afterpre-executionreview.16offlinepolicytestsPASS, notproductPASS.",
+  "timebox": {
+    "compilerSeconds": 240,
+    "preparationAndClassificationMinutes": 12,
+    "oneCompilerAttempt": true
+  },
+  "expected": "One fresh exact1685file defaultNext16.0.11Turbopack productionbuild exit0 withtypes/prerenders, no compiler-switch/mock/typeskip/checkdisable. Isolatedcopy rejects .env/symlink/generatedcache; verifies source/copycount/hash. Existingdependenciesviajunctiononly/noinstall. Systemenvallowlist/dummy.invalidSupabase/no realkeys/Sentrytelemetryoff. NodeTCP/fetchblockedexceptexactgeneratedC110PostCSSloopbackIPC+argvport, main3000excluded; notOSfirewall/native-networkconfinement claim.",
+  "steps": [
+    "Saveplan/harnesshashes beforecompiler; freshclock/source/no existingownedattempt. Guardtests16alreadyPASS beforecompiler/no externalrequests.",
+    "One harnesslaunch, preserve append-onlyrawlog/actualUTC/PID/exit/watchdog240. No oldC92retry or mainserverrestart/fullOAuthlogs. Humanstop stops onlyexactownedcompiler and PAUSEDexistingautomation/readback.",
+    "FAIL/timeout retained, no unchangedrerun/security/configfix. Exit0 istechnicalBUILD only/0newUI/fix/accepted; separatefinitebuilt-runtime/CUAexecutionplan afterward before A3-01promotion. No unchanged C93pageAssets.bundle or screenshot/cache/manualdate/auth/F013/profileSave repetition."
+  ],
+  "effects": "Isolatedlocalcopy/junctions/compiler/cache/rawlog only. No .env/externaldownloads/DEVAPI/DB/newfixture/roles/payments/booking/source mutations/cleanup. Ordinary mainappauth/telemetry unenumerated/notzeroTOTALwrites.",
+  "accounting": "20/316296left,S116/25primary62/79,S23/70,S41/47.25Octwindow0newfunctionalUI/0fix;logical11inherited. No acceptanceuntilseparateactualbuiltoutputproof. Fullcurrentlint/test notrerun/priorfailures retained, NOT_READY.",
+  "savedBeforeBuildUtc": "2026-10-25T09:00:17Z",
+  "harnessHashes": {
+    "scripts/closure-web-isolated-build-c110-20261025.mjs": "4e2cd027c508ba835c00e45564524638fd0dc40179d37dbe2113ded852599a4d",
+    "scripts/closure-web-offline-guard-c110-20261025.cjs": "6eadc63ffd8e7aa4c94a56e7309b4ff9274fcaf1090e6b51b6aeef0a7f18c45d",
+    "scripts/closure-web-offline-guard-c110-20261025.test.cjs": "86346818a13e77dcbd9f889a17e1b78a8a494ecbb7d3310439c83c1b8b10daf4"
+  }
+}

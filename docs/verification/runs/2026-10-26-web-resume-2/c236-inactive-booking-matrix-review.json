@@ -1,0 +1,188 @@
+{
+  "id": "C236",
+  "status": "D104_FINITE_THREE_CLASS_MATRIX_ACCEPTED_BY_EXISTING_CURRENT_CERTIFIED_UI_PROOFS_NO_REPLAY",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "reviewStartedAfterUtc": "2026-10-26T12:59:50Z",
+  "accountedAfterUtc": "2026-10-26T13:24:25Z",
+  "requirementId": "D1-04",
+  "finiteMatrix": [
+    "inactive service absent/staleIDrejected/active servicepositive",
+    "inactive branch hidden/staleIDforcesStep1/activebranchpositive",
+    "unapproved business hidden/directbookingunavailable despite realactivechild"
+  ],
+  "matrix": [
+    {
+      "caseId": "B2-03-S13-1",
+      "variant": "inactive service absent",
+      "independentExpected": "Complete finite functional variant: inactive service absent",
+      "actualHistoricalUI": "S16ownerknownhiddene215absentfrompublicS16/S18. Current same-branch2 stale service URL removes service, none selected/Nextdisabled. Validbranch1/day19/staff context also removes hidden ID and offers only active service. Positive active515 URL retains selected1/60min100–300 and Nextenabled, not clicked. Original step1/day18/unselected state and owner workspace restored. Branch2 lacks staff; not a flag-only mechanism or command-security proof. Fresh20Oct changed-dependency retest: validbranch1/staff1bfd/26Octstep4 rejects hiddene215, active515selected1/60min100–300/Nextenabled. No Next/time/slot action.",
+      "originalLedgerObservedUtc": "2026-10-20T08:34:48Z",
+      "currentCandidate": "dev-20261026-WEB-5387d70d6af1",
+      "method": "live",
+      "evidenceIds": [
+        "S1-EV-17",
+        "S1-EV-30",
+        "S1-EV-35",
+        "S1-EV-75"
+      ],
+      "dependencyComparison": [
+        {
+          "path": "apps/web/src/app/b/[slug]/booking/page.tsx",
+          "expectedSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+          "actualSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts",
+          "expectedSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+          "actualSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts",
+          "expectedSha256": "cd7b1a69c595a2055dfcdd3881543fc26f86d8f08cf65140caae787b48a3613f",
+          "actualSha256": "cd7b1a69c595a2055dfcdd3881543fc26f86d8f08cf65140caae787b48a3613f"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/view.tsx",
+          "expectedSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+          "actualSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/components/BookingFormSections.tsx",
+          "expectedSha256": "5b42b8700581cbe1c4dae3664dc29e94392e2ed519b982ff2fb7957c11e15be6",
+          "actualSha256": "5b42b8700581cbe1c4dae3664dc29e94392e2ed519b982ff2fb7957c11e15be6"
+        },
+        {
+          "path": "apps/web/src/app/dashboard/services/page.tsx",
+          "expectedSha256": "929c666b43d1dc049f19dada790a00ee0a47af964d869ade5be21dd3e5ba7a99",
+          "actualSha256": "929c666b43d1dc049f19dada790a00ee0a47af964d869ade5be21dd3e5ba7a99"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts",
+          "expectedSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+          "actualSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+        }
+      ],
+      "meaning": "Associate already-current certified realUI case; no re-execution, retiming, new distinctcase or new proof-reuse credit."
+    },
+    {
+      "caseId": "B2-03-S13-2",
+      "variant": "inactive branch not bookable",
+      "independentExpected": "Inactive branch absent from public card/selector; stale ID cannot skip branch selection; active control selectable",
+      "actualHistoricalUI": "Admininactivefa5f andactive0574 confirmed. PublicAonlyactive1; staleinactive&step2 afterfix=>step1/branchunselected/Nextdisabled foradmin+guest. ActiveURLretainsstep2; guest canselectactiveandNext. No time/create.",
+      "originalLedgerObservedUtc": "2026-10-20T08:34:48Z",
+      "currentCandidate": "dev-20261026-WEB-5387d70d6af1",
+      "method": "live",
+      "evidenceIds": [
+        "S1-EV-74",
+        "S1-EV-75",
+        "S1-EV-76",
+        "S1-EV-77"
+      ],
+      "dependencyComparison": [
+        {
+          "path": "apps/web/src/app/b/[slug]/view.tsx",
+          "expectedSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+          "actualSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts",
+          "expectedSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+          "actualSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/booking/page.tsx",
+          "expectedSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+          "actualSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/page.tsx",
+          "expectedSha256": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6",
+          "actualSha256": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts",
+          "expectedSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+          "actualSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1"
+        }
+      ],
+      "meaning": "Associate already-current certified realUI case; no re-execution, retiming, new distinctcase or new proof-reuse credit."
+    },
+    {
+      "caseId": "B2-03-S13-3",
+      "variant": "inactive business not bookable",
+      "independentExpected": "Unapproved business absent catalog and unavailable via public detail/booking even with real active child ID",
+      "actualHistoricalUI": "AdminBmoderationwithactivee1childconfirmed. Catalog3approved excludesB. Bothadminpublic+guest publicdetail andbookingwithactivechild=>Бизнес не найден/noform; not networkfailure.",
+      "originalLedgerObservedUtc": "2026-10-20T08:34:48Z",
+      "currentCandidate": "dev-20261026-WEB-5387d70d6af1",
+      "method": "live",
+      "evidenceIds": [
+        "S1-EV-74",
+        "S1-EV-75",
+        "S1-EV-76",
+        "S1-EV-77"
+      ],
+      "dependencyComparison": [
+        {
+          "path": "apps/web/src/app/b/[slug]/view.tsx",
+          "expectedSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+          "actualSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts",
+          "expectedSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+          "actualSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/booking/page.tsx",
+          "expectedSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+          "actualSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/page.tsx",
+          "expectedSha256": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6",
+          "actualSha256": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6"
+        },
+        {
+          "path": "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts",
+          "expectedSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+          "actualSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1"
+        }
+      ],
+      "meaning": "Associate already-current certified realUI case; no re-execution, retiming, new distinctcase or new proof-reuse credit."
+    }
+  ],
+  "primary": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c01-result.json",
+      "sha256": "d874c694309e6b47b8a3522cbf80258aca44ec48322b162a0d8878e39fcbbe39",
+      "scope": "Original20Oct actualsameLIVEadmin+guestinactivebranch+business and changeddependencyhiddenservicepositive/negative; beforefailure and originalclock preserved."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume-2/c204-candidate-review.json",
+      "sha256": "3b6d88e2e3dc2258c4f154e7d71b69c20ac73af45907d776f0811e7ddca17987",
+      "scope": "Currentcandidate certification bridge; newownUserBasicparamsroute unrelated, actual currentcase dependency hashes rechecked above."
+    }
+  ],
+  "decision": "Three finite required publicbooking inactiveclasses already have complete passedUIcases on unchangeddependencies. RepeatinginactiveAquery orchangingonlyrequestedstep wouldduplicateexistinggenericguard. Associate exactlytheseexistingcaseswithD1-04 andacceptthatrequirement; no newbrowser/login/branch/servicechoice or replay. OriginalunapprovedB fixture was subsequentlydeletedwithauthorizedC03cleanup; originalbefore/activechildpositive/guest+auth observations retained as executiontime proof, not a newcurrentexistentBfixture. No inferredcurrentfixture or cleanup command.",
+  "limits": "UIcatalog/entry/requiredselection guard only; not maliciouscommand/serverRLS/midflightdeactivation/allbooking/security/visual/devices/productionproof. Otherblocked/stalecases/failedtechnicalgates retained; zeroactivebranches originalFAIL unchanged/represented by separateacceptedF001proof underB2-03, not erased/excluded.",
+  "observationGap": {
+    "lastActualClockUtc": "2026-10-26T12:59:50Z",
+    "nextActualClockUtc": "2026-10-26T13:24:25Z",
+    "meaning": "Clock gap retained; no continuouswork or exactinterveningactivities claim. No productUIobservation/rehealth/assertion made in thisreview."
+  },
+  "effects": "Localread/hash/accounting only; no productbrowserUI/auth/fixture/entity/DB/API/SDK/SQL/storage/source/test/build/serveraction. Existingtab/server untouched byproduct commands; lifecyclehandoffmarkseparate0credit.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 1,
+    "acceptedBefore": 26,
+    "acceptedAfter": 27,
+    "remaining": 289,
+    "windowUi": 19,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17,
+    "firstAcceptedRequirementsThisWindow": 4,
+    "existingCertifiedCaseAssociations": 3,
+    "newDistinctCaseReuseCredit": 0
+  }
+}

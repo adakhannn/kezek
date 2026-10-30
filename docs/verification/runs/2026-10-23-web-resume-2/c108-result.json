@@ -1,0 +1,13 @@
+{
+  "id": "C108",
+  "plan": "c108-manual-address-plan.json",
+  "caseId": "S23-M202-branch-manual-address-draft-discard",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "sourceFingerprint": "b876ccbde0a87655431e32b2f6677b45b40c51376f0d3833f0434dafc4eab29a",
+  "status": "failed",
+  "observationWindowUtc": ["2026-10-23T06:23:38Z", "2026-10-23T06:25:08Z"],
+  "actual": "KnownSA exact inactiveA branch baseline originalname/emptyaddress/links/contacts/coords—/—/inherittrue/activefalse/Savechangesdisabled; actual map-unavailable notice explicitly instructs manual address. After clock06:24:10 ONE ordinary Address.fill(C108 UNSAVED ADDRESS 23OCT), AX unchanged and readonly DOM value empty/readOnlyfalse/disabledfalse. One ordinary Tab blur focused Instagram, address still empty, Savechangesdisabled. No secondfill/Save/Enter/mapclick. At06:24:35 left list: two original branches/inactive+activecontrol; reentry showed original emptyaddress/name/otherfields/nochangesdisabled. Root restored knownSAAnonymized/Business3 before06:25:08, handoff. Genuine input fallback failure, not map rootcause claim.",
+  "effects": "Synthetic unsaved input only, no Submit/validSave/appDB command. Ordinary navigation/mapmount/auth/telemetry unenumerated, not zero TOTAL writes. No schedule/active/contact/mapretry/newfixture/roles/payment/booking/security/storage/HTTP commands.",
+  "counts": "0newPASS/0fix/0accepted delta; currentwindow20UI-PASS/1verifiedfix remain. M2-02partial, fullmatrix incomplete. New S1-F015OPEN; F013OPEN unchanged.",
+  "next": "C109 minimal controlled-address onChange fix only after saved plan/originalboundary. Focused unit before/after, typecheck/scopedlint, exact candidate/dependency review; SAME-LIVE manual draft/blur/discard and targeted name/clear regressions with no Save/map commands. Production build gate must become stale on new candidate until fresh verified build; no blanket acceptance or oldproof retiming."
+}

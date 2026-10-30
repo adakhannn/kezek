@@ -47,6 +47,22 @@ describe('BusinessSwitcher', () => {
         window.localStorage.setItem('kezek_locale', 'en');
     });
 
+    it.each(['trigger', 'option'])('closes with Escape from %s without switching and restores trigger focus', async origin => {
+        fetchMock.mockResolvedValueOnce(getResponse());
+        render(renderSwitcher('biz-1'));
+        const trigger = await screen.findByRole('button', {name:'Business One'});
+        fireEvent.click(trigger);
+        const option = screen.getByRole('option', {name:'Business Two Osh'});
+        const target = origin === 'trigger' ? trigger : option;
+        target.focus();
+        fireEvent.keyDown(target, {key:'Escape'});
+        expect(screen.queryByRole('listbox')).toBeNull();
+        expect(trigger.getAttribute('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(trigger);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(refresh).not.toHaveBeenCalled();
+    });
+
     it('keeps a visible blocking loader until the refreshed workspace confirms the new business', async () => {
         let resolveSwitch!: (value: unknown) => void;
         const switchRequest = new Promise((resolve) => {

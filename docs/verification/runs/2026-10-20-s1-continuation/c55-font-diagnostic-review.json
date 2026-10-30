@@ -1,0 +1,10 @@
+{
+  "id":"C55_REVIEW",
+  "result":"c55-font-diagnostic-result.json",
+  "classification":"PARTIALLY_NARROWED_NOT_FIXED",
+  "facts":["In stripped compiler Node env with sameguard, fonts.googleapis.com/css2 failed with UND_ERR_CONNECT_TIMEOUT at10000ms; not a reported TLSvalidation/DNS error", "One exact public WOFF2 from actualC54log atfonts.gstatic.com returned200/7968bytes", "No C54_FONT_READ_DENIED diagnostic in these2GET results; not proof that all nativeTurbopack connections use Nodeguard"],
+  "notEstablished":["Exact rootcause of11nativeTurbopackbinary connection failures", "Persistent gstaticoutage or globalfontsblock", "TLS/certificatefailure", "Successful build/types/prerender/assets"],
+  "disposition":"One planned2-host probe complete12.368s, no extra GET/buildretries/mocks/compiler-switch/TLSdisable/proxy/OSchanges. ExistingcurrentbuildFAILretained, nextindependentown-clientreadonlycaseplan.",
+  "productCredit":{"newLivePass":0,"newFix":0,"acceptedRequirementDelta":0},
+  "scope":"OnlypublicfontGET in compilerdiagnostic; no token/auth/DEVDB/otherhosts/data changes. Runtimebrowsernotusedasbypass."
+}

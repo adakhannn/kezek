@@ -1,0 +1,21 @@
+{
+  "id":"C70",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "fileCount":1683,
+  "requirementIds":["M5-04"],
+  "timeboxMinutesAfterAuthenticatedEntry":10,
+  "reason":"Fourremainingexplicitdraftboundaryvariants savedbeforehumanpause, notC69sum99/days0retests. Sourceunchanged; originalC69PASSdates retained. Globalrequirementweights/316baseline unchanged.",
+  "setup":"FreshIAB2inventory no tabs andport3000notlistening; verifiedprojectbeforemainpnpmdevstart. NewnormalC70localhostentrytab justifiedonlyforlegitimatecase, notcapture/denialretry. ActualknownSAkezekkg required; ordinaryGooglelogin ifneeded. CAPTCHA/password/devicehandoff, no bypass. No olddenied/blockedproviderbindings.",
+  "cases":[
+    {"key":"sum-above-100","expected":"Validintegerbaselineweights sum100; firstweightbelow100 oneArrowRight ->sum101/visiblelabelcommit andSave disabled; Resetexactoriginal"},
+    {"key":"days-above-365","expected":"Ordinarynumberfill366/label366/native rangeOverflowtrue/Save disabled; Resetexactoriginal"},
+    {"key":"days-lower-bound-1","expected":"Ordinarynumberfill1/label1/no rangeUnderflow orrangeOverflow/Savebaselineenabled whileweights100; Resetexactoriginal. No submit/serveracceptanceclaim"},
+    {"key":"days-upper-bound-365","expected":"Ordinarynumberfill365/label365/no native rangeviolation/Savebaselineenabled whileweights100; Resetexactoriginal. No submit/serveracceptanceclaim"}
+  ],
+  "steps":["Normalnewlocalentry/actualrolecontrol andfreshratingform", "Captureoriginalvisible4weights/windowdays/save state; ifchangedinvalidbaseline stop ratherthanfitdata", "Clockbeforeeachsingleinput; comparelabel/total/disabled/nativevalidity; no Enter/Save", "ClockResetaftereach; exactoriginalarray/days restored", "Clockordinaryreturnadmin/knownSA; preserveuser tabs andmarkonlyworkingtabhandoff"],
+  "reuse":"C69sum99/days0twoPASS retainedwithoriginalUTC/evidence. C69server-rejection/persisted-dependencies2BLOCKEDstayindenominator; combinedscopedmatrix8slots ifnew4complete, notwholeM5-04.",
+  "effects":"TransientlocalformdraftandResetonly. NEVERSave/Enter/recalc/POST/configpersist/model/job/business/role/grant/booking/shift/payment commands. Ordinaryauthlookup/telemetryunenumerated/notzeroTOTALwrites; no rawstorage/cookie/token/APIprobes.",
+  "stop":"Inputcommitunconfirmed ->BLOCKEDwithoutblindretry/evaluateevents/nativeworkaround; Resetandrestore. Any unexpectedrole/errorstopchain. No UIproductfix frominstrumentfailure.",
+  "acceptance":"FournewUIvariantsinoneunsaveddraftsession, not4financialexecutions. No wholeconfig/model/API/security/visualPASS oracceptedrequirement/newfix fromthissubset."
+}

@@ -48,7 +48,8 @@ const TelegramProfileConnection = process.env.NEXT_PUBLIC_TELEGRAM_BOT_LINK_ENAB
 export default function ProfileForm() {
     const router = useRouter();
     const { t } = useLanguage();
-    const [loading, setLoading] = useState(false);
+    // The server/first client render must not advertise an empty, unlinked identity.
+    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -91,9 +92,15 @@ export default function ProfileForm() {
     const [notificationEmails, setNotificationEmails] = useState<NotificationEmail[]>([]);
     const [initialNotificationEmails, setInitialNotificationEmails] = useState<NotificationEmail[]>([]);
     const [notificationEmailsLoaded, setNotificationEmailsLoaded] = useState(false);
+    const initialProfileLoadStarted = useRef(false);
 
     useEffect(() => {
-        loadProfile();
+        // Locale changes translate the current draft, not replace it with stored data.
+        // Explicit identity changes still call loadProfile below.
+        if (!initialProfileLoadStarted.current) {
+            initialProfileLoadStarted.current = true;
+            loadProfile();
+        }
         const params = new URLSearchParams(window.location.search);
         const linked = params.get('linked');
         const linkError = params.get('error');

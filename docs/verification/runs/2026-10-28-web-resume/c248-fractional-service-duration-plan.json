@@ -1,0 +1,64 @@
+{
+  "id": "C248",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S28-I203-existing-service-fractional-duration-reject-discard",
+  "requirementIds": [
+    "I2-03"
+  ],
+  "variants": [
+    "service-invalid-edit:positive-fractional-duration-1.5"
+  ],
+  "timeboxMinutesIncludingRestore": 10,
+  "review": {
+    "history": {
+      "path": "docs/verification/runs/2026-10-26-web-resume-2/c217-result.json",
+      "sha256": "20eeec90dd72ced81d2feb26481d2d76ff19697ade1f7348e1816a34410e9eca"
+    },
+    "oldExecutedVariants": [
+      "blankRUname",
+      "duration0",
+      "priceFrom-1",
+      "reversedrange301-300"
+    ],
+    "distinctCondition": "Positive1.5 is >=1 but notinteger; C217duration0 didnotisolateintegercondition. Targetedhistoricalstage/result/review search located no fractional-duration actualcase. Do notrepeatoldfourinvalidvariants/branchclear/currentbuild/publicwizard.",
+    "source": "ServiceForm preservesinputstring except leadingzeros; numberinputstep1 butFORMnoValidate. onSubmit Number.isInteger(duration) rejects1.5 beforefetch with localizeddurationfield+summary. Routealsointegerguard sourceonly/notLIVEserverproof. Ordinary.fill+Tab canvisiblyestablish1.5; ifcommitoracleuncertainBLOCKED/noSave/no rawDOMworkaround."
+  },
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "b778953aa764cc3277969010b8077dbed68357d33341bec6b8c3188edb112fd8",
+    "apps/web/src/lib/serviceUpdateHttpService.ts": "593f4840a1ab042ca8c5b4d492f2b910aa8a46d5fbda954e104da92ba359c175",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28",
+    "apps/web/src/app/dashboard/services/[id]/page.tsx": "8ece808ba3e5509051baa9eb6ebb325af88cf780f6709c965797cdd3fc4eff75",
+    "apps/web/src/app/dashboard/services/[id]/EditServicePageClient.tsx": "2b31863251c1cbe415cb17a9ed2f8d5366a03e8a291b26e9b84910a41575b657",
+    "apps/web/src/lib/validation.ts": "1fbd74cb490998dc7d887a82d53e19f57c3447cef539ee3cc9662334428f9d54"
+  },
+  "knownTarget": {
+    "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+    "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+    "duration": 1,
+    "priceFrom": 0,
+    "priceTo": 300,
+    "names": "LIVE TEST Service31 Рус/Кыргыз/Еng existingauthoredstrings",
+    "branch1": true,
+    "branch2": false,
+    "active": true,
+    "staffAdahan": false
+  },
+  "role": "Knownownerosorovadahan04/currentBusiness2/RU",
+  "expected": "Freshknownowner/currentBusiness2 exact99editor baselineoriginalnames/1min0-300/branch1checked/branch2unchecked/activeTRUE/staffAdahanunchecked. Fill ONLYduration1.5+ordinaryTab, requirevisibleexact1.5/allotherssame. ONEordinarySave ->sameexacteditor localizedsummary Проверьте выделенные поля AND durationerror Укажите целое число не менее 1 минуты, retained1.5, no success/listnavigation. SidebarServicesdiscard/reentryexact99 thenONEreload original1min/allbaseline/staffunchecked; SAadminRU/Anonymized/Business3restore. ONEcompoundUIcase only, notserver/DB/fullI2/nativevisualproof.",
+  "steps": [
+    "Clock/freshprotectedSAadmin ->ordinarylogout/Googleknownowneronly; ContinuealreadyCurrentBusiness2only/no businessswitch/Remember. ObservedServices/exact99editlink. Unexpectedrole/context/missingfixture ->BLOCKED/noassociations/newfixture.",
+    "Readfullknownnonsensitivebaseline/name/duration/prices/branches/active/staffunchecked beforefield. Clock; fillONLYduration1.5+Tab, freshAXrequireexactvisible1.5. Ifnumberinputcommituncertainstop/discard/noSave/nativeeventworkaround.",
+    "ClockbeforeONEordinarySaveclick/noEnter. Requireexactfield+summaryerror/sameeditor. Timeout ->ONEfreshAX/no duplicateSave. Unexpectedsuccess/navigation=>preserveFAIL/stop/readexistingbaselineonly/no blindvalidrewrite/groupcleanup.",
+    "ObservedServicesdiscard ->exact99reentry/originalallfields; ONEfinalreload/readbaseline. Ordinaryownerlogout/GoogleknownSA ->protectedadminRU/Anonymized/Business3/markHandoff. Authautomaticdestinationmaydiffer, useordinaryobservedAdminmenuonly."
+  ],
+  "stopRules": [
+    "ExactlyONEinvalidSaveattemptmax. NEVERvalidSave/Create/Enter/price/name/branch/active/stafftoggle or entity/booking/slot/hold/paymentcommand.",
+    "No publiccatalogue/C241/receipts/G074modal/focus/profileSave/F013/build/cache/visual/providerloop.",
+    "No API/SQL/SDK/HTTP/storage/clipboard/unmask/source/test/build/server command.",
+    "Ifauth/read/observationblocker oneboundedfreshAXthenstop/no duplicateauth/newtab/forbiddenprovider."
+  ],
+  "effects": "One localfractional durationdraft +ONEinvalidSavevalidationattemptmax, discard/reentry/ONEreload andordinaryknownauthtransitions/restore. No intentionalvalidserviceupdate. Ordinaryauth/preferences/telemetry unenumerated, notzeroTOTALwrites.",
+  "credit": "AtmostONEfirstNEWfunctionalUIcase for isolatedpositivefractionalinput;0newaccepted/fix expected, wholeI2-03 remains partial."
+}

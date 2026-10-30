@@ -1,0 +1,24 @@
+{
+  "id": "C117",
+  "requirementIds": [
+    "M2-04"
+  ],
+  "caseId": "S25-M204-isolated-empty-members-readonly-SA",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "savedBeforeUiUtc": "2026-10-25T09:41:35Z",
+  "timeboxMinutes": 5,
+  "targetBusiness": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "expected": "Same knownSA/noArole can open exact isolatedA Участники бизнеса, correct businessname, settle Участников пока нет without error/loading. No Добавить участника link or grant/revoke/demote controls. One ordinaryreload retains namedemptyreadonlystate. Return protectedadmin/Anonymized/Business3/RU/handoff. Unexpected memberships indicate fixtureoracle mismatch ->BLOCKED/not unauthorized handling or rawDB empty assertion. One complete role-scoped empty view case, not whole M2-04.",
+  "steps": [
+    "Clock/fresh samehumanTab/admin; observedfixtureA ->verifyoriginalname/ownerunassigned/2branches0staff0services0bookings. Click observed Участники once; no owner/public/role links.",
+    "Wait bounded <=10s ordinary settledUI. Check exact businessname/Участники бизнеса/Участников пока нет and absence of loading/error/management controls. Ifunexpectedrows, record only membershippresence/oraclemismatch, no contact extraction, stopBLOCKED/no furtheraction. Iferror retain exact nonsensitive UI message and stop,no unchangedauth/request/reload diagnostic.",
+    "Only after initialsuccess, clock oneordinaryreload ->same settlednamedemptyreadonlystate. No add/roles/invite/revoke/demote/Save/Enter/HTTP/SDK/SQL. Clockreturnadmin via observedlink ->protectedheading/Anonymized/Business3/RU; handoff."
+  ],
+  "effects": "Ordinarynavigation/listGET/reload only, no plannedapplication mutation. Ordinaryauth/telemetry unenumerated/notzeroTOTALwrites. No rawDB/transport/RLS/role-security certificate.",
+  "accounting": "Atbest1NEWfunctionalUIPASS25Oct2->3/0fix/0accepteddelta. WholeM2-04members+publicvisibility incomplete; casePlanCompletefalse. OriginalUTC/otherproofs unchanged.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/members/page.tsx": "701264bffd38d7fa7d61253f89e7bceb681fba3543af586b999ffa065be09841",
+    "apps/web/src/app/admin/businesses/[id]/members/MembersClient.tsx": "2a724f87c67c35167ffbf85329566417674024a5072dfc85e5a3c889f76ed34d",
+    "apps/web/src/app/admin/api/businesses/[id]/members/list/route.ts": "860a55371aaf2f1760a5a8082c810e09289ffd694c0c05f87a0d72b3182efab1"
+  }
+}

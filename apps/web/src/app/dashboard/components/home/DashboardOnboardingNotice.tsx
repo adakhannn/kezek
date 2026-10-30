@@ -2,12 +2,14 @@ type DashboardOnboardingNoticeProps = {
     title: string;
     items: string[];
     summaryLabel: string;
+    remainingLabel: string;
 };
 
 export function DashboardOnboardingNotice({
     title,
     items,
     summaryLabel,
+    remainingLabel,
 }: DashboardOnboardingNoticeProps) {
     if (items.length === 0) {
         return null;
@@ -33,7 +35,7 @@ export function DashboardOnboardingNotice({
                     </div>
                 </div>
                 <div className="rounded-full border border-amber-200/80 bg-white/70 px-3 py-2 text-xs font-medium text-amber-900 shadow-sm dark:border-amber-800/60 dark:bg-amber-900/40 dark:text-amber-100">
-                    {items.length} open
+                    {remainingLabel.replace('{count}', String(items.length))}
                 </div>
             </div>
 

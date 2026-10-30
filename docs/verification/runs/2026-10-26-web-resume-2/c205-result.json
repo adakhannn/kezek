@@ -1,0 +1,28 @@
+{
+  "id": "C205",
+  "status": "PASS_SAME_LIVE_F021_VERIFIED_AND_OWN_NAME_RECOVERED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "plan": "c205-same-live-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T09:54:00Z",
+    "2026-10-26T09:56:23Z"
+  ],
+  "actual": "ExactC203 OWN NAME TESTNameonlySave nowСохранено. Own125recordreentryandoneReload showexacttemporaryName/heading/pristineSaveDisabled. ONLYNameoriginalАдаханОсоровSaveСохранено, ownreentry/oneReloadoriginal/pristine/SuperAdminActive; adminbaseline restored. OnecompoundNamepersist/restorecase, notE2canonicalprofile or role/securityproof.",
+  "before": "c203-effects-02-before-failure-recovered.json",
+  "restoration": "c205-effects-03-restored.json",
+  "credit": {
+    "newUi": 1,
+    "newWindowUiBefore": 8,
+    "newWindowUiAfter": 9,
+    "newVerifiedFix": 1,
+    "newWindowFixes": 1,
+    "logicalFixes": 17,
+    "newAccepted": 0,
+    "accepted": 23,
+    "remaining": 293,
+    "reasonA3Not24": "Currentroutefixcandidatebuild/outputpending; oldC174/C175immutableSTALE."
+  },
+  "effects": "TwoordinaryafterfixownUserBasicSavecommands temporaryName+originalrestore. Unchangedformcontactsresubmittedinternally/nofieldread-unmask/edit; no roles/password/Magiclink/OTP/message/deletion/booking/payment/newentity/API/SDK/SQL/storage/nativecommand. Originalvisiblebaseline restored; ordinaryappwritesunenumerated.",
+  "limits": "NarrowM3-01ownNameSave/restore only, wholeM3partial. PersonalprofileC77SMSboundaryretained. No newsecurity/credential privilege/foreignuser/phone-emailchange proof."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "C107",
+  "type": "bounded readonly manual branch address fallback review",
+  "startedAfterUtc": "2026-10-23T06:18:44Z",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "history": "Bounded search of WEB_HISTORICAL_DEFECTS.md, WEB_EVIDENCE_REVIEW.md and currentrun JSON found C106 map-unavailable observation, not a targeted manual-address input proof. C105/C106 concern branch whitespace rejection; no repeat credit. This is not a global absence claim.",
+  "oracle": "C106 actual UI promises manual address entry in both helper and map-unavailable notice. Independently expected ordinary input must retain the typed draft after blur and mark edit changed without Save.",
+  "sourceRisk": "BranchForm controls address with value but no onChange. Common Input simply forwards props, no hidden state handler. Source-only risk, NOT runtime bug yet. Submit only explicit form submit; map onPick separate. No map retry/search/geolocation/network/key/config/security actions.",
+  "evidencePaths": [
+    "docs/verification/runs/2026-10-23-web-resume-2/c106-result.json",
+    "apps/web/src/components/admin/branches/BranchForm.tsx",
+    "apps/web/src/components/ui/Input.tsx",
+    "apps/web/src/components/admin/branches/BranchMapPickerYandex.tsx"
+  ],
+  "executionCredit": 0,
+  "next": "Execute C108 one manual-address unsaved draft/blur/discard case under saved finite plan; no Save/Enter/map actions/newfixture/schedule/contact/active changes. If genuine FAIL, record before any minimal fix and SAME-LIVE plan. Counts remain21/316; source-only review0PASS/fix.",
+  "completedBeforeUtc": "2026-10-23T06:23:22Z",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c106-result.json",
+      "sha256": "eb08f4dc4059ef7f5a6a8441ede48e229eca18a3d406b0733896c9ee0cb5534b"
+    },
+    {
+      "path": "apps/web/src/components/admin/branches/BranchForm.tsx",
+      "sha256": "142dc0ccd41693697d71516ba7c7e9ed1ca3e491f1771e577f4bd78ea321e3f8"
+    },
+    {
+      "path": "apps/web/src/components/ui/Input.tsx",
+      "sha256": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf"
+    },
+    {
+      "path": "apps/web/src/components/admin/branches/BranchMapPickerYandex.tsx",
+      "sha256": "2ea6e90f39759778b9a414f574a1d405220fe2263010d7175dda67a5fdeda101"
+    }
+  ]
+}

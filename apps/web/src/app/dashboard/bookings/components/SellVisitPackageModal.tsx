@@ -101,10 +101,13 @@ export function SellVisitPackageModal({
     };
 
     const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
-    const discountLabel =
-        selectedPlan?.discount_type === 'percent'
-            ? `${selectedPlan.discount_value}%`
-            : `${selectedPlan?.discount_value ?? ''}`;
+    const planTerms = (plan: Plan) => [
+        `${t('dashboard.visitPackages.sell.visitsLabel', 'Визиты')}: ${plan.visit_count}`,
+        `${t('dashboard.visitPackages.sell.validityDaysLabel', 'Срок (дней)')}: ${plan.validity_days}`,
+        plan.discount_type === 'percent'
+            ? `${t('dashboard.visitPackages.sell.discountLabel', 'Скидка')}: ${plan.discount_value}%`
+            : `${t('dashboard.visitPackages.sell.pricePerVisitLabel', 'Цена за визит')}: ${plan.discount_value}`,
+    ].join(', ');
 
     return (
         <Dialog
@@ -160,14 +163,13 @@ export function SellVisitPackageModal({
                         >
                             {plans.map((plan) => (
                                 <option key={plan.id} value={plan.id}>
-                                    {plan.name_ru} — {plan.visit_count} визитов, {plan.validity_days} дн.
-                                    {plan.discount_type === 'percent' ? `, −${plan.discount_value}%` : `, ${plan.discount_value} за визит`}
+                                    {plan.name_ru} — {planTerms(plan)}
                                 </option>
                             ))}
                         </select>
                         {selectedPlan ? (
                             <p className="type-caption text-[var(--text-muted)]">
-                                {selectedPlan.name_ru}: {selectedPlan.visit_count} визитов, срок {selectedPlan.validity_days} дн., скидка {discountLabel}
+                                {selectedPlan.name_ru}: {planTerms(selectedPlan)}
                             </p>
                         ) : null}
                     </div>

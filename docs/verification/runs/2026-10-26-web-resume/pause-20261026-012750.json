@@ -1,0 +1,41 @@
+{
+  "id": "HUMAN_PAUSE_20261026_012750",
+  "request": "сделай логическое завершение и на паузу",
+  "firstActualClockUtc": "2026-10-26T01:27:50Z",
+  "firstActualClockBishkek": "2026-10-26 07:27:50 +06:00",
+  "finalizedUtc": "2026-10-26T01:29:27Z",
+  "authority": "Direct human stop prospectively supersedes all prior until-stop authorization. NEW direct human authorization required; stale/queued heartbeat is not resume permission.",
+  "automation": {
+    "id": "kezek",
+    "status": "PAUSED",
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configurationSHA256": "3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b",
+    "name": "Kezek WEB — до команды остановиться",
+    "rrule": "FREQ=MINUTELY;INTERVAL=15",
+    "targetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "existingAutomationNoDuplicate": true,
+    "preservedScheduleThreadName": true
+  },
+  "effects": "Administrative finalization only. No new product/UI/auth/DB/source/test/build/server action after stop. No pending fixture effects per frozen C179/C183 journals. User Tab2 preserved without new browser manipulation; last actual C189 handoff restored protected admin/RU/Anonymized/Business3 before01:16:32UTC. No fresh UI health claim. Prior ordinary auth/telemetry/normalization writes unenumerated, never zero TOTAL writes.",
+  "processes": {
+    "newTemporaryProcessesStarted": false,
+    "stopOrRestartCommandsIssued": false,
+    "activeTemporaryNetworkPermission": false,
+    "compilerAndTemporaryRuntime": "C174/C175 recorded finished/stopped; no later temporary process started in this window.",
+    "mainServer": {
+      "lastRecordedPid": 18368,
+      "leftUnmodifiedForUser": true,
+      "continuingTestProcess": false,
+      "currentHealth": "Not established. Scoped normal process/listener checks at finalization returned no rows; prior sandbox visibility limitations retained, not proof of server failure. No restart or recovery attempted."
+    }
+  },
+  "usage": {
+    "ordinaryUsageAllowed": true,
+    "usedPercent": 27,
+    "observedAfterClockUtc": "2026-10-26T01:27:50Z",
+    "limitExhaustion": false
+  },
+  "savedNextOnly": "C188 entrymethodreview complete0credit/currentC164mapdepsmatch/originalUTC; C189searchBookentry BLOCKEDbeforequery/CTA byactualroot Каталогвременнонедоступен/Неудалосьзагрузитьданные/0result afterpendingRendering. NotemptycataloguePASS/networkcause/sourcebugproof; no newfunctionalUI/fix/accepted. No reload/requery/provider/auth/serverretry/forcedwizardgoto. Ordinaryadminreturn restoredprotectedRU/Anonymized/Business3; no pendingeffects/role/newtab/entity/bookingcommand. Candidate82c7088de609/1686/buildC174C175/counts23of316293left/UI23/fix4/logical16 unchanged/NOT_READY. C189cannotretrywithoutnewcatalogcondition/no repeatedrepairask. NextC190 ONLYboundedREADONLY newlylocated13Octprimary apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json andexactcurrentdependency comparison forD3-05: thisfilewasnotinC187focused09Octset, genuine newevidencecondition notunchangeddiagnostic/retest. PreserveactualoriginalUTC/stimulus/effectoracle/cleanup/FAIL and distinguish report/mocked/API/source/LIVE. No browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQL/DB/API/SDK/storage/fault/source/test/build/server command or unchangedwizard/map/query/auth/F013/profileSave/cache/visual/repairquestion replay. Reuseonlycomplete matchingfinite method/dependencies/originalUTC; ifinsufficient retainexactblocker andindependentunfinishedpriority. Do not eraseC187priorreview or claimcurrentcataloguecause fromunrelatedadminfetchfailure. AllpriorWEBlocalonly/domainlast/safetyconstraints unchanged."
+}

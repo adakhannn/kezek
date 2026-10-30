@@ -1,0 +1,32 @@
+{
+  "id": "C147",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "files": 1686,
+  "savedBeforeBuildUtc": "2026-10-25T20:35:00Z",
+  "reason": "New C141 page-local status translations plus C145 one title scalar/test after completed f0dad7 C137/C138. Candidatec1115361a3b4 genuinely new, not unchanged compile retry. One final build for pending two presentation sourcechanges; old proofs/UTC immutable.",
+  "harness": "scripts/closure-web-isolated-build-c147-20261026.mjs",
+  "guard": "scripts/closure-web-offline-guard-c147-20261026.cjs",
+  "guardTest": "scripts/closure-web-offline-guard-c147-20261026.test.cjs",
+  "destination": "test-results/closure-web-20261026-c147-c1115361a3b4/build",
+  "rawLog": "c147-build-raw.txt",
+  "timebox": {
+    "compilerSeconds": 240,
+    "preparationAndClassificationMinutes": 12,
+    "oneCompilerAttempt": true
+  },
+  "preflight": "Fresh read-only main3000PID18368/no3107/no C147owned process; mainuntouched. Guard16offlinepolicytestsPASS and runtimeharness syntax0. Mechanical C137/C138 harness copies change only C147/C148/candidate/path tokens, same restriction. Exact new destination/raw absent checked again in emitter/harness.",
+  "expected": "Fresh exact1686file cold defaultNext16.0.11Turbopack build exit0/types/prerenders, no mock/compiler-switch/checkskip/install. Copy rejects .env/symlinks/generatedcache, exact source/copy count+fingerprint. Env systemallowlist/dummy.invalid backend/no realkeys, Sentry+telemetryoff. NodeTCP/fetch denied except exact owned generatedPostCSS loopback argvport; not OS firewall/native-confinement claim, no renewed network/font/download permission.",
+  "steps": [
+    "Clock/source/progress/attempt absence then ONE harness launch. Preserve rawappend-only log/PID/UTC/exit/watchdog. No unchanged C121/C93retry/mainrestart/fullOAuthlogs.",
+    "FAIL/timeout preserve, no unchangedrerun or speculative config/security/source repair. Humanstop stop onlyexactowncompiler +PAUSEDexistingkezek/readback/new26Octfinal.",
+    "Exit0 is technicalBUILDonly/0UI/fix/accepted. Save separate finite compiledruntime/actualCUA publicdocument plan before A3-01promotion; no pageAssets.bundle/capture/cache/visual/auth repetition."
+  ],
+  "effects": "Own isolatedcopy/dependencyjunctions/compiler/cache/rawlog only. No envcopy/download/DEVDB/appfixture/booking/role/securityconfig command; ordinary mainauth/telemetry unenumerated.",
+  "accounting": "20/316296left/S116primary62,S23/70,S41/47.26Oct6NEWUI/3fix/logical15;0newacceptance from compiler alone; fulltechnicalFAIL retained/NOT_READY.",
+  "harnessHashes": {
+    "scripts/closure-web-isolated-build-c147-20261026.mjs": "dc58d4ccfee1dc0400f633665718ebdd2088987c7b11711b0d86794cb93be524",
+    "scripts/closure-web-offline-guard-c147-20261026.cjs": "d6ae65cb321ae37405348691e10c616ff3a0c48e2e479503b07f18fc94838203",
+    "scripts/closure-web-offline-guard-c147-20261026.test.cjs": "c777b51d38de7a1901dd5726391f0f43793a10ae2064d8fd4aeba575e4c4c6ab"
+  }
+}

@@ -50,17 +50,23 @@ export function RoleAndBusinessSwitcher({
     const [state, setState] = useState<SwitcherState>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
     const isMobile = mode === 'mobile';
 
     useEffect(() => {
         let cancelled = false;
+        let generation = 0;
+        let reloadTimer: ReturnType<typeof setTimeout> | null = null;
 
         const load = async () => {
+            const requestGeneration = ++generation;
+            const isCurrent = () => !cancelled && requestGeneration === generation;
             try {
                 const { data: sessionRes } = await supabase.auth.getSession();
+                if (!isCurrent()) return;
                 const user = sessionRes.session?.user;
                 if (!user) {
-                    if (!cancelled) setState({ status: 'error' });
+                    setState({ status: 'error' });
                     return;
                 }
 
@@ -98,16 +104,33 @@ export function RoleAndBusinessSwitcher({
                     hasAdmin: !!isSuperData,
                 };
 
-                if (!cancelled) setState({ status: 'ready', roles });
+                if (isCurrent()) setState({ status: 'ready', roles });
             } catch (error) {
                 logWarn('RoleAndBusinessSwitcher', 'failed to load cabinet access', error);
-                if (!cancelled) setState({ status: 'error' });
+                if (isCurrent()) setState({ status: 'error' });
             }
         };
 
         void load();
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (cancelled || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
+            // Invalidate old results and visible options before querying the next
+            // account. Keep SDK calls out of the synchronous auth notification.
+            generation += 1;
+            setIsOpen(false);
+            if (reloadTimer) clearTimeout(reloadTimer);
+            if (!session?.user) {
+                setState({ status: 'error' });
+                return;
+            }
+            setState({ status: 'loading' });
+            reloadTimer = setTimeout(() => { if (!cancelled) void load(); }, 0);
+        });
         return () => {
             cancelled = true;
+            generation += 1;
+            if (reloadTimer) clearTimeout(reloadTimer);
+            subscription.unsubscribe();
         };
     }, []);
 
@@ -122,7 +145,10 @@ export function RoleAndBusinessSwitcher({
         };
 
         const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setIsOpen(false);
+            if (event.key === 'Escape') {
+                setIsOpen(false);
+                if (containerRef.current?.contains(document.activeElement)) triggerRef.current?.focus();
+            }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -176,6 +202,7 @@ export function RoleAndBusinessSwitcher({
         <div className={clsx(isMobile ? 'w-full' : 'hidden md:block')} ref={containerRef}>
             <div className="relative">
                 <button
+                    ref={triggerRef}
                     type="button"
                     onClick={() => setIsOpen((previous) => !previous)}
                     className={clsx(

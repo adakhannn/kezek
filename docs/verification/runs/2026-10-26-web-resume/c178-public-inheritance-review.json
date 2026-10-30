@@ -1,0 +1,45 @@
+{
+  "id": "C178",
+  "type": "Bounded exactpublicbusinesscontactinheritance history/receiver/effects and retainedfixtureviability review",
+  "startedAfterUtc": "2026-10-25T23:24:46Z",
+  "completedBeforeUtc": "2026-10-25T23:29:16Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "history": "G092 original2026-10-16T00:03:38Z certifies existingpublicbusiness catalog/genericentry, externalcontactdestinations notactivated; no parent/branchcontactmutation matrix. G129 original17Oct03:10:26..03:19:19 certifies knownowner settingslocale/noinput/Save, not contactinheritance propagation. UNITbranchcontactfallback supports helperlogic only. C169branchwebsitepersistedread is different inactivebranch/editor-only; no creditreplay. No targeted full publicinheritance LIVE matrix located in reviewedset, notglobalabsenceclaim.",
+  "receiver": "PublicBusinessPage reads approvedbusiness+activebranches, including contactfields/inheritflag, cache:no-store. BusinessInfo hero resolves businesscontacts; each namedactivebranchcard resolves business+branch. PublicContactActions rendersvisibleСайт href forresolvedwebsite; no networkdestinationactivation needed. resolvePublicContacts uses fieldoverride then businessfallback ifinherit!==false. Map propagation/bookingreceiver notthismatrix.",
+  "writeEffects": "ParentBusinessCardEdit PATCH bundlesoriginalname/slug/category/address/phones/fourcontacts/approval; validates thenonebusinessupdate, noowner/limit/role/job/message/email/OTP path. ActivecontrolBranchForm POST bundlesoriginalname/address/active/coords/fourlinks/fourcontacts/inheritflag; validates before scopedbranch+businessupdate. Schedule separate. ExistingfixtureA has documented2branches/no staff/services/bookings; freshUI mustreconfirm bothformsallblank/unmasked originalfields before FIRSTwrite.",
+  "authority": "Human continuingDEVWEBtestauthorization covers bounded reversible ordinaryUI edits to explicitlyretainedisolatedfixtureA; no newentity/credential/grant/irreversibledelete/payment/message/security change. Existingactivecontrol remainsactive, inactivecontrol untouched. Only syntheticnonrecipientHTTPSwebsites; publiclocaltestlink metadata, neverclickexternaldestination. Ordinaryform may normalizeempty/null/audittimestamps; no bit-identicalDBrollback/zeroTOTALwrites claim. Ifunknownmaskedbaseline/no exactsafe-restoration ->BLOCKEDnoSave.",
+  "viability": "Conditional on freshparent+activecontrolbaseline and publicpage showingexactoneactivecontrol/noSite links. Required3functionalstates are distinguishable byvisible publichrefs: parentP+branchP, parentP+branchB, parentP+noBranchSite. Five planned normalupdates returnbothoriginalwebsitesblank andinherittrue. Beforefirstwrite progress mustrecord pendingfixtureeffects; clearonlyafter finalUIreadback. No blindwrite/retry/auto-cleanup.",
+  "limits": "No originalbusiness1/2 or inactivefa5 mutation; no actualphone/email/privatecontact; no mapmarker/coords/permission, activation/publication/owner/role/schedule/booking change. WholeI1-03 stillneedsmappropagation andotherbranchlifecycle; no partialmatrixclaimedwhole.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "de60a1526da8b49cde543fac99d3e9e76fded3a0e4b813b151bb0b9b9e95c257",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "ba3ea61b3cddd8a0abae5f02c29e2429890c629c1f035dff2f6473e02d80a655",
+    "apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts": "3f9c72833192f834c021bdd321c74e5da74878613d001f250b511eed6e7b959c",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+    "apps/web/src/app/b/[slug]/page.tsx": "1ae03639ec4a656df3588d3cd628604f7588b4a45e8bd24b2846bc582e6808d6",
+    "apps/web/src/app/b/[slug]/BusinessInfo.tsx": "d3a8e198cfb7e90c276387c5bfb049d540896715dc6eddb8de3a5d8cd0faa906",
+    "apps/web/src/components/business/PublicContactActions.tsx": "a56ae2f56d08cc19df552e26ab959c85f14cc606e96cc18d20100b36a297626f",
+    "apps/web/src/lib/businessContacts.ts": "9d8d54d9187e8235823eb5c6e599bc4f805bd6776f03ab1bcb92841a5877ff4f"
+  },
+  "hashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G092-public-business-entry.json",
+      "sha256": "c8ea312d51197fbd6071213f2369b0bc5377dac0f9f16624d49235ffd2ac3e7b"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G129-business-contact-settings-locale-after.json",
+      "sha256": "304e771c8c5817b2ad4427d6785108b87df860499da5858dc0e5803002208c70"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c85-persisted-edit-review.json",
+      "sha256": "2a4257a5278da0350c7f6049febe6f2b9ab3c00586acaa0a6f10165fa2412727"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "sha256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca"
+    }
+  ],
+  "credit": "0UI/fix/accepted"
+}

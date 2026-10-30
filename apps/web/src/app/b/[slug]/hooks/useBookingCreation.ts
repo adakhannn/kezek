@@ -6,7 +6,7 @@ import { fmtErr, withNetworkRetry } from '../utils';
 
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 import { logDebug, logError } from '@/lib/log';
-import { createQuickHoldBooking } from '@/lib/quickHoldClient';
+import { createQuickHoldBooking, QuickHoldClientError } from '@/lib/quickHoldClient';
 import { TZ } from '@/lib/time';
 
 type BookingFeedbackApi = {
@@ -22,8 +22,8 @@ type UseBookingCreationParams = {
     isAuthed: boolean;
     t: (key: string, fallback?: string) => string;
     onAuthChoiceRequest: (slotTime: Date, slotStaffId?: string) => void;
-    onStaffIdChange?: (staffId: string) => void;
     onBookingCreated?: () => void;
+    onSlotUnavailable?: () => void;
     feedback: BookingFeedbackApi;
 };
 
@@ -36,8 +36,8 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         isAuthed,
         t,
         onAuthChoiceRequest,
-        onStaffIdChange,
         onBookingCreated,
+        onSlotUnavailable,
         feedback,
     } = params;
     const [loading, setLoading] = useState(false);
@@ -91,10 +91,8 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             return;
         }
 
-        if (staffId === 'any' && slotStaffId && onStaffIdChange) {
-            onStaffIdChange(slotStaffId);
-        }
-
+        // Resolve staff for this command without navigating the wizard mid-flight.
+        // The guest auth-choice callback persists its own resolved selection.
         if (!isAuthed) {
             onAuthChoiceRequest(slotTime, actualStaffId);
             return;
@@ -166,6 +164,11 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 location.href = `/booking/${bookingId}`;
             }, 200);
         } catch (e) {
+            if (e instanceof QuickHoldClientError && e.code === 'booking_slot_unavailable') {
+                feedback.showError(fmtErr(e, t));
+                onSlotUnavailable?.();
+                return;
+            }
             logError('BookingFlow', '[createBooking] unexpected error', e);
             const message =
                 fmtErr(e, t) ||

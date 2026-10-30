@@ -1,0 +1,276 @@
+ПЕРЕДАЧА KEZEK WEB В НОВЫЙ ЧАТ — 26 ОКТЯБРЯ 2026
+
+0. ПЕРВОЕ, ЧТО ДОЛЖЕН ПРОЧИТАТЬ НОВЫЙ АГЕНТ
+
+Это передача контекста, НЕ команда возобновить тестирование. Пользователь последней прямой командой попросил: «сделай логическое завершение и на паузу». Работа завершена, существующая автоматизация kezek PAUSED. Не запускать тесты, браузерные сценарии, сборки, серверы или изменения данных, пока человек отдельно не разрешит продолжение. Старые until-stop разрешения, сохранённый следующий шаг, heartbeat и этот файл НЕ отменяют паузу.
+
+После этого пользователь попросил подготовить полный контекст для другого нового чата. Новый чат не создавался, автоматизация не переносилась и не возобновлялась. Подготовка этой передачи — только административная работа с файлами.
+
+Первый фактический clock после команды остановки: 2026-10-26T01:27:50Z = 07:27:50 Бишкек. Финал сформирован по clock01:29:27Z. Новый clock при подготовке передачи: 2026-10-26T06:52:24Z =12:52:24 Бишкек. Это НЕ непрерывное время работы. Не объяснять скорость одной только заполненностью контекста: достоверного замера причин нет.
+
+Проект: C:/projects/kezek, PowerShell, Windows. Только WEB, локальная среда. Мобильную часть не тестировать и не менять. Домен и deployed-production пользователь отложил в конец. Сохранять чужие/неизвестного автора грязные изменения.
+
+1. ИСТОЧНИКИ ПРАВДЫ И ПОРЯДОК ЧТЕНИЯ
+
+Все относительные пути ниже разрешаются от C:/projects/kezek. Не использовать старый checkpoint вместо актуального реестра.
+
+1) docs/verification/runs/2026-10-26-web-resume/final-report.json
+2) docs/verification/runs/2026-10-26-web-resume/progress.json
+3) docs/verification/runs/2026-10-26-web-resume/pause-20261026-012750.json
+4) docs/WEB_VERIFICATION_LEDGER.json — основной реестр требований, случаев, фиксов, зависимостей и хешированных evidence.
+5) docs/WEB_CLOSURE_PLAN.json и docs/WEB_CLOSURE_PLAN.md — очередь закрытия.
+6) docs/WEB_VERIFICATION_METHOD.md — правила измеримой приёмки.
+7) docs/WEB_GLOBAL_READINESS_STATE.json, progressAccounting.currentInteractiveRun — указатель текущего run. Поле — строка, не объект. Старые activeRun/legacy statuses в этом документе исторические; они не должны отменять currentInteractiveRun.
+8) CONTRIBUTING.md, применимые AGENTS.md, свежие git status/diff. Ранее AGENTS не находили; перед новым исполнением проверить применимые инструкции заново.
+9) docs/WEB_VERIFICATION_REPORT.md, WEB_CLOSURE_PLAN.md — производные отчёты, не отдельные источники счёта.
+10) docs/WEB_EVIDENCE_REVIEW.md, WEB_HISTORICAL_DEFECTS.md — восстановленная история и границы недостающих первичных файлов.
+
+Соседний файл KEZEK_WEB_HANDOFF_ARCHIVE_2026-10-26.txt содержит точную сохранённую историю prompt автоматизации, текущие финал/progress/pause и метод. Он длинный; сначала прочитать эту структурированную передачу, из архива извлекать нужные исторические детали. Не загружать весь архив в новый контекст без необходимости.
+
+2. ПРОВЕРЕННОЕ СОСТОЯНИЕ ПЕРЕДАЧИ
+
+Candidate dev-20261026-WEB-82c7088de609.
+SHA256 82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c.
+1686 файлов в механической source boundary.
+Список: docs/verification/runs/2026-10-26-web-resume/c172-source-paths.json.
+Формула fingerprint: SHA256(JSON.stringify(paths.map(f => [f, SHA256(bytes(f))]))).
+Source boundary не включает environment secrets/сгенерированные кеши; scope описан в ledger.candidate. Не менять способ хеширования произвольно.
+
+На подготовке передачи повторно проверены: fingerprint прежний, ledger valid=true/errors=[], closure valid=true, accepted23/remaining293, automation PAUSED. Последний evidence S1-EV-631 — текущий final-report.json.
+SHA финала: 43e73d1c1b4b6fe22e44dda03608262c3799492be749667647f3c1cc1eb0b127.
+SHA конфигурации automation: 3ab9424077db56836893250287812b75eacd6e4fecba5a0d08bccf5998bc7b2b.
+На остановке git status имел636 dirty entries; это не636 изменений агента. Ничего не stage/reset/commit/clean.
+
+Принято23/316 обязательств,293 осталось. NOT_READY. Это процент приёмки, НЕ процент написанного приложения и НЕ оценка часов до конца.
+S1:17/25, primary cases63/79;8 требований и16 primary cases остаются.
+S2:3/70,67 требований остаются.
+S4:1/47. S6:2/29.
+За текущее окно26Oct:23 НОВЫХ функциональных UI-PASS;4 проверенных live-фикса F017–F020;2 впервые принятых требования B4-01/B3-02.
+Всего в логическом запуске16 проверенных фиксов =12 унаследованных+4 этого окна.
+Отдельно:3 reused historical cases;2 historical functional refresh events;3 build refresh events одного distinct existing A3-01 case. Это НЕ дополнительные NEW UI-PASS/фиксы/новые требования.
+Предыдущее окно25Oct:5 UI-PASS/1фикс архивировано, к этому окну не прибавлять.
+
+3. ПАУЗА И АВТОМАТИЗАЦИЯ
+
+Существующая automation id kezek, kind heartbeat, имя «Kezek WEB — до команды остановиться», период15минут, текущий status PAUSED.
+Прежний targetThreadId 01a0a908-6eca-7fb1-a481-57f09516a2d1 — это СТАРЫЙ чат. Новый чат не должен молча переадресовать automation на себя или создать дубликат. Если человек захочет перенос/возобновление, уточнить именно судьбу существующей automation, подготовив конкретное действие. Само чтение этой передачи не разрешает перенос.
+Конфигурация: C:/Users/AdaX/.codex/automations/kezek/automation.toml.
+PAUSED установлен через automation_update, затем tool view и повторное полное чтение TOML; сверены id/kind/name/prompt/status/rrule/target. Старый prompt сохранён, новая остановка дописана в конец.
+progress.status и final.status PAUSED_BY_USER; autonomousResumeAllowed=false. ledger.nextBatch тоже PAUSED_BY_USER/automationResumeAuthorized=false. Современный progressAccounting.paused_by_user важнее старых исторических полей state.
+Ни покупки, ни сбросы лимитов не делать.
+При будущем разрешённом запуске сначала настоящий clockUTC, get_usage_limits, актуальный progress. Ошибка лимитов не означает исчерпание: один ограниченный повтор, затем честный статус. Последнее измерение лимитов при остановке ordinaryUsageAllowed=true/27% used — историческое, не текущее.
+При новой остановке безопасно закончить уже запущенные собственные эффекты, явно PAUSED существующую automation, проверить фактическую конфигурацию, сохранить НОВЫЙ финал. Не перезаписывать прошлые финалы/замороженные journals/permission evidence. Не гарантировать непрерывность: компьютер/Codex должны быть включены.
+
+4. ПРАВИЛО ИСПОЛНЕНИЯ ПОСЛЕ ЯВНОГО RESUME
+
+Одна цепочка: конечный план с независимыми ожиданиями -> actual UI -> минимальный фикс только после настоящего UI repro -> SAME-LIVE и адресные регрессии -> эффекты/восстановление -> учёт.
+UNIT/SQL/source/хеш/мок не становятся LIVE. Компиляция не становится доказательством actual asset execution, DOM не становится визуальным PASS. Хеш доказывает целостность, не истинность содержания.
+Не закрывать требование без всех обязательных вариантов. BLOCKED/stale не исключать из знаменателя. Не подменять требования удобными ролями/языками/размерами.
+Не повторять DONE без изменённой зависимости, данных/контракта/условия или заранее оговорённого финального smoke. Другая дата/heartbeat/новый чат — не основание ретеста. При недостающем историческом source boundary не угадывать применимость.
+Старые beforeFAIL, ошибочные исходные oracle и их исправления сохранять. Original UTC не retime. updatedAt отчёта не выдавать за точный click time.
+Блокеру — конкретная причина и выход. На неизменный инструментальный сбой одна ограниченная диагностика, ориентир<=10мин, затем независимая незакрытая задача. Не бесконечные retry/auth/reload/newtab loops, не UNIT-имитация вместо LIVE.
+Отчёт по подпакету: было/стало/дельта, закрыто/осталось/блокеры. Тихо при неизменном неактуальном состоянии. Не обещать whole green/отсутствие всех ошибок. Административный ориентир метода<=15% рабочего блока; фактической статистики времени нет.
+
+5. ЖЁСТКИЕ ГРАНИЦЫ ДОСТУПА И ДЕЙСТВИЙ
+
+Только DEV Supabase beulnmftzbmtbdlgurht через обычный UI. Не прямой SQL/RPC/SDK/HTTP, не service-role impersonation.
+Четыре известные Google identity:
+kezekkg@gmail.com — суперадмин.
+osorovadahan04@gmail.com — владелец, alias osorov@sportsoft.ru.
+obraz.osh@gmail.com — сотрудник, alias adakhannn@yandex.com, НЕ pure client.
+low.fade.osh@gmail.com — pure client.
+Обычный login разрешался в активном окне; CAPTCHA/password/device вручную человеком, без обхода. Сейчас пауза, login не выполнять.
+Без specific action-time confirmation не создавать credentials/users/roles/jobs/multijob/admin/manager/foreignowner/secondstaff/grants/новые fixtures. Не ослаблять безопасность, не сбрасывать БД, не делать автоочистку/слепые миграции.
+Нет native/mobile/subagents/new chats, commit/push/deploy/stage/reset. Эта передача сама не является разрешением на новые чаты/агентов.
+Нет платежей/покупок/чужих сообщений/email/OTP/send. Не трогать существующие bookings/shifts/packages/payments.
+f821dd52 NEVER cancel без отдельного точного подтверждения. Closed909/256 не reopen.
+Новое необратимое UI delete всегда требует нового точного человеческого подтверждения при действии. Старое согласие на B нельзя заимствовать для A или иного объекта.
+Миграция G062 20261015075000 уже применена — не повторять.
+Нет external Playwright/CDP/native/rawHTTP/SDK/pagefetch/evaluatefetch/token-cookie-authcode-password-storage/clipboard extraction. Не читать .env/секреты/full OAuth server log. Не обходить URL-policy другим URL/вкладкой/браузером/HTTP.
+Masked AX «<redacted>» у телефона/email — граница инструмента, не фактическое значение и не продуктовый баг. Не .value, не unmask, не DOM equality workaround, не storage/clipboard.
+Обычные auth/analytics/telemetry/normalization записи не перечислены полностью: никогда не писать zero TOTAL writes.
+
+6. БРАУЗЕР И ЗАПРЕЩЁННЫЕ ПОВЕРХНОСТИ
+
+Только computer-use skill + cua_repl.
+Skill последнего сеанса: C:/Users/AdaX/.codex/plugins/cache/openai-bundled/computer-use/26.1021.31345/skills/computer-use/SKILL.md. Проверить доступную версию skill в новом чате, читать её до управления браузером. После compaction существующего CUA первым вызовом await cua.rewriteDocumentation(); только этот вызов, затем прочитать документацию. В новом чате JS handles прежнего REPL не существуют; не предполагать перенос переменных.
+Последний браузер IAB2, binding2. Рабочая пользовательская вкладка2/provider09f3d86a-f489-4f3f-be0a-e00c844b51ba; прежний handle resume26HumanTab. Последний actualUI C189: /admin, защищённая Админ-панель/RU/Anonymized/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1, восстановлена до01:16:32UTC26Oct. Это исторический снимок, не свежая UI health. Ambient URL не доказательство текущей роли/состояния.
+Пользовательская Google chooser вкладка1/provider874f5fb2-0ef7-48a3-9e30-627d63f028ce оставлена нетронутой. Не закрывать пользовательские вкладки; markHandoff рабочего/сохраняемых при их использовании. Новые вкладки/замены запрещены без нового основания и разрешения.
+Исторические старые tab18/provider90447e64-f1be-4740-a944-28b015348d51/restoredAdminTab52 и tab2/e03cd732 относятся прежним сеансам; не путать с современным tab2/09f3.
+НИКОГДА не bind/retry/goto/back/reload старые запрещённые providers:
+8f1d8750-106d-47a7-8b2d-d23fef8aaa02;
+5db2ef6d-2f4b-4783-9ee2-83943fbcac77;
+c6f744b5-18d3-4b56-9132-c301225c7e66;
+browser-use:23011460-bc97-4219-918d-2e16e9c8c958.
+Запрещены /admin/monitoring и guest/admin/api/metrics?limit=1, включая альтернативный URL/UI/HTTP обход.
+Supabase old tab отсутствует: замену не создавать, старый SQL g062ProjectionSql не выполнять.
+C09 screenshots не работали/неверный viewport; без новой причины не повторять снимки/масштаб/ручной viewport repair. Не заявлять visual/device/screenreader/no-flash PASS по DOM.
+C167 metadata CUA давала pageAssets/webmcp, но не correlated input/request timeline. Source500ms debounce, echo поля и settled URL не доказывают500ms/requestcount/end-to-endlatency. Не instrumentation/fakeclock/HTTP workaround.
+C93 pageAssets.bundle overrun уже был — без изменённого условия не повторять.
+CUA wait часто истекал примерно за3с даже при10/30с запросе. После уже выполненного действия допустим один свежий AX для выяснения состояния, НЕ дублировать click/Save/reload. Старый AX+Rendering может означать pending navigation; не считать его пустым результатом. Только documented APIs, свежие AX IDs после действий.
+
+7. FIXTURE A И РЕЕСТР ЭФФЕКТОВ
+
+Оригинальный registry docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json.
+SHA 20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca. Не менять.
+FixtureA business fe2d412c-21c6-40ef-b5d3-23f49f550610.
+Name S1 TEST 20261020 Branch Availability.
+Slug s1-test-20261020-branch-availability.
+Approved/Barber, owner unassigned, limit2,2branches,0staff/services/bookings.
+Inactive branch fa5f1017-d987-40c8-90ca-b042898c694f, name S1 TEST INACTIVE BRANCH.
+Active control057447c8-b200-4403-b056-49e3c250840f, name S1 TEST ACTIVE CONTROL.
+Исходные address/4directorylinks/4contacts blank, coords—/—, inherittrue,7closed days; respective activefalse/true.
+Последние проверенные baselines восстановлены. pendingFixtureEffects.pending=false. Никакой очистки сейчас не требуется.
+Заморожены c179-effects-journal.json EV607 и c183-effects-journal.json EV616. Нельзя rerun emit-c179-journal.mjs/emit-c183-journal.mjs или изменить эти журналы. Новые факты — отдельным append-only evidence. Не обещать bit-identical DB rollback: timestamps/empty-null normalization/telemetry не перечислены.
+FixtureB85adc551-249c-4931-a445-aa6f905f1bea + sole branch e1eedc5a уже необратимо удаленыC03 с точным согласием20Oct08:50:56Z. Не восстанавливать/не удалять заново.
+Другие известные сущности: business2 c28c8109-bedc-4f9e-bbc2-30f4b549131e/slugtestovyy-biznes-2; branch1 fe1dde50-c04a-4b48-b215-bde72aa60625; branch2 23a0ce35-5556-4e98-84ee-89ae067908fa. Business1 35e5b36c-a967-4708-ba4d-7d3fc24b89f4/Barber/noactivebranches. Эти IDs не дают разрешение записи.
+Category testc7cef81b restored originalname/slug/inactive/usage0C126. Barber85157ef2activeusage2,Women0851842bactiveusage1. Не создавать/активировать/удалять/force.
+
+8. СЕРВЕР, ШРИФТЫ И СБОРКА
+
+Исторический mainserver: node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1, cwdC:/projects/kezek/apps/web, session60432, parent12676/listenerPID18368,127.0.0.1:3000. Оставлен нетронутым для пользователя, не продолжающийся тест-процесс.
+На остановке scoped normal process/listener queries не вернули строк. Из-за прежних visibility ограничений это НЕ доказало падение/остановку. Здоровье mainserver сейчас не установлено. Не restart без проверки stopped/project. Не packageinstall/lockfilecleanup/повтор прежнего pnpmshimEPERM/fullOAuthlogs. В паузе вообще не запускать.
+Нет активного собственного временного compiler/runtime/networklease. C174compiler23980 finished25Oct23:04:38; C175runtime14212/session77169 намеренно остановлен23:05:53,3107gone по тогдашнему check.
+Шрифты уже локальные реальные Geist/GeistMono, next/font/local, лицензия/источники проверялисьC57. Разрешение человека на selfhost было прямым «да давай». Не менять дизайн/variables, не mock/font substitute/compiler switch/checkdisable.
+GoogleFonts compiler GET разрешение было отдельным и истекало; старое untilstop его не продлевает. Теперь не нужно. Нет новой сетевой lease. Не download/renew/rebuild без изменённой необходимости/полномочий.
+C54 colddefaultbuild EXIT1/CSS timeout сохранён, C55 diagnostic complete; не unchangedretry. C57/C58 старые успешные localfontbuild/actualassets — исторический candidate, не blanket-current proof.
+Текущий C174/C175 уже DONE: exact1686cold defaultNext16.0.11Turbopack, compile40.0s/types36prerenders/exit0; no.env/dummybackend/localfonts/Nodeoutboundguard кроме exactownedPostCSSIPC, не OS firewall.
+Build started25Oct23:03:23.215Z/finished23:04:38.101Z; c174-build-raw.txt, c174-result.json; buildtree test-results/closure-web-20261026-c174-82c7088de609/build.
+ActualCUAcompiledprivacy9sections/guestmenu/reload/adminrestore c175-result.json PASS, runtime stopped. A3-01 accepted восстановлен после смены кандидата; третий buildrefreshEVENT одного case, не NEWUI/fix.
+Не повторять текущую сборку/шрифты/C93bundle для нового чата или счётчика.
+
+9. ИСПРАВЛЕНИЯ И ТЕХНИЧЕСКИЕ ПРОВЕРКИ
+
+F017: канонический cancelled count+RUlabel AdminToday. F018: EN/KYsystemstatuscopy AdminToday. F019: лишний backslash EnglishTodaytitle. Их реальные beforeFAIL и SAME-LIVE вC133–C146, исходные evidence не стирать.
+F020: C171 syntheticno-digit phone/WhatsApp ordinarySave ошибочно принимался, переходил назад и readbackblank. Это настоящий beforeFAIL, не maskedAXbug.
+C172 minimal WEB lib/businessContacts.ts: reject nonemptyoriginalinput если normalizednull либо !isE164. Два guardусловия. Blank/formattednormalization не менялась.5tests добавлены.
+C173 те же exactknownsyntheticargs ordinarySave отклонены соответствующими formaterrors, discard/reentryblankbaseline, F020VERIFIED/одинcompoundNEWUI.
+Вспомогательный первоначальный oracle+12 был неверен для существующего E164regex; corrected+1. Before8PASS2FAIL -> after10PASS, types0, runtime-scopedlint0 (testignoredwarning1). Не переписывать исходный oracleFAIL или regex под тест.
+Полный WEBcoverage gate:540suites534PASS6FAIL;2558tests2547PASS11FAIL. Те же11 failedassertion identities какC135, это не доказательство причины. FullLint52errors167warnings/те же diagnostics. Scoped/type/build successes НЕ wholegreen. Не rerun неизменные тесты/сборку ради нового отчёта.
+Coverage subset collected585/615statements95.12%,75/76functions98.68%,275/316branches87.03% — не общий продуктовыйPASS.
+CONTRIBUTING требует lint/typecheck/test, coverage для validation/service/routes/repository/domain-adjacent, E2E для критических flows. Пользователь запретил externalPlaywright; не обходить это. UNIT не подменяет требуемыйLIVE.
+
+10. ТЕКУЩИЙ НЕЗАКОНЧЕННЫЙ ШАГ — C190, ТОЛЬКО ПОСЛЕ НОВОГО RESUME
+
+Не начат. Сохранён narrow READONLY review вновь найденного файла:
+apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json.
+Файл найден при C188 file search, содержимое ещё НЕ открывалось. Это новый evidence condition кC187, а не повод повторить прежнюю неизменную диагностику/UI. Дата папки13Oct НЕ автоматически время действия.
+Цель D3-05: прочитать exactprimary, оригинальныеUTC/stimulus/independentoutcomeoracle/cleanup/beforeFAIL; сравнить executiondateddependencies с нынешними. Различать actualUI/status/SQLUI/мок/source. Реюз только полного matchingfinite method/dependencies/originalUTC. Не угадать identity по именам helpers или поздним snapshots.
+NO browser/newtab/booking/hold/slot/Next/date/staff/service/confirm/cancel/payment/SQLexecution/DB/API/SDK/storage/fault/newfixture/role/source/test/build/server action от этого review. Не открыть wizard «для проверки». Если источника/bridge недостаточно — точный BLOCKED и независимая незавершённая задача.
+Не повторять C189catalogue/query, F013/auth/profileSave/cache/visual/repair question. Не переписать старыйC187 и не связать catalogueerror с adminerror без доказательства.
+
+11. ПОСЛЕДНИЕ C188/C189: ВХОД В BOOKING И НОВЫЙ БЛОКЕР КАТАЛОГА
+
+C188 reviewEV626; C189 finiteplanEV627; C189resultEV628; continuationEV629. Все в текущемrun:
+c188-booking-entry-method-review.json;
+c189-search-booking-entry-plan.json;
+c189-result.json;
+c189-continuation-readback.json.
+D1-01 четыре метода: directbookingURL/publicbusinessCTA/mapCTA/filteredsearchresultBook. Whole requirement partial/casePlanCompletefalse.
+C164 mapcase7declareddependencyhashes exactcurrent, original25Oct22:09:16..22:12:28Z. Не повторятьmap/не считать ещёNEWUI/reusecount.
+G09216Oct00:03:38Z KY generic publicbusinessCTA→business2Step1/unselected2/Nextdisabled; currentBusinessInfo/view изменён относительно позднего snapshot, полного executiondatedbridge нет, не promote/не replaygenericCTA.
+C79 поисковая история23Oct00:50:30..00:53:46 нажимала «Подробнее», не отдельную «Записаться». C166query/reset/URLsettlement тоже не bookingactivation.
+Текущий rootpage source показывает отдельные details /b/slug и Book /b/slug/booking толькоhas_active_branches. Sourcehref не LIVE.
+C189 один новый метод: cleanroot3biz -> exactquery«Тестовый бизнес2» -> единственныйBook -> correctwizard -> cleanroot/admin;6мин; ни selection/Next/slots/hold/confirm. Draftизstorage мог быть валиден: не требовать искусственно blankdate/branch, не extract/clearstorage.
+Actual01:14:00UTC26Oct freshadmin. BrandclickОНCE; headingwaitdeadline/oldadmin+Rendering, затем один boundedwait уже выполнявшегося navigation. Settledroot показал «Каталог временно недоступен», «Не удалось загрузить данные. Обновите страницу или попробуйте ещё раз позже.»,0вариантов/0мест/Найдено0, blanksearch, без cards/Book.
+Ни queryfill, ни reload/reset/category, ни Book/wizardnavigation не было. Это realcatalogueerror, не validempty/loadingPASS. Cause/status/response/timing unknown. HealthyadminBusiness3 не объясняет publicreadfailure и не доказывает ту же причину M1.
+ObservedAdminmenu→Админ-панель ONCE after01:14:45; onefreshAX afterwaitdeadline подтвердил protectedadmin/RU/Anonymized/Business3/4/1/4/30/TodayCancelled1. Handoff до01:16:32. Chooserнетронут/noauth/newtabs.
+Case S26-D101-filtered-search-booking-cta-entry BLOCKED, methodnotexecuted, blockedBy ACTUAL_PUBLIC_CATALOGUE_LOAD_ERROR_BEFORE_MATCHING_RESULT_CTA.0newUI/fix/accepted. Не новый distinctbug и не сертификатB3-03/D1-03errorhandling. Об ошибке один раз уведомили человека. Не повторять неизменное уведомление/retry и не делать speculativefix.
+
+12. C186/C187: BOOKING CONFLICT/DOUBLE-SUBMIT И ПОЧЕМУ НЕ ПРИНЯТО
+
+C186EV622/checkpoint623: D3-02 rapidpendingdoubleconfirm BLOCKED. busy+useRefinFlight/source и unresolvedmockcallcount неLIVE. Нет rapidactualstimulus+independentsingle-resultoracle, новые bookingfixture/commands не разрешены.
+Case S26-D302-rapid-pending-confirmation-single-result, blockedBy NO_MATCHING_LIVE_RAPID_SUBMIT_PROOF_AND_NO_NEW_BOOKING_COMMAND_AUTHORITY.
+Night09OctWB102/bug033 — sameowner-as-client sequentialtwo-tabs staleslot, НЕ rapidpending同formdouble/parallel/differentusers. RepeatBooking11Oct07:08/07:16 лишьnavigation;G090/G091commands исключали.
+Quick-hold JSinput не содержит explicitidempotencytoken, но это НЕ доказанный runtimebug/отсутствиеDBconstraint. Не speculativefix.
+
+C187EV624/checkpoint625 read exact night-2026-10-09/booking-conflict-stage.json. updatedAt2026-10-09T06:05:00+06:00 — stageMETADATA, неclickUTC.
+Before: owner-as-client branch1/staff1/service60/12Oct09,2tabs; первая3117ad85confirmed, вторая500/rawtimeslot/[objectObject]/staleconfirmation. Duplicate ужеbefore не было.
+After: первая629e5c4d; вторая stale409/localizedrefusal/confirmationclosed/09..09:45removed/10first; записанSQLUIoneactivebooking629e5c4d. Оба конкретных booking отменены тогда,SQLUI0active/09restored. Ничего не переигрывать/uncancel.
+Не доказывает realparallel/differentusers/complex/networklossaftercommit/retryidempotency.
+С15OctG052manifest7из8pathhashes совпадаютcurrent, viewdiffers. Но15Octpostdates09Oct;executiondated9Octsourcehash/bodybridge не найден. CurrentD3-05не promote/не regressionclaim.
+Case S26-D305-current-stale-slot-server-conflict, blockedBy HISTORICAL_EXECUTION_SOURCE_BOUNDARY_MISSING_FRESH_BOOKING_COMMAND_NOT_AUTHORIZED. Само partialrequirement исторически сохранено.
+7совпадающих paths:bookingSlotConflict.ts,bookingCommandsSupabase.ts,quickHoldHttpService.ts,quickHoldService.ts,quickHoldClient.ts,useBookingCreation.ts,utils.ts. Полныехеши вc187-stale-slot-conflict-review.json; G052manifest apps/web/test-results/global-2026-10-15/g052-copy-manifest.json, поле entries (неfiles).
+Readonly currentflow: error23P01/exactoverlap→BookingSlotConflictError→HTTP409code; clientQuickHoldError→feedback+onSlotUnavailable;viewsetPendingBooking(null)+refreshAvailability. confirmmodalbusy guards; withNetworkRetry oneTypeErrorretry. core-domain hold→confirm→notification. Агент никакие этиHTTP/SDK/RPCневызывал.
+
+13. C180–C185: УЖЕ ЗАКОНЧЕНО, НЕ ПОВТОРЯТЬ
+
+C180EV609/610 B4-05 publicmap missingcoords/providerfailure review0credit. G08515Oct22:26:25/G08722:49:53 currentMapPageClient/query/loader match, но providerfailure исключён/coordinate-lessmatrix не доказана. C179ACTIVE057coords—/— лишьprecondition, неmapexclusion. C162incidentalcount2не promote. WB019blankkey primarymissing;WB008GET500другаясurface;WB049/WB079adminmapnoticeнеpublicerror. Нельзя env/key/fault/mockLIVE/providerretry. Оба exactblocker сохранены.
+C181EV611/612 timezone readonly0credit: businesses.tznullable/branchesno tz;reviewedadmin/dashboardbranch/businesscontactformsno tzcontrol/payload. Bookingbusiness.tz/JSfallbackbusinessTz;SQLliteralBishkekfallback readsourceonly/notexecuted/notdeployedproof. Никакого runtimebugизdifference/controlabsence. G088/G089/G091dateguards/G129contactlocale исключаютmidnight/allzone;WB014forcedUTCprimarymissing. BLOCKEDбезnondefaultfixture/control/midnightoracle;no fakeclock/env/tz/schedule/bookingwrite.
+C182reviewEV613/plan614, C183PASS EV615/journal616/checkpoint617: existingACTIVE057fourdirectorylinks edit→reentry+reload exactvalues→publiclabelledInstagram/2ГИС/GoogleКарты/ЯндексКарты exacthrefs→clearSave/reentry+reload/publicabsence recovery. Knownsynthetic https://c183-directory.example.invalid/{instagram,two-gis,google-maps,yandex-maps}. NO externalactivation/provider/map/location/permission/newtab/auth. Exactly2ordinarySaveupdates onceeach despitewaitdeadline. Originalallblankcontacts/links/address/coords—/—/inherittrue/activeTRUE/7closed restored, inactivefa5нетронут. UI21→22. WholeI1-02/I1-03partial. FrozenjournalEV616neverrerun.
+C184reviewEV618/plan619: DeleteBizButton outerbuttononlysetConfirmOpen(true),Cancelonlyclose, separatefooterDeletePOST. C03Bconsentнеborrowed/C115branchdiffers.
+C185PASS EV620/checkpoint621: ONEcompoundnamedAwarningCancel/reload/retention. Exactname+«вместе со всеми данными? Это действие необратимо.»+separateCancel/Delete. CancelONLY,oneReload retainedAname/slug/approvedBarber/ownerunassigned/limit2/2branches0staff/services/bookings;branchIDs/activeflags2of2. NO finalDelete/Enter/typedname/force/Save/Create. UI22→23. Не genericdialog/focus/cascade/securityproof/неwholeM2-05. До00:29:16adminrestore/handoff. Не reopenдляEscape/Close/ещёPASS.
+
+14. C167–C179: УЖЕ ПОДТВЕРЖДЁННЫЕ CONTACTS И ГРАНИЦЫ
+
+C167 boundedB3-01debouncereviewDONE: no permitted correlatedtiming →BLOCKED, noqueryrerun/fakeclock/instrumentation.
+C168review/C169 onecompoundHTTPwebsitevalidationrejection+HTTPSsave/reentry/reload+clearsave/reentry/reload oninactiveA.3Saveattempts=1rejection+2updates;originalblankbaseline restored.UI17→18. Не повторять.
+C170broadcontact/inheritance/timezonematrixreviewDONE; не ещёразаудит. C171–C173F020см.выше.UI18→19.
+C176emailreadonlyDONE/C177 invalidknownsynthetic«INVALID EMAIL TEST» oneSave→nativebrowsermissing@validation/recovery,oneNEWcompoundUI19→20. Не serverregex/network/security/no-writePASS. UppercasesyntheticC177.TEST@EXAMPLE.INVALID maskedAX →normalization/persistenceBLOCKED BEFOREvalidSave. No unmask/.value/equality/workaround/send/OTP/privateemail.
+C178inheritancereview0credit/G092/G129notinheritanceexecution.
+C179onecompoundfull3variantpublicwebsiteinheritanceUI20→21: parentP→heroP+activebranchP;branchB→heroP+branchB;clearB/inheritfalse→heroP/noBranchSite. Knownsynthetic c179-parent.example.invalid/c179-branch.example.invalid, normalvisiblehrefonly/noactivation.
+Exactly5ordinaryupdates:parentP,branchB,branchblank+inheritfalse,branchinherittrue,parentblank. Originalparent/activebranch baselines/publicnoSite/oneactivecontrol restored, inactiveuntouched. journalEV607immutablependingfalse. WholeI1-02/I1-03не закрыты. Повтор website/nondigit/email/nativeguard/name/address/inheritance/directorylinks безchangeddependency запрещён.
+
+15. C150–C166 И ДРУГИЕ DONE
+
+C129unusedcategorywarningCancel,C131usedcategorywarninguncheckedforceCancel,C150create-modeunsavedaddressdraftCancel/reentry DONE; noCreate/newcategory.
+C151negativecreatevalidation sourceguards неLIVE, Submit/Create/Save/Enter/newentityauthorityabsentBLOCKED.
+C153warningEscape/Close,C155ownSAisolatednamedraftdiscard,C157active/blockeduserfilters,C160pureclientTelegramreminderCTA→ownprofile DONE. C160неTelegramlink/Save/Later;localhostBotdomaininvalidproviderlimitation,нетtunnel/domain/securityworkaround.
+C158readonlyS2frontiergroupedall67remaining DONE, не повторятьunchangedaudit.
+C162acceptedB4-01: direct/mapentryNEWUI+G085Footerhistoricalreuse exactfunctionaldeps/original15Oct22:26:25. Notgeolocation/nearest/markers/booking/visual/cacheproof. Accepted21→22,S6=1/29.
+C163review/C164onecompound4accessiblemapbranchCTAcombosPASS+oneoldG023branch2listrefresh. Providerballoon2BLOCKED,wholeB4-04partial. No slot/Next/date/staff/service/hold/bookingcommand.
+C165review/C166B3-02acceptedfinite9variants6caserows:3NEWcompoundUI+1historicalemptyquery-withcategoryrefreshafterHomeClientchange+2C79reuseoriginalUTC. Accepted22→23,S6=2/29,UI13→17. Query/category/resetroot3biz/admin restored. Не timingproof.
+
+16. ДРУГИЕ СОХРАНЁННЫЕ БЛОКЕРЫ И ЗАПРЕТЫ ПОВТОРОВ
+
+F013: C63ordinaryownstaffPastreloadactual«Требуется авторизация» при priorownhistory29;sourcegetUsererrorORmissinguser→UNAUTHORIZED, runtimecauseunknown. C64readonlyclassificationDONE/no correlatedstatus/code. Rootheaderиstaffheaderразошлись, cookie/networkcausalityнеproven. Не repeatstaffPastreload/auth/sessiondiagnostic безновогоcondition. Staffhistory2PASS1FAIL1BLOCKED/4;initial27oraclewrongpreserved, corrected29with19Octcancelledrows/tieunordered. StaffhistoryPASSнеfixF013.
+F005 fixed_pending_verification; прежнийlogoutparentredirectдоcomponenterror нерабочийinjection, не повторять.
+M1home businesscountfetchfailedintermittent C57/C133, восстановление3безfixнеfix. Непровереннаяпричинаbusiness-appfetchfail; C189catalogueнеprovensamecause.
+OwnerC67knownloginreachedbusinesschooser«Тестовыйбизнес2Текущий»,stopbeforechoice. DirectselectorownerBLOCKEDнеproductFAIL; не unchangedretry.
+F1-03directselector4PASS3BLOCKEDallavailabledone:SA/client/guest/staff;owner/manager/multiroleblocked. HeaderknownavailablevariantsDONE; не rerunдляcounts.
+C61profiledraft3PASS2BLOCKED/5;maskedphoneAXlength10неactualvalue/bug;Reset/reloadclean/noSave. C77profileSaveconsentabsent,phonecoupled/SMSrisk/no repeatedask/Save/OTP/unmask.
+C78expired/depletedpackagesmissingfixtures; не manufacture/consume.
+C82self/lastadminsourceonly; неdemote/suspend/delete/grants.
+ReceiptsE1-02statusmatrix4PASS1holdBLOCKED/5:confirmedC56reused,cancelled/no-showC59,paidC60RU/KY/EN+reloadONEcase. Donotrepeatpaid/cancelled/no-show/confirmedwithoutdependencychange,neverf821cancel. C56historyE1-03acceptedS4.2.
+F4-02returnmatrix48PASS16BLOCKED/64 (33new+15reused),F4-01 12PASS4BLOCKED DONE. C53Googlechooserabandonmentsubset3/3PASS;oldC49expiredOAuthstatere tryBLOCKEDretained/notproductbug. FullC3-03partialexplicitconsentrefusal/Yandexcancelunverified. No callbackURL/code replay.
+RatingdraftC69/C70sum99/101,days0/366invalid,1/365valid6PASS2BLOCKED;Reset35/25/20/20+30days;noSave/Enter/recalc/POST/configpersist/jobs. Не repeat.
+C68manualdatefillcommitunconfirmed,oneTableft30dayselected;BLOCKEDнеproductbug. Invalidrangeintentionalpersist опасно/errorviewhidesfilters;не rawDOMeventworkaround/retry. 7daypresetUIPASSnotGETnumericETLfinanceproof.
+Coldcache/ownercoldload требует актуальныйDisablecache+DevToolsopen;confirmationнеполучен/неповторятьrepairquestion. Visual/SSRinitial2вариантаblocked,8domainproductionlast. CurrentbuilddoneнеfreshcachePASS.
+C127service-categorycontractBLOCKED/no schemafeatureexpansion. DEC-CATALOG-SEARCH advertisedservicesearchоткрыт;B3-03networkfailure/B3-04realpaginationopen. No artificialfixtures/networkfault.
+Q1/S8finalchecks не приниматьранопоC172types. S8входтребуетвсехS1–S7;текущиескоппроверкинефинальныйrelease.
+
+17. ИСТОРИЯ ОКОН, КОТОРУЮ НЕЛЬЗЯ ПЕРЕПИСЫВАТЬ
+
+21Octdirectpermissionuntilhumanstopв06:07:49Zзаменилстарый11:00Bishkekprospectively,неcontinuity. Старыеpauses/finalsнеизменны.
+23Octfirstresumeclock22Oct23:04:14;C70/C71…C74window7UI/0fix/0accepted;explicitstop22Oct23:59:59Z,finalSHAe703a0e29ccf7dfe408640557db163b2903e2c6b5fa423a7378422a2b8964cea.
+23Oct«светдали можешьпродолжать»resume00:13:06Z,newrun2026-10-23-web-resume-2;window21UI/2fixF014F015/logical11. Pause06:34:23Z,finalSHA84c42de6d4edeac2a811f038e987a9fb946cc446359287d1766fd7faa7119e6b. Candidate88d5303de67a/1685;20/316buildpending.
+25Octresume08:52:04Z,window5UI/1fixF016/logical12;21/316afterbuild. Pause11:00:44Z. finalSHA59ca1f35df4965a0ee6eb69b41cb0b52559d6641648cb97881c3a6c40c29b676.
+26OctBishkekresume25Oct19:37:40Z,window0start, inheritedcandidate510f/1685/21accepted/logical12. Recoveryhumanrestorednewtab2/09f3,localserver18368. Currentwindow23UI/4fix/2accepted окончен26Oct01:27:50Zpause. Не суммировать UIизархивов сcurrentwindow.
+Candidatechain:4e13384124d3/1677 ->40a5aef0e785/1683(localfonts) ->88d5303de67a/1685(F014/F015) ->510f3832db4d/1685(F016) ->c1115361a3b4/1686(F017–19) ->82c7088de609/1686(F020). ХешикандидатовнеgitcommitSHA.
+Хронология21Octираньшеподробно вархивеpromptиrunфайлах. Не заявлятьнепрерывность черезостановки/потерюсвета/observationgapC68(09:49:51→10:57:20UTC).
+
+18. ФАЙЛОВЫЙ УЧЁТ И ИНСТРУМЕНТАЛЬНЫЕ ПОДСКАЗКИ
+
+Новый evidenceID послеEV631 — EV632, только если действительно нужен новый учёт; эта передача сама не новый productPASS. Не записывать фиктивный C190result, он NOTSTARTED.
+json-evidence-patch helper: docs/verification/runs/2026-10-20-s1-continuation/json-evidence-patch.mjs, updateJson сохраняет формат/историю. Evidence bytes JSON.stringify(v,null,2)+'\n';SHAactualbytes.
+emit-derived-reports.mjs тойже папки генерирует patch, не продуктовые изменения. После ledger edits applypatch и validator; не надо повторять весь test suite для docs.
+Текущийrunemitters emit-c188-c189-plan.mjs,emit-c189-result.mjs,emit-c189-checkpoint.mjs;emit-c187-review/checkpoint;emit-c186-review/checkpoint;emit-human-pause-final.mjs. НЕ rerunfinalкогдаонсуществует и НЕ frozenjournalemitters.
+Проверки read-only: node scripts/web-verification-report.mjs --json; node scripts/web-closure-plan.mjs --json. summarize/closureSummary доступныexport,примерывemitters. Derivedreportне sourceoftruth.
+Передача не требует повторных хеш-аудитов каждого старогоstage. Проверить актуальную boundaryи нужные dependencies выбранногокейса, не раздуватьадминистративныйцикл.
+rg first. Windows rg dir/*.json не работает как bashglob: каталог+-g. Не rgcontentsпоогромнымоднострочнымcoverage/JestJSON: ранее364k tokens; rg-l/filelist, затем Nodeparsefocusedfields. Не печатать полный automationprompt/secretlogs в tooloutput.
+PowerShell \" не Bashescaping. ДлясложногоNodeкода лучше файл/patch,либонеиспользоватьдвойныекавычкивнутри-e. Приошибкеescapingникакогопродуктовогоэффектанет, исправитькоманду безповтораproductaction.
+functions.wait только после Script running cellID. write_stdin только actualsession. Не rerunprocess потому что выводtruncated. Promise.allSettled длянезависимыхreadcalls, inspectallresults.
+Не repurposeHOME/CODEX_HOME, не destructiveFScleanup. Текущая средаdangerfullaccess/approvalnever: НЕ передавать sandbox_permissions,инструкцияговоритбудетrejected. Наличиетехническихправ не расширяетuserauthority.
+
+19. РЕКОМЕНДАЦИЯ НОВОМУ ЧАТУ ПО ПРОДУКТИВНОСТИ
+
+Пользователь недоволен медленным прогрессом и хочет чистый контекст. Не повторять весь предыдущий аудит/знакомство с проектом. Сначала подтвердить паузу и прочитать currentfinal/progress/точныйследующийscope. Если человек разрешит продолжение — узкий C190review, конкретный исход, затем реально закрываемое независимое требование с достаточными полномочиями.
+Не держать тысячи строк истории в каждом ответе и не добавлять один длинный checkpoint в пять документов. Реестр+primaryevidence+короткийprogress/derivedreports. Архив этой передачи — справочник, не обязательное чтение целиком.
+Не брать новый UIcase только потому, что он легко повторяется. DONE не повторять для счётчика. Не писать unit-тесты, имитирующие отсутствующий runtimefixture или запрещённое действие. Если все ближайшие безопасные варианты упираются в человека/недостающую роль/наблюдаемость, честно назвать этот предел и нужное конкретное решение, не производить стадии ради активности.
+Главная цель пользователя — стабилизировать WEB с настоящими UIдоказательствами и завершать конечные требования, а не генерировать отчёты. Но отменять границы безопасности/историирадиускорения нельзя.
+
+20. ГОТОВЫЙ ПЕРВЫЙ ТЕКСТ ДЛЯ НОВОГО ЧАТА
+
+«Работаем с Kezek WEB в C:\projects\kezek. Прочитай C:\projects\kezek\docs\verification\KEZEK_WEB_HANDOFF_2026-10-26.txt, текущие final-report/progress/ledger. Сначала только прими контекст и коротко подтверди текущее состояние. Проект и automation kezek находятся на паузе после моей команды; чтение передачи не разрешает возобновить тесты, браузер, сервер, сборку или записи данных. Сохранённый C190 не начат. Если дам отдельную команду продолжать, действуй по текущим границам, не повторяй завершённые проверки и не создавай дубликат automation. Архив истории читай точечно при необходимости.»
+
+КОНЕЦ ОСНОВНОЙ ПЕРЕДАЧИ. Все факты имеют предел наблюдения; новый чат обязан отличать сохранённые факты от свежей проверки. Старые finals/journals и прямые запреты сохраняются.

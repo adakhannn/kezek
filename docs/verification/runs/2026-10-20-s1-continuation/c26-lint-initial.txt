@@ -1,0 +1,16 @@
+(node:15468) ESLintIgnoreWarning: The ".eslintignore" file is no longer supported. Switch to using the "ignores" property in "eslint.config.js": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+C:\projects\kezek\apps\web\src\__tests__\api\admin\globalOverview.test.ts
+  0:0  warning  File ignored because of a matching ignore pattern. Use "--no-ignore" to disable file ignore settings or use "--no-warn-ignored" to suppress this warning
+
+C:\projects\kezek\apps\web\src\__tests__\lib\adminGlobalOverviewService.test.ts
+  0:0  warning  File ignored because of a matching ignore pattern. Use "--no-ignore" to disable file ignore settings or use "--no-warn-ignored" to suppress this warning
+
+C:\projects\kezek\apps\web\src\app\admin\analytics\overview\AdminAnalyticsOverviewSections.tsx
+  62:5  warning  'startDate' is defined but never used          @typescript-eslint/no-unused-vars
+  63:5  warning  'endDate' is defined but never used            @typescript-eslint/no-unused-vars
+  64:5  warning  'onStartDateChange' is defined but never used  @typescript-eslint/no-unused-vars
+  65:5  warning  'onEndDateChange' is defined but never used    @typescript-eslint/no-unused-vars
+
+✖ 6 problems (0 errors, 6 warnings)

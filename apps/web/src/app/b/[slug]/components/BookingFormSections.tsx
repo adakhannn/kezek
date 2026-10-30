@@ -31,6 +31,7 @@ type BookingFormSectionsProps = {
     day: Date;
     dayLabel: string;
     dayStr: string;
+    dayInRange?: boolean;
     formatBranchName: (name: string) => string;
     goNext: () => void;
     goPrev: () => void;
@@ -48,6 +49,8 @@ type BookingFormSectionsProps = {
     staff: Staff[];
     staffCurrent: Staff | null;
     staffFiltered: Staff[];
+    staffLoading?: boolean;
+    staffError?: boolean;
     staffId: string;
     step: number;
     t: TranslateFn;
@@ -77,6 +80,7 @@ export function BookingFormSections({
     day,
     dayLabel,
     dayStr,
+    dayInRange = true,
     formatBranchName,
     goNext,
     goPrev,
@@ -94,6 +98,8 @@ export function BookingFormSections({
     staff,
     staffCurrent,
     staffFiltered,
+    staffLoading,
+    staffError,
     staffId,
     step,
     t,
@@ -109,6 +115,8 @@ export function BookingFormSections({
     onRetrySlots,
 }: BookingFormSectionsProps) {
     const branch = branches.find((item) => item.id === branchId) ?? null;
+    const noStaffForRestoredServiceDay = step === 4 && !canGoNext && !!branchId && !!dayStr
+        && !staffLoading && !staffError && staffFiltered.length === 0;
 
     const stepMeta: Record<number, { title: string; description: string; next: string }> = {
         1: {
@@ -133,7 +141,9 @@ export function BookingFormSections({
         },
         5: {
             title: t('booking.flow.step5Title', 'Выберите свободное время'),
-            description: t('booking.flow.step5Description', 'Клик по слоту продолжит запись через авторизацию или гостевой сценарий.'),
+            description: isAuthed
+                ? t('booking.summary.selectSlotFirst', 'Выберите свободный слот, и система продолжит подтверждение записи.')
+                : t('booking.flow.step5Description', 'Клик по слоту продолжит запись через авторизацию или гостевой сценарий.'),
             next: t('booking.flow.step5Next', 'После выбора слота поток перейдёт к подтверждению.'),
         },
     };
@@ -184,10 +194,12 @@ export function BookingFormSections({
                             />
                             {dayStr ? (
                                 <AlertBanner
-                                    variant="info"
+                                    variant={dayInRange ? 'info' : 'warning'}
                                     compact
-                                    title={t('booking.step2.selectedDate', 'Выбранная дата')}
-                                    message={dayLabel}
+                                    title={dayInRange
+                                        ? t('booking.step2.selectedDate', 'Выбранная дата')
+                                        : t('datePicker.chooseDate', 'Выберите удобный день')}
+                                    message={dayInRange ? dayLabel : t('booking.step2.outOfRange', 'Выберите доступный день в календаре. Дата из ссылки или сохранённого выбора уже недоступна.')}
                                 />
                             ) : null}
                         </div>
@@ -204,6 +216,8 @@ export function BookingFormSections({
                         </div>
                         <StaffSelector
                             staff={staffFiltered}
+                            loading={staffLoading}
+                            error={staffError}
                             selectedStaffId={staffId}
                             onSelect={onStaffSelect}
                             dayStr={dayStr}
@@ -279,11 +293,15 @@ export function BookingFormSections({
                             <div className="type-label text-[var(--text-primary)]">
                                 {canGoNext
                                     ? t('booking.nav.ready', 'Текущий шаг готов')
+                                    : noStaffForRestoredServiceDay
+                                        ? t('booking.empty.noStaffTitle', 'На эту дату нет доступных специалистов')
                                     : t('booking.nav.pending', 'Нужен ещё один выбор')}
                             </div>
                             <p className="type-caption mt-1 text-[var(--text-secondary)]">
                                 {canGoNext
                                     ? t('booking.nav.readyHint', 'Можно безопасно переходить к следующему шагу.')
+                                    : noStaffForRestoredServiceDay
+                                        ? t('booking.empty.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров. Выберите другой день.')
                                     : t('booking.nav.pendingHint', 'Поток специально не даёт потеряться: сначала завершите текущий шаг.')}
                             </p>
                         </div>
@@ -313,6 +331,7 @@ export function BookingFormSections({
                 branchName={branch ? formatBranchName(branch.name) : null}
                 dayLabel={dayLabel}
                 staffCurrent={staffCurrent}
+                staffId={staffId}
                 serviceCurrent={serviceCurrent}
                 servicesSelected={selectedServicesForStep4.length > 0 ? selectedServicesForStep4 : undefined}
                 branchId={branchId}

@@ -1,0 +1,57 @@
+{
+  "id": "C191",
+  "status": "PASS_FILTERED_SEARCH_BOOK_CTA_ENTRY_AND_RESTORATION",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "caseId": "S26-D101-filtered-search-booking-cta-entry",
+  "plan": "c191-search-booking-entry-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T08:22:20Z",
+    "2026-10-26T08:26:05Z"
+  ],
+  "newCondition": "Existing local runtime was verified stopped and started once at07:26; one working tab explicitly authorized. This is not proof that restart fixed original C189 cause.",
+  "steps": [
+    {
+      "scope": "setup",
+      "actual": "Newtab create navigation timed out; listTabs showed same newtab1/admin. Bound same allowed tab; actual protected admin3/4/1/4/30/RU. No newtab retry, old providers not accessed."
+    },
+    {
+      "scope": "healthy catalogue",
+      "completedBeforeClockUtc": "2026-10-26T08:24:38Z",
+      "actual": "Ordinarybrandclick once then wait existingnavigation. Settled root blank query/3businesses/3places, no unavailable alert."
+    },
+    {
+      "scope": "filtered CTA",
+      "actionAfterClockUtc": "2026-10-26T08:24:38Z",
+      "actual": "Ordinary textbox fill exact Тестовый бизнес 2 ->settled qURL/1variant/1place/sole business2card. Separate Записаться clicked once ->samebusiness /b/testovyy-biznes-2/booking?step=1&day=2026-10-26; actual h1business2/step1/2branchchoices/Nextdisabled. No selection/Next/slots/hold/confirm."
+    },
+    {
+      "scope": "tool wait limitation",
+      "actual": "Exact-base waitForURL timed out because actual wizard appends normal step/day query. One fresh AX established successful navigation; no duplicateclick or false productfailure."
+    },
+    {
+      "scope": "restoration",
+      "completedBeforeClockUtc": "2026-10-26T08:26:05Z",
+      "actual": "Ordinary brand ->cleanroot blankquery/3businesses; observed Админ menu ->Админ-панель ->protected admin/RU/Anonymized/3business4branch1staff4service30booking/TodayCancelled1. markHandoff."
+    }
+  ],
+  "effects": "No booking/hold/confirm/cancel/payment/fixture/role/auth transition/source/test/build/DB/HTTP/SDK/storage action. Ordinary app navigation/analytics/draft/auth/telemetry effects unenumerated, not zero TOTAL writes.",
+  "dependencyHashes": {
+    "apps/web/src/app/page.tsx": "f36048e1f4cb46a51fd5f51861c7667398a660c36f4898891bc02f4e7ec96b7a",
+    "apps/web/src/app/_components/HomeClientComponents.tsx": "6715913579f36d5603a759ee7580acc8010f0435a54e6cfe9c1c506095054e00",
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+  },
+  "credit": {
+    "newUi": 1,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 23,
+    "remaining": 293,
+    "newWindowUi": 1
+  },
+  "limits": "Entry method only. C189original error retained; no proven catalogue fix/networkcause/debounce/security/visual/complete booking lifecycle or whole D1-01 yet."
+}

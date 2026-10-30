@@ -2,8 +2,8 @@
 import { notFound } from 'next/navigation';
 
 import StaffSchedulePageClient from './StaffSchedulePageClient';
+import ExplicitStaffSchedule from './ExplicitStaffSchedule';
 
-import ScheduleCalendar from '@/components/scheduling/ScheduleCalendar';
 import { getStaffContext } from '@/lib/authBiz';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 
@@ -40,10 +40,7 @@ export default async function StaffSchedulePage() {
 
     const activeBranches: Branch[] = (branches ?? []).filter((b) => b.is_active);
 
-    if (explicitSchedulingEnabled()) return <main className="mx-auto max-w-5xl p-6 space-y-4">
-        <h1 className="text-2xl font-semibold">Моё расписание</h1>
-        <ScheduleCalendar endpoint="/api/staff/me/schedule" branches={activeBranches} />
-    </main>;
+    if (explicitSchedulingEnabled()) return <ExplicitStaffSchedule branches={activeBranches} />;
 
     return (
         <StaffSchedulePageClient

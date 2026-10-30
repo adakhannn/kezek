@@ -1,0 +1,10 @@
+{
+  "result":"FAIL_THRESHOLD_NOT_TEST_FAILURE",
+  "exit":1,"suitesPass":4,"testsPass":36,
+  "sourceScope":"Only useBookingSteps.ts; ordinary Jest config threshold60 unchanged",
+  "statements":71.66,"branches":70.58,"functions":58.33,"lines":72.34,
+  "missingGate":"functions58.33<60",
+  "outputBoundary":"Exec requested700tokens; rawoutput was truncated by tool. Exact printed totals/threshold retained here; not claimed fullrawlog.",
+  "followUp":"Add one regression matching actual stale->active recovery and Back behavior, not chase100coverage. Do not lower/suppress threshold. Firstfailure retained even if nextgatepasses.",
+  "pnpmNotice":"On Jest thresholdexit1 pnpm also emitted misleading Command jest notfound; actual tests and coverage clearly executed. Notice retained, not an absent-Jest diagnosis."
+}

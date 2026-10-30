@@ -1,0 +1,168 @@
+{
+  "status": "SUPERSEDED_BY_2026_10_21_1100_FINAL",
+  "deadlineUtc": "2026-10-21T05:00:00Z",
+  "explicitPauseStillRequired": false,
+  "scope": "WEBonly until21Oct11:00Bishkek/05UTC; timeboxc32; no newprivileges/expiredFontsrenewal",
+  "currentCandidate": "dev-20261020-S1-4e13384124d3",
+  "accountingAuthority": "Current ledger/progress supersede this preliminary snapshot",
+  "acceptedS1": 16,
+  "remainingS1": 9,
+  "passedCases": 62,
+  "remainingCases": 17,
+  "packageCounts": {
+    "S1.1": "1/8",
+    "S1.2": "7/9",
+    "S1.3": "8/8"
+  },
+  "newConfirmedLiveFixes": 9,
+  "completed": [
+    "C01 inactive branch and hidden business functional cases, SAME-LIVE S1-F003, 37 targeted unit cases and scoped coverage PASS, typecheck0; preexisting view lintFAIL retained",
+    "C03 actual approved deletion of empty B and known deleted slug admin+guest; catalogue recovery PASS",
+    "C10 all8cold-cache functional documents4guest+4owner PASS with human-operated Disable cache/DevTools open; no images or source changes",
+    "C11 M1-02 all8non-admin root/nested UI cases PASS; S2 1/70 and S2.1 1/12, not API/RPC/no-flash/production",
+    "C12 M1-01 actual known superadmin /admin+reload+child positive control PASS; no production/API/whole-admin assertion",
+    "C16 four additional actual operational nav/reload PASS; M1-03 remains6/19PASS with2FAIL1blocked10notrun",
+    "C17 rating config read/nav/reload PASS, weights untouched; ratings-status persistent UI read FAIL retained. M1-03matrix7PASS3FAIL1BLOCKED8notrun/19",
+    "C18 actual analytics-overview entry+reload both HTTP500, retainedFAIL not KPIPASS. C13matrix7PASS4FAIL1BLOCKED7notrun/19",
+    "C19 platformanalytics nav/reloadPASS only; observed zeros not numericalcorrectness. M1-03matrix8PASS4FAIL1BLOCKED6notrun/19",
+    "C20 funnel nav/reloadPASS only; numeric/cohort contract not certified. M1-03matrix9PASS4FAIL1BLOCKED5notrun/19",
+    "C21 all remaining5navigation cases executed:2PASS3FAIL; cumulative11PASS7FAIL1BLOCKED/19. Ratings action cells literal object defect separate open, not fixed.",
+    "C22performance chain SAME-LIVE verified;20unitPASS/scoped3filecoverage100/types0/explicitlint0. Failedprototypes retained. Nav12PASS6FAIL1BLOCKED/19; requirementstillnotaccepted.",
+    "C23promotionspagecaller SAME-LIVE menu+reloadformPASS;8unitPASS/types0/lint0/scopedcoverage100;initial40functioncoverageFAILretained. Nav13PASS5FAIL1BLOCKED/19; M1-03notaccepted.",
+    "C24 HealthCheck actualmenu+fullreloadPASS; sharedreadloader currentcaller/globalrole;15unit+3routePASS/scoped2servicecoverage100/types0/lint0. No writes/jobs/email. Observationtimestampboundary/timegap13:55->22:09 explicitly notcontinuous. Nav14PASS4FAIL1BLOCKED/19; requirementstillnotaccepted.",
+    "C25ratingsstatus actualfullreload+menu metriccardsPASS;26unitPASS/scoped2servicecoverage100/types0/lint0. JobsabsenceNOTcertifiedempty/nojobsrun. Nav15PASS3FAIL1BLOCKED/19; M1-03stillnotaccepted.",
+    "C26 human-approved globaloverview actualmenu+reload emptysuccessPASS;23UNITPASS/types0/lint0/scopedcoverage>=60. Nonemptyglobalmodel UNIT-only. Nav16PASS2FAIL1BLOCKED/19; wholeM1-03stillnotaccepted.",
+    "C27existingF007renderonlyclosed actual8buttons/0objectcells afterfullreload;23scopedUNITPASS/types0/lint0. No recalc executed/claimed. Nav16/19unchanged/S1countsunchanged;8newverifiedfixeslogicalrun, no newdistinctfinding.",
+    "C28oldbusinessapplicationsfailureunreproduced in one menu/reload; C29normalsharedsessionlogout caused parentredirectbeforeF005componenterror; knownSArestored. Zero case/fixcredit, exactblockers retained.",
+    "C30fiveNEW settledpageaccessdenials PASS; knownSA restored; F4matrix9PASS4BLOCKED3notrun/16, no requirementcredit.",
+    "C31F4-01matrix12PASS4BLOCKED/16;8newC30C31+4reused. No newacceptedrequirement. KnownSArestored.",
+    "C33F4-02threeNEWmodecasesPASS,15reused=18PASS16BLOCKED30notrun/64. No acceptedrequirementdelta;21Oct05UTCdeadline.",
+    "C34 twelve NEW guest entrymodecases PASS. F4-02 30PASS16BLOCKED18notrun/64; no accepted requirement delta or new fixes. Known-SA restored.",
+    "C35 eight NEW pureclient entrymodecases PASS. F4-02 38PASS16BLOCKED10notrun/64; no new accepted requirements/fixes. Known-SA restored.",
+    "C36 five NEW owner entrymodecases PASS. F4-02 43PASS16BLOCKED5notrun/64; no new accepted requirements/fixes. Known-SA restored.",
+    "C37 five NEW staff entrymodecases PASS. F4-02 48PASS16BLOCKED0notrun/64; availablecomplete, requirementpartial, no newacceptedrequirements/fixes. Known-SA restored.",
+    "C38 existing-session safe return control FAIL;1FAIL7notrun/8subset, S1-F012OPENcauseunknown/no fix. No accepted requirement delta; F4-02 48PASS16BLOCKED unchanged. KnownSA adminrestored withoutlogin.",
+    "C39 F012 SAME-LIVE verified and8/8returnsubsetPASS,21UNITPASS/types0/explicitlint0. Three affected owner-signin cases STALE pending regression, no silent preservation.",
+    "C40 two dependency owner regressions PASS;3 parentrequirements restored; cold-cache owner case remainsSTALE pending current condition. No new fix/source change.",
+    "C41 generic role-default subset4PASS3BLOCKED/7:3newSA/client/staff+1reusedowner. No new accepted requirements or fixes; knownSArestored.",
+    "C42 eight NEW safeGoogle callback return casesPASS,4identities xredirect/next. No source/newfix/acceptedrequirementdelta; fullreturnhandlingpartial.",
+    "C43 sixNEWreturnprecedence/query/hashcasesPASS. No source/newfix/acceptedrequirementdelta; fullGoogle returncontractpartial.",
+    "C44 sixNEWunsafeGoogle callbackcasesPASS; Google/page subset28/32,4plannednotrun. Otherproviderhandoffunverified/fullC1partial, no source/fix/requirementdelta.",
+    "C45 threeNEWnormalization/querycallbackPASS+1reusedC11clientprotectedreturn:32/32Google/page subsetPASS, fullC1-03otherproviderhandoffunverified/partial; no source/fix/requirementdelta.",
+    "C46 C1-01 accepted from5currentcertified live observations with originalUTC;0newexecutions/fixes. S2 1->2/70,product17->18/316, S1unchanged.",
+    "C47 sevenfunctional providerUIassertionsPASS from5pageobservations,1visualhierarchyBLOCKED; publicqueryerror display only/notrealproviderfailure. C1-02partial/no newfix/source/requirementdelta.",
+    "C48 C3-01 realGooglelogin accepted4existingknownidentities using C42currentproof originalUTC;0newexecutions/fixes. S2 2->3/70,product18->19/316, S1unchanged.",
+    "C49 realGooglechooser Back+guest reload2PASS; retryBLOCKED after delayed accountselection/expiredOAuthstate -> unavailabledomain/browserpolicy. No provennewbug/fix/requirementdelta; no bypass. Humanrestorationrequested.",
+    "C50 accounting-only correction: current linked primary S1 matrix62/79PASS17remaining, not61/79. No new execution/fix/accepted requirement; old before-fix FAIL preserved."
+  ],
+  "latestCompleted": "C50 accounting-only correction: current linked primary S1 matrix62/79PASS17remaining, not61/79. No new execution/fix/accepted requirement; old before-fix FAIL preserved.",
+  "notCompleted": [
+    "One visual matrix remains blocked after C09 capture failure; manual evidence path may be coordinated separately",
+    "Original prehydration SSR remains unavailable under documented browser policy boundary",
+    "One original transient failed-request classification remains",
+    "Eight deployed-domain cases deferred, not excluded",
+    "C14 new candidate build/assets reopened5cases; F005 failure-path SAME-LIVE pending, not new confirmed fix",
+    "C15 actual fresh build fails fetching GoogleFonts; current build FAIL/assetsnotrun; no unchanged retry",
+    "Current candidate unbuilt/assetsunexecuted; priorC15FontsFAIL retained and permissionexpired. F007 render-only fixedC27, recalculation not executed."
+  ],
+  "deletedIds": {
+    "business": "85adc551-249c-4931-a445-aa6f905f1bea",
+    "soleChild": "e1eedc5a-5464-4add-989b-5accee455a99",
+    "recoverability": "Irreversible UI delete human action-time confirmed; no recreate; cascade not independently DB-audited"
+  },
+  "retainedIds": [
+    "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "35e5b36c-a967-4708-ba4d-7d3fc24b89f4"
+  ],
+  "limits": "No deployed production/wholegreen/security/visual/device/continuous-work claim. Old immutable finals unchanged. First configured180s watchdog finished after325.856s; no timely-stop claim. Ordinary telemetry/auth unenumerated, not zero total DB writes.",
+  "S2": {
+    "accepted": 3,
+    "total": 70,
+    "remaining": 67
+  },
+  "productAccepted": 19,
+  "productRemaining": 297,
+  "pendingLiveFix": "S1-F005",
+  "acceptanceCorrection": "C39 had made3 owner cases stale; C40 restores2 via actual UI. 3parents restored13->16 S1/14->17 product; cold parent remainspartial. Primary case checkpoint had+1overcount: both supplemental casesPASS excluded,59before+2=61/79,18remaining; history preserved.",
+  "draftRefreshedUtc": "2026-10-21T03:57:07Z",
+  "currentActualBrowser": {
+    "tab": "5",
+    "state": "Blocked error document after expired Google state; local session unknown, NOT restoredSA",
+    "secondary": "Original user2 untouched this subpackage; sharedcookie, not independent session",
+    "handoff": true,
+    "humanRestorationRequested": true
+  },
+  "finalization": {
+    "trigger": "humanstop or usageunavailable or21Oct04:45UTC winddown",
+    "explicitPausedReadbackRequired": true,
+    "finalBeforeUtc": "2026-10-21T05:00:00Z",
+    "finalReportFile": "final-report-2026-10-21-1100.json",
+    "actualPausedReadback": "docs/verification/runs/2026-10-20-s1-continuation/c51-automation-paused.json"
+  },
+  "remainingNav": {
+    "passed": 16,
+    "failed": 2,
+    "blocked": 1,
+    "notRun": 0,
+    "total": 19,
+    "remaining": 3
+  },
+  "productScenariosFinished": false,
+  "priorTimeboxedFinalization": {
+    "deadlineUtc": "2026-10-20T13:00:00Z",
+    "noNewLongAfterUtc": "2026-10-20T12:45:00Z",
+    "explicitPauseFromUtc": "2026-10-20T12:50:00Z",
+    "notYetPaused": true,
+    "automationActualLastReadback": "ACTIVE;UNTIL13UTC, not a replacement for explicit pause"
+  },
+  "newLiveFixes": 9,
+  "latestTimeGap": {
+    "afterClockUtc": "2026-10-20T13:55:11Z",
+    "nextClockUtc": "2026-10-20T22:09:08Z",
+    "exactSuccessTimestampNotCaptured": true,
+    "publicationAfterUtc": "2026-10-20T22:10:30Z",
+    "continuity": "No continuousworkproof across13:55->22:09; no retroactive timingclaim. Untilhumanstop authorization remainsprospective/no fixeddeadline. At22:09freshinventory+AXshows samehealthpage/Admin-panel, notnewreloadPASS."
+  },
+  "draftByUtc": "2026-10-21T04:35:00Z",
+  "authorizationEvidence": "docs/verification/runs/2026-10-20-s1-continuation/c32-authorization.json",
+  "newWindowLiveFixes": 1,
+  "latestCaseAccountingCorrection": "docs/verification/runs/2026-10-20-s1-continuation/c50-s1-case-accounting-review.json",
+  "remainingS1Groups": [
+    {
+      "kind": "deployed-domain cases user deferred until end",
+      "count": 8
+    },
+    {
+      "kind": "current candidate build and four asset cases stale; previous font connection FAIL retained, compiler permission expired",
+      "count": 5
+    },
+    {
+      "kind": "original pre-hydration SSR and initial visual proof unavailable",
+      "count": 2
+    },
+    {
+      "kind": "owner cold-load precondition unconfirmed after changed hook",
+      "count": 1
+    },
+    {
+      "kind": "original transient failed request classification lacks response/timing evidence",
+      "count": 1
+    }
+  ],
+  "until1100WindowSummary": {
+    "authorization": "docs/verification/runs/2026-10-20-s1-continuation/c32-authorization.json",
+    "newVerifiedFixes": 1,
+    "inheritedVerifiedFixes": 8,
+    "logicalRunVerifiedFixes": 9,
+    "newAcceptedRequirements": [
+      "C1-01",
+      "C3-01"
+    ],
+    "scope": "C33-C49 results retain original observation dates, reused vs new actions and limitations; not summed into a fictitious whole-product atomic percentage.",
+    "currentBrowser": "C49 retry-recovery still BLOCKED. Human normal local signin restoration requested once; no response yet, no retry/bind/new-tab/HTTP workaround.",
+    "finalStillRequired": true
+  },
+  "finalReport": "docs/verification/runs/2026-10-20-s1-continuation/final-report-2026-10-21-1100.json",
+  "finalizedUtc": "2026-10-21T04:43:26Z"
+}

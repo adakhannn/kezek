@@ -1,0 +1,36 @@
+{
+  "id": "C214",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "caseId": "S26-E201-unsaved-email-notification-draft-reset",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "requirementIds": [
+    "E2-01"
+  ],
+  "requiresLive": true,
+  "dependencyHashes": {
+    "apps/web/src/app/cabinet/components/ProfileForm.tsx": "2f5afa0c883dd72e87b0a367a48fbc10bc127ebb05b56a9cc35508e4c1123fe9",
+    "apps/web/src/app/cabinet/profile/ProfilePageClient.tsx": "6fb211bded8c650e5fe2defd08b1f82e30a84a7de468787f659b2a641f682c77",
+    "apps/web/src/app/cabinet/profile/page.tsx": "6aa22170467b6f5d83c81b318960607441435042f2fda68867540a722103ce8c"
+  },
+  "timeboxMinutes": 8,
+  "independentExpectation": "CurrentknownSAownprofileloadedclean/SaveResetdisabled. Recordvisibleemailmaster+addresschecked/disabledstateswithoutreadingmaskedvalues. Masterinvert ->dirtynotice/Resetenabled; childenablediffmasterstateandverifiedrule, checkedstatesretained. Reset ->exactoriginalvisiblemaster+childstates/clean. IfemailmasteroriginalONwithenabledknownownverifiedaddress, invertONEaddress ->dirty/Resetenabled; Reset ->originalexactcheckedstates/clean. ONEreloadmustloadedbaseline. BaselineOFF/noeligibleaddress ->conditionalperaddressvariantBLOCKED/noforce; do notsaveordescribeasfullcasePASS.",
+  "variants": [
+    "email-master:unsaved-toggle-dependent-disable-and-reset",
+    "email-address:unsaved-toggle-and-reset",
+    "email-draft:reload-original-visible-state"
+  ],
+  "steps": [
+    "FreshprotectedSAadmin/RU baseline. OrdinaryobservedPersonalCabinet/Profilelinks only; no authswitch. Waitloadedownprofile, exactnotificationsectionandcleanSaveResetdisabled. Wrongrole/loading/errors ->stopbeforeedit.",
+    "RecordnativeAXvisiblecheckboxbaseline only; no inputvalues/privatecontact/storage/unmask. InvertmasterEmailON/OFFonce; getAXdirty/childenabled+checkedstates; ordinaryResetonce. Requirebaselineexact. No Save/Enter/OTP/send/providerlink.",
+    "OnlyiforiginalmasterONandoneenabledknownownverifiedaddresscheckboxpresent: invertthatONEcheckbox, observecheckedchange+dirty, Resetonce->alloriginalvisiblecheckboxstates+clean. Otherwiseblockedrecipientvariant/no forcingmasterONtoenablemorecases.",
+    "ONEordinaryreload; waitloadedprofile, samemaster+recipientchecked/disabledstates, SaveResetdisabled. No post-savepersistenceclaim.",
+    "ReturnviaobservedheaderAdminpanelmenu toprotected/admin/RU/Anonymized/Business3;markHandoff."
+  ],
+  "effects": "Onlylocalunsavedbooleans+2Resetmax+oneReload, no persistentnotificationchange/Save/Enter/APItool/profilePOST/email/SMS/OTP/send/provider/link/unlink/security/role/booking/source/test/build/server command. Ordinaryauth/read/telemetryunenumerated.",
+  "stopRules": [
+    "Anyunexpectedpersistentwrite/notificationprompt/unexpectedstate: stopandonlylocalResetwhenavailable; neverSave.",
+    "Maskedlabels/notunambiguouscheckbox: BLOCKED/no DOMunmask/equalityworkaround.",
+    "Navigationwaittimeout->onefreshAX/no duplicateclick."
+  ],
+  "credit": "AtmostONEcompoundNEWfunctionalUIcaseifallthreevariantsPASS. E2-01remains partial; C77Save/phoneequality/servererrors notclosed."
+}

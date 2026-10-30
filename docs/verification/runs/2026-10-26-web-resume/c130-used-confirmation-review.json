@@ -1,0 +1,33 @@
+{
+  "id": "C130",
+  "type": "bounded readonly remaining used-category confirmation dependency variant review",
+  "completedBeforeUtc": "2026-10-25T20:00:37Z",
+  "history": "Selected Jul31 catalog note intentionally left destructive confirmation unsubmitted; Night09Oct create/rename retained inactive fixture. C119/C120 draft and C126 persisted-name regression do not cover an in-use category warning. C129 certifies usage0 warning/Cancel only. Current M5-01 selected case inventory has no positive-usage warning case. Bounded review, not global proof absence.",
+  "independentExpectation": "For category used by one known business, warning must identify exact category and expose the also-remove-from-1-business checkbox UNCHECKED. Cancel must preserve category/activity/usage and list summaries after ordinary reload. This is a distinct dependency warning branch, not another unused-category repetition.",
+  "sourceBoundary": "usageCount>0 renders force checkbox, initialized false. Opening sets local confirmOpen; Cancel closes/resets only. POST only on dialog confirm. No checkbox toggle, confirm, delete, membership change or server rejection test authorized by this plan.",
+  "originalBusinessMembershipOracle": "C124 previously established women category in only c28c8109-bedc-4f9e-bbc2-30f4b549131e. Original proof/UTC retained, not rerun or newly credited; C131 uses list usage1 only, no whole membership/ETL claim.",
+  "hashes": [
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c118-category-review.json",
+      "sha256": "1c1b3cc16c3afad50cec93c8177f31678bcb01d1a1b1e9d053566e2ef583eb0b"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-26-web-resume/c128-confirmation-review.json",
+      "sha256": "3f277f1bde7d022447e0bd2bd8c40074084d864237b304b30caaac29e38747fb"
+    },
+    {
+      "path": "docs/WEB_LIVE_TESTING_AREAS_CATALOG.md",
+      "sha256": "94ab076fb44eb3d232f8c6a6c94c0618368b8e3e7d7269fb55bd8ec95bdb3e88"
+    },
+    {
+      "path": "apps/web/test-results/night-2026-10-09/admin-stage.json",
+      "sha256": "ff2d84f4b8b3aa648b1a0ff0225ec5058faa83e96353d6deef071a4e11f95312"
+    },
+    {
+      "path": "apps/web/src/components/admin/categories/DeleteCategoryButton.tsx",
+      "sha256": "3c3b0f43412307ce5230de8d7d376ecf961f023cf13ef6d9db80008df1401232"
+    }
+  ],
+  "credit": "0 UI/fix/accepted",
+  "limits": "Actual dependency rejection/force deletion/cascade/whole M5-01 and M5-02 remain uncovered/blocked; no new privilege or irreversible action."
+}

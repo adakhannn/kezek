@@ -1,0 +1,66 @@
+{
+  "observedUtc": "2026-10-18T08:25:17Z",
+  "status": "CHECKPOINT_NOT_READY",
+  "valid": true,
+  "errors": [],
+  "accepted": 9,
+  "remaining": 307,
+  "s1": {
+    "id": "S1",
+    "title": "Основа: окружение, загрузка и публичные страницы",
+    "total": 25,
+    "priorityCounts": {
+      "P0": 21,
+      "P1": 4,
+      "P2": 0
+    },
+    "actualAccepted": 9,
+    "actualRemaining": 16,
+    "failed": 1,
+    "blocked": 6,
+    "plannedCumulativeAccepted": 25,
+    "plannedRemaining": 291,
+    "initialUnfinishedDefects": 3
+  },
+  "currentFindings": {
+    "total": 1,
+    "open": 1,
+    "verified": 0
+  },
+  "reportMatches": true,
+  "planMatches": true,
+  "scopeHash": "f5dccec857c14f4fb1e28bf6c929f14dcd5450ea7706ab487b444c7fb59c4273",
+  "releaseReady": false,
+  "packageCounts": [
+    {
+      "id": "S1.1",
+      "accepted": 1,
+      "total": 8,
+      "remaining": 7
+    },
+    {
+      "id": "S1.2",
+      "accepted": 4,
+      "total": 9,
+      "remaining": 5
+    },
+    {
+      "id": "S1.3",
+      "accepted": 4,
+      "total": 8,
+      "remaining": 4
+    }
+  ],
+  "runtimeFixes": 0,
+  "currentCandidateSourceUnchanged": {
+    "checkedFiles": 1656,
+    "fingerprint": "26746ec0760ff009aec884917a28b97f133d93c80ac9a03232f8c1ed359fa49d",
+    "equalsS11PreBuild": true
+  },
+  "accountingChecks": "accounting-checks.json",
+  "browserHandoff": "Existing IAB2/tab3 owner home, catalogue2, search reset; no new tabs or business commands; ordinary logout/login occurred in S1.2.",
+  "automation": "Not resumed; current work interactive only. No autonomous continuation scheduled.",
+  "deadlineUtc": "2026-10-18T12:30:00Z",
+  "domain": "Deferred to end by direct user decision, not excluded",
+  "notComplete": "S1 has16 unaccepted obligations, one current open finding. This is not the final completion of S1 or product readiness."
+}

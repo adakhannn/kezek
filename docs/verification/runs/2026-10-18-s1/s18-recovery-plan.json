@@ -1,0 +1,17 @@
+{
+  "id": "S1.2-successful-recovery",
+  "plannedUtc": "2026-10-18T11:31:55Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "authorization": "Direct user18Oct2026: Да, разрешаю этот тест только с чтением публичных DEV-данных. Продолжай закрывать S1 до18:40",
+  "origin": "http://127.0.0.1:3103",
+  "runtime": "Existing built source unchanged; anonymous public URL/key stay inside local child memory. No service-role, cookies or user bearer accepted; no private/Auth/RPC/storage endpoints or write methods permitted.",
+  "network": "Initial guard denies all requests. After actual error UI, reviewed one-shot local flag enables only validated anonymous public GET for approved-business/core active public data and category labels at exact DEV project HTTPS host. Redirects denied, TLS unchanged, max80requests/8s timeout, child480sec and hardguard12:25UTC.",
+  "cases": [
+    { "id": "S12-server-recovery", "steps": ["Open known business2 with initial fault", "Observe actual safe render failure", "Clock and enable bounded public read flag", "Click actual Повторить in same error boundary", "Require correct business2/two branches/three services, not merely navigation or reload"] },
+    { "id": "S12-api-recovery", "steps": ["Observe map normal app request failure before flag", "After permitted public network restoration click actual retry", "Require two correct branch cards and no error; no direct HTTP/fetch or endpoint navigation"] }
+  ],
+  "order": "Both error boundaries need genuine pre-restoration evidence. Business same-boundary retry succeeded first. Remove only the ephemeral network permission flag to reintroduce the controlled fault before opening map; recreate it after fresh map error and click same mounted map retry. No application data deletion; no cached success substitutes retry.",
+  "restore": "Return same existing tab3 to primarylocalhost owner/RU/currentbusiness2; stop exact owned child. No auth switch/Save/booking mutations. Ordinary telemetry effects unknown.",
+  "doesNotProve": ["deployed production/domain/CDN", "user auth/RLS/security authorization", "real sustained outage", "all config/client build-time variables", "all retry boundaries"],
+  "deadlineUtc": "2026-10-18T12:40:00Z"
+}

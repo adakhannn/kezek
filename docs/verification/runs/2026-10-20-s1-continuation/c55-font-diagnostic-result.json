@@ -1,0 +1,12 @@
+{
+  "id": "C55",
+  "plan": "c55-font-diagnostic-plan.json",
+  "startedUtc": "2026-10-21T06:29:09.579Z",
+  "finishedUtc": "2026-10-21T06:29:21.947Z",
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "{\"kind\":\"compiler environment public font GET diagnostic\",\"observations\":[{\"host\":\"fonts.googleapis.com\",\"path\":\"/css2\",\"startedUtc\":\"2026-10-21T06:29:09.797Z\",\"finishedUtc\":\"2026-10-21T06:29:20.528Z\",\"error\":{\"name\":\"TypeError\",\"code\":null,\"message\":\"fetch failed\",\"causeName\":\"ConnectTimeoutError\",\"causeCode\":\"UND_ERR_CONNECT_TIMEOUT\",\"causeMessage\":\"Connect Timeout Error (attempted address: fonts.googleapis.com:443, timeout: 10000ms)\"}},{\"host\":\"fonts.gstatic.com\",\"path\":\"/s/geist/v5/gyByhwUxId8gMEwTGFWNOITddY4.woff2\",\"status\":200,\"bytes\":7968,\"startedUtc\":\"2026-10-21T06:29:20.528Z\",\"finishedUtc\":\"2026-10-21T06:29:21.397Z\"}],\"productLivePassCredit\":0,\"notOSFirewall\":true}\n",
+  "stderr": "",
+  "effects": "Only2explicitpublicfontGET attempts in stripped compiler env/guard. No account/privateDB/TLSdisable/source changes. Not productcase/fix/acceptance."
+}

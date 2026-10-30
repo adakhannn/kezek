@@ -1,0 +1,36 @@
+export const applicationHistoryRu = {
+    'admin.applicationHistory.repeat': 'Повторная заявка',
+    'admin.applicationHistory.title': 'История заявок',
+    'admin.applicationHistory.count': 'Предыдущих заявок: {count}',
+    'admin.applicationHistory.repeatNotice': 'Сведения отражают историю на момент подачи. Повторная подача сама по себе не означает нарушение и не определяет решение по заявке.',
+    'admin.applicationHistory.rejected': 'Среди предыдущих заявок есть отклонённые. Рассмотрите текущую заявку отдельно.',
+    'admin.applicationHistory.other': 'Есть дополнительные системные отметки. Они сами по себе не являются причиной для отклонения.',
+    'admin.applicationHistory.status.pending': 'Ожидает решения',
+    'admin.applicationHistory.status.approved': 'Одобрена',
+    'admin.applicationHistory.status.rejected': 'Отклонена',
+    'admin.applicationHistory.status.cancelled': 'Отменена',
+} as const;
+export const applicationHistoryEn = {
+    'admin.applicationHistory.repeat': 'Repeat application',
+    'admin.applicationHistory.title': 'Application history',
+    'admin.applicationHistory.count': 'Previous applications: {count}',
+    'admin.applicationHistory.repeatNotice': 'This history reflects the time of submission. Applying again is not a violation in itself and does not determine the decision.',
+    'admin.applicationHistory.rejected': 'Some previous applications were rejected. Review the current application separately.',
+    'admin.applicationHistory.other': 'There are additional system notes. They are not grounds for rejection on their own.',
+    'admin.applicationHistory.status.pending': 'Awaiting decision',
+    'admin.applicationHistory.status.approved': 'Approved',
+    'admin.applicationHistory.status.rejected': 'Rejected',
+    'admin.applicationHistory.status.cancelled': 'Cancelled',
+} as const;
+export const applicationHistoryKy = {
+    'admin.applicationHistory.repeat': 'Кайталанган арыз',
+    'admin.applicationHistory.title': 'Арыздардын тарыхы',
+    'admin.applicationHistory.count': 'Мурунку арыздар: {count}',
+    'admin.applicationHistory.repeatNotice': 'Маалыматтар арыз берилген учурдагы тарыхты көрсөтөт. Кайра арыз берүү өзү эле эреже бузуу эмес жана чечимди аныктабайт.',
+    'admin.applicationHistory.rejected': 'Мурунку арыздардын арасында четке кагылгандары бар. Учурдагы арызды өзүнчө караңыз.',
+    'admin.applicationHistory.other': 'Кошумча системалык белгилер бар. Алар өзүнөн өзү арызды четке кагууга негиз болбойт.',
+    'admin.applicationHistory.status.pending': 'Чечим күтүлүүдө',
+    'admin.applicationHistory.status.approved': 'Жактырылды',
+    'admin.applicationHistory.status.rejected': 'Четке кагылды',
+    'admin.applicationHistory.status.cancelled': 'Жокко чыгарылды',
+} as const;

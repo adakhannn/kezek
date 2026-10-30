@@ -2,7 +2,7 @@
 
 import { addDays } from 'date-fns';
 import type { ReadonlyURLSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Branch, Service, Staff } from '../types';
 
@@ -53,6 +53,15 @@ export function useBookingSelectionState({
         () => staff.filter((member) => member.branch_id === branchId),
         [staff, branchId],
     );
+
+    // Hydration uses the raw setter below so URL/OAuth choices survive loading.
+    // A user changing the branch must invalidate its dependent choices together.
+    const selectBranch = useCallback((nextBranchId: string) => {
+        if (nextBranchId === branchId) return;
+        setStaffId('');
+        setServiceIds([]);
+        setBranchId(nextBranchId);
+    }, [branchId]);
 
     useEffect(() => {
         if (!initialBranchSet && branchFromUrl) {
@@ -189,7 +198,7 @@ export function useBookingSelectionState({
         serviceId,
         serviceIds,
         servicesByBranch,
-        setBranchId,
+        setBranchId: selectBranch,
         setDay,
         setServiceIds,
         setStaffId,

@@ -1,0 +1,323 @@
+{"event":"prepared","startedUtc":"2026-10-25T23:03:23.215Z","dest":"C:\\projects\\kezek\\test-results\\closure-web-20261026-c174-82c7088de609\\build","copiedFiles":1686,"copyFingerprint":"82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c","noEnvFiles":true,"coldNextCache":true,"defaultCompiler":true,"dummyBackend":true,"limitation":"Node TCP/fetch restriction except exact PostCSS IPC; not OS firewall or LIVE/deployed-production PASS"}
+{"event":"spawned","pid":23980,"utc":"2026-10-25T23:03:23.232Z"}
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\projects\kezek\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\projects\kezek\test-results\closure-web-20261026-c174-82c7088de609\build\apps\web\pnpm-lock.yaml
+   * C:\projects\kezek\test-results\closure-web-20261026-c174-82c7088de609\build\pnpm-lock.yaml
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+   ▲ Next.js 16.0.11 (Turbopack)
+   - Experiments (use with caution):
+     · clientTraceMetadata
+     · optimizePackageImports
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 40.0s
+   Running TypeScript ...
+   Collecting page data using 7 workers ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 7 workers (0/36) ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 7 workers (9/36) 
+   Generating static pages using 7 workers (18/36) 
+   Generating static pages using 7 workers (27/36) 
+ ✓ Generating static pages using 7 workers (36/36) in 1208.8ms
+   Finalizing page optimization ...
+
+Route (app)                                                      Revalidate  Expire
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /admin
+├ ƒ /admin/analytics/funnel
+├ ƒ /admin/analytics/load
+├ ƒ /admin/analytics/overview
+├ ƒ /admin/analytics/promotions
+├ ƒ /admin/analytics/system
+├ ƒ /admin/api/analytics/conversion-funnel
+├ ƒ /admin/api/analytics/load
+├ ƒ /admin/api/analytics/overview
+├ ƒ /admin/api/analytics/promotions
+├ ƒ /admin/api/analytics/track
+├ ƒ /admin/api/business-applications/[id]/status
+├ ƒ /admin/api/businesses/[id]/branch-limit
+├ ƒ /admin/api/businesses/[id]/branches/[branchId]/delete
+├ ƒ /admin/api/businesses/[id]/branches/[branchId]/schedule
+├ ƒ /admin/api/businesses/[id]/branches/[branchId]/update
+├ ƒ /admin/api/businesses/[id]/branches/create
+├ ƒ /admin/api/businesses/[id]/delete
+├ ƒ /admin/api/businesses/[id]/members/add
+├ ƒ /admin/api/businesses/[id]/members/demote
+├ ƒ /admin/api/businesses/[id]/members/grant
+├ ƒ /admin/api/businesses/[id]/members/invite
+├ ƒ /admin/api/businesses/[id]/members/list
+├ ƒ /admin/api/businesses/[id]/members/revoke
+├ ƒ /admin/api/businesses/[id]/owner/list
+├ ƒ /admin/api/businesses/[id]/owner/save
+├ ƒ /admin/api/businesses/[id]/owner/set
+├ ƒ /admin/api/businesses/[id]/owner/update
+├ ƒ /admin/api/businesses/[id]/owner/upsert
+├ ƒ /admin/api/businesses/[id]/update
+├ ƒ /admin/api/businesses/create
+├ ƒ /admin/api/categories/[id]/delete
+├ ƒ /admin/api/categories/[id]/update
+├ ƒ /admin/api/categories/create
+├ ƒ /admin/api/categories/existing
+├ ƒ /admin/api/categories/list
+├ ƒ /admin/api/finance-logs
+├ ƒ /admin/api/funnel-analytics
+├ ƒ /admin/api/metrics
+├ ƒ /admin/api/metrics/auth-flow
+├ ƒ /admin/api/metrics/stats
+├ ƒ /admin/api/rating-config
+├ ƒ /admin/api/role-applications
+├ ƒ /admin/api/role-applications/[id]/status
+├ ƒ /admin/api/roles/[id]/delete
+├ ƒ /admin/api/roles/[id]/update
+├ ƒ /admin/api/roles/add
+├ ƒ /admin/api/roles/assign
+├ ƒ /admin/api/roles/create
+├ ƒ /admin/api/roles/list
+├ ƒ /admin/api/roles/set-many
+├ ƒ /admin/api/system-analytics/overview
+├ ƒ /admin/api/system-health
+├ ƒ /admin/api/users/[id]/delete
+├ ƒ /admin/api/users/[id]/send-magic-link
+├ ƒ /admin/api/users/[id]/set-password
+├ ƒ /admin/api/users/[id]/suspend
+├ ƒ /admin/api/users/[id]/toggle-super
+├ ƒ /admin/api/users/[id]/update-basic
+├ ƒ /admin/api/users/create
+├ ƒ /admin/api/users/list
+├ ƒ /admin/api/users/search
+├ ƒ /admin/business-applications
+├ ƒ /admin/businesses
+├ ƒ /admin/businesses/[id]
+├ ƒ /admin/businesses/[id]/branches
+├ ƒ /admin/businesses/[id]/branches/[branchId]
+├ ƒ /admin/businesses/[id]/branches/new
+├ ƒ /admin/businesses/[id]/members
+├ ƒ /admin/businesses/[id]/members/new
+├ ƒ /admin/businesses/[id]/owner
+├ ƒ /admin/businesses/new
+├ ƒ /admin/categories
+├ ƒ /admin/categories/[id]
+├ ƒ /admin/categories/new
+├ ƒ /admin/funnel-analytics
+├ ƒ /admin/health-check
+├ ƒ /admin/monitoring
+├ ƒ /admin/performance
+├ ƒ /admin/promotions-debug
+├ ƒ /admin/rating-config
+├ ƒ /admin/ratings-debug
+├ ƒ /admin/ratings-status
+├ ƒ /admin/role-applications
+├ ƒ /admin/roles
+├ ƒ /admin/roles/[id]
+├ ƒ /admin/roles/new
+├ ƒ /admin/system-health
+├ ƒ /admin/users
+├ ƒ /admin/users/[id]
+├ ƒ /api-docs
+├ ƒ /api/account/deletion
+├ ƒ /api/admin/health-check
+├ ƒ /api/admin/initialize-ratings
+├ ƒ /api/admin/performance/stats
+├ ƒ /api/admin/promotions/debug
+├ ƒ /api/admin/ratings/debug-entities
+├ ƒ /api/admin/ratings/jobs
+├ ƒ /api/admin/ratings/recalculate
+├ ƒ /api/admin/ratings/status
+├ ƒ /api/auth/connections/unlink
+├ ƒ /api/auth/mobile-exchange
+├ ƒ /api/auth/sign-out
+├ ƒ /api/auth/telegram/link
+├ ƒ /api/auth/telegram/login
+├ ƒ /api/auth/telegram/mobile/callback
+├ ƒ /api/auth/telegram/mobile/confirm
+├ ƒ /api/auth/telegram/mobile/start
+├ ƒ /api/auth/telegram/mobile/status
+├ ƒ /api/auth/telegram/profile-link
+├ ƒ /api/auth/telegram/web-login
+├ ƒ /api/auth/whatsapp/create-session
+├ ƒ /api/auth/whatsapp/mobile/start
+├ ƒ /api/auth/whatsapp/mobile/verify
+├ ƒ /api/auth/whatsapp/send-otp
+├ ƒ /api/auth/whatsapp/verify-otp
+├ ƒ /api/auth/yandex/callback
+├ ƒ /api/auth/yandex/link/start
+├ ƒ /api/auth/yandex/start
+├ ƒ /api/bookings/[id]/cancel
+├ ƒ /api/bookings/[id]/mark-attendance
+├ ƒ /api/bookings/client-identities
+├ ƒ /api/branches/[id]/delete
+├ ƒ /api/branches/[id]/schedule
+├ ƒ /api/branches/[id]/update
+├ ƒ /api/branches/create
+├ ƒ /api/branches/map
+├ ƒ /api/branches/nearby
+├ ƒ /api/business-applications
+├ ƒ /api/business-role-applications
+├ ƒ /api/business-role-applications/[id]
+├ ƒ /api/businesses/search
+├ ƒ /api/cron/analytics/daily
+├ ƒ /api/cron/analytics/hourly-load
+├ ƒ /api/cron/close-shifts
+├ ƒ /api/cron/data-retention
+├ ƒ /api/cron/health-check-alerts
+├ ƒ /api/cron/recalculate-ratings
+├ ƒ /api/dashboard/analytics/load
+├ ƒ /api/dashboard/analytics/overview
+├ ƒ /api/dashboard/branches/[branchId]/promotions
+├ ƒ /api/dashboard/branches/[branchId]/promotions/[promotionId]
+├ ƒ /api/dashboard/branches/list
+├ ƒ /api/dashboard/clients/[clientId]/visit-packages
+├ ƒ /api/dashboard/contact-settings
+├ ƒ /api/dashboard/finance/[id]/stats
+├ ƒ /api/dashboard/finance/all
+├ ƒ /api/dashboard/staff-shifts/[id]/update-hours
+├ ƒ /api/dashboard/staff/[id]/finance
+├ ƒ /api/dashboard/staff/[id]/finance/audit-log
+├ ƒ /api/dashboard/staff/[id]/finance/stats
+├ ƒ /api/dashboard/staff/[id]/shift/close
+├ ƒ /api/dashboard/staff/[id]/shift/open
+├ ƒ /api/dashboard/staff/finance/all
+├ ƒ /api/dashboard/visit-package-plans
+├ ƒ /api/dashboard/visit-package-plans/[id]
+├ ƒ /api/dashboard/visit-packages
+├ ƒ /api/funnel-events
+├ ƒ /api/me/current-business
+├ ƒ /api/me/visit-packages
+├ ƒ /api/metrics/frontend
+├ ƒ /api/mobile/bookings
+├ ƒ /api/mobile/bookings/[id]
+├ ƒ /api/mobile/businesses
+├ ƒ /api/notify
+├ ƒ /api/notify/ping
+├ ƒ /api/profile/notification-emails
+├ ƒ /api/profile/update
+├ ƒ /api/public/work-locations
+├ ƒ /api/quick-book-guest
+├ ƒ /api/quick-hold
+├ ƒ /api/reviews/create
+├ ƒ /api/reviews/update
+├ ƒ /api/services/[id]/delete
+├ ƒ /api/services/[id]/update
+├ ƒ /api/services/create
+├ ƒ /api/staff/[id]/delete
+├ ƒ /api/staff/[id]/dismiss
+├ ƒ /api/staff/[id]/restore
+├ ƒ /api/staff/[id]/schedule
+├ ƒ /api/staff/[id]/time-off
+├ ƒ /api/staff/[id]/transfer
+├ ƒ /api/staff/[id]/update
+├ ƒ /api/staff/avatar/remove
+├ ƒ /api/staff/avatar/upload
+├ ƒ /api/staff/create
+├ ƒ /api/staff/create-from-user
+├ ƒ /api/staff/finance
+├ ƒ /api/staff/me/schedule
+├ ƒ /api/staff/shift/close
+├ ƒ /api/staff/shift/items
+├ ƒ /api/staff/shift/open
+├ ƒ /api/staff/shift/today
+├ ƒ /api/staff/sync-roles
+├ ƒ /api/staff/update
+├ ƒ /api/staff/work-locations
+├ ƒ /api/swagger.json
+├ ƒ /api/user/update-phone
+├ ƒ /api/users/search
+├ ƒ /api/webhooks/telegram
+├ ƒ /api/webhooks/whatsapp
+├ ƒ /api/whatsapp/diagnose
+├ ƒ /api/whatsapp/get-business-account
+├ ƒ /api/whatsapp/get-phone-numbers
+├ ƒ /api/whatsapp/send-otp
+├ ƒ /api/whatsapp/test
+├ ƒ /api/whatsapp/verify-otp
+├ ƒ /auth/callback
+├ ƒ /auth/callback-mobile
+├ ƒ /auth/callback-yandex
+├ ƒ /auth/callback/google
+├ ƒ /auth/post-signup
+├ ƒ /auth/reset-password
+├ ƒ /auth/sign-in
+├ ƒ /auth/sign-out
+├ ƒ /auth/update-password
+├ ƒ /auth/verify
+├ ƒ /auth/verify-email
+├ ƒ /auth/verify-otp
+├ ƒ /auth/whatsapp
+├ ƒ /b/[slug]
+├ ƒ /b/[slug]/booking
+├ ƒ /b/[slug]/promotions
+├ ƒ /booking/[id]
+├ ƒ /booking/[id]/cancel
+├ ƒ /business/apply
+├ ƒ /business/owner-apply
+├ ƒ /business/role-apply
+├ ƒ /business/staff-apply
+├ ƒ /cabinet
+├ ƒ /cabinet/bookings
+├ ƒ /cabinet/profile
+├ ƒ /dashboard
+├ ƒ /dashboard/analytics
+├ ƒ /dashboard/api/branches/[id]/admins/add
+├ ƒ /dashboard/api/branches/[id]/admins/list
+├ ƒ /dashboard/api/branches/[id]/admins/remove
+├ ƒ /dashboard/api/role-applications
+├ ƒ /dashboard/api/role-applications/[id]/status
+├ ƒ /dashboard/bookings
+├ ƒ /dashboard/branches
+├ ƒ /dashboard/branches/[id]
+├ ƒ /dashboard/branches/new
+├ ƒ /dashboard/finance
+├ ƒ /dashboard/role-applications
+├ ƒ /dashboard/services
+├ ƒ /dashboard/services/[id]
+├ ƒ /dashboard/services/new
+├ ƒ /dashboard/settings
+├ ƒ /dashboard/staff
+├ ƒ /dashboard/staff/[id]
+├ ƒ /dashboard/staff/[id]/finance
+├ ƒ /dashboard/staff/[id]/finance/stats
+├ ƒ /dashboard/staff/[id]/schedule
+├ ƒ /dashboard/staff/[id]/slots
+├ ƒ /dashboard/staff/new
+├ ƒ /dashboard/visit-packages
+├ ƒ /dashboard/visit-packages/[id]
+├ ƒ /dashboard/visit-packages/new
+├ ƒ /data-deletion
+├ ƒ /dev/super
+├ ○ /manifest.webmanifest
+├ ƒ /map
+├ ƒ /privacy
+├ ○ /robots.txt
+├ ƒ /select-business
+├ ƒ /select-cabinet
+├ ○ /sitemap.xml                                                         1h      1y
+├ ƒ /staff
+├ ƒ /staff/bookings
+├ ƒ /staff/finance
+├ ƒ /staff/schedule
+└ ƒ /terms
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+{"event":"finished","startedUtc":"2026-10-25T23:03:23.215Z","finishedUtc":"2026-10-25T23:04:38.101Z","exitCode":0,"signal":null,"timedOut":false,"pid":23980,"dest":"C:\\projects\\kezek\\test-results\\closure-web-20261026-c174-82c7088de609\\build"}

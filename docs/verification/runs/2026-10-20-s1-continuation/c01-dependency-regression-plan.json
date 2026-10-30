@@ -1,0 +1,12 @@
+{
+  "reason":"Only prior passed case declaring changed view.tsx dependency is B2-03-S13-1. Recheck its existing hidden-service negative and active-service positive after branch-step boundary change; no blanket retest.",
+  "case":"B2-03-S13-1",
+  "role":"Restored existing superadmin on ordinary public UI",
+  "branch":"fe1dde50-c04a-4b48-b215-bde72aa60625",
+  "staff":"1bfd0e3b-6fce-42a1-b439-6313af27112f",
+  "hiddenService":"e21565db-8dc1-41df-b6e3-0dc9d16b040a",
+  "activeService":"51571512-66c0-47db-91ab-cb89d61aa97b",
+  "day":"2026-10-26 next Monday; prior19Oct is now past, not reused as a future date",
+  "steps":["Open testovyy-biznes-2 booking step4 with validbranch/staff/day and knownhiddenservice", "Wait settledstate: hiddenservice notselected/absent, Nextdisabled", "Open same validcontext active515 service: selected1/60min100-300/Nextenabled", "Do not click Next/time/slot; restore adminlist"],
+  "scope":"Service filtering and valid active-branch preselection compatibility only; not new booking/availability/authorization/lifecycle proof. No writes except normal auth/telemetry unenumerated."
+}

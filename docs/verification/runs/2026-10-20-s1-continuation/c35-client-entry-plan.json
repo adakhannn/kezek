@@ -1,0 +1,14 @@
+{
+  "id":"C35",
+  "parent":"F4-02 fixed64 role-route-entrymode cases",
+  "candidate":"dev-20261020-S1-6b8b3bf85fe5",
+  "before":"30PASS16BLOCKED18notrun/64",
+  "cases":["client-root-newtab","client-root-copied-address","client-dashboard-newtab","client-dashboard-reload","client-dashboard-copied-address","client-staff-newtab","client-staff-reload","client-staff-copied-address"],
+  "expected":"Known pureclient low.fade.osh@gmail.com/LIVE TEST CLIENT12OCT, no staff/job/owner/globaladmin. Admin/dashboard must deny or safely redirect to authorized page without privileged workspace; staff explicit no-staff-access. Same denial after document reload and transferred benign observed target URL. Admin reload already C11 PASS is reused and must NOT execute again for credit.",
+  "steps":"Observe knownSA; ordinary logout and knownGoogleclient login; verify identity in UI. For each route create one legitimate named newtab-case temporarytab, inspect denial; only not_run fullreload cases; root then ordinary navigation to benign exact observed protected URL for copied-address. No system clipboard or API/SDK/token/cookie access. Close owncase tabs only, restoreknownSA and preserveuser2/5 handoff.",
+  "limits":"PAGE settledDOM only; no screenshots/no-flash/originalSSR/API/RLS/CSRF/IDOR/independent-session/OSclipboard certification. No capture-recovery/newroles/fixtures/businesscommands.",
+  "budgetMinutes":15,
+  "stop":"One bounded freshstate if failure, no blindretry/bypass. Password/CAPTCHA/device handoff. Clock before cases and authwrites, afterlongaction. Harddeadline21Oct05UTC; draft04:35/short04:40/finalpause04:45/no-new04:50.",
+  "afterIfAllPass":"38PASS16BLOCKED10notrun/64, remaining26; no acceptedrequirementdelta",
+  "next":"Remaining owner5/staff5 grouped by identity;16 missing-role blocks retained"
+}

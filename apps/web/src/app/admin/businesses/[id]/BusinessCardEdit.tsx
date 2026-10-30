@@ -100,7 +100,10 @@ export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
             });
             const payload = (await response.json()) as { ok?: boolean; error?: string };
             if (!response.ok || !payload.ok) {
-                throw new Error(payload.error || t('admin.businessDetail.error.save', 'Не удалось сохранить изменения'));
+                const message = payload.error === 'name cannot be empty'
+                    ? t('admin.businessDetail.error.nameRequired', 'Введите название бизнеса')
+                    : payload.error || t('admin.businessDetail.error.save', 'Не удалось сохранить изменения');
+                throw new Error(message);
             }
             setEditing(false);
             router.refresh();

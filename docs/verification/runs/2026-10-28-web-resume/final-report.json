@@ -1,0 +1,180 @@
+{
+  "id": "KEZEK_WEB_20261028_FINAL_PAUSED",
+  "status": "FINAL_NOT_READY_PAUSED_BY_USER",
+  "request": "остановись до нового запуска",
+  "firstActualClockAfterStopUtc": "2026-10-28T14:56:40Z",
+  "finalizedAfterClockUtc": "2026-10-28T14:57:20Z",
+  "timezone": "Asia/Bishkek",
+  "scope": "WEB Kezek C:/projects/kezek only, DEV/local plusisolatedcompiledoutput; no deployedproduction",
+  "releaseReady": false,
+  "autonomousResumeAllowed": false,
+  "automation": {
+    "id": "kezek",
+    "kind": "heartbeat",
+    "status": "PAUSED",
+    "updatedUtc": "2026-10-28T14:57:05.904Z",
+    "configSHA256": "c953a74e1a80d540fed8e1eebfe4f9cc4fa19f76a571ed27198bbb4dec707648",
+    "beforeConfigSHA256": "26c7a0421b0ba3f7901f2a1d916b2ba038208997f16823ab92c3a8ff0be29c33",
+    "changedFields": [
+      "status",
+      "updated_at"
+    ],
+    "promptNameRuleTargetCreatedAtPreserved": true,
+    "toolUpdateSuccess": true,
+    "toolViewReadback": true,
+    "fullActualConfigurationReadback": true,
+    "noDuplicate": true,
+    "backup": "automation-before-human-stop-20261028-145640.toml"
+  },
+  "candidate": {
+    "id": "dev-20261028-WEB-60022ce29b32",
+    "sourceFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+    "fileCount": 1687,
+    "sourceBoundary": "c252-source-paths.json",
+    "build": {
+      "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+      "plan": "c254-build-plan.json",
+      "buildEvidence": "c254-result.json",
+      "executionEvidence": "c257-result.json",
+      "buildExitCode": 0,
+      "compiledPages": 36,
+      "actualCompiledPrivacyNineSectionsGuestMenuReload": true,
+      "ownedRuntimeStopped": true
+    }
+  },
+  "acceptance": {
+    "accepted": 28,
+    "total": 316,
+    "remaining": 288,
+    "S1": {
+      "accepted": 17,
+      "total": 25,
+      "primaryPassed": 63,
+      "primaryTotal": 79
+    },
+    "S2": {
+      "accepted": 5,
+      "total": 70
+    },
+    "S4": {
+      "accepted": 3,
+      "total": 47
+    },
+    "S6": {
+      "accepted": 2,
+      "total": 29
+    },
+    "S8": {
+      "accepted": 1,
+      "total": 22
+    }
+  },
+  "window28Oct": {
+    "newFunctionalUiPass": 3,
+    "newFullyVerifiedLiveFixes": 0,
+    "newAcceptedRequirements": 1,
+    "newAcceptedRequirementIds": [
+      "Q1-01"
+    ],
+    "newNonliveTechnicalPassedCases": 1,
+    "verifiedFixesLogicalRun": 17,
+    "existingBuildCaseRefreshEvents": 1,
+    "buildRefreshNotNewUiOrFirstAcceptance": true,
+    "inherited26OctWindowNotAdded": true
+  },
+  "completed": [
+    "C238 AdminBusinessCardEditlocalcanonicalization/Cancel/reentry/reload onecompoundUIcase.",
+    "C246 firstactualinactivebranchdirtyreloaddiscardonecompoundUIcase; originalC243BLOCKED preserved.",
+    "C248 existingservicefractionalduration1.5correctrejection/discard/reentry/reload onecompoundUIcase.",
+    "Q1-01currentactualTypeScriptcommand argv/cwd/config/normalexit0/current1687boundary satisfied; originalC223provenanceBLOCKED preserved.",
+    "C254newcurrentcoldofflineNextbuildexit0/types/36prerenders; C257actualcompiledprivacy9sections/guestmenu/ONEreload/adminrestore refreshesexistingA3-01case."
+  ],
+  "pendingFix": {
+    "id": "S1-F022",
+    "status": "fixed_pending_verification",
+    "before": "C251 actualRU101name rejectedwithmisleadingminimum2-onlymessage; beforeFAIL/UTC immutable.",
+    "change": "OnlyServiceFormfallbacks+3nameInvaliddictionarykeysperRU/KY/EN nowstate2..100; sharedvalidator/payload/routes/ACL unchanged.",
+    "regression": "Before24newcomponentfeedbackFAIL+3existingcontrolsPASS; after39targetedPASS/currenttscexit0. UnitnotLIVE.",
+    "sameLive": "C256all6RU/KY/ENname1/101actualAX+Tab/ONEinvalidSave each ->correctrange+summary/sameeditor. Fivepositivebaseline discard/reentries.",
+    "blocker": "FinalServicesnavigationAUTH_SERVICE_UNAVAILABLE; mandatorylastoriginalservice99baseline+ONEreload NOTexecuted. CaseBLOCKED/noNEWUI/noverifiedfixcredit.",
+    "remainingPlan": "c258-conditional-final-readback-plan.json",
+    "doNotReplaySixUnchangedVariants": true
+  },
+  "technicalGates": {
+    "evidence": "c252-technical-checks.json",
+    "typecheck": "CURRENT_COMMAND_EXIT0",
+    "targeted7": "PASS",
+    "fullLint": "FAIL52errors167warnings_SAME_DIAGNOSTICS",
+    "sourceUnit": "FAIL11/PASS2578_SAME_FAILED_IDENTITIES",
+    "fullCoverage": "EXECUTED_FULL_FAILED_GATE_RETAINED",
+    "currentBuild": "C254_C257_SCOPED_PASS",
+    "targeted": "39PASS"
+  },
+  "technicalEvidence": "c252-technical-checks.json",
+  "retainedFailedGates": {
+    "fullJest": {
+      "suites": 541,
+      "passedSuites": 535,
+      "failedSuites": 6,
+      "totalTests": 2589,
+      "passed": 2578,
+      "failed": 11,
+      "sameFailedAssertionIdentitiesAsC204": true
+    },
+    "fullLint": {
+      "errors": 52,
+      "warnings": 167,
+      "sameDiagnosticsAsC204": true
+    },
+    "wholeGreen": false
+  },
+  "safety": {
+    "noProductWorkAfterStop": true,
+    "noKnownAcceptedFixtureMutationPending": true,
+    "pendingVerificationRecovery": {
+      "caseId": "S28-I203-service-localized-name-length-rejection-discard",
+      "status": "BLOCKED_OWNER_SERVICES_AUTH_SERVICE_UNAVAILABLE",
+      "required": [
+        "Originalservice99finalpositivepersistedbaseline/readback",
+        "ONEordinaryreloadbaseline/staffunchecked"
+      ],
+      "knownAcceptedFixtureMutationPending": false,
+      "noTotalWriteAudit": true
+    },
+    "ownedTemporaryCompilerAndRuntimePids": [
+      34524,
+      17028,
+      26792
+    ],
+    "ownedTemporaryPidsAbsent": true,
+    "listener3107Absent": true,
+    "mainDevserver": {
+      "listener": "127.0.0.1:3000",
+      "pid": 30212,
+      "sessionId": 34957,
+      "preserved": true
+    },
+    "browser": {
+      "browserId": "2",
+      "tabId": "1",
+      "provider": "browser-use:0777f06e-9992-423c-a911-193bae880c9c",
+      "handle": "kezekRecoveredTab",
+      "markHandoff": true,
+      "newPageProbe": false,
+      "lastActualUiBeforeClockUtc": "2026-10-28T14:37:11Z"
+    }
+  },
+  "priorFinal": {
+    "path": "docs/verification/runs/2026-10-26-web-resume-2/final-report.json",
+    "sha256": "802d4e256b960fb95e65e72d01e5faf2ba7c1da1e998adc019537e04d9f8a280",
+    "immutable": true
+  },
+  "pauseEvidence": "pause-20261028-145640.json",
+  "next": {
+    "status": "PAUSED_UNTIL_NEW_DIRECT_HUMAN_LAUNCH",
+    "savedConditionalPlan": "c258-conditional-final-readback-plan.json",
+    "entry": "Afternewhumanresume AND genuinelynewowner-servicesavailabilitycondition onlyfinaloriginal99readback+ONEreload+SArestore. CurrentSA/root/compiledprivacyPASS notownerServicesproof.",
+    "noAutomaticResume": true
+  },
+  "limits": "28/316notwholeWEBready. Allolderauth/role/fixture/security/financial/cache/visual/publicload/hour/calendar/profileSave blockersretained. Source/unit/hash/build arenotfunctionalLIVE. No continuousworkclaim acrosspauses/observationgaps. Ordinaryauth/preferences/telemetryeffects unenumerated/notzeroTOTALwrites."
+}

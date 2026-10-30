@@ -111,7 +111,7 @@ export function BookingFilters({
                         <option value="confirmed">{t('bookings.status.confirmed', 'Подтверждена')}</option>
                         <option value="paid">{t('bookings.status.paid', 'Оплачена')}</option>
                         <option value="cancelled">{t('bookings.status.cancelled', 'Отменена')}</option>
-                        <option value="no_show">{t('bookings.status.no_show', 'Не пришел')}</option>
+                        <option value="no_show">{t('bookings.status.noShow', 'Не пришел')}</option>
                     </select>
                 </div>
 

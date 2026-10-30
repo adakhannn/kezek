@@ -1,0 +1,34 @@
+// Disposable PostgreSQL only: receipt capabilities, composition and no PII.
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+const {PGlite}=await import(pathToFileURL(process.argv[2]).href);
+const db=new PGlite();
+const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
+await db.exec(`
+create role anon;create role authenticated;create role service_role;
+create type booking_status as enum('hold','confirmed','paid','cancelled');
+create table services(id uuid primary key,name_ru text,name_ky text,name_en text,duration_min int);
+create table staff(id uuid primary key,full_name text);
+create table bookings(id uuid primary key,status booking_status,start_at timestamptz,end_at timestamptz,staff_id uuid,service_id uuid,client_phone text);
+create table booking_services(booking_id uuid,service_id uuid,duration_min int,order_index int);
+insert into services values('${id(1)}','Первая','Биринчи','First',60),('${id(2)}','Вторая','Экинчи','Second',1);
+insert into staff values('${id(3)}','Test staff');
+insert into bookings values('${id(4)}','confirmed','2099-01-05T09:00:00+06:00','2099-01-05T10:01:00+06:00','${id(3)}','${id(1)}','PRIVATE'),('${id(5)}','cancelled','2099-01-05T11:00:00+06:00','2099-01-05T12:00:00+06:00','${id(3)}','${id(1)}','PRIVATE');
+insert into booking_services values('${id(4)}','${id(2)}',1,1),('${id(4)}','${id(1)}',60,0);
+alter table bookings enable row level security;
+`);
+await db.exec(await readFile(new URL('../supabase/migrations/20261009105000_public_booking_receipt_composition.sql',import.meta.url),'utf8'));
+await db.exec('set role anon');
+const receipt=(await db.query('select * from public.booking_receipt_public($1)',[id(4)])).rows[0];
+assert.equal(receipt.status,'confirmed');
+assert.deepEqual(receipt.services.map(s=>[s.name_en,s.duration_min]),[['First',60],['Second',1]]);
+assert.deepEqual(Object.keys(receipt),['id','status','start_at','end_at','staff_name','services']);
+const single=(await db.query('select * from public.booking_receipt_public($1)',[id(5)])).rows[0];
+assert.equal(single.status,'cancelled');assert.equal(single.services.length,1);assert.equal(single.services[0].duration_min,60);
+assert.equal((await db.query('select * from public.booking_receipt_public($1)',[id(99)])).rows.length,0);
+await assert.rejects(db.query('select * from public.bookings'),/permission denied/);
+await db.exec('reset role');
+assert.equal((await db.query("select has_function_privilege('anon','public.booking_receipt_public(uuid)','execute') as allowed")).rows[0].allowed,true);
+await db.close();
+console.log('PASS: anon exact UUID receipt returns ordered localized composition/durations and single-service fallback; no private fields/table read or unknown booking disclosure');

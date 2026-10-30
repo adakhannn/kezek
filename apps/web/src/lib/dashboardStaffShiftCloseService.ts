@@ -2,7 +2,8 @@ import { logError } from '@/lib/log';
 import { sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
 import { measurePerformance } from '@/lib/performance';
 import { closeStaffShiftUseCase } from '@/lib/staffShift/closeUseCase';
-import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
+import { matchesSavedShiftLedger, savedShiftLedgerItems } from '@/lib/staffShift/savedLedger';
+import { TZ, formatDateInTz } from '@/lib/time';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { closeShiftSchema, dateStringSchema } from '@/lib/validation/schemas';
 
@@ -30,20 +31,6 @@ type CloseStaffShiftRpcResult = {
     ok: boolean;
     error?: string | null;
     shift?: StaffShiftRow | null;
-};
-
-type ShiftItemInput = {
-    clientName?: string | null;
-    client_name?: string | null;
-    serviceName?: string | null;
-    service_name?: string | null;
-    serviceAmount?: number | null;
-    amount?: number | null;
-    consumablesAmount?: number | null;
-    consumables_amount?: number | null;
-    bookingId?: string | null;
-    booking_id?: string | null;
-    note?: string | null;
 };
 
 type Result =
@@ -161,7 +148,27 @@ export async function runDashboardStaffShiftClose({
         };
     }
 
-    const closedAt = getTomorrowMidnightIso(now);
+    // Owner and staff closure both finalize the same persisted ledger.
+    const { data: savedRows, error: itemsError } = await admin
+        .from('staff_shift_items')
+        .select('id, service_amount, consumables_amount, booking_id')
+        .eq('shift_id', existing.id);
+    if (itemsError) {
+        logError('DashboardStaffShiftClose', 'Error loading saved shift items', itemsError);
+        return {
+            ok: false, statusCode: 500, errorType: 'internal',
+            message: 'Не удалось загрузить клиентов смены. Попробуйте снова.',
+        };
+    }
+    const savedItems = savedShiftLedgerItems(savedRows ?? []);
+    if (!matchesSavedShiftLedger(items, savedItems)) {
+        return {
+            ok: false, statusCode: 409, errorType: 'validation',
+            message: 'Список клиентов изменился или ещё не сохранён. Сохраните клиентов и обновите смену перед закрытием.',
+        };
+    }
+
+    const closedAt = now.toISOString();
     const decision = closeStaffShiftUseCase({
         now,
         staff: {
@@ -170,7 +177,7 @@ export async function runDashboardStaffShiftClose({
             hourlyRate: staff.hourly_rate,
         },
         shift: existing,
-        items,
+        items: savedItems,
         totalAmountRaw,
         consumablesAmountRaw: consumablesAmount,
     });
@@ -258,7 +265,9 @@ export async function runDashboardStaffShiftClose({
     }
 
     const updated = typedResult.shift;
-    const bookingIds = await syncShiftItems({ admin, shiftId: updated.id, items });
+    const bookingIds = new Set<string>(savedItems
+        .map((item) => item.bookingId)
+        .filter((id): id is string => !!id));
     await markShiftBookingsPaid({ admin, bookingIds });
     await markMissingBookingsNoShow({
         admin,
@@ -301,76 +310,6 @@ function resolveShiftDate(req: Request):
     }
 
     return { ok: true, ymd: parsed.data };
-}
-
-function getTomorrowMidnightIso(now: Date) {
-    const todayInTz = formatDateInTz(now, TZ);
-    const todayDate = new Date(`${todayInTz}T12:00:00`);
-    todayDate.setDate(todayDate.getDate() + 1);
-    const nextDayYmd = formatDateInTz(todayDate, TZ);
-    return dateAtTz(nextDayYmd, '00:00').toISOString();
-}
-
-function normalizeShiftItems(items: ShiftItemInput[], shiftId: string) {
-    return items
-        .map((item) => ({
-            shift_id: shiftId,
-            client_name: item.clientName ?? item.client_name ?? null,
-            service_name: item.serviceName ?? item.service_name ?? null,
-            service_amount: Number(item.serviceAmount ?? item.amount ?? 0) || 0,
-            consumables_amount: Number(item.consumablesAmount ?? item.consumables_amount ?? 0) || 0,
-            booking_id: item.bookingId ?? item.booking_id ?? null,
-            note: item.note ?? null,
-        }))
-        .filter(
-            (item) => item.service_amount > 0 || item.consumables_amount > 0 || item.booking_id !== null,
-        );
-}
-
-async function syncShiftItems({
-    admin,
-    shiftId,
-    items,
-}: {
-    admin: any;
-    shiftId: string;
-    items: ShiftItemInput[];
-}) {
-    const { data: existingItems } = await admin
-        .from('staff_shift_items')
-        .select('booking_id')
-        .eq('shift_id', shiftId)
-        .not('booking_id', 'is', null);
-
-    const bookingIds = new Set<string>(
-        (existingItems ?? [])
-            .map((item: { booking_id: string | null }) => item.booking_id)
-            .filter((id: string | null): id is string => !!id),
-    );
-
-    if (items.length === 0) {
-        return bookingIds;
-    }
-
-    const cleanItems = normalizeShiftItems(items, shiftId);
-    for (const bookingId of cleanItems.map((item) => item.booking_id).filter((id): id is string => !!id)) {
-        bookingIds.add(bookingId);
-    }
-
-    const { error: deleteError } = await admin.from('staff_shift_items').delete().eq('shift_id', shiftId);
-    if (deleteError) {
-        logError('DashboardStaffShiftClose', 'Error deleting old shift items', deleteError);
-        return bookingIds;
-    }
-
-    if (cleanItems.length > 0) {
-        const { error: insertError } = await admin.from('staff_shift_items').insert(cleanItems);
-        if (insertError) {
-            logError('DashboardStaffShiftClose', 'Error inserting shift items', insertError);
-        }
-    }
-
-    return bookingIds;
 }
 
 async function markShiftBookingsPaid({

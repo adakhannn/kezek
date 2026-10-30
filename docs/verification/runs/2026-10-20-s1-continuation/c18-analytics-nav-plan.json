@@ -1,0 +1,8 @@
+{
+ "id":"C18","parent":"C13/M1-03","caseId":"S21-M103-analytics-overview","candidateId":"dev-20261020-S1-1c0013b28e40","afterClockUtc":"2026-10-20T12:28:31Z",
+ "scope":"One remaining actual admin menu address, functional read-only entry+reload. Preflight source hook uses GET/api/admin/branches/list and/admin/api/analytics/overview, not prohibited metrics. No method/body/command is initiated by agent.",
+ "steps":"Actual main nav Аналитика -> await observed current route/content. One planned document reload -> inspect final actual page. No period/date/branch changes or manual retry loop.",
+ "expected":"Known superadmin retains shell and meaningful analytics page after entry/reload; loading/error alone not final PASS, missing/failed data remains FAIL or control BLOCKED. KPI values observed only, not independent formula or financial/model reconciliation.",
+ "stop":"One bounded state observation after control failure, no new browser/tab or HTTP/CDP workaround. No source changes/new fix if full lifecycle cannot finish before deadline. Font compiler permission expires12:30 unchanged; no build/network probe in this case.",
+ "budgetMinutes":5,"draftAlreadyPrepared":true,"deadlineUtc":"2026-10-20T13:00:00Z"
+}

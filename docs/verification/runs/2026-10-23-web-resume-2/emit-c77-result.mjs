@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {updateJson} from '../2026-10-20-s1-continuation/json-evidence-patch.mjs';
+import {summarize} from '../../../../scripts/web-verification-report.mjs';
+const run='docs/verification/runs/2026-10-23-web-resume-2', read=f=>fs.readFileSync(f), j=f=>JSON.parse(read(f)), sha=b=>createHash('sha256').update(b).digest('hex');
+const utc=process.argv[2], l=j('docs/WEB_VERIFICATION_LEDGER.json'), p=j(run+'/progress.json'), s=j('docs/WEB_GLOBAL_READINESS_STATE.json'), d=j(run+'/draft.json'), r=j(run+'/c77-result.json');
+if(!utc||l.evidence.some(e=>e.id==='S1-EV-377'))throw Error('MissingUTC/alreadyapplied');
+if(sha(JSON.stringify(j(l.candidate.sourceBoundary.pathsFile).map(f=>[f,sha(read(f))])))!==p.sourceFingerprint)throw Error('Source changed');
+if(sha(read(p.priorCompletedWindow.replace('../','docs/verification/runs/')))!==p.priorFinalSHA256)throw Error('Prior final changed');
+r.completedBeforeUtc=utc;
+r.sourceAndHistoryHashes=[...r.history.map(x=>x.path),'apps/web/src/app/cabinet/components/ProfileForm.tsx','apps/web/src/lib/profileUpdateService.ts','apps/web/src/lib/profileUpdateHttpService.ts','apps/web/src/app/api/profile/update/route.ts','supabase/migrations/20260723090000_user_notification_emails.sql'].map(path=>({path,sha256:sha(read(path))}));
+const resultBytes=Buffer.from(JSON.stringify(r,null,2)+'\n');
+l.evidence.push({id:'S1-EV-377',path:run+'/c77-result.json',sha256:sha(resultBytes)});
+for(const id of r.requirements){const req=l.requirements.find(x=>x.id===id);req.saveEffectReview={evidenceId:'S1-EV-377',status:'blocked_pending_specific_bundled_write_authorization',newLiveCredit:0};}
+l.updatedUtc=utc;l.nextBatch.objective=r.next;
+Object.assign(p,{activeSubpackage:'C77_REVIEW_COMPLETE_PROFILE_SAVE_AUTHORITY_BLOCKED_C78_INDEPENDENT_REVIEW_NEXT',casePlan:'c77-result.json',lastCheckpoint:r.next,checkpointAfterClockUtc:utc});
+p.profileSaveBlocker={evidence:'c77-result.json',status:'awaiting_specific_human_decision',repeatQuestion:false,noSaveUntilDecision:true};
+Object.assign(s.progressAccounting,{latestCheckpointUtc:utc,latestCheckpointEvidence:run+'/c77-result.json'});
+d.updatedUtc=utc;d.completed.push('C77 readonly history/payload review: 0NEWUI/0reuse/0fix; normal name Save also writes phone, notification preferences including omitted SMS default true, and Auth metadata. E2 save/reload blocked pending specific bundled-write decision; historical draft/loading PASS untouched.');d.latestEvidence=run+'/c77-result.json';d.next=r.next;
+const v=summarize(l,f=>f===run+'/c77-result.json'?resultBytes:read(f));if(!v.valid||v.counts.passed!==21)throw Error(JSON.stringify(v.errors));
+process.stdout.write('*** Begin Patch\n'+updateJson(run+'/c77-result.json',r,3,true)+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+updateJson(run+'/draft.json',d,3,true)+'*** End Patch\n');

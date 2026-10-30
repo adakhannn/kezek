@@ -1,0 +1,13 @@
+{
+  "id":"C53",
+  "requirementIds":["C3-03"],
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "reasonForRetry":"C49 retry case BLOCKED due delayed Google choice/expiredOAuthstate. Human restored legitimate new usertab18, actualSA confirmedC52. Old Back/reloadPASS not repeated for credit; fresh Back is required setup for this one retry case.",
+  "caseId":"S21-C303-ABANDON-retry-recovery",
+  "expected":"After normalSAlogout -> safe local sign-in /auth/sign-in?redirect=%2Fterms -> Googlechooser -> ordinaryBack withoutaccountselection -> Googleagain -> immediate knownkezekkgselection, final exact http://localhost:3000/terms with authenticatedAnonymized/termsheading. Restore/admin withoutanotherlogin.",
+  "steps":["Clock before normallogout; verifyguestform", "Open exactsafe sign-in and observeGooglecontrol", "Clock then Googlechooser, ordinaryBack as setup only", "Observe usefulform, clock, Googleagain", "Observechooser, clock and immediatelyselectonlykezekkg", "Waitknowntermsheading; inspectbenignURL/header", "Clock then restore/admin/markhandoff"],
+  "budgetMinutes":5,
+  "stop":"One attempt only; if blockednavigation stopinput/no newtab/HTTP/alternateURL bypass. Password/CAPTCHA/device humanhandoff. Do not leave chooser idle for accounting work; finish or recordboundedblock.",
+  "effects":"One normalSAlogout and one ordinaryknownGooglelogin ifsuccessful; no account/role/grant/business/booking/notifications/OTP/save/link/unlink changes. Authsync/telemetry unenumerated, notzeroTOTALwrites.",
+  "limits":"One current retry case only, no fullC3-03/explicitproviderdenial/Yandex/sessioncardinality/security/no-flash/visual/domainproduction claim. C49failureevidencepreserved; no newfix withoutactualrepro."
+}

@@ -1,0 +1,33 @@
+{
+  "id": "S1.3-existing-inactive-service",
+  "plannedUtc": "2026-10-18T11:48:28Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "case": "B2-03-S13-1",
+  "fixture": {
+    "inactive": "e21565db-8dc1-41df-b6e3-0dc9d16b040a",
+    "ownerOracle": "S16 actual hidden45min150–275 atbranch2",
+    "positiveActive": "51571512-66c0-47db-91ab-cb89d61aa97b",
+    "staff": "1bfd0e3b-6fce-42a1-b439-6313af27112f",
+    "branch1": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+    "branch2": "23a0ce35-5556-4e98-84ee-89ae067908fa",
+    "day": "2026-10-19"
+  },
+  "reason": "S16 independently proved existing inactive row, S18 actual anonymous business data omits it. Add live stale URL prefill rejection and valid positive control without creating fixtures.",
+  "variants": [
+    "public business does not list known hidden service (reuseS16/S18)",
+    "same-branch2 stale hidden service query removed and no enabled booking progression without staff",
+    "branch1 validstaff/day stale hidden service remains unselected; active service control works"
+  ],
+  "steps": [
+    "Open current booking base and record original visible draft",
+    "Use documented app query fields branch/day/staff/service/step4 for hidden ID; observe normalized URL and summary, never select time",
+    "Check valid active515service with same validbranch1/staff/day atstep4 only; no Next to slots",
+    "Restore base unselected booking entry and original owner workspace"
+  ],
+  "limits": [
+    "No server booking command/API/RLS exploit, no lifecycle activation/deactivation/delete",
+    "No slot/hold/create/cancel/pay/auth redirect; URL prefill only",
+    "Inactive branch/business and known deleted slug remain unavailable fixtures; wholeB2-03/B2-04 notclosed"
+  ],
+  "deadlineUtc": "2026-10-18T12:40:00Z"
+}

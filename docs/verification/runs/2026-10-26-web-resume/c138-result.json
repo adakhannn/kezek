@@ -1,0 +1,39 @@
+{
+  "id": "C138",
+  "existingCaseId": "A3-01-S1-01",
+  "plan": "c138-built-output-plan.json",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "sourceFingerprint": "f0dad7beb1d68eadee7fe8e88e9066fc26fb20f1d4584868bb5e15666b343a7c",
+  "status": "PASS_ACTUAL_COMPILED_DOCUMENT",
+  "live": {
+    "observationWindowUtc": [
+      "2026-10-25T20:17:23Z",
+      "2026-10-25T20:18:23Z"
+    ],
+    "entry": "Existing human tab2 from freshly confirmed protected healthy localhostadmin navigated127.0.0.1:3107/privacy. Actual privacyheading/nine numberedsections/full publicdocument. Menu open showed guestВойти, RU selected; onlyClose, no auth.",
+    "reloadAfterClockUtc": "2026-10-25T20:17:41Z",
+    "reload": "One ordinary reload retains complete privacydocument/nine sections, no error overlay.",
+    "returnAfterClockUtc": "2026-10-25T20:17:48Z",
+    "return": "Actual localhost:3000/admin/protectedheading/settled Admin-panel/Anonymized/RU/Business3/Branch4/Staff1/Service4/Booking30, correctedTodayCancelled1. User tab2 marked handoff. No newtab/auth/deniedpage rescue."
+  },
+  "runtime": {
+    "pid": 10068,
+    "session": 79438,
+    "spawnedUtc": "2026-10-25T20:17:08.748Z",
+    "ready": "1978ms",
+    "stoppedAfterClockUtc": "2026-10-25T20:18:23Z",
+    "finished": {
+      "event": "finished",
+      "utc": "2026-10-25T20:18:24.062Z",
+      "pid": 10068,
+      "exitCode": 4294967295,
+      "signal": null
+    },
+    "classification": "Intentional stop after completed planned UI proof and safe adminreturn, not runtime crash/functionalFAIL. Exact PID/fullownedbuildpath/port validated before Stop-Process.",
+    "readback": "Only main127.0.0.1:3000PID18368 listening;3107listener and owned10068 absent."
+  },
+  "effects": "Owned isolateddummy nextstart and temporary public document entry/reload/return only. No DEVDB/booking/payment/role/message/persistentfixture/appauth transition. Ordinary auth/telemetry unenumerated.",
+  "accounting": "0newfunctionalUI/fix/newaccepted; refresh existing A3-01once/currentwindow1distinctcase. Restored21of316, S117primary63.26Oct3NEWUI/1fix/logical13. Fulltest11FAIL/fullLint52errors and all blocked/stale retained.",
+  "limits": "No assetbinarybundle/freshcache/visual/device/no-flash/deployedproduction/allroutes/security/fulltechnical green. Priorbuilds/finals/UTC immutable.",
+  "next": "C137+C138 currentcandidate exact1686defaultbuild/types36prerenders and actualcompiledprivacyentry/reload PASS restore existingA3-01 accepted20->21of316/S117primary63.26Oct3NEWUI/1verifiedfix/logical13 unchanged;1refreshEVENT/1distinctexistingcase, notnewUI. Onlyownedruntime10068stopped/3107gone/main18368retained, usertab2/admin restored. Next C139 bounded readonly O3-03/O3-04 history/dependency/oracle review for today-cancelled status locale after real26Oct fixture availability; do not repeat existing general language switch/proofs, no source fix without new finite UI repro."
+}

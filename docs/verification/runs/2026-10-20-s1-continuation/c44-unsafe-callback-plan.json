@@ -1,0 +1,23 @@
+{
+  "id":"C44",
+  "plannedAfterUtc":"2026-10-21T01:31:31Z",
+  "candidate":"dev-20261020-S1-4e13384124d3",
+  "requirementIds":["C1-03","P4-02"],
+  "scope":"Unsafe return input through ordinary NEW Google login after logout; knownSA only. 2aliases x3representative rejection classes=6 new cases. Existing-session C39negativecases not rerun or counted new.",
+  "budgetMinutes":10,
+  "identity":"Known existing kezekkg@gmail.com / Anonymized globalSA, samepermittedGoogle chooser. CAPTCHA/password/device -> handoff/blocked, no bypass.",
+  "aliases":["redirect","next"],
+  "inputs":[
+    {"key":"absolute","encoded":"http%3A%2F%2F127.0.0.1%3A3000%2Fterms","raw":"http://127.0.0.1:3000/terms"},
+    {"key":"network","encoded":"%2F%2F127.0.0.1%3A3000%2Fterms","raw":"//127.0.0.1:3000/terms"},
+    {"key":"backslash","encoded":"%2F%5C127.0.0.1%3A3000%2Fterms","raw":"/\\127.0.0.1:3000/terms"}
+  ],
+  "entryTemplate":"http://localhost:3000/auth/sign-in?{alias}={encoded}",
+  "expected":"Signed-out form normalizes unsafe return to safe /; choose knownSA via ordinary Google; final exact http://localhost:3000/admin, Панель администратора, Anonymized and authenticated header. Neither alternativeorigin nor terms destination. A short wait timeout is not failure; bounded actual finalstate required. No authcode/token/cookie extraction or logging.",
+  "steps":["Freshinventory/actualSA", "For named case normal Logout and verify root", "Open exact planned sign-in URL and verify form", "Googlebutton and exact knownSA account", "Observe settled admin heading/benignfinalURL/identity", "No new URL variants or retries without actualfailure; retain failure and stop dependent matrix if necessary", "Lastcase leaves originalSA/admin; handoff usertabs2/5"],
+  "canary":"All rejected strings refer only to same local DEV app at127.0.0.1, a different origin thanlocalhost. No external data-recipient, safetyinterstitial or network/policy bypass. No direct opening of alternateorigin during test.",
+  "fullReturnContractAccounting":{"existingPassedC1_03":22,"newUnsafeCallbackCases":6,"furtherPlannedGooglePageCases":["freshGoogle safe query/hash preservation","existingSA trimmed internal path","existingSA nonpath fallback","pureclient freshGoogle return /admin must still deny"],"googlePageSubsetTotal":32,"otherProviderScope":"C1 is Sign-in UI and redirect decisions, not Google-only. Yandex/Telegram/WhatsApp return handoff remains unverified in this candidate and cannot be closed by Google success. Track separately before declaring complete C1-03. C3/C4/C5 provider lifecycle/expiry/replay remains separate."},
+  "effects":"Six normal logout/login sequences if all succeed, app notification/auth sync and telemetry unenumerated. No agent business/job/role/grant/currentbusiness/booking/save/cancel/pay commands; neverzeroTOTALwrites. No source edits or fixtures.",
+  "limits":"No fullC1-03/P4-02/security/IDOR/CSRF/API-RLS/visual/device/production certificate. Expired Fonts permission notrenewed; no builds. Coldowner case remainsSTALE pending current humancondition.",
+  "deadlineUtc":"2026-10-21T05:00:00Z"
+}

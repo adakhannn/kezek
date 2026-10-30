@@ -1,0 +1,22 @@
+{
+  "id": "C205",
+  "status": "FINITE_SAME_LIVE_PLAN_BEFORE_RETEST",
+  "preparedAfterClockUtc": "2026-10-26T09:54:00Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "originalBefore": "S1-EV-666",
+  "fix": "S1-EV-670",
+  "caseId": "S26-M301-own-sa-basic-name-save-recovery",
+  "targetUserId": "125e60ab-eb79-4d92-bc6d-d84ae534eeee",
+  "originalName": "Адахан Осоров",
+  "testName": "C203 OWN NAME TEST",
+  "steps": [
+    "FreshsameownUserBasicForm/originalName/pristineSaveDisabled/SuperAdminActive; journalbaselinebeforeNameONLYfill/Save.",
+    "ExactoriginaltemporaryName, ONEordinarySave ->Saved. Ordinarybacklist/exactownrowreentry thenONEreload ->exacttemporaryName/heading/SaveDisabled. No duplicateSaveafterpending; usefreshAX.",
+    "Journalconfirmedowneffectbefore restore. FillONLYoriginalNameandONEordinarySave ->Saved; reentry/ONEreload ->originalName/pristine/SuperAdminActive. Appendfinaljournalpendingfalse; contacts/securitynotedited.",
+    "Protectedadmin/RU/Anonymized/Business3restore/markHandoff. IfretestfailsretainF021pending/open andprioritizeonlyownName recovery; no unrelatedcases."
+  ],
+  "expected": "ExactoriginalvalidNameSave nowpersists/reloads, originalName restored viaordinaryUI; sameownidentity/securityunchanged. Targeted7PASS+types0supportnotLIVE/substituteforfullgates.",
+  "effects": "AtmosttwonewordinaryUserBasicSaves(temporaryName+restore), existingmaskedcontactfieldsuntouched; no role/password/Magiclink/OTP/message/booking/entity command.",
+  "credit": "OnecompoundnewM3-01UIcaseandONEF021verifiedfixonlyafterallrecoveryandtargetedregressions; no extraPASSforbaseline/reentry/reload. A3buildSTALEuntilnewbuild+actualexecution."
+}

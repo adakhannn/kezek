@@ -1,0 +1,200 @@
+{
+  "status": "PAUSED_BY_USER",
+  "authorization": "остановись до нового запуска",
+  "authorizationEvidence": "authorization.json",
+  "firstClockAfterResumeUtc": "2026-10-28T08:35:29Z",
+  "timezone": "Asia/Bishkek",
+  "candidate": "dev-20261028-WEB-60022ce29b32",
+  "sourceFingerprint": "60022ce29b32af382f72423fd2693f93ac71898a4c5942a4a99218d4a07b07d9",
+  "sourceFileCount": 1687,
+  "accepted": 28,
+  "remaining": 288,
+  "total": 316,
+  "S1": {
+    "accepted": 17,
+    "total": 25,
+    "primaryPassed": 63,
+    "primaryTotal": 79
+  },
+  "S2": {
+    "accepted": 5,
+    "total": 70
+  },
+  "S4": {
+    "accepted": 3,
+    "total": 47
+  },
+  "S6": {
+    "accepted": 2,
+    "total": 29
+  },
+  "verifiedFixesLogicalRun": 17,
+  "newWindowLiveFixes": 0,
+  "newWindowAcceptedRequirements": 1,
+  "newWindowPassedCases": 3,
+  "reusedPriorProofCasesThisWindow": 0,
+  "refreshedHistoricalFunctionalCasesThisWindow": 0,
+  "buildRefreshEventsThisWindow": 1,
+  "distinctBuildCasesRefreshedThisWindow": 1,
+  "activeSubpackage": "STOPPED_BY_USER_C257_SAVED_C258_BLOCKED",
+  "lastCheckpoint": "Humanstop28Oct firstactualclock14:56:40UTC/20:56:40Bishkek. Existingkezek explicitlyPAUSED; toolview+actualfullconfigreadbackverified onlystatus/updated_atchanged. No newproductscenario/source/test/build/auth/fixturecommandsafterstop. Main3000PID30212/session34957 andoriginaltab1provider0777 preserved; ownedtemporarycompiler/runtimePIDsabsent/3107gone. Final28Octreport saved/NOT_READY/28of316288left/windowUI3/verifiedfix0/newaccepted1Q1-01/logical17/buildrefresh1. F022sixfeedbackobservedcorrectbutfinaloriginal99readback+ONEreloadBLOCKEDAUTH_SERVICE_UNAVAILABLE; no newUI/fixcredit. C258conditionalplan preserved, no executionuntilNEWdirecthumanlaunch andgenuinenewavailabilitycondition. Oldfinals/journals/UTCunchanged.",
+  "checkpointAfterClockUtc": "2026-10-28T15:00:31.755Z",
+  "automation": {
+    "id": "kezek",
+    "kind": "heartbeat",
+    "status": "PAUSED",
+    "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+    "previousTargetThreadId": "01a0a908-6eca-7fb1-a481-57f09516a2d1",
+    "intervalMinutes": 15,
+    "updateToolSuccess": true,
+    "toolViewReadback": true,
+    "fullPayloadMatchedConfigurationReadback": true,
+    "configSHA256": "c953a74e1a80d540fed8e1eebfe4f9cc4fa19f76a571ed27198bbb4dec707648",
+    "oldPromptPreserved": true,
+    "noDuplicate": true,
+    "evidence": "pause-20261028-145640.json"
+  },
+  "priorCompletedWindow": "docs/verification/runs/2026-10-26-web-resume-2/final-report.json",
+  "priorFinalSHA256": "802d4e256b960fb95e65e72d01e5faf2ba7c1da1e998adc019537e04d9f8a280",
+  "priorWindowArchived": {
+    "newUiPass": 19,
+    "newVerifiedFixes": 1,
+    "newAcceptedRequirements": 4,
+    "notAddedToThisWindow": true
+  },
+  "continuousObservationAcrossPause": false,
+  "releaseReady": false,
+  "autonomousResumeAllowed": false,
+  "currentBuild": {
+    "status": "PASS_BUILD_AND_ACTUAL_EXECUTION",
+    "plan": "docs/verification/runs/2026-10-28-web-resume/c254-build-plan.json",
+    "buildEvidence": "docs/verification/runs/2026-10-28-web-resume/c254-result.json",
+    "destination": "test-results/closure-web-20261028-c254-60022ce29b32/build",
+    "rawLog": "docs/verification/runs/2026-10-28-web-resume/c254-build-raw.txt",
+    "ownedCompilerPid": 34524,
+    "ownedSession": 79618,
+    "startedUtc": "2026-10-28T14:09:25.637Z",
+    "finishedUtc": "2026-10-28T14:11:08.426Z",
+    "exitCode": 0,
+    "timedOut": false,
+    "executionEvidence": "docs/verification/runs/2026-10-28-web-resume/c257-result.json",
+    "ownedRuntimePid": 26792,
+    "ownedRuntimeSession": 52323,
+    "runtimeStopped": true,
+    "runtimeFinishedUtc": "2026-10-28T14:37:09.346Z",
+    "actualExecution": "PASS_COMPILED_PRIVACY_GUEST_MENU_RELOAD_MAIN_RESTORE",
+    "runtimeStartedUtc": "2026-10-28T14:36:04.275Z"
+  },
+  "technicalGates": {
+    "evidence": "c252-technical-checks.json",
+    "typecheck": "CURRENT_COMMAND_EXIT0",
+    "targeted7": "PASS",
+    "fullLint": "FAIL52errors167warnings_SAME_DIAGNOSTICS",
+    "sourceUnit": "FAIL11/PASS2578_SAME_FAILED_IDENTITIES",
+    "fullCoverage": "EXECUTED_FULL_FAILED_GATE_RETAINED",
+    "currentBuild": "C254_C257_SCOPED_PASS",
+    "targeted": "39PASS"
+  },
+  "pendingFixtureEffects": {
+    "pending": false,
+    "inheritedRestored": true,
+    "priorJournal": "docs/verification/runs/2026-10-26-web-resume-2/c211-effects-03-restored.json"
+  },
+  "browser": {
+    "status": "RESTORED_PROTECTED_SUPERADMIN",
+    "browserId": "2",
+    "workingTabId": "1",
+    "workingProvider": "browser-use:0777f06e-9992-423c-a911-193bae880c9c",
+    "handle": "kezekRecoveredTab",
+    "actualRole": "KnownSAprotectedadmin/RU/Anonymized/Business3/4branches1staff4services30bookings/28OctToday0-0-0 restoredbefore14:37:11UTC/markHandoff; originaltab1provider0777/kezekRecoveredTab.",
+    "userTabHandoff": true,
+    "observationBlocker": "c243-result.json historicalblockedattempt; currentlimitedchainrestoredC246"
+  },
+  "server": {
+    "status": "MAIN_DEV_READY_AND_ACTUAL_UI",
+    "project": "C:/projects/kezek/apps/web",
+    "command": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1",
+    "startAfterClockUtc": "2026-10-28T14:20:33Z",
+    "sessionId": 34957,
+    "listenerPid": 30212,
+    "verifiedListener": "127.0.0.1:3000",
+    "readyDurationSeconds": 7.2,
+    "recoveryEvidence": "docs/verification/runs/2026-10-28-web-resume/c255-recovery-result.json",
+    "noDuplicateStart": true,
+    "priorSessionId": 31372,
+    "priorListenerPid": 6060
+  },
+  "constraints": "WEB/local only. No native/mobile/subagents/new chats/commit/push/deploy. No direct DB/SQL/RPC/SDK/HTTP, secrets/storage extraction, forbidden providers/endpoints or permission bypass. No new identities/roles/jobs/fixtures/booking commands/payments/irreversible delete without specific action-time authority. No unchanged DONE/tool/auth/catalogue/F013/profileSave/cache/visual/provider retry. Old journals/finals/UTC immutable.",
+  "casePlan": "c258-conditional-final-readback-plan.json",
+  "nextReview": "DO_NOT_EXECUTE_UNTIL_NEW_DIRECT_HUMAN_LAUNCH; savedconditionalC258final-readback-only",
+  "newWindowTechnicalPassedCases": 1,
+  "phaseSnapshot": [
+    {
+      "id": "S1",
+      "accepted": 17,
+      "total": 25
+    },
+    {
+      "id": "S2",
+      "accepted": 5,
+      "total": 70
+    },
+    {
+      "id": "S3",
+      "accepted": 0,
+      "total": 45
+    },
+    {
+      "id": "S4",
+      "accepted": 3,
+      "total": 47
+    },
+    {
+      "id": "S5",
+      "accepted": 0,
+      "total": 47
+    },
+    {
+      "id": "S6",
+      "accepted": 2,
+      "total": 29
+    },
+    {
+      "id": "S7",
+      "accepted": 0,
+      "total": 31
+    },
+    {
+      "id": "S8",
+      "accepted": 1,
+      "total": 22
+    }
+  ],
+  "S8": {
+    "accepted": 1,
+    "total": 22
+  },
+  "pendingVerificationRecovery": {
+    "caseId": "S28-I203-service-localized-name-length-rejection-discard",
+    "status": "BLOCKED_OWNER_SERVICES_AUTH_SERVICE_UNAVAILABLE",
+    "required": [
+      "Originalservice99finalpositivepersistedbaseline/readback",
+      "ONEordinaryreloadbaseline/staffunchecked"
+    ],
+    "knownAcceptedFixtureMutationPending": false,
+    "noTotalWriteAudit": true
+  },
+  "resumeAuthorizationBeforeStop": "можешь продолжить, пока я сам не попрошу остановиться",
+  "stop": {
+    "request": "остановись до нового запуска",
+    "firstActualClockUtc": "2026-10-28T14:56:40Z",
+    "pauseEvidence": "pause-20261028-145640.json",
+    "newDirectHumanLaunchRequired": true
+  },
+  "lastCompletedCheckpoint": "C257_COMPLETE_C258_BLOCKED_FINAL_READBACK_ONLY",
+  "finalReport": {
+    "path": "docs/verification/runs/2026-10-28-web-resume/final-report.json",
+    "status": "FINAL_NOT_READY_PAUSED_BY_USER",
+    "sha256": "c4177a632b879a65ab4359c042b754942862795317726c35dc77955a9bcc07a5"
+  }
+}

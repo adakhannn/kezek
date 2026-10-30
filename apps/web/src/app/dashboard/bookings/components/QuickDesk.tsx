@@ -5,6 +5,7 @@ import { addDays } from 'date-fns';
 import { useMemo, useState } from 'react';
 
 import { QuickDeskClientSection } from './QuickDeskClientSection';
+import { QuickDeskBookingFields } from './QuickDeskBookingFields';
 import { useQuickBooking } from './useQuickBooking';
 import { useQuickDeskClient } from './useQuickDeskClient';
 import { useQuickDeskFormResets } from './useQuickDeskFormResets';
@@ -14,8 +15,8 @@ import { useSyncServiceId } from './useSyncServiceId';
 import { useTemporaryTransfers } from './useTemporaryTransfers';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { StatusPanel, StatusItem } from '@/components/dashboard';
 import { Button } from '@/components/ui/Button';
+import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { logDebug } from '@/lib/log';
 import { formatDateInTz, todayStringInTz } from '@/lib/time';
@@ -48,12 +49,12 @@ export function QuickDesk({
     bizId,
     services,
     staff,
-    branches: _branches,
+    branches,
     onTabChange,
 }: QuickDeskProps) {
     const { t, locale } = useLanguage();
     const toast = useToast();
-    const [branchId, _setBranchId] = useState<string>('');
+    const [branchId, setBranchId] = useState<string>('');
     const [serviceId, setServiceId] = useState<string>('');
     const [staffId, setStaffId] = useState<string>('');
     const [date, setDate] = useState<string>(() => todayStringInTz(timezone));
@@ -109,19 +110,13 @@ export function QuickDesk({
         clearSlots: slotsApi.clearSlots,
     });
 
-    const [statusStats] = useState<{
-        todayCount: number;
-        tomorrowCount: number;
-        todayFreeSlots: number;
-        tomorrowFreeSlots: number;
-        loading: boolean;
-    }>({
-        todayCount: 0,
-        tomorrowCount: 0,
-        todayFreeSlots: 0,
-        tomorrowFreeSlots: 0,
-        loading: true,
-    });
+    const staffByBranch = useMemo(() => staff.filter(member => {
+        const context = resolveScheduleContext({
+            staffId: member.id, dayStr: date, selectedBranchId: branchId,
+            temporaryTransfers, staff: staffForSchedule,
+        });
+        return (context.isTemporaryTransfer ? context.targetBranchId : context.homeBranchId) === branchId;
+    }), [staff, date, branchId, temporaryTransfers, staffForSchedule]);
 
     const client = useQuickDeskClient();
 
@@ -193,12 +188,15 @@ export function QuickDesk({
         showError: (message) => toast.showError(message),
     });
 
-    const canCreate = branchId && serviceId && staffId && slotsApi.slotStartISO && client.canSubmitClient;
+    const canCreate = branchId && serviceId && staffId && client.canSubmitClient &&
+        staffByBranch.some(member => member.id === staffId) && !slotsApi.slotsLoading &&
+        slotsApi.slots.some(slot => slot.start_at === slotsApi.slotStartISO && slot.staff_id === staffId);
     const today = todayStringInTz(timezone);
     const tomorrow = formatDateInTz(addDays(new Date(), 1), timezone);
 
     return (
         <section className="rounded-[28px] border border-[var(--border-default)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-md)] sm:p-5 lg:p-6">
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
             <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
                 <div className="space-y-4">
                     <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4">
@@ -221,28 +219,12 @@ export function QuickDesk({
                         </div>
                     </div>
 
-                    <StatusPanel title={t('bookings.desk.statusPanel.title', 'Статус на сегодня/завтра')} loading={statusStats.loading}>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <StatusItem
-                                label={t('bookings.desk.statusPanel.today', 'Сегодня')}
-                                value={`${statusStats.todayCount} ${t('bookings.desk.statusPanel.bookings', 'записей')}`}
-                                subtitle={
-                                    slotsApi.slots.length > 0 && date === today
-                                        ? `${slotsApi.slots.length} ${t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}`
-                                        : undefined
-                                }
-                            />
-                            <StatusItem
-                                label={t('bookings.desk.statusPanel.tomorrow', 'Завтра')}
-                                value={`${statusStats.tomorrowCount} ${t('bookings.desk.statusPanel.bookings', 'записей')}`}
-                                subtitle={
-                                    slotsApi.slots.length > 0 && date === tomorrow
-                                        ? `${slotsApi.slots.length} ${t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}`
-                                        : undefined
-                                }
-                            />
-                        </div>
-                    </StatusPanel>
+                    <QuickDeskBookingFields branches={branches} staff={staffByBranch} services={servicesByBranch}
+                        branchId={branchId} date={date} staffId={staffId} serviceId={serviceId}
+                        slotStartISO={slotsApi.slotStartISO} today={today} tomorrow={tomorrow}
+                        timezone={timezone} locale={locale} slots={slotsApi.slots} slotsLoading={slotsApi.slotsLoading}
+                        disabled={quickBooking.creating} setBranchId={setBranchId} setDate={setDate}
+                        setStaffId={setStaffId} setServiceId={setServiceId} setSlotStartISO={slotsApi.setSlotStartISO} t={t} />
 
                     <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -253,7 +235,7 @@ export function QuickDesk({
                                 <p className="type-body mt-1 text-[var(--text-muted)]">
                                     {t(
                                         'bookings.desk.primaryActionDesc',
-                                        'Как только выбраны параметры и клиент, создавайте запись отсюда. Это главный action bar для стойки.',
+                                        'Выберите параметры визита и клиента, затем создайте запись.',
                                     )}
                                 </p>
                             </div>

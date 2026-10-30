@@ -1,0 +1,97 @@
+{
+  "id": "C192",
+  "status": "PASS_D101_FOUR_ENTRY_METHODS_ACCEPTED",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "sourceFingerprint": "82c7088de609524909e13e7a936099c8c7117738b3b559e0b8c1fc99f524697c",
+  "observationWindowUtc": [
+    "2026-10-26T08:28:54Z",
+    "2026-10-26T08:30:42Z"
+  ],
+  "plan": "c192-entry-method-closure-plan.json",
+  "direct": {
+    "caseId": "S26-D101-direct-positive-url",
+    "actual": "One direct same-tab document entry from protectedadmin to observed existing /b/testovyy-biznes-2/booking. Initial loading notPASS; settled correctbusiness h1/step1/2unselectedbranchchoices/Nextdisabled and normal?step=1&day=2026-10-26. No selection or booking command."
+  },
+  "business": {
+    "caseId": "S26-D101-public-business-cta-current-refresh",
+    "actual": "Existing publicbusiness2 detail shows correctname/2activebranches/3services/1staff/0offers. One actual primaryhero Записаться click ->correctsamebusiness settledwizard step1/2choices/Nextdisabled. This is current finite functional refresh of historical genericentry, no newdistinctbug or servicepreselectionclaim.",
+    "historicalPath": "apps/web/test-results/global-2026-10-16/stage-G092-public-business-entry.json",
+    "originalUtc": "2026-10-16T00:03:38Z",
+    "oldProofNotRetimed": true
+  },
+  "map": {
+    "caseId": "S26-B404-accessible-map-branch-handoff",
+    "originalUtc": "2026-10-25T22:12:28Z",
+    "originalObservationWindowUtc": [
+      "2026-10-25T22:09:16Z",
+      "2026-10-25T22:12:28Z"
+    ],
+    "dependencyComparison": [
+      {
+        "path": "apps/web/src/app/map/MapPageClient.tsx",
+        "originalSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+        "currentSha256": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+        "match": true
+      },
+      {
+        "path": "apps/web/src/app/map/branchBookingHref.ts",
+        "originalSha256": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+        "currentSha256": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+        "match": true
+      },
+      {
+        "path": "apps/web/src/app/b/[slug]/booking/page.tsx",
+        "originalSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+        "currentSha256": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+        "match": true
+      },
+      {
+        "path": "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx",
+        "originalSha256": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+        "currentSha256": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+        "match": true
+      },
+      {
+        "path": "apps/web/src/app/b/[slug]/view.tsx",
+        "originalSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+        "currentSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+        "match": true
+      },
+      {
+        "path": "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts",
+        "originalSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+        "currentSha256": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+        "match": true
+      },
+      {
+        "path": "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts",
+        "originalSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+        "currentSha256": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e",
+        "match": true
+      }
+    ],
+    "meaning": "Associate already-current actual map branch list/overlay handoff with D1-01. No UI rerun or extra new/reusecase credit."
+  },
+  "search": {
+    "caseId": "S26-D101-filtered-search-booking-cta-entry",
+    "evidence": "S1-EV-636",
+    "meaning": "Completed C191; not rerun."
+  },
+  "restoration": {
+    "completedBeforeClockUtc": "2026-10-26T08:30:42Z",
+    "actual": "Ordinarybrand ->cleanroot blankquery/3businesses; observedAdminmenu->protectedadmin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1; markHandoff."
+  },
+  "credit": {
+    "newUi": 1,
+    "historicalFunctionalRefreshEvents": 1,
+    "newFix": 0,
+    "newAccepted": 1,
+    "acceptedBefore": 23,
+    "acceptedAfter": 24,
+    "remaining": 292,
+    "newWindowUi": 2,
+    "newWindowFirstAccepted": 1
+  },
+  "effects": "Navigation/read-onlyUI only; no choices/Next/date/staff/service/slot/hold/confirm/cancel/payment/newentity/auth transition/DB/API/SDK/storage/source/test/build operation. Ordinary app telemetry/draft/auth effects unenumerated.",
+  "limits": "Finite D1-01 four entrymechanisms accepted; not wholebooking/security/role/locale/visual/lifecycle proof. C189priorcatalogueerror and all other blockers remain."
+}

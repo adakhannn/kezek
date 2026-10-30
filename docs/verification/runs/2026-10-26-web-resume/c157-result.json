@@ -1,0 +1,64 @@
+{
+  "id": "C157",
+  "status": "TWO_SCOPED_UI_PASS",
+  "caseIds": [
+    "S26-M301-users-active-filter",
+    "S26-M301-users-blocked-empty-filter"
+  ],
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "plan": "c157-user-filter-plan.json",
+  "addendum": "c157-active-transition-addendum.json",
+  "observationWindowUtc": [
+    "2026-10-25T21:20:56Z",
+    "2026-10-25T21:23:35Z"
+  ],
+  "baselineIds": [
+    "61f7237b-e7d6-4c4f-9658-c44e52432e49",
+    "55072889-cc60-4487-9f54-4fbaad2560e7",
+    "89ddab92-22e4-4edb-8204-39ed052c1b09",
+    "19cdda8f-9c7a-4486-a4e3-dc08978fe206",
+    "c28f0237-79fe-4247-a3bb-3324370e48a3",
+    "ca0e86fd-5d58-4337-ad10-1e9218fcfecf",
+    "9bd8fd88-7241-4c2c-9ef4-3c4a7135450c",
+    "125e60ab-eb79-4d92-bc6d-d84ae534eeee"
+  ],
+  "baseline": "FreshRU/protectedadmin/Anonymized; Usersblanksearch/Allstatuses/50perpage/eightknownIDs,7Active+1SuperAdmin, global8total8active0blocked1super. InitialURLwaittooltimeout followed by actualcorrectUI, no repeatedclick/productlatencyFAIL.",
+  "steps": [
+    {
+      "clockUtc": "2026-10-25T21:21:12Z",
+      "action": "FirstActivefilter/query",
+      "actual": "SelectedActive/queryactivepage1perPage50/samebaseline8rows. Notcreditedyet because no distinct datatransition observed; retain0creditcontrol."
+    },
+    {
+      "clockUtc": "2026-10-25T21:21:47Z",
+      "action": "Onlyblockedfilter/query",
+      "actual": "Queryblockedpage1perPage50; explicit Пользователи не найдены. Попробуйте изменить фильтры. and all8datarowsremoved; global8total8active0blocked1superunchanged. ScopedemptycasePASS."
+    },
+    {
+      "clockUtc": "2026-10-25T21:22:21Z",
+      "action": "After savedaddendum selectActive ONCE from observedemptyblockedstate",
+      "actual": "Queryactivepage1perPage50; emptyfeedbackgone and all8originalIDs visiblyreturned,7Active+1SuperAdmin/globalstatsunchanged. Actualempty->populatedtransition, scopedactivecasePASS; no duplicatecase/unchangedretry."
+    },
+    {
+      "clockUtc": "2026-10-25T21:22:30Z",
+      "action": "RestoreAllstatuses",
+      "actual": "URLwaittimeout thenfreshactualquerystatusallpage1perPage50/Allselected/eightretainedIDs/stats8/8/0/1. No repeatedselect."
+    },
+    {
+      "clockUtc": "2026-10-25T21:22:41Z",
+      "action": "Observed Вадминку link/adminrestore",
+      "actual": "ProtectedRU/Admin-panel/Anonymized/Logout/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1 restored; markHandoff."
+    }
+  ],
+  "actualByCase": [
+    "Activefilter from independentlyobservedempty state rendered exact8knownnonblockedIDs inclSA with selectedActive/queryactive and unchangedglobal8/8/0/1.",
+    "Blockedfilter rendered explicitemptyfeedback/noaccountrows with selectedBlocked/queryblocked and unchangedglobal8/8/0/1."
+  ],
+  "effects": "Ordinary querynavigation/select/filter reset only; no entity/account/role/security/booking/payment command/newfixture. Ordinary telemetry/authbackground unenumerated, neverzeroTOTALwrites.",
+  "newUiPass": 2,
+  "newVerifiedFix": 0,
+  "newAccepted": 0,
+  "limits": "Two scopedstatus-filterUIcases only; not wholeM3-01, search/newuser/update, blockedpositive/mixed/pagination/multi-page correctness, APIresponse timing/security/visual proof.",
+  "next": "C157 userstatusfilter2NEWUI PASS: actualblockedempty thenactivefromempty8originalIDs; global8/8/0/1 retained, originalAll/adminRUrestored.26Oct11NEWUI/3fix/logical15;21of316295left/S117primary63/S23/S41 unchanged/NOT_READY. Firstactive samebaseline observation0credit; addendum before changed-empty->active verification, no duplicatecase. NextC158 ONLYboundedREADONLY closure-frontier review of remaining S2 critical requirements/history/dependencies/effectauthority: identify a genuinely uncovered finite matrix that can materially advance a requirement within existing known4identities/no-newfixture/no-securitycommands, or exact groupedblocker and independent unfinished priority. Do not choose another alreadycovered localdraft/search/selector/receipt/count-control for newcredit. No UI/auth/entity effect from review itself; no new privileges/roles/jobs/users/fixtures/HTTP/secret/native/subagent/newchat/workaround. All old F013/F005/M1intermittent/cache/visual/owner/profileSave/technical blockers retained; no unchanged build/diagnostic."
+}

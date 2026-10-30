@@ -5,6 +5,11 @@ import {
     expectSuccessResponse,
     setupApiTestMocks,
 } from './testHelpers';
+import { dispatchCreatedGuestBookingNotification } from '@/lib/guestBookingNotificationDispatch';
+
+jest.mock('@/lib/guestBookingNotificationDispatch', () => ({
+    dispatchCreatedGuestBookingNotification: jest.fn().mockResolvedValue(undefined),
+}));
 
 setupApiTestMocks();
 
@@ -76,9 +81,13 @@ describe('/api/quick-book-guest', () => {
         const data = await expectSuccessResponse(await POST(req));
         expect(data.data.booking_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
         expect(data.data.confirmed).toBe(true);
-        const [notifyUrl, notifyInit] = (global.fetch as jest.Mock).mock.calls[0];
-        expect(String(notifyUrl)).toBe('http://localhost/api/notify');
-        expect(notifyInit.method).toBe('POST');
+        expect(dispatchCreatedGuestBookingNotification).toHaveBeenCalledTimes(1);
+        expect(dispatchCreatedGuestBookingNotification).toHaveBeenCalledWith(
+            'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'confirm',
+            expect.objectContaining(validPayload),
+        );
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 
     test('returns branch validation error when active branch is missing', async () => {

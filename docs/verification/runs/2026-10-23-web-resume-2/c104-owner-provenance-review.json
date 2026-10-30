@@ -1,0 +1,135 @@
+{
+  "id": "C104",
+  "type": "bounded read-only ownerG108 provenance/dependency review",
+  "startedAfterUtc": "2026-10-23T06:03:42Z",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "sourceFingerprint": "b876ccbde0a87655431e32b2f6677b45b40c51376f0d3833f0434dafc4eab29a",
+  "historicalObservation": {
+    "stage": "G108",
+    "run": "global-2026-10-17",
+    "originalWindowUtc": [
+      "2026-10-16T23:23:21Z",
+      "2026-10-16T23:27:19Z"
+    ],
+    "originalLogoutUtc": "2026-10-16T23:23:32Z",
+    "sourceFingerprint": "9f9b8c4d9ce303d7ad312565b73f8c74d059b09ad94ffd2116092a455826f1ad",
+    "scope": "Actualownerbusiness2/dashboard/bookings ->ordinarylogout/guestroot ->ONEBack to/auth/sign-in?redirect=/dashboard/no oldownerbody. Clientlogin23:24:10Z follows and is not the actor in thatBackcase. No ownerreload-afterBack recorded; no no-flash/API/RLS/currentmatrixclaim."
+  },
+  "integrity": {
+    "stageManifestFrom": "apps/web/test-results/global-2026-10-17/final-report.json evidenceAudit.stageManifests G108",
+    "stageSHA256": "f44f31588d263db6c304130dd977b0480ad1e297d50d96d63e1c648d5c88ee6a",
+    "stageMatchesManifest": true,
+    "raw": [
+      {
+        "file": "g108-owner-before-logout.txt",
+        "sha256": "825b25f7d5513d5ecec8bd343de6aaaf143ee80e4f19a03ed933ce1d7c02fb0f",
+        "matchesStage": true
+      },
+      {
+        "file": "g108-logout-settled.txt",
+        "sha256": "6e212934000a2a5ba710510fc9861f916d01e64e4efdfdfc759bf4d949413d8b",
+        "matchesStage": true
+      },
+      {
+        "file": "g108-back-loggedout.txt",
+        "sha256": "605e9b194cae1b26d99885ae7bb36c7f4c76d0badf802443b1eb1615f35fc57b",
+        "matchesStage": true
+      }
+    ],
+    "meaning": "Hashes establish unchanged historicalfiles, not currentproductcorrectness."
+  },
+  "dependencyVerdict": "HISTORICAL_ONLY_CURRENT_APPLICABILITY_NOT_ESTABLISHED. Bounded review of exactG108/G107/G104, runprogress/finalsource metadata and filenames found full fingerprints but no original9f9per-file source/dependency map adequate to compare ownerdashboardguard/auth/signout dependencies with currentb876. Finalrunfingerprinteb65 is later thanG108 and cannot be substituted. No globalclaim that no map exists anywhere, no recreation/inventedhistoricalhashes/currentPASS/reusedcredit. Differentglobalfingerprint alone does not prove behaviorregression; missingcomparison prevents certification. No newownerlogin/businesschoice/Backretry under unchangedconditions.",
+  "roleInventory": {
+    "scope": "Six-role coarse logoutBack coverage inventory ONLY, not completeatomicC6-04denominator",
+    "totalRoles": 6,
+    "currentNarrowPassed": 3,
+    "currentCases": [
+      "S23-C604-SA-logout-back-reload",
+      "S23-C604-client-logout-back-reload",
+      "S23-C604-staff-home-logout-back-reload"
+    ],
+    "historicalOnly": 1,
+    "historicalRole": "ownerG108original16OctUTC/no currentreuse",
+    "blocked": 2,
+    "blockedRoles": [
+      "manager:noapprovedfixture",
+      "multirole:noapprovedfixture"
+    ],
+    "wholeRequirementAccepted": false,
+    "casePlanComplete": false,
+    "newUiExecution": 0,
+    "reusedCurrentProofCases": 0
+  },
+  "evidencePaths": [
+    "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+    "apps/web/test-results/global-2026-10-17/g108-owner-before-logout.txt",
+    "apps/web/test-results/global-2026-10-17/g108-logout-settled.txt",
+    "apps/web/test-results/global-2026-10-17/g108-back-loggedout.txt",
+    "apps/web/test-results/global-2026-10-17/stage-G104-resume-preflight.json",
+    "apps/web/test-results/global-2026-10-17/stage-G107-owned-business-calendar-context.json",
+    "apps/web/test-results/global-2026-10-17/progress.json",
+    "apps/web/test-results/global-2026-10-17/final-report.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c99-result.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c101-result.json",
+    "docs/verification/runs/2026-10-23-web-resume-2/c103-result.json"
+  ],
+  "counts": {
+    "newUiPassed": 0,
+    "newWindowPassedCases": 19,
+    "newFixes": 0,
+    "newWindowLiveFixes": 1,
+    "logicalVerifiedLiveFixes": 10,
+    "accepted": 21,
+    "remaining": 295,
+    "acceptedDelta": 0
+  },
+  "effects": "Read-only archivedproof/source-metadata/ledgerqueue inspection, no UIinput/authsessiontransition/appDB/source/test/build/serverchanges. Oldfinals/stage/rawproofs immutable/originalUTCpreserved. Normalrunningapptelemetry unenumerated/notzeroTOTALwrites.",
+  "next": "C105 bounded read-only M2-02 existing isolated A branch edit history/payload/effect review before any finite UIplan. Existingbranchname/localvalidation may be genuinelyuncovered; first verify C01-C03 fixtureproofs/currentbranchcomponents and full bundled fields. No create/delete/newfixture/activepublication/schedule/contact/owner/role change without exactauthority; no repeat alreadydone availabilitychecks, M2-01drafting, C99/C101/C103authloops or F013. If unsafe/covered keep exactblocker, choose independentremainingP0. No productLIVEcredit from this review.",
+  "completedBeforeUtc": "2026-10-23T06:06:01Z",
+  "hashes": [
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G108-google-client-session.json",
+      "sha256": "f44f31588d263db6c304130dd977b0480ad1e297d50d96d63e1c648d5c88ee6a"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/g108-owner-before-logout.txt",
+      "sha256": "825b25f7d5513d5ecec8bd343de6aaaf143ee80e4f19a03ed933ce1d7c02fb0f"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/g108-logout-settled.txt",
+      "sha256": "6e212934000a2a5ba710510fc9861f916d01e64e4efdfdfc759bf4d949413d8b"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/g108-back-loggedout.txt",
+      "sha256": "605e9b194cae1b26d99885ae7bb36c7f4c76d0badf802443b1eb1615f35fc57b"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G104-resume-preflight.json",
+      "sha256": "43d306d26fac12f23916172535015041de5f91f08ead549cb09d0399f10f903d"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G107-owned-business-calendar-context.json",
+      "sha256": "db74559db90d8f92f03101a87b9a1545d1211ba984ddd6479fc249e0259e51cc"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/progress.json",
+      "sha256": "efa632dadaaefc5f9394c467c2c7c7f58db35f003a972d6e7538fac722b88826"
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/final-report.json",
+      "sha256": "280a582f81c4b62bf66950afa0a1f97eae7a1fbcbf794cb9a108036e5a085fa0"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c99-result.json",
+      "sha256": "2de77526b1aae2472dff42b9cdb8fbc6a2967d42ef7063d4287eace63b8bf85f"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c101-result.json",
+      "sha256": "e6508ba35839e4e7212496e020b9a47633f28c859804e449dee1898db25ea990"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c103-result.json",
+      "sha256": "04ac30d2415513ea971683b3b5d80b54420d2bfa3a1daedb6d43417e35126c69"
+    }
+  ]
+}

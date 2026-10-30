@@ -1,0 +1,10 @@
+{
+ "id":"C18","caseId":"S21-M103-analytics-overview","candidateId":"dev-20261020-S1-1c0013b28e40","status":"FAIL",
+ "actual":"Actual main-nav Аналитика -> /admin/analytics/overview with admin shell, Analytics business tabs and alert Ошибка загрузки обзора / HTTP500 / retrybutton. ONE planned reload briefly shows loading then same HTTP500. No repeat retry click or filter edit.",
+ "urlState":"Application itself adds default startDate2026-09-20/endDate2026-10-20 to current URL; no manual filter/preference save by agent. Final route/admin/analytics/overview with that default query.",
+ "boundary":"Actual UI HTTP500, not KPI values, not silentempty. Exact API response body/cause/SQL error not captured, no CORS/TLS diagnosis or original S1transient-cause attribution. No extra API/RPC/HTTP/SDK request by agent.",
+ "matrixAfter":{"passed":7,"failed":4,"blocked":1,"notRun":7,"total":19},
+ "effects":"Read-only menu navigation and one full reload under known superadmin; no business/role/booking/finance/SQL/job commands. Ordinary telemetry unenumerated. Existing usertabs retained.",
+ "counts":{"S1":"17/25accepted8left;63/79PASS16left","S2":"1/70accepted69left","product":"18/316accepted298leftNOT_READY"},
+ "newConfirmedFixes":2,"pendingLiveFix":"S1-F005","deadlineUtc":"2026-10-20T13:00:00Z"
+}

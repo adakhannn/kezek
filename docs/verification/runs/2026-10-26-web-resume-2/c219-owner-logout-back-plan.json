@@ -1,0 +1,38 @@
+{
+  "id": "C219",
+  "status": "FINITE_PLAN_BEFORE_UI",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-C604-owner-dashboard-logout-back-reload",
+  "requirementIds": [
+    "C6-04"
+  ],
+  "variants": [
+    "owner-dashboard-logout-back-reload"
+  ],
+  "dependencyHashes": {
+    "apps/web/src/app/_components/SignOutButton.tsx": "bd94ea2f25c39ddd30d0d146e95b468114794381c7c2448a05ff1af128546524",
+    "apps/web/src/app/auth/sign-out/page.tsx": "b15e268e4c2c70c294c47632e667e2bc4175f7caf42135661113dab20e8e4c4b",
+    "apps/web/src/app/api/auth/sign-out/route.ts": "da1a3c7ededcb019b3e94e14561a5de83323054eb0f259da3a628389b6051cc7",
+    "apps/web/src/lib/authSignOutService.ts": "8d65e2b2902d43c370463494f27b9cd7b7f334d75dff97f9513a7be65360c4b9",
+    "apps/web/src/app/dashboard/layout.tsx": "0c02a3f458300606108f583579feaf75e8dad62120f5be1be20db91499cc7255",
+    "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616",
+    "apps/web/src/app/dashboard/page.tsx": "37a1af442547c4a4b505951930ff4300a2766199571974e34ac462ddb82297ea"
+  },
+  "timeboxMinutesIncludingRestore": 9,
+  "role": "Knownownerosorovadahan04/aliasosorov@sportsoft.ru/business2alreadyCurrent",
+  "expected": "ActualhealthyownerDashboard2/h1name+IDc28c/switcher2 ->ordinaryВыйти ->settledguestroot/Войти/noownerheader. ONEBrowserBackmustsettle signinredirect=/dashboard/no ownDashboardh1/businesssidebar/privatebody/owneraccount/Logout. ONEordinaryreloadofsettledguestresultretainsauthgate/no ownerbody. SArestoredafter. Notno-flash/BFCache/cookie-token/API/RLS/expiry/allroleclaim.",
+  "steps": [
+    "FreshSAadmin ->ordinarylogout/localGoogleknownowner; ifactualchooser2Current clickContinuecurrentonly. RequirehealthyownDashboard2/h1name/IDc28c. No otherbusinesschoice/context/data/newtab/navigation.",
+    "ClockONEordinaryownerВыйти. Waitsettledguestroot/Войти/noaccount/Logout. Appordinarysignoutonly/no manualstorage/token/cookie/authcode.",
+    "ClockONEtab.back. Waitsignin/guestdenial andinspectactualAX. IfBacknotknownprotectedDashboardhistory/signingateequivalent recordBLOCKED/no additionalBacks/forcedgoto/historyhunt. Ifownerprivatebodyremainsonsettledresult recordFAIL/readonlyclassification, no repetitiveauthloop.",
+    "Ifexpecteddenialseen clockONEordinaryreload. Expectsameguestauthgate/no ownerbody. Onecompoundcaseonly.",
+    "OrdinaryvisibleGoogle/knownkezekkgimmediately ->localSArestore. IfknowncallbackreturnstoDashboardunderSAnoownbusiness, useobservedheaderAdminpanel linkonlytorestoreadmin. No businessselection/rolegrants. MarkHandoff."
+  ],
+  "effects": "Normalknownowner+SAauth/setupContinuealreadyCurrent2/readnav/Back/oneReloadonly; no profile/notification/businessentity/role/security/booking/slot/hold/Confirm/payment/APItool/SDK/SQL/storage/native/source/test/build/serveraction. Ordinaryauth/telemetryunenumerated.",
+  "stopRules": [
+    "Navigationtimeout->ONEfreshAX/no duplicateclick/login/Back/reload.",
+    "Unexpectedhistorytarget->BLOCKED/no alternateURL/tab/browser/probe.",
+    "Password/CAPTCHA/device/newpermission ->handoffno bypass. Humanstop prioritizes safeSArestorewithinexistingauthority/pause."
+  ],
+  "credit": "AtbestONEnewUIcase; C6-04partial/casePlanCompletefalse/manager-businessadmin-multirole andfullhistory/securityboundaries remain. OldG108Back-only retainednotretimed."
+}

@@ -1,0 +1,13 @@
+{
+ "id":"C15","candidateId":"dev-20261020-S1-1c0013b28e40","fingerprint":"1c0013b28e404ff2c414bb44c9f1d27a0dd63f00cdf1695bfad54f84b5ded46a","fileCount":1663,
+ "cases":["A3-01-S1-01","A3-02-S1-01","A3-02-S1-02","A3-02-S1-03","A3-02-S1-04"],
+ "reason":"Changed admin read-state runtime invalidates previous build/output certificate; preserve unrelated actual cases by exact reverse-delta review, not broad rerun",
+ "build":"Fresh isolated mechanical source copy, default Next/Turbopack, type checks/prerender enabled, no env files or real credentials. Dummy backend, Sentry disabled; only preexisting approved public Geist GET until20Oct12:30UTC through Node guard and exact PostCSS worker IPC. Not OS firewall/deployed security proof.",
+ "preflightFailure":"First copy probe did not spawn Next: broad lowercase c07 label replacement corrupted expected old SHA before intended SHA substitution. Raw retained; only exact expected newSHA fixed. Failed generated copy retained; second new isolated directory v2, no cleanup or user source reset.",
+ "liveAssets":"If build0, start own bounded process127.0.0.1:3104, all outbound Node network denied, dummy credentials. One temporary task-created isolated origin for current-output asset verification, NOT replacement for failed user capture. CUA actual/privacy document and pageAssets observed exports: CSS rules/fonts/logo/script resources. No screenshots/visual/device/production promotion. No DevSupabase/account auth/business commands.",
+ "restoration":"Close only own temporary asset tab, stop only owned temporary server, leave usertabs2/5 and primaryDEV7760 untouched. Compiler watchdog bounded240s; exact process checks not HTTP health. No persistent setting change.",
+ "stop":"Build fail -> retain genuine failure, do not skip types/change compiler solely for green. Asset fail -> retainpartial, do not callwholePASS. No cold cache/performance/SSR/security claim from isolated build.",
+ "authorizationDeadline":"GoogleFontsGET12:30UTC unchanged; build/server harness newscenario window12:15UTC retained, userworkdeadline13UTC19Bishkek. Do not extend font permission.",
+ "scopeLimit":"F005 remains fixed_pending_verification unless actual natural failure-path SAME-LIVE passes. Current successful reads/9UNIT assertions do not substitute.",
+ "deadlineUtc":"2026-10-20T13:00:00Z"
+}

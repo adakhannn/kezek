@@ -1,0 +1,103 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:27176) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/AdminRoleApplicationsReadState.test.tsx (5.485 s)
+  √ does not show empty while the initial read is pending (38 ms)
+  √ shows a confirmed empty list only after a successful read (29 ms)
+  √ shows successful rows without empty and without submitting moderation (125 ms)
+  × does not claim an empty list on network read failure (49 ms)
+  × does not claim an empty list on http read failure (35 ms)
+  × does not claim an empty list on json read failure (29 ms)
+  × does not certify an empty list when the read error banner is dismissed (54 ms)
+  × does not display stale rows as a different filter after its read fails (53 ms)
+  √ recovers from a read failure through a successful read-only filter change (77 ms)
+
+  ● does not claim an empty list on network read failure
+
+    expect(received).toBeNull()
+
+    Received: <h3 class="type-section-title text-[var(--text-primary)]">admin.roleApplications.empty.title</h3>
+
+      59 |     render(<RoleApplicationsAdminClient />);
+      60 |     expect((await screen.findByRole('alert')).textContent).toContain(readError);
+    > 61 |     expect(screen.queryByText(empty)).toBeNull();
+         |                                       ^
+      62 | });
+      63 |
+      64 | it('does not certify an empty list when the read error banner is dismissed', async () => {
+
+      at toBeNull (src/__tests__/components/AdminRoleApplicationsReadState.test.tsx:61:39)
+
+  ● does not claim an empty list on http read failure
+
+    expect(received).toBeNull()
+
+    Received: <h3 class="type-section-title text-[var(--text-primary)]">admin.roleApplications.empty.title</h3>
+
+      59 |     render(<RoleApplicationsAdminClient />);
+      60 |     expect((await screen.findByRole('alert')).textContent).toContain(readError);
+    > 61 |     expect(screen.queryByText(empty)).toBeNull();
+         |                                       ^
+      62 | });
+      63 |
+      64 | it('does not certify an empty list when the read error banner is dismissed', async () => {
+
+      at toBeNull (src/__tests__/components/AdminRoleApplicationsReadState.test.tsx:61:39)
+
+  ● does not claim an empty list on json read failure
+
+    expect(received).toBeNull()
+
+    Received: <h3 class="type-section-title text-[var(--text-primary)]">admin.roleApplications.empty.title</h3>
+
+      59 |     render(<RoleApplicationsAdminClient />);
+      60 |     expect((await screen.findByRole('alert')).textContent).toContain(readError);
+    > 61 |     expect(screen.queryByText(empty)).toBeNull();
+         |                                       ^
+      62 | });
+      63 |
+      64 | it('does not certify an empty list when the read error banner is dismissed', async () => {
+
+      at toBeNull (src/__tests__/components/AdminRoleApplicationsReadState.test.tsx:61:39)
+
+  ● does not certify an empty list when the read error banner is dismissed
+
+    expect(received).toBeNull()
+
+    Received: <h3 class="type-section-title text-[var(--text-primary)]">admin.roleApplications.empty.title</h3>
+
+      68 |     fireEvent.click(screen.getByRole('button', { name: 'Close banner' }));
+      69 |     expect(screen.queryByRole('alert')).toBeNull();
+    > 70 |     expect(screen.queryByText(empty)).toBeNull();
+         |                                       ^
+      71 |     expect(global.fetch).toHaveBeenCalledTimes(1);
+      72 | });
+      73 |
+
+      at Object.toBeNull (src/__tests__/components/AdminRoleApplicationsReadState.test.tsx:70:39)
+
+  ● does not display stale rows as a different filter after its read fails
+
+    expect(received).toBeNull()
+
+    Received: <h2 class="text-lg font-semibold text-[var(--text-primary)]">UNIT applicant</h2>
+
+      78 |     fireEvent.click(screen.getByRole('button', { name: 'admin.roleApplications.status.all' }));
+      79 |     await screen.findByRole('alert');
+    > 80 |     expect(screen.queryByText('UNIT applicant')).toBeNull();
+         |                                                  ^
+      81 |     expect(screen.queryByText(empty)).toBeNull();
+      82 | });
+      83 |
+
+      at Object.toBeNull (src/__tests__/components/AdminRoleApplicationsReadState.test.tsx:80:50)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 4 passed, 9 total
+Snapshots:   0 total
+Time:        18.626 s
+Ran all test suites within paths "src/__tests__/components/AdminRoleApplicationsReadState.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

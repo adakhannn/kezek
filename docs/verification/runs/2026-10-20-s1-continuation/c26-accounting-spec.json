@@ -1,0 +1,110 @@
+{
+  "id": "C26",
+  "fromCandidate": "dev-20261020-S1-6965bd8726b8",
+  "resultFile": "c26-result.json",
+  "originalFile": "c26-original-boundaries.json",
+  "newPaths": [
+    "apps/web/src/lib/adminGlobalOverviewService.ts",
+    "apps/web/src/lib/adminGlobalOverviewReadService.ts",
+    "apps/web/src/__tests__/api/admin/globalOverview.test.ts",
+    "apps/web/src/__tests__/lib/adminGlobalOverviewService.test.ts",
+    "apps/web/src/__tests__/components/AdminGlobalOverviewScope.test.tsx"
+  ],
+  "reviewEvidenceId": "S1-EV-235",
+  "reviewBasis": "Exactprior1670filefingerprint reconstructed fromfour savedexistingfiles excludingfive newpaths. OnlyglobaladminOverview route/clientcomposition+newglobalreader/aggregation changed. Owner/dashboard businessanalytics/authBiz/adminAccess/otherpasseddependencies unchanged. Allpassed dependencyhashes reviewed/originaldates preserved, notfreshretime. Currentbuild/assets unexecuted/stale, expiredFontsapproval/priorC15FAIL retained.",
+  "caseId": "S21-M103-analytics-overview",
+  "observationUpperUtc": "2026-10-20T22:36:55Z",
+  "dependencies": [
+    "apps/web/src/app/admin/layout.tsx",
+    "apps/web/src/lib/adminAccess.ts",
+    "apps/web/src/app/admin/analytics/overview/page.tsx",
+    "apps/web/src/app/admin/analytics/overview/useAdminAnalyticsOverviewData.ts",
+    "apps/web/src/app/admin/analytics/overview/AdminAnalyticsOverviewSections.tsx",
+    "apps/web/src/app/admin/api/analytics/overview/route.ts",
+    "apps/web/src/lib/adminGlobalOverviewReadService.ts",
+    "apps/web/src/lib/adminGlobalOverviewService.ts"
+  ],
+  "caseEvidenceIds": [
+    "S1-EV-227",
+    "S1-EV-228",
+    "S1-EV-234"
+  ],
+  "finding": {
+    "id": "S1-F011",
+    "requirementIds": [
+      "M1-03"
+    ],
+    "caseIds": [
+      "S21-M103-analytics-overview"
+    ],
+    "title": "Global administrative overview fails via selected-business context",
+    "expected": "Human-approved all-business readonlyoverview for currentglobalSA only, no arbitrarycurrentbiz; ownerbusinessscope unchanged",
+    "steps": [
+      "SameSA menu overview HTTP500",
+      "Explicitglobalreport read/aggregation/caller contract",
+      "SameSA menu+fullreload emptyreport, no error; no modelreconciliationclaim"
+    ],
+    "observedUtc": "2026-10-20T22:29:35Z",
+    "evidenceIds": [
+      "S1-EV-228"
+    ],
+    "fixEvidenceIds": [
+      "S1-EV-227",
+      "S1-EV-229",
+      "S1-EV-230",
+      "S1-EV-231",
+      "S1-EV-232",
+      "S1-EV-233",
+      "S1-EV-234"
+    ]
+  },
+  "evidence": [
+    [
+      227,
+      "c26-global-overview-plan.json"
+    ],
+    [
+      228,
+      "c26-before.json"
+    ],
+    [
+      229,
+      "c26-unit-before.txt"
+    ],
+    [
+      230,
+      "c26-unit-after.txt"
+    ],
+    [
+      231,
+      "c26-types-after.txt"
+    ],
+    [
+      232,
+      "c26-lint-after.txt"
+    ],
+    [
+      233,
+      "c26-lint-initial.txt"
+    ],
+    [
+      234,
+      "c26-result.json"
+    ]
+  ],
+  "newFixCount": 7,
+  "verifiedFixIds": [
+    "S1-F003",
+    "S1-F004",
+    "S1-F006",
+    "S1-F008",
+    "S1-F009",
+    "S1-F010",
+    "S1-F011"
+  ],
+  "label": "globalsuperadminoverview",
+  "planFile": "c26-global-overview-plan.json",
+  "page": "/admin/analytics/overview",
+  "browserState": "globalemptyreport noHTTP500, bothdateinputs; notfinancialmodel/ETLcompletenessproof",
+  "completion": "C26 human-approved globaloverview actualmenu+reload emptysuccessPASS;23UNITPASS/types0/lint0/scopedcoverage>=60. Nonemptyglobalmodel UNIT-only. Nav16PASS2FAIL1BLOCKED/19; wholeM1-03stillnotaccepted."
+}

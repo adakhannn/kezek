@@ -1,0 +1,26 @@
+{
+  "id": "C224",
+  "status": "PASS_ONE_PROFILE_EMAIL_RECIPIENT_REQUIRED_CLIENT_VALIDATION_RECOVERY_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c224-profile-email-required-plan.json",
+  "caseId": "S26-E202-profile-email-recipient-required-reject-reset",
+  "observationWindowUtc": [
+    "2026-10-26T11:44:07Z",
+    "2026-10-26T11:44:38Z"
+  ],
+  "actual": "FreshloadedknownSAownprofile/RU/Anonymized/phoneblank/WhatsAppblank; EmailmasterON/exactoneownkezekkgverifiedaddressON; WhatsAppTelegram0disabled; SaveResetdisabled. ONEsole-recipientcheckboxOFF ->masterremainsON/dirty. ONEordinarySave ->sameprofile/unsavednotice andvisibleНеудалосьвыполнитьдействие:Выберитeхотябыодинадресдляemail-уведомлений (exactUItext: Выберите хотя бы один адрес для email-уведомлений); no updated-success/navigation. ONEReset ->addressON/masterON/allbaseline/clean/errorcleared. ONEreloadsamecleanvisiblebaseline/SaveResetdisabled. No contact/name/provideredit.",
+  "effects": "OnlyoneunsavedrecipientcheckboxOFF+ONEclientguard-negativeSaveattempt/oneReset/oneReload. No authswitch/newidentity/provider/link-unlink/OTP/email-SMSsend/validProfileSave/profilepersist/role/security/booking/newentity/source/test/build/servercommand. Appordinaryread/auth/analytics/telemetryunenumerated; UIandreviewedpre-requestguardnotindependentzero-network/DBwriteaudit.",
+  "restoration": "Observedalso-accessАдмин-панельlink ->actualprotected/admin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1;markHandoff. OriginalEmailmaster+ownrecipientchecked, unsupportedchannelsdisabledunchecked, no pendinglocaldraft/dataeffect.",
+  "limits": "Clientrequired-recipientguard/errorrecoveryonly. C214togglesetupnotextracredit. NotvalidProfileSave/servererror/delivery/unknownnotify_smsrestoreproof; C77validsaveBLOCKEDretained. Q1-01documentedcommandprovenanceBLOCKEDnotnewtscFAIL; types0supportreceiptpreserved. No newfix/wholeE2/visual/API/securityclaim.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 15,
+    "windowUiAfter": 16,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

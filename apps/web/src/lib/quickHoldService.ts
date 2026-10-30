@@ -7,7 +7,8 @@ import {
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createSupabaseBookingCommands } from '@/lib/bookingCommandsSupabase';
-import { logDebug, logError } from '@/lib/log';
+import { BookingSlotConflictError } from '@/lib/bookingSlotConflict';
+import { logDebug, logError, logWarn } from '@/lib/log';
 import { SupabaseBranchRepository } from '@/lib/repositories';
 
 export async function runQuickHold(
@@ -29,7 +30,7 @@ export async function runQuickHold(
     const notifications: BookingNotificationPort = {
         async send(bookingId, type) {
             await notify({ bookingId, type });
-            logDebug('QuickHoldService', 'Notification sent successfully', {
+            logDebug('QuickHoldService', 'Notification dispatch attempt completed', {
                 bookingId,
                 type,
             });
@@ -46,7 +47,8 @@ export async function runQuickHold(
             input,
         );
     } catch (error) {
-        logError('QuickHoldService', 'Use case execution failed', error);
+        const logger = error instanceof BookingSlotConflictError ? logWarn : logError;
+        logger('QuickHoldService', 'Use case execution failed', error);
         throw error;
     }
 }

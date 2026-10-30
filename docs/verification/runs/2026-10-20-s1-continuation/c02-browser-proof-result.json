@@ -1,0 +1,12 @@
+{
+  "plannedAfterClockUtc":"2026-10-20T08:42:28Z",
+  "result":"BLOCKED_PROOF_CAPABILITY_NOT_PRODUCT_FAILURE",
+  "acceptedDelta":0,
+  "capabilities":{"browser":["visibility","viewport"],"tab":["pageAssets","webmcp"],"coldCacheControlAdvertised":false,"originalResponseInspectionAdvertised":false},
+  "viewport":{"requestedCSS":"1280x900","actualCSS":"4266x3000","actualDPR":0.300000020861626,"requestNotAcceptedAsDevicePASS":true,"resetCalled":true,"defaultAfterResetCSS":"5120x3600","defaultAfterResetDPR":0.45000001788139343,"exactPriorGeometryRestoredClaimed":false},
+  "screenshot":"Capture now returns actual JPEG bytes, but earlier5850x5503 image haspadding/scale inconsistency. After desktopoverride CSSmismatch found, no new screenshot/phone/tablet retry or CSSpatch.",
+  "remainingCases":["S12-cold-1","S12-cold-2","S12-cold-3","S12-cold-4","S12-cold-5","S12-cold-6","S12-cold-7","S12-cold-8","S12-SSR","S12-INITIAL-VISUAL"],
+  "exitCondition":"Supported coldcache + original prehydration response observation and faithful actualviewport/image/initialtiming proof. Normalreload/DOM/assets/mock not substitutes. Priorview-sourceURLpolicydenial untouched.",
+  "effects":"Only browserviewport override thenreset/readonlydimension observation. No navigation/auth/DB/settings/entity command in this diagnostic. Browser at adminbusinesslist, markedhandoff.",
+  "nextIndependent":"S1.1 newbuild pending specific currentwindow publicGoogleFonts permission; S1.3 deletedslug pending exacttarget irreversibledelete confirmation. Domain deferred to end. No unchanged diagnostics loops."
+}

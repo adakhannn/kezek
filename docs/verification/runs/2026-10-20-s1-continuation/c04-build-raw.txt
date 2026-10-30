@@ -1,0 +1,36 @@
+file:///C:/projects/kezek/scripts/closure-s1-isolated-build-20261020.mjs:37
+if (entries.length !== 1660 || fingerprint !== 'ed0bdd7faf246271380613feebb1b5dbd48b573ea00e635dc10bcddcf137590b') throw Error('Candidate changed; do not build another source silently');
+                                                                                                                         ^
+
+Error: Candidate changed; do not build another source silently
+    at file:///C:/projects/kezek/scripts/closure-s1-isolated-build-20261020.mjs:37:122
+    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.12.0
+
+V2 canonical-order followup
+{"event":"prepared","startedUtc":"2026-10-20T08:56:42.222Z","dest":"C:\\projects\\kezek\\test-results\\closure-s1-20261020-f003-fontread-v2\\build","copiedFiles":1660,"copyFingerprint":"ed0bdd7faf246271380613feebb1b5dbd48b573ea00e635dc10bcddcf137590b","noEnvFiles":true,"primarySourceConfigUnchanged":true,"coldNextCache":true,"limitations":"Dummy nonproduction config; Node network restriction not OS firewall; not live or release PASS."}
+{"event":"spawned","pid":30252}
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\projects\kezek\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\projects\kezek\test-results\closure-s1-20261020-f003-fontread-v2\build\apps\web\pnpm-lock.yaml
+   * C:\projects\kezek\test-results\closure-s1-20261020-f003-fontread-v2\build\pnpm-lock.yaml
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+   ▲ Next.js 16.0.11 (Turbopack)
+   - Experiments (use with caution):
+     · clientTraceMetadata
+     · optimizePackageImports
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 47s
+   Running TypeScript ...
+{"event":"finished","startedUtc":"2026-10-20T08:56:42.222Z","finishedUtc":"2026-10-20T09:02:08.078Z","exitCode":1,"signal":null,"timedOut":true,"pid":30252,"dest":"C:\\projects\\kezek\\test-results\\closure-s1-20261020-f003-fontread-v2\\build"}

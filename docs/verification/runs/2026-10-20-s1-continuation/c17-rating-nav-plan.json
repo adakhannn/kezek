@@ -1,0 +1,9 @@
+{
+ "id":"C17","parent":"C13/M1-03","candidateId":"dev-20261020-S1-1c0013b28e40","afterClockUtc":"2026-10-20T12:22:12Z",
+ "cases":["S21-M103-rating-config","S21-M103-ratings-status"],
+ "preflight":"Read source only: rating config server selects existing configuration; client POST save/initialize only explicit handlers, no action invoked. Ratings status server fetches only status/jobs GET, no job run. No metrics-dependent page selected.",
+ "steps":"Use actual observed admin menu link then inspect actual final page, one planned reload, inspect again. Config fields/buttons are observation only. Error-state route remains FAIL with evidence, not empty/model PASS. Stop after this bounded pair or control failure.",
+ "expectation":"Authorized superadmin retains shell, meaningful actual config/status content on route and reload, no read failure or global error. No CRUD/weights/initialization/job lifecycle or production claim.",
+ "stop":"No save/init/job trigger/grants/delete, auth/storage/token extraction, network probes or source-only fix. A new bug requiring larger fix cannot be begun if full same-live/regression/restoration cannot finish before13UTC. Font approval still ends12:30.",
+ "budgetMinutes":10,"draftByUtc":"2026-10-20T12:35:00Z","noNewLongScenarioAfterUtc":"2026-10-20T12:45:00Z","finalizeAndPauseFromUtc":"2026-10-20T12:50:00Z","deadlineUtc":"2026-10-20T13:00:00Z"
+}

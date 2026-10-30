@@ -1,0 +1,17 @@
+{
+  "id": "AUTOMATION_C236_CHECKPOINT_REFRESH",
+  "recordedAfterUtc": "2026-10-26T13:29:15Z",
+  "automationId": "kezek",
+  "status": "ACTIVE",
+  "targetThreadId": "01a17706-8dd7-73d3-bed4-b25369f5f1d2",
+  "updateToolSuccess": true,
+  "toolViewReadback": true,
+  "fullPayloadMatchedConfigurationReadback": true,
+  "configSHA256": "db4f1c4c1519c282275ee1a97bbd007e73b7923518c3e50fcbe90344da510542",
+  "previousExactConfiguration": "automation-before-c236-checkpoint.toml",
+  "previousSHA256": "bf3da18ebbe76ee7ac9d9933110fc6afeed27b59f53f2957b9461467d0f2bcfc",
+  "checkpoint": "C236_D104_ACCEPTED_BY_EXISTING_CURRENT_CERTIFIED_CASES_NO_UI_REPLAY",
+  "next": "C237_READONLY_BUSINESS_SLUG_VALIDATION_HISTORY_PAYLOAD_GUARD_REVIEW",
+  "noDuplicate": true,
+  "administrativeUpdateAddsNoProductCredit": true
+}

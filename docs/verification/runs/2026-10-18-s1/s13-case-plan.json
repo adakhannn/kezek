@@ -1,0 +1,125 @@
+{
+  "id": "S1.3",
+  "status": "checkpoint_partial",
+  "requirements": [
+    {
+      "id": "B1-01",
+      "expectedVariants": [
+        "owner home hero/navigation/discovery/footer",
+        "guest home hero/navigation/discovery/footer"
+      ],
+      "caseIds": [
+        "B1-01-S13-1",
+        "B1-01-S13-2"
+      ]
+    },
+    {
+      "id": "B1-02",
+      "expectedVariants": [
+        "card1 details CTA",
+        "card2 details CTA",
+        "card1 booking CTA",
+        "card2 booking CTA",
+        "home business apply CTA",
+        "home team apply CTA",
+        "home map CTA"
+      ],
+      "caseIds": [
+        "B1-02-S13-1",
+        "B1-02-S13-2",
+        "B1-02-S13-3",
+        "B1-02-S13-4",
+        "B1-02-S13-5",
+        "B1-02-S13-6",
+        "B1-02-S13-7"
+      ]
+    },
+    {
+      "id": "B1-03",
+      "expectedVariants": [
+        "owner authenticated header",
+        "guest unauthenticated header"
+      ],
+      "caseIds": [
+        "B1-03-S13-1",
+        "B1-03-S13-2"
+      ]
+    },
+    {
+      "id": "B1-04",
+      "expectedVariants": [
+        "home loading",
+        "home empty query",
+        "home controlled backend error"
+      ],
+      "caseIds": [
+        "B1-04-S13-1",
+        "B1-04-S13-2",
+        "B1-04-S13-3"
+      ]
+    },
+    {
+      "id": "B2-01",
+      "expectedVariants": [
+        "direct active business1",
+        "direct active business2"
+      ],
+      "caseIds": [
+        "B2-01-S13-1",
+        "B2-01-S13-2"
+      ]
+    },
+    {
+      "id": "B2-02",
+      "expectedVariants": [
+        "business1 identity/branches/services/contacts/promotions/booking",
+        "business2 identity/branches/services/contacts/promotions/booking"
+      ],
+      "caseIds": [
+        "B2-02-S13-1",
+        "B2-02-S13-2"
+      ]
+    },
+    {
+      "id": "B2-03",
+      "expectedVariants": [
+        "inactive service absent",
+        "inactive branch not bookable",
+        "inactive business not bookable",
+        "unavailable business with zero active branches"
+      ],
+      "caseIds": [
+        "B2-03-S13-1",
+        "B2-03-S13-2",
+        "B2-03-S13-3",
+        "B2-03-S13-4"
+      ]
+    },
+    {
+      "id": "B2-04",
+      "expectedVariants": [
+        "invalid slug",
+        "malformed slug",
+        "known deleted slug"
+      ],
+      "caseIds": [
+        "B2-04-S13-1",
+        "B2-04-S13-2",
+        "B2-04-S13-3"
+      ]
+    }
+  ],
+  "scope": "RU functional public entry only. Read-only CTAs stop before slot/hold/create/submit. Same-candidate S1.2 owner/guest home evidence may support shared header/discovery variants; no duplicate live chain. No new fixtures; missing inactive/deleted fixtures remain blocked. Devices/locales remain separate required O cases.",
+  "proofRules": "Visible DOM confirms content only, not visual quality; business current facts may be cross-checked against existing owner read surfaces without Save. No invented exact data oracle.",
+  "acceptedRequirementIds": [
+    "B1-01",
+    "B1-02",
+    "B1-03",
+    "B2-01"
+  ],
+  "remaining": 4,
+  "openFindingIds": [
+    "S1-F001"
+  ],
+  "planRevisionNote": "Discovered unavailable-zero-branch case added as FAIL; no original variant removed."
+}

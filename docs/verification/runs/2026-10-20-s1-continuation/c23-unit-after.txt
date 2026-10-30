@@ -1,0 +1,18 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+PASS src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx
+PASS src/__tests__/lib/adminAccess.test.ts
+----------------------------|---------|----------|---------|---------|-------------------
+File                        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------------|---------|----------|---------|---------|-------------------
+All files                   |     100 |      100 |     100 |     100 |                   
+ app/admin/promotions-debug |     100 |      100 |     100 |     100 |                   
+  page.tsx                  |     100 |      100 |     100 |     100 |                   
+ lib                        |     100 |      100 |     100 |     100 |                   
+  adminAccess.ts            |     100 |      100 |     100 |     100 |                   
+----------------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 2 passed, 2 total
+Tests:       8 passed, 8 total
+Snapshots:   0 total
+Time:        1.029 s, estimated 3 s
+Ran all test suites within paths "src/__tests__/components/PromotionsDebugCallerBoundary.test.tsx", "src/__tests__/lib/adminAccess.test.ts".

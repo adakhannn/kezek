@@ -1,0 +1,60 @@
+{
+  "id": "C211",
+  "status": "FINITE_PLAN_BASELINE_REQUIRED_BEFORE_NONCURRENT_CHOICE",
+  "preparedAfterClockUtc": "2026-10-26T10:28:04Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S26-F2-direct-business-chooser-two-owned-persistence",
+  "requirementIds": [
+    "F2-02",
+    "F2-04"
+  ],
+  "supportOnlyRequirements": [
+    "F2-01",
+    "F2-03"
+  ],
+  "role": "KnownGoogleosorovadahan04/aliasosorov@sportsoft.ru/existingowner/RU",
+  "businesses": [
+    {
+      "id": "35e5b36c-a967-4708-ba4d-7d3fc24b89f4",
+      "name": "Тестовый бизнес 1",
+      "slug": "testovyy-biznes-1"
+    },
+    {
+      "id": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+      "name": "Тестовый бизнес 2",
+      "slug": "testovyy-biznes-2"
+    }
+  ],
+  "authority": "Latesthumanfulltask-scopedroutineautonomy permitsordinaryreversibleownworkspacepreferencewithinexistingaccess; no newrole/grant/entity/booking/securitychange. PriorC67nobusinesschoiceplanstop supersededprospectivelybycurrentknownownerbusinesscontext+fullroutineauthority.",
+  "variants": [
+    "choice-screen:owned-business1-selected",
+    "choice-screen:owned-business2-selected",
+    "choice-screen:business1-reload-persists",
+    "choice-screen:business2-reload-persists"
+  ],
+  "independentExpectation": "FreshchooserlistsEXACTtwoallowedknownbusinesses/currentbusiness2. Choosebusiness1once ->dashboardID35e5b36c/name1/selector1/no business2maincontext; ONEreloadpreserves1. Directchooseragainshows1Currentand2available; choose2once ->dashboardIDc28c8109/name2/selector2; ONEreloadpreserves2/originalpreference. No completionfromoptimisticCurrentbadgebeforeactualdashboard/reload.",
+  "steps": [
+    "FreshSAadminbaseline; ordinarylogout/localGoogleknownowner. IfdefaultchooserrequiresContinue, onlyalreadyCurrentbusiness2 ->healthyownDashboard2as setup0credit. No select-cabinet/Remember/headerhistorytest.",
+    "ONEordinarydirect/select-business entryfromhealthyDashboard2. Requirebothknownchoices andCurrent2; captureappend-onlyeffectsjournalBEFOREnoncurrentchoice1. Unexpectedbusinesslist/currentstate ->stopread-only/no blindrestoration.",
+    "ONEbusiness1choice. Waitactualdashboard1ID/name/currentbusinessswitcher; ONEordinaryreloadthenwaitactualsame1. Do notopenBookings/calendar/history/financial/settings/service/usercommands.",
+    "ONEordinarydirect/select-business entryfromDashboard1. RequireCurrent1/bothknownchoices; recordconfirmedeffectbeforeoriginalrestore. ONEbusiness2choice ->actualdashboard2ID/name/selector2; ONEreloadmustsame2. Appendfinaljournalpendingfalseonlyaftersemanticoriginalcontextreadback.",
+    "Ordinaryownerlogout/knownkezekkgGoogleSArestore; protectedadmin/RU/Anonymized/Business3/4branch1staff4service30bookings/TodayCancelled1;markHandoff."
+  ],
+  "timeboxMinutes": 12,
+  "stopRules": [
+    "Pendingnavigation->onefreshAXbeforeanyretry, no duplicatePOST/choice/relogin.",
+    "Failureafterpreferencechange->onlynormalUIrecoverfreshknownoriginal2; no rawAPI/SQL/storage/SDK. Do notabandontemporaryownpreference.",
+    "No missingbusiness/unauthorizedroles/newfixtures orbookingscreatedtoforcecase."
+  ],
+  "effects": "Two noncurrentownworkspacechoices1and2/ownpreferencepersisted+restored; setupContinue2mayupsertsamepreference. Ordinaryknownauth/telemetryunenumerated. No businessentity/role/slot/booking/payment/profile/contact/notification/message/credential/source/test/build/server command.",
+  "dependencyHashes": {
+    "apps/web/src/app/select-business/page.tsx": "05ecf5066b72c8964e1eb19fe0e8df11d8bd8de215f08bdcb13ee48dece4da7d",
+    "apps/web/src/app/dashboard/components/BusinessSwitcher.tsx": "45ca644edd007bbe25415af64525a08427cf0152064e763a0e22a186d6db4d88",
+    "apps/web/src/app/api/me/current-business/route.ts": "53394b94cd0b203344c40058558ba25103fcb4c276e7954572b8ad2bd1dd559a",
+    "apps/web/src/lib/currentBusinessHttpService.ts": "2b5d4c3924047e6247f147c221a65ceca5b5950520bc1e14e9ae0b7040eaad95",
+    "apps/web/src/lib/currentBusinessService.ts": "b6d7e264c2b58f61dd79fe03170d336565dfbe3f5bdfffdf43238fa13fe65691",
+    "apps/web/src/app/dashboard/layout.tsx": "0c02a3f458300606108f583579feaf75e8dad62120f5be1be20db91499cc7255",
+    "apps/web/src/lib/authBiz.ts": "afad8448b98283909fb53a569448f5b43e016310afee019e9e78c8356799e616"
+  },
+  "acceptanceBoundary": "Afterall4finitevariantsPASS, F2-02multiple-owned-choiceandF2-04ordinaryreloadpersistence canbeacceptedfororiginalF2directchooserflow. NOTwholeF2/zero-onebusiness/API/RLS/revocation/concurrency/role/locale/visualclaims. AtmostONEcompoundNEWfunctionalUIcase, not4credits."
+}

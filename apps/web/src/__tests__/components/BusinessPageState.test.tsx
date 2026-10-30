@@ -58,4 +58,25 @@ describe('BusinessPageState', () => {
 
         await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
     });
+
+    it('refreshes the failed server payload as well as resetting the error boundary', async () => {
+        const reset = jest.fn();
+        render(<LanguageProvider><BusinessPageState kind="unavailable" onRetry={reset} /></LanguageProvider>);
+        fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+        expect(refresh).toHaveBeenCalledTimes(1);
+        expect(reset).toHaveBeenCalledTimes(1);
+    });
+
+    it('defers boundary reset while offline, then refreshes and resets on reconnection', async () => {
+        setOnline(false);
+        const reset = jest.fn();
+        render(<LanguageProvider><BusinessPageState kind="unavailable" onRetry={reset} /></LanguageProvider>);
+        fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+        expect(reset).not.toHaveBeenCalled();
+        expect(refresh).not.toHaveBeenCalled();
+        setOnline(true);
+        act(() => window.dispatchEvent(new Event('online')));
+        await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+        expect(reset).toHaveBeenCalledTimes(1);
+    });
 });

@@ -1,0 +1,8 @@
+{
+  "id": "25Oct-recovery",
+  "completedBeforeUtc": "2026-10-25T08:59:12Z",
+  "server": {"sessionId": 98607, "pid": 23304, "parentPid": 10168, "listen": "127.0.0.1:3000", "normalLaunchAfterVerifiedStopped": true, "packageScriptEquivalent": "node node_modules/next/dist/bin/next dev --turbopack --hostname 127.0.0.1", "startupWarning": "stale baseline-browser-mapping; no install/update attempted"},
+  "browser": {"id": "2", "tabId": "2", "provider": "browser-use:9330166e-02eb-4317-b88d-df1476284c6a", "handle": "resume25HumanTab", "initialDenied": "Acquisition of prior network-error document rejected by URL protocol policy. No agentreload/goto/newtab/alternatebrowser/HTTP/native workaround.", "humanNewCondition": "User directly replied открыл after manually restoring local page. Freshinventory then showed healthyKezek title/httpadmin. Binding new healthy document succeeded; not a retry against unchanged error document.", "actual": "After08:56:24 before08:59:12 freshAX localhost/admin protectedPaneladministrator/Anonymized/RU/Adminpanelcollapsed/Business3/4branches1staff4services30bookings. No authtransition or scenarioinput."},
+  "credit": "0newPASS/0fix/0accepted; recovery and currentrole control only. Source88d5/1685 unchanged. Prior21UI/2fix window archived, no continuityclaim.",
+  "effects": "One normalmainserverstart and readonly browser afterhumanrecovery; normal auth/telemetry effects unenumerated/notzeroTOTALwrites. No appdata/roles/fixtures/payment/security/source/configchanges."
+}

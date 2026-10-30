@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { isAuthSessionMissingError, type SupabaseClient } from '@supabase/supabase-js';
 
 import { BizAccessError } from './authDiagnostics';
 import {
@@ -58,7 +58,8 @@ export async function resolveBizContextForManagers() {
         });
         const authStatus = typeof eUser.status === 'number' ? eUser.status : 0;
         const authCode = typeof eUser.code === 'string' ? eUser.code : '';
-        const isRejectedSession = authStatus === 401 || authStatus === 403 || authCode === 'session_not_found';
+        const isRejectedSession = isAuthSessionMissingError(eUser)
+            || authStatus === 401 || authStatus === 403 || authCode === 'session_not_found';
         if (!isRejectedSession) {
             throw new BizAccessError('SERVICE_UNAVAILABLE', 'AUTH_SERVICE_UNAVAILABLE');
         }

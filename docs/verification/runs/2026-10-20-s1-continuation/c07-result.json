@@ -1,0 +1,26 @@
+{
+  "id":"C07",
+  "findingId":"S1-F004",
+  "caseId":"A3-04-S1-02",
+  "candidateId":"dev-20261020-S1-bbc338182f70",
+  "observedUtc":"2026-10-20T09:31:32Z",
+  "timestampBoundary":"Verified post-observation checkpoint, not invented exact screenshot/retry timestamp",
+  "status":"SAME_LIVE_PASS_AND_LOCAL_BUILD_ASSET_REVALIDATION",
+  "build":{"files":1662,"fingerprint":"bbc338182f704efa718188627ec0768f8a6711de35c67f33a6688e244eb465dd","startedUtc":"2026-10-20T09:28:10.989Z","finishedUtc":"2026-10-20T09:29:24.676Z","compilerSeconds":35.3,"prerenders":"36/36","exitCode":0,"timedOut":false,"cold":true,"limits":"DefaultNext16Turbopack/type gate enabled, exact isolated copy, dummy backend/Sentry disabled, user-approved publicFontsGET only; no .env or real credentials; no webpack/fontmock/skip gates"},
+  "environment":"Fresh local s1chunkfix-20261020-bbc338.localhost:3104/privacy then/auth/sign-in, actual guest; no login submission; real rendered production-mode output, not mocked component",
+  "assetChecks":{"css":"2stylesheets,17/112CSSOMrules","fonts":"3font/woff2 exports; document.fonts loaded; not selected-typography proof","images":"Logo complete320x86;1externalimage+15inlineSVG","scripts":"13observedscriptresources and actual post-recovery language interaction","bundle":"21/21exports,0failures; retained22files incl manifest","manifest":"c07-assets/manifest.json","limits":"Fresh URL namespace delivery, not browser cache-control proof for eight A1 cold cases or every route/image"},
+  "sameLive":[
+    "Fresh privacy actual content/guest and auth-specific chunk not loaded",
+    "Actual current auth manifest minus privacy manifest selects fec3fd9ad47d8cb1.js; prior a3ed filename absent from new build, read-only hash attempt rejected before any fault; selected correct new manifest target only",
+    "09:30:19.332UTC recoverable exact isolated generated chunk rename with90s guard; no source/config/DB edits",
+    "Actual observed Войти link click -> same error view and browser Failed to load chunk at09:30:35.269UTC; no automatic reload loop",
+    "09:30:42UTC exact bytes restored; SHAaa2db7f139d09fb7f6ac2e5bc824a53f748c29bde17b1bf3cb5c458531957339 verified; backup absent",
+    "Click visible Попробовать снова ONCE -> actual Kezek sign-in and provider controls, without manual browser reload; original C06 failure now recovers",
+    "English click changes page/provider text; Русский restores original RU; no auth provider submission, two isolated local language preference changes only",
+    "Fresh screenshot with CSS1280x720/DPR1.5 retained, qualitative current result not device matrix",
+    "Task-owned temporary test tab closed; main user's localhost tab untouched; exact own server30140 stopped09:31:33.123UTC; generated chunk restored and verified"
+  ],
+  "image":"c07-retry-recovered.jpg",
+  "unitControls":"C06 after2s17PASS; scoped coverage100statements/75branches/100functions/100lines threshold60; ErrorBoundary branch68.75 and pure classifier100; types0/scopedlint0. Not wholebaseline, not summed with earlier overlapping runs.",
+  "scopeLimits":["Only controlled unavailable-JS recovery case closes; A3-04 still waits actual old-document after deployment", "Original cold build C04 timeout and C06 live retry failure remain retained historical failures", "Dummy Telegram Bot domain invalid and FrontendMetrics API errors retained, not integration/security regressions diagnosed here", "No real user/role/booking/hold/create/cancel/pay/DB commands. Ordinary telemetry unenumerated, not zero total writes.", "User confirmed Ctrl0 on mainlocalhost; actual mainviewport/image recheck remains next, not inferred from isolated tab"]
+}

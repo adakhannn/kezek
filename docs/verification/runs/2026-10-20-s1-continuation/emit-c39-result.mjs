@@ -1,0 +1,38 @@
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {updateJson} from './json-evidence-patch.mjs';
+const run='docs/verification/runs/2026-10-20-s1-continuation',read=p=>fs.readFileSync(p),j=p=>JSON.parse(read(p)),sha=b=>createHash('sha256').update(b).digest('hex'),utc=process.argv[2];
+if(!utc)throw Error('ActualUTC required');
+const l=j('docs/WEB_VERIFICATION_LEDGER.json'),p=j(run+'/progress.json'),r=j(run+'/c39-result.json'),s=j('docs/WEB_GLOBAL_READINESS_STATE.json'),d=j(run+'/nonfinal-draft.json'),original=j(run+'/c39-original-boundaries.json'),from=structuredClone(l.candidate),changed=Object.keys(original)[0];
+if(from.id!==r.fromCandidate||l.evidence.some(e=>e.id==='S1-EV-266'))throw Error('Wrong candidate/already applied');
+const oldPaths=j(from.sourceBoundary.pathsFile),paths=[...oldPaths,'apps/web/src/__tests__/components/ExistingSessionRedirectSignals.test.tsx'];
+if(sha(JSON.stringify(oldPaths.map(f=>[f,sha(original[f]??read(f))])))!==from.sourceFingerprint)throw Error('Unexpected source delta');
+const fp=sha(JSON.stringify(paths.map(f=>[f,sha(read(f))])));if(fp!==r.sourceFingerprint)throw Error('Final candidate mismatch');
+const reviewId='S1-EV-274',stale=new Set(r.affectedOldCases),preserved=[],reconciled=[];
+for(const c of l.cases.filter(c=>c.status==='passed')){
+  const deltas=Object.entries(c.dependencyHashes??{}).filter(([f,h])=>sha(read(f))!==h);
+  if(deltas.some(([f])=>f!==changed))throw Error('Unexpected changed dependency '+c.id);
+  if(stale.has(c.id)){c.status='stale';c.staleSinceCandidate=r.candidate;c.staleReason='C39 changed authenticated sign-in signal path; targeted owner regression required';continue;}
+  if(deltas.length){
+    const ownerSignin=c.variants.some(v=>v.includes('owner')&&v.includes('/auth/sign-in'));
+    if(ownerSignin)throw Error('Missed affected owner signin '+c.id);
+    if(c.dependencyHashes[changed]!==sha(original[changed]))throw Error('Unexpected original dependency hash');
+    c.dependencyHashes[changed]=sha(read(changed));reconciled.push(c.id);
+  }
+  c.candidateId=r.candidate;if(Object.hasOwn(c,'currentCandidateReviewEvidenceId'))c.currentCandidateReviewEvidenceId=reviewId;preserved.push(c.id);
+}
+for(const id of stale){if(!l.cases.some(c=>c.id===id&&c.status==='stale'))throw Error('Missing stale target');}
+const review={utc,fromCandidateId:from.id,candidateId:r.candidate,sourceFingerprint:fp,fileCount:paths.length,oldFingerprintReconstructed:true,changedExistingFiles:[changed],newPaths:[paths.at(-1)],originalBoundaryEvidence:run+'/c39-original-boundaries.json',preservedCaseIds:preserved,dependencyApplicabilityReviewedCaseIds:reconciled,changedDependencyHash:{path:changed,oldHash:sha(original[changed]),newHash:sha(read(changed)),scope:'Applies exactly to dependencyApplicabilityReviewedCaseIds; originalUTC unchanged, not fresh executions'},staleCaseIds:[...stale],basis:r.oldCasePolicy,prototypeApplicability:r.prototypeApplicability,build:'Current candidate unbuilt/assetsstale; prior C15FontsFAIL retained, fontpermission expired/no retry.'};
+const pathsFile=run+'/c39-source-paths.json',reviewFile=run+'/c39-candidate-review.json',encoded=v=>JSON.stringify(v,null,2)+'\n';
+l.candidateHistory.push({...from,currentCertification:false,supersededUtc:utc});l.candidate={...from,id:r.candidate,sourceFingerprint:fp,fileCount:paths.length,observedUtc:utc,previousCandidate:{id:from.id,sourceFingerprint:from.sourceFingerprint},sourceBoundary:{pathsFile,sha256:sha(encoded(paths)),fileCount:paths.length},buildStatus:'UNEXECUTED_C39; priorC15FontsFAILunresolved/permissionexpired/no assetsPASS',certificationReviewEvidenceId:reviewId};
+const depPaths=['apps/web/src/app/auth/sign-in/SignInPage.tsx','apps/web/src/app/auth/sign-in/page.tsx',changed,'apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts','apps/web/src/lib/authReturnUrl.ts','apps/web/src/lib/signInRedirectLogic.ts','apps/web/src/lib/supabaseClient.ts'];
+for(const row of r.cases){const c=l.cases.find(c=>c.id==='S21-P402-SESSION-'+row.key);if(!c||!['failed','not_run'].includes(c.status))throw Error('Wrong return target');if(c.status==='failed')c.priorObservations=[...(c.priorObservations??[]),{candidateId:c.candidateId,status:c.status,observedUtc:c.observedUtc,actual:c.actual,evidenceIds:c.evidenceIds,dependencyHashes:c.dependencyHashes}];Object.assign(c,{status:'passed',candidateId:r.candidate,observedUtc:row.beforeUtc,observationWindowUtc:[row.afterUtc,row.beforeUtc],observedCandidate:row.candidateAtObservation,actual:row.actual,method:'live',steps:['Fresh sameknownSA existing session','Ordinary planned sign-in return URL, no providerclick','Observe safe final URL and expected heading; original failure SAME-LIVE final candidate'],sideEffects:r.effects,dependencyHashes:Object.fromEntries(depPaths.map(f=>[f,sha(read(f))])),evidenceIds:[...c.evidenceIds,'S1-EV-266','S1-EV-273',reviewId],currentCandidateReviewEvidenceId:reviewId});if(row.candidateAtObservation!==r.candidate)c.prototypeApplicabilityReviewEvidenceId=reviewId;}
+for(const id of ['P4-02','C1-03','C1-04']){const q=l.requirements.find(q=>q.id===id);q.status='partial';q.casePlanComplete=false;}
+const finding=l.currentFindings.find(f=>f.id==='S1-F012');if(finding.status!=='open')throw Error('Wrong finding');Object.assign(finding,{status:'verified',fixApplied:true,verifiedCandidateId:r.candidate,verifiedUtc:utc,verificationActual:r.sameLive,fixEvidenceIds:['S1-EV-266','S1-EV-267','S1-EV-269','S1-EV-270','S1-EV-271','S1-EV-272','S1-EV-273',reviewId],retestCaseIds:r.cases.map(x=>'S21-P402-SESSION-'+x.key),cause:r.causality,sideEffects:r.effects});
+const evidence=[[266,'c39-plan.json'],[267,'c39-unit-before.txt'],[268,'c39-unit-prototype.txt'],[269,'c39-unit-after.txt'],[270,'c39-types-after.txt'],[271,'c39-lint-after.txt'],[272,'c39-original-boundaries.json'],[273,'c39-result.json'],[275,'c39-lint-initial.txt'],[276,'c39-source-prototype.json']];l.evidence.push(...evidence.map(([n,f])=>({id:'S1-EV-'+n,path:run+'/'+f,sha256:sha(read(run+'/'+f))})),{id:reviewId,path:reviewFile,sha256:sha(encoded(review))});
+l.updatedUtc=utc;l.nextBatch.objective=r.next;
+Object.assign(p,{candidate:r.candidate,newLiveFixes:9,newDistinctFixIds:[...p.newDistinctFixIds,'S1-F012'],newWindowLiveFixes:1,activeSubpackage:'C39F012sameLive8returnPASS3ownerstale',casePlan:'c39-plan.json',lastCheckpoint:r.next,checkpointAfterClockUtc:utc,pendingLiveFinding:null});p.S2.returnPathSubset={requirementIds:['P4-02','C1-03','C1-04'],...r.matrixAfter};p.browser.page='/admin';p.browser.actualRole='C39sameSA adminrestoredwithoutreauth, Anonymized/Adminoverview, originaluser2root/5admin';p.latestTypecheckAfterFinalTestAddition='C39 exit0; pnpm -C apps/web typecheck';
+Object.assign(s.progressAccounting,{currentCandidate:r.candidate,latestCheckpointUtc:utc,latestCheckpointEvidence:run+'/c39-result.json'});
+d.draftRefreshedUtc=utc;d.currentCandidate=r.candidate;d.newLiveFixes=9;d.newWindowLiveFixes=1;d.latestCompleted='C39 F012 SAME-LIVE verified and8/8returnsubsetPASS,21UNITPASS/types0/explicitlint0. Three affected owner-signin cases STALE pending regression, no silent preservation.';d.completed.push(d.latestCompleted);d.currentActualBrowser={tab:'5',role:'knownSAkezekkg',path:'/admin',state:'restoredwithoutreauthafterC39',secondaryTab:'2root samecookie'};
+const add=(f,v)=>'*** Add File: '+f+'\n'+encoded(v).trimEnd().split('\n').map(x=>'+'+x).join('\n')+'\n';
+process.stdout.write('*** Begin Patch\n'+add(pathsFile,paths)+add(reviewFile,review)+updateJson('docs/WEB_VERIFICATION_LEDGER.json',l,3,true)+updateJson(run+'/progress.json',p,3,true)+updateJson('docs/WEB_GLOBAL_READINESS_STATE.json',s,3,true)+updateJson(run+'/nonfinal-draft.json',d,3,true)+'*** End Patch\n');

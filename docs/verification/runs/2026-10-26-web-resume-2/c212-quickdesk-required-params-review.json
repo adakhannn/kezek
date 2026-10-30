@@ -1,0 +1,32 @@
+{
+  "id": "C212",
+  "status": "BOUNDED_READONLY_REVIEW_COMPLETE_RUNTIME_ISOLATED_VALIDATION_BLOCKED",
+  "afterClockUtc": "2026-10-26T10:34:25Z",
+  "completedBeforeClockUtc": "2026-10-26T10:36:24Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "requirementId": "H2-03",
+  "files": {
+    "apps/web/test-results/night-2026-10-09/operations-stage.json": "e088477d0ca181d9672947ae8651c5c53ab5e4022109ebd834fb33b8b7752ea6",
+    "apps/web/src/app/dashboard/bookings/components/QuickDesk.tsx": "b109aa0478b691af806c048a1961eea65329d84262a8458ba2168fca4e52c94b",
+    "apps/web/src/app/dashboard/bookings/components/QuickDeskBookingFields.tsx": "912cc4a454d3f151525cfbbaae9b909dd28b674a8b7814fa91756151db066898",
+    "apps/web/src/app/dashboard/bookings/components/useQuickBooking.ts": "454be164f7e99c9ddc421cf87245409c4b5449c709a02fd9b97540332aca6d0e",
+    "apps/web/src/app/dashboard/bookings/components/useQuickDeskSlots.ts": "cb30056fefe1ade050a0ac5401540ea7e7e8889e87d6db6ada4ab6ded03f783b",
+    "apps/web/src/app/dashboard/bookings/components/useQuickDeskFormResets.ts": "dc1983f6f171bb4167bba78b28524442ece397fcaac1e71969639fdedf722316"
+  },
+  "historical": "09Octoperationsbug014 actualmissingcontrols/permanentlydisabledCreate before ->restoredbranch/date/staff/service/slot+actualcreated/cancelled2knownrows after. bug016 actualstaleclientselection before/afterproof usesotherwisevalidselectedslot. OriginalupdatedAt2026-10-09T04:18:00+06:00 stageMETADATA preserved, notexacteachclickUTC. Neitherisolated missingstaff/service/date finitepair+independentpositive; no currentexecution-sourcebridge asserted.",
+  "currentSourceBoundary": "QuickDesk canCreate conjunctionbranch/service/staff/currentstaffmembership/client/returnedselectedslot&&!loading. Hooksource isnotLIVE. Staff/date resets clear service+slot; services list requiresstaff/date/context. useQuickDeskSlots on fullyselectedparamsautoassignsfirstreturnedslot (no manualTimeclickneeded). useQuickBooking.create calls createInternalBooking then notification on success; neverinvoke.",
+  "blocker": "A disabledCreate with severalmissingchoices cannot independentlyproveeachmissing-parameterguard. Matchedeligiblepositive requiresfullyselectedparamsandthereforeautomaticactualslotselection; currenttaskforbids slot/hold/booking/Confirmcommands. No safeisolatedLIVEpositive establishedwithoutcrossingboundary; no forceclick/events/sourcefault/SDK/HTTP/SQL/storage/unitimitation. No productbug inferred.",
+  "effects": "Readlocalexistinghistory/sourceonly. No browser/auth/UI/form/slot/booking/hold/confirm/cancel/payment/source/test/build/server/API/SQL command. Oldrows/cleanupimmutable; no newcredit.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "reuse": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowUi": 11,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  },
+  "next": "C213narrowREADONLY E2-01 unsavednotificationcheckboxdraft/reset history/currentonChange-and-Reset effectreview BEFOREfiniteUIplan. DifferentfromC61name-draftandC77persistSaveblocker; provewhethercheckboxonChange/localResetonly oractualpersist/send. No Save/notify_smsunmask/email/SMS/OTP/provider/link/unlink/permission/profilepersist action. Ifalreadycoveredorunsafe exactblocker; no unchangedprofileSave/fielddraft/authloop."
+}

@@ -11,21 +11,9 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+    let bizId: string;
     try {
-        const { bizId } = await getBizContextForManagers();
-
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
-                <div className="flex items-start">
-                    <MobileSidebar bizId={bizId} />
-                    <section className="min-h-screen min-w-0 flex-1 pb-24 pt-4 md:pb-0 lg:pt-0">
-                        <ErrorBoundary>
-                            {children}
-                        </ErrorBoundary>
-                    </section>
-                </div>
-            </div>
-        );
+        ({ bizId } = await getBizContextForManagers());
     } catch (e: unknown) {
         if (e instanceof BizAccessError) {
             if (e.code === 'NOT_AUTHENTICATED') {
@@ -64,4 +52,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
             />
         );
     }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
+            <div className="flex items-start">
+                <MobileSidebar bizId={bizId} />
+                <section className="min-h-screen min-w-0 flex-1 pb-24 pt-4 md:pb-0 lg:pt-0">
+                    {/* A business change must discard the previous business's data and drafts. */}
+                    <ErrorBoundary key={bizId}>
+                        {children}
+                    </ErrorBoundary>
+                </section>
+            </div>
+        </div>
+    );
 }

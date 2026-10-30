@@ -1,0 +1,30 @@
+{
+  "id": "C97",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "caseId": "S23-M201-manual-create-local-guards-cancel",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "timeboxMinutes": 7,
+  "markerName": "C97 UNSAVED ONLY 23OCT",
+  "validReason": "C97 review",
+  "shortReason": "123456789",
+  "expected": "One compound local no-create case: fresh manual-create form blank/defaultlimit1/uncheckedcategories/acknowledgment, submit disabled. With name marker, Barbershop selected and acknowledgment checked but reason9chars, still disabled; exact10charreason enables. Independently set name1char, categorynone or acknowledgmentfalse with other prerequisites satisfied: each disables; restore each before next variant. NEVER click Submit/press Enter. Leave acknowledgmentfalse, Cancel; re-enter form shows original blanks/defaults and disabled Submit. Admin root still Business3/originalthreebusinesses. Not server/create/duplicate/audit/role/localization/visual proof.",
+  "steps": [
+    "Clock normal visible Создать бизнес link from same known SA/adminTab2. Verify no unexpected existing draft or category-load error. Inspect ordinary UI fields/categorylabel/acknowledgment/disabledSubmit before any local edits.",
+    "Fill markerName only, phone untouched/empty, branchlimit1 untouched. Select only Barbershop. Fill shortReason9 then check local acknowledgment; verify Submit disabled. Replace reason exact validReason10; verify enabled WITHOUT clicking. No Enter/implicit-submit keys or DOM event/API calls.",
+    "Fill Name=A; verify disabled. Restore markerName; verify enabled. Uncheck Barbershop; verify disabled; recheck enables. Uncheck acknowledgment; verify disabled; recheck enables. Then uncheck acknowledgment to leave form non-submittable. These local transitions constitute ONE complete compound case, not extraPASSperclick/field.",
+    "Clock Cancel; visible list original3businesses. Re-enter via observedcreate link; check original blankname/slug/phone/reason, branchlimit1, no categories/acknowledgment, Submitdisabled. Cancel again; returnAdminroot/Business3/exact known SA/RU and markHandoff."
+  ],
+  "effects": "Only ephemeral ordinary form draft edits/category/acknowledgment checkbox/Cancel navigation; NEVER click creation/override/Submit or press Enter. No app business mutation command/new fixture/roles/publication/owner/contact/security/payment/message writes. Normal auth/read telemetry unenumerated/not zeroTOTALwrites. Checking acknowledgment is local test state only, never submitted as a real creation attestation.",
+  "stop": "Unexpected draft/baseline/auth/error/uncertain input, source dependency mismatch or any accidental submit/navigation ->stop no retry/no new tab/fixtures/cleanup, inspect only safe outcome and report blocker. If control behavior differs recordactualFAIL, no forced event or speculative source fix. No extra boundary/role/language checks outsideplan.",
+  "accounting": "At best1newcompoundfunctionalUIPASS15->16,0fix/0accepted delta. This finite declared subset complete only when all transitions+Cancel verified; M2-01 entire atomic matrix remains incomplete/partial. Successcreation/server/audit/security/transport/otherfieldlimits blocked or unrun, not silently removed.",
+  "savedBeforeUiUtc": "2026-10-23T05:13:21Z",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/new/ManualBusinessCreateForm.tsx": "570cd62c8e2ecf611a4b84dd50fed6488c6b951253d899d279b4d34a5672a11a",
+    "apps/web/src/app/admin/businesses/new/page.tsx": "37ed95c633023ba66c110c37113c753fa56c74f87c125f759f1b9f03e327f071",
+    "apps/web/src/app/admin/api/businesses/create/route.ts": "89ae4eab5a681bcd15f01df590be6921397e193170806c6bd783c8d8e73cb036",
+    "apps/web/src/lib/manualBusinessCreationService.ts": "ac857b53240fefd374695a964094846e932943f8a1ec580061cf62876d8a3ce7",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+  }
+}

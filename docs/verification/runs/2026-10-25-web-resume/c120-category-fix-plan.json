@@ -1,0 +1,13 @@
+{
+  "id": "C120",
+  "finding": "S1-F016",
+  "fromCandidate": "dev-20261023-WEB-88d5303de67a",
+  "scope": "Only initialize CategoryForm slugDirty from editmode+existinginitialslug instead of unconditionalfalse. Preserve createauto-generation, clear-to-auto, manualblur normalization, availability, submitpayload/API/propagateSlug/authorization/schema/domainUI. Add focused regressions to existing CategoryForm.test.tsx; no redesign/route/security/backend mutation.",
+  "implementation": [
+    "Save exact original component+test and reconstruct oldfingerprint before sourceedit. New regressions runagainstoriginalruntime first; retainbeforeFAIL JSON. UNIT notLIVE.",
+    "Minimalone-line stateinitialization, focusedtests/types/scopedlint. Keep all fullgatefailures/coverage/visual/cacheblocks; no unchangedfullJest/build/restart/networkapprovals. Newcandidate explicitdependencyreview and A3-01STALE until genuinelyfreshbuild/execution; originalUTC notretimed.",
+    "SAME-LIVE exactsamecategory/editor beforetyping must retainoriginalsavedslug and disabledSave. Then originalC119draftsequence runs once: NameC119ӨнөрҮңкүр preservescustomslug; clearAddress+Tab ->c119-onor-ungkur; manualaddress+Tab ->c119-manual-url; latername keepsmanual; Cancel/reentry originalfields/nochangesdisabled; Cancel/rootadmin/handoff. NoSave/Enter/activation/publicnavigation."
+  ],
+  "accounting": "Atbest originalcase failed->passed oneNEWUI3->4 and oneverifiedfix0->1/logical11->12 onlyafter SAME-LIVE. BeforeFAIL retained. WholeM5-01/02 partial; newbuildgate may reduceaccepted21->20 until freshbuild/execution. No wholeGREEN or successfulpropagation/DBcorruption claim.",
+  "savedBeforeSourceEditUtc": "2026-10-25T10:00:39Z"
+}

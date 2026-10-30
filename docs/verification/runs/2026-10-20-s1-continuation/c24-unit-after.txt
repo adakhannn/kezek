@@ -1,0 +1,18 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+PASS src/__tests__/components/HealthCheckCallerRead.test.tsx
+PASS src/__tests__/lib/adminHealthCheckHttpService.test.ts
+PASS src/__tests__/lib/adminHealthCheckService.test.ts
+PASS src/__tests__/lib/adminAccess.test.ts
+--------------------------------|---------|----------|---------|---------|-------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------------------------|---------|----------|---------|---------|-------------------
+All files                       |     100 |      100 |     100 |     100 |                   
+ adminHealthCheckHttpService.ts |     100 |      100 |     100 |     100 |                   
+ adminHealthCheckReadService.ts |     100 |      100 |     100 |     100 |                   
+--------------------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 4 passed, 4 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        3.761 s, estimated 17 s
+Ran all test suites within paths "src/__tests__/components/HealthCheckCallerRead.test.tsx", "src/__tests__/lib/adminHealthCheckHttpService.test.ts", "src/__tests__/lib/adminHealthCheckService.test.ts", "src/__tests__/lib/adminAccess.test.ts".

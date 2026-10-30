@@ -1,0 +1,147 @@
+{
+  "id": "C190",
+  "status": "READONLY_COMPLETE_NEW_HISTORICAL_PROOF_CURRENT_BRIDGE_STILL_MISSING",
+  "observationWindowUtc": [
+    "2026-10-26T07:18:35Z",
+    "2026-10-26T07:21:35Z"
+  ],
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D3-05"
+  ],
+  "primary": {
+    "path": "apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json",
+    "sha256": "2dbb1a5cb71f9fad554c706d8d9b95f47c1af9df3bba44cd6e75a77b30e7ef4f",
+    "originalStartedUtc": "2026-10-13T10:42:50Z",
+    "account": "ordinary pureclient low.fade, business2 branchfe1d staff1bfd service5157",
+    "method": "Two ordinary tabs of the same pure client, sequential stale-slot confirmation; not simultaneous multiuser or rapid pending same-form double-submit.",
+    "before": {
+      "firstWriteUtc": "2026-10-13T10:43:18Z",
+      "firstBooking": "06458033-beaa-4c11-b424-ebda39651ae7",
+      "secondWriteUtc": "2026-10-13T10:43:51Z",
+      "oracle": "Fresh own cabinet count4 and retained booking visible once, stale confirmation closed and slots refreshed. Exact first error toast not captured; not claimed."
+    },
+    "sameLiveAfter": {
+      "firstWriteUtc": "2026-10-13T10:48:04Z",
+      "secondWriteUtc": "2026-10-13T10:48:23Z",
+      "firstBooking": "f821dd52-5480-4178-96a9-620424b5a108",
+      "oracle": "Visible localized slot occupied toast, modal closes, own count4->5 without reload, occupied times disappear; fresh cabinet5 contains each ID once."
+    },
+    "retainedEffects": [
+      {
+        "id": "06458033-beaa-4c11-b424-ebda39651ae7",
+        "status": "confirmed",
+        "day": "2026-10-19",
+        "timeBishkek": "12:15–13:15",
+        "timeUtc": "06:15–07:15",
+        "effect": "blocks60min"
+      },
+      {
+        "id": "f821dd52-5480-4178-96a9-620424b5a108",
+        "status": "confirmed",
+        "day": "2026-10-19",
+        "timeBishkek": "13:15–14:15",
+        "timeUtc": "07:15–08:15",
+        "effect": "blocks60min; one extra controlfixture necessary for same-live afterfix"
+      }
+    ],
+    "cleanupMeaning": "Retained intentionally in original stage. No cancellation or present-day health/status claim. f821dd52 remains NEVER cancel without exact new human confirmation."
+  },
+  "distinctions": [
+    "WB-168 was stale own-booking count after conflict, not a duplicate-created defect. Original before/after and exact UTC remain historical.",
+    "Cabinet identity/membership is an independent visible oracle of no visible duplicate, not an addressable DB result, concurrency/constraint/security or delivery proof.",
+    "Supporting stale-count-after.json/coverage-stage-039-042.json are Jest metrics, not browser source-boundary evidence.",
+    "D3-02 rapid same-form submit remains separately blocked."
+  ],
+  "dependencyComparison": [
+    {
+      "path": "apps/web/src/lib/bookingSlotConflict.ts",
+      "currentSha256": "35aaae6a6d7f38492ccbd95e31900fa844e5986803a956f4f9560d1e7af5982d",
+      "archived15OctSha256": "35aaae6a6d7f38492ccbd95e31900fa844e5986803a956f4f9560d1e7af5982d",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    },
+    {
+      "path": "apps/web/src/lib/bookingCommandsSupabase.ts",
+      "currentSha256": "865e2756dc7a9063980e4573291889180a5545883fdef7a69c4dc444ecb19f3c",
+      "archived15OctSha256": "865e2756dc7a9063980e4573291889180a5545883fdef7a69c4dc444ecb19f3c",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    },
+    {
+      "path": "apps/web/src/lib/quickHoldHttpService.ts",
+      "currentSha256": "3d292c0893a1c1d56e9d98f68e16b6f638c8b20ee5374b04c20a56e6b097436d",
+      "archived15OctSha256": "3d292c0893a1c1d56e9d98f68e16b6f638c8b20ee5374b04c20a56e6b097436d",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    },
+    {
+      "path": "apps/web/src/lib/quickHoldService.ts",
+      "currentSha256": "a1a995340d46790489d778b0867d032fab7bff2b7824ca723cce215814d84152",
+      "archived15OctSha256": "a1a995340d46790489d778b0867d032fab7bff2b7824ca723cce215814d84152",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    },
+    {
+      "path": "apps/web/src/lib/quickHoldClient.ts",
+      "currentSha256": "14471571cae6bf13a67631f5f8e77e7d98bca4c2a2a83d6cc998b86d7670982c",
+      "archived15OctSha256": "14471571cae6bf13a67631f5f8e77e7d98bca4c2a2a83d6cc998b86d7670982c",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts",
+      "currentSha256": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72",
+      "archived15OctSha256": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/view.tsx",
+      "currentSha256": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+      "archived15OctSha256": "210695684170b3f39c77c5762d7a06aeaf952e95292f2a745daf28c7bd7b2617",
+      "identical": false,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    },
+    {
+      "path": "apps/web/src/app/b/[slug]/utils.ts",
+      "currentSha256": "49eadc4f84c8dcf9a55b303dd269605eed828f9499db20a454627c8c1e5cc33b",
+      "archived15OctSha256": "49eadc4f84c8dcf9a55b303dd269605eed828f9499db20a454627c8c1e5cc33b",
+      "identical": true,
+      "temporalLimit": "15Oct snapshot postdates13Oct execution and cannot prove bytes executed13Oct; current view also differs."
+    }
+  ],
+  "dependencyHashes": {
+    "apps/web/src/lib/bookingSlotConflict.ts": "35aaae6a6d7f38492ccbd95e31900fa844e5986803a956f4f9560d1e7af5982d",
+    "apps/web/src/lib/bookingCommandsSupabase.ts": "865e2756dc7a9063980e4573291889180a5545883fdef7a69c4dc444ecb19f3c",
+    "apps/web/src/lib/quickHoldHttpService.ts": "3d292c0893a1c1d56e9d98f68e16b6f638c8b20ee5374b04c20a56e6b097436d",
+    "apps/web/src/lib/quickHoldService.ts": "a1a995340d46790489d778b0867d032fab7bff2b7824ca723cce215814d84152",
+    "apps/web/src/lib/quickHoldClient.ts": "14471571cae6bf13a67631f5f8e77e7d98bca4c2a2a83d6cc998b86d7670982c",
+    "apps/web/src/app/b/[slug]/hooks/useBookingCreation.ts": "0085f83b57771262545e3f2bad887c1b6d61d56611171507b21c4b8bf6d49e72",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/utils.ts": "49eadc4f84c8dcf9a55b303dd269605eed828f9499db20a454627c8c1e5cc33b",
+    "apps/web/src/app/api/quick-hold/route.ts": "018f8c789c7b5f9a7d528bf338ab398350192c4b55ac6cd14494b1f54759b0aa",
+    "apps/web/src/app/b/[slug]/components/BookingConfirmModal.tsx": "9380f9fb64939450cf029bf77b3e06bc676cb66dd6587e540716a9ab2b631a67",
+    "packages/core-domain/src/booking/useCases.ts": "1ae1f883706b986bc659baeba70d84c85488b4e5a660bb9f4ba20365b18ce082",
+    "apps/web/src/app/b/[slug]/hooks/useBookingAvailabilityRefresh.ts": "03292b4cb4c082db9205cfca310d2404305a3627958a404c9c15e6306b92fdac"
+  },
+  "bridgeSearch": {
+    "boundedFiles": [
+      "apps/web/test-results/live-2026-10-13/stage-042-stale-slot-conflict.json",
+      "apps/web/test-results/live-2026-10-13/stage-039-slot-copy.json",
+      "apps/web/test-results/live-2026-10-13/coverage-stage-039-042.json",
+      "apps/web/test-results/global-2026-10-15/g052-copy-manifest.json"
+    ],
+    "outcome": "No at-execution per-file hash/source body/build manifest found in focused13Oct stage set. Only later15Oct source snapshot and Jest instrumentation. Do not infer an execution bridge from helper names or later equal hashes."
+  },
+  "decision": "Add primary as historical refinement only; preserve C187 result. Current D3-05 case remains BLOCKED: no execution-dated complete source/receiver bridge and fresh booking command not authorized. No new UI/fix/accepted/reuse credit.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0,
+    "accepted": 23,
+    "remaining": 293
+  },
+  "effects": "Read-only source/evidence review and administrative records. No browser/auth/DB/SQL/API/SDK/booking/hold/confirm/cancel/payment/source/test/build/server operation."
+}

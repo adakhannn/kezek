@@ -153,7 +153,7 @@ export default function MonitoringClient() {
             if (metricsFilters.minDuration) params.set('minDuration', metricsFilters.minDuration);
             params.set('limit', '50');
 
-            const response = await fetch(`/api/admin/metrics?${params.toString()}`);
+            const response = await fetch(`/admin/api/metrics?${params.toString()}`);
             const data: MetricsResponse = await response.json();
 
             if (!data.ok) {
@@ -180,7 +180,7 @@ export default function MonitoringClient() {
             if (logsFilters.bizId) params.set('bizId', logsFilters.bizId);
             params.set('limit', '50');
 
-            const response = await fetch(`/api/admin/finance-logs?${params.toString()}`);
+            const response = await fetch(`/admin/api/finance-logs?${params.toString()}`);
             const data: FinanceLogsResponse = await response.json();
 
             if (!data.ok) {
@@ -205,8 +205,8 @@ export default function MonitoringClient() {
             params.set('windowMinutes', '60');
 
             const [response, authFlowResponse] = await Promise.all([
-                fetch(`/api/admin/metrics/stats?${params.toString()}`),
-                fetch('/api/admin/metrics/auth-flow?windowHours=24'),
+                fetch(`/admin/api/metrics/stats?${params.toString()}`),
+                fetch('/admin/api/metrics/auth-flow?windowHours=24'),
             ]);
             const data: StatsResponse = await response.json();
             const authFlowData: AuthFlowResponse = await authFlowResponse.json();
@@ -253,8 +253,8 @@ export default function MonitoringClient() {
     return (
         <div className="container mx-auto px-4 py-8">
             <PageHeader
-                title="Р СљР С•Р Р…Р С‘РЎ‚оринг Р С‘ РВ°РЅРВ°РВ»РёС‚РёРєРВ°"
-                description="РњРВµС‚РЎР‚Р С‘Р С”Р С‘ API, РѕРїРВµСЂРВ°СвЂ Р С‘Р С•Р Р…Р Р…РЎвЂ№РВµ РВ»оги Р С‘ РЎРѓР Р†Р С•Р Т‘РєРВ° РїРѕ Р С—РЎР‚Р С•Р С‘Р В·РІРѕРТ‘РёС‚РВµРВ»РЎРЉР Р…Р С•РЎРѓРЎ‚Р С‘ Р С”РЎР‚Р С‘РЎ‚РёС‡РВµРЎРѓР С”Р С‘РЎвЂ¦ СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚РѕРІ."
+                title="Мониторинг и аналитика"
+                description="Метрики API, операционные логи и сводка по производительности критических эндпоинтов."
                 className="mb-6"
             />
 
@@ -262,24 +262,24 @@ export default function MonitoringClient() {
                 value={activeTab}
                 onValueChange={(value) => setActiveTab(value as Tab)}
                 items={[
-                    { key: 'stats', label: 'РЎС‚РВ°тРёСЃС‚РёРєРВ°' },
-                    { key: 'metrics', label: 'РњРВµС‚РЎР‚Р С‘Р С”Р С‘ API' },
-                    { key: 'logs', label: 'РвЂєоги РѕРїРВµСЂРВ°СвЂ РёРв„–' },
+                    { key: 'stats', label: 'Статистика' },
+                    { key: 'metrics', label: 'Метрики API' },
+                    { key: 'logs', label: 'Логи операций' },
                 ]}
                 className="mb-6 w-full max-w-2xl"
                 stretch
             />
 
-            {error ? <AlertBanner variant="danger" title="РћСв‚¬РёРВ±РєРВ°" message={error} className="mb-6" /> : null}
+            {error ? <AlertBanner variant="danger" title="Ошибка" message={error} className="mb-6" /> : null}
 
             {activeTab === 'stats' ? (
                 <div className="space-y-6">
                     <SectionHeader
-                        title="Р РЋР Р†Р С•Р Т‘РєРВ° РїРѕ СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚РЎС“"
-                        description="РћРВ±Р Р…Р С•Р Р†Р В»СЏРВµРјРВ°РЎРЏ РєРВ°СЂС‚РёРЅРВ° РїРѕ РЎРѓР С”Р С•РЎР‚Р С•РЎРѓРЎ‚Р С‘, РЎС“РЎРѓР С—Р ВµСв‚¬Р Р…Р С•РЎРѓРЎ‚Р С‘ Р С‘ РЎР‚Р С‘РЎРѓР С”Р В°Р С РВ·РВ° Р С—Р С•РЎРѓР В»РВµРТ‘РЅРёРв„– С‡РВ°РЎРѓ."
+                        title="Сводка по эндпоинту"
+                        description="Обновляемая картина по скорости, успешности и рискам за последний час."
                         action={
                             <Button onClick={loadStats} disabled={loading} size="sm">
-                                {loading ? 'РвЂ”РВ°Р С–РЎР‚РЎС“Р В·РєРВ°...' : 'РћРВ±Р Р…Р С•Р Р†Р С‘РЎ‚РЎРЉ'}
+                                {loading ? 'Загрузка...' : 'Обновить'}
                             </Button>
                         }
                     />
@@ -289,14 +289,14 @@ export default function MonitoringClient() {
                     ) : stats ? (
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                <StatCard title="ВСЃРВµРіРѕ РВ·РВ°просов" value={stats.total_requests} />
-                                <StatCard title="Р Р€РЎРѓР С—Р ВµСв‚¬РЅСвЂ№СвЂ¦" value={stats.success_count} valueClassName="text-green-600 dark:text-green-400" />
-                                <StatCard title="РћСв‚¬РёРВ±РѕРє" value={stats.client_error_count + stats.server_error_count} valueClassName="text-red-600 dark:text-red-400" />
-                                <StatCard title="РЎСЂРВµРТ‘РЅРВµРВµ РІСЂРВµРјСЏ" value={formatDuration(stats.avg_duration_ms)} />
+                                <StatCard title="Всего запросов" value={stats.total_requests} />
+                                <StatCard title="Успешных" value={stats.success_count} valueClassName="text-green-600 dark:text-green-400" />
+                                <StatCard title="Ошибок" value={stats.client_error_count + stats.server_error_count} valueClassName="text-red-600 dark:text-red-400" />
+                                <StatCard title="Среднее время" value={formatDuration(stats.avg_duration_ms)} />
                                 <StatCard title="P95" value={formatDuration(stats.p95_duration_ms)} />
                                 <StatCard title="P99" value={formatDuration(stats.p99_duration_ms)} />
-                                <StatCard title="Р СџРЎР‚Р С•РЎвЂ РВµРЅС‚ РѕСв‚¬РёРВ±РѕРє" value={`${stats.error_rate.toFixed(2)}%`} />
-                                <StatCard title="РВ­РЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚" value={stats.endpoint} />
+                                <StatCard title="Процент ошибок" value={`${stats.error_rate.toFixed(2)}%`} />
+                                <StatCard title="Эндпоинт" value={stats.endpoint} />
                             </div>
 
                             {authFlow ? (
@@ -327,7 +327,7 @@ export default function MonitoringClient() {
                             ) : null}
                         </div>
                     ) : (
-                        <EmptyState compact title="РќРВµт РТ‘РВ°РЅРЅСвЂ№СвЂ¦" description="Р”РВ»РЎРЏ СЌС‚Р С•Р С–Р С• СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚РВ° Р С—Р С•Р С”Р В° РЅРВµт РЎРѓР Р†Р С•Р Т‘РЅРѕРв„– СЃС‚РВ°тРёСЃС‚Р С‘Р С”Р С‘." />
+                        <EmptyState compact title="Нет данных" description="Для этого эндпоинта пока нет сводной статистики." />
                     )}
                 </div>
             ) : null}
@@ -335,9 +335,9 @@ export default function MonitoringClient() {
             {activeTab === 'metrics' ? (
                 <div className="space-y-6">
                     <Card variant="elevated" padding="lg">
-                        <SectionHeader title="РВ¤РёРВ»СЊС‚СЂСвЂ№ РјРВµС‚РЎР‚Р С‘Р С”" description="РћС‚СЃРВµРв„–С‚РВµ РЅСѓРВ¶РЅСвЂ№РВµ СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚СвЂ№, РјРВµтРѕРТ‘СвЂ№, РѕСв‚¬РёРВ±РєРё Р С‘ РјРВµРТ‘РВ»РВµРЅРЅСвЂ№РВµ РВ·РВ°Р С—РЎР‚Р С•РЎРѓРЎвЂ№." className="mb-4" />
+                        <SectionHeader title="Фильтры метрик" description="Отсейте нужные эндпоинты, методы, ошибки и медленные запросы." className="mb-4" />
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <FilterField label="РВ­РЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚">
+                            <FilterField label="Эндпоинт">
                                 <input
                                     type="text"
                                     value={metricsFilters.endpoint}
@@ -346,20 +346,20 @@ export default function MonitoringClient() {
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
                             </FilterField>
-                            <FilterField label="РњРВµтРѕРТ‘">
+                            <FilterField label="Метод">
                                 <select
                                     value={metricsFilters.method}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, method: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">ВСЃРВµ</option>
+                                    <option value="">Все</option>
                                     <option value="GET">GET</option>
                                     <option value="POST">POST</option>
                                     <option value="PUT">PUT</option>
                                     <option value="DELETE">DELETE</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="РЎС‚РВ°тСѓСЃ РєРѕРТ‘">
+                            <FilterField label="Статус код">
                                 <input
                                     type="number"
                                     value={metricsFilters.statusCode}
@@ -368,13 +368,13 @@ export default function MonitoringClient() {
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
                             </FilterField>
-                            <FilterField label="Тип РѕСв‚¬РёРВ±РєРё">
+                            <FilterField label="Тип ошибки">
                                 <select
                                     value={metricsFilters.errorType}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, errorType: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">ВСЃРВµ</option>
+                                    <option value="">Все</option>
                                     <option value="validation">Validation</option>
                                     <option value="database">Database</option>
                                     <option value="auth">Auth</option>
@@ -382,7 +382,7 @@ export default function MonitoringClient() {
                                     <option value="network">Network</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Мин. РІСЂРВµРјя (Рјс)">
+                            <FilterField label="Мин. время (мс)">
                                 <input
                                     type="number"
                                     value={metricsFilters.minDuration}
@@ -394,7 +394,7 @@ export default function MonitoringClient() {
                         </div>
                         <div className="mt-4">
                             <Button onClick={loadMetrics} disabled={loading}>
-                                {loading ? 'РвЂ”РВ°Р С–РЎР‚РЎС“Р В·РєРВ°...' : 'Р СџРЎР‚Р С‘Р СР ВµнитСЊ СвЂћРёРВ»СЊС‚СЂСвЂ№'}
+                                {loading ? 'Загрузка...' : 'Применить фильтры'}
                             </Button>
                         </div>
                     </Card>
@@ -406,12 +406,12 @@ export default function MonitoringClient() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <TableHead>ВСЂРВµРјя</TableHead>
-                                        <TableHead>РВ­РЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚</TableHead>
-                                        <TableHead>РњРВµтРѕРТ‘</TableHead>
-                                        <TableHead>РЎС‚РВ°тСѓСЃ</TableHead>
-                                        <TableHead>ВСЂРВµРјя</TableHead>
-                                        <TableHead>РћСв‚¬РёРВ±РєРВ°</TableHead>
+                                        <TableHead>Время</TableHead>
+                                        <TableHead>Эндпоинт</TableHead>
+                                        <TableHead>Метод</TableHead>
+                                        <TableHead>Статус</TableHead>
+                                        <TableHead>Время</TableHead>
+                                        <TableHead>Ошибка</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -440,7 +440,7 @@ export default function MonitoringClient() {
                             </table>
                         </Card>
                     ) : (
-                        <EmptyState compact title="РќРВµт РјРВµС‚РЎР‚Р С‘Р С”" description="РВ¤РёРВ»СЊС‚СЂСвЂ№ РЅРВµ РІРВµРЎР‚Р Р…РЎС“Р В»Р С‘ РТ‘РВ°РЅРЅСвЂ№СвЂ¦. Р СџР С•Р С—РЎР‚Р С•Р В±СѓРв„–С‚РВµ РёРВ·РјРВµнитСЊ СѓСЃРВ»овия РІСвЂ№РВ±орки." />
+                        <EmptyState compact title="Нет метрик" description="Фильтры не вернули данных. Попробуйте изменить условия выборки." />
                     )}
                 </div>
             ) : null}
@@ -448,31 +448,31 @@ export default function MonitoringClient() {
             {activeTab === 'logs' ? (
                 <div className="space-y-6">
                     <Card variant="elevated" padding="lg">
-                        <SectionHeader title="РВ¤РёРВ»СЊС‚СЂСвЂ№ РВ»огов" description="РћСЃС‚РВ°РІСЊС‚РВµ РЅСѓРВ¶РЅСвЂ№Рв„– тРёРї РѕРїРВµСЂРВ°СвЂ РёРё Р С‘ РЎС“РЎР‚Р С•Р Р†Р ВµРЅСЊ РВ¶РЎС“РЎР‚Р Р…Р В°РВ»РВ°." className="mb-4" />
+                        <SectionHeader title="Фильтры логов" description="Оставьте нужный тип операции и уровень журнала." className="mb-4" />
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <FilterField label="Тип РѕРїРВµСЂРВ°СвЂ РёРё">
+                            <FilterField label="Тип операции">
                                 <select
                                     value={logsFilters.operationType}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, operationType: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">ВСЃРВµ</option>
-                                    <option value="shift_open">РћС‚РєСЂСвЂ№тРёРВµ СЃРјРВµРЅСвЂ№</option>
-                                    <option value="shift_close">РвЂ”РВ°РєСЂСвЂ№тРёРВµ СЃРјРВµРЅСвЂ№</option>
-                                    <option value="item_create">РЎРѕРВ·РТ‘РВ°РЅРёРВµ РєРВ»РёРВµРЅС‚РВ°</option>
-                                    <option value="item_update">РћРВ±Р Р…Р С•Р Р†Р В»РВµРЅРёРВµ РєРВ»РёРВµРЅС‚РВ°</option>
-                                    <option value="item_delete">РЈРТ‘РВ°РВ»РВµРЅРёРВµ РєРВ»РёРВµРЅС‚РВ°</option>
-                                    <option value="items_save">РЎРѕСвЂ¦СЂРВ°РЅРВµРЅРёРВµ РЎРѓР С—Р С‘РЎРѓР С”Р В°</option>
-                                    <option value="error">РћСв‚¬РёРВ±РєРВ°</option>
+                                    <option value="">Все</option>
+                                    <option value="shift_open">Открытие смены</option>
+                                    <option value="shift_close">Закрытие смены</option>
+                                    <option value="item_create">Создание клиента</option>
+                                    <option value="item_update">Обновление клиента</option>
+                                    <option value="item_delete">Удаление клиента</option>
+                                    <option value="items_save">Сохранение списка</option>
+                                    <option value="error">Ошибка</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Р Р€РЎР‚Р С•Р Р†Р ВµРЅСЊ">
+                            <FilterField label="Уровень">
                                 <select
                                     value={logsFilters.logLevel}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, logLevel: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">ВСЃРВµ</option>
+                                    <option value="">Все</option>
                                     <option value="debug">Debug</option>
                                     <option value="info">Info</option>
                                     <option value="warn">Warn</option>
@@ -482,7 +482,7 @@ export default function MonitoringClient() {
                         </div>
                         <div className="mt-4">
                             <Button onClick={loadLogs} disabled={loading}>
-                                {loading ? 'РвЂ”РВ°Р С–РЎР‚РЎС“Р В·РєРВ°...' : 'Р СџРЎР‚Р С‘Р СР ВµнитСЊ СвЂћРёРВ»СЊС‚СЂСвЂ№'}
+                                {loading ? 'Загрузка...' : 'Применить фильтры'}
                             </Button>
                         </div>
                     </Card>
@@ -494,12 +494,12 @@ export default function MonitoringClient() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <TableHead>ВСЂРВµРјя</TableHead>
+                                        <TableHead>Время</TableHead>
                                         <TableHead>Тип</TableHead>
-                                        <TableHead>Р Р€РЎР‚Р С•Р Р†Р ВµРЅСЊ</TableHead>
-                                        <TableHead>РЎРѕС‚СЂСѓРТ‘ник</TableHead>
-                                        <TableHead>Р РЋР С•Р С•Р В±СвЂ°РВµРЅРёРВµ</TableHead>
-                                        <TableHead>РћСв‚¬РёРВ±РєРВ°</TableHead>
+                                        <TableHead>Уровень</TableHead>
+                                        <TableHead>Сотрудник</TableHead>
+                                        <TableHead>Сообщение</TableHead>
+                                        <TableHead>Ошибка</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -522,7 +522,7 @@ export default function MonitoringClient() {
                             </table>
                         </Card>
                     ) : (
-                        <EmptyState compact title="РќРВµт РВ»огов" description="РџРѕ С‚РВµРєСѓСвЂ°РВµРв„– РІСвЂ№РВ±Р С•РЎР‚Р С”Р Вµ РѕРїРВµСЂРВ°СвЂ Р С‘Р С•Р Р…Р Р…РЎвЂ№Рв„– РВ¶РЎС“РЎР‚Р Р…Р В°РВ» Р С—РЎС“РЎРѓРЎ‚." />
+                        <EmptyState compact title="Нет логов" description="По текущей выборке операционный журнал пуст." />
                     )}
                 </div>
             ) : null}

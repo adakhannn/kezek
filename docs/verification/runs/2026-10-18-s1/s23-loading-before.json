@@ -1,0 +1,15 @@
+{
+  "recordedUtc": "2026-10-18T12:05:05Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "method": "live",
+  "url": "http://s1loading-20261018-115800.localhost:3103/privacy",
+  "steps": ["Load privacy document", "Click visible Вернуться на главную", "Read pending DOM during controlled10s normal public businesses GET delay", "Read settled home after actual public GET200"],
+  "pending": {"privacyStillPresent": true, "homePresent": false, "loadingSignals": [], "urlStillPrivacy": true},
+  "serverUtc": {"delayStarted": "2026-10-18T11:58:23.714Z", "businesses200": "2026-10-18T11:58:34.770Z", "branches200": "2026-10-18T11:58:35.076Z", "promotions200": "2026-10-18T11:58:35.307Z", "categories200": "2026-10-18T11:58:35.558Z"},
+  "settled": "Correct catalogue with two businesses, no catalogue error; no data loss",
+  "expected": "Small localized route-waiting indicator; user explicitly approved adding it",
+  "userApproval": "Да, добавь индикатор",
+  "effects": "Normal anonymous public DEV GET only; no business commands. Ordinary telemetry unenumerated.",
+  "cleanup": "Owned PID2648 stopped11:59:48.178UTC; permission marker removed; owner settings restored",
+  "limits": "DOM waiting-state proof only; no screenshot, device, screen-reader or deployed-environment PASS"
+}

@@ -1,0 +1,50 @@
+{
+  "id": "C83",
+  "type": "bounded read-only M2-01 history/effect review",
+  "startedAfterUtc": "2026-10-23T01:31:42Z",
+  "candidate": "dev-20261020-S1-40a5aef0e785",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "history": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "verdict": "Fixture A fe2d412c retained, named S1 TEST 20261020 Branch Availability; no owner/staff/services/bookings; two branch controls. Initial creation is historical setup, not a new pass. B was later deleted C03; never use/recreate B."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c01-result.json",
+      "verdict": "Booking inactive-branch fix and public visibility cases, not unsaved business name/slug override/cancel."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c02-browser-proof-result.json",
+      "verdict": "Browser proof-capability diagnostic only; no business draft test."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c03-result.json",
+      "verdict": "Exact B irreversible deletion after action-time consent; unrelated to A draft editing, no repeat authority."
+    }
+  ],
+  "sourceEffects": "BusinessCardEdit inputs and slug onBlur only update React state. Cancel calls reset(initial values) and exits editing; opening editor is local. PATCH exists only in explicit Save handler, which also sends categories/contacts/is_approved; never click it. Business detail page reads; no new mutation on entry. No inline validation/server rejection can be certified without Save, so those remain outside this safe case.",
+  "decision": "One genuinely uncovered local edit/cancel case is safe on retained A if actual baseline still matches. Automatic slug until manual override, explicit slug survives later name edit, Cancel/reopen restores original values. This whole sequence counts ONE new UI case, not per field/click. No persisted edit/create/lifecycle PASS.",
+  "effects": "Review only; no browser/app/DB/source/test/build commands or new credit.",
+  "next": "C84 execute only independently planned unsaved A draft sequence, no Save/Enter/contact/category/publication/owner/branch changes. Stop on identity/baseline mismatch, unsafe immediate persistence or input uncertainty.",
+  "completedBeforeUtc": "2026-10-23T01:33:58Z",
+  "historyHashes": [
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "sha256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c01-result.json",
+      "sha256": "d874c694309e6b47b8a3522cbf80258aca44ec48322b162a0d8878e39fcbbe39"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c02-browser-proof-result.json",
+      "sha256": "5f7aa60e00227289c660acd0b194541992fa348230d3ab3b2740ab17f299b518"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c03-result.json",
+      "sha256": "23f2d389f3224d6d5f5f857f97739781224132d8c34a8795d5e9a1991ba33436"
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+Captured build chunks; final chunk was tool-truncated, not an unabridged transcript.
+{"event":"prepared","startedUtc":"2026-10-18T12:05:39.594Z","copiedFiles":1659,"copyFingerprint":"0cc81561faf0c47d8dbd4b993204d9cfb40e5e2ac339473a21121310c479364e","pid":24376,"noEnvFiles":true}
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\projects\kezek\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\projects\kezek\test-results\closure-s1-20261018-f002\build\apps\web\pnpm-lock.yaml
+   * C:\projects\kezek\test-results\closure-s1-20261018-f002\build\pnpm-lock.yaml
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+   ▲ Next.js 16.0.11 (Turbopack)
+   - Experiments (use with caution):
+     · clientTraceMetadata
+     · optimizePackageImports
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+Warning: truncated output (original token count: 7052)
+Total output lines: 324
+
+Turbopack build encountered 11 warnings:
+[next]/internal/font/google/4fa387ec64143e14-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrMdmhHkjkotbA.woff2
+
+
+[next]/internal/font/google/53b9e256198e5412-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwTGFWNOITddY4.woff2
+
+
+[next]/internal/font/google/5ce348bf30bf5439-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrodmhHkjkotbA.woff2
+
+
+[next]/internal/font/google/6306c77e7c8268e4-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFg08vz7MhEIVVeA.woff2
+
+
+[next]/internal/font/google/7178b3e590c64307-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwSGFWNOITddY4.woff2
+
+
+[next]/internal/font/google/797e433ab948586e-s.p.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrcdmhHkjko.woff2
+
+
+[next]/internal/font/google/7d817b4c03b0c5f1-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrgdmhHkjkotbA.woff2
+
+
+[next]/internal/font/google/8a480f0b521d4e75-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwYGFWNOITddY4.woff2
+
+
+[next]/internal/font/google/bbc41e54d2fcbd21-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrkdmhHkjkotbA.woff2
+
+
+[next]/internal/font/google/caa3a2e1cccd8315-s.p.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwcGFWNOITd.woff2
+
+
+[next]/internal/font/google/fef07dbb0973bf53-s.woff2
+Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwRGFWNOITddY4.woff2
+
+
+
+> Build error occurred
+Error: Turbopack build failed with 11 errors:
+[next]/internal/font/google/geist_a71539c9.module.css:8:9
+Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'
+[0m [90m  6 |[39m   font[33m-[39mdisplay[33m:[39m swap[33m;[39m
+ [90m  7 |[39m   src[33m:[39m url([33m@[39mvercel[33m/[39mturbopack[33m-[39mnext[33m/[39minternal[33m/[39mfont[33m/[39mgoogle[35m/font?{%22url%22:%22https:/[39m[33m/[39mfonts[33m.[39mgstatic[33m.[39mcom[33m/[39ms[33m/[39mgeist[33m/[39mv5[33m/[39mgyByhwUxId8gMEwRGFWNOITddY4[33m.[39mwoff2[33m%[39m[35m22[39m[33m,[39m[33m%[39m[35m22[39mpreload[33m%[39m[35m22[39m[33m:[39m[36mfalse[39m[33m,[39m[33m%[39m[35m22[39mhas_size_adjust[33m%[39m[35m22[39m[33m:[39m[36mtrue[39m}) format([32m'woff2'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m  8 |[39m   unicode[33m-[39mrange[33m:[39m [33mU[39m[33m+[39m[35m0460[39m[33m-[39m[35m052[39m[33mF[39m[33m,[39m [33mU[39m[33m+[39m[35m1[39m[33mC80[39m[33m-[39m[35m1[39m[33mC8A[39m[33m,[39m [33mU[39m[33m+[39m[35m20[39m[33mB4[39m[33m,[39m [33mU[39m[33m+[39m[35m2[39m[33mDE0[39m[33m-[39m[35m2[39m[33mDFF[39m[33m,[39m [33mU[39m[33m+[39m[33mA640[39m[33m-[39m[33mA69F[39m[33m,[39m [33mU[39m[33m+[39m[33mFE2E[39m[33m-[39m[33mFE2F[39m[33m;[39m
+ [90m    |[39m         [31m[1m^[22m[39m
+ [90m  9 |[39m }
+ [90m 10 |[39m [90m/* cyrillic */[39m
+ [90m 11 |[39m [33m@[39mfont[33m-[39mface {[0m
+
+Import map: Resolved by import map
+
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/geist_a71539c9.module.css
+    [next]/internal/font/google/geist_a71539c9.js
+    ./test-results/closure-s1-20261018-f002/build/apps/web/src/app/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[next]/internal/font/google/geist_a71539c9.module.css:17:9
+Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'
+[0m [90m 15 |[39m   font[33m-[39mdisplay[33m:[39m swap[33m;[39m
+ [90m 16 |[39m   src[33m:[39m url([33m@[39mvercel[33m/[39mturbopack[33m-[39mnext[33m/[39minternal[33m/[39mfont[33m/[39mgoogle[35m/font?{%22url%22:%22https:/[39m[33m/[39mfonts[33m.[39mgstatic[33m.[39mcom[33m/[39ms[33m/[39mgeist[33m/[39mv5[33m/[39mgyByhwUxId8gMEwYGFWNOITddY4[33m.[39mwoff2[33m%[39m[35m22[39m[33m,[39m[33m%[39m[35m22[39mpreload…4552 tokens truncated…9m[33m-[39m[35m2[39m[33mC7F[39m[33m,[39m [33mU[39m[33m+[39m[33mA720[39m[33m-[39m[33mA7FF[39m[33m;[39m
+ [90m    |[39m         [31m[1m^[22m[39m
+ [90m 45 |[39m }
+ [90m 46 |[39m [90m/* latin */[39m
+ [90m 47 |[39m [33m@[39mfont[33m-[39mface {[0m
+
+Import map: Resolved by import map
+
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/geist_mono_8d43a2aa.module.css
+    [next]/internal/font/google/geist_mono_8d43a2aa.js
+    ./test-results/closure-s1-20261018-f002/build/apps/web/src/app/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[next]/internal/font/google/geist_mono_8d43a2aa.module.css:53:9
+Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'
+[0m [90m 51 |[39m   font[33m-[39mdisplay[33m:[39m swap[33m;[39m
+ [90m 52 |[39m   src[33m:[39m url([33m@[39mvercel[33m/[39mturbopack[33m-[39mnext[33m/[39minternal[33m/[39mfont[33m/[39mgoogle[35m/font?{%22url%22:%22https:/[39m[33m/[39mfonts[33m.[39mgstatic[33m.[39mcom[33m/[39ms[33m/[39mgeistmono[33m/[39mv6[33m/[39mor3nQ6H[33m-[39m[35m1[39m_WfwkMZI_qYFrcdmhHkjko[33m.[39mwoff2[33m%[39m[35m22[39m[33m,[39m[33m%[39m[35m22[39mpreload[33m%[39m[35m22[39m[33m:[39m[36mtrue[39m[33m,[39m[33m%[39m[35m22[39mhas_size_adjust[33m%[39m[35m22[39m[33m:[39m[36mtrue[39m}) format([32m'woff2'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 53 |[39m   unicode[33m-[39mrange[33m:[39m [33mU[39m[33m+[39m[35m0000[39m[33m-[39m[35m00[39m[33mFF[39m[33m,[39m [33mU[39m[33m+[39m[35m0131[39m[33m,[39m [33mU[39m[33m+[39m[35m0152[39m[33m-[39m[35m0153[39m[33m,[39m [33mU[39m[33m+[39m[35m02[39m[33mBB[39m[33m-[39m[35m02[39m[33mBC[39m[33m,[39m [33mU[39m[33m+[39m[35m02[39m[33mC6[39m[33m,[39m [33mU[39m[33m+[39m[35m02[39m[33mDA[39m[33m,[39m [33mU[39m[33m+[39m[35m02[39m[33mDC[39m[33m,[39m [33mU[39m[33m+[39m[35m0304[39m[33m,[39m [33mU[39m[33m+[39m[35m0308[39m[33m,[39m [33mU[39m[33m+[39m[35m0329[39m[33m,[39m [33mU[39m[33m+[39m[35m2000[39m[33m-[39m[35m206[39m[33mF[39m[33m,[39m [33mU[39m[33m+[39m[35m20[39m[33mAC[39m[33m,[39m [33mU[39m[33m+[39m[35m2122[39m[33m,[39m [33mU[39m[33m+[39m[35m2191[39m[33m,[39m [33mU[39m[33m+[39m[35m2193[39m[33m,[39m [33mU[39m[33m+[39m[35m2212[39m[33m,[39m [33mU[39m[33m+[39m[35m2215[39m[33m,[39m [33mU[39m[33m+[39m[33mFEFF[39m[33m,[39m [33mU[39m[33m+[39m[33mFFFD[39m[33m;[39m
+ [90m    |[39m         [31m[1m^[22m[39m
+ [90m 54 |[39m }
+ [90m 55 |[39m [33m@[39mfont[33m-[39mface {
+ [90m 56 |[39m     font[33m-[39mfamily[33m:[39m [32m'Geist Mono Fallback'[39m[33m;[39m[0m
+
+Import map: Resolved by import map
+
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/geist_mono_8d43a2aa.module.css
+    [next]/internal/font/google/geist_mono_8d43a2aa.js
+    ./test-results/closure-s1-20261018-f002/build/apps/web/src/app/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> ([next]/internal/font/google/geist_a71539c9.module.css:8:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_a71539c9.module.css:17:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_a71539c9.module.css:26:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_a71539c9.module.css:35:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_a71539c9.module.css:44:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_mono_8d43a2aa.module.css:8:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_mono_8d43a2aa.module.css:17:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_mono_8d43a2aa.module.css:26:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_mono_8d43a2aa.module.css:35:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_mono_8d43a2aa.module.css:44:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> ([next]/internal/font/google/geist_mono_8d43a2aa.module.css:53:9)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+{"event":"finished","startedUtc":"2026-10-18T12:05:39.594Z","finishedUtc":"2026-10-18T12:07:13.029Z","exitCode":1,"signal":null,"timedOut":false,"pid":24376,"dest":"C:\\projects\\kezek\\test-results\\closure-s1-20261018-f002\\build"}
+

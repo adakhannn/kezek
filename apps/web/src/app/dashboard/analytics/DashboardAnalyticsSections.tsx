@@ -11,13 +11,14 @@ import type {
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
-function formatNumber(value: number) {
-    return value.toLocaleString('ru-RU');
+function formatNumber(value: number, locale: string) {
+    return value.toLocaleString(locale);
 }
 
-function formatCurrencyKGS(value: number) {
-    return new Intl.NumberFormat('ru-RU', {
+function formatCurrencyKGS(value: number, locale: string) {
+    return new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: 'KGS',
         maximumFractionDigits: 0,
@@ -32,16 +33,25 @@ function getHeatmapRowClass(intensity: number) {
 }
 
 export function DashboardAnalyticsLoading() {
+    const { t } = useLanguage();
     return (
         <div className="px-4 py-10">
             <div className="flex items-center justify-center">
                 <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем аналитику по бизнесу...</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{t('analytics.loading')}</span>
                 </div>
             </div>
         </div>
     );
+}
+
+export function DashboardAnalyticsEmpty() {
+    const { t } = useLanguage();
+    return <section role="status" className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 space-y-2">
+        <h2 className="text-lg font-semibold">{t('analytics.emptyTitle')}</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300">{t('analytics.emptyHint')}</p>
+    </section>;
 }
 
 export function DashboardAnalyticsError({
@@ -51,16 +61,17 @@ export function DashboardAnalyticsError({
     error: string;
     onRetry: () => void;
 }) {
+    const { t } = useLanguage();
     return (
         <div className="px-4 py-10">
             <div className="mx-auto max-w-xl">
                 <AlertBanner
                     variant="danger"
-                    title="Ошибка загрузки аналитики"
+                    title={t('analytics.error')}
                     message={error}
                     action={
                         <Button type="button" variant="danger" size="sm" onClick={onRetry}>
-                            Попробовать снова
+                            {t('analytics.retry')}
                         </Button>
                     }
                     className="rounded-2xl p-6 shadow-sm"
@@ -71,14 +82,15 @@ export function DashboardAnalyticsError({
 }
 
 export function DashboardAnalyticsHeader() {
+    const { t } = useLanguage();
     return (
         <header className="space-y-1">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">Аналитика бизнеса</h1>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{t('analytics.title')}</h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-                Краткий обзор воронки бронирований и выручки по вашему бизнесу.
+                {t('analytics.description')}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-                Данные отображаются для текущего выбранного бизнеса в переключателе слева.
+                {t('analytics.businessHint')}
             </p>
         </header>
     );
@@ -105,13 +117,14 @@ export function DashboardAnalyticsFiltersSection({
     onEndDateChange: (value: string) => void;
     onBranchIdChange: (value: string) => void;
 }) {
+    const { t } = useLanguage();
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Период</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('analytics.period')}</h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Выберите период, за который нужно посмотреть конверсию и выручку.
+                        {t('analytics.periodHint')}
                     </p>
                 </div>
             </div>
@@ -119,7 +132,7 @@ export function DashboardAnalyticsFiltersSection({
             <div className="grid gap-4 md:grid-cols-4">
                 <div className="space-y-2">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-                        Быстрый выбор
+                        {t('analytics.quick')}
                     </p>
                     <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
                         {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((preset) => (
@@ -133,20 +146,21 @@ export function DashboardAnalyticsFiltersSection({
                                         : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                                 }`}
                             >
-                                {preset === '7' ? '7 дней' : preset === '30' ? '30 дней' : preset === '90' ? '90 дней' : 'Свой период'}
+                                {t(preset === '7' ? 'analytics.days7' : preset === '30' ? 'analytics.days30' : preset === '90' ? 'analytics.days90' : 'analytics.custom')}
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Филиал</p>
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">{t('analytics.branch')}</p>
                     <select
+                        aria-label={t('analytics.branch')}
                         value={branchId}
                         onChange={(event) => onBranchIdChange(event.target.value)}
                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
-                        <option value="all">Все филиалы</option>
+                        <option value="all">{t('analytics.allBranches')}</option>
                         {branches.map((branch) => (
                             <option key={branch.id} value={branch.id}>
                                 {branch.name}
@@ -154,14 +168,15 @@ export function DashboardAnalyticsFiltersSection({
                         ))}
                     </select>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                        Фильтр по филиалу влияет на блок «Загрузка по часам».
+                        {t('analytics.branchHint')}
                     </p>
                 </div>
 
                 <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Начало</p>
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">{t('analytics.start')}</p>
                     <input
                         type="date"
+                        aria-label={t('analytics.start')}
                         value={startDate}
                         onChange={(event) => onStartDateChange(event.target.value)}
                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -169,9 +184,10 @@ export function DashboardAnalyticsFiltersSection({
                 </div>
 
                 <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Окончание</p>
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">{t('analytics.end')}</p>
                     <input
                         type="date"
+                        aria-label={t('analytics.end')}
                         value={endDate}
                         onChange={(event) => onEndDateChange(event.target.value)}
                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -187,27 +203,28 @@ export function DashboardAnalyticsKpiSection({
 }: {
     summary: OverviewSummary;
 }) {
+    const { t, locale } = useLanguage();
     return (
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Создано бронирований
+                    {t('analytics.created')}
                 </p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {formatNumber(summary.bookings.created)}
+                    {formatNumber(summary.bookings.created, locale)}
                 </p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Подтверждено/оплачено
+                    {t('analytics.confirmed')}
                 </p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {formatNumber(summary.bookings.confirmedOrPaid)}
+                    {formatNumber(summary.bookings.confirmedOrPaid, locale)}
                 </p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Конверсия из выдачи в бронь
+                    {t('analytics.conversion')}
                 </p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     {summary.funnel.conversionHomeToBooking.toFixed(2)}%
@@ -215,10 +232,10 @@ export function DashboardAnalyticsKpiSection({
             </div>
             <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Выручка за период
+                    {t('analytics.revenue')}
                 </p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {formatCurrencyKGS(summary.revenue.total)}
+                    {formatCurrencyKGS(summary.revenue.total, locale)}
                 </p>
             </div>
         </section>
@@ -236,14 +253,15 @@ export function DashboardAnalyticsTrendsSection({
     promoShare: number;
     trendChartData: DashboardTrendChartData | null;
 }) {
+    const { t, locale } = useLanguage();
     return (
         <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between gap-2">
                     <div>
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Динамика бронирований</h2>
+                        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('analytics.trend')}</h2>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Как менялось количество подтверждённых бронирований по дням.
+                            {t('analytics.trendHint')}
                         </p>
                     </div>
                 </div>
@@ -252,7 +270,7 @@ export function DashboardAnalyticsTrendsSection({
                         <div key={point.date} className="flex items-center justify-between text-sm">
                             <span className="text-gray-600 dark:text-gray-300">{point.date}</span>
                             <span className="font-medium text-gray-900 dark:text-gray-100">
-                                {formatNumber(point.bookingsConfirmedOrPaid)}
+                                {formatNumber(point.bookingsConfirmedOrPaid, locale)}
                             </span>
                         </div>
                     ))}
@@ -262,21 +280,21 @@ export function DashboardAnalyticsTrendsSection({
             <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between gap-2">
                     <div>
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Выручка и доля промо</h2>
+                        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('analytics.promo')}</h2>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Сравнение общей выручки и доли выручки по промо-акциям.
+                            {t('analytics.promoHint')}
                         </p>
                     </div>
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-300">Выручка по промо</span>
+                        <span className="text-gray-600 dark:text-gray-300">{t('analytics.promoRevenue')}</span>
                         <span className="font-medium text-gray-900 dark:text-gray-100">
-                            {formatCurrencyKGS(summary.revenue.promoRevenue)}
+                            {formatCurrencyKGS(summary.revenue.promoRevenue, locale)}
                         </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-300">Доля промо в выручке</span>
+                        <span className="text-gray-600 dark:text-gray-300">{t('analytics.promoShare')}</span>
                         <span className="font-medium text-gray-900 dark:text-gray-100">{promoShare.toFixed(2)}%</span>
                     </div>
                 </div>
@@ -286,7 +304,7 @@ export function DashboardAnalyticsTrendsSection({
                         {trendChartData.revenue.map((point) => (
                             <div key={point.x} className="flex items-center justify-between text-xs">
                                 <span className="text-gray-500 dark:text-gray-400">{point.x}</span>
-                                <span className="text-gray-900 dark:text-gray-100">{formatCurrencyKGS(point.y)}</span>
+                                <span className="text-gray-900 dark:text-gray-100">{formatCurrencyKGS(point.y, locale)}</span>
                             </div>
                         ))}
                     </div>
@@ -301,6 +319,7 @@ export function DashboardAnalyticsLoadSection({
 }: {
     loadData: LoadResponse['data'];
 }) {
+    const { t, locale } = useLanguage();
     if (!loadData) {
         return null;
     }
@@ -311,9 +330,9 @@ export function DashboardAnalyticsLoadSection({
         <section className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between gap-2">
                 <div>
-                    <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Загрузка по часам</h2>
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('analytics.load')}</h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Простая heatmap по часам для оценки часов пик по выбранному периоду и филиалу.
+                        {t('analytics.loadHint')}
                     </p>
                 </div>
             </div>
@@ -321,9 +340,9 @@ export function DashboardAnalyticsLoadSection({
                 <table className="min-w-full text-xs border-separate border-spacing-y-1">
                     <thead>
                         <tr>
-                            <th className="text-left text-gray-500 dark:text-gray-400 px-2 py-1">Час</th>
-                            <th className="text-right text-gray-500 dark:text-gray-400 px-2 py-1">Брони</th>
-                            <th className="text-right text-gray-500 dark:text-gray-400 px-2 py-1">Промо</th>
+                            <th className="text-left text-gray-500 dark:text-gray-400 px-2 py-1">{t('analytics.hour')}</th>
+                            <th className="text-right text-gray-500 dark:text-gray-400 px-2 py-1">{t('analytics.bookings')}</th>
+                            <th className="text-right text-gray-500 dark:text-gray-400 px-2 py-1">{t('analytics.promotions')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -340,10 +359,10 @@ export function DashboardAnalyticsLoadSection({
                                 <tr key={hour} className={`${getHeatmapRowClass(intensity)} rounded-xl`}>
                                     <td className="px-2 py-1 text-gray-700 dark:text-gray-200">{hour}:00</td>
                                     <td className="px-2 py-1 text-right text-gray-900 dark:text-gray-100">
-                                        {total ? formatNumber(total) : '—'}
+                                        {total ? formatNumber(total, locale) : '—'}
                                     </td>
                                     <td className="px-2 py-1 text-right text-gray-900 dark:text-gray-100">
-                                        {promo ? formatNumber(promo) : '—'}
+                                        {promo ? formatNumber(promo, locale) : '—'}
                                     </td>
                                 </tr>
                             );

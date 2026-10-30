@@ -1,4 +1,6 @@
 import { listBranchesMap } from '@/lib/branchesMapService';
+import { loadPublicCategoryLabels } from '@/lib/publicCategoryLabels';
+jest.mock('@/lib/publicCategoryLabels', () => ({loadPublicCategoryLabels: jest.fn()}));
 
 jest.mock('@/lib/branches/buildApprovedBusinessesQuery', () => ({
     buildApprovedBusinessesQuery: jest.fn(),
@@ -9,6 +11,43 @@ import { buildApprovedBusinessesQuery } from '@/lib/branches/buildApprovedBusine
 describe('branchesMapService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.mocked(loadPublicCategoryLabels).mockResolvedValue({wellness:'Wellness'});
+    });
+
+    test('returns a business query error without fetching category labels', async () => {
+        jest.mocked(buildApprovedBusinessesQuery).mockReturnValue({limit:jest.fn().mockResolvedValue({data:null,error:{message:'unavailable'}})} as never);
+        const result = await listBranchesMap({supabase:{from:jest.fn()} as never});
+        expect(result).toMatchObject({ok:false,status:500});
+        expect(loadPublicCategoryLabels).not.toHaveBeenCalled();
+    });
+
+    test('returns no category labels when there are no mapped branches', async () => {
+        jest.mocked(buildApprovedBusinessesQuery).mockReturnValue({limit:jest.fn().mockResolvedValue({data:[{id:'b'}],error:null})} as never);
+        const query = {limit:jest.fn().mockResolvedValue({data:[],error:null}),eq:jest.fn(),not:jest.fn(),in:jest.fn(),select:jest.fn()};
+        query.select.mockReturnValue(query); query.in.mockReturnValue(query); query.not.mockReturnValue(query); query.eq.mockReturnValue(query);
+        expect(await listBranchesMap({supabase:{from:()=>query} as never})).toEqual({ok:true,data:[]});
+        expect(loadPublicCategoryLabels).not.toHaveBeenCalled();
+    });
+
+    test('uses the primary category name and safely handles missing metadata and numeric IDs', async () => {
+        jest.mocked(buildApprovedBusinessesQuery).mockReturnValue({limit:jest.fn().mockResolvedValue({data:[
+            {id:1,name:'Spa',slug:'spa',categories:['massage']},
+            {id:2,name:null,slug:null,categories:null},
+        ],error:null})} as never);
+        jest.mocked(loadPublicCategoryLabels).mockResolvedValue({massage:'Massage'});
+        const query = {limit:jest.fn().mockResolvedValue({data:[
+            {id:11,biz_id:1,name:'Main',address:null,lat:40,lon:72},
+            {id:12,biz_id:2,name:null,address:null,lat:'40',lon:'72'},
+            {id:13,biz_id:99,name:null,address:null,lat:null,lon:null},
+        ],error:null}),eq:jest.fn(),not:jest.fn(),in:jest.fn(),select:jest.fn()};
+        query.select.mockReturnValue(query); query.in.mockReturnValue(query); query.not.mockReturnValue(query); query.eq.mockReturnValue(query);
+        const result = await listBranchesMap({supabase:{from:()=>query} as never,onlyActive:false});
+        expect(query.eq).not.toHaveBeenCalled();
+        expect(result).toMatchObject({ok:true,data:[
+            {id:'11',categoryId:'massage',categoryName:'Massage'},
+            {id:'12',categoryId:null,categoryName:null,businessName:'',businessSlug:null,lat:40,lon:72},
+            {id:'13',categoryId:null,categoryName:null,businessName:'',lat:0,lon:0},
+        ]});
     });
 
     test('returns empty list when approved businesses query returns nothing', async () => {
@@ -85,7 +124,7 @@ describe('branchesMapService', () => {
                     lat: 42.8,
                     lon: 74.6,
                     categoryId: 'wellness',
-                    categoryName: null,
+                    categoryName: 'Wellness',
                 },
             ],
         });

@@ -5,6 +5,7 @@ import { type SupabaseClient } from '@supabase/supabase-js';
 import { EmailNotificationService } from './EmailNotificationService';
 import { ParticipantDataService } from './ParticipantDataService';
 import { TelegramNotificationService } from './TelegramNotificationService';
+import { uniqueTelegramRecipients } from './telegramRecipients';
 import { WhatsAppNotificationService } from './WhatsAppNotificationService';
 import type { 
     BookingRow, 
@@ -228,11 +229,15 @@ export class NotificationOrchestrator {
     ): Promise<number> {
         let sent = 0;
 
-        const results = await Promise.allSettled([
-            this.telegramService.sendToClient(clientData, bookingDetails, notifyType),
-            this.telegramService.sendToStaff(staffData, bookingDetails, notifyType),
-            this.telegramService.sendToOwner(ownerData, bookingDetails, notifyType),
-        ]);
+        const senders = {
+            client: (data: ParticipantData) => this.telegramService.sendToClient(data, bookingDetails, notifyType),
+            staff: (data: ParticipantData) => this.telegramService.sendToStaff(data, bookingDetails, notifyType),
+            owner: (data: ParticipantData) => this.telegramService.sendToOwner(data, bookingDetails, notifyType),
+        };
+        const results = await Promise.allSettled(
+            uniqueTelegramRecipients(clientData, staffData, ownerData)
+                .map(({ role, data }) => senders[role](data)),
+        );
 
         for (const result of results) {
             if (result.status === 'fulfilled' && result.value) {

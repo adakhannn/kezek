@@ -1,0 +1,22 @@
+{
+  "id":"C68",
+  "plan":"c68-valid-overview-filters-plan.json",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "sourceFingerprint":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf",
+  "startedAfterUtc":"2026-10-21T09:44:31Z",
+  "restoredBeforeUtc":"2026-10-21T09:49:51Z",
+  "original":"ActualknownSAAnonymized/admin ->visibleAnalyticsmenu ->globaloverview/Фильтры. Initialdates2026-09-21..2026-10-21;30daybuttonselectedDOMclassbg-white/shadow-sm. Globalsummary/allbusiness/no branchselector, threeemptytrendmessages. InitialdefaultemptycontextnotnewPASS/reexecutioncreditC26.",
+  "cases":[
+    {"key":"valid-custom-ui","status":"blocked","classification":"DATE_INPUT_COMMIT_UNCONFIRMED_NOT_CONFIRMED_PRODUCT_BUG","observationWindowUtc":["2026-10-21T09:45:12Z","2026-10-21T09:47:00Z"],"actual":"Ordinarydocumentedfill start2026-09-22changedvisibleinput/end21Octunchanged, butfreshDOMCustombuttonnotselected/30daysstillselected. OneordinaryTabcommit09:45:58samevalue/classstate. Stopmanualinputdiagnostic; no furtherfill/key/evaluateevent/nativeworkaround. Cannotdistinguishinputdelivery/commit fromproductonChangeissue; sourceonChangewouldsetCustombutnopropermanualeventproof. No PASS/newbug/fixclaim."},
+    {"key":"seven-day-preset-ui","status":"passed","observationWindowUtc":["2026-10-21T09:47:00Z","2026-10-21T09:48:25Z"],"actual":"Oneordinary7daysbutton ->visibleISOdates2026-10-14..2026-10-21/exactindependent7dayexpectation, selectedDOMclassbg-white/shadow-sm, globalscope/noerrorretained. OnlyUIcontrolmappingaccepted; actualGETcompletion/responseperiod/financialtotalsnotcertified."},
+    {"key":"invalid-range","status":"blocked","observationWindowUtc":["2026-10-21T09:44:31Z","2026-10-21T09:49:51Z"],"actual":"Notexecuted: sourceerrorviewhideseditablefiltersandpreferencespersist; no safeeditablevalidationrecoveryconfirmed. No intentionallyinvalidrange/HTTPprobe."},
+    {"key":"partial-api-failure","status":"blocked","observationWindowUtc":["2026-10-21T09:44:31Z","2026-10-21T09:49:51Z"],"actual":"No naturalpartialAPIerror/correlatedresponseobserved, no injection; notcertifiedfromempty/success."},
+    {"key":"error-retry","status":"blocked","observationWindowUtc":["2026-10-21T09:44:31Z","2026-10-21T09:49:51Z"],"actual":"No naturalrealerror, retrybuttonnotinvoked/nomockPASS; repeatedunchangedretryprohibited."}
+  ],
+  "restore":"09:48:25ordinary30daysbutton ->originalvisible2026-09-21..2026-10-21 and30dayselectedclass; bothdatesexactoriginalarray, customfieldtransientvaluereplaced. 09:48:54ordinaryГлавная ->actualAnonymized/protectedПанельадминистратора/Бизнесы3before09:49:51; original2/18handoff/5untouched/no newtabs.",
+  "effects":"Noauthtransition/business/role/grant/financialconfiguration/job/recalc/source/test/build/server/DB/APIprobe commands. Date/presetUIactionsimplicitlytriggerreadonlyoverviewGETs andpersistbrowserfilterpreferences; originalvisiblevaluesrestoredviaUI, no rawstorage/cookie/tokeninspection. Exactstorageresponseproofnotclaimed. Ordinaryauthlookup/telemetryunenumerated/notzeroTOTALwrites. No visual/pixel/freshcache/currentfinancialreconciliationclaim.",
+  "matrix":{"total":5,"passed":1,"failed":0,"blocked":4,"notRun":0,"remaining":4,"newLivePass":1,"newFixes":0,"scope":"OnlyfiniteoverviewUIcontrolsubset, notwholeM6allanalytics/API/responsecorrectness."},
+  "counts":"Product21/316,S117/25primary63/79,S23/70,S41/47unchanged;9verifiedlivefixesunchanged,F013open. M6-02partial.",
+  "independentPriorityReview":"M5-04Nadmin-stage containscategoryUUID/duplicatevalidation anduserssearch, notcurrentratingdraftvalidation. RatingConfigClient sourceonChange localstateonly; handleSubmitPOSTonlySave, recalcPOSTseparateafterSave, Resetlocalinitialvalues. Safe nextfiniteunsavedratingdraftUIvalidation, neverSave/Enter/recalc/persistconfiguration.",
+  "next":"C69finiteM5-04unsavedratingdraftplan BEFOREUI: captureoriginalvisible4weights/windowdays, testonesum-invalidlocaldraftwithordinarysliderkeyandonewindowdays-invaliddraftifinputcommitsvisibly, Resetbetween/after andleaveadmin. NEVERSave/Enter/recalc/jobs/POST/configchange; no API/financialformula/modelclaims. Stopinputuncertaintywithoutblindretry. C68manualdatecommitBLOCKEDnonewcondition/no repeat; C67ownerbusinessgate/F013staffremainopen/unexecuted."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "C198",
+  "status": "PASS_DEEP_STEP4_PAST_DATE_NEXT_GUARD",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "plan": "c198-deep-past-date-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T09:19:51Z",
+    "2026-10-26T09:23:03Z"
+  ],
+  "validControl": "ONEordinarydocumententry Step4/26OctMonday withknownbranchfe1/staff1bfd/service5157. Initialhydrationnotaccepted; locator waitno_matches, onefreshAXthenactualcheckboxchecked/selected1/60min100–300som/staffАдаханОсоров/samebranch/Nextenabled. Toollabelboundarynotproductfailure.",
+  "negative": "ONEordinarydocumententrychangesONLYdayto19OctMonday. Waitroleloadinghidden thenactualsamecheckedservice/selected1/60min100–300/staff/branch retained/day19OctMonday, Nextdisabled. DocumentedvisiblebuttonisEnabledfalse confirmed. No no-staff/unavailable-service notice; not empty-slot offday inference.",
+  "independentOracle": "26Oct2026 actualUTCandbusinessdate;19OctMondayis7dayspast. MatchingcurrentMondaycontrolNextenabled; sameknownchoicespastMondayNextdisabled. G09115Octoffday-NoSlotsconfound avoided; originalG091UTC/partial unchanged.",
+  "restoration": "Basebookingdocument resetStep1/no branch/staff/servicechoices/Nextdisabled/day26Oct. Onebrandclickpending thenawaitrootheadingactualroot3businesses; Adminmenu->Admin-panel protected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/TodayCancelled1; markHandoff.",
+  "effects": "Readonlydocumentnavigation/localrestoredURLdraftonly. No Next/slot/ChooseTime/Confirm/hold/booking/cancel/payment/Save/association/config/entity/authtransition/source/test/build/server/HTTP/SDK/SQL/storageprobe. Ordinaryappauth/analytics/telemetry/draftwritesunenumerated.",
+  "credit": {
+    "newUi": 1,
+    "newWindowUiBefore": 5,
+    "newWindowUiAfter": 6,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292
+  },
+  "limits": "OnlyStep4visibleNextlowerdateguardwithmatchingeligiblechoices; NOT Step5/backendbookingdate-rejection/SQL/API/RLS/alltimezones/midnight/no-flash/security/fullD2proof."
+}

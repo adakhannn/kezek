@@ -1,0 +1,40 @@
+{
+  "id": "C248",
+  "status": "PASS_ONE_POSITIVE_FRACTIONAL_DURATION_REJECTION_DISCARD_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c248-fractional-service-duration-plan.json",
+  "caseId": "S28-I203-existing-service-fractional-duration-reject-discard",
+  "setupStartedAfterClockUtc": "2026-10-28T12:29:48Z",
+  "observationWindowUtc": [
+    "2026-10-28T12:35:22Z",
+    "2026-10-28T12:38:39Z"
+  ],
+  "beforeInvalidSaveClockUtc": "2026-10-28T12:35:41Z",
+  "setup": "FreshknownSAadmin ->ordinarylogout/Googleknownowner/currentBusiness2Continueonly ->ownDashboard2 ->Services ->exact99editor. Baseline3authorednames LIVE TEST Service31 Рус/Кыргыз/Еng, duration1, listprice0–300 andeditorupper300 (AXomitszeroPriceFromvalue, no unmask/valueworkaround), branch1checked/branch2unchecked/activeTRUE/staffAdahanunchecked. No businessswitch/newassociation/config command.",
+  "actual": "ONLYdurationfilled1.5+ordinaryTab ->freshAXstepper float Value1.5/Details1,5; allotherfieldsbaseline. Afterclock12:35:41 ONEordinarySave ->sameexacteditor visible Проверьте выделенные поля AND Укажите целое число не менее 1 минуты, duration1.5retained/no success/listnavigation. SidebarServicesdiscard ->exact99list still1min/0–300/branch1active; reentry3names/1min/allbaseline. ONEfinalreload andwaitstaffcheckbox ->sameoriginal1min/upper300/branch1only/activeTRUE/Adahanunchecked/no errors. No validSave/Create/Enter/field/branch/stafftoggle commands.",
+  "restoration": {
+    "afterClockUtc": "2026-10-28T12:36:47Z",
+    "beforeClockUtc": "2026-10-28T12:38:39Z",
+    "actual": "Ordinaryownerlogout/Googleknownkezekkg only ->actualprotected/admin/RU/Anonymized/Business3/4branch1staff4service30booking/Today28Oct0-0-0, markHandoff. Sameworkingtab/provider0777/no newtab/no server action."
+  },
+  "toolNotes": [
+    "OwnerContinueheadingwaitdeadline thenONEfreshAX actualselect-business/current2; no duplicateauth.",
+    "Servicesdiscardwaitelementnotattached thenONEfreshAXcompletedlist; no repeatclick/Save.",
+    "PriceFrom0 omitted byAXstepper; independentlyvisiblelist before/after0–300 used, no privatefield/unmask/DOMvalue probe.",
+    "Duringordinarylogout rootcatalogueincidentallyloaded3businesses twice. Not independentnewPASS/currentpublicbookingdocproof/C189rootcausefix/C241retestauthorization."
+  ],
+  "effects": "ONEfractional localdraft/ONEinvalidSavevalidationattempt, discard/reentry/ONEreload. Twoordinarylogouts+twoGoogleloginsinclSArestore/currentBusiness2Continue setup may ordinarypreferenceupsert. No intentionalvalidserviceupdate/association/branch/name/price/active/entity/booking/hold/slot/payment/review/message/source/test/build/server command. UIerrors do notindependentlyprove zero API/DBwrites; ordinaryauth/read/preferences/telemetry unenumerated.",
+  "timebox": "Setup12:29:48 toadminrestorebefore12:38:39 <10minutes; no input/Saveafterdeadline12:39:48.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 2,
+    "windowUiAfter": 3,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0,
+    "logicalFixes": 17,
+    "accepted": 27,
+    "remaining": 289
+  },
+  "limits": "Onlyisolatedpositivefractionaldurationclientguard anddiscard/readback. C217zero/name/negativeprice/range notrerun. NotfullI2-03/server/DBatomicity/duplicates/publicavailability/visual/security/wholetechnicalPASS. Candidate/currentbuild/source unchanged."
+}

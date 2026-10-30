@@ -1,0 +1,29 @@
+{
+  "id": "C143_REVIEW_C144_PLAN",
+  "caseId": "S26-O303-admin-today-title-en",
+  "savedBeforeUiUtc": "2026-10-25T20:30:04Z",
+  "candidate": "dev-20261026-WEB-1f5ebe44a70f",
+  "review": {
+    "id": "C143",
+    "scope": "bounded readonly title-copy history/oracle review0credit",
+    "history": "Current O3-03 cases cover business-name errors and today status labels, not English Today heading punctuation. C140 recorded escaped title as incidental explicitly outside assertions; C142status PASS does not certify title. Selected original current case/evidence inventory and dictionary only, not global archive absence claim. Existing language switch/status controls are reused0newcredit.",
+    "independentOracle": "System section heading must be the ordinary English possessive Today's Bookings with U+0027 apostrophe and no U+005C backslash. It is system copy, no authored content/formatting policy ambiguity.",
+    "source": "admin.en.ts today heading literal contains overescaped backslash-apostrophe. Source predicts raw backslash but fresh finite heading read required before any fix.",
+    "credit": "0PASS/fix/accepted"
+  },
+  "scenario": {
+    "id": "C144",
+    "timeBudgetMinutes": 2,
+    "expected": "English settled admin heading and Today section title exactly Today's Bookings, no literal backslash. RU restored afterward.",
+    "steps": [
+      "Clock; ordinary existing tab English control once, wait translated server Admin Panel. Read only existing Today section heading via observed title prefix; compare exact English possessive string/code points. No statuscase replay/reload/booking action.",
+      "Clock; ordinary Русский restoration, wait protected Панель администратора/Admin-panel/Anonymized/RU; mark handoff. Unexpectedauth/readerror ->stop/no retry.",
+      "Only after real UI FAIL may one dictionary value spelling change; add component title regression, SAME-LIVE exact heading, RUrestore. Batch pending currentcandidate build after final scoped presentation fixes. No source-onlyPASS or wholelocale credit."
+    ]
+  },
+  "effects": "Ordinary locale controls/automaticrefresh only, RUrestore; no data/booking/role/auth/config command; ordinarytelemetry unenumerated.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/page.tsx": "87664bc6328f27a1e4e25997e7c37b836c45cb9a00b5fdd83fd492358c7cc236",
+    "apps/web/src/app/_components/i18n/dictionaries/admin.en.ts": "7c2390188ee8f4436fe610b4483f7bff3117e671fb7085b72b31c0e513309d27"
+  }
+}

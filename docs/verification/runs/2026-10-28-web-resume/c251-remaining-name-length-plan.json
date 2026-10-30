@@ -1,0 +1,101 @@
+{
+  "id": "C251_CONTINUATION",
+  "status": "PROSPECTIVE_PLAN_BEFORE_REMAINING_UI",
+  "parentPlan": "docs/verification/runs/2026-10-28-web-resume/c251-service-name-length-plan.json",
+  "priorAttempt": "docs/verification/runs/2026-10-28-web-resume/c251-result.json",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S28-I203-service-localized-name-length-rejection-discard",
+  "knownTarget": {
+    "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+    "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+    "originalNames": {
+      "ru": "LIVE TEST Service 31 Рус",
+      "ky": "LIVE TEST Service 31 Кыргыз",
+      "en": "LIVE TEST Service 31 Еng"
+    },
+    "duration": 1,
+    "priceFrom": 0,
+    "priceTo": 300,
+    "branch1": true,
+    "branch2": false,
+    "active": true,
+    "staff": false
+  },
+  "dependencyHashes": {
+    "apps/web/src/app/dashboard/services/ServiceForm.tsx": "b778953aa764cc3277969010b8077dbed68357d33341bec6b8c3188edb112fd8",
+    "apps/web/src/lib/serviceUpdateHttpService.ts": "593f4840a1ab042ca8c5b4d492f2b910aa8a46d5fbda954e104da92ba359c175",
+    "apps/web/src/lib/serviceUpdateRouteService.ts": "09558f04c1e61c74ee830061c01591807b569bad6a792001b7ff3ed43d714b28",
+    "apps/web/src/app/dashboard/services/[id]/page.tsx": "8ece808ba3e5509051baa9eb6ebb325af88cf780f6709c965797cdd3fc4eff75",
+    "apps/web/src/app/dashboard/services/[id]/EditServicePageClient.tsx": "2b31863251c1cbe415cb17a9ed2f8d5366a03e8a291b26e9b84910a41575b657",
+    "apps/web/src/lib/validation.ts": "1fbd74cb490998dc7d887a82d53e19f57c3447cef539ee3cc9662334428f9d54",
+    "packages/shared-client/src/validation.ts": "69190403d42d96f5c946d0341364385e4cc92400d0f51304a65084897c432298",
+    "apps/web/src/app/_components/i18n/dictionaries/services.ru.ts": "0fcbe290b75b34f0df3724db4e4a99ddaffafdcb9983c1131040742753a9a645",
+    "apps/web/src/app/_components/i18n/dictionaries/services.en.ts": "95916923eb2eb7326de11caeacff9f1b1c45ccd9b303ab90fcecda83d4d9c568",
+    "apps/web/src/app/_components/i18n/dictionaries/services.ky.ts": "e5d9d5d3b1c0e6a0bfa7994dbfb92e85ca94030266cf6d2ac9a9d256fdb5f278"
+  },
+  "variants": [
+    "service-name:ru:101-characters",
+    "service-name:ky:one-character",
+    "service-name:ky:101-characters",
+    "service-name:en:one-character",
+    "service-name:en:101-characters"
+  ],
+  "variantArguments": [
+    {
+      "id": "service-name:ru:101-characters",
+      "field": "ru",
+      "value": "C251_ЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯ",
+      "length": 101,
+      "bound": "long",
+      "expectedMessage": "Field+summarymustexplainmaximum100characters/orvalidrange2..100; sayingONLYatleast2 ismisleading for101characters and isUIfeedbackFAIL evenifsubmissionrejected."
+    },
+    {
+      "id": "service-name:ky:one-character",
+      "field": "ky",
+      "value": "Ө",
+      "length": 1,
+      "bound": "short",
+      "expectedMessage": "Field+summaryexplainatleast2characters"
+    },
+    {
+      "id": "service-name:ky:101-characters",
+      "field": "ky",
+      "value": "C251_ӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨӨ",
+      "length": 101,
+      "bound": "long",
+      "expectedMessage": "Field+summarymustexplainmaximum100characters/orvalidrange2..100; sayingONLYatleast2 ismisleading for101characters and isUIfeedbackFAIL evenifsubmissionrejected."
+    },
+    {
+      "id": "service-name:en:one-character",
+      "field": "en",
+      "value": "Q",
+      "length": 1,
+      "bound": "short",
+      "expectedMessage": "Field+summaryexplainatleast2characters"
+    },
+    {
+      "id": "service-name:en:101-characters",
+      "field": "en",
+      "value": "C251_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "length": 101,
+      "bound": "long",
+      "expectedMessage": "Field+summarymustexplainmaximum100characters/orvalidrange2..100; sayingONLYatleast2 ismisleading for101characters and isUIfeedbackFAIL evenifsubmissionrejected."
+    }
+  ],
+  "retainedCompletedVariant": "service-name:ru:one-character",
+  "expected": "ActualknownownerBusiness2/exactexisting99 allknownbaseline. EachvariantchangesONEnamefieldonly+Tab, requireexactvisiblepublicdraft (notmasked/DOMvalue), allothersoriginal. ONEordinaryinvalidSavepervariant ->sameeditor/summaryandcorrectfieldreason. Shortmustsaymin2; longmuststate100max/range instead ofcontradictorymin2-only. AftereachobservedServicesdiscard/reentryallbaseline, no validSave. EndONEreloadoriginalnames/1min/0–300/branch1only/active/staffunchecked; SAadmin/RU/Anonymized/Business3restore/handoff. ONEcompoundcase only whenallsixpass; anyrealFAILpreserved/no partialPASScredit.",
+  "steps": [
+    "Clock/freshSAadmin ->ordinaryknownownerGoogle/currentBusiness2Continueonly ->Services/exact99. Requireallknownbaseline, positivecatalogue/identity orBLOCKEDbeforeinput. No newfixture/association/businessswitch.",
+    "Clockforvariant: ordinaryfillONEdeclaredfield/value+Tab; exactAXecho/knownlengthmustbeobservable beforeONEinvalidSave. Allotherfieldsunchanged. Ifinputmasked/commituncertain stop/discard/no rawDOMvalue/event workaround.",
+    "ONEordinarySave/noEnter; captureexactfield+summarymessage/sameeditor. TooltimeoutONEfreshAX/no repeatSave. For101 ifonlymin2message, recordrealUIfeedbackFAIL; stopremainingvariants anddiscard/reenteroriginal. Do notpatchfromsource-onlyexpectation.",
+    "Ifallpasscontinueexactfinitesixarguments, discard/reenteraftereach. No furtherlengthcombinations/locales/max100validSave. Recoverypriority/nonewvariantafterminute12.",
+    "FinalONEreloadbaseline/currentownerlogout/GoogleknownSA/protectedadminRU/Anonymized/Business3/handoff. IfrealUIFAIL, preservethisevidenceandclassifysafeobservablecause, thenMINIMALfix+targetedregressions/SAME-LIVE allsix undernewfiniteplan. Anyproductsourcechange =>newcandidate andexistingA3-01buildstale untilproperofflinebuild+actualexecution, notfreshbuildfromunchangedcode."
+  ],
+  "scope": "Samecompoundcase/NOnewcase/NOcreditforpartial; doNOTrepeatRUshort. StartremainingRU101thenKY1/KY101/EN1/EN101. StopfirstrealFAIL andrestore beforeboundedcause/minimalfix. Allotheroriginalrestrictionspersist.",
+  "timeboxMinutesIncludingRestore": 15,
+  "stopNewVariantsAfterMinute": 10,
+  "setupAbortAtMinute": 7,
+  "recoveryReserveMinutes": 5,
+  "deadlineRule": "Recordfreshclock. Ifeditorbaselineunavailableatminute7, restorewithoutinput. No newvariantafterminute10. Recoverypriority; no repeatedauth/selectorloop. Preserveactualoverrunhonestly."
+}

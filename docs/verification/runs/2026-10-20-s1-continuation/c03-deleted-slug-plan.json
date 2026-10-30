@@ -1,0 +1,16 @@
+{
+  "id": "C03",
+  "afterClockUtc": "2026-10-20T08:47:19Z",
+  "case": "B2-04-S13-3",
+  "purpose": "Known previously existing deleted business slug, not a random missing address",
+  "approval": "Human action-time answer: Да, удалить этот тестовый бизнес",
+  "exactBusinessId": "85adc551-249c-4931-a445-aa6f905f1bea",
+  "exactBusinessName": "S1 TEST 20261020 Business Availability",
+  "soleBranchId": "e1eedc5a-5464-4add-989b-5accee455a99",
+  "preconditions": "Fresh admin detail: owner absent; one branch; zero staff/services/bookings. No other target authorized.",
+  "workflow": ["Inspect exact detail and deletion dialog", "Check clock immediately before final submit", "One ordinary application delete; do not blindly repeat on ambiguity", "Verify list, retained A and old businesses", "Open known public slug and booking slug; verify not-found and no booking form"],
+  "stopConditions": ["Unexpected dependencies", "Different target", "Ambiguous write outcome", "New permissions required"],
+  "recovery": "Deletion is irreversible and specifically approved. Do not recreate fixture or delete other entities.",
+  "timeBudgetMinutes": 20,
+  "limits": "No SDK/SQL/direct HTTP; CUA UI only; ordinary telemetry unenumerated"
+}

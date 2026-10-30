@@ -1,0 +1,154 @@
+diff --git a/test-results/closure-s1-20261018/build/apps/web/src/app/b/[slug]/BusinessInfo.tsx b/apps/web/src/app/b/[slug]/BusinessInfo.tsx
+index 6b9da60c..08a3d1d3 100644
+--- a/test-results/closure-s1-20261018/build/apps/web/src/app/b/[slug]/BusinessInfo.tsx
++++ b/apps/web/src/app/b/[slug]/BusinessInfo.tsx
+@@ -50,6 +50,8 @@ export default function BusinessInfo({ data }: { data: Data }) {
+     const { biz, branches, services, staff, promotions = [] } = data;
+     const { t, locale } = useLanguage();
+     const queryClient = useQueryClient();
++    const hasActiveBranches = branches.length > 0;
++    const noBranchesMessage = t('booking.empty.noBranches', 'У этого бизнеса нет активных филиалов. Пожалуйста, вернитесь позже.');
+ 
+     const handlePrefetchBookingData = () => {
+         const branchIds = branches.map((branch) => branch.id);
+@@ -119,8 +121,10 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                                                 {promotions.length} {t('business.hero.promotions', 'акции')}
+                                             </Badge>
+                                         ) : null}
+-                                        <Badge variant="info">
+-                                            {t('business.hero.bookable', 'Онлайн-запись доступна')}
++                                        <Badge variant={hasActiveBranches ? 'info' : 'neutral'}>
++                                            {hasActiveBranches
++                                                ? t('business.hero.bookable', 'Онлайн-запись доступна')
++                                                : t('booking.step1.noBranches', 'Нет активных филиалов.')}
+                                         </Badge>
+                                     </div>
+                                 }
+@@ -140,7 +144,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                                         <PublicContactActions contacts={resolvePublicContacts(biz)} compact />
+                                     </div>
+                                 }
+-                                actions={
++                                actions={hasActiveBranches ? (
+                                     <div className="flex flex-col gap-2 sm:items-end">
+                                         <Link
+                                             href={`/b/${biz.slug}/booking`}
+@@ -167,7 +171,11 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                                                 : t('business.hero.secondaryFallback', 'Выбрать филиал')}
+                                         </Link>
+                                     </div>
+-                                }
++                                ) : (
++                                    <p role="status" className="type-body max-w-sm text-[var(--text-secondary)]">
++                                        {noBranchesMessage}
++                                    </p>
++                                )}
+                             />
+ 
+                             <div className="grid gap-3 sm:grid-cols-3">
+@@ -190,7 +198,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                             </div>
+                         </div>
+ 
+-                        <Card variant="elevated" padding="lg" className="self-start">
++                        {hasActiveBranches ? <Card variant="elevated" padding="lg" className="self-start">
+                             <SectionHeader
+                                 title={t('business.trust.title', 'Почему можно идти дальше к записи')}
+                                 description={t(
+@@ -221,7 +229,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                                     )}
+                                 />
+                             </div>
+-                        </Card>
++                        </Card> : null}
+                     </div>
+                 </section>
+ 
+@@ -492,11 +500,13 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                     <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
+                         <Card variant="elevated" padding="lg">
+                             <SectionHeader
+-                                title={t('business.cta.title', 'Готовы перейти к записи')}
+-                                description={t(
++                                title={hasActiveBranches
++                                    ? t('business.cta.title', 'Готовы перейти к записи')
++                                    : t('booking.step1.noBranches', 'Нет активных филиалов.')}
++                                description={hasActiveBranches ? t(
+                                     'business.cta.description',
+                                     'Следующий шаг уже в booking flow: там выбираются филиал, услуга, сотрудник, дата и время.',
+-                                )}
++                                ) : noBranchesMessage}
+                             />
+                             <div className="mt-4 grid gap-3">
+                                 <BusinessMetric
+@@ -509,7 +519,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                                 />
+                             </div>
+                             <div className="mt-5 flex flex-col gap-2">
+-                                <Link
++                                {hasActiveBranches ? <Link
+                                     href={`/b/${biz.slug}/booking`}
+                                     onMouseEnter={handlePrefetchBookingData}
+                                     onFocus={handlePrefetchBookingData}
+@@ -520,7 +530,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
+                                     })}
+                                 >
+                                     {t('business.info.bookButton', 'Записаться')}
+-                                </Link>
++                                </Link> : null}
+                                 <Link
+                                     href="/"
+                                     className={buttonStyles({
+
+diff --git a/test-results/closure-s1-20261018/build/apps/web/src/app/page.tsx b/apps/web/src/app/page.tsx
+index 968fee48..01c6f84e 100644
+--- a/test-results/closure-s1-20261018/build/apps/web/src/app/page.tsx
++++ b/apps/web/src/app/page.tsx
+@@ -51,6 +51,7 @@ type Business = {
+     categories: string[] | null;
+     rating_score: number | null;
+     promotions_count?: number;
++    has_active_branches?: boolean;
+ };
+ 
+ type BranchSummary = {
+@@ -125,6 +126,10 @@ export default async function Home({
+             }
+ 
+             const branches = (branchesData ?? []) as BranchSummary[];
++            const businessesWithBranches = new Set(branches.map(branch => branch.biz_id));
++            typedBusinesses.forEach(business => {
++                business.has_active_branches = businessesWithBranches.has(business.id);
++            });
+ 
+             if (branches.length > 0) {
+                 const branchIds = branches.map((branch) => branch.id);
+@@ -318,8 +323,10 @@ function MarketplaceBusinessCard({
+ 
+             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[16px] bg-[var(--surface-emphasis)] px-3 py-2.5 text-xs text-[var(--text-secondary)]">
+                 <span className="inline-flex items-center gap-1.5">
+-                    <span className="h-2 w-2 rounded-full bg-[var(--status-success)]" aria-hidden="true" />
+-                    {t('home.card.onlineBooking', 'Онлайн-запись')}
++                    <span className={`h-2 w-2 rounded-full ${business.has_active_branches ? 'bg-[var(--status-success)]' : 'bg-[var(--text-muted)]'}`} aria-hidden="true" />
++                    {business.has_active_branches
++                        ? t('home.card.onlineBooking', 'Онлайн-запись')
++                        : t('booking.step1.noBranches', 'Нет активных филиалов.')}
+                 </span>
+                 {business.contact_phone ? (
+                     <span className="min-w-0 truncate">{business.contact_phone}</span>
+@@ -334,13 +341,13 @@ function MarketplaceBusinessCard({
+                     >
+                         <HomeAboutButtonText />
+                     </Link>
+-                    <Link
++                    {business.has_active_branches ? <Link
+                         href={`/b/${business.slug}/booking`}
+                         className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-[var(--motion-base)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]"
+                     >
+                         <HomeBookButtonText />
+                         <span className="ml-1.5" aria-hidden="true">→</span>
+-                    </Link>
++                    </Link> : null}
+                 </div>
+             </div>
+         </article>

@@ -1,0 +1,28 @@
+{
+  "id": "C108",
+  "requirementIds": [
+    "M2-02"
+  ],
+  "caseId": "S23-M202-branch-manual-address-draft-discard",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "timeboxMinutesIncludingRestore": 6,
+  "targetBusiness": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+  "targetBranch": "fa5f1017-d987-40c8-90ca-b042898c694f",
+  "draftAddress": "C108 UNSAVED ADDRESS 23OCT",
+  "expected": "Manual address helper promises input independently of map. One ordinary fill must retain exact C108 UNSAVED ADDRESS 23OCT after blur, enable Savechanges, leave name/inactive/contacts/coords/inheritance unchanged. NEVER Save or Enter. Leave/reentry must show original empty address/no changes/disabled Save. Map failure is a condition, not the issue under test; no map retry or causality claim.",
+  "steps": [
+    "Fresh clock, same knownSA humanTab2 root -> existingA -> branches -> exact inactivefa5 edit through observedlinks. Verify original name, emptyaddress/links/contacts, coords—/—, inheritchecked, activeunchecked, disabledSave. Unknown/masked/mismatch ->BLOCKED/no input. Observe manualaddress helper and map-unavailable notice; if map becomes healthy, helper alone still supports ordinary manual-entry expectation, no map actions.",
+    "Fresh clock, fill ONLY Address once with synthetic C108 UNSAVED ADDRESS 23OCT; fresh DOM input value/readOnly/disabled and Saveenabled. Ordinary Tab blur once, fresh state. If value reverts or cannot accept input, record realFAIL without blind retry/lower-level DOM events. Never Save/Enter/API/evaluatewrites.",
+    "Fresh clock leave via observed К списку филиалов; verify original2branches; normal reentry exactinactivefa5 to confirm emptyaddress/originalallfields/nochanges/disabledSave. ReturnAdminroot/knownSAAnonymizedBusiness3/RU/markhandoff. No mapretry/schedule/active/contacts/validSave/create/delete/newfixture."
+  ],
+  "effects": "Local synthetic unsaved draft only; no form submit or appDB command. Ordinary map mount/auth/telemetry unenumerated, not zero TOTAL writes. No HTTP/SDK/secret/storage/clipboard/native/screenshot/security commands.",
+  "accounting": "At best one new functionalUIPASS20->21,0fix/0accepteddelta. FAIL preserved if found; M2-02 whole matrix incomplete and other blockers retained. No reuse/retime oldproof.",
+  "savedBeforeUiUtc": "2026-10-23T06:23:22Z",
+  "dependencyHashes": {
+    "apps/web/src/components/admin/branches/BranchForm.tsx": "142dc0ccd41693697d71516ba7c7e9ed1ca3e491f1771e577f4bd78ea321e3f8",
+    "apps/web/src/components/ui/Input.tsx": "d7671d228d6e43c67f8e689d99c51d71ea46616664ae12f07e0fbb652b8dd5cf",
+    "apps/web/src/components/admin/branches/BranchMapPickerYandex.tsx": "2ea6e90f39759778b9a414f574a1d405220fe2263010d7175dda67a5fdeda101",
+    "apps/web/src/app/admin/businesses/[id]/branches/page.tsx": "59b746b95f328874a1d9e98fc56b8cabf0eb7168f37aac0ba275945a15c7f767",
+    "apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx": "c4a1a06b228e5215b96b517ecd89ea58d62c2b7b6357fd52a3f8d3238ab8ac0b"
+  }
+}

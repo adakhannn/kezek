@@ -1,0 +1,8 @@
+{
+  "id":"C68-observation-gap",
+  "lastUiBoundedBeforeUtc":"2026-10-21T09:49:51Z",
+  "nextActualClockUtc":"2026-10-21T10:57:20Z",
+  "facts":"C68UIeffects/restorationverifiedbefore09:49:51; nextclockobserved10:57:20duringresultregistration. No precisecontinuouswork/timing orreasonforthisgapestablished. No newUIexecutionclaimedinthegap; artifactsarepublishedlaterthanUIproof.",
+  "authorization":"Latesthumanuntilstop remainsprospective/no fixeddeadline; noextension/newprivilegesinferred. Oldmorningdeadline/finals/pausesandC24gaphistoryunchanged.",
+  "next":"Freshclock/usage/progressbeforeanynewscenario; C68notreexecutedforfreshness."
+}

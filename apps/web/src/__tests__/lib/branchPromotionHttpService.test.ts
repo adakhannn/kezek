@@ -34,6 +34,16 @@ describe('branchPromotionHttpService', () => {
         );
     });
 
+    test('preserves validation field metadata and rejection status', async () => {
+        (updateBranchPromotion as jest.Mock).mockResolvedValue({ok:false,status:400,error:'validation',
+            message:'Количество визитов должно быть больше 0',details:{field:'params.visit_count'}});
+        const response = await runUpdateBranchPromotionHttp(new Request('http://localhost/test',{
+            method:'PATCH',body:JSON.stringify({params:{visit_count:-1}})}),context);
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({ok:false,error:'validation',
+            message:'Количество визитов должно быть больше 0',details:{field:'params.visit_count'}});
+    });
+
     test('updates branch promotion through manager context', async () => {
         const req = new Request('http://localhost/api/dashboard/branches/branch-1/promotions/promo-1', {
             method: 'PATCH',

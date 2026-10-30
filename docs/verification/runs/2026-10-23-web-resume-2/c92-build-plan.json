@@ -1,0 +1,36 @@
+{
+  "id": "C92",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "sourceFingerprint": "b876ccbde0a87655431e32b2f6677b45b40c51376f0d3833f0434dafc4eab29a",
+  "files": 1684,
+  "dependencyReason": "C91 actual error-copy fix changed four runtime files plus added one test; C57 old build remains immutable historical PASS, not current-candidate build. This is a genuinely new source candidate, not unchanged retry.",
+  "preflight": "Actual23Oct02:48:21Z source unchanged/1684; new C92 build destination and log absent; elevated limited process inventory found no C92 compiler. Existing dev server/user SA tab untouched, no restart. No old font/download permission renewed.",
+  "timebox": {
+    "compilerSeconds": 240,
+    "preparationAndClassificationMinutes": 12,
+    "noUnchangedCompilerRetry": true
+  },
+  "harness": "scripts/closure-web-isolated-build-c92-20261023.mjs",
+  "guard": "scripts/closure-web-offline-guard-c92-20261023.cjs",
+  "guardTest": "scripts/closure-web-offline-guard-c92-20261023.test.cjs",
+  "destination": "test-results/closure-web-20261023-c92-b876ccbde0a8/build",
+  "rawLog": "c92-build-raw.txt",
+  "expected": "Exactly one fresh default Next16.0.11 Turbopack production build of exact ordered candidate1684files, no.env/allowlisted system environment/dummy invalid Supabase/no real keys/Sentry+telemetry disabled; no compiler switch/mocks/type skip/check disable. Exit0/types/prerenders yields scoped technical BUILD PASS only. Must run separate actual CUA built-document/assets plan before restoring A3-01 acceptance.",
+  "steps": [
+    "Check syntax of new harness/guard/test; execute only finite offline guard policy tests, no actual network. Failure stops before compiler; not product PASS.",
+    "Save this plan+hashes in ledger before compiler. Recheck exact current source and no existing own C92 run/result; clock immediately before single harness launch.",
+    "Harness copies only exact source selection, rejects .env/symlinks/generated caches, verifies copied fingerprint/count before compiler. Uses existing dependency junctions, no install or lock changes. Node TCP/fetch denied except exact generated C92 PostCSS worker loopback IPC/argv port, main3000 excluded. Not an OS firewall/native confinement assertion.",
+    "Run default next build once, preserve all raw output and exit/watchdog. No primary-server logs/restart or DB/API/user/browser changes. Poll bounded and report meaningful change; humanstop stops only exact owned child and pauses existing automation/readback.",
+    "Classify actual result. Any FAIL/timeout retained; no blind rerun/security/config/source fix from instrumental error. If0, create separate C93 compiled privacy entry/reload and observed-asset plan, own temporary runtime/tab only for independent built-output case, not denied-provider repair/replacement. Main user tab/session preserved."
+  ],
+  "effects": "Only isolated local copy/junctions/compiler/cache/raw log; no environment files, external downloads, DEV DB/roles/business/bookings/payments/messages/source writes or file cleanup. Auth/telemetry of untouched main app unenumerated; no zeroTOTALwrites claim.",
+  "accounting": "At compile0:0newUI/0newfix/0accepted delta; remains20/316 until separate built-runtime proof. Existing F014verified/currentwindow14UI1fix, F013open/global lint52errors/source-unit11FAIL/cache/visual/role/production blocks unchanged.",
+  "savedBeforeBuildUtc": "2026-10-23T02:55:35Z",
+  "harnessHashes": {
+    "scripts/closure-web-isolated-build-c92-20261023.mjs": "e796959c67c4311d7d34c91dc4f68ecac3b92f6d2f204adb6ef653823aad4e84",
+    "scripts/closure-web-offline-guard-c92-20261023.cjs": "5f0307438ec8e6664f1096989659f0f9c08ebd88c80456a6e4a5ebe0055204ab",
+    "scripts/closure-web-offline-guard-c92-20261023.test.cjs": "5754c7bd83375ed6e2df0e70a2c36e5b9c183ba912eaf884b340a17c7b9eac8d",
+    "scripts/closure-s1-isolated-build-c57-20261021.mjs": "f88a55bd1324f77fe2475e94aa94534e2c030487adc0fd44a540ff76277f81dc",
+    "scripts/closure-s1-offline-guard-c57-20261021.cjs": "9dc1cfa8e0336fc1ae5b7f385f1570f31c795fd0d57a828b1a68da7ff7a361a3"
+  }
+}

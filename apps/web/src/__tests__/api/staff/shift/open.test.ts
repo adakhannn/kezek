@@ -26,6 +26,7 @@ function createAwaitableQuery(result: QueryResult, resolver: 'gte' | 'maybeSingl
     const query: Record<string, jest.Mock | ((resolve: (value: QueryResult) => unknown) => unknown)> = {};
     query.select = jest.fn(() => query);
     query.eq = jest.fn(() => query);
+    query.is = jest.fn(() => query);
     query.lte = jest.fn(() => query);
     query.gte = jest.fn(() => (resolver === 'gte' ? Promise.resolve(result) : query));
     query.maybeSingle = jest.fn(() =>

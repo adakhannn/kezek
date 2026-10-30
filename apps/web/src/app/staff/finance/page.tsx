@@ -8,9 +8,9 @@ export const runtime = 'nodejs';
 
 export default async function StaffFinancePage() {
     // Просто проверяем доступ к кабинету сотрудника
-    await getStaffContext();
+    const { bizId, staffId } = await getStaffContext();
 
-    return <FinancePage showHeader={true} />;
+    return <FinancePage showHeader={true} viewScope={`${bizId}:${staffId}`} />;
 }
 
 

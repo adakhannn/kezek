@@ -1,0 +1,39 @@
+{
+  "id": "C196",
+  "status": "PLANNED_EXISTING_OWNER_AUTH_AND_REVERSIBLE_SERVICE_FIXTURE",
+  "preparedUtc": "2026-10-26T08:49:10Z",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "requirementIds": [
+    "D2-01",
+    "D2-02",
+    "D2-04"
+  ],
+  "objective": "Reach the ordinary management editor as existing knownowner, then execute exact C195 reversible existingservice-association/multi-selection/restore method if its baseline is available.",
+  "reason": "C195 globalSA lacksmanagementcontext. Knownowner exists. Earlier C67 stoppedbeforebusinessselection under narrower plan; currentdirecthumanfull-access/routine-autonomy steering authorizes ordinary selection of that existing ownbusiness, no newrole or grant. This is setup0credit, not repeateddirectselectoracceptance.",
+  "authority": "working-tab-and-autonomy-authority.json and currentdirecthuman message; all high-impact/security confirmation limits remain.",
+  "knownOwnerGoogle": "osorovadahan04@gmail.com",
+  "knownOwnerAlias": "osorov@sportsoft.ru",
+  "expectedBusiness": {
+    "id": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "name": "Тестовый бизнес 2"
+  },
+  "steps": [
+    "FreshknownSAadmin thenordinaryLogout; localSigninGoogle; immediately choose onlyknownowner identity. No password/code/cookie/token extraction, manualcallbackreplay, CAPTCHA/device bypass.",
+    "If actualbusinesschooser appears, choose exactexisting Тестовыйбизнес2 usingitsvisiblecontrol. Do not createbusiness or acquire newrole/privilege. Requireactualowner/managementheader andcorrectbusiness.",
+    "Openexistingstaffdetailthroughvisiblemanagementnavigation/knownstaffhref. Follow C195 baseline rules exactly. Before ANYservicecheckboxwrite, recordexactserviceID/staffID/originalcheckedstates in append-onlyeffects journal/pendingtrue. If identity/state uncertain, no toggle.",
+    "Onlyif exactexisting1minservice initiallyunchecked andknown60minservicechecked, add that ONEordinaryservicecapability relation. Follow C195 actualpersistence/multiserviceselect-partial-finaldeselect/independentsums, no time/slot/booking commands.",
+    "RemoveONLYtheownnewrelation, verifyreload/60minstillchecked/publiceligiblelistrecovered. Freeze finaljournal pendingfalse. No blindcleanup or unrelatedassociations.",
+    "OrdinaryownerLogout andknownkezekkgGoogleSAlogin; restoreprotectedadmin/RU/Anonymized/Business3 andmarkHandoff. Originalownerbusinesspreference captured before selection ifexposed; no inventedbit-identicalauthrollback."
+  ],
+  "basePlan": "c195-reversible-multi-service-plan.json",
+  "maxMinutesBeforeMutation": 10,
+  "mutationTimebox": "Once own effect exists, prioritize exactrecovery overnewcases or arbitrarytimecutoff.",
+  "noNewPermissions": "No account/user/role/job/securitygrant/credentials/newservice entity. Service capability association is a reversible existingDEV data relation, not useraccessgrant. Do not touchbookings/shifts/packages/payments or send messages.",
+  "stopRules": [
+    "ProviderURL-policyblock ->no sameprovider/newURL/browser/rawHTTP/native bypass.",
+    "Password/device/CAPTCHA needs humancontrolled step; do not inventcredentials orsolve.",
+    "Wrongbusiness/accessfailure ->oneexactblocker, no privilegedimpersonation/newrole.",
+    "Uncertainassociationwrite ->freshUIbeforeanyretry; recoveryonlyexactownnewlink."
+  ],
+  "credit": "Auth/context/servicefixturepreparation no productUIcasecredit. AtmostONEgenuinemulti-service functionalcase, no wholeD2acceptance automatically."
+}

@@ -36,7 +36,7 @@ export function BranchSelector({
                         {t('booking.step1.description', 'Начните с локации, чтобы дальше система показала релевантных сотрудников и доступные услуги.')}
                     </p>
                 </div>
-                <Badge variant="info">{`${branches.length} ${t('booking.step1.branchesCount', 'локаций')}`}</Badge>
+                <Badge variant="info">{t('booking.step1.branchesCount', 'Филиалы: {count}').replace('{count}', String(branches.length))}</Badge>
             </div>
 
             {branches.length === 0 ? (

@@ -1,0 +1,24 @@
+{
+  "id": "C41",
+  "plannedAfterUtc": "2026-10-21T00:46:30Z",
+  "candidate": "dev-20261020-S1-4e13384124d3",
+  "requirement": "C1-04",
+  "scope": "Existing authenticated sessions at generic /auth/sign-in, no explicit destination. Bounded role-default subset, NOT full C1/P4 authorization/session/provider acceptance.",
+  "budgetMinutes": 12,
+  "reason": "C39 exercised explicit/unsafe SA returns, C40 generic owner. Generic SA/client/staff outcomes remain unexecuted; don't repeat owner or unsafe-return matrix.",
+  "cases": [
+    {"id":"S21-C104-DEFAULT-SA","identity":"knownSA kezekkg@gmail.com","status":"not_run","expected":"Generic sign-in with existing SA session settles /admin and Панель администратора without provider action or fresh login."},
+    {"id":"S21-C104-DEFAULT-OWNER2","identity":"known owner with two businesses","status":"reuse_planned","fromCase":"S12-owner-route-2","evidence":"S1-EV-278","expected":"/select-business with exactly own two businesses; business2 retained. Original00:35:49..00:36:28 observation reused, no fresh execution."},
+    {"id":"S21-C104-DEFAULT-CLIENT","identity":"pureclient low.fade.osh@gmail.com","status":"not_run","expected":"Existing pureclient generic sign-in settles public /, client identity retained; no admin/staff/owner workspace or sign-in form left stuck. Public root is app's neutral default, not cabinet privilege."},
+    {"id":"S21-C104-DEFAULT-STAFF","identity":"known active staff obraz.osh@gmail.com","status":"not_run","expected":"Existing active staff generic sign-in settles /staff, shows own staff workspace; no owner/admin impersonation or job/context changes."},
+    {"id":"S21-C104-DEFAULT-OWNER1","status":"blocked","expected":"Existing single-business owner should reach /dashboard","reason":"Available owner has2businesses; no new owner/role/business-membership fixture or temporary reassignment allowed."},
+    {"id":"S21-C104-DEFAULT-BIZADMIN","status":"blocked","expected":"Existing businessadmin reaches authorized business /dashboard","reason":"No authorized businessadmin fixture; globalSA is not a substitute. No role creation."},
+    {"id":"S21-C104-DEFAULT-MANAGER","status":"blocked","expected":"Existing manager reaches authorized business /dashboard","reason":"No authorized manager fixture; no role creation."}
+  ],
+  "steps": ["Fresh inventory/role", "Generic document navigation with currentSA session", "Ordinary Google identity switch to known client, verify actual client identity", "Generic document navigation with existing client session", "Ordinary Google switch to known staff, verify own workspace", "Generic document navigation with existing staff session", "Restore knownSA through ordinary Google; preserve tabs2/5"],
+  "evidence": "Actual final URL+DOM heading/role/context; record intermediate loading, bounded wait, no no-flash/visual/device claim. No request injection, SDK/API probes, token/cookie extraction, private clipboard or screenshots unchanged retry.",
+  "effects": "Ordinary authorized identity switches and navigation; no agent business/booking/job/role/grant/current-business writes. App auth/telemetry effects unenumerated, never zero TOTAL writes.",
+  "countsBefore": {"S1Accepted":16,"S1Total":25,"S1PrimaryPASS":61,"S1PrimaryTotal":79,"S2Accepted":1,"S2Total":70,"productAccepted":17,"productTotal":316},
+  "acceptance": "C1-04 casePlanComplete remains false for complete contract, requirementpartial even if all4available role-default casespass;3blocked retained in7subset denominator.",
+  "deadlineUtc": "2026-10-21T05:00:00Z"
+}

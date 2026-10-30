@@ -1,0 +1,44 @@
+{
+  "id": "C95",
+  "requirementIds": [
+    "M2-01"
+  ],
+  "caseId": "S23-M201-duplicate-slug-reject-cancel",
+  "candidate": "dev-20261023-WEB-b876ccbde0a8",
+  "timeboxMinutesIncludingRecovery": 6,
+  "target": {
+    "id": "fe2d412c-21c6-40ef-b5d3-23f49f550610",
+    "name": "S1 TEST 20261020 Branch Availability",
+    "slug": "s1-test-20261020-branch-availability",
+    "category": "barbershop",
+    "approved": true,
+    "owner": null,
+    "branchLimit": 2,
+    "branches": 2,
+    "staff": 0,
+    "services": 0,
+    "bookings": 0,
+    "address": null,
+    "phones": null,
+    "contacts": "none"
+  },
+  "duplicateSlug": "testovyy-biznes-2",
+  "expected": "A cannot acquire another existing business public URL. One ordinary Save after only URL draft edit must visibly reject with conflict, retain editor and unchanged draft name/other fields. Cancel clears draft/error; ordinary reload retains A original slug/name/category/approved/owner/counts/empty address and contacts. Root still shows original other-business URL. One functional negative-path/recovery case, not new API/DB/visual/localization acceptance.",
+  "steps": [
+    "Clock; same known SA human Tab2 click observed A link. Verify exact id/name/slug/approved/category/owner/counts/empty address/phones. Stop on mismatch.",
+    "Edit via ordinary UI; verify original name/slug, all bundled address/phones/contacts blank, barbershop selected and approval checked. No masking extraction or other field edits. Clock; fill only URL-адрес with exact already-visible duplicate slug. Observe draft and all unchanged fields.",
+    "Clock immediately before ONE Save button click. No Enter, repeated submit, raw HTTP/SDK/DOM event/credentials/permission bypass. Expect explicit conflict/editor retained. Ambiguous outcome -> no retry; one safe observation/normal reload to classify and report if any actual unexpected mutation.",
+    "Clock Cancel then normal reload. Verify original A profile/counts; Edit only to verify all contacts still blank if readonly omits them, then Cancel. Return Admin root and confirm both known original slugs and Business3. Mark human tab handoff."
+  ],
+  "effects": "At most one invalid Save PATCH through ordinary UI, expected conflict-before-update. Full bundled unchanged fields reviewed. No valid Save, new entity or other business update, owner/approval/category/contact edit, delete/booking/payment/role/job/security command. Normal auth and telemetry writes unenumerated; do not claim zero TOTALwrites or raw DB transaction proof.",
+  "stop": "Unknown/masked/nonempty bundled baseline, wrong fixture/role/auth challenge, uncertain input/transport result, unexpected update ->stop/no resubmit/no speculative repair. Safe Cancel/reload only, report exact retained state if changed; no valid rollback command silently authorized. No repeated known completed case for counts.",
+  "accounting": "At most one NEW functional UI PASS: current window14->15,0newfix/0accepted delta. M2-01 stays partial/casePlanComplete false; all blocked variants and technical FAIL retained. Related raw-English error is not automatically a distinct F014 fix.",
+  "savedBeforeUiUtc": "2026-10-23T05:08:49Z",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx": "de60a1526da8b49cde543fac99d3e9e76fded3a0e4b813b151bb0b9b9e95c257",
+    "apps/web/src/app/admin/businesses/[id]/page.tsx": "6539f49525681d4600fa40d50b5e36b099576ee74017782d6d11356f4273def3",
+    "apps/web/src/app/admin/api/businesses/[id]/update/route.ts": "a864964368972b6fefde74ec7103374fd8f3f9ed211fef7b1e0b017eb166ba0c",
+    "apps/web/src/lib/businessContacts.ts": "22111c32110414ec704d0dd2725273b37f971920e92999c4a751e4aa0f6f264a",
+    "apps/web/src/lib/businessSlug.ts": "5ba614f50f484230ce4dce1d9f4f91fa92dedcb1f16ac96f3275aada5db65806"
+  }
+}

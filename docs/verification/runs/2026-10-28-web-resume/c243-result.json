@@ -1,0 +1,34 @@
+{
+  "id": "C243",
+  "status": "BLOCKED_AT_SETUP_INCONSISTENT_CUA_OBSERVATION_NO_FIELD_OR_RELOAD_ACTION",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c243-unsaved-admin-branch-reload-plan.json",
+  "caseId": "S28-P201-admin-branch-unsaved-dirty-reload",
+  "observationWindowUtc": [
+    "2026-10-28T09:19:59Z",
+    "2026-10-28T09:22:13Z"
+  ],
+  "actual": "Fresh AX showed protected SA/admin/RU/Anonymized/Business3. ONE observed A business-card link click. Following AX reported unchanged /admin tree. Bounded exact A-heading wait returned but AX still unchanged/admin. One narrow diagnostic: heading innerText returned S1 TEST 20261020 Branch Availability while same-provider tab inventory still /admin; ONE full fresh AX (disableDiffing) still /admin/protected main dashboard, no business detail or branch editor. Contradictory channels do not establish completed transition/actual edit target. No repeat click/goto/rebind/reload/native/provider workaround.",
+  "blocker": {
+    "owner": "Permitted CUA current-page observation consistency",
+    "exit": "A genuinely new tool/browser condition with internally consistent actual target evidence. This bounded diagnostic is complete; no unchanged diagnostic/navigation replay or repeated human repair question."
+  },
+  "notExecuted": [
+    "Branches or exact inactive branch editor entry",
+    "Any field fill/dirty draft",
+    "Intentional mid-form reload",
+    "Save/Enter or other entity command"
+  ],
+  "restoration": "No editor input or pending fixture effect was created. Preserve same working tab/markHandoff. AX+inventory report /admin, but destination consistency after the one link click is unresolved; no fresh fully consistent UI-health/restoration claim beyond those observations. Main server untouched.",
+  "effects": "ONE ordinary read-link click plus observation/wait/inventory and metadata handoff. No field/Save/reload/authswitch/fixture/entity/role/booking/HTTP/API/SQL/SDK/storage/source/test/build/server command. Ordinary app auth/analytics/telemetry unenumerated, not zero TOTAL writes.",
+  "classification": "Tool observation blocker, not product navigation/auth bug or justification for source/config/security/server change. Planned compoundcase NOT passed and no duplicate execution credit.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAccepted": 0,
+    "newReuse": 0,
+    "windowUi": 1,
+    "accepted": 27,
+    "remaining": 289
+  }
+}

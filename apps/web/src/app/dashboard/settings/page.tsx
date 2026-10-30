@@ -1,5 +1,6 @@
 import { BusinessContactSettingsForm } from './BusinessContactSettingsForm';
 
+import { getServerLocale, getT } from '@/app/_components/i18n/server';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -10,6 +11,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function BusinessSettingsPage() {
+    const t = getT(await getServerLocale());
     const { supabase, userId, bizId, business } = await getBizContextForManagers();
     const admin = getServiceClient();
     const [{ data: isSuper }, owner] = await Promise.all([
@@ -22,8 +24,8 @@ export default async function BusinessSettingsPage() {
             <main className="mx-auto max-w-4xl p-6">
                 <AlertBanner
                     variant="danger"
-                    title="Нет доступа"
-                    message="Публичные контакты может изменять только владелец бизнеса."
+                    title={t('business.contactSettings.noAccessTitle')}
+                    message={t('business.contactSettings.noAccessDescription')}
                 />
             </main>
         );
@@ -38,8 +40,8 @@ export default async function BusinessSettingsPage() {
     return (
         <main className="mx-auto max-w-4xl space-y-6 p-6 lg:p-8">
             <PageHeader
-                title="Настройки бизнеса"
-                description={`Публичные контакты ${business?.name || 'выбранного бизнеса'}`}
+                title={t('business.contactSettings.title')}
+                description={`${t('business.contactSettings.publicContacts')} ${business?.name || t('business.contactSettings.selectedBusiness')}`}
             />
             <BusinessContactSettingsForm
                 initial={{

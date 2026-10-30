@@ -4,9 +4,10 @@
 export const dynamic = 'force-dynamic';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { useSignInRedirectDecision } from '@/app/auth/sign-in/useSignInRedirectDecision';
 import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
@@ -16,102 +17,7 @@ function AuthCallbackContent() {
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
 
-    const fetchIsSuper = useCallback(async (): Promise<boolean> => {
-        const { data, error } = await supabase.rpc('is_super_admin');
-        if (error) {
-            logWarn('Callback', 'is_super_admin error', { error: error.message });
-            return false;
-        }
-        return !!data;
-    }, []);
-
-    const fetchOwnsBusiness = useCallback(async (userId?: string): Promise<boolean> => {
-        if (!userId) return false;
-        const { count, error } = await supabase
-            .from('businesses')
-            .select('id', { count: 'exact', head: true })
-            .eq('owner_id', userId);
-        if (error) {
-            logWarn('Callback', 'owner check error', { userId, error: error.message });
-            return false;
-        }
-        return (count ?? 0) > 0;
-    }, []);
-
-    const decideRedirect = useCallback(
-        async (fallback: string, userId?: string): Promise<string> => {
-            if (await fetchIsSuper()) return '/admin';
-
-            // Пробуем использовать новый API текущего бизнеса для детерминированного выбора
-            if (userId) {
-                try {
-                    const res = await fetch('/api/me/current-business', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                    });
-                    if (res.ok) {
-                        const json = (await res.json()) as {
-                            ok: boolean;
-                            data?: { currentBizId: string | null; businesses: { id: string }[] };
-                        };
-                        if (json.ok && json.data) {
-                            const count = json.data.businesses.length;
-                            if (count === 1) {
-                                const only = json.data.businesses[0];
-                                if (only?.id && json.data.currentBizId !== only.id) {
-                                    void fetch('/api/me/current-business', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ bizId: only.id }),
-                                    }).catch(() => undefined);
-                                }
-                                return '/dashboard';
-                            }
-                            if (count > 1) {
-                                return '/select-business';
-                            }
-                        }
-                    }
-                } catch (e) {
-                    logWarn('Callback', 'decideRedirect: current-business API failed, fallback to old logic', {
-                        error: e instanceof Error ? e.message : String(e),
-                    });
-                }
-            }
-
-            if (await fetchOwnsBusiness(userId)) return '/dashboard';
-            
-            // Проверяем наличие записи в staff (источник правды)
-            if (userId) {
-                try {
-                    const { data: staff } = await supabase
-                        .from('staff')
-                        .select('id')
-                        .eq('user_id', userId)
-                        .eq('is_active', true)
-                        .maybeSingle();
-                    
-                    if (staff) return '/staff';
-                } catch (error) {
-                    logWarn('Callback', 'decideRedirect: error checking staff', error);
-                }
-            }
-            
-            // Fallback: проверяем через RPC
-            try {
-                const { data: roles } = await supabase.rpc('my_role_keys');
-                const keys = Array.isArray(roles) ? (roles as string[]) : [];
-                if (keys.includes('owner')) return '/dashboard';
-                if (keys.includes('staff')) return '/staff';
-                if (keys.some(r => ['admin', 'manager'].includes(r))) return '/dashboard';
-            } catch (error) {
-                logWarn('Callback', 'decideRedirect: error checking roles', error);
-            }
-            
-            return fallback || '/';
-        },
-        [fetchIsSuper, fetchOwnsBusiness]
-    );
+    const { decideRedirect } = useSignInRedirectDecision({ router });
 
     useEffect(() => {
         (async () => {

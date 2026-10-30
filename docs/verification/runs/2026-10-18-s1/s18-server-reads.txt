@@ -1,0 +1,23 @@
+## server-retry
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":1,"utc":"2026-10-18T11:35:58.951Z"}
+{"event":"s18-public-get","table":"services","status":200,"sequence":4,"utc":"2026-10-18T11:35:59.270Z"}
+{"event":"s18-public-get","table":"branches","status":200,"sequence":4,"utc":"2026-10-18T11:35:59.277Z"}
+{"event":"s18-public-get","table":"staff","status":200,"sequence":4,"utc":"2026-10-18T11:35:59.297Z"}
+{"event":"s18-public-get","table":"branch_promotions","status":200,"sequence":5,"utc":"2026-10-18T11:35:59.517Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":6,"utc":"2026-10-18T11:35:59.832Z"}
+{"event":"s18-public-get","table":"staff","status":200,"sequence":7,"utc":"2026-10-18T11:36:00.003Z"}
+
+
+## map-retry
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":8,"utc":"2026-10-18T11:36:58.200Z"}
+{"event":"s18-public-get","table":"branches","status":200,"sequence":9,"utc":"2026-10-18T11:36:58.358Z"}
+{"event":"s18-public-get","table":"categories","status":200,"sequence":10,"utc":"2026-10-18T11:36:58.533Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":12,"utc":"2026-10-18T11:36:58.774Z"}
+{"event":"s18-public-get","table":"businesses","status":200,"sequence":13,"utc":"2026-10-18T11:36:58.861Z"}
+{"event":"s18-public-get","table":"staff","status":200,"sequence":14,"utc":"2026-10-18T11:36:58.915Z"}
+{"event":"s18-public-get","table":"staff","status":200,"sequence":14,"utc":"2026-10-18T11:36:59.000Z"}
+
+
+## stop
+{"event":"stopped","pid":18872,"utc":"2026-10-18T11:38:32.493Z","exitCode":4294967295,"signal":null}
+

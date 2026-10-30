@@ -1,0 +1,20 @@
+{
+  "id": "S1.1-fresh-origin-assets",
+  "plannedUtc": "2026-10-18T11:05:55Z",
+  "candidateId": "dev-20261018-S1-8734fceeb50b",
+  "requirements": [
+    "A3-02"
+  ],
+  "reason": "A new isolated origin namespace avoids reusing prior localhost/127.0.0.1 cache keys. Inspect actual observed resources and supported pageAssets export; do not infer loading from source references.",
+  "origin": "http://s1assets-20261018-110530.localhost:3103",
+  "steps": [
+    "Start current built server in existing guarded dummy mode",
+    "Navigate existing tab to unique local origin",
+    "Observe actual page and client language interaction",
+    "Use documented pageAssets inventory and bundle only observed stylesheet/font/image assets",
+    "Inspect script resource observations and scoped browser logs; no raw fetch/direct asset navigation",
+    "Restore localhost owner/RU/current business2 and stop exact owned server"
+  ],
+  "acceptance": "All four declared categories need actual loaded evidence. DOM-only absence of error is insufficient for unobserved asset category; inability remains blocker. Unique origin proves separate cache namespace, not global browser cache clearing.",
+  "limits": "Static local production-mode resources only, not deployed CDN/TLS, visual/device/screenshots or all-route assets. Build/home backend guarded as before; no real credentials or security changes."
+}

@@ -1,0 +1,23 @@
+{
+  "id": "C57",
+  "status": "PLANNED",
+  "authorizedUtcObservedBefore": "2026-10-21T06:55:58Z",
+  "humanAnswer": "да давай",
+  "authorization": "Replace external Google Fonts build download with real Geist/Geist Mono local files, license and next/font/local. No redesign, substituted font, compiler switch or disabled checks.",
+  "baselineCandidate": "dev-20261020-S1-4e13384124d3",
+  "baselineFingerprint": "4e13384124d33e72f0e7e0e87dbd2ba6faafa53a5d9cfb5ed2e1bf5749c27833",
+  "reproduction": "C54 exact cold default Next16.0.11 build exit1 with real Google font binary connection failures; C55 CSS GET timeout and one binary GET200. Root network cause remains unknown. Preserve all old FAIL artifacts.",
+  "scope": "Only root layout font loading, official font assets/license/provenance and focused regression tests. Existing variables, weight100..900, normal style, display swap, body/providers and routes unchanged.",
+  "sourceSelection": "Official google/fonts blobs for full variable normal fonts; verify Git blob SHA, family/version/weight and glyphs against exact Latin WOFF2 URLs emitted by C54 before accepting. Prefer exact current versions over upgrade.",
+  "cases": [
+    {"id":"font-origin-license", "method":"artifact", "expected":"Official source and complete OFL1.1 retained with hashes; no dependency install or lock change"},
+    {"id":"font-parity-coverage", "method":"artifact", "expected":"Both real families match current C54 Google font version/metrics, wght100..900; Latin/Russian/Kyrgyz including ӨөҮүҢң covered"},
+    {"id":"local-config-regression", "method":"unit", "expected":"next/font/local real files, original variables, swap/normal/range, no Google font loader; required gates honest"},
+    {"id":"fresh-offline-build", "method":"build", "expected":"New exact source cold standard Next build, stripped env/dummy DB/all external Node network denied, no font mock/type skip/compiler change; raw result retained"},
+    {"id":"local-live-regression", "method":"live", "expected":"CUA actual current admin reload plus planned public page shows intact app after font change; font/CSS artifacts locally emitted. DOM not visual/font-render/viewport PASS"}
+  ],
+  "deadline": "Until human stop or unavailable usage; no claim of uninterrupted work",
+  "stopCriteria": "Source mismatch, missing glyphs/license, broad unintended source changes, unsafe build network dependency or browser block: retain exact blocker; do not substitute font or bypass controls.",
+  "effects": "Public official source downloads only; no browser auth transitions/business/role/grant commands planned. Ordinary UI auth lookup/telemetry may occur and is unenumerated.",
+  "acceptance": "No new functional requirement credit for metadata/unit work. Build and live results separate; review candidate dependency applicability explicitly, preserve original live UTC. Old visuals/builds never silently promoted."
+}

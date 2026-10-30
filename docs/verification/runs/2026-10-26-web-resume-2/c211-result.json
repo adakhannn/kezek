@@ -1,0 +1,33 @@
+{
+  "id": "C211",
+  "status": "PASS_ONE_COMPOUND_TWO_OWNED_BUSINESS_CHOICE_AND_RELOAD_CASE",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c211-direct-business-choice-plan.json",
+  "caseId": "S26-F2-direct-business-chooser-two-owned-persistence",
+  "observationWindowUtc": [
+    "2026-10-26T10:32:38Z",
+    "2026-10-26T10:33:38Z"
+  ],
+  "restoredBeforeClockUtc": "2026-10-26T10:34:25Z",
+  "actual": "Direct/select-business exacttwoownedchoices/Current2 ->ONEchoiceBusiness1 ->actual/dashboard/h1name1/ID35e5b36c/switcher1; ONEreloadsameID/name1. DirectchooseragainCurrent1+Business2available ->ONEchoiceBusiness2 ->actual/dashboard/h1name2/IDc28c8109; ONEreloadsame2/hydratedswitcher2. OriginalCurrent2 restored. Optimisticbadge notusedascompletion.",
+  "effects": "Two noncurrentownpreferencechoices1then2, one setupContinuealreadyCurrent2; ordinarytwo knownGooglelogins/two logouts+telemetryunenumerated. No businessentity/role/booking/hold/slot/payment/profile/contact/notification/message/source/test/build/server command. Semanticoriginalpreferencerestored, notbitidenticalDBrollback.",
+  "restoration": "KnownSAkezekkg ordinaryGooglelogin ->actualprotected/admin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1/markHandoff. Originalbusiness2preferencereloadverifiedbeforeownerlogout.",
+  "toolNotes": "Setupfirstlogout expectedheadingВход waitdeadline because actualdestinationguestroot; onefreshAXthenobservedВойти clicked. Ownerchooserheadingexactnamecorrection viaonefreshAX. No duplicateauth/choice/sourcefix; no productFAILfromwait.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 10,
+    "windowUiAfter": 11,
+    "newFix": 0,
+    "acceptedBefore": 24,
+    "acceptedAfter": 26,
+    "remaining": 290,
+    "newRequirements": [
+      "F2-02",
+      "F2-04"
+    ],
+    "windowAcceptedRequirements": 3,
+    "windowLiveFixes": 1,
+    "logicalLiveFixes": 17
+  },
+  "limits": "Directmultiple-owned-businesschoiceandordinaryreloadfiniteflow only. F2-01zero/onebusiness paths,F2-03APIcalls,F2-05revocation notaccepted; no RLS/security/concurrency/visual/no-flash/wholeF2proof."
+}

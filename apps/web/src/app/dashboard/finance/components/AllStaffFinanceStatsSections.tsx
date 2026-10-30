@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import type { BranchOption, Period, StaffStat, TotalStats } from './allStaffFinanceStatsTypes';
+import { financeDateAnchor, financePeriodDate } from './financePeriodDate';
 
 function formatMoney(value: number, locale: string) {
     return `${value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`;
@@ -122,8 +123,8 @@ export function AllStaffFinanceStatsFilters({
 
                 <input
                     type={period === 'year' ? 'number' : period === 'month' ? 'month' : 'date'}
-                    value={period === 'year' ? date.split('-')[0] : date}
-                    onChange={(event) => onDateChange(period === 'year' ? `${event.target.value}-01-01` : event.target.value)}
+                    value={financePeriodDate(period, date)}
+                    onChange={(event) => onDateChange(financeDateAnchor(period, event.target.value))}
                     className="flex-1 sm:flex-none px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
                 />
 
@@ -150,13 +151,21 @@ export function AllStaffFinanceStatsTotals({
     locale: string;
     t: (key: string, fallback?: string) => string;
 }) {
+    const totalWithConsumables = totalStats.totalAmount + totalStats.totalConsumables;
+    const shareOfTotal = (value: number) => totalWithConsumables > 0
+        ? `${((value / totalWithConsumables) * 100).toFixed(1)}%`
+        : '0%';
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
                 <div className="text-xs uppercase tracking-wide text-indigo-100 mb-2">
-                    {t('finance.totalTurnover', 'Общий оборот')}
+                    {t('finance.totalWithConsumables', 'Услуги и расходники')}
                 </div>
-                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalStats.totalAmount, locale)}</div>
+                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalWithConsumables, locale)}</div>
+                <div className="text-xs text-indigo-100 mt-1">
+                    {t('finance.servicesRevenue', 'Услуги')}: {formatMoney(totalStats.totalAmount, locale)}
+                    {' · '}{t('finance.consumablesRevenue', 'Расходники')}: {formatMoney(totalStats.totalConsumables, locale)}
+                </div>
                 <div className="text-xs text-indigo-100 mt-1">{periodLabel}</div>
             </div>
 
@@ -166,7 +175,7 @@ export function AllStaffFinanceStatsTotals({
                 </div>
                 <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalStats.totalMaster, locale)}</div>
                 <div className="text-xs text-emerald-100 mt-1">
-                    {totalStats.totalAmount > 0 ? `${((totalStats.totalMaster / totalStats.totalAmount) * 100).toFixed(1)}%` : '0%'}
+                    {shareOfTotal(totalStats.totalMaster)} {t('finance.ofTotal', 'от общей суммы')}
                 </div>
             </div>
 
@@ -176,7 +185,7 @@ export function AllStaffFinanceStatsTotals({
                 </div>
                 <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalStats.totalSalon, locale)}</div>
                 <div className="text-xs text-blue-100 mt-1">
-                    {totalStats.totalAmount > 0 ? `${((totalStats.totalSalon / totalStats.totalAmount) * 100).toFixed(1)}%` : '0%'}
+                    {shareOfTotal(totalStats.totalSalon)} {t('finance.ofTotal', 'от общей суммы')}
                 </div>
             </div>
 
@@ -186,13 +195,13 @@ export function AllStaffFinanceStatsTotals({
                 <div className="text-xs text-gray-100 mt-1">
                     {totalStats.totalOpenShifts > 0 && (
                         <span>
-                            {totalStats.totalOpenShifts} {t('finance.shifts.open', 'открыта')}
+                            {t('finance.shifts.openCount', 'Open: {count}').replace('{count}', String(totalStats.totalOpenShifts))}
                         </span>
                     )}
                     {totalStats.totalOpenShifts > 0 && totalStats.totalClosedShifts > 0 && ' • '}
                     {totalStats.totalClosedShifts > 0 && (
                         <span>
-                            {totalStats.totalClosedShifts} {t('finance.shifts.closed', 'закрыта')}
+                            {t('finance.shifts.closedCount', 'Closed: {count}').replace('{count}', String(totalStats.totalClosedShifts))}
                         </span>
                     )}
                 </div>
@@ -247,7 +256,7 @@ export function AllStaffFinanceStatsTable({
                             <div className="grid grid-cols-2 gap-3 text-sm">
                                 <div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                        {t('finance.staffStats.turnover', 'Оборот')}
+                                        {t('finance.servicesRevenue', 'Услуги')}
                                     </div>
                                     <div className="font-semibold text-gray-900 dark:text-gray-100">
                                         {formatMoney(stat.totalAmount, locale)}
@@ -261,7 +270,7 @@ export function AllStaffFinanceStatsTable({
                                         {stat.shiftsCount}
                                         {stat.openShiftsCount > 0 && (
                                             <span className="text-xs text-green-600 dark:text-green-400 ml-1">
-                                                ({stat.openShiftsCount} {t('finance.shifts.open', 'открыта')})
+                                                ({t('finance.shifts.openCount', 'Open: {count}').replace('{count}', String(stat.openShiftsCount))})
                                             </span>
                                         )}
                                     </div>
@@ -308,7 +317,7 @@ export function AllStaffFinanceStatsTable({
                                 {t('finance.staffStats.status', 'Статус')}
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                {t('finance.staffStats.turnover', 'Оборот')}
+                                {t('finance.servicesRevenue', 'Услуги')}
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 {t('finance.staffStats.toEmployee', 'Сотруднику')}
@@ -372,7 +381,7 @@ export function AllStaffFinanceStatsTable({
                                         <div className="text-sm text-gray-900 dark:text-gray-100">{stat.shiftsCount}</div>
                                         {stat.openShiftsCount > 0 && (
                                             <div className="text-xs text-green-600 dark:text-green-400">
-                                                {stat.openShiftsCount} {t('finance.shifts.open', 'открыта')}
+                                                {t('finance.shifts.openCount', 'Open: {count}').replace('{count}', String(stat.openShiftsCount))}
                                             </div>
                                         )}
                                     </td>

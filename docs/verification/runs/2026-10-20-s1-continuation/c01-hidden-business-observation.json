@@ -1,0 +1,13 @@
+{
+  "observedAfterClockUtc":"2026-10-20T08:23:03Z",
+  "case":"B2-03-S13-3",
+  "role":"Existing superadmin on normal public routes",
+  "candidateBeforeFix":"dev-20261018-S1-0cc81561faf0",
+  "oracle":{"businessId":"85adc551-249c-4931-a445-aa6f905f1bea","slug":"s1-test-20261020-business-availability","adminStatus":"На модерации;1branch0staff0services0bookings/no owner","activeBranchId":"e1eedc5a-5464-4add-989b-5accee455a99","activeBranchName":"S1 TEST BUSINESS ACTIVE BRANCH","branchAdminStatus":"Активен;1/1"},
+  "actualCatalog":"Найдено:3; approvedA/testovyy-biznes-1/testovyy-biznes-2 present; hiddenB absent",
+  "actualPublicDetail":{"url":"/b/s1-test-20261020-business-availability","heading":"Бизнес не найден","content":"Проверьте адрес страницы или вернитесь в каталог, чтобы выбрать другой бизнес.","controls":["Повторить","В каталог"],"bookingCTA":false,"networkErrorPresentation":false},
+  "actualBooking":{"url":"/b/s1-test-20261020-business-availability/booking?branch=e1eedc5a-5464-4add-989b-5accee455a99&step=2","content":"Бизнес не найден","bookingForm":false,"branchDaySlotCreateControls":false},
+  "positiveControl":"ApprovedA publicpage renders1activebranch and normalbookingform; active057447c8 URL settlesstep2 with summaryS1 TEST ACTIVE CONTROL and Nextenabled. No staff/service/slot/create onfixture, notsuccessfulbookingproof.",
+  "result":"Finite hidden-business S1 functional behavior observed PASS; guest follow-up and final candidate/evidence registration pending",
+  "effects":"Only read-only page/navigation and priorNextbranchprerequisite repro. No authswitch, entitywrite, grant/delete/booking/hold/pay. Ordinary telemetry unenumerated. All fixtures retained."
+}

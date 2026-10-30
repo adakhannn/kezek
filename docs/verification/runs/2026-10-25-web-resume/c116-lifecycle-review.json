@@ -1,0 +1,73 @@
+{
+  "id": "C116",
+  "type": "bounded readonly M2 remaining lifecycle/history/effects inventory",
+  "startedAfterUtc": "2026-10-25T09:39:59Z",
+  "completedBeforeUtc": "2026-10-25T09:41:35Z",
+  "candidate": "dev-20261023-WEB-88d5303de67a",
+  "sourceFingerprint": "88d5303de67a1aeae962644a70b68116d3005e484e42514233cfc3804236c7a7",
+  "inventory": [
+    {
+      "requirementId": "M2-01",
+      "done": "5 declared draft/persist/invalid/duplicate/create-localguard cases; no repeats",
+      "remaining": "Actual creation audit/lifecycle and additional original variants not fully certified; no newfixture authority."
+    },
+    {
+      "requirementId": "M2-02",
+      "done": "Whitespace rejection, F015 manualdraft, C113 persistedaddress/recovery; no repeats",
+      "remaining": "Create/delete and other branch lifecycle effects not authorized by this plan; no newfixture, activation or schedule."
+    },
+    {
+      "requirementId": "M2-03",
+      "remaining": "Actual owner assignment/change expands access; requires specific action-time authority, absent. Do not click assignment or create role."
+    },
+    {
+      "requirementId": "M2-04",
+      "done": "Public availability proofs belong original S1 cases; do not retime/repeat. Current requirement has no targeted member-view case.",
+      "remaining": "New narrow known-SA readonly members view on isolated A selected; nonempty/owner/independentrole/publicvisibility variants still unaccepted."
+    },
+    {
+      "requirementId": "M2-05",
+      "done": "C115 Cancel path complete",
+      "remaining": "Actual irreversible delete/dependency/cascade needs exact action-time consent/appropriatefixture, absent; no alternate-dismissal farming."
+    }
+  ],
+  "history": "Exact M2 ledgercase/history reviews and C87/currentrun/fixture evidence inspected. No targeted retainedA-members empty readonly UI proof located in bounded sources; not globalabsenceclaim. FixtureA created withoutowner/staff/roles and subsequent authorized effects contain no rolegrants. This supplies independent expectedempty baseline, not current rawDB count. Unexpectedrows/baselinechange ->BLOCKED, no extraction of contact values or role mutation.",
+  "sourceEffects": "Members page grants viewing to super or businessowner/admin, management only businessowner/admin; knownSA has no A businessrole per fixturehistory. Clientmount only ordinary GET list; list reads RPC members_of_biz/fallbackview biz_id. Grant/revoke/demote are separate click commands NEVER used. EmptyState text encourages add even when canManagefalse; do not infer that prose grants permission. Do not investigate source-level auth scope risk via other identities/HTTP/SQL. Source is support, not runtimePASS.",
+  "authority": "Read-only ordinary UI view of retained fixtureA inside authorizedDEVscope. No newaccount/role/owner/member/invite/message/security/data mutation. If errors, one bounded UIsettlingread only, no reloadloop or speculative sourcefix. No currentsecret/storage/transport probes.",
+  "hashes": [
+    {
+      "path": "docs/verification/reviews.jsonl",
+      "sha256": "2b227b5c22cc06d83160aa0ed36856d26f0ef48f21971771c783947a46d6f1f8"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-fixtures/fixture-registry.json",
+      "sha256": "20906066c82fdca37bd8b936c42017e299736930d359431e53ec95c9cf0b8dca"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c87-completeness-review.json",
+      "sha256": "3436c4405a5d75bf6e785cafe01aa3049b9d54411137f29bed59bd28e43248b4"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c113-result.json",
+      "sha256": "69018d75c67bb18d3b7260aad835213be5377fe430086d44be570c6db5970cbf"
+    },
+    {
+      "path": "docs/verification/runs/2026-10-25-web-resume/c115-result.json",
+      "sha256": "b6d613b961d5c062abc9fd8fb8f4f6c9f08ef6b47eee18f6f715bd93ac26c0b3"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/members/page.tsx",
+      "sha256": "701264bffd38d7fa7d61253f89e7bceb681fba3543af586b999ffa065be09841"
+    },
+    {
+      "path": "apps/web/src/app/admin/businesses/[id]/members/MembersClient.tsx",
+      "sha256": "2a724f87c67c35167ffbf85329566417674024a5072dfc85e5a3c889f76ed34d"
+    },
+    {
+      "path": "apps/web/src/app/admin/api/businesses/[id]/members/list/route.ts",
+      "sha256": "860a55371aaf2f1760a5a8082c810e09289ffd694c0c05f87a0d72b3182efab1"
+    }
+  ],
+  "credit": "0UI/0fix/0accepted inventory only; casePlanComplete false for wholeM2.",
+  "next": "C117 finite one retainedA empty-members readonly known-SA entry/reload case before UI; no role controls, public repeats, grants or auth transitions."
+}

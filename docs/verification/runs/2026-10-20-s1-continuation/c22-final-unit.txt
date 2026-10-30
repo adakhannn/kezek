@@ -1,0 +1,22 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:15968) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/components/PerformanceResponseEnvelope.test.tsx
+PASS src/__tests__/lib/performanceStatsHttpService.test.ts
+PASS src/__tests__/api/admin/performance-stats.test.ts
+PASS src/__tests__/lib/performanceStatsService.test.ts
+PASS src/__tests__/lib/adminAccess.test.ts
+--------------------------------|---------|----------|---------|---------|-------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------------------------|---------|----------|---------|---------|-------------------
+All files                       |     100 |      100 |     100 |     100 |                   
+ adminAccess.ts                 |     100 |      100 |     100 |     100 |                   
+ performanceStatsHttpService.ts |     100 |      100 |     100 |     100 |                   
+ performanceStatsService.ts     |     100 |      100 |     100 |     100 |                   
+--------------------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 5 passed, 5 total
+Tests:       20 passed, 20 total
+Snapshots:   0 total
+Time:        7.826 s, estimated 8 s
+Ran all test suites within paths "src/__tests__/components/PerformanceResponseEnvelope.test.tsx", "src/__tests__/lib/performanceStatsHttpService.test.ts", "src/__tests__/lib/performanceStatsService.test.ts", "src/__tests__/lib/adminAccess.test.ts", "src/__tests__/api/admin/performance-stats.test.ts".

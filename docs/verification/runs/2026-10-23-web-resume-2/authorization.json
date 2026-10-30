@@ -1,0 +1,15 @@
+{
+  "id":"HUMAN_RESUME_2026_10_23_SECOND_WINDOW",
+  "request":"свет дали можешь продолжать",
+  "firstClockAfterReceiptUtc":"2026-10-23T00:13:06Z",
+  "firstClockBishkek":"2026-10-23T06:13:06+06:00",
+  "scope":"Resume previous WEB-only autonomous workflow until next explicit human stop/usage unavailable; no new fixeddeadline or expanded authority.",
+  "prospectiveOnly":true,
+  "priorPauseAndFinalImmutable":true,
+  "priorFinal":{"path":"../2026-10-23-web-resume/final-report.json","sha256":"e703a0e29ccf7dfe408640557db163b2903e2c6b5fa423a7378422a2b8964cea"},
+  "source":{"candidate":"dev-20261020-S1-40a5aef0e785","sha256":"40a5aef0e785216327a2ce4831f3447c90c0d0f73b5006d114e00c11d5726bdf","fileCount":1683,"unchanged":true},
+  "usage":{"ordinaryAllowed":true,"usedPercent":6,"noPurchaseOrReset":true},
+  "setup":"FreshIAB2 inventory onlyhumanTab2/provider9330166e localhost/admin; existingc70HumanTab actualAnonymized/protectedAdminheading/Business3. Elevated read-only check confirms127.0.0.1:3000 PID29340, sameprimaryserver; no restart. No newtab/binding/oldblockedretry/authtransition. Setup adds0PASS/0fix. Do not infer continuous availability or duration of reported power outage.",
+  "continuity":"No continuous observation across pause/power report, no retroactiveworkclaim. Prior7PASS remainpriorwindow, newwindowstarts0.",
+  "constraints":"All prior localWEB/known4Googleidentities/clock-before-scenario-and-write boundaries retained. No native/mobile/subagents/newchats/rawHTTP/SDK/token-cookie-authcode-password-storage/clipboard extraction, newusers/roles/jobs/fixtures/grants/service-roleimpersonation/payments/purchases/thirdpartymessages/securityweakening/DBreset/cleanup/blindmigrations/commit/push/deploy/stage/reset. Nevermonitoring/deniedmetrics/oldblockedproviders including23011460. Existingbookings/shifts/packages/paymentsuntouched/f821nevercancelwithoutnewexactconfirmation/closed909256notreopen. No renewal of revoked compiler/fontdownload authority. Localfonts alreadyreallicensed; no unchangedbuild/capture/auth/reload retries. Onstop safeeffects+explicitPAUSEDexistingkezek/readback+newwindowfinal, oldfinalsimmutable."
+}

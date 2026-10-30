@@ -1,0 +1,41 @@
+{
+  "id": "C137",
+  "candidate": "dev-20261026-WEB-f0dad7beb1d6",
+  "sourceFingerprint": "f0dad7beb1d68eadee7fe8e88e9066fc26fb20f1d4584868bb5e15666b343a7c",
+  "files": 1686,
+  "status": "BUILD_PASS_NOT_LIVE",
+  "event": "finished",
+  "startedUtc": "2026-10-25T20:14:53.895Z",
+  "finishedUtc": "2026-10-25T20:16:02.300Z",
+  "exitCode": 0,
+  "signal": null,
+  "timedOut": false,
+  "pid": 28188,
+  "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261026-c137-f0dad7beb1d6\\build",
+  "ownedSession": 55703,
+  "copy": {
+    "event": "prepared",
+    "startedUtc": "2026-10-25T20:14:53.895Z",
+    "dest": "C:\\projects\\kezek\\test-results\\closure-web-20261026-c137-f0dad7beb1d6\\build",
+    "copiedFiles": 1686,
+    "copyFingerprint": "f0dad7beb1d68eadee7fe8e88e9066fc26fb20f1d4584868bb5e15666b343a7c",
+    "noEnvFiles": true,
+    "coldNextCache": true,
+    "defaultCompiler": true,
+    "dummyBackend": true,
+    "limitation": "Node TCP/fetch restriction except exact PostCSS IPC; not OS firewall or LIVE/deployed-production PASS"
+  },
+  "rawLog": "c137-build-raw.txt",
+  "compile": "33.8s",
+  "typecheck": "PASS",
+  "prerenders": 36,
+  "policyTests": {
+    "passed": 16,
+    "failed": 0,
+    "networkRequests": 0,
+    "scope": "Finite guard policy tests, not product PASS"
+  },
+  "warnings": "Multiple lockfiles/root inference, stale baseline mapping and middleware convention warning retained; no package/config cleanup/compiler switch.",
+  "effects": "Own isolatedcopy/dependencyjunctions/compiler/cache/rawlog only. No envcopy/download/DEVDB/appfixture/booking/role/securityconfig command; ordinary mainauth/telemetry unenumerated.",
+  "counts": "0newUI/fix/accepted;20of316 until actual compiled output C138. Full test/lint failures and original C121/C122/finals immutable."
+}

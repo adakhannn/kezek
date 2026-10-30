@@ -1,0 +1,14 @@
+{
+  "id": "C146",
+  "caseId": "S26-O303-admin-today-title-en",
+  "savedBeforeUiUtc": "2026-10-25T20:32:21Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "timeBudgetMinutes": 2,
+  "expected": "English settled Admin Panel and section heading exactly Today's Bookings (no U+005C), original RU preserved after restore.",
+  "steps": [
+    "Clock; current usertab2/admin/RU ->ordinary English once, wait Admin Panel; fresh exact Today heading read must equal ordinary possessive string with no slash. No statuscase repetition/reload/booking/data action.",
+    "Clock; ordinary Русский restore, wait protected Панель администратора/Admin-panel/Anonymized/RU/Business3/Todaycount1; mark handoff. Controls0newcredit. Error/auth/uncertain state ->stop/no retry."
+  ],
+  "effects": "Locale preference/automaticrefresh only, restoreRU; no app data/booking/auth/config commands; ordinarytelemetry unenumerated.",
+  "limits": "Exact title scalar only, not all English copy/locale/dictionary/visual/SSRflash/fulltechnical acceptance."
+}

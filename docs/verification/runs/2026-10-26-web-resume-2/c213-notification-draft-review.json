@@ -1,0 +1,44 @@
+{
+  "id": "C213",
+  "status": "READONLY_REVIEW_COMPLETE_SAFE_UNSAVED_EMAIL_DRAFT_METHOD_IDENTIFIED",
+  "afterClockUtc": "2026-10-26T10:39:46Z",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "history": [
+    {
+      "path": "apps/web/test-results/global-2026-10-15/stage-G071-profile-draft-after.json",
+      "originalUtc": "2026-10-15T09:54:43Z",
+      "meaning": "Name/phoneunsaveddraftlocale+Reset only; explicitlynotificationtoggleexcluded."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-16/stage-G084-deletion-guard.json",
+      "originalUtc": "2026-10-15T22:03:59Z",
+      "meaning": "Tabfocusafterlastemailcheckbox; explicitlywithoutactivation, notificationsChangedfalse."
+    },
+    {
+      "path": "apps/web/test-results/global-2026-10-17/stage-G122-staff-profile-readonly.json",
+      "originalUtc": "2026-10-17T02:29:13Z",
+      "meaning": "Readonlychannelstates/locale, nottoggle."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-20-s1-continuation/c61-result.json",
+      "meaning": "Invalidphoneinputvariants+Reset, no notificationtoggle. Notretest."
+    },
+    {
+      "path": "docs/verification/runs/2026-10-23-web-resume-2/c77-result.json",
+      "meaning": "BundledProfileSaveunknownnotify_smsBLOCKED retained/no Save."
+    }
+  ],
+  "source": "Emailmaster onChange onlysetProfile+setError. Peraddress onChange onlysetNotificationEmails+setError. resetChanges onlyrestoresinitialProfile/initialNotificationEmails/initialWhatsAppPhone/clearslocalOTP,error/message. Submission separatehandleSubmit POST+bundledwrites; no effectdependentnotifychangefound. Sourceproof authorizesmethodclassification, notruntimePASS/no-writeaudit.",
+  "dependencyHashes": {
+    "apps/web/src/app/cabinet/components/ProfileForm.tsx": "2f5afa0c883dd72e87b0a367a48fbc10bc127ebb05b56a9cc35508e4c1123fe9",
+    "apps/web/src/app/cabinet/profile/ProfilePageClient.tsx": "6fb211bded8c650e5fe2defd08b1f82e30a84a7de468787f659b2a641f682c77",
+    "apps/web/src/app/cabinet/profile/page.tsx": "6aa22170467b6f5d83c81b318960607441435042f2fda68867540a722103ce8c"
+  },
+  "effects": "Localhistory/source reads only; no browser/UI/auth/profile/configuration/notification/message/source/test/build/server action",
+  "credit": {
+    "newUi": 0,
+    "newAccepted": 0,
+    "newFix": 0
+  },
+  "decision": "FiniteC214 localEmailmaster/recipientcheckbox+Reset/restoration only oncurrentknownSA; no authswitch/Save/Enter/send/link/unlink/extraction."
+}

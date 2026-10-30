@@ -3,7 +3,7 @@ import { ru, enGB } from 'date-fns/locale';
 import type { JSX } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { fromBookingCalendarDate, toBookingCalendarDate } from '@/lib/bookingCalendarDate';
+import { formatBookingDayLabel, fromBookingCalendarDate, toBookingCalendarDate } from '@/lib/bookingCalendarDate';
 
 type BookingDateCalendarProps = {
     value: Date;
@@ -136,7 +136,9 @@ export function BookingDateCalendar({ value, onChange, min, max, timezone, varia
                             data-date={format(day, 'yyyy-MM-dd')}
                             onClick={() => handleSelect(day)}
                             disabled={disabled}
-                            aria-label={format(day, 'PPPP', { locale: dateLocale })}
+                            aria-label={locale === 'ky'
+                                ? formatBookingDayLabel(fromBookingCalendarDate(day, timezone), timezone, 'ky')
+                                : format(day, 'PPPP', { locale: dateLocale })}
                             aria-pressed={selected}
                             className={[
                                 'flex h-9 w-9 items-center justify-center rounded-full transition-colors',

@@ -1,0 +1,18 @@
+{
+  "id":"C93-assets",
+  "pageUrl":"http://127.0.0.1:3107/privacy",
+  "inventoryId":"4d7ea734-c827-4fc7-80bd-05115a5f13cd",
+  "inventoryObservedBeforeUtc":"2026-10-23T03:05:52Z",
+  "bundleDirectory":"C:/Users/AdaX/AppData/Local/Packages/sandbox.{51ac27b5-7bb9-498a-b62a-89523a144379}/AC/Temp/browser-use/assets/0fcca98c-c775-4765-9994-dd2e003ed98c",
+  "bundleReturnedAfterLongCall":true,
+  "offlineVerificationAfterUtc":"2026-10-23T04:56:34Z",
+  "requested":5,"downloaded":5,"failed":0,
+  "files":[
+    {"id":"f28adba03d59d843","name":"Geist.p.a6c8254c.ttf","bytes":169056,"sha256":"73894e0448cae90a92b6c2f8732b7bb9acb7b94c418bff559dad4a18e1de9659","matchesSource":true},
+    {"id":"c2bda884e290f33d","name":"GeistMono.p.04960cf6.ttf","bytes":171948,"sha256":"d00e590b8eb3a59acc329b2d044fd143ae935090b7da33199ebee27cc7de8196","matchesSource":true},
+    {"id":"670af895068a09f2","name":"acf061602a45be3b.css","bytes":690,"sha256":"5f6cd8a60f5c6825f7a3112cf6ecb63397692c183053036757659c14e722496c","actual":"Both localTTFfontfaces/normal/swap/100..900; --font-geist-sans and --font-geist-mono retained. Generated class hashes differ from old C58 build as expected, not assumed byte-identical CSS."},
+    {"id":"a1b625aa94373e26","name":"07a32e1bc10605c4.css","bytes":221795,"sha256":"983aec7a4e5d77f1427526abf5656ac6330c627cbc788862a04d4f27bad56b13"},
+    {"id":"795a86f9dbc58558","name":"764e5e1f387273af.css","bytes":292,"sha256":"adacb23e563144df03255bde6eb8727c41ecd561edfa39bdcdae6f2c2e81cbeb","actual":"Arial Geist Fallback ascent95.94/descent28.16/linegap0/size104.76 and Mono74.67/21.92/0/134.59 preserved."}
+  ],
+  "limits":"Only alreadyobserved local font/CSS resources, no images/scripts/arbitrary URL fetches. File integrity/delivery is not actual painted font glyphs, cache-disabled/DevTools, visual/device/no-flash/screenreader or allchunks certification. Exact transfer timing during delayed bundle unavailable; c93-observation-gap.json preserved."
+}

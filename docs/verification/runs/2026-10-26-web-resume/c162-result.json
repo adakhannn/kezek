@@ -1,0 +1,52 @@
+{
+  "id": "C162",
+  "caseId": "S26-B401-public-map-direct-entry",
+  "status": "PASS_SCOPED_LIVE_B401_ACCEPTED",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "sourceFingerprint": "c1115361a3b4d2588d65e9480211167f408fc94b991d783e2e30f5efd520b853",
+  "plan": "c162-map-direct-entry-plan.json",
+  "historyReview": "c161-map-entry-history-review.json",
+  "observationWindowUtc": [
+    "2026-10-25T21:54:10Z",
+    "2026-10-25T21:56:33Z"
+  ],
+  "steps": [
+    {
+      "clockUtc": "2026-10-25T21:54:10Z",
+      "action": "Fresh protectedSAadmin then ONE ordinary directgoto /map inexistinguserTab2",
+      "actual": "Actual /map/titleКартафилиалов/mapheading. Initial0count/Загрузка isloading, NOT settledempty/PASS."
+    },
+    {
+      "action": "Boundedwait actualbranchlistloadinggone",
+      "actual": "Settled2местадлязаписи/Доступныефилиалы; knownФилиал1Бизнеса2 IDfe1dde50-c04a-4b48-b215-bde72aa60625 andФилиал2Бизнеса2 ID23a0ce35-5556-4e98-84ee-89ae067908fa; both business2 bookinghrefs carry matchingbranch. Publicfooter/mapattribution present. No genericServerComponenterror or authredirect. Renderedattribution is NOT tile/marker/visual/providerPASS."
+    },
+    {
+      "clockUtc": "2026-10-25T21:54:38Z",
+      "action": "ObservedАдмин menu->Админ-панель forrestore",
+      "actual": "Protected/admin/RU/Admin-panel/Anonymized/Logout/Business3/Branch4/Staff1/Service4/Booking30/TodayCancelled1 restored; markHandoff. No mapselect/location/booking/category/locale/authcommand."
+    }
+  ],
+  "actual": "ExplicitdirectURLentry fromdifferent/admin route reached identifiable settledpublicmap/list forknownretainedbranches; originalSAadmin restored. This is one new direct-entry execution. Combined with independently reviewed originalG085 actualFooternavigation and exactfunctionaldependency identity, finite2-method B4-01 accepted; oldnavUTC untouched/notnewexecution.",
+  "effects": "Directordinarypublicentry/adminreturn only; no account/provider/locationpermission/entity/role/booking/payment command/newfixture. Ordinaryappmaptraffic/telemetry unenumerated.",
+  "acceptance": {
+    "requirement": "B4-01",
+    "before": 21,
+    "after": 22,
+    "total": 316,
+    "remaining": 294,
+    "newUiPass": 1,
+    "reusedHistoricalCase": 1,
+    "newVerifiedFix": 0,
+    "newAccepted": 1,
+    "originalNavUtc": "2026-10-15T22:26:25Z",
+    "notCovered": [
+      "B4-02locationpermissions",
+      "B4-03markers/nearest/fullfilters",
+      "B4-04activatedbranchbookingcontext",
+      "B4-05providererrors/missingcoords",
+      "visual/cache/deployedproduction"
+    ]
+  },
+  "limits": "A public route-entry obligation has two finite entry mechanisms: publicFooter navigation and direct URL initialdocument entry. Each must reach identifiable settled map/list page without genericerror/authredirect. Tile/marker/provider success, geolocation, categories/nearest, branchbooking, freshcache/visual and otherB4 obligations are separate and remainunaccepted.",
+  "next": "C162explicitdirect/map entry1NEWUI PASS plus C161exactdependency-reviewed originalG085Footernavigation1REUSED/originalUTC -> narrow B4-01 fulltwo-entrymethods ACCEPTED. Product21->22of316/294left; S6now1/29.26Oct13NEWUI/3fix/logical15/1newaccepted; historicalreuse1notnewUI. S117/25primary63/79/S23/70/S41/47 unchanged/NOT_READY. Actualmapsettled2knownbiz2branches/links; no locationpermission/nearest/providercontrol/branchselection/bookingcommand/marker/visual/cache proof. SAadmin/RU/Anonymized/Business3 restoredwithoutauth/newtab. NextC163 boundedREADONLY B4-04 historical branchselection->business/bookingpath dependency review: exactG023primaryoriginalUTC/branchIDs/helper/mapselection/bookingquery receiver againstcurrent; G085/G087 supportandC162visiblehrefs are not newactivatednavigation proof. Reuseonlycompleteindependent finitebranchhandoffmatrix with demonstratedmatchingdeps; no blanketPASS or unchangedwizardrerun. Otherwise exactmissingdependency/methodblocker+independentpriority. No UI/location/auth/booking/entity effects fromreview, no repeatC162/directmap/banner/filters/drafts/build/F013/cache/visual/blocked security."
+}

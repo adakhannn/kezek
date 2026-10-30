@@ -1,0 +1,19 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:21152) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/components/AdminRoleApplicationsReadState.test.tsx
+  √ does not show empty while the initial read is pending (50 ms)
+  √ shows a confirmed empty list only after a successful read (38 ms)
+  √ shows successful rows without empty and without submitting moderation (47 ms)
+  √ does not claim an empty list on network read failure (55 ms)
+  √ does not claim an empty list on http read failure (36 ms)
+  √ does not claim an empty list on json read failure (31 ms)
+  √ does not certify an empty list when the read error banner is dismissed (71 ms)
+  √ does not display stale rows as a different filter after its read fails (72 ms)
+  √ recovers from a read failure through a successful read-only filter change (77 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        2.233 s, estimated 6 s
+Ran all test suites within paths "src/__tests__/components/AdminRoleApplicationsReadState.test.tsx".

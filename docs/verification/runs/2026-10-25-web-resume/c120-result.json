@@ -1,0 +1,26 @@
+{
+  "id": "C120",
+  "caseId": "S25-M501-inactive-category-slug-draft-cancel",
+  "candidate": "dev-20261025-WEB-510f3832db4d",
+  "sourceFingerprint": "510f3832db4d97d3c18f6c44db5c6c91acec16c1cc4ca935416fd5bf7bd5cc0b",
+  "status": "PASS_SAME_LIVE_initial_saved_slug_and_local_draft_recovery",
+  "startedAfterUtc": "2026-10-25T10:05:17Z",
+  "actual": "FreshsameSA/humanTab2/admin ->same3categories2active3usage/listoriginalc7cef81b nameLIVE TEST NIGHT09OCT CATEGORY EDITED/sluglive-test-night09oct-category/inactive0usage. Exacteditlink nowopens originalsavedslug unchanged, checkboxunchecked, Изменений нет/Savechangesdisabled BEFOREANYinput. Clock10:05:51 NameONLYC119ӨнөрҮңкүр ->manualoriginalslug unchanged/Saveenabled. Addressclear+Tab ->c119-onor-ungkur/automatichelper. Addressfill ' C119 Manual URL '+Tab ->c119-manual-url. NameC119SECONDLOCALNAME ->manualaddressunchanged. NoSave/Enter/toggle. Cancel ->listoriginalname/slug/inactive0usage andoriginal3categories. Clock10:06:18 exacteditreentry ->originalname/slug/uncheckedavailability/Измененийнет/disabledSave. Cancelsolelycleanup ->originallist. Clock10:06:37 rootreturn ->actualprotectedadmin/Anonymized/collapsedАдмин-панель/RU/Business3/4branches1staff4services30bookings, handoff. OriginalC119FAIL preserved, no duplicatecase/perfieldcredit.",
+  "effects": "Unsaved local Name/Addressdrafts, twoTabs and Cancelnavigation only; no Save/Enter/availability/delete/categorycreation/businesspropagation/role/fixture/booking/payment/authtransition command. No rawHTTP/SDK/SQL/secret/storage/prod/domain/navigationprobe, screenshot/viewportrepair, sourceoutsideoneCategoryFormline+focusedexistingtest changes. Ordinaryauth/telemetryunenumerated/notzeroTOTALwrites; no persistedDBwrite/propagation rollback certificate.",
+  "verificationBoundary": "F016initial savedcustomslug preservation fixed; sameform name/clear-to-auto/manualnormalization/manualoverride/Cancel/reentry addressedregressions passed. WholecategoryCRUD/dependency/security/localization/content/visual/fulltechnical gates incomplete. InitialbeforeFAIL retained; UNIT17PASS/types/scopedlint support notLIVE substitute.",
+  "counts": {
+    "newUiCases": 1,
+    "newWindowPassedCasesBefore": 3,
+    "newWindowPassedCasesAfter": 4,
+    "newVerifiedFixes": 1,
+    "newWindowLiveFixes": 1,
+    "logicalVerifiedFixesBefore": 11,
+    "logicalVerifiedFixesAfter": 12,
+    "accepted": 20,
+    "remaining": 296,
+    "acceptedDeltaFromFix": 0,
+    "staleBuildRequirement": "A3-01"
+  },
+  "next": "C121 finite genuinelyNEWcandidate510f3832/1685 offlinecolddefaultbuild plan BEFOREcompiler. Review C110guard/harness/priorraw and ensure no currentowncompiler/runtime, exactsource/dummyenv/no.env/localfonts/alloutboundNodeblocked/exactPostCSSIPC/watchdog240s/noAPIkeys/no renewednetworkapproval. Freshsourcechange justifiesnewbuild, never unchangedC110/C93bundle repeat. Then separateactualCUAcompiledoutput plan on samehumanTab only; nocompile-as-LIVE/assetcache/visual/deployedproduction claim. No furtherC119draft/reentry/auth/fixtures/role/money commands withoutnewdependency. F013 andallolderblockers/fullgatefailures retained.",
+  "completedBeforeUtc": "2026-10-25T10:07:29Z"
+}

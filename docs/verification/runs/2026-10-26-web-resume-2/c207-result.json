@@ -1,0 +1,53 @@
+{
+  "id": "C207",
+  "status": "PASS_ACTUAL_COMPILED_OUTPUT_AND_OWN_RUNTIME_STOPPED",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+  "files": 1687,
+  "plan": "c207-built-output-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T10:02:16Z",
+    "2026-10-26T10:03:19Z"
+  ],
+  "finalizedAfterClockUtc": "2026-10-26T10:05:12Z",
+  "actual": "FreshmainSAadmincontrol ->onesameworkingtab direct127.0.0.1:3107/privacy actualПолитикаконфиденциальности/nine numberedsections; ordinarycollapsedMenuopen shows RU/guestВойти/noaccount. ONEordinaryreloadsamecomplete9sectiondocument/menuclosed/nooverlay. Returnobservedlocalhost3000/admin; waitroleloadinghidden ->protectedAdmin-panel/Anonymized/RU/Business3/4branch1staff4service30booking/TodayCancelled1; markHandoff.",
+  "runtime": {
+    "event": "spawned",
+    "utc": "2026-10-26T10:01:57.237Z",
+    "pid": 30352,
+    "candidate": "dev-20261026-WEB-5387d70d6af1",
+    "sourceFingerprint": "5387d70d6af1f477fa51f4d572ddc74ceca8600426ef9a4d5fcfe964dfa90d2a",
+    "host": "127.0.0.1",
+    "port": 3107,
+    "watchdogMs": 300000,
+    "noEnvFiles": true,
+    "dummyBackend": true,
+    "generatedDeclarationOnly": true,
+    "readySeconds": 2.4,
+    "finished": {
+      "event": "finished",
+      "utc": "2026-10-26T10:03:20.209Z",
+      "pid": 30352,
+      "exitCode": 1,
+      "signal": null
+    },
+    "intentionalStop": "VerifiedCIMPID30352exactC206build/apps/webnextstart--port3107 beforetaskkill/T/F; ownchild30040+30352stopped. exit1isintentionalterminationafteractualPASS, notstartup/runtimefailure.",
+    "listenerReadback": "Only127.0.0.1:3000PID19968 remains;3107gone/mainpreserved."
+  },
+  "rawLog": "docs/verification/runs/2026-10-26-web-resume-2/c207-runtime-raw.txt",
+  "effects": "OwnedisolateddummyNextstart andpublicdocumententry/reload/adminreturnonly; no DEVDB/entity/booking/payment/role/message/authtransition/newtab/assetbundle/cache/visual/native/HTTP/SDK/storageaction. Mainauth/telemetryunenumerated. Noactiveownedcompiler/runtime/networklease remains.",
+  "credit": {
+    "newUi": 0,
+    "newFix": 0,
+    "newAcceptedRequirement": 0,
+    "existingBuildCaseRefreshEvents": 1,
+    "distinctExistingBuildCase": 1,
+    "acceptedBefore": 23,
+    "acceptedAfter": 24,
+    "remaining": 292,
+    "newWindowUi": 9,
+    "newWindowFixes": 1,
+    "logicalFixes": 17
+  },
+  "limits": "Exactnewcandidatebuild+actualpublicdocumentexecution only; notproductiondeployed/security/fullroutes/freshcache/visual/device/no-flash/fulltechnicalPASS. OldC174C175/finals/journals/UTCimmutable."
+}

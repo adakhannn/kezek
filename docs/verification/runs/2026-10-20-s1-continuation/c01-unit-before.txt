@@ -1,0 +1,177 @@
+  console.log
+    [Booking] canGoNext: all selected services valid (in servicesFiltered) { serviceIds: [ 'service' ] }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+  console.log
+    [Booking] canGoNext: all selected services valid (in servicesFiltered) { serviceIds: [ 'service' ] }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+  console.log
+    [Booking] canGoNext: all selected services valid (in servicesFiltered) { serviceIds: [ 'service' ] }
+
+      at log (../../packages/shared-client/src/log.ts:25:21)
+
+(node:17048) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/BookingBranchStepBoundary.test.tsx (5.805 s)
+  × rejects stale branch URL requested step 2 before rendering a later step (19 ms)
+  × rejects stale branch URL requested step 3 before rendering a later step (13 ms)
+  × rejects stale branch URL requested step 4 before rendering a later step (33 ms)
+  × rejects stale branch URL requested step 5 before rendering a later step (2 ms)
+  √ retains valid active-branch return URL step 2 (3 ms)
+  √ retains valid active-branch return URL step 3 (1 ms)
+  √ retains valid active-branch return URL step 4 (3 ms)
+  √ retains valid active-branch return URL step 5 (1 ms)
+  × does not advance from restored step 2 without its branch prerequisite (2 ms)
+  × does not advance from restored step 3 without its branch prerequisite (1 ms)
+  × does not advance from restored step 4 without its branch prerequisite (3 ms)
+  × waits for a valid URL branch to hydrate without losing the requested step (2 ms)
+
+  ● rejects stale branch URL requested step 2 before rendering a later step
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 2
+
+      13 |     const params = {...base, branchId:'', initialStep, initialBranchValid:false};
+      14 |     const {result} = renderHook(() => useBookingSteps(params));
+    > 15 |     expect(result.current.step).toBe(1);
+         |                                 ^
+      16 |     expect(result.current.canGoNext).toBe(false);
+      17 |     act(() => result.current.goNext());
+      18 |     expect(result.current.step).toBe(1);
+
+      at toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:15:33)
+
+  ● rejects stale branch URL requested step 3 before rendering a later step
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 3
+
+      13 |     const params = {...base, branchId:'', initialStep, initialBranchValid:false};
+      14 |     const {result} = renderHook(() => useBookingSteps(params));
+    > 15 |     expect(result.current.step).toBe(1);
+         |                                 ^
+      16 |     expect(result.current.canGoNext).toBe(false);
+      17 |     act(() => result.current.goNext());
+      18 |     expect(result.current.step).toBe(1);
+
+      at toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:15:33)
+
+  ● rejects stale branch URL requested step 4 before rendering a later step
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 4
+
+      13 |     const params = {...base, branchId:'', initialStep, initialBranchValid:false};
+      14 |     const {result} = renderHook(() => useBookingSteps(params));
+    > 15 |     expect(result.current.step).toBe(1);
+         |                                 ^
+      16 |     expect(result.current.canGoNext).toBe(false);
+      17 |     act(() => result.current.goNext());
+      18 |     expect(result.current.step).toBe(1);
+
+      at toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:15:33)
+
+  ● rejects stale branch URL requested step 5 before rendering a later step
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 5
+
+      13 |     const params = {...base, branchId:'', initialStep, initialBranchValid:false};
+      14 |     const {result} = renderHook(() => useBookingSteps(params));
+    > 15 |     expect(result.current.step).toBe(1);
+         |                                 ^
+      16 |     expect(result.current.canGoNext).toBe(false);
+      17 |     act(() => result.current.goNext());
+      18 |     expect(result.current.step).toBe(1);
+
+      at toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:15:33)
+
+  ● does not advance from restored step 2 without its branch prerequisite
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      28 |     const params = {...base, branchId:'', initialStep};
+      29 |     const {result} = renderHook(() => useBookingSteps(params));
+    > 30 |     expect(result.current.canGoNext).toBe(false);
+         |                                      ^
+      31 |     act(() => result.current.goNext());
+      32 |     expect(result.current.step).toBe(initialStep);
+      33 | });
+
+      at toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:30:38)
+
+  ● does not advance from restored step 3 without its branch prerequisite
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      28 |     const params = {...base, branchId:'', initialStep};
+      29 |     const {result} = renderHook(() => useBookingSteps(params));
+    > 30 |     expect(result.current.canGoNext).toBe(false);
+         |                                      ^
+      31 |     act(() => result.current.goNext());
+      32 |     expect(result.current.step).toBe(initialStep);
+      33 | });
+
+      at toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:30:38)
+
+  ● does not advance from restored step 4 without its branch prerequisite
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      28 |     const params = {...base, branchId:'', initialStep};
+      29 |     const {result} = renderHook(() => useBookingSteps(params));
+    > 30 |     expect(result.current.canGoNext).toBe(false);
+         |                                      ^
+      31 |     act(() => result.current.goNext());
+      32 |     expect(result.current.step).toBe(initialStep);
+      33 | });
+
+      at toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:30:38)
+
+  ● waits for a valid URL branch to hydrate without losing the requested step
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      38 |     });
+      39 |     expect(result.current.step).toBe(2);
+    > 40 |     expect(result.current.canGoNext).toBe(false);
+         |                                      ^
+      41 |     rerender({branchId:'active-branch'});
+      42 |     expect(result.current.canGoNext).toBe(true);
+      43 |     act(() => result.current.goNext());
+
+      at Object.toBe (src/__tests__/components/BookingBranchStepBoundary.test.tsx:40:38)
+
+Test Suites: 1 failed, 1 total
+Tests:       8 failed, 4 passed, 12 total
+Snapshots:   0 total
+Time:        19.942 s
+Ran all test suites within paths "src/__tests__/components/BookingBranchStepBoundary.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?
+

@@ -1,13 +1,14 @@
 ﻿// apps/web/src/app/cabinet/components/BookingCard.tsx
 'use client';
 
-import {formatInTimeZone} from 'date-fns-tz';
 import {useState, useEffect, useRef} from 'react';
+import { canCancel as canCancelBooking, type BookingStatus } from '@core-domain/booking';
 
 import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { formatBookingDateTime } from '@/lib/bookingCalendarDate';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -18,6 +19,7 @@ import { useToast } from '@/hooks/useToast';
 import { getTimezone } from '@/lib/env';
 import {logError} from '@/lib/log';
 import { transliterate } from '@/lib/transliterate';
+import { repeatBookingHref } from '@/lib/repeatBookingHref';
 
 const TZ = getTimezone();
 
@@ -35,13 +37,13 @@ export default function BookingCard({
                                         staffId,
                                         branchId,
                                         bizId,
-                                        canCancel,
+                                        canCancel: cancelRequested,
                                         review: initialReview,
                                         promotionApplied,
                                         subscriptionApplied,
                                     }: {
     bookingId: string;
-    status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
+    status: BookingStatus;
     start_at: string;
     end_at: string;
     service: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number } | null;
@@ -87,25 +89,20 @@ export default function BookingCard({
     const effectiveBranchId = branchId ?? branch?.id ?? null;
     const effectiveBizId = bizId ?? business?.id ?? null;
 
-    function repeatBooking() {
-        if (!business) return;
+    const repeatHref = business ? repeatBookingHref({
+        slug: business.slug,
+        branchId: effectiveBranchId,
+        staffId: effectiveStaffId,
+        serviceIds: servicesList?.length ? servicesList.map(item => item.id) : effectiveServiceId ? [effectiveServiceId] : [],
+    }) : '';
+
+    function clearPreviousDraft() {
         try {
-            if (typeof window !== 'undefined' && effectiveBizId && effectiveBranchId && effectiveServiceId && effectiveStaffId) {
-                const key = `booking_state_${effectiveBizId}`;
-                const dayStr = formatInTimeZone(new Date(start_at), TZ, 'yyyy-MM-dd');
-                const payload = {
-                    branchId: effectiveBranchId,
-                    serviceId: effectiveServiceId,
-                    staffId: effectiveStaffId,
-                    day: dayStr,
-                    step: 4,
-                };
-                window.localStorage.setItem(key, JSON.stringify(payload));
-            }
-        } catch (e) {
-            logError('BookingCard', 'repeatBooking: failed to save state', e);
+            if (effectiveBizId) window.localStorage.removeItem(`booking_state_${effectiveBizId}`);
+        } catch (error) {
+            // Selection travels in the link even if browser storage is unavailable.
+            logError('BookingCard', 'repeatBooking: failed to clear previous draft', error);
         }
-        window.location.href = `/b/${business.slug}`;
     }
 
     useEffect(() => {
@@ -147,19 +144,10 @@ export default function BookingCard({
     }
 
     const localeMap: Record<string, string> = {
-        ky: 'ru-KG',
+        ky: 'ky-KG',
         ru: 'ru-RU',
         en: 'en-US',
     };
-    
-    const dateFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: TZ,
-    });
     
     const timeFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
         hour: '2-digit',
@@ -169,15 +157,17 @@ export default function BookingCard({
     
     const startDate = new Date(start_at);
     const endDate = new Date(end_at);
-    const when = `${dateFormatter.format(startDate)} - ${timeFormatter.format(endDate)}`;
+    const formattedStart = formatBookingDateTime(startDate, TZ, locale);
+    const when = `${formattedStart} - ${timeFormatter.format(endDate)}`;
 
     const totalDurationMin =
         servicesList && servicesList.length > 0
             ? servicesList.reduce((sum, s) => sum + (s.duration_min || 0), 0)
             : service?.duration_min ?? 0;
     const hasMultipleServices = servicesList && servicesList.length > 1;
-    const canLeaveReview = !canCancel && !review && status !== 'cancelled';
-    const canEditReview = !canCancel && !!review && status !== 'cancelled';
+    const canCancel = cancelRequested && canCancelBooking(status);
+    const canLeaveReview = status === 'paid' && !review;
+    const canEditReview = status === 'paid' && !!review;
     const canRepeatBooking = !!(service && business);
     const hasLocation = !!(business?.name || branch?.name || branch?.address);
     const hasMapCoordinates = branch?.lat != null && branch?.lon != null;
@@ -187,6 +177,7 @@ export default function BookingCard({
         confirmed: t('cabinet.bookings.card.status.confirmed', 'Confirmed'),
         paid: t('cabinet.bookings.card.status.paid', 'Paid'),
         cancelled: t('cabinet.bookings.card.status.cancelled', 'Cancelled'),
+        no_show: t('cabinet.bookings.card.status.noShow', 'No-show'),
     };
 
     const statusOrder: Record<typeof status, number> = {
@@ -194,6 +185,7 @@ export default function BookingCard({
         confirmed: 2,
         paid: 3,
         cancelled: 3,
+        no_show: 3,
     };
 
     const timelineSteps: Array<{
@@ -216,7 +208,9 @@ export default function BookingCard({
             label:
                 status === 'cancelled'
                     ? t('cabinet.bookings.timeline.cancelled', 'Cancelled')
-                    : t('cabinet.bookings.timeline.completed', 'Completed'),
+                    : status === 'no_show'
+                        ? statusLabels.no_show
+                        : t('cabinet.bookings.timeline.completed', 'Completed'),
             done: statusOrder[status] >= 3,
         },
         {
@@ -285,7 +279,7 @@ export default function BookingCard({
                         <p className="type-label text-[var(--text-muted)]">
                             {t('cabinet.bookings.card.summary.when', 'Date and time')}
                         </p>
-                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">{dateFormatter.format(startDate)}</p>
+                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">{formattedStart}</p>
                         <p className="type-caption mt-1 text-[var(--text-secondary)]">
                             {timeFormatter.format(startDate)} - {timeFormatter.format(endDate)} • {TZ}
                         </p>
@@ -402,7 +396,7 @@ export default function BookingCard({
                             </svg>
                             <div className="flex-1">
                                 <p className="type-label text-[var(--status-info)]">
-                                    {t('cabinet.bookings.card.paidWithPackage', 'Paid with package')}: "{name}"
+                                    {t('cabinet.bookings.card.paidWithPackage', 'Paid with package')}: &quot;{name}&quot;
                                     {finalAmount != null && (
                                         <span className="ml-2 font-semibold text-[color:color-mix(in_srgb,var(--status-info)_86%,var(--text-primary))]">
                                             {t('cabinet.bookings.card.finalAmount', 'Final amount:')} {String(finalAmount)} {t('booking.currency', 'som')}
@@ -478,18 +472,16 @@ export default function BookingCard({
             <div className="flex flex-col gap-3 border-t border-[var(--border-subtle)] pt-4">
                 <div className="flex flex-wrap gap-2">
                     {canRepeatBooking ? (
-                        <Button
-                            type="button"
-                            onClick={repeatBooking}
-                            size="md"
-                            leadingIcon={
+                        <a
+                            href={repeatHref}
+                            onClick={clearPreviousDraft}
+                            className={buttonStyles({variant:'primary', size:'md'})}
+                        >
                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
-                            }
-                        >
                             {t('cabinet.bookings.card.actions.repeat', 'Повторить')}
-                        </Button>
+                        </a>
                     ) : null}
 
                     <a
@@ -613,8 +605,8 @@ export default function BookingCard({
                 onConfirm={cancelBooking}
                 title={t('cabinet.bookings.card.cancelConfirmTitle', 'Cancel booking?')}
                 message={t('cabinet.bookings.card.cancelConfirm', 'Are you sure you want to cancel this booking?')}
-                confirmLabel={t('cabinet.bookings.card.actions.cancel', 'Cancel booking')}
-                cancelLabel={t('common.cancel', 'Back')}
+                confirmLabel={t('cabinet.bookings.card.cancelConfirmAction', 'Cancel booking')}
+                cancelLabel={t('cabinet.bookings.card.cancelKeepAction', 'Keep booking')}
                 confirmVariant="danger"
                 isLoading={busy}
             />

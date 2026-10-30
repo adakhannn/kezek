@@ -1,0 +1,44 @@
+{
+  "id": "C233",
+  "status": "PARTIAL_MISSING_INTERVAL_REJECTION_OBSERVED_REVERSED_COMMIT_BLOCKED_NO_COMPOUND_PASS",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c233-invalid-branch-hours-plan.json",
+  "caseId": "S26-I101-inactive-branch-invalid-hours-local-recovery",
+  "observationWindowUtc": [
+    "2026-10-26T12:32:11Z",
+    "2026-10-26T12:35:09Z"
+  ],
+  "invalidSaveBeforeClockUtc": "2026-10-26T12:32:45Z",
+  "actual": "Exactinactivefa5/Aoriginalname/blankaddress-links-contacts/coords—inherittrue/activefalse/7closed days. ONE MondayAdd creates localemptyworkrange. ONE SaveSchedule inemptyinvalidstate ->sameeditor humanПроверьте интервалы: начало раньше окончания, без пересечений, перерывы внутри рабочего времени.; no success/navigation. Ordinary start09:00/end08:00fill+Tab yieldedAXtimevalues09:00/08:00, but originalerror remained although reviewedchange clearsfeedback. ONE ordinary staticheadingclick movedfocusout/no AXchange. Form-state commitment couldnotbe independently established; reverseorderingguard not submitted/certified. No secondSave/validcontrol/workaround.",
+  "subobservations": [
+    {
+      "name": "empty-local-interval-submit-validation",
+      "status": "observed_pass",
+      "credit": "Part of plannedcompound only/not new completed case"
+    },
+    {
+      "name": "reversed-local-interval-submit-validation",
+      "status": "blocked",
+      "reason": "AXvalues changed but previousvalidationfeedback remained after ordinaryfill/Tab/onefocusblur; componentstatecommit uncertain. No rawDOMevents/inputValue/stateprobe/unmask/secondsubmit."
+    },
+    {
+      "name": "valid09–18localcontrol",
+      "status": "not_run",
+      "reason": "Stoppeddependenttimeinputbranch after uncertaincommit; not fabricated."
+    }
+  ],
+  "effects": "ONEguard-negativeSaveScheduleattempt onlyinemptyrange state; oneAdd/twoordinarytimefills/Tab/oneheadingfocusblur/localnewrowremove; leave/reentry/ONEreload. No validSave/wholeweekPOSTintended/publish/branchactivation/staffschedule/shift/booking/hold/slot/payment/identity/role/security/newentity/API/SDK/SQL/storage/source/test/build/server action. UI/sourceguardnotindependentnetwork-writeaudit; ordinaryauth/read/analytics/telemetryunenumerated.",
+  "restoration": "RemovedONLYownnewMondayworkrange withlocalРабочее время: Удалить1 (notbranchDelete) ->all7closed anderrorcleared. LeftviaКспискуфилиалов, reenteredexactinactivefa5 andONEreload ->originalname/inactive/blankallcontact-links-address/coords—/inherittrue/7closed andnointerval/breakcontrols. ObservedАдминка ->protectedadmin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1;markHandoff/no pendingeffects.",
+  "limits": "No productfailure/rootcause from inputtool uncertainty. No repeatedtime/date/formloop or raw event workaround. Plannedcompound incomplete so0NEWUI/0fix/0accepted. Existingclosedbaseline is UIrestoration, not independentbit-identicalDBwriteproof.",
+  "credit": {
+    "newUi": 0,
+    "windowUiBefore": 19,
+    "windowUiAfter": 19,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  }
+}

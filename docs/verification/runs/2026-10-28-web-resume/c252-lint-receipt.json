@@ -1,0 +1,20 @@
+{
+  "id": "lint",
+  "executable": "C:\\Program Files\\nodejs\\node.exe",
+  "argv": [
+    "node_modules/eslint/bin/eslint.js",
+    ".",
+    "--format",
+    "json"
+  ],
+  "cwd": "C:/projects/kezek/apps/web",
+  "config": "apps/web/eslint.config.mjs",
+  "startedUtc": "2026-10-28T13:53:04.920Z",
+  "pid": 30304,
+  "watchdogMs": 240000,
+  "finishedUtc": "2026-10-28T13:55:31.703Z",
+  "exitCode": 1,
+  "signal": null,
+  "timedOut": false,
+  "log": "C:/projects/kezek/docs/verification/runs/2026-10-28-web-resume/c252-lint.log"
+}

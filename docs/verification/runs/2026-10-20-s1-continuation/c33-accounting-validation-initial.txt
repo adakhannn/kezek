@@ -1,0 +1,2 @@
+Accounting validator initial FAIL (not product scenario): Incomplete PASS for reused C11reload clones owner/client/staff because emitter omitted stepsmetadata. Originalsteps/UTC/evidence notlost, directcasesunchanged. Added explicit preservedsteps tothreeclonecases and fixedemitter forfutureuse; no newliveaction or casecountdelta.
+Originaldiagnostic: Error: [["Incomplete PASS: S21-F402-owner-root-reload","Incomplete PASS: S21-F402-client-root-reload","Incomplete PASS: S21-F402-staff-root-reload"],["Ledger/evidence verification failed; no certified progress may be shown"]]

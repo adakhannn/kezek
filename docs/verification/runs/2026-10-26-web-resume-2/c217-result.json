@@ -1,0 +1,49 @@
+{
+  "id": "C217",
+  "status": "PASS_ONE_COMPOUND_EXISTING_SERVICE_FOUR_INVALID_EDIT_VARIANTS",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "plan": "c217-service-invalid-edit-plan.json",
+  "caseId": "S26-I203-existing-service-invalid-edit-rejection-discard",
+  "observationWindowUtc": [
+    "2026-10-26T10:58:05Z",
+    "2026-10-26T10:59:53Z"
+  ],
+  "actual": "Exactexisting99servicebaseline1min/0-300som/RUnameLIVE TEST Service31Рус/KYКыргыз/ENЕng/branch1checked/branch2unchecked/activeTRUE/staffunchecked. EachONEargument+ONEordinarySave remainseditorwithsummaryПроверьтевыделенныеполя andspecificerror: whitespaceRU ->Названиеобязательно; duration0 ->целое>=1minute; priceFrom-1 ->nonnegativeprice; priceFrom301/To300 ->mincannotexceedmax. OrdinarysidebarServicesdiscard+exact99reentryaftereach restoresallbaseline. FinalONEreloadsameallfields+staffAdahanunchecked aftersettledloading.",
+  "effects": "Fourlocalinvaliddraftfills/fourordinarySavevalidationattemptseachonce, fourdiscard/reentries+onefinalreload. Twoordinarylogouts/twoknownGoogleloginsinclSArestore; ContinuealreadyCurrent2setupmayupsertsamepreference. No intentionalvalidserviceupdate/Create/branch-activation-assignmenttoggle/delete/newentity/slot/booking/hold/payment/source/test/build/server command. Ordinaryauth/read/telemetryunenumerated; UIdoesnotindependentlyprovezeroAPIorDBwrites.",
+  "variantWindows": [
+    {
+      "variant": "blankname",
+      "afterClockUtc": "2026-10-26T10:58:05Z",
+      "beforeClockUtc": "2026-10-26T10:58:38Z"
+    },
+    {
+      "variant": "duration0",
+      "afterClockUtc": "2026-10-26T10:58:38Z",
+      "beforeClockUtc": "2026-10-26T10:58:58Z"
+    },
+    {
+      "variant": "price-1",
+      "afterClockUtc": "2026-10-26T10:58:58Z",
+      "beforeClockUtc": "2026-10-26T10:59:19Z"
+    },
+    {
+      "variant": "range301-300",
+      "afterClockUtc": "2026-10-26T10:59:19Z",
+      "beforeClockUtc": "2026-10-26T10:59:53Z"
+    }
+  ],
+  "restoration": "Alloriginalnonsensitivevisibleeditorfieldsanduncheckedstaffrestoredbydiscard/reentry/finalreload. KnownSAkezekkgordinaryGoogle ->headingwaitdeadline, ONEfreshAXactualprotectedadmin/RU/Anonymized/Business3/4branches1staff4services30bookings/TodayCancelled1/markHandoff; no repeatedauth.",
+  "toolNotes": "Ownerchooserwaitdeadline ->onefreshAXcompletedchooser, Continuecurrentonly. InitialeditSavewaitElementnotattached ->freshAXstillpendingRendering, waitactualfieldthencompletededitor(no secondclick). OneServicesdiscardwaitdeadline ->freshAXcompletedlist/no repeat. Notproductfailure/timingbug.",
+  "credit": {
+    "newUi": 1,
+    "windowUiBefore": 12,
+    "windowUiAfter": 13,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 26,
+    "remaining": 290,
+    "windowLiveFixes": 1,
+    "logicalFixes": 17
+  },
+  "limits": "ValidationUIonly/notserverresponse/DB-atomicity/duplicate-name/isolation/publicavailability/fullI2/visualPASS. OldG005/C196notrepeatedorretimed."
+}

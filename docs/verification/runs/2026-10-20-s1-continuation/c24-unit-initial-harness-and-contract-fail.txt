@@ -1,0 +1,55 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/components/HealthCheckCallerRead.test.tsx
+  ● Test suite failed to run
+
+    Configuration error:
+
+    Could not locate module @/lib/adminHealthCheckReadService mapped as:
+    C:\projects\kezek\apps\web\src\$1.
+
+    Please check your configuration for these entries:
+    {
+      "moduleNameMapper": {
+        "/^@\/(.*)$/": "C:\projects\kezek\apps\web\src\$1"
+      },
+      "resolver": undefined
+    }
+
+      3 | import { readAdminHealthCheckForCaller } from '@/lib/adminHealthCheckReadService';
+      4 |
+    > 5 | jest.mock('@/lib/adminHealthCheckReadService',()=>({readAdminHealthCheckForCaller:jest.fn()}),{virtual:true});
+        |      ^
+      6 | jest.mock('@/app/_components/i18n/server',()=>({getT:async()=> (_key:string,fallback:string)=>fallback}));
+      7 | jest.mock('next/navigation',()=>({redirect:(url:string)=>{throw new Error('redirect:'+url);}}));
+      8 |
+
+      at createNoMappedModuleFoundError (../../node_modules/.pnpm/jest-resolve@29.7.0/node_modules/jest-resolve/build/resolver.js:759:17)
+      at Object.mock (src/__tests__/components/HealthCheckCallerRead.test.tsx:5:6)
+
+FAIL src/__tests__/lib/adminHealthCheckHttpService.test.ts
+  ● adminHealthCheckHttpService › does not authorize from another users global role
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      103 |     (runAdminHealthCheck as jest.Mock).mockResolvedValue({ok:true,data:{ok:true}});
+      104 |     const response=await runAdminHealthCheckHttp();
+    > 105 |     expect(response.status).toBe(403);expect(filters.user_id).toBe('current-user');
+          |                             ^
+      106 |     expect(getServiceClient).not.toHaveBeenCalled();expect(runAdminHealthCheck).not.toHaveBeenCalled();
+      107 |   });
+      108 |   test('preserves role read error before any privileged read',async()=>{
+
+      at Object.toBe (src/__tests__/lib/adminHealthCheckHttpService.test.ts:105:29)
+
+Test Suites: 2 failed, 2 total
+Tests:       1 failed, 5 passed, 6 total
+Snapshots:   0 total
+Time:        1.586 s
+Ran all test suites within paths "src/__tests__/components/HealthCheckCallerRead.test.tsx", "src/__tests__/lib/adminHealthCheckHttpService.test.ts".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

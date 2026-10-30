@@ -1,0 +1,23 @@
+{
+  "id":"C95",
+  "candidate":"dev-20261023-WEB-b876ccbde0a8",
+  "sourceFingerprint":"b876ccbde0a87655431e32b2f6677b45b40c51376f0d3833f0434dafc4eab29a",
+  "plan":"c95-duplicate-slug-plan.json",
+  "caseId":"S23-M201-duplicate-slug-reject-cancel",
+  "status":"passed",
+  "observationWindowUtc":["2026-10-23T05:08:57Z","2026-10-23T05:10:07Z"],
+  "timeline":[
+    {"afterClockUtc":"2026-10-23T05:08:57Z","actual":"Clicked exact observed isolated A link; first AX still root while navigation pending, waitFor exact allowed detail completed normally. A exact id/name/slug/approvedBarbershop/ownerunassigned/2branches0staff0services0bookings/limit2/addressphonesunspecified. Edit showed original name/slug, all6address-phone-contact inputs blank, barbershop checked/othercategoryunchecked/approvedchecked."},
+    {"afterClockUtc":"2026-10-23T05:09:14Z","actual":"Filled only URL-адрес=testovyy-biznes-2. Visible draft value/helper changed; original name/category/publication/emptycontacts unchanged."},
+    {"immediatelyBeforeCommandUtc":"2026-10-23T05:09:21Z","actual":"ONE Save click. InitialsavingdisabledCancel, then explicit slug is already taken visible; Save/Cancel available and editor/draft retained. No second submit/valid Save, no HTTPstatus/body extraction;409 is source expectation not independently observed transport status."},
+    {"afterClockUtc":"2026-10-23T05:09:31Z","actual":"Cancel cleared editor/error and immediately restored original readonly publicslug/address/phones/category."},
+    {"afterClockUtc":"2026-10-23T05:09:41Z","actual":"Ordinary reload retained exact A original name/slug/approved/category/owner/counts/limit/unspecifiedaddressphones. Header briefly loading available cabinets then normalAdmin. Edit inspection confirms original name/slug, all bundled address/phone/contact inputs still blank, category/approved original. Cancel left no draft."},
+    {"afterClockUtc":"2026-10-23T05:09:56Z","beforeClockUtc":"2026-10-23T05:10:07Z","actual":"Admin root normal navigation completed; known SA/Anonymized/RU/protectedheading/Business3,4branches1staff4services30bookings. A originalslug and distinct Тестовый бизнес2 testovyy-biznes-2 both visible. Same humanTab2 retained/markHandoff, no newtab/relogin/serverrestart."}
+  ],
+  "actual":"PASS functional uniqueness negative path and Cancel/reload recovery: existing A rejected occupied publicslug, editor retained; original A fields and other existing business publicslug remained visibly unchanged. One case, not separate Save/Cancel/reload PASS.",
+  "localization":"Visible RU error is raw English slug is already taken. C91/F014 scoped fix handled nameRequired only, not this branch. Related residual localization remains incomplete; no distinct new defect/fix credit, no whole O3-03 PASS or translation-green claim.",
+  "effects":"Exactly one ordinary invalid Save command and local draft/Cancel; no successful update observed. Normal app auth/telemetry unenumerated, NOT zeroTOTALwrites or exact rawDBrollback proof. No valid Save/newfixtures/otherbusinesscommands/owner/approval/category/contact/security/roles/jobs/bookings/shifts/packages/payments/messages commands; no source/test/build/server changes/rawHTTP/SDK/storage/secrets/native/screenshot probes.",
+  "counts":{"newUiPassed":1,"newWindowPassedBefore":14,"newWindowPassedAfter":15,"newLiveFixes":0,"newWindowLiveFixes":1,"logicalVerifiedLiveFixes":10,"acceptedBefore":21,"acceptedAfter":21,"remaining":295},
+  "limits":"M2-01 remains partial/casePlanCompletefalse; creation/historysetup/other validation and role/security/transport/concurrency variants not accepted. F013OPEN/fullLint52errors167warnings/sourceUnit11FAIL2530PASS/cache/visual/owner/profile/fixture blockers retained. Candidate unchanged.",
+  "next":"C96 bounded read-only manual-creation form/route/history effect review to determine whether any genuinely uncovered no-create validation can be tested safely before a finite UI plan. Do not create/override duplicates/auditfailinject/newfixture or reuse setup asPASS; if unsafe retain exact blocker and select independent remaining requirement. No unchanged C95/C91/C92/C93 repeat, no residual error-string F014 doublecredit."
+}

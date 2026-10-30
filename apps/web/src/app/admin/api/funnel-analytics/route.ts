@@ -6,6 +6,7 @@ import { getServiceClient } from '@/lib/supabaseService';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { validateQuery } from '@/lib/validation/apiValidation';
+import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -24,16 +25,29 @@ const analyticsQuerySchema = z.object({
 });
 
 /**
- * GET /api/admin/funnel-analytics
+ * GET /admin/api/funnel-analytics
  * Получает аналитику по конверсии воронки
  */
 export async function GET(req: Request) {
     return withErrorHandler('FunnelAnalytics', async () => {
         const supabase = await createSupabaseServerClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        if (!user) {
+        if (authError || !user) {
             return createErrorResponse('auth', 'Не авторизован', undefined, 401);
+        }
+
+        // Global event storage is server-only; enforce the same role as the admin shell
+        // before constructing a service client, independently of the page layout.
+        const { isSuperAdmin, error: roleError } = await checkCurrentUserIsSuperAdmin(
+            supabase as unknown as SuperAdminRoleClient,
+            user.id,
+        );
+        if (roleError) {
+            return createErrorResponse('service_unavailable', 'Не удалось проверить права доступа', undefined, 503);
+        }
+        if (!isSuperAdmin) {
+            return createErrorResponse('forbidden', 'Нужны права супер-администратора', undefined, 403);
         }
 
         const url = new URL(req.url);

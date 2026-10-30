@@ -1,0 +1,89 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/components/RatingsStatusCallerRead.test.tsx (6.458 s)
+  Ratings status server request-context read
+    × renders status from shared read without self HTTP (20 ms)
+    × renders existing job history without invoking or creating jobs (3 ms)
+    × redirects when status read denies the caller (2 ms)
+    × redirects when jobs read denies the caller (1 ms)
+    √ retains explicit status read error (2 ms)
+    √ retains thrown read error as an error surface (2 ms)
+
+  ● Ratings status server request-context read › renders status from shared read without self HTTP
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected substring: "Здоровье рейтинговой системы"
+    Received string:    "<main class=\"max-w-3xl mx-auto\"><div role=\"alert\" class=\"rounded-[var(--radius-lg)] border px-4 py-3 border-[color:color-mix(in_srgb,var(--status-danger)_24%,transparent)] bg-[var(--status-danger-soft)] text-[var(--status-danger)]\"><div class=\"flex items-start gap-3\"><div class=\"mt-0.5 shrink-0\" aria-hidden=\"true\"><svg class=\"h-5 w-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"min-w-0 flex-1\"><p class=\"type-label\">Ошибка статуса рейтингов</p><p class=\"type-caption mt-1 opacity-95\">Не удалось получить состояние рейтинговой системы.</p></div></div></div></main>"
+
+      11 |   afterEach(()=>{global.fetch=savedFetch;});
+      12 |   test('renders status from shared read without self HTTP',async()=>{
+    > 13 |     const html=renderToStaticMarkup(await RatingsStatusPage());expect(html).toContain('Здоровье рейтинговой системы');expect(html).toContain('Метрики сотрудников');expect(global.fetch).not.toHaveBeenCalled();
+         |                                                                             ^
+      14 |   });
+      15 |   test('renders existing job history without invoking or creating jobs',async()=>{
+      16 |     (readRatingsJobsForCaller as jest.Mock).mockResolvedValue({ok:true,data:{jobs:[{id:'history-job-id',created_at:'2026-10-20T00:00:00Z',date_from:'2026-10-01',date_to:'2026-10-02',scope:'all',status:'success',processed_days:2,total_days:2,error_message:null}]}});
+
+      at Object.toContain (src/__tests__/components/RatingsStatusCallerRead.test.tsx:13:77)
+
+  ● Ratings status server request-context read › renders existing job history without invoking or creating jobs
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected substring: "Задачи пересчёта рейтингов"
+    Received string:    "<main class=\"max-w-3xl mx-auto\"><div role=\"alert\" class=\"rounded-[var(--radius-lg)] border px-4 py-3 border-[color:color-mix(in_srgb,var(--status-danger)_24%,transparent)] bg-[var(--status-danger-soft)] text-[var(--status-danger)]\"><div class=\"flex items-start gap-3\"><div class=\"mt-0.5 shrink-0\" aria-hidden=\"true\"><svg class=\"h-5 w-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"min-w-0 flex-1\"><p class=\"type-label\">Ошибка статуса рейтингов</p><p class=\"type-caption mt-1 opacity-95\">Не удалось получить состояние рейтинговой системы.</p></div></div></div></main>"
+
+      15 |   test('renders existing job history without invoking or creating jobs',async()=>{
+      16 |     (readRatingsJobsForCaller as jest.Mock).mockResolvedValue({ok:true,data:{jobs:[{id:'history-job-id',created_at:'2026-10-20T00:00:00Z',date_from:'2026-10-01',date_to:'2026-10-02',scope:'all',status:'success',processed_days:2,total_days:2,error_message:null}]}});
+    > 17 |     const html=renderToStaticMarkup(await RatingsStatusPage());expect(html).toContain('Задачи пересчёта рейтингов');expect(html).toContain('2/2');expect(global.fetch).not.toHaveBeenCalled();
+         |                                                                             ^
+      18 |   });
+      19 |   test.each(['status','jobs'])('redirects when %s read denies the caller',async side=>{
+      20 |     (side==='status'?readRatingsStatusForCaller:readRatingsJobsForCaller as jest.Mock).mockResolvedValue({ok:false,status:403,error:'forbidden'});
+
+      at Object.toContain (src/__tests__/components/RatingsStatusCallerRead.test.tsx:17:77)
+
+  ● Ratings status server request-context read › redirects when status read denies the caller
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: {"$$typeof": Symbol(react.transitional.element), "_owner": null, "_store": {}, "key": null, "props": {"message": "Не удалось получить состояние рейтинговой системы.", "title": "Ошибка статуса рейтингов"}, "type": [Function RatingsStatusErrorState]}
+
+      19 |   test.each(['status','jobs'])('redirects when %s read denies the caller',async side=>{
+      20 |     (side==='status'?readRatingsStatusForCaller:readRatingsJobsForCaller as jest.Mock).mockResolvedValue({ok:false,status:403,error:'forbidden'});
+    > 21 |     await expect(RatingsStatusPage()).rejects.toThrow('redirect:/auth/sign-in?redirect=/admin/ratings-status');
+         |           ^
+      22 |   });
+      23 |   test('retains explicit status read error',async()=>{
+      24 |     (readRatingsStatusForCaller as jest.Mock).mockResolvedValue({ok:false,status:500,error:'internal',message:'Status unavailable'});
+
+      at expect (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:113:15)
+      at expect (src/__tests__/components/RatingsStatusCallerRead.test.tsx:21:11)
+
+  ● Ratings status server request-context read › redirects when jobs read denies the caller
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: {"$$typeof": Symbol(react.transitional.element), "_owner": null, "_store": {}, "key": null, "props": {"message": "Не удалось получить состояние рейтинговой системы.", "title": "Ошибка статуса рейтингов"}, "type": [Function RatingsStatusErrorState]}
+
+      19 |   test.each(['status','jobs'])('redirects when %s read denies the caller',async side=>{
+      20 |     (side==='status'?readRatingsStatusForCaller:readRatingsJobsForCaller as jest.Mock).mockResolvedValue({ok:false,status:403,error:'forbidden'});
+    > 21 |     await expect(RatingsStatusPage()).rejects.toThrow('redirect:/auth/sign-in?redirect=/admin/ratings-status');
+         |           ^
+      22 |   });
+      23 |   test('retains explicit status read error',async()=>{
+      24 |     (readRatingsStatusForCaller as jest.Mock).mockResolvedValue({ok:false,status:500,error:'internal',message:'Status unavailable'});
+
+      at expect (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:113:15)
+      at expect (src/__tests__/components/RatingsStatusCallerRead.test.tsx:21:11)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 2 passed, 6 total
+Snapshots:   0 total
+Time:        6.61 s
+Ran all test suites within paths "src/__tests__/components/RatingsStatusCallerRead.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

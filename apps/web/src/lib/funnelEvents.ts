@@ -43,6 +43,8 @@ export async function trackFunnelEvent(event: Omit<FunnelEvent, 'timestamp'>) {
     try {
         const response = await fetch('/api/funnel-events', {
             method: 'POST',
+            // Booking success navigates to its receipt immediately afterwards.
+            keepalive: true,
             headers: {
                 'Content-Type': 'application/json',
             },

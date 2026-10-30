@@ -1,0 +1,78 @@
+{
+  "id": "C251",
+  "status": "BLOCKED_TIMEBOX_PARTIAL_ONE_OF_SIX_NO_PRODUCT_FAIL",
+  "candidate": "dev-20261026-WEB-5387d70d6af1",
+  "caseId": "S28-I203-service-localized-name-length-rejection-discard",
+  "firstClockUtc": "2026-10-28T13:08:12Z",
+  "lastClockUtc": "2026-10-28T13:25:11Z",
+  "observationWindows": {
+    "setup": [
+      "2026-10-28T13:08:12Z",
+      "2026-10-28T13:17:26Z"
+    ],
+    "ruShortAndDiscard": [
+      "2026-10-28T13:17:26Z",
+      "2026-10-28T13:21:36Z"
+    ],
+    "finalReloadAndAuthRestore": [
+      "2026-10-28T13:21:36Z",
+      "2026-10-28T13:25:11Z"
+    ]
+  },
+  "timing": "Original15min includingrestore target13:23:12 was exceeded; no newvariant wasstartedafterminute12/13:20:12. Atactual13:21:36 recoveryonly, no101/KY/EN input. Completion before13:25:11 is a bound, not exactactionUTC. Setup/toolwait/contextoverhead consumedcasebudget; do not claimtimely15mincompletion.",
+  "baseline": {
+    "serviceId": "99c03a5d-1919-44cf-8de7-f86bc209e561",
+    "businessId": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "branchId": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+    "originalNames": {
+      "ru": "LIVE TEST Service 31 Рус",
+      "ky": "LIVE TEST Service 31 Кыргыз",
+      "en": "LIVE TEST Service 31 Еng"
+    },
+    "duration": 1,
+    "priceFrom": 0,
+    "priceTo": 300,
+    "branch1": true,
+    "branch2": false,
+    "active": true,
+    "staff": false,
+    "actualRole": "Knownowner/currentBusiness2/RU",
+    "positiveListPrice": "0 – 300 сом",
+    "priceFromAX": "zero omitted byAXstepper; positivevisiblelist supplies0baseline, no value/unmask workaround"
+  },
+  "completedVariants": [
+    {
+      "id": "service-name:ru:one-character",
+      "value": "Я",
+      "length": 1,
+      "actualEcho": "Название (русский) *, Value: Я",
+      "saveAttempts": 1,
+      "result": "OBSERVED_EXPECTED_REJECTION_NOT_COMPOUND_PASS",
+      "fieldError": "Введите не менее 2 символов",
+      "summary": "Проверьте выделенные поля",
+      "sameEditor": true,
+      "otherFieldsOriginal": true,
+      "discard": "ObservedServiceslink ->list99original1min0–300/branch1active ->exact99reentry original3names/1min/300/branch1only/active/staffunchecked"
+    }
+  ],
+  "unexecutedVariants": [
+    "service-name:ru:101-characters",
+    "service-name:ky:one-character",
+    "service-name:ky:101-characters",
+    "service-name:en:one-character",
+    "service-name:en:101-characters"
+  ],
+  "actualReload": "ONEreload afterdiscard/reentry: original3names/1min/priceTo300/branch1checked/branch2unchecked/activeTRUE; staffloadedunchecked. PriceFrom0fromvisiblelistprior, no hiddenread.",
+  "restore": "Ordinaryownerlogout ->guestroot ->SignInGoogleknownSA ->protected/admin/RU/Anonymized/Business3/4branches1staff4services30bookings/28OctToday0-0-0, markHandoff before13:25:11UTC.",
+  "toolLimits": "SelectorwaitdeadlinesresolvedONEfreshAX pertimeout, neverrepeatclick/Save/navigation. Lastprecompactioneditoroutputwastruncated; freshAXestablishedbaselinebeforeinput. No tooltimingrootcauseclaim.",
+  "sideEffects": "ONLYpublicRU1charlocaldraft+Tab/ONEinvalidSave/discard/reentry/ONEfinalreload/ordinaryknownauthrestore. No validSave/Create/namepersist/association/groupmerge/booking/payment/review/message/API/SQL/SDK/storage/source/test/build/servercommands. Ordinaryauth/preferences/telemetry/analytics effectsunenumerated; nozeroTOTALwritesclaim.",
+  "accounting": {
+    "newUIPass": 0,
+    "liveFixes": 0,
+    "acceptedRequirements": 0,
+    "compoundComplete": false,
+    "productFailObserved": false,
+    "sourceRiskStillUnverified": true
+  },
+  "exit": "ContinueONLYremainingfiveoriginalarguments underprospectiveboundedplan/freshbaseline; retainRUshortoriginalobservation, noreplayforcounts. No sourcepatchuntilactual101feedbackFAIL."
+}

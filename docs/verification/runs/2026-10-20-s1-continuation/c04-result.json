@@ -1,0 +1,31 @@
+{
+  "id": "C04",
+  "candidateId": "dev-20261020-S1-ed0bdd7faf24",
+  "observedUtc": "2026-10-20T09:09:35Z",
+  "status": "PASS_local_build_execution_and_scoped_asset_delivery_NOT_deployed_production",
+  "requirements": ["A3-01", "A3-02"],
+  "caseIds": ["A3-01-S1-01", "A3-02-S1-01", "A3-02-S1-02", "A3-02-S1-03", "A3-02-S1-04"],
+  "source": {"files":1660,"fingerprint":"ed0bdd7faf246271380613feebb1b5dbd48b573ea00e635dc10bcddcf137590b","copyAudit":"c04-copy-audit.json","primarySourceUnchanged":true},
+  "historyPreserved": [
+    "Initial copy preflight failed only due traversal order; exact bytes1660 MATCH and no compiler spawned",
+    "Cold default build compiled47s, then configured180s watchdog completed after325.856s at type-checking; exit1/timedOuttrue. Not cold-build PASS or timely-stop claim",
+    "Independent cold tsc --incremental false --extendedDiagnostics exit0;31.70s/2997files/1144834K memory; no network",
+    "One bounded warm-cache default build followup, no skipped type gate/fontmock/webpack fallback/source patch"
+  ],
+  "completedBuild": {"startedUtc":"2026-10-20T09:06:01.705Z","finishedUtc":"2026-10-20T09:07:33.963Z","exitCode":0,"timedOut":false,"compilerSeconds":39.2,"prerenders":"36/36","cold":false,"typeGate":"enabled; build advanced through page data and static generation"},
+  "liveArtifact": {
+    "origin":"http://s1assets-20261020-ed0bdd.localhost:3104",
+    "path":"/privacy",
+    "role":"guest; no real credentials",
+    "readySeconds":3.6,
+    "ownedPid":23604,
+    "checks":["Actual Политика конфиденциальности document renders","New never-used local origin for asset URL namespace, not controllable browser cold-cache proof for all routes","CSSOM two stylesheets17/112rules","3 font resources bundled as font/woff2; document.fonts.status loaded; face iterator empty in read-only DOM scope not proof of selected typography","13 script resources in pageAssets inventory/14 script elements; actual Меню button expands -> Закрыть/language/group/sign-in controls","Logo complete and decoded320x86","23/23 asset exports:2CSS,3WOFF2,3externalimages,15inlineSVG;0failures","Close menu and reload same document => correct heading","Return user tab to mainDEV localhost:3000/ guest catalogue before stopping temporary server"],
+    "assetManifest":"c04-assets/manifest.json",
+    "image":"c04-production-assets.jpg",
+    "actualCssViewport":{"width":451,"height":413,"dpr":1.8000000715255735},
+    "captureBoundary":"Current frame qualitative proof only; not canonical phone/tablet/desktop matrix or initial-paint acceptance",
+    "cleanup":"Exact own PID23604 verified and stopped09:09:36.272UTC; port3104 no listener; primary DEV3000 untouched"
+  },
+  "limitations":["Dummy invalid backend/no envfiles/service-role/Sentry; Node outbound restriction not an OS firewall","User permitted only public Google Fonts GET until20Oct12:30UTC; no DEV DB permission/credentials to compiler","FrontendMetrics API errors in dummy isolated environment retained, not production monitoring PASS","Existing workspace-root/multiple-lockfile/middleware/baseline warnings retained","Initial attempt timeout cause not established; successful warm followup does not erase it","DOM performance API unavailable in read-only scope; no raw HTTP/fetch workaround","Not every route/chunk/typography/device tested; no domain/deploy/security/RLS/wholegreen claim"],
+  "sideEffects":"Generated isolated build/cache/assets; temporary local process; public read-only navigation/menu/reload only. No business/auth/booking mutations in C04. Main tab guest catalogue; ordinary telemetry unenumerated."
+}

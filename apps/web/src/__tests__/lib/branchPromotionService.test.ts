@@ -12,6 +12,16 @@ describe('branchPromotionService', () => {
         jest.clearAllMocks();
     });
 
+    test('rejects negative visit count with stable field metadata before any update', async () => {
+        admin.from.mockReturnValueOnce({select:jest.fn().mockReturnThis(),eq:jest.fn().mockReturnThis(),
+            maybeSingle:jest.fn().mockResolvedValue({data:{id:'promo-1',promotion_type:'free_after_n_visits'},error:null})});
+        const result = await updateBranchPromotion({admin,branchId:'branch-1',promotionId:'promo-1',bizId:'biz-1',
+            body:{params:{visit_count:-1}}});
+        expect(result).toEqual({ok:false,status:400,error:'validation',
+            message:'Количество визитов должно быть больше 0',details:{field:'params.visit_count'}});
+        expect(admin.from).toHaveBeenCalledTimes(1);
+    });
+
     test('updates promotion when payload is valid', async () => {
         admin.from
             .mockReturnValueOnce({

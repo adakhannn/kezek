@@ -3,38 +3,9 @@ import { redirect } from 'next/navigation';
 import { getT } from '@/app/_components/i18n/server';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { formatDateTime } from '@/lib/dateFormat';
+import { readAdminHealthCheckForCaller } from '@/lib/adminHealthCheckReadService';
 
 export const dynamic = 'force-dynamic';
-
-type HealthCheckResponse = {
-    ok: boolean;
-    error?: string;
-    alerts: Array<{
-        type: 'error' | 'warning';
-        message: string;
-        details?: Record<string, unknown>;
-    }>;
-    checks: {
-        shifts: {
-            ok: boolean;
-            openShiftsOlderThan2Days: number;
-            lastCheckDate: string;
-        };
-        ratings: {
-            ok: boolean;
-            staffLastMetricDate: string | null;
-            branchLastMetricDate: string | null;
-            bizLastMetricDate: string | null;
-            daysSinceLastMetric: number | null;
-        };
-        promotions: {
-            ok: boolean;
-            lastAppliedDate: string | null;
-            daysSinceLastApplication: number | null;
-            activePromotionsCount: number;
-        };
-    };
-};
 
 export default async function HealthCheckPage() {
     const t = await getT();
@@ -44,28 +15,25 @@ export default async function HealthCheckPage() {
         if (!value) return t('common.noData', 'нет данных');
         return formatDateTime(value, 'ru', true);
     }
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/admin/health-check`, {
-        cache: 'no-store',
-    });
+    const result = await readAdminHealthCheckForCaller();
 
-    if (res.status === 401 || res.status === 403) {
+    if (!result.ok && (result.statusCode === 401 || result.statusCode === 403)) {
         redirect('/auth/sign-in?redirect=/admin/health-check');
     }
 
-    const data = (await res.json()) as HealthCheckResponse;
-
-    if (!data.ok && data.error) {
+    if (!result.ok) {
         return (
             <main className="max-w-4xl mx-auto p-6">
                 <AlertBanner
                     variant="danger"
                     title={t('admin.healthCheck.error.title', 'Ошибка health check')}
-                    message={data.error}
+                    message={result.message}
                 />
             </main>
         );
     }
+
+    const data = result.data;
 
     return (
         <main className="max-w-4xl mx-auto space-y-6 p-6">

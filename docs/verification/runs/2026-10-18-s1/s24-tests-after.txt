@@ -1,0 +1,19 @@
+
+
+(node:27144) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/components/BookingWizardTranslations.test.tsx (25.725 s)
+PASS src/__tests__/components/BusinessInfoTranslations.test.tsx
+PASS src/__tests__/components/HomeBranchAvailability.test.tsx
+PASS src/__tests__/components/HomeCountTranslations.test.tsx
+PASS src/__tests__/components/BusinessPageState.test.tsx
+PASS src/__tests__/components/PublicCategoryLabels.test.tsx
+PASS src/__tests__/components/RouteLoading.test.tsx
+
+Test Suites: 7 passed, 7 total
+Tests:       72 passed, 72 total
+Snapshots:   0 total
+Time:        84.407 s
+Ran all test suites within paths "src/__tests__/components/RouteLoading.test.tsx", "src/__tests__/components/BusinessInfoTranslations.test.tsx", "src/__tests__/components/HomeBranchAvailability.test.tsx", "src/__tests__/components/BusinessPageState.test.tsx", "src/__tests__/components/BookingWizardTranslations.test.tsx", "src/__tests__/components/HomeCountTranslations.test.tsx", "src/__tests__/components/PublicCategoryLabels.test.tsx".
+
+Typecheck exit0. Explicit ESLint of loading.tsx and RouteLoading.test.tsx exit0, 0errors/0warnings in files; legacy ESLintIgnoreWarning emitted.

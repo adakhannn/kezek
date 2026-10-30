@@ -41,10 +41,11 @@ jest.mock('next/link', () => {
 
 // Мок i18n-провайдера, чтобы не тянуть реальный контекст
 jest.mock('@/app/_components/i18n/LanguageProvider', () => {
+    const { ru } = jest.requireActual('@/app/_components/i18n/dictionaries') as { ru: Record<string, string> };
     return {
         useLanguage: () => ({
             locale: 'ru' as const,
-            t: (_key: string, fallback: string) => fallback,
+            t: (key: string, fallback?: string) => ru[key] ?? fallback ?? key,
         }),
     };
 });
@@ -156,7 +157,7 @@ describe('Staff cabinet pages basic render', () => {
             />,
         );
 
-        expect(html).toContain('Моё расписание');
+        expect(html).toMatch(/<h1[^>]*>Расписание<\/h1>/);
         expect(html).toContain('Просмотр вашего рабочего расписания');
     });
 

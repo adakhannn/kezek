@@ -132,7 +132,7 @@ export function useSlotsLoader(params: {
 
         // Debounce: откладываем выполнение запроса
         debounceTimerRef.current = setTimeout(() => {
-            let ignore = false;
+            const ignore = false;
             const isComplex = serviceIds.length > 1;
             const effectiveTotalDuration = isComplex
                 ? serviceIds.reduce((sum, id) => sum + (servicesFiltered.find((x) => x.id === id)?.duration_min ?? 0), 0)

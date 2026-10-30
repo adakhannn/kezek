@@ -33,11 +33,11 @@ export function ShiftControls({
     // Открыть смену можно только если на дату ещё нет смены.
     // При закрытой смене показываем не «Открыть», а отдельную кнопку переоткрытия,
     // чтобы не создавать ощущение двух смен за день.
-    const canShowOpenButton = !hasShift && !isDayOff;
+    const canShowShiftAvailability = !hasShift;
 
     return (
         <div className="flex gap-2 items-center flex-wrap">
-            {canShowOpenButton && (
+            {canShowShiftAvailability && (
                 <>
                     {isDayOff ? (
                         <div className="text-sm text-amber-600 dark:text-amber-400 font-medium px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
@@ -47,7 +47,7 @@ export function ShiftControls({
                         <Button
                             variant="primary"
                             onClick={onOpenShift}
-                            disabled={saving || isDayOff}
+                            disabled={loading || saving || isDayOff}
                             isLoading={saving}
                         >
                             {t('staff.finance.shift.open', 'Открыть смену')}
@@ -67,7 +67,7 @@ export function ShiftControls({
                     <Button
                         variant="primary"
                         onClick={onCloseShift}
-                        disabled={saving}
+                        disabled={loading || saving}
                         isLoading={saving}
                     >
                         {t('staff.finance.shift.close', 'Закрыть смену')}
@@ -78,7 +78,7 @@ export function ShiftControls({
                 <Button
                     variant="outline"
                     onClick={onOpenShift}
-                    disabled={saving}
+                    disabled={loading || saving}
                     isLoading={saving}
                 >
                     {t('staff.finance.shift.reopen', 'Переоткрыть')}

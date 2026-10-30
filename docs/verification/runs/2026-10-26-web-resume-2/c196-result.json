@@ -1,0 +1,39 @@
+{
+  "id": "C196",
+  "status": "PASS_ONE_COMPOUND_MULTI_SERVICE_CASE_AND_EXACT_RECOVERY",
+  "candidate": "dev-20261026-WEB-82c7088de609",
+  "plan": "c196-owner-multi-service-plan.json",
+  "observationWindowUtc": [
+    "2026-10-26T08:49:10Z",
+    "2026-10-26T09:08:14Z"
+  ],
+  "executionTiming": "Multi-service stimulus occurred after linked08:56:00Z and before recorded08:59:21Z checkpoint; recovery observed after actual09:04:35Z and before09:08:14Z. No claim of continuous observation across compaction/heartbeat.",
+  "actual": "Two eligible named services visible: original60min100–300som and newlyassociatedexisting1min0–300som. Both selected ->2 identities/61min/100–600som/Nextenabled. Uncheck60min ->1minservice retained/selected1/1min/0–300som/Nextenabled. Unchecklast1min ->bothunchecked/summaryNotselected/Nextdisabled. ONE compound case, no time/slot/Confirm/hold/booking command.",
+  "independentOracle": {
+    "beforeBoth": "60+1=61min; lower100+0=100; upper300+300=600;count2/Nextenabled",
+    "afterPartial": "only1min0–300/count1/Nextenabled",
+    "afterFinal": "no servicechoice/Nextdisabled"
+  },
+  "serviceIds": [
+    "51571512-66c0-47db-91ab-cb89d61aa97b",
+    "99c03a5d-1919-44cf-8de7-f86bc209e561"
+  ],
+  "staffId": "1bfd0e3b-6fce-42a1-b439-6313af27112f",
+  "restoration": "c196-effects-03-restored.json",
+  "instrumentationNotes": [
+    "Secondservice guessedaccessiblelabel locator no_matches sentnoclick; freshAX then correctoneclick, no duplicate stimulus.",
+    "Duringrecovery agentmistakenly guessed /book/<business-id> and observed404. Corrected using actual archived /b/testovyy-biznes-2/booking. This agent address error is not product404bug or newcasecredit.",
+    "RSC URL query maylag renderedwizardselection; assertions from settledvisiblecheckbox/summary/Next state, no requesttiming/storageclaim."
+  ],
+  "effects": "Exactlyone ordinary UI newservice_staff link andone exactownlinkremoval, knownowner/SA authtransitions; no existingbooking/shift/package/payment/role/serviceentity altered. Ordinary appauth/analytics/telemetry/draftwrites unenumerated.",
+  "credit": {
+    "newUi": 1,
+    "newWindowUiBefore": 3,
+    "newWindowUiAfter": 4,
+    "newFix": 0,
+    "newAccepted": 0,
+    "accepted": 24,
+    "remaining": 292
+  },
+  "limits": "D2-01/02/04 remainpartial/casePlanCompletefalse; notslotavailability/multi-servicecreation/lifecycle/security/allroles/visualproof. C194preconditionBLOCKED preserved as priorhistory, not erased."
+}

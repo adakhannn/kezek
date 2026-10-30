@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { CreateBookingForm } from './CreateBookingForm';
+import { useStaffBookingListHistory } from './useStaffBookingListHistory';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
@@ -66,7 +67,14 @@ export default function StaffBookingsView({
     branches: Branch[];
 }) {
     const { t, locale } = useLanguage();
-    const [tab, setTab] = useState<'upcoming' | 'past' | 'create'>('upcoming');
+    const { tab: listTab, setTab: setListTab } = useStaffBookingListHistory(bizId, staffId);
+    const [creating, setCreating] = useState(false);
+    const tab = creating ? 'create' : listTab;
+
+    function setTab(nextTab: 'upcoming' | 'past' | 'create') {
+        setCreating(nextTab === 'create');
+        if (nextTab !== 'create') setListTab(nextTab);
+    }
 
     // Используем унифицированные функции форматирования дат
     const formatDateTimeLocal = (iso: string): string => formatDateTime(iso, locale as 'ru' | 'ky' | 'en', true);

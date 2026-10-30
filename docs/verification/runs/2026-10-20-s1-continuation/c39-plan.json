@@ -1,0 +1,9 @@
+{
+  "id":"C39",
+  "finding":"S1-F012 genuineUI C38 safe return FAIL",
+  "hypothesis":"Initial getUser plus INITIAL_SESSION both invoke decideAndGo, each performs router replace+refresh. Installed Next16 actionqueue permits duplicate navigation to discard a pending action while refresh queued. First isolate duplicate signal handling with targeted UNIT, not treat it as causal live proof.",
+  "sequence":"Preserve failing signal tests. If duplicate confirmed, minimal hook coalescing/lifecycle guard only, no authorization/return sanitizer/role resolution changes. SAME-LIVE exact knownSA /auth/sign-in?redirect=%2Fterms. If not fixed, retain prototype/failure and undo only agent hook patch; do not markfix or repeatedly retry. No auth/SDK diagnostics via browser.",
+  "budgetMinutes":15,
+  "acceptance":"C38 exact live control resumes /terms; then original remaining7 finite return cases or recordremaining. Newcandidate source/dependency review required; no blanketretiming. Guest/no-user/unmount and duplicate notification UNIT controls, scopedtypes/lint. Runtime sourcefixcredit onlyafterSAME-LIVE.",
+  "stop":"No repeatedunchangedUI probe; one changed hypothesis and samecase afterpatch. Unknowncause staysOPEN, no debug endpoints/token/log extraction/failureinjection/networkbypass. Deadline21Oct05UTC/cutoffsunchanged."
+}

@@ -1,8 +1,10 @@
 # Cleanup And Next Phase Plan
 
-**Status:** working document  
+**Status:** historical architecture cleanup wave
 **Created:** 2026-03-30  
 **Purpose:** normalize docs/roadmap state after the large `Phase 6.1` completion and define the next architecture package of work.
+
+As of2026-10-14, current WEB work is ordered by [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md), not by the broad refactor candidates below. Preserve this completed-wave history; refactor only where needed for a confirmed defect or safe verification during stabilization.
 
 ## How To Use
 
@@ -148,7 +150,7 @@ Result on 2026-03-30:
   [MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
 - The first execution task is `M.1 Decompose ShiftQuickScreen`.
 
-## Current Next Task
+## Next Task Recorded For The Architecture Wave
 
 **Next:** `W.1 Decompose FinancePage`
 

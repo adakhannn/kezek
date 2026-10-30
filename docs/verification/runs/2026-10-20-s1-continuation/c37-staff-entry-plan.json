@@ -1,0 +1,14 @@
+{
+  "id":"C37",
+  "parent":"F4-02 fixed64 role-route-entrymode cases",
+  "candidate":"dev-20261020-S1-6b8b3bf85fe5",
+  "before":"43PASS16BLOCKED5notrun/64",
+  "cases":["staff-root-newtab","staff-root-copied-address","staff-dashboard-newtab","staff-dashboard-reload","staff-dashboard-copied-address"],
+  "expected":"Known Google obraz.osh@gmail.com, canonical alias adakhannn@yandex.com, active knownstaff NOTpureclient. Actual staff control; globaladmin absent and no owner/management authority. Admin explicit globalSA denial, dashboard explicit management denial under newtab/transferredURL/reload. Existing staff-admin reload C11PASS remains original/no repeat.",
+  "steps":"KnownSA ordinary logout/knownstaff Google login; observe actual identity and staff control without business commands. Named legitimate newtab-case temp per protected route, inspect denial, only remaining dashboardreload, root then normal navigation to observed benign sameURL. Close owncase tabs, restoreknownSA and preserveuser2/5handoff.",
+  "limits":"PAGE settledDOM only, not screenshots/no-flash/originalSSR/API/RLS/CSRF/IDOR/independentsession/OSclipboard PASS. No rawHTTP/SDK/cookie/token/native, roles/jobs/grants/business/finance commands. Existing login may execute app idempotentstaffRoleSync; no new agent role command and never zero TOTAL writes.",
+  "budgetMinutes":12,
+  "stop":"One bounded freshstate for unknown outcome, no blindretry/bypass. CAPTCHA/password/device handoff. Clockbeforecases/authwrite and afterlongaction. Harddeadline21Oct05UTC/cutoffs unchanged.",
+  "afterIfAllPass":"48PASS16BLOCKED0notrun/64 remaining16, all available modes executed but wholeF4-02 remains partial",
+  "next":"Select next independent bounded unclosed S2.1 requirement after examining ledger scope; missingroles16 remainblocked, do notrepeatmatrix or createfixtures"
+}

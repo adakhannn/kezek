@@ -1,0 +1,220 @@
+Captured tool transcript; output was truncated by the tool at the stated limit. Not an unabridged Jest log.
+Warning: truncated output (original token count: 4279)
+Total output lines: 231
+
+(node:14024) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+FAIL src/__tests__/components/BusinessInfoTranslations.test.tsx (9.573 s)
+  BusinessInfo visible landing localization
+    × does not invite booking without active branches in ru (89 ms)
+    × does not invite booking without active branches in ky (18 ms)
+    × does not invite booking without active branches in en (17 ms)
+    × restores booking actions when active branches become available (108 ms)
+    √ uses correct section count forms for ru/1 (49 ms)
+    √ uses correct section count forms for ru/2 (29 ms)
+    √ uses correct section count forms for ru/5 (41 ms)
+    √ uses correct section count forms for ru/11 (41 ms)
+    √ uses correct section count forms for ru/21 (75 ms)
+    √ uses correct section count forms for en/1 (24 ms)
+    √ uses correct section count forms for en/2 (27 ms)
+    √ uses correct section count forms for en/5 (45 ms)
+    √ uses correct section count forms for en/11 (56 ms)
+    √ uses correct section count forms for en/21 (116 ms)
+    √ uses correct section count forms for ky/1 (74 ms)
+    √ uses correct section count forms for ky/2 (37 ms)
+    √ uses correct section count forms for ky/5 (36 ms)
+    √ uses correct section count forms for ky/11 (50 ms)
+    √ uses correct section count forms for ky/21 (54 ms)
+    √ provides dictionary entries for every visible product label in ru (12 ms)
+    √ provides dictionary entries for every visible product label in ky (16 ms)
+    √ provides dictionary entries for every visible product label in en (25 ms)
+    √ renders translated actions and headings in en without changing user data or destinations (221 ms)
+    √ renders translated actions and headings in ky without changing user data or destinations (151 ms)
+    √ updates public product copy when the active language changes (77 ms)
+
+  ● BusinessInfo visible landing localization › does not invite booking without active branches in ru
+
+    expect(received).toBeNull()
+
+    Received: <span class="inline-flex items-center gap-1 rounded-full border font-medium tracking-[0.01em] align-middle px-2.5 py-1 text-xs border-[color:color-mix(in_srgb,var(--status-info)_28%,transparent)] bg-[var(--status-info-soft)] text-[var(--status-info)]">Онлайн-запись доступна</span>
+
+      33 |         const dictionary = dictionaries[locale];
+      34 |         const { container } = render(<BusinessInfo data={{ ...fixture, branches: [], services: [], staff: [] }} />);
+    > 35 |         expect(screen.queryByText(dictionary['business.hero.bookable'])).toBeNull();
+         |                                                                          ^
+      36 |         expect(screen.queryByRole('link', { name: dictionary['business.info.bookButton'], exact: true })).toBeNull();
+      37 |         expect(container.querySelectorAll('a[href*="/booking"]')).toHaveLength(0);
+      38 |         expect(screen.getAllByText(dictionary['booking.empty.noBranches']).length).toBeGreaterThan(0);
+
+      at toBeNull (src/__tests__/components/BusinessInfoTranslations.test.tsx:35:74)
+
+  ● BusinessInfo visible landing localization › does not invite booking without active branches in ky
+
+    expect(received).toBeNull()
+
+    Received: <span class="inline-flex items-center gap-1 rounded-full border font-medium tracking-[0.01em] align-middle px-2.5 py-1 text-xs border-[color:color-mix(in_srgb,var(--status-info)_28%,transparent)] bg-[var(--status-info-soft)] text-[var(--status-info)]">Онлайн жазылуу жеткиликтүү</span>
+
+      33 |         const dictionary = dictionaries[locale];
+      34 |         const { container } = render(<BusinessInfo data={{ ...fixture, branches: [], services: [], staff: [] }} />);
+    > 35 |         expect(screen.queryByText(dictionary['business.hero.bookable'])).toBeNull();
+         |                                                                          ^
+      36 |         expect(screen.queryByRole('link', { name: dictionary['business.info.bookButton'], exact: true })).toBeNull();
+      37 |         expect(container.querySelectorAll('a[href*="/booking"]')).toHaveLength(0);
+      38 |         expect(screen.getAllByText(dictionary['booking.empty.noBranches']).length).toBeGreaterThan(0);
+
+      at toBeNull (src/__tests__/components/BusinessInfoTranslations.test.tsx:35:74)
+
+  ● BusinessInfo visible landing localization › does not invite booking without active branches in en
+
+    expect(received).toBeNull()
+
+    Received: <span class="inline-flex items-center gap-1 rounded-full border font-medium tracking-[0.01em] align-middle px-2.5 py-1 text-xs border-[color:color-mix(in_srgb,var(--status-info)_28%,transparent)] bg-[var(--status-info-soft)] text-[var(--status-info)]">Online booking available</span>
+
+      33 |         const dictionary = dictionaries[locale];
+      34 |         const { container } = render(<BusinessInfo data={{ ...fixture, branches: [], services: [], staff: [] }} />);
+    > 35 |         expect(screen.queryByText(dictionary['business.hero.bookable'])).toBeNull();
+         |                                                                          ^
+      36 |         expect(screen.queryByRole('link', { name: dictionary['business.info.bookButton'], exact: true })).toBeNull();
+      37 |         expect(container.querySelectorAll('a[href*="/booking"]')).toHaveLength(0);
+      38 |         expect(screen.getAllByText(dictionary['booking.empty.noBranches']).length).toBeGreaterThan(0);
+
+      at toBeNull (src/__tests__/components/BusinessInfoTranslations.test.tsx:35:74)
+
+  ● BusinessInfo visible landing localization › restores booking actions when active branches become available
+
+    TestingLibraryElementError: Found multiple elements with the role "link" and name "Записаться"
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    [36m<a[39m
+      [33mclass[39m=[32m"motion-interactive motion-pressable inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-[var(--text-inverse)] shadow-[var(--shadow-md)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-lg)] min-h-[48px] min-w-[48px] px-5 py-3 text-base sm:min-h-[44px] sm:min-w-[44px] min-w-[15rem] shadow-[var(--shadow-md)]"[39m
+      [33mhref[39m=[32m"/b/fixture-business/booking"[39m
+    [36m>[39m
+      [0mЗаписаться[0m
+    [36m</a>[39m
+
+    Ignored nodes: comments, script, style
+    [36m<a[39m
+      [33mclass[39m=[32m"motion-interactive motion-pressable inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-[var(--text-inverse)] shadow-[var(--shadow-md)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-lg)] min-h-[48px] min-w-[48px] px-5 py-3 text-base sm:min-h-[44px] sm:min-w-[44px] w-full"[39m
+      [33mhref[39m=[32m"/b/fixture-business/booking"[39m
+    [36m>[39m
+      [0mЗаписаться[0m
+    [36m</a>[39m
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<main[39m
+          [33mclass[39m=[32m"min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_26%),radial-gradient(circle_at_top_right,rgba(244,114,…279 tokens truncated…mclass[39m=[32m"flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between "[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"min-w-0"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"mb-2"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex flex-wrap items-center gap-2"[39m
+                        [36m>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"inline-flex items-center gap-1 rounded-full border font-medium tracking-[0.01em] align-middle px-2.5 py-1 text-xs border-[color:color-mix(in_srgb,var(--accent-primary)_24%,transparent)] bg-[color:color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-[var(--accent-primary)]"[39m
+                          [36m>[39m
+                            [0mПроверенный бизнес[0m
+                          [36m</span>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"inline-flex items-center gap-1 rounded-full border font-medium tracking-[0.01em] align-middle px-2.5 py-1 text-xs border-[color:color-mix(in_srgb,var(--status-info)_28%,transparent)] bg-[var(--status-info-soft)] text-[var(--status-info)]"[39m
+                          [36m>[39m
+                            [0mОнлайн-запись доступна[0m
+                          [36m</span>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<h1[39m
+                        [33mclass[39m=[32m"type-page-title text-[var(--text-primary)]"[39m
+                      [36m>[39m
+                        [0mFixture business[0m
+                      [36m</h1>[39m
+                      [36m<p[39m
+                        [33mclass[39m=[32m"type-body mt-2 max-w-3xl text-[var(--text-muted)]"[39m
+                      [36m>[39m
+                        [0mСтраница заранее показывает филиалы, команду и предложения, чтобы пользователь понимал, что именно он бронирует и почему стоит идти дальше.[0m
+                      [36m</p>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"mt-3"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-800 px-3 py-1"[39m
+                          [36m>[39m
+                            [36m<span[39m
+                              [33mclass[39m=[32m"text-xs font-medium text-gray-500 dark:text-gray-400"[39m
+                            [36m>[39m
+                              [0mНедостаточно данных для рейтинга[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"shrink-0"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"flex flex-col gap-2 sm:items-end"[39m
+                      [36m>[39m
+                        [36m<a[39m
+                          [33mclass[39m=[32m"motion-interactive motion-pressable inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-[var(--text-inverse)] shadow-[var(--shadow-md)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-lg)] min-h-[48px] min-w-[48px] px-5 py-3 text-base sm:min-h-[44px] sm:min-w-[44px] min-w-[15rem] shadow-[var(--shadow-md)]"[39m
+                          [33mhref[39m=[32m"/b/fixture-business/booking"[39m
+                        [36m>[39m
+                          [0mЗаписаться[0m
+                        [36m</a>[39m
+                        [36m<a[39m
+                          [33mclass[39m=[32m"motion-interactive motion-pressable inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none border border-[var(--border-default)] bg-transparent text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-[color:color-mix(in_srgb,var(--surface-card)_88%,transparent)] min-h-[44px] min-w-[44px] px-4 py-2.5 text-sm sm:min-h-[40px] sm:min-w-[40px] sm:text-[15px] min-w-[15rem]"[39m
+                          [33mhref[39m=[32m"/b/fixture-business/booking"[39m
+                        [36m>[39m
+                          [0mВыбрать филиал[0m
+                        [36m</a>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</header>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"grid gap-3 sm:grid-cols-3"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"rounded-[22px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_88%,transparent)] p-4 shadow-[var(--shadow-xs)]"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"type-metric text-[var(--text-primary)]"[39m
+                      [36m>[39m
+                        [0m0[0m
+                      [36m</div>[39m
+                      [36m<p[39m
+                        [33mclass[39m=[32m"type-c...
+
+      44 |         setLanguage('ru');
+      45 |         const view = render(<BusinessInfo data={{ ...fixture, branches: [], services: [], staff: [] }} />);
+    > 46 |         expect(screen.queryByRole('link', { name: 'Записаться', exact: true })).toBeNull();
+         |                       ^
+      47 |         view.rerender(<BusinessInfo data={fixture} />);
+      48 |         expect(screen.getByText('Онлайн-запись доступна')).toBeTruthy();
+      49 |         expect(screen.getAllByRole('link', { name: 'Записаться', exact: true })).toHaveLength(2);
+
+      at Object.getElementError (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at ../../node_modules/.pnpm/_68dcfeefe3bb685f0aae8e3346badda2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.queryByRole (src/__tests__/components/BusinessInfoTranslations.test.tsx:46:23)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 21 passed, 25 total
+Snapshots:   0 total
+Time:        27.317 s
+Ran all test suites within paths "src/__tests__/components/BusinessInfoTranslations.test.tsx".
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found
+
+Did you mean "pnpm exec jest"?

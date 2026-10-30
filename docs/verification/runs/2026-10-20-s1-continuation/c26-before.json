@@ -1,0 +1,10 @@
+{
+  "candidate": "dev-20261020-S1-6965bd8726b8",
+  "observationWindowUtc": ["2026-10-20T22:28:19Z", "2026-10-20T22:29:35Z"],
+  "role": "Same known superadmin, Admin-panel/Anonymized visible",
+  "steps": ["ratings-status -> actual Analytics menu", "wait for actual overview URL and loading settlement"],
+  "actual": "Analytics businesses layout; alert Ошибка загрузки обзора / HTTP 500 / retry button; no KPIs",
+  "expected": "Human explicitly chose readonly all-business global superadmin overview, not arbitrary current business",
+  "evidence": "Fresh CUA DOM observations, no screenshot/visual PASS and no raw API probe",
+  "effects": "Read navigation only. No business preference writes/role changes/jobs/SQL; ordinary telemetry not enumerated."
+}

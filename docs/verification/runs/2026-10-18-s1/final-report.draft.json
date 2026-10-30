@@ -1,0 +1,21 @@
+{
+  "status": "NONFINAL_DRAFT_NOT_RELEASE_READY",
+  "preparedUtc": "2026-10-18T12:32:52.1016362Z",
+  "timestampBasis": "Original file creationUTC verified read-only; not the later correction mtime",
+  "deadlineUtc": "2026-10-18T12:40:00Z",
+  "candidateId": "dev-20261018-S1-0cc81561faf0",
+  "sourceFingerprint": "0cc81561faf0c47d8dbd4b993204d9cfb40e5e2ac339473a21121310c479364e",
+  "requirements": {"applicable":316,"accepted":16,"remaining":300,"acceptancePercent":5.1,"notDevelopmentCompletionPercent":true},
+  "S1": {"total":25,"accepted":16,"remaining":9,"acceptancePercent":64,"casesTotal":79,"casesPassed":56,"casesBlocked":22,"casesNotRun":1},
+  "subpackages": [{"id":"S1.1","accepted":3,"remaining":5,"total":8},{"id":"S1.2","accepted":7,"remaining":2,"total":9},{"id":"S1.3","accepted":6,"remaining":2,"total":8}],
+  "currentFixes": {"verified":2,"open":0,"ids":["S1-F001","S1-F002"]},
+  "newThisContinuation": "Localized loading.tsx only in product runtime; same delayed privacy-to-home liveRUENKY, successremoval/errorremoval verified. Added3unitlocale cases. EarlierS1-F001 not counted twice.",
+  "checks": {"productScopedSuites":7,"productScopedTestsPassed":72,"typecheckExit":0,"newFilesLintExit":0,"defaultBuildExit":0,"accountingTestsPassed":61,"publicReadPolicyMemoryTests":21,"fontReadPolicyMemoryTestsLatest":16,"diffCheckExit":0,"notAdditiveCoverage":true,"notWholeBaselineGreen":true},
+  "failedAttemptsRetained": ["s24-test-before.txt missing-component failure", "s24-build-console.txt genuine11fontdefaultbuildfailure", "s24-functional-build-console.txt webpack/localfontfixture180stimeout after36pages; actualfunctionalnextstarttest not buildPASS", "HistoricalG116coverageFAIL/G141-G145UNITred/oldfullbaselinefailures unchanged"],
+  "remainingPlan": "s26-remaining-plan.json",
+  "releaseDecision": "NOT_READY",
+  "automation": "ExistingkezekPAUSED, read-only config observation12:31UTC; no resume/newautomation",
+  "noNewScenarioBeforeFinal": true,
+  "knownHandoff": "Owner/RU/business2/settings; owned3103stopped, permissionmarkerabsent; primary14216healthy metadata+actualUI",
+  "notFinalTimestampProof": true
+}

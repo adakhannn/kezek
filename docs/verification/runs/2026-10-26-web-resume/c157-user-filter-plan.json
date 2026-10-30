@@ -1,0 +1,40 @@
+{
+  "id": "C157",
+  "savedBeforeUiUtc": "2026-10-25T21:20:42Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "timeBudgetMinutes": 5,
+  "requirementId": "M3-01",
+  "role": "Existing knownSA/Admin-panel/Anonymized/RU",
+  "caseIds": [
+    "S26-M301-users-active-filter",
+    "S26-M301-users-blocked-empty-filter"
+  ],
+  "baselineIds": [
+    "61f7237b-e7d6-4c4f-9658-c44e52432e49",
+    "55072889-cc60-4487-9f54-4fbaad2560e7",
+    "89ddab92-22e4-4edb-8204-39ed052c1b09",
+    "19cdda8f-9c7a-4486-a4e3-dc08978fe206",
+    "c28f0237-79fe-4247-a3bb-3324370e48a3",
+    "ca0e86fd-5d58-4337-ad10-1e9218fcfecf",
+    "9bd8fd88-7241-4c2c-9ef4-3c4a7135450c",
+    "125e60ab-eb79-4d92-bc6d-d84ae534eeee"
+  ],
+  "steps": [
+    "Clock; freshactualprotectedadmin/RU/existingtab2; ordinary Users link. Require blank search/Allstatuses/50perpage, samebaseline8IDs, active8blocked0super1. Mismatch ->BLOCKED no search/pagination/auth/reload/workaround. Baseline is reusedcontrol0newcredit.",
+    "Clock; ordinary native statusselect Onlyactive once. Wait bounded for query status=active page1 perPage50 and freshAXcompleteddata. Expect same8IDs includingSuper/eachnonblocked, globalstats8/8/0/1. Selectionvalue alone or pendingoldrows is notPASS. No repeated select on uncertainty.",
+    "Clock; ordinary statusselect Onlyblocked once. Wait bounded for query status=blocked page1 perPage50/freshAXemptyfeedback, no data rows. Globalstatsremain8/8/0/1. Only emptyblockedstate covered, nonemptyblockedfixture remainsmissing.",
+    "Clock; restoreoriginalAllstatuses ordinaryselect, freshAXsame8IDs/stat8/8/0/1 then observedAdminlink/protectedRU/Business3. MarkHandoff/preserveuserGooglechoosertab. No search/perpage/checkbox/bulk/security/role/Save/Create/Delete/Enter/auth command."
+  ],
+  "expected": [
+    "Activefilter completed UI/query retains all8knownnonblockedIDs inclSA/globalstatsunchanged.",
+    "Blockedfilter completedUI/query shows explicit emptyfeedback/noaccountrows/globalstatsunchanged."
+  ],
+  "effects": "Ordinary querynavigation/select/filter reset only; no entity/account/role/security/booking/payment command/newfixture. Ordinary telemetry/authbackground unenumerated, neverzeroTOTALwrites.",
+  "limits": "Two scopedstatus-filterUIcases only; not wholeM3-01, search/newuser/update, blockedpositive/mixed/pagination/multi-page correctness, APIresponse timing/security/visual proof.",
+  "dependencyHashes": {
+    "apps/web/src/app/admin/users/UsersClient.tsx": "e6b322212b5734352ddcb3b1c82bc2840d877e80afc65b1c57b0f7b27cad6297",
+    "apps/web/src/app/admin/users/page.tsx": "a989ac4529f1e6a85b1fdb4edd415edede523cc83adf64e610064fbfeea669fe",
+    "apps/web/src/app/admin/api/users/list/route.ts": "27b65e48e8e1141f7c9217cfcb331acb935e681f522d779815d0f2f40330548e",
+    "apps/web/src/lib/adminUserStats.ts": "7148bfaafa6d0f38ad776a22be6a4d1711007d9cffbd6c6180196fee9d5067b2"
+  }
+}

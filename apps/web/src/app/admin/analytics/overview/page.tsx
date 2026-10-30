@@ -16,12 +16,9 @@ export default function AdminAnalyticsOverviewPage() {
         periodPreset,
         startDate,
         endDate,
-        branchId,
-        branches,
         data,
         trendChartData,
         promoShare,
-        setBranchId,
         handlePresetChange,
         retry,
         setStartDateAndCustom,
@@ -49,9 +46,6 @@ export default function AdminAnalyticsOverviewPage() {
                 endDate={endDate}
                 onStartDateChange={setStartDateAndCustom}
                 onEndDateChange={setEndDateAndCustom}
-                branchId={branchId}
-                onBranchIdChange={setBranchId}
-                branches={branches}
             />
 
             <AdminAnalyticsKpiSection summary={data.summary} promoShare={promoShare} />

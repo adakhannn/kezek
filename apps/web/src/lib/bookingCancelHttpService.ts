@@ -18,7 +18,6 @@ export async function runBookingCancelHttp(
     const result = await runBookingCancelRoute({
         supabase,
         bookingId,
-        requestUrl: req.url,
     });
 
     if (!result.ok) {

@@ -75,6 +75,9 @@ export const branchesRu = {
     'branches.promotions.error.delete': 'Ошибка удаления акции',
     'branches.promotions.error.load': 'Ошибка загрузки акций',
     'branches.promotions.error.save': 'Ошибка сохранения акции',
+    'branches.promotions.validation.visitCount': 'Количество визитов должно быть больше 0',
+    'branches.promotions.validation.discount': 'Процент скидки должен быть от 1 до 100',
+    'branches.promotions.validation.general': 'Проверьте параметры акции и попробуйте снова',
     'branches.promotions.error.update': 'Ошибка обновления акции',
     'branches.promotions.everyNthFree': 'Каждая {n}-я услуга бесплатно',
     'branches.promotions.isActive.label': 'Активна (отображается клиентам)',
@@ -144,4 +147,6 @@ export const branchesRu = {
     'branches.table.name': 'Название',
     'branches.table.status': 'Статус',
     'branches.title': 'Филиалы',
+    'branches.edit.bizContext': 'Бизнес',
+    'branches.edit.bizDefaultName': 'Ваш бизнес в Kezek',
 } as const;

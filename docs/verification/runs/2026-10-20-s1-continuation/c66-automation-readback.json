@@ -1,0 +1,10 @@
+{
+  "id":"kezek",
+  "readbackBeforeUtc":"2026-10-21T09:25:23Z",
+  "status":"ACTIVE",
+  "rrule":"FREQ=MINUTELY;INTERVAL=15",
+  "exactPromptReadback":true,
+  "changed":"OnlyexistingpromptappendC64-C66checkpoint; sameid/name/status/cadence/target preserved, no duplicateautomation/newchat.",
+  "next":"C67knownowner explicitselectoronly; no C64diagnostic orSA/client/guestselectorrepeat. Humanstop requiresPAUSED/readback/safeowned-effectfinalization.",
+  "validator":{"valid":true,"errors":[],"accepted":21,"applicable":316,"releaseReady":false}
+}

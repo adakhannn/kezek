@@ -1,0 +1,13 @@
+{
+  "id":"C58",
+  "candidate":"dev-20261020-S1-40a5aef0e785",
+  "precondition":"C57exactfreshdefaultbuild1683files exit0/types36prerenders; no.env/dummyenv. Do not rebuild.",
+  "timeboxMinutes":10,
+  "runtime":"Own nextstart127.0.0.1:3107 from exactC57output, strippedenv/dummyDB/no credentials, Nodeexternalnetworkdenied, no mainserverrestart. Different host fromlocalhost prevents sharing existing appcookies. Own temporarytab named builtoutputcase, not capture/blockedtab workaround; closeown tab/serveraftertest.",
+  "cases":[
+    {"id":"built-privacy-document-reload","requirement":"A3-01","expected":"Actual compiled privacycontent on127.0.0.1 and fullreload works; noerroroverlay/hydrationfailure. Dummyisolatedenvironment, not deployedproduction."},
+    {"id":"built-font-assets","expected":"CUApageAssets alreadyobserved local productionTTF/CSS canbundle and matchofficialbinaries/vars/settings; not actualrender/fontpixels/freshDisablecache PASS."}
+  ],
+  "exclusions":"No APIprobes, externalPlaywright/CDP/evaluatefetch, backendfixture/auth/roles/businesscommands, deniedmonitoring/metrics. No screenshotretry or freshcacheclaim without actualcondition. No GooglecompilerGETpermissionneeded.",
+  "stop":"If missingruntime/portconflict/block, retain exact blocker, do not replacecapturetab, switchcompiler or reuseoldbuild. Killonlyowned runtimeaftertest/watchdog15min, no filecleanup."
+}

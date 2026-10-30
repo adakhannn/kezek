@@ -1,0 +1,49 @@
+{
+  "id": "C164",
+  "savedBeforeUiUtc": "2026-10-25T22:09:04Z",
+  "candidate": "dev-20261026-WEB-c1115361a3b4",
+  "caseId": "S26-B404-accessible-map-branch-handoff",
+  "requirement": "B4-04",
+  "timeBudgetMinutes": 8,
+  "role": "ExistingknownSA/RU/publicmap/bookingread-only; no authtransition",
+  "targets": [
+    {
+      "id": "fe1dde50-c04a-4b48-b215-bde72aa60625",
+      "name": "Филиал 1 Бизнеса 2"
+    },
+    {
+      "id": "23a0ce35-5556-4e98-84ee-89ae067908fa",
+      "name": "Филиал 2 Бизнеса 2"
+    }
+  ],
+  "business": {
+    "id": "c28c8109-bedc-4f9e-bbc2-30f4b549131e",
+    "slug": "testovyy-biznes-2",
+    "name": "Тестовый бизнес 2"
+  },
+  "variants": [
+    "list-CTA:branch1",
+    "list-CTA:branch2-changed-receiver-refresh",
+    "selected-overlay-CTA:branch1",
+    "selected-overlay-CTA:branch2"
+  ],
+  "independentOracle": "Each actualchosenbranchCTA must open exactbusiness2 /b/testovyy-biznes-2/booking?branch=TARGET; settledwizard must show the SAME chosenbranch selected and summary/address wherevisible. Previouslyvisitedbranch/localdraft must not replace explicitincomingbranch. Sourcehreftext alone is insufficient. No need advancewizard or selectday/service/staff/slot. Ifunexpectedlaterstep, captureactualselectedbranch; do not blindly reset/advance.",
+  "steps": [
+    "Clock; freshprotectedadmin/RU/Anonymized/Business3. OrdinaryfooterMapsetup0credit, settleexact2knownbiz2branchcards. Missingtarget/error/blockednavigation ->stopno reload/replacement/HTTP/providerworkaround.",
+    "Clock; actualbranch1 LIST Book link once. ObserveURL and settledbusiness/branchselected, notjust query. Do NOT touchbranchselectioninsidewizard/Next/date/service/staff/slot/Confirm/Enter/Create/Save. Mismatch ->preserveFAIL/stopmatrix; no storageclear or correctivebranchclick.",
+    "Clock; ordinaryfooterMapreturn/setup0credit; branch2 LIST Book once. This is namedrefresh of originalG023 after changedreceiver, not anothernewPASS. Sameactualselectedtargetoracle.",
+    "Clock; ordinaryMapreturn, branch1listcardselection only to expose selectedoverlay. Captureoverlaytargetname/address and click ONLY its newlyobserved Book CTA, notduplicatelistCTA. Verify samebranchwizard. Repeat for branch2selectedoverlayasdistinctuncoveredtarget. Each navigation is newmethod/data combination, no repeatedunchangedretry.",
+    "Clock; restoreadmin viaobservedAdminmenu or allowedknown/admin navigation fromdifferentroute. Requireprotectedheading/RU/Anonymized/Business3 andmarkHandoff. No appentity/booking/permission command, no auth/newtab. Ifany unexpectederror/mismatch, stopsremainingvariants/notwholematrixPASS; allowonlyadminreturn."
+  ],
+  "effects": "Ordinarymapselection and read-onlybookingentry/adminreturn only; no day/service/staff/slot/Next/hold/Confirm/create/cancel/retime/payment/role/provider/location command. Appbookingdraftstorage/auth/telemetryunenumerated, neverzeroTOTALwrites; no extractionor forcedclear.",
+  "limits": "Onecompoundaccessible-surfaceintegration case with4subvariants:3genuinelyuncovered +1historicalfunctionalrefresh. Countatmost1NEWcompoundUI and1refreshEVENT, no newfixwithoutrepro/minimalfix/SAME-LIVE. WholeB4-04 remains partial whileproviderballoon2variantsBLOCKED; no marker/visual/permission/APIsecurity/fullbooking proof.",
+  "dependencyHashes": {
+    "apps/web/src/app/map/MapPageClient.tsx": "6e17cb0a8f65bb7145cd84f4fb65cb96dd911c01235fdec2caec0d947812aba7",
+    "apps/web/src/app/map/branchBookingHref.ts": "52887a8ca69e949c821dc7901b248ae5319c8076b687b6a81c36a7572b0c6b4e",
+    "apps/web/src/app/b/[slug]/booking/page.tsx": "bb8043f006a430795978d062f33cd43447e31066ffa85ca081a65a5b10008952",
+    "apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx": "5f2f576d4dadf4712bc8c9d4442594bdbf27b564a497cdcf492b108747e6fa00",
+    "apps/web/src/app/b/[slug]/view.tsx": "86ede1df2c34c2939d15b6f78ea832d3c6506bde7f62145bb87ee9c0c3f9d27e",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts": "9183a9eeac2de04f8842329b0ad4a3aa9f589afb3b25e40399a21ffd82a598a1",
+    "apps/web/src/app/b/[slug]/hooks/useBookingSteps.ts": "39d86f3294f9bab4f05c00974e74d29393c3fa682b17c8feb0b156478700fd5e"
+  }
+}

@@ -56,6 +56,14 @@ export default function AllStaffFinanceStats() {
         return date.split('-')[0];
     };
 
+    const filters = (
+        <AllStaffFinanceStatsFilters
+            period={period} date={date} branchId={branchId} branches={branches} loading={loading}
+            onPeriodChange={setPeriod} onDateChange={setDate} onBranchChange={setBranchId}
+            onRefresh={() => { void loadStats(); }} t={t}
+        />
+    );
+
     if (loading && !totalStats) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -66,16 +74,19 @@ export default function AllStaffFinanceStats() {
 
     if (error) {
         return (
-            <AlertBanner
-                variant="danger"
-                title={t('finance.error.title', 'Ошибка загрузки статистики')}
-                message={error}
-                action={
-                    <Button type="button" variant="danger" size="sm" onClick={() => void loadStats()}>
-                        {t('finance.retry', 'Попробовать снова')}
-                    </Button>
-                }
-            />
+            <div className="space-y-4 sm:space-y-6">
+                {filters}
+                <AlertBanner
+                    variant="danger"
+                    title={t('finance.error.title', 'Ошибка загрузки статистики')}
+                    message={error}
+                    action={
+                        <Button type="button" variant="danger" size="sm" onClick={() => void loadStats()}>
+                            {t('finance.retry', 'Попробовать снова')}
+                        </Button>
+                    }
+                />
+            </div>
         );
     }
 
@@ -96,20 +107,7 @@ export default function AllStaffFinanceStats() {
 
     return (
         <div className="space-y-4 sm:space-y-6">
-            <AllStaffFinanceStatsFilters
-                period={period}
-                date={date}
-                branchId={branchId}
-                branches={branches}
-                loading={loading}
-                onPeriodChange={setPeriod}
-                onDateChange={setDate}
-                onBranchChange={setBranchId}
-                onRefresh={() => {
-                    void loadStats();
-                }}
-                t={t}
-            />
+            {filters}
 
             {totalStats && (
                 <AllStaffFinanceStatsTotals
