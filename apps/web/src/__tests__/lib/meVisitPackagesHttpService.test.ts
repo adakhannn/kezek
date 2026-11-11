@@ -16,6 +16,29 @@ describe('meVisitPackagesHttpService', () => {
     jest.clearAllMocks();
   });
 
+  test('recomputes today across Bishkek midnight in the same process', async () => {
+    jest.useFakeTimers();
+    const previousTimezone = process.env.NEXT_PUBLIC_TZ;
+    process.env.NEXT_PUBLIC_TZ = 'Asia/Bishkek';
+    try {
+      (createSupabaseClients as jest.Mock).mockResolvedValue({
+        supabase: { auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) } },
+        admin: {},
+      });
+      (listCurrentUserVisitPackages as jest.Mock).mockResolvedValue({ ok: true, data: { packages: [] } });
+      jest.setSystemTime(new Date('2026-11-09T17:59:59Z'));
+      await runMeVisitPackagesHttp(new Request('http://localhost/api/me/visit-packages'));
+      jest.setSystemTime(new Date('2026-11-09T18:00:00Z'));
+      await runMeVisitPackagesHttp(new Request('http://localhost/api/me/visit-packages'));
+      expect(listCurrentUserVisitPackages).toHaveBeenNthCalledWith(1, expect.objectContaining({ today: '2026-11-09' }));
+      expect(listCurrentUserVisitPackages).toHaveBeenNthCalledWith(2, expect.objectContaining({ today: '2026-11-10' }));
+    } finally {
+      jest.useRealTimers();
+      if (previousTimezone === undefined) delete process.env.NEXT_PUBLIC_TZ;
+      else process.env.NEXT_PUBLIC_TZ = previousTimezone;
+    }
+  });
+
   test('returns auth error when user is missing', async () => {
     (createSupabaseClients as jest.Mock).mockResolvedValue({
       supabase: { auth: { getUser: jest.fn().mockResolvedValue({ data: { user: null } }) } },

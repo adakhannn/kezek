@@ -11,21 +11,21 @@ import { useEffect, useState } from 'react';
 import { getApiStats } from '@/lib/apiLogger';
 
 export function PerformanceMonitor() {
-    const [stats, setStats] = useState(getApiStats());
+    const [stats, setStats] = useState(getApiStats);
     const [isVisible, setIsVisible] = useState(false);
 
-    // Работает только в dev режиме
-    if (process.env.NODE_ENV !== 'development') {
-        return null;
-    }
+    const isDevelopment = process.env.NODE_ENV === 'development';
 
     useEffect(() => {
+        if (!isDevelopment) return;
         const interval = setInterval(() => {
             setStats(getApiStats());
         }, 2000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [isDevelopment]);
+
+    if (!isDevelopment) return null;
 
     // Показываем только если есть данные
     if (stats.totalCalls === 0 && !isVisible) {

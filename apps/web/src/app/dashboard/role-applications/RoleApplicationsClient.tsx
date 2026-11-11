@@ -58,7 +58,7 @@ const statusLabels: Record<ApplicationRow['status'], string> = {
 export function RoleApplicationsClient() {
     const [items, setItems] = useState<ApplicationRow[]>([]);
     const [branches, setBranches] = useState<BranchRow[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loadStatus, setLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading');
     const [actionId, setActionId] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [branchId, setBranchId] = useState('');
@@ -69,7 +69,7 @@ export function RoleApplicationsClient() {
     const [rejectNote, setRejectNote] = useState('');
 
     async function load() {
-        setLoading(true);
+        setLoadStatus('loading');
         setError(null);
         try {
             const response = await fetch('/dashboard/api/role-applications', { cache: 'no-store' });
@@ -80,10 +80,10 @@ export function RoleApplicationsClient() {
             setItems(payload.items);
             setBranches(payload.branches);
             setBranchId((current) => current || payload.branches[0]?.id || '');
+            setLoadStatus('ready');
         } catch (loadError) {
             setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить заявки');
-        } finally {
-            setLoading(false);
+            setLoadStatus('error');
         }
     }
 
@@ -146,8 +146,18 @@ export function RoleApplicationsClient() {
         }
     }
 
-    if (loading) {
+    if (loadStatus === 'loading') {
         return <Card padding="lg">Загружаем заявки…</Card>;
+    }
+
+    if (loadStatus === 'error') {
+        return (
+            <AlertBanner
+                variant="danger"
+                message={error || 'Не удалось загрузить заявки'}
+                action={<Button type="button" onClick={() => void load()}>Повторить загрузку</Button>}
+            />
+        );
     }
 
     return (

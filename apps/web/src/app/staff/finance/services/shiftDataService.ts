@@ -4,28 +4,30 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { formatInTimeZone } from 'date-fns-tz';
 
+import { readFinanceCalendar, type FinanceCalendar } from '@/lib/finance/calendar';
+import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError, logDebug } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { readScheduledDay } from '@/lib/scheduling/read';
-import { TZ } from '@/lib/time';
 
 export interface ShiftDataServiceOptions {
     supabase: SupabaseClient;
     staffId: string;
     bizId: string;
-    targetDate: Date;
+    targetDate?: Date | string;
     useServiceClient?: boolean; // Для обхода RLS при просмотре менеджером
 }
 
 export interface ShiftDataServiceResult {
     ok: true;
+    calendar: FinanceCalendar;
     today: {
         exists: boolean;
         status: 'open' | 'closed' | 'none';
         shift: {
             id: string;
+            ledger_revision: number;
             shift_date: string;
             opened_at: string | null;
             closed_at: string | null;
@@ -116,13 +118,10 @@ export async function getShiftData({
         }
     }
     
-    // Дата в локальной TZ (без времени)
-    const scheduledDay = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, targetDate) : null;
-    const ymd = scheduledDay?.ymd ?? formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
-    const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
-    const today = formatInTimeZone(new Date(), scheduledDay?.day.tz ?? TZ, 'yyyy-MM-dd');
-    const dateStart = `${ymd}T00:00:00`;
-    const dateEnd = `${ymd}T23:59:59`;
+    const calendar = await readFinanceCalendar(client, bizId, staffId, targetDate);
+    const { date: ymd, todayDate: today, dayStart: dateStart, dayEnd: dateEnd } = calendar;
+    const scheduledDay = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, ymd) : null;
+    const dow = new Date(ymd + 'T12:00:00Z').getUTCDay();
 
     // Вспомогательная обёртка для замера времени выполнения отдельных частей
     // Supabase возвращает PostgrestBuilder (thenable), поэтому принимаем PromiseLike<T>
@@ -153,14 +152,9 @@ export async function getShiftData({
         ),
 
         // 2. Смена за выбранную дату с позициями (объединенный запрос для уменьшения количества запросов)
-        measurePart('shift_with_items', () =>
-            client
-                .from('staff_shifts')
-                .select('id, shift_date, opened_at, closed_at, expected_start, late_minutes, status, total_amount, consumables_amount, master_share, salon_share, percent_master, percent_salon, hours_worked, hourly_rate, guaranteed_amount, topup_amount, staff_shift_items(id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at)')
-                .eq('staff_id', staffId)
-                .eq('shift_date', ymd)
-                .maybeSingle(),
-        ),
+        measurePart('shift_with_items', () => client.rpc('read_staff_shift_snapshot', {
+            p_biz_id: bizId, p_staff_id: staffId, p_shift_date: ymd,
+        })),
 
         // 3. Записи (bookings) сотрудника за выбранную дату
         measurePart('bookings', () =>
@@ -180,7 +174,7 @@ export async function getShiftData({
                 )
                 .eq('staff_id', staffId)
                 .gte('start_at', dateStart)
-                .lte('start_at', dateEnd)
+                .lt('start_at', dateEnd)
                 .neq('status', 'cancelled')
                 .order('start_at', { ascending: true }),
         ),
@@ -235,13 +229,7 @@ export async function getShiftData({
         ),
 
         // 8. allShifts для сегодня — в том же батче, без второго await
-        measurePart('all_shifts_today', () =>
-            client
-                .from('staff_shifts')
-                .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
-                .eq('staff_id', staffId)
-                .order('shift_date', { ascending: false }),
-        ),
+        measurePart('all_shifts_today', async () => ({ data: await readStaffHistory(client, bizId, staffId), error: null })),
     ] : [];
 
     const allPromises = [...basePromises, ...dayOffPromises];
@@ -292,6 +280,7 @@ export async function getShiftData({
     // Извлекаем items из объединенного запроса и отделяем их от данных смены
     type ShiftWithItems = {
         id: string;
+        ledger_revision: number;
         shift_date: string;
         opened_at: string | null;
         closed_at: string | null;
@@ -321,8 +310,12 @@ export async function getShiftData({
     };
 
     const shiftWithItems = shiftRaw as ShiftWithItems | null;
+    if (shiftWithItems && (typeof shiftWithItems.id !== 'string' || !Number.isSafeInteger(shiftWithItems.ledger_revision) || !Array.isArray(shiftWithItems.staff_shift_items))) {
+        throw new Error('Incomplete shift ledger snapshot');
+    }
     const shift = shiftWithItems ? {
         id: shiftWithItems.id,
+        ledger_revision: shiftWithItems.ledger_revision,
         shift_date: shiftWithItems.shift_date,
         opened_at: shiftWithItems.opened_at,
         closed_at: shiftWithItems.closed_at,
@@ -507,10 +500,12 @@ export async function getShiftData({
 
     if (shift && shift.status === 'open' && shift.opened_at && hourlyRate) {
         const openedAt = new Date(shift.opened_at);
-        const now = new Date();
-        const diffMs = now.getTime() - openedAt.getTime();
-        currentHoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
-        currentGuaranteedAmount = Math.round(currentHoursWorked * hourlyRate * 100) / 100;
+        const end = Math.min(Date.now(), Date.parse(calendar.dayEnd));
+        if (openedAt.getTime() >= Date.parse(calendar.dayStart) && openedAt.getTime() <= end) {
+            const diffMs = end - openedAt.getTime();
+            currentHoursWorked = Math.round((diffMs / 3600000) * 100) / 100;
+            currentGuaranteedAmount = Math.round(currentHoursWorked * hourlyRate * 100) / 100;
+        }
     }
 
     // Обрабатываем allShifts и статистику (только если запрашивается сегодня)
@@ -538,6 +533,7 @@ export async function getShiftData({
         
         if (statsError) {
             logError('ShiftDataService', 'Error loading shifts stats', statsError);
+            throw new Error('Failed to load complete staff finance history');
         } else {
             allShifts = ((allShiftsData as Array<{
                 shift_date: string | Date;
@@ -561,11 +557,7 @@ export async function getShiftData({
 
             const closed = allShifts.filter((s) => s.status === 'closed');
             const totalAmount = closed.reduce((sum, s) => sum + s.total_amount, 0);
-            const totalMaster = closed.reduce((sum, s) => {
-                const guaranteed = s.guaranteed_amount ?? 0;
-                const masterShare = s.master_share;
-                return sum + (guaranteed > masterShare ? guaranteed : masterShare);
-            }, 0);
+            const totalMaster = closed.reduce((sum, s) => sum + s.master_share, 0);
             const totalSalon = closed.reduce((sum, s) => {
                 // salon_share is the final closed snapshot, already net of top-up.
                 return sum + s.salon_share;
@@ -584,6 +576,7 @@ export async function getShiftData({
 
     return {
         ok: true,
+        calendar,
         today: shift
             ? {
                   exists: true,
@@ -623,6 +616,7 @@ export type FinanceResponsePayloadItem = {
 
 /** Формат ответа для API и SSR: today.items в camelCase, остальное без изменений */
 export type FinanceResponsePayload = {
+    calendar: FinanceCalendar;
     today: Omit<ShiftDataServiceResult['today'], 'items'> & {
         items: FinanceResponsePayloadItem[];
     };
@@ -653,6 +647,7 @@ export function buildFinanceResponsePayload(result: ShiftDataServiceResult): Fin
         createdAt: item.created_at ?? null,
     }));
     return {
+        calendar: result.calendar,
         today: { ...result.today, items },
         bookings: result.bookings,
         services: result.services,

@@ -1,3 +1,4 @@
+jest.mock('@/lib/rateLimit', () => ({ ...jest.requireActual('@/lib/rateLimit'), checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})) }));
 import { NextResponse } from 'next/server';
 
 import { runStaffShiftCloseHttp } from '@/lib/staffShiftCloseHttpService';
@@ -68,7 +69,7 @@ describe('staffShiftCloseHttpService', () => {
         validateRequest.mockResolvedValue({
             success: true,
             data: {
-                totalAmount: 1500,
+                expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: 1500,
                 consumablesAmount: 100,
                 items: [{ serviceAmount: 1400 }],
             },
@@ -96,6 +97,7 @@ describe('staffShiftCloseHttpService', () => {
             status: 'closed',
         });
         expect(runStaffShiftClose).toHaveBeenCalledWith({
+            actorId: 'user-id', expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7,
             supabase: { mocked: true },
             staffId: 'staff-id',
             bizId: 'biz-id',

@@ -34,16 +34,10 @@ describe('ratingsAdminHttpService', () => {
   test('loads ratings status for super admin', async () => {
     (createSupabaseServerClient as jest.Mock).mockResolvedValue({
       auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        is: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({
-          data: { role_key: 'super_admin', biz_id: null },
+      rpc: jest.fn().mockResolvedValue({
+          data: true,
           error: null,
         }),
-      }),
     });
     (getServiceClient as jest.Mock).mockReturnValue({ from: jest.fn() });
     (getRatingsStatus as jest.Mock).mockResolvedValue({ healthy: true });
@@ -64,11 +58,7 @@ describe('ratingsAdminHttpService', () => {
   test('loads ratings jobs for super admin', async () => {
     (createSupabaseServerClient as jest.Mock).mockResolvedValue({
       auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
-        is: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: { role_key: 'super_admin', biz_id: null }, error: null }),
-      }),
+      rpc: jest.fn().mockResolvedValue({ data: true, error: null }),
     });
     (ensureSuperAdminAccess as jest.Mock).mockResolvedValue({ ok: true });
     (getServiceClient as jest.Mock).mockReturnValue({ from: jest.fn() });

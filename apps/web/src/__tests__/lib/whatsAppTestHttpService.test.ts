@@ -1,3 +1,4 @@
+jest.mock('@/lib/adminHttpAccess', () => ({ requireCurrentSuperAdmin: jest.fn(async () => ({ ok: true, user: { id: 'test-super-admin' } })) }));
 jest.mock('@/lib/whatsAppTestService', () => ({
     getWhatsAppTestSnapshot: jest.fn(),
 }));
@@ -17,7 +18,7 @@ describe('whatsAppTestHttpService', () => {
         });
         const { runWhatsAppTestHttp } = await import('@/lib/whatsAppTestHttpService');
 
-        const response = runWhatsAppTestHttp({} as NodeJS.ProcessEnv);
+        const response = await runWhatsAppTestHttp({} as NodeJS.ProcessEnv);
         const body = await response.json();
 
         expect(getWhatsAppTestSnapshot).toHaveBeenCalled();

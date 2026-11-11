@@ -1,33 +1,6 @@
+import { readAnalyticsSnapshot, reportFailure } from '@/lib/analyticsReportSnapshot';
+import type { ReportClient } from '@/lib/finance/reportSnapshot';
 import { getCached, setCached } from '@/lib/simpleCache';
-
-type OverviewAdminLike = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: string) => {
-                gte: (column: string, value: string) => {
-                    lte: (column: string, value: string) => {
-                        order: (column: string, options: { ascending: boolean }) => Promise<{
-                            data: OverviewRow[] | null;
-                            error: { message: string } | null;
-                        }>;
-                    };
-                };
-            };
-        };
-    };
-};
-
-type OverviewRow = {
-    date: string;
-    home_views: number | null;
-    business_page_views: number | null;
-    booking_flow_starts: number | null;
-    bookings_created: number | null;
-    bookings_confirmed_or_paid: number | null;
-    promo_bookings: number | null;
-    promo_revenue: number | null;
-    total_revenue: number | null;
-};
 
 export async function getDashboardAnalyticsOverview({
     admin,
@@ -35,13 +8,13 @@ export async function getDashboardAnalyticsOverview({
     startDate,
     endDate,
 }: {
-    admin: OverviewAdminLike;
+    admin: ReportClient;
     bizId: string;
     startDate: string;
     endDate: string;
 }): Promise<
     | { ok: true; data: unknown }
-    | { ok: false; error: 'server'; message: string; status: 500 }
+    | { ok: false; error: 'server' | 'validation'; message: string; status: 500 | 400 }
 > {
     const cacheKey = `dashboard_analytics_overview:${bizId}:${startDate}:${endDate}`;
     const cached = getCached<unknown>(cacheKey);
@@ -49,24 +22,9 @@ export async function getDashboardAnalyticsOverview({
         return { ok: true, data: cached };
     }
 
-    const { data, error } = await admin
-        .from('business_daily_stats')
-        .select(
-            'date,home_views,business_page_views,booking_flow_starts,bookings_created,bookings_confirmed_or_paid,promo_bookings,promo_revenue,total_revenue',
-        )
-        .eq('biz_id', bizId)
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: true });
-
-    if (error) {
-        return {
-            ok: false,
-            error: 'server',
-            message: 'Failed to load overview analytics',
-            status: 500,
-        };
-    }
+    let data;
+    try { data = (await readAnalyticsSnapshot(admin, { bizId, startDate, endDate, kind: 'daily' })).rows; }
+    catch (error) { return reportFailure(error); }
 
     let sumHomeViews = 0;
     let sumBusinessViews = 0;

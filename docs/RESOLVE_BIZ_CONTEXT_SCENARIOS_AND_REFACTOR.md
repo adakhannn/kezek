@@ -1,5 +1,7 @@
 # resolveBizContextForManagers: сценарии и план рефакторинга
 
+> Статус: исторический план до выделения подфункций; исходная дата здесь не указана. Помечен 1 ноября 2026. Реализация уже разделена: [resolver](../apps/web/src/lib/bizContextResolver.ts), [strategies](../apps/web/src/lib/bizContextResolutionStrategies.ts), [runtime helpers](../apps/web/src/lib/bizContextRuntimeHelpers.ts). Текущие правила — [ADR](BIZ_CONTEXT_RESOLVER_ADR.md). Номера строк, план и обещания ошибок ниже не являются текущим контрактом или очередью работ.
+
 Документ разбирает все ветки функции `resolveBizContextForManagers`, фиксирует сценарии в виде таблицы кейсов и готовит план рефакторинга (подфункции + unit-тесты). Связанные задачи: блок 4 — «Сложный и слабо тестируемый resolveBizContextForManagers»; блоки 5.3, 5.6 в `OWNER_CABINET_RISKS_AND_IMPROVEMENTS_TASKS.md`.
 
 ---

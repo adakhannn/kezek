@@ -1,221 +1,61 @@
-# Настройка Cron Jobs (рейтинги и аналитика)
+# Cron: Vercel, выполнение и восстановление
 
-## 📋 Обзор
+Актуализировано: 2026-11-10. Аудитория и владелец: эксплуатация. Статус: текущая реализация и локальные проверки; регистрация задач и доставка уведомлений в deployment не подтверждены. Целевой хостинг, выбранный владельцем проекта, — Vercel Pro / Enterprise.
 
-- Cron job для пересчета рейтингов запускается **каждый день в 3:00 UTC** (8:00 по времени Бишкека, UTC+5).
-- Cron job для дневной бизнес‑аналитики (`business_daily_stats`) запускается **каждый день в 3:30 UTC** (8:30 по времени Бишкека, UTC+5).
+Документ объясняет конфигурацию, наблюдение и восстановление фоновых операций. Предпосылки: применённые миграции соответствующего релиза, серверный доступ к Supabase, секрет cron и настроенные зависимости. Общий порядок выпуска — [OPERATIONS](docs/OPERATIONS.md), переменные — [ENV_GUIDE](ENV_GUIDE.md), состояние — [PROJECT_STATUS](docs/PROJECT_STATUS.md).
 
-## 🔧 Шаг 1: Обновление vercel.json
+## Один источник расписаний
 
-Файл `vercel.json` уже обновлен и содержит задачи:
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/close-shifts",
-      "schedule": "0 18 * * *"
-    },
-    {
-      "path": "/api/cron/recalculate-ratings",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/analytics/daily",
-      "schedule": "30 3 * * *"
-    }
-  ]
-}
-```
-
-**Расписание:**
-- `0 3 * * *` = каждый день в 03:00 UTC (08:00 Asia/Bishkek) — пересчёт рейтингов
-- `30 3 * * *` = каждый день в 03:30 UTC (08:30 Asia/Bishkek) — агрегация бизнес‑аналитики
-- Можно изменить на другое время, например:
-  - `0 2 * * *` = 02:00 UTC (07:00 Asia/Bishkek)
-  - `0 4 * * *` = 04:00 UTC (09:00 Asia/Bishkek)
-
-## 🔐 Шаг 2: Настройка переменных окружения
-
-### В Vercel (Production):
-
-1. Перейди в **Settings** → **Environment Variables** твоего проекта
-2. Убедись, что установлена переменная:
-   ```
-   CRON_SECRET=твой_секретный_ключ_здесь
-   ```
-   или
-   ```
-   VERCEL_CRON_SECRET=твой_секретный_ключ_здесь
-   ```
-
-3. **Рекомендация:** Используй длинный случайный ключ, например:
-   ```bash
-   # Сгенерируй ключ (в терминале):
-   openssl rand -hex 32
-   ```
-
-4. **Важно:** Убедись, что переменная установлена для всех окружений (Production, Preview, Development)
-
-### Локально (.env.local):
-
-Добавь в файл `.env.local`:
-
-```env
-CRON_SECRET=твой_секретный_ключ_здесь
-```
-
-## 🚀 Шаг 3: Деплой изменений
-
-1. Закоммить изменения:
-   ```bash
-   git add vercel.json
-   git commit -m "feat: add cron job for rating recalculation"
-   git push
-   ```
-
-2. После деплоя Vercel автоматически зарегистрирует новый cron job
-
-3. Проверить в Vercel Dashboard:
-   - Перейди в **Settings** → **Cron Jobs**
-   - Должна появиться задача `/api/cron/recalculate-ratings`
-
-## ✅ Шаг 4: Тестирование
-
-### Ручной тест (локально или через curl):
+[cronJobs.json](apps/web/src/config/cronJobs.json) задаёт восемь заданий. [Генератор](scripts/generate-cron-manifests.mjs) обновляет секцию `crons` в [корневом](vercel.json) и [web manifest](apps/web/vercel.json), сохраняя остальные настройки. Обе секции одинаковы; проверка также требует существующий GET handler для каждого пути.
 
 ```bash
-# Замени SECRET_KEY на твой CRON_SECRET
-curl -X GET "http://localhost:3000/api/cron/recalculate-ratings" \
-  -H "Authorization: Bearer SECRET_KEY"
+node scripts/generate-cron-manifests.mjs --write
+node scripts/generate-cron-manifests.mjs --check
 ```
 
-**Ожидаемый ответ:**
-```json
-{
-  "ok": true,
-  "message": "Ratings recalculated successfully"
-}
-```
+| Задание | Путь после `/api/cron/` | Расписание UTC | Допустимый возраст последнего успеха |
+| --- | --- | --- | --- |
+| Закрытие смен | `close-shifts` | `*/5 * * * *` | 15 минут |
+| Рейтинги | `recalculate-ratings` | `0 3 * * *` | 27 часов |
+| Retention | `data-retention` | `0 4 * * *` | 27 часов |
+| Health alerts | `health-check-alerts` | `0 9 * * *` | 27 часов |
+| Daily analytics | `analytics/daily` | `30 3 * * *` | 27 часов |
+| Hourly analytics | `analytics/hourly-load` | `40 3 * * *` | 27 часов |
+| Уведомления о брони | `booking-notifications` | `* * * * *` | 5 минут, если worker включён |
+| WhatsApp inbox | `whatsapp-inbox` | `* * * * *` | 5 минут, если worker включён |
 
-### Ручной тест аналитики (локально):
+Asia/Bishkek — UTC+6. Расписание хостинга задано в UTC; границы финансового дня и агрегатов определяются часовым поясом бизнеса. Pro / Enterprise допускают минутное расписание, но вызовы расходуют ресурсы Functions. Vercel не повторяет неуспешный cron автоматически: восстановление должно переживать следующий плановый запуск. [Лимиты Vercel](https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing), [поведение cron](https://vercel.com/docs/schedules/cron-jobs/manage-cron-jobs).
 
-```bash
-curl -X POST "http://localhost:3000/api/cron/analytics/daily?startDate=2026-02-26&endDate=2026-02-26" \
-  -H "Authorization: Bearer SECRET_KEY"
-```
+## Авторизация и журнал выполнения
 
-**Ожидаемый ответ (пример):**
-```json
-{
-  "ok": true,
-  "data": {
-    "message": "Analytics daily aggregation completed",
-    "results": [
-      { "date": "2026-02-26", "updated": 3 }
-    ]
-  }
-}
-```
+Все handlers используют [общий guard](apps/web/src/lib/cronAuthorization.ts): точный `Authorization: Bearer <secret>`, сравнение без зависимости времени от содержимого, отсутствующий/пустой/окружённый пробелами secret отклоняется до доступа к БД. Приложение поддерживает `CRON_SECRET || VERCEL_CRON_SECRET`; для автоматического заголовка Vercel задавайте **CRON_SECRET**, без пробелов, случайное значение минимум 16 символов. После изменения переменной требуется новый deployment; значение в документах и логах не сохраняют. [Настройка Vercel](https://vercel.com/docs/schedules/cron-jobs/manage-cron-jobs).
 
-### Тест в продакшене:
+После авторизации [tracking](apps/web/src/lib/cronExecutionTracking.ts) записывает начало, затем результат в БД. [Миграция журнала](supabase/migrations/20261110113500_cron_execution_tracking.sql) предоставляет только серверные RPC; прямой DML закрыт. Сбой записи начала даёт 503 без выполнения работы. Сбой записи результата даёт 503 с неопределённым подтверждением: работа могла завершиться, поэтому handler не вызывает её повторно. Успех требует HTTP 2xx и верхнего `ok:true`; бизнесовые детали результата проверяются отдельно.
 
-```bash
-# Замени SECRET_KEY и DOMAIN
-curl -X GET "https://kezek.kg/api/cron/recalculate-ratings" \
-  -H "Authorization: Bearer SECRET_KEY"
+Каждый запуск имеет UUID. Журнал хранит имя задания, время, результат, HTTP status и ограниченный код ошибки; пользовательские payload и секреты не записываются. Повтор записи того же результата идемпотентен. При новом запуске незавершённые записи старше 15 минут помечаются ошибкой, а старые записи старше 30 дней удаляются партиями до 200. Это ограниченная уборка, а не гарантия удаления всего старого хвоста за один запрос.
 
-curl -X POST "https://kezek.kg/api/cron/analytics/daily" \
-  -H "Authorization: Bearer SECRET_KEY"
-```
+[Health evaluator](apps/web/src/lib/cronExecutionHealth.ts) различает `healthy`, `running`, `failed`, `stuck`, `overdue`, `unobserved`, `disabled`. Отсутствие наблюдений не означает успех. Пропущенный запуск виден при следующем чтении health; для обнаружения полной остановки приложения нужна внешняя проверка с независимым каналом. Ежедневное письмо само по себе не обеспечивает пятиминутное оповещение. См. [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md).
 
-### Через Vercel Dashboard:
+## Работа заданий и ограничения
 
-1. Перейди в **Deployments**
-2. Выбери последний деплой
-3. Открой **Functions** → найди `/api/cron/recalculate-ratings`
-4. Можно запустить вручную через **Invoke**
+**Close.** [Сервис](apps/web/src/lib/closeShiftsCronService.ts) забирает до 25 просроченных смен через `SKIP LOCKED`, lease на пять минут и порядок повторных попыток, не позволяющий одной ошибочной старой смене блокировать весь хвост. [SQL snapshot/claim](supabase/migrations/20261110113000_shift_close_backlog.sql) читает полный ledger, ревизию, настройки и часовой пояс. Бюджет обработки — 45 секунд; незапущенные записи освобождаются. `maxDuration` handler — 60 секунд. Ответ содержит `closed`, `total`, `attempted`, `pending`, `hasMore`, `errors`; при ошибках — HTTP 500 с summary. Успешная партия с `hasMore:true` ещё не означает завершения хвоста.
 
-## 📊 Шаг 5: Мониторинг
+Close использует границу полуночи после даты самой смены и длительность локального дня, включая 23/25 часов при DST. Суммы берутся из ledger; пустой ledger при наличии paid/confirmed bookings требует `needs_review`, без выдуманного дохода. Атомарная команда проверяет ревизию и настройки перед записью финансов и статусов. [Финансовый контракт](docs/api/STAFF_AND_FINANCE.md), [тест конкурентных транзакций](scripts/test-finance-transactions.mjs), [проверка backlog](scripts/test-shift-close-backlog.mjs).
 
-### Проверка логов:
+**Analytics.** По умолчанию заново обрабатываются три предыдущие календарные даты; явный диапазон должен быть валидным и не длиннее 366 дней. [SQL aggregation](supabase/migrations/20261110110000_reporting_completeness.sql) считает по всем подходящим строкам, с локальными полуинтервалами суток, атомарно обновляет результат и удаляет устаревшие агрегаты. Лимит строк REST не отсекает исходные данные. Ошибка чтения не заменяется нулём. Длительность больших диапазонов на целевом deployment ещё должна быть измерена; ручной диапазон не является checkpoint-механизмом.
 
-1. В Vercel Dashboard → **Logs**
-2. Фильтр: `[Recalculate Ratings Cron]`
-3. Ищи сообщения:
-   - `Successfully recalculated ratings` ✅
-   - `Error:` ❌
+**Ratings.** [Сервис](apps/web/src/lib/recalculateRatingsCronService.ts) выбирает диапазон по последней дате `biz_day_metrics`, с lookback до семи дней. Проверяйте вложенные diagnostics и полноту всех уровней; HTTP успех не доказывает восстановление более давних пропусков.
 
-### Проверка выполнения:
+**Retention.** Очистка, анонимизация и завершение запросов удаления меняют данные. Требуются проверка каждого счётчика и каждого `*_error`, правила хранения и рабочее восстановление: [DATA_RETENTION](DATA_RETENTION.md).
 
-После первого запуска проверь в Supabase:
+**Notifications.** Worker включается только при `BOOKING_NOTIFICATION_WORKER_ENABLED=true`; до этого handler возвращает `enabled:false` без обращения к БД и провайдерам. Worker обрабатывает волны до двух событий, не более 100 событий за запуск и в пределах 45 секунд; lease — 90 секунд, deadline провайдера — восемь секунд. Один event не забирается повторно в том же запуске. Транзакционный outbox отделяет подтверждение брони от доставки. Проверяйте состояния доставок и dead letters независимо от успешного cron. Неопределённые отправки Telegram/WhatsApp требуют сверки; гарантия exactly-once не заявляется. [Полный контракт уведомлений](apps/web/src/lib/notifications/README.md).
 
-```sql
--- Проверь, что дневные метрики создались
-SELECT COUNT(*) FROM staff_day_metrics WHERE metric_date = CURRENT_DATE - 1;
+**WhatsApp inbox.** При `WHATSAPP_INBOX_WORKER_ENABLED=true` worker обрабатывает до 20 событий, concurrency 4, бюджет 45 секунд, lease 90 секунд, максимум восемь попыток. Webhook подтверждает приём только после durable записи. Неоднозначная отправка не повторяется автоматически; legacy/expired записи требуют разбора. Ежедневный retention сохраняет tombstones повторов после удаления PII. [API-контракт](docs/api/AUTH_AND_INTEGRATIONS.md).
 
--- Проверь, что рейтинги обновились
-SELECT id, full_name, rating_score, rating_updated_at 
-FROM staff 
-WHERE rating_score IS NOT NULL 
-ORDER BY rating_updated_at DESC 
-LIMIT 10;
-```
+**Состояние очередей.** [Queue health](apps/web/src/lib/backgroundQueueHealth.ts) читает полные SQL-счётчики. `failed` либо `ambiguous > 0` дают проблему; `due > 0` с возрастом старше 300 секунд — backlog. Счётчики failed/ambiguous могут пересекаться, поэтому в UI показаны отдельно и не складываются. Disabled означает, что данные не запрошены, а не пустую очередь. Ошибка чтения не превращается в healthy.
 
-## ⚙️ Настройка расписания (опционально)
+## Подтверждение выпуска
 
-Если нужно изменить время запуска, отредактируй `schedule` в `vercel.json`:
+Для конкретного релиза фиксируют deployment ID, project root и восемь реально зарегистрированных расписаний; наличие файла в Git этого не подтверждает. Затем сверяют наличие конфигурации без публикации значений, начало/завершение запусков в журнале, задержку очереди, результат операций и отсутствие непроверенных ошибок. После пропущенного запуска проверяют `hasMore`, lease и сохранённые результаты, прежде чем повторять финансовую или внешнюю операцию.
 
-**Формат cron:** `минута час день месяц день_недели`
-
-**Примеры:**
-- `0 3 * * *` - каждый день в 03:00 UTC
-- `0 2 * * *` - каждый день в 02:00 UTC  
-- `30 3 * * *` - каждый день в 03:30 UTC
-- `0 3 * * 1` - каждый понедельник в 03:00 UTC
-- `0 */6 * * *` - каждые 6 часов
-
-**Важно:** Vercel использует UTC время!
-
-## 🔍 Устранение проблем
-
-### Проблема: Cron не запускается
-
-**Решение:**
-1. Проверь, что `vercel.json` задеплоен
-2. Проверь в Vercel Dashboard → Settings → Cron Jobs
-3. Убедись, что переменная `CRON_SECRET` установлена
-
-### Проблема: 401 Unauthorized
-
-**Решение:**
-1. Проверь, что `CRON_SECRET` совпадает в Vercel и в коде
-2. Убедись, что заголовок `Authorization: Bearer ...` правильный
-3. Перезапусти деплой после изменения переменных
-
-### Проблема: Ошибки в SQL функциях
-
-**Решение:**
-1. Проверь логи в Vercel → Logs
-2. Убедись, что миграции применены в Supabase
-3. Проверь, что функция `recalculate_ratings_for_date` существует:
-   ```sql
-   SELECT proname FROM pg_proc WHERE proname = 'recalculate_ratings_for_date';
-   ```
-
-## 📝 Примечания
-
-- **Время выполнения:** Cron job может занять несколько минут, если данных много
-- **Частота:** Рекомендуется запускать раз в день (ночью)
-- **Безопасность:** Никогда не коммить `CRON_SECRET` в git!
-- **Мониторинг:** Настрой уведомления в Vercel для ошибок cron jobs
-
-## 🎯 Следующие шаги
-
-После настройки cron job:
-
-1. ✅ Дождись первого автоматического запуска (или запусти вручную)
-2. ✅ Проверь логи на наличие ошибок
-3. ✅ Убедись, что рейтинги обновились в базе данных
-4. ✅ Проверь отображение рейтингов на публичных страницах
-
+Локальные unit/SQL проверки не доказывают работу Vercel scheduler, достаточность ресурсов или доставку получателю. Ручной вызов retention/Close/alerts меняет данные либо отправляет письмо; его не используют как безобидный health probe. Данный документ сам по себе не разрешает deployment, финансовую операцию или внешнюю отправку.

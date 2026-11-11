@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logError } from '@/lib/log';
-import { getCached, setCached } from '@/lib/simpleCache';
+import { getDashboardAnalyticsLoad } from '@/lib/dashboardAnalyticsLoadService';
 import { getServiceClient } from '@/lib/supabaseService';
 import { addDaysToDateString, getTimezone, todayDateString } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
@@ -45,61 +44,8 @@ export async function GET(req: Request) {
     const endStr = endDate ?? todayDateString(tz);
     const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 
-    const cacheKey = `analytics_load:${effectiveBizId}:${branchId || 'all'}:${startStr}:${endStr}`;
-    const cached = getCached<unknown>(cacheKey);
-    if (cached) {
-      return createSuccessResponse(cached);
-    }
-
-    let query = serviceClient
-      .from('business_hourly_load')
-      .select('biz_id,branch_id,date,hour,bookings_count,promo_bookings_count,staff_count,unique_clients_count')
-      .eq('biz_id', effectiveBizId)
-      .gte('date', startStr)
-      .lte('date', endStr)
-      .order('date', { ascending: true })
-      .order('hour', { ascending: true });
-
-    if (branchId) {
-      query = query.eq('branch_id', branchId);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      logError('AdminAnalyticsLoad', 'Failed to load business_hourly_load', { error: error.message });
-      return createErrorResponse('server', 'Failed to load hourly analytics', undefined, 500);
-    }
-
-    type BusinessHourlyRow = {
-      date: string;
-      hour: number;
-      bookings_count: number | null;
-      promo_bookings_count: number | null;
-      staff_count: number | null;
-      unique_clients_count: number | null;
-    };
-
-    const rows = (data ?? []) as BusinessHourlyRow[];
-
-    const points = rows.map((r) => ({
-      date: r.date,
-      hour: r.hour,
-      bookingsCount: r.bookings_count ?? 0,
-      promoBookingsCount: r.promo_bookings_count ?? 0,
-      staffCount: r.staff_count ?? null,
-      uniqueClientsCount: r.unique_clients_count ?? null,
-    }));
-
-    const payload = {
-      bizId: effectiveBizId,
-      branchId: branchId ?? null,
-      period: { startDate: startStr, endDate: endStr },
-      points,
-    };
-
-    setCached(cacheKey, payload, 60_000);
-
-    return createSuccessResponse(payload);
+    const result = await getDashboardAnalyticsLoad({ admin: serviceClient, bizId: effectiveBizId, branchId, startDate: startStr, endDate: endStr });
+    return result.ok ? createSuccessResponse(result.data) : createErrorResponse(result.error, result.message, undefined, result.status);
   });
 }
 

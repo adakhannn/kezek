@@ -1,329 +1,81 @@
 import { POST } from '@/app/api/staff/shift/items/route';
 
-jest.mock('@/lib/authBiz', () => ({
-    getStaffContextForRequest: jest.fn(),
-    getBizContextForManagers: jest.fn(),
-}));
-
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
-}));
-
+jest.mock('@/lib/authBiz', () => ({ getStaffContextForRequest: jest.fn(), getBizContextForManagers: jest.fn() }));
+jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
 jest.mock('@/lib/rateLimit', () => ({
-    withRateLimit: jest.fn((_req, _config, handler) => handler()),
-    RateLimitConfigs: { normal: {} },
-}));
-
-jest.mock('@/lib/apiMetrics', () => ({
-    logApiMetric: jest.fn(() => Promise.resolve()),
-    getIpAddress: jest.fn(() => '127.0.0.1'),
-    determineErrorType: jest.fn(() => null),
-}));
-
-jest.mock('@/lib/time', () => ({
-    TZ: 'Asia/Bishkek',
-    formatDateInTz: jest.fn(() => '2024-01-26'),
-}));
+    checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})), withRateLimit: jest.fn((_req, _config, handler) => handler()), RateLimitConfigs: { normal: {} } }));
+jest.mock('@/lib/apiMetrics', () => ({ logApiMetric: jest.fn(() => Promise.resolve()), getIpAddress: jest.fn(() => '127.0.0.1'), determineErrorType: jest.fn(() => null) }));
+jest.mock('@/lib/time', () => ({ TZ: 'Asia/Bishkek', formatDateInTz: jest.fn(() => '2024-01-26') }));
 
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
-type QueryResult = { data: unknown; error: unknown };
-
-function createListQuery(result: QueryResult) {
-    const query: Record<string, jest.Mock> = {};
-    const chain = () => query;
-    query.select = jest.fn(chain);
-    query.eq = jest.fn(chain);
-    query.lte = jest.fn(chain);
-    query.gte = jest.fn(chain);
-    query.neq = jest.fn(chain);
-    query.in = jest.fn(chain);
-    query.order = jest.fn(chain);
-    query.then = jest.fn((resolve: (value: QueryResult) => unknown) => Promise.resolve(resolve(result)));
-    return query;
-}
-
-function createMaybeSingleQuery(result: QueryResult) {
-    const query: Record<string, jest.Mock> = {};
-    const chain = () => query;
-    query.select = jest.fn(chain);
-    query.eq = jest.fn(chain);
-    query.lte = jest.fn(chain);
-    query.gte = jest.fn(chain);
-    query.neq = jest.fn(chain);
-    query.in = jest.fn(chain);
-    query.order = jest.fn(chain);
-    query.maybeSingle = jest.fn().mockResolvedValue(result);
-    return query;
-}
-
-function createInsertQuery(result: QueryResult) {
-    return {
-        insert: jest.fn().mockResolvedValue(result),
-    };
-}
-
-function createUpdateQuery(result: QueryResult) {
-    return {
-        update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue(result),
-        }),
-    };
-}
-
-function createDeleteQuery(result: QueryResult) {
-    return {
-        delete: jest.fn().mockReturnValue({
-            in: jest.fn().mockResolvedValue(result),
-        }),
-    };
-}
+const supabase = { from: jest.fn(), rpc: jest.fn() };
+const items = [{ clientName: 'Ivan Ivanov', serviceName: 'Haircut', serviceAmount: 1000, consumablesAmount: 100 }];
+const request = (body: unknown) => new Request('http://localhost/api/staff/shift/items', { method: 'POST', body: JSON.stringify({ expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, ...(body as object) }) });
 
 describe('/api/staff/shift/items', () => {
-    const mockSupabase = {
-        auth: {
-            getUser: jest.fn().mockResolvedValue({
-                data: { user: { id: 'user-1' } },
-                error: null,
-            }),
-        },
-        from: jest.fn(),
-    };
-
-    const mockAdmin = {
-        from: jest.fn(),
-    };
-
     beforeEach(() => {
         jest.clearAllMocks();
-
-        (getStaffContextForRequest as jest.Mock).mockResolvedValue({
-            supabase: mockSupabase,
-            staffId: 'staff-1',
-            bizId: 'biz-1',
-        });
-
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        supabase.rpc.mockReset().mockResolvedValue({ data: { ok: true, shift_id: 'shift-1', revision: 8, items }, error: null });
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({ supabase, staffId: 'staff-1', bizId: 'biz-1', userId: 'user-1' });
     });
 
-    test('saves items for an open shift and recalculates totals', async () => {
-        mockSupabase.from
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: { percent_master: 60, percent_salon: 40 },
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: { id: 'shift-1', status: 'open', shift_date: '2024-01-26' },
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createListQuery({
-                    data: [],
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createInsertQuery({
-                    data: [],
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createListQuery({
-                    data: [
-                        { service_amount: 1000, consumables_amount: 100 },
-                        { service_amount: 2000, consumables_amount: 200 },
-                    ],
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createUpdateQuery({
-                    data: { id: 'shift-1' },
-                    error: null,
-                }),
-            );
-
-        const req = new Request('http://localhost/api/staff/shift/items', {
-            method: 'POST',
-            body: JSON.stringify({
-                items: [
-                    {
-                        clientName: 'Ivan Ivanov',
-                        serviceName: 'Haircut',
-                        serviceAmount: 1000,
-                        consumablesAmount: 100,
-                    },
-                    {
-                        clientName: 'Petr Petrov',
-                        serviceName: 'Coloring',
-                        serviceAmount: 2000,
-                        consumablesAmount: 200,
-                    },
-                ],
-            }),
-        });
-
-        const response = await POST(req);
-        const data = await response.json();
-
+    test('saves the validated ledger through one caller-bound atomic command', async () => {
+        const response = await POST(request({ items, expectedRevision: 7 }));
         expect(response.status).toBe(200);
-        expect(data.ok).toBe(true);
-        expect(mockSupabase.from).toHaveBeenCalledWith('staff_shift_items');
-        expect(mockSupabase.from).toHaveBeenCalledWith('staff_shifts');
+        expect(await response.json()).toMatchObject({ ok: true, data: { shiftId: 'shift-1', revision: 8, items } });
+        expect(supabase.rpc).toHaveBeenCalledTimes(1);
+        expect(supabase.rpc).toHaveBeenCalledWith('save_staff_shift_command', {
+            p_staff_id: 'staff-1', p_biz_id: 'biz-1', p_actor_id: 'user-1', p_shift_date: null,
+            p_items: expect.arrayContaining([expect.objectContaining(items[0])]), p_allow_create: false, p_expected_revision: 7, p_expected_shift_id: '11111111-1111-4111-8111-111111111111',
+        });
+        expect(supabase.from).not.toHaveBeenCalled();
+        expect(getServiceClient).not.toHaveBeenCalled();
     });
 
-    test('accepts an empty item list and updates shift totals to zero', async () => {
-        mockSupabase.from
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: { percent_master: 60, percent_salon: 40 },
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: { id: 'shift-1', status: 'open', shift_date: '2024-01-26' },
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createListQuery({
-                    data: [],
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createListQuery({
-                    data: [],
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createUpdateQuery({
-                    data: { id: 'shift-1' },
-                    error: null,
-                }),
-            );
-
-        const req = new Request('http://localhost/api/staff/shift/items', {
-            method: 'POST',
-            body: JSON.stringify({ items: [] }),
-        });
-
-        const response = await POST(req);
-        const data = await response.json();
-
+    test('passes an empty replacement to the transactional command', async () => {
+        const response = await POST(request({ items: [] }));
         expect(response.status).toBe(200);
-        expect(data.ok).toBe(true);
+        expect((await response.json()).ok).toBe(true);
+        expect(supabase.rpc).toHaveBeenCalledWith('save_staff_shift_command', expect.objectContaining({ p_items: [], p_expected_revision: 7 }));
     });
 
-    test('returns validation error when items are missing', async () => {
-        const req = new Request('http://localhost/api/staff/shift/items', {
-            method: 'POST',
-            body: JSON.stringify({}),
-        });
-
-        const response = await POST(req);
-        const data = await response.json();
-
+    test('rejects missing items before any command', async () => {
+        const response = await POST(request({}));
         expect(response.status).toBe(400);
-        expect(data.ok).toBe(false);
-        expect(data.error).toBe('validation');
+        expect((await response.json()).error).toBe('validation');
+        expect(supabase.rpc).not.toHaveBeenCalled();
     });
 
-    test('returns validation error when there is no open shift', async () => {
-        mockSupabase.from
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: { percent_master: 60, percent_salon: 40 },
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: null,
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: null,
-                    error: null,
-                }),
-            );
-
-        const req = new Request('http://localhost/api/staff/shift/items', {
-            method: 'POST',
-            body: JSON.stringify({
-                items: [
-                    {
-                        clientName: 'Ivan Ivanov',
-                        serviceName: 'Haircut',
-                        serviceAmount: 1000,
-                    },
-                ],
-            }),
-        });
-
-        const response = await POST(req);
-        const data = await response.json();
-
+    test.each([
+        { expectedRevision: undefined }, { expectedShiftId: undefined },
+        { expectedRevision: null }, { expectedShiftId: null },
+        { expectedRevision: Number.MAX_SAFE_INTEGER + 1 }, { expectedRevision: -1 },
+    ])('rejects missing or invalid snapshot identity %j before any command', async version => {
+        const response = await POST(request({ items, ...version }));
         expect(response.status).toBe(400);
-        expect(data.ok).toBe(false);
-        expect(data.error).toBe('validation');
+        expect(supabase.rpc).not.toHaveBeenCalled();
     });
 
-    test('returns internal error when insert fails', async () => {
-        mockSupabase.from
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: { percent_master: 60, percent_salon: 40 },
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createMaybeSingleQuery({
-                    data: { id: 'shift-1', status: 'open', shift_date: '2024-01-26' },
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createListQuery({
-                    data: [],
-                    error: null,
-                }),
-            )
-            .mockReturnValueOnce(
-                createInsertQuery({
-                    data: null,
-                    error: { message: 'insert failed' },
-                }),
-            );
+    test.each([
+        ['22023', 400, 'validation'],
+        ['40001', 409, 'validation'],
+        ['42501', 403, 'forbidden'],
+        ['XX000', 500, 'internal'],
+    ])('maps command failure %s without a partial-write fallback', async (code, status, error) => {
+        supabase.rpc.mockResolvedValue({ data: null, error: { code, message: 'command rejected' } });
+        const response = await POST(request({ items }));
+        expect(response.status).toBe(status);
+        expect((await response.json()).error).toBe(error);
+        expect(supabase.rpc).toHaveBeenCalledTimes(1);
+        expect(supabase.from).not.toHaveBeenCalled();
+    });
 
-        const req = new Request('http://localhost/api/staff/shift/items', {
-            method: 'POST',
-            body: JSON.stringify({
-                items: [
-                    {
-                        clientName: 'Ivan Ivanov',
-                        serviceName: 'Haircut',
-                        serviceAmount: 1000,
-                    },
-                ],
-            }),
-        });
-
-        const response = await POST(req);
-        const data = await response.json();
-
-        expect(response.status).toBe(500);
-        expect(data.ok).toBe(false);
-        expect(data.error).toBe('internal');
+    test('denies a context missing the verified actor before issuing a command', async () => {
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({ supabase, staffId: 'staff-1', bizId: 'biz-1' });
+        const response = await POST(request({ items }));
+        expect(response.status).toBe(403);
+        expect(supabase.rpc).not.toHaveBeenCalled();
     });
 });

@@ -68,16 +68,10 @@ describe('/api/admin/initialize-ratings', () => {
             });
 
             // Мокаем проверку роли (не суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                is: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
+            mockSupabase.rpc.mockResolvedValueOnce({
+                    data: false,
                     error: null,
-                }),
-            });
+                });
 
             const req = createMockRequest('http://localhost/api/admin/initialize-ratings', {
                 method: 'POST',
@@ -100,19 +94,10 @@ describe('/api/admin/initialize-ratings', () => {
             });
 
             // Мокаем проверку роли (суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                is: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        role_key: 'super_admin',
-                        biz_id: null,
-                    },
+            mockSupabase.rpc.mockResolvedValueOnce({
+                    data: true,
                     error: null,
-                }),
-            });
+                });
 
             // Мокаем вызов RPC функции
             mockAdmin.rpc.mockResolvedValue({
@@ -148,19 +133,10 @@ describe('/api/admin/initialize-ratings', () => {
             });
 
             // Мокаем проверку роли (суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                is: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        role_key: 'super_admin',
-                        biz_id: null,
-                    },
+            mockSupabase.rpc.mockResolvedValueOnce({
+                    data: true,
                     error: null,
-                }),
-            });
+                });
 
             // Мокаем вызов RPC функции
             mockAdmin.rpc.mockResolvedValue({

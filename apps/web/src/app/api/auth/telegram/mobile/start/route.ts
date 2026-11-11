@@ -29,5 +29,6 @@ export async function POST(request: Request) {
         withErrorHandler('TelegramMobileStart', () =>
             runTelegramMobileStartHttp(request),
         ),
+        "/api/auth/telegram/mobile/start",
     );
 }

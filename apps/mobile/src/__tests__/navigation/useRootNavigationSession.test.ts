@@ -1,8 +1,7 @@
 import {
-    extractHashTokens,
     handleDeepLinkAuth,
     isAuthCallbackUrl,
-    tryRestorePendingSession,
+    exchangeViaMobileApi,
     useRootNavigationSession,
 } from '../../navigation/useRootNavigationSession';
 import { supabase } from '../../lib/supabase';
@@ -76,117 +75,44 @@ describe('useRootNavigationSession helpers', () => {
         expect(isAuthCallbackUrl('kezek://home')).toBe(false);
     });
 
-    test('extracts hash tokens from callback url', () => {
-        expect(
-            extractHashTokens('kezek://auth/callback#access_token=token-1&refresh_token=token-2'),
-        ).toEqual({
-            accessToken: 'token-1',
-            refreshToken: 'token-2',
-        });
+    test.each([
+        'kezek://auth/callback#access_token=access&refresh_token=refresh',
+        'kezek://auth/callback?access_token=access&refresh_token=refresh',
+        'kezek://auth/callback?exchange_code=unbound',
+        'kezek://callback-mobile?exchange_code=unbound',
+        'https://evil.invalid/auth/callback?code=unbound',
+    ])('rejects legacy credentials and noncanonical callbacks: %s', async url => {
+        expect(await handleDeepLinkAuth(url, 'https://kezek.kg')).toBe(false);
+        expect(mockedSupabase.auth.setSession).not.toHaveBeenCalled();
+        expect(mockedSupabase.auth.exchangeCodeForSession).not.toHaveBeenCalled();
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    test('handles callback urls with access and refresh tokens', async () => {
-        const handled = await handleDeepLinkAuth(
-            'kezek://auth/callback#access_token=access-1&refresh_token=refresh-1',
-            'https://kezek.kg',
-        );
-
-        expect(handled).toBe(true);
-        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
-            access_token: 'access-1',
-            refresh_token: 'refresh-1',
-        });
+    test('passes only a native authorization code to the SDK PKCE verifier', async () => {
+        const url = 'kezek://auth/callback?code=once-oauth-code';
+        expect(await handleDeepLinkAuth(url)).toBe(true);
+        expect(await handleDeepLinkAuth(url)).toBe(true);
+        expect(mockedSupabase.auth.exchangeCodeForSession).toHaveBeenCalledTimes(1);
+        expect(mockedSupabase.auth.exchangeCodeForSession).toHaveBeenCalledWith('once-oauth-code');
+        expect(mockedSupabase.auth.setSession).not.toHaveBeenCalled();
     });
 
-    test('does not process the same callback url twice', async () => {
-        const callbackUrl = 'kezek://auth/callback#access_token=once-access&refresh_token=once-refresh';
-
-        const firstHandled = await handleDeepLinkAuth(callbackUrl, 'https://kezek.kg');
-        const secondHandled = await handleDeepLinkAuth(callbackUrl, 'https://kezek.kg');
-
-        expect(firstHandled).toBe(true);
-        expect(secondHandled).toBe(true);
-        expect(mockedSupabase.auth.setSession).toHaveBeenCalledTimes(1);
-        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
-            access_token: 'once-access',
-            refresh_token: 'once-refresh',
-        });
+    test('redeems a provider grant with its initiating verifier over POST', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ data: { accessToken: 'access', refreshToken: 'refresh' } }) });
+        await exchangeViaMobileApi('grant', 'https://kezek.kg', 'a'.repeat(64));
+        expect(global.fetch).toHaveBeenCalledWith('https://kezek.kg/api/auth/mobile-exchange', expect.objectContaining({ method: 'POST', body: JSON.stringify({ code: 'grant', codeVerifier: 'a'.repeat(64) }) }));
+        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({ access_token: 'access', refresh_token: 'refresh' });
     });
 
-    test('handles callback urls with exchange_code via mobile api', async () => {
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: true,
-            json: async () => ({
-                accessToken: 'access-2',
-                refreshToken: 'refresh-2',
-            }),
-        });
-
-        const handled = await handleDeepLinkAuth(
-            'kezek://callback-mobile?exchange_code=code-123',
-            'https://kezek.kg',
-        );
-
-        expect(handled).toBe(true);
-        expect(global.fetch).toHaveBeenCalledWith(
-            'https://kezek.kg/api/auth/mobile-exchange?code=code-123',
-            expect.objectContaining({ signal: expect.any(Object) }),
-        );
-        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
-            access_token: 'access-2',
-            refresh_token: 'refresh-2',
-        });
-    });
-
-    test('handles callback urls with oauth code', async () => {
-        const handled = await handleDeepLinkAuth(
-            'kezek://auth/callback?code=oauth-code',
-            'https://kezek.kg',
-        );
-
-        expect(handled).toBe(true);
-        expect(mockedSupabase.auth.exchangeCodeForSession).toHaveBeenCalledWith('oauth-code');
-    });
-
-    test('restores pending session via mobile exchange endpoint', async () => {
-        (global.fetch as jest.Mock)
-            .mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({
-                    hasPending: true,
-                    code: 'pending-123',
-                }),
-            })
-            .mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({
-                    accessToken: 'access-3',
-                    refreshToken: 'refresh-3',
-                }),
-            });
-
-        const restored = await tryRestorePendingSession('https://kezek.kg');
-
-        expect(restored).toBe(true);
-        expect(global.fetch).toHaveBeenNthCalledWith(
-            1,
-            'https://kezek.kg/api/auth/mobile-exchange?check=true',
-            expect.objectContaining({ signal: expect.any(Object) }),
-        );
-        expect(global.fetch).toHaveBeenNthCalledWith(
-            2,
-            'https://kezek.kg/api/auth/mobile-exchange?code=pending-123',
-            expect.objectContaining({ signal: expect.any(Object) }),
-        );
-        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
-            access_token: 'access-3',
-            refresh_token: 'refresh-3',
-        });
+    test('cannot redeem a grant without a local initiating verifier', async () => {
+        await expect(exchangeViaMobileApi('grant', 'https://kezek.kg', '')).rejects.toThrow('proof');
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(mockedSupabase.auth.setSession).not.toHaveBeenCalled();
     });
 
     test('cold start deep link: restores session on bootstrap from auth callback url', async () => {
         (Linking.getInitialURL as jest.Mock).mockResolvedValueOnce(
-            'kezek://auth/callback#access_token=cold-access&refresh_token=cold-refresh',
+            'kezek://auth/callback?code=cold-oauth',
         );
 
         mockedSupabase.auth.getSession
@@ -214,10 +140,7 @@ describe('useRootNavigationSession helpers', () => {
             expect(result.current.hasSession).toBe(true);
         });
 
-        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
-            access_token: 'cold-access',
-            refresh_token: 'cold-refresh',
-        });
+        expect(mockedSupabase.auth.exchangeCodeForSession).toHaveBeenCalledWith('cold-oauth');
     });
 
     test('syncs the current auth session when the app returns to foreground', async () => {
@@ -251,5 +174,6 @@ describe('useRootNavigationSession helpers', () => {
             expect(result.current.hasSession).toBe(true);
         });
         expect(mockedSupabase.auth.getSession).toHaveBeenCalledTimes(2);
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 });

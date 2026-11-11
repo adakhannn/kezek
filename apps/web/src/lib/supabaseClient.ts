@@ -1,5 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 
+import { logWarnSafe } from './logSafe';
+
 /**
  * Клиент Supabase для использования в клиентских компонентах
  * Использует createBrowserClient из @supabase/ssr для правильной работы с cookies и сессиями
@@ -22,8 +24,8 @@ const resolvedSupabaseUrl = hasValidBrowserConfig ? supabaseUrl! : 'https://inva
 const resolvedSupabaseAnonKey = hasValidBrowserConfig ? supabaseAnonKey! : 'invalid-anon-key';
 
 if (!hasValidBrowserConfig && typeof window !== 'undefined') {
-    console.warn(
-        '[Supabase] Public runtime configuration is invalid; auth and data requests are disabled until configuration is fixed.',
+    logWarnSafe(
+        'Supabase', 'Public runtime configuration is invalid; auth and data requests are disabled until configuration is fixed.',
     );
 }
 

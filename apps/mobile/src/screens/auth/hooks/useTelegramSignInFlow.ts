@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
 import { TELEGRAM_ACTIVE_FLOW_STORAGE_KEY } from '../../../lib/authStorageKeys';
+import { createMobileAuthProof } from '../../../lib/authCrypto';
 import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../../lib/fetchWithTimeout';
 import { getErrorMessage } from '../../../lib/errors';
 import { logError, logWarn } from '../../../lib/log';
@@ -13,21 +14,13 @@ import { type AuthUiState, transitionAuthUiState } from './authUiState';
 
 const TELEGRAM_POLL_INTERVAL_MS = 2500;
 const TELEGRAM_POLL_TIMEOUT_MS = 3 * 60 * 1000;
-const TELEGRAM_WEB_WIDGET_FALLBACK_REDIRECT =
-    '/auth/callback-mobile?redirect=kezek://auth/callback';
-
 type ShowToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
 type TelegramFlowState = {
     nonce: string;
+    codeVerifier: string;
     botDeepLink: string;
     startedAt: number;
 };
-
-function buildTelegramWebWidgetFallbackUrl(apiUrl: string) {
-    const base = apiUrl.replace(/\/+$/, '');
-    const redirectParam = encodeURIComponent(TELEGRAM_WEB_WIDGET_FALLBACK_REDIRECT);
-    return `${base}/auth/sign-in?redirect=${redirectParam}`;
-}
 
 function buildTelegramAppDeepLink(botDeepLink: string): string | null {
     try {
@@ -126,6 +119,7 @@ export function useTelegramSignInFlow({
                 typeof parsed?.nonce !== 'string' ||
                 typeof parsed?.botDeepLink !== 'string' ||
                 typeof parsed?.startedAt !== 'number'
+                || typeof parsed?.codeVerifier !== 'string' || !/^[a-f0-9]{64}$/.test(parsed.codeVerifier)
             ) {
                 throw new Error('invalid telegram flow payload');
             }
@@ -180,7 +174,9 @@ export function useTelegramSignInFlow({
                         continue;
                     }
 
-                    await exchangeViaMobileApi(exchangeCode, apiUrl);
+                    const verifier = telegramFlowRef.current?.codeVerifier;
+                    if (!verifier) throw new Error('Начните вход заново в этом приложении.');
+                    await exchangeViaMobileApi(exchangeCode, apiUrl, verifier);
                     const restored = await ensureSessionRestored(undefined, 5);
                     if (!restored) {
                         throw new Error('Сессия не установлена после exchange');
@@ -250,6 +246,7 @@ export function useTelegramSignInFlow({
         await clearPersistedTelegramFlow();
 
         try {
+            const proof = await createMobileAuthProof();
             const response = await fetchWithTimeout(`${apiUrl}/api/auth/telegram/mobile/start`, {
                 method: 'POST',
                 headers: {
@@ -257,33 +254,13 @@ export function useTelegramSignInFlow({
                 },
                 body: JSON.stringify({
                     appName: 'Kezek Mobile',
+                    codeChallenge: proof.codeChallenge,
                     platform: Platform.OS,
                     device: Constants.deviceName ?? null,
                 }),
             });
 
             if (!response.ok) {
-                if (response.status === 503) {
-                    const fallbackUrl = buildTelegramWebWidgetFallbackUrl(apiUrl);
-                    logWarn(
-                        'SignInScreen',
-                        'Telegram mobile deeplink auth unavailable, fallback to web widget',
-                        { fallbackUrl },
-                    );
-
-                    const canOpenFallback = await Linking.canOpenURL(fallbackUrl);
-                    if (!canOpenFallback) {
-                        throw new Error('Не удалось открыть резервный веб-вход Telegram');
-                    }
-
-                    await Linking.openURL(fallbackUrl);
-                    showToast(
-                        'Мобильный вход через Telegram временно недоступен. Открыт веб-вход.',
-                        'info',
-                    );
-                    return;
-                }
-
                 const errorText = await response.text();
                 throw new Error(`Telegram mobile start failed: ${response.status} ${errorText}`);
             }
@@ -303,7 +280,7 @@ export function useTelegramSignInFlow({
             const startedAt = Date.now();
             setTelegramNonce(nonce);
             setTelegramDeepLink(botDeepLink);
-            await persistTelegramFlow({ nonce, botDeepLink, startedAt });
+            await persistTelegramFlow({ nonce, botDeepLink, startedAt, codeVerifier: proof.codeVerifier });
 
             await openTelegramLink(botDeepLink);
             showToast('Открываем Telegram для подтверждения входа', 'info');

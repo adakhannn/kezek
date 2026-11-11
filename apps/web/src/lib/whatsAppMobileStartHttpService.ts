@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logWarn } from '@/lib/log';
+import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { getRateLimitIdentifier } from '@/lib/rateLimit';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -15,6 +16,7 @@ import { runWhatsAppMobileStartRoute, type WhatsAppMobileStartRouteResult } from
 
 type StartBody = {
     phone?: string;
+    codeChallenge?: string;
 };
 
 function validateReplayWindow(headers: Headers) {
@@ -42,7 +44,10 @@ export async function runWhatsAppMobileStartHttp(req: Request): Promise<NextResp
         return createErrorResponse('validation', 'Неверный формат JSON', undefined, 400);
     }
 
-    const normalizedPhone = body.phone ? normalizePhoneToE164(body.phone) : null;
+    if (!body || typeof body !== 'object' || Array.isArray(body) || typeof body.codeChallenge !== 'string' || !MOBILE_CODE_CHALLENGE_RE.test(body.codeChallenge)) {
+        return createErrorResponse('validation', 'Обновите приложение и начните вход заново.', undefined, 400);
+    }
+    const normalizedPhone = typeof body.phone === 'string' ? normalizePhoneToE164(body.phone) : null;
     if (normalizedPhone) {
         const abuse = checkWhatsAppMobileStartAbuse({
             identifier: getRateLimitIdentifier(req),
@@ -64,7 +69,7 @@ export async function runWhatsAppMobileStartHttp(req: Request): Promise<NextResp
         return createErrorResponse('validation', replay.message, undefined, 400);
     }
     const idempotencyKey = idempotencyHeader
-        ? buildWhatsAppMobileIdempotencyKey(['whatsapp-mobile-start', body.phone ?? '', idempotencyHeader])
+        ? buildWhatsAppMobileIdempotencyKey(['whatsapp-mobile-start', body.phone ?? '', body.codeChallenge, idempotencyHeader])
         : '';
 
     if (idempotencyKey) {
@@ -87,6 +92,7 @@ export async function runWhatsAppMobileStartHttp(req: Request): Promise<NextResp
     const result = await runWhatsAppMobileStartRoute({
         admin: createSupabaseAdminClient() as unknown as Parameters<typeof runWhatsAppMobileStartRoute>[0]['admin'],
         phone: body.phone,
+        codeChallenge: body.codeChallenge,
     });
 
     if (!result.ok) {

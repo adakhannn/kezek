@@ -39,6 +39,22 @@ jobs:
       - name: Check active docs links
         run: pnpm check:docs-links
 
+      - name: Check offline OpenAPI, SDK and typed consumer
+        run: |
+          pnpm check:openapi
+          node --test scripts/openapi-tools.test.mjs
+
+      - name: Shared client types and unit tests
+        run: |
+          pnpm -C packages/shared-client typecheck
+          pnpm -C packages/shared-client test --runInBand --watchAll=false
+
+      - name: Check SQL runner failure propagation
+        run: node --test scripts/sql-runner.test.mjs scripts/isolated-sql-runner.test.mjs
+
+      - name: Check generated cron manifests
+        run: pnpm check:crons
+
       - name: Check hotspot size guardrails
         run: pnpm check:hotspots
 
@@ -78,7 +94,6 @@ jobs:
 
   web_core_tests:
     runs-on: ubuntu-latest
-    # Временно: часть тестов требует донастройки моков под текущий API
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -112,7 +127,7 @@ jobs:
           echo "Источник истины для порога: apps/web/jest.config.js"
         working-directory: apps/web
 
-  api_tests:
+  web_full_tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -136,8 +151,8 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: apps/web
 
-      - name: Run extended API and lib sweep
-        run: pnpm test:ci:extended
+      - name: Run all web Jest suites including components
+        run: pnpm test --ci --watchAll=false --maxWorkers=50%
         working-directory: apps/web
 
   e2e_smoke_tests:
@@ -382,32 +397,58 @@ jobs:
           fi
           eas build --platform ios --profile production --non-interactive --no-wait
 
-  # SQL тесты запускаются только если есть доступ к тестовой БД
-  # Для запуска в CI нужно установить SUPABASE_DB_URL в secrets
+  # Required synthetic PostgreSQL gates. No linked project, secrets, host ports or provider calls.
   sql_tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - test-mobile-auth-grants-isolated.cjs
+          - test-finance-transactions.mjs
+          - test-booking-requests-isolated.cjs
+          - test-booking-notification-outbox-isolated.cjs
+          - test-staff-scoped-slots-isolated.cjs
+          - test-cron-execution-isolated.cjs
+          - test-reporting-completeness.mjs
+          - test-shift-close-backlog.mjs
+          - test-whatsapp-inbox-isolated.cjs
+          - test-booking-finance-boundary-isolated.mjs
+          - test-attendance-command-isolated.mjs
+          - test-shift-hours-adjustment-isolated.mjs
+          - test-platform-admin-commands-isolated.cjs
+          - test-privileged-maintenance-isolated.cjs
+          - test-user-lifecycle-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Run SQL tests
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+      - name: Pull disposable PostgreSQL image
+        run: docker pull postgres:16
+
+      - name: Run isolated SQL contracts
+        run: node scripts/${{ matrix.runner }}
+
+  redis_tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Pull disposable Redis image
+        run: docker pull redis:7-alpine
+      - name: Run atomic rate-limit contracts
         run: |
-          if [ -n "$SUPABASE_DB_URL" ]; then
-            echo "🧪 Запуск критичных SQL-тестов..."
-            psql "$SUPABASE_DB_URL" -f supabase/tests_critical_scenarios.sql
-            echo "✅ Все тесты пройдены успешно!"
-          else
-            echo "⚠️ SUPABASE_TEST_DB_URL не установлен, пропускаем SQL тесты"
-            echo "Для запуска тестов в CI установите SUPABASE_TEST_DB_URL в secrets"
-          fi
+          node scripts/test-rate-limit-isolated.mjs
+          node scripts/test-performance-metrics-isolated.mjs
 
   security_audit:
     runs-on: ubuntu-latest

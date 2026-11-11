@@ -4,7 +4,7 @@
  * Помогает выявить дублирующиеся запросы и лишние вызовы
  */
 
-import { logDebug } from './log';
+import { logDebug, logError, logWarn, maskUrl } from './log';
 
 interface ApiCall {
     url: string;
@@ -41,8 +41,9 @@ export function logApiCall(
         return;
     }
 
+    const safeUrl = maskUrl(url);
     const call: ApiCall = {
-        url,
+        url: safeUrl,
         method,
         timestamp: Date.now(),
         duration: options?.duration,
@@ -50,7 +51,7 @@ export function logApiCall(
         error: options?.error,
     };
 
-    const key = getCallKey(url, method);
+    const key = getCallKey(safeUrl, method);
     const calls = recentCalls.get(key) || [];
     calls.push(call);
     
@@ -66,18 +67,19 @@ export function logApiCall(
     );
 
     if (duplicateCalls.length > 0) {
-        console.warn(
-            `[api-logger] ⚠️ Duplicate API call detected: ${method} ${url}`,
-            `\n  Previous calls: ${duplicateCalls.length}`,
-            `\n  Time since last: ${call.timestamp - duplicateCalls[duplicateCalls.length - 1].timestamp}ms`
-        );
+        logWarn('ApiLogger', 'Duplicate API call detected', {
+            method,
+            url: safeUrl,
+            previousCalls: duplicateCalls.length,
+            timeSinceLastMs: call.timestamp - duplicateCalls[duplicateCalls.length - 1].timestamp,
+        });
     }
 
     // Логируем запрос
-    const logMessage = `[api-logger] ${method} ${url}`;
+    const logMessage = 'API request completed';
     const logData: Record<string, unknown> = {
         method,
-        url,
+        url: safeUrl,
     };
 
     if (options?.duration !== undefined) {
@@ -94,9 +96,9 @@ export function logApiCall(
     }
 
     if (options?.error || (options?.status && options.status >= 400)) {
-        console.error(logMessage, logData);
+        logError('ApiLogger', logMessage, logData);
     } else if (duplicateCalls.length > 0) {
-        console.warn(logMessage, logData);
+        logWarn('ApiLogger', logMessage, logData);
     } else {
         logDebug('ApiLogger', logMessage, logData);
     }

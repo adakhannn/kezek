@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import { RoleApplicationsClient } from '@/app/dashboard/role-applications/RoleApplicationsClient';
 
@@ -22,10 +22,12 @@ function application(status: Status, id = status) {
 }
 let originalFetch: typeof fetch;
 let payload: { ok: boolean; items: ReturnType<typeof application>[]; branches: typeof branch[] };
+let expectedReads: number;
 
 beforeEach(() => {
     originalFetch = global.fetch;
     payload = { ok: true, items: [], branches: [branch] };
+    expectedReads = 1;
     // In-memory GET only. Any command or unexpected endpoint fails the test.
     global.fetch = jest.fn(async (url: unknown, init?: RequestInit) => {
         if (url !== '/dashboard/api/role-applications' || init?.method) {
@@ -35,8 +37,10 @@ beforeEach(() => {
     }) as jest.Mock;
 });
 afterEach(() => {
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(global.fetch).toHaveBeenCalledWith('/dashboard/api/role-applications', { cache: 'no-store' });
+    expect(global.fetch).toHaveBeenCalledTimes(expectedReads);
+    for (let call = 1; call <= expectedReads; call++) {
+        expect(global.fetch).toHaveBeenNthCalledWith(call, '/dashboard/api/role-applications', { cache: 'no-store' });
+    }
     global.fetch = originalFetch;
 });
 
@@ -102,8 +106,7 @@ it('renders applicant text as literal content rather than interpreting markup', 
     expect(container.querySelector('script')).toBeNull();
 });
 
-// These are safety expectations, not claims of a fresh live reproduction. Keep
-// failures visible until a permitted real UI scenario establishes reachability.
+// Isolated read-state regression tests, not claims of live UI acceptance.
 it.each(['network', 'http', 'json'] as const)('does not advertise a confirmed empty list after a %s failure', async (failure) => {
     const message = `UNIT ${failure} load failure`;
     if (failure === 'network') (global.fetch as jest.Mock).mockRejectedValue(new Error(message));
@@ -113,4 +116,24 @@ it.each(['network', 'http', 'json'] as const)('does not advertise a confirmed em
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain(message);
     expect(screen.queryByText(emptyTitle)).toBeNull();
+    expect(screen.queryByText('Нужен филиал')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Настроить и принять' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Close banner' })).toBeNull();
+});
+
+it('keeps the result unknown during retry and shows an empty list only after retry succeeds', async () => {
+    expectedReads = 2;
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('unit initial read failure'));
+    render(<RoleApplicationsClient />);
+    await screen.findByRole('alert');
+    let resolveRetry!: (value: unknown) => void;
+    (global.fetch as jest.Mock).mockReturnValueOnce(new Promise(resolve => { resolveRetry = resolve; }));
+    fireEvent.click(screen.getByRole('button', { name: 'Повторить загрузку' }));
+    expect(screen.getByText('Загружаем заявки…')).toBeTruthy();
+    expect(screen.queryByText(emptyTitle)).toBeNull();
+    expect(screen.queryByText('Нужен филиал')).toBeNull();
+    await act(async () => resolveRetry({ ok: true, json: async () => payload }));
+    await screen.findByText(emptyTitle);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByText('Нужен филиал')).toBeNull();
 });

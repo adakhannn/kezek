@@ -1,23 +1,22 @@
 // apps/web/src/app/staff/finance/components/ShiftHeader.tsx
 
-import { formatInTimeZone } from 'date-fns-tz';
 
 import type { Shift } from '../types';
-import { formatTime } from '../utils';
+import { financeDateLabel } from '../utils/calendar';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { TZ } from '@/lib/time';
 
 
 interface ShiftHeaderProps {
     shiftDate: Date;
+    timezone?: string;
     onShiftDateChange: (date: Date) => void;
     shift: Shift | null;
     status: 'open' | 'closed' | 'none';
     staffId?: string;
 }
 
-export function ShiftHeader({ shiftDate, onShiftDateChange, shift, status, staffId }: ShiftHeaderProps) {
+export function ShiftHeader({ timezone, shiftDate, onShiftDateChange, shift, status, staffId }: ShiftHeaderProps) {
     const { t, locale } = useLanguage();
 
     return (
@@ -30,11 +29,11 @@ export function ShiftHeader({ shiftDate, onShiftDateChange, shift, status, staff
                         </span>
                     </div>
                     <div className="text-base text-gray-600 dark:text-gray-400">
-                        {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
+                        {financeDateLabel(shiftDate)?.split('-').reverse().join('.')} {timezone ? '(' + timezone + ')' : ''}
                     </div>
                     {status === 'open' && shift && (
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {t('staff.finance.shift.opened', 'Открыта')}: {formatTime(shift.opened_at, locale)}
+                            {t('staff.finance.shift.opened', 'Открыта')}: {shift.opened_at ? new Date(shift.opened_at).toLocaleTimeString(locale, { timeZone: timezone, hour: '2-digit', minute: '2-digit' }) : '—'}
                         </div>
                     )}
                     {status === 'none' && (

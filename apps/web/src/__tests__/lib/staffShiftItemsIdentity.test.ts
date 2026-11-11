@@ -1,110 +1,49 @@
 import { runSaveStaffShiftItems } from '@/lib/staffShiftItemsService';
 import { getServiceClient } from '@/lib/supabaseService';
-jest.mock('@/lib/supabaseService', () => ({getServiceClient:jest.fn()}));
-jest.mock('@/lib/log', () => ({logError:jest.fn()}));
+jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
 
-const key = 'ade307ae-6c38-424b-a9ee-63a32316c702';
-type Row = Record<string, unknown>;
-function database(initial:Row[] = [], collisionError = false) {
-    const rows = [...initial];
-    const writes: Array<{table:string;action:string;data:unknown;filters:unknown}> = [];
-    const db = {from:jest.fn((table:string) => {
-        let fields = '', action = '', payload:Row = {};
-        const filters:Array<(row:Row) => boolean> = [];
-        const q = {
-            select(value:string) {fields=value; return q;},
-            eq(field:string,value:unknown) {filters.push(row => row[field]===value); return q;},
-            in(field:string,values:unknown[]) {filters.push(row => values.includes(row[field]));return q;},
-            update(value:Row) {action='update';payload=value;return q;},
-            maybeSingle:async () => ({data:table==='staff' ? {percent_master:60,percent_salon:40}
-                : {id:'shift-test',status:'open',shift_date:'2026-10-12'},error:null}),
-            upsert:jest.fn(async (values:Row[],options:{ignoreDuplicates:boolean}) => {
-                writes.push({table,action:'upsert',data:values,filters:options});
-                for (const value of values) if (!rows.some(row => row.id===value.id)) rows.push({...value});
-                return {error:null};
-            }),
-            insert:jest.fn(async (values:Row[]) => {
-                writes.push({table,action:'insert',data:values,filters:[]});
-                rows.push(...values);return {error:null};
-            }),
-            delete() {action='delete';return q;},
-            then(resolve:(value:{data:Row[];error:unknown}) => unknown) {
-                if (collisionError && fields==='id, shift_id') return Promise.resolve(resolve({data:[],error:{message:'offline'}}));
-                const selected = rows.filter(row => filters.every(predicate => predicate(row)));
-                if (action) {
-                    writes.push({table,action,data:payload,filters});
-                    if (action==='update' && table==='staff_shift_items') selected.forEach(row => Object.assign(row,payload));
-                    if (action==='delete') selected.forEach(row => rows.splice(rows.indexOf(row),1));
-                }
-                return Promise.resolve(resolve({data:selected,error:null}));
-            },
-        };
-        return q;
-    })};
-    jest.mocked(getServiceClient).mockReturnValue(db as unknown as ReturnType<typeof getServiceClient>);
-    return {db,rows,writes};
-}
-const draft = {clientId:key,clientName:'LIVE TEST',serviceName:'Cut',serviceAmount:251,consumablesAmount:49};
-const save = (db:ReturnType<typeof database>['db'],items:Row[]) => runSaveStaffShiftItems({
-    supabase:db,staffId:'staff-test',bizId:'biz-test',items,targetShiftDate:'2026-10-12',isOwnerMode:false,useServiceClient:false,
+const draft = { clientId: 'ade307ae-6c38-424b-a9ee-63a32316c702', clientName: 'Synthetic client', serviceName: 'Cut', serviceAmount: 251, consumablesAmount: 49 };
+const client = () => ({ rpc: jest.fn().mockResolvedValue({ data: { ok: true, shift_id: 'shift-test', revision: 9, items: [draft] }, error: null }), from: jest.fn() });
+const save = (db: ReturnType<typeof client>, overrides: Record<string, unknown> = {}) => runSaveStaffShiftItems({
+    supabase: db, staffId: 'staff-test', bizId: 'biz-test', actorId: 'actor-test', expectedShiftId: 'shift-test', expectedRevision: 8, items: [draft],
+    targetShiftDate: '2026-10-12', isOwnerMode: false, useServiceClient: false, ...overrides,
 });
+beforeEach(() => jest.clearAllMocks());
 
-test('save/autosave/retry with same draft identity keeps one row, then updates it', async () => {
-    const {db,rows,writes}=database();
-    expect(await save(db,[draft])).toEqual({ok:true});
-    expect(await save(db,[draft])).toEqual({ok:true});
-    expect(await save(db,[{...draft,serviceAmount:252}])).toEqual({ok:true});
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({id:key,shift_id:'shift-test',service_amount:252,consumables_amount:49});
-    expect(writes.filter(write => write.action==='upsert')).toHaveLength(1);
-    expect(writes.find(write => write.action==='upsert')?.filters).toEqual({onConflict:'id',ignoreDuplicates:true});
-    expect(writes.some(write => write.action==='delete')).toBe(false);
+test('passes stable item identities and all writes through one checked transaction', async () => {
+    const db = client();
+    expect(await save(db, { expectedRevision: 8 })).toEqual({ ok: true, data: { shiftId: 'shift-test', revision: 9, items: [draft] } });
+    expect(db.rpc).toHaveBeenCalledTimes(1);
+    expect(db.rpc).toHaveBeenCalledWith('save_staff_shift_command', {
+        p_staff_id: 'staff-test', p_biz_id: 'biz-test', p_actor_id: 'actor-test', p_shift_date: '2026-10-12',
+        p_items: [draft], p_allow_create: false, p_expected_revision: 8, p_expected_shift_id: 'shift-test',
+    });
+    expect(db.from).not.toHaveBeenCalled();
 });
-
-test('identical deliberate rows with separate keys remain separate', async () => {
-    const {db,rows}=database();
-    expect(await save(db,[draft,{...draft,clientId:'86e044d6-d065-4875-9946-a3789d1266f3'}])).toEqual({ok:true});
-    expect(rows).toHaveLength(2);
+test('does not collapse deliberate duplicate rows with distinct identities', async () => {
+    const db = client();
+    const items = [draft, { ...draft, clientId: '86e044d6-d065-4875-9946-a3789d1266f3' }];
+    await save(db, { items });
+    expect(db.rpc.mock.calls[0][1].p_items).toEqual(items);
 });
-
-test('foreign draft collision rejects before any financial writes', async () => {
-    const {db,rows,writes}=database([{id:key,shift_id:'foreign-shift',service_amount:777}]);
-    expect(await save(db,[draft])).toMatchObject({ok:false,statusCode:403,errorType:'forbidden'});
-    expect(writes).toHaveLength(0);
-    expect(rows[0].service_amount).toBe(777);
+test.each([['42501', 403], ['40001', 409], ['22023', 400], ['22P02', 400], ['23514', 400], ['P0001', 500]])(
+    'surfaces database rejection %s without fallback writes', async (code, statusCode) => {
+        const db = client(); db.rpc.mockResolvedValue({ data: null, error: { code } });
+        expect(await save(db)).toMatchObject({ ok: false, statusCode });
+        expect(db.rpc).toHaveBeenCalledTimes(1); expect(db.from).not.toHaveBeenCalled();
+    },
+);
+test('missing actor cannot issue a privileged write', async () => {
+    const db = client(); expect(await save(db, { actorId: '' })).toMatchObject({ ok: false, statusCode: 403 });
+    expect(db.rpc).not.toHaveBeenCalled();
 });
-
-test('unknown persisted ID cannot be used to edit another shift', async () => {
-    const {db,writes}=database([{id:key,shift_id:'foreign-shift'}]);
-    expect(await save(db,[{...draft,id:key,clientId:undefined}])).toMatchObject({ok:false,statusCode:403});
-    expect(writes).toHaveLength(0);
+test('unconfirmed result is an error, never false success', async () => {
+    const db = client(); db.rpc.mockResolvedValue({ data: { ok: false }, error: null });
+    expect(await save(db)).toMatchObject({ ok: false, statusCode: 500 });
 });
-
-test('identity lookup failure fails closed without writing', async () => {
-    const {db,writes}=database([],true);
-    expect(await save(db,[draft])).toMatchObject({ok:false,statusCode:500});
-    expect(writes).toHaveLength(0);
-});
-
-test('empty list still removes owned items and resets totals', async () => {
-    const {db,rows,writes}=database([{id:key,shift_id:'shift-test',service_amount:251,consumables_amount:49}]);
-    expect(await save(db,[])).toEqual({ok:true});
-    expect(rows).toHaveLength(0);
-    expect(writes.find(write => write.table==='staff_shifts' && write.action==='update')?.data)
-        .toMatchObject({total_amount:0,master_share:0,salon_share:0,consumables_amount:0});
-});
-
-test('acknowledged row updates only its shift and preserves creation time', async () => {
-    const created = '2026-10-12T05:00:00Z';
-    const {db,rows,writes}=database([{id:key,shift_id:'shift-test',created_at:created,service_amount:251}]);
-    expect(await save(db,[{...draft,id:key,clientId:undefined,serviceAmount:252}])).toEqual({ok:true});
-    expect(rows[0]).toMatchObject({created_at:created,service_amount:252});
-    expect(writes.some(write => write.action==='upsert' || write.action==='insert' || write.action==='delete')).toBe(false);
-});
-
-test('empty legacy placeholder creates no row', async () => {
-    const {db,rows,writes}=database();
-    expect(await save(db,[{clientName:' ',serviceName:null,serviceAmount:0,consumablesAmount:0,bookingId:null}])).toEqual({ok:true});
-    expect(rows).toHaveLength(0);
-    expect(writes.some(write => write.action==='insert')).toBe(false);
+test('manager command carries the real actor to the service-role transaction', async () => {
+    const db = client(), admin = client(); jest.mocked(getServiceClient).mockReturnValue(admin as never);
+    expect(await save(db, { useServiceClient: true, isOwnerMode: true })).toEqual({ ok: true, data: { shiftId: 'shift-test', revision: 9, items: [draft] } });
+    expect(admin.rpc).toHaveBeenCalledWith('save_staff_shift_command', expect.objectContaining({ p_actor_id: 'actor-test', p_allow_create: true }));
+    expect(db.rpc).not.toHaveBeenCalled();
 });

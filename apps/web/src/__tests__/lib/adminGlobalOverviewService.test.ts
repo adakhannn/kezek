@@ -18,17 +18,15 @@ test('empty data is explicitly empty, finite and zero', () => {
 test.each([NaN, Infinity, 'not numeric'])('rejects invalid numeric input %s rather than reporting zero', value => {
   expect(() => aggregateGlobalOverview([{ date: '2026-10-01', total_revenue: value }], '', '')).toThrow('Non-finite');
 });
-test('reads all pages, stable date/biz order and fails instead of returning partial totals', async () => {
-  const range = jest.fn().mockResolvedValueOnce({ data: Array.from({ length: 1000 }, () => ({ date: '2026-10-01', bookings_created: 1 })), error: null }).mockResolvedValueOnce({ data: [{ date: '2026-10-01', bookings_created: 2 }], error: null });
-  const query = { select: jest.fn().mockReturnThis(), gte: jest.fn().mockReturnThis(), lte: jest.fn().mockReturnThis(), order: jest.fn().mockReturnThis(), range };
-  const client = { from: jest.fn(() => query) };
-  const result = await getGlobalOverview(client, '2026-10-01', '2026-10-02');
+const day = { date: '2026-10-01', home_views: 0, business_page_views: 0, booking_flow_starts: 0, bookings_created: 1002, bookings_confirmed_or_paid: 0, promo_bookings: 0, promo_revenue: 0, total_revenue: 0 };
+test('reads scalar database rollup and fails instead of returning partial totals', async () => {
+  const rpc = jest.fn().mockResolvedValue({ data: { rows: [day], activeBusinesses: 1002 }, error: null });
+  const result = await getGlobalOverview({ rpc }, '2026-10-01', '2026-10-02');
   expect(result.summary.bookings.created).toBe(1002); expect(result.byDay).toHaveLength(1);
-  expect(range.mock.calls).toEqual([[0, 999], [1000, 1999]]); expect(client.from).toHaveBeenCalledWith('business_daily_stats');
-  range.mockReset().mockResolvedValueOnce({ data: Array.from({ length: 1000 }, () => ({ date: '2026-10-01' })), error: null }).mockResolvedValueOnce({ data: null, error: new Error('second page failed') });
-  await expect(getGlobalOverview(client, '', '')).rejects.toThrow('Failed to load');
+  expect(rpc).toHaveBeenCalledWith('read_analytics_report_snapshot', { p_date_from: '2026-10-01', p_date_to: '2026-10-02', p_biz_id: null, p_branch_id: null, p_kind: 'global' });
+  rpc.mockResolvedValue({ data: null, error: { message: 'source unavailable' } });
+  await expect(getGlobalOverview({ rpc }, '2026-10-01', '2026-10-02')).rejects.toThrow('source unavailable');
 });
-test('null query result is empty', async () => {
-  const query = { select: jest.fn().mockReturnThis(), gte: jest.fn().mockReturnThis(), lte: jest.fn().mockReturnThis(), order: jest.fn().mockReturnThis(), range: async () => ({ data: null, error: null }) };
-  expect((await getGlobalOverview({ from: () => query }, '', '')).byDay).toEqual([]);
+test('null query result is an incomplete response, not zero totals', async () => {
+  await expect(getGlobalOverview({ rpc: async () => ({ data: null, error: null }) }, '2026-10-01', '2026-10-02')).rejects.toThrow('Incomplete');
 });

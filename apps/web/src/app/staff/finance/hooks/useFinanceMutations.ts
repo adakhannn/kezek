@@ -1,335 +1,66 @@
-/**
- * Оптимизированные мутации для работы с финансами
- * Использует React Query для оптимистичных обновлений и кэширования
- */
+import { useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatInTimeZone } from 'date-fns-tz';
-
-import type { ShiftItem } from '../types';
+import { FinanceWriteError, type FinanceTransport, type FinanceSaveReceipt } from '../services/financeDraftSession';
+import type { Shift, ShiftItem } from '../types';
 import { deduplicateServiceNameString } from '../utils';
+import { financeDateLabel } from '../utils/calendar';
 
-import type { FinanceDataResponse } from './useFinanceData';
+import { fetchFinanceData } from './useFinanceData';
 
-import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { useToast } from '@/hooks/useToast';
-import { TZ } from '@/lib/time';
-
-interface UseFinanceMutationsOptions {
-    staffId?: string;
-    date: Date;
+async function command<T>(url: string, body?: unknown): Promise<T> {
+    const response = await fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    let json;
+    try { json = await response.json(); }
+    catch { throw new FinanceWriteError('Ответ сервера не получен. Проверьте смену перед следующей записью.', response.ok ? 0 : response.status); }
+    if (!response.ok || !json.ok) throw new FinanceWriteError(json.message || 'Не удалось подтвердить финансовую операцию.', response.status);
+    return json.data as T;
 }
-
-/**
- * Открытие смены
- */
-async function openShift(staffId: string | undefined, date: Date): Promise<void> {
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    
-    if (staffId) {
-        // Для владельца: дата передается через query параметр
-        const url = `/api/dashboard/staff/${staffId}/shift/open?date=${dateStr}`;
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!res.ok) {
-            const json = await res.json();
-            throw new Error(json.error || 'Не удалось открыть смену');
-        }
-    } else {
-        // Для сотрудника: всегда открывает на сегодня, не принимает параметры
-        const url = '/api/staff/shift/open';
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!res.ok) {
-            const json = await res.json();
-            throw new Error(json.error || 'Не удалось открыть смену');
-        }
-    }
-}
-
-/**
- * Закрытие смены.
- * Для владельца (staffId передан) — POST /api/dashboard/staff/[id]/shift/close?date=YYYY-MM-DD.
- * Для сотрудника — POST /api/staff/shift/close (смена текущего пользователя на сегодня).
- */
-async function closeShift(
-    staffId: string | undefined,
-    date: Date,
-    items: ShiftItem[]
-): Promise<void> {
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-
-    const formattedItems = items.map((item) => ({
-        id: item.id,
-        clientName: item.clientName,
+function wireItems(items: ShiftItem[]) {
+    return items.map(item => ({
+        id: item.id, clientId: item.clientId, clientName: item.clientName,
         serviceName: deduplicateServiceNameString(item.serviceName) || item.serviceName || '',
-        serviceAmount: item.serviceAmount,
-        consumablesAmount: item.consumablesAmount,
-        bookingId: item.bookingId,
+        serviceAmount: item.serviceAmount, consumablesAmount: item.consumablesAmount, bookingId: item.bookingId,
     }));
-
-    const body: { items?: typeof formattedItems; totalAmount?: number } = {};
-    if (formattedItems.length > 0) {
-        body.items = formattedItems;
-    } else {
-        body.totalAmount = 0;
-    }
-
-    const url = staffId
-        ? `/api/dashboard/staff/${staffId}/shift/close?date=${dateStr}`
-        : '/api/staff/shift/close';
-
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-        let errorMessage = 'Не удалось закрыть смену';
-        try {
-            const json = await res.json();
-            errorMessage = json.error || json.message || errorMessage;
-        } catch {
-            // Используем стандартное сообщение
-        }
-        throw new Error(errorMessage);
-    }
 }
 
-/**
- * Сохранение списка клиентов (синхронизация всего списка)
- */
-async function saveShiftItems(
-    staffId: string | undefined,
-    date: Date,
-    items: ShiftItem[]
-): Promise<void> {
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const url = '/api/staff/shift/items';
-
-    // API ожидает items в camelCase формате согласно saveShiftItemsSchema
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            items: items.map((item) => ({
-                id: item.id,
-                clientId: item.clientId,
-                clientName: item.clientName,
-                serviceName: deduplicateServiceNameString(item.serviceName) || item.serviceName || '',
-                serviceAmount: item.serviceAmount,
-                consumablesAmount: item.consumablesAmount,
-                bookingId: item.bookingId,
-            })),
-            staffId: staffId || undefined,
-            shiftDate: dateStr,
-        }),
-    });
-
-    if (!res.ok) {
-        const json = await res.json();
-        throw new Error(json.error || 'Не удалось сохранить клиентов');
-    }
-}
-
-/**
- * Хук для мутаций финансов
- */
-export function useFinanceMutations({ staffId, date }: UseFinanceMutationsOptions) {
-    const { t } = useLanguage();
-    const toast = useToast();
+/** Transport only. Draft ownership, acknowledgements and serialization live in FinanceDraftSession. */
+export function useFinanceMutations({ staffId, date }: { staffId?: string; date: Date | string | null }): FinanceTransport {
     const queryClient = useQueryClient();
-
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const queryKey = ['finance', staffId || 'current', dateStr];
-
-    // Мутация открытия смены
-    const openShiftMutation = useMutation({
-        mutationFn: () => openShift(staffId, date),
-        onMutate: async () => {
-            // Отменяем исходящие запросы для оптимистичного обновления
-            await queryClient.cancelQueries({ queryKey });
-
-            // Сохраняем предыдущее состояние
-            const previousData = queryClient.getQueryData(queryKey);
-
-            // Оптимистично обновляем кэш - устанавливаем смену как открытую
-            queryClient.setQueryData(queryKey, (old: FinanceDataResponse | undefined) => {
-                if (!old) return old;
-                
-                const now = new Date().toISOString();
-                const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                
-                // Создаем оптимистичную смену
-                const optimisticShift = {
-                    id: old.today?.shift?.id || `temp-${Date.now()}`,
-                    shift_date: dateStr,
-                    opened_at: now,
-                    closed_at: null,
-                    expected_start: null,
-                    late_minutes: 0,
-                    status: 'open' as const,
-                    total_amount: 0,
-                    consumables_amount: 0,
-                    master_share: 0,
-                    salon_share: 0,
-                    percent_master: old.staffPercentMaster ?? 60,
-                    percent_salon: old.staffPercentSalon ?? 40,
-                    hours_worked: null,
-                    hourly_rate: old.hourlyRate ?? null,
-                    guaranteed_amount: null,
-                    topup_amount: null,
-                };
-
-                return {
-                    ...old,
-                    today: {
-                        exists: true,
-                        status: 'open' as const,
-                        shift: optimisticShift,
-                        items: old.today?.items || [],
-                    },
-                };
-            });
-
-            return { previousData };
-        },
-        onError: (error: Error, variables, context) => {
-            // Откатываем изменения при ошибке
-            if (context?.previousData) {
-                queryClient.setQueryData(queryKey, context.previousData);
-            }
-            toast.showError(error.message);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey });
-            toast.showSuccess(t('staff.finance.shift.opened', 'Смена успешно открыта'));
-        },
-    });
-
-    // Мутация закрытия смены
-    const closeShiftMutation = useMutation({
-        mutationFn: (items: ShiftItem[]) => closeShift(staffId, date, items),
-        onMutate: async (items) => {
-            // Отменяем исходящие запросы для оптимистичного обновления
-            await queryClient.cancelQueries({ queryKey });
-
-            // Сохраняем предыдущее состояние
-            const previousData = queryClient.getQueryData(queryKey);
-
-            // Вычисляем суммы из items для оптимистичного обновления
-            const totalAmount = items.reduce((sum, item) => sum + (item.serviceAmount || 0), 0);
-            const consumablesAmount = items.reduce((sum, item) => sum + (item.consumablesAmount || 0), 0);
-            
-            // Оптимистично обновляем кэш - устанавливаем смену как закрытую
-            queryClient.setQueryData(queryKey, (old: FinanceDataResponse | undefined) => {
-                if (!old || !old.today?.shift) return old;
-                
-                const now = new Date().toISOString();
-                
-                // Вычисляем доли (упрощенно, без учета гарантированной суммы)
-                const percentMaster = old.staffPercentMaster ?? 60;
-                const percentSalon = old.staffPercentSalon ?? 40;
-                const percentSum = percentMaster + percentSalon || 100;
-                const masterShare = Math.round((totalAmount * percentMaster) / percentSum);
-                const salonShare = Math.round((totalAmount * percentSalon) / percentSum) + consumablesAmount;
-
-                // Обновляем смену
-                const optimisticShift = {
-                    ...old.today.shift,
-                    status: 'closed' as const,
-                    closed_at: now,
-                    total_amount: totalAmount,
-                    consumables_amount: consumablesAmount,
-                    master_share: masterShare,
-                    salon_share: salonShare,
-                };
-
-                return {
-                    ...old,
-                    today: {
-                        exists: true,
-                        status: 'closed' as const,
-                        shift: optimisticShift,
-                        items: old.today.items || [],
-                    },
-                };
-            });
-
-            return { previousData };
-        },
-        onError: (error: Error, variables, context) => {
-            // Откатываем изменения при ошибке
-            if (context?.previousData) {
-                queryClient.setQueryData(queryKey, context.previousData);
-            }
-            toast.showError(error.message);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey });
-            toast.showSuccess(t('staff.finance.shift.closed', 'Смена успешно закрыта'));
-        },
-    });
-
-    // Мутация сохранения списка клиентов (синхронизация)
-    const saveItemsMutation = useMutation({
-        mutationFn: (items: ShiftItem[]) => saveShiftItems(staffId, date, items),
-        onMutate: async (items) => {
-            // Отменяем любые исходящие запросы
-            await queryClient.cancelQueries({ queryKey });
-            
-            // Снапшот предыдущих данных
-            const previousData = queryClient.getQueryData<FinanceDataResponse>(queryKey);
-            
-            // Проверяем, есть ли новые элементы без id (для них нужен refetch)
-            const hasNewItems = items.some((item) => !item.id);
-            
-            // Если все элементы имеют id, делаем оптимистичное обновление без refetch
-            if (!hasNewItems && previousData) {
-                queryClient.setQueryData<FinanceDataResponse>(queryKey, (old) => {
-                    if (!old) return old;
-                    return {
-                        ...old,
-                        today: {
-                            ...old.today,
-                            items: items, // Обновляем items оптимистично
-                        },
-                    };
+    const dateStr = financeDateLabel(date);
+    return useMemo(() => {
+        // Capture primitive scope for the entire lifetime of this draft, including pending requests on navigation.
+        const queryKey = ['finance', staffId || 'current', dateStr ?? 'today'];
+        const endpoint = (action: 'open' | 'close', selectedDate?: string) => {
+            const base = staffId ? '/api/dashboard/staff/' + staffId + '/shift/' + action : '/api/staff/shift/' + action;
+            return selectedDate ? base + '?date=' + selectedDate : base;
+        };
+        const refresh = () => { void queryClient.invalidateQueries({ queryKey }); };
+        return {
+            load: async (selectedDate) => {
+                const payload = await fetchFinanceData(staffId, selectedDate ?? dateStr ?? null);
+                queryClient.setQueryData(queryKey, payload);
+                return { shift: payload.today.shift, items: payload.today.items, calendarDate: payload.calendar?.date ?? payload.today.shift?.shift_date };
+            },
+            open: (selectedDate) => command(endpoint('open', selectedDate ?? dateStr)),
+            save: async (items, version) => {
+                const receipt = await command<FinanceSaveReceipt>('/api/staff/shift/items', {
+                    items: wireItems(items), staffId, shiftDate: version.calendarDate ?? dateStr,
+                    expectedShiftId: version.expectedShiftId, expectedRevision: version.expectedRevision,
                 });
-            }
-            
-            return { previousData, hasNewItems };
-        },
-        onError: (error: Error, variables, context) => {
-            toast.showError(error.message);
-            // Откатываем оптимистичное обновление при ошибке
-            if (context?.previousData) {
-                queryClient.setQueryData(queryKey, context.previousData);
-            }
-        },
-        onSuccess: (data, variables, context) => {
-            // Инвалидируем кэш только если есть новые элементы без id
-            // Для существующих элементов мы уже сделали оптимистичное обновление
-            if (context?.hasNewItems) {
-                queryClient.invalidateQueries({ queryKey });
-            }
-        },
-    });
-
-    return {
-        openShift: openShiftMutation.mutateAsync,
-        closeShift: closeShiftMutation.mutateAsync,
-        saveItems: saveItemsMutation.mutateAsync,
-        isOpening: openShiftMutation.isPending,
-        isClosing: closeShiftMutation.isPending,
-        isSaving: saveItemsMutation.isPending,
-    };
+                refresh();
+                return receipt;
+            },
+            close: async (items, version) => {
+                const result = await command<{ shift: Shift }>(endpoint('close', version.calendarDate ?? dateStr), {
+                    items: wireItems(items), totalAmount: items.reduce((sum, item) => sum + (item.serviceAmount ?? 0), 0), expectedShiftId: version.expectedShiftId, expectedRevision: version.expectedRevision,
+                });
+                refresh();
+                return result?.shift;
+            },
+        };
+    }, [dateStr, staffId, queryClient]);
 }
-

@@ -1,3 +1,4 @@
+import cronJobs from '@/config/cronJobs.json';
 /**
  * Тесты для /api/admin/health-check
  * Комплексная проверка здоровья системы
@@ -59,16 +60,10 @@ describe('/api/admin/health-check', () => {
             });
 
             // Мокаем проверку роли (не суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                is: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
+            mockSupabase.rpc.mockResolvedValueOnce({
+                    data: false,
                     error: null,
-                }),
-            });
+                });
 
             const req = createMockRequest('http://localhost/api/admin/health-check', {
                 method: 'GET',
@@ -82,6 +77,7 @@ describe('/api/admin/health-check', () => {
     describe('Успешная проверка здоровья', () => {
         test('должен успешно вернуть результаты проверки здоровья', async () => {
             const today = new Date().toISOString();
+            mockAdmin.rpc.mockImplementation((name: string) => ({ abortSignal: async () => ({ data: name === 'read_cron_execution_health' ? cronJobs.map(job => ({ job: job.id, last_started_at: today, last_completed_at: today, last_success_at: today, last_failure_at: null, oldest_running_at: null, running_count: 0 })) : { pending:0,due:0,processing:0,failed:0,ambiguous:0,oldest_due_age_seconds:0 }, error:null }) }));
 
             mockSupabase.auth.getUser.mockResolvedValue({
                 data: {
@@ -93,26 +89,17 @@ describe('/api/admin/health-check', () => {
             });
 
             // Мокаем проверку роли (суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                is: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        role_key: 'super_admin',
-                        biz_id: null,
-                    },
+            mockSupabase.rpc.mockResolvedValueOnce({
+                    data: true,
                     error: null,
-                }),
-            });
+                });
 
             // Мокаем проверку открытых смен
             mockAdmin.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 lt: jest.fn().mockResolvedValue({
-                    data: [],
+                    count: 0, data: [],
                     error: null,
                 }),
             });
@@ -169,9 +156,7 @@ describe('/api/admin/health-check', () => {
 
             mockAdmin.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                is: jest.fn().mockResolvedValue({
-                    count: 5,
+                eq: jest.fn().mockResolvedValue({ count: 5,
                     error: null,
                 }),
             });

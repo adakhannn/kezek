@@ -1,108 +1,44 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { documentationFiles, repoRoot, markdownLinks, headingAnchors, resolveDocLink, jsonFenceFailures } from './docs-lib.mjs';
+import { generateDocsCatalog } from './generate-docs-catalog.mjs';
+import { generateApiCatalog } from './generate-api-catalog.mjs';
 
-const repoRoot = process.cwd();
-const activeDocs = [
-    'README.md',
-    'GETTING_STARTED.md',
-    'CONTRIBUTING.md',
-    'TESTING_GUIDE.md',
-    'PROJECT_DOCUMENTATION.md',
-    'docs/README.md',
-    'docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md',
-    'apps/web/README.md',
-    'apps/mobile/README.md',
-    'apps/web/e2e/README.md',
-];
-
-const markdownLinkPattern = /\[[^\]]+\]\(([^)]+)\)/g;
-
-function normalizeDocPath(linkTarget, sourceFile) {
-    const [rawPath, rawAnchor] = linkTarget.split('#');
-    const anchor = rawAnchor?.trim() || null;
-
-    if (!rawPath || rawPath === '') {
-        return { filePath: sourceFile, anchor };
-    }
-
-    if (/^(https?:|mailto:)/i.test(rawPath)) {
-        return null;
-    }
-
-    if (rawPath.startsWith('/C:/') || rawPath.startsWith('/c:/')) {
-        return { filePath: rawPath.slice(1), anchor };
-    }
-
-    if (path.win32.isAbsolute(rawPath) || path.posix.isAbsolute(rawPath)) {
-        return { filePath: rawPath, anchor };
-    }
-
-    return {
-        filePath: path.resolve(path.dirname(sourceFile), rawPath),
-        anchor,
-    };
-}
-
-function slugifyHeading(text) {
-    return text
-        .trim()
-        .toLowerCase()
-        .replace(/[^\p{L}\p{N}\s-]/gu, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-}
-
-function collectAnchors(markdown) {
-    const anchors = new Set();
-    for (const line of markdown.split(/\r?\n/u)) {
-        const match = /^(#{1,6})\s+(.+)$/u.exec(line.trim());
-        if (!match) {
-            continue;
-        }
-
-        const heading = match[2].trim();
-        anchors.add(slugifyHeading(heading));
-    }
-
-    return anchors;
-}
-
+const documents = documentationFiles().filter(document => ['current', 'design'].includes(document.kind));
 const failures = [];
-
-for (const relativeDocPath of activeDocs) {
-    const sourceFile = path.resolve(repoRoot, relativeDocPath);
-    const content = fs.readFileSync(sourceFile, 'utf8');
-    const links = [...content.matchAll(markdownLinkPattern)];
-
-    for (const link of links) {
-        const target = link[1].trim();
-        const normalized = normalizeDocPath(target, sourceFile);
-        if (!normalized) {
-            continue;
-        }
-
-        const { filePath, anchor } = normalized;
-        if (!fs.existsSync(filePath)) {
-            failures.push(`${relativeDocPath}: missing target ${target}`);
-            continue;
-        }
-
-        if (anchor) {
-            const targetMarkdown = fs.readFileSync(filePath, 'utf8');
-            const anchors = collectAnchors(targetMarkdown);
-            if (!anchors.has(anchor.toLowerCase())) {
-                failures.push(`${relativeDocPath}: missing anchor ${target}`);
-            }
+const anchors = new Map();
+let linkCount = 0;
+for (const document of documents) {
+    const content = fs.readFileSync(path.join(repoRoot, document.file), 'utf8');
+    for (const link of markdownLinks(content)) {
+        if (link.error) { failures.push(`${document.file}:${link.line}: ${link.error}`); continue; }
+        const target = resolveDocLink(document.file, link.target);
+        if (!target) continue;
+        linkCount++;
+        if (target.error) { failures.push(`${document.file}:${link.line}: ${target.error}`); continue; }
+        if (!fs.existsSync(target.filePath)) { failures.push(`${document.file}:${link.line}: missing target ${link.target}`); continue; }
+        if (!target.anchor) continue;
+        if (!fs.statSync(target.filePath).isFile()) { failures.push(`${document.file}:${link.line}: anchor on directory ${link.target}`); continue; }
+        const text = fs.readFileSync(target.filePath, 'utf8');
+        if (!target.filePath.endsWith('.md') && /^L\d+(?:-L\d+)?$/.test(target.anchor)) {
+            const [start, end = start] = target.anchor.match(/\d+/g).map(Number);
+            if (start < 1 || end < start || end > text.split(/\r?\n/).length) failures.push(`${document.file}:${link.line}: invalid source line ${link.target}`);
+        } else {
+            if (!anchors.has(target.filePath)) anchors.set(target.filePath, headingAnchors(text));
+            if (!anchors.get(target.filePath).has(target.anchor)) failures.push(`${document.file}:${link.line}: missing anchor ${link.target}`);
         }
     }
+    for (const issue of jsonFenceFailures(content)) failures.push(`${document.file}:${issue.line}: ${issue.error}`);
+    if (/\uFFFD/.test(content)) failures.push(`${document.file}: replacement character U+FFFD found`);
+    if (/(?:[РС][^\s]){5,}/u.test(content)) failures.push(`${document.file}: probable UTF-8/Windows-1251 mojibake; inspect text encoding`);
 }
-
-if (failures.length > 0) {
-    console.error('Broken markdown links found in active docs:');
-    for (const failure of failures) {
-        console.error(`- ${failure}`);
-    }
-    process.exit(1);
+for (const [file, generate] of [['docs/DOCUMENTATION_MAP.md', generateDocsCatalog], ['docs/api/ROUTE_CATALOG.md', generateApiCatalog]]) {
+    if (!fs.existsSync(path.join(repoRoot, file)) || fs.readFileSync(path.join(repoRoot, file), 'utf8').replace(/\r\n/g, '\n') !== generate()) failures.push(`${file}: generated catalog is stale`);
 }
-
-console.log(`Checked active docs links: ${activeDocs.length} files, no broken local links found.`);
+if (failures.length) {
+    console.error('Documentation checks failed:');
+    failures.forEach(failure => console.error(`- ${failure}`));
+    process.exitCode = 1;
+} else {
+    console.log(`Checked ${documents.length} current/reference documents and ${linkCount} local links: links, anchors, JSON examples and generated catalogs are consistent.`);
+}

@@ -1,7 +1,9 @@
+import { logError } from '@/lib/log';
+
 type AdminClientLike = {
-    rpc: (fn: string, params: Record<string, unknown>) => Promise<unknown>;
+    rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{ error?: { message: string } | null }>;
     from: (table: string) => {
-        insert: (payload: Record<string, unknown>) => Promise<unknown>;
+        insert: (payload: Record<string, unknown>) => PromiseLike<{ error?: { message: string } | null }>;
     };
 };
 
@@ -12,112 +14,56 @@ export type RatingsManualRecalculateInput = {
     date_to?: string | null;
 };
 
-export async function runRatingsManualRecalculate({
-    admin,
-    userId,
-    body,
-}: {
+type RecalculateFailure = { ok: false; error: 'bad_request' | 'internal'; message: string; status: 400 | 500 };
+
+function validDate(value: unknown): value is string {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+export async function runRatingsManualRecalculate({ admin, userId, body }: {
     admin: AdminClientLike;
     userId: string;
     body: RatingsManualRecalculateInput;
 }): Promise<
-    | {
-          ok: true;
-          data: {
-              ok: true;
-              entity_type: 'staff' | 'branch' | 'biz';
-              entity_id: string;
-              action: 'recalculate_metrics' | 'recalculate_rating';
-          };
-      }
-    | {
-          ok: false;
-          error: 'bad_request' | 'internal';
-          message: string;
-          status: 400 | 500;
-      }
+    | { ok: true; data: { ok: true; entity_type: 'staff' | 'branch' | 'biz'; entity_id: string; action: 'recalculate_metrics' | 'recalculate_rating' } }
+    | RecalculateFailure
 > {
-    const { entity_type, entity_id, date_from, date_to } = body;
-
-    if (!entity_type || !entity_id) {
-        return {
-            ok: false,
-            error: 'bad_request',
-            message: 'entity_type и entity_id обязательны',
-            status: 400,
-        };
+    const { entity_type, entity_id, date_from, date_to } = body ?? {};
+    if (!entity_type || !['staff', 'branch', 'biz'].includes(entity_type) || typeof entity_id !== 'string' || !entity_id.trim()) {
+        return { ok: false, error: 'bad_request', message: 'entity_type и entity_id обязательны', status: 400 };
     }
-
-    const parsedDateFrom = date_from ? new Date(date_from) : null;
-    const parsedDateTo = date_to ? new Date(date_to) : null;
-    const action: 'recalculate_metrics' | 'recalculate_rating' =
-        parsedDateFrom && parsedDateTo ? 'recalculate_metrics' : 'recalculate_rating';
-
-    let status: 'success' | 'error' = 'success';
+    const hasRange = date_from != null || date_to != null;
+    if (hasRange && (!validDate(date_from) || !validDate(date_to) || date_from > date_to)) {
+        return { ok: false, error: 'bad_request', message: 'Укажите корректный диапазон дат YYYY-MM-DD', status: 400 };
+    }
+    const action = hasRange ? 'recalculate_metrics' as const : 'recalculate_rating' as const;
     let errorMessage: string | null = null;
-
     try {
-        if (action === 'recalculate_metrics') {
-            const startDate = parsedDateFrom!.toISOString().slice(0, 10);
-            const endDate = parsedDateTo!.toISOString().slice(0, 10);
-
-            await admin.rpc('recalculate_ratings_for_date_range', {
-                p_start_date: startDate,
-                p_end_date: endDate,
+        if (hasRange) {
+            const result = await admin.rpc('recalculate_ratings_for_date_range', {
+                p_start_date: date_from, p_end_date: date_to,
             });
-
-            if (entity_type === 'staff') {
-                await admin.rpc('calculate_staff_rating', { p_staff_id: entity_id });
-            } else if (entity_type === 'branch') {
-                await admin.rpc('calculate_branch_rating', { p_branch_id: entity_id });
-            } else {
-                await admin.rpc('calculate_biz_rating', { p_biz_id: entity_id });
-            }
-        } else {
-            if (entity_type === 'staff') {
-                await admin.rpc('calculate_staff_rating', { p_staff_id: entity_id });
-            } else if (entity_type === 'branch') {
-                await admin.rpc('calculate_branch_rating', { p_branch_id: entity_id });
-            } else {
-                await admin.rpc('calculate_biz_rating', { p_biz_id: entity_id });
-            }
+            if (result.error) throw new Error(result.error.message);
         }
+        const result = await admin.rpc(`calculate_${entity_type}_rating`, { [`p_${entity_type}_id`]: entity_id });
+        if (result.error) throw new Error(result.error.message);
     } catch (error) {
-        status = 'error';
         errorMessage = error instanceof Error ? error.message : String(error);
     }
 
     try {
-        await admin.from('rating_manual_recalc_log').insert({
-            user_id: userId,
-            entity_type,
-            entity_id,
-            date_from: parsedDateFrom ? parsedDateFrom.toISOString().slice(0, 10) : null,
-            date_to: parsedDateTo ? parsedDateTo.toISOString().slice(0, 10) : null,
-            action,
-            status,
-            error_message: errorMessage,
+        const log = await admin.from('rating_manual_recalc_log').insert({
+            user_id: userId, entity_type, entity_id, date_from: date_from ?? null, date_to: date_to ?? null,
+            action, status: errorMessage === null ? 'success' : 'error', error_message: errorMessage,
         });
-    } catch {
-        // best effort only
+        if (log.error) logError('RatingsManualRecalculate', 'Could not persist audit result', log.error);
+    } catch (error) {
+        logError('RatingsManualRecalculate', 'Could not persist audit result', error);
     }
-
-    if (status === 'error') {
-        return {
-            ok: false,
-            error: 'internal',
-            message: errorMessage || 'Ошибка пересчёта рейтинга',
-            status: 500,
-        };
+    if (errorMessage !== null) {
+        return { ok: false, error: 'internal', message: errorMessage || 'Ошибка пересчёта рейтинга', status: 500 };
     }
-
-    return {
-        ok: true,
-        data: {
-            ok: true,
-            entity_type,
-            entity_id,
-            action,
-        },
-    };
+    return { ok: true, data: { ok: true, entity_type, entity_id, action } };
 }

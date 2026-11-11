@@ -1,101 +1,34 @@
 # Kezek Web
 
-The web app is the main product surface for:
+Статус: справочник приложения. Обновлено 30 октября 2026.
 
-- public booking
-- business dashboard
-- staff workspace
-- admin tools
-- API routes
+Next.js App Router обслуживает публичную запись, кабинеты клиента/бизнеса/сотрудника, администрирование и HTTP API. Версии и доступные команды: [package.json](package.json).
 
-Stack:
+## Подготовка и запуск
 
-- Next.js 16 App Router
-- React 19
-- TypeScript
-- Tailwind 4
-- Supabase
-
-## Run
-
-From the repository root:
-
-```bash
-pnpm install
-pnpm -C apps/web dev
-```
-
-Open `http://localhost:3000`.
-
-You can also work from `apps/web` directly:
-
-```bash
-cd apps/web
-pnpm install
-pnpm dev
-```
-
-## Core Commands
+Общие зависимости, настройка окружения и ограничения исходной схемы базы: [GETTING_STARTED.md](../../GETTING_STARTED.md). Сначала подготовить согласованную среду, затем из корня репозитория:
 
 ```bash
 pnpm -C apps/web dev
-pnpm -C apps/web build
-pnpm -C apps/web start
-pnpm -C apps/web lint
-pnpm -C apps/web typecheck
-pnpm -C apps/web test
-pnpm -C apps/web test:coverage
-pnpm -C apps/web test:e2e
 ```
 
-Current unit/integration coverage gate:
+Обычный локальный адрес — `http://localhost:3000`. Эта команда — справка для отдельной задачи разработки; документационная работа не возобновляет закрытую WEB-кампанию.
 
-- source of truth: `apps/web/jest.config.js`
-- minimum threshold: `60%` for statements, branches, functions, and lines
+## Структура
 
-## Environment
+- `src/app`: страницы, layouts, API и административные маршруты.
+- `src/components`: общие компоненты UI.
+- `src/lib`: HTTP-сервисы, orchestration, контекст доступа, persistence, интеграции.
+- `src/__tests__`: unit/service/API проверки.
+- `e2e`: Playwright-сценарии с требованиями к окружению и fixtures.
 
-Create `apps/web/.env.local`.
+Маршруты не образуют единственную границу доступа: клиенты вызывают и прямые Supabase RPC. Фактические потоки и ограничения: [архитектура](../../PROJECT_DOCUMENTATION.md).
 
-Important variables:
+## Проверки и документация
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_SITE_ORIGIN`
-- `NEXT_PUBLIC_TZ`
-- `RESEND_API_KEY`
-- `EMAIL_FROM`
-
-Additional integrations such as WhatsApp, Telegram, Yandex OAuth, Redis, and cron secrets depend on the feature set you are working on.
-
-## Project Structure
-
-- `src/app`: pages, layouts, and route handlers
-- `src/app/api`: API routes
-- `src/components`: shared UI
-- `src/lib`: services, validation, infrastructure helpers, repositories
-- `src/__tests__`: unit and integration tests
-- `e2e`: Playwright scenarios
-
-## Architecture Notes
-
-The current web direction is:
-
-- thin route handlers
-- HTTP-layer parsing and response mapping in dedicated services
-- business orchestration below the route layer
-- domain logic moved into shared packages where reuse is justified
-
-For the route pattern, see:
-[HOWTO_NEW_API_ENDPOINT.md](/C:/projects/kezek/apps/web/src/lib/HOWTO_NEW_API_ENDPOINT.md)
-
-## Main Documentation
-
-- [README.md](/C:/projects/kezek/README.md): repo overview
-- [docs/README.md](/C:/projects/kezek/docs/README.md): main docs index
-- [GETTING_STARTED.md](/C:/projects/kezek/GETTING_STARTED.md): onboarding and setup
-- [PROJECT_DOCUMENTATION.md](/C:/projects/kezek/PROJECT_DOCUMENTATION.md): technical architecture
-- [CONTRIBUTING.md](/C:/projects/kezek/CONTRIBUTING.md): contribution rules
-- [TESTING_GUIDE.md](/C:/projects/kezek/TESTING_GUIDE.md): testing workflow
-- [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md): current review-driven improvement backlog
+- [TESTING_GUIDE.md](../../TESTING_GUIDE.md) — команды и действительные границы CI. Порог 60% применяется к allowlist в [jest.config.js](jest.config.js), а не ко всему web.
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) — правила изменений.
+- [Новый endpoint](src/lib/HOWTO_NEW_API_ENDPOINT.md) — локальный шаблон.
+- [Эксплуатация](../../docs/OPERATIONS.md) — конфигурация cron, развёртывание и восстановление.
+- [Текущее состояние](../../docs/PROJECT_STATUS.md) — ограничения и открытые проблемы.
+- [Индекс документации](../../docs/README.md) — единственная общая карта.

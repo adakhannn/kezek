@@ -1,3 +1,4 @@
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 // apps/web/src/app/admin/api/roles/create/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,16 +19,10 @@ export async function POST(req: Request) {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
-        const { data: { user } } = await supa.auth.getUser();
-        if (!user) return NextResponse.json({ ok:false, error:'auth' }, { status: 401 });
+        const { data: { user }, error: authError } = await supa.auth.getUser();
+        if (authError || !user) return NextResponse.json({ ok:false, error:'auth' }, { status: 401 });
 
-        const { data: superRow, error: roleErr } = await supa
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { isSuperAdmin: superRow, error: roleErr } = await checkCurrentUserIsSuperAdmin(supa, user.id);
 
         if (roleErr || !superRow) {
             return NextResponse.json({ ok:false, error:'forbidden' }, { status: 403 });

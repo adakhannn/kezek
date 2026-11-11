@@ -1,9 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { isFinanceDate, readFinanceCalendar } from '@/lib/finance/calendar';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { readScheduledDay } from '@/lib/scheduling/read';
-import { TZ, dateAtTz, formatDateInTz, todayTz } from '@/lib/time';
+import { dateAtTz } from '@/lib/time';
 
 type ShiftOpenContext = {
     supabase: SupabaseClient;
@@ -21,8 +22,8 @@ type ShiftOpenRpcResult = {
 
 type ShiftOpenFailure = {
     ok: false;
-    status: 400 | 500;
-    error: 'validation' | 'internal';
+    status: 400 | 403 | 409 | 500;
+    error: 'validation' | 'forbidden' | 'internal';
     message: string;
 };
 
@@ -40,15 +41,19 @@ export async function runOpenStaffShift({
     bizId,
     branchId,
     now = new Date(),
-}: ShiftOpenContext & { now?: Date }): Promise<ShiftOpenResult> {
-    const scheduled = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, now) : null;
-    const ymd = scheduled?.ymd ?? formatDateInTz(now, TZ);
+    requestedDate,
+}: ShiftOpenContext & { now?: Date; requestedDate?: string }): Promise<ShiftOpenResult> {
+    if (requestedDate && !isFinanceDate(requestedDate)) return { ok: false, status: 400, error: 'validation', message: 'Неверная дата смены.' };
+    const calendar = await readFinanceCalendar(supabase, bizId, staffId, now);
+    if (requestedDate && requestedDate !== calendar.date) return { ok: false, status: 409, error: 'validation', message: 'День бизнеса изменился. Обновите смену перед открытием.' };
+    const ymd = calendar.date;
+    const scheduled = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, ymd) : null;
 
     const dayOffResult = scheduled
         ? scheduled.expectedStart
             ? { ok: true as const, expectedStart: scheduled.expectedStart }
             : { ok: false as const, status: 400 as const, error: 'validation' as const, message: 'На сегодня не назначены рабочие часы. Обратитесь к руководителю.' }
-        : await ensureStaffCanWorkToday({ supabase, staffId, bizId, ymd });
+        : await ensureStaffCanWorkToday({ supabase, staffId, bizId, ymd, timezone: calendar.timezone });
     if (!dayOffResult.ok) {
         return dayOffResult;
     }
@@ -72,8 +77,8 @@ export async function runOpenStaffShift({
         logError('StaffShiftOpen', 'Error calling open_staff_shift_safe RPC', rpcError);
         return {
             ok: false,
-            status: 500,
-            error: 'internal',
+            status: rpcError.code === '40001' ? 409 : rpcError.code === '42501' ? 403 : 500,
+            error: rpcError.code === '42501' ? 'forbidden' : rpcError.code === '40001' ? 'validation' : 'internal',
             message: rpcError.message || 'Не удалось открыть смену',
         };
     }
@@ -117,11 +122,13 @@ async function ensureStaffCanWorkToday({
     staffId,
     bizId,
     ymd,
+    timezone,
 }: {
     supabase: SupabaseClient;
     staffId: string;
     bizId: string;
     ymd: string;
+    timezone: string;
 }): Promise<{ ok: true; expectedStart: Date | null } | ShiftOpenFailure> {
     const { data: timeOffs, error: timeOffError } = await supabase
         .from('staff_time_off')
@@ -145,7 +152,7 @@ async function ensureStaffCanWorkToday({
         };
     }
 
-    const expectedStart = await resolveExpectedStart({ supabase, staffId, bizId, ymd });
+    const expectedStart = await resolveExpectedStart({ supabase, staffId, bizId, ymd, timezone });
     if (!expectedStart) {
         return {
             ok: false,
@@ -163,11 +170,13 @@ async function resolveExpectedStart({
     staffId,
     bizId,
     ymd,
+    timezone,
 }: {
     supabase: SupabaseClient;
     staffId: string;
     bizId: string;
     ymd: string;
+    timezone: string;
 }): Promise<Date | null> {
     const { data: dateRule, error: dateRuleError } = await supabase
         .from('staff_schedule_rules')
@@ -183,12 +192,12 @@ async function resolveExpectedStart({
         logWarn('StaffShiftOpen', 'Cannot load staff_schedule_rules', dateRuleError);
     }
 
-    const expectedStartFromDateRule = parseExpectedStart(ymd, dateRule?.intervals);
+    const expectedStartFromDateRule = parseExpectedStart(ymd, dateRule?.intervals, timezone);
     if (dateRule?.is_active && expectedStartFromDateRule) {
         return expectedStartFromDateRule;
     }
 
-    const weeklyDay = todayTz().getDay();
+    const weeklyDay = new Date(ymd + 'T12:00:00Z').getUTCDay();
     const { data: workingHoursRow, error: workingHoursError } = await supabase
         .from('working_hours')
         .select('intervals')
@@ -201,10 +210,10 @@ async function resolveExpectedStart({
         logWarn('StaffShiftOpen', 'Cannot load working_hours', workingHoursError);
     }
 
-    return parseExpectedStart(ymd, workingHoursRow?.intervals);
+    return parseExpectedStart(ymd, workingHoursRow?.intervals, timezone);
 }
 
-function parseExpectedStart(ymd: string, rawIntervals: unknown): Date | null {
+function parseExpectedStart(ymd: string, rawIntervals: unknown, timezone: string): Date | null {
     try {
         const intervals = (rawIntervals ?? []) as { start: string; end: string }[];
         if (!Array.isArray(intervals) || intervals.length === 0) {
@@ -215,7 +224,7 @@ function parseExpectedStart(ymd: string, rawIntervals: unknown): Date | null {
             (left.start ?? '').localeCompare(right.start ?? '')
         )[0];
 
-        return firstInterval?.start ? dateAtTz(ymd, firstInterval.start) : null;
+        return firstInterval?.start ? dateAtTz(ymd, firstInterval.start, timezone) : null;
     } catch (error) {
         logWarn('StaffShiftOpen', 'Failed to parse schedule intervals', error);
         return null;

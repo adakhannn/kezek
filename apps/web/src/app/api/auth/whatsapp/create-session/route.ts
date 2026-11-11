@@ -8,5 +8,6 @@ import { runWhatsAppCreateSessionHttp } from '@/lib/whatsAppCreateSessionHttpSer
 export async function POST(req: Request) {
   return withRateLimit(req, routeRateLimit('api/auth/whatsapp/create-session', RateLimitConfigs.auth), () =>
     withErrorHandler('WhatsAppAuth', () => runWhatsAppCreateSessionHttp(req)),
+      "/api/auth/whatsapp/create-session",
   );
 }

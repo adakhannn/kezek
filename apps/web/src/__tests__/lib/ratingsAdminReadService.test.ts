@@ -11,15 +11,14 @@ jest.mock('@/lib/ratingsJobsService',()=>({getRatingsJobs:jest.fn()}));
 describe('Ratings authorized read shared by SSR and HTTP',()=>{
   const admin={from:jest.fn()};
   function setup(user:string|null='current',rowUser='current',scope:string|null=null,error:unknown=null){
-    const filters:Record<string,unknown>={};
-    const query={select:jest.fn().mockReturnThis(),eq:jest.fn((k:string,v:string)=>{filters[k]=v;return query;}),is:jest.fn((k:string,v:null)=>{filters[k]=v;return query;}),limit:jest.fn().mockReturnThis(),maybeSingle:jest.fn(async()=>({data:filters.user_id===rowUser&&filters.role_key==='super_admin'&&filters.biz_id===scope?{role_key:'super_admin',biz_id:scope}:null,error}))};
-    (createSupabaseServerClient as jest.Mock).mockResolvedValue({auth:{getUser:async()=>({data:{user:user?{id:user}:null}})},from:()=>query});
-    return filters;
+    const rpc=jest.fn().mockResolvedValue({data:user===rowUser&&scope===null,error});
+    (createSupabaseServerClient as jest.Mock).mockResolvedValue({auth:{getUser:async()=>({data:{user:user?{id:user}:null},error:null})},rpc});
+    return rpc;
   }
   beforeEach(()=>{jest.resetAllMocks();(getServiceClient as jest.Mock).mockReturnValue(admin);(getRatingsStatus as jest.Mock).mockResolvedValue({staff_without_rating:1});(getRatingsJobs as jest.Mock).mockResolvedValue({ok:true,data:{jobs:[]}});});
   test('passes current globalcaller and status window to unchanged status reader',async()=>{
     const filters=setup();expect(await readRatingsStatusForCaller('3')).toEqual({ok:true,data:{staff_without_rating:1}});
-    expect(filters).toEqual({user_id:'current',role_key:'super_admin',biz_id:null});expect(getRatingsStatus).toHaveBeenCalledWith(admin,{errorsWindowDaysParam:'3'});
+    expect(filters).toHaveBeenCalledWith('is_super_admin');expect(getRatingsStatus).toHaveBeenCalledWith(admin,{errorsWindowDaysParam:'3'});
   });
   test('reads jobs without creating or starting them',async()=>{setup();expect(await readRatingsJobsForCaller()).toEqual({ok:true,data:{jobs:[]}});expect(getRatingsJobs).toHaveBeenCalledWith({admin});});
   test.each([

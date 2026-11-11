@@ -1,8 +1,10 @@
 /**
  * Событийная модель для воронок бронирования
- * 
+ *
  * Отслеживает события без привязки к PII (персональным данным)
  */
+
+import { logWarnSafe } from './logSafe';
 
 export type FunnelEventType =
     | 'business_view'           // Просмотр бизнеса (публичный поток)
@@ -55,11 +57,14 @@ export async function trackFunnelEvent(event: Omit<FunnelEvent, 'timestamp'>) {
         });
 
         if (!response.ok) {
-            console.warn('Failed to track funnel event', event.event_type);
+            logWarnSafe('FunnelEvents', 'Failed to track funnel event', { eventType: event.event_type, status: response.status });
         }
     } catch (error) {
         // Не блокируем основной поток при ошибках отслеживания
-        console.warn('Error tracking funnel event', error);
+        logWarnSafe('FunnelEvents', 'Error tracking funnel event', {
+            eventType: event.event_type,
+            error: error instanceof Error ? { name: error.name, message: error.message } : error,
+        });
     }
 }
 

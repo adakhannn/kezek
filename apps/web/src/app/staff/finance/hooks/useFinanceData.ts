@@ -4,17 +4,18 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { formatInTimeZone } from 'date-fns-tz';
 import React, { useMemo, useRef } from 'react';
 
 import type { Booking, ServiceName, Shift, ShiftItem, Stats } from '../types';
+import { financeDateLabel } from '../utils/calendar';
 import { fetchWithRetry } from '../utils/networkRetry';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useToast } from '@/hooks/useToast';
-import { TZ } from '@/lib/time';
+import type { FinanceCalendar } from '@/lib/finance/calendar';
 
 export interface FinanceData {
+    calendar?: FinanceCalendar;
     todayStatus: 'open' | 'closed' | 'none';
     todayExists: boolean;
     shift: Shift | null;
@@ -41,6 +42,7 @@ export interface FinanceData {
 }
 
 export interface FinanceDataResponse {
+    calendar?: FinanceCalendar;
     /** Присутствует только в ответе API; при initialData (SSR) может отсутствовать */
     ok?: true;
     today: {
@@ -72,7 +74,7 @@ export interface FinanceDataResponse {
 
 interface UseFinanceDataOptions {
     staffId?: string;
-    date: Date;
+    date: Date | string | null;
     enabled?: boolean;
     /** Данные с сервера (SSR prefetch) — используются только для текущей даты, без отдельного запроса */
     initialData?: FinanceDataResponse | import('../services/shiftDataService').FinanceResponsePayload;
@@ -90,15 +92,17 @@ interface UseFinanceDataReturn {
 /**
  * Функция загрузки данных с сервера
  */
-async function fetchFinanceData(
+export async function fetchFinanceData(
     staffId: string | undefined,
-    date: Date,
+    date: Date | string | null,
     signal?: AbortSignal
 ): Promise<FinanceDataResponse> {
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const apiUrl = staffId
-        ? `/api/staff/finance?staffId=${encodeURIComponent(staffId)}&date=${dateStr}`
-        : `/api/staff/finance?date=${dateStr}`;
+    const dateStr = financeDateLabel(date);
+    const params = new URLSearchParams();
+    if (staffId) params.set('staffId', staffId);
+    if (dateStr) params.set('date', dateStr);
+    const query = params.toString();
+    const apiUrl = '/api/staff/finance' + (query ? '?' + query : '');
 
     // Жесткий таймаут для запроса финансов, чтобы не ждать по 15–20 секунд.
     // Если сервер зависает или долго отвечает, прерываем запрос и показываем
@@ -185,12 +189,11 @@ export function useFinanceData({
     const toast = useToast();
     const queryClient = useQueryClient();
 
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const queryKey = ['finance', staffId || 'current', dateStr];
+    const dateStr = financeDateLabel(date);
+    const queryKey = ['finance', staffId || 'current', dateStr ?? 'today'];
 
     // Определяем, является ли дата сегодняшней
-    const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
-    const isToday = dateStr === todayStr;
+    const isToday = !dateStr;
 
     // Адаптивные настройки кэширования:
     // - Для сегодняшней смены: данные могут обновляться чаще (5 секунд)
@@ -232,6 +235,7 @@ export function useFinanceData({
             return null;
         }
         return {
+            calendar: response.calendar,
             todayStatus: today.status,
             todayExists: today.exists,
             shift: today.shift ?? null,

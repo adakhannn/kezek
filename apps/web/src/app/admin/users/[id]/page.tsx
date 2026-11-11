@@ -4,12 +4,15 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+
 import { getT } from '@/app/_components/i18n/server';
 import { AdminEntityFlowTabs } from '@/app/admin/_components/AdminEntityFlowTabs';
 import { UserBasicForm } from '@/components/admin/users/UserBasicForm';
 import { UserPageRedirect } from '@/components/admin/users/UserPageRedirect';
 import { UserSecurityActions } from '@/components/admin/users/UserSecurityActions';
 import { AlertBanner } from '@/components/ui/AlertBanner';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { readPlatformAdminStates } from '@/lib/platformAdminState';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,16 +31,10 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
         cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
-    const { data: { user } } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">{t('admin.error.unauthorized', 'Unauthorized')}</div>;
+    const { data: { user }, error: authError } = await supa.auth.getUser();
+    if (authError || !user) return <div className="p-4">{t('admin.error.unauthorized', 'Unauthorized')}</div>;
 
-    const { data: superRow, error: superErr } = await supa
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supa, user.id);
 
     if (superErr) return <div className="p-4">{t('admin.error.load', 'Load error')}: {superErr.message}</div>;
     if (!superRow) return <div className="p-4">{t('admin.noAccess.title', 'No access')}</div>;
@@ -53,15 +50,12 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
 
     const userMeta = (u.user_metadata ?? {}) as Partial<{ full_name: string }>;
 
-    const { data: suRow } = await admin
-        .from('user_roles_with_user')
-        .select('user_id')
-        .eq('user_id', id)
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
-    const isSuperUser = !!suRow;
+    let isSuperUser: boolean;
+    try {
+        isSuperUser = (await readPlatformAdminStates(admin, user.id, [id])).get(id) === true;
+    } catch {
+        return <div className="p-4">{t('admin.error.load', 'Load error')}</div>;
+    }
 
     const { data: ownerBusinesses } = await admin
         .from('businesses')

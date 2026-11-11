@@ -1,6 +1,8 @@
 # Domain Expansion Plan
 
-**Status:** active proposal  
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
+**Status at original snapshot:** active proposal
 **Created:** 2026-03-31  
 **Purpose:** identify what logic should move into shared domain modules next.
 

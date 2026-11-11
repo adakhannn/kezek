@@ -4,6 +4,11 @@
 
 import { onCLS, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals';
 
+import { logDebug, logWarn } from './log';
+import { sendFrontendMetric } from './performanceClient';
+import { CLIENT_OPERATIONS } from './performanceCore';
+import type { ClientOperation } from './performanceCore';
+
 export interface WebVitalsMetric {
     name: string;
     value: number;
@@ -65,39 +70,10 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
  * Отправляет метрику на сервер
  */
 async function sendMetric(metric: WebVitalsMetric | PageLoadMetric | RenderMetric): Promise<void> {
-    try {
-        if (
-            typeof window !== 'undefined' &&
-            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ) {
-            return;
-        }
-
-        // Используем sendBeacon для надежной доставки метрик
-        // даже если страница закрывается
-        const blob = new Blob([JSON.stringify(metric)], {
-            type: 'application/json',
-        });
-
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon('/api/metrics/frontend', blob);
-        } else {
-            // Fallback для старых браузеров
-            fetch('/api/metrics/frontend', {
-                method: 'POST',
-                body: JSON.stringify(metric),
-                headers: { 'Content-Type': 'application/json' },
-                keepalive: true, // Важно для отправки перед закрытием страницы
-            }).catch(() => {
-                // Игнорируем ошибки, чтобы не влиять на UX
-            });
-        }
-    } catch (error) {
-        // Игнорируем ошибки отправки метрик
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('[WebVitals] Failed to send metric:', error);
-        }
-    }
+    const operation = 'name' in metric ? metric.name : 'loadTime' in metric ? 'page_load' : 'render';
+    if (!CLIENT_OPERATIONS.some(allowed => allowed === operation)) return;
+    const value = 'name' in metric ? metric.value : 'loadTime' in metric ? metric.loadTime : metric.renderTime;
+    await sendFrontendMetric({ operation: operation as ClientOperation, value, success: true });
 }
 
 /**
@@ -119,7 +95,7 @@ function handleMetric(metric: Metric): void {
 
     // Логируем в dev режиме
     if (process.env.NODE_ENV === 'development') {
-        console.log(`[WebVitals] ${metric.name}:`, {
+        logDebug('WebVitals', metric.name, {
             value: metric.value,
             rating: webVitalsMetric.rating,
             delta: metric.delta,
@@ -190,7 +166,7 @@ function sendPageLoadMetric(): void {
     sendMetric(pageLoadMetric);
 
     if (process.env.NODE_ENV === 'development') {
-        console.log('[PageLoad] Metrics:', pageLoadMetric);
+        logDebug('PageLoad', 'Metrics', pageLoadMetric);
     }
 }
 
@@ -214,7 +190,7 @@ export function measureRender(componentName: string, renderTime: number, compone
         sendMetric(renderMetric);
 
         if (process.env.NODE_ENV === 'development') {
-            console.warn(`[Render] Slow render in ${componentName}:`, renderMetric);
+            logWarn('Render', 'Slow component render', { componentName, ...renderMetric });
         }
     }
 }
@@ -249,7 +225,7 @@ export function initFrontendPerformanceMonitoring(): void {
         } catch (error) {
             // PerformanceObserver может не поддерживаться в некоторых браузерах
             if (process.env.NODE_ENV === 'development') {
-                console.warn('[Performance] PerformanceObserver not supported:', error);
+                logWarn('Performance', 'PerformanceObserver not supported', error instanceof Error ? { name: error.name, message: error.message } : error);
             }
         }
     }

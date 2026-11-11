@@ -1,40 +1,40 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { recalcHourlyForDate } from '@/lib/analyticsHourlyLoadCronService';
+import { analyticsReportDates } from '@/lib/analyticsReportDates';
+import { ReportRangeError } from '@/lib/analyticsReportSnapshot';
+import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { isAuthorizedCronRequest } from '@/lib/cronAuthorization';
+import { trackCronExecution } from '@/lib/cronExecutionTracking';
 import { logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import {
-    addDaysToDateString,
-    dateRangeInclusive,
     getTimezone,
     todayDateString,
 } from '@/lib/time';
 
-const YMD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function runAnalyticsHourlyLoadCronHttp(
     req: Request,
     cronSecret: string | undefined,
 ): Promise<NextResponse> {
-    const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    if (!isAuthorizedCronRequest(req, cronSecret)) {
         return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     }
+
+    return trackCronExecution('analytics-hourly-load', async () => {
 
     const url = new URL(req.url);
     const startParam = url.searchParams.get('startDate');
     const endParam = url.searchParams.get('endDate');
     const tz = getTimezone();
 
-    const days =
-        startParam &&
-        endParam &&
-        YMD_REGEX.test(startParam) &&
-        YMD_REGEX.test(endParam) &&
-        startParam <= endParam
-            ? dateRangeInclusive(startParam, endParam, tz)
-            : [addDaysToDateString(todayDateString(tz), -1, tz)];
+    let days: string[];
+    try { days = analyticsReportDates(todayDateString(tz), tz, startParam, endParam); }
+    catch (error) {
+        if (error instanceof ReportRangeError) return createErrorResponse('validation', error.message, undefined, 400);
+        throw error;
+    }
 
     const supabase = getServiceClient();
     const results: Array<{ date: string; updated: number }> = [];
@@ -51,5 +51,6 @@ export async function runAnalyticsHourlyLoadCronHttp(
     return createSuccessResponse({
         message: 'Analytics hourly load aggregation completed',
         results,
+    });
     });
 }

@@ -1,42 +1,9 @@
-﻿import { logDebug, logError } from '@/lib/log';
-import { TZ, todayStringInTz } from '@/lib/time';
+﻿import { readFinanceReport, readFinanceReportToday, financeReportWorkedHours, type FinanceReport, type ReportClient } from '@/lib/finance/reportSnapshot';
+import { logError } from '@/lib/log';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { financeAllQuerySchema } from '@/lib/validation/schemas';
 
 type Period = 'day' | 'month' | 'year';
-
-type StaffFinanceStats = {
-    staff_id: string;
-    staff_name: string;
-    is_active: boolean;
-    branch_id: string;
-    shifts: {
-        total: number;
-        closed: number;
-        open: number;
-    };
-    stats: {
-        total_amount: number;
-        total_master: number;
-        total_salon: number;
-        total_consumables: number;
-        total_late_minutes: number;
-    };
-};
-
-type BusinessFinanceStatsResult = {
-    staff_stats?: StaffFinanceStats[];
-    total_stats?: {
-        total_shifts: number;
-        closed_shifts: number;
-        open_shifts: number;
-        total_amount: number;
-        total_master: number;
-        total_salon: number;
-        total_consumables: number;
-        total_late_minutes: number;
-    };
-};
 
 type FinanceAllResult =
     | {
@@ -53,13 +20,12 @@ type FinanceAllResult =
 
 export async function runFinanceAllDashboard({
     req,
-    supabase,
     admin,
     bizId,
 }: {
     req: Request;
-    supabase: any;
-    admin: any;
+    supabase: unknown;
+    admin: ReportClient;
     bizId: string;
 }): Promise<FinanceAllResult> {
     const url = new URL(req.url);
@@ -80,139 +46,25 @@ export async function runFinanceAllDashboard({
 
     const { period, date: dateParam, branchId } = queryValidation.data;
     const periodTyped = (period || 'day') as Period;
-    const date = dateParam || todayStringInTz(TZ);
+    let date: string;
+    try { date = dateParam || await readFinanceReportToday(admin, bizId); }
+    catch { return { ok: false, statusCode: 500, errorType: 'internal', message: 'Не удалось получить бизнес-календарь отчёта' }; }
     const { dateFrom, dateTo } = resolveDateRange(periodTyped, date);
 
-    const { data: branches, error: branchesError } = await supabase
-        .from('branches')
-        .select('id, name')
-        .eq('biz_id', bizId)
-        .order('name');
-
-    if (branchesError) {
-        logError('FinanceAll', 'Error loading branches', branchesError);
-        return {
-            ok: false,
-            statusCode: 500,
-            errorType: 'internal',
-            message: branchesError.message,
-        };
+    let report: FinanceReport;
+    try { report = await readFinanceReport(admin, { bizId, dateFrom, dateTo, branchId }); }
+    catch (error) {
+        logError('FinanceAll', 'Failed to read complete finance snapshot', error);
+        return { ok: false, statusCode: 500, errorType: 'internal', message: error instanceof Error ? error.message : 'Не удалось получить финансовую статистику' };
+    }
+    const { branches, staff: staffList, shifts: openShifts } = report;
+    const closedByStaff = new Map(report.closedStats.map(row => [row.staff_id, row]));
+    const shiftsByStaff = new Map<string, typeof openShifts>();
+    for (const shift of openShifts) {
+        const rows = shiftsByStaff.get(shift.staff_id) ?? [];
+        rows.push(shift); shiftsByStaff.set(shift.staff_id, rows);
     }
 
-    let staffQuery = supabase
-        .from('staff')
-        .select('id, full_name, is_active, hourly_rate, percent_master, percent_salon, branch_id')
-        .eq('biz_id', bizId)
-        .order('full_name');
-
-    if (branchId) {
-        staffQuery = staffQuery.eq('branch_id', branchId);
-    }
-
-    const { data: staffList, error: staffError } = await staffQuery;
-    if (staffError) {
-        logError('FinanceAll', 'Error loading staff', staffError);
-        return {
-            ok: false,
-            statusCode: 500,
-            errorType: 'internal',
-            message: staffError.message,
-        };
-    }
-
-    logDebug('FinanceAll', 'Calling get_business_finance_stats', {
-        bizId,
-        dateFrom,
-        dateTo,
-        branchId: branchId || null,
-    });
-
-    const { data: businessStats, error: statsError } = await admin.rpc('get_business_finance_stats', {
-        p_biz_id: bizId,
-        p_date_from: dateFrom,
-        p_date_to: dateTo,
-        p_branch_id: branchId || null,
-        p_include_open: true,
-    });
-
-    if (statsError) {
-        logError('FinanceAll', 'Error calling get_business_finance_stats RPC', {
-            error: statsError.message,
-            code: statsError.code,
-            details: statsError.details,
-            hint: statsError.hint,
-            fullError: statsError,
-        });
-        return {
-            ok: false,
-            statusCode: 500,
-            errorType: 'internal',
-            message: statsError.message || 'Не удалось получить финансовую статистику',
-            details: { details: statsError.details, hint: statsError.hint, code: statsError.code },
-        };
-    }
-
-    logDebug('FinanceAll', 'get_business_finance_stats success', {
-        hasData: !!businessStats,
-        staffStatsCount: businessStats?.staff_stats?.length || 0,
-    });
-
-    let shiftsQuery = admin
-        .from('staff_shifts')
-        .select('*')
-        .eq('biz_id', bizId)
-        .eq('status', 'open')
-        .gte('shift_date', dateFrom)
-        .lte('shift_date', dateTo);
-
-    if (branchId) {
-        shiftsQuery = shiftsQuery.eq('branch_id', branchId);
-    }
-
-    const { data: openShifts, error: openShiftsError } = await shiftsQuery;
-    if (openShiftsError) {
-        logError('FinanceAll', 'Error loading open shifts', openShiftsError);
-    }
-
-    const openShiftIds = (openShifts || []).map((shift: { id: string }) => shift.id);
-    const shiftItemsMap: Record<
-        string,
-        Array<{
-            id: string;
-            client_name: string | null;
-            service_name: string | null;
-            service_amount: number;
-            consumables_amount: number;
-        }>
-    > = {};
-
-    if (openShiftIds.length > 0) {
-        const { data: itemsData, error: itemsError } = await admin
-            .from('staff_shift_items')
-            .select('id, shift_id, client_name, service_name, service_amount, consumables_amount')
-            .in('shift_id', openShiftIds)
-            .order('created_at', { ascending: true });
-
-        if (itemsError) {
-            logError('FinanceAll', 'Error loading shift items', itemsError);
-        } else {
-            for (const item of itemsData || []) {
-                const shiftId = item.shift_id;
-                if (!shiftItemsMap[shiftId]) {
-                    shiftItemsMap[shiftId] = [];
-                }
-                shiftItemsMap[shiftId].push({
-                    id: item.id,
-                    client_name: item.client_name,
-                    service_name: item.service_name,
-                    service_amount: Number(item.service_amount ?? 0),
-                    consumables_amount: Number(item.consumables_amount ?? 0),
-                });
-            }
-        }
-    }
-
-    const businessStatsData: BusinessFinanceStatsResult | undefined = businessStats ?? undefined;
     const staffStats: Array<{
         staffId: string;
         staffName: string | null;
@@ -225,18 +77,18 @@ export async function runFinanceAllDashboard({
         totalSalon: number;
         totalConsumables: number;
         totalLateMinutes: number;
-    }> = (staffList || []).map((staff: any) => {
-        const sqlStats = businessStatsData?.staff_stats?.find((entry) => entry.staff_id === staff.id);
-        let totalAmount = sqlStats?.stats.total_amount || 0;
-        let totalMaster = sqlStats?.stats.total_master || 0;
-        let totalSalon = sqlStats?.stats.total_salon || 0;
-        let totalConsumables = sqlStats?.stats.total_consumables || 0;
-        let totalLateMinutes = sqlStats?.stats.total_late_minutes || 0;
-        const closedShiftsCount = sqlStats?.shifts.closed || 0;
+    }> = staffList.map((staff) => {
+        const sqlStats = closedByStaff.get(staff.id);
+        let totalAmount = sqlStats?.total_amount || 0;
+        let totalMaster = sqlStats?.total_master || 0;
+        let totalSalon = sqlStats?.total_salon || 0;
+        let totalConsumables = sqlStats?.total_consumables || 0;
+        let totalLateMinutes = sqlStats?.total_late_minutes || 0;
+        const closedShiftsCount = sqlStats?.closed_shifts || 0;
 
-        const staffOpenShifts = (openShifts || []).filter((shift: any) => shift.staff_id === staff.id);
+        const staffOpenShifts = shiftsByStaff.get(staff.id) ?? [];
         for (const shift of staffOpenShifts) {
-            const shiftItems = shiftItemsMap[shift.id] || [];
+            const shiftItems = shift.items;
             const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
             const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
             const shiftPercentMaster = Number(shift.percent_master ?? staff.percent_master ?? 60);
@@ -244,19 +96,17 @@ export async function runFinanceAllDashboard({
             const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
             const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
             const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
-            const baseSalonShare = shiftTotalAmount - baseMasterShare;
+            const baseSalonShare = shiftTotalAmount - baseMasterShare + shiftConsumables;
 
-            const hourlyRate = shift.hourly_rate
+            const hourlyRate = shift.hourly_rate != null
                 ? Number(shift.hourly_rate)
-                : staff.hourly_rate
+                : staff.hourly_rate != null
                   ? Number(staff.hourly_rate)
                   : null;
             let guaranteedAmount = 0;
 
-            if (hourlyRate && shift.opened_at) {
-                const openedAt = new Date(shift.opened_at);
-                const diffMs = new Date().getTime() - openedAt.getTime();
-                const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
+            const hoursWorked = financeReportWorkedHours(shift);
+            if (hourlyRate && hoursWorked !== null) {
                 guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
             }
 
@@ -304,7 +154,7 @@ export async function runFinanceAllDashboard({
             dateFrom,
             dateTo,
             branchId: branchId || null,
-            branches: (branches || []).map((branch: any) => ({
+            branches: branches.map((branch) => ({
                 id: branch.id,
                 name: branch.name,
             })),

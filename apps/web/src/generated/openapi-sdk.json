@@ -1,0 +1,1026 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Kezek reviewed SDK subset",
+    "version": "0.1.0",
+    "description": "Only the source-reviewed booking and shift commands. This document deliberately excludes every inventory-only operation. Client generation supplies types and transport, not runtime validation, token refresh, idempotency-key creation or automatic retries."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Same origin. SDK consumers must configure their own approved base URL."
+    }
+  ],
+  "x-reviewed-source-sha256": "9d0f7ad864ca2a60f4eff48d678ca5ae9e4e72149d89547ba1e63c2f97ebb0af",
+  "x-reviewed-sources": [
+    "apps/web/src/app/api/quick-book-guest/route.ts",
+    "apps/web/src/app/api/quick-hold/route.ts",
+    "apps/web/src/app/api/staff/shift/close/route.ts",
+    "apps/web/src/app/api/staff/shift/items/route.ts",
+    "apps/web/src/lib/apiErrorHandler.ts",
+    "apps/web/src/lib/authBiz.ts",
+    "apps/web/src/lib/bookingRequestHttp.ts",
+    "apps/web/src/lib/bookingRequestService.ts",
+    "apps/web/src/lib/quickBookGuestHttpService.ts",
+    "apps/web/src/lib/quickBookGuestService.ts",
+    "apps/web/src/lib/quickHoldHttpService.ts",
+    "apps/web/src/lib/quickHoldService.ts",
+    "apps/web/src/lib/rateLimit.ts",
+    "apps/web/src/lib/requestAuthContext.ts",
+    "apps/web/src/lib/staffShift/financeCommand.ts",
+    "apps/web/src/lib/staffShiftCloseHttpService.ts",
+    "apps/web/src/lib/staffShiftCloseService.ts",
+    "apps/web/src/lib/staffShiftItemsHttpService.ts",
+    "apps/web/src/lib/staffShiftItemsRouteService.ts",
+    "apps/web/src/lib/staffShiftItemsService.ts",
+    "apps/web/src/lib/validation/apiValidation.ts",
+    "apps/web/src/lib/validation/bookingSchemas.ts",
+    "apps/web/src/lib/validation/schemas.ts",
+    "packages/core-domain/src/booking/validation.ts",
+    "scripts/openapi-contracts.mjs",
+    "supabase/migrations/20261109091100_atomic_shift_commands.sql",
+    "supabase/migrations/20261110100000_finance_draft_revision.sql",
+    "supabase/migrations/20261110101000_atomic_booking_requests.sql",
+    "supabase/migrations/20261110114000_finance_calendar.sql",
+    "supabase/migrations/20261110123000_service_only_booking_commands.sql"
+  ],
+  "x-inventory-boundary": "Explicit route exports including .tsx and local re-exports; no implicit framework HEAD/OPTIONS, middleware, rewrites, direct Supabase or deployment validation.",
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Verified Supabase access token. Some browser flows additionally support the existing session cookies, as described per operation."
+      }
+    },
+    "schemas": {
+      "ApiErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {}
+        },
+        "required": [
+          "ok",
+          "error"
+        ]
+      },
+      "BookingServiceInput": {
+        "type": "object",
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "duration_min": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "order_index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "service_id",
+          "duration_min"
+        ]
+      },
+      "QuickHoldInput": {
+        "type": "object",
+        "properties": {
+          "biz_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staff_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "service_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "services": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/BookingServiceInput"
+            }
+          },
+          "start_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:?\\d{2})$",
+            "description": "A valid date with seconds and timezone; fractional seconds are not accepted by the HTTP validator."
+          }
+        },
+        "required": [
+          "biz_id",
+          "staff_id",
+          "start_at"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "service_id"
+            ]
+          },
+          {
+            "required": [
+              "services"
+            ]
+          }
+        ],
+        "description": "Either service_id or a non-empty services array is required. If services is supplied it must be non-empty even when service_id is also supplied. Unknown keys are stripped. Calendar, schedule and tenant validity are enforced by the server."
+      },
+      "QuickBookGuestInput": {
+        "type": "object",
+        "properties": {
+          "biz_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staff_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "service_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "services": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/BookingServiceInput"
+            }
+          },
+          "start_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:?\\d{2})$",
+            "description": "A valid date with seconds and timezone; fractional seconds are not accepted by the HTTP validator."
+          },
+          "client_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "description": "Must contain non-whitespace characters."
+          },
+          "client_phone": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{7,14}$"
+          },
+          "client_email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "nullable": true
+          }
+        },
+        "required": [
+          "biz_id",
+          "staff_id",
+          "start_at",
+          "branch_id",
+          "client_name",
+          "client_phone"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "service_id"
+            ]
+          },
+          {
+            "required": [
+              "services"
+            ]
+          }
+        ],
+        "description": "Unknown keys are stripped. Business rules and service availability are validated on the server."
+      },
+      "BookingSuccess": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "booking_id": {
+                "type": "string"
+              },
+              "confirmed": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              }
+            },
+            "required": [
+              "booking_id",
+              "confirmed"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "data"
+        ]
+      },
+      "ShiftItemInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Stable client-generated identity for a new draft row."
+          },
+          "clientName": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "serviceName": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "serviceAmount": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000000,
+            "default": 0
+          },
+          "consumablesAmount": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000000,
+            "default": 0
+          },
+          "bookingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "No note field is accepted. Amounts may be fractional. Omitted amounts default to zero."
+      },
+      "SaveShiftItemsInput": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/ShiftItemInput"
+            }
+          },
+          "staffId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shiftDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "A real calendar date in 1900..2100."
+          },
+          "expectedShiftId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "expectedShiftId",
+          "expectedRevision"
+        ],
+        "additionalProperties": false,
+        "description": "Both expected fields must refer to the draft snapshot. Both null only for a manager creating a previously absent shift on the current business-local day. For an existing shift, the stored shift date is authoritative; an explicit shiftDate must match it. Never rebase a stale draft automatically. staffId selects the manager cookie-session path; staff mode supports a verified bearer or cookie session.",
+        "oneOf": [
+          {
+            "properties": {
+              "expectedShiftId": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              },
+              "expectedRevision": {
+                "type": "integer",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "expectedShiftId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        ]
+      },
+      "SavedShiftItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "serviceAmount": {
+            "type": "number"
+          },
+          "consumablesAmount": {
+            "type": "number"
+          },
+          "bookingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "clientName",
+          "serviceName",
+          "serviceAmount",
+          "consumablesAmount",
+          "bookingId"
+        ]
+      },
+      "SaveShiftItemsSuccess": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "shiftId": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SavedShiftItem"
+                }
+              }
+            },
+            "required": [
+              "shiftId",
+              "revision",
+              "items"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "data"
+        ]
+      },
+      "CloseShiftInput": {
+        "type": "object",
+        "properties": {
+          "expectedShiftId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/ShiftItemInput"
+            }
+          },
+          "totalAmount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "consumablesAmount": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "expectedShiftId",
+          "expectedRevision"
+        ],
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "items"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/components/schemas/ShiftItemInput"
+                }
+              }
+            }
+          },
+          {
+            "required": [
+              "totalAmount"
+            ]
+          }
+        ],
+        "description": "The supplied items must match the saved ledger. Close finalizes saved positions; it does not save draft edits. A non-empty items array or totalAmount is required. Identity and revision belong to the original draft."
+      },
+      "ClosedShift": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ledger_revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "closed"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "ledger_revision",
+          "status"
+        ],
+        "description": "Only these fields are modeled for the SDK. The endpoint returns the stored staff_shifts row, with additional database fields."
+      },
+      "CloseShiftSuccess": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "shift": {
+                "$ref": "#/components/schemas/ClosedShift"
+              }
+            },
+            "required": [
+              "shift"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "data"
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/api/quick-book-guest": {
+      "post": {
+        "operationId": "quickBookGuest",
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Confirm a guest booking",
+        "description": "No login required. The caller must retain both request identity and guest proof for exact retries. Confirmation commits a durable notification event; success does not mean a message has been delivered.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickBookGuestInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, identity, shape or domain parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Verified session required or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Booking attempt/slot conflict, or stale shift identity/revision/ledger. Do not silently rebase a financial draft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; inspect Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected or database command failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency or rate-limit readiness failure. Booking transport uncertainty must retry the exact same identity and payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "reviewed",
+        "x-unmodeled-responses": "Other infrastructure/framework responses are outside this typed contract.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            },
+            "description": "UUID v4 generated before sending. Reuse with identical payload for an uncertain response; a new attempt needs a new key."
+          },
+          {
+            "name": "X-Booking-Client-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "description": "32 cryptographically random bytes encoded as lowercase hex, retained with this attempt. Never log it."
+          }
+        ],
+        "x-next-route": "/api/quick-book-guest",
+        "x-source-file": "apps/web/src/app/api/quick-book-guest/route.ts",
+        "x-manual-contract": "docs/api/BOOKING_AND_CATALOG.md"
+      }
+    },
+    "/api/quick-hold": {
+      "post": {
+        "operationId": "quickHold",
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Confirm an authenticated booking",
+        "description": "The legacy route name does not create a hold: it confirms the booking. Verified cookie/bearer session, mandatory request identity, atomic booking and notification enqueue. Repeating the same identity/payload resolves an uncertain result without creating another booking.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickHoldInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, identity, shape or domain parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Verified session required or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Booking attempt/slot conflict, or stale shift identity/revision/ledger. Do not silently rebase a financial draft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; inspect Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected or database command failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency or rate-limit readiness failure. Booking transport uncertainty must retry the exact same identity and payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "reviewed",
+        "x-unmodeled-responses": "Other infrastructure/framework responses are outside this typed contract.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-browser-auth": "Existing verified Supabase cookie session is also accepted. Cookie names/chunking are deployment-specific and not modeled as a fixed cookie security scheme.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            },
+            "description": "UUID v4 generated before sending. Reuse with identical payload for an uncertain response; a new attempt needs a new key."
+          }
+        ],
+        "x-next-route": "/api/quick-hold",
+        "x-source-file": "apps/web/src/app/api/quick-hold/route.ts",
+        "x-manual-contract": "docs/api/BOOKING_AND_CATALOG.md"
+      }
+    },
+    "/api/staff/shift/close": {
+      "post": {
+        "operationId": "closeShift",
+        "tags": [
+          "Shifts"
+        ],
+        "summary": "Close the current staff shift",
+        "description": "Verified staff context. Finalizes the saved ledger under an identity/revision guard. Repeating Close for the same already-closed shift returns it; a reopened shift with an old revision conflicts. Additional notification work after the commit is not a delivery guarantee.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseShiftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloseShiftSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, identity, shape or domain parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Verified session required or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Caller or linked resource is not allowed for this tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Booking attempt/slot conflict, or stale shift identity/revision/ledger. Do not silently rebase a financial draft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; inspect Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected or database command failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency or rate-limit readiness failure. Booking transport uncertainty must retry the exact same identity and payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "reviewed",
+        "x-unmodeled-responses": "Other infrastructure/framework responses are outside this typed contract.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-browser-auth": "Existing verified Supabase cookie session is also accepted. Cookie names/chunking are deployment-specific and not modeled as a fixed cookie security scheme.",
+        "x-next-route": "/api/staff/shift/close",
+        "x-source-file": "apps/web/src/app/api/staff/shift/close/route.ts",
+        "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
+      }
+    },
+    "/api/staff/shift/items": {
+      "post": {
+        "operationId": "saveShiftItems",
+        "tags": [
+          "Shifts"
+        ],
+        "summary": "Replace a shift ledger using the original revision",
+        "description": "Authenticated staff may save their existing shift; staffId selects manager cookie-session authorization for a tenant-owned staff member. Saves are atomic and return canonical rows/revision. A 409 requires explicit review of the preserved draft against a fresh snapshot. Serialize Save and Close; an uncertain response is not permission to overwrite using a new revision.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveShiftItemsInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveShiftItemsSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON, identity, shape or domain parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Verified session required or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Caller or linked resource is not allowed for this tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Booking attempt/slot conflict, or stale shift identity/revision/ledger. Do not silently rebase a financial draft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; inspect Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected or database command failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency or rate-limit readiness failure. Booking transport uncertainty must retry the exact same identity and payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "reviewed",
+        "x-unmodeled-responses": "Other infrastructure/framework responses are outside this typed contract.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-browser-auth": "Existing verified Supabase cookie session is also accepted. Cookie names/chunking are deployment-specific and not modeled as a fixed cookie security scheme.",
+        "x-next-route": "/api/staff/shift/items",
+        "x-source-file": "apps/web/src/app/api/staff/shift/items/route.ts",
+        "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
+      }
+    }
+  }
+}

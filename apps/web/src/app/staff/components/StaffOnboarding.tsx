@@ -1,33 +1,46 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useState, useSyncExternalStore } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Card } from '@/components/ui/Card';
 
 const STORAGE_KEY = 'staff_onboarding_dismissed_v1';
+const DISMISSED = 'kezek-staff-onboarding-dismissed';
+
+function createOnboardingStore() {
+    let dismissedInThisTab = false;
+    const getSnapshot = () => {
+        if (dismissedInThisTab) return false;
+        try { return !window.localStorage.getItem(STORAGE_KEY); } catch { return false; }
+    };
+    const subscribe = (notify: () => void) => {
+        const onStorage = (event: StorageEvent) => {
+            if (event.key !== null && event.key !== STORAGE_KEY) return;
+            dismissedInThisTab = false;
+            notify();
+        };
+        const onDismiss = () => { dismissedInThisTab = true; notify(); };
+        window.addEventListener('storage', onStorage);
+        window.addEventListener(DISMISSED, onDismiss);
+        return () => {
+            window.removeEventListener('storage', onStorage);
+            window.removeEventListener(DISMISSED, onDismiss);
+        };
+    };
+    const dismiss = () => {
+        dismissedInThisTab = true;
+        try { window.localStorage.setItem(STORAGE_KEY, '1'); } catch { /* Dismiss for this mounted session. */ }
+        window.dispatchEvent(new Event(DISMISSED));
+    };
+    return { getSnapshot, subscribe, dismiss };
+}
 
 export function StaffOnboarding() {
     const { t } = useLanguage();
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-        try {
-            setVisible(!localStorage.getItem(STORAGE_KEY));
-        } catch {
-            setVisible(false);
-        }
-    }, []);
-
-    const dismiss = () => {
-        try {
-            localStorage.setItem(STORAGE_KEY, '1');
-            setVisible(false);
-        } catch {
-            setVisible(false);
-        }
-    };
+    const [store] = useState(createOnboardingStore);
+    const visible = useSyncExternalStore(store.subscribe, store.getSnapshot, () => false);
 
     if (!visible) return null;
 
@@ -104,7 +117,7 @@ export function StaffOnboarding() {
                 </div>
                 <button
                     type="button"
-                    onClick={dismiss}
+                    onClick={store.dismiss}
                     className="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
                 >
                     {t('staff.onboarding.dismiss', 'Понятно')}

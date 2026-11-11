@@ -3,6 +3,14 @@ import {
     QuickBookGuestClientError,
 } from '@/lib/quickBookGuestClient';
 
+jest.mock('@/lib/bookingRequestClient', () => ({
+    acknowledgeBookingRequest: jest.fn().mockResolvedValue(undefined),
+    getBookingRequestHeaders: jest.fn().mockResolvedValue({
+        'Idempotency-Key': '11111111-1111-4111-8111-111111111111',
+        'X-Booking-Client-Token': 'a'.repeat(64),
+    }),
+}));
+
 describe('quickBookGuestClient', () => {
     it('returns booking id from standardized success response', async () => {
         const fetchImpl = jest.fn().mockResolvedValue({
@@ -41,6 +49,7 @@ describe('quickBookGuestClient', () => {
             json: async () => ({
                 ok: true,
                 booking_id: 'guest-top-level',
+                confirmed: true,
             }),
         });
 
@@ -180,6 +189,6 @@ describe('quickBookGuestClient', () => {
                 },
                 { fetchImpl: fetchImpl as unknown as typeof fetch },
             ),
-        ).rejects.toThrow('Booking created without booking_id');
+        ).rejects.toThrow('Booking confirmation is unavailable; retry the same request');
     });
 });

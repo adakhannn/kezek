@@ -4,6 +4,7 @@ type Row = Record<string, unknown>;
 type Result = { data: Row | Row[] | null; error: { message: string } | null };
 
 const rows = new Map<string, Row>();
+const grants = new Map<string, Row>();
 
 function query() {
     let operation: 'select' | 'insert' | 'update' | 'delete' = 'select';
@@ -50,9 +51,21 @@ function query() {
 }
 
 export const telegramAttemptPersistence = {
-    reset: () => rows.clear(),
+    reset: () => { rows.clear(); grants.clear(); },
     client: {
+        rpc: async (name: string, args: Record<string, string>) => {
+            if (name === 'create_mobile_session_grant') {
+                grants.set(args.p_code_hash, { code_challenge: args.p_code_challenge, user_id: args.p_user_id });
+                return { data: null, error: null };
+            }
+            if (name !== 'consume_mobile_session_grant') throw new Error(`Unmocked RPC: ${name}`);
+            const grant = grants.get(args.p_code_hash);
+            if (!grant || grant.code_challenge !== args.p_code_challenge) return { data: null, error: null };
+            grants.delete(args.p_code_hash);
+            return { data: grant.user_id, error: null };
+        },
         from: (table: string) => {
+            if (table === 'mobile_session_grants') return { insert: async (grant: Row) => { grants.set(String(grant.code_hash), grant); return { error: null }; } };
             if (table !== 'telegram_mobile_auth_attempts') throw new Error(`Unmocked persistence table: ${table}`);
             return query();
         },

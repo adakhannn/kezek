@@ -112,5 +112,10 @@ describe('WhatsAppScreen', () => {
         const firstHeaders = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
         const retryHeaders = fetchSpy.mock.calls[1][1]?.headers as Record<string, string>;
         expect(retryHeaders['x-idempotency-key']).toBe(firstHeaders['x-idempotency-key']);
+        const firstBody = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+        const retryBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
+        expect(firstBody.codeChallenge).toMatch(/^[a-f0-9]{64}$/);
+        expect(firstBody).not.toHaveProperty('codeVerifier');
+        expect(retryBody.codeChallenge).toBe(firstBody.codeChallenge);
     });
 });

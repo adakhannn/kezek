@@ -1,3 +1,5 @@
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { readPlatformAdminStates } from '@/lib/platformAdminState';
 // apps/web/src/app/admin/api/users/list/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -61,19 +63,13 @@ export async function GET(req: Request) {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
-        const { data: meData } = await supa.auth.getUser();
-        if (!meData?.user) {
+        const { data: meData, error: authError } = await supa.auth.getUser();
+        if (authError || !meData?.user) {
             return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' } satisfies ListErr, { status: 401 });
         }
 
         // доступ только глобальному супер-админу
-        const { data: superRow, error: superErr } = await supa
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supa, meData.user.id);
         if (superErr) return NextResponse.json({ ok: false, error: superErr.message } satisfies ListErr, { status: 400 });
         if (!superRow) return NextResponse.json({ ok: false, error: 'FORBIDDEN' } satisfies ListErr, { status: 403 });
 
@@ -106,16 +102,7 @@ export async function GET(req: Request) {
         }
 
         // 5) Флаг супера
-        const superIds = new Set<string>();
-        if (ids.length > 0) {
-            const { data: supers } = await admin
-                .from('user_roles_with_user')
-                .select('user_id')
-                .in('user_id', ids)
-                .eq('role_key', 'super_admin')
-                .is('biz_id', null);
-            for (const r of supers ?? []) superIds.add(r.user_id);
-        }
+        const superStates = await readPlatformAdminStates(admin, meData.user.id, ids);
 
         // 6) Флаг "заблокирован" (+ причина)
         const blockedMap = new Map<string, { reason: string | null }>();
@@ -130,7 +117,7 @@ export async function GET(req: Request) {
         // 7) Формируем список и применяем поиск/фильтр
         let items: UserListItem[] = users.map((u) => {
             const full_name = profiles[u.id]?.full_name ?? (u.user_metadata?.full_name ?? null);
-            const is_super = superIds.has(u.id);
+            const is_super = superStates.get(u.id) === true;
             const blk = blockedMap.get(u.id);
             return {
                 id: u.id,

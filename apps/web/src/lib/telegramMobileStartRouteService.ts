@@ -21,11 +21,13 @@ function resolveTelegramBotUsername() {
 
 export async function runTelegramMobileStartRoute({
     source,
+    codeChallenge,
 }: {
     source?: TelegramMobileAuthSourceMeta;
-} = {}): Promise<TelegramMobileStartRouteResult> {
+    codeChallenge: string;
+}): Promise<TelegramMobileStartRouteResult> {
     const botUsername = resolveTelegramBotUsername();
-    const payload = await createTelegramMobileAuthAttempt({ botUsername, source });
+    const payload = await createTelegramMobileAuthAttempt({ botUsername, source, codeChallenge });
     await writeTelegramAuthAuditEvent({
         eventType: 'mobile_start_created',
         nonce: payload.nonce,

@@ -5,6 +5,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { apiRequest } from '../../lib/api';
 import { useConfirmBooking } from '../../hooks/useConfirmBooking';
 import { createTestQueryClient } from '../testQueryClient';
+import * as SecureStore from 'expo-secure-store';
 
 jest.mock('../../lib/api', () => ({
     apiRequest: jest.fn(),
@@ -31,6 +32,10 @@ const params = {
 describe('useConfirmBooking', () => {
     beforeEach(() => {
         mockApiRequest.mockReset();
+        const store = new Map<string, string>();
+        jest.mocked(SecureStore.getItemAsync).mockImplementation(async key => store.get(key) ?? null);
+        jest.mocked(SecureStore.setItemAsync).mockImplementation(async (key, value) => { store.set(key, value); });
+        jest.mocked(SecureStore.deleteItemAsync).mockImplementation(async key => { store.delete(key); });
     });
 
     test('extracts booking id from standard quick-hold API envelope', async () => {
@@ -73,6 +78,29 @@ describe('useConfirmBooking', () => {
         });
 
         await waitFor(() => expect(onError).toHaveBeenCalled());
+        expect(onSuccess).not.toHaveBeenCalled();
+    });
+
+    test('manual retry after a lost response reuses the persisted request identity', async () => {
+        mockApiRequest.mockRejectedValueOnce(new Error('Network response lost'));
+        mockApiRequest.mockResolvedValueOnce({ data: { booking_id: 'same-booking', confirmed: true } });
+        const { result } = renderHook(() => useConfirmBooking(), { wrapper: createWrapper() });
+        await act(async () => {
+            await expect(result.current.createBookingAsync(params)).rejects.toThrow('Network response lost');
+            await expect(result.current.createBookingAsync(params)).resolves.toMatchObject({ booking_id: 'same-booking' });
+        });
+        const first = mockApiRequest.mock.calls[0][1]?.headers;
+        expect(first).toHaveProperty('Idempotency-Key');
+        expect(mockApiRequest.mock.calls[1][1]?.headers).toEqual(first);
+    });
+
+    test('an unconfirmed response cannot report booking success', async () => {
+        const onSuccess = jest.fn();
+        mockApiRequest.mockResolvedValueOnce({ data: { booking_id: 'hold-only', confirmed: false } });
+        const { result } = renderHook(() => useConfirmBooking({ onSuccess }), { wrapper: createWrapper() });
+        await act(async () => {
+            await expect(result.current.createBookingAsync(params)).rejects.toThrow();
+        });
         expect(onSuccess).not.toHaveBeenCalled();
     });
 });

@@ -77,7 +77,7 @@ describe('branchUpdateHttpService', () => {
     const response = await runBranchUpdateHttp(
       new Request('http://localhost/api/branches/branch-id/update', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ name: 'Branch' }),
       }),
       { params: { id: 'branch-id' } },
     );
@@ -86,4 +86,15 @@ describe('branchUpdateHttpService', () => {
     expect(response.status).toBe(400);
     expect(body.error).toBe('validation');
   });
+
+  test.each(['{', 'null', '[]', '{}', '{"is_active":"false"}', '{"name":3}', '{"contact_email":{}}']) (
+    'rejects malformed or invalid update without invoking the service: %s', async (body) => {
+      const response = await runBranchUpdateHttp(new Request('http://localhost/api/branches/branch-id/update', {
+        method: 'POST', body,
+      }), { params: { id: 'branch-id' } });
+      expect(response.status).toBe(400);
+      expect(updateBranch).not.toHaveBeenCalled();
+      expect(getServiceClient).not.toHaveBeenCalled();
+    },
+  );
 });

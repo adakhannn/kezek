@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-    return withRateLimit(req, RateLimitConfigs.critical, async () =>
+    return withRateLimit(req, RateLimitConfigs.authenticatedIngress, async () =>
         runStaffShiftOpenHttp(req),
+        "/api/staff/shift/open",
     );
 }

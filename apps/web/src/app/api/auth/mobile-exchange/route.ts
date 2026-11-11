@@ -10,9 +10,10 @@ import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit
 export async function POST(request: NextRequest) {
   return withRateLimit(request, routeRateLimit('api/auth/mobile-exchange', RateLimitConfigs.auth), () =>
     withErrorHandler('MobileExchange', () => runMobileExchangePostHttp(request)),
+      "/api/auth/mobile-exchange",
   );
 }
 
-export async function GET(request: NextRequest) {
-  return withErrorHandler('MobileExchange', () => runMobileExchangeGetHttp(request));
+export async function GET() {
+  return runMobileExchangeGetHttp();
 }

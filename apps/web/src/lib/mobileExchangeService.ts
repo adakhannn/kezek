@@ -1,183 +1,66 @@
-import crypto from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 
-import { logWarn } from '@/lib/log';
+import { getServiceClient } from '@/lib/supabaseService';
+import { issueSessionForVerifiedUser } from '@/lib/verifiedIdentitySession';
 
-type StoredTokens = {
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: number;
-    createdAt: number;
-    sequence: number;
+export const MOBILE_CODE_CHALLENGE_RE = /^[a-f0-9]{64}$/;
+const VERIFIER_RE = /^[A-Za-z0-9._~-]{43,128}$/;
+const CODE_RE = /^[A-Za-z0-9_-]{43}$/;
+const USER_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const hashMobileExchangeSecret = (value: string) => createHash('sha256').update(value).digest('hex');
+
+type Tokens = { accessToken: string; refreshToken: string };
+export type MobileExchangeRepository = {
+    issue: (grant: { codeHash: string; codeChallenge: string; userId: string }) => Promise<void>;
+    consume: (codeHash: string, codeChallenge: string) => Promise<string | null>;
 };
 
-type ExchangeFailure = {
-    ok: false;
-    error: 'not_found' | 'validation' | 'conflict';
-    message: string;
-    status: number;
+const repository: MobileExchangeRepository = {
+    async issue(grant) {
+        const { error } = await getServiceClient().rpc('create_mobile_session_grant', {
+            p_code_hash: grant.codeHash,
+            p_code_challenge: grant.codeChallenge,
+            p_user_id: grant.userId,
+        });
+        if (error) throw new Error('Mobile sign-in storage unavailable');
+    },
+    async consume(codeHash, codeChallenge) {
+        const { data, error } = await getServiceClient().rpc('consume_mobile_session_grant', {
+            p_code_hash: codeHash,
+            p_code_challenge: codeChallenge,
+        });
+        if (error) throw new Error('Mobile sign-in storage unavailable');
+        return typeof data === 'string' ? data : null;
+    },
 };
 
-const tokenStore = new Map<string, StoredTokens>();
-const consumedTokenStore = new Map<string, number>();
-let cleanupInterval: NodeJS.Timeout | null = null;
-let creationSequence = 0;
-const EXCHANGE_CODE_TTL_MS = 2 * 60 * 1000;
-const CONSUMED_CODE_RETENTION_MS = 10 * 60 * 1000;
-
-function nowMs() {
-    return Date.now();
-}
-
-function randomCode() {
-    return crypto.randomBytes(3).toString('hex').toUpperCase();
-}
-
-function cleanupExpiredTokens() {
-    const now = nowMs();
-
-    for (const [code, data] of tokenStore.entries()) {
-        if (data.expiresAt < now) {
-            tokenStore.delete(code);
-        }
+/** Server-only: call after independently verifying the provider identity.
+ * The challenge must come from the initiating attempt, never the approval request. */
+export async function issueMobileSessionGrant(
+    { userId, codeChallenge }: { userId: string; codeChallenge: string },
+    store: MobileExchangeRepository = repository,
+) {
+    if (!USER_ID_RE.test(userId) || !MOBILE_CODE_CHALLENGE_RE.test(codeChallenge)) {
+        throw new Error('Invalid mobile sign-in binding');
     }
-    for (const [code, consumedUntil] of consumedTokenStore.entries()) {
-        if (consumedUntil < now) {
-            consumedTokenStore.delete(code);
-        }
-    }
-
-    if (tokenStore.size > 1000) {
-        const entries = Array.from(tokenStore.entries()).sort((a, b) => a[1].createdAt - b[1].createdAt);
-        const toDelete = entries.slice(0, tokenStore.size - 1000);
-        toDelete.forEach(([code]) => tokenStore.delete(code));
-    }
-}
-
-function startCleanupInterval() {
-    if (cleanupInterval) {
-        return;
-    }
-
-    cleanupInterval = setInterval(cleanupExpiredTokens, 5 * 60 * 1000);
-    cleanupInterval.unref?.();
-}
-
-startCleanupInterval();
-
-export function storeMobileTokens({
-    accessToken,
-    refreshToken,
-}: {
-    accessToken: string;
-    refreshToken: string;
-}) {
-    let code = randomCode();
-    while (tokenStore.has(code)) {
-        code = randomCode();
-    }
-    const now = nowMs();
-    const expiresAt = now + EXCHANGE_CODE_TTL_MS;
-
-    tokenStore.set(code, {
-        accessToken,
-        refreshToken,
-        expiresAt,
-        createdAt: now,
-        sequence: ++creationSequence,
-    });
-
-    logWarn('MobileExchange', 'Token stored', {
-        exchangeCode: code,
-        expiresAt: new Date(expiresAt).toISOString(),
-    });
-
+    const code = randomBytes(32).toString('base64url');
+    await store.issue({ codeHash: hashMobileExchangeSecret(code), codeChallenge, userId });
     return { code };
 }
 
-export function getLatestPendingMobileExchange() {
-    const now = nowMs();
-    let latestCode: string | null = null;
-    let latestCreatedAt = 0;
-    let latestSequence = 0;
-
-    for (const [code, data] of tokenStore.entries()) {
-        if (
-            data.expiresAt > now &&
-            (data.createdAt > latestCreatedAt ||
-                (data.createdAt === latestCreatedAt && data.sequence > latestSequence))
-        ) {
-            latestCode = code;
-            latestCreatedAt = data.createdAt;
-            latestSequence = data.sequence;
-        }
+export async function redeemMobileSessionGrant(
+    { code, codeVerifier }: { code: unknown; codeVerifier: unknown },
+    deps: { store?: MobileExchangeRepository; issueSession?: (userId: string) => Promise<Tokens> } = {},
+) {
+    if (typeof code !== 'string' || !CODE_RE.test(code) ||
+        typeof codeVerifier !== 'string' || !VERIFIER_RE.test(codeVerifier)) {
+        return { ok: false as const, status: 400, error: 'validation', message: 'Начните вход заново в приложении.' };
     }
-
-    if (!latestCode) {
-        return null;
-    }
-
-    return {
-        code: latestCode,
-        createdAt: latestCreatedAt,
-    };
+    const userId = await (deps.store ?? repository).consume(
+        hashMobileExchangeSecret(code), hashMobileExchangeSecret(codeVerifier),
+    );
+    // Wrong verifier, expired, unknown and replay deliberately indistinguishable.
+    if (!userId) return { ok: false as const, status: 400, error: 'invalid_grant', message: 'Запрос входа недоступен. Начните заново.' };
+    const payload = await (deps.issueSession ?? issueSessionForVerifiedUser)(userId);
+    return { ok: true as const, payload };
 }
-
-export function exchangeMobileTokens(
-    code: string
-):
-    | {
-          ok: true;
-          data: {
-              accessToken: string;
-              refreshToken: string;
-          };
-      }
-    | ExchangeFailure {
-    const tokenData = tokenStore.get(code);
-
-    if (!tokenData) {
-        if (consumedTokenStore.has(code)) {
-            return {
-                ok: false,
-                error: 'conflict',
-                message: 'Код уже использован',
-                status: 409,
-            };
-        }
-
-        return {
-            ok: false,
-            error: 'not_found',
-            message: 'Неверный или истекший код',
-            status: 404,
-        };
-    }
-
-    if (tokenData.expiresAt < nowMs()) {
-        tokenStore.delete(code);
-        return {
-            ok: false,
-            error: 'validation',
-            message: 'Код истек',
-            status: 410,
-        };
-    }
-
-    tokenStore.delete(code);
-    consumedTokenStore.set(code, nowMs() + CONSUMED_CODE_RETENTION_MS);
-
-    return {
-        ok: true,
-        data: {
-            accessToken: tokenData.accessToken,
-            refreshToken: tokenData.refreshToken,
-        },
-    };
-}
-
-export function __resetMobileExchangeStoreForTests() {
-    tokenStore.clear();
-    consumedTokenStore.clear();
-    creationSequence = 0;
-}
-

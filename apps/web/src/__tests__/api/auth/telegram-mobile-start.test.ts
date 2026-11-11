@@ -35,6 +35,7 @@ describe('/api/auth/telegram/mobile/start', () => {
             'http://localhost/api/auth/telegram/mobile/start',
             {
                 method: 'POST',
+                body: { codeChallenge: 'a'.repeat(64) },
             },
         );
 
@@ -49,6 +50,7 @@ describe('/api/auth/telegram/mobile/start', () => {
             'http://localhost/api/auth/telegram/mobile/start',
             {
                 method: 'POST',
+                body: { codeChallenge: 'a'.repeat(64) },
             },
         );
 
@@ -63,7 +65,7 @@ describe('/api/auth/telegram/mobile/start', () => {
         ).toBe('string');
     });
 
-    test('handles invalid json body and still creates auth attempt', async () => {
+    test('rejects invalid json before creating an unbound attempt', async () => {
         delete process.env.MOBILE_TELEGRAM_DEEPLINK_AUTH_ROLLOUT_PERCENT;
 
         const request = createMockRequest(
@@ -75,11 +77,7 @@ describe('/api/auth/telegram/mobile/start', () => {
         );
 
         const response = await POST(request);
-        const data = await expectSuccessResponse(response, 200);
-
-        expect(data).toHaveProperty('data.nonce');
-        expect(data).toHaveProperty('data.botDeepLink');
-        expect(data).toHaveProperty('data.expiresAt');
+        await expectErrorResponse(response, 400, 'validation');
     });
 
     test('returns 503 when rollout percentage is 0', async () => {
@@ -90,6 +88,7 @@ describe('/api/auth/telegram/mobile/start', () => {
             'http://localhost/api/auth/telegram/mobile/start',
             {
                 method: 'POST',
+                body: { codeChallenge: 'a'.repeat(64) },
                 headers: {
                     'x-mobile-rollout-key': 'test-user',
                 },

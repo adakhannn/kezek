@@ -8,12 +8,9 @@ import { logDebug, logError, logWarn } from '../../../lib/log';
 import { supabase } from '../../../lib/supabase';
 import {
     handleDeepLinkAuth,
-    tryRestorePendingSession,
 } from '../../../navigation/useRootNavigationSession';
-import { MOBILE_GOOGLE_NATIVE_AUTH_ENABLED } from './authFeatureFlags';
 import { type AuthUiState, transitionAuthUiState } from './authUiState';
 
-const MOBILE_REDIRECT = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
 const GOOGLE_NATIVE_REDIRECT = 'kezek://auth/callback';
 const GOOGLE_SESSION_SYNC_DELAY_MS = 500;
 const GOOGLE_AUTH_FLOW_NAME = 'mobile_google_oauth';
@@ -135,12 +132,7 @@ export function useGoogleSignInFlow({
             return finish(true);
         }
 
-        const restored = await tryRestorePendingSession(apiUrl).catch(() => false);
-        if (!restored) {
-            return finish(false);
-        }
-
-        return finish(await hasActiveSession());
+        return finish(false);
     };
 
     const showGoogleSuccessOnce = () => {
@@ -279,16 +271,14 @@ export function useGoogleSignInFlow({
         googleCallbackMetricSentRef.current = false;
 
         try {
-            const redirectTo = MOBILE_GOOGLE_NATIVE_AUTH_ENABLED
-                ? GOOGLE_NATIVE_REDIRECT
-                : MOBILE_REDIRECT;
+            const redirectTo = GOOGLE_NATIVE_REDIRECT;
             trackGoogleLoginEvent('mobile_google_login_started', {
-                redirect: MOBILE_GOOGLE_NATIVE_AUTH_ENABLED ? 'native' : 'web_callback',
+                redirect: 'native_pkce',
             });
             logGoogleFlowStage('started', {
                 provider: 'google',
                 redirectTo,
-                nativeAuthEnabled: MOBILE_GOOGLE_NATIVE_AUTH_ENABLED,
+                nativeAuthEnabled: true,
             });
 
             const returnUrl = GOOGLE_NATIVE_REDIRECT;

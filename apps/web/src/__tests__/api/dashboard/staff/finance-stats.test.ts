@@ -23,6 +23,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockAdmin.from.mockReset();
         jest.useFakeTimers();
         jest.setSystemTime(fixedNow);
 
@@ -81,19 +82,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
 
     describe('success', () => {
         test('returns day stats with closed shift and grouped items', async () => {
-            mockAdmin.from
-                .mockReturnValueOnce({
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-                })
-                .mockReturnValueOnce({
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    gte: jest.fn().mockReturnThis(),
-                    lte: jest.fn().mockReturnThis(),
-                    order: jest.fn().mockResolvedValue({
-                        data: [
+            mockAdmin.rpc.mockResolvedValue({data:{branches:[],staff:[],closedStats:[],shifts:([
                             {
                                 id: 'shift-1',
                                 shift_date: '2024-01-15',
@@ -112,15 +101,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
                                 closed_at: '2024-01-15T17:00:00.000Z',
                                 staff: null,
                             },
-                        ],
-                        error: null,
-                    }),
-                })
-                .mockReturnValueOnce({
-                    select: jest.fn().mockReturnThis(),
-                    in: jest.fn().mockReturnThis(),
-                    order: jest.fn().mockResolvedValue({
-                        data: [
+                        ]).map(shift=>({ledger_revision:7,timezone:'Asia/Bishkek',day_start:'2024-01-14T18:00:00Z',day_end:'2024-01-15T18:00:00Z',day_hours:24,...shift,items:[
                             {
                                 id: 'item-1',
                                 shift_id: 'shift-1',
@@ -143,10 +124,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
                                 booking_id: null,
                                 created_at: '2024-01-15T12:00:00.000Z',
                             },
-                        ],
-                        error: null,
-                    }),
-                });
+                        ]}))},error:null});
 
             const req = createMockRequest(
                 `http://localhost/api/dashboard/staff/${staffId}/finance/stats?period=day&date=2024-01-15`,
@@ -166,12 +144,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
         });
 
         test('returns month stats and includes current open shift for today', async () => {
-            mockAdmin.from
-                .mockReturnValueOnce({
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: {
+            mockAdmin.rpc.mockResolvedValue({data:{branches:[],staff:[],closedStats:[],shifts:([{
                             id: 'open-shift',
                             shift_date: '2024-01-15',
                             status: 'open',
@@ -192,28 +165,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
                                 percent_master: 60,
                                 percent_salon: 40,
                             },
-                        },
-                        error: null,
-                    }),
-                })
-                .mockReturnValueOnce({
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    gte: jest.fn().mockReturnThis(),
-                    lte: jest.fn().mockReturnThis(),
-                    order: jest.fn().mockResolvedValue({
-                        data: [],
-                        error: null,
-                    }),
-                })
-                .mockReturnValueOnce({
-                    select: jest.fn().mockReturnThis(),
-                    in: jest.fn().mockReturnThis(),
-                    order: jest.fn().mockResolvedValue({
-                        data: [],
-                        error: null,
-                    }),
-                });
+                        }]).map(shift=>({ledger_revision:7,timezone:'Asia/Bishkek',day_start:'2024-01-14T18:00:00Z',day_end:'2024-01-15T18:00:00Z',day_hours:24,...shift,items:[]}))},error:null});
 
             const req = createMockRequest(
                 `http://localhost/api/dashboard/staff/${staffId}/finance/stats?period=month&date=2024-01`,

@@ -99,61 +99,13 @@ describe('serverCancelBookingService', () => {
         expect(from).not.toHaveBeenCalled();
     });
 
-    it('falls back to direct status update for staff assignment errors', async () => {
-        const rpc = jest.fn().mockResolvedValue({
-            error: { message: 'Staff is not assigned to branch' },
-        });
-        const eqClient = jest.fn().mockResolvedValue({ error: null });
-        const eqId = jest.fn().mockReturnValue({ eq: eqClient });
-        const update = jest.fn().mockReturnValue({ eq: eqId });
-        const from = jest.fn().mockReturnValue({ update });
-        (cancelBookingUseCase as jest.Mock).mockImplementation(async ({ commands }) => {
-            await commands.cancelBooking('booking-2');
-        });
-
-        await runServerCancelBooking(
-            {
-                supabase: { rpc, from } as any,
-                clientId: 'client-1',
-            },
-            'booking-2',
-        );
-
-        expect(from).toHaveBeenCalledWith('bookings');
-        expect(update).toHaveBeenCalledWith({ status: 'cancelled' });
-        expect(eqId).toHaveBeenCalledWith('id', 'booking-2');
-        expect(eqClient).toHaveBeenCalledWith('client_id', 'client-1');
-    });
-
-    it('logs and throws when fallback update fails', async () => {
-        const updateError = new Error('update failed');
-        const rpc = jest.fn().mockResolvedValue({
-            error: { message: 'Booking not assigned to branch staff anymore' },
-        });
-        const eq = jest.fn().mockResolvedValue({ error: updateError });
-        const update = jest.fn().mockReturnValue({ eq });
-        const from = jest.fn().mockReturnValue({ update });
-        (cancelBookingUseCase as jest.Mock).mockImplementation(async ({ commands }) => {
-            await commands.cancelBooking('booking-fallback-error');
-        });
-
-        await expect(
-            runServerCancelBooking(
-                {
-                    supabase: { rpc, from } as any,
-                },
-                'booking-fallback-error',
-            ),
-        ).rejects.toThrow('update failed');
-
-        expect(logError).toHaveBeenCalledWith(
-            'ServerCancelBookingService',
-            'Fallback booking status update failed',
-            expect.objectContaining({
-                bookingId: 'booking-fallback-error',
-                error: updateError,
-            }),
-        );
+    it.each(['Staff is not assigned to branch', 'BOOKING_FINANCIAL_REVERSAL_REQUIRED'])('never bypasses an RPC rejection: %s', async message => {
+        const error = { message };
+        const rpc = jest.fn().mockResolvedValue({ error });
+        const from = jest.fn();
+        (cancelBookingUseCase as jest.Mock).mockImplementation(async ({ commands }) => commands.cancelBooking('booking-2'));
+        await expect(runServerCancelBooking({ supabase: { rpc, from } as any }, 'booking-2')).rejects.toEqual(error);
+        expect(from).not.toHaveBeenCalled();
     });
 
     it('logs and rethrows non-fallback rpc errors', async () => {

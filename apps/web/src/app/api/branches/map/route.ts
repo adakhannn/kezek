@@ -11,5 +11,6 @@ export async function GET(req: Request) {
         RateLimitConfigs.public,
         () =>
             withErrorHandler('BranchesMap', async () => runBranchesMapHttp(req)),
+        "/api/branches/map",
     );
 }

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { readScheduledDay } from '@/lib/scheduling/read';
@@ -51,12 +52,15 @@ export async function runStaffShiftToday({
 
     const isDayOff = scheduled ? !scheduled.day.intervals.length : await resolveIsDayOff({ supabase, staffId, bizId, ymd, dow });
 
-    const { data: shift, error: shiftError } = await supabase
-        .from('staff_shifts')
-        .select('*')
-        .eq('staff_id', staffId)
-        .eq('shift_date', ymd)
-        .maybeSingle();
+    const { data: shiftWithItems, error: shiftError } = await supabase.rpc('read_staff_shift_snapshot', {
+        p_biz_id: bizId, p_staff_id: staffId, p_shift_date: ymd,
+    });
+    if (shiftWithItems && (!Array.isArray(shiftWithItems.staff_shift_items) || !Number.isSafeInteger(shiftWithItems.ledger_revision))) {
+        return { ok: false, status: 500, error: 'internal', message: 'Incomplete shift ledger snapshot' };
+    }
+    const shift = shiftWithItems ? { ...shiftWithItems } : null;
+    const items = shiftWithItems?.staff_shift_items ?? [];
+    if (shift) delete shift.staff_shift_items;
 
     if (shiftError) {
         logError('StaffShiftToday', 'Error loading today shift', shiftError);
@@ -68,25 +72,14 @@ export async function runStaffShiftToday({
         };
     }
 
-    const items = shift ? await loadShiftItems({ supabase, shiftId: shift.id }) : [];
     const todayBookings = await loadTodayBookings({ supabase, staffId, ymd });
     const availableServices = await loadAvailableServices({ supabase, staffId });
     const currentWork = calculateCurrentWork({ shift, hourlyRate, now });
 
-    const { data: allShifts, error: statsError } = await supabase
-        .from('staff_shifts')
-        .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
-        .eq('staff_id', staffId)
-        .order('shift_date', { ascending: false });
-
-    if (statsError) {
-        logError('StaffShiftToday', 'Error loading shifts stats', statsError);
-        return {
-            ok: false,
-            status: 500,
-            error: 'internal',
-            message: statsError.message,
-        };
+    let allShifts;
+    try { allShifts = await readStaffHistory(supabase, bizId, staffId); }
+    catch {
+        return { ok: false, status: 500, error: 'internal', message: 'Failed to load complete staff finance history' };
     }
 
     const closedShifts = (allShifts ?? []).filter((entry: { status: string }) => entry.status === 'closed');
@@ -100,9 +93,8 @@ export async function runStaffShiftToday({
                 sum: number,
                 entry: { guaranteed_amount?: number | null; master_share?: number | null },
             ) => {
-                const guaranteed = Number(entry.guaranteed_amount || 0);
                 const masterShare = Number(entry.master_share || 0);
-                return sum + (guaranteed > masterShare ? guaranteed : masterShare);
+                return sum + masterShare;
             },
             0,
         ),
@@ -110,7 +102,7 @@ export async function runStaffShiftToday({
             (
                 sum: number,
                 entry: { salon_share?: number | null; topup_amount?: number | null },
-            ) => sum + Number(entry.salon_share || 0) - Number(entry.topup_amount || 0),
+            ) => sum + Number(entry.salon_share || 0),
             0,
         ),
         totalLateMinutes: closedShifts.reduce(
@@ -221,22 +213,6 @@ async function resolveIsDayOff({
 
     const intervals = (workingHoursRow?.intervals ?? []) as { start: string; end: string }[];
     return !Array.isArray(intervals) || intervals.length === 0;
-}
-
-async function loadShiftItems({ supabase, shiftId }: { supabase: SupabaseClient; shiftId: string }) {
-    const { data, error } = await supabase
-        .from('staff_shift_items')
-        .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
-        .eq('shift_id', shiftId)
-        .order('created_at', { ascending: false })
-        .order('id', { ascending: false });
-
-    if (error) {
-        logError('StaffShiftToday', 'Error loading shift items', error);
-        return [];
-    }
-
-    return data ?? [];
 }
 
 async function loadTodayBookings({

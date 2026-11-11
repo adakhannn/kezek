@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
 
+
 import { sendAlertEmail } from '@/lib/alerts';
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { readBackgroundQueueHealth } from '@/lib/backgroundQueueHealth';
+import { isAuthorizedCronRequest } from '@/lib/cronAuthorization';
+import { readCronExecutionHealth } from '@/lib/cronExecutionHealth';
+import { trackCronExecution } from '@/lib/cronExecutionTracking';
 import { runHealthCheckAlerts } from '@/lib/healthCheckAlertsCronService';
 import { logDebug } from '@/lib/log';
 
-const CRON_SECRET = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET;
-
 export async function runHealthCheckAlertsCronHttp(req: Request): Promise<NextResponse> {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${CRON_SECRET}`) {
+  if (!isAuthorizedCronRequest(req, process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET)) {
     return createErrorResponse('auth', 'Не авторизован', undefined, 401);
   }
+
+    return trackCronExecution('health-check-alerts', async () => {
 
   logDebug('HealthCheckAlerts', 'Starting health check...');
 
@@ -19,8 +23,12 @@ export async function runHealthCheckAlertsCronHttp(req: Request): Promise<NextRe
   const { formatInTimeZone } = await import('date-fns-tz');
   const { TZ } = await import('@/lib/time');
 
+  const admin = getServiceClient();
+  const [cronStatuses, queueStatuses] = await Promise.all([readCronExecutionHealth(admin), readBackgroundQueueHealth(admin)]);
   const result = await runHealthCheckAlerts({
-    admin: getServiceClient() as never,
+    admin: admin as never,
+    cronStatuses,
+    queueStatuses,
     formatDate: formatInTimeZone,
     tz: TZ,
     now: new Date(),
@@ -32,4 +40,5 @@ export async function runHealthCheckAlertsCronHttp(req: Request): Promise<NextRe
   }
 
   return createSuccessResponse(result.data);
+    });
 }

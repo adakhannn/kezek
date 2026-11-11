@@ -1,184 +1,38 @@
-﻿import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { logDebug, logError } from '@/lib/log';
+import { isFinanceDate, readFinanceCalendar } from '@/lib/finance/calendar';
+import { logError } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { readScheduledDay } from '@/lib/scheduling/read';
-import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
+import { financeCommandFailure } from '@/lib/staffShift/financeCommand';
+import { dateAtTz } from '@/lib/time';
 
-type Result =
-    | {
-          ok: false;
-          statusCode: 400 | 500;
-          errorType: 'validation' | 'internal';
-          message: string;
-          details?: Record<string, unknown>;
-      }
-    | {
-          ok: true;
-          shift: Record<string, unknown>;
-      };
-
-export async function runDashboardStaffShiftOpen({
-    req,
-    supabase,
-    admin,
-    bizId,
-    staffId,
-    staff,
-}: {
-    req: Request;
-    supabase: SupabaseClient;
-    admin: SupabaseClient;
-    bizId: string;
-    staffId: string;
-    staff: {
-        branch_id: string | null;
-    };
+type Result = { ok: true; shift: Record<string, unknown> } | { ok: false; statusCode: number; errorType: 'validation' | 'forbidden' | 'internal'; message: string; details?: Record<string, unknown> };
+export async function runDashboardStaffShiftOpen({ req, supabase, admin, bizId, staffId, staff }: {
+    req: Request; supabase: SupabaseClient; admin: SupabaseClient; bizId: string; staffId: string; staff: { branch_id: string | null };
 }): Promise<Result> {
-    const { searchParams } = new URL(req.url);
-    const dateParam = searchParams.get('date');
-    const targetDate = dateParam ? new Date(`${dateParam}T00:00:00`) : new Date();
-    const scheduled = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, dateParam || targetDate) : null;
-    const ymd = scheduled?.ymd ?? formatDateInTz(targetDate, TZ);
-    if (scheduled && !scheduled.expectedStart) return {
-        ok: false, statusCode: 400, errorType: 'validation',
-        message: 'На этот день не назначены рабочие часы. Сначала настройте график сотрудника.',
-    };
-
-    if (staff.branch_id == null) {
-        logDebug('OwnerShiftOpen', 'Staff has no branch_id', { staffId, bizId });
-        return {
-            ok: false,
-            statusCode: 400,
-            errorType: 'validation',
-            message:
-                'У сотрудника не указан филиал. Укажите филиал в карточке сотрудника и попробуйте снова.',
-        };
-    }
-
-    const { data: existingShift, error: checkError } = await admin
-        .from('staff_shifts')
-        .select('id, status')
-        .eq('staff_id', staffId)
-        .eq('shift_date', ymd)
-        .maybeSingle();
-
-    if (checkError) {
-        logError('OwnerShiftOpen', 'Error checking existing shift', checkError);
-        return {
-            ok: false,
-            statusCode: 500,
-            errorType: 'internal',
-            message: 'Не удалось проверить существующую смену',
-        };
-    }
-
-    if (existingShift?.status === 'open') {
-        logDebug('OwnerShiftOpen', 'Shift already open, returning existing shift', {
-            shiftId: existingShift.id,
-            staffId,
-            ymd,
-        });
-        return {
-            ok: true,
-            shift: existingShift,
-        };
-    }
-
-    const { expectedStart } = scheduled ?? await resolveExpectedStart({
-        supabase,
-        bizId,
-        staffId,
-        ymd,
-        targetDate,
+    const dateParam = new URL(req.url).searchParams.get('date');
+    if (dateParam && !isFinanceDate(dateParam)) return { ok: false, statusCode: 400, errorType: 'validation', message: 'Неверная дата смены.' };
+    const calendar = await readFinanceCalendar(supabase, bizId, staffId, dateParam ?? undefined);
+    const ymd = calendar.date;
+    if (ymd > calendar.todayDate) return { ok: false, statusCode: 409, errorType: 'validation', message: 'Будущую смену открыть нельзя.' };
+    const { data: existing, error: readError } = await admin.from('staff_shifts').select('id,status')
+        .eq('staff_id', staffId).eq('biz_id', bizId).eq('shift_date', ymd).maybeSingle();
+    if (readError) return financeCommandFailure(readError);
+    if (!existing && ymd !== calendar.todayDate) return { ok: false, statusCode: 409, errorType: 'validation', message: 'За прошлый день можно повторно открыть только существующую смену с сохранённым временем открытия.' };
+    if (!existing && !staff.branch_id) return { ok: false, statusCode: 400, errorType: 'validation', message: 'У сотрудника не указан филиал.' };
+    const scheduled = !existing && explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, ymd) : null;
+    if (scheduled && !scheduled.expectedStart) return { ok: false, statusCode: 400, errorType: 'validation', message: 'На этот день не назначены рабочие часы. Сначала настройте график сотрудника.' };
+    const { expectedStart } = existing ? { expectedStart: null } : scheduled ?? await resolveExpectedStart({ supabase, bizId, staffId, ymd, timezone: calendar.timezone });
+    const now = new Date();
+    const { data, error } = await supabase.rpc('open_staff_shift_safe', {
+        p_staff_id: staffId, p_biz_id: bizId, p_branch_id: scheduled?.day.branch_id ?? staff.branch_id,
+        p_shift_date: ymd, p_opened_at: now.toISOString(), p_expected_start: expectedStart?.toISOString() ?? null,
+        p_late_minutes: expectedStart ? Math.max(0, Math.round((now.getTime() - expectedStart.getTime()) / 60000)) : 0,
     });
-
-    const openedAt = new Date();
-    const lateMinutes =
-        expectedStart && openedAt.getTime() > expectedStart.getTime()
-            ? Math.round((openedAt.getTime() - expectedStart.getTime()) / 60000)
-            : 0;
-
-    if (existingShift) {
-        const { data: updatedShift, error: updateError } = await admin
-            .from('staff_shifts')
-            .update({
-                status: 'open',
-                opened_at: openedAt.toISOString(),
-                closed_at: null,
-                late_minutes: lateMinutes,
-            })
-            .eq('id', existingShift.id)
-            .select()
-            .single();
-
-        if (updateError) {
-            logError('OwnerShiftOpen', 'Error updating shift', updateError);
-            return {
-                ok: false,
-                statusCode: 500,
-                errorType: 'internal',
-                message: 'Не удалось открыть смену',
-            };
-        }
-
-        logDebug('OwnerShiftOpen', 'Shift reopened successfully', {
-            shiftId: updatedShift.id,
-            staffId,
-            ymd,
-        });
-
-        return {
-            ok: true,
-            shift: updatedShift,
-        };
-    }
-
-    const { data: newShift, error: createError } = await admin
-        .from('staff_shifts')
-        .insert({
-            staff_id: staffId,
-            biz_id: bizId,
-            branch_id: scheduled?.day.branch_id ?? staff.branch_id,
-            shift_date: ymd,
-            status: 'open',
-            opened_at: openedAt.toISOString(),
-            late_minutes: lateMinutes,
-        })
-        .select()
-        .single();
-
-    if (createError) {
-        const errorPayload = {
-            code: (createError as { code?: string })?.code,
-            message: (createError as { message?: string })?.message,
-            details: (createError as { details?: string })?.details,
-            hint: (createError as { hint?: string })?.hint,
-            staffId,
-            bizId,
-            branch_id: scheduled?.day.branch_id ?? staff.branch_id,
-            shift_date: ymd,
-        };
-        logError('OwnerShiftOpen', 'Error creating shift', errorPayload);
-        return {
-            ok: false,
-            statusCode: 500,
-            errorType: 'internal',
-            message: (createError as { message?: string })?.message || 'Не удалось создать смену',
-            details: errorPayload,
-        };
-    }
-
-    logDebug('OwnerShiftOpen', 'Shift opened successfully', {
-        shiftId: newShift.id,
-        staffId,
-        ymd,
-    });
-
-    return {
-        ok: true,
-        shift: newShift,
-    };
+    if (error) return financeCommandFailure(error);
+    if (!data?.ok || !data.shift) return financeCommandFailure({ message: 'Unconfirmed shift open' });
+    return { ok: true, shift: data.shift };
 }
 
 async function resolveExpectedStart({
@@ -186,15 +40,15 @@ async function resolveExpectedStart({
     bizId,
     staffId,
     ymd,
-    targetDate,
+    timezone,
 }: {
     supabase: SupabaseClient;
     bizId: string;
     staffId: string;
     ymd: string;
-    targetDate: Date;
+    timezone: string;
 }) {
-    const dow = targetDate.getDay();
+    const dow = new Date(ymd + 'T12:00:00Z').getUTCDay();
     let expectedStart: Date | null = null;
     let hasWorkingHours = false;
 
@@ -215,7 +69,7 @@ async function resolveExpectedStart({
                 hasWorkingHours = true;
                 const first = [...intervals].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''))[0];
                 if (first?.start) {
-                    expectedStart = dateAtTz(ymd, first.start);
+                    expectedStart = dateAtTz(ymd, first.start, timezone);
                 }
             }
         } catch (error) {
@@ -237,7 +91,7 @@ async function resolveExpectedStart({
             if (Array.isArray(intervals) && intervals.length > 0) {
                 const first = [...intervals].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''))[0];
                 if (first?.start) {
-                    expectedStart = dateAtTz(ymd, first.start);
+                    expectedStart = dateAtTz(ymd, first.start, timezone);
                 }
             }
         } catch (error) {

@@ -10,6 +10,7 @@ export async function GET(req: Request, context: unknown) {
         req,
         RateLimitConfigs.normal,
         () => withErrorHandler('MobileBookingDetails', async () => runGetMobileBookingDetailsHttp(req, context)),
+        "/api/mobile/bookings/[id]",
     );
 }
 
@@ -18,5 +19,6 @@ export async function POST(req: Request, context: unknown) {
         req,
         RateLimitConfigs.normal,
         () => withErrorHandler('MobileBookingCancel', async () => runCancelMobileBookingHttp(req, context)),
+        "/api/mobile/bookings/[id]",
     );
 }

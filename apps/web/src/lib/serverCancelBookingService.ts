@@ -8,12 +8,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { logDebug, logError } from '@/lib/log';
 
 function createServerCancelCommands(
-    supabase: SupabaseClient,
-    options: {
-        clientId?: string;
-    } = {},
+    supabase: SupabaseClient
 ): BookingCommandsPort {
-    const { clientId } = options;
 
     return {
         async holdSlot() {
@@ -34,37 +30,6 @@ function createServerCancelCommands(
             });
 
             if (!error) {
-                return;
-            }
-
-            const errorMessage = error.message.toLowerCase();
-            if (
-                errorMessage.includes('not assigned to branch') ||
-                errorMessage.includes('staff')
-            ) {
-                let updateQuery = supabase
-                    .from('bookings')
-                    .update({ status: 'cancelled' })
-                    .eq('id', bookingId);
-
-                if (clientId) {
-                    updateQuery = updateQuery.eq('client_id', clientId);
-                }
-
-                const { error: updateError } = await updateQuery;
-
-                if (updateError) {
-                    logError(
-                        'ServerCancelBookingService',
-                        'Fallback booking status update failed',
-                        {
-                            bookingId,
-                            error: updateError,
-                        },
-                    );
-                    throw updateError;
-                }
-
                 return;
             }
 
@@ -98,9 +63,7 @@ export async function runServerCancelBooking(
 
     await cancelBookingUseCase(
         {
-            commands: createServerCancelCommands(deps.supabase, {
-                clientId: deps.clientId,
-            }),
+            commands: createServerCancelCommands(deps.supabase),
             notifications,
         },
         bookingId,

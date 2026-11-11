@@ -1,5 +1,7 @@
 # Module Boundaries
 
+Status: engineering placement rules, reviewed 2026-10-30. These are requirements for changes, not a claim that all existing code already conforms. Actual data flows: [architecture](../PROJECT_DOCUMENTATION.md). Current work: [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
 **Purpose:** define where logic should live across `packages/core-domain`, `packages/shared-client`, `apps/web`, and `apps/mobile`.
 
 ## Core Rule

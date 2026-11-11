@@ -10,8 +10,8 @@ import { BookingHeader } from './components/BookingHeader';
 import { BookingSteps } from './components/BookingSteps';
 import { GuestBookingModal } from './components/GuestBookingModal';
 import { PromotionsList } from './components/PromotionsList';
-import { useBookingCreation } from './hooks/useBookingCreation';
 import { useBookingAvailabilityRefresh } from './hooks/useBookingAvailabilityRefresh';
+import { useBookingCreation } from './hooks/useBookingCreation';
 import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
 import { useBookingFlowDerived } from './hooks/useBookingFlowDerived';
 import { useBookingSelectionState } from './hooks/useBookingSelectionState';
@@ -129,7 +129,7 @@ export default function BookingForm({ data }: { data: Data }) {
         isAuthed,
     );
 
-    const { refreshSlots, slots, slotsError, slotsLoading } = useBookingSlotsState({
+    const { refreshSlots, slots, slotsError, slotsLoading, hasMore, loadingMore, loadMore, moreError } = useBookingSlotsState({
         bizId: biz.id,
         branchId,
         dayStr,
@@ -235,7 +235,7 @@ export default function BookingForm({ data }: { data: Data }) {
             logError('Booking', 'save booking state failed', error);
         }
         const redirect = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;
+        router.push(`/auth/sign-in?mode=phone&redirect=${redirect}`);
     }
 
     const stepFromUrl = searchParams.get('step');
@@ -459,6 +459,10 @@ export default function BookingForm({ data }: { data: Data }) {
                     slots={slots}
                     slotsError={slotsError}
                     slotsLoading={slotsLoading}
+                    slotsHasMore={hasMore}
+                    slotsLoadingMore={loadingMore}
+                    slotsMoreError={moreError}
+                    onLoadMoreSlots={loadMore}
                     staff={staff}
                     staffCurrent={staffCurrent}
                     staffFiltered={staffFiltered}

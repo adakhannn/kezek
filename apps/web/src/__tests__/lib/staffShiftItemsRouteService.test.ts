@@ -1,3 +1,4 @@
+jest.mock('@/lib/rateLimit', () => ({ ...jest.requireActual('@/lib/rateLimit'), checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})) }));
 jest.mock('@/lib/authBiz', () => ({
     getStaffContextForRequest: jest.fn(),
     getBizContextForManagers: jest.fn(),
@@ -47,12 +48,12 @@ describe('staffShiftItemsRouteService', () => {
             bizId: 'biz-1',
             userId: 'user-1',
         });
-        (runSaveStaffShiftItems as jest.Mock).mockResolvedValue({ ok: true });
+        (runSaveStaffShiftItems as jest.Mock).mockResolvedValue({ ok: true, data: { shiftId: 'created-shift', revision: 1, items: [] } });
 
         const req = new Request('http://localhost/api/staff/shift/items', {
             method: 'POST',
             body: JSON.stringify({
-                items: [],
+                items: [], expectedShiftId: null, expectedRevision: null,
             }),
         });
 
@@ -62,13 +63,15 @@ describe('staffShiftItemsRouteService', () => {
             supabase: { auth: { getUser: expect.any(Function) } },
             staffId: 'staff-1',
             bizId: 'biz-1',
-            items: [],
+            items: [], expectedShiftId: null, expectedRevision: null,
             targetShiftDate: undefined,
+            actorId: 'user-1',
             isOwnerMode: false,
             useServiceClient: false,
         });
         expect(result).toEqual({
             ok: true,
+            data: { shiftId: 'created-shift', revision: 1, items: [] },
             metric: {
                 staffId: 'staff-1',
                 bizId: 'biz-1',
@@ -99,7 +102,7 @@ describe('staffShiftItemsRouteService', () => {
             method: 'POST',
             body: JSON.stringify({
                 staffId: '11111111-1111-4111-8111-111111111112',
-                items: [],
+                items: [], expectedShiftId: null, expectedRevision: null,
             }),
         });
 

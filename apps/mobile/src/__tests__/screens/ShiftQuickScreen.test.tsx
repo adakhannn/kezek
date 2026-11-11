@@ -74,6 +74,13 @@ describe('ShiftQuickScreen', () => {
         ...overrides,
     });
 
+    const savedResponse = (options?: { body?: unknown }) => {
+        if (typeof options?.body !== 'string') return { ok: true };
+        const payload = JSON.parse(options.body);
+        return { ok: true, data: { shiftId: payload.expectedShiftId, revision: payload.expectedRevision + 1,
+            items: payload.items.map((item: Record<string, unknown>, index: number) => ({ ...item, id: item.id ?? item.clientId ?? 'saved-' + index })) } };
+    };
+
     beforeEach(() => {
         secureStorage.clear();
         (SecureStore.getItemAsync as jest.Mock).mockImplementation(async (key: string) =>
@@ -86,7 +93,7 @@ describe('ShiftQuickScreen', () => {
             secureStorage.delete(key);
         });
         mockStaff();
-        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+        mockedApiRequest.mockImplementation(async (endpoint: string, options) => {
             if (endpoint === '/api/staff/finance') {
                 return {
                     ok: true,
@@ -94,7 +101,7 @@ describe('ShiftQuickScreen', () => {
                 };
             }
 
-            return { ok: true };
+            return savedResponse(options);
         });
     });
 
@@ -125,7 +132,7 @@ describe('ShiftQuickScreen', () => {
     });
 
     test('renders active shift add-client form and saves items', async () => {
-        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+        mockedApiRequest.mockImplementation(async (endpoint: string, options) => {
             if (endpoint === '/api/staff/finance') {
                 return {
                     ok: true,
@@ -135,6 +142,7 @@ describe('ShiftQuickScreen', () => {
                             status: 'open',
                             shift: {
                                 id: 'shift-1',
+                                ledger_revision: 3,
                                 shift_date: '2026-06-03',
                                 status: 'open',
                                 opened_at: '2026-06-03T08:00:00.000Z',
@@ -152,7 +160,7 @@ describe('ShiftQuickScreen', () => {
                 };
             }
 
-            return { ok: true };
+            return savedResponse(options);
         });
 
         renderWithProviders(<ShiftQuickScreen />);
@@ -173,7 +181,7 @@ describe('ShiftQuickScreen', () => {
     });
 
     test('edits existing manual shift client item', async () => {
-        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+        mockedApiRequest.mockImplementation(async (endpoint: string, options) => {
             if (endpoint === '/api/staff/finance') {
                 return {
                     ok: true,
@@ -183,6 +191,7 @@ describe('ShiftQuickScreen', () => {
                             status: 'open',
                             shift: {
                                 id: 'shift-1',
+                                ledger_revision: 3,
                                 shift_date: '2026-06-03',
                                 status: 'open',
                                 opened_at: '2026-06-03T08:00:00.000Z',
@@ -210,7 +219,7 @@ describe('ShiftQuickScreen', () => {
                 };
             }
 
-            return { ok: true };
+            return savedResponse(options);
         });
 
         renderWithProviders(<ShiftQuickScreen />);
@@ -245,7 +254,7 @@ describe('ShiftQuickScreen', () => {
 
     test('keeps failed offline item queued and clears it after successful retry', async () => {
         let isOnline = false;
-        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+        mockedApiRequest.mockImplementation(async (endpoint: string, options) => {
             if (endpoint === '/api/staff/finance') {
                 return {
                     ok: true,
@@ -255,6 +264,7 @@ describe('ShiftQuickScreen', () => {
                             status: 'open',
                             shift: {
                                 id: 'shift-1',
+                                ledger_revision: 3,
                                 shift_date: '2026-06-06',
                                 status: 'open',
                                 opened_at: '2026-06-06T08:00:00.000Z',
@@ -276,7 +286,7 @@ describe('ShiftQuickScreen', () => {
                 throw new Error('Network request failed');
             }
 
-            return { ok: true };
+            return savedResponse(options);
         });
 
         renderWithProviders(<ShiftQuickScreen />);
@@ -309,7 +319,7 @@ describe('ShiftQuickScreen', () => {
     });
 
     test('does not report an offline operation as queued when secure storage fails', async () => {
-        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+        mockedApiRequest.mockImplementation(async (endpoint: string, options) => {
             if (endpoint === '/api/staff/finance') {
                 return {
                     ok: true,
@@ -319,6 +329,7 @@ describe('ShiftQuickScreen', () => {
                             status: 'open',
                             shift: {
                                 id: 'shift-1',
+                                ledger_revision: 3,
                                 shift_date: '2026-06-09',
                                 status: 'open',
                                 opened_at: '2026-06-09T08:00:00.000Z',
@@ -340,7 +351,7 @@ describe('ShiftQuickScreen', () => {
                 throw new Error('Network request failed');
             }
 
-            return { ok: true };
+            return savedResponse(options);
         });
         (SecureStore.setItemAsync as jest.Mock).mockImplementation(
             async (key: string, value: string) => {

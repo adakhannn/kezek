@@ -26,5 +26,6 @@ export async function POST(req: Request) {
                     return createErrorResponse('validation', 'Invalid JSON body', undefined, 400);
                 }
             }),
+        "/api/me/current-business",
     );
 }

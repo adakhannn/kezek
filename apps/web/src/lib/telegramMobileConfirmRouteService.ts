@@ -2,9 +2,9 @@ import crypto from 'crypto';
 
 import { createClient } from '@supabase/supabase-js';
 
-import { getSupabaseAnonKey, getSupabaseServiceRoleKey, getSupabaseUrl } from '@/lib/env';
-import { runMobileExchangePost } from '@/lib/mobileExchangeRouteService';
-import { handleTelegramLogin } from '@/lib/telegramLoginService';
+import { getSupabaseServiceRoleKey, getSupabaseUrl } from '@/lib/env';
+import { issueMobileSessionGrant, MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
+import { resolveTelegramIdentity } from '@/lib/telegramLoginService';
 import {
     consumePendingTelegramMobileAuthAttempt,
     getTelegramMobileAuthAttempt,
@@ -176,15 +176,18 @@ export async function runTelegramMobileConfirmRoute({
         };
     }
 
+    if (!pending.attempt.codeChallenge || !MOBILE_CODE_CHALLENGE_RE.test(pending.attempt.codeChallenge)) {
+        await markTelegramMobileAuthAttemptFailed({ nonce, reason: 'missing_initiator_binding' });
+        return { ok: false, status: 409, error: 'conflict', message: 'Начните вход заново в обновлённом приложении.' };
+    }
+
     const serviceRoleKey = getSupabaseServiceRoleKey();
     const supabaseUrl = getSupabaseUrl();
-    const anonKey = getSupabaseAnonKey();
     const admin = createClient(supabaseUrl, serviceRoleKey) as unknown as Parameters<
-        typeof handleTelegramLogin
+        typeof resolveTelegramIdentity
     >[0]['admin'];
-    const authClient = createClient(supabaseUrl, anonKey);
 
-    const loginResult = await handleTelegramLogin({
+    const loginResult = await resolveTelegramIdentity({
         admin,
         normalized: {
             telegram_id: telegramId,
@@ -207,54 +210,17 @@ export async function runTelegramMobileConfirmRoute({
         };
     }
 
-    const { error: signInError, data: signInData } =
-        await authClient.auth.signInWithPassword({
-            email: loginResult.data.email,
-            password: loginResult.data.password,
-        });
-
-    const accessToken = signInData.session?.access_token;
-    const refreshToken = signInData.session?.refresh_token;
-
-    if (signInError || !accessToken || !refreshToken) {
-        await markTelegramMobileAuthAttemptFailed({
-            nonce,
-            reason: 'supabase_sign_in_failed',
-        });
-        return {
-            ok: false,
-            status: 500,
-            error: 'internal',
-            message: 'Не удалось подготовить мобильную сессию',
-        };
-    }
-
-    const exchangeResult = runMobileExchangePost({
-        accessToken,
-        refreshToken,
+    const { code } = await issueMobileSessionGrant({
+        userId: loginResult.userId,
+        codeChallenge: pending.attempt.codeChallenge!,
     });
-
-    if (!exchangeResult.ok) {
-        await markTelegramMobileAuthAttemptFailed({
-            nonce,
-            reason: 'mobile_exchange_prepare_failed',
-        });
-        return {
-            ok: false,
-            status: 500,
-            error: 'internal',
-            message: 'Не удалось подготовить exchange-код для мобильной сессии',
-        };
-    }
-
-    const code = exchangeResult.payload.code;
 
     await markTelegramMobileAuthAttemptApproved({
         nonce,
         telegramId,
-        userId: loginResult.data.userId,
+        userId: loginResult.userId,
         exchangeCode: code,
-        linkage: loginResult.data.linkage,
+        linkage: loginResult.linkage,
     });
 
     return {
@@ -263,7 +229,7 @@ export async function runTelegramMobileConfirmRoute({
             status: 'approved',
             nonce,
             expiresAt: pending.attempt.expiresAt,
-            linkage: loginResult.data.linkage,
+            linkage: loginResult.linkage,
         },
     };
 }

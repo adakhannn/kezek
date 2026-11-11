@@ -10,6 +10,7 @@ import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { getFreeSlotsForServiceDay, getFreeSlotsForComplexDay, createInternalBooking, createInternalComplexBooking } from '@/lib/bookingDashboardService';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
+import { logError } from '@/lib/log';
 import { TZ, todayStringInTz } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 import { validateName, validatePhone } from '@/lib/validation';
@@ -80,6 +81,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                     raw = (await getFreeSlotsForServiceDay({
                         bizId,
                         serviceId: singleServiceId,
+                        staffId: selectedStaffId,
                         day: date,
                         perStaff: 400,
                         stepMinutes: 15,
@@ -126,7 +128,6 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 setSlotsLoading(false);
             } catch (error: unknown) {
                 // Локальное логирование ошибки загрузки слотов
-                const { logError } = require('@/lib/log');
                 logError('StaffBookingsView', 'get_free_slots_service_day_v2 error', {
                     message: error instanceof Error ? error.message : String(error),
                 });
@@ -267,8 +268,6 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 });
             } catch (e) {
                 // Не блокируем UX, если трекинг не сработал
-                 
-                const { logError } = require('@/lib/log');
                 logError('StaffBookings', 'Failed to track booking_success funnel event', e);
             }
             toast.showSuccess(

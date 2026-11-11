@@ -23,6 +23,7 @@ describe('telegramMobileConfirmRouteService', () => {
 
     test('returns same approved result for repeated confirm with same telegram_id', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -55,6 +56,7 @@ describe('telegramMobileConfirmRouteService', () => {
 
     test('returns conflict for repeated confirm from different telegram_id', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });

@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
+import { bookingCancellationError } from '@/lib/bookingCancellationError';
 import { dispatchBookingNotification } from '@/lib/bookingNotificationDispatch';
 import { runServerCancelBooking } from '@/lib/serverCancelBookingService';
 
@@ -23,7 +24,7 @@ type CancelSuccess = {
     alreadyCancelled?: boolean;
 };
 
-export type BookingCancelRouteResult = CancelFailure | CancelSuccess;
+export type BookingCancelRouteResult = CancelFailure | CancelSuccess | NonNullable<ReturnType<typeof bookingCancellationError>>;
 
 export async function runBookingCancelRoute({
     supabase,
@@ -69,16 +70,22 @@ export async function runBookingCancelRoute({
         };
     }
 
-    await runServerCancelBooking(
-        {
-            supabase,
-            clientId: isClientOwner ? user.id : undefined,
-            notify: async ({ bookingId: id, type }) => {
-                await dispatchBookingNotification(supabase, id, type);
+    try {
+        await runServerCancelBooking(
+            {
+                supabase,
+                clientId: isClientOwner ? user.id : undefined,
+                notify: async ({ bookingId: id, type }) => {
+                    await dispatchBookingNotification(supabase, id, type);
+                },
             },
-        },
-        bookingId,
-    );
+            bookingId,
+        );
+    } catch (error) {
+        const failure = bookingCancellationError(error);
+        if (failure) return failure;
+        throw error;
+    }
 
     return { ok: true };
 }

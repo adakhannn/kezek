@@ -1,3 +1,5 @@
+jest.mock('@/lib/internalBookingClient', () => ({ postInternalBooking: jest.fn() }));
+import { postInternalBooking } from '@/lib/internalBookingClient';
 jest.mock('@core-domain/booking', () => ({
     cancelBookingUseCase: jest.fn(),
     confirmBookingUseCase: jest.fn(),
@@ -20,7 +22,7 @@ import {
 } from '@core-domain/booking';
 
 import {
-    cancelBookingWithFallback,
+    cancelBooking,
     confirmBooking,
     createInternalBooking,
     createInternalComplexBooking,
@@ -55,7 +57,7 @@ describe('bookingDashboardService', () => {
     it('delegates cancel action to core-domain use case', async () => {
         (cancelBookingUseCase as jest.Mock).mockResolvedValue(undefined);
 
-        await cancelBookingWithFallback('booking-cancel-1');
+        await cancelBooking('booking-cancel-1');
 
         expect(cancelBookingUseCase).toHaveBeenCalledWith(
             {
@@ -115,86 +117,16 @@ describe('bookingDashboardService', () => {
         );
     });
 
-    it('falls back to bookings update when cancel rpc reports branch/staff mismatch', async () => {
-        (cancelBookingUseCase as jest.Mock).mockImplementation(async ({ commands }) => {
-            await commands.cancelBooking('booking-cancel-fallback');
-        });
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            error: {
-                message: 'Booking not assigned to branch staff anymore',
-            },
-        });
-
-        const updateQuery = {
-            update: jest.fn(),
-            eq: jest.fn(),
-        };
-        updateQuery.update.mockReturnValue(updateQuery);
-        updateQuery.eq.mockResolvedValue({
-            error: null,
-        });
-        (supabase.from as jest.Mock).mockReturnValue(updateQuery);
-
-        await cancelBookingWithFallback('booking-cancel-fallback');
-
-        expect(supabase.from).toHaveBeenCalledWith('bookings');
-        expect(updateQuery.update).toHaveBeenCalledWith({ status: 'cancelled' });
-        expect(updateQuery.eq).toHaveBeenCalledWith('id', 'booking-cancel-fallback');
+    it.each(['Staff no longer assigned', 'BOOKING_FINANCIAL_REVERSAL_REQUIRED', 'permission denied'])('keeps cancellation failure without direct table writes: %s', async message => {
+        const error = { message };
+        (cancelBookingUseCase as jest.Mock).mockImplementation(async ({ commands }) => commands.cancelBooking('cancel-1'));
+        (supabase.rpc as jest.Mock).mockResolvedValue({ error });
+        await expect(cancelBooking('cancel-1')).rejects.toEqual(error);
+        expect(supabase.from).not.toHaveBeenCalled();
     });
 
-    it('rethrows cancel rpc errors outside fallback branch', async () => {
-        const rpcError = {
-            message: 'permission denied',
-        };
-        (cancelBookingUseCase as jest.Mock).mockImplementation(async ({ commands }) => {
-            await commands.cancelBooking('booking-cancel-error');
-        });
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            error: rpcError,
-        });
-
-        await expect(cancelBookingWithFallback('booking-cancel-error')).rejects.toEqual(rpcError);
-    });
-
-    it('logs and rethrows fallback update errors', async () => {
-        const updateError = new Error('update failed');
-        (cancelBookingUseCase as jest.Mock).mockImplementation(async ({ commands }) => {
-            await commands.cancelBooking('booking-cancel-update-error');
-        });
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            error: {
-                message: 'Staff no longer assigned',
-            },
-        });
-
-        const updateQuery = {
-            update: jest.fn(),
-            eq: jest.fn(),
-        };
-        updateQuery.update.mockReturnValue(updateQuery);
-        updateQuery.eq.mockResolvedValue({
-            error: updateError,
-        });
-        (supabase.from as jest.Mock).mockReturnValue(updateQuery);
-
-        await expect(cancelBookingWithFallback('booking-cancel-update-error')).rejects.toThrow(
-            'update failed',
-        );
-        expect(logError).toHaveBeenCalledWith(
-            'BookingDashboardService',
-            'cancel_booking fallback update error',
-            expect.objectContaining({
-                bookingId: 'booking-cancel-update-error',
-                error: updateError,
-            }),
-        );
-    });
-
-    it('creates internal booking through rpc', async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            data: 'booking-created-1',
-            error: null,
-        });
+    it('creates internal booking through durable HTTP client', async () => {
+        (postInternalBooking as jest.Mock).mockResolvedValue('booking-created-1');
 
         const bookingId = await createInternalBooking({
             bizId: 'biz-1',
@@ -209,25 +141,23 @@ describe('bookingDashboardService', () => {
         });
 
         expect(bookingId).toBe('booking-created-1');
-        expect(supabase.rpc).toHaveBeenCalledWith('create_internal_booking', {
-            p_biz_id: 'biz-1',
-            p_branch_id: 'branch-1',
-            p_service_id: 'service-1',
-            p_staff_id: 'staff-1',
-            p_start: '2026-03-26T10:00:00Z',
-            p_minutes: 90,
-            p_client_id: 'client-1',
-            p_client_name: 'Client',
-            p_client_phone: '+996700000001',
+        expect(postInternalBooking).toHaveBeenCalledWith({
+            mode: 'simple',
+            biz_id: 'biz-1',
+            branch_id: 'branch-1',
+            service_id: 'service-1',
+            staff_id: 'staff-1',
+            start_at: '2026-03-26T10:00:00Z',
+            duration_min: 90,
+            client_id: 'client-1',
+            client_name: 'Client',
+            client_phone: '+996700000001',
         });
     });
 
-    it('logs and rethrows createInternalBooking rpc errors', async () => {
+    it('logs and rethrows createInternalBooking HTTP errors', async () => {
         const error = new Error('create_internal_booking failed');
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            data: null,
-            error,
-        });
+        (postInternalBooking as jest.Mock).mockRejectedValue(error);
 
         await expect(
             createInternalBooking({
@@ -245,10 +175,7 @@ describe('bookingDashboardService', () => {
     });
 
     it('maps complex booking services payload and uses default order indexes', async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            data: 'complex-booking-1',
-            error: null,
-        });
+        (postInternalBooking as jest.Mock).mockResolvedValue('complex-booking-1');
 
         const bookingId = await createInternalComplexBooking({
             bizId: 'biz-1',
@@ -266,28 +193,26 @@ describe('bookingDashboardService', () => {
         });
 
         expect(bookingId).toBe('complex-booking-1');
-        expect(supabase.rpc).toHaveBeenCalledWith('create_internal_complex_booking', {
-            p_biz_id: 'biz-1',
-            p_branch_id: 'branch-1',
-            p_staff_id: 'staff-1',
-            p_start: '2026-03-26T10:00:00Z',
-            p_services: [
+        expect(postInternalBooking).toHaveBeenCalledWith({
+            mode: 'complex',
+            biz_id: 'biz-1',
+            branch_id: 'branch-1',
+            staff_id: 'staff-1',
+            start_at: '2026-03-26T10:00:00Z',
+            services: [
                 { service_id: 'service-1', duration_min: 30, order_index: 0 },
                 { service_id: 'service-2', duration_min: 45, order_index: 7 },
             ],
-            p_client_id: null,
-            p_client_name: 'Guest',
-            p_client_phone: '+996700000002',
-            p_client_email: null,
+            client_id: null,
+            client_name: 'Guest',
+            client_phone: '+996700000002',
+            client_email: null,
         });
     });
 
-    it('logs and rethrows createInternalComplexBooking rpc errors', async () => {
+    it('logs and rethrows createInternalComplexBooking HTTP errors', async () => {
         const error = new Error('create_internal_complex_booking failed');
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            data: null,
-            error,
-        });
+        (postInternalBooking as jest.Mock).mockRejectedValue(error);
 
         await expect(
             createInternalComplexBooking({
@@ -321,6 +246,7 @@ describe('bookingDashboardService', () => {
         await expect(
             getFreeSlotsForServiceDay({
                 bizId: 'biz-1',
+                staffId: 'staff-1',
                 serviceId: 'service-1',
                 day: '2026-03-26',
             }),
@@ -332,7 +258,13 @@ describe('bookingDashboardService', () => {
             p_day: '2026-03-26',
             p_per_staff: 400,
             p_step_min: 15,
+            p_staff_id: 'staff-1',
         });
+    });
+
+    it.each(['any', ''])('rejects unscoped dashboard slot request %s before RPC', async staffId => {
+        await expect(getFreeSlotsForServiceDay({ bizId: 'biz-1', serviceId: 'service-1', day: '2035-01-01', staffId })).rejects.toThrow('USE_PAGED_SLOTS');
+        expect(supabase.rpc).not.toHaveBeenCalled();
     });
 
     it('returns empty list when service-day rpc data is null', async () => {
@@ -344,6 +276,7 @@ describe('bookingDashboardService', () => {
         await expect(
             getFreeSlotsForServiceDay({
                 bizId: 'biz-1',
+                staffId: 'staff-1',
                 serviceId: 'service-1',
                 day: '2026-03-26',
                 perStaff: 10,
@@ -362,6 +295,7 @@ describe('bookingDashboardService', () => {
         await expect(
             getFreeSlotsForServiceDay({
                 bizId: 'biz-1',
+                staffId: 'staff-1',
                 serviceId: 'service-1',
                 day: '2026-03-26',
             }),

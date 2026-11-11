@@ -1,7 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
@@ -14,26 +14,49 @@ interface ToastProps {
     onClose?: () => void;
 }
 
-export function Toast({ message, type = 'info', duration = 5000, onClose }: ToastProps) {
+export function Toast(props: ToastProps) {
+    return <ToastInstance key={`${props.type ?? 'info'}:${props.message}`} {...props} />;
+}
+
+function ToastInstance({ message, type = 'info', duration = 5000, onClose }: ToastProps) {
     const { t } = useLanguage();
     const [phase, setPhase] = useState<'visible' | 'closing'>('visible');
 
-    useEffect(() => {
-        setPhase('visible');
-    }, [message, type]);
+    const onCloseRef = useRef(onClose);
+    const closingRef = useRef(false);
+    const autoCloseTimer = useRef<number | null>(null);
+    const closingTimer = useRef<number | null>(null);
+
+    useLayoutEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
+    const close = useCallback(() => {
+        if (closingRef.current) return;
+        closingRef.current = true;
+        if (autoCloseTimer.current !== null) window.clearTimeout(autoCloseTimer.current);
+        autoCloseTimer.current = null;
+        setPhase('closing');
+        closingTimer.current = window.setTimeout(() => {
+            closingTimer.current = null;
+            onCloseRef.current?.();
+        }, 300);
+    }, []);
 
     useEffect(() => {
-        const close = () => {
-            setPhase('closing');
-            window.setTimeout(() => onClose?.(), 300);
-        };
-
-        if (duration > 0) {
-            const timer = window.setTimeout(close, duration);
-
-            return () => clearTimeout(timer);
+        if (duration > 0 && !closingRef.current) {
+            autoCloseTimer.current = window.setTimeout(close, duration);
         }
-    }, [duration, onClose]);
+        return () => {
+            if (autoCloseTimer.current !== null) window.clearTimeout(autoCloseTimer.current);
+            autoCloseTimer.current = null;
+        };
+    }, [duration, close]);
+
+    useEffect(() => () => {
+        if (closingTimer.current !== null) window.clearTimeout(closingTimer.current);
+        closingTimer.current = null;
+    }, []);
 
     const typeStyles = {
         success:
@@ -88,10 +111,7 @@ export function Toast({ message, type = 'info', duration = 5000, onClose }: Toas
             <div className="flex-shrink-0" aria-hidden="true">{icons[type]}</div>
             <div className="flex-1 text-sm font-medium">{message}</div>
             <button
-                onClick={() => {
-                    setPhase('closing');
-                    window.setTimeout(() => onClose?.(), 300);
-                }}
+                onClick={close}
                 aria-label={t('common.closeNotification', 'Закрыть уведомление')}
                 className="motion-interactive flex-shrink-0 text-current opacity-70 hover:opacity-100"
             >

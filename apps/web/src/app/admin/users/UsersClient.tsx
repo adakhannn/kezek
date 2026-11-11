@@ -8,10 +8,10 @@ import { AdminDataTable } from '../_components/AdminDataTable';
 import { AdminFilterBar } from '../_components/AdminFilterBar';
 import { AdminPagination } from '../_components/AdminPagination';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import type { AdminUserStats } from '@/lib/adminUserStats';
 
 type UserListItem = {
@@ -62,20 +62,26 @@ export default function UsersClient({
     const [status, setStatus] = useState(initialStatus);
     const [perPage, setPerPage] = useState(initialPerPage);
     const [isPending, startTransition] = useTransition();
-    const [users, setUsers] = useState(initialUsers);
-    const [page, setPage] = useState(initialPage);
-    const [total, setTotal] = useState(initialTotal);
+    const users = initialUsers;
+    const page = initialPage;
+    const total = initialTotal;
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const filterKey = JSON.stringify([initialSearch, initialStatus, initialPerPage]);
+    const [previousFilterKey, setPreviousFilterKey] = useState(filterKey);
+    const [previousResult, setPreviousResult] = useState({ users: initialUsers, page: initialPage, filterKey });
 
-    useEffect(() => {
-        setUsers(initialUsers);
-        setPage(initialPage);
-        setTotal(initialTotal);
+    // Reconcile a committed server navigation before rendering children. Keeping
+    // the same input mounted preserves focus; ordinary data refreshes keep its draft.
+    if (previousFilterKey !== filterKey) {
+        setPreviousFilterKey(filterKey);
         setSearch(initialSearch);
         setStatus(initialStatus);
         setPerPage(initialPerPage);
+    }
+    if (previousResult.users !== initialUsers || previousResult.page !== initialPage || previousResult.filterKey !== filterKey) {
+        setPreviousResult({ users: initialUsers, page: initialPage, filterKey });
         setSelectedIds([]);
-    }, [initialUsers, initialPage, initialTotal, initialSearch, initialStatus, initialPerPage]);
+    }
 
     useEffect(() => {
         const timer = setTimeout(() => {

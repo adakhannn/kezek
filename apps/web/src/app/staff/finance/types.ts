@@ -40,6 +40,7 @@ export type Booking = {
 
 export type Shift = {
     id: string;
+    ledger_revision: number;
     shift_date: string;
     opened_at: string | null;
     closed_at: string | null;

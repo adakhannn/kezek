@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { logError } from '@/lib/log';
+import { rateLimitDeniedResponse } from '@/lib/rateLimit';
 import { runStaffShiftItemsRoute } from '@/lib/staffShiftItemsRouteService';
 
 export async function runStaffShiftItemsHttp(req: Request): Promise<NextResponse> {
@@ -41,7 +42,8 @@ export async function runStaffShiftItemsHttp(req: Request): Promise<NextResponse
                 userAgent: req.headers.get('user-agent') || undefined,
             }).catch(() => {});
 
-            return createErrorResponse(result.error, result.message, undefined, result.status);
+            return result.rateLimit ? rateLimitDeniedResponse(result.rateLimit)
+                : createErrorResponse(result.error, result.message, undefined, result.status);
         }
 
         statusCode = 200;
@@ -61,7 +63,7 @@ export async function runStaffShiftItemsHttp(req: Request): Promise<NextResponse
             userAgent: req.headers.get('user-agent') || undefined,
         }).catch(() => {});
 
-        return createSuccessResponse();
+        return createSuccessResponse(result.data);
     } catch (error) {
         logError('StaffShiftItems', 'Error saving shift items', error);
         errorMessage = 'Ошибка при сохранении данных';

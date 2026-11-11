@@ -20,6 +20,7 @@ type Options = {
     prepareItemsForSave: PrepareItemsForSave;
     saveItems: SaveItems;
     serializeItems: SerializeItems;
+    savedSignature?: string | null;
 };
 
 export function useFinanceClientAutosave({
@@ -32,6 +33,7 @@ export function useFinanceClientAutosave({
     prepareItemsForSave,
     saveItems,
     serializeItems,
+    savedSignature,
 }: Options) {
     const localItemsRef = useRef<ShiftItem[]>([]);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -41,18 +43,20 @@ export function useFinanceClientAutosave({
     const isOpenRef = useRef(false);
     const isReadOnlyForOwnerRef = useRef(false);
     const lastSavedItemsRef = useRef<string | null>(null);
-    const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(null);
+    const [internalSavedSignature, setLastSavedSignature] = useState<string | null>(null);
+    const lastSavedSignature = savedSignature === undefined ? internalSavedSignature : savedSignature;
 
+    // Only committed props may reach an existing timer or an unmount flush.
+    // A render that suspends or is abandoned must not change those callbacks.
     useEffect(() => {
         localItemsRef.current = localItems;
-    }, [localItems]);
-
-    saveItemsRef.current = saveItems;
-    prepareItemsForSaveRef.current = prepareItemsForSave;
-    serializeItemsRef.current = serializeItems;
-
-    isOpenRef.current = isOpen;
-    isReadOnlyForOwnerRef.current = isReadOnlyForOwner;
+        saveItemsRef.current = saveItems;
+        prepareItemsForSaveRef.current = prepareItemsForSave;
+        serializeItemsRef.current = serializeItems;
+        isOpenRef.current = isOpen;
+        isReadOnlyForOwnerRef.current = isReadOnlyForOwner;
+        if (savedSignature !== undefined) lastSavedItemsRef.current = savedSignature;
+    }, [localItems, saveItems, prepareItemsForSave, serializeItems, isOpen, isReadOnlyForOwner, savedSignature]);
 
     const clearPendingSave = useCallback(() => {
         if (saveTimeoutRef.current) {
@@ -62,16 +66,16 @@ export function useFinanceClientAutosave({
     }, []);
 
     const markSaved = useCallback((signature: string) => {
+        if (savedSignature !== undefined) return;
         lastSavedItemsRef.current = signature;
         setLastSavedSignature(signature);
-    }, []);
+    }, [savedSignature]);
 
     const handleSaveNow = useCallback(() => {
         if (!isOpen || isReadOnlyForOwner) return;
 
         const latestItemsRaw = localItemsRef.current;
         const latestItems = prepareItemsForSaveRef.current(latestItemsRaw);
-        if (latestItems.length === 0) return;
 
         const latestSignature = serializeItemsRef.current(latestItems);
         if (lastSavedSignature !== null && latestSignature === lastSavedSignature) {
@@ -94,9 +98,6 @@ export function useFinanceClientAutosave({
             return;
         }
         if (!isOpen || isReadOnlyForOwner) {
-            return;
-        }
-        if (localItems.length === 0) {
             return;
         }
 
@@ -134,16 +135,15 @@ export function useFinanceClientAutosave({
         if (wasClients && activeTab !== 'clients') {
             clearPendingSave();
             const latestItems = prepareItemsForSaveRef.current(localItemsRef.current);
-            const latestSignature = latestItems.length > 0 ? serializeItemsRef.current(latestItems) : null;
+            const latestSignature = serializeItemsRef.current(latestItems);
 
             if (
-                latestItems.length > 0 &&
                 latestSignature &&
                 latestSignature !== lastSavedItemsRef.current &&
                 isOpen &&
                 !isReadOnlyForOwner
             ) {
-                void saveItemsRef.current(latestItems);
+                void saveItemsRef.current(latestItems).catch(() => { /* The draft owns the error state. */ });
             }
         }
     }, [activeTab, clearPendingSave, isOpen, isReadOnlyForOwner, previousTabRef]);
@@ -151,13 +151,12 @@ export function useFinanceClientAutosave({
     useEffect(() => {
         return () => {
             const latestItems = prepareItemsForSaveRef.current(localItemsRef.current);
-            const latestSignature = latestItems.length > 0 ? serializeItemsRef.current(latestItems) : null;
+            const latestSignature = serializeItemsRef.current(latestItems);
 
-            if (latestItems.length === 0) return;
             if (!latestSignature || latestSignature === lastSavedItemsRef.current) return;
             if (!isOpenRef.current || isReadOnlyForOwnerRef.current) return;
 
-            void saveItemsRef.current(latestItems);
+            void saveItemsRef.current(latestItems).catch(() => { /* The draft owns the error state. */ });
         };
     }, []);
 

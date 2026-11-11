@@ -1,7 +1,7 @@
 import { runDashboardStaffShiftUpdateHoursHttp } from '@/lib/dashboardStaffShiftUpdateHoursHttpService';
 
 jest.mock('@/lib/routeParams', () => ({
-    getRouteParamRequired: jest.fn(),
+    getRouteParamUuid: jest.fn(),
 }));
 
 jest.mock('@/lib/withManagerContext', () => ({
@@ -12,19 +12,19 @@ jest.mock('@/lib/dashboardStaffShiftUpdateHoursService', () => ({
     updateDashboardShiftHours: jest.fn(),
 }));
 
-const { getRouteParamRequired } = require('@/lib/routeParams');
+const { getRouteParamUuid } = require('@/lib/routeParams');
 const { withManagerContext } = require('@/lib/withManagerContext');
 const { updateDashboardShiftHours } = require('@/lib/dashboardStaffShiftUpdateHoursService');
 
 describe('dashboardStaffShiftUpdateHoursHttpService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        getRouteParamRequired.mockResolvedValue('shift-id');
+        getRouteParamUuid.mockResolvedValue('shift-id');
         withManagerContext.mockImplementation(
             async (_req: Request, _scope: string, handler: Function) =>
                 handler({
                     admin: { mocked: true },
-                    bizId: 'biz-1',
+                    bizId: 'biz-1', userId: 'actor-1',
                 }),
         );
     });
@@ -71,7 +71,7 @@ describe('dashboardStaffShiftUpdateHoursHttpService', () => {
 
         const req = new Request('http://localhost/api/dashboard/staff-shifts/shift-id/update-hours', {
             method: 'POST',
-            body: JSON.stringify({ hours_worked: 8.333 }),
+            body: JSON.stringify({ hours_worked: 8.333, expectedRevision: 9 }),
             headers: { 'content-type': 'application/json' },
         });
 
@@ -85,8 +85,15 @@ describe('dashboardStaffShiftUpdateHoursHttpService', () => {
             admin: { mocked: true },
             bizId: 'biz-1',
             shiftId: 'shift-id',
-            hoursWorked: 8.33,
+            hoursWorked: 8.33, expectedRevision: 9, actorId: 'actor-1',
         });
         expect(data.data.shift.hours_worked).toBe(8.33);
     });
+});
+
+test.each([{ hours_worked:8 }, { hours_worked:'8',expectedRevision:0 }, { hours_worked:8,expectedRevision:-1 }, { hours_worked:8,expectedRevision:0,total_amount:1 }])('strict update-hours input %j is rejected', async body => {
+    withManagerContext.mockImplementation(async (_req: Request, _scope: string, handler: Function) => handler({admin:{},bizId:'biz',userId:'actor'}));
+    updateDashboardShiftHours.mockClear();
+    const res=await runDashboardStaffShiftUpdateHoursHttp(new Request('http://localhost',{method:'POST',body:JSON.stringify(body)}),{});
+    expect(res.status).toBe(400);expect(updateDashboardShiftHours).not.toHaveBeenCalled();
 });

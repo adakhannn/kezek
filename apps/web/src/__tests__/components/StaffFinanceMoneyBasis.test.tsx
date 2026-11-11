@@ -6,6 +6,7 @@ import { financeRu } from '@/app/_components/i18n/dictionaries/finance.ru';
 
 const t = (key: string, fallback: string) => (financeRu as Record<string, string>)[key] ?? fallback;
 const shift = {
+    ledger_revision: 7, timezone: 'Asia/Bishkek', day_hours:24,
     id: 'live-finance', shift_date: '2026-10-13', status: 'closed' as const,
     opened_at: '2026-10-13T11:36:00Z', closed_at: '2026-10-13T11:37:00Z',
     total_amount: 600, consumables_amount: 50, base_master_share: 360, base_salon_share: 290,

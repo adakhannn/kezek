@@ -1,4 +1,4 @@
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { runAdminHealthCheck } from '@/lib/adminHealthCheckService';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -13,13 +13,13 @@ type CallerReadResult = Awaited<ReturnType<typeof runAdminHealthCheck>> | {
 /** Shared request-context read for the server page and HTTP adapter. */
 export async function readAdminHealthCheckForCaller(): Promise<CallerReadResult> {
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
     return { ok: false, statusCode: 401, errorType: 'auth', message: 'Не авторизован' };
   }
 
   const { isSuperAdmin, error } = await checkCurrentUserIsSuperAdmin(
-    supabase as unknown as SuperAdminRoleClient,
+    supabase,
     user.id,
   );
   if (error) {

@@ -6,9 +6,7 @@ import type { BookingCommandsPort, BookingNotificationPort } from './useCases';
 describe('core-domain/booking/useCases', () => {
     test('createBookingUseCase возвращает ошибку, если филиал не найден или неактивен', async () => {
         const branchRepository: BranchRepository = {
-            // @ts-expect-error не все методы нужны для теста
             findFirstActiveByBizId: jest.fn(),
-            // @ts-expect-error не все методы нужны для теста
             findActiveById: jest.fn().mockResolvedValue(null),
         };
 
@@ -26,12 +24,7 @@ describe('core-domain/booking/useCases', () => {
                 service_id: 'service-1',
                 staff_id: 'staff-1',
                 start_at: '2025-01-01T10:00:00.000Z',
-                client_id: null,
-                client_name: null,
-                client_phone: null,
-                comment: null,
-                source: 'manual',
-                meta: null,
+
             },
         );
 
@@ -44,9 +37,7 @@ describe('core-domain/booking/useCases', () => {
 
     test('createBookingUseCase создаёт, подтверждает и шлёт уведомление при успешном сценарии (одна услуга)', async () => {
         const branchRepository: BranchRepository = {
-            // @ts-expect-error не все методы нужны для теста
             findActiveById: jest.fn().mockResolvedValue({ id: 'branch-1' }),
-            // @ts-expect-error не все методы нужны для теста
             findFirstActiveByBizId: jest.fn(),
         };
 
@@ -68,12 +59,7 @@ describe('core-domain/booking/useCases', () => {
                 service_id: 'service-1',
                 staff_id: 'staff-1',
                 start_at: '2025-01-01T10:00:00.000Z',
-                client_id: 'client-1',
-                client_name: 'Test Client',
-                client_phone: '+996555000000',
-                comment: null,
-                source: 'manual',
-                meta: null,
+
             },
         );
 
@@ -95,9 +81,7 @@ describe('core-domain/booking/useCases', () => {
 
     test('createBookingUseCase использует holdComplexSlot, если передан массив services и порт его поддерживает', async () => {
         const branchRepository: BranchRepository = {
-            // @ts-expect-error не все методы нужны для теста
             findActiveById: jest.fn().mockResolvedValue({ id: 'branch-1' }),
-            // @ts-expect-error не все методы нужны для теста
             findFirstActiveByBizId: jest.fn(),
         };
 
@@ -107,7 +91,6 @@ describe('core-domain/booking/useCases', () => {
 
         const commands: BookingCommandsPort = {
             holdSlot,
-            // @ts-expect-error optional method in interface
             holdComplexSlot,
             confirmBooking,
             cancelBooking: jest.fn().mockResolvedValue(undefined),
@@ -126,7 +109,7 @@ describe('core-domain/booking/useCases', () => {
                     { service_id: 'service-1', duration_min: 30 },
                     { service_id: 'service-2', duration_min: 45, order_index: 5 },
                 ],
-            } as any,
+            },
         );
 
         expect(result.ok).toBe(true);
@@ -150,9 +133,10 @@ describe('core-domain/booking/useCases', () => {
 
     test('decideMarkAttendanceUseCase возвращает BOOKING_NOT_IN_PAST, если дата в будущем', async () => {
         const bookingRepository: BookingRepository = {
-            // @ts-expect-error не все методы нужны для теста
+            updateStatus: jest.fn(),
             findById: jest.fn().mockResolvedValue({
                 id: 'booking-1',
+                branch_id: 'branch-1', service_id: 'service-1', staff_id: 'staff-1', promotion_applied: null,
                 biz_id: 'biz-1',
                 status: 'hold',
                 start_at: '2025-01-01T10:00:00.000Z',
@@ -178,9 +162,10 @@ describe('core-domain/booking/useCases', () => {
 
     test('decideMarkAttendanceUseCase помечает как paid/no_show и решает про промо', async () => {
         const bookingRepository: BookingRepository = {
-            // @ts-expect-error не все методы нужны для теста
+            updateStatus: jest.fn(),
             findById: jest.fn().mockResolvedValue({
                 id: 'booking-1',
+                branch_id: 'branch-1', service_id: 'service-1', staff_id: 'staff-1', promotion_applied: null,
                 biz_id: 'biz-1',
                 status: 'confirmed',
                 start_at: '2024-01-01T10:00:00.000Z',
@@ -219,5 +204,5 @@ describe('core-domain/booking/useCases', () => {
             expect(noShowResult.applyPromotion).toBe(false);
         }
     });
-}
+});
 

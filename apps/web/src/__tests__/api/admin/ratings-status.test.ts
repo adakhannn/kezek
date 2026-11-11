@@ -32,18 +32,6 @@ describe('/api/admin/ratings/status', () => {
     const mockSupabase = createMockSupabase();
     const mockAdmin = createMockSupabase();
 
-    function createSuperAdminLookupQuery(row: unknown) {
-        return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            is: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({
-                data: row,
-                error: null,
-            }),
-        };
-    }
 
     function createMetricMaxQuery(metricDate: string | null) {
         return {
@@ -118,7 +106,7 @@ describe('/api/admin/ratings/status', () => {
             error: null,
         });
 
-        mockSupabase.from.mockReturnValueOnce(createSuperAdminLookupQuery(null));
+        mockSupabase.rpc.mockResolvedValueOnce({data:false,error:null});
 
         const req = createMockRequest('http://localhost/api/admin/ratings/status', {
             method: 'GET',
@@ -134,12 +122,7 @@ describe('/api/admin/ratings/status', () => {
             error: null,
         });
 
-        mockSupabase.from.mockReturnValueOnce(
-            createSuperAdminLookupQuery({
-                role_key: 'super_admin',
-                biz_id: null,
-            })
-        );
+        mockSupabase.rpc.mockResolvedValueOnce({ data: true, error: null });
 
         mockAdmin.from
             .mockReturnValueOnce(createMetricMaxQuery('2024-01-15'))

@@ -7,7 +7,8 @@ import { runNotifyPingHttp } from '@/lib/notifyPingHttpService';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
-    return withRateLimit(req, RateLimitConfigs.normal, () =>
+    return withRateLimit(req, { ...RateLimitConfigs.critical, keyPrefix: 'notify-ping' }, () =>
         withErrorHandler('NotifyPing', async () => runNotifyPingHttp(req)),
+        "/api/notify/ping",
     );
 }

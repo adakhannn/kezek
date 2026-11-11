@@ -1,6 +1,7 @@
-# Archived Improvement Tasks
+# Исторические задачи
 
-This document is archived. Full historical version: [docs/archive/IMPROVEMENT_TASKS.md](docs/archive/IMPROVEMENT_TASKS.md).
+Статус: указатель совместимости, обновлён 30 октября 2026.
 
-Current execution backlog: [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md).
-Historical backlog snapshot: [FUTURE_IMPROVEMENTS_TASKS.md](FUTURE_IMPROVEMENTS_TASKS.md).
+Исходный список сохранён в [архиве](docs/archive/IMPROVEMENT_TASKS.md). Его отметки описывают прежнюю волну.
+
+Текущая работа: [PROJECT_STATUS.md](docs/PROJECT_STATUS.md). Общая навигация: [docs/README.md](docs/README.md). Отдельная действующая очередь здесь не ведётся.

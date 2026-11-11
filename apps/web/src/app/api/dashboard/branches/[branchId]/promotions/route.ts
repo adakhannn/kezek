@@ -12,5 +12,6 @@ export async function GET(req: Request, context: unknown) {
 export async function POST(req: Request, context: unknown) {
     return withRateLimit(req, RateLimitConfigs.normal, () =>
         withErrorHandler('BranchPromotions', async () => runCreateBranchPromotionHttp(req, context)),
+        "/api/dashboard/branches/[branchId]/promotions",
     );
 }

@@ -1,7 +1,10 @@
 import { runYandexOAuthCallback } from '@/lib/yandexAuthCallbackService';
+import { issueSessionForVerifiedUser } from '@/lib/verifiedIdentitySession';
+jest.mock('@/lib/verifiedIdentitySession', () => ({ issueSessionForVerifiedUser: jest.fn(async () => ({ accessToken: 'access', refreshToken: 'refresh' })) }));
 import { createMockSupabase } from '../api/testHelpers';
 
 describe('yandexAuthCallbackService', () => {
+    beforeEach(() => { jest.clearAllMocks(); });
     test('builds callback redirect for existing user', async () => {
         const admin = createMockSupabase();
         const updateProfile = jest.fn().mockReturnThis();
@@ -66,6 +69,9 @@ describe('yandexAuthCallbackService', () => {
 
         expect(result.redirectUrl).toContain('/auth/callback?next=%2F');
         expect(result.redirectUrl).toContain('#access_token=access&refresh_token=refresh');
+        expect(issueSessionForVerifiedUser).toHaveBeenCalledWith('existing-user-id');
+        expect(admin.auth.admin?.updateUserById).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ password: expect.anything() }));
+        expect((admin as unknown as { auth: { signInWithPassword: jest.Mock } }).auth.signInWithPassword).not.toHaveBeenCalled();
         expect(updateProfile).toHaveBeenCalledWith({
             yandex_id: '123',
             yandex_username: 'testuser',
@@ -179,5 +185,6 @@ describe('yandexAuthCallbackService', () => {
             user_metadata: expect.objectContaining({ yandex_id: '123' }),
         }));
         expect((admin as any).auth.signInWithPassword).not.toHaveBeenCalled();
+        expect(issueSessionForVerifiedUser).not.toHaveBeenCalled();
     });
 });

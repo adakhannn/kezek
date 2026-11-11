@@ -102,7 +102,7 @@ export const bookingKy = {
     'booking.step2.selectedDate': 'Тандалган күн:',
     'booking.step2.title': 'Кадам 2. Күндү тандаңыз',
     'booking.step3.anyMaster': 'Ар кандай кызматкер',
-    'booking.step3.anyMasterHint': 'Эң жакын бош убакыт',
+    'booking.step3.anyMasterHint': 'Ар башка адистердин бош убактысы',
     'booking.step3.noStaff': 'Тандалган күн үчүн бул филиалда жеткиликтүү кызматкерлер жок.',
     'booking.step3.selectDayFirst': 'Алгач 2-кадамда күндү тандаңыз.',
     'booking.step3.title': 'Кадам 3. Кызматкерди тандаңыз',

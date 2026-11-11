@@ -1,11 +1,11 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { Service } from '../types';
 import { fmtErr, isNetworkError, withNetworkRetry } from '../utils';
 
-import { logDebug, logError } from '@/lib/log';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
+import { logDebug, logError } from '@/lib/log';
 import { createGuestBookingRequest } from '@/lib/quickBookGuestClient';
 import { TZ } from '@/lib/time';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
@@ -42,6 +42,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         client_email: '',
     });
     const [loading, setLoading] = useState(false);
+    const inFlight = useRef(false);
 
     function openModal(nextSlotTime: Date, nextSlotStaffId?: string) {
         logDebug('GuestBooking', 'Opening modal', {
@@ -62,6 +63,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
     }
 
     async function createGuestBooking() {
+        if (inFlight.current) return;
         logDebug('GuestBooking', 'createGuestBooking called', {
             staffId,
             slotStaffId,
@@ -156,6 +158,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
             }
         }
 
+        inFlight.current = true;
         setLoading(true);
         try {
             const startISO = formatInTimeZone(
@@ -223,7 +226,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                           })),
                       };
 
-            logDebug('GuestBooking', 'Sending request', requestBody);
+            logDebug('GuestBooking', 'Sending booking request');
 
             const { bookingId } = await withNetworkRetry(
                 () => createGuestBookingRequest(requestBody),
@@ -279,6 +282,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
 
             feedback.showError(message);
         } finally {
+            inFlight.current = false;
             setLoading(false);
         }
     }

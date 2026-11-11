@@ -159,32 +159,18 @@ function ClientEditFormInner({
 
     // Для клиентов без брони (`bookingId` пустой) поддерживаем выбор нескольких услуг через чекбоксы.
     const isWalkIn = !item.bookingId;
-    const [selectedServiceNames, setSelectedServiceNames] = useState<string[]>(() =>
-        item.serviceName ? item.serviceName.split('+').map((s) => s.trim()).filter(Boolean) : []
+    const selectedServiceNames = useMemo(() =>
+        item.serviceName ? item.serviceName.split('+').map((name) => name.trim()).filter(Boolean) : [],
+        [item.serviceName],
     );
-
-    // Синхронизируем локальное состояние чекбоксов, если serviceName обновили извне (например, при загрузке из БД)
-    useEffect(() => {
-        const parts = item.serviceName ? item.serviceName.split('+').map((s) => s.trim()).filter(Boolean) : [];
-        setSelectedServiceNames(parts);
-    }, [item.serviceName]);
 
     const toggleServiceForWalkIn = (label: string) => {
         if (!isWalkIn || !isOpen || isReadOnly) return;
-        setSelectedServiceNames((prev) => {
-            const exists = prev.includes(label);
-            return exists ? prev.filter((n) => n !== label) : [...prev, label];
-        });
+        const nextNames = selectedServiceNames.includes(label)
+            ? selectedServiceNames.filter((name) => name !== label)
+            : [...selectedServiceNames, label];
+        handleServiceChange(nextNames.join(' + '));
     };
-
-    // После изменения набора чекбоксов обновляем serviceName в родителе (FinancePage) один раз, после рендера
-    useEffect(() => {
-        if (!isWalkIn) return;
-        const nextLabel = selectedServiceNames.join(' + ');
-        if (nextLabel !== (item.serviceName || '')) {
-            handleServiceChange(nextLabel);
-        }
-    }, [isWalkIn, selectedServiceNames]);
 
     // Обработка горячих клавиш
     useEffect(() => {

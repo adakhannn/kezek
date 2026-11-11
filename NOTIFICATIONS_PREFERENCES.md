@@ -1,128 +1,76 @@
-# Модель предпочтений уведомлений (NOTIFY-2)
+# Предпочтения и доставка уведомлений
 
-Этот документ фиксирует, **где и как** хранятся настройки уведомлений и какие каналы реально используются.
+Статус: текущая модель по исходникам, сверка 2026-11-01. Runtime и доставка провайдерами: `NOT_RUN`. Владелец: backend / notifications. Этот документ описывает существующие различия по каналам и ролям; наличие preference в профиле не означает, что каждый отправщик его применяет.
 
----
+Контракты: [notify и интеграции](docs/api/AUTH_AND_INTEGRATIONS.md), [профиль и auth flows](docs/api/CLIENT_AND_AUTH_FLOWS.md). Конфигурация: [WhatsApp](WHATSAPP_SETUP.md), [Telegram](TELEGRAM_AUTH_IMPLEMENTATION.md). Эксплуатация и риски: [Operations](docs/OPERATIONS.md), [Engineering findings](docs/ENGINEERING_FINDINGS.md).
 
-## 1. Где хранятся предпочтения
+## Данные предпочтений
 
-### 1.1. Уровень клиента (`profiles`)
+| Данные | Что читает текущая реализация |
+| --- | --- |
+| `profiles.notify_email` | Разрешение email для клиента, мастера и владельца в booking orchestrator; `null`/отсутствие profile дают runtime fallback `true` |
+| `user_notification_emails` | Участники используют строки с `verified=true` и `enabled=true`. Адреса нормализуются и дедуплицируются; если список пуст или чтение завершилось ошибкой, остаётся fallback email роли |
+| `profiles.whatsapp_phone`, `whatsapp_verified`, `notify_whatsapp` | Подтверждённый адрес канала отдельно от контактного `phone`. В booking отправке проверки применяются полностью только к клиенту |
+| `profiles.telegram_id`, `telegram_verified`, `notify_telegram` | Идентификатор Telegram пользователя и состояние привязки. Sender использует ID как private-chat destination, не как произвольный group chat |
+| `businesses.email_notify_to` | Дополнительные email-получатели брони. Это не primary email владельца и не настройка его личного согласия |
+| `profiles.notify_sms` | Сохраняется profile update service, но booking orchestrator ниже не выполняет SMS-отправку. Аналогично наличие типа/экрана push не доказывает push-доставку этим orchestrator |
 
-Таблица `profiles` содержит настройки уведомлений для конечного пользователя:
+Источник загрузки — [ParticipantDataService](apps/web/src/lib/notifications/ParticipantDataService.ts). Здесь описаны fallback в коде, а не предположения о defaults фактической базы.
 
-- `notify_email boolean` — получать ли email‑уведомления (по умолчанию `true`).
-- `notify_whatsapp boolean` — получать ли уведомления в WhatsApp (по умолчанию `true`).
-- `whatsapp_verified boolean` — верифицирован ли WhatsApp номер.
-- `notify_telegram boolean` — получать ли уведомления в Telegram (по умолчанию `true`).
-- `telegram_verified boolean` — верифицирован ли Telegram.
-- `telegram_id bigint` — chat id в Telegram (если привязан).
-- `phone`, `full_name` — контактные данные, используемые как fallback.
+[User notification email service](apps/web/src/lib/userNotificationEmailService.ts) синхронизирует источники подтверждённого account email, Google identity email и Yandex metadata через RPC. `/api/profile/notification-emails` и изменения предпочтений описаны в [CLIENT_AND_AUTH_FLOWS](docs/api/CLIENT_AND_AUTH_FLOWS.md). Пустой список enabled email **не является общим запретом отправки**: для этого в booking flow используется также `notify_email=false`.
 
-Эти поля считываются в `ParticipantDataService.getClientData` и попадают в `ParticipantData`:
+## Кто получает уведомления о брони
 
-- `notifyEmail`, `notifyWhatsApp`, `notifyTelegram`,
-- `whatsappVerified`, `telegramVerified`,
-- `telegramId`.
+[NotificationOrchestrator](apps/web/src/lib/notifications/NotificationOrchestrator.ts) обрабатывает `hold`, `confirm`, `cancel` и загружает клиента, владельца и мастера. Правила подтверждены непосредственно [WhatsApp sender service](apps/web/src/lib/notifications/WhatsAppNotificationService.ts) и [Telegram sender service](apps/web/src/lib/notifications/TelegramNotificationService.ts).
 
-### 1.2. Уровень бизнеса (`businesses`)
+| Получатель | Email | WhatsApp | Telegram |
+| --- | --- | --- | --- |
+| Клиент | Enabled verified notification emails; fallback Auth view, затем `booking.client_email`. Нужен `notifyEmail`; клиентская копия содержит `.ics` | Нужны `whatsapp_phone`, `notify_whatsapp=true`, `whatsapp_verified=true` | Нужны Telegram ID, `notify_telegram=true`, `telegram_verified=true` |
+| Мастер | Enabled verified emails по `staff.user_id`; fallback `staff.email`. Profile `notify_email` учитывается | Profile WhatsApp phone либо fallback `staff.phone`. **Sender не проверяет `notify_whatsapp` или `whatsapp_verified`**, хотя loader их читает | Profile по `staff.user_id`; ID и `notify_telegram` обязательны, `telegram_verified` не обязателен |
+| Владелец | Enabled verified emails по `business.owner_id`; fallback Auth admin / Auth view. Profile `notify_email` учитывается | `profiles.whatsapp_phone`. **Sender не проверяет `notify_whatsapp` или `whatsapp_verified`**; loader владельца эти два поля не загружает | Profile по owner ID; ID и `notify_telegram` обязательны, `telegram_verified` не обязателен |
+| Дополнительные адреса бизнеса | Нормализованные `email_notify_to`; общего profile opt-out для этих адресов в этой ветке нет | Не используются этой веткой | Не используются этой веткой |
 
-- `email_notify_to text[]` — список email‑адресов, на которые уходят уведомления о бронях (администраторы/владелец).
-- `owner_id uuid` — владелец бизнеса (его email и имя используются как fallback, если `email_notify_to` пустой).
+Для гостевой брони `client_phone` — контакт, он сам не становится проверенным WhatsApp-адресом. Email гостя может использоваться как fallback. При отсутствии связанного `staff.user_id` личные preferences мастера загрузить нельзя, остаются runtime defaults и данные staff.
 
-`ParticipantDataService.getOwnerData`:
+Email owner исключается из дополнительных адресов бизнеса независимо от того, включён ли его `notify_email`. Финальный email dedup оставляет первого получателя по строке адреса; для fallback адресов не гарантирована единая нормализация регистра. [Telegram dedup](apps/web/src/lib/notifications/telegramRecipients.ts) сначала фильтрует разрешённых получателей, затем оставляет один chat ID в порядке client → staff → owner. WhatsApp отправляется тремя отдельными вызовами без аналогичного dedup: совпавшие номера ролей могут получить несколько сообщений.
 
-- предпочитает email из `email_notify_to` (первый валидный);
-- в качестве резервного варианта использует email из `auth.users`.
+Обход WhatsApp preferences для staff/owner — **текущее ограничение, требующее исправления**, а не рекомендуемое правило «служебные сообщения можно отправлять всегда». То же различие verification для Telegram необходимо учитывать при изменении политики. Изменение только loader или UI не меняет проверки sender.
 
-### 1.3. Уровень сотрудника (`staff` + `profiles`)
+## Сохранение профиля
 
-- Email и телефон мастера берутся из строки `staff` (поля `email`, `phone`).
-- Telegram настройки мастера (если у него есть `user_id`) берутся из `profiles`:
-  - `telegram_id`, `notify_telegram`, `telegram_verified`.
+[Profile update service](apps/web/src/lib/profileUpdateService.ts) получает текущего пользователя и:
 
-`ParticipantDataService.getStaffData` возвращает `ParticipantData` для мастера.
+- Сохраняет `notify_email` и `notify_sms`, по умолчанию `true` при отсутствии поля.
+- Разрешает `notify_whatsapp=true` только если текущий profile содержит WhatsApp phone и verified; `notify_telegram=true` — только если есть Telegram ID и verified.
+- Если передан `notification_emails`, вызывает `set_my_notification_email_preferences` после profile upsert. Ошибка RPC может вернуться после уже сохранённого profile; общей транзакции этих действий нет.
 
----
+HTTP handler делает type cast body, а не полную Zod-валидацию. Это не универсальный PATCH с сохранением отсутствующих preferences: не следует отправлять неполное тело, предполагая, что пропущенные поля останутся прежними. Подробные входы и errors — [API flow handbook](docs/api/CLIENT_AND_AUTH_FLOWS.md).
 
-## 2. Как используются предпочтения в `NotificationOrchestrator`
+## Что означает результат отправки
 
-Файл: `apps/web/src/lib/notifications/NotificationOrchestrator.ts`.
+`POST /api/notify` принимает booking ID и тип события, проверяет пользователя и право на бронь, затем собирает получателей из сохранённых данных. До auth в [notifyBookingService](apps/web/src/lib/notifyBookingService.ts) проверяется `RESEND_API_KEY`; при его отсутствии весь путь прекращается, даже если WhatsApp/Telegram настроены. Email sender использует `EMAIL_FROM`; конфигурация остальных каналов описана в связанных руководствах.
 
-1. Сначала собираются данные участников:
+Пример **формы** успешного ответа, не результат проведённой отправки:
 
-```ts
-const [clientData, ownerData, staffData] = await Promise.all([
-  participantService.getClientData(booking),
-  participantService.getOwnerData(biz),
-  participantService.getStaffData(staff),
-]);
+```json
+{
+  "ok": true,
+  "data": {
+    "sent": 1,
+    "whatsappSent": 0,
+    "telegramSent": 1
+  }
+}
 ```
 
-2. **Email‑уведомления**:
+Счётчики отражают успешные ответы отправщиков внутри запроса. Нули могут означать отсутствие подходящих адресатов, выключенный/ненастроенный канал или ошибку провайдера; HTTP 200 не доказывает доставку каждому участнику.
 
-- Клиент:
-  - отправляем письмо **только если** `clientData.email && clientData.notifyEmail` (учёт `notify_email` из `profiles`);
-  - для клиента прикладывается `.ics`.
-- Мастер:
-  - письмо отправляется, если есть `staffData.email` (отдельных флагов для opt‑out пока нет).
-- Владелец:
-  - письмо уходит по адресу из `email_notify_to` или, если он не задан, по email из `auth.users`.
-- Администраторы:
-  - все адреса из `biz.email_notify_to` (кроме дубликата email владельца).
+[EmailNotificationService](apps/web/src/lib/notifications/EmailNotificationService.ts) отправляет письма последовательно, с паузой 600 ms между адресатами; при HTTP 429 делает один повтор после `Retry-After` либо 2 секунд. WhatsApp и Telegram используют `Promise.allSettled` по получателям, каналы запускаются параллельно. Это inline-отправка: в данной цепочке нет durable outbox, общего worker retry или атомарности с записью брони. Повторный notify может повторить доставку; provider fetch не имеет заданного здесь deadline. Нагрузка увеличивает время HTTP-запросов — [Operations](docs/OPERATIONS.md) не объявляет измеренную пропускную способность.
 
-3. **WhatsApp и Telegram**:
+`POST /api/notify/ping` — **OPEN risk**, не health check: [HTTP](apps/web/src/lib/notifyPingHttpService.ts) и [service](apps/web/src/lib/notifyPingService.ts) отправляют настоящее Resend email по переданному адресу, без проверки пользователя в этой цепочке. Внешний `ok:true` возможен даже при отказе провайдера (`data.ok=false`). Использовать его как обычную production-проверку или доказательство готовности каналов нельзя.
 
-- Вызовы:
+## Другие события
 
-```ts
-this.whatsappService.sendToClient(clientData, bookingDetails, notifyType);
-this.whatsappService.sendToStaff(staffData, bookingDetails, notifyType);
-this.whatsappService.sendToOwner(ownerData, bookingDetails, notifyType);
+Заявки бизнеса/мастера/владельца используют отдельный [businessRoleApplicationNotificationService](apps/web/src/lib/businessRoleApplicationNotificationService.ts). Он проверяет profile preferences и verification для Telegram/WhatsApp и имеет собственные шаблоны и правила получателей. Эти проверки не исправляют booking senders и не позволяют переносить таблицу выше на все сообщения проекта.
 
-this.telegramService.sendToClient(clientData, bookingDetails, notifyType);
-this.telegramService.sendToStaff(staffData, bookingDetails, notifyType);
-this.telegramService.sendToOwner(ownerData, bookingDetails, notifyType);
-```
-
-- Предпочтения/верификация учитываются внутри соответствующих сервисов:
-  - `notifyWhatsApp` + `whatsappVerified` для WhatsApp;
-  - `notifyTelegram` + `telegramVerified` + `telegramId` для Telegram.
-
----
-
-## 3. Как это соотносится с доменным контрактом `NotificationChannel`
-
-В `@core-domain/ports` определены:
-
-- `NotificationChannel = 'email' | 'whatsapp' | 'telegram' | 'push'`;
-- `NotificationMessage` — минимальный доменный контракт для сообщений (канал, тип события, получатель, шаблон, переменные).
-
-Текущая реализация `NotificationOrchestrator` и `ParticipantDataService` фактически заполняет:
-
-- **какие каналы** доступны для конкретного пользователя:
-  - email: по наличию email и `notifyEmail`;
-  - WhatsApp: по наличию телефона и `notifyWhatsApp`/`whatsappVerified`;
-  - Telegram: по наличию `telegramId` и `notifyTelegram`/`telegramVerified`;
-- **какие каналы включены для бизнеса**:
-  - email для владельца/админов через `email_notify_to`.
-
-При дальнейшем развитии можно:
-
-- добавить явные флаги “включён канал для бизнеса” (например, `business_notify_whatsapp`, `business_notify_telegram`);
-- строить список `NotificationMessage` по `NotificationChannel`/типу события и уже их передавать в инфраструктурные сервисы (email/WhatsApp/Telegram), опираясь на этот общий доменный контракт.
-
----
-
-## 4. Краткий чек‑лист при работе с уведомлениями
-
-- При добавлении нового типа уведомлений:
-  - использовать `NotifyType`/`NotificationEventType` для именования события;
-  - убедиться, что `ParticipantDataService` возвращает достаточно информации для всех каналов.
-- При изменении предпочтений:
-  - минимальные флаги и поля должны добавляться в `profiles` / `businesses`;
-  - `ParticipantDataService` обязан их читать и приводить к `ParticipantData`.
-- При добавлении нового канала:
-  - расширить `NotificationChannel`;
-  - добавить поддержку в `ParticipantData` (флаги/идентификаторы);
-  - реализовать новый `<Channel>NotificationService` и интегрировать его в `NotificationOrchestrator`.
-
+Новые каналы и события должны явно определить источник согласия, подтверждение адресата, dedup/idempotency и результат частичной ошибки. До изменения реализации действующим фактом остаётся поведение связанных consumers, а не единая декларация в UI или типах.

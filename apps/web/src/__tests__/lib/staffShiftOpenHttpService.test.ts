@@ -1,3 +1,4 @@
+jest.mock('@/lib/rateLimit', () => ({ ...jest.requireActual('@/lib/rateLimit'), checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})) }));
 import { runStaffShiftOpenHttp } from '@/lib/staffShiftOpenHttpService';
 
 jest.mock('@/lib/authBiz', () => ({
@@ -34,6 +35,7 @@ describe('staffShiftOpenHttpService', () => {
     test('returns success payload from open shift service', async () => {
         getStaffContextForRequest.mockResolvedValue({
             supabase,
+            userId: 'user-id',
             staffId: 'staff-id',
             bizId: 'biz-id',
             branchId: 'branch-id',
@@ -56,6 +58,7 @@ describe('staffShiftOpenHttpService', () => {
     test('maps service failure to api error response', async () => {
         getStaffContextForRequest.mockResolvedValue({
             supabase,
+            userId: 'user-id',
             staffId: 'staff-id',
             bizId: 'biz-id',
             branchId: 'branch-id',

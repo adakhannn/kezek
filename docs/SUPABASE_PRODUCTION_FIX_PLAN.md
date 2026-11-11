@@ -1,8 +1,10 @@
 # Supabase production fix plan
 
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
 Last updated: 2026-07-14 local  
 Owner: User + Codex  
-Status: Active  
+Status at original snapshot: Active
 Environment: Supabase production project `beulnmftzbmtbdlgurht`, app `kezek.kg`
 
 ## Purpose

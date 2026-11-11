@@ -1,6 +1,6 @@
 import { runDashboardStaffShiftClose } from '@/lib/dashboardStaffShiftCloseService';
 
-jest.mock('@/lib/performance', () => ({
+jest.mock('@/lib/performanceServer', () => ({
     measurePerformance: jest.fn((_operation, fn) => fn()),
 }));
 
@@ -93,6 +93,7 @@ describe('dashboardStaffShiftCloseService', () => {
         );
 
         const result = await runDashboardStaffShiftClose({
+            actorId: 'actor-id',
             req: new Request('http://localhost/api/dashboard/staff/staff-id/shift/close?date=2024-01-15', {
                 method: 'POST',
                 body: JSON.stringify({ totalAmount: 0, items: [] }),

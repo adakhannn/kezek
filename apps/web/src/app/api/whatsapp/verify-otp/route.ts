@@ -12,5 +12,6 @@ import { runWhatsAppVerifyOtpHttp } from '@/lib/whatsAppVerifyOtpHttpService';
 export async function POST(req: Request) {
   return withRateLimit(req, routeRateLimit('api/whatsapp/verify-otp', RateLimitConfigs.auth), async () =>
     withErrorHandler('WhatsAppVerifyOtp', () => runWhatsAppVerifyOtpHttp(req)),
+      "/api/whatsapp/verify-otp",
   );
 }

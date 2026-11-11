@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -37,19 +39,13 @@ export async function GET() {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
             return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
         }
 
         // Проверяем, что пользователь - суперадмин
-        const { data: superRow, error: superErr } = await supabase
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
         if (superErr) {
             return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
@@ -92,19 +88,13 @@ export async function POST(req: Request) {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
             return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
         }
 
         // Проверяем, что пользователь - суперадмин
-        const { data: superRow, error: superErr } = await supabase
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
         if (superErr) {
             return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });

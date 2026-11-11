@@ -40,11 +40,12 @@ export function mapVerifyError(status: number, payload: unknown): string {
 export async function startWhatsAppWebAuth(
   fetcher: typeof fetch,
   phone: string,
+  codeChallenge: string,
 ): Promise<StartResponseData> {
   const response = await fetcher('/api/auth/whatsapp/mobile/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone: phone.trim() }),
+    body: JSON.stringify({ phone: phone.trim(), codeChallenge }),
   });
   const data = (await response.json()) as ApiPayload;
 
@@ -80,9 +81,15 @@ export async function verifyWhatsAppWebOtp(
 export async function exchangeWhatsAppWebSession(
   fetcher: typeof fetch,
   exchangeCode: string,
+  codeVerifier: string,
 ): Promise<{ accessToken: string; refreshToken: string }> {
   const response = await fetcher(
-    `/api/auth/mobile-exchange?code=${encodeURIComponent(exchangeCode)}`,
+    '/api/auth/mobile-exchange',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: exchangeCode, codeVerifier }),
+    },
   );
   const data = (await response.json()) as ApiPayload & {
     data?: { accessToken?: string; refreshToken?: string };

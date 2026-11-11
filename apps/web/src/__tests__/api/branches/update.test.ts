@@ -66,6 +66,8 @@ describe('/api/branches/[id]/update', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (checkResourceBelongsToBiz as jest.Mock).mockReset();
+        mockAdmin.from.mockReset();
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             bizId,
@@ -78,7 +80,10 @@ describe('/api/branches/[id]/update', () => {
     });
 
     describe('Валидация', () => {
-        test('должен вернуть 400 при отсутствии name', async () => {
+        test('частичный запрос меняет только переданное поле is_active', async () => {
+            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({ data: { id: branchId, biz_id: bizId }, error: null });
+            const query = createUpdateQuery({ error: null });
+            mockAdmin.from.mockReturnValueOnce(query);
             const req = createMockRequest(`http://localhost/api/branches/${branchId}/update`, {
                 method: 'POST',
                 body: {
@@ -87,7 +92,8 @@ describe('/api/branches/[id]/update', () => {
             });
 
             const res = await POST(req, { params: { id: branchId } });
-            await expectErrorResponse(res, 400, 'NAME_REQUIRED');
+            await expectSuccessResponse(res, 200);
+            expect(query.update).toHaveBeenCalledWith({ is_active: true });
         });
 
         test('должен вернуть 400 при пустом name', async () => {

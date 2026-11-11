@@ -33,6 +33,10 @@ function formatValue(value: number | null): string {
 }
 
 export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }) {
+    return <FinanceSettingsAuditLogForStaff key={staffId} staffId={staffId} />;
+}
+
+function FinanceSettingsAuditLogForStaff({ staffId }: { staffId: string }) {
     const { t } = useLanguage();
     const [entries, setEntries] = useState<AuditLogEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -40,8 +44,6 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
 
     useEffect(() => {
         let cancelled = false;
-        setLoading(true);
-        setError(null);
         const url = `/api/dashboard/staff/${staffId}/finance/audit-log`;
         fetch(url)
             .then((res) => {
@@ -49,7 +51,8 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
                 return res.json();
             })
             .then((data) => {
-                if (cancelled || !data?.ok) return;
+                if (cancelled) return;
+                if (!data?.ok) throw new Error(data?.message || 'Failed to load audit log');
                 setEntries(data.data?.entries ?? []);
             })
             .catch((value) => {

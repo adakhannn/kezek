@@ -12,5 +12,6 @@ export async function GET(req: Request) {
         RateLimitConfigs.public,
         () =>
             withErrorHandler('MobileBusinesses', async () => runMobileBusinessesHttp(req)),
+        "/api/mobile/businesses",
     );
 }

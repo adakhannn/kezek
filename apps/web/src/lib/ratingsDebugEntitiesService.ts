@@ -1,26 +1,23 @@
-type AuthClientLike = {
-    from: (table: string) => any;
-};
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+type AuthClientLike = SuperAdminRoleClient;
 
 type AdminClientLike = {
-    from: (table: string) => any;
+    from: SupabaseClient['from'];
 };
 
 export async function ensureSuperAdminAccess({
     supabase,
+    userId,
 }: {
     supabase: AuthClientLike;
+    userId: string;
 }): Promise<
     | { ok: true }
     | { ok: false; error: 'internal' | 'forbidden'; message: string; status: 400 | 403 }
 > {
-    const { data: superRow, error: superErr } = await supabase
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supabase, userId);
 
     if (superErr) {
         return {

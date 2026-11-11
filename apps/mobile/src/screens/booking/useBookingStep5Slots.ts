@@ -95,6 +95,7 @@ export function useBookingStep5Slots(bookingData: BookingDataShape) {
                 const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                     p_biz_id: bookingData.business.id,
                     p_service_id: bookingData.serviceId,
+                    p_staff_id: bookingData.staffId,
                     p_day: bookingData.selectedDate,
                     p_per_staff: 400,
                     p_step_min: 15,

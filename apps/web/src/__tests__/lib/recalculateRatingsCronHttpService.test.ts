@@ -1,8 +1,9 @@
+jest.mock('@/lib/cronExecutionTracking', () => ({ trackCronExecution: jest.fn((_job: string, action: () => Promise<Response>) => action()) }));
 jest.mock('@/lib/alerts', () => ({
   sendAlertEmail: jest.fn(),
 }));
 
-jest.mock('@/lib/performance', () => ({
+jest.mock('@/lib/performanceServer', () => ({
   measurePerformance: jest.fn(),
 }));
 

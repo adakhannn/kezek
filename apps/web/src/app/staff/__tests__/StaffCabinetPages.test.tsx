@@ -20,6 +20,13 @@ import StaffFinancePageClient from '../../dashboard/staff/[id]/finance/StaffFina
 import StaffFinanceStatsPageClient from '../../dashboard/staff/[id]/finance/stats/StaffFinanceStatsPageClient';
 import SlotsClient from '../../dashboard/staff/[id]/slots/Client';
 
+// The component uses the App Router for its read-only list filter. This SSR
+// harness supplies navigation; its URL/history behavior has a dedicated suite.
+jest.mock('next/navigation', () => ({
+    useRouter: () => ({ replace: jest.fn() }),
+    useSearchParams: () => new URLSearchParams(),
+}));
+
 // Упрощаем сложный FinancePage, чтобы не поднимать React Query и сложные хуки в тестах
 jest.mock('@/app/staff/finance/components/FinancePage', () => {
     return {

@@ -49,6 +49,7 @@ describe('telegramWebhookHttpService', () => {
 
     test('handles /start payload and sends approval message with source details', async () => {
         const attempt = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
             source: {
@@ -114,6 +115,7 @@ describe('telegramWebhookHttpService', () => {
 
     test('passes cancel callback payload to mobile callback route', async () => {
         const attempt = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -179,6 +181,7 @@ describe('telegramWebhookHttpService', () => {
 
     test('passes approve callback payload to mobile callback route', async () => {
         const attempt = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });

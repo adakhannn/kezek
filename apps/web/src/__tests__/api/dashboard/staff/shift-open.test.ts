@@ -1,3 +1,4 @@
+jest.mock('@/lib/finance/calendar', () => ({ isFinanceDate: jest.requireActual('@/lib/finance/calendar').isFinanceDate, readFinanceCalendar: jest.fn(async () => ({ date: '2024-01-15', todayDate: '2024-01-15', timezone: 'Asia/Bishkek' })) }));
 import { POST } from '@/app/api/dashboard/staff/[id]/shift/open/route';
 import {
     createMockRequest,
@@ -30,6 +31,7 @@ describe('/api/dashboard/staff/[id]/shift/open', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockSupabase.rpc.mockResolvedValue({ data: { ok: true, shift: { id: 'shift-id', status: 'open', ledger_revision: 0 } }, error: null });
 
         (withManagerAndStaffContext as jest.Mock).mockImplementation(
             async (_req, _context, _config, handler) =>
@@ -97,19 +99,6 @@ describe('/api/dashboard/staff/[id]/shift/open', () => {
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-            })
-            .mockReturnValueOnce({
-                insert: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'shift-id',
-                        staff_id: staffId,
-                        shift_date: '2024-01-15',
-                        status: 'open',
-                    },
-                    error: null,
-                }),
             });
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/open?date=2024-01-15`, {

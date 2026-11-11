@@ -6,6 +6,26 @@
 
 require('@testing-library/jest-native/extend-expect');
 
+// Every network result in unit tests must be explicit; never call a real provider.
+global.fetch = jest.fn(async () => {
+    throw new Error('Unmocked network request in mobile unit test');
+});
+
+// Native crypto boundary is replaced by Node crypto; no provider/network calls.
+jest.mock('expo-crypto', () => {
+    const crypto = require('node:crypto');
+    return {
+        CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+        getRandomBytesAsync: jest.fn(async count => new Uint8Array(crypto.randomBytes(count))),
+        getRandomValues: jest.fn(array => crypto.randomFillSync(array)),
+        digestStringAsync: jest.fn(async (_algorithm, value) => crypto.createHash('sha256').update(value).digest('hex')),
+        digest: jest.fn(async (_algorithm, value) => {
+            const result = crypto.createHash('sha256').update(Buffer.from(value)).digest();
+            return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength);
+        }),
+    };
+});
+
 // Mock Expo modules
 jest.mock('expo-constants', () => ({
     default: {

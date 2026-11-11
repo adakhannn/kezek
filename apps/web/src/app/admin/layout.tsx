@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { AdminNav } from './_components/AdminNav';
 
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 
 
@@ -19,12 +19,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     });
 
     // 1) авторизация
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/auth/sign-in?redirect=/admin');
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) redirect('/auth/sign-in?redirect=/admin');
 
-    // 2) проверка роли super_admin глобально (biz_id IS NULL)
+    // 2) каноническая SQL-проверка платформенной роли текущей сессии
     const { isSuperAdmin: isSuper, error: roleErr } = await checkCurrentUserIsSuperAdmin(
-        supabase as unknown as SuperAdminRoleClient,
+        supabase,
         user.id,
     );
 

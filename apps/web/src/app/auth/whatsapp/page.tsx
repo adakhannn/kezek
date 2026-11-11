@@ -12,6 +12,7 @@ import {
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AlertBanner } from '@/components/ui/AlertBanner';
+import { createAuthProof } from '@/lib/authPkceClient';
 import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -30,6 +31,7 @@ function WhatsAppAuthContent() {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [codeVerifier, setCodeVerifier] = useState<string | null>(null);
   const [maskedDestination, setMaskedDestination] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,7 +46,9 @@ function WhatsAppAuthContent() {
     setError(null);
 
     try {
-      const payload = await startWhatsAppWebAuth(fetch, phone);
+      const proof = await createAuthProof();
+      const payload = await startWhatsAppWebAuth(fetch, phone, proof.codeChallenge);
+      setCodeVerifier(proof.codeVerifier);
       setAttemptId(payload.attemptId);
       setMaskedDestination(payload.maskedDestination ?? null);
       setStep('otp');
@@ -63,7 +67,7 @@ function WhatsAppAuthContent() {
     setError(null);
 
     try {
-      if (!attemptId) {
+      if (!attemptId || !codeVerifier) {
         throw new Error('Сессия подтверждения не найдена. Запросите код заново.');
       }
       if (otp.trim().length !== 6) {
@@ -78,7 +82,8 @@ function WhatsAppAuthContent() {
       if (payload.status !== 'approved' || !payload.exchangeCode) {
         throw new Error('Проверка не завершена. Попробуйте снова.');
       }
-      const exchangeData = await exchangeWhatsAppWebSession(fetch, payload.exchangeCode);
+      const exchangeData = await exchangeWhatsAppWebSession(fetch, payload.exchangeCode, codeVerifier);
+      setCodeVerifier(null);
 
       const { error: sessionError } = await supabase.auth.setSession({
         access_token: exchangeData.accessToken,

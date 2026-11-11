@@ -1,0 +1,17 @@
+[
+  "test-mobile-auth-grants-isolated.cjs",
+  "test-finance-transactions.mjs",
+  "test-booking-requests-isolated.cjs",
+  "test-booking-notification-outbox-isolated.cjs",
+  "test-staff-scoped-slots-isolated.cjs",
+  "test-cron-execution-isolated.cjs",
+  "test-reporting-completeness.mjs",
+  "test-shift-close-backlog.mjs",
+  "test-whatsapp-inbox-isolated.cjs",
+  "test-booking-finance-boundary-isolated.mjs",
+  "test-attendance-command-isolated.mjs",
+  "test-shift-hours-adjustment-isolated.mjs",
+  "test-platform-admin-commands-isolated.cjs",
+  "test-privileged-maintenance-isolated.cjs",
+  "test-user-lifecycle-isolated.cjs"
+]

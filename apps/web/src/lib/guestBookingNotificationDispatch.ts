@@ -1,6 +1,4 @@
-import { getEmailFrom, getResendApiKey } from '@/lib/env';
-import { BookingDataService } from '@/lib/notifications/BookingDataService';
-import { deliverStoredBookingNotification } from '@/lib/notifyBookingService';
+import { enqueueStoredBookingNotification } from '@/lib/notifyBookingService';
 import type { QuickBookGuestInput } from '@/lib/quickBookGuestService';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
@@ -16,25 +14,17 @@ export async function dispatchCreatedGuestBookingNotification(
 ): Promise<void> {
     const admin = createSupabaseAdminClient();
     const { data, error } = await admin.from('bookings')
-        .select('id')
+        .select('id,status')
         .eq('id', bookingId)
         .eq('biz_id', command.biz_id)
         .eq('branch_id', command.branch_id)
         .eq('staff_id', command.staff_id)
         .eq('start_at', command.start_at)
-        .eq('status', type === 'confirm' ? 'confirmed' : 'pending_hold')
+        .in('status', type === 'confirm' ? ['confirmed'] : ['hold', 'pending_hold'])
         .is('client_id', null)
         .maybeSingle();
     if (error || !data) {
         throw new Error('Created guest booking notification scope mismatch');
     }
-    const booking = await new BookingDataService(admin).getBookingById(bookingId);
-    if (!booking || booking.client_id !== null || booking.status !== (type === 'confirm' ? 'confirmed' : 'pending_hold')) {
-        throw new Error('Guest booking is no longer in the notification state');
-    }
-    const result = await deliverStoredBookingNotification(admin, admin, booking, type, {
-        apiKey: getResendApiKey(),
-        from: getEmailFrom(),
-    });
-    if (!result.ok) throw new Error(`Guest booking notification failed: ${result.error}`);
+    await enqueueStoredBookingNotification(admin, bookingId, type);
 }

@@ -10,5 +10,6 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.critical,
         () => withErrorHandler('RatingsManualRecalculate', async () => runRatingsManualRecalculateHttp(req)),
+        "/api/admin/ratings/recalculate",
     );
 }

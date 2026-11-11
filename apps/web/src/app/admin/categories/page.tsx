@@ -8,6 +8,7 @@ import { DeleteCategoryButton } from '@/components/admin/categories/DeleteCatego
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,19 +32,14 @@ export default async function CategoriesPage() {
 
     const {
         data: { user },
+        error: authError,
     } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">{t('admin.error.unauthorized', 'Не авторизован')}</div>;
+    if (authError || !user) return <div className="p-4">{t('admin.error.unauthorized', 'Не авторизован')}</div>;
 
-    const { data: superRow, error: superErr } = await supa
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin, error: superErr } = await checkCurrentUserIsSuperAdmin(supa, user.id);
 
     if (superErr) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {superErr.message}</div>;
-    if (!superRow) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа')}</div>;
+    if (!isSuperAdmin) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа')}</div>;
 
     const { data: rpcData, error } = await supa.rpc('categories_with_usage_v2');
     if (error) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {error.message}</div>;

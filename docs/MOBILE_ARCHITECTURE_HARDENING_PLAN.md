@@ -1,6 +1,8 @@
 # Mobile Architecture Hardening Plan
 
-**Status:** active implementation plan  
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
+**Status at original snapshot:** active implementation plan
 **Created:** 2026-03-30  
 **Purpose:** reduce the next largest maintainability hotspots after the web API thin-route wave.
 
@@ -10,9 +12,9 @@ The next highest-value complexity cluster is in `apps/mobile`.
 
 The audit shows:
 
-- [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx) is still a large screen with auth, cache, offline queue, mutations, and UI in one file.
-- [ShiftsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftsScreen.tsx) still mixes data loading and presentation.
-- [CabinetScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/CabinetScreen.tsx) and [BookingDetailsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/BookingDetailsScreen.tsx) are still large user-facing screens.
+- [ShiftQuickScreen.tsx](../apps/mobile/src/screens/ShiftQuickScreen.tsx) is still a large screen with auth, cache, offline queue, mutations, and UI in one file.
+- [ShiftsScreen.tsx](../apps/mobile/src/screens/ShiftsScreen.tsx) still mixes data loading and presentation.
+- [CabinetScreen.tsx](../apps/mobile/src/screens/CabinetScreen.tsx) and [BookingDetailsScreen.tsx](../apps/mobile/src/screens/BookingDetailsScreen.tsx) are still large user-facing screens.
 - The mobile app already has successful examples of decomposition from the earlier `HomeScreen` and `RootNavigator` work.
 
 This package has:
@@ -43,7 +45,7 @@ Out of scope:
 
 - Priority: `critical`
 - Files:
-  - [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx)
+  - [ShiftQuickScreen.tsx](../apps/mobile/src/screens/ShiftQuickScreen.tsx)
   - related shift hooks/services to be introduced under `apps/mobile/src/screens/shift/` or `apps/mobile/src/hooks/`
 
 Why first:
@@ -56,7 +58,7 @@ Why first:
 
 - Priority: `high`
 - Files:
-  - [ShiftsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftsScreen.tsx)
+  - [ShiftsScreen.tsx](../apps/mobile/src/screens/ShiftsScreen.tsx)
 
 Why second:
 
@@ -67,8 +69,8 @@ Why second:
 
 - Priority: `high`
 - Files:
-  - [CabinetScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/CabinetScreen.tsx)
-  - [BookingDetailsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/BookingDetailsScreen.tsx)
+  - [CabinetScreen.tsx](../apps/mobile/src/screens/CabinetScreen.tsx)
+  - [BookingDetailsScreen.tsx](../apps/mobile/src/screens/BookingDetailsScreen.tsx)
 
 Why third:
 
@@ -103,11 +105,11 @@ Done when:
 
 Result on 2026-03-30:
 
-- [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx) now acts as a composition screen instead of holding all screen logic inline.
-- Offline queue and cache persistence moved into [offlineStorage.ts](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/offlineStorage.ts).
-- Query and mutation orchestration moved into [useShiftQuickScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/useShiftQuickScreenData.ts).
-- Presentation and styles moved into [ShiftQuickSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/ShiftQuickSections.tsx) and [shiftQuickStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/shiftQuickStyles.ts).
-- Smoke coverage was added in [ShiftQuickScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/ShiftQuickScreen.test.tsx).
+- [ShiftQuickScreen.tsx](../apps/mobile/src/screens/ShiftQuickScreen.tsx) now acts as a composition screen instead of holding all screen logic inline.
+- Offline queue and cache persistence moved into [offlineStorage.ts](../apps/mobile/src/screens/shiftQuick/offlineStorage.ts).
+- Query and mutation orchestration moved into [useShiftQuickScreenData.ts](../apps/mobile/src/screens/shiftQuick/useShiftQuickScreenData.ts).
+- Presentation and styles moved into [ShiftQuickSections.tsx](../apps/mobile/src/screens/shiftQuick/ShiftQuickSections.tsx) and [shiftQuickStyles.ts](../apps/mobile/src/screens/shiftQuick/shiftQuickStyles.ts).
+- Smoke coverage was added in [ShiftQuickScreen.test.tsx](../apps/mobile/src/__tests__/screens/ShiftQuickScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.2 Decompose `ShiftsScreen`
@@ -128,11 +130,11 @@ Done when:
 
 Result on 2026-03-30:
 
-- [ShiftsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftsScreen.tsx) now acts as a thin composition screen.
-- Data loading moved into [useShiftsScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/shifts/useShiftsScreenData.ts).
-- Presentation moved into [ShiftsScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/shifts/ShiftsScreenSections.tsx).
-- Shared screen types and styles now live in [types.ts](/C:/projects/kezek/apps/mobile/src/screens/shifts/types.ts) and [shiftsScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/shifts/shiftsScreenStyles.ts).
-- Smoke coverage was added in [ShiftsScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/ShiftsScreen.test.tsx).
+- [ShiftsScreen.tsx](../apps/mobile/src/screens/ShiftsScreen.tsx) now acts as a thin composition screen.
+- Data loading moved into [useShiftsScreenData.ts](../apps/mobile/src/screens/shifts/useShiftsScreenData.ts).
+- Presentation moved into [ShiftsScreenSections.tsx](../apps/mobile/src/screens/shifts/ShiftsScreenSections.tsx).
+- Shared screen types and styles now live in [types.ts](../apps/mobile/src/screens/shifts/types.ts) and [shiftsScreenStyles.ts](../apps/mobile/src/screens/shifts/shiftsScreenStyles.ts).
+- Smoke coverage was added in [ShiftsScreen.test.tsx](../apps/mobile/src/__tests__/screens/ShiftsScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.3 Audit next mobile screen candidates after shift flows
@@ -151,12 +153,12 @@ Done when:
 
 Result on 2026-03-30:
 
-- [CabinetScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/CabinetScreen.tsx) was chosen as the next candidate over [BookingDetailsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/BookingDetailsScreen.tsx) because it mixed user loading, booking fetches, offline fallback, tab state, and presentation in one file.
-- [CabinetScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/CabinetScreen.tsx) now acts as a thin composition screen.
-- Data loading and offline fallback moved into [useCabinetScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/cabinet/useCabinetScreenData.ts).
-- Presentation moved into [CabinetScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/cabinet/CabinetScreenSections.tsx).
-- Shared types and styles now live in [types.ts](/C:/projects/kezek/apps/mobile/src/screens/cabinet/types.ts) and [cabinetScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/cabinet/cabinetScreenStyles.ts).
-- Smoke coverage was updated in [CabinetScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/CabinetScreen.test.tsx).
+- [CabinetScreen.tsx](../apps/mobile/src/screens/CabinetScreen.tsx) was chosen as the next candidate over [BookingDetailsScreen.tsx](../apps/mobile/src/screens/BookingDetailsScreen.tsx) because it mixed user loading, booking fetches, offline fallback, tab state, and presentation in one file.
+- [CabinetScreen.tsx](../apps/mobile/src/screens/CabinetScreen.tsx) now acts as a thin composition screen.
+- Data loading and offline fallback moved into [useCabinetScreenData.ts](../apps/mobile/src/screens/cabinet/useCabinetScreenData.ts).
+- Presentation moved into [CabinetScreenSections.tsx](../apps/mobile/src/screens/cabinet/CabinetScreenSections.tsx).
+- Shared types and styles now live in [types.ts](../apps/mobile/src/screens/cabinet/types.ts) and [cabinetScreenStyles.ts](../apps/mobile/src/screens/cabinet/cabinetScreenStyles.ts).
+- Smoke coverage was updated in [CabinetScreen.test.tsx](../apps/mobile/src/__tests__/screens/CabinetScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.4 Decompose `BookingDetailsScreen`
@@ -177,11 +179,11 @@ Done when:
 
 Result on 2026-03-30:
 
-- [BookingDetailsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/BookingDetailsScreen.tsx) now acts as a composition screen instead of owning fetch, cancel, linking, and presentation logic inline.
-- Data loading and cancellation flow moved into [useBookingDetailsData.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/useBookingDetailsData.ts).
-- Presentation moved into [BookingDetailsSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/BookingDetailsSections.tsx).
-- Shared screen types and styles now live in [types.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/types.ts) and [bookingDetailsStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/bookingDetailsStyles.ts).
-- Smoke coverage was updated in [BookingDetailsScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/BookingDetailsScreen.test.tsx).
+- [BookingDetailsScreen.tsx](../apps/mobile/src/screens/BookingDetailsScreen.tsx) now acts as a composition screen instead of owning fetch, cancel, linking, and presentation logic inline.
+- Data loading and cancellation flow moved into [useBookingDetailsData.ts](../apps/mobile/src/screens/bookingDetails/useBookingDetailsData.ts).
+- Presentation moved into [BookingDetailsSections.tsx](../apps/mobile/src/screens/bookingDetails/BookingDetailsSections.tsx).
+- Shared screen types and styles now live in [types.ts](../apps/mobile/src/screens/bookingDetails/types.ts) and [bookingDetailsStyles.ts](../apps/mobile/src/screens/bookingDetails/bookingDetailsStyles.ts).
+- Smoke coverage was updated in [BookingDetailsScreen.test.tsx](../apps/mobile/src/__tests__/screens/BookingDetailsScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.5 Re-rank remaining mobile complexity after the screen decomposition wave
@@ -203,7 +205,7 @@ Done when:
 Result on 2026-03-30:
 
 - The remaining mobile complexity was rescanned after the current screen decomposition wave.
-- The largest remaining screen-level hotspot is now [StaffScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/StaffScreen.tsx), followed by [ProfileScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ProfileScreen.tsx) and then navigation/presentation follow-up in [MainNavigator.tsx](/C:/projects/kezek/apps/mobile/src/navigation/MainNavigator.tsx).
+- The largest remaining screen-level hotspot is now [StaffScreen.tsx](../apps/mobile/src/screens/StaffScreen.tsx), followed by [ProfileScreen.tsx](../apps/mobile/src/screens/ProfileScreen.tsx) and then navigation/presentation follow-up in [MainNavigator.tsx](../apps/mobile/src/navigation/MainNavigator.tsx).
 - The next recommended task is to decompose `StaffScreen`, because it still mixes staff lookup, upcoming bookings fetch, refresh orchestration, and screen presentation in one file.
 
 ### M.6 Decompose `StaffScreen`
@@ -224,11 +226,11 @@ Done when:
 
 Result on 2026-03-30:
 
-- [StaffScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/StaffScreen.tsx) now acts as a thin composition screen.
-- Staff lookup and upcoming booking queries moved into [useStaffScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/staff/useStaffScreenData.ts).
-- Presentation moved into [StaffScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/staff/StaffScreenSections.tsx).
-- Shared types and styles now live in [types.ts](/C:/projects/kezek/apps/mobile/src/screens/staff/types.ts) and [staffScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/staff/staffScreenStyles.ts).
-- Smoke coverage was updated in [StaffScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/StaffScreen.test.tsx).
+- [StaffScreen.tsx](../apps/mobile/src/screens/StaffScreen.tsx) now acts as a thin composition screen.
+- Staff lookup and upcoming booking queries moved into [useStaffScreenData.ts](../apps/mobile/src/screens/staff/useStaffScreenData.ts).
+- Presentation moved into [StaffScreenSections.tsx](../apps/mobile/src/screens/staff/StaffScreenSections.tsx).
+- Shared types and styles now live in [types.ts](../apps/mobile/src/screens/staff/types.ts) and [staffScreenStyles.ts](../apps/mobile/src/screens/staff/staffScreenStyles.ts).
+- Smoke coverage was updated in [StaffScreen.test.tsx](../apps/mobile/src/__tests__/screens/StaffScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/StaffScreen.test.tsx src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.7 Decompose `ProfileScreen`
@@ -249,11 +251,11 @@ Done when:
 
 Result on 2026-03-30:
 
-- [ProfileScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ProfileScreen.tsx) now acts as a composition screen.
-- User/profile loading, form state sync, save mutation, and sign-out confirm flow moved into [useProfileScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/profile/useProfileScreenData.ts).
-- Presentation moved into [ProfileScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/profile/ProfileScreenSections.tsx).
-- Shared types and styles now live in [types.ts](/C:/projects/kezek/apps/mobile/src/screens/profile/types.ts) and [profileScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/profile/profileScreenStyles.ts).
-- Smoke coverage was added in [ProfileScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/ProfileScreen.test.tsx).
+- [ProfileScreen.tsx](../apps/mobile/src/screens/ProfileScreen.tsx) now acts as a composition screen.
+- User/profile loading, form state sync, save mutation, and sign-out confirm flow moved into [useProfileScreenData.ts](../apps/mobile/src/screens/profile/useProfileScreenData.ts).
+- Presentation moved into [ProfileScreenSections.tsx](../apps/mobile/src/screens/profile/ProfileScreenSections.tsx).
+- Shared types and styles now live in [types.ts](../apps/mobile/src/screens/profile/types.ts) and [profileScreenStyles.ts](../apps/mobile/src/screens/profile/profileScreenStyles.ts).
+- Smoke coverage was added in [ProfileScreen.test.tsx](../apps/mobile/src/__tests__/screens/ProfileScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/ProfileScreen.test.tsx src/__tests__/screens/StaffScreen.test.tsx src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.8 Re-rank next mobile follow-up after the profile/staff wave
@@ -274,7 +276,7 @@ Done when:
 Result on 2026-03-30:
 
 - After `StaffScreen` and `ProfileScreen`, the remaining mobile screen hotspot was reassessed.
-- The next best screen-level candidate was [DashboardScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/DashboardScreen.tsx) because it still mixed owner checks, business loading, refresh orchestration, and presentation in one file.
+- The next best screen-level candidate was [DashboardScreen.tsx](../apps/mobile/src/screens/DashboardScreen.tsx) because it still mixed owner checks, business loading, refresh orchestration, and presentation in one file.
 
 ### M.9 Decompose `DashboardScreen`
 
@@ -294,11 +296,11 @@ Done when:
 
 Result on 2026-03-30:
 
-- [DashboardScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/DashboardScreen.tsx) now acts as a composition screen.
-- Owner/business loading moved into [useDashboardScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/dashboard/useDashboardScreenData.ts).
-- Presentation moved into [DashboardScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/dashboard/DashboardScreenSections.tsx).
-- Shared types and styles now live in [types.ts](/C:/projects/kezek/apps/mobile/src/screens/dashboard/types.ts) and [dashboardScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/dashboard/dashboardScreenStyles.ts).
-- Smoke coverage was added in [DashboardScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/DashboardScreen.test.tsx).
+- [DashboardScreen.tsx](../apps/mobile/src/screens/DashboardScreen.tsx) now acts as a composition screen.
+- Owner/business loading moved into [useDashboardScreenData.ts](../apps/mobile/src/screens/dashboard/useDashboardScreenData.ts).
+- Presentation moved into [DashboardScreenSections.tsx](../apps/mobile/src/screens/dashboard/DashboardScreenSections.tsx).
+- Shared types and styles now live in [types.ts](../apps/mobile/src/screens/dashboard/types.ts) and [dashboardScreenStyles.ts](../apps/mobile/src/screens/dashboard/dashboardScreenStyles.ts).
+- Smoke coverage was added in [DashboardScreen.test.tsx](../apps/mobile/src/__tests__/screens/DashboardScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/DashboardScreen.test.tsx src/__tests__/screens/ProfileScreen.test.tsx src/__tests__/screens/StaffScreen.test.tsx src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.10 Re-rank the next mobile package after the dashboard/profile/staff wave
@@ -318,7 +320,7 @@ Done when:
 
 Result on 2026-03-30:
 
-- After the dashboard/profile/staff wave, the next highest-value remaining screen-level hotspot was [BookingScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/BookingScreen.tsx).
+- After the dashboard/profile/staff wave, the next highest-value remaining screen-level hotspot was [BookingScreen.tsx](../apps/mobile/src/screens/BookingScreen.tsx).
 - The reason was that the booking entry screen still mixed business bootstrap queries, promotions loading, analytics, and booking-context wiring in one file.
 
 ### M.11 Decompose `BookingScreen`
@@ -339,9 +341,9 @@ Done when:
 
 Result on 2026-03-30:
 
-- [BookingScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/BookingScreen.tsx) now acts as a thin composition screen.
-- Initial business bootstrap, promotions loading, analytics start event, and booking-context hydration moved into [useBookingScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingFlow/useBookingScreenData.ts).
-- Smoke coverage was added in [BookingScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/BookingScreen.test.tsx).
+- [BookingScreen.tsx](../apps/mobile/src/screens/BookingScreen.tsx) now acts as a thin composition screen.
+- Initial business bootstrap, promotions loading, analytics start event, and booking-context hydration moved into [useBookingScreenData.ts](../apps/mobile/src/screens/bookingFlow/useBookingScreenData.ts).
+- Smoke coverage was added in [BookingScreen.test.tsx](../apps/mobile/src/__tests__/screens/BookingScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/BookingScreen.test.tsx src/__tests__/screens/DashboardScreen.test.tsx src/__tests__/screens/ProfileScreen.test.tsx src/__tests__/screens/StaffScreen.test.tsx src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.12 Re-rank the remaining mobile follow-up after the booking-entry cleanup
@@ -361,7 +363,7 @@ Done when:
 
 Result on 2026-03-30:
 
-- After the booking-entry cleanup, the remaining highest-value mobile follow-up was [MainNavigator.tsx](/C:/projects/kezek/apps/mobile/src/navigation/MainNavigator.tsx).
+- After the booking-entry cleanup, the remaining highest-value mobile follow-up was [MainNavigator.tsx](../apps/mobile/src/navigation/MainNavigator.tsx).
 - The reason was that the main tab navigator still mixed cabinet stack declaration, shared visual options, and conditional tab composition in one file.
 
 ### M.13 Decompose `MainNavigator`
@@ -382,10 +384,10 @@ Done when:
 
 Result on 2026-03-30:
 
-- [MainNavigator.tsx](/C:/projects/kezek/apps/mobile/src/navigation/MainNavigator.tsx) now acts as a thin top-level tab composition module.
-- Shared tab and cabinet stack options moved into [mainNavigatorConfig.tsx](/C:/projects/kezek/apps/mobile/src/navigation/mainNavigatorConfig.tsx).
-- The nested cabinet stack moved into [CabinetNavigator.tsx](/C:/projects/kezek/apps/mobile/src/navigation/CabinetNavigator.tsx).
-- Smoke coverage was added in [MainNavigator.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/navigation/MainNavigator.test.tsx).
+- [MainNavigator.tsx](../apps/mobile/src/navigation/MainNavigator.tsx) now acts as a thin top-level tab composition module.
+- Shared tab and cabinet stack options moved into [mainNavigatorConfig.tsx](../apps/mobile/src/navigation/mainNavigatorConfig.tsx).
+- The nested cabinet stack moved into [CabinetNavigator.tsx](../apps/mobile/src/navigation/CabinetNavigator.tsx).
+- Smoke coverage was added in [MainNavigator.test.tsx](../apps/mobile/src/__tests__/navigation/MainNavigator.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/navigation/MainNavigator.test.tsx src/__tests__/screens/BookingScreen.test.tsx src/__tests__/screens/DashboardScreen.test.tsx src/__tests__/screens/ProfileScreen.test.tsx src/__tests__/screens/StaffScreen.test.tsx src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 
 ### M.14 Close out the current mobile hardening wave and choose the next package
@@ -410,7 +412,7 @@ Result on 2026-03-30:
   `ShiftQuickScreen`, `ShiftsScreen`, `CabinetScreen`, `BookingDetailsScreen`, `StaffScreen`, `ProfileScreen`, `DashboardScreen`, `BookingScreen`, and `MainNavigator`.
 - The remaining mobile files are no longer dominated by the same monolithic screen pattern that justified this wave.
 - The current wave is therefore closed, and the next package moves back to web presentation cleanup.
-- The next focused plan is [WEB_PRESENTATION_HARDENING_PLAN.md](/C:/projects/kezek/docs/WEB_PRESENTATION_HARDENING_PLAN.md).
+- The next focused plan is [WEB_PRESENTATION_HARDENING_PLAN.md](WEB_PRESENTATION_HARDENING_PLAN.md).
 
 ### M.15 Post-wave home presentation split
 
@@ -430,10 +432,10 @@ Done when:
 
 Result on 2026-04-01:
 
-- [HomeScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/HomeScreenSections.tsx) now acts as a thin export layer.
-- Presentation was split into [HomeScreenHeader.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/HomeScreenHeader.tsx), [SearchSection.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/SearchSection.tsx), [BookingActivitySections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/BookingActivitySections.tsx), and [DiscoverySections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/DiscoverySections.tsx).
+- [HomeScreenSections.tsx](../apps/mobile/src/screens/home/HomeScreenSections.tsx) now acts as a thin export layer.
+- Presentation was split into [HomeScreenHeader.tsx](../apps/mobile/src/screens/home/HomeScreenHeader.tsx), [SearchSection.tsx](../apps/mobile/src/screens/home/SearchSection.tsx), [BookingActivitySections.tsx](../apps/mobile/src/screens/home/BookingActivitySections.tsx), and [DiscoverySections.tsx](../apps/mobile/src/screens/home/DiscoverySections.tsx).
 - Stable test selectors were added for the hero title and search input in the home screen presentation layer.
-- Smoke coverage was refreshed in [HomeScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/HomeScreen.test.tsx).
+- Smoke coverage was refreshed in [HomeScreen.test.tsx](../apps/mobile/src/__tests__/screens/HomeScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --watchAll=false src/__tests__/screens/HomeScreen.test.tsx`.
 
 ### M.16 Booking slot orchestration extraction
@@ -454,8 +456,8 @@ Done when:
 
 Result on 2026-04-01:
 
-- Slot loading and error classification moved into [useBookingStep5Slots.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep5Slots.ts).
-- [BookingStep5Time.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep5Time.tsx) now acts more like a rendering and navigation screen for the time-step flow.
+- Slot loading and error classification moved into [useBookingStep5Slots.ts](../apps/mobile/src/screens/booking/useBookingStep5Slots.ts).
+- [BookingStep5Time.tsx](../apps/mobile/src/screens/booking/BookingStep5Time.tsx) now acts more like a rendering and navigation screen for the time-step flow.
 - The screen size dropped from `313` to `211` lines.
 - Verified with `pnpm -C apps/mobile typecheck`.
 
@@ -477,10 +479,10 @@ Done when:
 
 Result on 2026-04-01:
 
-- Business/bootstrap hydration moved from [BookingStep1Branch.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep1Branch.tsx) into [useBookingStep1Business.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep1Business.ts).
-- Services loading moved from [BookingStep2Service.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep2Service.tsx) into [useBookingStep2Services.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep2Services.ts).
-- Staff loading moved from [BookingStep3Staff.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep3Staff.tsx) into [useBookingStep3Staff.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep3Staff.ts).
-- [BookingStep3Staff.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep3Staff.tsx) now measures `223` lines after extraction.
+- Business/bootstrap hydration moved from [BookingStep1Branch.tsx](../apps/mobile/src/screens/booking/BookingStep1Branch.tsx) into [useBookingStep1Business.ts](../apps/mobile/src/screens/booking/useBookingStep1Business.ts).
+- Services loading moved from [BookingStep2Service.tsx](../apps/mobile/src/screens/booking/BookingStep2Service.tsx) into [useBookingStep2Services.ts](../apps/mobile/src/screens/booking/useBookingStep2Services.ts).
+- Staff loading moved from [BookingStep3Staff.tsx](../apps/mobile/src/screens/booking/BookingStep3Staff.tsx) into [useBookingStep3Staff.ts](../apps/mobile/src/screens/booking/useBookingStep3Staff.ts).
+- [BookingStep3Staff.tsx](../apps/mobile/src/screens/booking/BookingStep3Staff.tsx) now measures `223` lines after extraction.
 - Verified with `pnpm -C apps/mobile typecheck`.
 
 ### M.18 Booking flow final-step extraction pass
@@ -501,7 +503,7 @@ Done when:
 
 Result on 2026-04-01:
 
-- Date-list generation and date-label formatting moved from [BookingStep4Date.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep4Date.tsx) into [useBookingStep4Dates.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep4Dates.ts).
-- Booking confirmation derivation, validation, and submit orchestration moved from [BookingStep6Confirm.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep6Confirm.tsx) into [useBookingStep6Confirm.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep6Confirm.ts).
+- Date-list generation and date-label formatting moved from [BookingStep4Date.tsx](../apps/mobile/src/screens/booking/BookingStep4Date.tsx) into [useBookingStep4Dates.ts](../apps/mobile/src/screens/booking/useBookingStep4Dates.ts).
+- Booking confirmation derivation, validation, and submit orchestration moved from [BookingStep6Confirm.tsx](../apps/mobile/src/screens/booking/BookingStep6Confirm.tsx) into [useBookingStep6Confirm.ts](../apps/mobile/src/screens/booking/useBookingStep6Confirm.ts).
 - The full booking step flow now follows a more uniform hook-plus-screen composition pattern.
 - Verified with `pnpm -C apps/mobile typecheck`.

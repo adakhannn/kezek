@@ -51,10 +51,11 @@ test('SSR finance payload and browser aggregation use the same final closed shar
     jest.useFakeTimers().setSystemTime(new Date('2026-10-17T01:00:00Z'));
     try {
         const supabase = {
+            rpc: jest.fn(async (name: string) => ({ data: name === 'read_staff_finance_calendar' ? { date: '2026-10-17', todayDate: '2026-10-17', timezone: 'Asia/Bishkek', dayStart: '2026-10-16T18:00Z', dayEnd: '2026-10-17T18:00Z', dayHours: 24 } : name === 'read_staff_shift_snapshot' ? null : [closed], error: null })),
             from: jest.fn((table: string) => {
                 let single = false;
                 const builder: Record<string, unknown> = {};
-                for (const key of ['select', 'eq', 'gte', 'lte', 'neq', 'order', 'is']) {
+                for (const key of ['select', 'eq', 'gte', 'lt', 'lte', 'neq', 'order', 'is']) {
                     builder[key] = jest.fn(() => builder);
                 }
                 builder.maybeSingle = jest.fn(() => { single = true; return builder; });
@@ -72,4 +73,9 @@ test('SSR finance payload and browser aggregation use the same final closed shar
         expect(result.stats).toEqual({ totalAmount: 600, totalMaster: 600, totalSalon: 50, totalLateMinutes: 516, shiftsCount: 1 });
         expect(result.allShifts[0]).toMatchObject({ salon_share: 50, topup_amount: 240 });
     } finally { jest.useRealTimers(); }
+});
+
+test('saved master payout is authoritative even when historical guarantee metadata differs', () => {
+    const { result } = renderHook(() => useShiftStats({ allShifts: [{ ...closed, master_share: 700, guaranteed_amount: 900 }], statsPeriod: 'all', selectedDate: date, selectedMonth: date, selectedYear: 2026 }));
+    expect(result.current.totalMaster).toBe(700);
 });

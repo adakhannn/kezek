@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
 import {
     createErrorResponse,
     createSuccessResponse,
@@ -7,6 +8,8 @@ import {
 import { runWhatsAppDiagnoseRoute } from '@/lib/whatsAppDiagnoseRouteService';
 
 export async function runWhatsAppDiagnoseHttp(): Promise<NextResponse> {
+    const access = await requireCurrentSuperAdmin();
+    if (!access.ok) return access.response;
     const result = await runWhatsAppDiagnoseRoute({
         env: process.env,
     });

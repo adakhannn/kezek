@@ -8,13 +8,14 @@ jest.mock('next/navigation',()=>({redirect:(url:string)=>{throw new Error('redir
 
 describe('HealthCheck server page uses authorized request read, not self HTTP',()=>{
   const originalFetch=global.fetch;
-  const report={ok:true,alerts:[],checks:{shifts:{ok:true,openShiftsOlderThan2Days:0,lastCheckDate:'2026-10-20'},ratings:{ok:true,staffLastMetricDate:null,branchLastMetricDate:null,bizLastMetricDate:null,daysSinceLastMetric:1},promotions:{ok:true,activePromotionsCount:0,lastAppliedDate:null,daysSinceLastApplication:null}}};
+  const report={ok:true,alerts:[],checks:{backgroundQueues:{ok:true,queues:[{job:'booking-notifications',status:'disabled',counts:null}]},cronExecutions:{ok:true,jobs:[{job:'close-shifts',status:'healthy',lastSuccessAt:'2026-11-10T10:00:00Z'},{job:'booking-notifications',status:'disabled',lastSuccessAt:null}]},shifts:{ok:true,openShiftsOlderThan2Days:0,lastCheckDate:'2026-10-20'},ratings:{ok:true,staffLastMetricDate:null,branchLastMetricDate:null,bizLastMetricDate:null,daysSinceLastMetric:1},promotions:{ok:true,activePromotionsCount:0,lastAppliedDate:null,daysSinceLastApplication:null}}};
   beforeEach(()=>{jest.clearAllMocks();global.fetch=jest.fn(async()=>({status:401,json:async()=>({ok:false,error:'auth'})})) as unknown as typeof fetch;});
   afterEach(()=>{global.fetch=originalFetch;});
   test('renders successful read directly with no credential forwarding or internal HTTP',async()=>{
     (readAdminHealthCheckForCaller as jest.Mock).mockResolvedValue({ok:true,data:report});
     const html=renderToStaticMarkup(await HealthCheckPage());
     expect(html).toContain('Health Check системы');expect(html).toContain('Система здорова');
+    expect(html).toContain('close-shifts');expect(html).toContain('healthy');expect(html).toContain('booking-notifications');expect(html).toContain('disabled');
     expect(readAdminHealthCheckForCaller).toHaveBeenCalledTimes(1);expect(global.fetch).not.toHaveBeenCalled();
   });
   test('renders degraded report as report, not auth failure',async()=>{

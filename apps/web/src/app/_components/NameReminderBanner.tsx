@@ -12,27 +12,26 @@ import { supabase } from '@/lib/supabaseClient';
  */
 export function NameReminderBanner() {
     const pathname = usePathname();
+    if (pathname === '/cabinet' || pathname.startsWith('/cabinet/')) return null;
+    return <ActiveNameReminderBanner key={pathname} />;
+}
+
+function ActiveNameReminderBanner() {
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let mounted = true;
-
-        // Если пользователь уже находится в кабинете, баннер не показываем,
-        // чтобы он не мигал во время редактирования профиля.
-        if (pathname.startsWith('/cabinet')) {
-            setShow(false);
-            setLoading(false);
-            return () => {
-                mounted = false;
-            };
-        }
+        let latestCheck = 0;
 
         const checkName = async () => {
+            const check = ++latestCheck;
+            const isCurrent = () => mounted && check === latestCheck;
             try {
                 const { data: { user } } = await supabase.auth.getUser();
+                if (!isCurrent()) return;
                 if (!user) {
-                    if (mounted) {
+                    if (isCurrent()) {
                         setShow(false);
                         setLoading(false);
                     }
@@ -41,9 +40,10 @@ export function NameReminderBanner() {
 
                 // Проверяем, является ли пользователь суперадмином
                 const { data: isSuper } = await supabase.rpc('is_super_admin');
+                if (!isCurrent()) return;
                 if (isSuper) {
                     // Для суперадмина не показываем баннер
-                    if (mounted) {
+                    if (isCurrent()) {
                         setShow(false);
                         setLoading(false);
                     }
@@ -57,13 +57,14 @@ export function NameReminderBanner() {
                     .maybeSingle();
 
                 // Показываем уведомление, если имени нет
-                if (mounted) {
+                if (isCurrent()) {
                     setShow(!profile?.full_name?.trim());
                     setLoading(false);
                 }
             } catch (error) {
+                if (!isCurrent()) return;
                 logWarn('NameReminderBanner', 'error checking name', error);
-                if (mounted) {
+                if (isCurrent()) {
                     setLoading(false);
                 }
             }
@@ -103,7 +104,7 @@ export function NameReminderBanner() {
             authSubscription.unsubscribe();
             profileSubscription.unsubscribe();
         };
-    }, [pathname]);
+    }, []);
 
     if (loading || !show) {
         return null;

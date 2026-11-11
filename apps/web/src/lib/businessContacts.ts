@@ -46,6 +46,11 @@ function normalizeHttpsUrl(value: unknown): string | null {
 }
 
 export function validatePublicContacts(input: PublicContactFields): PublicContactValidation {
+    for (const field of ['contact_phone', 'contact_whatsapp', 'contact_email', 'website_url'] as const) {
+        if (input[field] != null && typeof input[field] !== 'string') {
+            return { ok: false, field, message: 'Контакт должен быть строкой или null' };
+        }
+    }
     const contact_phone = normalizePhone(input.contact_phone);
     const contact_whatsapp = normalizePhone(input.contact_whatsapp);
     const contact_email = optionalText(input.contact_email)?.toLowerCase() ?? null;
@@ -73,6 +78,18 @@ export function validatePublicContacts(input: PublicContactFields): PublicContac
             contact_email,
             website_url,
         },
+    };
+}
+
+/** Normalize only explicitly supplied contacts, preserving all omitted fields. */
+export function validatePublicContactPatch(input: PublicContactFields):
+    | { ok: true; value: PublicContactFields }
+    | Exclude<PublicContactValidation, { ok: true }> {
+    const result = validatePublicContacts(input);
+    if (!result.ok) return result;
+    return {
+        ok: true,
+        value: Object.fromEntries(Object.entries(result.value).filter(([key]) => Object.hasOwn(input, key))),
     };
 }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getWhatsAppAccessToken } from '@/lib/env';
 import {
@@ -8,6 +9,8 @@ import {
 } from '@/lib/whatsAppAccountLookupService';
 
 export async function runWhatsAppBusinessAccountLookupHttp(): Promise<NextResponse> {
+  const access = await requireCurrentSuperAdmin();
+  if (!access.ok) return access.response;
   let accessToken: string;
   try {
     accessToken = getWhatsAppAccessToken();
@@ -33,6 +36,8 @@ export async function runWhatsAppBusinessAccountLookupHttp(): Promise<NextRespon
 }
 
 export async function runWhatsAppPhoneNumbersLookupHttp(req: Request): Promise<NextResponse> {
+  const access = await requireCurrentSuperAdmin();
+  if (!access.ok) return access.response;
   let accessToken: string;
   try {
     accessToken = getWhatsAppAccessToken();

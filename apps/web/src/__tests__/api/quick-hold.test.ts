@@ -1,172 +1,70 @@
-import {
-    createMockRequest,
-    createMockSupabase,
-    expectErrorResponse,
-    expectSuccessResponse,
-    setupApiTestMocks,
-} from './testHelpers';
+import { bookingRpcResult } from '../lib/bookingRpcMock';
+import { createMockRequest, createMockSupabase, expectErrorResponse, expectSuccessResponse, setupApiTestMocks } from './testHelpers';
 
 setupApiTestMocks();
-jest.mock('@/lib/bookingNotificationDispatch', () => ({ dispatchBookingNotification: jest.fn() }));
-
-import { dispatchBookingNotification } from '@/lib/bookingNotificationDispatch';
-
 const { createClient } = require('@supabase/supabase-js');
 const { createServerClient } = require('@supabase/ssr');
 const { POST } = require('@/app/api/quick-hold/route');
+const supabase = createMockSupabase();
+const admin = createMockSupabase();
+const requestId = '55555555-5555-4555-8555-555555555555';
+const payload = {
+    biz_id: '11111111-1111-4111-8111-111111111111',
+    service_id: '33333333-3333-4333-8333-333333333333',
+    staff_id: '44444444-4444-4444-8444-444444444444', start_at: '2035-01-01T10:00:00Z',
+};
+const request = (body: unknown = payload, headers: Record<string, string> = { 'Idempotency-Key': requestId }) => createMockRequest('http://localhost/api/quick-hold', { method: 'POST', body, headers });
 
-describe('/api/quick-hold', () => {
-    const mockSupabase = createMockSupabase();
-    const validPayload = {
-        biz_id: '11111111-1111-4111-8111-111111111111',
-        service_id: '33333333-3333-4333-8333-333333333333',
-        staff_id: '44444444-4444-4444-8444-444444444444',
-        start_at: '2026-03-21T10:00:00Z',
-    };
+beforeEach(() => {
+    jest.clearAllMocks();
+    createServerClient.mockReturnValue(supabase);
+    createClient.mockImplementation((_url: string, _key: string, options: { global?: { headers?: { Authorization?: string } } }) => options?.global?.headers?.Authorization ? supabase : admin);
+    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'verified-user' } }, error: null });
+    admin.rpc.mockReturnValue(bookingRpcResult({ data: { booking_id: 'receipt-id', confirmed: true }, error: null }));
+    global.fetch = jest.fn(async () => { throw new Error('Unexpected network request'); });
+});
 
-    beforeEach(() => {
-        jest.clearAllMocks();
+test('requires authentication', async () => {
+    supabase.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
+    await expectErrorResponse(await POST(request()), 401, 'auth');
+    expect(admin.rpc).not.toHaveBeenCalled();
+});
 
-        (createServerClient as jest.Mock).mockReturnValue(mockSupabase);
-        (createClient as jest.Mock).mockReturnValue(mockSupabase);
-        mockSupabase.auth.getUser.mockResolvedValue({
-            data: { user: { id: 'user-id-123' } },
-            error: null,
-        });
+test('requires client request identity and valid payload', async () => {
+    await expectErrorResponse(await POST(request(payload, {})), 400, 'validation');
+    await expectErrorResponse(await POST(request({ biz_id: payload.biz_id })), 400, 'validation');
+    expect(admin.rpc).not.toHaveBeenCalled();
+});
 
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue({ ok: true }),
-            text: jest.fn().mockResolvedValue(''),
-        } as unknown as Response);
+test.each(['cookie', 'bearer'])('creates one atomic command using verified %s actor on the service client and no provider dispatch', async mode => {
+    const headers = { 'Idempotency-Key': requestId, ...(mode === 'bearer' ? { Authorization: 'Bearer synthetic-token' } : {}) };
+    const response = await expectSuccessResponse(await POST(request(payload, headers)));
+    expect(response.data).toEqual({ booking_id: 'receipt-id', confirmed: true });
+    expect(admin.rpc).toHaveBeenCalledTimes(1);
+    expect(admin.rpc).toHaveBeenCalledWith('create_confirmed_booking', {
+        p_request_id: requestId, p_payload: expect.objectContaining(payload), p_guest_secret: null, p_actor_id: 'verified-user',
     });
+    expect(supabase.rpc).not.toHaveBeenCalled();
+    expect(supabase.from).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+});
 
-    test('returns 401 when user is not authenticated', async () => {
-        mockSupabase.auth.getUser.mockResolvedValueOnce({
-            data: { user: null },
-            error: null,
-        });
+test('payload identity fields cannot replace the verified actor', async () => {
+    await expectSuccessResponse(await POST(request({ ...payload, actor_id: 'foreign', p_actor_id: 'foreign', client_id: 'foreign' })));
+    const args = admin.rpc.mock.calls[0][1];
+    expect(args.p_actor_id).toBe('verified-user');
+    expect(args.p_payload).not.toHaveProperty('client_id');
+    expect(args.p_payload).not.toHaveProperty('p_actor_id');
+    expect(supabase.rpc).not.toHaveBeenCalled();
+});
 
-        const res = await POST(
-            createMockRequest('http://localhost/api/quick-hold', {
-                method: 'POST',
-                body: validPayload,
-            }),
-        );
-
-        await expectErrorResponse(res, 401, 'auth');
-    });
-
-    test('creates hold booking successfully', async () => {
-        mockSupabase.from.mockReturnValueOnce({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({
-                data: { id: '22222222-2222-4222-8222-222222222222' },
-                error: null,
-            }),
-        });
-
-        mockSupabase.rpc
-            .mockResolvedValueOnce({
-                data: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-                error: null,
-            })
-            .mockResolvedValueOnce({
-                data: { ok: true },
-                error: null,
-            });
-
-        const data = await expectSuccessResponse(
-            await POST(
-                createMockRequest('http://localhost/api/quick-hold', {
-                    method: 'POST',
-                    body: validPayload,
-                }),
-            ),
-        );
-
-        expect(data.data.booking_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
-        expect(data.data.confirmed).toBe(true);
-        expect(dispatchBookingNotification).toHaveBeenCalledWith(mockSupabase, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'confirm');
-        expect(global.fetch).not.toHaveBeenCalled();
-    });
-
-    test('returns mapped validation error when branch is missing', async () => {
-        mockSupabase.from.mockReturnValueOnce({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({
-                data: null,
-                error: null,
-            }),
-        });
-
-        const data = await expectErrorResponse(
-            await POST(
-                createMockRequest('http://localhost/api/quick-hold', {
-                    method: 'POST',
-                    body: validPayload,
-                }),
-            ),
-            400,
-            'validation',
-        );
-
-        expect(data.details.kind).toBe('NO_ACTIVE_BRANCH_FOR_BIZ');
-    });
-
-    test('maps an overlap writer rejection to 409 without confirming or notifying', async () => {
-        mockSupabase.from.mockReturnValueOnce({ select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(), order: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({ data: { id: '22222222-2222-4222-8222-222222222222' }, error: null }) });
-        mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: { message: 'time slot is already booked', code: 'P0001' } });
-        const data = await expectErrorResponse(await POST(createMockRequest('http://localhost/api/quick-hold', {
-            method: 'POST', body: validPayload,
-        })), 409, 'booking_slot_unavailable');
-        expect(data.details).toBeUndefined();
-        expect(mockSupabase.rpc).toHaveBeenCalledTimes(1);
-        expect(dispatchBookingNotification).not.toHaveBeenCalled();
-    });
-
-    test('supports bearer auth requests', async () => {
-        mockSupabase.from.mockReturnValueOnce({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({
-                data: { id: '22222222-2222-4222-8222-222222222222' },
-                error: null,
-            }),
-        });
-
-        mockSupabase.rpc
-            .mockResolvedValueOnce({
-                data: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-                error: null,
-            })
-            .mockResolvedValueOnce({
-                data: { ok: true },
-                error: null,
-            });
-
-        const req = createMockRequest('http://localhost/api/quick-hold', {
-            method: 'POST',
-            body: validPayload,
-            headers: {
-                Authorization: 'Bearer test-token',
-            },
-        });
-
-        const data = await expectSuccessResponse(await POST(req));
-        expect(data.data.booking_id).toBe('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
-        expect(createClient).toHaveBeenCalled();
-        expect(dispatchBookingNotification).toHaveBeenCalledWith(mockSupabase, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'confirm');
-    });
+test.each([
+    ['BOOKING_REQUEST_CONFLICT', 409, 'booking_request_conflict'],
+    ['time slot is already booked', 409, 'booking_slot_unavailable'],
+    ['NO_ACTIVE_BRANCH_FOR_BIZ', 400, 'validation'],
+    ['synthetic confirm failure', 503, 'service_unavailable'],
+])('maps atomic command rejection %s', async (message, status, code) => {
+    admin.rpc.mockReturnValueOnce(bookingRpcResult({ data: null, error: { message } }));
+    await expectErrorResponse(await POST(request()), status as number, code as string);
+    expect(admin.rpc).toHaveBeenCalledTimes(1);
 });

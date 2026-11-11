@@ -1,54 +1,21 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getRouteParamRequired } from '@/lib/routeParams';
-import {
-    updateDashboardShiftHours,
-    type DashboardShiftHoursAdminLike,
-} from '@/lib/dashboardStaffShiftUpdateHoursService';
+import { updateDashboardShiftHours } from '@/lib/dashboardStaffShiftUpdateHoursService';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { withManagerContext } from '@/lib/withManagerContext';
-
-type Body = {
-    hours_worked: number;
-};
-
-export async function runDashboardStaffShiftUpdateHoursHttp(
-    req: Request,
-    context: unknown,
-): Promise<NextResponse> {
-    const shiftId = await getRouteParamRequired(context, 'id');
-
-    return withManagerContext(req, 'UpdateShiftHours', async ({ admin, bizId }) => {
-        let body: Body;
-        try {
-            body = await req.json();
-        } catch {
-            return createErrorResponse('validation', 'Неверный формат JSON', undefined, 400);
-        }
-
-        const rawHours = Number(body.hours_worked);
-        if (!Number.isFinite(rawHours) || rawHours < 0 || rawHours > 24 * 2) {
-            return createErrorResponse(
-                'validation',
-                'Количество часов должно быть от 0 до 48',
-                undefined,
-                400,
-            );
-        }
-
-        const hoursWorked = Math.round(rawHours * 100) / 100;
-
-        const result = await updateDashboardShiftHours({
-            admin: admin as unknown as DashboardShiftHoursAdminLike,
-            bizId,
-            shiftId,
-            hoursWorked,
-        });
-
-        if (!result.ok) {
-            return createErrorResponse(result.error, result.message, undefined, result.status);
-        }
-
+const bodySchema = z.object({ hours_worked: z.number().finite().min(0).max(25), expectedRevision: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER) }).strict();
+export async function runDashboardStaffShiftUpdateHoursHttp(req: Request, context: unknown): Promise<NextResponse> {
+    const shiftId = await getRouteParamUuid(context, 'id');
+    return withManagerContext(req, 'UpdateShiftHours', async ({ admin, bizId, userId }) => {
+        let body: unknown;
+        try { body = await req.json(); } catch { return createErrorResponse('validation', 'Неверный формат JSON', undefined, 400); }
+        const parsed = bodySchema.safeParse(body);
+        if (!parsed.success) return createErrorResponse('validation', 'Нужны часы (0–25) и версия исходной смены. Максимум часов зависит от локального дня.', undefined, 400);
+        const result = await updateDashboardShiftHours({ admin, bizId, shiftId, actorId: userId,
+            hoursWorked: Math.round(parsed.data.hours_worked * 100) / 100, expectedRevision: parsed.data.expectedRevision });
+        if (!result.ok) return createErrorResponse(result.error, result.message, undefined, result.status);
         return createSuccessResponse(result.data);
     });
 }

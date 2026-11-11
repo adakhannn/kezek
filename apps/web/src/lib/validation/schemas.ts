@@ -143,12 +143,19 @@ export const saveShiftItemsSchema = z.object({
     items: shiftItemsArraySchema,
     staffId: z.string().uuid().optional(),
     shiftDate: dateStringSchema.optional(),
-}).strict();
+    expectedShiftId: z.string().uuid().nullable(),
+    expectedRevision: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable(),
+}).strict().refine(
+    (data) => (data.expectedShiftId === null) === (data.expectedRevision === null),
+    { message: 'Shift identity and revision must refer to the same snapshot' },
+);
 
 /**
  * Схема для запроса закрытия смены
  */
 export const closeShiftSchema = z.object({
+    expectedShiftId: z.string().uuid(),
+    expectedRevision: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
     items: shiftItemsArraySchema.optional(),
     totalAmount: z.number().nonnegative('Total amount cannot be negative').optional(),
     consumablesAmount: z.number().nonnegative('Consumables amount cannot be negative').optional(),

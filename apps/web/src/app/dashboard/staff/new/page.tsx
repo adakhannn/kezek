@@ -6,22 +6,21 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function NewStaffPage() {
+    let branches: Array<{ id: string; name: string }> = [];
+    let errorMessage: string | null = null;
     try {
         const { supabase, bizId } = await getBizContextForManagers();
 
-        const { data: branches } = await supabase
+        const { data } = await supabase
             .from('branches')
             .select('id,name')
             .eq('biz_id', bizId)
             .order('name');
 
-        return <NewStaffPageClient branches={branches || []} />;
+        branches = data ?? [];
     } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : 'Нет доступа';
-        return (
-            <main className="p-6 text-red-600">
-                {message}
-            </main>
-        );
+        errorMessage = e instanceof Error ? e.message : 'Нет доступа';
     }
+    if (errorMessage !== null) return <main className="p-6 text-red-600">{errorMessage}</main>;
+    return <NewStaffPageClient branches={branches} />;
 }

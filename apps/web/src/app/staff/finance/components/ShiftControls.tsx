@@ -74,7 +74,7 @@ export function ShiftControls({
                     </Button>
                 </>
             )}
-            {isClosed && hasShift && (
+            {isClosed && hasShift && staffId && (
                 <Button
                     variant="outline"
                     onClick={onOpenShift}

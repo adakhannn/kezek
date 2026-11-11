@@ -216,6 +216,7 @@ describe('/api/auth/telegram/mobile/confirm', () => {
     test('returns 410 for expired pending nonce', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 1,
         });
@@ -244,6 +245,7 @@ describe('/api/auth/telegram/mobile/confirm', () => {
     test('returns 409 when nonce is bound to another telegram account', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -276,6 +278,7 @@ describe('/api/auth/telegram/mobile/confirm', () => {
     test('returns 409 when nonce is already consumed', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });

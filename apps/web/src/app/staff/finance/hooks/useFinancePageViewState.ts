@@ -78,7 +78,7 @@ export function useFinancePageViewState({ staffId, viewScope }: Options) {
     const [localMonth, setLocalMonth] = useState(dateDefaults.selectedMonth);
     const [localYear, setLocalYear] = useState(dateDefaults.selectedYear);
     // Never restore operation date, financial rows or editing/expanded state.
-    const [shiftDate, setShiftDate] = useState<Date>(todayTz());
+    const [shiftDate, setShiftDate] = useState<Date | null>(null);
     const [showShiftDetails, setShowShiftDetails] = useState(false);
     const previousTabRef = useRef<TabKey | null>(null);
 

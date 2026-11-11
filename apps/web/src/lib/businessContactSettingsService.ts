@@ -1,7 +1,7 @@
 import {
-    type PublicContactFields,
-    validatePublicContacts,
+    validatePublicContactPatch,
 } from '@/lib/businessContacts';
+import { publicContactPatchSchema } from '@/lib/validation/businessUpdateSchemas';
 
 export type BusinessContactSettingsAdminLike = {
     // Kept structurally small so this service can be unit-tested without
@@ -13,9 +13,13 @@ export type BusinessContactSettingsAdminLike = {
 export async function updateBusinessContactSettings(params: {
     admin: BusinessContactSettingsAdminLike;
     bizId: string;
-    input: PublicContactFields;
+    input: unknown;
 }) {
-    const validation = validatePublicContacts(params.input);
+    const parsed = publicContactPatchSchema.safeParse(params.input);
+    if (!parsed.success) {
+        return { ok: false as const, status: 400, error: 'validation', message: parsed.error.issues[0].message };
+    }
+    const validation = validatePublicContactPatch(parsed.data);
     if (!validation.ok) {
         return {
             ok: false as const,

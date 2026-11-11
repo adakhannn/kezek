@@ -18,6 +18,7 @@ import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
 import { getMobileApiUrl } from '../../lib/apiUrl';
+import { createMobileAuthProof } from '../../lib/authCrypto';
 import { WHATSAPP_ACTIVE_ATTEMPT_KEY } from '../../lib/authStorageKeys';
 import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../lib/fetchWithTimeout';
 import { getErrorMessage } from '../../lib/errors';
@@ -37,6 +38,7 @@ type WhatsAppStep = 'phone' | 'otp';
 
 type WhatsAppActiveAttempt = {
     attemptId: string;
+    codeVerifier: string;
     phone: string;
     expiresAt: string;
     cooldownUntil: number;
@@ -110,6 +112,7 @@ export default function WhatsAppScreen() {
 
     const activeAttemptRef = useRef<WhatsAppActiveAttempt | null>(null);
     const sendIdempotencyRef = useRef<StableIdempotencyEntry | null>(null);
+    const sendProofRef = useRef<{ key: string; codeVerifier: string; codeChallenge: string } | null>(null);
     const verifyIdempotencyRef = useRef<StableIdempotencyEntry | null>(null);
 
     const persistActiveAttempt = async (attempt: WhatsAppActiveAttempt) => {
@@ -128,7 +131,8 @@ export default function WhatsAppScreen() {
 
         try {
             const parsed = JSON.parse(raw) as Partial<WhatsAppActiveAttempt>;
-            if (!parsed.attemptId || !parsed.phone || !parsed.expiresAt || typeof parsed.cooldownUntil !== 'number') {
+            if (!parsed.attemptId || !parsed.phone || !parsed.expiresAt || typeof parsed.cooldownUntil !== 'number' ||
+                typeof parsed.codeVerifier !== 'string' || !/^[a-f0-9]{64}$/.test(parsed.codeVerifier)) {
                 throw new Error('Invalid payload');
             }
 
@@ -140,6 +144,7 @@ export default function WhatsAppScreen() {
 
             const restored: WhatsAppActiveAttempt = {
                 attemptId: parsed.attemptId,
+                codeVerifier: parsed.codeVerifier,
                 phone: parsed.phone,
                 expiresAt: parsed.expiresAt,
                 cooldownUntil: parsed.cooldownUntil,
@@ -208,6 +213,10 @@ export default function WhatsAppScreen() {
                 'wa-start',
             );
             sendIdempotencyRef.current = idempotency;
+            if (sendProofRef.current?.key !== idempotency.key) {
+                sendProofRef.current = { key: idempotency.key, ...await createMobileAuthProof() };
+            }
+            const proof = sendProofRef.current;
             const response = await fetchWithTimeout(`${apiUrl}/api/auth/whatsapp/mobile/start`, {
                 method: 'POST',
                 headers: {
@@ -215,7 +224,7 @@ export default function WhatsAppScreen() {
                     'x-idempotency-key': idempotency.key,
                     'x-client-timestamp': String(Date.now()),
                 },
-                body: JSON.stringify({ phone: normalizedPhone }),
+                body: JSON.stringify({ phone: normalizedPhone, codeChallenge: proof.codeChallenge }),
             });
             const payload = await response.json();
 
@@ -231,6 +240,7 @@ export default function WhatsAppScreen() {
 
             const attempt: WhatsAppActiveAttempt = {
                 attemptId: data.attemptId,
+                codeVerifier: proof.codeVerifier,
                 phone: normalizedPhone,
                 expiresAt: data.expiresAt,
                 cooldownUntil: Date.now() + RESEND_COOLDOWN_SEC * 1000,
@@ -238,6 +248,7 @@ export default function WhatsAppScreen() {
 
             await persistActiveAttempt(attempt);
             sendIdempotencyRef.current = null;
+            sendProofRef.current = null;
 
             setStep('otp');
             setOtp('');
@@ -307,7 +318,7 @@ export default function WhatsAppScreen() {
                 attemptId: activeAttempt.attemptId,
             });
 
-            await exchangeViaMobileApi(data.exchangeCode, apiUrl);
+            await exchangeViaMobileApi(data.exchangeCode, apiUrl, activeAttempt.codeVerifier);
             await clearActiveAttempt();
             verifyIdempotencyRef.current = null;
             showToast(WHATSAPP_COPY.signInSuccess, 'success');

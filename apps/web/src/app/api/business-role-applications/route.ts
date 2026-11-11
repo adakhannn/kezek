@@ -112,5 +112,6 @@ export async function POST(request: Request) {
 
             return Response.json({ ok: true, id: result.id });
         },
+        "/api/business-role-applications",
     );
 }

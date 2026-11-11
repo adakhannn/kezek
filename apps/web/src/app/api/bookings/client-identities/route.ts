@@ -7,5 +7,5 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     return withRateLimit(req, RateLimitConfigs.normal, () =>
-        withErrorHandler('DashboardBookingClientIdentities', () => runDashboardBookingClientIdentityHttp(req)));
+        withErrorHandler('DashboardBookingClientIdentities', () => runDashboardBookingClientIdentityHttp(req)), "/api/bookings/client-identities");
 }

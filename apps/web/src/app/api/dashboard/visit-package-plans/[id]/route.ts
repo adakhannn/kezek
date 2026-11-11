@@ -8,5 +8,6 @@ export const runtime = 'nodejs';
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('VisitPackagePlanPatch', async () => runVisitPackagePlanPatchHttp(req, context)),
+      "/api/dashboard/visit-package-plans/[id]",
   );
 }

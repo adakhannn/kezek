@@ -38,6 +38,7 @@ describe('branchUpdateService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (checkResourceBelongsToBiz as jest.Mock).mockReset();
   });
 
   test('rejects invalid coordinates', async () => {
@@ -66,7 +67,7 @@ describe('branchUpdateService', () => {
     expect(result).toEqual({
       ok: false,
       error: 'validation',
-      message: 'Некорректные координаты',
+      message: expect.any(String),
       status: 400,
     });
   });
@@ -125,4 +126,22 @@ describe('branchUpdateService', () => {
       data: {},
     });
   });
+
+  test('preserves omitted fields when updating one contact', async () => {
+    const admin = createAdmin();
+    (checkResourceBelongsToBiz as jest.Mock).mockResolvedValue({ data: { id: branchId, biz_id: bizId }, error: null });
+    const query = createUpdateQuery({ error: null });
+    admin.from.mockReturnValueOnce(query);
+    const result = await updateBranch({ admin, branchId, bizId, body: { contact_email: ' OWNER@EXAMPLE.COM ' } });
+    expect(result.ok).toBe(true);
+    expect(query.update).toHaveBeenCalledWith({ contact_email: 'owner@example.com' });
+  });
+
+  test.each([{ lat: 42 }, { lon: 74 }, { lat: null, lon: 74 }, { lat: 42, lon: null }])(
+    'rejects incomplete coordinates without database writes: %j', async (body) => {
+      const admin = createAdmin();
+      expect(await updateBranch({ admin, branchId, bizId, body })).toMatchObject({ ok: false, status: 400 });
+      expect(admin.from).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -13,7 +13,7 @@ export async function runMarkAttendanceHttp(
   context: unknown,
 ): Promise<NextResponse> {
   const bookingId = await getRouteParamUuid(context, 'id');
-  const { bizId } = await getBizContextForManagers();
+  const { bizId, userId } = await getBizContextForManagers();
   const admin = getServiceClient();
 
   const validationResult = await validateRequest(req, markAttendanceSchema);
@@ -25,6 +25,7 @@ export async function runMarkAttendanceHttp(
     admin,
     bookingId,
     bizId,
+    actorId: userId,
     attended: validationResult.data.attended,
   });
 

@@ -4,6 +4,7 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
+import { checkVerifiedPrincipalRateLimit, rateLimitDeniedResponse, RateLimitConfigs } from '@/lib/rateLimit';
 import { runStaffShiftClose } from '@/lib/staffShiftCloseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { closeShiftSchema } from '@/lib/validation/schemas';
@@ -29,6 +30,9 @@ export async function runStaffShiftCloseHttp(req: Request): Promise<NextResponse
         staffId = ctxStaffId;
         bizId = ctxBizId;
 
+        const limit = await checkVerifiedPrincipalRateLimit(req, endpoint, { userId: ctxUserId, bizId: ctxBizId }, RateLimitConfigs.critical);
+        if (!limit.success) return rateLimitDeniedResponse(limit);
+
         const validationResult = await validateRequest(req, closeShiftSchema);
         if (!validationResult.success) {
             const validationError = await validationResult.response.json();
@@ -45,6 +49,9 @@ export async function runStaffShiftCloseHttp(req: Request): Promise<NextResponse
             supabase,
             staffId,
             bizId,
+            actorId: userId,
+            expectedShiftId: validationResult.data.expectedShiftId,
+            expectedRevision: validationResult.data.expectedRevision,
             items: validationResult.data.items ?? [],
             totalAmountRaw: validationResult.data.totalAmount ?? 0,
             consumablesAmount: validationResult.data.consumablesAmount ?? 0,

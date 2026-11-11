@@ -31,5 +31,6 @@ export async function GET(request: NextRequest) {
         withErrorHandler('TelegramMobileStatus', () =>
             runTelegramMobileStatusHttp(request),
         ),
+        "/api/auth/telegram/mobile/status",
     );
 }

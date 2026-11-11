@@ -58,7 +58,7 @@ describe('runWhatsAppMobileStartHttp', () => {
 
         const req = createMockRequest('http://localhost/api/auth/whatsapp/mobile/start', {
             method: 'POST',
-            body: { phone: '+996500574029' },
+            body: { phone: '+996500574029', codeChallenge: 'a'.repeat(64) },
         });
 
         const res = await runWhatsAppMobileStartHttp(req);
@@ -97,12 +97,12 @@ describe('runWhatsAppMobileStartHttp', () => {
         const req1 = createMockRequest('http://localhost/api/auth/whatsapp/mobile/start', {
             method: 'POST',
             headers,
-            body: { phone: '+996500574029' },
+            body: { phone: '+996500574029', codeChallenge: 'a'.repeat(64) },
         });
         const req2 = createMockRequest('http://localhost/api/auth/whatsapp/mobile/start', {
             method: 'POST',
             headers,
-            body: { phone: '+996500574029' },
+            body: { phone: '+996500574029', codeChallenge: 'a'.repeat(64) },
         });
 
         const res1 = await runWhatsAppMobileStartHttp(req1);
@@ -118,7 +118,7 @@ describe('runWhatsAppMobileStartHttp', () => {
 
         const req = createMockRequest('http://localhost/api/auth/whatsapp/mobile/start', {
             method: 'POST',
-            body: { phone: '+996500574029' },
+            body: { phone: '+996500574029', codeChallenge: 'a'.repeat(64) },
         });
 
         const res = await runWhatsAppMobileStartHttp(req);

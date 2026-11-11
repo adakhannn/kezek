@@ -136,6 +136,7 @@ export function FinanceShiftTabSection({
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <ShiftHeader
+                    timezone={financeData.data?.calendar?.timezone}
                     shiftDate={shiftDate}
                     onShiftDateChange={onShiftDateChange}
                     shift={shift}
@@ -236,6 +237,7 @@ export function FinanceShiftTabSection({
 }
 
 type FinanceClientsTabSectionProps = {
+    timezone?: string;
     staffId?: string;
     shiftDate: Date;
     onShiftDateChange: (date: Date) => void;
@@ -261,6 +263,7 @@ type FinanceClientsTabSectionProps = {
 };
 
 export function FinanceClientsTabSection({
+    timezone,
     staffId,
     shiftDate,
     onShiftDateChange,
@@ -287,6 +290,7 @@ export function FinanceClientsTabSection({
     return (
         <div className={`space-y-4 ${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'}`}>
             <ClientsListHeader
+                timezone={timezone}
                 shiftDate={shiftDate}
                 onShiftDateChange={onShiftDateChange}
                 isOpen={isOpen}

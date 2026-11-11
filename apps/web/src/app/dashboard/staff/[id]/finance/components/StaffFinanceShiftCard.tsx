@@ -1,12 +1,11 @@
 'use client';
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { bookingCountForm } from '@/lib/bookingCountForm';
 import type { StaffFinanceStatsShift } from '@/lib/finance/types';
 import { logError } from '@/lib/log';
-import { TZ } from '@/lib/time';
 
 function formatMoney(value: number, locale: string) {
     return `${value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`;
@@ -29,44 +28,53 @@ export function StaffFinanceShiftCard({
         const current = shift.hours_worked ?? 0;
         return Number.isFinite(current) ? current.toFixed(2) : '0.00';
     });
+    const [editVersion, setEditVersion] = useState<{ id: string; revision: number } | null>(null);
+    const [requiresReview, setRequiresReview] = useState(false);
+    const saveLock = useRef(false);
     const [isSavingHours, setIsSavingHours] = useState(false);
     const [inlineError, setInlineError] = useState<string | null>(null);
 
-    const shiftDate = formatInTimeZone(new Date(`${shift.shift_date}T12:00:00`), TZ, 'dd.MM.yyyy');
-    const openedTime = shift.opened_at ? formatInTimeZone(new Date(shift.opened_at), TZ, 'HH:mm') : null;
-    const closedTime = shift.closed_at ? formatInTimeZone(new Date(shift.closed_at), TZ, 'HH:mm') : null;
+    const shiftDate = shift.shift_date.split('-').reverse().join('.');
+    const openedTime = shift.opened_at ? formatInTimeZone(new Date(shift.opened_at), shift.timezone, 'HH:mm') : null;
+    const closedTime = shift.closed_at ? formatInTimeZone(new Date(shift.closed_at), shift.timezone, 'HH:mm') : null;
     const guaranteeDominates = shift.guaranteed_amount > 0 && shift.guaranteed_amount > shift.master_share;
 
     async function saveEditedHours() {
+        if (saveLock.current || requiresReview || !editVersion) return;
         const raw = hoursInput.trim().replace(',', '.');
         const nextValue = Number(raw);
-        if (!raw || !Number.isFinite(nextValue) || nextValue < 0 || nextValue > 24) {
+        if (!raw || !Number.isFinite(nextValue) || nextValue < 0 || nextValue > shift.day_hours) {
             setInlineError(t('finance.staffStats.editHoursInvalid', 'Invalid hours value'));
             return;
         }
 
         setInlineError(null);
         try {
+            saveLock.current = true;
             setIsSavingHours(true);
-            const response = await fetch(`/api/dashboard/staff-shifts/${shift.id}/update-hours`, {
+            const response = await fetch(`/api/dashboard/staff-shifts/${editVersion.id}/update-hours`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     hours_worked: nextValue,
+                    expectedRevision: editVersion.revision,
                 }),
             });
             const json = await response.json().catch(() => ({}));
             if (!response.ok || !json.ok) {
-                throw new Error(json.error || `HTTP_${response.status}`);
+                if (response.status === 409 || response.status >= 500) setRequiresReview(true);
+                throw new Error(json.message || `HTTP_${response.status}`);
             }
             setIsEditingHours(false);
             await onHoursUpdated?.();
         } catch (error) {
             logError('StaffFinanceShiftCard', 'Failed to update shift hours', error);
-            setInlineError(t('finance.staffStats.editHoursError', 'Failed to update hours'));
+            setRequiresReview(true);
+            setInlineError(error instanceof Error ? error.message : t('finance.staffStats.editHoursError', 'Failed to update hours'));
         } finally {
+            saveLock.current = false;
             setIsSavingHours(false);
         }
     }
@@ -143,16 +151,18 @@ export function StaffFinanceShiftCard({
                         </div>
                     </div>
 
-                    {shift.status === 'closed' ? (
+                    {shift.status === 'closed' || isEditingHours ? (
                         <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                             <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     type="button"
                                     className="rounded-[var(--radius-sm)] border border-[var(--border-default)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--border-strong)]"
-                                    disabled={isSavingHours}
+                                    disabled={isSavingHours || isEditingHours || !Number.isSafeInteger(shift.ledger_revision)}
                                     onClick={() => {
                                         const current = shift.hours_worked ?? 0;
                                         setHoursInput(Number.isFinite(current) ? current.toFixed(2) : '0.00');
+                                        setEditVersion({ id: shift.id, revision: shift.ledger_revision });
+                                        setRequiresReview(false);
                                         setInlineError(null);
                                         setIsEditingHours((value) => !value);
                                     }}
@@ -167,8 +177,9 @@ export function StaffFinanceShiftCard({
                                             aria-label={t('finance.staffStats.editHoursPrompt', 'Enter actual hours worked')}
                                             inputMode="decimal"
                                             min={0}
-                                            max={24}
+                                            max={shift.day_hours}
                                             step={0.25}
+                                            disabled={isSavingHours || requiresReview}
                                             value={hoursInput}
                                             onChange={(event) => setHoursInput(event.target.value)}
                                             className="h-8 w-24 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-elevated)] px-2 text-xs text-[var(--text-primary)]"
@@ -176,7 +187,7 @@ export function StaffFinanceShiftCard({
                                         <button
                                             type="button"
                                             className="rounded-[var(--radius-sm)] bg-[var(--accent-primary)] px-2.5 py-1 text-xs font-semibold text-[var(--text-inverse)] disabled:opacity-50"
-                                            disabled={isSavingHours}
+                                            disabled={isSavingHours || requiresReview}
                                             onClick={() => {
                                                 void saveEditedHours();
                                             }}
@@ -187,13 +198,16 @@ export function StaffFinanceShiftCard({
                                             type="button"
                                             className="rounded-[var(--radius-sm)] border border-[var(--border-default)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)]"
                                             disabled={isSavingHours}
-                                            onClick={() => setIsEditingHours(false)}
+                                            onClick={() => { setIsEditingHours(false); setRequiresReview(false); setInlineError(null); }}
                                         >
                                             {t('common.cancel', 'Cancel')}
                                         </button>
                                     </>
                                 ) : null}
                             </div>
+                            {requiresReview && onHoursUpdated ? <button type="button" disabled={isSavingHours} onClick={async () => {
+                                await onHoursUpdated(); setIsEditingHours(false); setRequiresReview(false); setInlineError(null);
+                            }}>{t('finance.staffStats.discardHoursReload', 'Discard input and reload shift')}</button> : null}
                             {inlineError ? <p className="type-caption mt-2 text-[var(--status-danger)]">{inlineError}</p> : null}
                         </div>
                     ) : null}
@@ -219,7 +233,7 @@ export function StaffFinanceShiftCard({
                                 ) : (
                                     shift.items.map((item) => {
                                         const createdAt = item.created_at
-                                            ? formatInTimeZone(new Date(item.created_at), TZ, 'HH:mm')
+                                            ? formatInTimeZone(new Date(item.created_at), shift.timezone, 'HH:mm')
                                             : '—';
                                         return (
                                             <tr key={item.id}>

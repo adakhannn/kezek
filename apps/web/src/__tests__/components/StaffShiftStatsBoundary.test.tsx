@@ -22,7 +22,8 @@ test('zero-valued historical fields do not become NaN or invent financial amount
 
 test('employee guarantee can exceed base share without a second deduction from saved business share', () => {
     const { result } = renderHook(() => useShiftStats({ ...options, allShifts: [{
-        shift_date: '2026-10-18', status: 'closed', total_amount: 600, master_share: 360,
+        // Closed ledger master_share already includes the 240 guarantee top-up.
+        shift_date: '2026-10-18', status: 'closed', total_amount: 600, master_share: 600,
         salon_share: 50, late_minutes: 0, guaranteed_amount: 600, topup_amount: 240,
     }] }));
     expect(result.current).toEqual({

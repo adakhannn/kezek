@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { BusinessSwitcher } from './BusinessSwitcher';
 
@@ -9,13 +9,17 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { WorkspaceNavItem, WorkspaceSidebarShell } from '@/app/_components/workspace/WorkspaceNavigation';
 
 export function MobileSidebar({ bizId }: { bizId: string }) {
-    const { t } = useLanguage();
     const pathname = usePathname();
+    const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
+    const [previousPathname, setPreviousPathname] = useState(pathname);
 
-    useEffect(() => {
+    // Reset the sheet before rendering the next route, without remounting the
+    // business switcher (which would refetch its data on every navigation).
+    if (previousPathname !== pathname) {
+        setPreviousPathname(pathname);
         setIsOpen(false);
-    }, [pathname]);
+    }
 
     const navItems = useMemo<WorkspaceNavItem[]>(
         () => [

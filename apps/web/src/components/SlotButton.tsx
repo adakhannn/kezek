@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
+import { createQuickHoldBooking, QuickHoldClientError } from '@/lib/quickHoldClient';
 
 export type QuickPayload = {
     biz_id: string;
@@ -23,27 +24,29 @@ export default function SlotButton({
 }) {
     const toast = useToast();
     const [loading, setLoading] = useState(false);
+    const inFlight = useRef(false);
 
     async function onClick() {
-        if (loading) return;
+        if (inFlight.current) return;
+        inFlight.current = true;
         setLoading(true);
         try {
-            const res = await fetch('/api/quick-hold', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(payload),
+            const { bookingId } = await createQuickHoldBooking({
+                biz_id: payload.biz_id,
+                service_id: payload.service_id,
+                staff_id: payload.staff_id,
+                start_at: payload.start_at,
             });
-            if (res.status === 401) {
+            window.location.href = `${redirectBase}/${bookingId}`;
+        } catch (e) {
+            if (e instanceof QuickHoldClientError && e.status === 401) {
                 window.location.href = `/b/${payload.slug}`;
                 return;
             }
-            const data: { ok: boolean; booking_id?: string; error?: string; message?: string } = await res.json();
-            if (!data.ok || !data.booking_id) throw new Error(data.message || data.error || 'Ошибка');
-            window.location.href = `${redirectBase}/${data.booking_id}`;
-        } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             toast.showError(msg);
         } finally {
+            inFlight.current = false;
             setLoading(false);
         }
     }

@@ -1,11 +1,13 @@
 export type ShiftItem = {
     id?: string;
+    clientId?: string;
     clientName: string;
     serviceName: string;
     serviceAmount: number;
     consumablesAmount: number;
     bookingId?: string | null;
     createdAt?: string | null;
+    note?: string | null;
 };
 
 export type TodayShift = {
@@ -13,6 +15,7 @@ export type TodayShift = {
     status: 'open' | 'closed' | 'none';
     shift: {
         id: string;
+        ledger_revision: number;
         shift_date: string;
         status: 'open' | 'closed';
         opened_at: string | null;
@@ -36,6 +39,22 @@ export type FinanceData = {
     currentGuaranteedAmount: number | null;
     isDayOff: boolean;
 };
+
+export type ShiftItemInput = Omit<ShiftItem, 'id' | 'createdAt'>;
+export type ShiftLedgerSnapshot = {
+    expectedShiftId: string;
+    expectedRevision: number;
+    items: ShiftItem[];
+};
+export type ShiftItemsCommand = ShiftLedgerSnapshot;
+export type ShiftCloseCommand = ShiftLedgerSnapshot & { totalAmount: number; consumablesAmount: number };
+export type ShiftItemEdit = {
+    base: ShiftLedgerSnapshot;
+    item: ShiftItemInput;
+    itemId?: string;
+    replacesQueuedAt?: string;
+};
+export type SavedShiftLedger = { shiftId: string; revision: number; items: ShiftItem[] };
 
 export type ShiftQuickMetrics = {
     totalAmount: number;

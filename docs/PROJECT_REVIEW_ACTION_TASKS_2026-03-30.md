@@ -1,6 +1,8 @@
 # Project Review Action Tasks 2026-03-30
 
-**Status:** active working backlog  
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
+**Status at original snapshot:** active working backlog
 **Created:** 2026-03-30  
 **Purpose:** convert the current project review into a concrete improvement task list.
 
@@ -61,26 +63,26 @@ Done when:
 
 Progress:
 
-- extracted sign-in redirect policy into [signInRedirectLogic.ts](/C:/projects/kezek/apps/web/src/lib/signInRedirectLogic.ts)
-- added focused tests in [signInRedirectLogic.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/signInRedirectLogic.test.ts)
-- connected [SignInPage.tsx](/C:/projects/kezek/apps/web/src/app/auth/sign-in/SignInPage.tsx) to the extracted redirect helper
-- extracted sign-in submit actions into [useSignInSubmitActions.ts](/C:/projects/kezek/apps/web/src/app/auth/sign-in/useSignInSubmitActions.ts)
-- extracted existing-session redirect effect into [useExistingSessionRedirect.ts](/C:/projects/kezek/apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts)
-- extracted sign-in redirect orchestration into [useSignInRedirectDecision.ts](/C:/projects/kezek/apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts)
-- extracted sign-in layout into [SignInPageView.tsx](/C:/projects/kezek/apps/web/src/app/auth/sign-in/SignInPageView.tsx)
-- extracted finance local item orchestration into [itemLogic.ts](/C:/projects/kezek/apps/web/src/app/staff/finance/utils/itemLogic.ts)
-- connected [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx) to the extracted finance item helpers
-- added focused tests in [itemLogic.test.ts](/C:/projects/kezek/apps/web/src/__tests__/app/staff/finance/utils/itemLogic.test.ts)
+- extracted sign-in redirect policy into [signInRedirectLogic.ts](../apps/web/src/lib/signInRedirectLogic.ts)
+- added focused tests in [signInRedirectLogic.test.ts](../apps/web/src/__tests__/lib/signInRedirectLogic.test.ts)
+- connected [SignInPage.tsx](../apps/web/src/app/auth/sign-in/SignInPage.tsx) to the extracted redirect helper
+- extracted sign-in submit actions into [useSignInSubmitActions.ts](../apps/web/src/app/auth/sign-in/useSignInSubmitActions.ts)
+- extracted existing-session redirect effect into [useExistingSessionRedirect.ts](../apps/web/src/app/auth/sign-in/useExistingSessionRedirect.ts)
+- extracted sign-in redirect orchestration into [useSignInRedirectDecision.ts](../apps/web/src/app/auth/sign-in/useSignInRedirectDecision.ts)
+- extracted sign-in layout into [SignInPageView.tsx](../apps/web/src/app/auth/sign-in/SignInPageView.tsx)
+- extracted finance local item orchestration into [itemLogic.ts](../apps/web/src/app/staff/finance/utils/itemLogic.ts)
+- connected [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx) to the extracted finance item helpers
+- added focused tests in [itemLogic.test.ts](../apps/web/src/__tests__/app/staff/finance/utils/itemLogic.test.ts)
 - moved finance list insert/delete and expanded-index transitions into reusable item helpers
-- extracted finance save/delete/add/duplicate orchestration into [useFinanceItemActions.ts](/C:/projects/kezek/apps/web/src/app/staff/finance/hooks/useFinanceItemActions.ts)
-- extracted finance server-to-local synchronization into [useFinanceServerSync.ts](/C:/projects/kezek/apps/web/src/app/staff/finance/hooks/useFinanceServerSync.ts)
-- extracted finance shift action/loading orchestration into [useFinanceShiftActions.ts](/C:/projects/kezek/apps/web/src/app/staff/finance/hooks/useFinanceShiftActions.ts)
-- extracted finance derived page state into [useFinancePageDerivedState.ts](/C:/projects/kezek/apps/web/src/app/staff/finance/hooks/useFinancePageDerivedState.ts)
+- extracted finance save/delete/add/duplicate orchestration into [useFinanceItemActions.ts](../apps/web/src/app/staff/finance/hooks/useFinanceItemActions.ts)
+- extracted finance server-to-local synchronization into [useFinanceServerSync.ts](../apps/web/src/app/staff/finance/hooks/useFinanceServerSync.ts)
+- extracted finance shift action/loading orchestration into [useFinanceShiftActions.ts](../apps/web/src/app/staff/finance/hooks/useFinanceShiftActions.ts)
+- extracted finance derived page state into [useFinancePageDerivedState.ts](../apps/web/src/app/staff/finance/hooks/useFinancePageDerivedState.ts)
 
 Result:
 
-- [SignInPage.tsx](/C:/projects/kezek/apps/web/src/app/auth/sign-in/SignInPage.tsx) now acts as a thin container over extracted hooks and view modules.
-- [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx) was reduced from the earlier hotspot state to a smaller composition screen backed by reusable finance hooks and item helpers.
+- [SignInPage.tsx](../apps/web/src/app/auth/sign-in/SignInPage.tsx) now acts as a thin container over extracted hooks and view modules.
+- [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx) was reduced from the earlier hotspot state to a smaller composition screen backed by reusable finance hooks and item helpers.
 - The extracted auth and finance orchestration is now testable without rendering the full page.
 
 ### P0.2 Decompose high-complexity service orchestration
@@ -107,22 +109,22 @@ Done when:
 
 Progress:
 
-- extracted WhatsApp text-command routing into [whatsAppCommandRouting.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppCommandRouting.ts)
-- connected [whatsAppWebhookService.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppWebhookService.ts) to the extracted command router for cancel, confirm, remind, and help flows
-- added focused routing tests in [whatsAppCommandRouting.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppCommandRouting.test.ts)
-- extracted WhatsApp outbound reply formatting into [whatsAppWebhookText.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppWebhookText.ts)
-- extracted WhatsApp message context resolution into [whatsAppMessageContext.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppMessageContext.ts)
-- extracted shared booking action execution into [whatsAppBookingCommandFlow.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppBookingCommandFlow.ts)
-- extracted WhatsApp message persistence into [whatsAppMessagePersistence.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppMessagePersistence.ts)
-- extracted media/status handling into [whatsAppMediaStatusHandlers.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppMediaStatusHandlers.ts)
-- connected [whatsAppWebhookService.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppWebhookService.ts) to the extracted text and context helpers
-- connected [whatsAppWebhookService.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppWebhookService.ts) to the extracted booking command flow
-- connected [whatsAppWebhookService.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppWebhookService.ts) to the extracted persistence and media/status helpers
-- added focused tests in [whatsAppWebhookText.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppWebhookText.test.ts), [whatsAppMessageContext.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppMessageContext.test.ts), [whatsAppBookingCommandFlow.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppBookingCommandFlow.test.ts), [whatsAppMessagePersistence.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppMessagePersistence.test.ts), and [whatsAppMediaStatusHandlers.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppMediaStatusHandlers.test.ts)
+- extracted WhatsApp text-command routing into [whatsAppCommandRouting.ts](../apps/web/src/lib/whatsAppCommandRouting.ts)
+- connected [whatsAppWebhookService.ts](../apps/web/src/lib/whatsAppWebhookService.ts) to the extracted command router for cancel, confirm, remind, and help flows
+- added focused routing tests in [whatsAppCommandRouting.test.ts](../apps/web/src/__tests__/lib/whatsAppCommandRouting.test.ts)
+- extracted WhatsApp outbound reply formatting into [whatsAppWebhookText.ts](../apps/web/src/lib/whatsAppWebhookText.ts)
+- extracted WhatsApp message context resolution into [whatsAppMessageContext.ts](../apps/web/src/lib/whatsAppMessageContext.ts)
+- extracted shared booking action execution into [whatsAppBookingCommandFlow.ts](../apps/web/src/lib/whatsAppBookingCommandFlow.ts)
+- extracted WhatsApp message persistence into [whatsAppMessagePersistence.ts](../apps/web/src/lib/whatsAppMessagePersistence.ts)
+- extracted media/status handling into [whatsAppMediaStatusHandlers.ts](../apps/web/src/lib/whatsAppMediaStatusHandlers.ts)
+- connected [whatsAppWebhookService.ts](../apps/web/src/lib/whatsAppWebhookService.ts) to the extracted text and context helpers
+- connected [whatsAppWebhookService.ts](../apps/web/src/lib/whatsAppWebhookService.ts) to the extracted booking command flow
+- connected [whatsAppWebhookService.ts](../apps/web/src/lib/whatsAppWebhookService.ts) to the extracted persistence and media/status helpers
+- added focused tests in [whatsAppWebhookText.test.ts](../apps/web/src/__tests__/lib/whatsAppWebhookText.test.ts), [whatsAppMessageContext.test.ts](../apps/web/src/__tests__/lib/whatsAppMessageContext.test.ts), [whatsAppBookingCommandFlow.test.ts](../apps/web/src/__tests__/lib/whatsAppBookingCommandFlow.test.ts), [whatsAppMessagePersistence.test.ts](../apps/web/src/__tests__/lib/whatsAppMessagePersistence.test.ts), and [whatsAppMediaStatusHandlers.test.ts](../apps/web/src/__tests__/lib/whatsAppMediaStatusHandlers.test.ts)
 
 Result:
 
-- [whatsAppWebhookService.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppWebhookService.ts) now behaves as a coordinator over focused routing, context, persistence, text, and booking-flow helpers.
+- [whatsAppWebhookService.ts](../apps/web/src/lib/whatsAppWebhookService.ts) now behaves as a coordinator over focused routing, context, persistence, text, and booking-flow helpers.
 - Finance orchestration now has dedicated action and synchronization hooks instead of one large inline service layer.
 - The main high-complexity seams identified in the review were extracted and covered with focused tests.
 
@@ -151,8 +153,8 @@ Done when:
 
 Result:
 
-- Added [DOMAIN_EXPANSION_PLAN.md](/C:/projects/kezek/docs/DOMAIN_EXPANSION_PLAN.md)
-- Rewrote [MODULE_BOUNDARIES.md](/C:/projects/kezek/docs/MODULE_BOUNDARIES.md) into a clean active rule document
+- Added [DOMAIN_EXPANSION_PLAN.md](DOMAIN_EXPANSION_PLAN.md)
+- Rewrote [MODULE_BOUNDARIES.md](MODULE_BOUNDARIES.md) into a clean active rule document
 
 ### P0.4 Normalize active documentation and remove contradictions
 
@@ -177,8 +179,8 @@ Done when:
 
 Result:
 
-- Rewrote [apps/web/README.md](/C:/projects/kezek/apps/web/README.md) and aligned the coverage threshold with `apps/web/jest.config.js`
-- Added the new review backlog and domain plan to [README.md](/C:/projects/kezek/README.md) and [docs/README.md](/C:/projects/kezek/docs/README.md)
+- Rewrote [apps/web/README.md](../apps/web/README.md) and aligned the coverage threshold with `apps/web/jest.config.js`
+- Added the new review backlog and domain plan to [README.md](../README.md) and [docs/README.md](README.md)
 
 ## P1 Tasks
 
@@ -208,9 +210,9 @@ Done when:
 
 Progress:
 
-- Rewrote [apps/web/README.md](/C:/projects/kezek/apps/web/README.md)
-- Rewrote [apps/mobile/README.md](/C:/projects/kezek/apps/mobile/README.md)
-- Rewrote [MODULE_BOUNDARIES.md](/C:/projects/kezek/docs/MODULE_BOUNDARIES.md)
+- Rewrote [apps/web/README.md](../apps/web/README.md)
+- Rewrote [apps/mobile/README.md](../apps/mobile/README.md)
+- Rewrote [MODULE_BOUNDARIES.md](MODULE_BOUNDARIES.md)
 
 Remaining high-value files:
 
@@ -244,30 +246,30 @@ Progress:
 - verified local typecheck health for both `apps/web` and `apps/mobile`
 - stabilized the mobile smoke suite by introducing a shared test QueryClient configuration for React Query based screen tests
 - verified `pnpm -C apps/mobile test -- --runInBand --watchAll=false` locally: 15 suites and 35 tests passed
-- made `mobile_tests` blocking in [ci.yml](/C:/projects/kezek/.github/workflows/ci.yml)
+- made `mobile_tests` blocking in [ci.yml](../.github/workflows/ci.yml)
 - aligned `mobile_tests` CI execution with the proven local command: `pnpm test -- --runInBand --watchAll=false`
-- added stable web CI scripts in [apps/web/package.json](/C:/projects/kezek/apps/web/package.json): `test:ci:core` and `test:ci:extended`
+- added stable web CI scripts in [apps/web/package.json](../apps/web/package.json): `test:ci:core` and `test:ci:extended`
 - verified a stable blocking web coverage gate locally via `pnpm -C apps/web test:ci:core`: 23 suites, 238 tests, coverage above the 60% global threshold
 - verified a broad `api/lib` sweep locally via `pnpm -C apps/web test:ci:extended`: 292 suites and 1081 tests passed
-- split the old web gate into a blocking `web_core_tests` coverage job and a non-blocking extended `api/lib` sweep in [ci.yml](/C:/projects/kezek/.github/workflows/ci.yml)
-- fixed the remaining extended web sweep teardown leak by unref-ing module-scope cleanup intervals in [mobileExchangeService.ts](/C:/projects/kezek/apps/web/src/lib/mobileExchangeService.ts) and [rateLimit.ts](/C:/projects/kezek/apps/web/src/lib/rateLimit.ts)
+- split the old web gate into a blocking `web_core_tests` coverage job and a non-blocking extended `api/lib` sweep in [ci.yml](../.github/workflows/ci.yml)
+- fixed the remaining extended web sweep teardown leak by unref-ing module-scope cleanup intervals in [mobileExchangeService.ts](../apps/web/src/lib/mobileExchangeService.ts) and [rateLimit.ts](../apps/web/src/lib/rateLimit.ts)
 - re-verified the full extended sweep locally after the teardown fix: `pnpm -C apps/web test:ci:extended` passed cleanly with 292 suites and 1081 tests
-- made `api_tests` blocking in [ci.yml](/C:/projects/kezek/.github/workflows/ci.yml) now that the extended web sweep completes reliably
-- added a deterministic Playwright smoke gate via [smoke-public.spec.ts](/C:/projects/kezek/apps/web/e2e/smoke-public.spec.ts) and [test:e2e:smoke](/C:/projects/kezek/apps/web/package.json)
-- added a new blocking `e2e_smoke_tests` job in [ci.yml](/C:/projects/kezek/.github/workflows/ci.yml) while keeping the full seeded E2E suite non-blocking
+- made `api_tests` blocking in [ci.yml](../.github/workflows/ci.yml) now that the extended web sweep completes reliably
+- added a deterministic Playwright smoke gate via [smoke-public.spec.ts](../apps/web/e2e/smoke-public.spec.ts) and [test:e2e:smoke](../apps/web/package.json)
+- added a new blocking `e2e_smoke_tests` job in [ci.yml](../.github/workflows/ci.yml) while keeping the full seeded E2E suite non-blocking
 - verified the smoke browser gate locally via `pnpm -C apps/web test:e2e:smoke`: 3 tests passed
-- split the larger Playwright layer into explicit script groups in [apps/web/package.json](/C:/projects/kezek/apps/web/package.json): `test:e2e:http`, `test:e2e:auth-required`, `test:e2e:seed-required`, and `test:e2e:full-seeded`
-- aligned [ci.yml](/C:/projects/kezek/.github/workflows/ci.yml) and [apps/web/e2e/README.md](/C:/projects/kezek/apps/web/e2e/README.md) with the new smoke/auth/seeded grouping
-- made the smoke and HTTP Playwright scripts deterministic with `--workers=1` in [apps/web/package.json](/C:/projects/kezek/apps/web/package.json)
+- split the larger Playwright layer into explicit script groups in [apps/web/package.json](../apps/web/package.json): `test:e2e:http`, `test:e2e:auth-required`, `test:e2e:seed-required`, and `test:e2e:full-seeded`
+- aligned [ci.yml](../.github/workflows/ci.yml) and [apps/web/e2e/README.md](../apps/web/e2e/README.md) with the new smoke/auth/seeded grouping
+- made the smoke and HTTP Playwright scripts deterministic with `--workers=1` in [apps/web/package.json](../apps/web/package.json)
 - re-verified the grouped stable E2E entry points locally: `smoke-public.spec.ts` passed with 3 tests, `whatsapp-webhook.spec.ts` passed with 1 test
-- added shared Playwright env helpers in [testEnv.ts](/C:/projects/kezek/apps/web/e2e/testEnv.ts)
+- added shared Playwright env helpers in [testEnv.ts](../apps/web/e2e/testEnv.ts)
 - removed placeholder fallback accounts and seeded ids from the grouped `auth-required` and `seed-required` specs so those flows now depend on explicit environment configuration instead of silent defaults
 - added suite-level Playwright preflight skips for grouped specs with required env, so missing contracts now surface as explicit skipped suites instead of failing deep inside scenario execution
-- extracted shared Playwright auth/bootstrap helpers into [authHelpers.ts](/C:/projects/kezek/apps/web/e2e/authHelpers.ts) and reused them across manager, super-admin, multi-role, and staff login flows
+- extracted shared Playwright auth/bootstrap helpers into [authHelpers.ts](../apps/web/e2e/authHelpers.ts) and reused them across manager, super-admin, multi-role, and staff login flows
 
 Result:
 
-- CI now has blocking `mobile_tests`, `web_core_tests`, `api_tests`, and `e2e_smoke_tests` gates in [ci.yml](/C:/projects/kezek/.github/workflows/ci.yml).
+- CI now has blocking `mobile_tests`, `web_core_tests`, `api_tests`, and `e2e_smoke_tests` gates in [ci.yml](../.github/workflows/ci.yml).
 - Full seeded E2E remains intentionally non-blocking, but it is now clearly separated from the trusted PR-quality gate.
 - Green CI now represents a materially stronger signal than the original lint-and-typecheck baseline.
 
@@ -290,16 +292,16 @@ Done when:
 
 Progress:
 
-- added redirect-decision tests in [signInRedirectLogic.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/signInRedirectLogic.test.ts)
-- added focused mobile auth/session restoration tests in [useRootNavigationSession.test.ts](/C:/projects/kezek/apps/mobile/src/__tests__/navigation/useRootNavigationSession.test.ts)
+- added redirect-decision tests in [signInRedirectLogic.test.ts](../apps/web/src/__tests__/lib/signInRedirectLogic.test.ts)
+- added focused mobile auth/session restoration tests in [useRootNavigationSession.test.ts](../apps/mobile/src/__tests__/navigation/useRootNavigationSession.test.ts)
 - verified the full mobile smoke suite after the new auth/session coverage: 16 suites and 41 tests passed
-- added WhatsApp command-routing tests in [whatsAppCommandRouting.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppCommandRouting.test.ts)
-- added finance item logic tests in [itemLogic.test.ts](/C:/projects/kezek/apps/web/src/__tests__/app/staff/finance/utils/itemLogic.test.ts)
-- added WhatsApp message context tests in [whatsAppMessageContext.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppMessageContext.test.ts)
-- added WhatsApp reply text tests in [whatsAppWebhookText.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppWebhookText.test.ts)
-- added WhatsApp booking command scenario tests in [whatsAppBookingCommandFlow.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppBookingCommandFlow.test.ts)
-- added WhatsApp persistence tests in [whatsAppMessagePersistence.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppMessagePersistence.test.ts)
-- added WhatsApp media/status tests in [whatsAppMediaStatusHandlers.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/whatsAppMediaStatusHandlers.test.ts)
+- added WhatsApp command-routing tests in [whatsAppCommandRouting.test.ts](../apps/web/src/__tests__/lib/whatsAppCommandRouting.test.ts)
+- added finance item logic tests in [itemLogic.test.ts](../apps/web/src/__tests__/app/staff/finance/utils/itemLogic.test.ts)
+- added WhatsApp message context tests in [whatsAppMessageContext.test.ts](../apps/web/src/__tests__/lib/whatsAppMessageContext.test.ts)
+- added WhatsApp reply text tests in [whatsAppWebhookText.test.ts](../apps/web/src/__tests__/lib/whatsAppWebhookText.test.ts)
+- added WhatsApp booking command scenario tests in [whatsAppBookingCommandFlow.test.ts](../apps/web/src/__tests__/lib/whatsAppBookingCommandFlow.test.ts)
+- added WhatsApp persistence tests in [whatsAppMessagePersistence.test.ts](../apps/web/src/__tests__/lib/whatsAppMessagePersistence.test.ts)
+- added WhatsApp media/status tests in [whatsAppMediaStatusHandlers.test.ts](../apps/web/src/__tests__/lib/whatsAppMediaStatusHandlers.test.ts)
 
 Result:
 
@@ -324,7 +326,7 @@ Done when:
 
 Result:
 
-- Rewrote [MODULE_BOUNDARIES.md](/C:/projects/kezek/docs/MODULE_BOUNDARIES.md) as the active boundary rule document
+- Rewrote [MODULE_BOUNDARIES.md](MODULE_BOUNDARIES.md) as the active boundary rule document
 - Added explicit placement heuristics and large-file decomposition rules
 
 ## P2 Tasks
@@ -343,22 +345,22 @@ Tasks:
 Progress:
 
 - re-audited the current mobile hotspots after the earlier screen and navigator wave
-- decomposed [HomeScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/HomeScreenSections.tsx) into focused presentational modules:
-  [HomeScreenHeader.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/HomeScreenHeader.tsx),
-  [SearchSection.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/SearchSection.tsx),
-  [BookingActivitySections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/BookingActivitySections.tsx), and
-  [DiscoverySections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/DiscoverySections.tsx)
-- reduced [HomeScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/HomeScreenSections.tsx) to a thin export layer
-- added stable `testID` hooks for the home hero title and search input, then refreshed [HomeScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/HomeScreen.test.tsx) to avoid locale/encoding-sensitive selectors
+- decomposed [HomeScreenSections.tsx](../apps/mobile/src/screens/home/HomeScreenSections.tsx) into focused presentational modules:
+  [HomeScreenHeader.tsx](../apps/mobile/src/screens/home/HomeScreenHeader.tsx),
+  [SearchSection.tsx](../apps/mobile/src/screens/home/SearchSection.tsx),
+  [BookingActivitySections.tsx](../apps/mobile/src/screens/home/BookingActivitySections.tsx), and
+  [DiscoverySections.tsx](../apps/mobile/src/screens/home/DiscoverySections.tsx)
+- reduced [HomeScreenSections.tsx](../apps/mobile/src/screens/home/HomeScreenSections.tsx) to a thin export layer
+- added stable `testID` hooks for the home hero title and search input, then refreshed [HomeScreen.test.tsx](../apps/mobile/src/__tests__/screens/HomeScreen.test.tsx) to avoid locale/encoding-sensitive selectors
 - verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --watchAll=false src/__tests__/screens/HomeScreen.test.tsx`
-- extracted business/bootstrap hydration from [BookingStep1Branch.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep1Branch.tsx) into [useBookingStep1Business.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep1Business.ts)
-- extracted services loading and booking-context hydration from [BookingStep2Service.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep2Service.tsx) into [useBookingStep2Services.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep2Services.ts)
-- extracted staff loading and booking-context hydration from [BookingStep3Staff.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep3Staff.tsx) into [useBookingStep3Staff.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep3Staff.ts)
-- extracted booking slot loading and error classification from [BookingStep5Time.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep5Time.tsx) into [useBookingStep5Slots.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep5Slots.ts)
-- reduced [BookingStep3Staff.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep3Staff.tsx) to `223` lines and [BookingStep5Time.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep5Time.tsx) from `313` to `211` lines while keeping those screens focused on selection and navigation
+- extracted business/bootstrap hydration from [BookingStep1Branch.tsx](../apps/mobile/src/screens/booking/BookingStep1Branch.tsx) into [useBookingStep1Business.ts](../apps/mobile/src/screens/booking/useBookingStep1Business.ts)
+- extracted services loading and booking-context hydration from [BookingStep2Service.tsx](../apps/mobile/src/screens/booking/BookingStep2Service.tsx) into [useBookingStep2Services.ts](../apps/mobile/src/screens/booking/useBookingStep2Services.ts)
+- extracted staff loading and booking-context hydration from [BookingStep3Staff.tsx](../apps/mobile/src/screens/booking/BookingStep3Staff.tsx) into [useBookingStep3Staff.ts](../apps/mobile/src/screens/booking/useBookingStep3Staff.ts)
+- extracted booking slot loading and error classification from [BookingStep5Time.tsx](../apps/mobile/src/screens/booking/BookingStep5Time.tsx) into [useBookingStep5Slots.ts](../apps/mobile/src/screens/booking/useBookingStep5Slots.ts)
+- reduced [BookingStep3Staff.tsx](../apps/mobile/src/screens/booking/BookingStep3Staff.tsx) to `223` lines and [BookingStep5Time.tsx](../apps/mobile/src/screens/booking/BookingStep5Time.tsx) from `313` to `211` lines while keeping those screens focused on selection and navigation
 - re-verified the mobile package with `pnpm -C apps/mobile typecheck` after the booking-step extraction pass
-- extracted booking date-list generation and date-label formatting from [BookingStep4Date.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep4Date.tsx) into [useBookingStep4Dates.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep4Dates.ts)
-- extracted booking confirmation derivation and submit orchestration from [BookingStep6Confirm.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep6Confirm.tsx) into [useBookingStep6Confirm.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep6Confirm.ts)
+- extracted booking date-list generation and date-label formatting from [BookingStep4Date.tsx](../apps/mobile/src/screens/booking/BookingStep4Date.tsx) into [useBookingStep4Dates.ts](../apps/mobile/src/screens/booking/useBookingStep4Dates.ts)
+- extracted booking confirmation derivation and submit orchestration from [BookingStep6Confirm.tsx](../apps/mobile/src/screens/booking/BookingStep6Confirm.tsx) into [useBookingStep6Confirm.ts](../apps/mobile/src/screens/booking/useBookingStep6Confirm.ts)
 
 Done when:
 
@@ -384,13 +386,13 @@ Tasks:
 
 Progress:
 
-- added [scripts/check-doc-links.mjs](/C:/projects/kezek/scripts/check-doc-links.mjs) as a lightweight active-doc markdown link check
-- added the repo-level command `pnpm check:docs-links` in [package.json](/C:/projects/kezek/package.json)
+- added [scripts/check-doc-links.mjs](../scripts/check-doc-links.mjs) as a lightweight active-doc markdown link check
+- added the repo-level command `pnpm check:docs-links` in [package.json](../package.json)
 - verified the current active-doc set passes the new local link check cleanly
-- added [scripts/check-hotspot-sizes.mjs](/C:/projects/kezek/scripts/check-hotspot-sizes.mjs) as a lightweight guard for the main large-file regression hotspots
-- added the repo-level command `pnpm check:hotspots` in [package.json](/C:/projects/kezek/package.json)
-- verified the current hotspot baseline passes locally for [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx), [whatsAppWebhookService.ts](/C:/projects/kezek/apps/web/src/lib/whatsAppWebhookService.ts), and [SignInPage.tsx](/C:/projects/kezek/apps/web/src/app/auth/sign-in/SignInPage.tsx)
-- added both maintenance checks to the blocking `lint_typecheck` CI job in [ci.yml](/C:/projects/kezek/.github/workflows/ci.yml), so doc-link drift and hotspot regressions now fail PR validation automatically
+- added [scripts/check-hotspot-sizes.mjs](../scripts/check-hotspot-sizes.mjs) as a lightweight guard for the main large-file regression hotspots
+- added the repo-level command `pnpm check:hotspots` in [package.json](../package.json)
+- verified the current hotspot baseline passes locally for [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx), [whatsAppWebhookService.ts](../apps/web/src/lib/whatsAppWebhookService.ts), and [SignInPage.tsx](../apps/web/src/app/auth/sign-in/SignInPage.tsx)
+- added both maintenance checks to the blocking `lint_typecheck` CI job in [ci.yml](../.github/workflows/ci.yml), so doc-link drift and hotspot regressions now fail PR validation automatically
 
 Done when:
 
@@ -415,10 +417,10 @@ Tasks:
 
 Progress:
 
-- aligned [DOCUMENTS_OVERVIEW.md](/C:/projects/kezek/DOCUMENTS_OVERVIEW.md) and [docs/README.md](/C:/projects/kezek/docs/README.md) so the current execution backlog is [PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md)
-- explicitly marked [FUTURE_IMPROVEMENTS_TASKS.md](/C:/projects/kezek/FUTURE_IMPROVEMENTS_TASKS.md) as historical context in the active docs indexes
+- aligned [DOCUMENTS_OVERVIEW.md](../DOCUMENTS_OVERVIEW.md) and [docs/README.md](README.md) so the current execution backlog is [PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md)
+- explicitly marked [FUTURE_IMPROVEMENTS_TASKS.md](../FUTURE_IMPROVEMENTS_TASKS.md) as historical context in the active docs indexes
 - confirmed older root task stubs still exist only as archive pointers and no longer need to be treated as the primary working backlog
-- rewrote the archived root backlog pointers in [TASKS.md](/C:/projects/kezek/TASKS.md), [IMPROVEMENT_TASKS.md](/C:/projects/kezek/IMPROVEMENT_TASKS.md), and [REFACTOR_TASKS.md](/C:/projects/kezek/REFACTOR_TASKS.md) so they point to the current execution backlog first
+- rewrote the archived root backlog pointers in [TASKS.md](../TASKS.md), [IMPROVEMENT_TASKS.md](../IMPROVEMENT_TASKS.md), and [REFACTOR_TASKS.md](../REFACTOR_TASKS.md) so they point to the current execution backlog first
 
 Done when:
 

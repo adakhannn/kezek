@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { en, ky, ru } from '@/app/_components/i18n/dictionaries';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -102,8 +102,7 @@ it.each(['rejected', 'non-ok', 'malformed-json'] as const)('retains a loaded pro
     expect(logError).not.toHaveBeenCalled();
 });
 
-// Safety expectations extending WB202's unknown-identity boundary. A failure here
-// is UNIT-ONLY evidence pending real UI reproduction, not a confirmed live bug.
+// These isolated tests cover the unknown-identity boundary, not live UI acceptance.
 it('does not advertise an editable empty identity after the profile read fails', async () => {
     const failure = { message: 'unit profile read failure' };
     profileRead.mockResolvedValue({ data: null, error: failure });
@@ -131,4 +130,34 @@ it('does not advertise an editable empty identity when authentication returns no
     expect(profileRead).not.toHaveBeenCalled();
     expect(global.fetch).not.toHaveBeenCalled();
     expectIdentityHidden();
+});
+
+it('rejects an authentication error even when a user object is present', async () => {
+    const failure = { message: 'unit invalid auth session' };
+    (supabase.auth.getUser as jest.Mock).mockResolvedValue({ data: { user: fixtureUser }, error: failure });
+    render(<ProfileForm />);
+    await screen.findByRole('alert');
+    expect(profileRead).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expectIdentityHidden();
+    expect(logError).toHaveBeenCalledWith('ProfileForm', 'Error loading profile', failure);
+});
+
+it.each(['ru', 'en', 'ky'] as const)('recovers from a %s profile read error only after an explicit successful retry', async (next) => {
+    selectLocale(next);
+    profileRead.mockResolvedValueOnce({ data: null, error: { message: 'unit profile unavailable' } });
+    render(<ProfileForm />);
+    expect((await screen.findByRole('alert')).textContent).toContain(text('cabinet.profile.error.load'));
+    expectIdentityHidden();
+    const retry = deferred<{ data: { user: typeof fixtureUser } }>();
+    (supabase.auth.getUser as jest.Mock).mockReturnValueOnce(retry.promise);
+    fireEvent.click(screen.getByRole('button', { name: text('cabinet.profile.retry') }));
+    expect(screen.getByText(text('cabinet.profile.loading'))).toBeTruthy();
+    expectIdentityHidden();
+    await act(async () => retry.resolve({ data: { user: fixtureUser } }));
+    await screen.findByDisplayValue(fixtureName);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(profileRead).toHaveBeenCalledTimes(2);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect((screen.getByRole('button', { name: text('cabinet.profile.save'), exact: true }) as HTMLButtonElement).disabled).toBe(true);
 });

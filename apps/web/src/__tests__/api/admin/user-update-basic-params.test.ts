@@ -13,8 +13,7 @@ jest.mock('@/lib/env', () => ({
 }));
 
 const userId = '125e60ab-eb79-4d92-bc6d-d84ae534eeee';
-const roleQuery = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), is: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(), maybeSingle: jest.fn() };
-const auth = { auth: { getUser: jest.fn() }, from: jest.fn(() => roleQuery) };
+const auth = { auth: { getUser: jest.fn() }, rpc: jest.fn() };
 const admin = { auth: { admin: { getUserById: jest.fn(), updateUserById: jest.fn() } } };
 const request = () => new Request('http://localhost/admin/api/users/' + userId + '/update-basic', { method: 'POST', body: JSON.stringify({ full_name: ' C203 OWN NAME TEST ', email: 'known@example.invalid', phone: null }) });
 beforeEach(() => {
@@ -23,7 +22,7 @@ beforeEach(() => {
     (createServerClient as jest.Mock).mockReturnValue(auth);
     (createClient as jest.Mock).mockReturnValue(admin);
     auth.auth.getUser.mockResolvedValue({ data: { user: { id: userId } } });
-    roleQuery.maybeSingle.mockResolvedValue({ data: { role_key: 'super_admin' }, error: null });
+    auth.rpc.mockResolvedValue({data:true,error:null});
     admin.auth.admin.getUserById.mockResolvedValue({ data: { user: { user_metadata: { retained: 'unchanged', full_name: 'ORIGINAL' } } }, error: null });
     admin.auth.admin.updateUserById.mockResolvedValue({ error: null });
 });
@@ -31,6 +30,7 @@ it.each(['promised', 'plain'])('resolves %s params and preserves existing metada
     const params = shape === 'promised' ? Promise.resolve({ id: userId }) : { id: userId };
     const response = await POST(request(), { params });
     expect(response.status).toBe(200);
+    expect(auth.rpc).toHaveBeenCalledWith('is_super_admin');
     expect(admin.auth.admin.getUserById).toHaveBeenCalledWith(userId);
     expect(admin.auth.admin.updateUserById).toHaveBeenCalledTimes(1);
     expect(admin.auth.admin.updateUserById).toHaveBeenCalledWith(userId, {
@@ -49,7 +49,7 @@ it('requires authentication before creating an admin client', async () => {
     expect(createClient).not.toHaveBeenCalled();
 });
 it('preserves the superadmin denial without writing user data', async () => {
-    roleQuery.maybeSingle.mockResolvedValue({ data: null, error: null });
+    auth.rpc.mockResolvedValue({data:false,error:null});
     expect((await POST(request(), { params: Promise.resolve({ id: userId }) })).status).toBe(403);
     expect(createClient).not.toHaveBeenCalled();
 });

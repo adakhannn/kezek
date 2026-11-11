@@ -1,3 +1,4 @@
+jest.mock('@/lib/cronExecutionTracking', () => ({ trackCronExecution: jest.fn((_job: string, action: () => Promise<Response>) => action()) }));
 import { runAnalyticsHourlyLoadCronHttp } from '@/lib/analyticsHourlyLoadCronHttpService';
 
 jest.mock('@/lib/analyticsHourlyLoadCronService', () => ({
@@ -9,7 +10,7 @@ jest.mock('@/lib/supabaseService', () => ({
 }));
 
 jest.mock('@/lib/time', () => ({
-    addDaysToDateString: jest.fn(() => '2026-03-26'),
+    addDaysToDateString: jest.fn((_date, offset) => '2026-03-' + (27 + offset)),
     dateRangeInclusive: jest.fn(() => ['2026-03-20', '2026-03-21']),
     getTimezone: jest.fn(() => 'Asia/Almaty'),
     todayDateString: jest.fn(() => '2026-03-27'),
@@ -60,8 +61,8 @@ describe('analyticsHourlyLoadCronHttpService', () => {
         ]);
     });
 
-    test('falls back to previous day when params are missing', async () => {
-        recalcHourlyForDate.mockResolvedValue({ date: '2026-03-26', updated: 1 });
+    test('revisits three recent dates when params are missing', async () => {
+        recalcHourlyForDate.mockImplementation(async ({ dateStr }: { dateStr: string }) => ({ date: dateStr, updated: 1 }));
 
         const res = await runAnalyticsHourlyLoadCronHttp(
             new Request('http://localhost/api/cron/analytics/hourly-load', {
@@ -72,6 +73,7 @@ describe('analyticsHourlyLoadCronHttpService', () => {
         const data = await res.json();
 
         expect(res.status).toBe(200);
-        expect(data.data.results).toEqual([{ date: '2026-03-26', updated: 1 }]);
+        expect(data.data.results).toEqual(['2026-03-24', '2026-03-25', '2026-03-26'].map(date => ({ date, updated: 1 })));
+        expect(recalcHourlyForDate).toHaveBeenCalledTimes(3);
     });
 });

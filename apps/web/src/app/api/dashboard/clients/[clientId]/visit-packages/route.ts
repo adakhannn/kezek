@@ -8,5 +8,6 @@ export const runtime = 'nodejs';
 export async function POST(req: Request, context: { params: Promise<{ clientId: string }> }) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('SellVisitPackage', async () => runSellVisitPackageHttp(req, context)),
+      "/api/dashboard/clients/[clientId]/visit-packages",
   );
 }

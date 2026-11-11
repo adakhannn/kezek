@@ -38,65 +38,10 @@ describe('/api/dashboard/finance/all', () => {
 
     describe('Edge cases', () => {
         test('должен вернуть пустой список при отсутствии сотрудников', async () => {
-            // Мокируем запрос филиалов
-            const mockBranchesQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockBranchesQuery),
-            });
 
-            // Мокируем запрос сотрудников
-            const mockStaffQuery = {
-                eq: jest.fn(),
-                order: jest.fn(),
-                then: (resolve: (value: unknown) => unknown) => resolve({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockStaffQuery.eq.mockReturnValue(mockStaffQuery);
-            mockStaffQuery.order.mockReturnValue(mockStaffQuery);
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockStaffQuery),
-            });
-
-            // Мокируем RPC для получения статистики
             mockSupabase.rpc.mockResolvedValue({
-                data: {
-                    staff_stats: [],
-                    total_stats: {
-                        total_shifts: 0,
-                        closed_shifts: 0,
-                        open_shifts: 0,
-                        total_amount: 0,
-                        total_master: 0,
-                        total_salon: 0,
-                        total_consumables: 0,
-                        total_late_minutes: 0,
-                    },
-                },
+                data: { branches: [], staff: [], shifts: [], closedStats: [] },
                 error: null,
-            });
-
-            const mockShiftsQuery = {
-                eq: jest.fn(),
-                gte: jest.fn(),
-                lte: jest.fn(),
-                then: (resolve: (value: unknown) => unknown) => resolve({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockShiftsQuery.eq.mockReturnValue(mockShiftsQuery);
-            mockShiftsQuery.gte.mockReturnValue(mockShiftsQuery);
-            mockShiftsQuery.lte.mockReturnValue(mockShiftsQuery);
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockShiftsQuery),
             });
 
             const req = new Request('http://localhost/api/dashboard/finance/all?period=day&date=2026-03-04', {
@@ -114,64 +59,9 @@ describe('/api/dashboard/finance/all', () => {
         test('должен обработать фильтрацию по филиалу', async () => {
             const branchId = '11111111-1111-4111-8111-111111111111';
 
-            // Мокируем запрос филиалов
-            const mockBranchesQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [{ id: branchId, name: 'Test Branch' }],
-                    error: null,
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockBranchesQuery),
-            });
-
-            // Мокируем запрос сотрудников
-            const mockStaffQuery = {
-                eq: jest.fn(),
-                order: jest.fn(),
-                then: (resolve: (value: unknown) => unknown) => resolve({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockStaffQuery.eq.mockReturnValue(mockStaffQuery);
-            mockStaffQuery.order.mockReturnValue(mockStaffQuery);
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockStaffQuery),
-            });
-
             mockSupabase.rpc.mockResolvedValue({
-                data: {
-                    staff_stats: [],
-                    total_stats: {
-                        total_shifts: 0,
-                        closed_shifts: 0,
-                        open_shifts: 0,
-                        total_amount: 0,
-                        total_master: 0,
-                        total_salon: 0,
-                        total_consumables: 0,
-                        total_late_minutes: 0,
-                    },
-                },
+                data: { branches: [], staff: [], shifts: [], closedStats: [] },
                 error: null,
-            });
-
-            const mockShiftsQuery = {
-                eq: jest.fn(),
-                gte: jest.fn(),
-                lte: jest.fn(),
-                then: (resolve: (value: unknown) => unknown) => resolve({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockShiftsQuery.eq.mockReturnValue(mockShiftsQuery);
-            mockShiftsQuery.gte.mockReturnValue(mockShiftsQuery);
-            mockShiftsQuery.lte.mockReturnValue(mockShiftsQuery);
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockShiftsQuery),
             });
 
             const req = new Request(`http://localhost/api/dashboard/finance/all?period=day&date=2026-03-04&branchId=${branchId}`, {
@@ -187,31 +77,7 @@ describe('/api/dashboard/finance/all', () => {
         });
 
         test('должен обработать ошибку RPC', async () => {
-            // Мокируем запрос филиалов
-            const mockBranchesQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockBranchesQuery),
-            });
 
-            // Мокируем запрос сотрудников
-            const mockStaffQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockStaffQuery),
-            });
-
-            // Мокируем RPC с ошибкой
             mockSupabase.rpc.mockResolvedValue({
                 data: null,
                 error: { message: 'RPC error' },
@@ -229,59 +95,10 @@ describe('/api/dashboard/finance/all', () => {
         });
 
         test('должен обработать некорректные параметры периода', async () => {
-            // Мокируем запрос филиалов
-            const mockBranchesQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockBranchesQuery),
-            });
 
-            // Мокируем запрос сотрудников
-            const mockStaffQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockStaffQuery),
-            });
-
-            // Мокируем RPC
             mockSupabase.rpc.mockResolvedValue({
-                data: {
-                    staff_stats: [],
-                    total_stats: {
-                        total_shifts: 0,
-                        closed_shifts: 0,
-                        open_shifts: 0,
-                        total_amount: 0,
-                        total_master: 0,
-                        total_salon: 0,
-                        total_consumables: 0,
-                        total_late_minutes: 0,
-                    },
-                },
+                data: { branches: [], staff: [], shifts: [], closedStats: [] },
                 error: null,
-            });
-
-            // Мокируем запрос открытых смен
-            const mockShiftsQuery = {
-                eq: jest.fn().mockReturnThis(),
-                gte: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnValue(mockShiftsQuery),
             });
 
             const req = new Request('http://localhost/api/dashboard/finance/all?period=invalid', {
@@ -290,8 +107,9 @@ describe('/api/dashboard/finance/all', () => {
 
             const response = await GET(req);
 
-            // Должен вернуть дефолтный период (day) или ошибку валидации
-            expect([200, 400]).toContain(response.status);
+            // Неверный период отклоняется до запроса данных
+            expect(response.status).toBe(400);
+            expect(mockSupabase.rpc).not.toHaveBeenCalled();
         });
     });
 });

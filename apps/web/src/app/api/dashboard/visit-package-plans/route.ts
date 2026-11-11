@@ -15,5 +15,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('VisitPackagePlansCreate', async () => runCreateVisitPackagePlanHttp(req)),
+      "/api/dashboard/visit-package-plans",
   );
 }

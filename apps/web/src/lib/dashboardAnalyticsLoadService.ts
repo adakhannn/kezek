@@ -1,21 +1,6 @@
+import { readAnalyticsSnapshot, reportFailure, type HourlyAnalyticsRow } from '@/lib/analyticsReportSnapshot';
+import type { ReportClient } from '@/lib/finance/reportSnapshot';
 import { getCached, setCached } from '@/lib/simpleCache';
-
-type LoadAdminLike = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: string) => any;
-        };
-    };
-};
-
-type LoadRow = {
-    date: string;
-    hour: number;
-    bookings_count: number | null;
-    promo_bookings_count: number | null;
-    staff_count: number | null;
-    unique_clients_count: number | null;
-};
 
 export async function getDashboardAnalyticsLoad({
     admin,
@@ -24,14 +9,14 @@ export async function getDashboardAnalyticsLoad({
     startDate,
     endDate,
 }: {
-    admin: LoadAdminLike;
+    admin: ReportClient;
     bizId: string;
     branchId?: string;
     startDate: string;
     endDate: string;
 }): Promise<
     | { ok: true; data: unknown }
-    | { ok: false; error: 'server'; message: string; status: 500 }
+    | { ok: false; error: 'server' | 'validation'; message: string; status: 500 | 400 }
 > {
     const cacheKey = `dashboard_analytics_load:${bizId}:${branchId || 'all'}:${startDate}:${endDate}`;
     const cached = getCached<unknown>(cacheKey);
@@ -39,34 +24,15 @@ export async function getDashboardAnalyticsLoad({
         return { ok: true, data: cached };
     }
 
-    let query = admin
-        .from('business_hourly_load')
-        .select('biz_id,branch_id,date,hour,bookings_count,promo_bookings_count,staff_count,unique_clients_count')
-        .eq('biz_id', bizId)
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: true })
-        .order('hour', { ascending: true });
-
-    if (branchId) {
-        query = query.eq('branch_id', branchId);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-        return {
-            ok: false,
-            error: 'server',
-            message: 'Failed to load hourly analytics',
-            status: 500,
-        };
-    }
+    let data;
+    try { data = (await readAnalyticsSnapshot(admin, { bizId, branchId, startDate, endDate, kind: 'hourly' })).rows as unknown as HourlyAnalyticsRow[]; }
+    catch (error) { return reportFailure(error); }
 
     const payload = {
         bizId,
         branchId: branchId ?? null,
         period: { startDate, endDate },
-        points: ((data ?? []) as LoadRow[]).map((row) => ({
+        points: data.map((row) => ({
             date: row.date,
             hour: row.hour,
             bookingsCount: row.bookings_count ?? 0,

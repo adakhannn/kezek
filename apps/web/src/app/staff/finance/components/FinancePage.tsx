@@ -9,11 +9,11 @@ import { useState, useCallback, memo, useRef, lazy } from 'react';
 
 import { useFinanceClientAutosave } from '../hooks/useFinanceClientAutosave';
 import { useFinanceData } from '../hooks/useFinanceData';
+import { useFinanceDraft } from '../hooks/useFinanceDraft';
 import { useFinanceItemActions } from '../hooks/useFinanceItemActions';
 import { useFinanceMutations } from '../hooks/useFinanceMutations';
 import { useFinancePageDerivedState } from '../hooks/useFinancePageDerivedState';
 import { useFinancePageViewState } from '../hooks/useFinancePageViewState';
-import { useFinanceServerSync } from '../hooks/useFinanceServerSync';
 import { useFinanceShiftActions } from '../hooks/useFinanceShiftActions';
 import { useShiftCalculations } from '../hooks/useShiftCalculations';
 import type { ShiftItem } from '../types';
@@ -55,7 +55,7 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
         activeTabRef,
         statsPeriod,
         setStatsPeriod,
-        shiftDate,
+        shiftDate: requestedShiftDate,
         setShiftDate,
         selectedDate,
         setSelectedDate,
@@ -70,7 +70,6 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
     } = useFinancePageViewState({ staffId, viewScope });
 
     // Локальное состояние для items (для оптимистичных обновлений)
-    const [localItems, setLocalItems] = useState<ShiftItem[]>([]);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     // Отслеживаем, какие элементы были только что сохранены (новые элементы без id)
     const savedItemsWithoutIdRef = useRef<Set<number>>(new Set());
@@ -91,15 +90,35 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
     // Загрузка данных через React Query (initialData от SSR убирает первый запрос)
     const financeData = useFinanceData({
         staffId,
-        date: shiftDate,
+        date: requestedShiftDate,
         enabled: true,
         initialData,
     });
 
     // Мутации
-    const mutations = useFinanceMutations({ staffId, date: shiftDate });
+    const transport = useFinanceMutations({ staffId, date: requestedShiftDate });
+    const { session, state: draft } = useFinanceDraft(transport, financeData.data, prepareItemsForSave);
+    const calendarDate = draft.calendarDate ?? financeData.data?.calendar?.date;
+    const shiftDate = calendarDate ? new Date(calendarDate + 'T12:00:00') : requestedShiftDate ?? new Date();
+    const localItems = draft.items;
+    const setLocalItems = session.setItems;
+    const mutations = {
+        saveItems: session.save, openShift: session.open, closeShift: session.close,
+        isSaving: draft.operation === 'save', isOpening: draft.operation === 'open', isClosing: draft.operation === 'close',
+    };
+    const viewData = financeData.data && draft.initialized ? {
+        ...financeData.data, shift: draft.shift, items: draft.items,
+        todayStatus: draft.shift?.status ?? 'none' as const, todayExists: !!draft.shift,
+    } : financeData.data;
+    const changeShiftDate = (next: Date) => {
+        if (session.dirty || draft.blocked || draft.operation) {
+            toast.showError('Сначала сохраните черновик или явно загрузите актуальную смену, отказавшись от черновика.');
+            return;
+        }
+        setShiftDate(next);
+    };
 
-    const currentTodayStatus = financeData.data?.todayStatus ?? 'none';
+    const currentTodayStatus = viewData?.todayStatus ?? 'none';
     const currentIsOpen = currentTodayStatus === 'open';
     const currentIsClosed = currentTodayStatus === 'closed';
     const currentIsReadOnlyForOwner = !!staffId && currentIsClosed;
@@ -116,20 +135,11 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
         previousTabRef,
         localItems,
         isOpen: currentIsOpen,
-        isReadOnlyForOwner: currentIsReadOnlyForOwner,
+        isReadOnlyForOwner: currentIsReadOnlyForOwner || !!draft.blocked || !draft.initialized,
         prepareItemsForSave,
         saveItems: mutations.saveItems,
         serializeItems: serializeShiftItems,
-    });
-
-    useFinanceServerSync({
-        financeData: financeData.data,
-        isLoading: financeData.isLoading,
-        setLocalItems,
-        setExpandedItems,
-        skipNextSyncRef,
-        savedItemsWithoutIdRef,
-        markSaved,
+        savedSignature: draft.initialized ? serializeShiftItems(draft.savedItems) : null,
     });
 
     const {
@@ -168,7 +178,7 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
         stats,
         todayStatus,
     } = useFinancePageDerivedState({
-        financeData: financeData.data,
+        financeData: viewData,
         localItems,
         setExpandedItems,
         lastSavedSignature,
@@ -225,12 +235,22 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
                 showStats={!staffId}
             />
 
+            {draft.error && (
+                <div role="alert" className="my-4 rounded-lg border border-amber-400 bg-amber-50 p-4 text-slate-900">
+                    <p>{draft.error}</p>
+                    {draft.blocked && <p>Запись остановлена. Скопируйте нужные изменения перед отказом от черновика.</p>}
+                    <button type="button" disabled={!!draft.operation}
+                        onClick={() => { clearPendingSave(); void session.reload().catch(() => {}); }}
+                        className="mt-2 underline">Отказаться от черновика и загрузить актуальную смену</button>
+                </div>
+            )}
+
             {activeTab === 'shift' && (
                 <FinanceShiftTabSection
                     staffId={staffId}
                     financeData={financeData}
                     shiftDate={shiftDate}
-                    onShiftDateChange={setShiftDate}
+                    onShiftDateChange={changeShiftDate}
                     shift={shift}
                     todayStatus={todayStatus}
                     isOpen={isOpen ?? false}
@@ -248,12 +268,13 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
 
             {activeTab === 'clients' && (
                 <FinanceClientsTabSection
+                    timezone={financeData.data?.calendar?.timezone}
                     staffId={staffId}
                     shiftDate={shiftDate}
-                    onShiftDateChange={setShiftDate}
+                    onShiftDateChange={changeShiftDate}
                     isOpen={isOpen ?? false}
                     isClosed={isClosed ?? false}
-                    isReadOnlyForOwner={isReadOnlyForOwner}
+                    isReadOnlyForOwner={isReadOnlyForOwner || draft.operation === 'close' || draft.operation === 'open' || draft.operation === 'reload'}
                     isSaving={mutations.isSaving}
                     isShiftActionPending={mutations.isOpening || mutations.isClosing}
                     onAddClient={handleAddClient}

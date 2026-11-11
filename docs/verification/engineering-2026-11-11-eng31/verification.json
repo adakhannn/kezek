@@ -1,0 +1,225 @@
+{
+  "date": "2026-11-11",
+  "scope": "ENG-31 only",
+  "status": "LOCAL_FIXED",
+  "head": "b424cd396cbeefbe2a4173e0aa4583661e85ba87",
+  "stagedDiffSha256": "6c9d8aef67dd392a0948a5ac224d251984deb189066eac45d8a0d5c2af04705a",
+  "remoteMutation": false,
+  "web": {
+    "suites": 602,
+    "tests": 3535,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0,
+    "coverageGate": "PASS unchanged",
+    "lintErrors": 0,
+    "lintWarnings": 124,
+    "typecheck": "PASS"
+  },
+  "build": {
+    "code": 0,
+    "started": "2026-11-11T07:26:26.068Z",
+    "finished": "2026-11-11T07:27:44.476Z",
+    "cwd": "C:\\Users\\AdaX\\AppData\\Local\\Temp\\kezek-critical-20261110-pmg7ca\\release-build-1794313068134\\apps\\web",
+    "externalNetwork": "blocked",
+    "sourceSnapshot": "eng31-20261111",
+    "applicationSourceParity": true
+  },
+  "integration": {
+    "runner": "scripts/test-user-lifecycle-isolated.cjs",
+    "status": "PASS",
+    "network": "internal",
+    "hostPorts": 0,
+    "externalMessages": 0,
+    "sqlRegressions": [
+      "platform-admin-commands",
+      "privileged-maintenance"
+    ]
+  },
+  "nativeCopy": {
+    "container": "kezek-eng31-20261111",
+    "network": "none",
+    "schemaSha256": "f9f2410628ec05aa41cc8bf40ebde7647f9160e040d2c144566d5438c0aaf84c",
+    "dataSha256": "86fea11218c92ed063b598da3d5902077e85c08bd9344cfbb515ee4525402591",
+    "migrations": [
+      {
+        "file": "20261109090000_bound_mobile_session_grants.sql",
+        "sha256": "ad437864fdcf965ec6e4db5568d1c171fe22201197b9519091add5976fd30bde",
+        "status": "PASS"
+      },
+      {
+        "file": "20261109090100_tenant_finance_rpc_guards.sql",
+        "sha256": "4dfa74c757eaa22205041107fb60ebfd067e1d2a476b6f2728d476267341c347",
+        "status": "PASS"
+      },
+      {
+        "file": "20261109091100_atomic_shift_commands.sql",
+        "sha256": "ee8797d416bf01b7568ba541e27c1ac15843fb8f4d4763bd99ff7482b1986ed6",
+        "status": "PASS"
+      },
+      {
+        "file": "20261109100000_yandex_oauth_state.sql",
+        "sha256": "bb1fd6f17be4394ee20e89e9239a43a31cb227ed5f82ba7163a4109756bda00b",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110090000_booking_notification_outbox.sql",
+        "sha256": "ed901ae6453318be3f23ddae3ac4affb023b33bfd288dd7ddd1b9ffa92c9d1d7",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110100000_finance_draft_revision.sql",
+        "sha256": "b43eddecd16bfc63338c2a5e1a6e0a6508212cceb67f22f062d44730bb8827e7",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110101000_atomic_booking_requests.sql",
+        "sha256": "1e186cd2d4d3508694939008ddaa8bfd9e69d59ed5bd6f5ba5b2196ffcd3d75a",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110110000_reporting_completeness.sql",
+        "sha256": "69fb566122c004d6af790248f0e9a5bed54b4a0e58f894d2166d1c571f049651",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110113000_shift_close_backlog.sql",
+        "sha256": "a331f113384b1dace33a6bddf76396f9b9e159e227690701ea110b9b775466e2",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110113500_cron_execution_tracking.sql",
+        "sha256": "87a52553ed394e8118f0d123f2290c54813a3b53362ef27c732915d32061a713",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110114000_finance_calendar.sql",
+        "sha256": "62a27dc972af8e3502ad3e630a332941710e361fbc7251715c6bd0b3a7614c54",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110121000_staff_scoped_slots.sql",
+        "sha256": "5a4cf8d7a7fd6214af3bbb4b0cc5c23c02e1eaebeca592e67c0b214e1eb1130a",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110123000_service_only_booking_commands.sql",
+        "sha256": "b4308fef783844bbfb3765f9b12704aa99e757afb3a62a975ede48af91f9e8d9",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110124000_whatsapp_inbox.sql",
+        "sha256": "fd8e6acb38d7b2eee5a2336c750134bf68aa8f60642e416b59eb96221ccec8d9",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110125000_booking_outbox_throughput.sql",
+        "sha256": "b01ebcc8f4393b8bd49fce5a3f41ee70c101330a0ecd5c1fcd098742e96c5372",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110130000_booking_attendance_command.sql",
+        "sha256": "46d11e8796a77d2e062c5e40fd990f2d18be8e80ecd41bcb2b20a74da949b93c",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110131000_shift_hours_adjustment.sql",
+        "sha256": "b5464aad11bbe0b3f592a055ff7edb1043399d6fdff97ca6847c2c7c7fb480dd",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110132000_privileged_maintenance_acl.sql",
+        "sha256": "5ef0496cbcb67224f588df9723fd3b502e11a517054c7a1e3483184cfe009aae",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110133000_internal_booking_requests.sql",
+        "sha256": "a73ddf794840f3f34086f4bb9a780103262a6724001156ecf08473b79ed07b66",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110134000_platform_admin_commands.sql",
+        "sha256": "d116e8d28e1984ad2b063e9a1e5d930e81d543ad512ce3cdec58479b6c721f2c",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110140000_booking_legacy_surface.sql",
+        "sha256": "d43fb76a9c8981a03561aa2083625809da679bdb32f20a8444402d0b370a4d63",
+        "status": "PASS"
+      },
+      {
+        "file": "20261111090000_user_lifecycle.sql",
+        "sha256": "d0405c7384ebd01947a4419d1308591326ba16b6821d403bae0fd3ce526320a3",
+        "status": "PASS"
+      }
+    ],
+    "executor": "postgres",
+    "lifecycleAssertions": "PASS rolled back",
+    "testSqlSha256": "7ffd132cc2e3416a032d8cbfcb1b0bf1bdf4b30717dc885676103ccdb89f0bfc",
+    "remoteSchemaSnapshotDate": "2026-11-10",
+    "completeEmptyBootstrap": false
+  },
+  "artifacts": [
+    {
+      "privateFile": "web-jest-verified.json",
+      "sha256": "184692e8f46cee45efd2be8ce9fa7999165bcede9f54adf4805963b37f28fce7"
+    },
+    {
+      "privateFile": "release-build-result.json",
+      "sha256": "aa38c4f79bf864ab6a551ddec51943fb1e1d451379f58c622f2a67a92b26d13b"
+    },
+    {
+      "privateFile": "auth-rest-final.log",
+      "sha256": "ba85dc7c0dc62d5b4c426b914a5940039d498b9dd01190f942f3192f40c379d8"
+    },
+    {
+      "privateFile": "platform-commands.log",
+      "sha256": "67c98c3448ec936c404fe20c283255f15d25809be2c30caae96718a1a918b53b"
+    },
+    {
+      "privateFile": "maintenance.log",
+      "sha256": "0137d87d1126083da063212d8d3b9dceb53bd7a32a9ff6e3f6b5e55b71a2f43f"
+    },
+    {
+      "privateFile": "native-lifecycle.sql.stdout",
+      "sha256": "9eb30da1032265b8966d877aa4b593ca36f45ab65a9d2c6467065e78abf98411"
+    },
+    {
+      "privateFile": "web-lint-final.json",
+      "sha256": "85ea40c41a0acd3c24910211d25606a944c71db5ff7f2108ec098d15f849fe90"
+    },
+    {
+      "privateFile": "typecheck-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "privateFile": "docs-links.log",
+      "sha256": "6d1f753d6490b25c3cdcc2761bba03e5b9f2471e7e7d5cd6ace5349247516ef4"
+    },
+    {
+      "privateFile": "docs-tests.log",
+      "sha256": "1c14a1c335fe264590bbaedeeaf2652c3e14e3b9de714002355491bb31e8a49e"
+    }
+  ],
+  "sourceManifestSha256": "2d058f55afc7122a264eebb60f8173c60ccade82febe47973688db89d6343cff",
+  "documentation": {
+    "tests": 29,
+    "documents": 113,
+    "links": 2759,
+    "status": "PASS",
+    "openApi": "PASS",
+    "cronManifests": 8,
+    "diffCheck": "PASS"
+  },
+  "preservation": {
+    "stagedUnchanged": true,
+    "existingDirtyChangesPreserved": true,
+    "commit": false,
+    "push": false,
+    "deploy": false
+  },
+  "cleanup": {
+    "nativeCloneRemoved": true,
+    "authRestContainersRemoved": true
+  }
+}

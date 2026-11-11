@@ -1,4 +1,6 @@
 import { runNotifyPingHttp } from '@/lib/notifyPingHttpService';
+import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
+jest.mock('@/lib/adminHttpAccess', () => ({ requireCurrentSuperAdmin: jest.fn() }));
 
 jest.mock('@/lib/notifyPingService', () => ({
     runNotifyPing: jest.fn(),
@@ -9,6 +11,7 @@ import { runNotifyPing } from '@/lib/notifyPingService';
 describe('notifyPingHttpService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.mocked(requireCurrentSuperAdmin).mockResolvedValue({ ok: true, user: { id: 'admin', email: 'user@example.com', email_confirmed_at: '2026-01-01' } } as never);
     });
 
     test('delegates valid request to notify ping service', async () => {
@@ -27,7 +30,6 @@ describe('notifyPingHttpService', () => {
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
                     to: 'user@example.com',
-                    from: 'noreply@example.com',
                 }),
             }),
         );
@@ -35,7 +37,6 @@ describe('notifyPingHttpService', () => {
 
         expect(runNotifyPing).toHaveBeenCalledWith({
             to: 'user@example.com',
-            from: 'noreply@example.com',
             env: process.env,
         });
         expect(response.status).toBe(200);
@@ -62,5 +63,22 @@ describe('notifyPingHttpService', () => {
         expect(response.status).toBe(400);
         expect(body.error).toBe('validation');
         expect(body.details).toEqual({ code: 'no RESEND_API_KEY' });
+    });
+
+    test.each([
+        [{ to: 'other@example.com' }, 403],
+        [{ to: ['user@example.com', 'other@example.com'] }, 400],
+        [{ to: 'user@example.com', from: 'attacker@example.com' }, 400],
+    ])('rejects arbitrary recipients and sender overrides: %p', async (body, status) => {
+        const response = await runNotifyPingHttp(new Request('http://localhost/api/notify/ping', { method: 'POST', body: JSON.stringify(body) }));
+        expect(response.status).toBe(status);
+        expect(runNotifyPing).not.toHaveBeenCalled();
+    });
+
+    test('requires a confirmed email even for a super administrator', async () => {
+        jest.mocked(requireCurrentSuperAdmin).mockResolvedValue({ ok: true, user: { id: 'admin', email: 'user@example.com' } } as never);
+        const response = await runNotifyPingHttp(new Request('http://localhost/api/notify/ping', { method: 'POST', body: '{}' }));
+        expect(response.status).toBe(403);
+        expect(runNotifyPing).not.toHaveBeenCalled();
     });
 });

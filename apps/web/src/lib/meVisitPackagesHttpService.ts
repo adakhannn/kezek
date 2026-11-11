@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server';
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { listCurrentUserVisitPackages } from '@/lib/meVisitPackagesService';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
-
-const TODAY = new Date().toISOString().slice(0, 10);
+import { todayDateString } from '@/lib/time';
 
 export async function runMeVisitPackagesHttp(req: Request): Promise<NextResponse> {
   const { supabase, admin } = await createSupabaseClients();
@@ -22,7 +21,7 @@ export async function runMeVisitPackagesHttp(req: Request): Promise<NextResponse
     admin: admin as never,
     user,
     includeAll: status === 'all',
-    today: TODAY,
+    today: todayDateString(),
   });
 
   if (!result.ok) {

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { logDebug, logError } from '@/lib/log';
+import { issueSessionForVerifiedUser } from '@/lib/verifiedIdentitySession';
 
 export type YandexUserInfo = {
     id: string | number;
@@ -309,50 +310,14 @@ export async function runYandexOAuthCallback({
         userId = userResolution.userId;
     }
 
-    const { data: currentUser, error: getUserError } = await admin.auth.admin.getUserById(userId);
-    if (getUserError) {
-        logError('YandexAuth', 'getUserById error', getUserError);
-        throw new Error('Failed to get user info');
-    }
-
-    const userEmail = currentUser?.user?.email || yandexUser.default_email || `yandex_${yandexUser.id}@yandex.local`;
     await syncYandexNotificationEmail(admin, userId, yandexUser);
-
-    if (!currentUser?.user?.email && yandexUser.default_email) {
-        await admin.auth.admin.updateUserById(userId, {
-            email: yandexUser.default_email,
-            email_confirm: true,
-        });
-    }
-
-    const tempPassword = randomHex(32);
-    const { error: passwordError } = await admin.auth.admin.updateUserById(userId, {
-        password: tempPassword,
-    });
-
-    if (passwordError) {
-        logError('YandexAuth', 'Update password error', passwordError);
-        throw new Error('Failed to set password for session');
-    }
-
-    const {
-        data: { session },
-        error: signInError,
-    } = await admin.auth.signInWithPassword({
-        email: userEmail,
-        password: tempPassword,
-    });
-
-    if (signInError || !session) {
-        logError('YandexAuth', 'signInWithPassword error', signInError);
-        throw new Error('Failed to create session');
-    }
+    const session = await issueSessionForVerifiedUser(userId);
 
     const redirectUrl = buildCallbackRedirect({
         origin,
         redirectTo,
-        accessToken: session.access_token,
-        refreshToken: session.refresh_token,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
     });
 
     logDebug('YandexAuth', 'Redirecting to callback with tokens', { userId });

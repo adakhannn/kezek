@@ -1,6 +1,8 @@
 # Web Presentation Hardening Plan
 
-**Status:** completed  
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
+**Status at original snapshot:** completed
 **Created:** 2026-03-30  
 **Purpose:** reduce the next biggest maintainability hotspots in `apps/web` after the API thin-route wave and the mobile hardening wave.
 
@@ -10,11 +12,11 @@ The next highest-value complexity cluster has shifted back to `apps/web`, but no
 
 The biggest remaining live hotspots include:
 
-- [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx)
-- [view.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/view.tsx)
-- [page.tsx](/C:/projects/kezek/apps/web/src/app/admin/analytics/overview/page.tsx)
-- [AllStaffFinanceStats.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/finance/components/AllStaffFinanceStats.tsx)
-- [Client.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/schedule/Client.tsx)
+- [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx)
+- [view.tsx](../apps/web/src/app/dashboard/bookings/view.tsx)
+- [page.tsx](../apps/web/src/app/admin/analytics/overview/page.tsx)
+- [AllStaffFinanceStats.tsx](../apps/web/src/app/dashboard/finance/components/AllStaffFinanceStats.tsx)
+- [Client.tsx](../apps/web/src/app/dashboard/staff/[id]/schedule/Client.tsx)
 
 This package has:
 
@@ -44,7 +46,7 @@ Out of scope:
 
 - Priority: `critical`
 - Files:
-  - [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx)
+  - [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx)
   - adjacent finance workspace components and hooks
 
 Why first:
@@ -57,22 +59,22 @@ Why first:
 
 - Priority: `high`
 - Files:
-  - [view.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/view.tsx)
+  - [view.tsx](../apps/web/src/app/dashboard/bookings/view.tsx)
 
 ### 3. Analytics/admin page cleanup
 
 - Priority: `high`
 - Files:
-  - [page.tsx](/C:/projects/kezek/apps/web/src/app/admin/analytics/overview/page.tsx)
-  - [page.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/analytics/page.tsx)
+  - [page.tsx](../apps/web/src/app/admin/analytics/overview/page.tsx)
+  - [page.tsx](../apps/web/src/app/dashboard/analytics/page.tsx)
 
 ### W.3 Decompose analytics/admin pages
 
 - Priority: `high`
 - Status: `done`
 - Files:
-  - [page.tsx](/C:/projects/kezek/apps/web/src/app/admin/analytics/overview/page.tsx)
-  - [page.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/analytics/page.tsx)
+  - [page.tsx](../apps/web/src/app/admin/analytics/overview/page.tsx)
+  - [page.tsx](../apps/web/src/app/dashboard/analytics/page.tsx)
 
 Tasks:
 
@@ -88,14 +90,14 @@ Done when:
 
 Progress:
 
-- extracted admin analytics page-local types into [types.ts](/C:/projects/kezek/apps/web/src/app/admin/analytics/overview/types.ts)
-- moved admin analytics fetch/persist/derived-state orchestration into [useAdminAnalyticsOverviewData.ts](/C:/projects/kezek/apps/web/src/app/admin/analytics/overview/useAdminAnalyticsOverviewData.ts)
-- moved admin analytics loading, error, filters, KPI, and trends presentation into [AdminAnalyticsOverviewSections.tsx](/C:/projects/kezek/apps/web/src/app/admin/analytics/overview/AdminAnalyticsOverviewSections.tsx)
-- reduced [page.tsx](/C:/projects/kezek/apps/web/src/app/admin/analytics/overview/page.tsx) to a `54` line composition root
-- extracted dashboard analytics page-local types into [types.ts](/C:/projects/kezek/apps/web/src/app/dashboard/analytics/types.ts)
-- moved dashboard analytics fetch and derived-state orchestration into [useDashboardAnalyticsPageData.ts](/C:/projects/kezek/apps/web/src/app/dashboard/analytics/useDashboardAnalyticsPageData.ts)
-- moved dashboard analytics header, filters, KPI, trends, and load heatmap presentation into [DashboardAnalyticsSections.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/analytics/DashboardAnalyticsSections.tsx)
-- reduced [page.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/analytics/page.tsx) to a `64` line composition root
+- extracted admin analytics page-local types into [types.ts](../apps/web/src/app/admin/analytics/overview/types.ts)
+- moved admin analytics fetch/persist/derived-state orchestration into [useAdminAnalyticsOverviewData.ts](../apps/web/src/app/admin/analytics/overview/useAdminAnalyticsOverviewData.ts)
+- moved admin analytics loading, error, filters, KPI, and trends presentation into [AdminAnalyticsOverviewSections.tsx](../apps/web/src/app/admin/analytics/overview/AdminAnalyticsOverviewSections.tsx)
+- reduced [page.tsx](../apps/web/src/app/admin/analytics/overview/page.tsx) to a `54` line composition root
+- extracted dashboard analytics page-local types into [types.ts](../apps/web/src/app/dashboard/analytics/types.ts)
+- moved dashboard analytics fetch and derived-state orchestration into [useDashboardAnalyticsPageData.ts](../apps/web/src/app/dashboard/analytics/useDashboardAnalyticsPageData.ts)
+- moved dashboard analytics header, filters, KPI, trends, and load heatmap presentation into [DashboardAnalyticsSections.tsx](../apps/web/src/app/dashboard/analytics/DashboardAnalyticsSections.tsx)
+- reduced [page.tsx](../apps/web/src/app/dashboard/analytics/page.tsx) to a `64` line composition root
 - verified with `pnpm -C apps/web typecheck`
 
 ### W.4 Decompose all-staff finance stats
@@ -103,7 +105,7 @@ Progress:
 - Priority: `high`
 - Status: `done`
 - File:
-  - [AllStaffFinanceStats.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/finance/components/AllStaffFinanceStats.tsx)
+  - [AllStaffFinanceStats.tsx](../apps/web/src/app/dashboard/finance/components/AllStaffFinanceStats.tsx)
 
 Tasks:
 
@@ -118,10 +120,10 @@ Done when:
 
 Progress:
 
-- extracted finance stats types into [allStaffFinanceStatsTypes.ts](/C:/projects/kezek/apps/web/src/app/dashboard/finance/components/allStaffFinanceStatsTypes.ts)
-- moved fetch and auto-refresh orchestration into [useAllStaffFinanceStatsData.ts](/C:/projects/kezek/apps/web/src/app/dashboard/finance/components/useAllStaffFinanceStatsData.ts)
-- moved filters, summary cards, and staff list/table presentation into [AllStaffFinanceStatsSections.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/finance/components/AllStaffFinanceStatsSections.tsx)
-- reduced [AllStaffFinanceStats.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/finance/components/AllStaffFinanceStats.tsx) to a composition root over extracted sections
+- extracted finance stats types into [allStaffFinanceStatsTypes.ts](../apps/web/src/app/dashboard/finance/components/allStaffFinanceStatsTypes.ts)
+- moved fetch and auto-refresh orchestration into [useAllStaffFinanceStatsData.ts](../apps/web/src/app/dashboard/finance/components/useAllStaffFinanceStatsData.ts)
+- moved filters, summary cards, and staff list/table presentation into [AllStaffFinanceStatsSections.tsx](../apps/web/src/app/dashboard/finance/components/AllStaffFinanceStatsSections.tsx)
+- reduced [AllStaffFinanceStats.tsx](../apps/web/src/app/dashboard/finance/components/AllStaffFinanceStats.tsx) to a composition root over extracted sections
 - verified with `pnpm -C apps/web typecheck`
 
 ### W.5 Decompose staff schedule client
@@ -129,7 +131,7 @@ Progress:
 - Priority: `high`
 - Status: `done`
 - File:
-  - [Client.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/schedule/Client.tsx)
+  - [Client.tsx](../apps/web/src/app/dashboard/staff/[id]/schedule/Client.tsx)
 
 Tasks:
 
@@ -145,10 +147,10 @@ Done when:
 
 Progress:
 
-- extracted shared schedule types into [scheduleTypes.ts](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/schedule/scheduleTypes.ts)
-- extracted transfers presentation into [TransfersTab.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/schedule/TransfersTab.tsx)
-- extracted single-range input, day row, tabs, week sections, and instructions into [ScheduleSections.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/schedule/ScheduleSections.tsx)
-- reduced [Client.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/schedule/Client.tsx) from `1019` to `367` lines while keeping save/apply orchestration local
+- extracted shared schedule types into [scheduleTypes.ts](../apps/web/src/app/dashboard/staff/[id]/schedule/scheduleTypes.ts)
+- extracted transfers presentation into [TransfersTab.tsx](../apps/web/src/app/dashboard/staff/[id]/schedule/TransfersTab.tsx)
+- extracted single-range input, day row, tabs, week sections, and instructions into [ScheduleSections.tsx](../apps/web/src/app/dashboard/staff/[id]/schedule/ScheduleSections.tsx)
+- reduced [Client.tsx](../apps/web/src/app/dashboard/staff/[id]/schedule/Client.tsx) from `1019` to `367` lines while keeping save/apply orchestration local
 - verified with `pnpm -C apps/web typecheck`
 
 ## Phase 1
@@ -172,13 +174,13 @@ Done when:
 
 Progress:
 
-- extracted tab/date/session view state into [useFinancePageViewState.ts](/C:/projects/kezek/apps/web/src/app/staff/finance/hooks/useFinancePageViewState.ts)
-- wired [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx) to the new hook so the top-level component no longer owns that whole inline state block
-- extracted debounced client autosave/flush behavior into [useFinanceClientAutosave.ts](/C:/projects/kezek/apps/web/src/app/staff/finance/hooks/useFinanceClientAutosave.ts)
-- rewired [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx) to use the new autosave hook while preserving existing debounce behavior
-- extracted top-level page sections into [FinancePageSections.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePageSections.tsx)
-- reduced [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx) to a clearer composition of header, tabs, and tab-specific sections
-- current top-level [FinancePage.tsx](/C:/projects/kezek/apps/web/src/app/staff/finance/components/FinancePage.tsx) is down to `634` lines and now reads primarily as composition plus screen-specific handlers
+- extracted tab/date/session view state into [useFinancePageViewState.ts](../apps/web/src/app/staff/finance/hooks/useFinancePageViewState.ts)
+- wired [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx) to the new hook so the top-level component no longer owns that whole inline state block
+- extracted debounced client autosave/flush behavior into [useFinanceClientAutosave.ts](../apps/web/src/app/staff/finance/hooks/useFinanceClientAutosave.ts)
+- rewired [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx) to use the new autosave hook while preserving existing debounce behavior
+- extracted top-level page sections into [FinancePageSections.tsx](../apps/web/src/app/staff/finance/components/FinancePageSections.tsx)
+- reduced [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx) to a clearer composition of header, tabs, and tab-specific sections
+- current top-level [FinancePage.tsx](../apps/web/src/app/staff/finance/components/FinancePage.tsx) is down to `634` lines and now reads primarily as composition plus screen-specific handlers
 - verified with `pnpm -C apps/web typecheck`
 - verified with `pnpm -C apps/web test -- --runInBand --forceExit --runTestsByPath src/app/staff/finance/components/__tests__/FinancePage.debounce.test.tsx`
 
@@ -187,7 +189,7 @@ Progress:
 - Priority: `high`
 - Status: `done`
 - File:
-  - [view.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/view.tsx)
+  - [view.tsx](../apps/web/src/app/dashboard/bookings/view.tsx)
 
 Tasks:
 
@@ -203,12 +205,12 @@ Done when:
 
 Progress:
 
-- extracted dashboard booking tabs and calendar section into [BookingsViewSections.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/BookingsViewSections.tsx)
-- rewired [view.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/view.tsx) to consume the external tabs/calendar presentation module
-- extracted the list-tab screen into [DashboardBookingsListSection.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/DashboardBookingsListSection.tsx)
-- moved list filtering, paging, attendance, confirm and cancel orchestration behind [useDashboardBookingsListController.ts](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/useDashboardBookingsListController.ts)
-- centralized shared screen types in [bookingsViewTypes.ts](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/bookingsViewTypes.ts)
-- reduced [view.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/view.tsx) to a `67` line composition root over extracted calendar, list and desk sections
+- extracted dashboard booking tabs and calendar section into [BookingsViewSections.tsx](../apps/web/src/app/dashboard/bookings/components/BookingsViewSections.tsx)
+- rewired [view.tsx](../apps/web/src/app/dashboard/bookings/view.tsx) to consume the external tabs/calendar presentation module
+- extracted the list-tab screen into [DashboardBookingsListSection.tsx](../apps/web/src/app/dashboard/bookings/components/DashboardBookingsListSection.tsx)
+- moved list filtering, paging, attendance, confirm and cancel orchestration behind [useDashboardBookingsListController.ts](../apps/web/src/app/dashboard/bookings/components/useDashboardBookingsListController.ts)
+- centralized shared screen types in [bookingsViewTypes.ts](../apps/web/src/app/dashboard/bookings/components/bookingsViewTypes.ts)
+- reduced [view.tsx](../apps/web/src/app/dashboard/bookings/view.tsx) to a `67` line composition root over extracted calendar, list and desk sections
 - verified with `pnpm -C apps/web typecheck`
 
 ### W.6 Decompose public booking flow view
@@ -216,7 +218,7 @@ Progress:
 - Priority: `high`
 - Status: `done`
 - File:
-  - [view.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/view.tsx)
+  - [view.tsx](../apps/web/src/app/b/[slug]/view.tsx)
 
 Tasks:
 
@@ -232,11 +234,11 @@ Done when:
 
 Progress:
 
-- extracted step 1-5 presentation, step navigation, and summary layout into [BookingFormSections.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/components/BookingFormSections.tsx)
-- rewired [view.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/view.tsx) to use explicit `handleBranchSelect`, `handleDayChange`, `handleStaffSelect`, `handleServiceToggle`, and `handleSlotSelect` handlers instead of keeping the entire render tree inline
-- extracted branch/day/staff/service restore and selection synchronization into [useBookingSelectionState.ts](/C:/projects/kezek/apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts)
-- extracted auth subscription and business-view analytics side effects into [useBookingViewerMeta.ts](/C:/projects/kezek/apps/web/src/app/b/[slug]/hooks/useBookingViewerMeta.ts)
-- extracted slots refresh and post-RPC slot filtering into [useBookingSlotsState.ts](/C:/projects/kezek/apps/web/src/app/b/[slug]/hooks/useBookingSlotsState.ts)
-- extracted availability and display-derived state into [useBookingFlowDerived.ts](/C:/projects/kezek/apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts)
-- reduced [view.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/view.tsx) from `866` to `427` lines while preserving the existing slot, funnel, and booking creation flow
+- extracted step 1-5 presentation, step navigation, and summary layout into [BookingFormSections.tsx](../apps/web/src/app/b/[slug]/components/BookingFormSections.tsx)
+- rewired [view.tsx](../apps/web/src/app/b/[slug]/view.tsx) to use explicit `handleBranchSelect`, `handleDayChange`, `handleStaffSelect`, `handleServiceToggle`, and `handleSlotSelect` handlers instead of keeping the entire render tree inline
+- extracted branch/day/staff/service restore and selection synchronization into [useBookingSelectionState.ts](../apps/web/src/app/b/[slug]/hooks/useBookingSelectionState.ts)
+- extracted auth subscription and business-view analytics side effects into [useBookingViewerMeta.ts](../apps/web/src/app/b/[slug]/hooks/useBookingViewerMeta.ts)
+- extracted slots refresh and post-RPC slot filtering into [useBookingSlotsState.ts](../apps/web/src/app/b/[slug]/hooks/useBookingSlotsState.ts)
+- extracted availability and display-derived state into [useBookingFlowDerived.ts](../apps/web/src/app/b/[slug]/hooks/useBookingFlowDerived.ts)
+- reduced [view.tsx](../apps/web/src/app/b/[slug]/view.tsx) from `866` to `427` lines while preserving the existing slot, funnel, and booking creation flow
 - verified with `pnpm -C apps/web typecheck`

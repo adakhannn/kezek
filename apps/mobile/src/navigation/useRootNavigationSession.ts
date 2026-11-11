@@ -7,8 +7,6 @@ import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 import { supabase } from '../lib/supabase';
 import { logDebug, logError, logWarn, maskUrl } from '../lib/log';
 
-const AUTH_CALLBACK_RE =
-    /auth\/callback|callback-mobile|access_token=|refresh_token=|\?code=|exchange_code=/i;
 const AUTH_CALLBACK_DEDUP_TTL_MS = 2 * 60 * 1000;
 export { getMobileApiUrl };
 
@@ -41,7 +39,10 @@ function isAuthCallbackAlreadyProcessed(url: string) {
 }
 
 export function isAuthCallbackUrl(url: string) {
-    return AUTH_CALLBACK_RE.test(url);
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'kezek:' && parsed.hostname === 'auth' && parsed.pathname === '/callback';
+    } catch { return false; }
 }
 
 async function setSessionFromTokens(accessToken: string, refreshToken: string) {
@@ -55,22 +56,12 @@ async function setSessionFromTokens(accessToken: string, refreshToken: string) {
     }
 }
 
-export function extractHashTokens(url: string) {
-    const match = url.match(/#access_token=([^&]+)&refresh_token=([^&]+)/);
-
-    if (!match) {
-        return null;
-    }
-
-    return {
-        accessToken: decodeURIComponent(match[1]),
-        refreshToken: decodeURIComponent(match[2]),
-    };
-}
-
-export async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string) {
+export async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string, codeVerifier: string) {
+    if (!/^[a-f0-9]{64}$/.test(codeVerifier)) throw new Error('Missing initiating sign-in proof');
     const response = await fetchWithTimeout(
-        `${apiUrl}/api/auth/mobile-exchange?code=${encodeURIComponent(exchangeCode)}`,
+        apiUrl + '/api/auth/mobile-exchange',
+        { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: exchangeCode, codeVerifier }) },
     );
 
     if (!response.ok) {
@@ -92,7 +83,7 @@ export async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string)
     await setSessionFromTokens(accessToken, refreshToken);
 }
 
-export async function handleDeepLinkAuth(url: string, apiUrl: string) {
+export async function handleDeepLinkAuth(url: string, _apiUrl?: string) {
     if (!url || !isAuthCallbackUrl(url)) {
         return false;
     }
@@ -107,42 +98,12 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
     logDebug('RootNavigatorSession', 'Handling auth callback URL', { url: maskUrl(url) });
 
     try {
-        let urlObject: URL;
-
-        try {
-            urlObject = new URL(url);
-        } catch {
-            const tokens = extractHashTokens(url);
-
-            if (tokens) {
-                await setSessionFromTokens(tokens.accessToken, tokens.refreshToken);
-                markAuthCallbackProcessed(url);
-                return true;
-            }
-
-            throw new Error('Unable to parse auth callback URL');
-        }
-
-        const hashParams = new URLSearchParams(urlObject.hash.slice(1));
+        const urlObject = new URL(url);
         const queryParams = new URLSearchParams(urlObject.search);
-        const accessToken =
-            hashParams.get('access_token') || queryParams.get('access_token');
-        const refreshToken =
-            hashParams.get('refresh_token') || queryParams.get('refresh_token');
-        const exchangeCode = queryParams.get('exchange_code');
+        // Only an authorization code bound to the SDK's local PKCE verifier.
+        // Never accept raw tokens or an unbound mobile exchange link.
+        if (urlObject.hash || queryParams.has('access_token') || queryParams.has('refresh_token') || queryParams.has('exchange_code')) return false;
         const code = queryParams.get('code');
-
-        if (exchangeCode) {
-            await exchangeViaMobileApi(exchangeCode, apiUrl);
-            markAuthCallbackProcessed(url);
-            return true;
-        }
-
-        if (accessToken && refreshToken) {
-            await setSessionFromTokens(accessToken, refreshToken);
-            markAuthCallbackProcessed(url);
-            return true;
-        }
 
         if (code) {
             const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -163,27 +124,6 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
         logError('RootNavigatorSession', 'Failed to process auth callback URL', error);
         return false;
     }
-}
-
-export async function tryRestorePendingSession(apiUrl: string) {
-    const response = await fetchWithTimeout(`${apiUrl}/api/auth/mobile-exchange?check=true`);
-
-    if (!response.ok) {
-        return false;
-    }
-
-    const payload = await response.json();
-    const data =
-        payload && typeof payload === 'object' && 'data' in payload
-            ? (payload.data as { hasPending?: boolean; code?: string })
-            : (payload as { hasPending?: boolean; code?: string });
-
-    if (!data.hasPending || !data.code) {
-        return false;
-    }
-
-    await exchangeViaMobileApi(data.code, apiUrl);
-    return true;
 }
 
 export function useRootNavigationSession() {
@@ -240,15 +180,7 @@ export function useRootNavigationSession() {
             }
 
             try {
-                const currentSession = await syncSession('app-active');
-
-                if (!currentSession) {
-                    const restored = await tryRestorePendingSession(apiUrl);
-
-                    if (restored) {
-                        await syncSession('pending-mobile-exchange');
-                    }
-                }
+                await syncSession('app-active');
             } catch (error) {
                 logError('RootNavigatorSession', 'App resume session sync failed', error);
             }

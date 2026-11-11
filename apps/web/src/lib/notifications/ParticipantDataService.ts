@@ -9,8 +9,13 @@ import { logDebug, logError } from '@/lib/log';
 export class ParticipantDataService {
     constructor(
         private supabase: SupabaseClient,
-        private admin: SupabaseClient
+        private admin: SupabaseClient,
+        private strict = false
     ) {}
+
+    private assertLookup(error: unknown) {
+        if (this.strict && error) throw new Error('NOTIFICATION_PARTICIPANT_LOOKUP_FAILED');
+    }
 
     private async getEnabledNotificationEmails(userId: string): Promise<string[]> {
         const { data, error } = await this.admin
@@ -19,6 +24,7 @@ export class ParticipantDataService {
             .eq('user_id', userId)
             .eq('verified', true)
             .eq('enabled', true);
+        this.assertLookup(error);
         if (error) {
             logError('ParticipantDataService', 'Failed to load notification emails', error);
             return [];
@@ -52,11 +58,12 @@ export class ParticipantDataService {
 
         if (booking.client_id) {
             // Получаем данные из auth_users_view
-            const { data: au } = await this.supabase
+            const { data: au, error: lookupError } = await this.supabase
                 .from('auth_users_view')
                 .select('email, full_name, phone')
                 .eq('id', booking.client_id)
                 .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
+                this.assertLookup(lookupError);
             
             data.email = au?.email ?? null;
             data.name = au?.full_name ?? null;
@@ -64,7 +71,7 @@ export class ParticipantDataService {
             
             // Получаем данные из profiles (включая настройки уведомлений)
             try {
-                const { data: profile } = await this.supabase
+                const { data: profile, error: lookupError } = await this.supabase
                     .from('profiles')
                     .select('phone, whatsapp_phone, full_name, notify_email, notify_whatsapp, whatsapp_verified, telegram_id, notify_telegram, telegram_verified')
                     .eq('id', booking.client_id)
@@ -79,6 +86,7 @@ export class ParticipantDataService {
                         notify_telegram: boolean | null;
                         telegram_verified: boolean | null;
                     }>();
+                this.assertLookup(lookupError);
                 
                 if (profile) {
                     if (!data.phone && profile.phone) {
@@ -97,6 +105,7 @@ export class ParticipantDataService {
                     data.telegramVerified = profile.telegram_verified ?? false;
                 }
             } catch (e) {
+                if (this.strict) throw new Error('NOTIFICATION_PARTICIPANT_LOOKUP_FAILED');
                 logError('ParticipantDataService', 'Failed to get client data from profiles', e);
             }
             data.notificationEmails = await this.getEnabledNotificationEmails(booking.client_id);
@@ -148,6 +157,7 @@ export class ParticipantDataService {
         // Пробуем через Admin API
         try {
             const { data: ou, error: ouError } = await this.admin.auth.admin.getUserById(biz.owner_id);
+            this.assertLookup(ouError);
             if (!ouError && ou?.user) {
                 ownerEmailFromAuth = ou.user.email ?? null;
                 const meta = (ou.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
@@ -160,17 +170,19 @@ export class ParticipantDataService {
                 });
             }
         } catch (e) {
+                if (this.strict) throw new Error('NOTIFICATION_PARTICIPANT_LOOKUP_FAILED');
             logError('ParticipantDataService', 'Failed to get owner data via Admin API', e);
         }
 
         // Fallback через auth_users_view
         if (!ownerEmailFromAuth || !data.phone) {
             try {
-                const { data: ou } = await this.supabase
+                const { data: ou, error: lookupError } = await this.supabase
                     .from('auth_users_view')
                     .select('email, full_name, phone')
                     .eq('id', biz.owner_id)
                     .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
+                this.assertLookup(lookupError);
                 
                 if (ou) {
                     ownerEmailFromAuth = ownerEmailFromAuth || (ou.email ?? null);
@@ -178,6 +190,7 @@ export class ParticipantDataService {
                     data.phone = data.phone || (ou.phone ?? null);
                 }
             } catch (e) {
+                if (this.strict) throw new Error('NOTIFICATION_PARTICIPANT_LOOKUP_FAILED');
                 logError('ParticipantDataService', 'Failed to get owner data via auth_users_view', e);
             }
         }
@@ -185,11 +198,12 @@ export class ParticipantDataService {
         // Получаем контактный телефон и WhatsApp из profiles
         if (!data.phone || !data.whatsappPhone) {
             try {
-                const { data: profile } = await this.admin
+                const { data: profile, error: lookupError } = await this.admin
                     .from('profiles')
-                    .select('phone, whatsapp_phone')
+                    .select('phone, whatsapp_phone, notify_whatsapp')
                     .eq('id', biz.owner_id)
-                    .maybeSingle<{ phone: string | null; whatsapp_phone: string | null }>();
+                    .maybeSingle<{ phone: string | null; whatsapp_phone: string | null; notify_whatsapp: boolean | null }>();
+                this.assertLookup(lookupError);
                 
                 if (!data.phone && profile?.phone) {
                     data.phone = profile.phone;
@@ -197,14 +211,16 @@ export class ParticipantDataService {
                 if (profile?.whatsapp_phone) {
                     data.whatsappPhone = profile.whatsapp_phone;
                 }
+                data.notifyWhatsApp = profile?.notify_whatsapp ?? true;
             } catch (e) {
+                if (this.strict) throw new Error('NOTIFICATION_PARTICIPANT_LOOKUP_FAILED');
                 logError('ParticipantDataService', 'Failed to get owner phone from profiles', e);
             }
         }
 
         // Получаем имя и Telegram данные из profiles
         try {
-            const { data: profile } = await this.admin
+            const { data: profile, error: lookupError } = await this.admin
                 .from('profiles')
                 .select('full_name, notify_email, telegram_id, notify_telegram, telegram_verified')
                 .eq('id', biz.owner_id)
@@ -215,6 +231,7 @@ export class ParticipantDataService {
                     notify_telegram: boolean | null;
                     telegram_verified: boolean | null;
                 }>();
+                this.assertLookup(lookupError);
 
             if (profile) {
                 if (!data.name && profile.full_name) {
@@ -226,6 +243,7 @@ export class ParticipantDataService {
                 data.telegramVerified = profile.telegram_verified ?? false;
             }
         } catch (e) {
+                if (this.strict) throw new Error('NOTIFICATION_PARTICIPANT_LOOKUP_FAILED');
             logError('ParticipantDataService', 'Failed to get owner notification settings', e);
         }
 
@@ -259,7 +277,7 @@ export class ParticipantDataService {
             data.email = data.notificationEmails[0] ?? data.email;
             try {
                 logDebug('ParticipantDataService', 'Getting staff telegram data', { user_id: staff.user_id });
-                const { data: profile } = await this.admin
+                const { data: profile, error: lookupError } = await this.admin
                     .from('profiles')
                     .select('notify_email, whatsapp_phone, whatsapp_verified, notify_whatsapp, telegram_id, notify_telegram, telegram_verified')
                     .eq('id', staff.user_id)
@@ -272,6 +290,7 @@ export class ParticipantDataService {
                         notify_telegram: boolean | null;
                         telegram_verified: boolean | null;
                     }>();
+                this.assertLookup(lookupError);
                 
                 if (profile) {
                     data.notifyEmail = profile.notify_email ?? true;
@@ -283,6 +302,7 @@ export class ParticipantDataService {
                     data.telegramVerified = profile.telegram_verified ?? false;
                 }
             } catch (e) {
+                if (this.strict) throw new Error('NOTIFICATION_PARTICIPANT_LOOKUP_FAILED');
                 logError('ParticipantDataService', 'Failed to get staff telegram data', e);
             }
         }

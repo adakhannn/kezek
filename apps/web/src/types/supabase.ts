@@ -1775,6 +1775,7 @@ export type Database = {
           p_per_staff?: number
           p_service_id: string
           p_step_min?: number
+          p_staff_id?: string | null
         }
         Returns: {
           branch_id: string
@@ -1782,6 +1783,19 @@ export type Database = {
           staff_id: string
           start_at: string
         }[]
+      }
+      get_free_slots_page_v1: {
+        Args: {
+          p_biz_id: string
+          p_branch_id: string
+          p_day: string
+          p_service_id: string | null
+          p_duration_min: number | null
+          p_staff_id: string | null
+          p_cursor: Json | null
+          p_limit?: number
+        }
+        Returns: Json
       }
       gettransactionid: { Args: never; Returns: unknown }
       grant_branch_admin: {

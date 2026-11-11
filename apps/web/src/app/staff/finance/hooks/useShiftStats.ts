@@ -87,9 +87,9 @@ export function useShiftStats({
         }
         
         const totalAmount = filtered.reduce((sum, s) => sum + s.total_amount, 0);
-        // Итоговая сумма сотрудника = гарантированная сумма (если есть и больше базовой доли) или базовая доля
+        // Закрытая смена хранит итоговую выплату; гарантия повторно не применяется.
         const totalMaster = filtered.reduce((sum, s) => {
-            return sum + (s.guaranteed_amount > s.master_share ? s.guaranteed_amount : s.master_share);
+            return sum + s.master_share;
         }, 0);
         // Закрытие уже сохраняет итоговую долю бизнеса с учётом доплаты.
         // topup_amount — отдельные метаданные, не повторное списание.

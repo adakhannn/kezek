@@ -1,5 +1,7 @@
 # Mobile Google Auth Decoupling Tasks
 
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
 Goal: remove dependency of mobile Google sign-in on web callback (`https://kezek.kg/auth/callback-mobile`) and use native mobile flow with stable app return.
 
 ## Context (Current State)
@@ -21,7 +23,7 @@ Result:
 - [x] Decision: Supabase native mobile OAuth flow is primary.
 - [x] Redirect URI: `kezek://auth/callback`.
 - [x] Scope: Android/iOS native builds (dev/prod); Expo Go is not primary runtime.
-- [x] ADR: [MOBILE_GOOGLE_AUTH_ADR.md](/C:/projects/kezek/docs/MOBILE_GOOGLE_AUTH_ADR.md)
+- [x] ADR: [MOBILE_GOOGLE_AUTH_ADR.md](MOBILE_GOOGLE_AUTH_ADR.md)
 
 ## Epic 2. Google + Supabase Configuration
 
@@ -36,13 +38,13 @@ Result:
 
 Result:
 
-- [x] Config runbook: [MOBILE_GOOGLE_AUTH_EPIC2_CONFIG.md](/C:/projects/kezek/docs/MOBILE_GOOGLE_AUTH_EPIC2_CONFIG.md)
+- [x] Config runbook: [MOBILE_GOOGLE_AUTH_EPIC2_CONFIG.md](MOBILE_GOOGLE_AUTH_EPIC2_CONFIG.md)
 - [x] Canonical values fixed in docs and project.
 - [x] Manual dashboard setup completed.
 
 ## Epic 3. Mobile Implementation
 
-- [x] Update `handleGoogleSignIn()` in [SignInScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/auth/SignInScreen.tsx):
+- [x] Update `handleGoogleSignIn()` in [SignInScreen.tsx](../apps/mobile/src/screens/auth/SignInScreen.tsx):
   - [x] native redirect as primary
   - [x] correct handling for `success/cancel/dismiss/error`
 - [x] Simplify session recovery after OAuth.
@@ -102,7 +104,7 @@ Status:
   - [ ] percentage production
   - [ ] 100%
 - [x] Rollback plan to previous web callback flow.
-- [x] On-call support runbook: [MOBILE_GOOGLE_AUTH_ROLLOUT_RUNBOOK.md](/C:/projects/kezek/docs/MOBILE_GOOGLE_AUTH_ROLLOUT_RUNBOOK.md)
+- [x] On-call support runbook: [MOBILE_GOOGLE_AUTH_ROLLOUT_RUNBOOK.md](MOBILE_GOOGLE_AUTH_ROLLOUT_RUNBOOK.md)
 
 ## Priorities
 

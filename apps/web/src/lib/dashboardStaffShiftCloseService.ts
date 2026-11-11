@@ -1,14 +1,19 @@
+import { isShiftDurationWithinDay } from '@core-domain/finance/guarantee';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logError } from '@/lib/log';
 import { sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
-import { measurePerformance } from '@/lib/performance';
+import { measurePerformance } from '@/lib/performanceServer';
+import { readShiftCloseSnapshot, shiftCloseTime } from '@/lib/staffShift/closeSnapshot';
 import { closeStaffShiftUseCase } from '@/lib/staffShift/closeUseCase';
+import { commitShiftClose, financeCommandFailure } from '@/lib/staffShift/financeCommand';
 import { matchesSavedShiftLedger, savedShiftLedgerItems } from '@/lib/staffShift/savedLedger';
-import { TZ, formatDateInTz } from '@/lib/time';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { closeShiftSchema, dateStringSchema } from '@/lib/validation/schemas';
 
 type StaffShiftRow = {
     id: string;
+    ledger_revision: number;
     staff_id: string;
     biz_id: string;
     shift_date: string;
@@ -30,6 +35,7 @@ type StaffShiftRow = {
 type CloseStaffShiftRpcResult = {
     ok: boolean;
     error?: string | null;
+    action?: string | null;
     shift?: StaffShiftRow | null;
 };
 
@@ -42,11 +48,13 @@ export async function runDashboardStaffShiftClose({
     admin,
     bizId,
     staffId,
+    actorId,
 }: {
     req: Request;
-    admin: any;
+    admin: Pick<SupabaseClient, 'from' | 'rpc' | 'auth'>;
     bizId: string;
     staffId: string;
+    actorId: string;
 }): Promise<Result> {
     const { data: staff, error: staffError } = await admin
         .from('staff')
@@ -109,7 +117,7 @@ export async function runDashboardStaffShiftClose({
         };
     }
 
-    const { items = [], totalAmount: totalAmountRaw = 0, consumablesAmount = 0 } = validationResult.data;
+    const { items = [], totalAmount: totalAmountRaw = 0, consumablesAmount = 0, expectedShiftId, expectedRevision } = validationResult.data;
     const now = new Date();
 
     const { data: existing, error: loadError } = await admin
@@ -117,7 +125,7 @@ export async function runDashboardStaffShiftClose({
         .select('*')
         .eq('biz_id', bizId)
         .eq('staff_id', staffId)
-        .eq('shift_date', ymdResult.ymd)
+        .eq('id', expectedShiftId)
         .maybeSingle();
 
     if (loadError) {
@@ -139,28 +147,24 @@ export async function runDashboardStaffShiftClose({
         };
     }
 
-    if (existing.status === 'closed') {
-        return {
-            ok: false,
-            statusCode: 400,
-            errorType: 'validation',
-            message: 'Смена уже закрыта. Обновите страницу для просмотра результатов.',
-        };
-    }
+    if (ymdResult.ymd && existing.shift_date !== ymdResult.ymd) return financeCommandFailure({ code: '40001' });
+    if (!actorId) return financeCommandFailure({ code: '42501' });
+    if (existing.id !== expectedShiftId) return financeCommandFailure({ code: '40001' });
+    if (existing.status === 'closed') return { ok: true, shift: existing };
+    if (existing.ledger_revision !== expectedRevision) return financeCommandFailure({ code: '40001' });
 
     // Owner and staff closure both finalize the same persisted ledger.
-    const { data: savedRows, error: itemsError } = await admin
-        .from('staff_shift_items')
-        .select('id, service_amount, consumables_amount, booking_id')
-        .eq('shift_id', existing.id);
-    if (itemsError) {
-        logError('DashboardStaffShiftClose', 'Error loading saved shift items', itemsError);
-        return {
-            ok: false, statusCode: 500, errorType: 'internal',
-            message: 'Не удалось загрузить клиентов смены. Попробуйте снова.',
-        };
+    let snapshot;
+    try { snapshot = await readShiftCloseSnapshot(admin, bizId, staffId, existing.id); }
+    catch (error) {
+        logError('DashboardStaffShiftClose', 'Error loading complete shift ledger', error);
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Не удалось загрузить полный список клиентов смены.' };
     }
-    const savedItems = savedShiftLedgerItems(savedRows ?? []);
+    if (snapshot.shift.ledger_revision !== expectedRevision || snapshot.shift.status !== 'open') return financeCommandFailure({ code: '40001' });
+    let financialCloseTime;
+    try { financialCloseTime = shiftCloseTime(snapshot, now); }
+    catch { return { ok: false, statusCode: 409, errorType: 'validation', message: 'Время открытия вне дня смены. Требуется проверка.' }; }
+    const savedItems = savedShiftLedgerItems(snapshot.items);
     if (!matchesSavedShiftLedger(items, savedItems)) {
         return {
             ok: false, statusCode: 409, errorType: 'validation',
@@ -168,15 +172,15 @@ export async function runDashboardStaffShiftClose({
         };
     }
 
-    const closedAt = now.toISOString();
+    const closedAt = financialCloseTime.toISOString();
     const decision = closeStaffShiftUseCase({
-        now,
+        now: financialCloseTime,
         staff: {
-            percentMaster: staff.percent_master,
-            percentSalon: staff.percent_salon,
-            hourlyRate: staff.hourly_rate,
+            percentMaster: snapshot.staff.percent_master,
+            percentSalon: snapshot.staff.percent_salon,
+            hourlyRate: snapshot.staff.hourly_rate,
         },
-        shift: existing,
+        shift: snapshot.shift,
         items: savedItems,
         totalAmountRaw,
         consumablesAmountRaw: consumablesAmount,
@@ -201,45 +205,21 @@ export async function runDashboardStaffShiftClose({
     }
 
     const { hoursWorked, financials } = decision;
-    const hourlyRate = staff.hourly_rate ? Number(staff.hourly_rate) : null;
+    if (!isShiftDurationWithinDay(hoursWorked, snapshot.dayHours)) return { ok: false, statusCode: 409, errorType: 'validation', message: 'Часы превышают длину локального дня смены.' };
 
     const { data: rpcResult, error: rpcError } = await measurePerformance(
         'shift_close_dashboard',
         async () =>
-            admin.rpc('close_staff_shift_safe', {
-                p_shift_id: existing.id,
-                p_total_amount: financials.totalAmount,
-                p_consumables_amount: financials.totalConsumables,
-                p_percent_master: financials.normalizedPercentMaster,
-                p_percent_salon: financials.normalizedPercentSalon,
-                p_master_share: financials.finalMasterShare,
-                p_salon_share: financials.finalSalonShare,
-                p_hours_worked: hoursWorked,
-                p_hourly_rate: hourlyRate,
-                p_guaranteed_amount: financials.guaranteedAmount,
-                p_topup_amount: financials.topupAmount,
-                p_closed_at: closedAt,
+            commitShiftClose({
+                client: admin, shiftId: existing.id, actorId, revision: expectedRevision,
+                staff: snapshot.staff, financials, hoursWorked, closedAt,
             }),
         { shiftId: existing.id, staffId, itemsCount: items.length },
     );
 
     if (rpcError) {
-        logError('DashboardStaffShiftClose', 'Error calling close_staff_shift_safe RPC', rpcError);
-        let message = 'Не удалось закрыть смену';
-        if (rpcError.code === 'P0001' || rpcError.message?.includes('already closed')) {
-            message = 'Смена уже закрыта';
-        } else if (rpcError.code === '23505') {
-            message = 'Конфликт данных. Обновите страницу.';
-        } else if (rpcError.message) {
-            message = rpcError.message;
-        }
-
-        return {
-            ok: false,
-            statusCode: 500,
-            errorType: 'internal',
-            message,
-        };
+        logError('DashboardStaffShiftClose', 'Atomic close failed', rpcError);
+        return financeCommandFailure(rpcError);
     }
 
     const typedResult = rpcResult as CloseStaffShiftRpcResult | null;
@@ -265,25 +245,15 @@ export async function runDashboardStaffShiftClose({
     }
 
     const updated = typedResult.shift;
-    const bookingIds = new Set<string>(savedItems
-        .map((item) => item.bookingId)
-        .filter((id): id is string => !!id));
-    await markShiftBookingsPaid({ admin, bookingIds });
-    await markMissingBookingsNoShow({
-        admin,
-        staffId,
-        ymd: ymdResult.ymd,
-        includedBookingIds: bookingIds,
-    });
-    await queueShiftCloseNotification({
+    if (typedResult.action !== 'already_closed') await queueShiftCloseNotification({
         admin,
         bizId,
-        ymd: ymdResult.ymd,
+        ymd: existing.shift_date,
         staff,
         financials,
         itemsCount: items.length,
         hoursWorked: hoursWorked ?? 0,
-    });
+    }).catch((error) => logError('DashboardStaffShiftClose', 'Notification failed after committed close', error));
 
     return {
         ok: true,
@@ -292,11 +262,11 @@ export async function runDashboardStaffShiftClose({
 }
 
 function resolveShiftDate(req: Request):
-    | { ok: true; ymd: string }
+    | { ok: true; ymd: string | null }
     | { ok: false; statusCode: 400; errorType: 'validation'; message: string } {
     const dateParam = new URL(req.url).searchParams.get('date');
     if (!dateParam) {
-        return { ok: true, ymd: formatDateInTz(new Date(), TZ) };
+        return { ok: true, ymd: null };
     }
 
     const parsed = dateStringSchema.safeParse(dateParam);
@@ -312,123 +282,6 @@ function resolveShiftDate(req: Request):
     return { ok: true, ymd: parsed.data };
 }
 
-async function markShiftBookingsPaid({
-    admin,
-    bookingIds,
-}: {
-    admin: any;
-    bookingIds: Set<string>;
-}) {
-    if (bookingIds.size === 0) {
-        return;
-    }
-
-    try {
-        const bookingIdsArray = Array.from(bookingIds);
-        const { data: bookingsForUpdate, error: bookingsForUpdateError } = await admin
-            .from('bookings')
-            .select('id, status')
-            .in('id', bookingIdsArray);
-
-        if (bookingsForUpdateError) {
-            logError('DashboardStaffShiftClose', 'Error loading bookings for status update', bookingsForUpdateError);
-        }
-
-        const statusMap = new Map<string, string>();
-        for (const booking of bookingsForUpdate || []) {
-            statusMap.set(String(booking.id), String(booking.status));
-        }
-
-        for (const bookingId of bookingIdsArray) {
-            try {
-                const currentStatus = statusMap.get(bookingId);
-                if (currentStatus === 'paid' || currentStatus === 'no_show') {
-                    continue;
-                }
-
-                const { error: rpcErr } = await admin.rpc('update_booking_status_with_promotion', {
-                    p_booking_id: bookingId,
-                    p_new_status: 'paid',
-                });
-
-                if (!rpcErr) {
-                    continue;
-                }
-
-                if (
-                    rpcErr.message?.includes('function') ||
-                    rpcErr.message?.includes('does not exist') ||
-                    rpcErr.message?.includes('schema cache')
-                ) {
-                    const { error: fallbackRpcErr } = await admin.rpc('update_booking_status_no_check', {
-                        p_booking_id: bookingId,
-                        p_new_status: 'paid',
-                    });
-                    if (
-                        fallbackRpcErr &&
-                        !fallbackRpcErr.message?.includes('function') &&
-                        !fallbackRpcErr.message?.includes('does not exist')
-                    ) {
-                        await admin.from('bookings').update({ status: 'paid' }).eq('id', bookingId);
-                    }
-                } else {
-                    logError('DashboardStaffShiftClose', `Error updating booking ${bookingId} to paid`, rpcErr);
-                }
-            } catch (error) {
-                logError('DashboardStaffShiftClose', `Error updating booking ${bookingId} status`, error);
-            }
-        }
-    } catch (error) {
-        logError('DashboardStaffShiftClose', 'Unexpected error updating bookings to paid', error);
-    }
-}
-
-async function markMissingBookingsNoShow({
-    admin,
-    staffId,
-    ymd,
-    includedBookingIds,
-}: {
-    admin: any;
-    staffId: string;
-    ymd: string;
-    includedBookingIds: Set<string>;
-}) {
-    const { data: todayBookings, error: bookingsError } = await admin
-        .from('bookings')
-        .select('id, status')
-        .eq('staff_id', staffId)
-        .gte('start_at', `${ymd}T00:00:00`)
-        .lte('start_at', `${ymd}T23:59:59`)
-        .neq('status', 'cancelled');
-
-    if (bookingsError || !todayBookings) {
-        return;
-    }
-
-    const notAddedBookings = todayBookings.filter(
-        (booking: { id: string; status: string }) =>
-            !includedBookingIds.has(booking.id) &&
-            booking.status !== 'no_show' &&
-            booking.status !== 'paid' &&
-            booking.status !== 'confirmed',
-    );
-
-    for (const booking of notAddedBookings) {
-        try {
-            const { error: rpcErr } = await admin.rpc('update_booking_status_no_check', {
-                p_booking_id: booking.id,
-                p_new_status: 'no_show',
-            });
-            if (rpcErr && !rpcErr.message?.includes('function') && !rpcErr.message?.includes('does not exist')) {
-                await admin.from('bookings').update({ status: 'no_show' }).eq('id', booking.id);
-            }
-        } catch (error) {
-            logError('DashboardStaffShiftClose', `Error updating booking ${booking.id} to no_show`, error);
-        }
-    }
-}
-
 async function queueShiftCloseNotification({
     admin,
     bizId,
@@ -438,7 +291,7 @@ async function queueShiftCloseNotification({
     itemsCount,
     hoursWorked,
 }: {
-    admin: any;
+    admin: Pick<SupabaseClient, 'from' | 'rpc' | 'auth'>;
     bizId: string;
     ymd: string;
     staff: { full_name?: string | null; user_id?: string | null };

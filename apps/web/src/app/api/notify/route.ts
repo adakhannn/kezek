@@ -8,5 +8,6 @@ import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 export async function POST(req: Request) {
     return withRateLimit(req, RateLimitConfigs.normal, () =>
         withErrorHandler('Notify', async () => runNotifyHttp(req)),
+        "/api/notify",
     );
 }

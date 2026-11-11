@@ -1,10 +1,10 @@
 // apps/web/src/lib/notifications/EmailNotificationService.ts
 
-import { buildEmailHtml, buildEmailText } from './messageBuilders';
+import { buildBookingEmailPayload } from './emailPayload';
 import type { EmailRecipient, BookingDetails, NotifyType } from './types';
-import { buildHtmlPersonal } from './utils';
 
-import { buildIcs } from '@/lib/ics';
+
+
 import { logDebug, logError, logWarn } from '@/lib/log';
 
 export interface EmailConfig {
@@ -31,22 +31,6 @@ export class EmailNotificationService {
             return 0;
         }
 
-        const baseHtml = buildEmailHtml(bookingDetails, notifyType);
-        const text = buildEmailText(bookingDetails, notifyType);
-        
-        // Готовим .ics для клиента (один раз)
-        const icsText = buildIcs({
-            id: bookingDetails.booking.id,
-            summary: `${bookingDetails.service?.name_ru ?? 'Услуга'} — ${bookingDetails.biz?.name ?? 'Бизнес'}`,
-            description: `${notifyType === 'hold' ? 'Удержание слота' : notifyType === 'confirm' ? 'Бронь подтверждена' : 'Бронь отменена'}. Мастер: ${bookingDetails.staff?.full_name ?? 'Мастер'}`,
-            location: bookingDetails.biz?.address ?? '',
-            startISO: bookingDetails.booking.start_at,
-            endISO: bookingDetails.booking.end_at,
-            tz: bookingDetails.timezone,
-            url: `${bookingDetails.origin}/booking/${bookingDetails.booking.id}`,
-        });
-        const icsBase64 = Buffer.from(icsText, 'utf8').toString('base64');
-
         const headers = {
             'content-type': 'application/json',
             Authorization: `Bearer ${this.config.apiKey}`,
@@ -67,25 +51,7 @@ export class EmailNotificationService {
             }
 
             try {
-                const htmlPersonal = buildHtmlPersonal(baseHtml, recipient.name, recipient.role);
-                const payload: Record<string, unknown> = {
-                    from: this.config.from,
-                    to: [recipient.email],
-                    subject: `Kezek: ${notifyType === 'hold' ? 'Удержание слота' : notifyType === 'confirm' ? 'Бронь подтверждена' : 'Бронь отменена'}`,
-                    html: htmlPersonal,
-                    text,
-                };
-
-                if (this.config.replyTo) {
-                    payload.reply_to = this.config.replyTo;
-                }
-
-                if (recipient.withIcs) {
-                    payload.attachments = [{ 
-                        filename: 'booking.ics', 
-                        content: icsBase64
-                    }];
-                }
+                const payload = buildBookingEmailPayload(recipient, bookingDetails, notifyType, this.config);
 
                 const emailResponse = await fetch('https://api.resend.com/emails', {
                     method: 'POST',

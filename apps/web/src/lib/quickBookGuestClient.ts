@@ -1,4 +1,5 @@
 import type { ApiErrorResponse } from './apiErrorHandler';
+import { acknowledgeBookingRequest, getBookingRequestHeaders } from './bookingRequestClient';
 
 export type QuickBookGuestClientInput = {
     biz_id: string;
@@ -62,12 +63,15 @@ export async function createGuestBookingRequest(
     input: QuickBookGuestClientInput,
     deps: {
         fetchImpl?: typeof fetch;
+        requestHeaders?: (input: object, guest: boolean) => Promise<Record<string, string>>;
+        acknowledgeRequest?: typeof acknowledgeBookingRequest;
     } = {},
 ): Promise<{ bookingId: string }> {
     const fetchImpl = deps.fetchImpl ?? fetch;
+    const requestHeaders = await (deps.requestHeaders ?? getBookingRequestHeaders)(input, true);
     const response = await fetchImpl('/api/quick-book-guest', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', ...requestHeaders },
         body: JSON.stringify(input),
     });
 
@@ -89,12 +93,15 @@ export async function createGuestBookingRequest(
         });
     }
 
-    if (!bookingId) {
-        throw new QuickBookGuestClientError('Booking created without booking_id', {
+    const confirmed = body.data?.confirmed ?? body.confirmed;
+    if (!bookingId || confirmed !== true) {
+        throw new QuickBookGuestClientError('Booking confirmation is unavailable; retry the same request', {
             status: response.status,
             details: body,
         });
     }
 
+    // A storage cleanup failure keeps a replayable receipt, never a false error.
+    try { await (deps.acknowledgeRequest ?? acknowledgeBookingRequest)(input, true, requestHeaders); } catch { /* Keep the receipt identity. */ }
     return { bookingId };
 }

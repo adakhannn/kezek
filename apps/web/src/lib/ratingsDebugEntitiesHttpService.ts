@@ -14,16 +14,15 @@ const MAX_DAYS = 90;
 
 export async function runRatingsDebugEntitiesHttp(req: Request): Promise<NextResponse> {
     const supabase = await createSupabaseServerClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (authError || !user) {
         return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     }
 
     const accessResult = await ensureSuperAdminAccess({
-        supabase: supabase as never,
+        supabase,
+        userId: user.id,
     });
     if (!accessResult.ok) {
         return createErrorResponse(

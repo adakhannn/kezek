@@ -1,13 +1,11 @@
 'use client';
 
-import { formatInTimeZone } from 'date-fns-tz';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { BranchOption, Period, StaffStat, TotalStats } from './allStaffFinanceStatsTypes';
 import { financePeriodDate } from './financePeriodDate';
 
 import { logError } from '@/lib/log';
-import { TZ } from '@/lib/time';
 
 export function useAllStaffFinanceStatsData({
     t,
@@ -16,21 +14,28 @@ export function useAllStaffFinanceStatsData({
 }) {
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState<Period>('day');
-    const [date, setDate] = useState(formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
+    const [selectedDate, setDate] = useState<string | null>(null);
+    const [serverDate, setServerDate] = useState('');
+    const sequence = useRef(0);
     const [staffStats, setStaffStats] = useState<StaffStat[]>([]);
     const [totalStats, setTotalStats] = useState<TotalStats | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [branches, setBranches] = useState<BranchOption[]>([]);
     const [branchId, setBranchId] = useState<string | 'all'>('all');
 
+    const request = useMemo(() => ({ branchId, selectedDate, period }), [branchId, selectedDate, period]);
+    const [snapshotOwner, setSnapshotOwner] = useState<object | null>(null);
+    const ownsSnapshot = snapshotOwner === request;
+    const date = selectedDate ?? (ownsSnapshot ? serverDate : '');
     const loadStats = useCallback(async () => {
+        const requestId = ++sequence.current;
         setLoading(true);
         setError(null);
         try {
             const params = new URLSearchParams({
                 period,
-                date: financePeriodDate(period, date),
             });
+            if (selectedDate) params.set('date', financePeriodDate(period, selectedDate));
             if (branchId !== 'all') {
                 params.set('branchId', branchId);
             }
@@ -44,12 +49,14 @@ export function useAllStaffFinanceStatsData({
                 error?: string;
                 details?: unknown;
                 data?: {
+                    dateFrom?: string;
                     branches?: { id: string; name: string }[];
                     staffStats?: StaffStat[];
                     totalStats?: TotalStats | null;
                 };
             };
 
+            if (requestId !== sequence.current) return;
             if (!response.ok || !json.ok || !json.data) {
                 const errorMessage = json.message || json.error || t('finance.loading', 'Не удалось загрузить статистику');
                 const errorDetails = json.details ? ` (${JSON.stringify(json.details)})` : '';
@@ -63,20 +70,25 @@ export function useAllStaffFinanceStatsData({
                   }))
                 : [];
 
+            setSnapshotOwner(request);
+            setServerDate(json.data.dateFrom ?? '');
             setBranches(apiBranches);
             setStaffStats(json.data.staffStats || []);
             setTotalStats(json.data.totalStats || null);
         } catch (value) {
+            if (requestId !== sequence.current) return;
+            setSnapshotOwner(request);
             const message = value instanceof Error ? value.message : String(value);
             setError(message);
             logError('AllStaffFinanceStats', 'Error loading stats', value);
         } finally {
-            setLoading(false);
+            if (requestId === sequence.current) setLoading(false);
         }
-    }, [branchId, date, period, t]);
+    }, [branchId, selectedDate, period, t, request]);
 
     useEffect(() => {
         void loadStats();
+        return () => { sequence.current += 1; };
     }, [loadStats]);
 
     useEffect(() => {
@@ -90,13 +102,13 @@ export function useAllStaffFinanceStatsData({
     }, [loadStats, period]);
 
     return {
-        loading,
+        loading: !ownsSnapshot || loading,
         period,
         date,
-        staffStats,
-        totalStats,
-        error,
-        branches,
+        staffStats: ownsSnapshot ? staffStats : [],
+        totalStats: ownsSnapshot ? totalStats : null,
+        error: ownsSnapshot ? error : null,
+        branches: ownsSnapshot ? branches : [],
         branchId,
         setPeriod,
         setDate,

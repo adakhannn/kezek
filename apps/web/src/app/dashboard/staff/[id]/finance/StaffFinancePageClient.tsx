@@ -6,6 +6,7 @@ import { FinancePage } from '@/app/staff/finance/components/FinancePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Badge } from '@/components/ui/Badge';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { logError } from '@/lib/log';
 
 export default function StaffFinancePageClient({
     id,
@@ -56,7 +57,6 @@ export default function StaffFinancePageClient({
             <div className="rounded-[28px] border border-[var(--border-default)] bg-[var(--surface-card)] shadow-[var(--shadow-md)] min-w-0 overflow-x-hidden">
                 <ErrorBoundary
                     onError={(error, errorInfo) => {
-                        const { logError } = require('@/lib/log');
                         logError('StaffFinancePage', 'FinancePage error', { error, errorInfo });
                     }}
                     fallback={

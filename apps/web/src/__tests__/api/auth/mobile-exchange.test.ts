@@ -1,138 +1,43 @@
-﻿import { POST, GET } from '@/app/api/auth/mobile-exchange/route';
-import {
-    setupApiTestMocks,
-    createMockNextRequest,
-    createMockRequest,
-    expectSuccessResponse,
-    expectErrorResponse,
-} from '../testHelpers';
-
+import { POST, GET } from '@/app/api/auth/mobile-exchange/route';
+import { hashMobileExchangeSecret, issueMobileSessionGrant } from '@/lib/mobileExchangeService';
+import { issueSessionForVerifiedUser } from '@/lib/verifiedIdentitySession';
+import { telegramAttemptPersistence } from '@/__tests__/fixtures/telegramAttemptPersistence';
+import { setupApiTestMocks, createMockNextRequest, expectErrorResponse, expectSuccessResponse } from '../testHelpers';
 setupApiTestMocks();
+// Limiter has its own tests; isolate this contract from cross-test IP counters.
+jest.mock('@/lib/rateLimit', () => ({
+    ...jest.requireActual('@/lib/rateLimit'),
+    withRateLimit: (_request: unknown, _config: unknown, handler: () => unknown) => handler(),
+}));
+jest.mock('@/lib/supabaseService', () => ({ getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client }));
+jest.mock('@/lib/verifiedIdentitySession', () => ({ issueSessionForVerifiedUser: jest.fn(async () => ({ accessToken: 'synthetic-access', refreshToken: 'synthetic-refresh' })) }));
+const verifier = 'v'.repeat(64);
+const userId = '00000000-0000-4000-8000-000000000001';
+const post = (body: unknown) => POST(createMockNextRequest('http://localhost/api/auth/mobile-exchange', { method: 'POST', body }));
+beforeEach(() => { telegramAttemptPersistence.reset(); jest.clearAllMocks(); });
 
-describe('/api/auth/mobile-exchange', () => {
-    describe('POST /api/auth/mobile-exchange', () => {
-        test('stores tokens and returns exchange code', async () => {
-            const req = createMockRequest('http://localhost/api/auth/mobile-exchange', {
-                method: 'POST',
-                body: {
-                    accessToken: 'access-token',
-                    refreshToken: 'refresh-token',
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('data.code');
-            expect(typeof (data as { data: { code: string } }).data.code).toBe('string');
-        });
-
-        test('returns 400 when accessToken missing', async () => {
-            const req = createMockRequest('http://localhost/api/auth/mobile-exchange', {
-                method: 'POST',
-                body: {
-                    refreshToken: 'refresh-token',
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
-        });
-
-        test('returns 400 when refreshToken missing', async () => {
-            const req = createMockRequest('http://localhost/api/auth/mobile-exchange', {
-                method: 'POST',
-                body: {
-                    accessToken: 'access-token',
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
-        });
+describe('/api/auth/mobile-exchange bound grant contract', () => {
+    test.each(['', '?check=true', '?code=legacy'])('GET %s is retired and reveals no session or discovery data', async query => {
+        const response = await Reflect.apply(GET, undefined, [createMockNextRequest('http://localhost/api/auth/mobile-exchange' + query)]);
+        const data = await expectErrorResponse(response, 410, 'gone');
+        expect(data).not.toHaveProperty('data');
+        expect(response.headers.get('Cache-Control')).toBe('no-store');
+        expect(issueSessionForVerifiedUser).not.toHaveBeenCalled();
     });
-
-    describe('GET /api/auth/mobile-exchange', () => {
-        test('exchanges code to tokens', async () => {
-            const postReq = createMockRequest('http://localhost/api/auth/mobile-exchange', {
-                method: 'POST',
-                body: {
-                    accessToken: 'access-token',
-                    refreshToken: 'refresh-token',
-                },
-            });
-
-            const postRes = await POST(postReq);
-            const postData = await expectSuccessResponse(postRes, 200);
-            const code = (postData as { data: { code: string } }).data.code;
-
-            const getReq = createMockNextRequest(`http://localhost/api/auth/mobile-exchange?code=${code}`, {
-                method: 'GET',
-            });
-
-            const getRes = await GET(getReq);
-            const getData = await expectSuccessResponse(getRes, 200);
-
-            expect(getData).toHaveProperty('data.accessToken', 'access-token');
-            expect(getData).toHaveProperty('data.refreshToken', 'refresh-token');
-        });
-
-        test('returns 404 for unknown code', async () => {
-            const req = createMockNextRequest('http://localhost/api/auth/mobile-exchange?code=INVALID', {
-                method: 'GET',
-            });
-
-            const res = await GET(req);
-            await expectErrorResponse(res, 404);
-        });
-
-        test('returns 409 when same exchange code is retried', async () => {
-            const postReq = createMockRequest('http://localhost/api/auth/mobile-exchange', {
-                method: 'POST',
-                body: {
-                    accessToken: 'access-token',
-                    refreshToken: 'refresh-token',
-                },
-            });
-
-            const postRes = await POST(postReq);
-            const postData = await expectSuccessResponse(postRes, 200);
-            const code = (postData as { data: { code: string } }).data.code;
-
-            const firstGetReq = createMockNextRequest(
-                `http://localhost/api/auth/mobile-exchange?code=${code}`,
-                { method: 'GET' },
-            );
-            const firstGetRes = await GET(firstGetReq);
-            await expectSuccessResponse(firstGetRes, 200);
-
-            const secondGetReq = createMockNextRequest(
-                `http://localhost/api/auth/mobile-exchange?code=${code}`,
-                { method: 'GET' },
-            );
-            const secondGetRes = await GET(secondGetReq);
-            await expectErrorResponse(secondGetRes, 409, 'conflict');
-        });
-
-        test('returns latest pending code with check=true', async () => {
-            const postReq = createMockRequest('http://localhost/api/auth/mobile-exchange', {
-                method: 'POST',
-                body: {
-                    accessToken: 'access-token',
-                    refreshToken: 'refresh-token',
-                },
-            });
-
-            await POST(postReq);
-
-            const checkReq = createMockNextRequest('http://localhost/api/auth/mobile-exchange?check=true', {
-                method: 'GET',
-            });
-
-            const checkRes = await GET(checkReq);
-            const checkData = await expectSuccessResponse(checkRes, 200);
-
-            expect(checkData).toHaveProperty('data.code');
-        });
+    test.each([{ accessToken: 'uploaded-access', refreshToken: 'uploaded-refresh' }, { code: 'legacy' }, { code: 'a'.repeat(43), codeVerifier: '' }, { code: 'a'.repeat(43), codeVerifier: verifier, userId: 'other' }])('rejects token ingress or malformed proof', async body => {
+        await expectErrorResponse(await post(body), 400, 'validation');
+        expect(issueSessionForVerifiedUser).not.toHaveBeenCalled();
+    });
+    test('wrong verifier cannot claim a grant; the initiating verifier succeeds once', async () => {
+        const { code } = await issueMobileSessionGrant({ userId, codeChallenge: hashMobileExchangeSecret(verifier) });
+        await expectErrorResponse(await post({ code, codeVerifier: 'x'.repeat(64) }), 400, 'invalid_grant');
+        expect(issueSessionForVerifiedUser).not.toHaveBeenCalled();
+        const response = await post({ code, codeVerifier: verifier });
+        const body = await expectSuccessResponse(response);
+        expect(body).toMatchObject({ data: { accessToken: 'synthetic-access', refreshToken: 'synthetic-refresh' } });
+        expect(response.headers.get('Cache-Control')).toBe('no-store');
+        await expectErrorResponse(await post({ code, codeVerifier: verifier }), 400, 'invalid_grant');
+        expect(issueSessionForVerifiedUser).toHaveBeenCalledTimes(1);
+        expect(issueSessionForVerifiedUser).toHaveBeenCalledWith(userId);
     });
 });

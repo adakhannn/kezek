@@ -13,5 +13,5 @@ export async function POST(req: Request, context: unknown) {
             withErrorHandler('ServicesUpdate', async () => {
                 return runServiceUpdateHttp(req, context);
             })
-    );
+    , "/api/services/[id]/update");
 }

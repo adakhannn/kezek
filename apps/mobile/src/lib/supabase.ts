@@ -4,6 +4,9 @@ import Constants from 'expo-constants';
 import { logEnvVars } from '../utils/debug';
 import { logError, logDebug } from './log';
 import { secureSessionStorage } from './secureSessionStorage';
+import { installNativeAuthCrypto } from './authCrypto';
+
+installNativeAuthCrypto();
 
 // В Expo переменные окружения доступны через process.env.EXPO_PUBLIC_*
 // Также можно получить через Constants.expoConfig.extra (если настроено в app.json)
@@ -43,6 +46,7 @@ Then restart Expo with: npx expo start --clear`;
 // Custom storage для React Native (использует SecureStore)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
+        flowType: 'pkce',
         storage: secureSessionStorage,
         autoRefreshToken: true,
         persistSession: true,

@@ -13,5 +13,6 @@ export async function POST(req: Request) {
         RateLimitConfigs.normal,
         () =>
             withErrorHandler('ReviewsUpdate', async () => runReviewUpdateHttp(req)),
+        "/api/reviews/update",
     );
 }

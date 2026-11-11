@@ -72,5 +72,5 @@ export async function runTelegramWebLoginHttp(req: NextRequest): Promise<Respons
         } catch {
             return fail('Не удалось завершить вход. Создайте новый запрос или войдите другим способом.', 503);
         }
-    });
+    }, "/api/auth/telegram/web-login");
 }

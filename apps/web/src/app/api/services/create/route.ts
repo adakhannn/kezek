@@ -9,5 +9,6 @@ import { runServiceCreateHttp } from '@/lib/serviceCreateHttpService';
 export async function POST(req: Request) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('ServicesCreate', async () => runServiceCreateHttp(req)),
+      "/api/services/create",
   );
 }

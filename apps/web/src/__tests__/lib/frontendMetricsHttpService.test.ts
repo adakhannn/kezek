@@ -1,65 +1,34 @@
 import { runFrontendMetricsHttp } from '@/lib/frontendMetricsHttpService';
-
-jest.mock('@/lib/apiMetrics', () => ({
-  getIpAddress: jest.fn().mockReturnValue('127.0.0.1'),
-}));
-
-jest.mock('@/lib/frontendMetricsService', () => ({
-  getFrontendMetricType: jest.fn().mockReturnValue('render'),
-  saveFrontendMetric: jest.fn().mockResolvedValue(undefined),
-}));
-
-jest.mock('@/lib/supabaseHelpers', () => ({
-  createSupabaseServerClient: jest.fn(),
-}));
-
-jest.mock('@/lib/supabaseService', () => ({
-  getServiceClient: jest.fn(),
-}));
-
-import { saveFrontendMetric } from '@/lib/frontendMetricsService';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
-import { getServiceClient } from '@/lib/supabaseService';
-
-describe('frontendMetricsHttpService', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (createSupabaseServerClient as jest.Mock).mockResolvedValue({ auth: { getUser: jest.fn() } });
-    (getServiceClient as jest.Mock).mockReturnValue({ rpc: jest.fn() });
-  });
-
-  test('returns validation error for invalid json body', async () => {
-    const req = new Request('http://localhost/api/metrics/frontend', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: '{',
-    });
-
-    const response = await runFrontendMetricsHttp(req);
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(body.error).toBe('validation');
-    expect(saveFrontendMetric).not.toHaveBeenCalled();
-  });
-
-  test('saves metric asynchronously and returns success', async () => {
-    const req = new Request('http://localhost/api/metrics/frontend', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        page: '/dashboard',
-        renderTime: 500,
-        componentCount: 25,
-        timestamp: Date.now(),
-      }),
-    });
-
-    const response = await runFrontendMetricsHttp(req);
-    const body = await response.json();
-
+import { recordPerformanceSample } from '@/lib/performanceStore';
+jest.mock('@/lib/performanceStore', () => ({ recordPerformanceSample: jest.fn() }));
+const request = (body: string) => new Request('https://unit.invalid/api/metrics/frontend', { method: 'POST', body });
+beforeEach(() => { jest.clearAllMocks(); jest.mocked(recordPerformanceSample).mockResolvedValue(undefined); });
+test('persists a bounded public client sample before acknowledging it', async () => {
+    const response = await runFrontendMetricsHttp(request(JSON.stringify({ operation: 'page_load', value: 100, success: true })));
     expect(response.status).toBe(200);
-    expect(body.data).toEqual({ ok: true });
-    expect(saveFrontendMetric).toHaveBeenCalled();
-  });
+    expect(await response.json()).toEqual({ ok: true, data: { recorded: true, source: 'client' } });
+});
+test.each(['{', 'null', '[]', JSON.stringify({ operation: 'shift_close', value: 100, success: true }), JSON.stringify({ operation: 'CLS', value: 0.1, success: true, source: 'server' }), JSON.stringify({ operation: 'render', value: 100, success: true, timestamp: 1 }), ' '.repeat(1025)])('rejects malformed, excessive or forged data before Redis', async body => {
+    expect((await runFrontendMetricsHttp(request(body))).status).toBe(400);
+    expect(recordPerformanceSample).not.toHaveBeenCalled();
+});
+test('does not trust a dishonest Content-Length', async () => {
+    const req = new Request('https://unit.invalid/metrics', { method: 'POST', body: 'x'.repeat(2048), headers: { 'Content-Length': '1' } });
+    expect((await runFrontendMetricsHttp(req)).status).toBe(400);
+    expect(recordPerformanceSample).not.toHaveBeenCalled();
+});
+test('returns 503 when the store cannot acknowledge the write', async () => {
+    jest.mocked(recordPerformanceSample).mockRejectedValue(new Error('timeout'));
+    expect((await runFrontendMetricsHttp(request(JSON.stringify({ operation: 'render', value: 100, success: true })))).status).toBe(503);
+});
+test('a stalled upload is bounded and never reaches storage', async () => {
+    jest.useFakeTimers();
+    try {
+        const body = new ReadableStream<Uint8Array>({ start() {} });
+        const req = new Request('https://unit.invalid/metrics', { method: 'POST', body, duplex: 'half' } as RequestInit);
+        const pending = runFrontendMetricsHttp(req);
+        await jest.advanceTimersByTimeAsync(1000);
+        expect((await pending).status).toBe(400);
+        expect(recordPerformanceSample).not.toHaveBeenCalled();
+    } finally { jest.useRealTimers(); }
 });

@@ -1,156 +1,38 @@
-# API финансов (смены, клиенты, статистика)
+# Финансовый API: навигация по исходникам
 
-Документация основных endpoints раздела финансов: данные смены, открытие/закрытие смены, сохранение клиентов, статистика и аудит настроек.
+Статус: справочный указатель, частичная сверка 30 октября 2026. Сопровождение: команда разработки финансового модуля. Документ не подтверждает полноту контракта, безопасность развёрнутой БД или успешную приёмку финансовых сценариев.
 
-Общие форматы ответов и коды ошибок см. в `apps/web/src/lib/API_ERROR_FORMATS.md`.
+Основная карта API — [API_DOCUMENTATION.md](../API_DOCUMENTATION.md). Этот указатель помогает найти финансовую цепочку; схемы запроса и ответа следует проверять по выбранному route, HTTP/service-коду и [валидации](../apps/web/src/lib/validation/schemas.ts). Формат ответа формируется [apiErrorHandler](../apps/web/src/lib/apiErrorHandler.ts); примеры старых справочников не заменяют этот код.
 
----
+## Открытые ограничения
 
-## Endpoints
+- [ENG-02](ENGINEERING_FINDINGS.md#eng-02-привилегированные-rpc-без-проверки-бизнеса): определения некоторых `SECURITY DEFINER` RPC и grants допускают вызов без проверки бизнеса; фактические ACL сервера не проверены. Проверка контекста в Next.js не доказывает защищённость прямого RPC.
+- [ENG-03](ENGINEERING_FINDINGS.md#eng-03-вложенные-booking-id-не-проверяются-при-сохранении-смены): при сохранении позиций проверка целевого сотрудника не распространяется на все вложенные booking ID перед обновлением их статусов через service client.
+- [ENG-05](ENGINEERING_FINDINGS.md#eng-05-финансовое-сохранение-и-закрытие-не-защищают-всю-операцию): сохранение состоит из отдельных запросов, часть ошибок только логируется; при закрытии остаётся окно между чтением позиций и блокировкой смены в RPC. Наличие функции с названием `atomic` или `safe` не подтверждает атомарность всей цепочки.
 
-### Данные смены
+Все три записи остаются OPEN. Редактура этого документа не исправляет доступ, списания или конкурентные изменения. Состояние приёмки и ограничения работы — в [PROJECT_STATUS.md](PROJECT_STATUS.md) и [WEB_AGENT_HANDOFF.md](WEB_AGENT_HANDOFF.md); прежняя кампания закрыта, `kezek` — PAUSED. Документационная задача не запускает запросы к БД или финансовые операции.
 
-#### `GET /api/staff/finance?staffId=&date=`
+## Карта финансовых маршрутов
 
-Данные смены за выбранную дату для текущего пользователя (сотрудник) или для указанного сотрудника (менеджер/владелец).
+Назначение в таблице описывает ветки приложения, а не доказанную гарантию доступа. Полные структуры payload намеренно не дублируются.
 
-| Параметр   | Тип   | Описание |
-|-----------|--------|----------|
-| `staffId` | string | Опционально. UUID сотрудника — для вызова от менеджера; при отсутствии используется текущий пользователь (смена «за себя»). |
-| `date`    | string | Опционально. Дата в формате `YYYY-MM-DD`. По умолчанию — сегодня в TZ бизнеса. |
+| Метод и путь | Назначение | Где проверить цепочку |
+| --- | --- | --- |
+| `GET /api/staff/finance` | Данные смены; ветка сотрудника или менеджера при `staffId` | [HTTP](../apps/web/src/lib/staffFinanceHttpService.ts), [контекст и query](../apps/web/src/lib/staffFinanceRouteService.ts) |
+| `POST /api/staff/shift/open` | Открытие смены текущего сотрудника | [HTTP](../apps/web/src/lib/staffShiftOpenHttpService.ts), [service](../apps/web/src/lib/staffShiftOpenService.ts) |
+| `POST /api/dashboard/staff/[id]/shift/open` | Открытие смены выбранного сотрудника из dashboard | [HTTP](../apps/web/src/lib/dashboardStaffShiftOpenHttpService.ts), [service](../apps/web/src/lib/dashboardStaffShiftOpenService.ts) |
+| `POST /api/staff/shift/close` | Закрытие смены текущего сотрудника | [HTTP](../apps/web/src/lib/staffShiftCloseHttpService.ts), [service](../apps/web/src/lib/staffShiftCloseService.ts) |
+| `POST /api/dashboard/staff/[id]/shift/close` | Закрытие смены выбранного сотрудника из dashboard | [HTTP](../apps/web/src/lib/dashboardStaffShiftCloseHttpService.ts), [service](../apps/web/src/lib/dashboardStaffShiftCloseService.ts) |
+| `POST /api/staff/shift/items` | Сохранение позиций своей смены или выбранного сотрудника | [контекст и schema](../apps/web/src/lib/staffShiftItemsRouteService.ts), [запись и статусы](../apps/web/src/lib/staffShiftItemsService.ts) |
+| `GET /api/dashboard/staff/[id]/finance/stats` | Статистика; manager-ветка и отдельная Bearer-ветка для самого сотрудника | [HTTP и выбор ветки](../apps/web/src/lib/staffFinanceStatsHttpService.ts), [период и расчёт](../apps/web/src/lib/staffFinanceStatsService.ts) |
+| `GET /api/dashboard/staff/[id]/finance/audit-log` | Аудит финансовых настроек | [HTTP](../apps/web/src/lib/staffFinanceAuditLogHttpService.ts), [service](../apps/web/src/lib/staffFinanceAuditLogService.ts) |
+| `POST /api/dashboard/staff-shifts/[id]/update-hours` | Изменение часов закрытой смены | [HTTP и диапазон](../apps/web/src/lib/dashboardStaffShiftUpdateHoursHttpService.ts), [service и статус смены](../apps/web/src/lib/dashboardStaffShiftUpdateHoursService.ts) |
 
-**Ответ при успехе:** `{ ok: true, today: { exists, status, shift, items }, bookings?, services?, allShifts?, staffPercentMaster?, staffPercentSalon?, hourlyRate?, currentHoursWorked?, currentGuaranteedAmount?, isDayOff?, stats? }`.
+## Уточнения к прежней редакции
 
-**Кто вызывает:** сотрудник (своя смена, без `staffId`); менеджер/владелец (смена сотрудника, с `staffId`). Контекст менеджера — через `getBizContextForManagers`; сотрудник должен принадлежать текущему бизнесу.
+- `saveShiftItemsSchema` включает `items`, необязательные `staffId` и `shiftDate`. `closeShiftSchema` — строгая схема с `items`, `totalAmount`, `consumablesAmount` и дополнительным условием наличия данных. Формулировка «и т.д.» не описывает её контракт; актуальные поля и ограничения находятся в [schemas.ts](../apps/web/src/lib/validation/schemas.ts).
+- Для финансовой статистики утверждение «только менеджер/владелец» неполно: [HTTP service](../apps/web/src/lib/staffFinanceStatsHttpService.ts) содержит Bearer-ветку сотрудника с проверкой собственного ID. Её наличие не означает, что все негативные проверки доступа пройдены.
+- Универсального правила «все dashboard routes возвращают 404 при чужом объекте» здесь нет. Например, Bearer-ветка статистики возвращает 403 при несовпадении staff ID. Проверять код ответа нужно по конкретному обработчику.
+- Для `update-hours` прежнее описание диапазона 0–24 не совпадает с [HTTP-валидацией](../apps/web/src/lib/dashboardStaffShiftUpdateHoursHttpService.ts), допускающей 0–48. При этом [миграция CHECK](../supabase/migrations/20260213000000_add_shift_constraints_and_transactions.sql) задаёт 0–24. Это расхождение исходников; фактическая запись значений выше 24 в удалённой БД не проверялась. Документ не объявляет ни один из диапазонов согласованным сквозным контрактом.
 
----
-
-### Открытие смены
-
-#### `POST /api/staff/shift/open`
-
-Открытие смены **за текущего пользователя** (сотрудник открывает свою смену).
-
-**Query:** опционально `date=YYYY-MM-DD`.
-
-**Кто вызывает:** только сотрудник (контекст «кабинет сотрудника»). Проверяется, что смена открывается за себя.
-
----
-
-#### `POST /api/dashboard/staff/[id]/shift/open?date=`
-
-Открытие смены **для сотрудника с заданным `id`** от имени менеджера/владельца.
-
-| Параметр | Описание |
-|----------|----------|
-| `id`     | UUID сотрудника (route param). |
-| `date`   | Опционально. Дата в формате `YYYY-MM-DD`. |
-
-**Кто вызывает:** только менеджер/владелец. Проверка через `withManagerAndStaffContext`: сотрудник должен принадлежать текущему бизнесу; у сотрудника должен быть указан филиал.
-
----
-
-### Закрытие смены
-
-#### `POST /api/staff/shift/close`
-
-Закрытие смены **текущего пользователя** (сотрудник закрывает свою смену).
-
-**Body:** соответствует `closeShiftSchema`: `items?`, `totalAmount?`, `consumablesAmount?` и т.д. (см. `@/lib/validation/schemas`).
-
-**Кто вызывает:** только сотрудник. RLS и контекст гарантируют, что закрывается только своя смена.
-
----
-
-#### `POST /api/dashboard/staff/[id]/shift/close?date=`
-
-Закрытие смены **сотрудника с заданным `id`** от имени менеджера/владельца (вариант B).
-
-| Параметр | Описание |
-|----------|----------|
-| `id`     | UUID сотрудника (route param). |
-| `date`   | Опционально. Дата в формате `YYYY-MM-DD`. |
-
-**Body:** тот же формат, что и для `POST /api/staff/shift/close` (items, totalAmount и т.д.).
-
-**Кто вызывает:** только менеджер/владелец. Используется `withManagerAndStaffContext`; закрывается только смена сотрудника, принадлежащего текущему бизнесу.
-
----
-
-### Сохранение клиентов смены
-
-#### `POST /api/staff/shift/items`
-
-Сохранение списка клиентов (позиций смены). Может вызываться и для своей смены сотрудником, и для смены сотрудника менеджером (при передаче `staffId` в body).
-
-**Body:** `{ items: ShiftItem[], staffId?: string }`. При вызове из кабинета менеджера передаётся `staffId` сотрудника.
-
-**Кто вызывает:** сотрудник (свои items, без `staffId`); менеджер/владелец (items смены сотрудника, с `staffId`). Проверка принадлежности сотрудника бизнесу на бэкенде.
-
----
-
-### Статистика по сменам сотрудника
-
-#### `GET /api/dashboard/staff/[id]/finance/stats?period=&date=`
-
-Агрегированная статистика по сменам сотрудника за период.
-
-| Параметр | Описание |
-|----------|----------|
-| `id`     | UUID сотрудника (route param). |
-| `period` | `day` \| `month` \| `year`. По умолчанию `day`. |
-| `date`   | Для `day`: `YYYY-MM-DD`; для `month`: `YYYY-MM`; для `year`: `YYYY`. По умолчанию — сегодня. |
-
-**Ответ при успехе:** `{ ok: true, stats: StaffFinanceStatsPayload }` (см. `@/lib/finance/types`).
-
-**Кто вызывает:** только менеджер/владелец. Доступ через `withManagerAndStaffContext`; сотрудник должен принадлежать текущему бизнесу.
-
----
-
-### Аудит изменений финансовых настроек
-
-#### `GET /api/dashboard/staff/[id]/finance/audit-log`
-
-Журнал изменений финансовых настроек сотрудника (проценты, ставка за час и т.д.).
-
-| Параметр | Описание |
-|----------|----------|
-| `id`     | UUID сотрудника (route param). |
-
-**Ответ при успехе:** `{ ok: true, data: { entries: AuditLogEntry[] } }`.
-
-**Кто вызывает:** только менеджер/владелец. Доступ через `withManagerAndStaffContext`.
-
----
-
-### Обновление отработанных часов по смене
-
-#### `POST /api/dashboard/staff-shifts/[id]/update-hours`
-
-Обновление поля `hours_worked` у смены (для перерасчёта гарантированной суммы и долей).
-
-**Параметр:** `id` — UUID смены (route param).
-
-**Body:** `{ hours_worked: number }` (0–24).
-
-**Кто вызывает:** только менеджер/владелец. Проверяется принадлежность смены текущему бизнесу. Разрешено только для **закрытых** смен.
-
----
-
-## Роли и условия вызова
-
-| Роль | Endpoint | Условие |
-|------|----------|--------|
-| **Сотрудник** | `GET /api/staff/finance` (без `staffId`) | Только свои данные смены. |
-| **Сотрудник** | `POST /api/staff/shift/open` | Открывает только свою смену. |
-| **Сотрудник** | `POST /api/staff/shift/close` | Закрывает только свою смену. |
-| **Сотрудник** | `POST /api/staff/shift/items` (без `staffId`) | Сохранение клиентов только своей смены. |
-| **Менеджер/владелец** | `GET /api/staff/finance?staffId=...` | Смена сотрудника, принадлежащего бизнесу. |
-| **Менеджер/владелец** | `POST /api/dashboard/staff/[id]/shift/open` | Открытие смены сотрудника своего бизнеса (у сотрудника должен быть филиал). |
-| **Менеджер/владелец** | `POST /api/dashboard/staff/[id]/shift/close` | Закрытие смены сотрудника своего бизнеса (вариант B — отдельный endpoint от закрытия своей смены). |
-| **Менеджер/владелец** | `POST /api/staff/shift/items` (с `staffId`) | Сохранение клиентов смены сотрудника своего бизнеса. |
-| **Менеджер/владелец** | `GET /api/dashboard/staff/[id]/finance/stats` | Статистика по сменам сотрудника своего бизнеса. |
-| **Менеджер/владелец** | `GET /api/dashboard/staff/[id]/finance/audit-log` | Аудит настроек сотрудника своего бизнеса. |
-| **Менеджер/владелец** | `POST /api/dashboard/staff-shifts/[id]/update-hours` | Редактирование часов только у смен своего бизнеса и только для закрытых смен. |
-
-При несовпадении бизнеса (например, запрос смены/действия по сотруднику другого бизнеса) dashboard-эндпоинты возвращают **404** (not found), чтобы не раскрывать факт существования чужих сущностей.
+Связанные источники: [финансовые типы](../apps/web/src/lib/finance/types.ts), [общая финансовая логика](../packages/core-domain/src/finance/index.ts), [миграции и неизвестное состояние сервера](../supabase/README.md). Для новой проверки сначала выбираются точный сценарий, разрешённая среда и независимый ожидаемый результат.

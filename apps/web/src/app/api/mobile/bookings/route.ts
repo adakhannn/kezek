@@ -10,5 +10,6 @@ export async function GET(req: Request) {
         req,
         RateLimitConfigs.normal,
         () => withErrorHandler('MobileBookingsList', async () => runListMobileBookingsHttp(req)),
+        "/api/mobile/bookings",
     );
 }

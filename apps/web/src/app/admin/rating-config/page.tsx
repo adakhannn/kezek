@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { RatingConfigClient } from './RatingConfigClient';
 
 import { getT } from '@/app/_components/i18n/server';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 
 
 export const dynamic = 'force-dynamic';
@@ -34,17 +35,11 @@ export default async function RatingConfigPage() {
     });
 
     // 1) Авторизация
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/auth/sign-in?redirect=/admin/rating-config');
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) redirect('/auth/sign-in?redirect=/admin/rating-config');
 
     // 2) Проверка супер-админа
-    const { data: superRow, error: superErr } = await supabase
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin, error: superErr } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
     const t = await getT();
     
@@ -55,7 +50,7 @@ export default async function RatingConfigPage() {
             </main>
         );
     }
-    if (!superRow) {
+    if (!isSuperAdmin) {
         return (
             <main className="p-6">
                 <div className="text-red-600">{t('admin.ratingConfig.noAccess', 'Нет доступа. Только суперадмин может управлять настройками рейтинга.')}</div>

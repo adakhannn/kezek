@@ -1,3 +1,4 @@
+jest.mock('@/lib/rateLimit', () => ({ ...jest.requireActual('@/lib/rateLimit'), checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})) }));
 import { runDashboardStaffShiftCloseHttp } from '@/lib/dashboardStaffShiftCloseHttpService';
 
 jest.mock('@/lib/routeParams', () => ({
@@ -27,6 +28,7 @@ describe('dashboardStaffShiftCloseHttpService', () => {
       handler({
         admin: { from: jest.fn(), auth: { admin: { getUserById: jest.fn() } } },
         bizId: 'biz-1',
+        userId: 'user-1',
       }),
     );
     (runDashboardStaffShiftClose as jest.Mock).mockResolvedValue({
@@ -46,6 +48,7 @@ describe('dashboardStaffShiftCloseHttpService', () => {
       req: expect.any(Request),
       admin: expect.objectContaining({ from: expect.any(Function) }),
       bizId: 'biz-1',
+      actorId: 'user-1',
       staffId: 'staff-1',
     });
     expect(response.status).toBe(200);
@@ -57,6 +60,7 @@ describe('dashboardStaffShiftCloseHttpService', () => {
       handler({
         admin: { from: jest.fn(), auth: { admin: { getUserById: jest.fn() } } },
         bizId: 'biz-1',
+        userId: 'user-1',
       }),
     );
     (runDashboardStaffShiftClose as jest.Mock).mockResolvedValue({

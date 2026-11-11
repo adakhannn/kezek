@@ -1,3 +1,5 @@
+import { getRouteParam } from '@/lib/routeParams';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 // apps/web/src/app/admin/api/roles/[id]/delete/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,11 +11,7 @@ import {NextResponse} from 'next/server';
 export async function POST(_req: Request, context: unknown) {
     try {
         // Аккуратно достаём id из контекста
-        const params =
-            typeof context === 'object' && context !== null && 'params' in context
-                ? (context as { params?: Record<string, string | string[]> }).params ?? {}
-                : {};
-        const id = Array.isArray(params.id) ? params.id[0] : params.id;
+        const id = await getRouteParam(context, 'id');
         if (!id) {
             return NextResponse.json({ok: false, error: 'missing id'}, {status: 400});
         }
@@ -31,17 +29,11 @@ export async function POST(_req: Request, context: unknown) {
         });
 
         // auth
-        const {data: {user}} = await supa.auth.getUser();
-        if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
+        const { data: { user }, error: authError } = await supa.auth.getUser();
+        if (authError || !user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         // проверка super_admin (глобальная роль с biz_id IS NULL)
-        const {data: superRow, error: roleErr} = await supa
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { isSuperAdmin: superRow, error: roleErr } = await checkCurrentUserIsSuperAdmin(supa, user.id);
 
         if (roleErr || !superRow) {
             return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});

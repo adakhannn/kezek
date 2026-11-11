@@ -1,3 +1,4 @@
+jest.mock('@/lib/adminHttpAccess', () => ({ requireCurrentSuperAdmin: jest.fn(async () => ({ ok: true, user: { id: 'test-super-admin' } })) }));
 /**
  * Тесты для /api/whatsapp/get-business-account
  * Получение WhatsApp Business Account ID и списка номеров

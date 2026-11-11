@@ -14,6 +14,7 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 type Profile = {
@@ -49,7 +50,7 @@ export default function ProfileForm() {
     const router = useRouter();
     const { t } = useLanguage();
     // The server/first client render must not advertise an empty, unlinked identity.
-    const [loading, setLoading] = useState(true);
+    const [loadStatus, setLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading');
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -145,12 +146,14 @@ export default function ProfileForm() {
     const canSubmit = isDirty && !saving && !phoneValidationError;
 
     async function loadProfile() {
-        setLoading(true);
+        setLoadStatus('loading');
         try {
             const {
                 data: { user },
+                error: authError,
             } = await supabase.auth.getUser();
-            if (!user) return;
+            if (authError) throw authError;
+            if (!user) throw new Error('Authenticated profile user is unavailable');
 
             const notificationEmailRequest = fetch('/api/profile/notification-emails')
                 .then(async (response) => {
@@ -168,11 +171,7 @@ export default function ProfileForm() {
                 .eq('id', user.id)
                 .maybeSingle();
 
-            if (fetchError) {
-                const { logError } = require('@/lib/log');
-                logError('ProfileForm', 'Error loading profile', fetchError);
-                return;
-            }
+            if (fetchError) throw fetchError;
 
             const meta = (user.user_metadata ?? {}) as {
                 auth_provider?: string | null;
@@ -218,11 +217,10 @@ export default function ProfileForm() {
             setNotificationEmails(nextNotificationEmails);
             setInitialNotificationEmails(nextNotificationEmails);
             setNotificationEmailsLoaded(true);
+            setLoadStatus('ready');
         } catch (e) {
-            const { logError } = require('@/lib/log');
             logError('ProfileForm', 'Error loading profile', e);
-        } finally {
-            setLoading(false);
+            setLoadStatus('error');
         }
     }
 
@@ -442,7 +440,7 @@ export default function ProfileForm() {
         setOtpCode('');
     }
 
-    if (loading) {
+    if (loadStatus === 'loading') {
         return (
             <Card variant="elevated" padding="lg" className="py-10 text-center">
                 <div className="mx-auto inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--accent-primary)]" />
@@ -450,6 +448,20 @@ export default function ProfileForm() {
                     {t('cabinet.profile.loading', 'Загрузка...')}
                 </p>
             </Card>
+        );
+    }
+
+    if (loadStatus === 'error') {
+        return (
+            <AlertBanner
+                variant="danger"
+                message={t('cabinet.profile.error.load', 'Не удалось загрузить профиль. Повторите попытку.')}
+                action={(
+                    <Button type="button" onClick={() => void loadProfile()}>
+                        {t('cabinet.profile.retry', 'Повторить загрузку')}
+                    </Button>
+                )}
+            />
         );
     }
 

@@ -1,28 +1,6 @@
-import { NextResponse } from 'next/server';
+import { retiredWhatsAppAuthResponse } from '@/lib/retiredWhatsAppAuth';
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
-import { runWhatsAppCreateSessionRoute } from '@/lib/whatsAppCreateSessionRouteService';
-import type { WhatsAppSessionAdminClientLike } from '@/lib/whatsAppCreateSessionService';
-import { validateRequest } from '@/lib/validation/apiValidation';
-import { createWhatsAppSessionSchema } from '@/lib/validation/schemas';
-
-export async function runWhatsAppCreateSessionHttp(req: Request): Promise<NextResponse> {
-  const validationResult = await validateRequest(req, createWhatsAppSessionSchema);
-  if (!validationResult.success) {
-    return validationResult.response;
-  }
-
-  const { phone, userId } = validationResult.data;
-  const result = await runWhatsAppCreateSessionRoute({
-    admin: createSupabaseAdminClient() as unknown as WhatsAppSessionAdminClientLike,
-    phone,
-    userId,
-  });
-
-  if (!result.ok) {
-    return createErrorResponse(result.error, result.message, result.details, result.status);
-  }
-
-  return createSuccessResponse(result.payload);
+export async function runWhatsAppCreateSessionHttp(_req: Request) {
+    void _req;
+    return retiredWhatsAppAuthResponse();
 }

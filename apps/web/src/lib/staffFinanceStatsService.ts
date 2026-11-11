@@ -1,12 +1,11 @@
-﻿import type { SupabaseClient } from '@supabase/supabase-js';
-
+﻿import { readFinanceReport, readFinanceReportToday, financeReportWorkedHours, type FinanceReport, type ReportClient } from '@/lib/finance/reportSnapshot';
 import type { StaffFinanceStatsPeriod, StaffFinanceStatsShiftItem } from '@/lib/finance/types';
 import { logDebug, logError } from '@/lib/log';
-import { TZ, todayStringInTz } from '@/lib/time';
 
-type StaffFinanceStatsClient = Pick<SupabaseClient, 'from'>;
+type StaffFinanceStatsClient = ReportClient;
 
 type StaffFinanceStatsShiftRow = {
+    ledger_revision: number; timezone: string; day_start: string; day_end: string; day_hours: number;
     id: string;
     shift_date: string;
     status: 'open' | 'closed';
@@ -20,6 +19,9 @@ type StaffFinanceStatsShiftRow = {
     hours_worked?: number | null;
     hourly_rate?: number | null;
     guaranteed_amount?: number | null;
+    total_amount?: number | null;
+    consumables_amount?: number | null;
+    topup_amount?: number | null;
     staff?: {
         hourly_rate?: number | null;
         percent_master?: number | null;
@@ -58,7 +60,12 @@ export async function runStaffFinanceStats({
     staffId,
     staff,
 }: StaffFinanceStatsContext): Promise<StaffFinanceStatsResult> {
-    const parsed = parseStatsRequest(req);
+    let defaultDate: string | undefined;
+    if (!new URL(req.url).searchParams.get('date')) {
+        try { defaultDate = await readFinanceReportToday(admin, bizId); }
+        catch { return { ok: false, status: 500, error: 'internal', message: 'Не удалось получить бизнес-календарь отчёта' }; }
+    }
+    const parsed = parseStatsRequest(req, defaultDate);
     if (!parsed.ok) {
         return parsed;
     }
@@ -74,48 +81,18 @@ export async function runStaffFinanceStats({
         date,
     });
 
-    const today = todayStringInTz(TZ);
-    const { data: todayOpenShift } = await admin
-        .from('staff_shifts')
-        .select('*')
-        .eq('biz_id', bizId)
-        .eq('staff_id', staffId)
-        .eq('shift_date', today)
-        .eq('status', 'open')
-        .maybeSingle();
-
-    const { data: shifts, error: shiftsError } = await admin
-        .from('staff_shifts')
-        .select('*, staff:staff_id (hourly_rate, percent_master, percent_salon)')
-        .eq('biz_id', bizId)
-        .eq('staff_id', staffId)
-        .gte('shift_date', dateFrom)
-        .lte('shift_date', dateTo)
-        .order('shift_date', { ascending: false });
-
-    if (shiftsError) {
-        logError('StaffFinanceStats', 'Error loading shifts', shiftsError);
-        return {
-            ok: false,
-            status: 500,
-            error: 'internal',
-            message: shiftsError.message,
-        };
+    let report: FinanceReport;
+    try {
+        report = await readFinanceReport(admin, { bizId, staffId, dateFrom, dateTo });
+        if (report.shifts.some(row => !Number.isSafeInteger(row.ledger_revision) || typeof row.timezone !== 'string' ||
+            !Number.isFinite(row.day_hours) || !Number.isFinite(Date.parse(row.day_start ?? '')) || !Number.isFinite(Date.parse(row.day_end ?? '')))) throw new Error('Неполная версия или календарь финансовой смены');
     }
-
-    let finalShifts = Array.isArray(shifts) ? shifts : [];
-    if (todayOpenShift) {
-        const shouldIncludeTodayOpenShift = (period === 'day' && date === today) || period !== 'day';
-        const alreadyIncluded = finalShifts.some((shift) => shift.id === todayOpenShift.id);
-        if (shouldIncludeTodayOpenShift && !alreadyIncluded) {
-            finalShifts = [todayOpenShift, ...finalShifts];
-        }
+    catch (error) {
+        logError('StaffFinanceStats', 'Failed to read complete shift snapshot', error);
+        return { ok: false, status: 500, error: 'internal', message: error instanceof Error ? error.message : 'Не удалось получить финансовую статистику' };
     }
-
-    const shiftItemsMap = await loadShiftItemsMap({
-        admin,
-        shiftIds: finalShifts.map((shift) => shift.id),
-    });
+    const finalShifts = report.shifts;
+    const shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]> = Object.fromEntries(finalShifts.map(shift => [shift.id, shift.items]));
 
     const mappedShifts = finalShifts.map((shift) => mapShiftForStats({ shift, shiftItemsMap }));
 
@@ -160,7 +137,7 @@ export async function runStaffFinanceStats({
     };
 }
 
-function parseStatsRequest(req: Request):
+function parseStatsRequest(req: Request, defaultDate?: string):
     | (StaffFinanceStatsFailure & { ok: false })
     | {
           ok: true;
@@ -172,7 +149,7 @@ function parseStatsRequest(req: Request):
     const { searchParams } = new URL(req.url);
     const period = normalizePeriod(searchParams.get('period'));
     const dateParam = searchParams.get('date');
-    const date = dateParam ? validatePeriodDate(period, dateParam) : todayStringInTz(TZ);
+    const date = dateParam ? validatePeriodDate(period, dateParam) : defaultDate ?? validationFailure('Нет даты бизнес-календаря');
 
     if (typeof date !== 'string') {
         return date;
@@ -280,52 +257,6 @@ function validationFailure(message: string): StaffFinanceStatsFailure {
     };
 }
 
-async function loadShiftItemsMap({
-    admin,
-    shiftIds,
-}: {
-    admin: StaffFinanceStatsClient;
-    shiftIds: string[];
-}): Promise<Record<string, StaffFinanceStatsShiftItem[]>> {
-    const shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]> = {};
-    if (shiftIds.length === 0) {
-        return shiftItemsMap;
-    }
-
-    const { data, error } = await admin
-        .from('staff_shift_items')
-        .select(
-            'id, shift_id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at',
-        )
-        .in('shift_id', shiftIds)
-        .order('created_at', { ascending: true });
-
-    if (error) {
-        logError('StaffFinanceStats', 'Error loading shift items', error);
-        return shiftItemsMap;
-    }
-
-    for (const item of data || []) {
-        const shiftId = item.shift_id;
-        if (!shiftItemsMap[shiftId]) {
-            shiftItemsMap[shiftId] = [];
-        }
-
-        shiftItemsMap[shiftId].push({
-            id: item.id,
-            client_name: item.client_name,
-            service_name: item.service_name,
-            service_amount: Number(item.service_amount ?? 0),
-            consumables_amount: Number(item.consumables_amount ?? 0),
-            note: item.note,
-            booking_id: item.booking_id,
-            created_at: item.created_at ?? null,
-        });
-    }
-
-    return shiftItemsMap;
-}
-
 function mapShiftForStats({
     shift,
     shiftItemsMap,
@@ -334,18 +265,17 @@ function mapShiftForStats({
     shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]>;
 }) {
     const shiftItems = shiftItemsMap[shift.id] || [];
-    const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
-    const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
+    const ledgerAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
+    const ledgerConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
+    const shiftTotalAmount = shift.status === 'closed' ? Number(shift.total_amount ?? ledgerAmount) : ledgerAmount;
+    const shiftConsumables = shift.status === 'closed' ? Number(shift.consumables_amount ?? ledgerConsumables) : ledgerConsumables;
     const staffData = (shift as {
         staff?: { hourly_rate?: number | null; percent_master?: number | null; percent_salon?: number | null } | null;
     }).staff;
-    const hourlyRate = shift.hourly_rate
-        ? Number(shift.hourly_rate)
-        : staffData?.hourly_rate
-          ? Number(staffData.hourly_rate)
-          : null;
-    const staffPercentMaster = staffData?.percent_master ? Number(staffData.percent_master) : null;
-    const staffPercentSalon = staffData?.percent_salon ? Number(staffData.percent_salon) : null;
+    const hourlyRate = shift.status === 'closed' ? (shift.hourly_rate == null ? null : Number(shift.hourly_rate))
+        : shift.hourly_rate != null ? Number(shift.hourly_rate) : staffData?.hourly_rate != null ? Number(staffData.hourly_rate) : null;
+    const staffPercentMaster = shift.status === 'open' && staffData?.percent_master != null ? Number(staffData.percent_master) : null;
+    const staffPercentSalon = shift.status === 'open' && staffData?.percent_salon != null ? Number(staffData.percent_salon) : null;
     const shiftPercentMaster = Number(shift.percent_master ?? staffPercentMaster ?? 60);
     const shiftPercentSalon = Number(shift.percent_salon ?? staffPercentSalon ?? 40);
     const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
@@ -353,15 +283,13 @@ function mapShiftForStats({
     const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
     const baseSalonShare = shiftTotalAmount - baseMasterShare + shiftConsumables;
 
+    const workedHours = financeReportWorkedHours({ opened_at: shift.opened_at, day_start: shift.day_start, day_end: shift.day_end });
     let displayMasterShare = Number(shift.master_share ?? 0);
     let displaySalonShare = Number(shift.salon_share ?? 0);
 
     if (shift.status === 'open') {
-        if (hourlyRate && shift.opened_at) {
-            const openedAt = new Date(shift.opened_at);
-            const diffMs = new Date().getTime() - openedAt.getTime();
-            const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
-            const guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
+        if (hourlyRate && workedHours !== null) {
+            const guaranteedAmount = Math.round(workedHours * hourlyRate * 100) / 100;
             if (guaranteedAmount > baseMasterShare) {
                 displayMasterShare = guaranteedAmount;
                 displaySalonShare = Math.max(0, baseSalonShare - (displayMasterShare - baseMasterShare));
@@ -373,28 +301,18 @@ function mapShiftForStats({
             displayMasterShare = baseMasterShare;
             displaySalonShare = baseSalonShare;
         }
-    } else {
-        const dbGuaranteedAmount = Number(shift.guaranteed_amount ?? 0);
-        if (dbGuaranteedAmount > 0 && dbGuaranteedAmount > baseMasterShare) {
-            displayMasterShare = dbGuaranteedAmount;
-            displaySalonShare = Math.max(0, baseSalonShare - (displayMasterShare - baseMasterShare));
-        } else {
-            displayMasterShare = baseMasterShare;
-            displaySalonShare = baseSalonShare;
-        }
     }
 
     let displayGuaranteedAmount = Number(shift.guaranteed_amount ?? 0);
-    let displayHoursWorked: number | null = Number(shift.hours_worked ?? null);
-    if (shift.status === 'open' && hourlyRate && shift.opened_at) {
-        const openedAt = new Date(shift.opened_at);
-        const diffMs = new Date().getTime() - openedAt.getTime();
-        displayHoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
-        displayGuaranteedAmount = Math.round(displayHoursWorked * hourlyRate * 100) / 100;
+    let displayHoursWorked: number | null = shift.hours_worked == null ? null : Number(shift.hours_worked);
+    if (shift.status === 'open' && hourlyRate) {
+        displayHoursWorked = workedHours;
+        displayGuaranteedAmount = workedHours === null ? 0 : Math.round(workedHours * hourlyRate * 100) / 100;
     }
 
     return {
         id: shift.id,
+        ledger_revision: shift.ledger_revision, timezone: shift.timezone, day_hours: shift.day_hours,
         shift_date: shift.shift_date,
         status: shift.status,
         opened_at: shift.opened_at,
@@ -409,7 +327,8 @@ function mapShiftForStats({
         hours_worked: displayHoursWorked,
         hourly_rate: hourlyRate,
         guaranteed_amount: displayGuaranteedAmount,
-        topup_amount: Math.max(0, Math.round((displayGuaranteedAmount - baseMasterShare) * 100) / 100),
+        topup_amount: shift.status === 'closed' && shift.topup_amount != null ? Number(shift.topup_amount)
+            : Math.max(0, Math.round((displayGuaranteedAmount - baseMasterShare) * 100) / 100),
         items: shiftItems.map((item) => ({
             id: item.id,
             client_name: item.client_name || '',

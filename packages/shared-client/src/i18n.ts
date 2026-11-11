@@ -1,3 +1,5 @@
+import type { BookingStatus } from './types';
+
 /**
  * Централизованные утилиты для локализации
  * 
@@ -21,7 +23,7 @@ export type ServiceName = {
 /**
  * Тип статуса бронирования
  */
-export type BookingStatus = 'hold' | 'confirmed' | 'paid' | 'cancelled' | 'no_show';
+export type { BookingStatus } from './types';
 
 /**
  * Получает правильное название услуги с учетом языка

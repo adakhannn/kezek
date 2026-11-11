@@ -1,8 +1,12 @@
+# История UI и UX задач
+
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
 ﻿# MOBILE AUTH WEB PARITY IMPLEMENTATION PLAN
 
 Last updated: 2026-05-25  
 Owner: Mobile team  
-Status: Proposed (ready for execution)
+Status at original snapshot: Proposed (ready for execution)
 
 ## Goal
 Bring `apps/mobile` auth entry UI/UX to visual and interaction parity with `apps/web` auth page while preserving the already-hardened mobile auth logic (Google/Telegram/WhatsApp flows, recovery, resilience).

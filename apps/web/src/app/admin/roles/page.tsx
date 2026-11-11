@@ -4,7 +4,10 @@ import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 
 import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
+
 import RolesClient from './RolesClient';
+
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,8 +20,8 @@ export default async function RolesPage() {
         cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
-    const { data: { user } } = await supa.auth.getUser();
-    if (!user) {
+    const { data: { user }, error: authError } = await supa.auth.getUser();
+    if (authError || !user) {
         return (
             <main className="p-4 space-y-4">
                 <h1 className="text-2xl font-semibold">Роли</h1>
@@ -27,16 +30,9 @@ export default async function RolesPage() {
         );
     }
 
-    // НОВАЯ проверка супер-админа
-    const { data: superRow, error: roleErr } = await supa
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin, error: roleErr } = await checkCurrentUserIsSuperAdmin(supa, user.id);
 
-    if (roleErr || !superRow) {
+    if (roleErr || !isSuperAdmin) {
         return (
             <main className="p-4 space-y-4">
                 <h1 className="text-2xl font-semibold">Роли</h1>

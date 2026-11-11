@@ -5,6 +5,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '../lib/api';
+import { acknowledgeBookingRequest, getBookingRequestKey } from '../lib/bookingRequest';
 
 export type ConfirmBookingParams = {
     biz_id: string;
@@ -29,19 +30,24 @@ type QuickHoldApiResponse = {
 };
 
 async function createBooking(params: ConfirmBookingParams): Promise<ConfirmBookingResponse> {
+    const requestId = await getBookingRequestKey(params);
     const response = await apiRequest<QuickHoldApiResponse>('/api/quick-hold', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': requestId },
         body: JSON.stringify(params),
     });
 
-    return normalizeConfirmBookingResponse(response);
+    const confirmed = normalizeConfirmBookingResponse(response);
+    // A storage failure keeps the safe replay identity; it must not report a
+    // failed booking after the server's confirmed response has been received.
+    try { await acknowledgeBookingRequest(params, requestId); } catch { /* Keep the receipt identity. */ }
+    return confirmed;
 }
 
 function normalizeConfirmBookingResponse(response: QuickHoldApiResponse): ConfirmBookingResponse {
     const bookingId = response.data?.booking_id ?? response.booking_id;
 
-    if (!bookingId) {
+    if (!bookingId || (response.data?.confirmed ?? response.confirmed) !== true) {
         throw new Error('Не удалось получить номер созданной записи');
     }
 

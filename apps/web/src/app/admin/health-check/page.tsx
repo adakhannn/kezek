@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 
 import { getT } from '@/app/_components/i18n/server';
 import { AlertBanner } from '@/components/ui/AlertBanner';
-import { formatDateTime } from '@/lib/dateFormat';
 import { readAdminHealthCheckForCaller } from '@/lib/adminHealthCheckReadService';
+import { formatDateTime } from '@/lib/dateFormat';
 
 export const dynamic = 'force-dynamic';
 
@@ -185,9 +185,53 @@ export default async function HealthCheckPage() {
                 </div>
             </section>
 
+            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <h2 className="text-lg font-semibold">{t('admin.healthCheck.cron.title', 'Фоновые задания')}</h2>
+                <div className="mt-3 overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead><tr>
+                            <th scope="col" className="p-2">{t('admin.healthCheck.cron.job', 'Задание')}</th>
+                            <th scope="col" className="p-2">{t('admin.healthCheck.cron.status', 'Состояние')}</th>
+                            <th scope="col" className="p-2">{t('admin.healthCheck.cron.success', 'Последний успех')}</th>
+                        </tr></thead>
+                        <tbody>{data.checks.cronExecutions.jobs.map(job => (
+                            <tr key={job.job} className="border-t border-gray-200 dark:border-gray-800">
+                                <th scope="row" className="p-2 font-medium">{job.job}</th>
+                                <td className="p-2">{t(`admin.healthCheck.cron.${job.status}`, job.status)}</td>
+                                <td className="p-2">{formatDate(job.lastSuccessAt)}</td>
+                            </tr>
+                        ))}</tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section className="rounded-2xl border border-gray-200 bg-white p-4 text-xs text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+                <h2 className="mb-3 text-lg font-semibold">{t('admin.healthCheck.queue.title', 'Очереди')}</h2>
+                <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+                    <thead><tr>
+                        <th scope="col" className="p-2">{t('admin.healthCheck.cron.job', 'Задание')}</th>
+                        <th scope="col" className="p-2">{t('admin.healthCheck.cron.status', 'Состояние')}</th>
+                        <th scope="col" className="p-2">{t('admin.healthCheck.queue.due', 'Готовы к обработке')}</th>
+                        <th scope="col" className="p-2">{t('admin.healthCheck.queue.failed', 'Требуют разбора')}</th>
+                        <th scope="col" className="p-2">{t('admin.healthCheck.queue.ambiguous', 'Доставка не подтверждена')}</th>
+                        <th scope="col" className="p-2">{t('admin.healthCheck.queue.age', 'Ожидание, сек.')}</th>
+                    </tr></thead>
+                    <tbody>{data.checks.backgroundQueues.queues.map(queue => (
+                        <tr key={queue.job} className="border-t border-gray-200 dark:border-gray-800">
+                            <th scope="row" className="p-2 font-medium">{queue.job}</th>
+                            <td className="p-2">{t(`admin.healthCheck.queue.${queue.status}`, queue.status)}</td>
+                            <td className="p-2">{queue.counts?.due ?? '—'}</td>
+                            <td className="p-2">{queue.counts?.failed ?? '—'}</td>
+                            <td className="p-2">{queue.counts?.ambiguous ?? '—'}</td>
+                            <td className="p-2">{queue.counts ? Math.ceil(queue.counts.oldest_due_age_seconds) : '—'}</td>
+                        </tr>
+                    ))}</tbody>
+                </table></div>
+            </section>
+
             <section className="rounded-2xl border border-gray-200 bg-white p-4 text-xs text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
                 <p>
-                    {t('admin.healthCheck.info', 'Health check выполняется автоматически ежедневно в 09:00 UTC (14:00 Bishkek). При обнаружении проблем отправляется email-алерт на адрес, указанный в')} <code>ALERT_EMAIL_TO</code>.
+                    {t('admin.healthCheck.info', 'Плановое время проверки — 09:00 UTC (15:00 Бишкек). Фактическое выполнение показано в журнале заданий. Отправка предупреждений требует настройки получателя.')}
                 </p>
             </section>
         </main>

@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 
+import { readAnalyticsSnapshot, reportFailure } from '@/lib/analyticsReportSnapshot';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { logError } from '@/lib/log';
@@ -82,81 +83,23 @@ export async function GET(req: Request) {
 
     const serviceClient = getServiceClient();
 
-    const { data, error } = await serviceClient
-      .from('business_daily_stats')
-      .select('biz_id,date,bookings_created,bookings_confirmed_or_paid,total_revenue')
-      .gte('date', startStr)
-      .lte('date', endStr);
-
-    if (error) {
-      logError('SystemAnalyticsOverview', 'Failed to load business_daily_stats', { error: error.message });
-      return createErrorResponse('server', 'Failed to load system overview analytics', undefined, 500);
+    let snapshot;
+    try { snapshot = await readAnalyticsSnapshot(serviceClient, { startDate: startStr, endDate: endStr, kind: 'global' }); }
+    catch (error) {
+      const failure = reportFailure(error);
+      return createErrorResponse(failure.error, failure.message, undefined, failure.status);
     }
-
-    type Row = {
-      biz_id: string | null;
-      date: string;
-      bookings_created: number | null;
-      bookings_confirmed_or_paid: number | null;
-      total_revenue: number | null;
-    };
-
-    const rows = (data ?? []) as Row[];
-
-    const uniqueBizIds = new Set<string>();
-    const byDate = new Map<
-      string,
-      { activeBizIds: Set<string>; bookingsConfirmed: number; totalRevenue: number }
-    >();
-
-    let sumCreated = 0;
-    let sumConfirmed = 0;
-    let sumRevenue = 0;
-
-    rows.forEach((r) => {
-      const bizId = r.biz_id ? String(r.biz_id) : null;
-      if (bizId) {
-        uniqueBizIds.add(bizId);
-      }
-
-      const created = r.bookings_created ?? 0;
-      const confirmed = r.bookings_confirmed_or_paid ?? 0;
-      const revenue = Number(r.total_revenue ?? 0);
-
-      sumCreated += created;
-      sumConfirmed += confirmed;
-      sumRevenue += revenue;
-
-      const entry =
-        byDate.get(r.date) ??
-        ((): { activeBizIds: Set<string>; bookingsConfirmed: number; totalRevenue: number } => {
-          const e = { activeBizIds: new Set<string>(), bookingsConfirmed: 0, totalRevenue: 0 };
-          byDate.set(r.date, e);
-          return e;
-        })();
-
-      if (bizId) {
-        entry.activeBizIds.add(bizId);
-      }
-      entry.bookingsConfirmed += confirmed;
-      entry.totalRevenue += revenue;
-    });
-
+    const sumCreated = snapshot.rows.reduce((sum, row) => sum + Number(row.bookings_created ?? 0), 0);
+    const sumConfirmed = snapshot.rows.reduce((sum, row) => sum + Number(row.bookings_confirmed_or_paid ?? 0), 0);
+    const sumRevenue = snapshot.rows.reduce((sum, row) => sum + Number(row.total_revenue ?? 0), 0);
     const avgCheck = sumConfirmed > 0 ? sumRevenue / sumConfirmed : 0;
-
-    const byDay = Array.from(byDate.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([date, v]) => ({
-        date,
-        activeBusinesses: v.activeBizIds.size,
-        bookingsConfirmed: v.bookingsConfirmed,
-        totalRevenue: v.totalRevenue,
-      }));
+    const byDay = snapshot.rows.map(row => ({ date: row.date, activeBusinesses: row.active_businesses,
+      bookingsConfirmed: Number(row.bookings_confirmed_or_paid ?? 0), totalRevenue: Number(row.total_revenue ?? 0) }));
 
     const payload = {
       summary: {
         period: { startDate: startStr, endDate: endStr },
-        activeBusinesses: uniqueBizIds.size,
+        activeBusinesses: snapshot.activeBusinesses,
         bookings: {
           created: sumCreated,
           confirmed: sumConfirmed,

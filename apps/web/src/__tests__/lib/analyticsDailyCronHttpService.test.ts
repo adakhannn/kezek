@@ -1,3 +1,4 @@
+jest.mock('@/lib/cronExecutionTracking', () => ({ trackCronExecution: jest.fn((_job: string, action: () => Promise<Response>) => action()) }));
 jest.mock('@/lib/analyticsDailyCronService', () => ({
     runAnalyticsDailyCron: jest.fn(),
 }));

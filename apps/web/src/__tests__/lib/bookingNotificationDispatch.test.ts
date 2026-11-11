@@ -10,10 +10,10 @@ describe('in-request booking notification dispatch', () => {
     beforeEach(() => jest.clearAllMocks());
 
     test('retains the request client rather than issuing an HTTP self-fetch', async () => {
-        (runNotifyBooking as jest.Mock).mockResolvedValue({ ok: true, data: { sent: 0, telegramSent: 1, whatsappSent: 0 } });
+        (runNotifyBooking as jest.Mock).mockResolvedValue({ ok: true, data: { queued: true, event_id: 'event' } });
         await dispatchBookingNotification(client, 'booking-id', 'confirm');
         expect(runNotifyBooking).toHaveBeenCalledWith({ booking_id: 'booking-id', type: 'confirm' }, client);
-        expect(logDebug).toHaveBeenCalledWith('BookingNotificationDispatch', 'Notification dispatch completed', expect.objectContaining({ telegramSent: 1 }));
+        expect(logDebug).toHaveBeenCalledWith('BookingNotificationDispatch', 'Notification queued', expect.objectContaining({ queued: true, event_id: 'event' }));
         expect(logError).not.toHaveBeenCalled();
     });
 

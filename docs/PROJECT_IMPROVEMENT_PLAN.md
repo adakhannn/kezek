@@ -1,6 +1,8 @@
 # Project Improvement Plan
 
-**Status:** historical architecture roadmap; retained for wave context
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
+**Status at original snapshot:** historical architecture roadmap; retained for wave context
 **Created:** 2026-03-21  
 **Last normalized:** 2026-03-30  
 **Purpose:** long-term technical improvement roadmap for the `main` branch.
@@ -12,14 +14,14 @@ Current operational priority as of2026-10-14: [WEB_GLOBAL_READINESS_PLAN.md](./W
 This file is the high-level roadmap.
 
 - Use this file to understand what major phases exist and which ones are complete.
-- Use [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md) for the latest execution snapshot.
-- Use [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md) for the current working task list after Phase 6.1.
+- Use [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md) for the latest execution snapshot.
+- Use [CLEANUP_AND_NEXT_PHASE_PLAN.md](CLEANUP_AND_NEXT_PHASE_PLAN.md) for the current working task list after Phase 6.1.
 
 ## Source Of Truth Split
 
-- Long-term roadmap: [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md)
-- Latest delivered progress: [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
-- Current working cleanup and phase selection plan: [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md)
+- Long-term roadmap: [PROJECT_IMPROVEMENT_PLAN.md](PROJECT_IMPROVEMENT_PLAN.md)
+- Latest delivered progress: [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
+- Current working cleanup and phase selection plan: [CLEANUP_AND_NEXT_PHASE_PLAN.md](CLEANUP_AND_NEXT_PHASE_PLAN.md)
 
 ## Phase Summary
 
@@ -70,7 +72,7 @@ This file is the high-level roadmap.
   - business orchestration was pushed down into lower service and domain layers
 
 For the final Phase 6.1 delivery snapshot, see:
-[PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
+[PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
 
 ## Current State
 
@@ -89,7 +91,7 @@ Current active planning area:
 ## Current Next Step
 
 The current execution plan has moved out of this master roadmap and into:
-[CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md)
+[CLEANUP_AND_NEXT_PHASE_PLAN.md](CLEANUP_AND_NEXT_PHASE_PLAN.md)
 
 That file is now the operational checklist for:
 

@@ -1,8 +1,9 @@
 import type { ApiErrorResponse } from './apiErrorHandler';
+import { acknowledgeBookingRequest, getBookingRequestHeaders } from './bookingRequestClient';
 
 export type QuickHoldClientInput = {
     biz_id: string;
-    branch_id: string;
+    branch_id?: string;
     service_id?: string;
     services?: { service_id: string; duration_min: number; order_index?: number }[];
     staff_id: string;
@@ -64,12 +65,15 @@ export async function createQuickHoldBooking(
     input: QuickHoldClientInput,
     deps: {
         fetchImpl?: typeof fetch;
+        requestHeaders?: (input: object, guest: boolean) => Promise<Record<string, string>>;
+        acknowledgeRequest?: typeof acknowledgeBookingRequest;
     } = {},
 ): Promise<{ bookingId: string }> {
     const fetchImpl = deps.fetchImpl ?? fetch;
+    const requestHeaders = await (deps.requestHeaders ?? getBookingRequestHeaders)(input, false);
     const response = await fetchImpl('/api/quick-hold', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', ...requestHeaders },
         body: JSON.stringify(input),
     });
 
@@ -92,12 +96,16 @@ export async function createQuickHoldBooking(
         });
     }
 
-    if (!bookingId) {
-        throw new QuickHoldClientError('Booking created without booking_id', {
+    const confirmed = body.data?.confirmed ?? body.confirmed;
+    if (!bookingId || confirmed !== true) {
+        throw new QuickHoldClientError('Booking confirmation is unavailable; retry the same request', {
             status: response.status,
             details: body,
         });
     }
 
+    // Cleanup failure must not turn an acknowledged booking into an error. The
+    // retained identity remains safe to replay if browser storage is unavailable.
+    try { await (deps.acknowledgeRequest ?? acknowledgeBookingRequest)(input, false, requestHeaders); } catch { /* Keep the receipt identity. */ }
     return { bookingId };
 }

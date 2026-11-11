@@ -1,7 +1,7 @@
 import { runNotifyPing } from '@/lib/notifyPingService';
 
 describe('notifyPingService', () => {
-    test('returns validation error when resend api key is missing', async () => {
+    test('does not send when provider settings are missing', async () => {
         const result = await runNotifyPing({
             to: 'user@example.com',
             env: {},
@@ -9,10 +9,9 @@ describe('notifyPingService', () => {
 
         expect(result).toEqual({
             ok: false,
-            status: 400,
-            error: 'validation',
-            message: 'RESEND_API_KEY не установлен',
-            details: { code: 'no RESEND_API_KEY' },
+            status: 503,
+            error: 'service_unavailable',
+            message: 'Отправка диагностических писем не настроена',
         });
     });
 
@@ -46,8 +45,20 @@ describe('notifyPingService', () => {
             payload: {
                 ok: true,
                 status: 202,
-                text: '{"id":"email_123"}',
             },
         });
+    });
+
+    test('provider rejection is an HTTP failure, not a successful ping', async () => {
+        const fetchImpl = jest.fn().mockResolvedValue({ ok: false, status: 429 });
+        const result = await runNotifyPing({ to: 'admin@example.invalid', env: { RESEND_API_KEY: 'fake', EMAIL_FROM: 'sender@example.invalid' }, fetchImpl });
+        expect(result).toMatchObject({ ok: false, status: 502, error: 'service_unavailable', details: { providerStatus: 429 } });
+    });
+
+    test('network/timeout failure is reported without leaking provider details', async () => {
+        const fetchImpl = jest.fn().mockRejectedValue(new Error('secret provider payload'));
+        const result = await runNotifyPing({ to: 'admin@example.invalid', env: { RESEND_API_KEY: 'fake', EMAIL_FROM: 'sender@example.invalid' }, fetchImpl });
+        expect(result).toMatchObject({ ok: false, status: 502 });
+        expect(JSON.stringify(result)).not.toContain('secret provider payload');
     });
 });

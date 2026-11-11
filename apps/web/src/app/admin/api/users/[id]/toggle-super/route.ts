@@ -1,91 +1,32 @@
+import { z } from 'zod';
+
+import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { getRouteParam } from '@/lib/routeParams';
+import { getServiceClient } from '@/lib/supabaseService';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+const inputSchema = z.object({ makeSuper: z.boolean() }).strict();
+const idSchema = z.string().uuid();
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
-
-type Body = { makeSuper?: boolean };
-
-export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
-    try {
-        const { id } = await ctx.params;
-
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const cookieStore = await cookies();
-
-        // Проверяем, что вызвавший — глобальный супер-админ
-        const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+export async function POST(req: Request, context: unknown) {
+    return withErrorHandler('SetPlatformAdmin', async () => {
+        const access = await requireCurrentSuperAdmin();
+        if (!access.ok) return access.response;
+        const id = idSchema.safeParse(await getRouteParam(context, 'id'));
+        const body = inputSchema.safeParse(await req.json().catch(() => null));
+        if (!id.success || !body.success) return createErrorResponse('validation', 'Некорректный пользователь или makeSuper', undefined, 400);
+        const { data, error } = await getServiceClient().rpc('set_platform_admin_role', {
+            p_actor_id: access.user.id, p_target_user_id: id.data, p_enabled: body.data.makeSuper,
         });
-
-        const { data: { user } } = await supa.auth.getUser();
-        if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
-
-        const { data: superRow, error: superErr } = await supa
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
-
-        if (superErr) return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
-        if (!superRow) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
-
-        const admin = createClient(URL, SERVICE);
-        const body = (await req.json()) as Body;
-        const makeSuper = !!body.makeSuper;
-
-        // находим role_id супер-админа
-        const { data: roleRow, error: roleErr } = await admin
-            .from('roles')
-            .select('id')
-            .eq('key', 'super_admin')
-            .maybeSingle();
-
-        if (roleErr || !roleRow) {
-            return NextResponse.json({ ok: false, error: 'Роль super_admin не найдена' }, { status: 400 });
+        if (error) {
+            if (error.message === 'PLATFORM_ADMIN_FORBIDDEN') return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+            if (error.message === 'PLATFORM_ADMIN_TARGET_NOT_FOUND') return createErrorResponse('not_found', 'Пользователь не найден', undefined, 404);
+            if (error.message === 'PLATFORM_ADMIN_LAST_ADMIN') return createErrorResponse('conflict', 'Нельзя снять роль последнего администратора платформы', undefined, 409);
+            return createErrorResponse('service_unavailable', 'Не удалось подтвердить изменение роли', undefined, 503);
         }
-
-        const role_id = roleRow.id;
-
-        if (makeSuper) {
-            // проверка существования
-            const { data: existing, error: exErr } = await admin
-                .from('user_roles')
-                .select('user_id')
-                .eq('user_id', id)
-                .eq('role_id', role_id)
-                .is('biz_id', null)
-                .limit(1)
-                .maybeSingle();
-            if (exErr) return NextResponse.json({ ok: false, error: exErr.message }, { status: 400 });
-
-            if (!existing) {
-                const { error: insErr } = await admin
-                    .from('user_roles')
-                    .insert({ user_id: id, role_id, biz_id: null });
-                if (insErr && (insErr).code !== '23505') {
-                    return NextResponse.json({ ok: false, error: insErr.message }, { status: 400 });
-                }
-            }
-        } else {
-            const { error: delErr } = await admin
-                .from('user_roles')
-                .delete()
-                .eq('user_id', id)
-                .eq('role_id', role_id)
-                .is('biz_id', null);
-            if (delErr) return NextResponse.json({ ok: false, error: delErr.message }, { status: 400 });
-        }
-
-        return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+        if (typeof data !== 'boolean' || data !== body.data.makeSuper) return createErrorResponse('service_unavailable', 'Состояние роли не подтверждено', undefined, 503);
+        return createSuccessResponse({ isSuperAdmin: data });
+    });
 }

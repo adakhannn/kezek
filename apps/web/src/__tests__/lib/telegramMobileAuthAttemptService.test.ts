@@ -19,6 +19,7 @@ describe('telegramMobileAuthAttemptService', () => {
 
     test('creates pending auth attempt with nonce, bot link and expiresAt', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -37,10 +38,12 @@ describe('telegramMobileAuthAttemptService', () => {
 
     test('generates unique nonce values with telegram-safe format', async () => {
         const first = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
         const second = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -58,6 +61,7 @@ describe('telegramMobileAuthAttemptService', () => {
 
     test('returns expired status when ttl elapsed', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 1,
         });
@@ -71,6 +75,7 @@ describe('telegramMobileAuthAttemptService', () => {
 
     test('returns approved status when attempt approved', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -83,6 +88,7 @@ describe('telegramMobileAuthAttemptService', () => {
 
     test('stores source metadata when start payload includes source info', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
             source: {
@@ -102,6 +108,7 @@ describe('telegramMobileAuthAttemptService', () => {
 
     test('marks nonce as consumed after first use and blocks second consume', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -124,6 +131,7 @@ describe('telegramMobileAuthAttemptService', () => {
 
     test('binds telegram context to pending attempt', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });

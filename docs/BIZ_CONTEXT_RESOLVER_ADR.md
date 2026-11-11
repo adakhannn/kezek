@@ -1,73 +1,76 @@
 # ADR: resolveBizContextForManagers — выбор бизнеса для кабинета менеджмента
 
-**Дата:** 2026-03-03  
-**Статус:** принят  
-**Область:** веб (`apps/web`), модуль `lib/bizContextResolver.ts`
+Дата исходного ADR: **3 марта 2026**, исходный статус — принят. Текущая редакция: архитектурный справочник, **сверено по исходникам 1 ноября 2026**. Сопровождение: разработчики auth/business-контекста. Runtime, роли и схема целевой БД этой редакцией не проверялись.
 
----
+Область: web, [bizContextResolver](../apps/web/src/lib/bizContextResolver.ts) и его стратегии/helpers. Документ описывает реализованный алгоритм; ограничения модели выбора — [USER_CURRENT_BUSINESS_INVARIANTS](USER_CURRENT_BUSINESS_INVARIANTS.md), HTTP-контракты — [BUSINESS_WORKFLOWS](api/BUSINESS_WORKFLOWS.md#контекст-бизнеса-и-данные-кабинета).
 
 ## 1. Назначение
 
-`resolveBizContextForManagers()` определяет **текущий бизнес** (`bizId`) для пользователя при работе с кабинетом владельца/админа/менеджера (дашборд, API `/api/dashboard/*`). Возвращает `{ supabase, userId, bizId }` или выбрасывает `BizAccessError`.
+resolveBizContextForManagers определяет бизнес для пользователя в manager-сценариях и возвращает `{ supabase, userId, bizId, business }`. business содержит метаданные или null; city в нём всегда null, поле city из businesses не читается. При отсутствии результата выбора выбрасывается BizAccessError; другие исключения могут распространяться дальше.
 
-Используется в `getBizContextForManagers()` (authBiz) и в обёртке `withManagerContext`.
+[getBizContextForManagers](../apps/web/src/lib/authBiz.ts) делегирует resolver. [withManagerContext](../apps/web/src/lib/withManagerContext.ts) использует его результат и создаёт отдельный admin-клиент для handler. Возвращаемый resolver-ом supabase остаётся пользовательским; привилегированный клиент используется внутри выбора/загрузки метаданных и не включается в возвращаемый объект.
 
----
+Текущий бизнес — контекст операции, не доказательство доступа к произвольному дочернему объекту. Проверки конкретного business/staff/branch/booking остаются обязанностью использующего контекст пути.
 
 ## 2. Приоритеты выбора бизнеса
 
-### 2.1. Супер-админ (RPC `is_super_admin()` = true)
+Сначала создаётся cookie/server client и вызывается auth.getUser. После успешной идентификации resolver пытается создать service client; при ошибке создания возвращается к пользовательскому клиенту и его RLS. Затем вызывается RPC is_super_admin через пользовательский клиент. Исключение RPC даёт false; возвращённая ошибка логируется, результат определяется через `!!data`. Источник — [runtime helpers](../apps/web/src/lib/bizContextRuntimeHelpers.ts).
 
-1. **user_current_business** — если есть запись и бизнес с этим `biz_id` существует в `businesses`, возвращается этот `biz_id`.
-2. **Fallback** — бизнес с `slug = 'kezek'`. Если не найден или ошибка — возвращается `undefined` (далее → NO_BIZ_ACCESS).
+### Супер-администратор
 
-### 2.2. Обычный пользователь
+1. Читается user_current_business. Если biz_id найден, дополнительно проверяется существование бизнеса.
+2. Если выбранного существующего бизнеса нет, ищется бизнес со slug=kezek.
+3. Отсутствие/ошибка fallback даёт отсутствие bizId и затем NO_BIZ_ACCESS.
 
-1. **user_current_business** — если есть запись, проверяется наличие у пользователя роли **owner**, **admin** или **manager** для этого `biz_id` (через `user_roles` + `roles`). Если роль есть — возвращается этот `biz_id`. Если записи нет или роли нет — переходим к шагу 2 **только если записи в user_current_business не было** (при «потере прав» автовыбор не делается).
-2. **user_roles** — среди ролей пользователя выбираются записи с ключом `owner`/`admin`/`manager` и непустым `biz_id`; берётся первый бизнес по детерминированной сортировке по `biz_id`.
-3. **owner_id** — первый бизнес из `businesses` по `owner_id = userId`, сортировка по `id`.
+Эта стратегия не равна списку и setter API текущего бизнеса: у тех нет отдельного super_admin-допуска. Нельзя переносить поведение resolver на весь dashboard или UI.
 
-Если после всех шагов `bizId` не найден — выбрасывается `BizAccessError('NO_BIZ_ACCESS')` с диагностикой.
+### Обычный пользователь
 
----
+1. Читается user_current_business. Если найден biz_id, он принимается только при owner/admin/manager в user_roles с этим biz_id, ключи определяются через roles.
+2. Если строка обнаружена, но подходящей роли нет, **автоподбор не выполняется**. Результат — NO_BIZ_ACCESS даже при других ролях/бизнесах или owner_id. Строка не очищается.
+3. Только если current-строка не обнаружена, выбирается первый business из подходящих user_roles с непустым biz_id после сортировки строкового biz_id через localeCompare.
+4. Если по ролям результата нет, выбирается первый businesses.id по owner_id пользователя, с сортировкой id ASC и limit 1.
 
-## 3. Поддерживаемые сценарии
+[MANAGER_ROLE_KEYS](../apps/web/src/lib/userRoleProfile.ts) содержит owner, admin, manager; staff в него не входит. Стратегии — [bizContextResolutionStrategies](../apps/web/src/lib/bizContextResolutionStrategies.ts).
 
-| Сценарий | Результат |
-|----------|-----------|
-| Пользователь не аутентифицирован | `BizAccessError('NOT_AUTHENTICATED')` |
-| Супер-админ, в user_current_business выбран существующий бизнес | Этот `biz_id` |
-| Супер-админ, записи нет или бизнес удалён | Бизнес с slug `kezek` |
-| Обычный пользователь, в user_current_business выбран бизнес и есть роль owner/admin/manager | Этот `biz_id` |
-| Обычный пользователь, в user_current_business выбран бизнес, но роли нет (потеря прав) | Автовыбор **не** выполняется → при отсутствии других вариантов NO_BIZ_ACCESS |
-| Обычный пользователь, записи в user_current_business нет | Автовыбор: сначала по user_roles (owner/admin/manager + biz_id), затем по owner_id |
-| Несколько бизнесов по ролям/владельцу | Один бизнес: по user_roles — первый по сортировке `biz_id`; по owner_id — первый по `id` |
-| Нет ни ролей, ни владения, ни валидного current_biz | `BizAccessError('NO_BIZ_ACCESS')` с диагностикой |
+Проверка owner_id применяется только как последний fallback при отсутствии current-строки. Поэтому пользователь с одним лишь owner_id может пройти явный setter, но затем не пройти resolver с уже сохранённым выбором. Это фактическое расхождение, не общее правило «владелец всегда имеет доступ».
 
----
+## 3. Поддерживаемые сценарии и границы
+
+| Сценарий | Результат исходников |
+| --- | --- |
+| getUser вернул user без error | Переход к выбору бизнеса |
+| user отсутствует либо возвращена ошибка отклонённой сессии | NOT_AUTHENTICATED / UNAUTHORIZED |
+| getUser вернул иную ошибку | SERVICE_UNAVAILABLE / AUTH_SERVICE_UNAVAILABLE |
+| Super-admin, выбран существующий бизнес | Выбранный bizId |
+| Super-admin, выбора/бизнеса нет | Fallback slug=kezek, иначе NO_BIZ_ACCESS |
+| Обычный user, current выбран и manager-роль есть | Выбранный bizId |
+| Обычный user, current выбран, manager-роли нет | NO_BIZ_ACCESS без автоматического переключения |
+| Current не найден, несколько подходящих бизнесов | Детерминированный первый по ролям, иначе owner_id; обязательного экрана выбора здесь нет |
+| Автоподбор дал бизнес | Контекст возвращается; resolver не сохраняет этот выбор в таблицу |
+| BizId выбран, но метаданные не загрузились | Возвращается контекст с business=null; логируется предупреждение |
+
+Загрузка current-строки не проверяет её error отдельно. При ошибке без data обычная ветка может считать выбор отсутствующим и разрешить автоподбор. Ошибки чтения ролей в current-ветке также не превращаются в отдельную недоступность сервиса. Роль может дать bizId до проверки метаданных; их отсутствие затем не отменяет контекст. Эти особенности исключают общее обещание «все сбои БД безопасно и однозначно отличены от потери прав».
+
+Resolver сам не проверяет is_approved/активность бизнеса, не назначает роли, не исправляет current-строку и не возвращает UI-redirect. [cabinetAccess](../apps/web/src/lib/cabinetAccess.ts) и [userRoleProfile](../apps/web/src/lib/userRoleProfile.ts) — отдельная логика видимости/навигации; совпадение их результата с каждым resolver-сценарием не гарантируется названием helper.
 
 ## 4. Ошибки и диагностика
 
-- **NOT_AUTHENTICATED** — не удалось получить пользователя из Supabase Auth.
-- **NO_BIZ_ACCESS** — бизнес не определён ни по одному правилу. В `diagnostics` передаются: `hasCurrentBizRecord`, `currentBizId`, `currentBizHasAllowedRole`, счётчики по ролям и владельцу, список ошибок загрузки (для логов и отладки).
+[BizAccessError](../apps/web/src/lib/authDiagnostics.ts) содержит code, message и опциональную diagnostics. Для возвращённой ошибки getUser rejected session определяется как isAuthSessionMissingError, status 401/403 либо code=session_not_found. Эти случаи дают code=NOT_AUTHENTICATED, message=UNAUTHORIZED. Остальные возвращённые auth-ошибки дают code=SERVICE_UNAVAILABLE, message=AUTH_SERVICE_UNAVAILABLE. Это классификация результата getUser, не перехват любого исключения всей цепочки.
 
----
+При невозможности выбрать бизнес code=NO_BIZ_ACCESS. Публичная структура diagnostics включает флаги пройденных проверок, currentBizId, hasCurrentBizRecord, currentBizHasAllowedRole, счётчики ролей/владения и errorsCount. Полный массив текстов ошибок находится во внутренней диагностике/логах, а не в возвращаемом BizAccessDiagnostics. Часть ошибок current-ветки в эти счётчики не попадает.
 
-## 5. Подфункции и тесты
+**HTTP-код зависит от вызывающей обёртки.** Текущий withManagerContext преобразует NOT_AUTHENTICATED в 401 auth, а любой другой BizAccessError — в 403 forbidden, включая SERVICE_UNAVAILABLE. Поэтому нельзя обещать HTTP 503 только на основании кода resolver. Непойманные исключения обрабатываются внешним handler, если он есть. Контракт конкретного маршрута нужно смотреть в [API-карте](../API_DOCUMENTATION.md).
 
-Реализация разбита на подфункции (внутренние):
+## 5. Разделение реализации и проверок
 
-- `resolveForSuperAdmin(admin, userId)` — текущий бизнес или kezek.
-- `resolveFromCurrentBusiness(admin, userId, diagnostics)` — проверка user_current_business и ролей.
-- `resolveFromUserRoles(admin, userId, diagnostics)` — автовыбор по user_roles.
-- `resolveFromOwnerId(admin, userId, diagnostics)` — фоллбек по owner_id.
+| Файл | Ответственность |
+| --- | --- |
+| [bizContextResolver](../apps/web/src/lib/bizContextResolver.ts) | Аутентификация, оркестрация стратегий, общий результат и метаданные |
+| [bizContextResolutionStrategies](../apps/web/src/lib/bizContextResolutionStrategies.ts) | resolveForSuperAdmin, resolveFromCurrentBusiness, resolveFromUserRoles, resolveFromOwnerId; внутренние диагностические данные |
+| [bizContextRuntimeHelpers](../apps/web/src/lib/bizContextRuntimeHelpers.ts) | Клиенты/fallback, проверка super-admin, сведение диагностик и название пути выбора |
+| [userRoleProfile](../apps/web/src/lib/userRoleProfile.ts) | MANAGER_ROLE_KEYS и роль/доступность кабинетов; authContext переэкспортирует их |
+| [withManagerContext](../apps/web/src/lib/withManagerContext.ts) | Перевод BizAccessError в HTTP и создание admin-клиента для handler |
+| [currentBusinessService](../apps/web/src/lib/currentBusinessService.ts) | Отдельные операции получения списка и явного сохранения выбора |
 
-Unit-тесты: `apps/web/src/__tests__/lib/bizContextResolver.test.ts` (сценарии: owner_id, только роли, super_admin с/без current_biz, несколько бизнесов, отсутствие прав, NOT_AUTHENTICATED).
-
----
-
-## 6. Связанные документы
-
-- `docs/ROLES_AND_BUSINESS_SELECTION_AUDIT.md` — обзор компонентов и дублирования логики.
-- `docs/USER_CURRENT_BUSINESS_INVARIANTS.md` — инварианты таблицы user_current_business.
-- `apps/web/src/lib/authContext.ts` — константа `MANAGER_ROLE_KEYS` (owner, admin, manager).
+Стратегии являются экспортируемыми функциями отдельного файла, а не внутренними функциями resolver. Существующие [unit-тесты resolver](../apps/web/src/__tests__/lib/bizContextResolver.test.ts) — источник сценариев, не свидетельство выполнения этой редакцией. Новая продуктовая задача должна проверять отдельно ошибки Auth/БД, owner-only и role-only, потерю прав к current, несколько бизнесов и различия super-admin/UI/API; порядок проверок — [CONTRIBUTING](../CONTRIBUTING.md).

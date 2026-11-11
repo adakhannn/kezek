@@ -1,10 +1,6 @@
-﻿import { createClient } from '@supabase/supabase-js';
-
-import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
-import { logDebug, logWarn } from '@/lib/log';
-import { runMobileExchangePost } from '@/lib/mobileExchangeRouteService';
+﻿import { logDebug, logWarn } from '@/lib/log';
+import { issueMobileSessionGrant, MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
-import { createWhatsAppSignInSession } from '@/lib/whatsAppCreateSessionService';
 import { findWhatsAppOwnerByPhone } from '@/lib/whatsAppIdentityOwnershipService';
 import { trackWhatsAppMobileMetric } from '@/lib/whatsAppMobileMetricsService';
 import { hashWhatsappOtp, hashWhatsappPhone, secureEqualHex } from '@/lib/whatsAppOtpHash';
@@ -16,6 +12,7 @@ type AuthUser = {
 };
 
 type AdminLike = {
+    rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message?: string } | null }>;
     from: (table: string) => {
         select: (columns: string) => {
             eq: (column: string, value: string) => {
@@ -68,6 +65,7 @@ type Success = {
 export type WhatsAppMobileVerifyRouteResult = Failure | Success;
 
 type OtpAttemptRow = {
+    code_challenge: string | null;
     id: string;
     phone: string;
     phone_hash: string | null;
@@ -82,12 +80,11 @@ type OtpAttemptRow = {
 };
 
 const MAX_FAILED_ATTEMPTS = 5;
-const LOCK_WINDOW_MS = 10 * 60 * 1000;
 
 async function getOtpAttemptById(admin: AdminLike, attemptId: string): Promise<OtpAttemptRow | null> {
     const result = (await admin
         .from('whatsapp_otp_codes')
-        .select('id, phone, phone_hash, otp_hash, code, status, expires_at, used_at, consumed_at, failed_attempts, locked_until')
+        .select('id, code_challenge, phone, phone_hash, otp_hash, code, status, expires_at, used_at, consumed_at, failed_attempts, locked_until')
         .eq('id', attemptId)
         .maybeSingle()) as { data: unknown; error: { message?: string } | null };
     const { data, error } = result;
@@ -146,38 +143,9 @@ async function resolveOrCreateUser(admin: AdminLike, phoneE164: string): Promise
 }
 
 async function markAttemptFailed(admin: AdminLike, attempt: OtpAttemptRow) {
-    const nextFailedAttempts = (attempt.failed_attempts ?? 0) + 1;
-    const lockUntil =
-        nextFailedAttempts >= MAX_FAILED_ATTEMPTS
-            ? new Date(Date.now() + LOCK_WINDOW_MS).toISOString()
-            : null;
-
-    await admin
-        .from('whatsapp_otp_codes')
-        .update({
-            failed_attempts: nextFailedAttempts,
-            locked_until: lockUntil,
-            status: nextFailedAttempts >= MAX_FAILED_ATTEMPTS ? 'failed' : 'pending',
-        })
-        .eq('id', attempt.id)
-        .is('used_at', null);
-
-    return { nextFailedAttempts, lockUntil };
-}
-
-async function markAttemptConsumed(admin: AdminLike, attemptId: string) {
-    const nowIso = new Date().toISOString();
-    await admin
-        .from('whatsapp_otp_codes')
-        .update({
-            used_at: nowIso,
-            consumed_at: nowIso,
-            status: 'consumed',
-            failed_attempts: 0,
-            locked_until: null,
-        })
-        .eq('id', attemptId)
-        .is('used_at', null);
+    const { data, error } = await admin.rpc('register_whatsapp_mobile_otp_failure', { p_attempt_id: attempt.id });
+    if (error || typeof data !== 'number') throw new Error('OTP verification storage unavailable');
+    return { nextFailedAttempts: data };
 }
 
 export async function runWhatsAppMobileVerifyRoute({
@@ -290,7 +258,6 @@ export async function runWhatsAppMobileVerifyRoute({
             logWarn('WhatsAppMobileVerify', 'Attempt locked by failed OTP checks', {
                 attemptId: attempt.id,
                 failedAttempts: failedState.nextFailedAttempts,
-                lockedUntil: failedState.lockUntil,
             });
             return {
                 ok: false,
@@ -299,7 +266,6 @@ export async function runWhatsAppMobileVerifyRoute({
                 message: 'Слишком много неверных попыток. Попробуйте позже.',
                 details: {
                     code: 'attempt_locked',
-                    lockedUntil: failedState.lockUntil,
                 },
             };
         }
@@ -311,6 +277,18 @@ export async function runWhatsAppMobileVerifyRoute({
             message: 'Неверный или истекший код. Запросите новый код.',
             details: { code: 'invalid_code' },
         };
+    }
+
+    if (!attempt.code_challenge || !MOBILE_CODE_CHALLENGE_RE.test(attempt.code_challenge)) {
+        return { ok: false, status: 409, error: 'conflict', message: 'Начните вход заново в обновлённом приложении.' };
+    }
+    const consumed = await admin.rpc('consume_whatsapp_mobile_otp', {
+        p_attempt_id: attempt.id,
+        p_otp_hash: inputOtpHash,
+        p_code_challenge: attempt.code_challenge,
+    });
+    if (consumed.error || consumed.data !== true) {
+        return { ok: false, status: 409, error: 'conflict', message: 'Попытка уже обработана или истекла. Начните вход заново.' };
     }
 
     const userResult = await resolveOrCreateUser(admin, normalizedPhone);
@@ -344,84 +322,10 @@ export async function runWhatsAppMobileVerifyRoute({
         };
     }
 
-    await markAttemptConsumed(admin, attempt.id);
-
-    const createSessionResult = await createWhatsAppSignInSession({
-        admin: admin as never,
+    const { code: exchangeCode } = await issueMobileSessionGrant({
         userId: resolvedUser.userId,
+        codeChallenge: attempt.code_challenge!,
     });
-
-    if (!createSessionResult.ok) {
-        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
-            attemptId: attempt.id,
-            phoneHash: attempt.phone_hash,
-            metadata: {
-                stage: 'session_prepare',
-                error: createSessionResult.error,
-                status: createSessionResult.status,
-            },
-        });
-        return {
-            ok: false,
-            status: createSessionResult.status,
-            error: createSessionResult.error,
-            message: createSessionResult.message,
-            details: createSessionResult.details as Record<string, unknown> | undefined,
-        };
-    }
-
-    const authClient = createClient(getSupabaseUrl(), getSupabaseAnonKey());
-    const { data: signInData, error: signInError } = await authClient.auth.signInWithPassword({
-        email: createSessionResult.data.email,
-        password: createSessionResult.data.password,
-    });
-
-    const accessToken = signInData.session?.access_token;
-    const refreshToken = signInData.session?.refresh_token;
-
-    if (signInError || !accessToken || !refreshToken) {
-        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
-            attemptId: attempt.id,
-            phoneHash: attempt.phone_hash,
-            metadata: {
-                stage: 'sign_in_with_password',
-                reason: signInError?.message || 'missing_tokens',
-            },
-        });
-        return {
-            ok: false,
-            status: 500,
-            error: 'internal',
-            message: 'Не удалось подготовить mobile exchange',
-            details: {
-                code: 'sign_in_failed',
-                reason: signInError?.message || 'missing_tokens',
-            },
-        };
-    }
-
-    const exchangeResult = runMobileExchangePost({
-        accessToken,
-        refreshToken,
-    });
-
-    if (!exchangeResult.ok) {
-        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
-            attemptId: attempt.id,
-            phoneHash: attempt.phone_hash,
-            metadata: {
-                stage: 'mobile_exchange',
-                error: exchangeResult.error,
-                status: exchangeResult.status,
-            },
-        });
-        return {
-            ok: false,
-            status: exchangeResult.status,
-            error: exchangeResult.error,
-            message: exchangeResult.message,
-        };
-    }
 
     await admin
         .from('whatsapp_otp_codes')
@@ -446,7 +350,7 @@ export async function runWhatsAppMobileVerifyRoute({
         payload: {
             status: 'approved',
             attemptId: attempt.id,
-            exchangeCode: exchangeResult.payload.code,
+            exchangeCode,
             expiresAt: attempt.expires_at,
             userId: resolvedUser.userId,
             linkage: resolvedUser.linkage,

@@ -14,8 +14,9 @@ export default async function StaffFinanceStatsPage({
 }: {
     params: Promise<{ id: string }>;
 }) {
+    const { id } = await params;
+    let fullName: string | null;
     try {
-        const { id } = await params;
         const { supabase, bizId } = await getBizContextForManagers();
 
         // Проверяем, что сотрудник принадлежит этому бизнесу (общий хелпер)
@@ -36,13 +37,13 @@ export default async function StaffFinanceStatsPage({
             return notFound();
         }
 
-        const staff = staffResult.data;
-        return <StaffFinanceStatsPageClient id={id} fullName={staff.full_name} />;
+        fullName = staffResult.data.full_name;
+
     } catch (e) {
         if (e instanceof Error && e.message !== 'NO_BIZ_ACCESS' && e.message !== 'UNAUTHORIZED') {
             logError('StaffFinanceStatsPage', 'Unexpected error', e);
         }
         throw e;
     }
+    return <StaffFinanceStatsPageClient id={id} fullName={fullName} />;
 }
-

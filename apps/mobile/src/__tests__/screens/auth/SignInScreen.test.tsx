@@ -14,7 +14,6 @@ import {
     exchangeViaMobileApi,
     handleDeepLinkAuth,
     getMobileApiUrl,
-    tryRestorePendingSession,
 } from '../../../navigation/useRootNavigationSession';
 
 const mockShowToast = jest.fn();
@@ -37,7 +36,6 @@ jest.mock('../../../navigation/useRootNavigationSession', () => ({
     exchangeViaMobileApi: (...args: unknown[]) => mockExchangeViaMobileApi(...args),
     getMobileApiUrl: () => mockGetMobileApiUrl(),
     handleDeepLinkAuth: jest.fn(),
-    tryRestorePendingSession: jest.fn(),
 }));
 
 jest.mock('../../../lib/analytics', () => ({
@@ -65,7 +63,6 @@ describe('SignInScreen', () => {
         };
     };
     const mockedHandleDeepLinkAuth = handleDeepLinkAuth as unknown as jest.Mock;
-    const mockedTryRestorePendingSession = tryRestorePendingSession as unknown as jest.Mock;
 
     beforeEach(() => {
         jest.useRealTimers();
@@ -141,8 +138,6 @@ describe('SignInScreen', () => {
         });
         mockedHandleDeepLinkAuth.mockReset();
         mockedHandleDeepLinkAuth.mockResolvedValue(true);
-        mockedTryRestorePendingSession.mockReset();
-        mockedTryRestorePendingSession.mockResolvedValue(false);
 
         const fetchMock = jest.fn();
         global.fetch = fetchMock as unknown as typeof fetch;
@@ -207,6 +202,7 @@ describe('SignInScreen', () => {
             expect(mockExchangeViaMobileApi).toHaveBeenCalledWith(
                 'EXCH-1',
                 'https://kezek.kg',
+                expect.stringMatching(/^[a-f0-9]{64}$/),
             );
         });
 
@@ -298,7 +294,7 @@ describe('SignInScreen', () => {
 
         dateNowSpy.mockRestore();
     });
-    test('rollback: fallback to web-widget flow when mobile start returns 503', async () => {
+    test('fails closed without legacy token bridge when mobile start returns 503', async () => {
         const fetchMock = global.fetch as unknown as jest.Mock;
         fetchMock.mockResolvedValueOnce(
             createResponse(
@@ -316,9 +312,8 @@ describe('SignInScreen', () => {
         fireEvent.press(screen.getByText(/Telegram/i));
 
         await waitFor(() => {
-            expect(mockOpenURL).toHaveBeenCalledWith(
-                expect.stringContaining('/auth/sign-in?redirect='),
-            );
+            expect(mockShowToast).toHaveBeenCalledWith(expect.any(String), 'error');
+            expect(mockOpenURL).not.toHaveBeenCalled();
         });
     });
 
@@ -401,42 +396,15 @@ describe('SignInScreen', () => {
         });
     });
 
-    test('google integration: network retry path restores session via pending exchange', async () => {
-        jest.useFakeTimers();
-
-        mockedSupabase.auth.getSession.mockResolvedValue({
-            data: { session: null },
-        });
-        mockedTryRestorePendingSession.mockImplementationOnce(async () => {
-            mockedSupabase.auth.getSession.mockResolvedValue({
-                data: { session: { access_token: 'a2', refresh_token: 'r2' } },
-            });
-            return true;
-        });
-
-        mockOpenAuthSessionAsync.mockResolvedValueOnce({
-            type: 'success',
-            url: 'kezek://auth/callback?code=oauth-code&state=test-state-1',
-        });
-
+    test('Google failure never discovers a global pending exchange', async () => {
+        mockedSupabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+        mockOpenAuthSessionAsync.mockResolvedValueOnce({ type: 'success', url: 'kezek://auth/callback?code=missing-session&state=test-state-1' });
         render(<SignInScreen />);
         fireEvent.press(screen.getByText(/Google/i));
-
-        await act(async () => {
-            jest.advanceTimersByTime(700);
-        });
-
-        await waitFor(() => {
-            expect(mockedTryRestorePendingSession).toHaveBeenCalledWith('https://kezek.kg');
-        });
-
-        await waitFor(() => {
-            expect(mockShowToast).toHaveBeenCalledWith('Вход выполнен успешно', 'success');
-        });
-
-        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
-            expect.objectContaining({ eventType: 'mobile_google_login_success' }),
-        );
+        await waitFor(() => expect(mockedHandleDeepLinkAuth).toHaveBeenCalled());
+        await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('сессия не установлена'), 'info'), { timeout: 2000 });
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(mockExchangeViaMobileApi).not.toHaveBeenCalled();
     });
 
     test('google integration: repeated callback with same url is idempotent', async () => {

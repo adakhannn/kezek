@@ -11,7 +11,7 @@ describe('initializeRatingsRouteService', () => {
         auth: {
             getUser: jest.fn(),
         },
-        from: jest.fn(),
+        rpc: jest.fn(),
     };
 
     const admin = {
@@ -47,16 +47,10 @@ describe('initializeRatingsRouteService', () => {
             data: { user: { id: 'user-1' } },
             error: null,
         });
-        supabase.from.mockReturnValue({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            is: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({
-                data: null,
+        supabase.rpc.mockResolvedValue({
+                data: false,
                 error: null,
-            }),
-        });
+            });
 
         const result = await runInitializeRatingsRoute({
             supabase,
@@ -77,16 +71,10 @@ describe('initializeRatingsRouteService', () => {
             data: { user: { id: 'user-1' } },
             error: null,
         });
-        supabase.from.mockReturnValue({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            is: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({
-                data: { role_key: 'super_admin', biz_id: null },
+        supabase.rpc.mockResolvedValue({
+                data: true,
                 error: null,
-            }),
-        });
+            });
         (initializeRatings as jest.Mock).mockResolvedValue({
             ok: true,
             data: { message: 'Ratings initialized' },

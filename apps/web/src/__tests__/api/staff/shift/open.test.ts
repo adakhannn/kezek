@@ -1,3 +1,4 @@
+jest.mock('@/lib/finance/calendar', () => ({ isFinanceDate: jest.requireActual('@/lib/finance/calendar').isFinanceDate, readFinanceCalendar: jest.fn(async () => ({ date: '2024-01-15', todayDate: '2024-01-15', timezone: 'Asia/Bishkek' })) }));
 import { POST } from '@/app/api/staff/shift/open/route';
 
 jest.mock('@/lib/authBiz', () => ({
@@ -5,6 +6,7 @@ jest.mock('@/lib/authBiz', () => ({
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
+    checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})),
     withRateLimit: jest.fn((req, config, handler) => handler()),
     RateLimitConfigs: {
         critical: {},

@@ -17,6 +17,7 @@ describe('deprecatedStaffFinanceService', () => {
     };
 
     const admin = {
+        rpc: jest.fn(),
         from: jest.fn(),
     };
 
@@ -47,61 +48,8 @@ describe('deprecatedStaffFinanceService', () => {
     });
 
     test('returns expected finance payload for legacy route flow', async () => {
-        admin.from
-            .mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            })
-            .mockReturnValueOnce((() => {
-                const query = {
-                    select: jest.fn(),
-                    eq: jest.fn(),
-                    gte: jest.fn(),
-                    order: jest.fn(),
-                };
-                query.select.mockReturnValue(query);
-                query.eq.mockReturnValue(query);
-                query.gte.mockReturnValue(query);
-                query.order.mockResolvedValue({
-                    data: [
-                        {
-                            total_amount: 8000,
-                            master_share: 4800,
-                            salon_share: 3200,
-                            late_minutes: 0,
-                        },
-                    ],
-                    error: null,
-                });
-                return query;
-            })())
-            .mockReturnValueOnce((() => {
-                const query = {
-                    select: jest.fn(),
-                    eq: jest.fn(),
-                    order: jest.fn(),
-                };
-                query.select.mockReturnValue(query);
-                query.eq.mockReturnValue(query);
-                query.order.mockResolvedValue({
-                    data: [
-                        {
-                            shift_date: '2024-01-10',
-                            status: 'closed',
-                            total_amount: 8000,
-                            master_share: 4800,
-                            salon_share: 3200,
-                            late_minutes: 0,
-                        },
-                    ],
-                    error: null,
-                });
-                return query;
-            })());
+        admin.from.mockReturnValue({ select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }) });
+        admin.rpc.mockResolvedValue({ data: [{ id: 'history-row', shift_date: '2024-01-10', status: 'closed', total_amount: 8000, master_share: 4800, salon_share: 3200, late_minutes: 0, guaranteed_amount: null, topup_amount: null }], error: null });
 
         const bookingsQuery = {
             select: jest.fn(),

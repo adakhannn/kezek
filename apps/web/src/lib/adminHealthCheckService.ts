@@ -1,5 +1,8 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { formatInTimeZone } from 'date-fns-tz';
 
+import { readBackgroundQueueHealth, type BackgroundQueueHealth } from '@/lib/backgroundQueueHealth';
+import { readCronExecutionHealth, type CronHealthStatus } from '@/lib/cronExecutionHealth';
 import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
@@ -26,6 +29,8 @@ type HealthCheckResult = {
         redis: ServiceSection;
     };
     checks: {
+        cronExecutions: { ok: boolean; jobs: CronHealthStatus[] };
+        backgroundQueues: { ok: boolean; queues: BackgroundQueueHealth[] };
         shifts: {
             ok: boolean;
             openShiftsOlderThan2Days: number;
@@ -51,24 +56,24 @@ type Result =
     | { ok: false; statusCode: 500; errorType: 'internal'; message: string }
     | { ok: true; data: HealthCheckResult };
 
-export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Result> {
+export async function runAdminHealthCheck({ admin }: { admin: Pick<SupabaseClient, 'from' | 'rpc' | 'auth'> }): Promise<Result> {
     const alerts: HealthCheckResult['alerts'] = [];
     const now = new Date();
     const twoDaysAgo = new Date(now);
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
     const twoDaysAgoYmd = formatInTimeZone(twoDaysAgo, TZ, 'yyyy-MM-dd');
 
-    const { data: openShifts, error: shiftsError } = await admin
+    const { count: openShiftsCount, error: shiftsError } = await admin
         .from('staff_shifts')
-        .select('id, shift_date, staff_id')
+        .select('id', { count: 'exact', head: true })
         .eq('status', 'open')
         .lt('shift_date', twoDaysAgoYmd);
 
-    if (shiftsError) {
+    if (shiftsError || openShiftsCount === null || !Number.isSafeInteger(openShiftsCount) || openShiftsCount < 0) {
         logError('HealthCheck', 'Error checking open shifts', shiftsError);
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Shift health data is unavailable' };
     }
 
-    const openShiftsCount = openShifts?.length ?? 0;
     const shiftsOk = openShiftsCount === 0;
     if (!shiftsOk) {
         alerts.push({
@@ -81,16 +86,19 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
         });
     }
 
-    const [{ data: staffMax }, { data: branchMax }, { data: bizMax }] = await Promise.all([
+    const [{ data: staffMax, error: staffError }, { data: branchMax, error: branchError }, { data: bizMax, error: bizError }] = await Promise.all([
         admin.from('staff_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
         admin.from('branch_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
         admin.from('biz_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
     ]);
+    if (staffError || branchError || bizError) {
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Rating health data is unavailable' };
+    }
 
     const lastMetricDate =
-        staffMax?.metric_date || branchMax?.metric_date || bizMax?.metric_date
+        staffMax?.metric_date && branchMax?.metric_date && bizMax?.metric_date
             ? new Date(
-                  Math.max(
+                  Math.min(
                       staffMax?.metric_date ? new Date(staffMax.metric_date).getTime() : 0,
                       branchMax?.metric_date ? new Date(branchMax.metric_date).getTime() : 0,
                       bizMax?.metric_date ? new Date(bizMax.metric_date).getTime() : 0,
@@ -127,15 +135,17 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
 
     if (promoError) {
         logError('HealthCheck', 'Error checking promotion usage', promoError);
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Promotion health data is unavailable' };
     }
 
-    const { data: activePromotions, error: activePromoError } = await admin
+    const { count: activePromotionsCount, error: activePromoError } = await admin
         .from('branch_promotions')
         .select('id', { count: 'exact', head: true })
         .eq('is_active', true);
 
-    if (activePromoError) {
+    if (activePromoError || activePromotionsCount === null || !Number.isSafeInteger(activePromotionsCount) || activePromotionsCount < 0) {
         logError('HealthCheck', 'Error checking active promotions', activePromoError);
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Promotion count is unavailable' };
     }
 
     const lastPromoDate = lastPromoUsage?.created_at ? new Date(lastPromoUsage.created_at) : null;
@@ -144,7 +154,6 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
         daysSinceLastPromo = Math.floor((now.getTime() - lastPromoDate.getTime()) / (1000 * 60 * 60 * 24));
     }
 
-    const activePromotionsCount = activePromotions?.length ?? 0;
     const promotionsOk =
         activePromotionsCount === 0 ||
         (lastPromoDate !== null && daysSinceLastPromo !== null && daysSinceLastPromo <= 7);
@@ -161,7 +170,16 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
         });
     }
 
-    const coreOk = shiftsOk && ratingsOk && promotionsOk;
+    let cronStatuses: CronHealthStatus[];
+    let queueStatuses: BackgroundQueueHealth[];
+    try { [cronStatuses, queueStatuses] = await Promise.all([readCronExecutionHealth(admin, now), readBackgroundQueueHealth(admin)]); }
+    catch { return { ok: false, statusCode: 500, errorType: 'internal', message: 'Cron health data is unavailable' }; }
+    const unhealthyCron = cronStatuses.filter(job => ['failed', 'stuck', 'overdue', 'unobserved'].includes(job.status));
+    for (const job of unhealthyCron) alerts.push({ type: job.status === 'unobserved' ? 'warning' : 'error',
+        message: `Cron ${job.job}: ${job.status}`, details: { ...job } });
+    const unhealthyQueues = queueStatuses.filter(queue => queue.status === 'failed' || queue.status === 'backlog');
+    for (const queue of unhealthyQueues) alerts.push({ type: 'error', message: `Queue ${queue.job}: ${queue.status}`, details: { ...queue } });
+    const coreOk = shiftsOk && ratingsOk && promotionsOk && unhealthyCron.length === 0 && unhealthyQueues.length === 0;
 
     return {
         ok: true,
@@ -182,7 +200,7 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
                 email: {
                     status: 'degraded',
                     details: {
-                        note: 'RESEND_API_KEY presence is checked by /api/notify; здесь только статический статус',
+                        note: 'Delivery health is recorded by the booking outbox worker; this endpoint does not send a probe email',
                     },
                 },
                 whatsapp: {
@@ -199,6 +217,8 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
                 },
             },
             checks: {
+                cronExecutions: { ok: unhealthyCron.length === 0, jobs: cronStatuses },
+                backgroundQueues: { ok: unhealthyQueues.length === 0, queues: queueStatuses },
                 shifts: {
                     ok: shiftsOk,
                     openShiftsOlderThan2Days: openShiftsCount,

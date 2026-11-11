@@ -9,5 +9,6 @@ import { runReviewCreateHttp } from '@/lib/reviewCreateHttpService';
 export async function POST(req: Request) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('ReviewsCreate', async () => runReviewCreateHttp(req)),
+      "/api/reviews/create",
   );
 }

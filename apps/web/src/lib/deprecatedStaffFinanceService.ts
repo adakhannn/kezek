@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError } from '@/lib/log';
 import { TZ, todayStringInTz, formatDateInTz } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
@@ -358,26 +359,12 @@ async function loadRecentClosedShifts({
     | { ok: true; data: ShiftStatsRow[] }
     | { ok: false; status: 500; error: 'internal'; message: string }
 > {
-    const { data, error } = await admin
-        .from('staff_shifts')
-        .select('total_amount, master_share, salon_share, late_minutes')
-        .eq('biz_id', bizId)
-        .eq('staff_id', staffId)
-        .eq('status', 'closed')
-        .gte('shift_date', statsWindowStart)
-        .order('shift_date', { ascending: false });
-
-    if (error) {
-        logError('DeprecatedStaffFinance', 'Error loading stats', error);
-        return {
-            ok: false,
-            status: 500,
-            error: 'internal',
-            message: error.message,
-        };
+    try {
+        const rows = await readStaffHistory(admin, bizId, staffId, statsWindowStart);
+        return { ok: true, data: rows.filter(row => row.status === 'closed') };
+    } catch {
+        return { ok: false, status: 500, error: 'internal', message: 'Failed to load complete staff finance history' };
     }
-
-    return { ok: true, data: Array.isArray(data) ? data : [] };
 }
 
 async function loadAllShifts({
@@ -392,24 +379,8 @@ async function loadAllShifts({
     | { ok: true; data: ShiftListRow[] }
     | { ok: false; status: 500; error: 'internal'; message: string }
 > {
-    const { data, error } = await admin
-        .from('staff_shifts')
-        .select('shift_date, status, total_amount, master_share, salon_share, late_minutes')
-        .eq('biz_id', bizId)
-        .eq('staff_id', staffId)
-        .order('shift_date', { ascending: false });
-
-    if (error) {
-        logError('DeprecatedStaffFinance', 'Error loading all shifts', error);
-        return {
-            ok: false,
-            status: 500,
-            error: 'internal',
-            message: error.message,
-        };
-    }
-
-    return { ok: true, data: Array.isArray(data) ? data : [] };
+    try { return { ok: true, data: await readStaffHistory(admin, bizId, staffId) }; }
+    catch { return { ok: false, status: 500, error: 'internal', message: 'Failed to load complete staff finance history' }; }
 }
 
 function buildStats(entries: ShiftStatsRow[]) {

@@ -74,6 +74,8 @@ export const cabinetEn = {
     'cabinet.profile.error.codeLength': 'Enter 6-digit code',
     'cabinet.profile.error.phoneRequired': 'Specify phone number first',
     'cabinet.profile.error.save': 'Error saving',
+    'cabinet.profile.error.load': 'Could not load your profile. Please try again.',
+    'cabinet.profile.retry': 'Retry loading',
     'cabinet.profile.error.sendCode': 'Error sending code',
     'cabinet.profile.error.verifyCode': 'Error verifying code',
     'cabinet.profile.loading': 'Loading...',

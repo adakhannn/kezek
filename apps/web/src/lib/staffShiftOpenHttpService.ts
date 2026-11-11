@@ -4,6 +4,7 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
+import { checkVerifiedPrincipalRateLimit, rateLimitDeniedResponse, RateLimitConfigs } from '@/lib/rateLimit';
 import { runOpenStaffShift } from '@/lib/staffShiftOpenService';
 
 export async function runStaffShiftOpenHttp(req: Request): Promise<NextResponse> {
@@ -22,16 +23,16 @@ export async function runStaffShiftOpenHttp(req: Request): Promise<NextResponse>
         staffId = contextStaffId;
         bizId = contextBizId;
 
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
-        userId = user?.id;
+        userId = context.userId;
+        const limit = await checkVerifiedPrincipalRateLimit(req, endpoint, { userId: context.userId, bizId: contextBizId }, RateLimitConfigs.critical);
+        if (!limit.success) return rateLimitDeniedResponse(limit);
 
         const result = await runOpenStaffShift({
             supabase,
             staffId,
             bizId,
             branchId,
+            requestedDate: new URL(req.url).searchParams.get('date') ?? undefined,
         });
 
         statusCode = result.status;

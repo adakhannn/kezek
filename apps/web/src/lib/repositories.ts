@@ -45,10 +45,12 @@ export class SupabaseBookingRepository implements BookingRepository {
         bookingId: string;
         newStatus: BookingStatus;
     }): Promise<void> {
-        const { error } = await this.supabase
-            .from('bookings')
-            .update({ status: params.newStatus })
-            .eq('id', params.bookingId);
+        if (params.newStatus !== 'confirmed' && params.newStatus !== 'cancelled') {
+            throw new Error('Attendance requires the checked financial command');
+        }
+        const { error } = await this.supabase.rpc(params.newStatus === 'confirmed' ? 'confirm_booking' : 'cancel_booking', {
+            p_booking_id: params.bookingId,
+        });
 
         if (error) {
             throw error;

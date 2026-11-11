@@ -1,137 +1,61 @@
-# Rate Limiting для API Endpoints
+# Ограничение частоты API-запросов
 
-## Как работает
+Статус: reference. Сверено 2026-11-10. Владелец: Engineering / эксплуатация. Источник реализации — [rateLimit.ts](apps/web/src/lib/rateLimit.ts); вход — [OPERATIONS](docs/OPERATIONS.md). Фактические Redis и ingress deployment здесь не подтверждены.
 
-### Обзор
+Этот limiter применяется к выбранным handlers. Он не задаёт предел нагрузки приложения и не доказывает защиту от DDoS.
 
-Реализован rate limiting для защиты критичных и публичных API endpoints от злоупотреблений и DDoS атак через утилиту `apps/web/src/lib/rateLimit.ts`.
+## Идентичность маршрута и квоты
 
-- **В продакшене:** используется **Upstash Redis** для распределённого rate limiting (serverless).
-- **В dev:** автоматический fallback на in-memory хранилище (настройка не требуется).
-
-### Конфигурации (пресеты)
-
-| Пресет | Лимит | Endpoints |
-|--------|-------|-----------|
-| **public** | 10 запросов/мин | `/api/quick-book-guest`, `/api/quick-hold` |
-| **critical** | 5 запросов/мин | `/api/staff/shift/open`, `/api/staff/shift/close` |
-| **normal** | 30 запросов/мин | `/api/staff/shift/items`, `/api/bookings/[id]/mark-attendance` |
-| **auth** | 5 запросов / 15 мин | `/api/whatsapp/send-otp`, `/api/whatsapp/verify-otp`, `/api/auth/telegram/login`, `/api/auth/telegram/link` |
-
-### Использование в API
+Каждый `withRateLimit(req, config, handler, routeId)` требует явный стабильный шаблон пути. Ключ включает HTTP method, routeId, optional bounded sub-action `keyPrefix` и hash идентификатора. Query string и конкретный UUID вместо `[id]` не создают новую квоту. [AST inventory test](apps/web/src/__tests__/lib/rateLimitRouteInventory.test.ts) проверяет route callsites, включая `.tsx`. Новый маршрут должен передавать собственный шаблон, например:
 
 ```typescript
-import { withRateLimit, RateLimitConfigs } from '@/lib/rateLimit';
-
-export async function POST(req: Request) {
-  return withRateLimit(
-    req,
-    RateLimitConfigs.public, // или .auth, .normal, .critical
-    async () => {
-      // ваш код
-      return NextResponse.json({ ok: true });
-    }
-  );
-}
+withRateLimit(req, RateLimitConfigs.normal, handler, '/api/example/[id]');
 ```
 
-### Ответ при превышении лимита
+`routeRateLimit(subAction, base, overrides)` сохраняет возможность отдельного счётчика для ограниченного набора действий внутри одного endpoint. Нельзя строить subAction из произвольного query/body. `identifier` допустим для уже проверенной сервером личности; decoded JWT без проверки и пользовательские headers не являются verified identity.
 
-Код `429 Too Many Requests`, тело:
+| Пресет | Запросов | Окно | Применение |
+| --- | ---: | ---: | --- |
+| `public` | 10 | 60 секунд | Некоторые публичные endpoints |
+| `critical` | 5 | 60 секунд | Критичные действия; scope определяется callsite |
+| `normal` | 30 | 60 секунд | Обычные действия и отдельные telemetry routes |
+| `auth` | 5 | 15 минут | Выбранные auth actions |
+| `authenticatedIngress` | 600 | 60 секунд | Предварительный IP budget четырёх финансовых mutations ниже |
 
-```json
-{
-  "ok": false,
-  "error": "rate_limit_exceeded",
-  "message": "Превышен лимит запросов. Попробуйте через X секунд.",
-  "retryAfter": 60
-}
-```
+Методы и маршруты изолированы: telemetry не расходует budget auth или finance. Это не означает, что каждый endpoint проекта уже имеет limiter.
 
-Заголовки: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After`.
+После verified staff/manager context четыре mutations — staff Open, Save, Close и manager Close — проверяют отдельные principal и tenant budgets. Principal key содержит verified user + business, tenant key — verified business. User quota: 5/min для Open/Close, 30/min для Save; tenant quota — user quota × 60. Обе квоты проверяются одной атомарной операцией. Отказ по одной не расходует другую: исчерпавший свою квоту пользователь не может повторными отказами потратить остаток коллег.
 
-### Идентификация клиентов
+Предварительный ingress budget 600/min выше пользовательского: допускает до 120 полных critical user budgets либо 20 Save budgets за общим NAT на одном маршруте. Это начальная настройка защиты от частоты запросов, а не измеренная ёмкость или гарантия для любого офиса. Для большего NAT/бизнеса требуется согласованная настройка с наблюдением 429 и latency. Остальные authenticated endpoints могут пока иметь только ingress или существующий per-user limiter; не переносить указанные четыре post-auth guarantees на весь API.
 
-IP берётся из заголовков (по порядку): `x-forwarded-for`, `x-real-ip`, `cf-connecting-ip`; иначе `unknown`.
+## Доверенный ingress обязателен для IP limits в production
 
-### Выбор хранилища
+`RATE_LIMIT_TRUSTED_IP_HEADER` должен явно выбирать один из: `x-forwarded-for`, `x-real-ip`, `cf-connecting-ip`, `x-vercel-forwarded-for`. Принимается только один валидный IPv4/IPv6; произвольная цепочка адресов не разбирается по первому элементу. При отсутствующей/неизвестной policy или некорректном адресе production IP-limit возвращает 503 до Redis и handler.
 
-1. **Redis доступен** (`UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` заданы) — Upstash Redis, общее состояние между инстансами.
-2. **Redis недоступен** — in-memory, автоочистка каждые 5 минут (удобно для разработки).
+**Имя переменной не делает заголовок доверенным.** Оператор должен подтвердить, что единственный допустимый ingress удаляет/перезаписывает клиентское значение, и прямой доступ к приложению в обход него закрыт. До этой проверки production readiness лимитера остаётся открытой. Значения секретов и ingress policy кодовые изменения не устанавливают.
 
----
+В non-production без policy используется общий `development-local` identifier; поддельные forwarding headers также не считаются trusted IP. Для точных synthetic tests задаётся явная test policy.
 
-## Настройка
+`getRateLimitIdentifier` сохранён отдельно как compatibility helper для mobile auth attempt fingerprints (старый порядок forwarded/real/cloudflare/unknown). Он больше не выбирает идентификатор limiter. Его результат не доказывает принадлежность IP; смена схемы fingerprint требует отдельного согласованного auth protocol изменения.
 
-### Зачем нужен Redis в продакшене
+## Redis, атомарность и отказ
 
-In-memory не подходит для serverless (Vercel): у каждого инстанса своё состояние. Upstash Redis даёт общий счётчик для всех запросов.
+Для общего хранилища нужны `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN`. Установленный SDK указан в [web package.json](apps/web/package.json). Один `EVAL` выполняет проверку budgets, `INCR`, `PEXPIRE`, `PTTL`; orphan counter без expiry получает TTL, действующее окно не продлевается. Counters разных scopes используют разные namespaces.
 
-### 1. Создание Upstash Redis
+SDK retries и auto-pipelining отключены, telemetry SDK отключена; deadline — 1000 ms с AbortController и отдельным ограничением ожидания. Ошибка конфигурации/SDK/Redis, timeout или некорректный ответ дают 503 до handler. **Production никогда не переключается на process-local memory.** Настроенный, но неработающий Redis также не подменяется памятью в development.
 
-1. Зайти на https://upstash.com, создать аккаунт при необходимости.
-2. Создать Redis database, выбрать регион (ближе к деплою Vercel), план (Free tier достаточно для старта).
-3. Скопировать `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN`.
+Только non-production без обеих Redis variables использует Map. Она ограничена 10 000 ключей; при заполнении удаляются истёкшие записи, активные не вытесняются ради нового ключа. Если места нет — 503. Состояние локально процессу и не предназначено для production, многопроцессной ёмкости или сохранения лимитов после restart.
 
-### 2. Установка зависимости
+Контракт SDK сверялся по установленным types и первичным источникам: [EVAL](https://upstash.com/docs/redis/sdks/ts/commands/scripts/eval), [timeout](https://upstash.com/docs/redis/sdks/ts/advanced), [retries](https://upstash.com/docs/redis/sdks/ts/retries). Это проверка API SDK, а не запрос к живому Upstash.
+
+## Ответы и проверка
+
+Превышение budget — 429, `error: rate_limit_exceeded`; недоступность проверки — 503, `error: service_unavailable`. Ответ содержит `retryAfter`, `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`. Более узкие headers внутреннего authenticated guard сохраняются внешней обёрткой. Наличие headers само по себе не доказывает использование Redis.
+
+[Unit tests](apps/web/src/__tests__/lib/rateLimit.test.ts) проверяют timeout, failures, memory cap, trusted header policy, NAT scopes и wire invocation. [Finance guard tests](apps/web/src/__tests__/lib/financeRateLimitGuards.test.ts) проверяют проверенную identity и отказ до financial command. [Auth isolation tests](apps/web/src/__tests__/api/authRateLimitIsolation.test.ts) проверяют раздельные actions. [Disposable Redis runner](scripts/test-rate-limit-isolated.mjs) выполняет настоящий Lua с конкурентными запросами, orphan TTL и shared-tenant случаями в Redis 7: `--network none`, без host ports/credentials, cleanup контейнера. Команда для отдельно разрешённой локальной проверки:
 
 ```bash
-cd apps/web
-pnpm add @upstash/redis
+node scripts/test-rate-limit-isolated.mjs
 ```
 
-### 3. Переменные окружения
-
-**Локально** (`.env.local`):
-
-```env
-UPSTASH_REDIS_REST_URL=https://your-redis-url.upstash.io
-UPSTASH_REDIS_REST_TOKEN=your-redis-token
-```
-
-**Vercel:**
-
-- **Вариант A:** Vercel Dashboard → проект → Settings → Integrations → Upstash → подключить базу (переменные подставятся сами).
-- **Вариант B:** Settings → Environment Variables → добавить `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` для Production/Preview/Development → сохранить и передеплоить.
-
-### 4. Проверка
-
-В ответах API должны быть заголовки `X-RateLimit-Limit`, `X-RateLimit-Remaining`. При превышении лимита — `429` и `Retry-After`.
-
-**Тест через curl:**
-
-```bash
-# например, 11 запросов подряд к лимитированному endpoint (лимит 10)
-for i in {1..11}; do
-  curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/quick-book-guest \
-    -H "Content-Type: application/json" \
-    -d '{"biz_id":"...","service_id":"...","staff_id":"...","start_at":"...","client_name":"Test","client_phone":"+996555123456"}'
-done
-```
-
-Ожидается один ответ `429`.
-
-### Мониторинг (Upstash)
-
-https://console.upstash.com → ваша база → Commands: количество операций, память, latency.
-
-### Стоимость
-
-- Free tier: 10 000 команд/день, 256 MB — обычно достаточно.
-- Pay-as-you-go: $0.20 за 100K команд.
-
-### Troubleshooting
-
-- **Rate limiting не срабатывает в проде:** проверить наличие `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` в Vercel, логи на ошибки Redis, `pnpm list @upstash/redis` в apps/web.
-- **Fallback на in-memory:** если Redis недоступен, используется память процесса. Для локальной разработки и тестов это нормально; в продакшене нужно убедиться, что Redis настроен.
-
-### Альтернативы
-
-При необходимости можно заменить Upstash на Vercel KV, Redis Cloud или свой Redis, обновив `getRedisClient()` в `apps/web/src/lib/rateLimit.ts`.
-
----
-
-## Дальнейшие улучшения
-
-- Идентификация по `user_id` для авторизованных пользователей.
-- Rate limiting на уровне CDN (например, Vercel Edge Middleware).
+При неожиданном 429 проверяют route/method/scope, общий NAT, размер окна и фактические quotas. При 503 — наличие shared Redis, deadline и подтверждённый ingress. Секреты, raw IP и полные пользовательские identifiers в diagnostic report не включать. Burst реальных booking/OTP/finance handlers не является разрешённой проверкой по умолчанию; deployment/provider и нагрузочные проверки требуют своей среды и явного scope.

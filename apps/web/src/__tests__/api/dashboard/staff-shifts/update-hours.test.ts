@@ -1,238 +1,48 @@
-/**
- * Тесты для /api/dashboard/staff-shifts/[id]/update-hours
- * Обновление отработанных часов смены
- */
-
 import { POST } from '@/app/api/dashboard/staff-shifts/[id]/update-hours/route';
 import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
-
-setupApiTestMocks();
-
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
-import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
-
-jest.mock('@/lib/authBiz', () => ({
-    getBizContextForManagers: jest.fn(),
-}));
-
-jest.mock('@/lib/supabaseHelpers', () => ({
-    createSupabaseAdminClient: jest.fn(),
-}));
-
-jest.mock('@/lib/routeParams', () => ({
-    getRouteParamRequired: jest.fn(),
-}));
-
-jest.mock('@/lib/dbHelpers', () => ({
-    checkResourceBelongsToBiz: jest.fn(),
-}));
-
-describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
-    const mockAdmin = createMockSupabase();
-    const shiftId = 'shift-uuid';
-    const bizId = 'biz-uuid';
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-
-        (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            supabase: mockAdmin,
-            userId: 'user-uuid',
-            bizId,
-        });
-
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
-
-        (getRouteParamRequired as jest.Mock).mockResolvedValue(shiftId);
+setupApiTestMocks();
+jest.mock('@/lib/authBiz', () => ({ getBizContextForManagers: jest.fn() }));
+jest.mock('@/lib/supabaseHelpers', () => ({ createSupabaseAdminClient: jest.fn() }));
+const shiftId='f0000000-0000-4000-8000-000000000001';
+const shift={id:shiftId,biz_id:'biz',status:'closed',ledger_revision:7,total_amount:10000,consumables_amount:1000,percent_master:60,percent_salon:40,hourly_rate:500};
+describe('POST update-hours version protocol', () => {
+    const admin=createMockSupabase();
+    const request=(body:unknown) => POST(createMockRequest('http://localhost/api/dashboard/staff-shifts/'+shiftId+'/update-hours',{method:'POST',body}),{params:{id:shiftId}});
+    beforeEach(()=>{
+        jest.clearAllMocks();admin.rpc.mockReset();
+        (getBizContextForManagers as jest.Mock).mockResolvedValue({supabase:admin,userId:'actor',bizId:'biz'});
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(admin);
+        admin.rpc.mockResolvedValueOnce({data:{shift,dayHours:24},error:null}).mockResolvedValue({data:{ok:true,shift:{...shift,ledger_revision:8,hours_worked:8}},error:null});
     });
-
-    describe('Валидация', () => {
-        test('должен вернуть 400 при невалидном JSON', async () => {
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: 'invalid-json',
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'validation');
-        });
-
-        test('должен вернуть 400 при отсутствии hours_worked', async () => {
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: {},
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'validation');
-        });
-
-        test('должен вернуть 400 при отрицательном hours_worked', async () => {
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: {
-                    hours_worked: -1,
-                },
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'validation');
-        });
-
-        test('должен вернуть 400 при hours_worked > 48', async () => {
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: {
-                    hours_worked: 49,
-                },
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'validation');
-        });
+    test.each(['invalid-json',{}, {hours_worked:-1,expectedRevision:7},{hours_worked:26,expectedRevision:7},{hours_worked:8},{hours_worked:'8',expectedRevision:7}])('rejects invalid input %j without RPC',async body=>{
+        await expectErrorResponse(await request(body),400,'validation');expect(admin.rpc).not.toHaveBeenCalled();
     });
-
-    describe('Проверка прав доступа', () => {
-        test('должен вернуть 404 если смена не найдена', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-                data: null,
-                error: 'Resource not found',
-            });
-
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: {
-                    hours_worked: 8,
-                },
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 404, 'not_found');
-        });
-
-        test('должен вернуть 400 если смена не закрыта', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-                data: {
-                    id: shiftId,
-                    biz_id: bizId,
-                    staff_id: 'staff-id',
-                    status: 'open', // Смена открыта
-                    total_amount: 10000,
-                    consumables_amount: 1000,
-                    percent_master: 60,
-                    percent_salon: 40,
-                    hourly_rate: 500,
-                    guaranteed_amount: 0,
-                    master_share: 0,
-                    salon_share: 0,
-                    topup_amount: 0,
-                },
-                error: null,
-            });
-
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: {
-                    hours_worked: 8,
-                },
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'validation');
-        });
+    test('rejects a malformed shift UUID',async()=>{
+        const res=await POST(createMockRequest('http://localhost',{method:'POST',body:{hours_worked:8,expectedRevision:7}}),{params:{id:'bad'}});
+        expect(res.status).toBe(400);expect(admin.rpc).not.toHaveBeenCalled();
     });
-
-    describe('Успешное обновление', () => {
-        test('должен успешно обновить часы для закрытой смены', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-                data: {
-                    id: shiftId,
-                    biz_id: bizId,
-                    staff_id: 'staff-id',
-                    status: 'closed', // Смена закрыта
-                    total_amount: 10000,
-                    consumables_amount: 1000,
-                    percent_master: 60,
-                    percent_salon: 40,
-                    hourly_rate: 500,
-                    guaranteed_amount: 0,
-                    master_share: 0,
-                    salon_share: 0,
-                    topup_amount: 0,
-                },
-                error: null,
-            });
-
-            const updateChain = {
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: shiftId, hours_worked: 8 },
-                    error: null,
-                }),
-            };
-            mockAdmin.from.mockReturnValueOnce(updateChain);
-
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: {
-                    hours_worked: 8,
-                },
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
-        });
-
-        test('должен корректно округлить hours_worked до 2 знаков', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-                data: {
-                    id: shiftId,
-                    biz_id: bizId,
-                    staff_id: 'staff-id',
-                    status: 'closed',
-                    total_amount: 10000,
-                    consumables_amount: 1000,
-                    percent_master: 60,
-                    percent_salon: 40,
-                    hourly_rate: 500,
-                    guaranteed_amount: 0,
-                    master_share: 0,
-                    salon_share: 0,
-                    topup_amount: 0,
-                },
-                error: null,
-            });
-
-            const updateChain2 = {
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: shiftId, hours_worked: 8.33 },
-                    error: null,
-                }),
-            };
-            mockAdmin.from.mockReturnValueOnce(updateChain2);
-
-            const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
-                method: 'POST',
-                body: {
-                    hours_worked: 8.333333, // Будет округлено до 8.33
-                },
-            });
-
-            const res = await POST(req, { params: { id: shiftId } });
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
-        });
+    test.each([['P0002',404,'not_found'],['42501',403,'forbidden']])('scoped read failure %s',async(code,status,error)=>{
+        admin.rpc.mockReset().mockResolvedValue({data:null,error:{code}});
+        await expectErrorResponse(await request({hours_worked:8,expectedRevision:7}),status as number,error as string);expect(admin.from).not.toHaveBeenCalled();
+    });
+    test('reopened shift returns conflict without write',async()=>{
+        admin.rpc.mockReset().mockResolvedValue({data:{shift:{...shift,status:'open'},dayHours:24},error:null});
+        await expectErrorResponse(await request({hours_worked:8,expectedRevision:7}),409,'validation');expect(admin.rpc).toHaveBeenCalledTimes(1);
+    });
+    test('closed shift uses canonical guarantee and returns new revision',async()=>{
+        const data=await expectSuccessResponse(await request({hours_worked:8,expectedRevision:7}),200);
+        expect(data.data.shift.ledger_revision).toBe(8);
+        expect(admin.rpc).toHaveBeenNthCalledWith(2,'adjust_closed_shift_hours_command',expect.objectContaining({p_actor_id:'actor',p_expected_revision:7,p_hours_worked:8,p_calculation:expect.objectContaining({guaranteedAmount:4000,finalMasterShare:6000,finalSalonShare:5000})}));
+        expect(admin.from).not.toHaveBeenCalled();
+    });
+    test('rounds to two decimals before canonical calculation',async()=>{
+        await expectSuccessResponse(await request({hours_worked:8.333333,expectedRevision:7}),200);
+        expect(admin.rpc.mock.calls[1][1]).toMatchObject({p_hours_worked:8.33,p_calculation:{guaranteedAmount:4165}});
+    });
+    test('commit conflict does not retry or fall back to direct UPDATE',async()=>{
+        admin.rpc.mockResolvedValue({data:null,error:{code:'40001'}});
+        await expectErrorResponse(await request({hours_worked:8,expectedRevision:7}),409,'validation');expect(admin.rpc).toHaveBeenCalledTimes(2);expect(admin.from).not.toHaveBeenCalled();
     });
 });
-
-

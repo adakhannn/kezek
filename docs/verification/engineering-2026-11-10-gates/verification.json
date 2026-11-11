@@ -1,0 +1,158 @@
+{
+  "recordedDate": "2026-11-10",
+  "scope": "Fix the causes of seven failed tests and 52 web lint errors; local checkout only",
+  "head": "b424cd396cbeefbe2a4173e0aa4583661e85ba87",
+  "indexDiffSha256": "6c9d8aef67dd392a0948a5ac224d251984deb189066eac45d8a0d5c2af04705a",
+  "indexMatchesStart": true,
+  "baseline": {
+    "web": {
+      "suites": 540,
+      "tests": 2733,
+      "failed": 7,
+      "source": "../engineering-2026-11-09/verification.json"
+    },
+    "lint": {
+      "errors": 52,
+      "warnings": 142,
+      "reproduced": true,
+      "errorsByRule": {
+        "react-hooks/set-state-in-effect": 15,
+        "react-hooks/preserve-manual-memoization": 3,
+        "no-console": 13,
+        "react-hooks/immutability": 1,
+        "@typescript-eslint/no-require-imports": 5,
+        "react-hooks/error-boundaries": 5,
+        "react-hooks/refs": 5,
+        "react-hooks/rules-of-hooks": 5
+      }
+    }
+  },
+  "web": {
+    "command": "pnpm -C apps/web test:coverage --maxWorkers=2 --silent --json --outputFile=<temporary-test-report>",
+    "exitCode": 0,
+    "suites": 554,
+    "passedSuites": 554,
+    "failedSuites": 0,
+    "tests": 2827,
+    "passed": 2827,
+    "failed": 0,
+    "pending": 0,
+    "todo": 0,
+    "coverageAllowlistOnly": {
+      "statements": {
+        "covered": 597,
+        "total": 630,
+        "pct": 94.76
+      },
+      "branches": {
+        "covered": 276,
+        "total": 319,
+        "pct": 86.52
+      },
+      "functions": {
+        "covered": 78,
+        "total": 80,
+        "pct": 97.5
+      },
+      "lines": {
+        "covered": 560,
+        "total": 580,
+        "pct": 96.55
+      }
+    },
+    "originalSevenFailures": [
+      {
+        "file": "apps/web/src/app/staff/__tests__/StaffCabinetPages.test.tsx",
+        "test": "Staff cabinet pages basic render StaffBookingsView отображает вкладки и базовую информацию о бронированиях",
+        "status": "passed"
+      },
+      {
+        "file": "apps/web/src/__tests__/components/ProfileLoadFailureBoundary.test.tsx",
+        "test": "does not advertise an editable empty identity after the profile read fails",
+        "status": "passed"
+      },
+      {
+        "file": "apps/web/src/__tests__/components/ProfileLoadFailureBoundary.test.tsx",
+        "test": "does not advertise an editable empty identity after authentication rejects",
+        "status": "passed"
+      },
+      {
+        "file": "apps/web/src/__tests__/components/ProfileLoadFailureBoundary.test.tsx",
+        "test": "does not advertise an editable empty identity when authentication returns no user",
+        "status": "passed"
+      },
+      {
+        "file": "apps/web/src/__tests__/components/RoleApplicationsReadState.test.tsx",
+        "test": "does not advertise a confirmed empty list after a network failure",
+        "status": "passed"
+      },
+      {
+        "file": "apps/web/src/__tests__/components/RoleApplicationsReadState.test.tsx",
+        "test": "does not advertise a confirmed empty list after a http failure",
+        "status": "passed"
+      },
+      {
+        "file": "apps/web/src/__tests__/components/RoleApplicationsReadState.test.tsx",
+        "test": "does not advertise a confirmed empty list after a json failure",
+        "status": "passed"
+      }
+    ]
+  },
+  "lint": {
+    "command": "pnpm -C apps/web exec eslint . --format json --output-file <temporary-lint-report>",
+    "exitCode": 0,
+    "errors": 0,
+    "warnings": 136
+  },
+  "typecheck": {
+    "command": "pnpm -C apps/web typecheck",
+    "exitCode": 0,
+    "status": "PASS"
+  },
+  "checksPreserved": {
+    "eslintRules": true,
+    "jestAssertions": true,
+    "coverageAllowlist": true,
+    "coverageThresholds": {
+      "statements": 60,
+      "branches": 60,
+      "functions": 60,
+      "lines": 60
+    }
+  },
+  "evidence": {
+    "temporaryDirectory": "%TEMP%/kezek-gates-20261110",
+    "sha256": {
+      "baseline.json": "a4c3aba0fd7dda6fb1dfdc149b93f633334838ce22806cc4cad9aea7e9c9e467",
+      "lint-before.json": "75c3adf8da490f2d28f1f98e4c101dcc18cf7242d7386400c3d563b9ad88ea67",
+      "lint-after.json": "f1f84629bd442e3ad7632c816c8f41e4c77764274e4581f59085b45f15357d0d",
+      "web-after.json": "4e8329ec774af38a212e88e53815f4a3e516f9c05f7b474d81fcc17a2ac55ad9",
+      "web-after.log": "e5463cf9e44abe706260c3d268cab850faf4ad45ee30c0623ea440849a1de52b",
+      "typecheck-after.log": "9ae89d6c8132aed9706e705b5bad0c94cd29e28a2a62acbbe3784a8621cdbc35"
+    }
+  },
+  "notRun": [
+    "release build",
+    "browser/provider/device E2E",
+    "application or remote migrations",
+    "load/capacity benchmarks",
+    "mobile tests and SQL runners (unchanged in this follow-up)"
+  ],
+  "remaining": [
+    "136 lint warnings",
+    "ENG-13 server-side filtering and SQL load plan",
+    "existing newer admin-search draft can be replaced by an earlier submitted query response",
+    "other open/partial engineering findings and rollout conditions in ENGINEERING_FINDINGS.md"
+  ],
+  "documentation": {
+    "command": "node scripts/check-doc-links.mjs",
+    "exitCode": 0,
+    "documents": 113,
+    "localLinks": 2606,
+    "catalogs": "PASS"
+  },
+  "diffCheck": {
+    "command": "git diff --check",
+    "exitCode": 0
+  }
+}

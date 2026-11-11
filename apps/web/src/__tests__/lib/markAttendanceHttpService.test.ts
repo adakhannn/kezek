@@ -32,7 +32,7 @@ describe('markAttendanceHttpService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getRouteParamUuid as jest.Mock).mockResolvedValue('booking-1');
-    (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId: 'biz-1' });
+    (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId: 'biz-1', userId: 'manager-1' });
     (getServiceClient as jest.Mock).mockReturnValue({ from: jest.fn(), rpc: jest.fn() });
   });
 
@@ -72,6 +72,7 @@ describe('markAttendanceHttpService', () => {
       admin: { from: expect.any(Function), rpc: expect.any(Function) },
       bookingId: 'booking-1',
       bizId: 'biz-1',
+      actorId: 'manager-1',
       attended: true,
     });
     expect(response.status).toBe(200);

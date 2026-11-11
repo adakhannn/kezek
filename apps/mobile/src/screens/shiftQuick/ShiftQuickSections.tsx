@@ -46,6 +46,12 @@ type ShiftQuickSectionsProps = {
     refreshing: boolean;
     isProcessingQueue: boolean;
     pendingQueueCount: number;
+    commandsBlocked?: boolean;
+    savingBlocked?: boolean;
+    reviewMessage?: string;
+    reviewItems?: ShiftItem[];
+    onRestoreDraft?: () => void;
+    onDiscardDraft?: () => void;
     isOpening: boolean;
     isClosing: boolean;
     isAddingClient: boolean;
@@ -78,6 +84,7 @@ export function ShiftQuickSections({
     refreshing,
     isProcessingQueue,
     pendingQueueCount,
+    commandsBlocked, savingBlocked, reviewMessage, reviewItems, onRestoreDraft, onDiscardDraft,
     isOpening,
     isClosing,
     isAddingClient,
@@ -182,7 +189,7 @@ export function ShiftQuickSections({
                         </View>
                     </View>
 
-                    {pendingQueueCount > 0 ? (
+                    {pendingQueueCount > 0 && !reviewMessage ? (
                         <View style={styles.queueInlineBanner}>
                             <FeedbackBanner
                                 variant="info"
@@ -195,7 +202,7 @@ export function ShiftQuickSections({
                                 message={
                                     isProcessingQueue
                                         ? 'Пожалуйста, подождите. Данные скоро обновятся автоматически.'
-                                        : 'Действия сохранены локально и отправятся при стабильном интернете.'
+                                        : 'Черновик сохранён. При отправке сервер проверит исходную версию смены.'
                                 }
                             />
                         </View>
@@ -206,7 +213,7 @@ export function ShiftQuickSections({
                             <Button
                                 title="Открыть смену"
                                 onPress={onOpenShift}
-                                disabled={isOpening || financeData.isDayOff}
+                                disabled={commandsBlocked || isOpening || financeData.isDayOff}
                                 loading={isOpening}
                                 fullWidth
                                 leadingIcon={<Ionicons name="play" size={18} color="#fff" />}
@@ -216,7 +223,7 @@ export function ShiftQuickSections({
                             <Button
                                 title="Закрыть смену"
                                 onPress={onCloseShift}
-                                disabled={isClosing}
+                                disabled={commandsBlocked || isClosing || addClientForm.showAddClient}
                                 loading={isClosing}
                                 variant="danger"
                                 fullWidth
@@ -272,6 +279,7 @@ export function ShiftQuickSections({
                         {!addClientForm.showAddClient ? (
                             <Button
                                 title="Добавить клиента"
+                                disabled={commandsBlocked}
                                 onPress={() => addClientActions.setShowAddClient(true)}
                                 variant="outline"
                                 fullWidth
@@ -291,6 +299,7 @@ export function ShiftQuickSections({
                                 ) : null}
                                 <Input
                                     placeholder="Имя клиента *"
+                                    editable={!savingBlocked && !isAddingClient}
                                     value={addClientForm.newClientName}
                                     onChangeText={addClientActions.setNewClientName}
                                     autoFocus
@@ -303,6 +312,7 @@ export function ShiftQuickSections({
                                 <Input
                                     ref={serviceInputRef}
                                     placeholder="Услуга"
+                                    editable={!savingBlocked && !isAddingClient}
                                     value={addClientForm.newServiceName}
                                     onChangeText={addClientActions.setNewServiceName}
                                     returnKeyType="next"
@@ -315,6 +325,7 @@ export function ShiftQuickSections({
                                         ref={amountInputRef}
                                         containerStyle={styles.amountInputContainer}
                                         placeholder="Сумма"
+                                        editable={!savingBlocked && !isAddingClient}
                                         value={addClientForm.newServiceAmount}
                                         onChangeText={addClientActions.setNewServiceAmount}
                                         keyboardType="numeric"
@@ -327,13 +338,14 @@ export function ShiftQuickSections({
                                         ref={consumablesInputRef}
                                         containerStyle={styles.amountInputContainer}
                                         placeholder="Расходники"
+                                        editable={!savingBlocked && !isAddingClient}
                                         value={addClientForm.newConsumablesAmount}
                                         onChangeText={addClientActions.setNewConsumablesAmount}
                                         keyboardType="numeric"
                                         returnKeyType="done"
                                         onFocus={revealActiveField}
                                         onSubmitEditing={() => {
-                                            if (!isAddingClient && addClientForm.newClientName.trim()) {
+                                            if (!savingBlocked && !isAddingClient && addClientForm.newClientName.trim()) {
                                                 addClientActions.submit();
                                             }
                                         }}
@@ -350,7 +362,7 @@ export function ShiftQuickSections({
                                     <Button
                                         title={isEditingClient ? SAVE_CHANGES_LABEL : SAVE_CLIENT_LABEL}
                                         onPress={addClientActions.submit}
-                                        disabled={isAddingClient || !addClientForm.newClientName.trim()}
+                                        disabled={savingBlocked || isAddingClient || !addClientForm.newClientName.trim()}
                                         loading={isAddingClient}
                                         fullWidth
                                         style={styles.addClientActionButton}
@@ -369,7 +381,7 @@ export function ShiftQuickSections({
                                 key={item.id || `${item.clientName}-${index}`}
                                 item={item}
                                 itemIndex={index}
-                                canEdit={isOpen}
+                                canEdit={isOpen && !commandsBlocked}
                                 onEditClient={onEditClient}
                             />
                         ))}
@@ -386,7 +398,20 @@ export function ShiftQuickSections({
                     </Card>
                 ) : null}
 
-                {pendingQueueCount > 0 || isProcessingQueue ? (
+                {reviewMessage ? (
+                    <Card padding="md">
+                        <FeedbackBanner variant="warning" title="Нужна сверка смены" message={reviewMessage} />
+                        {reviewItems ? <View>
+                            <Text>Сохранённый черновик (не подтверждён сервером)</Text>
+                            {reviewItems.map((item, index) => <Text key={item.id ?? index}>
+                                {item.clientName} · {item.serviceName} · {formatPrice(item.serviceAmount)} · расходники {formatPrice(item.consumablesAmount)}
+                            </Text>)}
+                        </View> : null}
+                        <Button title="Загрузить актуальную смену" onPress={() => void onRefresh()} disabled={isProcessingQueue} />
+                        {onRestoreDraft ? <Button title="Сверить черновик в редакторе" onPress={onRestoreDraft} disabled={isProcessingQueue} /> : null}
+                        {onDiscardDraft ? <Button title="Удалить проверенный черновик" variant="secondary" onPress={onDiscardDraft} disabled={isProcessingQueue} /> : null}
+                    </Card>
+                ) : pendingQueueCount > 0 || isProcessingQueue ? (
                     <View style={styles.offlineIndicator}>
                         <OfflineBanner
                             compact
@@ -398,7 +423,7 @@ export function ShiftQuickSections({
                             message={
                                 isProcessingQueue
                                     ? 'Ожидайте завершения синхронизации, затем список обновится автоматически.'
-                                    : 'Действия будут отправлены на сервер, как только соединение станет стабильным.'
+                                    : 'Повторная отправка сохранит исходную версию. При конфликте очередь остановится для проверки.'
                             }
                             onRetry={() => void onRefresh()}
                             style={styles.offlineBanner}

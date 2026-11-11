@@ -7,5 +7,6 @@ import { runTelegramLoginHttp } from '@/lib/telegramLoginHttpService';
 export async function POST(req: Request) {
     return withRateLimit(req, routeRateLimit('api/auth/telegram/login', RateLimitConfigs.auth), async () =>
         withErrorHandler('TelegramLogin', async () => runTelegramLoginHttp(req)),
+        "/api/auth/telegram/login",
     );
 }

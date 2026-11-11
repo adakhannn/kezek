@@ -36,8 +36,14 @@ it('keeps an existing open shift actionable even if schedule later becomes a day
     expect(screen.getByRole('button', {name:'Закрыть смену'})).toBeTruthy();
 });
 
-it('keeps the existing closed-shift reopening control', () => {
-    render(<ShiftControls {...base} hasShift isClosed />);
+it('keeps manager closed-shift reopening control', () => {
+    render(<ShiftControls {...base} hasShift isClosed staffId="staff" />);
     expect(screen.getByRole('button', {name:staffRu['staff.finance.shift.reopen']})).toBeTruthy();
     expect(screen.queryByRole('button', {name:'Открыть смену'})).toBeNull();
+});
+
+
+it('does not offer manager-only reopen in the staff workspace', () => {
+    render(<ShiftControls {...base} hasShift isClosed />);
+    expect(screen.queryByRole('button', { name: staffRu['staff.finance.shift.reopen'] })).toBeNull();
 });

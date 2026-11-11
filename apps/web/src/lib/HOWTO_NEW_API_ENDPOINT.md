@@ -1,124 +1,85 @@
-# HOWTO: новый API endpoint (шаблон)
+# HOWTO: новый API endpoint
 
-Краткий паттерн для добавления нового endpoint в `apps/web/src/app/api/**/route.ts`.
+Актуализировано: 2026-10-30. Владелец: backend. Это правило для новой реализации, а не утверждение, что существующий API уже приведён к одному виду.
 
-## 1. Общий поток
+Основные документы: [CONTRIBUTING](../../../../CONTRIBUTING.md), [карта API](../../../../API_DOCUMENTATION.md), [открытые инженерные проблемы](../../../../docs/ENGINEERING_FINDINGS.md). Контракт выбранного маршрута проверяется по route, HTTP/service-коду и схеме; [форматы ответов](API_ERROR_FORMATS.md) описывают helpers и известные различия.
 
-Целевой шаблон для route handlers:
+## Граница слоёв
 
-**route = transport + validation + auth/context**
+Целевой поток: HTTP → auth/context → валидация формата → service/use-case → явное преобразование результата в HTTP.
 
-Практически это выглядит как:
+В `route.ts` остаются метод, transport, wrappers и делегирование. HTTP service выбирает auth, валидирует body/query/params и переводит ожидаемые ошибки в статус/код ответа. App-level service и persistence adapters выполняют работу с БД; независимые бизнес-инварианты относятся в `packages/core-domain`. Порты определяются рядом с соответствующим доменным модулем или в `core-domain/ports`; не все действующие use-cases уже используют один общий набор портов.
 
-**HTTP → auth/context → validation (Zod) → use-case/service → HTTP‑ответ**
+## Выбор контекста и валидации
 
-1. **HTTP‑обёртка / transport**  
-   - `export async function GET/POST(...)`  
-   - оборачиваем тело в `withRateLimit` (если нужно) и `withErrorHandler`.
+| Задача | Существующий helper | Граница ответственности |
+| --- | --- | --- |
+| Проверить пользователя из Bearer или cookies | [resolveRequestAuthContext](requestAuthContext.ts) | Возвращает контекст либо NextResponse; не проверяет право на конкретный бизнес/объект |
+| Получить текущий manager/owner business context | [withManagerContext](withManagerContext.ts) | Использует cookie-based `getBizContextForManagers`; `req` не делает его Bearer-wrapper |
+| Дополнительно проверить staff из route params | [withManagerAndStaffContext](withManagerAndStaffContext.ts) | Проверяет staff.biz_id; не проверяет автоматически booking/package IDs внутри тела |
+| Публичное чтение | [createSupabaseAnonClient](supabaseHelpers.ts) | Анонимный клиент без cookies; публичность операции и доступ к данным всё равно должны быть определены |
+| Body/query | [validateRequest / validateQuery](validation/apiValidation.ts) | Возвращают discriminated result; при неуспехе вернуть `result.response` |
+| UUID в route params | [getRouteParamUuid](routeParams.ts) | Проверка формата не равна проверке принадлежности объекта |
 
-2. **Auth / context**  
-   - для приватных route используем `withManagerContext`, `withManagerAndStaffContext` или другой context-wrapper;
-   - для public route явно создаем нужный клиент/контекст (`createSupabaseAnonClient`, request-scoped helpers);
-   - route только подключает контекст, но не держит внутри бизнес-процесс.
+`validateRequest(req, schema)` асинхронен, `validateQuery(new URL(req.url), schema)` синхронен. Повторяющиеся query-параметры могут стать массивами, числовые значения требуют явного преобразования схемой. `withValidation(schema, handler)` возвращает функцию `(req) => Promise<NextResponse>`; это не готовый ответ без вызова с запросом.
 
-3. **Валидация входа**  
-   - для `body`/`query` используем `validateRequest` / `validateQuery` и Zod‑схему из `lib/validation/*`;
-   - при ошибке сразу возвращаем `validationResult.response`.
+Для операций с service-role клиентом проверяйте actor, бизнес и все вложенные ссылки до мутаций. Наличие context wrapper, page layout или UUID validation не заменяет tenant authorization. Прямо доступный RPC также должен соблюдать эту границу; конкретные пробелы сохранены в инженерном реестре.
 
-4. **Доменная валидация** (по необходимости)  
-   - для сложных кейсов используем функции из доменных модулей (`@core-domain/booking`, `@core-domain/schedule`);
-   - сюда попадают уже нормализованные данные после Zod.
+## Тонкий transport
 
-5. **Use‑case / service**  
-   - собираем зависимости доменного use‑case: репозитории (`@core-domain/ports` + адаптеры в `lib/repositories.ts`), команды (RPC/SQL) и нотификации;
-   - вызываем use‑case из `@core-domain/*` или app-level service, если кейс еще не доведен до доменного слоя;
-   - именно здесь живут orchestration, RPC, confirm, notify и другие шаги процесса.
-
-6. **Ответ**  
-   - на успех: `createSuccessResponse(payload)`;
-   - на ошибку внутри use‑case: кидаем `Error` и даём `withErrorHandler` сформировать JSON об ошибке.
-
-## 2. Что должно остаться в route.ts
-
-В route handler допустимы только:
-
-- HTTP transport (`GET/POST`, `req`, `params`, status/response mapping)
-- подключение rate limit / error wrapper
-- auth/context wrapper или создание request-scoped context
-- Zod-валидация и легкая нормализация входа
-- вызов одного use-case/service
-
-В route handler не должно оставаться:
-
-- длинной RPC-orchestration логики
-- последовательности `branch check -> hold -> confirm -> notify`
-- сложной бизнес-ветвистости
-- логики, которую нельзя протестировать отдельно от Next route handler
-
-## 3. Пример: упрощённый `quick-hold`
-
-Фрагмент обработчика (детали опущены для краткости):
+Пример фабрики для нового POST-handler. `runHttp` — уже реализованный HTTP service с auth, validation и result mapping:
 
 ```ts
-export async function POST(req: Request) {
-  return withRateLimit(
-    req,
-    RateLimitConfigs.public,
-    async () =>
-      withErrorHandler('QuickHold', async () => {
-        // 1) Auth/context
-        const supabase = await createSupabaseServerClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          return createErrorResponse('auth', 'Not signed in', undefined, 401);
-        }
+import type { NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/apiErrorHandler';
+import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
 
-        // 2) Zod-валидация
-        const validationResult = await validateRequest(req, quickHoldSchema);
-        if (!validationResult.success) {
-          return validationResult.response;
-        }
-
-        // 3) Доменная валидация (booking)
-        const domainValidation = validateCreateBookingParams(validationResult.data);
-        if (!domainValidation.valid || !domainValidation.data) {
-          return createErrorResponse('validation', domainValidation.error ?? 'Invalid params', undefined, 400);
-        }
-
-        // 4) Use-case/service deps
-        const branchRepository = new SupabaseBranchRepository(supabase);
-        const commands: BookingCommandsPort = { /* реализация RPC */ };
-        const notifications: BookingNotificationPort = { /* вызов /api/notify или локальной функции */ };
-
-        // 5) Вызов use-case
-        const { bookingId } = await createBookingUseCase(
-          { branchRepository, commands, notifications },
-          domainValidation.data,
-        );
-
-        // 6) HTTP-ответ
-        return createSuccessResponse({ booking_id: bookingId, confirmed: true });
-      }),
-  );
+export function makePostHandler(
+  scope: string,
+  routeId: string,
+  runHttp: (req: Request) => Promise<NextResponse>,
+) {
+  return async (req: Request) =>
+    withRateLimit(
+      req,
+      routeRateLimit(routeId, RateLimitConfigs.normal),
+      () => withErrorHandler(scope, () => runHttp(req)),
+    );
 }
 ```
 
-## 4. Выбор места для логики
+Это пример формы, не универсальная политика лимитов. Выберите preset и action key для конкретной операции; user/business budgets требуют установленной identity. Голый preset без prefix сейчас может делить IP-счётчик с другими маршрутами — [RATE_LIMITING](../../../../RATE_LIMITING.md).
 
-- **Валидация формата** (`string`, `uuid`, `date-time`) → Zod‑схемы в `lib/validation`.
-- **Бизнес‑инварианты** (обязательность полей, комбинации статусов, промо и т.п.) → доменные модули в `@core-domain/*`.
-- **Работа с БД** (Supabase таблицы/RPC) → адаптеры в `lib/repositories.ts` или локальные "команды" (реализация портов).  
-  Доменные use‑case видят только интерфейсы из `@core-domain/ports`.
+Действующий booking flow можно читать в [runQuickHoldHttp](quickHoldHttpService.ts) и [runQuickHold](quickHoldService.ts): Bearer/cookie context, schema, domain validation и явная проверка `result.ok`. Не копируйте его как доказательство готовой отказоустойчивости уведомлений; соответствующие ограничения описаны в инженерном реестре.
 
-## 5. Чек‑лист при добавлении endpoint
+## Ожидаемая ошибка — явный результат
 
-- [ ] Обёртка `withErrorHandler` и `withRateLimit` (если публичный/часто вызываемый роут).
-- [ ] Auth/context подключается единообразно и не размазан по файлу.
-- [ ] Zod‑валидация через `validateRequest`/`validateQuery`.
-- [ ] При необходимости — доменная валидация из `@core-domain/*`.
-- [ ] Логика бизнес‑процесса вынесена в use‑case/service (по возможности).
-- [ ] Доступ к БД идёт через адаптеры/порты, а не напрямую из use‑case.
-- [ ] Ответы формируются через `createSuccessResponse` / `createErrorResponse`.
-- [ ] При изменении контрактов обновлена Swagger‑документация и тесты.
+Не превращайте ожидаемый отказ в произвольный `Error` в расчёте на распознавание текста. `handleApiError` использует эвристики по message; текст меняется и может раскрыть внутренние сведения. В HTTP service укажите стабильный error code, безопасное сообщение и статус:
+
+```ts
+const result = await runCommand(validatedInput);
+
+if (!result.ok) {
+  return createErrorResponse(
+    result.error,
+    result.message,
+    result.publicDetails,
+    result.status,
+  );
+}
+
+return createSuccessResponse(result.data);
 ```
+
+Фрагмент предполагает такой контракт вашего `runCommand`; это не общий тип всех сервисов репозитория. Нельзя извлекать поля успешной ветки до проверки `ok`. Supabase `{ data, error }` тоже требует явной проверки: fulfilled Promise не означает бизнес-успех.
+
+`withErrorHandler` остаётся внешней защитой от непредвиденного exception. Переданные `details` не скрываются helper автоматически в production. Не передавайте credentials, raw DB errors или персональные данные в публичный ответ.
+
+## Перед завершением изменения
+
+- Зафиксировать метод, auth/tenant boundary, schema, статусы и форму ответа; синхронизировать существующих потребителей и соответствующее OpenAPI-описание.
+- Для записи определить атомарность, поведение при частичном отказе и повторе. Изменение envelope само по себе не решает retry/idempotency.
+- Выполнить проверки по [CONTRIBUTING](../../../../CONTRIBUTING.md) для изменённых слоёв и проверить значимые негативные/конкурентные случаи в разрешённой среде.
+
+Это руководство не подтверждает закрытие известных дефектов и не возобновляет остановленную WEB-кампанию.
 

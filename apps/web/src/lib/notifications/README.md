@@ -1,153 +1,45 @@
-# Notification System
+# Уведомления о бронировании
 
-Модульная система отправки уведомлений для бронирований.
+Статус: текущая реализация, 2026-11-10. Аудитория — разработчик и владелец эксплуатации. Проверки здесь локальные; включение worker в развёрнутой среде — отдельный шаг. Основные входы: [API](../../../../../API_DOCUMENTATION.md), [эксплуатация](../../../../../docs/OPERATIONS.md), [открытые инженерные проблемы](../../../../../docs/ENGINEERING_FINDINGS.md).
 
-## Структура
+## Запись события и HTTP
 
-```
-notifications/
-├── types.ts                      # Типы и интерфейсы
-├── utils.ts                      # Утилиты (first, normalizeEmails, greet, roleRu, statusRu, buildHtmlPersonal)
-├── messageBuilders.ts            # Построение сообщений (HTML, текст, WhatsApp, Telegram)
-├── BookingDataService.ts         # Получение данных бронирования из БД
-├── ParticipantDataService.ts     # Получение данных участников (клиент, владелец, мастер)
-├── EmailNotificationService.ts   # Отправка email уведомлений
-├── WhatsAppNotificationService.ts # Отправка WhatsApp уведомлений
-├── TelegramNotificationService.ts # Отправка Telegram уведомлений
-├── NotificationOrchestrator.ts   # Координация всех сервисов
-└── index.ts                      # Экспорты
-```
+[SQL outbox](../../../../../supabase/migrations/20261110090000_booking_notification_outbox.sql) добавляет ревизию бронирования и триггер: переходы `hold`/`pending_hold`, `confirmed`, `cancelled` записывают намерение уведомить в той же транзакции. Уникальность `(booking_id, booking_revision, event_type)` предотвращает повторный enqueue. [Атомарная команда бронирования](../../../../../supabase/migrations/20261110101000_atomic_booking_requests.sql) использует тот же enqueue; повтор команды не создаёт новое событие.
 
-## Использование
+`POST /api/notify` проверяет пользователя и принадлежность бронирования, затем возвращает `{ "ok": true, "data": { "queued": true, "event_id": "event-uuid" } }`. Это подтверждение регистрации события, а не доставки. Несовпадение текущего статуса — 409; недоступная очередь — 503. [HTTP](../notifyHttpService.ts), [сервис](../notifyBookingService.ts), [частный гостевой адаптер](../guestBookingNotificationDispatch.ts).
 
-### Базовое использование
+## Подготовка и доставка
 
-```typescript
-import { NotificationOrchestrator } from '@/lib/notifications';
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
+[Planner](BookingNotificationPlanner.ts) повторно использует общие [email recipients](emailRecipients.ts), [email payload](emailPayload.ts), [Telegram recipients](telegramRecipients.ts), [WhatsApp eligibility](whatsappRecipients.ts) и шаблоны сообщений. Он загружает предпочтения строго: ошибка чтения не превращается в пустой успешный список. Payload получателя, включая персонализацию и календарный файл, сохраняется один раз перед отправкой. Credentials в payload не записываются. Provider configuration проверяется при отправке: её отсутствие приводит к повтору/ошибке, а не к тихому пропуску.
 
-// Создаем клиенты Supabase
-const supabase = createServerClient(url, anon, { cookies });
-const admin = createClient(url, serviceKey);
+Клиентские Telegram/WhatsApp требуют verified binding; служебные staff/owner сохраняют существующую политику привязки. Явные настройки каналов учитываются. Одинаковые email, chat ID и WhatsApp-номер получают одно сообщение в пределах события. Максимум — 200 получателей; превышение является ошибкой подготовки.
 
-// Создаем оркестратор
-const orchestrator = new NotificationOrchestrator(
-    supabase,
-    admin,
-    {
-        apiKey: getResendApiKey(),
-        from: getEmailFrom(),
-        replyTo: ownerEmail,
-    }
-);
+Время сообщения берётся из `businesses.tz` с проверкой IANA; переходы DST учитываются при форматировании каждой даты. Только `NULL` разрешает использовать `getTimezone()` из конфигурации. Пустое, отсутствующее или некорректное значение останавливает подготовку с ошибкой, чтобы не отправить неверное время.
 
-// Отправляем уведомления
-const result = await orchestrator.sendNotifications(booking, 'confirm');
-// result: { emailsSent: 3, whatsappSent: 2, telegramSent: 1 }
-```
+[Worker](outboxWorker.ts) выполняет волны по два события через `FOR UPDATE SKIP LOCKED`, с lease 90 секунд: максимум 100 событий за запуск и только пока остаётся рабочий бюджет 45 секунд. Новая волна требует запаса для provider deadline и подтверждений БД. [Provider deadline](outboxTransport.ts) — 8 секунд, [DB HTTP deadline](outboxStore.ts) — 5 секунд. Это границы допуска работы, а не обещание обработать 100 событий за минуту: фактическая скорость зависит от подготовки, получателей и провайдеров. Уже захваченные события исключаются из всех последующих волн этого запуска, включая retry/continue. Состав получателей и успешные receipts сохраняются между запусками. Исчерпание бюджета продолжает оставшуюся работу без расхода попытки ошибки; ошибки ограничены восемью попытками, затем событие переходит в `failed`. События старше 30 дней не отправляются.
 
-### BookingDataService
+[Миграция throughput](../../../../../supabase/migrations/20261110125000_booking_outbox_throughput.sql) возвращает claim и до 200 сохранённых получателей скалярным JSON. PostgREST row cap не обрезает массив получателей. Пустые credentials выявляются до provider fetch.
 
-Сервис для получения данных бронирования из базы данных:
+Перед каждой отправкой SQL проверяет lease token и текущую ревизию брони. Изменившееся событие помечается `obsolete`. Сообщение, уже принятое внешним провайдером до изменения брони, отозвать этим механизмом нельзя.
 
-```typescript
-import { BookingDataService } from '@/lib/notifications';
-import { createClient } from '@supabase/supabase-js';
+## Неопределённый результат провайдера
 
-const admin = createClient(url, serviceKey);
-const bookingService = new BookingDataService(admin);
+Resend получает стабильный `Idempotency-Key` вместе с неизменным payload. [Официальная документация](https://resend.com/docs/dashboard/emails/idempotency-keys) гарантирует хранение ключей 24 часа; SQL прекращает неопределённые повторы через 23 часа от первой попытки. Полученный provider ID сохраняется отдельно для каждого адресата.
 
-// Получить данные бронирования
-const booking = await bookingService.getBookingById('booking-123');
+У используемых [Telegram Bot API](https://core.telegram.org/bots/api#sendmessage) и WhatsApp-вызова нет применённого протокола дедупликации повторного запроса. Поэтому worker сначала сохраняет начало попытки. Потерянный ответ, timeout или потеря записи receipt после успешной отправки означают `ambiguous`: автоматически повторно такое сообщение не отправляется. Явный отказ 429 допускает повтор с учётом `Retry-After`; остальные окончательные отказы видны как ошибки. Гарантии exactly-once для внешних Telegram/WhatsApp нет.
 
-// Получить email владельца
-const ownerEmail = await bookingService.getOwnerEmail('owner-123');
-// или из бизнеса
-const ownerEmail = await bookingService.getOwnerEmailFromBusiness(booking.biz);
-```
+`failed` и `ambiguous` требуют ручной сверки владельцем эксплуатации с данными провайдера. Нельзя автоматически очищать receipts или возвращать эти доставки в очередь: провайдер мог уже принять сообщение. Обработанные получатели при ошибке другого канала не отправляются заново.
 
-### Использование отдельных сервисов
+## Эксплуатация
 
-```typescript
-import { 
-    EmailNotificationService,
-    WhatsAppNotificationService,
-    TelegramNotificationService,
-    ParticipantDataService 
-} from '@/lib/notifications';
+[GET /api/cron/booking-notifications](../../app/api/cron/booking-notifications/route.ts) требует непустой корректный `CRON_SECRET` либо `VERCEL_CRON_SECRET` и точный bearer. Worker отключён по умолчанию; включение требует `BOOKING_NOTIFICATION_WORKER_ENABLED=true`, применённой миграции, настроенных используемых каналов и отдельно настроенного периодического вызова. Этот документ не подтверждает наличие расписания или активацию. Cron возвращает число захваченных событий и их исходы; 503 означает сбой запуска.
 
-// Получаем данные участников
-const participantService = new ParticipantDataService(supabase, admin);
-const clientData = await participantService.getClientData(booking);
-const ownerData = await participantService.getOwnerData(biz);
-const staffData = await participantService.getStaffData(staff);
+Service role имеет чтение outbox, но изменения выполняются только через ограниченные RPC. `booking_notification_backlog_health()` возвращает скалярный JSON без PII: `pending`, `due`, `processing`, `failed`, `ambiguous`, `oldest_due_age_seconds`. Это количества событий; `ambiguous` означает хотя бы одного неопределённого получателя и может пересекаться с `failed`. `due` включает готовые pending и processing с истёкшим lease, до восьмой попытки и моложе 30 дней. При пустом due возраст равен нулю. Для разбора доступны `last_error_code` и receipts; payload нельзя выводить в общие логи/алерты.
 
-// Отправляем email
-const emailService = new EmailNotificationService({
-    apiKey: getResendApiKey(),
-    from: getEmailFrom(),
-});
-await emailService.sendNotifications(recipients, bookingDetails, 'confirm');
+`prune_booking_notifications` ограниченно удаляет payload/recipient receipts через 30 дней с подготовки или завершения события; активный lease не очищается. Запись события остаётся как минимальный маркер дедупликации без адресов и содержимого сообщения, поэтому повторный enqueue после очистки не отправляет сообщение заново. Очистку вызывают worker и ежедневный data-retention cron независимо от флага отправки; оператор должен обеспечить выполнение расписания и следить за backlog очистки.
 
-// Отправляем WhatsApp
-const whatsappService = new WhatsAppNotificationService();
-await whatsappService.sendToClient(clientData, bookingDetails, 'confirm');
+## Локальные проверки
 
-// Отправляем Telegram
-const telegramService = new TelegramNotificationService();
-await telegramService.sendToOwner(ownerData, bookingDetails, 'confirm');
-```
+[Изолированный SQL runner](../../../../../scripts/test-booking-notification-outbox-isolated.cjs) проверяет конкурентный claim, lease fencing, частичные receipts, immutable preparation, неопределённые исходы, ограниченные повторы, ревизию, retention и ACL. [Booking runner](../../../../../scripts/test-booking-requests-isolated.cjs) проверяет общий rollback брони и outbox. Они используют отдельные disposable PostgreSQL-контейнеры без сети/портов/томов, синтетические записи и реальную SQL-миграцию.
 
-## Архитектура
-
-### ParticipantDataService
-- Получает данные клиента, владельца и мастера из БД
-- Обрабатывает настройки уведомлений
-- Поддерживает гостевые бронирования
-
-### EmailNotificationService
-- Отправляет email через Resend API
-- Поддерживает персонализацию (приветствие по роли)
-- Обрабатывает rate limiting
-- Добавляет .ics вложения для клиентов
-
-### WhatsAppNotificationService
-- Отправляет уведомления через WhatsApp Cloud API
-- Проверяет настройки уведомлений и верификацию номера
-- Нормализует номера телефонов
-
-### TelegramNotificationService
-- Отправляет уведомления через Telegram Bot API
-- Проверяет настройки уведомлений
-- Для мастера и владельца отправляет даже без верификации (служебные уведомления)
-
-### NotificationOrchestrator
-- Координирует все сервисы
-- Формирует список получателей
-- Отправляет уведомления параллельно
-- Возвращает сводку результатов
-
-## Преимущества новой архитектуры
-
-1. **Модульность** - каждый сервис отвечает за свою область
-2. **Тестируемость** - легко тестировать отдельные компоненты
-3. **Переиспользуемость** - сервисы можно использовать независимо
-4. **Поддерживаемость** - проще добавлять новые каналы уведомлений
-5. **Безопасность** - используется безопасное логирование вместо console.log
-
-## Миграция
-
-Старый код (1017 строк в route.ts) был разбит на:
-- **types.ts** - 80 строк
-- **utils.ts** - 60 строк
-- **messageBuilders.ts** - 200 строк
-- **ParticipantDataService.ts** - 250 строк
-- **EmailNotificationService.ts** - 150 строк
-- **WhatsAppNotificationService.ts** - 120 строк
-- **TelegramNotificationService.ts** - 120 строк
-- **NotificationOrchestrator.ts** - 200 строк
-- **route.ts** - 120 строк (было 1017)
-
-**Итого:** ~1300 строк вместо 1017, но с лучшей структурой и переиспользуемостью.
-
+Unit tests заменяют все provider-вызовы mocks. Эти проверки не подтверждают доставку в реальный почтовый ящик/чат, права реального provider account или работоспособность расписания в развёрнутой среде.

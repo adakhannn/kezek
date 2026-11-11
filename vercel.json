@@ -1,1 +1,36 @@
-{"crons":[{"path":"/api/cron/close-shifts","schedule":"0 18 * * *"},{"path":"/api/cron/recalculate-ratings","schedule":"0 3 * * *"},{"path":"/api/cron/data-retention","schedule":"0 4 * * *"}]}
+{
+  "crons": [
+    {
+      "path": "/api/cron/close-shifts",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/recalculate-ratings",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/data-retention",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/health-check-alerts",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/analytics/daily",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/analytics/hourly-load",
+      "schedule": "40 3 * * *"
+    },
+    {
+      "path": "/api/cron/booking-notifications",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/whatsapp-inbox",
+      "schedule": "* * * * *"
+    }
+  ]
+}

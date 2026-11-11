@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import NewMemberExisting from './NewMemberExisting';
 
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { isUuid } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -27,23 +28,21 @@ export default async function NewMemberPage({ params }: { params: Promise<{ id: 
         },
     });
 
-    const { data: { user } } = await supa.auth.getUser();
-    if (!user) return <main className="p-4">Не авторизован</main>;
+    const { data: { user }, error: authError } = await supa.auth.getUser();
+    if (authError || !user) return <main className="p-4">Не авторизован</main>;
 
     // доступ: super_admin (global) ИЛИ owner/admin конкретного бизнеса
-    const { data: superRow } = await supa
-        .from('user_roles_with_user')
-        .select('user_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin, error: superError } = await checkCurrentUserIsSuperAdmin(supa, user.id);
+    if (superError) return <main className="p-4">Не удалось проверить права доступа</main>;
 
-    let allowed = !!superRow;
+    let allowed = isSuperAdmin;
     if (!allowed) {
-        const { data: isOwner } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: id });
-        const { data: isAdmin } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: id });
-        allowed = !!isOwner || !!isAdmin;
+        const { data: isOwner, error: ownerError } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: id });
+        const { data: isAdmin, error: adminError } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: id });
+        if (ownerError || adminError || typeof isOwner !== 'boolean' || typeof isAdmin !== 'boolean') {
+            return <main className="p-4">Не удалось проверить права доступа</main>;
+        }
+        allowed = isOwner === true || isAdmin === true;
     }
     if (!allowed) return <main className="p-4">Нет доступа</main>;
 

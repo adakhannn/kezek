@@ -13,5 +13,6 @@ export const runtime = 'nodejs';
 export async function GET(req: Request) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('PerformanceStats', async () => runPerformanceStatsHttp()),
+      "/api/admin/performance/stats",
   );
 }

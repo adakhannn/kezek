@@ -1,20 +1,18 @@
-import { randomUUID } from 'crypto';
-
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse } from '@/lib/apiErrorHandler';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getYandexCallbackUrl, getYandexOAuthCredentials } from '@/lib/yandexOAuthConfig';
+import { createYandexOAuthState } from '@/lib/yandexOAuthState';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request) {
+async function startLink(request: Request) {
     const supabase = await createSupabaseServerClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (authError || !user) {
         return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     }
 
@@ -23,7 +21,12 @@ export async function POST(request: Request) {
         return createErrorResponse('config', 'Вход через Яндекс временно недоступен', undefined, 503);
     }
 
-    const state = randomUUID();
+    let state: string;
+    try {
+        state = await createYandexOAuthState('link', user.id, '/profile');
+    } catch {
+        return createErrorResponse('service_unavailable', 'Вход через Яндекс временно недоступен', undefined, 503);
+    }
     const authUrl = new URL('https://oauth.yandex.ru/authorize');
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('client_id', credentials.clientId);
@@ -39,4 +42,8 @@ export async function POST(request: Request) {
         maxAge: 10 * 60,
     });
     return response;
+}
+
+export async function POST(request: Request) {
+    return withRateLimit(request, { ...RateLimitConfigs.auth, keyPrefix: 'yandex-link-start' }, () => startLink(request), "/api/auth/yandex/link/start");
 }

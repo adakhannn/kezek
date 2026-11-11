@@ -10,12 +10,15 @@ import {
 
 function createMockSupabase() {
     const fromMock = jest.fn();
+    const rpcMock = jest.fn();
 
     return {
         supabase: {
             from: fromMock,
+            rpc: rpcMock,
         } as unknown as SupabaseClient,
         fromMock,
+        rpcMock,
     };
 }
 
@@ -87,33 +90,18 @@ describe('SupabaseBookingRepository', () => {
         await expect(repo.findById('b1')).rejects.toThrow('booking lookup failed');
     });
 
-    it('updates booking status', async () => {
-        const { supabase, fromMock } = createMockSupabase();
-        const query = createQueryBuilder();
-        query.eq.mockResolvedValue({ error: null });
-        fromMock.mockReturnValue(query);
-
-        const repo = new SupabaseBookingRepository(supabase);
-
-        await expect(
-            repo.updateStatus({ bookingId: 'b1', newStatus: 'paid' }),
-        ).resolves.toBeUndefined();
-        expect(query.update).toHaveBeenCalledWith({ status: 'paid' });
-        expect(query.eq).toHaveBeenCalledWith('id', 'b1');
+    it('confirms and cancels only through checked transition RPCs', async () => {
+        const { supabase, fromMock, rpcMock } = createMockSupabase(); rpcMock.mockResolvedValue({ error: null }); const repo = new SupabaseBookingRepository(supabase);
+        await repo.updateStatus({ bookingId: 'b1', newStatus: 'confirmed' }); await repo.updateStatus({ bookingId: 'b1', newStatus: 'cancelled' });
+        expect(rpcMock).toHaveBeenNthCalledWith(1,'confirm_booking',{p_booking_id:'b1'}); expect(rpcMock).toHaveBeenNthCalledWith(2,'cancel_booking',{p_booking_id:'b1'}); expect(fromMock).not.toHaveBeenCalled();
     });
-
-    it('rethrows updateStatus errors', async () => {
-        const { supabase, fromMock } = createMockSupabase();
-        const query = createQueryBuilder();
-        const error = new Error('update failed');
-        query.eq.mockResolvedValue({ error });
-        fromMock.mockReturnValue(query);
-
-        const repo = new SupabaseBookingRepository(supabase);
-
-        await expect(
-            repo.updateStatus({ bookingId: 'b1', newStatus: 'cancelled' }),
-        ).rejects.toThrow('update failed');
+    it('requires the explicit financial command for attendance statuses', async () => {
+        const { supabase, fromMock, rpcMock } = createMockSupabase(); const repo = new SupabaseBookingRepository(supabase);
+        await expect(repo.updateStatus({ bookingId: 'b1', newStatus: 'paid' })).rejects.toThrow('checked financial command'); expect(fromMock).not.toHaveBeenCalled(); expect(rpcMock).not.toHaveBeenCalled();
+    });
+    it('rethrows checked RPC errors without direct fallback', async () => {
+        const { supabase, fromMock, rpcMock } = createMockSupabase(); rpcMock.mockResolvedValue({ error: new Error('update failed') });
+        await expect(new SupabaseBookingRepository(supabase).updateStatus({ bookingId: 'b1', newStatus: 'cancelled' })).rejects.toThrow('update failed'); expect(fromMock).not.toHaveBeenCalled();
     });
 });
 

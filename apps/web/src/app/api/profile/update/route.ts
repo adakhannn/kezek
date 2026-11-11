@@ -8,5 +8,6 @@ import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 export async function POST(req: Request) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('ProfileUpdate', async () => runProfileUpdateHttp(req)),
+      "/api/profile/update",
   );
 }

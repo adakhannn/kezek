@@ -14,13 +14,13 @@ import { LanguageSwitcher } from './i18n/LanguageSwitcher';
 import { supabase } from '@/lib/supabaseClient';
 
 export function MobileHeaderMenu() {
+    const pathname = usePathname();
+    return <MobileHeaderMenuContent key={pathname} />;
+}
+
+function MobileHeaderMenuContent() {
     const [isOpen, setIsOpen] = useState(false);
     const { t } = useLanguage();
-    const pathname = usePathname();
-
-    useEffect(() => {
-        setIsOpen(false);
-    }, [pathname]);
 
     useEffect(() => {
         if (!isOpen) return;

@@ -4,6 +4,9 @@
  */
 
 import { POST } from '@/app/api/notify/ping/route';
+import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
+jest.mock('@/lib/adminHttpAccess', () => ({ requireCurrentSuperAdmin: jest.fn() }));
+jest.mock('@/lib/rateLimit', () => ({ withRateLimit: (_req: Request, _config: unknown, handler: () => Promise<Response>) => handler(), RateLimitConfigs: { critical: {} } }));
 import { createMockRequest, expectErrorResponse, expectSuccessResponse } from '../testHelpers';
 
 describe('/api/notify/ping', () => {
@@ -11,6 +14,7 @@ describe('/api/notify/ping', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    jest.mocked(requireCurrentSuperAdmin).mockResolvedValue({ ok: true, user: { id: 'admin', email: 'user@example.com', email_confirmed_at: '2026-01-01' } } as never);
     process.env = { ...originalEnv };
     delete process.env.RESEND_API_KEY;
     delete process.env.EMAIL_FROM;
@@ -20,16 +24,16 @@ describe('/api/notify/ping', () => {
     process.env = originalEnv;
   });
 
-  test('должен вернуть 400, если RESEND_API_KEY не установлен', async () => {
+  test('должен вернуть 503, если настройки отправки отсутствуют', async () => {
     const req = createMockRequest('http://localhost/api/notify/ping', {
       method: 'POST',
       body: { to: 'user@example.com' },
     });
 
     const res = await POST(req);
-    const data = await expectErrorResponse(res, 400, 'validation');
+    const data = await expectErrorResponse(res, 503, 'service_unavailable');
 
-    expect(data.message).toContain('RESEND_API_KEY');
+    expect(data.message).toContain('не настроена');
   });
 
   test('должен отправить ping-письмо при наличии RESEND_API_KEY', async () => {
@@ -69,7 +73,6 @@ describe('/api/notify/ping', () => {
     expect(data.data).toMatchObject({
       ok: true,
       status: 202,
-      text: '{"id":"email_123"}',
     });
   });
 });

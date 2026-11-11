@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { FilterPreset, applyPreset } from './FilterPresets';
 import type { BookingItem } from './bookingsViewTypes';
 
-import { cancelBookingWithFallback, confirmBooking } from '@/lib/bookingDashboardService';
+import { bookingCancellationError } from '@/lib/bookingCancellationError';
+import { cancelBooking, confirmBooking } from '@/lib/bookingDashboardService';
 import { filterDashboardBookings } from '@/lib/dashboardBookingSearch';
 import { logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
@@ -277,9 +278,10 @@ export function useDashboardBookingsListController({
 
     async function cancel(id: string) {
         try {
-            await cancelBookingWithFallback(id);
+            await cancelBooking(id);
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message = bookingCancellationError(error)?.message
+                ?? (error instanceof Error ? error.message : t('bookings.list.cancelError', 'Не удалось отменить запись'));
             showError(message);
             return;
         }

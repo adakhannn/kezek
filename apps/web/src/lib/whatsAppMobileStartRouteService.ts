@@ -7,6 +7,7 @@ import {
     getWhatsAppOtpTemplateType,
 } from '@/lib/env';
 import { logDebug, logWarn } from '@/lib/log';
+import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 import { trackWhatsAppMobileMetric } from '@/lib/whatsAppMobileMetricsService';
@@ -130,6 +131,7 @@ async function insertOtpAttempt({
     code,
     otpHash,
     expiresAtIso,
+    codeChallenge,
 }: {
     admin: AdminLike;
     phone: string;
@@ -138,11 +140,13 @@ async function insertOtpAttempt({
     code: string;
     otpHash: string;
     expiresAtIso: string;
+    codeChallenge: string;
 }) {
     const result = (await admin
         .from('whatsapp_otp_codes')
         .insert({
             phone,
+            code_challenge: codeChallenge,
             phone_masked: phoneMasked,
             phone_hash: phoneHash,
             code,
@@ -167,10 +171,15 @@ async function insertOtpAttempt({
 export async function runWhatsAppMobileStartRoute({
     admin,
     phone,
+    codeChallenge,
 }: {
     admin: AdminLike;
     phone?: string | null;
+    codeChallenge: string;
 }): Promise<WhatsAppMobileStartRouteResult> {
+    if (!MOBILE_CODE_CHALLENGE_RE.test(codeChallenge)) {
+        return { ok: false, status: 400, error: 'validation', message: 'Начните вход заново.' };
+    }
     if (!phone?.trim()) {
         return {
             ok: false,
@@ -219,6 +228,7 @@ export async function runWhatsAppMobileStartRoute({
             code: otpCode,
             otpHash,
             expiresAtIso: expiresAt,
+            codeChallenge,
         });
         await trackWhatsAppMobileMetric('mobile_whatsapp_login_started', {
             attemptId: attempt.id,

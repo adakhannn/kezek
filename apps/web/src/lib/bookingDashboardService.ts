@@ -4,6 +4,7 @@ import {
     type BookingCommandsPort,
 } from '@core-domain/booking';
 
+import { postInternalBooking } from '@/lib/internalBookingClient';
 import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -38,28 +39,6 @@ function createDashboardBookingCommands(): BookingCommandsPort {
                 p_booking_id: bookingId,
             });
             if (error) {
-                const msg = error.message.toLowerCase();
-                if (msg.includes('not assigned to branch') || msg.includes('staff')) {
-                    const { error: updateError } = await supabase
-                        .from('bookings')
-                        .update({ status: 'cancelled' })
-                        .eq('id', bookingId);
-
-                    if (updateError) {
-                        logError(
-                            'BookingDashboardService',
-                            'cancel_booking fallback update error',
-                            {
-                                bookingId,
-                                error: updateError,
-                            },
-                        );
-                        throw updateError;
-                    }
-
-                    return;
-                }
-
                 logError('BookingDashboardService', 'cancel_booking error', {
                     bookingId,
                     error,
@@ -79,7 +58,7 @@ export async function confirmBooking(bookingId: string): Promise<void> {
     );
 }
 
-export async function cancelBookingWithFallback(bookingId: string): Promise<void> {
+export async function cancelBooking(bookingId: string): Promise<void> {
     await cancelBookingUseCase(
         {
             commands: createDashboardBookingCommands(),
@@ -101,26 +80,9 @@ export type CreateInternalBookingParams = {
 };
 
 export async function createInternalBooking(params: CreateInternalBookingParams): Promise<string> {
-    const { bizId, branchId, serviceId, staffId, startAtISO, minutes, clientId, clientName, clientPhone } = params;
-
-    const { data, error } = await supabase.rpc('create_internal_booking', {
-        p_biz_id: bizId,
-        p_branch_id: branchId,
-        p_service_id: serviceId,
-        p_staff_id: staffId,
-        p_start: startAtISO,
-        p_minutes: minutes,
-        p_client_id: clientId,
-        p_client_name: clientName,
-        p_client_phone: clientPhone,
-    });
-
-    if (error) {
-        logError('BookingDashboardService', 'create_internal_booking error', { params, error });
-        throw error;
-    }
-
-    return String(data);
+    return postInternalBooking({ mode: 'simple', biz_id: params.bizId, branch_id: params.branchId,
+        staff_id: params.staffId, service_id: params.serviceId, start_at: params.startAtISO,
+        duration_min: params.minutes, client_id: params.clientId, client_name: params.clientName, client_phone: params.clientPhone });
 }
 
 export type CreateInternalComplexBookingService = {
@@ -142,44 +104,25 @@ export type CreateInternalComplexBookingParams = {
 };
 
 export async function createInternalComplexBooking(params: CreateInternalComplexBookingParams): Promise<string> {
-    const { bizId, branchId, staffId, startAtISO, services, clientId, clientName, clientPhone, clientEmail } = params;
-
-    const servicesPayload = services.map((s, index) => ({
-        service_id: s.serviceId,
-        duration_min: s.durationMin,
-        order_index: typeof s.orderIndex === 'number' ? s.orderIndex : index,
-    }));
-
-    const { data, error } = await supabase.rpc('create_internal_complex_booking', {
-        p_biz_id: bizId,
-        p_branch_id: branchId,
-        p_staff_id: staffId,
-        p_start: startAtISO,
-        p_services: servicesPayload,
-        p_client_id: clientId,
-        p_client_name: clientName,
-        p_client_phone: clientPhone,
-        p_client_email: clientEmail ?? null,
-    });
-
-    if (error) {
-        logError('BookingDashboardService', 'create_internal_complex_booking error', { params, error });
-        throw error;
-    }
-
-    return String(data);
+    return postInternalBooking({ mode: 'complex', biz_id: params.bizId, branch_id: params.branchId,
+        staff_id: params.staffId, start_at: params.startAtISO, client_id: params.clientId,
+        client_name: params.clientName, client_phone: params.clientPhone, client_email: params.clientEmail ?? null,
+        services: params.services.map((service, index) => ({ service_id: service.serviceId,
+            duration_min: service.durationMin, order_index: service.orderIndex ?? index })) });
 }
 
 export type GetFreeSlotsParams = {
     bizId: string;
     serviceId: string;
+    staffId: string;
     day: string;
     perStaff?: number;
     stepMinutes?: number;
 };
 
 export async function getFreeSlotsForServiceDay(params: GetFreeSlotsParams): Promise<DashboardSlot[]> {
-    const { bizId, serviceId, day, perStaff = 400, stepMinutes = 15 } = params;
+    const { bizId, serviceId, staffId, day, perStaff = 400, stepMinutes = 15 } = params;
+    if (!staffId || staffId === 'any') throw new Error('USE_PAGED_SLOTS');
 
     const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
         p_biz_id: bizId,
@@ -187,6 +130,7 @@ export async function getFreeSlotsForServiceDay(params: GetFreeSlotsParams): Pro
         p_day: day,
         p_per_staff: perStaff,
         p_step_min: stepMinutes,
+        p_staff_id: staffId,
     });
 
     if (error) {

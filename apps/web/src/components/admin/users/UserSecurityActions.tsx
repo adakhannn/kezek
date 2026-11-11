@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 type OkResp = { ok: true };
 type ErrResp = { ok: false; error?: string; message?: string; code?: string; businesses?: { id: string; name: string | null; slug: string | null }[] };
-type ToggleSuperResp = OkResp | ErrResp;
+type ToggleSuperResp = { ok: true; data: { isSuperAdmin: boolean } } | ErrResp;
 type DeleteUserResp = OkResp | ErrResp;
 type SendMagicResp = ({ ok: true; link?: string } | ErrResp);
 type SuspendResp = { ok: true; blocked: boolean } | ErrResp;
@@ -55,8 +55,9 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
             });
             const j = (await resp.json()) as ToggleSuperResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${resp.status}`);
-            setSuperVal(next);
-            setMsg(next ? 'Назначен супер-админом' : 'Супер-админ снят');
+            if (!j.data || typeof j.data.isSuperAdmin !== 'boolean') throw new Error('Не удалось подтвердить состояние роли');
+            setSuperVal(j.data.isSuperAdmin);
+            setMsg(j.data.isSuperAdmin ? 'Назначен супер-админом' : 'Супер-админ снят');
         } catch (e) {
             setErr(extractError(e));
         } finally {
@@ -74,6 +75,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
             });
             const j = (await resp.json()) as SuspendResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || ('message' in j && j.message) || `HTTP ${resp.status}`);
+            if (typeof j.blocked !== 'boolean' || j.blocked !== next) throw new Error('Не удалось подтвердить состояние блокировки');
             setBlocked(j.blocked);
             setMsg(j.blocked ? 'Пользователь заблокирован' : 'Пользователь разблокирован');
             router.refresh();
@@ -94,25 +96,10 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
             const resp = await fetch(`/admin/api/users/${userId}/delete`, { method: 'POST' });
             const j = (await resp.json()) as DeleteUserResp;
 
-            if (!resp.ok) {
-                // маппинг загадочной ошибки удаления -> совет на блокировку
-                if (resp.status === 409 && 'code' in j && j.code === 'DELETE_BLOCKED_USE_SUSPEND') {
-                    const list = Array.isArray(j.businesses)
-                        ? j.businesses.map((b) => (b.slug ? `${b.name} (@${b.slug})` : (b.name ?? 'Без названия'))).join(', ')
-                        : '';
-                    setErr('Удаление не доступно. Используйте «Заблокировать» выше.' + (list ? ` Бизнесы: ${list}` : ''));
-                    setLoading(false);
-                    return;
-                }
-                setErr(('error' in j && j.error) || ('message' in j && j.message) || `HTTP ${resp.status}`);
-                setMsg('Можно вместо удаления заблокировать пользователя (кнопка ниже).');
-                setLoading(false);
-                return;
+            if (!resp.ok || !('ok' in j) || j.ok !== true) {
+                throw new Error(('error' in j && j.error) || ('message' in j && j.message) || 'Не удалось подтвердить удаление');
             }
 
-            // УСПЕШНОЕ удаление - немедленный редирект БЕЗ задержек
-            // Используем replace вместо href, чтобы не добавлять в историю
-            // И делаем это СРАЗУ, до любых других операций
             window.location.replace('/admin/users');
             // Не выполняем код после этой строки - редирект уже начался
             return;
@@ -240,7 +227,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                     <div className="flex-1">
                         <h3 className="font-semibold text-red-900 dark:text-red-300 mb-1">Опасная зона</h3>
                         <p className="text-sm text-red-800 dark:text-red-400">
-                            Удаление полностью удалит аккаунт. Если удаление не проходит — используйте «Заблокировать» выше.
+                            Удаление удалит аккаунт; история записей и финансов сохранится. Владение бизнесами нужно передать заранее.
                         </p>
                     </div>
                 </div>

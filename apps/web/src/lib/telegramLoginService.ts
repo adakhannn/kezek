@@ -151,11 +151,12 @@ async function createNewTelegramUser(
     };
 }
 
-export async function handleTelegramLogin({
+/** Identity resolution shared with the PKCE grant flow; never rotates credentials. */
+export async function resolveTelegramIdentity({
     admin,
     normalized,
     randomHex = defaultRandomHex,
-}: TelegramLoginInput): Promise<TelegramLoginResult> {
+}: TelegramLoginInput) {
     const existingProfile = await findExistingProfile(admin, normalized.telegram_id);
     let userId: string;
     let linkage: 'existing' | 'created';
@@ -172,6 +173,14 @@ export async function handleTelegramLogin({
         userId = creation.userId;
         linkage = 'created';
     }
+
+    return { ok: true as const, userId, linkage };
+}
+
+export async function handleTelegramLogin({ admin, normalized, randomHex = defaultRandomHex }: TelegramLoginInput): Promise<TelegramLoginResult> {
+    const identity = await resolveTelegramIdentity({ admin, normalized, randomHex });
+    if (!identity.ok) return identity;
+    const { userId, linkage } = identity;
 
     const tempPassword = randomHex(16);
     const tempEmail = `telegram_${normalized.telegram_id}@telegram.local`;

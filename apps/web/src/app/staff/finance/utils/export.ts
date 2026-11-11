@@ -5,6 +5,8 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import type { ShiftItem, Shift } from '../types';
+
+import { financeDateLabel } from './calendar';
 import { shiftSummaryAmounts } from './summaryAmounts';
 
 import { TZ } from '@/lib/time';
@@ -38,7 +40,7 @@ export function exportClientsToCSV(
             : '-';
 
         return [
-            formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy'),
+            financeDateLabel(shiftDate)!.split('-').reverse().join('.'),
             staffName || '-',
             item.clientName || '-',
             item.serviceName || '-',
@@ -62,7 +64,7 @@ export function exportClientsToCSV(
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `clients_${formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}.csv`;
+    link.download = `clients_${financeDateLabel(shiftDate)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -88,7 +90,7 @@ export function exportShiftSummaryToCSV(
     const revenue = shiftSummaryAmounts(calculations);
     
     const rows = [
-        ['Дата смены', formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')],
+        ['Дата смены', financeDateLabel(shiftDate)!.split('-').reverse().join('.')],
         ['Сотрудник', staffName || '-'],
         ['Статус', shift?.status === 'closed' ? 'Закрыта' : shift?.status === 'open' ? 'Открыта' : 'Не создана'],
         ['', ''],
@@ -119,7 +121,7 @@ export function exportShiftSummaryToCSV(
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `shift_summary_${formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}.csv`;
+    link.download = `shift_summary_${financeDateLabel(shiftDate)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

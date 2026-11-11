@@ -9,10 +9,13 @@ jest.mock('@/lib/validation/apiValidation', () => ({
 import { runNotifyHttp } from '@/lib/notifyHttpService';
 import { runNotifyBooking } from '@/lib/notifyBookingService';
 import { validateRequest } from '@/lib/validation/apiValidation';
+import { resolveRequestAuthContext } from '@/lib/requestAuthContext';
+jest.mock('@/lib/requestAuthContext', () => ({ resolveRequestAuthContext: jest.fn() }));
 
 describe('notifyHttpService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.mocked(resolveRequestAuthContext).mockResolvedValue({ supabase: { verified: true }, user: { id: 'user' } } as never);
     });
 
     test('delegates validated request to notify service', async () => {
@@ -22,7 +25,7 @@ describe('notifyHttpService', () => {
         });
         (runNotifyBooking as jest.Mock).mockResolvedValue({
             ok: true,
-            data: { sent: 1, whatsappSent: 0, telegramSent: 0 },
+            data: { queued: true, event_id: 'event-id' },
         });
 
         const response = await runNotifyHttp(
@@ -30,8 +33,8 @@ describe('notifyHttpService', () => {
         );
         const body = await response.json();
 
-        expect(runNotifyBooking).toHaveBeenCalledWith({ type: 'hold', booking_id: 'booking-id' });
+        expect(runNotifyBooking).toHaveBeenCalledWith({ type: 'hold', booking_id: 'booking-id' }, { verified: true });
         expect(response.status).toBe(200);
-        expect(body.data.sent).toBe(1);
+        expect(body.data).toEqual({ queued: true, event_id: 'event-id' });
     });
 });

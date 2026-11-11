@@ -1,0 +1,538 @@
+{
+  "date": "2026-11-11",
+  "status": "LOCAL_PACKAGE_COMPLETE",
+  "scope": "Finish existing package only; no remote DB mutation or deployment",
+  "head": "b424cd396cbeefbe2a4173e0aa4583661e85ba87",
+  "stagedSha256": "6c9d8aef67dd392a0948a5ac224d251984deb189066eac45d8a0d5c2af04705a",
+  "sourceManifest": "source-hashes.json",
+  "sourceManifestSha256": "393a5d7938070441f503a9c32218c4f62d0e0fa603d765064d7597bc3b24b219",
+  "web": {
+    "suites": 600,
+    "tests": 3498,
+    "passed": 3498,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0,
+    "success": true
+  },
+  "mobile": {
+    "suites": 46,
+    "tests": 257,
+    "passed": 257,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0,
+    "success": true
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 124
+  },
+  "typecheck": {
+    "web": "PASS",
+    "mobile": "PASS",
+    "shared": "PASS",
+    "coreDomain": "PASS"
+  },
+  "sharedTests": {
+    "suites": 2,
+    "tests": 10,
+    "status": "PASS"
+  },
+  "build": {
+    "code": 0,
+    "started": "2026-11-11T06:55:37.698Z",
+    "finished": "2026-11-11T06:56:45.154Z",
+    "cwd": "C:\\Users\\AdaX\\AppData\\Local\\Temp\\kezek-critical-20261110-pmg7ca\\release-build-1794313068134\\apps\\web",
+    "externalNetwork": "blocked",
+    "sourceSnapshot": "package-closure-20261111",
+    "sourceMatchesCurrent": true
+  },
+  "coverage": {
+    "thresholds": {
+      "statements": 60,
+      "branches": 60,
+      "functions": 60,
+      "lines": 60
+    },
+    "scope": "Existing collectCoverageFrom allowlist, not all source",
+    "unchanged": true
+  },
+  "sql": {
+    "suiteCount": 14,
+    "status": "PASS",
+    "execution": "First nine suites passed in registry run; boundary runner failed its timing assumption, fixed with explicit lock barrier and rerun PASS; remaining four suites PASS",
+    "registry": [
+      "test-mobile-auth-grants-isolated.cjs",
+      "test-finance-transactions.mjs",
+      "test-booking-requests-isolated.cjs",
+      "test-booking-notification-outbox-isolated.cjs",
+      "test-staff-scoped-slots-isolated.cjs",
+      "test-cron-execution-isolated.cjs",
+      "test-reporting-completeness.mjs",
+      "test-shift-close-backlog.mjs",
+      "test-whatsapp-inbox-isolated.cjs",
+      "test-booking-finance-boundary-isolated.mjs",
+      "test-attendance-command-isolated.mjs",
+      "test-shift-hours-adjustment-isolated.mjs",
+      "test-platform-admin-commands-isolated.cjs",
+      "test-privileged-maintenance-isolated.cjs"
+    ]
+  },
+  "redis": {
+    "rateLimit": "PASS",
+    "performance": "PASS"
+  },
+  "database": {
+    "container": "kezek-package-closure-20261111",
+    "network": "none",
+    "schemaSha256": "f9f2410628ec05aa41cc8bf40ebde7647f9160e040d2c144566d5438c0aaf84c",
+    "dataSha256": "86fea11218c92ed063b598da3d5902077e85c08bd9344cfbb515ee4525402591",
+    "migrations": [
+      {
+        "file": "20261109090000_bound_mobile_session_grants.sql",
+        "sha256": "ad437864fdcf965ec6e4db5568d1c171fe22201197b9519091add5976fd30bde",
+        "status": "PASS"
+      },
+      {
+        "file": "20261109090100_tenant_finance_rpc_guards.sql",
+        "sha256": "4dfa74c757eaa22205041107fb60ebfd067e1d2a476b6f2728d476267341c347",
+        "status": "PASS"
+      },
+      {
+        "file": "20261109091100_atomic_shift_commands.sql",
+        "sha256": "ee8797d416bf01b7568ba541e27c1ac15843fb8f4d4763bd99ff7482b1986ed6",
+        "status": "PASS"
+      },
+      {
+        "file": "20261109100000_yandex_oauth_state.sql",
+        "sha256": "bb1fd6f17be4394ee20e89e9239a43a31cb227ed5f82ba7163a4109756bda00b",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110090000_booking_notification_outbox.sql",
+        "sha256": "ed901ae6453318be3f23ddae3ac4affb023b33bfd288dd7ddd1b9ffa92c9d1d7",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110100000_finance_draft_revision.sql",
+        "sha256": "b43eddecd16bfc63338c2a5e1a6e0a6508212cceb67f22f062d44730bb8827e7",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110101000_atomic_booking_requests.sql",
+        "sha256": "1e186cd2d4d3508694939008ddaa8bfd9e69d59ed5bd6f5ba5b2196ffcd3d75a",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110110000_reporting_completeness.sql",
+        "sha256": "69fb566122c004d6af790248f0e9a5bed54b4a0e58f894d2166d1c571f049651",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110113000_shift_close_backlog.sql",
+        "sha256": "a331f113384b1dace33a6bddf76396f9b9e159e227690701ea110b9b775466e2",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110113500_cron_execution_tracking.sql",
+        "sha256": "87a52553ed394e8118f0d123f2290c54813a3b53362ef27c732915d32061a713",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110114000_finance_calendar.sql",
+        "sha256": "62a27dc972af8e3502ad3e630a332941710e361fbc7251715c6bd0b3a7614c54",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110121000_staff_scoped_slots.sql",
+        "sha256": "5a4cf8d7a7fd6214af3bbb4b0cc5c23c02e1eaebeca592e67c0b214e1eb1130a",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110123000_service_only_booking_commands.sql",
+        "sha256": "b4308fef783844bbfb3765f9b12704aa99e757afb3a62a975ede48af91f9e8d9",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110124000_whatsapp_inbox.sql",
+        "sha256": "fd8e6acb38d7b2eee5a2336c750134bf68aa8f60642e416b59eb96221ccec8d9",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110125000_booking_outbox_throughput.sql",
+        "sha256": "b01ebcc8f4393b8bd49fce5a3f41ee70c101330a0ecd5c1fcd098742e96c5372",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110130000_booking_attendance_command.sql",
+        "sha256": "46d11e8796a77d2e062c5e40fd990f2d18be8e80ecd41bcb2b20a74da949b93c",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110131000_shift_hours_adjustment.sql",
+        "sha256": "b5464aad11bbe0b3f592a055ff7edb1043399d6fdff97ca6847c2c7c7fb480dd",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110132000_privileged_maintenance_acl.sql",
+        "sha256": "5ef0496cbcb67224f588df9723fd3b502e11a517054c7a1e3483184cfe009aae",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110133000_internal_booking_requests.sql",
+        "sha256": "a73ddf794840f3f34086f4bb9a780103262a6724001156ecf08473b79ed07b66",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110134000_platform_admin_commands.sql",
+        "sha256": "d116e8d28e1984ad2b063e9a1e5d930e81d543ad512ce3cdec58479b6c721f2c",
+        "status": "PASS"
+      },
+      {
+        "file": "20261110140000_booking_legacy_surface.sql",
+        "sha256": "d43fb76a9c8981a03561aa2083625809da679bdb32f20a8444402d0b370a4d63",
+        "status": "PASS"
+      }
+    ],
+    "remoteMutation": false,
+    "authBoundary": "Only eight referenced auth UUID rows; no secrets/passwords/sessions",
+    "behaviorChecks": [
+      {
+        "file": "finance-calendar-actual-schema-smoke.sql",
+        "status": "PASS",
+        "rollback": true,
+        "sha256": "3ee695bc7babae77f4e5e768be80036579d9c2606bd721049e437ff523cc490c"
+      },
+      {
+        "file": "booking-boundary-actual-schema-smoke.sql",
+        "status": "PASS",
+        "rollback": true,
+        "sha256": "6175c3865d1ff1ee56c8bcf44aacadb3e092f1df2848bf09502fc859da6a35b6"
+      },
+      {
+        "file": "slots-actual-schema-smoke.sql",
+        "status": "PASS",
+        "rollback": true,
+        "sha256": "812630218346dfc25d8c2e1fb867b4bf01874826769caaf57f001d6f599c8993"
+      },
+      {
+        "file": "maintenance-actual-schema-smoke.sql",
+        "status": "PASS",
+        "rollback": true,
+        "sha256": "73b008771c8f93a10fcc5dbf975c9b14fd7eaa4670e6c2b64146894b52af0f81"
+      },
+      {
+        "file": "final-commands-smoke.sql",
+        "status": "PASS",
+        "rollback": true,
+        "sha256": "a245b6e922f080e2f1717f6c396a2837157b38cb0f654637fe9d8d2833d0d29c"
+      }
+    ]
+  },
+  "initialWeb": {
+    "suites": 599,
+    "tests": 3481,
+    "passed": 3460,
+    "failed": 21,
+    "skipped": 0,
+    "todo": 0,
+    "success": false
+  },
+  "originalFailures": [
+    {
+      "file": "apps/web/src/app/staff/finance/components/__tests__/FinancePage.debounce.test.tsx",
+      "name": "FinancePage debounced save autosaves one meaningful client change after debounce",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/app/staff/finance/components/__tests__/FinancePage.debounce.test.tsx",
+      "name": "FinancePage debounced save batches two meaningful edits into one debounced save",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/app/staff/finance/components/__tests__/FinancePage.debounce.test.tsx",
+      "name": "FinancePage debounced save flushes meaningful unsaved changes when leaving clients tab",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/app/staff/finance/components/__tests__/FinancePage.debounce.test.tsx",
+      "name": "FinancePage debounced save flushes meaningful unsaved changes on unmount",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/components/StaffFinanceStatsTranslations.test.tsx",
+      "name": "localizes the observed finance statistics and editor in ru without finance fallbacks",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/components/StaffFinanceStatsTranslations.test.tsx",
+      "name": "localizes the observed finance statistics and editor in ky without finance fallbacks",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/components/StaffFinanceStatsTranslations.test.tsx",
+      "name": "localizes the observed finance statistics and editor in en without finance fallbacks",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/lib/openApiSdkContract.test.ts",
+      "name": "generated authenticated booking wire passes real validation and preserves the caller identity",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/lib/openApiSdkContract.test.ts",
+      "name": "generated guest booking carries durable proof and supports services-only normalization",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/components/StaffShiftStatsBoundary.test.tsx",
+      "name": "employee guarantee can exceed base share without a second deduction from saved business share",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/dashboard/finance/all.test.ts",
+      "name": "/api/dashboard/finance/all Edge cases должен вернуть пустой список при отсутствии сотрудников",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/dashboard/finance/all.test.ts",
+      "name": "/api/dashboard/finance/all Edge cases должен обработать фильтрацию по филиалу",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/staff/shift/today.test.ts",
+      "name": "/api/staff/shift/today returns today shift data when an open shift exists",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/staff/shift/today.test.ts",
+      "name": "/api/staff/shift/today returns no-shift payload when there is no open shift",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/staff/shift/today.test.ts",
+      "name": "/api/staff/shift/today marks the day as off when time off exists",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/dashboard/staff/finance-stats.test.ts",
+      "name": "/api/dashboard/staff/[id]/finance/stats success returns day stats with closed shift and grouped items",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/dashboard/staff/finance-stats.test.ts",
+      "name": "/api/dashboard/staff/[id]/finance/stats success returns month stats and includes current open shift for today",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/dashboard/finance-all.test.ts",
+      "name": "/api/dashboard/finance/all должен успешно вернуть статистику (реэкспорт)",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/dashboard/staff/finance-all.test.ts",
+      "name": "/api/dashboard/staff/finance/all Успешное получение статистики должен успешно вернуть статистику всех сотрудников за день",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/dashboard/staff/finance-all.test.ts",
+      "name": "/api/dashboard/staff/finance/all Успешное получение статистики должен успешно вернуть статистику за месяц",
+      "finalStatus": "passed"
+    },
+    {
+      "file": "apps/web/src/__tests__/api/staff/shift/items.test.ts",
+      "name": "/api/staff/shift/items saves the validated ledger through one caller-bound atomic command",
+      "finalStatus": "passed"
+    }
+  ],
+  "documentation": {
+    "status": "PASS",
+    "currentReferenceDocuments": 113,
+    "localLinks": 2747,
+    "toolingTests": 29,
+    "cronJobs": 8,
+    "httpOperations": 213,
+    "typedSdkOperations": 4,
+    "checks": [
+      "links",
+      "anchors",
+      "JSON examples",
+      "API catalogue",
+      "documentation catalogue",
+      "OpenAPI/SDK reproducibility",
+      "SQL/CI matrix parity",
+      "cron manifest parity",
+      "git diff --check"
+    ]
+  },
+  "e2e": {
+    "status": "NOT_RUN",
+    "reason": "No isolated seeded auth/provider/device bootstrap; old manual campaign remains paused"
+  },
+  "privateArtifacts": {
+    "directory": "%TEMP%/kezek-package-closure-20261111",
+    "files": [
+      {
+        "file": "web-tests.json",
+        "sha256": "1de0a32b5d86674ab2f07ef4b48dbb455032e9c0cba0531b0d287c581882abab"
+      },
+      {
+        "file": "web-tests.log",
+        "sha256": "404863ea973d2f9cd419dbdfce91db6ebbf87b014d1b9d44e6907f2c0e130af3"
+      },
+      {
+        "file": "web-tests-final.json",
+        "sha256": "9101205e690db37f991e6b5025d2d88223c1837fccbbed9ce3c7a111d1bd30b7"
+      },
+      {
+        "file": "web-tests-final.log",
+        "sha256": "a94eb3fd9603ea894056d3d91b087c07dd1d8bfcdb61573bd9d9c0fcf9cb715c"
+      },
+      {
+        "file": "web-lint-final.json",
+        "sha256": "ea044f546d15bc413e5bad8431b6c7c871a647f47ca440617d668872628d5100"
+      },
+      {
+        "file": "web-tsc-final.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "file": "mobile-tests.json",
+        "sha256": "057a620015187d6540188ad73481cb72c7563098dc8148eda7620af3e30227b2"
+      },
+      {
+        "file": "mobile-tsc.log",
+        "sha256": "d8809d1edf8b639f4f89664562d4ed86413f2e29da31fcd75f81cdb05a91e4ac"
+      },
+      {
+        "file": "shared-tests.log",
+        "sha256": "5d778ae7bdfeb0f475d6891e08527204fa3a3e68149f621ebd9d8b0460d43e0e"
+      },
+      {
+        "file": "shared-tsc.log",
+        "sha256": "0771af5c0641c01f57fdb816721bb17ced33f64156e24454d920b4a629cec35b"
+      },
+      {
+        "file": "sql-isolated.log",
+        "sha256": "53bfcbdca431d37bc46298cc3568d7cbab4ca9f2eaa6a59630443606d483c4ad"
+      },
+      {
+        "file": "sql-boundary-final.log",
+        "sha256": "90965a63032c6a2d065e9f78751d9534981cec8c3d4476433e46fb4d0b9b20ed"
+      },
+      {
+        "file": "sql-tail-final.log",
+        "sha256": "4841637267818774cda8a657709b8a8db4e1c1ae6022395a878ed6dae35f3808"
+      },
+      {
+        "file": "redis-rate-limit.log",
+        "sha256": "7637b24b311a4b154652dd563238c4ac7cf39dd38a17c84c1d12741ddaf0c6ff"
+      },
+      {
+        "file": "redis-performance.log",
+        "sha256": "0d60f0b15dbd191ab65a25adb92a65f3838e5f2a43ac0730748f1e596210c81a"
+      },
+      {
+        "file": "migration-replay.json",
+        "sha256": "02adc173c9a1516f2721eee36e622aaaa031e61728868c09403841701c9a5b03"
+      },
+      {
+        "file": "release-build.stdout",
+        "sha256": "50359c9f504153ec9db58405a8ea21d70a67cd3080a8975c7ea7c4696344400c"
+      },
+      {
+        "file": "release-build.stderr",
+        "sha256": "d1f8451fb562916e782976cecba1ba7904e907e7c21cd3eae2127f6cba3ecd60"
+      },
+      {
+        "file": "release-build-result.json",
+        "sha256": "495464bb76067fe5af2467c3cec674c596a7b32633f8872fcb9a74f79ab0da39"
+      },
+      {
+        "file": "core-tests.json",
+        "sha256": "0e019ce38c47e4be6d66a125e6a964c1786b274cdd42a66c13df747ee21c0e5e"
+      },
+      {
+        "file": "core-tests.log",
+        "sha256": "4dc40a3492c2434bc4c34f2e6b78f6a4bdef5bdd29fa33d622c5732b297b8890"
+      },
+      {
+        "file": "core-tsc-final.log",
+        "sha256": "025642299bad84cc97aebe2adede04340b9d7cc3d0fc36bd82cb31026865ffd3"
+      },
+      {
+        "file": "format-regressions.log",
+        "sha256": "edecbba82a640246376e155b1e532b474c71967238d2d5520794a9e22e3c144a"
+      },
+      {
+        "file": "tools-tests-final.log",
+        "sha256": "069deddc0fae074aad2e644b43bb7a60bcd75f63eb76883ee696905da0b9c353"
+      },
+      {
+        "file": "docs-check.log",
+        "sha256": "63e133077c47e7b19506f061619d8bd4e3ee9460d1f12960885d6a95a076b052"
+      },
+      {
+        "file": "crons-check.log",
+        "sha256": "824ea07c83b18f75e1578f68cbafd44c963cc7e97319660cc019ba83c1a482de"
+      },
+      {
+        "file": "openapi-check.log",
+        "sha256": "378b8cb1c3ad8e5e0ac91af7312e5854eee18cb2e2462d06e4d3d2fcd0df2d13"
+      },
+      {
+        "file": "diff-check-final.log",
+        "sha256": "6e9f2ac3fc8a3dc5f469872834c128b9047b875bf3c9f158a7e976e4f856d7a7"
+      },
+      {
+        "file": "cleanup.json",
+        "sha256": "3fa6d873b51d47894f694f47df8f7b11650940d8032e7a7cf7a09dbcf7c14af2"
+      },
+      {
+        "file": "replay-clone.cjs",
+        "sha256": "4684a09876f09c5cac51480ebc6f5f146dabab653909cd0c8184c999f4ff7fa8"
+      },
+      {
+        "file": "build-network-guard.cjs",
+        "sha256": "d72f5621fac7e89a120e8bd7ee8533c4d6402a14c800e4d8b3a0b51efdfb833d"
+      },
+      {
+        "file": "run-isolated-build.cjs",
+        "sha256": "ed480c24ba0287d557eaa9b88486dbfb565aa15eb9d145ddbbb04baffaa77ef9"
+      }
+    ]
+  },
+  "remaining": [
+    "ENG-31 user delete/suspend lifecycle",
+    "ENG-10 geo completeness",
+    "remote migration history reconciliation and matched SQL/web/mobile rollout",
+    "provider/device/browser E2E and remote CI execution",
+    "RPS/provider throughput/cost/backlog measurement, external monitoring and PITR/RTO",
+    "legacy date/auth/admin/RPC surfaces outside fixed scope",
+    "124 lint warnings; framework/build warnings; no full baseline in checkout"
+  ],
+  "coreDomain": {
+    "suites": 4,
+    "tests": 58,
+    "passed": 58,
+    "failed": 0,
+    "skipped": 0,
+    "success": true,
+    "typecheck": "PASS",
+    "discovery": "All existing test.ts; repaired previously uncompiled/excluded sibling test files without changing production domain logic"
+  },
+  "cleanup": {
+    "removed": [
+      "kezek-package-closure-20261111",
+      "kezek-critical-schema-20261110-pmg7ca"
+    ],
+    "otherContainers": "untouched",
+    "privateBackups": "retained"
+  },
+  "validationNotes": [
+    "Web final full run 600/3498; subsequent formatting removed only obsolete mock scaffolding/trailing whitespace; affected 3 suites/8 tests rerun PASS. Production sources differed only in whitespace before final successful build.",
+    "Core-domain separate typecheck exposed syntax/type fixture errors and two excluded files. All four suites enabled and passed.",
+    "No ESLint rules, web test selection or coverage thresholds/allowlist weakened; core test discovery expanded."
+  ]
+}

@@ -2,6 +2,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 
 import { LanguageProvider, useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { StaffOnboarding } from '@/app/staff/components/StaffOnboarding';
 
 function LocaleProbe() {
     const { locale, t } = useLanguage();
@@ -20,4 +21,8 @@ test.each([
 test('keeps the default for standalone consumers without a server locale', () => {
     const html = renderToStaticMarkup(<LanguageProvider><LocaleProbe /></LanguageProvider>);
     expect(html).toBe('<p>ru|Язык</p>');
+});
+
+test('does not reveal onboarding before the browser preference can be read', () => {
+    expect(renderToStaticMarkup(<LanguageProvider><StaffOnboarding /></LanguageProvider>)).toBe('');
 });

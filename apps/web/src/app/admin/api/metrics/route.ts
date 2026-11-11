@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateQuery } from '@/lib/validation/apiValidation';
@@ -31,6 +32,8 @@ const metricsQuerySchema = z.object({
  * Получает метрики API запросов с фильтрацией
  */
 export async function GET(req: Request) {
+    const access = await requireCurrentSuperAdmin();
+    if (!access.ok) return access.response;
     try {
         const url = new URL(req.url);
         const queryValidation = validateQuery(url, metricsQuerySchema);

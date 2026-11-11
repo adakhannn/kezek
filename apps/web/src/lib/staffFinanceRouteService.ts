@@ -52,7 +52,7 @@ export async function runStaffFinanceRoute(req: Request): Promise<StaffFinanceRo
     }
 
     const { staffId: staffIdParam, date: dateParam } = queryValidation.data;
-    const targetDate = parseTargetDate(dateParam);
+    const targetDate = dateParam;
 
     let staffId: string;
     let bizId: string;
@@ -153,15 +153,6 @@ export async function runStaffFinanceRoute(req: Request): Promise<StaffFinanceRo
             useServiceClient,
         },
     };
-}
-
-function parseTargetDate(dateParam?: string) {
-    if (!dateParam) {
-        return new Date();
-    }
-
-    const [year, month, day] = dateParam.split('-').map(Number);
-    return new Date(year, month - 1, day);
 }
 
 function normalizeId(value: unknown) {

@@ -9,5 +9,6 @@ import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 export async function POST(req: Request, context: unknown) {
   return withRateLimit(req, RateLimitConfigs.normal, async () =>
     withErrorHandler('BookingsMarkAttendance', () => runMarkAttendanceHttp(req, context)),
+      "/api/bookings/[id]/mark-attendance",
   );
 }

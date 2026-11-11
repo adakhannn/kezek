@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { releaseApplicationBlock } from '@/lib/applicationPolicy';
 import { notifyOwnerApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
 import {
@@ -23,13 +23,13 @@ type Body = {
 export async function POST(request: Request, context: unknown) {
     const applicationId = await getRouteParamRequired(context, 'id');
     const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
         return Response.json({ ok: false, message: 'auth' }, { status: 401 });
     }
 
     const { isSuperAdmin, error } = await checkCurrentUserIsSuperAdmin(
-        supabase as unknown as SuperAdminRoleClient,
+        supabase,
         user.id,
     );
     if (error || !isSuperAdmin) {

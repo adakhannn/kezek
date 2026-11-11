@@ -2,9 +2,9 @@
 
 import { buildWhatsAppText } from './messageBuilders';
 import type { ParticipantData, BookingDetails, NotifyType } from './types';
+import { whatsappRecipientPhone } from './whatsappRecipients';
 
 import { logDebug, logError, logWarn } from '@/lib/log';
-import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 
 export class WhatsAppNotificationService {
@@ -38,7 +38,7 @@ export class WhatsAppNotificationService {
         }
 
         try {
-            const phoneE164 = normalizePhoneToE164(whatsappPhone);
+            const phoneE164 = whatsappRecipientPhone('client', clientData);
             if (!phoneE164) {
                 logWarn('WhatsAppNotificationService', 'Client WhatsApp phone not normalized', { phone: whatsappPhone });
                 return false;
@@ -76,7 +76,7 @@ export class WhatsAppNotificationService {
         }
 
         try {
-            const phoneE164 = normalizePhoneToE164(whatsappPhone);
+            const phoneE164 = whatsappRecipientPhone('staff', staffData);
             if (!phoneE164) {
                 logWarn('WhatsAppNotificationService', 'Staff WhatsApp phone not normalized', { phone: whatsappPhone });
                 return false;
@@ -114,7 +114,7 @@ export class WhatsAppNotificationService {
         }
 
         try {
-            const phoneE164 = normalizePhoneToE164(whatsappPhone);
+            const phoneE164 = whatsappRecipientPhone('owner', ownerData);
             if (!phoneE164) {
                 logWarn('WhatsAppNotificationService', 'Owner WhatsApp phone not normalized', { phone: whatsappPhone });
                 return false;

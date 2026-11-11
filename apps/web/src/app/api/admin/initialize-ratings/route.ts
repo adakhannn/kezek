@@ -8,5 +8,6 @@ export const runtime = 'nodejs';
 export async function POST(req: Request) {
     return withRateLimit(req, RateLimitConfigs.critical, () =>
         withErrorHandler('InitializeRatings', async () => runInitializeRatingsHttp(req)),
+        "/api/admin/initialize-ratings",
     );
 }

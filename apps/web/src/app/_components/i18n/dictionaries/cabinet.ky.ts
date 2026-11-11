@@ -73,6 +73,8 @@ export const cabinetKy = {
     'cabinet.profile.error.codeLength': '6-цифралуу кодду киргизиңиз',
     'cabinet.profile.error.phoneRequired': 'Алгач телефон номерин көрсөтүңүз',
     'cabinet.profile.error.save': 'Сактоодо ката',
+    'cabinet.profile.error.load': 'Профилди жүктөө мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'cabinet.profile.retry': 'Кайра жүктөө',
     'cabinet.profile.error.sendCode': 'Код жөнөтүүдө ката',
     'cabinet.profile.error.verifyCode': 'Кодду текшерүүдө ката',
     'cabinet.profile.loading': 'Жүктөлүүдө...',

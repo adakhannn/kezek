@@ -105,7 +105,7 @@ export const bookingRu = {
     'booking.step2.selectedDate': 'Выбранная дата:',
     'booking.step2.title': 'Шаг 2. Выберите день',
     'booking.step3.anyMaster': 'Любой мастер',
-    'booking.step3.anyMasterHint': 'Ближайший свободный слот',
+    'booking.step3.anyMasterHint': 'Время у разных мастеров',
     'booking.step3.noStaff': 'На выбранную дату в этом филиале нет доступных мастеров.',
     'booking.step3.selectDayFirst': 'Сначала выберите день на шаге 2.',
     'booking.step3.title': 'Шаг 3. Выберите мастера',

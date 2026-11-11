@@ -20,7 +20,7 @@ const zeroStats: StaffFinanceStatsPayload = {
     shiftsCount:1,openShiftsCount:0,closedShiftsCount:1,totalAmount:0,totalMaster:0,totalSalon:0,
     totalConsumables:0,totalLateMinutes:0,totalClients:0,totalBaseMasterShare:0,totalBaseSalonShare:0,
     totalGuaranteedAmount:0,hasGuaranteedPayment:false,
-    shifts:[{id:'shift-test',shift_date:'2026-10-12',status:'closed',opened_at:'2026-10-11T22:47:00Z',
+    shifts:[{id:'shift-test',ledger_revision:7,timezone:'Asia/Bishkek',day_hours:24,shift_date:'2026-10-12',status:'closed',opened_at:'2026-10-11T22:47:00Z',
         closed_at:'2026-10-11T22:48:00Z',total_amount:0,consumables_amount:0,master_share:0,
         salon_share:0,late_minutes:0,hours_worked:null,hourly_rate:null,guaranteed_amount:0,items:[]}],
 };

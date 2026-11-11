@@ -1,278 +1,71 @@
-# Руководство по тестированию API Routes
+# Локальный справочник API-тестов
 
-## Обзор
+Статус: `reference`. Сверено с исходниками: **2026-11-01**. Владелец: **Engineering**. Runtime-проверка при обновлении документа: **NOT_RUN**.
 
-Это руководство описывает подход к тестированию API routes в проекте. Цель - обеспечить покрытие тестами всех критичных endpoints.
+Эта папка содержит Jest-тесты API routes и их зависимостей. Общий процесс, CI и coverage описаны в [TESTING_GUIDE.md](../../../../../TESTING_GUIDE.md), выбор слоя и границы mocked tests — в [API_TESTING.md](../../../../../API_TESTING.md). Контракты endpoints находятся в [API reference](../../../../../API_DOCUMENTATION.md).
 
-## Структура тестов
+## Расположение и примеры
 
-### Расположение файлов
-```
-apps/web/src/__tests__/api/
-├── testHelpers.ts          # Общие утилиты и моки
-├── quick-hold.test.ts      # Пример теста
-├── quick-book-guest.test.ts
-├── staff/
-│   └── create.test.ts
-├── bookings/
-│   └── cancel.test.ts
-└── TESTING_GUIDE.md        # Это руководство
-```
+Тесты обычно именуются `*.test.ts` и сгруппированы по API-теме; точные правила обнаружения задаёт [jest.config.js](../../../jest.config.js). Имена папок не всегда повторяют URL буквально. Общие утилиты находятся рядом: [testHelpers.ts](testHelpers.ts).
 
-### Именование
-- Файлы тестов: `[route-name].test.ts`
-- Группировка по папкам соответствует структуре API routes
+| Тема | Существующий тестовый код |
+| --- | --- |
+| Авторизованное и гостевое бронирование | [quick-hold.test.ts](quick-hold.test.ts), [quick-book-guest.test.ts](quick-book-guest.test.ts) |
+| Отмена и отметка посещения | [bookings/cancel.test.ts](bookings/cancel.test.ts), [bookings/mark-attendance.test.ts](bookings/mark-attendance.test.ts) |
+| Закрытие смены и финансы | [staff/shift/close.test.ts](staff/shift/close.test.ts), [dashboard/finance/all.test.ts](dashboard/finance/all.test.ts) |
+| CRUD и промо | [services/create.test.ts](services/create.test.ts), [branches/schedule.test.ts](branches/schedule.test.ts), [promotions/promotions.test.ts](promotions/promotions.test.ts) |
+| Auth и ограничения запросов | [auth/mobile-exchange.test.ts](auth/mobile-exchange.test.ts), [authRateLimitIsolation.test.ts](authRateLimitIsolation.test.ts) |
+| Уведомления и webhook | [notify.test.ts](notify.test.ts), [webhooks/whatsapp.test.ts](webhooks/whatsapp.test.ts) |
+| Admin и health | [admin/user-update-basic-params.test.ts](admin/user-update-basic-params.test.ts), [admin/health-check.test.ts](admin/health-check.test.ts) |
 
-## Инфраструктура
+Это навигация по исходникам, не матрица PASS и не доказательство полного покрытия сценариев. [Реестр бизнес-сценариев](../../../../../SCENARIO_TEST_REGISTRY.md) помогает выбрать предмет проверки; его ожидаемые ветки нужно сверять с текущим контрактом и конкретными assertions. E2E находятся отдельно; их команды, fixtures и ограничения описаны в [E2E reference](../../../e2e/README.md).
 
-### testHelpers.ts
+## Что делают общие утилиты
 
-Содержит общие утилиты:
-- `createMockRequest()` - создание мок Request
-- `createMockSupabase()` - создание мок Supabase клиента
-- `setupApiTestMocks()` - настройка стандартных моков
-- `expectSuccessResponse()` - проверка успешного ответа
-- `expectErrorResponse()` - проверка ответа с ошибкой
+| Экспорт из `testHelpers.ts` | Поведение и ограничение |
+| --- | --- |
+| `createMockRequest(url, options)` | Создаёт обычный `Request`, по умолчанию GET с JSON content type; truthy `body` сериализует, строку передаёт как есть. Для тел `false`, `0`, `null`, пустой строки и проверки raw body используйте явно созданный `Request`. |
+| `createMockNextRequest(url, options)` | Создаёт `NextRequest`; truthy body сериализуется через `JSON.stringify`, headers передаются из options. |
+| `createMockSupabase()` | Возвращает набор `jest.fn` с цепочкой query-методов на одном объекте. Ответы terminal-методов и RPC нужно задавать в тесте; это не реализация SQL, RLS или транзакций. |
+| `setupApiTestMocks()` | Регистрирует моки limiter, `next/headers`, Supabase SDK и устанавливает тестовые значения трёх Supabase env-переменных. Limiter просто вызывает handler; реальные квоты этим helper не проверяются. |
+| `createTelegramMobileSignedHeaders(params)` | Использует production helper подписи bot-запроса для переданных secret/body/time/requestId; правильная подпись сама по себе не проверяет отказ при неверной подписи или replay. |
+| `expectErrorResponse(response, status, error?)` | Проверяет статус и `ok: false`; при переданном error нормализует старые коды через внутреннюю таблицу. Возвращает разобранный JSON. |
+| `expectSuccessResponse(response, status = 200)` | Проверяет статус и `ok: true`; если `data` — объект, дополнительно разворачивает его поля наверх возвращаемого значения. Для точной проверки wire envelope читайте `response.json()` непосредственно. |
 
-### Стандартные моки
-
-Все тесты должны мокировать:
-- `@/lib/rateLimit` - rate limiting
-- `next/headers` - cookies и headers
-- `@supabase/supabase-js` - Supabase клиент
-- `@supabase/ssr` - SSR Supabase клиент
-
-## Структура теста
+Пример использования только request helper; он не вызывает endpoint:
 
 ```typescript
-import { POST } from '@/app/api/route-name/route';
-import { setupApiTestMocks, createMockRequest, ... } from './testHelpers';
+import { createMockRequest } from './testHelpers';
 
-setupApiTestMocks();
-
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-
-describe('/api/route-name', () => {
-    const mockSupabase = createMockSupabase();
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-        // Настройка моков
-    });
-
-    describe('Авторизация', () => {
-        test('должен вернуть 401 если не авторизован', async () => {
-            // Тест
-        });
-    });
-
-    describe('Валидация', () => {
-        test('должен вернуть 400 при невалидных данных', async () => {
-            // Тест
-        });
-    });
-
-    describe('Успешный сценарий', () => {
-        test('должен успешно выполнить операцию', async () => {
-            // Тест
-        });
-    });
-
-    describe('Обработка ошибок', () => {
-        test('должен обработать ошибку БД', async () => {
-            // Тест
-        });
-    });
+const request = createMockRequest('http://localhost/api/services/create', {
+    method: 'POST',
+    body: { name_ru: 'Стрижка', duration_min: 30, price_from: 500 },
 });
 ```
 
-## Что тестировать
+Не копируйте общий набор моков автоматически. Например, [mark-attendance](bookings/mark-attendance.test.ts) подменяет business context, service client и route params; [authRateLimitIsolation](authRateLimitIsolation.test.ts) сохраняет реальный limiter и подменяет его внешние зависимости. Выбирайте границу по проверяемому поведению. При обходе auth, параметров или limiter отдельным mock тест не доказывает работу этой границы. Порядок регистрации моков и загрузки route также существенен; в [quick-hold](quick-hold.test.ts) route загружается после настройки через `require`.
 
-### Обязательные тесты для каждого route:
+## Как добавлять содержательную проверку
 
-1. **Авторизация** (если требуется)
-   - 401 при отсутствии авторизации
-   - 403 при недостаточных правах
+1. Сопоставьте route, HTTP service, schema и вызываемый service; сформулируйте ожидаемый результат независимо от mock. Коды ошибок и форма ответа различаются между endpoints — нельзя назначать всем единый `401/403/400/200` шаблон.
+2. Для защищённой операции проверьте отсутствие сессии, недостаточную роль и чужой tenant; отдельно убедитесь, что запрещённый запрос не вызывает запись или уведомление. Не считайте admin, auth и debug endpoints низкоприоритетными только из-за названия.
+3. Проверьте обязательные поля, неверные типы, граничные значения и успешный ответ. Если форма JSON важна клиенту, проверяйте исходный envelope, а не только значение, развёрнутое helper.
+4. Для DB/RPC зависимостей различайте отсутствие данных и ошибку чтения; для mutations — конфликт, частичный отказ и повтор запроса. Проверяйте аргументы и количество side effects, если контракт обещает однократность.
+5. Изолируйте mocks между cases. `jest.clearAllMocks()` очищает историю вызовов, но не сбрасывает реализации и очереди `mockResolvedValueOnce`; настройку и сброс выбирайте с учётом этого.
+6. Свяжите тест с бизнес-сценарием и укажите оставшуюся границу: mocked RPC не проверяет реальную constraint, конкурентность или доставку сообщения. Такие проверки требуют отдельного SQL/integration/E2E scope.
 
-2. **Валидация входных данных**
-   - 400 при отсутствии обязательных полей
-   - 400 при невалидном формате данных
-   - 400 при невалидных типах данных
+## Запуск и интерпретация результата
 
-3. **Успешный сценарий**
-   - 200 с корректными данными
-   - Проверка вызова правильных методов БД
-   - Проверка структуры ответа
-
-4. **Обработка ошибок**
-   - Ошибки БД (RPC, queries)
-   - Ошибки валидации
-   - Edge cases (не найдено, конфликты)
-
-### Дополнительные тесты (по необходимости):
-
-- Rate limiting
-- Логирование
-- Уведомления
-- Сложная бизнес-логика
-
-## Примеры
-
-### Простой GET endpoint
-
-```typescript
-describe('/api/staff/shift/today', () => {
-    test('должен вернуть смену на сегодня', async () => {
-        mockSupabase.auth.getUser.mockResolvedValue({
-            data: { user: { id: 'user-id' } },
-        });
-
-        mockSupabase.from.mockReturnValueOnce({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
-                data: { id: 'shift-id', date: '2024-01-01' },
-            }),
-        });
-
-        const req = createMockRequest('http://localhost/api/staff/shift/today');
-        const res = await GET(req);
-        const data = await expectSuccessResponse(res);
-
-        expect(data.id).toBe('shift-id');
-    });
-});
-```
-
-### POST endpoint с валидацией
-
-```typescript
-describe('/api/services/create', () => {
-    test('должен вернуть 400 при отсутствии name', async () => {
-        mockSupabase.auth.getUser.mockResolvedValue({
-            data: { user: { id: 'user-id' } },
-        });
-
-        const req = createMockRequest('http://localhost/api/services/create', {
-            method: 'POST',
-            body: {
-                branch_id: 'branch-id',
-                duration_min: 30,
-                // name отсутствует
-            },
-        });
-
-        const res = await POST(req);
-        await expectErrorResponse(res, 400);
-    });
-});
-```
-
-### Endpoint с RPC
-
-```typescript
-describe('/api/bookings/[id]/cancel', () => {
-    test('должен вызвать RPC cancel_booking', async () => {
-        // Настройка моков...
-
-        mockSupabase.rpc.mockResolvedValueOnce({
-            data: { id: bookingId, status: 'cancelled' },
-            error: null,
-        });
-
-        const req = createMockRequest(`http://localhost/api/bookings/${bookingId}/cancel`, {
-            method: 'POST',
-        });
-
-        const res = await POST(req, { params: { id: bookingId } });
-        
-        expect(mockSupabase.rpc).toHaveBeenCalledWith(
-            'cancel_booking',
-            expect.objectContaining({ p_booking_id: bookingId })
-        );
-    });
-});
-```
-
-## Приоритеты тестирования
-
-### Высокий приоритет (критичные endpoints):
-1. ✅ `quick-hold` - быстрое создание брони
-2. ✅ `quick-book-guest` - гостевая бронь
-3. ✅ `bookings/[id]/cancel` - отмена брони
-4. ✅ `bookings/[id]/mark-attendance` - отметка посещения
-5. ✅ `staff/shift/close` - закрытие смены
-6. ✅ `notify` - отправка уведомлений
-
-### Средний приоритет:
-- CRUD операции (staff, services, branches)
-- Финансовые endpoints
-- Dashboard endpoints
-
-### Низкий приоритет:
-- Admin endpoints
-- Debug endpoints
-- Health checks
-
-## Запуск тестов
+Следующие команды выполняются из корня репозитория **только в отдельно разрешённой задаче и изолированной среде**. Документационная правка не запускает приложение или тесты и не возобновляет [закрытую WEB-кампанию](../../../../../docs/WEB_AGENT_HANDOFF.md).
 
 ```bash
-# Все тесты
-npm test
+# Только эта папка
+pnpm -C apps/web test --runInBand src/__tests__/api
 
-# Только API тесты
-npm test -- __tests__/api
-
-# Конкретный файл
-npm test -- quick-hold.test.ts
-
-# С покрытием
-npm test -- --coverage
+# Один конкретный файл
+pnpm -C apps/web test --runInBand --runTestsByPath src/__tests__/api/quick-hold.test.ts
 ```
 
-## Покрытие
+Источник команд — [web package.json](../../../package.json). Корневой `pnpm test:api` запускает полный web Jest, а `pnpm test` сначала запускает SQL. Для coverage и CI используйте [канонический справочник](../../../../../TESTING_GUIDE.md#что-означает-coverage-60): текущий порог **60%** действует только на allowlist `collectCoverageFrom`; отдельного подтверждённого порога «80% всех критичных endpoints» нет.
 
-Цель: **80%+ покрытие для критичных endpoints**.
-
-Дополнительно к процентному покрытию мы ведём **реестр бизнес‑сценариев** в `SCENARIO_TEST_REGISTRY.md`:
-
-- каждый сценарий (например, "1. Публичная запись авторизованного пользователя") связывается с одним или несколькими Jest/E2E‑тестами;
-- при добавлении/изменении тестов стоит проверять, какие сценарии они покрывают.
-
-Мини‑матрица соответствия (неполная, для ориентира):
-
-| # сценария (см. SCENARIO_TEST_REGISTRY.md)                        | Что покрывает (основные тесты)                                      |
-|-------------------------------------------------------------------|---------------------------------------------------------------------|
-| 1. Публичная запись авторизованного пользователя                  | `quick-hold.test.ts`, E2E `quickdesk.spec.ts` (создание/подтверждение) |
-| 2. Гостевая запись без аккаунта                                   | `quick-book-guest.test.ts`, E2E `booking-flow.spec.ts` (гостевой флоу) |
-| 3. Отмена бронирования клиентом                                   | `bookings/cancel.test.ts`, E2E `quickdesk.spec.ts` (отмена)           |
-| 4. Отмена/подтверждение через WhatsApp                            | `webhooks/whatsapp.test.ts`, E2E `whatsapp-webhook.spec.ts` (HTTP webhook) |
-| 5. Отметка посещения и применение промо                           | `bookings/mark-attendance.test.ts`, E2E `promotion-application.spec.ts` |
-| 6–7. Открытие/закрытие смены, корректировка часов и гарантии     | `staff/shift/close.test.ts`, E2E `hours-worked-recalculation.spec.ts`, `finance-disputes-verification.spec.ts` |
-| 8. Финансовая статистика                                          | тесты в `dashboard/finance/*.test.ts`, E2E сценарии по finance      |
-| 9–10. CRUD филиалов/услуг и промо                                 | тесты в `branches/*.test.ts`, `services/*.test.ts`, `promotions/*.test.ts` |
-| 11. Авторизация (Telegram/WhatsApp/mobile-exchange)              | `auth/*.test.ts` (telegram, whatsapp, mobile-exchange)              |
-| 12. Уведомления (email / WhatsApp / Telegram)                    | `notify.test.ts`, `notify/ping.test.ts`                             |
-| 14. Health/monitoring сценарии                                   | `admin/health-check.test.ts`, `admin/performance/stats.test.ts`     |
-
-Полный список сценариев и их покрытие см. в `SCENARIO_TEST_REGISTRY.md`. При добавлении нового теста:
-
-1. Найдите соответствующий сценарий (или добавьте новый).
-2. Убедитесь, что тест покрывает хотя бы один happy path и хотя бы один edge‑case сценария.
-
-## Best Practices
-
-1. **Используйте общие утилиты** из `testHelpers.ts`
-2. **Группируйте тесты** по функциональности (describe blocks)
-3. **Тестируйте edge cases** - не только happy path
-4. **Проверяйте вызовы** методов БД (mockSupabase.rpc, mockSupabase.insert)
-5. **Используйте типизацию** - TypeScript помогает избежать ошибок
-6. **Документируйте сложные тесты** - комментарии для неочевидных случаев
-
-## Следующие шаги
-
-1. Поддерживать актуальность матрицы сценариев (`SCENARIO_TEST_REGISTRY.md`) при добавлении новых фич.
-2. Для новых endpoints сразу решать, к какому сценарию они относятся, и добавлять соответствующие тесты.
-3. Постепенно расширять E2E‑покрытие ключевых сценариев (особенно мобильных и операторских флоу).
-
+Сохраняйте точную команду, scope, ревизию, среду, exit code, failures и skipped. Наличие файлов и статическое чтение не заменяют отчёт запуска. Процесс изменений — в [CONTRIBUTING.md](../../../../../CONTRIBUTING.md); локальный гайд не создаёт отдельный источник приёмки.

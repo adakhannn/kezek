@@ -40,6 +40,10 @@ type SlotPickerProps = {
     clientBookingsLoading: boolean;
     bookingLoading: boolean;
     onRetry?: () => void;
+    hasMore?: boolean;
+    loadingMore?: boolean;
+    moreError?: string | null;
+    onLoadMore?: () => void;
 };
 
 export function SlotPicker({
@@ -61,6 +65,10 @@ export function SlotPicker({
     clientBookingsLoading,
     bookingLoading,
     onRetry,
+    hasMore = false,
+    loadingMore = false,
+    moreError,
+    onLoadMore,
 }: SlotPickerProps) {
     const { t, locale } = useLanguage();
     const formatName = (name: string) => formatStaffName(name, locale);
@@ -140,7 +148,7 @@ export function SlotPicker({
                 />
             ) : null}
 
-            {!loading && !error && slots.length === 0 ? (
+            {!loading && !error && !hasMore && slots.length === 0 ? (
                 <BookingEmptyState
                     type="empty"
                     title={t('booking.empty.noSlotsTitle', 'Свободных слотов пока нет')}
@@ -205,6 +213,18 @@ export function SlotPicker({
                             </button>
                         );
                     })}
+                </div>
+            ) : null}
+            {!loading && !error && hasMore ? (
+                <div className="space-y-2" aria-live="polite">
+                    <p className="type-caption text-[var(--text-secondary)]">
+                        {t('booking.slots.partial', 'Показана часть мастеров и времени. Можно загрузить следующие варианты.')}
+                    </p>
+                    {moreError ? <p role="alert" className="type-caption text-[var(--text-primary)]">{moreError}</p> : null}
+                    <button type="button" disabled={loadingMore || bookingLoading} onClick={onLoadMore}
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border-default)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] disabled:opacity-60">
+                        {loadingMore ? t('booking.loadingSlots', 'Загружаем свободные слоты') : t('booking.slots.loadMore', 'Показать ещё мастеров и время')}
+                    </button>
                 </div>
             ) : null}
         </div>

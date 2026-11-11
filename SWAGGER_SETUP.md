@@ -1,119 +1,43 @@
-# Swagger/OpenAPI Documentation Setup
+# Swagger и OpenAPI в Kezek
 
-## Обзор
+Статус: reference, обновлено 2026-11-10. Владелец: engineering. Локально проверены offline generation, typed consumer и HTTP/UI unit tests с synthetic boundaries. Браузер, deployment и live providers этими проверками не охвачены.
 
-В проекте настроена документация API с использованием Swagger/OpenAPI. Документация доступна по адресу `/api-docs` и генерируется автоматически из JSDoc комментариев в API routes.
+Основные ручные контракты — [API_DOCUMENTATION](API_DOCUMENTATION.md); полный список exports — [HTTP-каталог](docs/api/ROUTE_CATALOG.md).
 
-## Версионирование API
+## Два уровня описания
 
-- Текущая публичная версия API — **`v1`**:
-  - в OpenAPI‑спецификации это отражено в поле `info.version = "1.0.0"` и в корневом поле `x-api-version: "v1"`;
-  - все текущие публичные endpoints (`/api/...`) относятся к версии v1.
-- При появлении `v2`:
-  - новые стабильные контракты будут документироваться отдельно (например, через теги `v2/*` или отдельный swagger‑файл);
-  - старые endpoints останутся как v1 и будут отмечены как `deprecated` там, где это нужно.
+[Генератор](scripts/generate-openapi.mjs) использует существующий TypeScript AST [каталога](scripts/generate-api-catalog.mjs): route.ts/tsx/js, локальные re-export, маршруты вне /api и динамические сегменты. Он не исполняет приложение. Автоматические HEAD/OPTIONS Next, middleware, rewrites, прямые Supabase/RPC вызовы и доступность deployment не входят в inventory. Новый catch-all требует явного согласования модели пути; генерация остановится.
 
-Пока **URL‑префикс `/api/v1/...` не используется**, но зарезервирован для будущих версий. Вся информация о текущей версии берётся из Swagger (`info.version`, `x-api-version`) и раздела «Версионирование» в `API_DOCUMENTATION.md`.
+- [openapi.json](apps/web/src/generated/openapi.json) содержит все явные METHOD/path. Для каждой операции есть x-source-file, x-next-route и x-manual-contract. Только x-contract-status=reviewed содержит проверенную типизацию. Для inventory-only нет выдуманных auth/body/response schemas; отсутствие security здесь не означает публичный доступ.
+- [openapi-sdk.json](apps/web/src/generated/openapi-sdk.json) содержит только четыре reviewed операции: POST /api/quick-hold, POST /api/quick-book-guest, POST /api/staff/shift/items и POST /api/staff/shift/close. Только этот subset используется для SDK.
 
-## Использование
+[Источник reviewed schemas](scripts/openapi-contracts.mjs) сверяется с Zod, HTTP/services и SQL. JSON schema отражает wire shape и основные ограничения; календарные, tenant, schedule и прочие бизнес-правила остаются серверными. Генератор клиента не превращает все anyOf/oneOf/range ограничения в TypeScript. Типы не заменяют runtime validation.
 
-### Просмотр документации
+Описанный bearerAuth — поддерживаемый транспорт SDK. Browser handlers также используют существующую проверенную Supabase cookie session; имена и chunking cookies не выдумываются как фиксированная cookie-схема. Manager Save с staffId использует cookie-session context; bearer staff path не даёт менеджерских прав.
 
-1. Запустите dev сервер: `pnpm dev`
-2. Откройте в браузере: `http://localhost:3000/api-docs`
-3. Вы увидите интерактивную Swagger UI документацию
+## Runtime потребители
 
-### JSON спецификация
+[GET /api/swagger.json](apps/web/src/app/api/swagger.json/route.ts) возвращает OpenAPI 3.0.3 object в корне JSON, без ok/data. [swagger.ts](apps/web/src/lib/swagger.ts) импортирует сохранённый artifact; filesystem, cwd, env и swagger-jsdoc при запросе не используются. Это публичное описание; у самого handler нет auth/limiter.
 
-OpenAPI спецификация доступна в формате JSON по адресу:
-- `http://localhost:3000/api/swagger.json`
+[UI /api-docs](apps/web/src/app/api-docs/page.tsx) проверяет HTTP status, отклоняет envelopes, неверную форму и пустые paths, отменяет запрос при unmount. Это проверка границы потребителя, а не полноценный валидатор OpenAPI. Swagger отображается без Try it out: страница не служит интерфейсом выполнения финансовых/административных команд.
 
-## Добавление документации к новым endpoints
+servers=/ означает same origin, а info.version — версию документа. Это не объявление совместимости всех HTTP handlers или адрес production.
 
-Чтобы добавить документацию к новому API endpoint, добавьте JSDoc комментарии с аннотациями `@swagger`:
+## Обновление и проверка
 
-```typescript
-/**
- * @swagger
- * /api/example:
- *   post:
- *     summary: Краткое описание endpoint
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *     responses:
- *       '200':
- *         description: Успешный ответ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- */
-export async function POST(req: Request) {
-    // ...
-}
-```
+Из корня, без сервера, .env, БД и сети после установки зависимостей:
 
-## Доступные теги
+~~~bash
+pnpm generate:openapi
+pnpm check:openapi
+pnpm generate:sdk
+node --test scripts/openapi-tools.test.mjs
+~~~
 
-- `Authentication` - Эндпоинты для аутентификации
-- `Bookings` - Управление бронированиями
-- `Staff` - Управление сотрудниками
-- `Shifts` - Управление сменами сотрудников
-- `Dashboard` - Дашборд для менеджеров и владельцев
-- `Admin` - Административные функции
-- `Cron` - Cron jobs для автоматизации
-- `Profile` - Управление профилем пользователя
+Генерация записывает артефакты. При изменении контрактов сначала сверить смысл route → validation → service → SQL и обновить тематический справочник/marker. Затем изменить reviewed schemas и перегенерировать JSON/SDK. Не редактировать generated файлы вручную.
 
-## Схемы
+check:openapi проверяет полный inventory, manual markers и совпадение артефактов. Fingerprint включает перечисленные x-reviewed-sources и четыре route-файла, нормализует CRLF и не содержит timestamp/env. Изменение источника требует повторной смысловой проверки; обновление hash само по себе её не доказывает. Это явная граница файлов, а не полный транзитивный граф.
 
-В конфигурации Swagger определены общие схемы:
-- `Error` - Формат ошибок
-- `Booking` - Бронирование
-- `StaffShift` - Смена сотрудника
+[Tooling tests](scripts/openapi-tools.test.mjs) проверяют AST parity, dynamic paths, воспроизводимость вне cwd, stale artifacts, SDK во временном каталоге, его совпадение с сохранённым клиентом и реальную TS-компиляцию потребителя. CI выполняет их вместе с check:openapi. [HTTP consumer tests](apps/web/src/__tests__/lib/openApiSdkContract.test.ts) проводят generated requests через настоящие HTTP/Zod validators, подменяя auth/DB, и проверяют identity, guest proof, canonical Save, Close envelope и отсутствие автоматического повтора на 409. Это не live E2E.
 
-Используйте их через `$ref`:
-```yaml
-schema:
-  $ref: '#/components/schemas/Error'
-```
-
-## Безопасность
-
-Документация поддерживает два типа авторизации:
-- `bearerAuth` - Bearer token (для мобильного приложения)
-- `cookieAuth` - Cookie (для веб-версии)
-
-## Конфигурация
-
-Конфигурация находится в `apps/web/src/lib/swagger.ts`. Здесь можно:
-- Изменить информацию о API
-- Добавить новые серверы
-- Добавить новые схемы
-- Добавить новые теги
-
-## Примеры
-
-Примеры документации уже добавлены к следующим endpoints:
-- `/api/quick-hold` - Создание бронирования
-- `/api/staff/shift/open` - Открытие смены
-- `/api/bookings/[id]/mark-attendance` - Отметка посещения
-
-## Полезные ссылки
-
-- [OpenAPI Specification](https://swagger.io/specification/)
-- [Swagger JSDoc](https://github.com/Surnet/swagger-jsdoc)
-- [Swagger UI React](https://github.com/swagger-api/swagger-ui)
-
+SDK и его эксплуатационные ограничения описаны в [README клиента](packages/shared-client/src/generated-sdk/README.md). Общие ошибки — [API_ERROR_FORMATS](apps/web/src/lib/API_ERROR_FORMATS.md).

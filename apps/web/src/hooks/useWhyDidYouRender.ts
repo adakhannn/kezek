@@ -9,31 +9,28 @@
  * }
  */
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+
+import { logDebug } from '@/lib/log';
 
 interface Props {
     [key: string]: unknown;
 }
 
 export function useWhyDidYouRender(name: string, props: Props) {
-    // Работает только в dev режиме
-    if (process.env.NODE_ENV !== 'development') {
-        return;
-    }
-
     const previousProps = useRef<Props | undefined>(undefined);
-    
-    // Создаем строку из props для использования в зависимостях
-    const propsStr = JSON.stringify(props);
-    const propsKey = useMemo(() => propsStr, [propsStr]);
 
     useEffect(() => {
+        if (process.env.NODE_ENV !== 'development') {
+            previousProps.current = undefined;
+            return;
+        }
         if (previousProps.current) {
             const allKeys = Object.keys({ ...previousProps.current, ...props });
             const changedProps: Record<string, { from: unknown; to: unknown }> = {};
 
             allKeys.forEach((key) => {
-                if (previousProps.current![key] !== props[key]) {
+                if (!Object.is(previousProps.current![key], props[key])) {
                     changedProps[key] = {
                         from: previousProps.current![key],
                         to: props[key],
@@ -42,20 +39,11 @@ export function useWhyDidYouRender(name: string, props: Props) {
             });
 
             if (Object.keys(changedProps).length) {
-                // eslint-disable-next-line no-console
-                console.group(`[why-did-you-render] ${name}`);
-                // eslint-disable-next-line no-console
-                console.log('Changed props:', changedProps);
-                // eslint-disable-next-line no-console
-                console.log('Previous props:', previousProps.current);
-                // eslint-disable-next-line no-console
-                console.log('Current props:', props);
-                // eslint-disable-next-line no-console
-                console.groupEnd();
+                logDebug('WhyDidYouRender', 'Component props changed', { name, changedProps });
             }
         }
 
         previousProps.current = props;
-    }, [name, propsKey]);
+    });
 }
 

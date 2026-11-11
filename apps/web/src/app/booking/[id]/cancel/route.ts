@@ -2,6 +2,7 @@ import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import { bookingCancellationError } from '@/lib/bookingCancellationError';
 import {logError} from '@/lib/log';
 import { runServerCancelBooking } from '@/lib/serverCancelBookingService';
 
@@ -33,32 +34,26 @@ export async function POST(
         .eq('id', id)
         .maybeSingle();
 
-    // Если уже отменена, редиректим
-    if (booking?.status === 'cancelled') {
-        return NextResponse.redirect(new URL(`/booking/${id}`, req.url));
-    }
-
     try {
         const {data: {user}} = await supabase.auth.getUser();
         if (!user || !booking || booking.client_id !== user.id) {
             return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+        }
+        if (booking.status === 'cancelled') {
+            return NextResponse.redirect(new URL(`/booking/${id}`, req.url));
         }
 
         await runServerCancelBooking(
             {
                 supabase,
                 clientId: user.id,
-                notify: async ({ bookingId, type }) => {
-                    await fetch(new URL('/api/notify', req.url), {
-                        method: 'POST',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({ type, booking_id: bookingId }),
-                    });
-                },
+                // The status transaction enqueues the notification through the DB trigger.
             },
             id,
         );
     } catch (error) {
+        const failure = bookingCancellationError(error);
+        if (failure) return NextResponse.json(failure, { status: failure.status });
         logError('BookingCancel', 'Failed to cancel booking', error);
         return NextResponse.json({ok: false, error: error instanceof Error ? error.message : String(error)}, {status: 400});
     }

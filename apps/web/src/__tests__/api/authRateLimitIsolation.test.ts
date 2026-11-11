@@ -23,6 +23,10 @@ import { POST as action5 } from '@/app/api/auth/whatsapp/verify-otp/route';
 import { POST as action6 } from '@/app/api/auth/whatsapp/create-session/route';
 import { POST as action7 } from '@/app/api/auth/mobile-exchange/route';
 
+let caseNumber = 0;
+const previousProxyHeader = process.env.RATE_LIMIT_TRUSTED_IP_HEADER;
+afterAll(() => { if(previousProxyHeader === undefined) delete process.env.RATE_LIMIT_TRUSTED_IP_HEADER; else process.env.RATE_LIMIT_TRUSTED_IP_HEADER = previousProxyHeader; });
+
 const actions = [
     { path: '/api/whatsapp/send-otp', post: action0 },
     { path: '/api/whatsapp/verify-otp', post: action1 },
@@ -37,28 +41,28 @@ const actions = [
 describe.each(['memory', 'redis'])('auth rate-limit isolation (%s)', (backend) => {
     beforeEach(() => {
         jest.clearAllMocks();
+        caseNumber++;
+        process.env.RATE_LIMIT_TRUSTED_IP_HEADER = 'x-forwarded-for';
         (getUpstashRedisUrl as jest.Mock).mockReturnValue(backend === 'redis' ? 'https://redis.example' : '');
         (getUpstashRedisToken as jest.Mock).mockReturnValue(backend === 'redis' ? 'test' : '');
         const counts = new Map<string, number>();
         (Redis as jest.Mock).mockImplementation(() => ({
-            incr: jest.fn(async (key: string) => {
+            eval: jest.fn(async (_script: string, keys: string[], windows: number[]) => keys.flatMap((key, index) => {
                 const count = (counts.get(key) ?? 0) + 1;
                 counts.set(key, count);
-                return count;
-            }),
-            expire: jest.fn(async () => 1),
-            ttl: jest.fn(async () => 900),
+                return [count, windows[index]];
+            })),
         }));
     });
 
     test.each(actions)('$path keeps its limit without blocking other actions', async (target) => {
-        const ip = backend + target.path;
+        const ip = `203.0.113.${caseNumber}`;
         const request = (path: string) => new NextRequest('https://example.com' + path, {
             method: 'POST', headers: { 'x-forwarded-for': ip },
         });
         // Reproduce a busy profile: unrelated requests have already used the legacy counter.
         for (let i = 0; i < 10; i++) {
-            await checkRateLimit(request('/api/metrics/frontend'), RateLimitConfigs.normal);
+            await checkRateLimit(request('/api/metrics/frontend'), RateLimitConfigs.normal, '/api/metrics/frontend');
         }
         for (let i = 0; i < 5; i++) {
             const response = await target.post(request(target.path));
@@ -78,7 +82,7 @@ describe.each(['memory', 'redis'])('auth rate-limit isolation (%s)', (backend) =
         }
         // A different client still has its own allowance.
         const independent = await target.post(new NextRequest('https://example.com' + target.path, {
-            method: 'POST', headers: { 'x-forwarded-for': ip + '-other' },
+            method: 'POST', headers: { 'x-forwarded-for': `198.51.100.${caseNumber}` },
         }));
         expect(independent.status).toBe(200);
     });

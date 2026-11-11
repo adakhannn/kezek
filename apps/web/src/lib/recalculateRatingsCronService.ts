@@ -1,4 +1,7 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logDebug, logError } from '@/lib/log';
+import type { ServerOperation } from '@/lib/performanceCore';
 import { addDaysToDateString } from '@/lib/time';
 
 type AlertPayload = {
@@ -8,12 +11,12 @@ type AlertPayload = {
 };
 
 export type RecalculateRatingsSupabaseLike = {
-    from: (table: string) => any;
+    from: SupabaseClient['from'];
     rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: { message?: string; code?: string } | null }>;
 };
 
 type MeasurePerformance = <T>(
-    operation: string,
+    operation: ServerOperation,
     fn: () => Promise<T>,
     metadata?: Record<string, unknown>
 ) => Promise<T>;
@@ -174,12 +177,12 @@ export async function runRecalculateRatingsCron({
 }: RecalculateRatingsCronDeps) {
     const yesterdayStr = addDaysToDateString(todayStr, -1, tz);
 
-    const lastMetricResponse = (supabase
+    const lastMetricResponse = supabase
         .from('biz_day_metrics')
         .select('metric_date')
         .order('metric_date', { ascending: false })
         .limit(1)
-        .maybeSingle() as Promise<{ data: { metric_date: string } | null }>);
+        .maybeSingle<{ metric_date: string }>();
     const { data: lastBizMetric } = await lastMetricResponse;
 
     const rangeStartStr = computeRangeStart({

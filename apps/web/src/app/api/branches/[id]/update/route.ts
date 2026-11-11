@@ -8,5 +8,6 @@ import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 export async function POST(req: Request, context: unknown) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('BranchesUpdate', async () => runBranchUpdateHttp(req, context)),
+      "/api/branches/[id]/update",
   );
 }

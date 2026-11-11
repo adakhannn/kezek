@@ -74,6 +74,8 @@ export const cabinetRu = {
     'cabinet.profile.error.codeLength': 'Введите 6-значный код',
     'cabinet.profile.error.phoneRequired': 'Сначала укажите номер телефона',
     'cabinet.profile.error.save': 'Ошибка при сохранении',
+    'cabinet.profile.error.load': 'Не удалось загрузить профиль. Повторите попытку.',
+    'cabinet.profile.retry': 'Повторить загрузку',
     'cabinet.profile.error.sendCode': 'Ошибка при отправке кода',
     'cabinet.profile.error.verifyCode': 'Ошибка при проверке кода',
     'cabinet.profile.loading': 'Загрузка...',

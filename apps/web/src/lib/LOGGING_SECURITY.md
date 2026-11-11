@@ -1,187 +1,36 @@
-# Безопасное логирование
+# Маскирование и ограничения логов
 
-## Проблема
+Статус: справочник по исходникам, сверка 2026-11-10. Основное правило — [LOGGING_POLICY](LOGGING_POLICY.md). Маскирование уменьшает раскрытие выбранных данных, но не делает произвольный payload безопасным.
 
-Логирование чувствительных данных (токены, ключи, пароли) может привести к утечке информации, если логи попадут в руки злоумышленников.
+## Общая реализация с разной политикой вывода
 
-## Решение
+| Вход | Реализация | Граница |
+| --- | --- | --- |
+| @/lib/log, @shared-client/log | [shared log](../../../../packages/shared-client/src/log.ts) → [shared logSafe](../../../../packages/shared-client/src/logSafe.ts) | Основной путь web/mobile; очищает extra, но не scope/message |
+| Прямой @/lib/logSafe | [web compatibility helper](logSafe.ts) → shared logger и sanitizer | Сохраняет прежний API и production-вывод info/warn/error; очистка extra теперь общая |
 
-Создан модуль `apps/web/src/lib/logSafe.ts` для автоматического маскирования чувствительных данных при логировании.
+Прямые logSafe/logWarnSafe/logErrorSafe из web helper выводят очищенные данные без общего production-фильтра; только logDebugSafe выключен при NODE_ENV=production. Название Safe не означает одинаковое поведение двух модулей.
 
-## Использование
+## Shared sanitizeObject
 
-### Базовое использование
+- Рекурсивно обрабатывает enumerable-поля и массивы; глубина больше 10 заменяется на [Max depth reached].
+- Имена ключей проверяются без учёта регистра по вхождению чувствительных слов. Список включает token, key, secret, password, auth, session, cookie, phone, email, otp, nonce, signature, exchange_code и точный key code.
+- Строка в таком поле маскируется частично; чувствительное значение другого ненулевого типа заменяется на [SENSITIVE_DATA_MASKED]. Это может скрыть и полезные поля с похожими именами.
+- В свободных строках распознаются Bearer, определённые key=value assignments и JWT-подобные значения. Произвольное имя, телефон или email внутри обычного текста автоматически не распознаются.
+- Error с неenumerable message/stack может превратиться в пустой объект. Helper не является полноценным сериализатором исключений.
 
-```typescript
-import { logSafe, logErrorSafe, logDebugSafe } from '@/lib/logSafe';
+Для пустой строки/null/undefined maskToken выдаёт [NO_TOKEN], для длины 1–8 — ****, для 9–16 сохраняет первые/последние 2 символа, для более длинных — первые/последние 4. sanitizeObject добавляет длину для длинного чувствительного поля; maskToken — нет. Это частичное раскрытие, а не полное удаление секрета.
 
-// Автоматически маскирует чувствительные поля
-logSafe('MyScope', 'User logged in', {
-    userId: '123',
-    token: 'secret-token-here', // Будет замаскирован
-    apiKey: 'key-12345', // Будет замаскирован
-    email: 'user@example.com' // Останется как есть
-});
+Shared maskUrl при успешном разборе URL убирает fragment и обрабатывает query keys/строки; не гарантирует очистку чувствительных значений внутри pathname. При ошибке разбора, в том числе относительного URL без base, возвращается исходная строка после обработки только строковыми шаблонами: fragment и обычные контакты могут остаться. Не передавайте полный URL, если для диагностики достаточно имени операции.
 
-// Вывод:
-// [MyScope] User logged in { userId: '123', token: 'secr****oken', apiKey: 'key-****45', email: 'user@example.com' }
-```
+## Совместимость web logSafe
 
-### Использование существующих функций
+С 10 ноября локальный helper делегирует sanitizeObject, maskToken, maskUrl и вывод shared реализации. Вложенные phone/email/otp/code/nonce/signature и распознаваемые credentials в строках обрабатываются одинаково. В частности, поведение maskUrl при невалидном или относительном URL теперь соответствует shared helper выше. Совместимость уровней вывода и очистка проверяются в [logSafeCompatibility.test.ts](../__tests__/lib/logSafeCompatibility.test.ts).
 
-Функции `logDebug`, `logError`, `logWarn` из `@/lib/log` автоматически используют безопасное логирование:
+Утверждение «все логгеры автоматически скрывают телефон, OTP и токены в тексте» по-прежнему неверно: scope/message не очищаются, а свободные строки не распознают все PII. Сохранённая legacy production-политика означает, что очищенный extra у logSafe/logWarnSafe/logErrorSafe выводится и в production; новые вызовы используют основной интерфейс и минимальный набор полей.
 
-```typescript
-import { logError, logDebug } from '@/lib/log';
+## Проверка изменения
 
-// Токены автоматически замаскируются
-logError('QuickHold', 'Auth failed', {
-    token: 'secret-token',
-    error: 'Invalid token'
-});
-```
+Используйте фиктивные строки, похожие по форме на реальные данные, и проверяйте фактический вывод нужного helper в целевом режиме. Проверка должна включать текст сообщения, вложенный объект, URL, Error, массив и ошибку провайдера. Не читайте и не публикуйте production-логи или секреты ради проверки маскирования.
 
-### Маскирование токенов вручную
-
-```typescript
-import { maskToken } from '@/lib/logSafe';
-
-const token = 'very-secret-token-12345';
-console.log('Token:', maskToken(token));
-// Вывод: Token: very****2345
-```
-
-### Маскирование URL
-
-```typescript
-import { maskUrl } from '@/lib/logSafe';
-
-const url = 'https://api.example.com/endpoint?token=secret&key=123';
-console.log('URL:', maskUrl(url));
-// Вывод: URL: https://api.example.com/endpoint?token=secr****ret&key=123
-```
-
-## Что маскируется автоматически
-
-Следующие поля автоматически маскируются:
-
-- `token`, `access_token`, `refresh_token`, `bearer_token`
-- `api_key`, `apiKey`, `apikey`
-- `secret`, `secret_key`, `secretKey`
-- `password`, `passwd`, `pwd`
-- `authorization`, `auth`
-- `key`, `private_key`, `privateKey`
-- `service_role_key`, `serviceRoleKey`
-- `supabase_key`, `supabaseKey`
-- `resend_api_key`, `resendApiKey`
-- `whatsapp_access_token`, `whatsappAccessToken`
-- `telegram_token`, `telegramToken`
-- `session`, `session_id`, `sessionId`
-- `cookie`, `cookies`
-
-И любые другие поля, содержащие эти слова в названии.
-
-## Формат маскирования
-
-- **Короткие значения (≤8 символов)**: `****`
-- **Средние значения (9-16 символов)**: `ab****cd` (первые 2 и последние 2 символа)
-- **Длинные значения (>16 символов)**: `abcd****wxyz (length: 32)` (первые 4 и последние 4 символа + длина)
-
-## Правила безопасного логирования
-
-### ✅ МОЖНО логировать:
-
-- User IDs (UUID)
-- Email адреса (но не пароли!)
-- Имена пользователей
-- Номера телефонов (но не полные с кодом доступа)
-- Общие метрики и статистику
-- Ошибки без чувствительных данных
-
-### ❌ НЕЛЬЗЯ логировать:
-
-- Токены доступа (access tokens, refresh tokens)
-- API ключи
-- Пароли (даже хешированные)
-- Service Role Keys
-- Сессионные данные
-- Полные URL с токенами в query параметрах
-- Персональные данные (ПДн) без согласия
-
-### ⚠️ ОСТОРОЖНО:
-
-- Email адреса (могут быть ПДн)
-- Номера телефонов (могут быть ПДн)
-- IP адреса (могут быть ПДн)
-- Геолокация (может быть ПДн)
-
-## Примеры
-
-### ❌ НЕПРАВИЛЬНО:
-
-```typescript
-// НЕ ДЕЛАЙТЕ ТАК!
-console.log('Token:', bearerToken);
-logError('Auth', 'Failed', { token: bearerToken });
-logDebug('API', 'Request', { apiKey: process.env.API_KEY });
-```
-
-### ✅ ПРАВИЛЬНО:
-
-```typescript
-// Используйте безопасное логирование
-import { logError, logDebug } from '@/lib/log';
-
-logError('Auth', 'Failed', { 
-    hasToken: !!bearerToken,
-    tokenLength: bearerToken?.length 
-    // Токен автоматически замаскируется
-});
-
-logDebug('API', 'Request', { 
-    hasApiKey: !!process.env.API_KEY 
-    // Ключ не логируется вообще
-});
-```
-
-## Интеграция с системами мониторинга
-
-При интеграции с Sentry, LogRocket и другими системами мониторинга:
-
-1. **Используйте безопасное логирование перед отправкой:**
-   ```typescript
-   import { sanitizeObject } from '@/lib/logSafe';
-   import * as Sentry from '@sentry/nextjs';
-   
-   Sentry.captureException(error, {
-       extra: sanitizeObject(sensitiveData)
-   });
-   ```
-
-2. **Настройте фильтры на стороне мониторинга:**
-   - Sentry: Data Scrubbing
-   - LogRocket: Privacy settings
-
-## Проверка логов
-
-Перед деплоем проверьте логи на наличие чувствительных данных:
-
-```bash
-# Поиск потенциальных утечек
-grep -r "token.*=" logs/ | grep -v "masked\|****"
-grep -r "api.*key" logs/ | grep -v "masked\|****"
-grep -r "password" logs/ | grep -v "masked\|****"
-```
-
-## Миграция существующего кода
-
-1. Замените `console.log/error/warn` на `logSafe/logErrorSafe/logDebugSafe`
-2. Или используйте существующие функции из `@/lib/log` (они уже безопасны)
-3. Удалите явное логирование токенов и ключей
-4. Используйте `maskToken()` для ручного маскирования при необходимости
-
-## Дополнительные ресурсы
-
-- [OWASP: Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
-- [OWASP: Data Protection](https://owasp.org/www-project-data-security-top-10/)
-
+Для PII, хранения копий и служебного доступа — [SECURITY](SECURITY.md), [DATA_RETENTION](../../../../DATA_RETENTION.md), [SERVICE_CLIENT_USAGE_GUIDE](../../../../docs/SERVICE_CLIENT_USAGE_GUIDE.md). Автоматическая очистка Sentry, provider logs и всех прямых console-вызовов этим helper не обеспечивается.

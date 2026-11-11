@@ -1,3 +1,17 @@
+// Transport mocks retain complete close-read fixtures; SQL snapshot behavior is tested separately.
+jest.mock('@/lib/staffShift/closeSnapshot', () => ({
+    ...jest.requireActual('@/lib/staffShift/closeSnapshot'),
+    readShiftCloseSnapshot: jest.fn(async (client, bizId, staffId, shiftId) => {
+        const records = await Promise.all(client.from.mock.results.map(async (result: { value?: { maybeSingle?: { mock?: { results?: Array<{ value: Promise<{ data: unknown }> }> } } } }) =>
+            (await result.value?.maybeSingle?.mock?.results?.[0]?.value)?.data));
+        const shift = records.find((row) => row && (row as { id: string }).id === shiftId) as { shift_date: string };
+        const staff = records.find((row) => row && (row as { id: string }).id === staffId);
+        const { data, error } = await client.from('staff_shift_items').select('*').eq('shift_id', shiftId);
+        if (error) throw new Error(error.message);
+        return { shift, staff, items: data ?? [], timezone: 'Asia/Bishkek', dayHours: 24,
+            dayStart: shift.shift_date + 'T00:00:00+06:00', closeBoundary: shift.shift_date + 'T24:00:00+06:00' };
+    }),
+}));
 import { POST } from '@/app/api/dashboard/staff/[id]/shift/close/route';
 import {
     createMockRequest,
@@ -17,13 +31,14 @@ jest.mock('@/lib/routeParams', () => ({
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
+    checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})),
     withRateLimit: jest.fn((_req, _config, handler) => handler()),
     RateLimitConfigs: {
         critical: {},
     },
 }));
 
-jest.mock('@/lib/performance', () => ({
+jest.mock('@/lib/performanceServer', () => ({
     measurePerformance: jest.fn((_operation, fn) => fn()),
 }));
 
@@ -114,6 +129,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
     };
 
     beforeEach(() => {
+        jest.useFakeTimers().setSystemTime(new Date('2024-01-15T17:00:00Z'));
         jest.clearAllMocks();
         admin.from.mockReset();
         admin.rpc.mockReset();
@@ -121,10 +137,11 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         (getRouteParamUuid as jest.Mock).mockResolvedValue(staffId);
         (withManagerContext as jest.Mock).mockImplementation(
-            async (_req: Request, _scope: string, callback: (args: { admin: typeof admin; bizId: string }) => Promise<Response>) =>
+            async (_req: Request, _scope: string, callback: (args: { admin: typeof admin; bizId: string; userId: string }) => Promise<Response>) =>
                 callback({
                     admin,
                     bizId,
+                    userId: 'manager-user-id',
                 }),
         );
 
@@ -162,6 +179,8 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
         });
     });
 
+    afterEach(() => jest.useRealTimers());
+
     test('returns 400 for invalid date query', async () => {
         admin.from.mockReturnValueOnce(
             createAdminQueryResult({
@@ -179,7 +198,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=invalid`, {
             method: 'POST',
-            body: { totalAmount: 0, items: [] },
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: 0, items: [] },
         });
 
         const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
@@ -195,7 +214,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
             method: 'POST',
-            body: { totalAmount: 0, items: [] },
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: 0, items: [] },
         });
 
         const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
@@ -219,7 +238,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
             method: 'POST',
-            body: { totalAmount: 0, items: [] },
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: 0, items: [] },
         });
 
         const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
@@ -243,7 +262,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
             method: 'POST',
-            body: { totalAmount: -100, items: [] },
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: -100, items: [] },
         });
 
         const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
@@ -273,14 +292,14 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
             method: 'POST',
-            body: { totalAmount: 1000, items: [] },
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: 1000, items: [] },
         });
 
         const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
         await expectErrorResponse(res, 400, 'validation');
     });
 
-    test('returns 400 when shift is already closed', async () => {
+    test('returns the closed shift without another write on a repeated close', async () => {
         admin.from
             .mockReturnValueOnce(
                 createAdminQueryResult({
@@ -298,7 +317,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
             .mockReturnValueOnce(
                 createAdminQueryResult({
                     maybeSingleData: {
-                        id: 'shift-id',
+                        id: '11111111-1111-4111-8111-111111111111',
                         staff_id: staffId,
                         biz_id: bizId,
                         shift_date: '2024-01-15',
@@ -311,11 +330,13 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
             method: 'POST',
-            body: { totalAmount: 1000, items: [] },
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: 1000, items: [] },
         });
 
         const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-        await expectErrorResponse(res, 400, 'validation');
+        const data = await expectSuccessResponse(res, 200);
+        expect(data.data.shift.status).toBe('closed');
+        expect(admin.rpc).not.toHaveBeenCalled();
     });
 
     test('closes dashboard shift with totalAmount payload', async () => {
@@ -336,11 +357,12 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
             .mockReturnValueOnce(
                 createAdminQueryResult({
                     maybeSingleData: {
-                        id: 'shift-id',
+                        id: '11111111-1111-4111-8111-111111111111',
                         staff_id: staffId,
                         biz_id: bizId,
                         shift_date: '2024-01-15',
                         status: 'open',
+                        ledger_revision: 7,
                         opened_at: '2024-01-15T09:00:00Z',
                         closed_at: null,
                         total_amount: 0,
@@ -361,7 +383,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
             data: {
                 ok: true,
                 shift: {
-                    id: 'shift-id',
+                    id: '11111111-1111-4111-8111-111111111111',
                     staff_id: staffId,
                     biz_id: bizId,
                     shift_date: '2024-01-15',
@@ -385,7 +407,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
             method: 'POST',
-            body: { totalAmount: 1000, consumablesAmount: 0, items: [] },
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 7, totalAmount: 1000, consumablesAmount: 0, items: [] },
         });
 
         const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
@@ -393,10 +415,13 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         expect(data.data.shift.status).toBe('closed');
         expect(admin.rpc).toHaveBeenCalledWith(
-            'close_staff_shift_safe',
+            'close_staff_shift_command',
             expect.objectContaining({
-                p_shift_id: 'shift-id',
-                p_total_amount: 1000,
+                p_shift_id: '11111111-1111-4111-8111-111111111111',
+                p_actor_id: 'manager-user-id',
+                p_expected_revision: 7,
+                p_expected_settings: { percent_master: 60, percent_salon: 40, hourly_rate: 100 },
+                p_calculation: expect.objectContaining({ totalAmount: 1000, totalConsumables: 0 }),
             }),
         );
     });
@@ -422,11 +447,12 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
             .mockReturnValueOnce(
                 createAdminQueryResult({
                     maybeSingleData: {
-                        id: 'shift-id',
+                        id: '11111111-1111-4111-8111-111111111111',
                         staff_id: staffId,
                         biz_id: bizId,
                         shift_date: '2024-01-15',
                         status: 'open',
+                        ledger_revision: 11,
                         opened_at: '2024-01-15T09:00:00Z',
                         closed_at: null,
                         total_amount: 0,
@@ -448,7 +474,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
             data: {
                 ok: true,
                 shift: {
-                    id: 'shift-id',
+                    id: '11111111-1111-4111-8111-111111111111',
                     staff_id: staffId,
                     biz_id: bizId,
                     shift_date: '2024-01-15',
@@ -472,7 +498,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
 
         const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
             method: 'POST',
-            body: {
+            body: { expectedShiftId: '11111111-1111-4111-8111-111111111111', expectedRevision: 11,
                 items: [
                     {
                         clientName: 'Client 1',
@@ -489,7 +515,12 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
         const data = await expectSuccessResponse(res, 200);
 
         expect(data.data.shift.status).toBe('closed');
-        expect(savedLedger.eq).toHaveBeenCalledWith('shift_id','shift-id');
+        expect(admin.rpc).toHaveBeenCalledTimes(1);
+        expect(admin.rpc).toHaveBeenCalledWith('close_staff_shift_command', expect.objectContaining({
+            p_actor_id: 'manager-user-id', p_expected_revision: 11,
+            p_calculation: expect.objectContaining({ totalAmount: 1000, totalConsumables: 100 }),
+        }));
+        expect(savedLedger.eq).toHaveBeenCalledWith('shift_id','11111111-1111-4111-8111-111111111111');
         expect(savedLedger.delete).not.toHaveBeenCalled();
         expect(savedLedger.insert).not.toHaveBeenCalled();
     });

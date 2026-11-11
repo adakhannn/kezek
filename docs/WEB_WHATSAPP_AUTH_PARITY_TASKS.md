@@ -1,5 +1,7 @@
 # Web WhatsApp Auth Parity Tasks
 
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
 ## Goal
 - Bring WhatsApp login in web to the same secure flow used in mobile.
 - Remove legacy session creation path from web auth UX.

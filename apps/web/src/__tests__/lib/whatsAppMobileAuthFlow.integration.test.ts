@@ -2,25 +2,14 @@ jest.mock('@/lib/senders/whatsapp', () => ({
     sendWhatsApp: jest.fn(),
 }));
 
-jest.mock('@/lib/whatsAppCreateSessionService', () => ({
-    createWhatsAppSignInSession: jest.fn(),
-}));
-
-jest.mock('@supabase/supabase-js', () => ({
-    createClient: jest.fn(),
-}));
-
-import { createClient } from '@supabase/supabase-js';
-
-import { GET as mobileExchangeGET } from '@/app/api/auth/mobile-exchange/route';
-import { __resetMobileExchangeStoreForTests } from '@/lib/mobileExchangeService';
+jest.mock('@/lib/mobileExchangeService', () => ({ ...jest.requireActual('@/lib/mobileExchangeService'), issueMobileSessionGrant: jest.fn(async () => ({ code: 'bound-grant' })) }));
+import { issueMobileSessionGrant } from '@/lib/mobileExchangeService';
 import { runWhatsAppMobileStartRoute } from '@/lib/whatsAppMobileStartRouteService';
 import { runWhatsAppMobileVerifyRoute } from '@/lib/whatsAppMobileVerifyRouteService';
-import { createWhatsAppSignInSession } from '@/lib/whatsAppCreateSessionService';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
-import { createMockNextRequest, expectSuccessResponse } from '../api/testHelpers';
 
 type AttemptRow = {
+    code_challenge?: string;
     id: string;
     phone: string;
     phone_hash: string | null;
@@ -42,6 +31,19 @@ function createInMemoryAdmin() {
     let seq = 1;
 
     const admin = {
+        rpc: jest.fn(async (_name: string, args: Record<string, string>) => {
+            const row = attempts.find(it => it.id === args.p_attempt_id);
+            if (_name === 'register_whatsapp_mobile_otp_failure') {
+                if (!row || row.used_at || row.status !== 'pending') return { data: 5, error: null };
+                row.failed_attempts += 1;
+                if (row.failed_attempts >= 5) row.status = 'failed';
+                return { data: row.failed_attempts, error: null };
+            }
+            if (!row || row.used_at || row.otp_hash !== args.p_otp_hash || row.code_challenge !== args.p_code_challenge) return { data: false, error: null };
+            row.used_at = row.consumed_at = new Date().toISOString();
+            row.status = 'consumed';
+            return { data: true, error: null };
+        }),
         auth: {
             admin: {
                 listUsers: jest.fn(async () => ({ data: { users } })),
@@ -160,11 +162,9 @@ function createInMemoryAdmin() {
 }
 
 describe('whatsApp mobile auth integration', () => {
-    const mockedCreateClient = createClient as unknown as jest.Mock;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        __resetMobileExchangeStoreForTests();
 
         process.env.WHATSAPP_OTP_TEMPLATE_NAME = 'kezek_test';
         process.env.WHATSAPP_OTP_TEMPLATE_LANG = 'ru';
@@ -172,26 +172,6 @@ describe('whatsApp mobile auth integration', () => {
         delete process.env.WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON;
 
         (sendWhatsApp as jest.Mock).mockResolvedValue(undefined);
-        (createWhatsAppSignInSession as jest.Mock).mockResolvedValue({
-            ok: true,
-            data: {
-                email: 'wa_user@example.com',
-                password: 'temp-pass',
-            },
-        });
-        mockedCreateClient.mockReturnValue({
-            auth: {
-                signInWithPassword: jest.fn().mockResolvedValue({
-                    data: {
-                        session: {
-                            access_token: 'access-token',
-                            refresh_token: 'refresh-token',
-                        },
-                    },
-                    error: null,
-                }),
-            },
-        });
     });
 
     test('happy-path: start -> verify -> mobile exchange session', async () => {
@@ -199,6 +179,7 @@ describe('whatsApp mobile auth integration', () => {
 
         const start = await runWhatsAppMobileStartRoute({
             admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
             phone: '+996500574029',
         });
         expect(start.ok).toBe(true);
@@ -218,14 +199,8 @@ describe('whatsApp mobile auth integration', () => {
             return;
         }
 
-        const exchangeReq = createMockNextRequest(
-            `http://localhost/api/auth/mobile-exchange?code=${verify.payload.exchangeCode}`,
-            { method: 'GET' },
-        );
-        const exchangeRes = await mobileExchangeGET(exchangeReq);
-        const exchangeData = await expectSuccessResponse(exchangeRes, 200);
-        expect(exchangeData).toHaveProperty('data.accessToken', 'access-token');
-        expect(exchangeData).toHaveProperty('data.refreshToken', 'refresh-token');
+        expect(verify.payload.exchangeCode).toBe('bound-grant');
+        expect(issueMobileSessionGrant).toHaveBeenCalledWith({ userId: verify.payload.userId, codeChallenge: 'a'.repeat(64) });
     });
 
     test('signs in to the existing account linked through a verified profile', async () => {
@@ -238,6 +213,7 @@ describe('whatsApp mobile auth integration', () => {
 
         const start = await runWhatsAppMobileStartRoute({
             admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
             phone: '+996500574029',
         });
         expect(start.ok).toBe(true);
@@ -256,7 +232,7 @@ describe('whatsApp mobile auth integration', () => {
         expect(verify.payload.userId).toBe('existing-user');
         expect(verify.payload.linkage).toBe('existing');
         expect(admin.auth.admin.createUser).not.toHaveBeenCalled();
-        expect(createWhatsAppSignInSession).toHaveBeenCalledWith(
+        expect(issueMobileSessionGrant).toHaveBeenCalledWith(
             expect.objectContaining({ userId: 'existing-user' }),
         );
     });
@@ -266,6 +242,7 @@ describe('whatsApp mobile auth integration', () => {
 
         const start = await runWhatsAppMobileStartRoute({
             admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
             phone: '+996500574029',
         });
         expect(start.ok).toBe(true);
@@ -334,12 +311,14 @@ describe('whatsApp mobile auth integration', () => {
 
         const first = await runWhatsAppMobileStartRoute({
             admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
             phone: '+996500574029',
         });
         expect(first.ok).toBe(false);
 
         const second = await runWhatsAppMobileStartRoute({
             admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
             phone: '+996500574029',
         });
         expect(second.ok).toBe(true);
@@ -363,6 +342,7 @@ describe('whatsApp mobile auth integration', () => {
 
         const start = await runWhatsAppMobileStartRoute({
             admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
             phone: '+996500574029',
         });
         expect(start.ok).toBe(true);
@@ -370,5 +350,25 @@ describe('whatsApp mobile auth integration', () => {
         const sendArgs = (sendWhatsApp as jest.Mock).mock.calls.at(-1)?.[0];
         expect(sendArgs?.template?.components?.[0]?.parameters?.[0]?.text).toMatch(/^\d{6}$/);
         expect(sendArgs?.template?.components?.[1]?.parameters?.[0]?.text).toMatch(/^\d{6}$/);
+    });
+    test('two concurrent valid OTP verifications issue only one grant', async () => {
+        const admin = createInMemoryAdmin();
+        const start = await runWhatsAppMobileStartRoute({ admin: admin as never, phone: '+996500574029', codeChallenge: 'a'.repeat(64) });
+        if (!start.ok) throw new Error('start failed');
+        const input = { admin: admin as never, attemptId: start.payload.attemptId, code: admin.__getAttempts()[0].code ?? '', phone: '+996500574029' };
+        const results = await Promise.all([runWhatsAppMobileVerifyRoute(input), runWhatsAppMobileVerifyRoute(input)]);
+        expect(results.filter(result => result.ok)).toHaveLength(1);
+        expect(issueMobileSessionGrant).toHaveBeenCalledTimes(1);
+        expect(admin.auth.admin.createUser).toHaveBeenCalledTimes(1);
+    });
+    test('failed atomic consume prevents user mutation and grant issuance', async () => {
+        const admin = createInMemoryAdmin();
+        const start = await runWhatsAppMobileStartRoute({ admin: admin as never, phone: '+996500574029', codeChallenge: 'a'.repeat(64) });
+        if (!start.ok) throw new Error('start failed');
+        admin.rpc.mockResolvedValueOnce({ data: false, error: null });
+        const result = await runWhatsAppMobileVerifyRoute({ admin: admin as never, attemptId: start.payload.attemptId, code: admin.__getAttempts()[0].code ?? '' });
+        expect(result).toMatchObject({ ok: false, status: 409 });
+        expect(issueMobileSessionGrant).not.toHaveBeenCalled();
+        expect(admin.auth.admin.createUser).not.toHaveBeenCalled();
     });
 });

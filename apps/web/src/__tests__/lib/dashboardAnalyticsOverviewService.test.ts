@@ -2,8 +2,8 @@ import { getDashboardAnalyticsOverview } from '@/lib/dashboardAnalyticsOverviewS
 
 describe('dashboardAnalyticsOverviewService', () => {
     test('aggregates overview payload and caches it', async () => {
-        const order = jest.fn().mockResolvedValue({
-            data: [
+        const rpc = jest.fn().mockResolvedValue({
+            data: { rows: [
                 {
                     date: '2026-03-01',
                     home_views: 100,
@@ -15,16 +15,11 @@ describe('dashboardAnalyticsOverviewService', () => {
                     promo_revenue: 500,
                     total_revenue: 2000,
                 },
-            ],
+            ] },
             error: null,
         });
-        const lte = jest.fn().mockReturnValue({ order });
-        const gte = jest.fn().mockReturnValue({ lte });
-        const eq = jest.fn().mockReturnValue({ gte });
-        const select = jest.fn().mockReturnValue({ eq });
-
         const result = await getDashboardAnalyticsOverview({
-            admin: { from: jest.fn().mockReturnValue({ select }) } as never,
+            admin: { rpc },
             bizId: 'biz-1',
             startDate: '2026-03-01',
             endDate: '2026-03-31',

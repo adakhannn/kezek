@@ -1,13 +1,15 @@
+jest.mock('@/lib/staffShift/closeSnapshot', () => ({ ...jest.requireActual('@/lib/staffShift/closeSnapshot'), readShiftCloseSnapshot: jest.fn() }));
+const { readShiftCloseSnapshot } = jest.requireMock('@/lib/staffShift/closeSnapshot');
 import { runDashboardStaffShiftClose } from '@/lib/dashboardStaffShiftCloseService';
 
-jest.mock('@/lib/performance', () => ({ measurePerformance: (_name: string, fn: () => unknown) => fn() }));
+jest.mock('@/lib/performanceServer', () => ({ measurePerformance: (_name: string, fn: () => unknown) => fn() }));
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logDebug: jest.fn() }));
 jest.mock('@/lib/notifications/shiftNotifications', () => ({ sendShiftCloseNotification: jest.fn() }));
 
 const itemId = '9c8a0a7f-6fab-4708-b204-0fb9fbdeb25d';
 const row = {id:itemId,service_amount:301,consumables_amount:49,booking_id:null};
 const submitted = {id:itemId,serviceAmount:301,consumablesAmount:49,bookingId:null};
-const shift = {id:'shift-test',staff_id:'staff-test',biz_id:'biz-test',shift_date:'2026-10-09',status:'open',opened_at:'2026-10-09T00:14:00Z'};
+const shift = {id:'11111111-1111-4111-8111-111111111111',staff_id:'staff-test',biz_id:'biz-test',shift_date:'2026-10-09',status:'open',ledger_revision:7,opened_at:'2026-10-09T00:14:00Z'};
 
 function query(result: unknown) {
     const builder = {
@@ -23,6 +25,9 @@ function query(result: unknown) {
 
 function setup(itemsError: unknown = null) {
     const itemQuery = query({data:[row],error:itemsError});
+    if (itemsError) readShiftCloseSnapshot.mockRejectedValue(new Error('ledger unavailable'));
+    else readShiftCloseSnapshot.mockResolvedValue({ shift, staff: { percent_master: 60, percent_salon: 40, hourly_rate: null }, items: [row],
+        timezone: 'Asia/Bishkek', dayStart: '2026-10-08T18:00Z', closeBoundary: '2026-10-09T18:00Z', dayHours: 24 });
     const admin = {
         from:jest.fn((table: string) => table==='staff' ? query({data:{id:'staff-test',biz_id:'biz-test',percent_master:60,percent_salon:40,user_id:null}})
             : table==='staff_shifts' ? query({data:shift}) : table==='staff_shift_items' ? itemQuery : query({data:[],error:null})),
@@ -33,21 +38,21 @@ function setup(itemsError: unknown = null) {
 }
 
 function close(admin: ReturnType<typeof setup>['admin'], items: Record<string,unknown>[]) {
-    return runDashboardStaffShiftClose({admin,bizId:'biz-test',staffId:'staff-test',
+    return runDashboardStaffShiftClose({actorId:'actor-1',admin,bizId:'biz-test',staffId:'staff-test',
         req:new Request('http://localhost/api/dashboard/staff/staff-test/shift/close?date=2026-10-09',{
             method:'POST',headers:{'content-type':'application/json'},
-            body:JSON.stringify({items,totalAmount:9999,consumablesAmount:9999}),
+            body:JSON.stringify({expectedShiftId:shift.id,expectedRevision:shift.ledger_revision,items,totalAmount:9999,consumablesAmount:9999}),
         }),
     });
 }
 
-test.each(['2026-10-08T23:40:00.000Z','2026-10-09T17:55:00.000Z','2026-10-09T18:05:00.000Z'])(
-    'manual owner closure records the actual action instant %s, not the day boundary', async instant => {
+test.each(['2026-10-09T01:40:00.000Z','2026-10-09T17:55:00.000Z','2026-10-09T18:05:00.000Z'])(
+    'manual owner closure is bounded by the financial day %s', async instant => {
         jest.useFakeTimers().setSystemTime(new Date(instant));
         try {
             const {admin} = setup();
             expect(await close(admin,[submitted])).toMatchObject({ok:true});
-            expect(admin.rpc).toHaveBeenCalledWith('close_staff_shift_safe',expect.objectContaining({p_closed_at:instant}));
+            expect(admin.rpc).toHaveBeenCalledWith('close_staff_shift_command',expect.objectContaining({p_actor_id:'actor-1',p_expected_revision:7,p_calculation:expect.objectContaining({closedAt:new Date(Math.min(Date.parse(instant),Date.parse('2026-10-09T18:00Z'))).toISOString()})}));
         } finally { jest.useRealTimers(); }
     },
 );
@@ -55,11 +60,11 @@ test.each(['2026-10-08T23:40:00.000Z','2026-10-09T17:55:00.000Z','2026-10-09T18:
 test('owner closes the saved ledger without replacing identities or trusting submitted totals',async () => {
     const {admin,itemQuery} = setup();
     expect(await close(admin,[submitted])).toMatchObject({ok:true});
-    expect(itemQuery.eq).toHaveBeenCalledWith('shift_id','shift-test');
+    expect(readShiftCloseSnapshot).toHaveBeenCalledWith(admin,'biz-test','staff-test',shift.id);
     expect(itemQuery.delete).not.toHaveBeenCalled();
     expect(itemQuery.insert).not.toHaveBeenCalled();
-    expect(admin.rpc).toHaveBeenCalledWith('close_staff_shift_safe',expect.objectContaining({
-        p_total_amount:301,p_consumables_amount:49,p_master_share:181,p_salon_share:169,
+    expect(admin.rpc).toHaveBeenCalledWith('close_staff_shift_command',expect.objectContaining({
+        p_expected_revision:7,p_calculation:expect.objectContaining({totalAmount:301,totalConsumables:49,finalMasterShare:181,finalSalonShare:169}),
     }));
 });
 

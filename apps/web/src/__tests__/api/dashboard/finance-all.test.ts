@@ -37,30 +37,10 @@ describe('/api/dashboard/finance/all', () => {
     });
 
     test('должен успешно вернуть статистику (реэкспорт)', async () => {
-        mockSupabase.from.mockReturnValue({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockResolvedValue({ data: [], error: null }),
-        });
-        mockSupabase.from.mockReturnValueOnce({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockResolvedValue({ data: [], error: null }),
-        });
-        mockSupabase.from.mockReturnValueOnce({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockResolvedValue({ data: [], error: null }),
-        });
+
         (mockAdmin.rpc as jest.Mock).mockResolvedValue({
-            data: { staff_stats: [], total_stats: null },
+            data: { branches: [], staff: [], shifts: [], closedStats: [] },
             error: null,
-        });
-        mockAdmin.from.mockReturnValue({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            gte: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockResolvedValue({ data: [], error: null }),
         });
 
         const req = createMockRequest('http://localhost/api/dashboard/finance/all?period=day&date=2024-01-15', {
@@ -73,5 +53,4 @@ describe('/api/dashboard/finance/all', () => {
         expect(data).toHaveProperty('ok', true);
     });
 });
-
 

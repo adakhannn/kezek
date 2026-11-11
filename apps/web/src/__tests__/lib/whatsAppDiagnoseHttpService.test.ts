@@ -1,3 +1,4 @@
+jest.mock('@/lib/adminHttpAccess', () => ({ requireCurrentSuperAdmin: jest.fn(async () => ({ ok: true, user: { id: 'test-super-admin' } })) }));
 jest.mock('@/lib/whatsAppDiagnoseRouteService', () => ({
     runWhatsAppDiagnoseRoute: jest.fn(),
 }));

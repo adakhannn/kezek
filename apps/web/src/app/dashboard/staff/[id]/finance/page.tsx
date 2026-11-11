@@ -14,8 +14,9 @@ export default async function StaffFinancePage({
 }: {
     params: Promise<{ id: string }>;
 }) {
+    const { id } = await params;
+    let fullName: string | null;
     try {
-        const { id } = await params;
         const { supabase, bizId } = await getBizContextForManagers();
 
         // Проверяем, что сотрудник принадлежит этому бизнесу (общий хелпер)
@@ -37,10 +38,10 @@ export default async function StaffFinancePage({
             return notFound();
         }
 
-        const staff = staffResult.data;
+        fullName = staffResult.data.full_name;
 
         // Без server-prefetch: данные смены загрузит клиент через /api/staff/finance
-        return <StaffFinancePageClient id={id} fullName={staff.full_name} />;
+
     } catch (e) {
         // Если getBizContextForManagers выбросил ошибку, она будет обработана в layout
         // Но на всякий случай логируем здесь
@@ -50,5 +51,5 @@ export default async function StaffFinancePage({
         // Пробрасываем ошибку дальше, чтобы layout мог её обработать
         throw e;
     }
+    return <StaffFinancePageClient id={id} fullName={fullName} />;
 }
-

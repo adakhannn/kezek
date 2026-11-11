@@ -1,47 +1,13 @@
-﻿import { runMarkAttendance } from '@/lib/markAttendanceService';
-
-jest.mock('@/lib/performance', () => ({
-    measurePerformance: jest.fn((_operation, fn) => fn()),
-}));
-
-describe('markAttendanceService', () => {
-    const mockAdmin = {
-        from: jest.fn(() => mockAdmin),
-        select: jest.fn(() => mockAdmin),
-        eq: jest.fn(() => mockAdmin),
-        maybeSingle: jest.fn(),
-        rpc: jest.fn(),
-        update: jest.fn(() => mockAdmin),
-    };
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
-    test('returns forbidden when booking belongs to another business', async () => {
-        mockAdmin.maybeSingle.mockResolvedValueOnce({
-            data: {
-                id: 'booking-id',
-                biz_id: 'other-biz-id',
-                start_at: new Date(Date.now() - 86400000).toISOString(),
-                status: 'confirmed',
-            },
-            error: null,
-        });
-
-        const result = await runMarkAttendance({
-            admin: mockAdmin,
-            bookingId: 'booking-id',
-            bizId: 'test-biz-id',
-            attended: true,
-        });
-
-        expect(result).toEqual({
-            ok: false,
-            statusCode: 403,
-            errorType: 'forbidden',
-            message: 'Доступ запрещен',
-        });
-    });
+import { runMarkAttendance } from '@/lib/markAttendanceService';
+jest.mock('@/lib/performanceServer', () => ({ measurePerformance: jest.fn((_operation, run) => run()) }));
+const receipt = { ok: true, status: 'paid', promotion_applied: false, subscription_applied: true, promotion_info: { title: 'Package', discount_percent: 0, discount_amount: 0, final_amount: 500 } };
+function setup(data: unknown = receipt, error: unknown = null) { const admin = { rpc: jest.fn().mockResolvedValue({ data, error }), from: jest.fn() }; return { admin, run: (actorId='actor') => runMarkAttendance({ admin, bookingId: 'booking', bizId: 'biz', actorId, attended: true }) }; }
+test('sends the verified actor/business and returns authoritative persisted benefit fields', async () => {
+    const { admin, run } = setup(); expect(await run()).toMatchObject({ ok: true, payload: { status: 'paid', subscription_applied: true, promotion_info: receipt.promotion_info } });
+    expect(admin.rpc).toHaveBeenCalledWith('mark_booking_attendance_command', { p_booking_id: 'booking', p_biz_id: 'biz', p_actor_id: 'actor', p_attended: true }); expect(admin.from).not.toHaveBeenCalled();
 });
-
+test('missing actor is forbidden before any command', async () => { const { run, admin } = setup(); expect(await run('')).toMatchObject({ ok: false, statusCode: 403 }); expect(admin.rpc).not.toHaveBeenCalled(); });
+test.each([['42501',403],['P0002',404],['22023',400],['40001',409],['P0001',500],['42883',500]])('SQL %s remains non-success%s with no direct-write fallback', async (code,statusCode) => {
+    const { run, admin } = setup(null,{code,message:'function does not exist'}); expect(await run()).toMatchObject({ ok: false, statusCode }); expect(admin.from).not.toHaveBeenCalled(); expect(admin.rpc).toHaveBeenCalledTimes(1);
+});
+test.each([null, {}, { ...receipt, status: 'no_show' }, { ...receipt, ok: false }])('an incomplete or contradictory receipt is never accepted: %j', async data => { expect(await setup(data).run()).toMatchObject({ ok: false, statusCode: 500 }); });

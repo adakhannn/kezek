@@ -1,95 +1,30 @@
-/**
- * Тесты для /api/auth/yandex/callback
- * OAuth callback от Yandex
- */
-
+jest.mock('@/lib/yandexOAuthConfig', () => ({ getYandexPublicOrigin: () => 'https://example.invalid' }));
+jest.mock('@/lib/yandexOAuthState', () => ({ consumeYandexOAuthState: jest.fn() }));
+jest.mock('@/lib/yandexAuthCallbackRouteService', () => ({ runYandexAuthCallbackRoute: jest.fn() }));
+jest.mock('next/headers', () => ({ cookies: jest.fn() }));
 import { GET } from '@/app/api/auth/yandex/callback/route';
-import { setupApiTestMocks, createMockRequest } from '../testHelpers';
+import { cookies } from 'next/headers';
+import { consumeYandexOAuthState } from '@/lib/yandexOAuthState';
+import { runYandexAuthCallbackRoute } from '@/lib/yandexAuthCallbackRouteService';
 
-setupApiTestMocks();
-
-// Мокаем fetch для внешних запросов
-global.fetch = jest.fn();
-
-describe('/api/auth/yandex/callback', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+describe('Yandex callback route state boundary', () => {
+    beforeEach(() => { jest.resetAllMocks(); });
+    test('rejects an OAuth code without an initiated browser attempt', async () => {
+        const response = await GET(new Request('https://example.invalid/api/auth/yandex/callback?code=attacker-code'));
+        expect(response.status).toBe(307);
+        expect(response.headers.get('location')).toContain('error=yandex_state');
+        expect(runYandexAuthCallbackRoute).not.toHaveBeenCalled();
+        expect(global.fetch).not.toHaveBeenCalled();
     });
-
-    test('должен вернуть редирект при ошибке OAuth', async () => {
-        const req = createMockRequest('http://localhost/api/auth/yandex/callback?error=access_denied', {
-            method: 'GET',
-        });
-
-        const res = await GET(req);
-        expect(res.status).toBe(307); // Redirect
-        expect(res.headers.get('location')).toContain('/auth/sign-in?error=');
-    });
-
-    test('должен вернуть редирект при отсутствии кода', async () => {
-        const req = createMockRequest('http://localhost/api/auth/yandex/callback', {
-            method: 'GET',
-        });
-
-        const res = await GET(req);
-        expect(res.status).toBe(307); // Redirect
-        expect(res.headers.get('location')).toContain('/auth/sign-in?error=no_code');
-    });
-
-    test('должен обработать успешный OAuth callback', async () => {
-        // Мокаем успешный обмен кода на токен
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                access_token: 'yandex-access-token',
-            }),
-        });
-
-        // Мокаем получение информации о пользователе
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                id: 'yandex-user-id',
-                login: 'testuser',
-                default_email: 'test@yandex.ru',
-            }),
-        });
-
-        // Мокаем createClient
-        const mockAdmin = {
-            from: jest.fn(),
-            auth: {
-                admin: {
-                    listUsers: jest.fn().mockResolvedValue({
-                        data: {
-                            users: [],
-                        },
-                        error: null,
-                    }),
-                    createUser: jest.fn().mockResolvedValue({
-                        data: {
-                            user: {
-                                id: 'new-user-id',
-                            },
-                        },
-                        error: null,
-                    }),
-                },
-            },
-        };
-
-        jest.mock('@supabase/supabase-js', () => ({
-            createClient: jest.fn().mockReturnValue(mockAdmin),
-        }));
-
-        const req = createMockRequest('http://localhost/api/auth/yandex/callback?code=oauth-code', {
-            method: 'GET',
-        });
-
-        const res = await GET(req);
-        // Может вернуть редирект или ошибку в зависимости от конфигурации
-        expect([200, 307, 500]).toContain(res.status);
+    test('allows exchange only after matching cookie and atomic state consumption', async () => {
+        const state = 'a'.repeat(64);
+        jest.mocked(cookies).mockResolvedValue({ get: (name: string) => name === 'kezek_yandex_sign_in_state' ? { value: state } : undefined } as never);
+        jest.mocked(consumeYandexOAuthState).mockResolvedValue({ returnPath: '/cabinet' });
+        jest.mocked(runYandexAuthCallbackRoute).mockResolvedValue({ ok: true, redirectUrl: 'https://example.invalid/auth/callback' });
+        const response = await GET(new Request('https://example.invalid/api/auth/yandex/callback?code=verified-code&state=' + state));
+        expect(response.status).toBe(307);
+        expect(response.headers.get('location')).toBe('https://example.invalid/auth/callback');
+        expect(consumeYandexOAuthState).toHaveBeenCalledWith(state, 'sign_in', null);
+        expect(runYandexAuthCallbackRoute).toHaveBeenCalledTimes(1);
     });
 });
-
-

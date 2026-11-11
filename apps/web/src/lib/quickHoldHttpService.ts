@@ -1,11 +1,11 @@
-import { type BookingError, type CreateBookingResult, validateCreateBookingParams } from '@core-domain/booking';
+import { validateCreateBookingParams } from '@core-domain/booking';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { dispatchBookingNotification } from '@/lib/bookingNotificationDispatch';
-import { BookingSlotConflictError } from '@/lib/bookingSlotConflict';
+import { readBookingRequestIdentity } from '@/lib/bookingRequestHttp';
 import { runQuickHold } from '@/lib/quickHoldService';
 import { resolveRequestAuthContext } from '@/lib/requestAuthContext';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
 
@@ -39,28 +39,14 @@ function normalizeQuickHoldInput(raw: QuickHoldRequestBody) {
     return domainValidation.data;
 }
 
-function mapQuickHoldError(error: BookingError) {
-    const kind = error.kind;
-    const baseMessage =
-        kind === 'BRANCH_NOT_FOUND_OR_INACTIVE'
-            ? 'Филиал не найден или неактивен'
-            : kind === 'NO_ACTIVE_BRANCH_FOR_BIZ'
-              ? 'Для выбранного бизнеса нет активных филиалов'
-              : 'Не удалось создать бронирование';
-
-    return createErrorResponse(
-        'validation',
-        error.message || baseMessage,
-        { kind },
-        400,
-    );
-}
-
 export async function runQuickHoldHttp(req: Request): Promise<NextResponse> {
     const authContext = await resolveRequestAuthContext(req, 'QuickHold');
     if (authContext instanceof Response) {
         return authContext as NextResponse;
     }
+
+    const identity = readBookingRequestIdentity(req, false);
+    if (identity instanceof NextResponse) return identity;
 
     const validationResult = await validateRequest(req, quickHoldSchema);
     if (!validationResult.success) {
@@ -74,26 +60,8 @@ export async function runQuickHoldHttp(req: Request): Promise<NextResponse> {
         return normalized as NextResponse;
     }
 
-    let result: CreateBookingResult;
-    try {
-        result = await runQuickHold(
-            {
-                supabase: authContext.supabase,
-                userId: authContext.user.id,
-                notify: ({ bookingId, type }) => dispatchBookingNotification(authContext.supabase, bookingId, type),
-            },
-            normalized,
-        );
-    } catch (error) {
-        if (error instanceof BookingSlotConflictError) {
-            return createErrorResponse('booking_slot_unavailable', error.message, undefined, 409);
-        }
-        throw error;
-    }
-
-    if (!result.ok) {
-        return mapQuickHoldError(result.error);
-    }
+    const result = await runQuickHold({ admin: createSupabaseAdminClient(), actorId: authContext.user.id, identity }, normalized);
+    if (result instanceof NextResponse) return result;
 
     return createSuccessResponse({
         booking_id: result.bookingId,

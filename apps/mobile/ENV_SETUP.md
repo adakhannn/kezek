@@ -1,7 +1,7 @@
-# Переменные окружения (Mobile)
+# Конфигурация мобильного приложения
 
-Настройка переменных окружения для мобильного приложения перенесена в **единый гайд по env** в корне репозитория.
+Статус: указатель на основное руководство, обновлён 1 ноября 2026.
 
-👉 **[ENV_GUIDE.md](../../ENV_GUIDE.md)** — раздел **«2. Mobile»**: требуемые переменные, где взять значения, `.env.local`, troubleshooting и альтернативы (EAS Secrets, app.json).
+Имена переменных, публичность и fallback описаны в [ENV_GUIDE — Mobile](../../ENV_GUIDE.md#mobile). Порядок подготовки согласованной среды — в [GETTING_STARTED](../../GETTING_STARTED.md). Существующий локальный файл не перезаписывать шаблоном.
 
-Кратко: скопируйте `apps/mobile/.env.example` в `apps/mobile/.env.local`, заполните `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_API_URL` и запускайте Expo с `npx expo start --clear`.
+Ошибки загрузки конфигурации: [диагностика mobile](TROUBLESHOOTING.md). Команды установки и значения env здесь не дублируются.

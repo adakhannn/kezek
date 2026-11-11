@@ -9,5 +9,6 @@ export const runtime = 'nodejs';
 export async function POST(req: Request, context: unknown) {
   return withRateLimit(req, RateLimitConfigs.critical, async () =>
     withErrorHandler('OwnerShiftOpen', () => runDashboardStaffShiftOpenHttp(req, context)),
+      "/api/dashboard/staff/[id]/shift/open",
   );
 }

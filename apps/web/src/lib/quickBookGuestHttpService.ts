@@ -2,13 +2,13 @@ import { validateCreateGuestBookingParams } from '@core-domain/booking';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { dispatchCreatedGuestBookingNotification } from '@/lib/guestBookingNotificationDispatch';
-import { createSupabaseAnonClient } from '@/lib/supabaseHelpers';
+import { readBookingRequestIdentity } from '@/lib/bookingRequestHttp';
 import {
     type QuickBookGuestInput,
     type QuickBookGuestSupabasePort,
     runQuickBookGuest,
 } from '@/lib/quickBookGuestService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { quickBookGuestSchema } from '@/lib/validation/bookingSchemas';
 
@@ -48,6 +48,9 @@ function normalizeQuickBookGuestInput(
 }
 
 export async function runQuickBookGuestHttp(req: Request): Promise<NextResponse> {
+    const identity = readBookingRequestIdentity(req, true);
+    if (identity instanceof NextResponse) return identity;
+
     const validationResult = await validateRequest(req, quickBookGuestSchema);
     if (!validationResult.success) {
         return validationResult.response;
@@ -60,12 +63,11 @@ export async function runQuickBookGuestHttp(req: Request): Promise<NextResponse>
         return normalized;
     }
 
-    const supabase = createSupabaseAnonClient() as unknown as QuickBookGuestSupabasePort;
+    const admin = createSupabaseAdminClient() as unknown as QuickBookGuestSupabasePort;
     const result = await runQuickBookGuest(
         {
-            supabase,
-            notifyGuestBooking: async ({ bookingId, type }) =>
-                dispatchCreatedGuestBookingNotification(bookingId, type, normalized),
+            admin,
+            identity,
         },
         normalized,
     );

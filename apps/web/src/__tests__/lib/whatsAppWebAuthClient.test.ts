@@ -47,7 +47,7 @@ describe('whatsAppWebAuthClient', () => {
         }),
       );
 
-    const start = await startWhatsAppWebAuth(fetcher as unknown as typeof fetch, '+996500574029');
+    const start = await startWhatsAppWebAuth(fetcher as unknown as typeof fetch, '+996500574029', 'a'.repeat(64));
     expect(start.attemptId).toBe('attempt-1');
 
     const verify = await verifyWhatsAppWebOtp(fetcher as unknown as typeof fetch, {
@@ -61,6 +61,7 @@ describe('whatsAppWebAuthClient', () => {
     const exchange = await exchangeWhatsAppWebSession(
       fetcher as unknown as typeof fetch,
       verify.exchangeCode!,
+      'v'.repeat(64),
     );
     expect(exchange).toEqual({ accessToken: 'at-1', refreshToken: 'rt-1' });
   });
@@ -75,7 +76,7 @@ describe('whatsAppWebAuthClient', () => {
     );
 
     await expect(
-      startWhatsAppWebAuth(fetcher as unknown as typeof fetch, '+996500574029'),
+      startWhatsAppWebAuth(fetcher as unknown as typeof fetch, '+996500574029', 'a'.repeat(64)),
     ).rejects.toThrow(
       'Вход через WhatsApp временно недоступен для вашего профиля. Попробуйте позже.',
     );

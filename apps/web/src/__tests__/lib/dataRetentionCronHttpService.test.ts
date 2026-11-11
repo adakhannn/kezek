@@ -1,3 +1,4 @@
+jest.mock('@/lib/cronExecutionTracking', () => ({ trackCronExecution: jest.fn((_job: string, action: () => Promise<Response>) => action()) }));
 jest.mock('@/lib/dataRetentionCronService', () => ({
     runDataRetention: jest.fn(),
 }));
@@ -48,6 +49,17 @@ describe('dataRetentionCronHttpService', () => {
         });
         expect(response.status).toBe(200);
         expect(body.data.api_metrics_deleted).toBe(2);
+    });
+
+    test('partial cleanup is an HTTP failure with committed counters preserved', async () => {
+        (runDataRetention as jest.Mock).mockResolvedValue({ ok: false, error: 'internal', status: 500,
+            message: 'Some data retention steps failed', details: { api_metrics_deleted: 2, finance_logs_error: 'failed' } });
+        const { runDataRetentionCronHttp } = await import('@/lib/dataRetentionCronHttpService');
+        const response = await runDataRetentionCronHttp(new Request('http://localhost/api/cron/data-retention', {
+            headers: { authorization: 'Bearer test-secret' },
+        }), 'test-secret');
+        expect(response.status).toBe(500);
+        expect(await response.json()).toMatchObject({ ok: false, details: { api_metrics_deleted: 2, finance_logs_error: 'failed' } });
     });
 }
 );

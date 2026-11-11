@@ -1,4 +1,6 @@
 import type { OverviewByDayPoint } from '@/app/admin/analytics/overview/types';
+import { readAnalyticsSnapshot } from '@/lib/analyticsReportSnapshot';
+import type { ReportClient } from '@/lib/finance/reportSnapshot';
 
 const fields = {
   homeViews: 'home_views', businessPageViews: 'business_page_views', bookingFlowStarts: 'booking_flow_starts',
@@ -37,28 +39,8 @@ export function aggregateGlobalOverview(rows: GlobalOverviewRow[], startDate: st
   };
 }
 
-type StatsQuery = {
-  select(columns: string): StatsQuery;
-  gte(column: string, value: string): StatsQuery;
-  lte(column: string, value: string): StatsQuery;
-  order(column: string, options: { ascending: boolean }): StatsQuery;
-  range(from: number, to: number): PromiseLike<{ data: GlobalOverviewRow[] | null; error: unknown }>;
-};
-export type GlobalOverviewClient = { from(table: string): StatsQuery };
-
+export type GlobalOverviewClient = ReportClient;
 export async function getGlobalOverview(admin: GlobalOverviewClient, startDate: string, endDate: string) {
-  const rows: GlobalOverviewRow[] = [];
-  const size = 1000;
-  // Stable primary-key order prevents same-date businesses being lost at page boundaries.
-  for (let offset = 0; ; offset += size) {
-    const { data, error } = await admin.from('business_daily_stats')
-      .select(['date', ...Object.values(fields)].join(','))
-      .gte('date', startDate).lte('date', endDate)
-      .order('date', { ascending: true }).order('biz_id', { ascending: true })
-      .range(offset, offset + size - 1);
-    if (error) throw new Error('Failed to load overview analytics');
-    rows.push(...(data ?? []));
-    if (!data || data.length < size) break;
-  }
-  return aggregateGlobalOverview(rows, startDate, endDate);
+  const snapshot = await readAnalyticsSnapshot(admin, { startDate, endDate, kind: 'global' });
+  return aggregateGlobalOverview(snapshot.rows, startDate, endDate);
 }

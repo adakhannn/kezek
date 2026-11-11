@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { logError, logDebug } from '@/lib/log';
-import { getServiceClient } from '@/lib/supabaseService';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { logError, logDebug } from '@/lib/log';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { getServiceClient } from '@/lib/supabaseService';
 import { validateQuery } from '@/lib/validation/apiValidation';
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         // Global event storage is server-only; enforce the same role as the admin shell
         // before constructing a service client, independently of the page layout.
         const { isSuperAdmin, error: roleError } = await checkCurrentUserIsSuperAdmin(
-            supabase as unknown as SuperAdminRoleClient,
+            supabase,
             user.id,
         );
         if (roleError) {

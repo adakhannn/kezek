@@ -46,6 +46,10 @@ type BookingFormSectionsProps = {
     slots: Slot[];
     slotsError: string | null;
     slotsLoading: boolean;
+    slotsHasMore?: boolean;
+    slotsLoadingMore?: boolean;
+    slotsMoreError?: string | null;
+    onLoadMoreSlots?: () => void;
     staff: Staff[];
     staffCurrent: Staff | null;
     staffFiltered: Staff[];
@@ -95,6 +99,10 @@ export function BookingFormSections({
     slots,
     slotsError,
     slotsLoading,
+    slotsHasMore,
+    slotsLoadingMore,
+    slotsMoreError,
+    onLoadMoreSlots,
     staff,
     staffCurrent,
     staffFiltered,
@@ -269,6 +277,10 @@ export function BookingFormSections({
                             selectedSlot={null}
                             onSelect={onSlotSelect}
                             loading={slotsLoading}
+                            hasMore={slotsHasMore}
+                            loadingMore={slotsLoadingMore}
+                            moreError={slotsMoreError}
+                            onLoadMore={onLoadMoreSlots}
                             error={slotsError}
                             dayStr={dayStr}
                             dayLabel={dayLabel}

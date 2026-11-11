@@ -1,243 +1,190 @@
-jest.mock('@/lib/env', () => ({
-    getUpstashRedisUrl: jest.fn(),
-    getUpstashRedisToken: jest.fn(),
-}));
-
-jest.mock('@upstash/redis', () => ({
-    Redis: jest.fn(),
-}));
-
-jest.mock('@/lib/log', () => ({
-    logWarn: jest.fn(),
-}));
-
+jest.mock('@/lib/env', () => ({ getUpstashRedisUrl: jest.fn(), getUpstashRedisToken: jest.fn() }));
+jest.mock('@upstash/redis', () => ({ Redis: jest.fn() }));
+jest.mock('@/lib/log', () => ({ logWarn: jest.fn() }));
 import { Redis } from '@upstash/redis';
-
-import { getUpstashRedisToken, getUpstashRedisUrl } from '@/lib/env';
+import { getUpstashRedisUrl, getUpstashRedisToken } from '@/lib/env';
 import { logWarn } from '@/lib/log';
-import {
-    RateLimitConfigs,
-    checkRateLimit,
-    getRateLimitIdentifier,
-    routeRateLimit,
-    withRateLimit,
-} from '@/lib/rateLimit';
+import { checkRateLimit, withRateLimit, checkVerifiedPrincipalRateLimit, getRateLimitIdentifier,
+    getTrustedRateLimitIdentifier, routeRateLimit, RateLimitConfigs, RATE_LIMIT_TIMEOUT_MS,
+    RATE_LIMIT_MEMORY_CAP, RATE_LIMIT_SCRIPT } from '@/lib/rateLimit';
 
-function createRequest(headers: Record<string, string> = {}): Request {
-    return new Request('https://example.com', {
-        headers,
-    });
-}
+const req = (path = '/api/test', method = 'POST', headers: Record<string, string> = {}) =>
+    new Request('https://example.com' + path, { method, headers });
+const config = (identifier: string) => ({ maxRequests: 2, windowMs: 60000, identifier });
+const originalMode = process.env.NODE_ENV;
+const originalProxy = process.env.RATE_LIMIT_TRUSTED_IP_HEADER;
+const redis = (value: unknown = [1, 60000]) => {
+    (getUpstashRedisUrl as jest.Mock).mockReturnValue('https://synthetic.redis.invalid');
+    (getUpstashRedisToken as jest.Mock).mockReturnValue('synthetic-token');
+    const evalMock = jest.fn().mockResolvedValue(value);
+    (Redis as jest.Mock).mockImplementation(() => ({ eval: evalMock }));
+    return evalMock;
+};
+beforeEach(() => {
+    jest.clearAllMocks();
+    (logWarn as jest.Mock).mockReset();
+    process.env.NODE_ENV = 'test';
+    delete process.env.RATE_LIMIT_TRUSTED_IP_HEADER;
+    (getUpstashRedisUrl as jest.Mock).mockReturnValue(undefined);
+    (getUpstashRedisToken as jest.Mock).mockReturnValue(undefined);
+});
+afterEach(() => {
+    jest.useRealTimers();
+    process.env.NODE_ENV = originalMode;
+    if (originalProxy === undefined) delete process.env.RATE_LIMIT_TRUSTED_IP_HEADER;
+    else process.env.RATE_LIMIT_TRUSTED_IP_HEADER = originalProxy;
+});
 
-describe('rateLimit', () => {
-    const mockedRedis = Redis as jest.Mock;
-    const mockedGetRedisUrl = getUpstashRedisUrl as jest.MockedFunction<
-        typeof getUpstashRedisUrl
-    >;
-    const mockedGetRedisToken = getUpstashRedisToken as jest.MockedFunction<
-        typeof getUpstashRedisToken
-    >;
-    const mockedLogWarn = logWarn as jest.MockedFunction<typeof logWarn>;
+test('memory counter rejects the next request and starts a fresh window at exact expiry', async () => {
+    jest.useFakeTimers().setSystemTime(100000);
+    const options = { ...config('memory-expiry'), maxRequests: 1, windowMs: 2000 };
+    expect((await checkRateLimit(req(), options, '/memory')).success).toBe(true);
+    expect(await checkRateLimit(req(), options, '/memory')).toMatchObject({ success: false, remaining: 0, retryAfter: 2 });
+    jest.setSystemTime(102000);
+    expect((await checkRateLimit(req(), options, '/memory')).success).toBe(true);
+});
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        mockedGetRedisUrl.mockReturnValue('');
-        mockedGetRedisToken.mockReturnValue('');
-    });
+test('method and route template isolate budgets; query and dynamic IDs cannot bypass one route', async () => {
+    const options = { ...config('same-client'), maxRequests: 1 };
+    expect((await checkRateLimit(req('/api/items/a?x=1'), options, '/api/items/[id]')).success).toBe(true);
+    expect((await checkRateLimit(req('/api/items/b?x=2'), options, '/api/items/[id]')).success).toBe(false);
+    expect((await checkRateLimit(req('/api/items/b', 'GET'), options, '/api/items/[id]')).success).toBe(true);
+    expect((await checkRateLimit(req('/api/finance'), options, '/api/finance')).success).toBe(true);
+});
 
-    test('uses in-memory fallback and blocks after maxRequests', async () => {
-        const req = createRequest({ 'x-forwarded-for': '10.0.0.1' });
-        const config = { maxRequests: 2, windowMs: 60_000, identifier: 'memory-basic' };
+test('one EVAL is used with no retries/pipelining and millisecond TTL arguments', async () => {
+    const evaluate = redis([1, 500]);
+    const result = await checkRateLimit(req(), { ...config('one-eval'), windowMs: 500 }, '/eval');
+    expect(evaluate).toHaveBeenCalledTimes(1);
+    expect(evaluate).toHaveBeenCalledWith(RATE_LIMIT_SCRIPT, [expect.stringMatching(/^ratelimit:v2:POST:\/eval:/)], [500, 2]);
+    expect(Redis).toHaveBeenCalledWith(expect.objectContaining({ retry: false, enableAutoPipelining: false,
+        enableTelemetry: false, signal: expect.any(AbortSignal) }));
+    expect(result).toMatchObject({ success: true, remaining: 1 });
+    expect(evaluate.mock.calls[0][1][0]).not.toContain('one-eval');
+});
 
-        const first = await checkRateLimit(req, config);
-        const second = await checkRateLimit(req, config);
-        const third = await checkRateLimit(req, config);
+test('Redis limit response provides a rounded positive Retry-After and never calls the handler', async () => {
+    redis([3, 1001]);
+    const handler = jest.fn(async () => new Response('ok'));
+    const response = await withRateLimit(req(), config('blocked'), handler, '/blocked');
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toBe('2');
+    expect(handler).not.toHaveBeenCalled();
+});
 
-        expect(first).toMatchObject({ success: true, remaining: 1, limit: 2 });
-        expect(second).toMatchObject({ success: true, remaining: 0, limit: 2 });
-        expect(third.success).toBe(false);
-        expect(third.retryAfter).toBeGreaterThan(0);
-    });
+test.each([undefined, '', '   '])('production without complete Redis config fails closed (%j)', async value => {
+    process.env.NODE_ENV = 'production';
+    (getUpstashRedisUrl as jest.Mock).mockReturnValue(value);
+    const handler = jest.fn(async () => new Response('should not happen'));
+    const response = await withRateLimit(req(), config('prod-missing'), handler, '/prod');
+    expect(response.status).toBe(503);
+    expect(handler).not.toHaveBeenCalled();
+});
 
-    test('restarts in-memory window after expiration', async () => {
-        const nowSpy = jest.spyOn(Date, 'now');
-        nowSpy
-            .mockReturnValueOnce(1_000)
-            .mockReturnValueOnce(1_100)
-            .mockReturnValueOnce(4_500);
+test.each([[null], [1], [0, 60000], [1, -1], [1, 60001], ['1', 60000], [1, Number.NaN]])('malformed Redis tuple %j is denied', async (...value) => {
+    redis(value);
+    expect(await checkRateLimit(req(), config('bad-reply'), '/bad')).toMatchObject({ success: false, unavailable: true });
+});
 
-        const req = createRequest({ 'x-forwarded-for': '10.0.0.2' });
-        const config = { maxRequests: 1, windowMs: 2_000, identifier: 'memory-expired' };
+test('Redis exception never resets a production budget into memory and logging failure stays closed', async () => {
+    process.env.NODE_ENV = 'production';
+    const evaluate = redis();
+    evaluate.mockRejectedValue(new Error('network down'));
+    (logWarn as jest.Mock).mockImplementation(() => { throw new Error('logger down'); });
+    const response = await withRateLimit(req(), config('no-fallback'), async () => new Response('bad'), '/failure');
+    expect(response.status).toBe(503);
+});
 
-        const first = await checkRateLimit(req, config);
-        const blocked = await checkRateLimit(req, config);
-        const expiredWindow = await checkRateLimit(req, config);
+test('hanging provider is aborted and returns 503 within the bounded deadline', async () => {
+    jest.useFakeTimers();
+    const evaluate = redis();
+    evaluate.mockImplementation(() => new Promise(() => {}));
+    const operation = withRateLimit(req(), config('timeout'), async () => new Response('bad'), '/timeout');
+    await jest.advanceTimersByTimeAsync(RATE_LIMIT_TIMEOUT_MS);
+    expect((await operation).status).toBe(503);
+    const options = (Redis as jest.Mock).mock.calls.at(-1)[0];
+    expect(options.signal.aborted).toBe(true);
+});
 
-        expect(first.success).toBe(true);
-        expect(blocked.success).toBe(false);
-        expect(expiredWindow).toMatchObject({ success: true, remaining: 0, limit: 1 });
+test('constructor failure is unavailable, including when Redis is explicitly configured in development', async () => {
+    redis();
+    (Redis as jest.Mock).mockImplementation(() => { throw new Error('constructor'); });
+    expect(await checkRateLimit(req(), config('constructor'), '/constructor')).toMatchObject({ unavailable: true });
+});
 
-        nowSpy.mockRestore();
-    });
+test('no implicit trust of forwarded headers; configured single valid ingress address only', () => {
+    process.env.NODE_ENV = 'production';
+    expect(getTrustedRateLimitIdentifier(req('/', 'GET', { 'x-forwarded-for': '203.0.113.1' }))).toBeUndefined();
+    process.env.RATE_LIMIT_TRUSTED_IP_HEADER = 'cf-connecting-ip';
+    expect(getTrustedRateLimitIdentifier(req('/', 'GET', { 'x-forwarded-for': '203.0.113.1' }))).toBeUndefined();
+    expect(getTrustedRateLimitIdentifier(req('/', 'GET', { 'cf-connecting-ip': '2001:db8::1' }))).toBe('2001:db8::1');
+    expect(getTrustedRateLimitIdentifier(req('/', 'GET', { 'cf-connecting-ip': '203.0.113.1, 203.0.113.2' }))).toBeUndefined();
+    expect(getTrustedRateLimitIdentifier(req('/', 'GET', { 'cf-connecting-ip': 'attacker' }))).toBeUndefined();
+    process.env.RATE_LIMIT_TRUSTED_IP_HEADER = 'authorization';
+    expect(getTrustedRateLimitIdentifier(req())).toBeUndefined();
+});
 
-    test('uses redis backend when Upstash env is configured', async () => {
-        mockedGetRedisUrl.mockReturnValue('https://upstash.example');
-        mockedGetRedisToken.mockReturnValue('token');
+test('production without a trusted ingress identity is denied before Redis', async () => {
+    process.env.NODE_ENV = 'production';
+    const evaluate = redis();
+    expect(await checkRateLimit(req(), RateLimitConfigs.public, '/ingress')).toMatchObject({ unavailable: true });
+    expect(evaluate).not.toHaveBeenCalled();
+});
 
-        const redisClient = {
-            incr: jest.fn().mockResolvedValue(1),
-            expire: jest.fn().mockResolvedValue(1),
-            ttl: jest.fn().mockResolvedValue(60),
-        };
-        mockedRedis.mockImplementation(() => redisClient);
+test('mobile attempt fingerprint compatibility remains unchanged and is separate from trusted identity', () => {
+    const request = req('/', 'GET', { 'x-forwarded-for': '203.0.113.1, 10.0.0.1', 'x-real-ip': '203.0.113.2' });
+    expect(getRateLimitIdentifier(request)).toBe('203.0.113.1');
+    expect(getRateLimitIdentifier(req('/', 'GET', { 'x-real-ip': '203.0.113.2' }))).toBe('203.0.113.2');
+    expect(getRateLimitIdentifier(req())).toBe('unknown');
+});
 
-        const result = await checkRateLimit(
-            createRequest({ 'x-forwarded-for': '10.0.0.3' }),
-            { maxRequests: 3, windowMs: 60_000, identifier: 'redis-success', keyPrefix: 'api/test' },
-        );
+test('verified users sharing NAT have separate primary budgets; tenant quota remains shared', async () => {
+    const request = req('/', 'POST', { 'x-forwarded-for': '203.0.113.9' });
+    const options = { maxRequests: 1, windowMs: 60000 };
+    expect((await checkVerifiedPrincipalRateLimit(request, '/nat', { userId: 'a', bizId: 'biz-a' }, options)).success).toBe(true);
+    expect((await checkVerifiedPrincipalRateLimit(request, '/nat', { userId: 'a', bizId: 'biz-a' }, options)).success).toBe(false);
+    expect((await checkVerifiedPrincipalRateLimit(request, '/nat', { userId: 'b', bizId: 'biz-a' }, options)).success).toBe(true);
+    for (let index = 0; index < 58; index++) expect((await checkVerifiedPrincipalRateLimit(request, '/nat', { userId: `u${index}`, bizId: 'biz-a' }, options)).success).toBe(true);
+    expect((await checkVerifiedPrincipalRateLimit(request, '/nat', { userId: 'tenant-overflow', bizId: 'biz-a' }, options)).success).toBe(false);
+    expect((await checkVerifiedPrincipalRateLimit(request, '/nat', { userId: 'a', bizId: 'biz-b' }, options)).success).toBe(true);
+});
 
-        expect(mockedRedis).toHaveBeenCalledWith({
-            url: 'https://upstash.example',
-            token: 'token',
-        });
-        expect(redisClient.incr).toHaveBeenCalledWith('ratelimit:api/test:redis-success');
-        expect(redisClient.expire).toHaveBeenCalledWith('ratelimit:api/test:redis-success', 60);
-        expect(redisClient.ttl).toHaveBeenCalledWith('ratelimit:api/test:redis-success');
-        expect(result).toMatchObject({ success: true, limit: 3, remaining: 2 });
-    });
+test('principal and tenant consume one EVAL, and missing verified principal never executes it', async () => {
+    const evaluate = redis([1, 60000, 3, 60000]);
+    expect((await checkVerifiedPrincipalRateLimit(req(), '/principal', { userId: 'u', bizId: 'b' }, RateLimitConfigs.critical)).success).toBe(true);
+    expect(evaluate).toHaveBeenCalledTimes(1);
+    expect(evaluate.mock.calls[0][1]).toHaveLength(2);
+    expect(evaluate.mock.calls[0][1][0]).not.toBe(evaluate.mock.calls[0][1][1]);
+    expect(await checkVerifiedPrincipalRateLimit(req(), '/principal', { userId: '', bizId: 'b' }, RateLimitConfigs.critical)).toMatchObject({ unavailable: true });
+    expect(evaluate).toHaveBeenCalledTimes(1);
+});
 
-    test('returns retryAfter when redis over-limit branch is hit', async () => {
-        mockedGetRedisUrl.mockReturnValue('https://upstash.example');
-        mockedGetRedisToken.mockReturnValue('token');
+test('response status, custom headers and narrower authenticated limit headers survive wrapping', async () => {
+    const response = await withRateLimit(req(), config('response'), async () => new Response('{"ok":true}', {
+        status: 201, headers: { 'X-Custom': 'yes', 'X-RateLimit-Limit': '1' },
+    }), '/response');
+    expect(response.status).toBe(201);
+    expect(response.headers.get('X-Custom')).toBe('yes');
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('1');
+    expect(await response.json()).toEqual({ ok: true });
+    expect(routeRateLimit('poll', RateLimitConfigs.auth, { maxRequests: 20 })).toMatchObject({ keyPrefix: 'poll', maxRequests: 20 });
+});
 
-        const redisClient = {
-            incr: jest.fn().mockResolvedValue(5),
-            expire: jest.fn(),
-            ttl: jest.fn().mockResolvedValue(17),
-        };
-        mockedRedis.mockImplementation(() => redisClient);
+test('invalid route/config does not fall back to a shared budget', async () => {
+    expect(await checkRateLimit(req(), config('invalid-route'), '')).toMatchObject({ unavailable: true });
+    expect(await checkRateLimit(req(), { ...config('invalid-limit'), maxRequests: 0 }, '/invalid')).toMatchObject({ unavailable: true });
+});
 
-        const result = await checkRateLimit(
-            createRequest({ 'x-forwarded-for': '10.0.0.4' }),
-            { maxRequests: 2, windowMs: 60_000, identifier: 'redis-blocked' },
-        );
-
-        expect(result).toMatchObject({
-            success: false,
-            limit: 2,
-            remaining: 0,
-            retryAfter: 17,
-        });
-        expect(redisClient.expire).not.toHaveBeenCalled();
-    });
-
-    test('falls back to in-memory when redis client setup fails', async () => {
-        mockedGetRedisUrl.mockReturnValue('https://upstash.example');
-        mockedGetRedisToken.mockReturnValue('token');
-        mockedRedis.mockImplementation(() => {
-            throw new Error('constructor failed');
-        });
-
-        const result = await checkRateLimit(
-            createRequest({ 'x-forwarded-for': '10.0.0.5' }),
-            { maxRequests: 1, windowMs: 60_000, identifier: 'redis-constructor-fallback' },
-        );
-
-        expect(result).toMatchObject({ success: true, remaining: 0, limit: 1 });
-        expect(mockedLogWarn).toHaveBeenCalledWith(
-            'RateLimit',
-            '@upstash/redis not available, using in-memory fallback',
-            expect.any(Error),
-        );
-    });
-
-    test('falls back to in-memory when redis operations throw', async () => {
-        mockedGetRedisUrl.mockReturnValue('https://upstash.example');
-        mockedGetRedisToken.mockReturnValue('token');
-
-        const redisClient = {
-            incr: jest.fn().mockRejectedValue(new Error('network down')),
-            expire: jest.fn(),
-            ttl: jest.fn(),
-        };
-        mockedRedis.mockImplementation(() => redisClient);
-
-        const result = await checkRateLimit(
-            createRequest({ 'x-forwarded-for': '10.0.0.6' }),
-            { maxRequests: 1, windowMs: 60_000, identifier: 'redis-runtime-fallback' },
-        );
-
-        expect(result).toMatchObject({ success: true, remaining: 0, limit: 1 });
-        expect(mockedLogWarn).toHaveBeenCalledWith(
-            'RateLimit',
-            'Redis error, falling back to in-memory',
-            expect.any(Error),
-        );
-    });
-
-    test('withRateLimit returns 429 response and survives logging failure', async () => {
-        mockedLogWarn.mockImplementation(() => {
-            throw new Error('logger unavailable');
-        });
-
-        const req = createRequest({ 'x-forwarded-for': '10.0.0.7' });
-        const config = { maxRequests: 1, windowMs: 60_000, identifier: 'with-limit' };
-        const handler = jest.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
-
-        const firstRes = await withRateLimit(req, config, handler);
-        const secondRes = await withRateLimit(req, config, handler);
-
-        expect(firstRes.status).toBe(200);
-        expect(secondRes.status).toBe(429);
-        expect(handler).toHaveBeenCalledTimes(1);
-        expect(secondRes.headers.get('Retry-After')).not.toBeNull();
-        await expect(secondRes.json()).resolves.toMatchObject({
-            ok: false,
-            error: 'rate_limit_exceeded',
-        });
-    });
-
-    test('withRateLimit preserves handler response and appends rate-limit headers', async () => {
-        const response = await withRateLimit(
-            createRequest({ 'x-forwarded-for': '10.0.0.8' }),
-            { maxRequests: 3, windowMs: 60_000, identifier: 'with-success' },
-            async () =>
-                new Response(JSON.stringify({ ok: true }), {
-                    status: 201,
-                    statusText: 'Created',
-                    headers: { 'Content-Type': 'application/json', 'X-Custom': 'yes' },
-                }),
-        );
-
-        expect(response.status).toBe(201);
-        expect(response.statusText).toBe('Created');
-        expect(response.headers.get('X-Custom')).toBe('yes');
-        expect(response.headers.get('X-RateLimit-Limit')).toBe('3');
-        await expect(response.json()).resolves.toEqual({ ok: true });
-    });
-
-    test('routeRateLimit keeps base config and applies overrides', () => {
-        const config = routeRateLimit('api/notify', RateLimitConfigs.normal, { maxRequests: 20 });
-
-        expect(config).toEqual({
-            maxRequests: 20,
-            windowMs: RateLimitConfigs.normal.windowMs,
-            keyPrefix: 'api/notify',
-        });
-    });
-
-    test('getRateLimitIdentifier prefers forwarded header and falls back through known headers', () => {
-        expect(
-            getRateLimitIdentifier(
-                createRequest({ 'x-forwarded-for': '203.0.113.1, 198.51.100.9' }),
-            ),
-        ).toBe('203.0.113.1');
-        expect(getRateLimitIdentifier(createRequest({ 'x-real-ip': '203.0.113.2' }))).toBe(
-            '203.0.113.2',
-        );
-        expect(
-            getRateLimitIdentifier(createRequest({ 'cf-connecting-ip': '203.0.113.3' })),
-        ).toBe('203.0.113.3');
-        expect(getRateLimitIdentifier(createRequest())).toBe('unknown');
-    });
+test('development store has a hard cap, preserves active counters, and reclaims expired entries', async () => {
+    jest.useFakeTimers().setSystemTime(Date.now() + 86400000);
+    const options = { maxRequests: 1, windowMs: 1000 };
+    let denied = 0;
+    for (let index = 0; index < RATE_LIMIT_MEMORY_CAP + 1; index++) {
+        const result = await checkRateLimit(req(), { ...options, identifier: `bounded-${index}` }, '/bounded');
+        if (result.unavailable) denied++;
+    }
+    expect(denied).toBeGreaterThan(0);
+    expect((await checkRateLimit(req(), { ...options, identifier: 'bounded-0' }, '/bounded')).success).toBe(false);
+    jest.advanceTimersByTime(1000);
+    expect((await checkRateLimit(req(), { ...options, identifier: 'after-expiry' }, '/bounded')).success).toBe(true);
 });

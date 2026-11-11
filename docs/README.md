@@ -1,106 +1,76 @@
-# Kezek Docs Index
+# Документация Kezek
 
-This file is the main documentation index for the project.
+Статус: действующий индекс. Навигация и локальные ссылки проверены 1 ноября 2026. Сопровождение: сопровождающий репозитория; персональный ответственный не назначен.
 
-If you are unsure which document is current, start here.
+Начинайте отсюда. По каждому вопросу ниже указан один основной документ. Тематические справочники уточняют отдельные части системы; планы и старые отчёты не определяют текущую работу.
 
-## Current WEB Priority
+Все остальные материалы доступны в [полном каталоге документов](DOCUMENTATION_MAP.md). Он обнаруживает новые файлы автоматически и разделяет справочники, решения, историю и учёт проверок.
 
-**30 октября 2026: широкий автономный ручной прогон закрыт, `kezek` PAUSED.**
-Начало для следующего агента: [WEB_AGENT_HANDOFF.md](WEB_AGENT_HANDOFF.md).
-Там указаны источники истины, незавершённый F022, блокеры и условия новой задачи.
-Принято 28/316, осталось 288; NOT_READY. Старые команды запуска ниже и в архивах не действуют.
+## Основные документы
 
-As of 2026-10-18, the measurable closure queue is [WEB_CLOSURE_PLAN.md](./WEB_CLOSURE_PLAN.md): 316 obligations assigned once to eight phases, with conditional milestones, actual ledger counts, 50 unfinished defect chains and explicit blockers. Its [JSON](./WEB_CLOSURE_PLAN.json) is checked by `node scripts/web-closure-plan.mjs --json`. Planning does not authorize live tests or resume automation.
+| Вопрос | Основной документ | Граница ответственности |
+| --- | --- | --- |
+| Каково состояние проекта и текущий приоритет | [Текущее состояние](PROJECT_STATUS.md) | Ограничения, открытые вопросы и ссылки на реестры |
+| Как подготовить окружение | [Запуск проекта](../GETTING_STARTED.md) | Зависимости, конфигурация, ограничения исходной схемы БД |
+| Как система устроена сейчас | [Архитектура](../PROJECT_DOCUMENTATION.md) | Потоки данных и границы доверия по исходникам |
+| Как вносить изменения | [Правила разработки](../CONTRIBUTING.md) | Слои, необходимые проверки и сопровождение документации |
+| Как проверять результат | [Руководство по проверкам](../TESTING_GUIDE.md) | Назначение наборов, границы CI и свидетельств |
+| Как эксплуатировать систему | [Эксплуатация](OPERATIONS.md) | Развёртывание, фоновые задачи, наблюдаемость, восстановление |
 
-As of 2026-10-14, the operational priority is stabilizing the existing WEB product for a verified closed-pilot candidate, not starting another broad architecture or redesign wave.
+Для первой задачи используйте [маршрут разработчика](ONBOARDING.md): он связывает чтение с конкретным результатом. Для оценки рисков начните с [инженерного реестра](ENGINEERING_FINDINGS.md), для работы со стендом — с [эксплуатации](OPERATIONS.md).
 
-- [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md): overall analysis, scope, ordered work packages and completion criteria.
-- [WEB_GLOBAL_READINESS_STATE.json](./WEB_GLOBAL_READINESS_STATE.json): current-candidate status for all82 catalogue areas and33 planned work packages. Historical targeted results remain separate.
-- [WEB_LIVE_TESTING_AREAS_CATALOG.md](./WEB_LIVE_TESTING_AREAS_CATALOG.md): detailed scenarios; old area statuses are not current release approval.
-- [WEB_BUG_REGISTRY.md](./WEB_BUG_REGISTRY.md): defect evidence, including open and pending historical follow-ups.
+## Проблемы и приёмка
 
-The March architecture plans below describe their own delivered waves; their green baseline statements do not certify the October product candidate. Creating this plan does not resume a scheduled run, modify the application or authorize deployment.
+Это разные виды сведений; их статусы нельзя складывать или подменять друг другом.
 
-## Sources Of Truth
+| Вопрос | Источник |
+| --- | --- |
+| Какие проблемы найдены статическим анализом | [Инженерный реестр](ENGINEERING_FINDINGS.md). Открытые выводы по коду, без утверждения live-воспроизведения |
+| Как обращаться с закрытой WEB-кампанией | [WEB_AGENT_HANDOFF.md](WEB_AGENT_HANDOFF.md). Ограничения и передача процесса |
+| Какие требования и случаи приняты | [WEB_VERIFICATION_LEDGER.json](WEB_VERIFICATION_LEDGER.json): выбранные `requirements`, `cases`, `currentFindings`, `releaseGates`, `nextBatch` |
+| По каким правилам учитывалась приёмка | [WEB_VERIFICATION_METHOD.md](WEB_VERIFICATION_METHOD.md) |
+| Как был распределён остаток | [WEB_CLOSURE_PLAN.md](WEB_CLOSURE_PLAN.md), данные [JSON](WEB_CLOSURE_PLAN.json); это план, не разрешение исполнения |
+| Где лежат первичные свидетельства | [Указатель доказательств](verification/README.md). Открывать по конкретному ID или вопросу |
 
-Use one primary document per topic:
+Правила работы с закрытой кампанией сосредоточены в handoff; текущий запрос — в состоянии проекта. Исторические команды не назначают новую работу.
 
-1. Onboarding and local setup
-   - [GETTING_STARTED.md](/C:/projects/kezek/GETTING_STARTED.md)
-   - [ONBOARDING.md](/C:/projects/kezek/docs/ONBOARDING.md)
+## Тематические справочники
 
-2. Architecture and technical structure
-   - [PROJECT_DOCUMENTATION.md](/C:/projects/kezek/PROJECT_DOCUMENTATION.md)
-   - [HOWTO_NEW_API_ENDPOINT.md](/C:/projects/kezek/apps/web/src/lib/HOWTO_NEW_API_ENDPOINT.md)
+| Тема | Документы | Как читать |
+| --- | --- | --- |
+| Web и mobile | [Web](../apps/web/README.md), [Mobile](../apps/mobile/README.md) | Структура конкретного приложения; общие команды — в руководствах выше |
+| Конфигурация | [Переменные окружения](../ENV_GUIDE.md) | Имена и назначение; значения секретов не хранить в документах |
+| API | [Карта API](../API_DOCUMENTATION.md), [новый endpoint](../apps/web/src/lib/HOWTO_NEW_API_ENDPOINT.md), [ответы и ошибки](../apps/web/src/lib/API_ERROR_FORMATS.md) | Карта существующих маршрутов, правила нового обработчика и контракты общих helpers |
+| Продукт | [Функции](../SYSTEM_FEATURES_DOCUMENTATION.md), [термины](GLOSSARY.md) | Назначение функций и предметный словарь; результаты приёмки — в ledger |
+| Границы модулей | [MODULE_BOUNDARIES.md](MODULE_BOUNDARIES.md) | Правила размещения нового кода |
+| База | [Supabase](../supabase/README.md), [миграции](../supabase/APPLY_MIGRATIONS.md) | Исходная схема, порядок изменений и ограничения восстановления |
+| Расписания | [Модель расписаний](EXPLICIT_STAFF_SCHEDULES.md), [история включения](SCHEDULE_REMOTE_ROLLOUT.md), [исторический откат](STAFF_SCHEDULE_ROLLBACK.md) | Модель данных и датированные наблюдения; старые rollout/rollback не являются текущими инструкциями запуска |
+| Финансы и пакеты | [Финансовый API](FINANCE_API.md), [контракты пакетов](api/BUSINESS_WORKFLOWS.md), [проект решения](SUBSCRIPTIONS_AND_PACKAGES_FEATURE.md) | Текущее поведение отдельно от исходного плана; известные ограничения отмечены в реестре |
+| Даты | [Модель дат](DATE_HANDLING_MODEL.md), [риски дат](DATE_HANDLING_RISKS.md) | Договорённости о часовых поясах и границах суток |
+| Авторизация | [Google](MOBILE_GOOGLE_AUTH_ADR.md), [WhatsApp](MOBILE_WHATSAPP_AUTH_ADR.md), [привязка Telegram](TELEGRAM_LINKING_ADR.md) | ADR — записи архитектурных решений для потоков входа и привязки |
+| UI | [Основа UI](UI_SYSTEM_FOUNDATION.md), [критерии UI](UI_DEFINITION_OF_DONE.md) | Компоненты, визуальные правила и требования к интерфейсу |
 
-3. Product and feature reference
-   - [SYSTEM_FEATURES_DOCUMENTATION.md](/C:/projects/kezek/SYSTEM_FEATURES_DOCUMENTATION.md)
-   - feature-specific docs under [docs](/C:/projects/kezek/docs)
+В таблице перечислены справочники и правила, а не отчёты о выполнении приложения. Степень сверки указана в документе. Для каждой явно экспортированной HTTP-операции теперь есть описание в [тематическом API-справочнике](../API_DOCUMENTATION.md); полноту соответствия проверяет AST-каталог. Действующая схема сервера, runtime и эксплуатационные показатели требуют отдельных наблюдений.
 
-4. Engineering process and testing
-   - [CONTRIBUTING.md](/C:/projects/kezek/CONTRIBUTING.md)
-   - [TESTING_GUIDE.md](/C:/projects/kezek/TESTING_GUIDE.md)
-   - [API_TESTING.md](/C:/projects/kezek/API_TESTING.md)
-   - [E2E_TESTING.md](/C:/projects/kezek/E2E_TESTING.md)
-   - repo maintenance checks in [package.json](/C:/projects/kezek/package.json), including `check:docs-links` and `check:hotspots`
+## История и предложения
 
-5. Improvement planning
-   - [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md) — current WEB execution priority
-   - [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md)
-   - [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
-   - [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md)
-   - [MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
-   - [WEB_PRESENTATION_HARDENING_PLAN.md](/C:/projects/kezek/docs/WEB_PRESENTATION_HARDENING_PLAN.md)
-   - [PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md)
-   - [DOMAIN_EXPANSION_PLAN.md](/C:/projects/kezek/docs/DOMAIN_EXPANSION_PLAN.md)
+[Индекс истории](archive/README.md) объединяет прежние roadmap, backlog, аудиты и завершённые волны. Некоторые файлы сохранены по старым путям ради ссылок. Их `[x]`, `completed`, `active` и «все проблемы закрыты» описывают историческую волну, а не состояние всего проекта сегодня.
 
-## Quick Navigation
+[DOCUMENTS_OVERVIEW.md](../DOCUMENTS_OVERVIEW.md), [TASKS.md](../TASKS.md), [IMPROVEMENT_TASKS.md](../IMPROVEMENT_TASKS.md) и [REFACTOR_TASKS.md](../REFACTOR_TASKS.md) — указатели совместимости. Новые очереди задач в них не ведутся.
 
-### Start Here
+## Правила обновления
 
-- [GETTING_STARTED.md](/C:/projects/kezek/GETTING_STARTED.md): install, env, run commands
-- [ONBOARDING.md](/C:/projects/kezek/docs/ONBOARDING.md): onboarding checklist
-- [apps/mobile/README.md](/C:/projects/kezek/apps/mobile/README.md): mobile setup and checks
+1. Сначала обновить основной документ по теме. В остальных местах оставить ссылку, не копировать статус или большой отчёт.
+2. Указывать статус: **действующая инструкция**, **справочник**, **проект решения** или **исторический снимок**. Дату наблюдения не заменять датой редакторской правки.
+3. Отделять требования к поведению, выводы по исходникам, выполненные проверки и факты развёрнутой среды.
+4. Использовать относительные ссылки внутри репозитория. Не добавлять пути компьютера автора.
+5. При закрытии плана сохранить его результаты, пометить историю и убрать из действующей очереди.
+6. Первичные evidence, ledger и архивные снимки менять только в рамках их отдельного процесса учёта; редактура руководств не создаёт новый PASS.
 
-### Architecture
+Перед завершением правки убедиться, что читателю понятны назначение документа, следующий шаг и способ проверки результата. Для команды указать рабочую директорию и предпосылки; для API-примера — метод, путь и исходник контракта. Слово «проверено» должно уточнять метод: чтение кода, выполненный тест или наблюдение в конкретной среде.
 
-- [PROJECT_DOCUMENTATION.md](/C:/projects/kezek/PROJECT_DOCUMENTATION.md): overall technical architecture
-- [API_DOCUMENTATION.md](/C:/projects/kezek/API_DOCUMENTATION.md): API map and contracts
-- [HOWTO_NEW_API_ENDPOINT.md](/C:/projects/kezek/apps/web/src/lib/HOWTO_NEW_API_ENDPOINT.md): route pattern for new web API handlers
+Документационная проверка из корня: `pnpm check:docs-links`; прямой эквивалент — `node scripts/check-doc-links.mjs`. Нужны установленные зависимости из lockfile: API-каталог использует TypeScript AST. Приложение, сервер и сеть не запускаются.
 
-### Product
+Проверка автоматически находит действующие Markdown в корне, docs, apps, packages и supabase; проверяет локальные ссылки/якоря, JSON-примеры, повреждённую кодировку, актуальность каталогов и однозначное покрытие HTTP-экспортов контрактами. Исторические тела и первичные evidence не пересчитываются. Внешние URL и смысловая корректность всех утверждений автоматикой не доказываются.
 
-- [SYSTEM_FEATURES_DOCUMENTATION.md](/C:/projects/kezek/SYSTEM_FEATURES_DOCUMENTATION.md): product behavior and business rules
-- [SUBSCRIPTIONS_AND_PACKAGES_FEATURE.md](/C:/projects/kezek/docs/SUBSCRIPTIONS_AND_PACKAGES_FEATURE.md): subscriptions and visit packages
-- [GLOSSARY.md](/C:/projects/kezek/docs/GLOSSARY.md): product terminology
-
-### Process
-
-- [CONTRIBUTING.md](/C:/projects/kezek/CONTRIBUTING.md): contribution and PR rules
-- [TESTING_GUIDE.md](/C:/projects/kezek/TESTING_GUIDE.md): testing workflow
-- [MANUAL_TESTING_TRACKER.md](/C:/projects/kezek/docs/MANUAL_TESTING_TRACKER.md): short living checklist for the current manual product run
-- [API_TESTING.md](/C:/projects/kezek/API_TESTING.md): API route testing
-- [E2E_TESTING.md](/C:/projects/kezek/E2E_TESTING.md): end-to-end testing
-
-### Planning
-
-- [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md): current overall WEB verification and pilot-readiness plan
-- [WEB_GLOBAL_READINESS_STATE.json](./WEB_GLOBAL_READINESS_STATE.json): living work-package and release-area decisions
-- [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md): long-term roadmap
-- [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md): latest delivered progress snapshot
-- [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md): current working cleanup and next-phase plan
-- [MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md): completed mobile hardening wave
-- [WEB_PRESENTATION_HARDENING_PLAN.md](/C:/projects/kezek/docs/WEB_PRESENTATION_HARDENING_PLAN.md): next focused implementation plan
-- [PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md): review-driven execution backlog
-- [DOMAIN_EXPANSION_PLAN.md](/C:/projects/kezek/docs/DOMAIN_EXPANSION_PLAN.md): next domain extraction roadmap
-
-## Archive And Historical Context
-
-These documents are useful as history, not as the primary source of truth:
-
-- [DOCUMENTS_OVERVIEW.md](/C:/projects/kezek/DOCUMENTS_OVERVIEW.md)
-- [PROJECT_REVIEW.md](/C:/projects/kezek/PROJECT_REVIEW.md)
-- [FUTURE_IMPROVEMENTS_TASKS.md](/C:/projects/kezek/FUTURE_IMPROVEMENTS_TASKS.md): historical consolidated backlog before the current review-driven backlog
-- [EVOLUTION_TECH_PLAN.md](/C:/projects/kezek/EVOLUTION_TECH_PLAN.md)
-- archive docs under [docs/archive](/C:/projects/kezek/docs/archive)
+После изменения состава документов обновить `node scripts/generate-docs-catalog.mjs --write`. После сверки изменённого API — `node scripts/generate-api-catalog.mjs --write`; изменение fingerprint нельзя принимать без чтения затронутого контракта. При правке tooling выполнить `node --test scripts/docs-tools.test.mjs`. Затем `git diff --check`.

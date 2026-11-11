@@ -1,18 +1,18 @@
 // apps/web/src/app/staff/finance/components/ClientsListHeader.tsx
 
-import { formatInTimeZone } from 'date-fns-tz';
 
 import type { ShiftItem, Shift } from '../types';
+import { financeDateLabel } from '../utils/calendar';
 import { exportClientsToCSV } from '../utils/export';
 import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
-import { TZ } from '@/lib/time';
 
 
 interface ClientsListHeaderProps {
     shiftDate: Date;
+    timezone?: string;
     onShiftDateChange: (date: Date) => void;
     isOpen: boolean;
     isClosed: boolean;
@@ -31,6 +31,7 @@ interface ClientsListHeaderProps {
 
 export function ClientsListHeader({
     shiftDate,
+    timezone,
     onShiftDateChange,
     isOpen,
     isClosed,
@@ -76,7 +77,7 @@ export function ClientsListHeader({
                         )}
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                        {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
+                        {financeDateLabel(shiftDate)?.split('-').reverse().join('.')} {timezone ? '(' + timezone + ')' : ''}
                     </div>
                 </div>
             </div>

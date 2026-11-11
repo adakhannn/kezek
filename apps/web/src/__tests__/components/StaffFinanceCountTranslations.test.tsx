@@ -10,6 +10,7 @@ import { AllStaffFinanceStatsTotals } from '@/app/dashboard/finance/components/A
 import type { StaffFinanceStatsPayload, StaffFinanceStatsShift } from '@/lib/finance/types';
 
 const shift: StaffFinanceStatsShift = {
+    ledger_revision: 7, timezone: 'Asia/Bishkek', day_hours:24,
     id: 'count-only', shift_date: '2026-10-13', status: 'closed', opened_at: null, closed_at: null,
     total_amount: 0, consumables_amount: 0, master_share: 0, salon_share: 0, late_minutes: 0,
     hours_worked: null, hourly_rate: null, guaranteed_amount: 0, items: [],

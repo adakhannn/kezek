@@ -1,6 +1,6 @@
-
 import { formatInTimeZone } from 'date-fns-tz';
 
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getIntegrationsStatus } from '@/lib/integrationsStatusService';
 import { logError, logDebug } from '@/lib/log';
@@ -70,20 +70,14 @@ type SystemHealthResponse = {
 export async function GET(req: Request) {
     return withErrorHandler('SystemHealth', async () => {
         const supabase = await createSupabaseServerClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        if (!user) {
+        if (authError || !user) {
             return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         // Проверяем, что пользователь — суперадмин
-        const { data: superRow } = await supabase
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { isSuperAdmin: superRow } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
         if (!superRow) {
             return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);

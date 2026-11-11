@@ -8,7 +8,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockReturnValue({
-                                lt: jest.fn().mockResolvedValue({ data: [] }),
+                                lt: jest.fn().mockResolvedValue({ data: null, count: 0 }),
                             }),
                         }),
                     };
@@ -43,7 +43,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockResolvedValue({
-                                data: [],
+                                data: null, count: 0,
                             }),
                         }),
                     };
@@ -88,7 +88,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockReturnValue({
-                                lt: jest.fn().mockResolvedValue({ data: [{ id: 'shift-1' }] }),
+                                lt: jest.fn().mockResolvedValue({ data: null, count: 1 }),
                             }),
                         }),
                     };
@@ -119,7 +119,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockResolvedValue({
-                                data: [{ id: 'promo-1' }],
+                                data: null, count: 1,
                             }),
                         }),
                     };
@@ -166,7 +166,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockReturnValue({
-                                lt: jest.fn().mockResolvedValue({ data: [] }),
+                                lt: jest.fn().mockResolvedValue({ data: null, count: 0 }),
                             }),
                         }),
                     };
@@ -205,7 +205,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockResolvedValue({
-                                data: [],
+                                data: null, count: 0,
                             }),
                         }),
                     };
@@ -299,7 +299,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockReturnValue({
-                                lt: jest.fn().mockResolvedValue({ data: [] }),
+                                lt: jest.fn().mockResolvedValue({ data: null, count: 0 }),
                             }),
                         }),
                     };
@@ -338,7 +338,7 @@ describe('healthCheckAlertsCronService', () => {
                     return {
                         select: jest.fn().mockReturnValue({
                             eq: jest.fn().mockResolvedValue({
-                                data: [],
+                                data: null, count: 0,
                             }),
                         }),
                     };

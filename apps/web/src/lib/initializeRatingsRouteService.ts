@@ -1,3 +1,6 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import {
     initializeRatings,
     type InitializeRatingsAdminLike,
@@ -25,15 +28,13 @@ export async function runInitializeRatingsRoute({
     admin,
     body,
 }: {
-    supabase: any;
+    supabase: Pick<SupabaseClient, 'auth' | 'rpc'>;
     admin: InitializeRatingsAdminLike;
     body: InitializeRatingsPayload;
 }): Promise<InitializeRatingsRouteResult> {
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (authError || !user) {
         return {
             ok: false,
             status: 401,
@@ -42,13 +43,7 @@ export async function runInitializeRatingsRoute({
         };
     }
 
-    const { data: superRow, error: superErr } = await supabase
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
     if (superErr) {
         return {

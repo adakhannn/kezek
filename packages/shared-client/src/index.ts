@@ -101,7 +101,6 @@ export {
 } from './i18n';
 export type {
     ServiceName,
-    BookingStatus,
     StatusColorConfigWeb,
     StatusColorConfigMobile,
 } from './i18n';

@@ -1,218 +1,31 @@
-# Руководство по проверке прав доступа в API endpoints
+# Проверка доступа в HTTP-обработчике
 
-## Обзор
+Статус: справочник helpers и правила нового кода; сверено по исходникам 1 ноября 2026. Полное соответствие существующих endpoints этим правилам не утверждается.
 
-Все API endpoints должны проверять права доступа пользователя перед выполнением операций. Для этого используется централизованная утилита `@/lib/authCheck`.
+[Новый endpoint](HOWTO_NEW_API_ENDPOINT.md) описывает общую цепочку; [service client guide](../../../../docs/SERVICE_CLIENT_USAGE_GUIDE.md) — операции с привилегированным клиентом. Контракт конкретного маршрута искать в [API guide](../../../../API_DOCUMENTATION.md).
 
-## Основные утилиты
+## Разные уровни проверки
 
-### `checkResourceBelongsToBusiness`
+| Уровень | Источник | Что проверяет |
+| --- | --- | --- |
+| Identity из запроса | [requestAuthContext](requestAuthContext.ts) | Разрешение Bearer/cookie пользователя |
+| Управленческий бизнес | [authBiz](authBiz.ts), [withManagerContext](withManagerContext.ts) | Текущий разрешённый контекст; manager wrapper использует cookie-путь |
+| Сотрудник в контексте бизнеса | [withManagerAndStaffContext](withManagerAndStaffContext.ts) | Конкретный staff ID и принадлежность выбранному бизнесу |
+| Сущность по бизнесу | [authCheck](authCheck.ts) | Читает biz_id строки и сравнивает с переданным bizId |
+| Прямой SQL/RPC | Функция, grants и RLS | Отдельная граница; Next.js helper этот вызов не защищает |
 
-Проверяет, принадлежит ли ресурс указанному бизнесу.
+Проверка принадлежности не устанавливает identity и полномочия на операцию. Сначала получить доверенный bizId, затем проверять целевой объект и все вложенные booking/branch/service/package IDs. UUID из body является входными данными, а не доказательством доступа.
 
-```typescript
-import { checkResourceBelongsToBusiness } from '@/lib/authCheck';
+## Контракты authCheck
 
-const check = await checkResourceBelongsToBusiness(
-    'bookings',      // название таблицы
-    bookingId,       // ID ресурса
-    bizId,           // ID бизнеса
-    'biz_id'         // название колонки с ID бизнеса (опционально, по умолчанию 'biz_id')
-);
+`checkResourceBelongsToBusiness(table, resourceId, bizId)` и helpers для branch/staff/service/booking/promotion возвращают `{ belongs, error? }`. Не найденная строка тоже может дать error. Их результат необходимо обработать; сам вызов не прерывает мутацию.
 
-if (!check.belongs) {
-    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-}
-```
+`checkBranchesBelongToBusiness(branchIds, bizId)` имеет другой результат: `{ allBelong, missing, error? }`. Прежнее утверждение, что все helpers возвращают belongs, неверно. Список таблиц и helper выбирает сервер, не произвольный пользовательский table.
 
-### Специализированные функции
+HTTP 401/403/404/500 задаются конкретной цепочкой. `withManagerAndStaffContext` использует 404 для ряда отказов; это не универсальный контракт всего API. Семантика exceptions — в [форматах ошибок](API_ERROR_FORMATS.md).
 
-Для удобства созданы специализированные функции для проверки конкретных типов ресурсов:
+## Текущий бизнес
 
-```typescript
-import {
-    checkBranchBelongsToBusiness,
-    checkStaffBelongsToBusiness,
-    checkServiceBelongsToBusiness,
-    checkBookingBelongsToBusiness,
-    checkPromotionBelongsToBusiness,
-} from '@/lib/authCheck';
+[Инварианты current business](../../../../docs/USER_CURRENT_BUSINESS_INVARIANTS.md) задают правила выбора контекста. `user_current_business` хранит выбор, но не выдаёт права. Изменение выбора через API должно отдельно проверять доступ к бизнесу.
 
-// Проверка филиала
-const branchCheck = await checkBranchBelongsToBusiness(branchId, bizId);
-
-// Проверка сотрудника
-const staffCheck = await checkStaffBelongsToBusiness(staffId, bizId);
-
-// Проверка услуги
-const serviceCheck = await checkServiceBelongsToBusiness(serviceId, bizId);
-
-// Проверка бронирования
-const bookingCheck = await checkBookingBelongsToBusiness(bookingId, bizId);
-
-// Проверка акции
-const promotionCheck = await checkPromotionBelongsToBusiness(promotionId, bizId);
-```
-
-## Примеры использования
-
-### Пример 1: Проверка доступа к бронированию
-
-```typescript
-export async function POST(req: Request) {
-    return withErrorHandler('MyEndpoint', async () => {
-        const { supabase } = await createSupabaseClients();
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
-        }
-
-        const body = await req.json();
-        const bookingId = body.booking_id;
-
-        // Проверяем, является ли пользователь клиентом бронирования
-        const { data: booking } = await supabase
-            .from('bookings')
-            .select('client_id, biz_id')
-            .eq('id', bookingId)
-            .maybeSingle();
-
-        if (!booking) {
-            return createErrorResponse('not_found', 'Бронирование не найдено', undefined, 404);
-        }
-
-        const isClient = booking.client_id === user.id;
-
-        // Если не клиент, проверяем, является ли пользователь менеджером бизнеса
-        if (!isClient) {
-            try {
-                const { bizId } = await getBizContextForManagers();
-                const check = await checkBookingBelongsToBusiness(bookingId, bizId);
-                if (!check.belongs) {
-                    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-                }
-            } catch {
-                return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-            }
-        }
-
-        // Продолжаем выполнение операции
-        // ...
-    });
-}
-```
-
-### Пример 2: Проверка доступа менеджера к ресурсу
-
-```typescript
-export async function PATCH(req: Request, context: unknown) {
-    return withErrorHandler('MyEndpoint', async () => {
-        const resourceId = await getRouteParamUuid(context, 'id');
-        const { bizId } = await getBizContextForManagers();
-        
-        // Проверяем, что ресурс принадлежит бизнесу менеджера
-        const check = await checkResourceBelongsToBusiness('my_table', resourceId, bizId);
-        
-        if (!check.belongs) {
-            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-        }
-
-        // Продолжаем выполнение операции
-        // ...
-    });
-}
-```
-
-### Пример 3: Проверка принадлежности пользователя к ресурсу
-
-```typescript
-export async function DELETE(req: Request, context: unknown) {
-    return withErrorHandler('MyEndpoint', async () => {
-        const { supabase } = await createSupabaseClients();
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
-        }
-
-        const resourceId = await getRouteParamUuid(context, 'id');
-
-        // Проверяем, что ресурс принадлежит пользователю
-        const { data: resource } = await supabase
-            .from('my_table')
-            .select('user_id')
-            .eq('id', resourceId)
-            .maybeSingle();
-
-        if (!resource) {
-            return createErrorResponse('not_found', 'Ресурс не найден', undefined, 404);
-        }
-
-        if (resource.user_id !== user.id) {
-            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-        }
-
-        // Продолжаем выполнение операции
-        // ...
-    });
-}
-```
-
-## Рекомендации
-
-1. **Всегда проверяйте авторизацию** перед проверкой прав доступа
-2. **Используйте специализированные функции** для конкретных типов ресурсов
-3. **Проверяйте принадлежность к бизнесу** для операций менеджеров
-4. **Проверяйте принадлежность пользователю** для операций клиентов
-5. **Возвращайте понятные сообщения об ошибках** (403 для запрета доступа, 404 для не найденных ресурсов)
-
-## Интеграция с `getBizContextForManagers`
-
-Для endpoints, доступных только менеджерам/владельцам, используйте `getBizContextForManagers`:
-
-```typescript
-import { getBizContextForManagers } from '@/lib/authBiz';
-
-// Возвращает { supabase, userId, bizId }
-const { supabase, userId, bizId } = await getBizContextForManagers();
-
-// Эта функция:
-// - проверяет, что пользователь авторизован;
-// - для обычных пользователей использует текущий выбранный бизнес (таблица user_current_business),
-//   а при его отсутствии — детерминированно выбирает бизнес по ролям или owner_id;
-// - для super admin не подбирает бизнес автоматически, если current_biz_id не задан.
-```
-
-### Использование `current_biz_id`
-
-Текущий выбранный бизнес пользователя хранится в таблице `user_current_business` (`user_id`, `biz_id`):
-
-- устанавливается через API `/api/me/current-business` (POST);
-- читается через API `/api/me/current-business` (GET) и используется в UI:
-  - при входе, если у пользователя несколько бизнесов — страница `/select-business`;
-  - в кабинете — переключатель бизнеса в левом меню.
-
-**Рекомендации для новых endpoints:**
-
-1. Не пытайтесь сами выбирать `bizId` по `user_roles` или `businesses.owner_id` в каждом endpoint.
-2. Для всего, что относится к кабинету бизнеса (dashboard, финансы, сотрудники и т.п.), всегда берите `bizId` только из `getBizContextForManagers()`.
-3. Если endpoint меняет текущий бизнес (например, выбор из списка), используйте `/api/me/current-business` и не меняйте `user_current_business` напрямую из клиента.
-
-## Обработка ошибок
-
-Все функции проверки возвращают объект с полем `belongs` (boolean) и опциональным полем `error` (string):
-
-```typescript
-const check = await checkBookingBelongsToBusiness(bookingId, bizId);
-
-if (check.error) {
-    logError('MyEndpoint', 'Error checking booking', { error: check.error });
-    return createErrorResponse('internal', 'Ошибка проверки доступа', undefined, 500);
-}
-
-if (!check.belongs) {
-    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-}
-```
-
+Известные нарушения границ доступа остаются в [инженерном реестре](../../../../docs/ENGINEERING_FINDINGS.md). Страница, роль в UI или название safe/atomic в SQL не заменяют проверки вызывающего и принадлежности данных.

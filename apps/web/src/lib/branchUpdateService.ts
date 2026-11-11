@@ -1,15 +1,11 @@
-import { type PublicContactFields, validatePublicContacts } from '@/lib/businessContacts';
+import type { z } from 'zod';
+
+import { validatePublicContactPatch } from '@/lib/businessContacts';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
+import { branchUpdateSchema } from '@/lib/validation/businessUpdateSchemas';
 
-export type BranchUpdateBody = PublicContactFields & {
-  name: string;
-  address?: string | null;
-  is_active: boolean;
-  lat?: number | null;
-  lon?: number | null;
-  inherit_business_contacts?: boolean;
-};
+export type BranchUpdateBody = z.infer<typeof branchUpdateSchema>;
 
 export type BranchUpdateAdminLike = {
   from: (table: string) => {
@@ -37,16 +33,17 @@ export async function updateBranch(params: {
   bizId: string;
   body: BranchUpdateBody;
 }): Promise<BranchUpdateResult> {
-  const { admin, branchId, bizId, body } = params;
-
-  if (!body.name?.trim()) {
+  const { admin, branchId, bizId } = params;
+  const parsed = branchUpdateSchema.safeParse(params.body);
+  if (!parsed.success) {
     return {
       ok: false,
       error: 'validation',
-      message: 'Имя обязательно',
+      message: parsed.error.issues[0].message,
       status: 400,
     };
   }
+  const body = parsed.data;
 
   const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
     admin as never,
@@ -75,7 +72,7 @@ export async function updateBranch(params: {
     };
   }
 
-  const contacts = validatePublicContacts(body);
+  const contacts = validatePublicContactPatch(body);
   if (!contacts.ok) {
     return {
       ok: false,
@@ -85,23 +82,10 @@ export async function updateBranch(params: {
     };
   }
 
-  const updateData: {
-    name: string;
-    address: string | null;
-    is_active: boolean;
-    coords?: string | null;
-    contact_phone: string | null;
-    contact_whatsapp: string | null;
-    contact_email: string | null;
-    website_url: string | null;
-    inherit_business_contacts: boolean;
-  } = {
-    name: body.name.trim(),
-    address: body.address ?? null,
-    is_active: !!body.is_active,
-    ...contacts.value,
-    inherit_business_contacts: body.inherit_business_contacts !== false,
-  };
+  const updateData: Record<string, unknown> = { ...contacts.value };
+  for (const field of ['name', 'address', 'is_active', 'inherit_business_contacts', 'directory_links'] as const) {
+    if (Object.hasOwn(body, field)) updateData[field] = body[field];
+  }
 
   if ('lat' in body || 'lon' in body) {
     if (body.lat != null && body.lon != null) {

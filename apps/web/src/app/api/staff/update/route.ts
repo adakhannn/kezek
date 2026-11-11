@@ -10,5 +10,6 @@ export async function POST(req: Request, context: unknown) {
     req,
     RateLimitConfigs.normal,
     () => withErrorHandler('StaffUpdate', () => runStaffUpdateHttp(req, context)),
+      "/api/staff/update",
   );
 }

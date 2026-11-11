@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import {logError} from '@/lib/log';
+import { logError } from '@/lib/log';
+import { loadOpenApiDocument } from '@/lib/openApiDocument';
 
 // Swagger UI — тяжёлая библиотека, загружаем её только на клиенте и только для этой страницы,
 // чтобы не раздувать общий bundle и не мешать SSR.
@@ -21,16 +22,22 @@ export default function ApiDocsPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/api/swagger.json')
-            .then((res) => res.json())
-            .then((data) => {
-                setSpec(data);
-                setLoading(false);
+        const controller = new AbortController();
+        let active = true;
+        loadOpenApiDocument(controller.signal)
+            .then((document) => {
+                if (active) setSpec(document);
             })
-            .catch((err) => {
-                logError('ApiDocs', 'Failed to load Swagger spec', err);
-                setLoading(false);
+            .catch((error: unknown) => {
+                if (active) logError('ApiDocs', 'Failed to load OpenAPI document', error);
+            })
+            .finally(() => {
+                if (active) setLoading(false);
             });
+        return () => {
+            active = false;
+            controller.abort();
+        };
     }, []);
 
     if (loading) {
@@ -56,7 +63,7 @@ export default function ApiDocsPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <SwaggerUI spec={spec} />
+            <SwaggerUI spec={spec} supportedSubmitMethods={[]} />
         </div>
     );
 }

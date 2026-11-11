@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 
+import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
+import { getServiceClient } from '@/lib/supabaseService';
 import { formatTelegramMobileStartPayload } from '@/lib/telegramMobileDeepLinkPayload';
 import { trackTelegramMobileMetric } from '@/lib/telegramMobileMetricsService';
-import { getServiceClient } from '@/lib/supabaseService';
 
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
 
@@ -23,6 +24,7 @@ export type TelegramMobileAuthSourceMeta = {
 
 export type TelegramMobileAuthAttempt = {
     nonce: string;
+    codeChallenge?: string;
     status: TelegramMobileAuthAttemptStatus;
     createdAt: number;
     expiresAt: number;
@@ -41,7 +43,11 @@ export type TelegramMobileAuthAttempt = {
 };
 
 type AttemptRow = {
+    source: TelegramMobileAuthSourceMeta | null;
+    telegram_context: { chatId?: number; username?: string; firstName?: string; lastName?: string } | null;
+    linkage: 'existing' | 'created' | null;
     nonce: string;
+    code_challenge: string | null;
     status: string;
     telegram_id: number | null;
     user_id: string | null;
@@ -51,8 +57,8 @@ type AttemptRow = {
     created_at: string;
 };
 
-function getAttemptsAdmin(): any {
-    return getServiceClient() as any;
+function getAttemptsAdmin() {
+    return getServiceClient();
 }
 
 function nowMs() {
@@ -65,7 +71,14 @@ function nowIso() {
 
 function toAttempt(row: AttemptRow): TelegramMobileAuthAttempt {
     return {
+        source: row.source ?? undefined,
+        linkage: row.linkage ?? undefined,
+        telegramChatId: row.telegram_context?.chatId,
+        telegramUsername: row.telegram_context?.username,
+        telegramFirstName: row.telegram_context?.firstName,
+        telegramLastName: row.telegram_context?.lastName,
         nonce: row.nonce,
+        codeChallenge: row.code_challenge ?? undefined,
         status: row.status as TelegramMobileAuthAttemptStatus,
         createdAt: Date.parse(row.created_at),
         expiresAt: Date.parse(row.expires_at),
@@ -90,7 +103,7 @@ async function getAttemptRow(nonce: string): Promise<AttemptRow | null> {
     const admin = getAttemptsAdmin();
     const { data, error } = await admin
         .from('telegram_mobile_auth_attempts')
-        .select('nonce,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
+        .select('source,telegram_context,linkage,nonce,code_challenge,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
         .eq('nonce', nonce)
         .single();
 
@@ -115,7 +128,7 @@ async function markExpiredIfNeeded(row: AttemptRow): Promise<AttemptRow> {
         .from('telegram_mobile_auth_attempts')
         .update({ status: 'expired' })
         .eq('nonce', row.nonce)
-        .select('nonce,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
+        .select('source,telegram_context,linkage,nonce,code_challenge,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
         .maybeSingle();
 
     if (data) {
@@ -134,13 +147,16 @@ async function markExpiredIfNeeded(row: AttemptRow): Promise<AttemptRow> {
 
 export async function createTelegramMobileAuthAttempt({
     botUsername,
+    codeChallenge,
     ttlMs = DEFAULT_TTL_MS,
     source,
 }: {
     botUsername: string;
+    codeChallenge: string;
     ttlMs?: number;
     source?: TelegramMobileAuthSourceMeta;
 }) {
+    if (!MOBILE_CODE_CHALLENGE_RE.test(codeChallenge)) throw new Error('Invalid mobile sign-in binding');
     const now = nowMs();
     const expiresAt = now + ttlMs;
     const admin = getAttemptsAdmin();
@@ -151,6 +167,8 @@ export async function createTelegramMobileAuthAttempt({
     for (let i = 0; i < 5 && !inserted; i += 1) {
         const { error } = await admin.from('telegram_mobile_auth_attempts').insert({
             nonce,
+            code_challenge: codeChallenge,
+            source: source ?? null,
             status: 'pending',
             expires_at: new Date(expiresAt).toISOString(),
         });
@@ -239,7 +257,7 @@ export async function consumePendingTelegramMobileAuthAttempt(nonce: string): Pr
         .eq('status', 'pending')
         .is('consumed_at', null)
         .gt('expires_at', nowIsoValue)
-        .select('nonce,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
+        .select('source,telegram_context,linkage,nonce,code_challenge,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
         .maybeSingle();
 
     if (error) {
@@ -291,6 +309,7 @@ export async function markTelegramMobileAuthAttemptApproved({
         .from('telegram_mobile_auth_attempts')
         .update({
             status: 'approved',
+            linkage,
             telegram_id: telegramId,
             user_id: userId,
             exchange_code: exchangeCode,
@@ -334,10 +353,10 @@ export async function markTelegramMobileAuthAttemptFailed({
 export async function attachTelegramMobileAuthAttemptTelegramContext({
     nonce,
     telegramId,
-    chatId: _chatId,
-    username: _username,
-    firstName: _firstName,
-    lastName: _lastName,
+    chatId,
+    username,
+    firstName,
+    lastName,
 }: {
     nonce: string;
     telegramId: number;
@@ -371,23 +390,17 @@ export async function attachTelegramMobileAuthAttemptTelegramContext({
     }
 
     const admin = getAttemptsAdmin();
-    await admin
-        .from('telegram_mobile_auth_attempts')
-        .update({
-            telegram_id: telegramId,
-        })
-        .eq('nonce', nonce)
-        .eq('status', 'pending');
-
-    const updated = await getAttemptRow(nonce);
-    if (!updated) {
-        return { ok: false, error: 'not_found' };
-    }
-
-    return {
-        ok: true,
-        attempt: toAttempt(updated),
-    };
+    let binding = admin.from('telegram_mobile_auth_attempts')
+        .update({ telegram_id: telegramId, telegram_context: { chatId, username, firstName, lastName } })
+        .eq('nonce', nonce).eq('status', 'pending').gt('expires_at', nowIso());
+    binding = effective.telegram_id == null
+        ? binding.is('telegram_id', null)
+        : binding.eq('telegram_id', telegramId);
+    const { data: updated, error } = await binding
+        .select('source,telegram_context,linkage,nonce,code_challenge,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
+        .maybeSingle();
+    if (error || !updated) return { ok: false, error: 'invalid_status' };
+    return { ok: true, attempt: toAttempt(updated) };
 }
 
 export async function __resetTelegramMobileAuthAttemptsForTests() {

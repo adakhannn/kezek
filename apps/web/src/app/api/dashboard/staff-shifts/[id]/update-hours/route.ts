@@ -10,5 +10,6 @@ export async function POST(req: Request, context: unknown) {
         withErrorHandler('UpdateShiftHours', async () =>
             runDashboardStaffShiftUpdateHoursHttp(req, context),
         ),
+        "/api/dashboard/staff-shifts/[id]/update-hours",
     );
 }

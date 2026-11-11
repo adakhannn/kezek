@@ -38,4 +38,11 @@ describe('bookingCancelHttpService', () => {
         expect(response.status).toBe(200);
         expect(body.ok).toBe(true);
     });
+    test('financial conflict remains HTTP409 rather than a successful cancellation', async () => {
+        (runBookingCancelRoute as jest.Mock).mockResolvedValue({ ok: false, status: 409,
+            error: 'financial_reversal_required', message: 'Требуется финансовый возврат' });
+        const response = await runBookingCancelHttp(new Request('http://localhost/api/bookings/booking-id/cancel', { method: 'POST' }), {});
+        expect(response.status).toBe(409);
+        expect(await response.json()).toMatchObject({ ok: false });
+    });
 });

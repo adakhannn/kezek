@@ -9,7 +9,6 @@ import { supabase } from '../../lib/supabase';
 import {
   getMobileApiUrl,
   handleDeepLinkAuth,
-  tryRestorePendingSession,
 } from '../../navigation/useRootNavigationSession';
 import AuthHeroBadge from './components/AuthHeroBadge';
 import { useAuthAppStateRecovery } from './hooks/useAuthAppStateRecovery';
@@ -54,16 +53,6 @@ export default function SignInScreen() {
       } = await supabase.auth.getSession();
       if (session) {
         return true;
-      }
-
-      const restored = await tryRestorePendingSession(apiUrl).catch(() => false);
-      if (restored) {
-        const {
-          data: { session: restoredSession },
-        } = await supabase.auth.getSession();
-        if (restoredSession) {
-          return true;
-        }
       }
 
       await new Promise((resolve) => setTimeout(resolve, 700));

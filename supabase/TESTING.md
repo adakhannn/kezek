@@ -1,93 +1,69 @@
-# SQL Тесты для критичных сценариев
+# SQL scenarios: scope и ограничения
 
-Этот документ описывает автоматизированные SQL-тесты для проверки критичных сценариев системы.
+Статус: `reference`. Сверено с исходниками: **2026-11-10**. Владелец: **Engineering**.
 
-## Что тестируется
+Основной процесс — [TESTING_GUIDE.md](../TESTING_GUIDE.md). [Индекс](../docs/README.md), [эксплуатация](../docs/OPERATIONS.md), [инженерное состояние](../docs/PROJECT_STATUS.md).
 
-1. **Закрытие смен с гарантией** — проверка расчета гарантированной оплаты при отсутствии клиентов
-2. **Применение промо** — проверка автоматического применения акций при переходе брони в статус `paid`
-3. **Инициализация и пересчет рейтингов** — проверка расчета рейтингов для сотрудников, филиалов и бизнесов
-4. **Комплексный тест** — проверка взаимодействия смен, промо и рейтингов за несколько дней
-5. **Рейтинги при отсутствии активности** — проверка сохранения рейтинга при периодах без метрик
+SQL-файл выполняет записи и массовые расчёты. Его команды предназначены только для отдельной разрешённой задачи на подготовленной изолированной БД. Эта документация не разрешает подключаться к рабочему Supabase, создавать fixtures, применять миграции, сбрасывать БД или очищать данные. В документационной работе 30 октября SQL и тесты не запускались; [WEB handoff](../docs/WEB_AGENT_HANDOFF.md) остаётся действующим для закрытой кампании.
 
-## Запуск тестов
+## Что находится в файле
 
-### Локально (через Supabase CLI)
+[tests_critical_scenarios.sql](tests_critical_scenarios.sql) содержит пять последовательных PostgreSQL `DO`-блоков:
 
-```bash
-# Убедитесь, что Supabase CLI установлен
-npm install -g supabase
+| Сценарий | Фактическое действие | Граница вывода |
+| --- | --- | --- |
+| Смена без клиентов с гарантией | Создаёт сущности, сам вычисляет и записывает суммы в `staff_shifts`, затем читает их | Не вызывает настоящее закрытие смены; не доказывает его расчёт |
+| Промо при `paid` | Создаёт данные и вызывает `update_booking_status_with_promotion` | Проверяет выбранный пример на фактической схеме, не все акции/роли |
+| Инициализация рейтингов | Вызывает `initialize_all_ratings(30)` и `recalculate_ratings_for_date` | Расчёт может затронуть другие данные той же БД |
+| Смены, промо и рейтинги за несколько дней | Создаёт связанные данные и вызывает функции рейтингов/промо | Не заменяет HTTP/UI lifecycle или конкурентный тест |
+| Рейтинг без активности | Удаляет метрики созданного сотрудника и вызывает `calculate_staff_rating` | Один отдельный инвариант |
 
-# Запустите тесты
-pnpm test:sql
+Названия сценариев описывают намерение тестового кода, а не свежий PASS. Фактическую совместимость со схемой нужно подтвердить в отдельно подготовленной среде.
 
-# Или напрямую через Supabase CLI
-supabase db execute --file supabase/tests_critical_scenarios.sql
-```
+## Два разных способа запуска
 
-### Локально (через прямой доступ к БД)
+Для отдельно разрешённой проверки legacy scenarios на подготовленной изолированной БД:
 
 ```bash
-# Укажите URL подключения к БД
-export SUPABASE_DB_URL="postgresql://user:password@host:port/database"
-pnpm test:sql
-
-# Или в PowerShell
-$env:SUPABASE_DB_URL="postgresql://user:password@host:port/database"
 pnpm test:sql
 ```
 
-### В CI/CD
+Нужен явно заданный `SUPABASE_DB_URL` и установленный `psql`. [Root script](../package.json) вызывает [единый Node runner](../scripts/run-sql-tests.mjs): один запуск `psql -X --no-password --set=ON_ERROR_STOP=1`, без shell interpolation, выбора linked project или fallback после ошибки. Отсутствующий target — nonzero exit до запуска процесса. [Bash](../scripts/run-tests.sh) делегирует через `exec`; [PowerShell](../scripts/run-tests.ps1) проверяет `$LASTEXITCODE`. Native nonzero и прерывание завершают runner ошибкой; success другого shell не может её скрыть. [Tooling tests](../scripts/sql-runner.test.mjs) проверяют аргументы и передачу exit code с синтетическим process boundary, без подключения к БД.
 
-Тесты автоматически запускаются в GitHub Actions при:
-- Push в `main`
-- Pull Request
+Корневой `pnpm test` по-прежнему сначала запускает эти legacy scenarios, затем web Jest. Для unit-only работы использовать web Jest script из [основного справочника](../TESTING_GUIDE.md).
 
-Для работы тестов в CI нужно установить секрет `SUPABASE_TEST_DB_URL` в настройках репозитория GitHub.
+Для отдельных PostgreSQL контрактов и конкурентности существует независимый набор:
 
-**Как установить:**
-1. Перейдите в Settings → Secrets and variables → Actions
-2. Добавьте новый секрет `SUPABASE_TEST_DB_URL`
-3. Укажите connection string к тестовой БД (например: `postgresql://postgres:password@db.xxx.supabase.co:5432/postgres`)
-
-## Формат тестов
-
-Все тесты написаны в формате PostgreSQL `DO $$ ... $$;` блоков. При успехе вы увидите сообщения `NOTICE`, при ошибке тест упадет с `EXCEPTION`.
-
-## Добавление новых тестов
-
-1. Откройте `supabase/tests_critical_scenarios.sql`
-2. Добавьте новый `DO $$ ... $$;` блок с тестом
-3. Используйте префикс `[TEST N]` для сообщений
-4. Проверьте тест локально перед коммитом
-
-## Пример структуры теста
-
-```sql
-do $$
-declare
-    -- Объявляем переменные
-    v_test_id uuid;
-begin
-    raise notice '[TEST N] Старт теста...';
-    
-    -- Выполняем действия
-    -- ...
-    
-    -- Проверяем результаты
-    if условие then
-        raise exception '[TEST N] Ожидали X, получили Y';
-    end if;
-    
-    raise notice '[TEST N] OK — тест пройден';
-end;
-$$;
+```bash
+pnpm test:sql:isolated
 ```
 
-## Важно
+Он требует Docker и образ PostgreSQL 16. Runners создают собственные disposable контейнеры с `--network none`, без host ports и host mounts; fixtures полностью synthetic. Они не читают `.env`, не выбирают linked Supabase и не отправляют сообщения провайдерам. Контейнер удаляется в cleanup; сбой Docker/SQL/assertion — ошибка, а не skip.
 
-- Тесты создают тестовые данные в БД (бизнесы, филиалы, сотрудники и т.д.)
-- Тесты должны быть идемпотентными (можно запускать несколько раз)
-- При ошибке тест останавливается с `EXCEPTION`
-- Все тесты выполняются последовательно
+| Runner | Проверяемая граница |
+| --- | --- |
+| [mobile auth / Yandex](../scripts/test-mobile-auth-grants-isolated.cjs) | Однократное потребление grant/OTP/state, параллельные вызовы, expiry, права ролей |
+| [finance](../scripts/test-finance-transactions.mjs) | Реальные command RPC на synthetic schema: actor/tenant, revision, rollback, overlap/locks, повторные команды |
+| [booking](../scripts/test-booking-requests-isolated.cjs) | Атомарный idempotency claim/create, гонки и выбранные права ролей |
+| [notification outbox](../scripts/test-booking-notification-outbox-isolated.cjs) | SQL lifecycle очереди, leases/receipts и конкурентность; детали assertions — в runner |
+| [staff-scoped slots](../scripts/test-staff-scoped-slots-isolated.cjs) | Фильтрация выбранных сотрудников до resolver, фактические calls/rows и EXPLAIN на synthetic 1000 staff |
 
+[CI](../.github/workflows/ci.yml) вызывает каждый runner из registry отдельным matrix job. Ни remote DB secret, ни условие «без secret пропустить» им не нужны. Это обязательные по workflow проверки без `continue-on-error`; настройки branch protection не подтверждены. Наличие конфигурации не является результатом CI. SQL gates не доказывают доставку реального provider, полный bootstrap проекта или совместимость всей удалённой схемы.
+
+## Оставшиеся ограничения legacy SQL scenarios
+
+1. **Нет общей rollback/cleanup-границы.** Успешные `DO`-блоки оставляют строки; последующая ошибка не отменяет предыдущие успешные блоки. Есть фиксированные slug и телефоны. Идемпотентность повторного прогона не обеспечена.
+2. **Есть глобальные операции.** Например, `initialize_all_ratings` не ограничен единственной fixture. БД с рабочими/чужими тестовыми данными не является подходящей изоляцией.
+3. **Первый сценарий проверяет записанные им значения.** Он не вызывает настоящий shift-close. Новый disposable finance runner вызывает command RPC, но это не меняет границу старого файла.
+4. **Полный bootstrap отдельно не подтверждён.** Synthetic fixtures включают необходимые таблицы вручную и не являются доказательством развёртывания всего проекта из migrations/seed. Текущее состояние — в [PROJECT_STATUS.md](../docs/PROJECT_STATUS.md).
+
+Для результата сохранять target environment без credentials, версию схемы, точную команду, exit code и failures/skips. Реальные права RLS, жизненный цикл HTTP/UI и delivery providers требуют своих проверок; privileged connection и успешный unit test их не заменяют.
+
+Согласованные методы восстановления и migrations описываются через [OPERATIONS.md](../docs/OPERATIONS.md); старые команды из SQL Editor и ручной кампании не дают разрешения на их выполнение.
+
+
+[cron execution heartbeat](../scripts/test-cron-execution-isolated.cjs) проверяет lifecycle/права/lease/freshness на synthetic PostgreSQL и входит в обязательную CI SQL matrix вместе с auth/finance/booking/outbox/slots.
+
+[Reporting completeness](../scripts/test-reporting-completeness.mjs) и [shift-close backlog](../scripts/test-shift-close-backlog.mjs) также входят в [единый registry suites](../scripts/sql-isolated-suites.json). Детальная область assertions определяется каждым runner; общий PASS не заменяет replay на фактической схеме.
+
+[WhatsApp inbox](../scripts/test-whatsapp-inbox-isolated.cjs) проверяет concurrent receive/claim, phone ownership, реальные защищённые booking transitions и атомарность outbox/receipt, lease/ambiguity, конечные retries, legacy quarantine и PII pruning с tombstone. Provider не вызывается.

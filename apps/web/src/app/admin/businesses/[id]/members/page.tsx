@@ -7,6 +7,7 @@ import MembersClient from './MembersClient';
 
 export const dynamic = 'force-dynamic';
 
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { isUuid } from '@/lib/validation';
 
 export default async function MembersPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,8 +32,9 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     // 1) auth
     const {
         data: { user },
+        error: authError,
     } = await supa.auth.getUser();
-    if (!user) {
+    if (authError || !user) {
         return (
             <main className="p-4">
                 <div>Не авторизован</div>
@@ -41,19 +43,17 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     }
 
     // 2) Права: разделяем на просмотр и управление
-    const { data: superRow } = await supa
-        .from('user_roles_with_user')
-        .select('user_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin, error: superError } = await checkCurrentUserIsSuperAdmin(supa, user.id);
+    if (superError) return <main className="p-4">Не удалось проверить права доступа</main>;
 
     // право на просмотр: супер или владелец/админ
-    const { data: isOwner } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: id });
-    const { data: isAdmin } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: id });
+    const { data: isOwner, error: ownerError } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: id });
+    const { data: isAdmin, error: adminError } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: id });
+    if (ownerError || adminError || typeof isOwner !== 'boolean' || typeof isAdmin !== 'boolean') {
+        return <main className="p-4">Не удалось проверить права доступа</main>;
+    }
 
-    const canView = !!superRow || !!isOwner || !!isAdmin;
+    const canView = isSuperAdmin || isOwner === true || isAdmin === true;
     if (!canView) {
         return (
             <main className="p-4">
@@ -63,7 +63,7 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     }
 
     // право на управление: только владелец/админ (без супера)
-    const canManage = !!isOwner || !!isAdmin;
+    const canManage = isOwner === true || isAdmin === true;
 
     // Получаем информацию о бизнесе для заголовка
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;

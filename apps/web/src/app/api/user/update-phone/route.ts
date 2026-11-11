@@ -9,5 +9,6 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
     return withRateLimit(req, RateLimitConfigs.auth, () =>
         withErrorHandler('UserUpdatePhone', async () => runUserUpdatePhoneHttp(req)),
+        "/api/user/update-phone",
     );
 }

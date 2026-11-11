@@ -1,3 +1,4 @@
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -44,16 +45,10 @@ export async function POST(req: Request, ctx: unknown) {
             },
         });
 
-        const { data: { user } } = await supa.auth.getUser();
-        if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
+        const { data: { user }, error: authError } = await supa.auth.getUser();
+        if (authError || !user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
-        const { data: superRow, error: superErr } = await supa
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supa, user.id);
         if (superErr) return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
         if (!superRow) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 

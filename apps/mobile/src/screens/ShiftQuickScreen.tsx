@@ -8,7 +8,8 @@ import { useToast } from '../contexts/ToastContext';
 import { getErrorMessage } from '../lib/errors';
 import { ShiftQuickSections } from './shiftQuick/ShiftQuickSections';
 import { useShiftQuickScreenData } from './shiftQuick/useShiftQuickScreenData';
-import type { ShiftItem } from './shiftQuick/types';
+import { captureShiftLedger, createShiftClientId, isShiftLedgerSnapshot } from './shiftQuick/commandProtocol';
+import type { ShiftItem, ShiftLedgerSnapshot } from './shiftQuick/types';
 
 const EDIT_CLIENT_SUCCESS = '\u041a\u043b\u0438\u0435\u043d\u0442 \u043e\u0431\u043d\u043e\u0432\u043b\u0451\u043d.';
 const EDIT_CLIENT_QUEUED =
@@ -26,6 +27,10 @@ const ADD_CLIENT_ERROR =
 export default function ShiftQuickScreen() {
     const [showAddClient, setShowAddClient] = useState(false);
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+    const [editorBase, setEditorBase] = useState<ShiftLedgerSnapshot | null>(null);
+    const [editingItemId, setEditingItemId] = useState<string | undefined>();
+    const [draftClientId, setDraftClientId] = useState<string | undefined>();
+    const [replacesQueuedAt, setReplacesQueuedAt] = useState<string | undefined>();
     const [newClientName, setNewClientName] = useState('');
     const [newServiceName, setNewServiceName] = useState('');
     const [newServiceAmount, setNewServiceAmount] = useState('');
@@ -42,6 +47,7 @@ export default function ShiftQuickScreen() {
         refreshing,
         isProcessingQueue,
         pendingQueueCount,
+        reviewOperation, reviewItems, queueError, canRestoreDraft, reloadForReview, discardReviewedQueue,
         metrics,
         openShiftMutation,
         closeShiftMutation,
@@ -58,13 +64,30 @@ export default function ShiftQuickScreen() {
         setNewConsumablesAmount('');
         setAddClientError(null);
         setEditingItemIndex(null);
+        setEditingItemId(undefined);
+        setDraftClientId(undefined);
+        setEditorBase(null);
+        setReplacesQueuedAt(undefined);
+    };
+
+    const startAddClient = (show: boolean) => {
+        if (!show) { resetAddClientForm(); return; }
+        try {
+            setEditorBase(captureShiftLedger(financeData));
+            setDraftClientId(createShiftClientId());
+            setShowAddClient(true);
+        } catch (error) { showToast(getErrorMessage(error, 'Обновите смену.'), 'error'); }
     };
 
     const startEditClient = (item: ShiftItem, itemIndex: number) => {
-        if (item.bookingId) {
+        if (item.bookingId || !item.id) {
             return;
         }
-
+        try { setEditorBase(captureShiftLedger(financeData)); }
+        catch (error) { showToast(getErrorMessage(error, 'Обновите смену.'), 'error'); return; }
+        setEditingItemId(item.id);
+        setDraftClientId(undefined);
+        setReplacesQueuedAt(undefined);
         setEditingItemIndex(itemIndex);
         setShowAddClient(true);
         setNewClientName(item.clientName);
@@ -87,6 +110,9 @@ export default function ShiftQuickScreen() {
     };
 
     const handleCloseShift = async () => {
+        let base: ShiftLedgerSnapshot;
+        try { base = captureShiftLedger(financeData); }
+        catch (error) { showToast(getErrorMessage(error, 'Обновите смену.'), 'error'); return; }
         const shouldClose = await confirm({
             title: 'Закрыть смену?',
             message: 'После закрытия смены вы не сможете добавлять клиентов. Продолжить?',
@@ -99,7 +125,48 @@ export default function ShiftQuickScreen() {
             return;
         }
 
-        closeShiftMutation.mutate();
+        closeShiftMutation.mutate(base);
+    };
+
+    const restoreDraft = async () => {
+        if (!canRestoreDraft || !reviewOperation?.edit) return;
+        try {
+            const fresh = await reloadForReview();
+            const base = captureShiftLedger(fresh);
+            if (!isShiftLedgerSnapshot(reviewOperation.data) || base.expectedShiftId !== reviewOperation.data.expectedShiftId) {
+                throw new Error('Черновик относится к другой смене. Проверьте его отдельно: перенос в текущую смену недоступен.');
+            }
+            const { item } = reviewOperation.edit;
+            // A lost response may already have created this exact draft row. Use its
+            // stable identity when the user explicitly reviews it, not a duplicate add.
+            const itemId = reviewOperation.edit.itemId ?? (item.clientId && base.items.some(entry => entry.id === item.clientId) ? item.clientId : undefined);
+            const index = itemId ? base.items.findIndex(entry => entry.id === itemId) : -1;
+            if (itemId && (index < 0 || base.items[index].bookingId)) {
+                throw new Error('Исходная строка больше недоступна для редактирования. Сверьте сохранённый черновик с актуальной сменой.');
+            }
+            setEditorBase(base);
+            setEditingItemId(itemId);
+            setDraftClientId(itemId ? undefined : item.clientId);
+            setEditingItemIndex(itemId ? index : null);
+            setReplacesQueuedAt(reviewOperation.timestamp);
+            setNewClientName(item.clientName);
+            setNewServiceName(item.serviceName);
+            setNewServiceAmount(String(item.serviceAmount));
+            setNewConsumablesAmount(String(item.consumablesAmount));
+            setShowAddClient(true);
+            setAddClientError('Сверьте черновик со списком клиентов ниже. Сохранение создаст новую команду для загруженной версии смены.');
+        } catch (error) { showToast(getErrorMessage(error, 'Не удалось загрузить актуальную смену.'), 'error'); }
+    };
+    const discardDraft = async () => {
+        const accepted = await confirm({ title: 'Удалить сохранённый черновик?',
+            message: 'Сначала сверьте его с сервером: прежняя отправка могла завершиться. Удаление черновика не отменяет операции на сервере.',
+            confirmLabel: 'Удалить черновик', cancelLabel: 'Отмена', variant: 'danger' });
+        if (!accepted) return;
+        try {
+            await reloadForReview();
+            await discardReviewedQueue();
+            resetAddClientForm();
+        } catch (error) { showToast(getErrorMessage(error, 'Не удалось проверить смену.'), 'error'); }
     };
 
     const handleSaveClient = () => {
@@ -107,12 +174,20 @@ export default function ShiftQuickScreen() {
             setAddClientError(CLIENT_NAME_REQUIRED);
             return;
         }
+        if (!editorBase) { setAddClientError('Откройте форму заново после обновления смены.'); return; }
 
+        const serviceAmount = newServiceAmount.trim() ? Number(newServiceAmount) : 0;
+        const consumablesAmount = newConsumablesAmount.trim() ? Number(newConsumablesAmount) : 0;
+        if (![serviceAmount, consumablesAmount].every(value => Number.isFinite(value) && value >= 0 && value <= 100000000)) {
+            setAddClientError('Введите суммы от 0 до 100 000 000.');
+            return;
+        }
         const item = {
+            ...(draftClientId ? { clientId: draftClientId } : {}),
             clientName: newClientName.trim(),
             serviceName: newServiceName.trim(),
-            serviceAmount: Number(newServiceAmount) || 0,
-            consumablesAmount: Number(newConsumablesAmount) || 0,
+            serviceAmount,
+            consumablesAmount,
             bookingId: null,
         };
 
@@ -120,8 +195,7 @@ export default function ShiftQuickScreen() {
         if (editingItemIndex != null) {
             updateClientMutation.mutate(
                 {
-                    itemIndex: editingItemIndex,
-                    item,
+                    base: editorBase, itemId: editingItemId, item, replacesQueuedAt,
                 },
                 {
                     onSuccess: (result) => {
@@ -139,7 +213,7 @@ export default function ShiftQuickScreen() {
         }
 
         addClientMutation.mutate(
-            item,
+            { base: editorBase, item, replacesQueuedAt },
             {
                 onSuccess: (result) => {
                     resetAddClientForm();
@@ -192,6 +266,12 @@ export default function ShiftQuickScreen() {
             refreshing={refreshing}
             isProcessingQueue={isProcessingQueue}
             pendingQueueCount={pendingQueueCount}
+            reviewMessage={queueError ?? reviewOperation?.reason ?? (reviewOperation ? 'Сохранённая операция требует проверки.' : undefined)}
+            reviewItems={reviewItems}
+            onRestoreDraft={canRestoreDraft ? () => void restoreDraft() : undefined}
+            onDiscardDraft={reviewOperation ? () => void discardDraft() : undefined}
+            commandsBlocked={isProcessingQueue || pendingQueueCount > 0 || !!queueError}
+            savingBlocked={isProcessingQueue || !!queueError || (pendingQueueCount > 0 && !replacesQueuedAt)}
             isOpening={openShiftMutation.isPending}
             isClosing={closeShiftMutation.isPending}
             isAddingClient={addClientMutation.isPending || updateClientMutation.isPending}
@@ -206,7 +286,7 @@ export default function ShiftQuickScreen() {
                 error: addClientError,
             }}
             addClientActions={{
-                setShowAddClient,
+                setShowAddClient: startAddClient,
                 setNewClientName: (value) => {
                     setAddClientError(null);
                     setNewClientName(value);

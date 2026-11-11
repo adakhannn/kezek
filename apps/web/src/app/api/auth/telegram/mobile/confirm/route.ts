@@ -29,5 +29,6 @@ export async function POST(request: Request) {
         withErrorHandler('TelegramMobileConfirm', () =>
             runTelegramMobileConfirmHttp(request),
         ),
+        "/api/auth/telegram/mobile/confirm",
     );
 }

@@ -19,6 +19,7 @@ export type StaffFinanceStatsShiftItem = {
 };
 
 export type StaffFinanceStatsShift = {
+    ledger_revision: number; timezone: string; day_hours: number;
     id: string;
     shift_date: string;
     status: 'open' | 'closed';

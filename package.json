@@ -41,12 +41,16 @@
     "prepare": "husky install",
     "supabase": "supabase",
     "db:push": "supabase db push",
-    "test:sql": "bash scripts/run-tests.sh || powershell -ExecutionPolicy Bypass -File scripts/run-tests.ps1",
+    "test:sql": "node scripts/run-sql-tests.mjs",
     "test:api": "pnpm -C apps/web test",
     "test:e2e": "pnpm -C apps/web test:e2e",
     "test": "pnpm test:sql && pnpm test:api",
-    "generate:sdk": "openapi -i http://localhost:3000/api/swagger.json -o packages/shared-client/src/generated-sdk -c fetch",
-    "generate:api-route": "node scripts/generate-api-route.mjs"
+    "generate:sdk": "node scripts/generate-sdk.mjs",
+    "generate:api-route": "node scripts/generate-api-route.mjs",
+    "test:sql:isolated": "node scripts/run-isolated-sql-tests.mjs",
+    "generate:openapi": "node scripts/generate-openapi.mjs --write",
+    "check:openapi": "node scripts/generate-openapi.mjs --check",
+    "check:crons": "node scripts/generate-cron-manifests.mjs --check"
   },
   "lint-staged": {
     "**/jest.config.js": [],

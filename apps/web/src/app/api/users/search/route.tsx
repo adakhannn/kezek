@@ -8,5 +8,6 @@ import { runUsersSearchHttp } from '@/lib/usersSearchHttpService';
 export async function POST(req: Request) {
     return withRateLimit(req, RateLimitConfigs.normal, () =>
         withErrorHandler('UsersSearch', async () => runUsersSearchHttp(req)),
+        "/api/users/search",
     );
 }

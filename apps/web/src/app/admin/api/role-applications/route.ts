@@ -1,18 +1,18 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function GET(request: Request) {
     const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
         return Response.json({ ok: false, message: 'auth' }, { status: 401 });
     }
 
     const { isSuperAdmin, error } = await checkCurrentUserIsSuperAdmin(
-        supabase as unknown as SuperAdminRoleClient,
+        supabase,
         user.id,
     );
     if (error || !isSuperAdmin) {

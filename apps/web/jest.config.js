@@ -1,8 +1,8 @@
 const nextJest = require('next/jest');
 
-const createJestConfig = nextJest({
-    dir: './',
-});
+// Unit tests use explicit module mappings below. Passing dir would make Next load
+// application configuration and local credentials before the isolated setup runs.
+const createJestConfig = nextJest();
 
 const customJestConfig = {
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],

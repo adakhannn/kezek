@@ -1,19 +1,21 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { WorkspaceNavItem, WorkspaceSidebarShell } from '@/app/_components/workspace/WorkspaceNavigation';
 
 export function StaffMobileSidebar({ staffId }: { staffId: string }) {
-    const { t } = useLanguage();
     const pathname = usePathname();
+    const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
+    const [previousPathname, setPreviousPathname] = useState(pathname);
 
-    useEffect(() => {
+    if (previousPathname !== pathname) {
+        setPreviousPathname(pathname);
         setIsOpen(false);
-    }, [pathname]);
+    }
 
     const navItems = useMemo<WorkspaceNavItem[]>(
         () => [

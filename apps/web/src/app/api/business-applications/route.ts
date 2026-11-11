@@ -71,5 +71,5 @@ export async function POST(request: Request) {
                 code: 'unexpected_error',
             }, { status: 500 });
         }
-    });
+    }, "/api/business-applications");
 }

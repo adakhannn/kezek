@@ -40,6 +40,7 @@ describe('/api/auth/telegram/mobile/status', () => {
 
     test('returns pending for active nonce', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -69,6 +70,7 @@ describe('/api/auth/telegram/mobile/status', () => {
 
     test('returns exchangeCode when nonce is approved', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -90,6 +92,7 @@ describe('/api/auth/telegram/mobile/status', () => {
 
     test('returns expired for timed out nonce', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 1,
         });
@@ -108,6 +111,7 @@ describe('/api/auth/telegram/mobile/status', () => {
 
     test('returns pending when nonce is in consumed state', async () => {
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });

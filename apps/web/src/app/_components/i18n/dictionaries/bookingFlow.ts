@@ -1,5 +1,7 @@
 // Common wizard and time-selection copy; service/business names remain user data.
 export const bookingFlowRu = {
+    'booking.slots.partial': 'Показана часть мастеров и времени. Можно загрузить следующие варианты.',
+    'booking.slots.loadMore': 'Показать ещё мастеров и время',
     'booking.flow.step1Title': 'Сначала выберите филиал',
     'booking.flow.step1Description': 'После выбора локации система покажет только релевантные сценарии записи.',
     'booking.flow.step1Next': 'Дальше откроется выбор даты.',
@@ -15,13 +17,13 @@ export const bookingFlowRu = {
     'booking.step2.description': 'Календарь показывает ближайшие доступные даты для продолжения записи.',
     'booking.step2.outOfRange': 'Выберите доступный день в календаре. Дата из ссылки или сохранённого выбора уже недоступна.',
     'booking.flow.step3Title': 'Определитесь со специалистом',
-    'booking.flow.step3Description': 'Можно выбрать конкретного мастера или доверить системе ближайший слот.',
+    'booking.flow.step3Description': 'Можно выбрать конкретного мастера или посмотреть варианты у разных мастеров.',
     'booking.flow.step3Next': 'Дальше откроется выбор услуг.',
     'booking.flow.step4Title': 'Соберите визит из услуг',
     'booking.flow.step4Description': 'На этом шаге уже видно длительность и ориентир по стоимости.',
     'booking.flow.step4Next': 'Дальше останется выбрать точное время.',
     'booking.step3.kicker': 'Шаг 3',
-    'booking.step3.description': 'Сначала можно выбрать конкретного специалиста или доверить системе ближайший свободный слот у любого мастера.',
+    'booking.step3.description': 'Выберите конкретного специалиста или посмотрите свободное время у разных мастеров.',
     'booking.step3.selectedMaster': 'Выбран для визита',
     'booking.step3.availableMaster': 'Можно выбрать',
     'booking.step4.kicker': 'Шаг 4',
@@ -71,6 +73,8 @@ export const bookingFlowRu = {
 };
 
 export const bookingFlowEn: Record<keyof typeof bookingFlowRu, string> = {
+    'booking.slots.partial': 'Some specialists and times are shown. Load more options to continue browsing.',
+    'booking.slots.loadMore': 'Show more specialists and times',
     'booking.flow.step1Title': 'Choose a branch first',
     'booking.flow.step1Description': 'After you choose a location, only relevant booking options will be shown.',
     'booking.flow.step1Next': 'Next: choose a date.',
@@ -86,13 +90,13 @@ export const bookingFlowEn: Record<keyof typeof bookingFlowRu, string> = {
     'booking.step2.description': 'The calendar shows nearby dates to continue booking.',
     'booking.step2.outOfRange': 'Choose an available day in the calendar. The date from the link or saved selection is no longer available.',
     'booking.flow.step3Title': 'Choose a specialist',
-    'booking.flow.step3Description': 'Choose a specific specialist or let the system find the nearest available time.',
+    'booking.flow.step3Description': 'Choose a specific specialist or browse times with different specialists.',
     'booking.flow.step3Next': 'Next: choose services.',
     'booking.flow.step4Title': 'Build your visit with services',
     'booking.flow.step4Description': 'You can now see the duration and estimated price.',
     'booking.flow.step4Next': 'Next: choose the exact time.',
     'booking.step3.kicker': 'Step 3',
-    'booking.step3.description': 'Choose a specific specialist or the nearest available time with any specialist.',
+    'booking.step3.description': 'Choose a specific specialist or browse available times with different specialists.',
     'booking.step3.selectedMaster': 'Selected for your visit',
     'booking.step3.availableMaster': 'Available to select',
     'booking.step4.kicker': 'Step 4',
@@ -142,6 +146,8 @@ export const bookingFlowEn: Record<keyof typeof bookingFlowRu, string> = {
 };
 
 export const bookingFlowKy: Record<keyof typeof bookingFlowRu, string> = {
+    'booking.slots.partial': 'Адистер менен убакыттардын бир бөлүгү көрсөтүлдү. Кийинки варианттарды жүктөй аласыз.',
+    'booking.slots.loadMore': 'Дагы адистерди жана убакыттарды көрсөтүү',
     'booking.flow.step1Title': 'Алгач филиалды тандаңыз',
     'booking.flow.step1Description': 'Жайгашкан жерди тандагандан кийин ылайыктуу жазылуу варианттары көрсөтүлөт.',
     'booking.flow.step1Next': 'Андан кийин күндү тандайсыз.',
@@ -157,13 +163,13 @@ export const bookingFlowKy: Record<keyof typeof bookingFlowRu, string> = {
     'booking.step2.description': 'Календарь жазылууну улантуу үчүн жакынкы күндөрдү көрсөтөт.',
     'booking.step2.outOfRange': 'Календардан жеткиликтүү күндү тандаңыз. Шилтемедеги же сакталган тандоодогу күн эми жеткиликсиз.',
     'booking.flow.step3Title': 'Адисти тандаңыз',
-    'booking.flow.step3Description': 'Белгилүү бир адисти тандаңыз же эң жакын бош убакытты системага табууга уруксат бериңиз.',
+    'booking.flow.step3Description': 'Белгилүү бир адисти тандаңыз же ар башка адистердин бош убактысын караңыз.',
     'booking.flow.step3Next': 'Андан кийин кызматтарды тандайсыз.',
     'booking.flow.step4Title': 'Визитке кызматтарды тандаңыз',
     'booking.flow.step4Description': 'Бул кадамда узактык жана болжолдуу баа көрсөтүлөт.',
     'booking.flow.step4Next': 'Андан кийин так убакытты тандайсыз.',
     'booking.step3.kicker': '3-кадам',
-    'booking.step3.description': 'Белгилүү бир адисти же каалаган адистин эң жакын бош убактысын тандаңыз.',
+    'booking.step3.description': 'Белгилүү бир адисти тандаңыз же ар башка адистердин бош убактысын караңыз.',
     'booking.step3.selectedMaster': 'Визитке тандалды',
     'booking.step3.availableMaster': 'Тандасаңыз болот',
     'booking.step4.kicker': '4-кадам',

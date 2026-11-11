@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { logDebug, logError } from '@/lib/log';
 import { runNotifyBooking } from '@/lib/notifyBookingService';
 
-/** Dispatch inside the request, retaining its identity rather than making an unauthenticated self-fetch. */
+/** Authorize and idempotently enqueue; delivery runs in the outbox worker. */
 export async function dispatchBookingNotification(
     supabase: SupabaseClient,
     bookingId: string,
@@ -17,11 +17,11 @@ export async function dispatchBookingNotification(
             });
             return;
         }
-        logDebug('BookingNotificationDispatch', 'Notification dispatch completed', {
+        logDebug('BookingNotificationDispatch', 'Notification queued', {
             bookingId, type, ...result.data,
         });
     } catch (error) {
-        // A delivery failure must not roll back an already committed booking command.
+        // Booking mutations already enqueue transactionally via the DB trigger.
         logError('BookingNotificationDispatch', 'Notification dispatch failed', { bookingId, type, error });
     }
 }

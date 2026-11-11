@@ -1,7 +1,7 @@
 'use client';
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import type { Branch, TimeRange } from './scheduleTypes';
 
@@ -120,16 +120,6 @@ function DayRow({
     });
     const [selectedBranchId, setSelectedBranchId] = useState<string>(branchId || homeBranchId);
 
-    useEffect(() => {
-        const isOff = intervals !== null && intervals !== undefined && Array.isArray(intervals) && intervals.length === 0;
-        setIsDayOff(isOff);
-        if (intervals && Array.isArray(intervals) && intervals.length > 0 && intervals[0].start && intervals[0].end) {
-            setInterval(intervals[0]);
-        } else {
-            setInterval(defaultInterval);
-        }
-        setSelectedBranchId(branchId || homeBranchId);
-    }, [intervals, branchId, homeBranchId]);
 
     const isToday = dateStr === todayStr;
 
@@ -374,7 +364,7 @@ export function ScheduleWeekSection({
                         const ruleData = rulesByDate.get(dateStr);
                         return (
                             <DayRow
-                                key={dateStr}
+                                key={JSON.stringify([dateStr, ruleData?.intervals ?? null, ruleData?.branch_id ?? null, homeBranchId])}
                                 date={date}
                                 dow={dow}
                                 intervals={ruleData !== undefined ? ruleData.intervals : null}
@@ -394,7 +384,7 @@ export function ScheduleWeekSection({
                         const ruleData = rulesByDate.get(dateStr);
                         return (
                             <DayRow
-                                key={dateStr}
+                                key={JSON.stringify([dateStr, ruleData?.intervals ?? null, ruleData?.branch_id ?? null, homeBranchId])}
                                 date={date}
                                 dow={dow}
                                 intervals={ruleData !== undefined ? ruleData.intervals : null}

@@ -2,11 +2,13 @@
 
 import { type SupabaseClient } from '@supabase/supabase-js';
 
+import { prepareBookingNotificationContext } from './BookingNotificationPlanner';
 import { EmailNotificationService } from './EmailNotificationService';
 import { ParticipantDataService } from './ParticipantDataService';
 import { TelegramNotificationService } from './TelegramNotificationService';
-import { uniqueTelegramRecipients } from './telegramRecipients';
 import { WhatsAppNotificationService } from './WhatsAppNotificationService';
+import { buildEmailRecipients } from './emailRecipients';
+import { uniqueTelegramRecipients } from './telegramRecipients';
 import type { 
     BookingRow, 
     EmailRecipient, 
@@ -15,10 +17,7 @@ import type {
     ParticipantData,
     BookingDetails 
 } from './types';
-import { first, normalizeEmails } from './utils';
 
-import { getSiteOrigin } from '@/lib/env';
-import { getTimezone } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 
 export class NotificationOrchestrator {
@@ -26,8 +25,6 @@ export class NotificationOrchestrator {
     private emailService: EmailNotificationService;
     private whatsappService: WhatsAppNotificationService;
     private telegramService: TelegramNotificationService;
-    private timezone: string;
-    private origin: string;
 
     constructor(
         supabase: SupabaseClient,
@@ -38,11 +35,7 @@ export class NotificationOrchestrator {
         this.emailService = new EmailNotificationService(emailConfig);
         this.whatsappService = new WhatsAppNotificationService();
         this.telegramService = new TelegramNotificationService();
-        this.timezone = getTimezone();
-        
-        // Всегда используем kezek.kg для ссылок в письмах
-        const originEnv = getSiteOrigin();
-        this.origin = originEnv.includes('vercel.app') ? 'https://kezek.kg' : originEnv;
+
     }
 
     /**
@@ -57,32 +50,8 @@ export class NotificationOrchestrator {
             type: notifyType,
         });
 
-        // Извлекаем данные из бронирования
-        const service = first(booking.services);
-        const staff = first(booking.staff);
-        const biz = first(booking.biz);
-        const branch = first(booking.branches);
-
-        // Получаем данные участников
-        const [clientData, ownerData, staffData] = await Promise.all([
-            this.participantService.getClientData(booking),
-            this.participantService.getOwnerData(biz),
-            this.participantService.getStaffData(staff),
-        ]);
-
-        // Формируем детали бронирования
-        const bookingDetails: BookingDetails = {
-            booking,
-            service,
-            staff,
-            biz,
-            branch,
-            clientName: clientData.name,
-            clientPhone: clientData.phone,
-            clientEmail: clientData.email,
-            origin: this.origin,
-            timezone: this.timezone,
-        };
+        const { details: bookingDetails, clientData, staffData, ownerData } = await prepareBookingNotificationContext(this.participantService, booking);
+        const biz = bookingDetails.biz;
 
         // Формируем список получателей email
         const emailRecipients = this.buildEmailRecipients(
@@ -112,80 +81,8 @@ export class NotificationOrchestrator {
     /**
      * Формирует список получателей email
      */
-    private buildEmailRecipients(
-        clientData: ParticipantData,
-        staffData: ParticipantData,
-        ownerData: ParticipantData,
-        biz: { email_notify_to: string[] | null } | null
-    ): EmailRecipient[] {
-        const recipients: EmailRecipient[] = [];
-
-        // Клиент — отдельное письмо с .ics (только если включены email уведомления)
-        if (clientData.notifyEmail) {
-            const clientEmails = clientData.notificationEmails.length > 0
-                ? clientData.notificationEmails
-                : clientData.email ? [clientData.email] : [];
-            for (const email of clientEmails) {
-                recipients.push({
-                    email,
-                    name: clientData.name,
-                    role: 'client',
-                    withIcs: true,
-                });
-            }
-        }
-
-        // Мастер
-        const staffEmails = staffData.notificationEmails.length > 0
-            ? staffData.notificationEmails
-            : staffData.email ? [staffData.email] : [];
-        if (staffData.notifyEmail) {
-            for (const email of staffEmails) {
-                recipients.push({
-                    email,
-                    name: staffData.name,
-                    role: 'staff',
-                });
-            }
-        }
-
-        // Владелец
-        const ownerEmails = ownerData.notificationEmails.length > 0
-            ? ownerData.notificationEmails
-            : ownerData.email ? [ownerData.email] : [];
-        if (ownerData.notifyEmail) {
-            for (const email of ownerEmails) {
-                recipients.push({
-                    email,
-                    name: ownerData.name,
-                    role: 'owner',
-                });
-            }
-        }
-
-        // Администраторы из списка
-        const adminEmails = biz?.email_notify_to ?? [];
-        const normalizedAdminEmails = normalizeEmails(adminEmails);
-        const ownerEmailSet = new Set(ownerEmails.map((email) => email.toLowerCase().trim()));
-        
-        for (const em of normalizedAdminEmails) {
-            const emNormalized = em.toLowerCase().trim();
-            // Пропускаем email, который уже используется как ownerEmail
-            if (ownerEmailSet.has(emNormalized)) {
-                continue;
-            }
-            recipients.push({ email: em, name: null, role: 'admin' });
-        }
-
-        // Дедуп по email (оставляем первый встретившийся вариант)
-        const uniqMap = new Map<string, EmailRecipient>();
-        for (const r of recipients) {
-            if (!uniqMap.has(r.email)) {
-                uniqMap.set(r.email, r);
-            }
-        }
-
-        return Array.from(uniqMap.values());
+    private buildEmailRecipients(clientData: ParticipantData, staffData: ParticipantData, ownerData: ParticipantData, biz: { email_notify_to: string[] | null } | null): EmailRecipient[] {
+        return buildEmailRecipients(clientData, staffData, ownerData, biz);
     }
 
     /**

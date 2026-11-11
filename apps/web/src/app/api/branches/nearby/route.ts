@@ -11,5 +11,6 @@ export async function GET(req: Request) {
         RateLimitConfigs.public,
         () =>
             withErrorHandler('BranchesNearby', async () => runBranchesNearbyHttp(req)),
+        "/api/branches/nearby",
     );
 }

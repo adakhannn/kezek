@@ -1,53 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { logError } from '@/lib/log';
 import { loadWorkLocations } from '@/lib/scheduling/locationsClient';
 
-export type TemporaryTransferRow = {
-    staff_id: string;
-    branch_id: string;
-    date: string;
-};
-
+export type TemporaryTransferRow = { staff_id: string; branch_id: string; date: string };
 type StaffRow = { id: string; branch_id: string };
+const EMPTY_TRANSFERS: TemporaryTransferRow[] = [];
 
 export function useTemporaryTransfers(bizId: string, date: string, staff: StaffRow[]) {
-    const [transfers, setTransfers] = useState<TemporaryTransferRow[]>([]);
+    const staffKey = JSON.stringify(staff.map(({ id, branch_id }) => [id, branch_id]).sort(([a], [b]) => a.localeCompare(b)));
+    const requestKey = JSON.stringify([bizId, date, staffKey]);
+    const request = useMemo(() => ({ key: requestKey }), [requestKey]);
+    const enabled = Boolean(bizId && date && staff.length);
+    const [snapshot, setSnapshot] = useState<{ request: typeof request; rows: TemporaryTransferRow[] } | null>(null);
 
     useEffect(() => {
-        if (!date || !bizId || staff.length === 0) {
-            setTransfers([]);
-            return;
-        }
+        if (!enabled) return;
         let ignore = false;
-        (async () => {
-            const staffHomeBranches = new Map<string, string>();
-            for (const s of staff) {
-                staffHomeBranches.set(s.id, s.branch_id);
-            }
-            const data = await loadWorkLocations(bizId, date, date, true).catch(error => {
+        const homes = new Map<string, string>(JSON.parse(staffKey) as Array<[string, string]>);
+        void loadWorkLocations(bizId, date, date, true)
+            .then(data => {
+                if (ignore) return;
+                const rows = data.filter(rule => Boolean(homes.get(rule.staff_id)) && rule.branch_id !== homes.get(rule.staff_id))
+                    .map(rule => ({ staff_id: rule.staff_id, branch_id: rule.branch_id, date: rule.date_on }));
+                setSnapshot({ request, rows });
+            })
+            .catch(error => {
+                if (ignore) return;
                 logError('useTemporaryTransfers', 'Error loading temporary transfers', error);
-                return [];
+                setSnapshot({ request, rows: [] });
             });
-            if (ignore) return;
-            const list = (data ?? [])
-                .filter((rule: { staff_id: string; branch_id: string; date_on: string }) => {
-                    const homeBranchId = staffHomeBranches.get(rule.staff_id);
-                    return homeBranchId && rule.branch_id !== homeBranchId;
-                })
-                .map((rule: { staff_id: string; branch_id: string; date_on: string }) => ({
-                    staff_id: rule.staff_id,
-                    branch_id: rule.branch_id,
-                    date: rule.date_on,
-                }));
-            setTransfers(list);
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [date, bizId, staff]);
+        return () => { ignore = true; };
+    }, [bizId, date, staffKey, request, enabled]);
 
-    return transfers;
+    return enabled && snapshot?.request === request ? snapshot.rows : EMPTY_TRANSFERS;
 }

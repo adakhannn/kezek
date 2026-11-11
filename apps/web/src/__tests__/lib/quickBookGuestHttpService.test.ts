@@ -1,131 +1,59 @@
 import { NextResponse } from 'next/server';
-
 import { runQuickBookGuestHttp } from '@/lib/quickBookGuestHttpService';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
+import { runQuickBookGuest } from '@/lib/quickBookGuestService';
 
-jest.mock('@/lib/validation/apiValidation', () => ({
-    validateRequest: jest.fn(),
-}));
+jest.mock('@/lib/validation/apiValidation', () => ({ validateRequest: jest.fn() }));
+jest.mock('@/lib/supabaseHelpers', () => ({ createSupabaseAdminClient: jest.fn() }));
+jest.mock('@/lib/quickBookGuestService', () => ({ runQuickBookGuest: jest.fn() }));
 
-jest.mock('@/lib/supabaseHelpers', () => ({
-    createSupabaseAnonClient: jest.fn(),
-}));
+const payload = {
+    biz_id: '11111111-1111-4111-8111-111111111111', branch_id: '22222222-2222-4222-8222-222222222222',
+    service_id: '33333333-3333-4333-8333-333333333333', staff_id: '44444444-4444-4444-8444-444444444444',
+    start_at: '2035-01-01T10:00:00Z', client_name: 'Synthetic Guest', client_phone: '+996555000111',
+};
+const requestId = '55555555-5555-4555-8555-555555555555';
+const guestSecret = 'a'.repeat(64);
+const supabase = { rpc: jest.fn() };
+const request = (headers: Record<string, string> = { 'Idempotency-Key': requestId, 'X-Booking-Client-Token': guestSecret }) => new Request('http://localhost/api/quick-book-guest', { method: 'POST', headers });
 
-jest.mock('@/lib/quickBookGuestService', () => ({
-    runQuickBookGuest: jest.fn(),
-}));
-jest.mock('@/lib/guestBookingNotificationDispatch', () => ({
-    dispatchCreatedGuestBookingNotification: jest.fn().mockResolvedValue(undefined),
-}));
+beforeEach(() => {
+    jest.resetAllMocks();
+    jest.mocked(createSupabaseAdminClient).mockReturnValue(supabase as never);
+    jest.mocked(validateRequest).mockResolvedValue({ success: true, data: payload });
+    jest.mocked(runQuickBookGuest).mockResolvedValue({ bookingId: 'receipt-id', confirmed: true });
+});
 
-const { validateRequest } = require('@/lib/validation/apiValidation');
-const { createSupabaseAnonClient } = require('@/lib/supabaseHelpers');
-const { runQuickBookGuest } = require('@/lib/quickBookGuestService');
-const { dispatchCreatedGuestBookingNotification } = require('@/lib/guestBookingNotificationDispatch');
+test.each([{}, { 'Idempotency-Key': requestId }])('missing request identity/proof fails before booking work (%j)', async headers => {
+    expect((await runQuickBookGuestHttp(request(headers))).status).toBe(400);
+    expect(runQuickBookGuest).not.toHaveBeenCalled();
+    expect(createSupabaseAdminClient).not.toHaveBeenCalled();
+});
 
-describe('quickBookGuestHttpService', () => {
-    const validBody = {
-        biz_id: '11111111-1111-4111-8111-111111111111',
-        branch_id: '22222222-2222-4222-8222-222222222222',
-        service_id: '33333333-3333-4333-8333-333333333333',
-        staff_id: '44444444-4444-4444-8444-444444444444',
-        start_at: '2026-03-21T10:00:00Z',
-        client_name: 'Test User',
-        client_phone: '+996555123456',
-        client_email: 'test@example.com',
-    };
+test('preserves request validator failure', async () => {
+    const invalid = NextResponse.json({ ok: false, error: 'validation' }, { status: 400 });
+    jest.mocked(validateRequest).mockResolvedValue({ success: false, response: invalid });
+    expect(await runQuickBookGuestHttp(request())).toBe(invalid);
+    expect(runQuickBookGuest).not.toHaveBeenCalled();
+    expect(createSupabaseAdminClient).not.toHaveBeenCalled();
+});
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue({ ok: true }),
-            text: jest.fn().mockResolvedValue(''),
-        } as unknown as Response);
-    });
+test('forwards guest identity on a service-only client and wraps only the atomic receipt', async () => {
+    const response = await runQuickBookGuestHttp(request());
+    expect(runQuickBookGuest).toHaveBeenCalledWith({ admin: supabase, identity: { requestId, guestSecret } }, expect.objectContaining(payload));
+    expect(await response.json()).toEqual({ ok: true, data: { booking_id: 'receipt-id', confirmed: true } });
+});
 
-    test('returns validation response from request validator', async () => {
-        validateRequest.mockResolvedValue({
-            success: false,
-            response: NextResponse.json(
-                { ok: false, error: 'validation' },
-                { status: 400 },
-            ),
-        });
+test('normalizes complex service fallback', async () => {
+    const { service_id, ...base } = payload;
+    jest.mocked(validateRequest).mockResolvedValue({ success: true, data: { ...base, services: [{ service_id, duration_min: 30 }] } });
+    await runQuickBookGuestHttp(request());
+    expect(runQuickBookGuest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ service_id, services: [{ service_id, duration_min: 30 }] }));
+});
 
-        const res = await runQuickBookGuestHttp(
-            new Request('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-            }),
-        );
-
-        expect(res.status).toBe(400);
-    });
-
-    test('creates guest booking and returns success payload', async () => {
-        validateRequest.mockResolvedValue({
-            success: true,
-            data: validBody,
-        });
-        createSupabaseAnonClient.mockReturnValue({ mocked: true });
-        runQuickBookGuest.mockResolvedValue({
-            bookingId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-            confirmed: true,
-        });
-
-        const res = await runQuickBookGuestHttp(
-            new Request('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: JSON.stringify(validBody),
-                headers: { 'content-type': 'application/json' },
-            }),
-        );
-        const data = await res.json();
-
-        expect(res.status).toBe(200);
-        expect(data.data).toEqual({
-            booking_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-            confirmed: true,
-        });
-        expect(runQuickBookGuest).toHaveBeenCalledWith(
-            expect.objectContaining({
-                supabase: { mocked: true },
-                notifyGuestBooking: expect.any(Function),
-            }),
-            expect.objectContaining(validBody),
-        );
-    });
-
-    test('returns next response from guest booking service as-is', async () => {
-        validateRequest.mockResolvedValue({
-            success: true,
-            data: validBody,
-        });
-        createSupabaseAnonClient.mockReturnValue({ mocked: true });
-        runQuickBookGuest.mockResolvedValue(
-            NextResponse.json({ ok: false, error: 'validation' }, { status: 400 }),
-        );
-
-        const res = await runQuickBookGuestHttp(
-            new Request('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: JSON.stringify(validBody),
-                headers: { 'content-type': 'application/json' },
-            }),
-        );
-
-        expect(res.status).toBe(400);
-    });
-
-    test('dispatches only the command result directly with its validated guest scope', async () => {
-        validateRequest.mockResolvedValue({ success: true, data: validBody });
-        createSupabaseAnonClient.mockReturnValue({ mocked: true });
-        runQuickBookGuest.mockImplementation(async (deps: { notifyGuestBooking: (payload: { bookingId: string; type: string }) => Promise<void> }) => {
-            await deps.notifyGuestBooking({ bookingId: 'created-id', type: 'confirm' });
-            return { bookingId: 'created-id', confirmed: true };
-        });
-        await runQuickBookGuestHttp(new Request('http://localhost/api/quick-book-guest', { method: 'POST' }));
-        expect(dispatchCreatedGuestBookingNotification).toHaveBeenCalledWith('created-id', 'confirm', expect.objectContaining(validBody));
-        expect(global.fetch).not.toHaveBeenCalled();
-    });
+test('preserves unavailable atomic result rather than returning a partial booking id', async () => {
+    const unavailable = NextResponse.json({ ok: false, error: 'service_unavailable' }, { status: 503 });
+    jest.mocked(runQuickBookGuest).mockResolvedValue(unavailable);
+    expect(await runQuickBookGuestHttp(request())).toBe(unavailable);
 });

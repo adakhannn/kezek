@@ -10,5 +10,6 @@ export async function GET(req: Request) {
         req,
         RateLimitConfigs.normal,
         () => withErrorHandler('RatingsJobs', async () => runRatingsJobsHttp()),
+        "/api/admin/ratings/jobs",
     );
 }

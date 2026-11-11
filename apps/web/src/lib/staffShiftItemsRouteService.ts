@@ -1,5 +1,6 @@
 import { getBizContextForManagers, getStaffContextForRequest } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
+import { checkVerifiedPrincipalRateLimit, RateLimitConfigs, type RateLimitResult } from '@/lib/rateLimit';
 import type { StaffContext } from '@/lib/staffRoleSync';
 import { runSaveStaffShiftItems } from '@/lib/staffShiftItemsService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -8,6 +9,7 @@ import { saveShiftItemsSchema } from '@/lib/validation/schemas';
 
 type Success = {
     ok: true;
+    data: { shiftId: string; revision: number; items: import('@/lib/validation/types').ShiftItem[] };
     metric: {
         staffId: string;
         bizId: string;
@@ -17,9 +19,10 @@ type Success = {
 
 type Failure = {
     ok: false;
-    error: 'validation' | 'auth' | 'forbidden' | 'internal' | 'not_found';
+    error: 'validation' | 'auth' | 'forbidden' | 'internal' | 'not_found' | 'rate_limit' | 'service_unavailable';
     message: string;
     status: number;
+    rateLimit?: RateLimitResult;
     metric?: {
         staffId?: string;
         bizId?: string;
@@ -47,7 +50,7 @@ export async function runStaffShiftItemsRoute(req: Request): Promise<StaffShiftI
         };
     }
 
-    const { items, staffId: targetStaffId, shiftDate: targetShiftDate } = validationResult.data;
+    const { items, staffId: targetStaffId, shiftDate: targetShiftDate, expectedRevision, expectedShiftId } = validationResult.data;
     let supabase: StaffContext['supabase'];
     let staffId: string;
     let bizId: string;
@@ -63,9 +66,10 @@ export async function runStaffShiftItemsRoute(req: Request): Promise<StaffShiftI
 
         const {
             data: { user },
+            error: userError,
         } = await supabase.auth.getUser();
         userId = user?.id;
-        if (!user) {
+        if (userError || !user) {
             return {
                 ok: false,
                 error: 'auth',
@@ -112,14 +116,22 @@ export async function runStaffShiftItemsRoute(req: Request): Promise<StaffShiftI
         userId = context.userId;
     }
 
+    const limit = await checkVerifiedPrincipalRateLimit(req, '/api/staff/shift/items', { userId: userId ?? '', bizId }, RateLimitConfigs.normal);
+    if (!limit.success) return { ok: false, error: limit.unavailable ? 'service_unavailable' : 'rate_limit',
+        message: limit.unavailable ? 'Проверка лимитов временно недоступна' : 'Превышен лимит запросов',
+        status: limit.unavailable ? 503 : 429, rateLimit: limit, metric: { staffId, bizId, userId } };
+
     const result = await runSaveStaffShiftItems({
         supabase,
         staffId,
         bizId,
+        actorId: userId ?? '',
         items,
         targetShiftDate,
         isOwnerMode,
         useServiceClient,
+        expectedRevision,
+        expectedShiftId,
     });
 
     if (!result.ok) {
@@ -138,6 +150,7 @@ export async function runStaffShiftItemsRoute(req: Request): Promise<StaffShiftI
 
     return {
         ok: true,
+        data: result.data,
         metric: {
             staffId,
             bizId,

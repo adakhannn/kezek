@@ -13,5 +13,6 @@ import { runWhatsAppSendOtpHttp } from '@/lib/whatsAppSendOtpHttpService';
 export async function POST(req: Request) {
   return withRateLimit(req, routeRateLimit('api/whatsapp/send-otp', RateLimitConfigs.auth), async () =>
     withErrorHandler('WhatsAppSendOtp', () => runWhatsAppSendOtpHttp(req)),
+      "/api/whatsapp/send-otp",
   );
 }

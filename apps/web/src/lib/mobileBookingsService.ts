@@ -1,6 +1,8 @@
 import type { ClientBookingDetailsDto, ClientBookingListItemDto } from '@shared-client/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { bookingCancellationError } from '@/lib/bookingCancellationError';
+
 type BookingListService = {
     name_ru: string | null;
 };
@@ -63,14 +65,14 @@ type BookingDetailsRow = {
     business: BookingDetailsBusiness | BookingDetailsBusiness[] | null;
 };
 
-type MobileBookingsClientLike = Pick<SupabaseClient, 'from'>;
+type MobileBookingsClientLike = Pick<SupabaseClient, 'from' | 'rpc'>;
 
 type ServiceFailure = {
     ok: false;
-    error: 'internal' | 'not_found';
+    error: 'internal' | 'not_found' | 'forbidden' | 'financial_reversal_required' | 'not_cancellable' | 'booking_changed';
     message: string;
     details?: unknown;
-    status: 404 | 500;
+    status: 403 | 404 | 409 | 500;
 };
 
 function toSingle<T>(value: T | T[] | null): T | null {
@@ -292,13 +294,11 @@ export async function cancelMobileBooking({
         };
     }
 
-    const { error: updateError } = await client
-        .from('bookings')
-        .update({ status: 'cancelled' })
-        .eq('id', bookingId)
-        .eq('client_id', userId);
+    const { error: updateError } = await client.rpc('cancel_booking', { p_booking_id: bookingId });
 
     if (updateError) {
+        const conflict = bookingCancellationError(updateError);
+        if (conflict) return conflict;
         return {
             ok: false,
             error: 'internal',

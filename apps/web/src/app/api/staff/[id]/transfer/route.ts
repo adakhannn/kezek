@@ -11,5 +11,6 @@ export async function POST(req: Request, context: unknown) {
     req,
     RateLimitConfigs.normal,
     () => withErrorHandler('StaffTransfer', () => runStaffTransferHttp(req, context)),
+      "/api/staff/[id]/transfer",
   );
 }

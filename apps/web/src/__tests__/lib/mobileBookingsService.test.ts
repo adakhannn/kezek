@@ -111,31 +111,19 @@ describe('mobileBookingsService', () => {
         });
     });
 
-    test('cancels booking owned by mobile user', async () => {
-        const maybeSingle = jest.fn().mockResolvedValue({
-            data: { id: 'booking-1', status: 'confirmed' },
-            error: null,
-        });
-        const readEqClient = { eq: jest.fn().mockReturnValue({ maybeSingle }) };
-        const readEqBooking = jest.fn().mockReturnValue(readEqClient);
-        const select = jest.fn().mockReturnValue({ eq: readEqBooking });
-
-        const updateEqClient = jest.fn().mockResolvedValue({ error: null });
-        const updateEqBooking = jest.fn().mockReturnValue({ eq: updateEqClient });
-        const update = jest.fn().mockReturnValue({ eq: updateEqBooking });
-        const from = jest.fn().mockReturnValue({ select, update });
-
-        const result = await cancelMobileBooking({
-            client: { from } as never,
-            userId: 'user-1',
-            bookingId: 'booking-1',
-        });
-
-        expect(result).toEqual({ ok: true });
-        expect(readEqBooking).toHaveBeenCalledWith('id', 'booking-1');
-        expect(readEqClient.eq).toHaveBeenCalledWith('client_id', 'user-1');
-        expect(update).toHaveBeenCalledWith({ status: 'cancelled' });
-        expect(updateEqBooking).toHaveBeenCalledWith('id', 'booking-1');
-        expect(updateEqClient).toHaveBeenCalledWith('client_id', 'user-1');
+    test.each([
+        [null, { ok: true }],
+        [{ message: 'BOOKING_FINANCIAL_REVERSAL_REQUIRED' }, { ok: false, error: 'financial_reversal_required', status: 409 }],
+        [{ message: 'BOOKING_NOT_FOUND' }, { ok: false, error: 'not_found', status: 404 }],
+    ])('cancels only through checked RPC: %j', async (error, expected) => {
+        const query = { select: jest.fn(), eq: jest.fn(), maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'booking-1', status: 'confirmed' }, error: null }) };
+        query.select.mockReturnValue(query); query.eq.mockReturnValue(query);
+        const from = jest.fn().mockReturnValue(query);
+        const rpc = jest.fn().mockResolvedValue({ error });
+        const result = await cancelMobileBooking({ client: { from, rpc } as never, userId: 'user-1', bookingId: 'booking-1' });
+        expect(result).toMatchObject(expected);
+        expect(rpc).toHaveBeenCalledWith('cancel_booking', { p_booking_id: 'booking-1' });
+        expect(query.eq).toHaveBeenCalledWith('client_id', 'user-1');
+        expect(from).toHaveBeenCalledTimes(1);
     });
 });

@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 
 type Biz = {
     id: string;
@@ -37,18 +38,13 @@ export default async function Page() {
 
     const {
         data: { user },
+        error: authError,
     } = await supabase.auth.getUser();
-    if (!user) redirect('/auth/sign-in?redirect=/admin/businesses');
+    if (authError || !user) redirect('/auth/sign-in?redirect=/admin/businesses');
 
-    const { data: superRow, error: roleErr } = await supabase
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
+    const { isSuperAdmin, error: roleErr } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
-    if (roleErr || !superRow) {
+    if (roleErr || !isSuperAdmin) {
         return <main className="p-6">403</main>;
     }
 

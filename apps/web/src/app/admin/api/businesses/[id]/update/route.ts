@@ -6,17 +6,10 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { validatePublicContacts, type PublicContactFields } from '@/lib/businessContacts';
+import { validatePublicContactPatch } from '@/lib/businessContacts';
 import { getRouteParamRequired } from '@/lib/routeParams';
-
-type Body = PublicContactFields & {
-    name?: string;
-    slug?: string;
-    categories?: string[] | null;
-    address?: string | null;
-    phones?: string[] | null;
-    is_approved?: boolean;
-};
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { businessUpdateSchema } from '@/lib/validation/businessUpdateSchemas';
 
 function validSlug(s: string): boolean {
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s);
@@ -52,7 +45,9 @@ export async function PATCH(req: Request, context: unknown) {
             return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
         }
 
-        const body = (await req.json()) as Body;
+        const validation = await validateRequest(req, businessUpdateSchema);
+        if (!validation.success) return validation.response;
+        const body = validation.data;
         const admin = createClient(URL, SERVICE);
 
         const { data: existing, error: fetchErr } = await admin
@@ -123,7 +118,7 @@ export async function PATCH(req: Request, context: unknown) {
         const contactFieldsPresent = ['contact_phone', 'contact_whatsapp', 'contact_email', 'website_url']
             .some((field) => field in body);
         if (contactFieldsPresent) {
-            const contacts = validatePublicContacts(body);
+            const contacts = validatePublicContactPatch(body);
             if (!contacts.ok) {
                 return NextResponse.json({ ok: false, error: contacts.message }, { status: 400 });
             }

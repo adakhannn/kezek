@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { runTelegramMobileStartRoute } from '@/lib/telegramMobileStartRouteService';
 
 export async function runTelegramMobileStartHttp(
@@ -11,6 +12,7 @@ export async function runTelegramMobileStartHttp(
         device?: string;
         region?: string;
         platform?: string;
+        codeChallenge?: string;
     } = {};
 
     try {
@@ -19,12 +21,16 @@ export async function runTelegramMobileStartHttp(
         body = {};
     }
 
+    if (!body || typeof body !== 'object' || Array.isArray(body) || typeof body.codeChallenge !== 'string' || !MOBILE_CODE_CHALLENGE_RE.test(body.codeChallenge)) {
+        return createErrorResponse('validation', 'Обновите приложение и начните вход заново.', undefined, 400);
+    }
     const result = await runTelegramMobileStartRoute({
+        codeChallenge: body.codeChallenge,
         source: {
-            appName: body.appName?.trim() || 'Kezek Mobile',
-            device: body.device?.trim() || null,
-            region: body.region?.trim() || null,
-            platform: body.platform?.trim() || null,
+            appName: (typeof body.appName === 'string' ? body.appName.trim().slice(0, 120) : '') || 'Kezek Mobile',
+            device: (typeof body.device === 'string' ? body.device.trim().slice(0, 120) : '') || null,
+            region: (typeof body.region === 'string' ? body.region.trim().slice(0, 120) : '') || null,
+            platform: (typeof body.platform === 'string' ? body.platform.trim().slice(0, 120) : '') || null,
             userAgent: request.headers.get('user-agent'),
         },
     });

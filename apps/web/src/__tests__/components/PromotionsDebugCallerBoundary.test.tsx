@@ -10,33 +10,23 @@ jest.mock('@/app/admin/promotions-debug/PromotionsDebugClient', () => ({ Promoti
 
 describe('Promotions debug uses the shared current global superadmin boundary', () => {
   function setup(user: string | null, rowUser='current-user', scope: string | null=null, readError: unknown=null) {
-    const filters: Record<string, unknown> = {};
-    let selectedTable='';
-    const result = () => ({ data: selectedTable==='user_roles_with_user' && filters.user_id===rowUser && filters.role_key==='super_admin' && filters.biz_id===scope ? { role_key:'super_admin',biz_id:scope } : null,error:readError });
-    const query = {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn((key: string,value: string) => { filters[key]=value;return query; }),
-      is: jest.fn((key: string,value: null) => { filters[key]=value;return query; }),
-      limit: jest.fn().mockReturnThis(),
-      single: jest.fn(async()=>result()), maybeSingle: jest.fn(async()=>result()),
-    };
-    const client={ auth:{getUser:jest.fn(async()=>({data:{user:user?{id:user}:null}}))},from:jest.fn((table:string)=>{selectedTable=table;return query;}) };
+    const rpc=jest.fn().mockResolvedValue({data:user===rowUser&&scope===null,error:readError});
+    const client={auth:{getUser:jest.fn(async()=>({data:{user:user?{id:user}:null},error:null}))},rpc};
     (cookies as jest.Mock).mockResolvedValue({get:jest.fn()});
     (createServerClient as jest.Mock).mockReturnValue(client);
-    return {client,filters};
+    return {client};
   }
   beforeEach(()=>jest.clearAllMocks());
   test('admits the same current global role as the admin layout', async()=>{
-    const {client,filters}=setup('current-user');
+    const {client}=setup('current-user');
     expect(await PromotionsDebugPage()).toBeTruthy();
-    expect(client.from).toHaveBeenCalledWith('user_roles_with_user');
-    expect(filters).toEqual({user_id:'current-user',role_key:'super_admin',biz_id:null});
+    expect(client.rpc).toHaveBeenCalledWith('is_super_admin');
     expect(redirect).not.toHaveBeenCalled();
   });
   test('guest stops before any role query', async()=>{
     const {client}=setup(null);
     await expect(PromotionsDebugPage()).rejects.toThrow('redirect:/auth/sign-in');
-    expect(client.from).not.toHaveBeenCalled();
+    expect(client.rpc).not.toHaveBeenCalled();
   });
   test('uses only the request cookie reader and leaves cookie writes disabled', async()=>{
     setup('current-user');

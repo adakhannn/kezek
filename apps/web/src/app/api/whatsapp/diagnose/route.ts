@@ -10,5 +10,6 @@ import { runWhatsAppDiagnoseHttp } from '@/lib/whatsAppDiagnoseHttpService';
 export async function GET(req: Request) {
     return withRateLimit(req, RateLimitConfigs.normal, () =>
         withErrorHandler('WhatsAppDiagnose', async () => runWhatsAppDiagnoseHttp()),
+        "/api/whatsapp/diagnose",
     );
 }

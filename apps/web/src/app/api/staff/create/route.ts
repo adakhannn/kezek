@@ -10,5 +10,6 @@ export async function POST(req: Request) {
     req,
     RateLimitConfigs.normal,
     () => withErrorHandler('StaffCreate', () => runStaffCreateHttp(req)),
+      "/api/staff/create",
   );
 }

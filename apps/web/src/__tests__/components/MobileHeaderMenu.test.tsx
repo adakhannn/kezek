@@ -4,8 +4,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { MobileHeaderMenu } from '@/app/_components/MobileHeaderMenu';
 
+let mockPathname = '/';
+
 jest.mock('next/navigation', () => ({
-    usePathname: () => '/',
+    usePathname: () => mockPathname,
     useRouter: () => ({
         refresh: jest.fn(),
     }),
@@ -24,6 +26,24 @@ jest.mock('@/lib/supabaseClient', () => ({
 }));
 
 describe('MobileHeaderMenu', () => {
+    beforeEach(() => { mockPathname = '/'; });
+
+    test('closes on navigation and does not restore an open menu when returning', () => {
+        const { rerender } = render(<MobileHeaderMenu />);
+        fireEvent.click(screen.getByRole('button', { name: 'Меню' }));
+        expect(screen.getByRole('button', { name: 'Меню', expanded: true })).toBeTruthy();
+
+        mockPathname = '/catalog';
+        rerender(<MobileHeaderMenu />);
+        expect(screen.getByRole('button', { name: 'Меню', expanded: false })).toBeTruthy();
+        mockPathname = '/';
+        rerender(<MobileHeaderMenu />);
+        expect(screen.getByRole('button', { name: 'Меню', expanded: false })).toBeTruthy();
+        fireEvent.click(screen.getByRole('button', { name: 'Меню' }));
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(screen.getByRole('button', { name: 'Меню', expanded: false })).toBeTruthy();
+    });
+
     test('closes immediately when the sign-in link is selected', async () => {
         render(<MobileHeaderMenu />);
 

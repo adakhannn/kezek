@@ -6,11 +6,13 @@ import React from 'react';
 import { render, screen, act, fireEvent, waitFor, within } from '@testing-library/react';
 
 import { FinancePage } from '../FinancePage';
+import { FinanceWriteError } from '../../services/financeDraftSession';
 
 const DEBOUNCE_MS = 100;
 
 const mockShift = {
     id: 'shift-1',
+    ledger_revision: 7,
     shift_date: '2025-03-12',
     opened_at: '2025-03-12T09:00:00Z',
     closed_at: null,
@@ -52,6 +54,12 @@ const mockFinanceData = {
 };
 
 const mockSaveItems = jest.fn().mockResolvedValue(undefined);
+const mockTransport = {
+    save: mockSaveItems,
+    load: jest.fn(),
+    open: jest.fn(),
+    close: jest.fn(),
+};
 
 jest.mock('@/app/staff/finance/constants', () => ({
     SAVE_DEBOUNCE_MS: 100,
@@ -69,14 +77,7 @@ jest.mock('../../hooks/useFinanceData', () => ({
 }));
 
 jest.mock('../../hooks/useFinanceMutations', () => ({
-    useFinanceMutations: () => ({
-        saveItems: mockSaveItems,
-        isSaving: false,
-        isOpening: false,
-        isClosing: false,
-        openShift: jest.fn(),
-        closeShift: jest.fn(),
-    }),
+    useFinanceMutations: () => mockTransport,
 }));
 
 jest.mock('../../hooks/useServiceOptions', () => ({
@@ -170,7 +171,11 @@ function updateExpandedServiceAmount(index: number, value: string) {
 describe('FinancePage debounced save', () => {
     beforeEach(() => {
         jest.useFakeTimers();
-        mockSaveItems.mockClear();
+        mockSaveItems.mockReset().mockImplementation(async (items, version) => ({
+            shiftId: mockShift.id, revision: version.expectedRevision + 1,
+            items: items.map((item: { id?: string; clientId?: string }) => ({ ...item, id: item.id ?? item.clientId })),
+        }));
+        mockTransport.load.mockResolvedValue({ shift: mockShift, items: [] });
         mockFinanceData.items = [];
         if (typeof window !== 'undefined') {
             window.sessionStorage.clear();
@@ -202,7 +207,7 @@ describe('FinancePage debounced save', () => {
             expect.objectContaining({
                 clientName: 'Анна',
             }),
-        ]);
+        ], { expectedShiftId: mockShift.id, expectedRevision: 7, calendarDate: mockShift.shift_date });
     });
 
     test('batches two meaningful edits into one debounced save', async () => {
@@ -225,7 +230,7 @@ describe('FinancePage debounced save', () => {
             expect.arrayContaining([
                 expect.objectContaining({ clientName: 'Анна' }),
                 expect.objectContaining({ clientName: 'Бек' }),
-            ]),
+            ]), { expectedShiftId: mockShift.id, expectedRevision: 7, calendarDate: mockShift.shift_date },
         );
     });
 
@@ -249,11 +254,9 @@ describe('FinancePage debounced save', () => {
     });
 
     test('delete still saves immediately', async () => {
+        mockFinanceData.items = [makeSavedItem(1, '1')];
         renderPage();
-
-        clickAddClient();
-        const collapseButton = screen.getByTitle(/свернуть/i);
-        fireEvent.click(collapseButton);
+        await flushAsyncWork();
 
         const deleteButton = screen.getByTitle(/удалить/i);
         fireEvent.click(deleteButton);
@@ -278,6 +281,7 @@ describe('FinancePage debounced save', () => {
         await waitFor(() => {
             expect(mockSaveItems).toHaveBeenCalledWith(
                 expect.arrayContaining([expect.objectContaining({ clientName: 'Перед уходом' })]),
+                { expectedShiftId: mockShift.id, expectedRevision: 7, calendarDate: mockShift.shift_date },
             );
         });
     });
@@ -295,7 +299,29 @@ describe('FinancePage debounced save', () => {
         await waitFor(() => {
             expect(mockSaveItems).toHaveBeenCalledWith(
                 expect.arrayContaining([expect.objectContaining({ serviceAmount: 2500 })]),
+                { expectedShiftId: mockShift.id, expectedRevision: 7, calendarDate: mockShift.shift_date },
             );
         });
+    });
+
+    test('keeps a conflicted draft visible and stops autosave until explicit discard/reload', async () => {
+        mockFinanceData.items = [makeSavedItem(1, '1')];
+        mockSaveItems.mockRejectedValueOnce(new FinanceWriteError('Смена изменена в другом окне', 409));
+        mockTransport.load.mockResolvedValue({ shift: { ...mockShift, ledger_revision: 12 }, items: [makeSavedItem(2, 'Сервер')] });
+        renderPage();
+        await flushAsyncWork();
+        fireEvent.click(screen.getByTitle(/редактировать/i));
+        updateExpandedClientName(0, 'Мой несохранённый черновик');
+        await advanceDebounce();
+        expect(screen.getByRole('alert').textContent).toContain('Смена изменена');
+        expect(screen.getByDisplayValue('Мой несохранённый черновик')).toBeTruthy();
+        await advanceDebounce();
+        updateExpandedClientName(0, 'Черновик остаётся доступен');
+        await advanceDebounce();
+        expect(mockSaveItems).toHaveBeenCalledTimes(1);
+        fireEvent.click(screen.getByRole('button', { name: /отказаться от черновика и загрузить/i }));
+        await flushAsyncWork();
+        expect(screen.queryByDisplayValue('Черновик остаётся доступен')).toBeNull();
+        expect(screen.queryByRole('alert')).toBeNull();
     });
 });

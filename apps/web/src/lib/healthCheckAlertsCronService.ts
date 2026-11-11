@@ -1,3 +1,6 @@
+import type { BackgroundQueueHealth } from '@/lib/backgroundQueueHealth';
+import type { CronHealthStatus } from '@/lib/cronExecutionHealth';
+
 type Alert = {
     type: 'error' | 'warning';
     message: string;
@@ -45,6 +48,18 @@ function toIso(date: Date) {
     return date.toISOString();
 }
 
+function checkedData<T>(response: QueryResult<T>, source: string): T | null {
+    if (response.error) throw new Error(`HEALTH_SOURCE_UNAVAILABLE:${source}`);
+    return response.data;
+}
+
+function checkedCount(response: QueryResult<unknown>, source: string): number {
+    if (response.error || !Number.isSafeInteger(response.count) || response.count == null || response.count < 0) {
+        throw new Error(`HEALTH_COUNT_UNAVAILABLE:${source}`);
+    }
+    return response.count;
+}
+
 async function getAnalyticsEventCount(
     admin: AdminClientLike,
     eventType: string,
@@ -58,29 +73,30 @@ async function getAnalyticsEventCount(
         .gte('created_at', fromIso)
         .lt('created_at', toIsoValue);
 
-    if (typeof response?.count === 'number') {
-        return response.count;
-    }
-
-    if (Array.isArray(response?.data)) {
-        return response.data.length;
-    }
-
-    return 0;
+    return checkedCount(response, 'analytics_events');
 }
 
-export async function runHealthCheckAlerts({
+export async function runHealthCheckAlerts(params: Parameters<typeof collectHealthCheckAlerts>[0]): ReturnType<typeof collectHealthCheckAlerts> {
+    try { return await collectHealthCheckAlerts(params); }
+    catch { return { ok: false, error: 'internal', message: 'Health check source data is unavailable', status: 500 }; }
+}
+
+async function collectHealthCheckAlerts({
     admin,
     formatDate,
     tz,
     now,
     sendAlertEmail,
+    cronStatuses = [],
+    queueStatuses = [],
 }: {
     admin: AdminClientLike;
     formatDate: (date: Date, tz: string, format: string) => string;
     tz: string;
     now: Date;
     sendAlertEmail: EmailSenderLike;
+    cronStatuses?: CronHealthStatus[];
+    queueStatuses?: BackgroundQueueHealth[];
 }): Promise<
     | {
           ok: true;
@@ -102,17 +118,24 @@ export async function runHealthCheckAlerts({
       }
 > {
     const alerts: Alert[] = [];
+    const unhealthyQueues = queueStatuses.filter(queue => queue.status === 'failed' || queue.status === 'backlog');
+    for (const queue of unhealthyQueues) alerts.push({ type: 'error', message: `Queue ${queue.job}: ${queue.status}`, details: { ...queue } });
+    const unhealthyCron = cronStatuses.filter(job => ['failed', 'stuck', 'overdue', 'unobserved'].includes(job.status));
+    for (const job of unhealthyCron) {
+        alerts.push({ type: job.status === 'unobserved' ? 'warning' : 'error',
+            message: `Cron ${job.job}: ${job.status}`, details: { ...job } });
+    }
     const twoDaysAgo = new Date(now);
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
     const twoDaysAgoYmd = formatDate(twoDaysAgo, tz, 'yyyy-MM-dd');
 
-    const { data: openShifts } = await admin
-        .from<{ id: string; shift_date: string; staff_id: string }[]>('staff_shifts')
-        .select('id, shift_date, staff_id')
+    const openShifts = await admin
+        .from<{ id: string }[]>('staff_shifts')
+        .select('id', { count: 'exact', head: true })
         .eq('status', 'open')
         .lt('shift_date', twoDaysAgoYmd);
 
-    const openShiftsCount = openShifts?.length ?? 0;
+    const openShiftsCount = checkedCount(openShifts, 'staff_shifts');
     if (openShiftsCount > 0) {
         alerts.push({
             type: 'error',
@@ -121,7 +144,7 @@ export async function runHealthCheckAlerts({
         });
     }
 
-    const [{ data: staffMax }, { data: branchMax }, { data: bizMax }] = await Promise.all([
+    const [staffResult, branchResult, bizResult] = await Promise.all([
         admin
             .from<{ metric_date: string }>('staff_day_metrics')
             .select('metric_date')
@@ -141,11 +164,14 @@ export async function runHealthCheckAlerts({
             .limit(1)
             .maybeSingle(),
     ]);
+    const staffMax = checkedData(staffResult, 'staff_day_metrics');
+    const branchMax = checkedData(branchResult, 'branch_day_metrics');
+    const bizMax = checkedData(bizResult, 'biz_day_metrics');
 
     const lastMetricDate =
-        staffMax?.metric_date || branchMax?.metric_date || bizMax?.metric_date
+        staffMax?.metric_date && branchMax?.metric_date && bizMax?.metric_date
             ? new Date(
-                  Math.max(
+                  Math.min(
                       staffMax?.metric_date ? new Date(staffMax.metric_date).getTime() : 0,
                       branchMax?.metric_date ? new Date(branchMax.metric_date).getTime() : 0,
                       bizMax?.metric_date ? new Date(bizMax.metric_date).getTime() : 0,
@@ -170,14 +196,15 @@ export async function runHealthCheckAlerts({
         });
     }
 
-    const { data: lastPromoUsage } = await admin
+    const promoResult = await admin
         .from<{ created_at: string }>('client_promotion_usage')
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+    const lastPromoUsage = checkedData(promoResult, 'client_promotion_usage');
 
-    const { data: activePromotions } = await admin
+    const activePromotions = await admin
         .from<{ id: string }[]>('branch_promotions')
         .select('id', { count: 'exact', head: true })
         .eq('is_active', true);
@@ -185,7 +212,7 @@ export async function runHealthCheckAlerts({
     const lastPromoDate = lastPromoUsage?.created_at ? new Date(lastPromoUsage.created_at) : null;
     const daysSinceLastPromo =
         lastPromoDate == null ? null : Math.floor((now.getTime() - lastPromoDate.getTime()) / (1000 * 60 * 60 * 24));
-    const activePromotionsCount = activePromotions?.length ?? 0;
+    const activePromotionsCount = checkedCount(activePromotions, 'branch_promotions');
 
     if (activePromotionsCount > 0 && (lastPromoDate === null || (daysSinceLastPromo !== null && daysSinceLastPromo > 7))) {
         alerts.push({
@@ -412,6 +439,8 @@ export async function runHealthCheckAlerts({
         ok: alerts.length === 0,
         alerts,
         checks: {
+            cronExecutions: { ok: unhealthyCron.length === 0, jobs: cronStatuses },
+            backgroundQueues: { ok: unhealthyQueues.length === 0, queues: queueStatuses },
             shifts: {
                 ok: openShiftsCount === 0,
                 openShiftsOlderThan2Days: openShiftsCount,

@@ -1,8 +1,12 @@
+# История UI и UX задач
+
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
 ﻿# MOBILE UI/UX DEEP ANALYSIS AND FIX PLAN
 
 Last updated: 2026-05-19
 Owner: Mobile team
-Status: In progress
+Status at original snapshot: In progress
 
 ## Goal
 Stabilize and unify mobile UI/UX quality across auth, home, profile, and shared components.

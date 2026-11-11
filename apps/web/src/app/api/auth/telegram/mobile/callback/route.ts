@@ -29,5 +29,6 @@ export async function POST(request: Request) {
         withErrorHandler('TelegramMobileCallback', () =>
             runTelegramMobileCallbackHttp(request),
         ),
+        "/api/auth/telegram/mobile/callback",
     );
 }

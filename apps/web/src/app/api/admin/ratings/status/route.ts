@@ -8,5 +8,6 @@ export const runtime = 'nodejs';
 export async function GET(req: Request) {
   return withRateLimit(req, RateLimitConfigs.normal, () =>
     withErrorHandler('RatingsStatus', async () => runRatingsStatusHttp(req)),
+      "/api/admin/ratings/status",
   );
 }

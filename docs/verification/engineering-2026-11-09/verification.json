@@ -1,0 +1,136 @@
+{
+  "recordedDate": "2026-11-10",
+  "scope": "local engineering package; no deployment or old WEB campaign",
+  "head": "b424cd396cbeefbe2a4173e0aa4583661e85ba87",
+  "indexDiffSha256": "6c9d8aef67dd392a0948a5ac224d251984deb189066eac45d8a0d5c2af04705a",
+  "indexMatchesStart": true,
+  "web": {
+    "suites": 540,
+    "passedSuites": 537,
+    "failedSuites": 3,
+    "tests": 2733,
+    "passed": 2726,
+    "failed": 7,
+    "exitCode": 1,
+    "command": "pnpm -C apps/web test:coverage --maxWorkers=2 --silent --json",
+    "coverageAllowlistOnly": {
+      "statements": {
+        "covered": 596,
+        "total": 630,
+        "pct": 94.6
+      },
+      "functions": {
+        "covered": 78,
+        "total": 80,
+        "pct": 97.5
+      },
+      "branches": {
+        "covered": 276,
+        "total": 319,
+        "pct": 86.52
+      },
+      "lines": {
+        "covered": 559,
+        "total": 580,
+        "pct": 96.38
+      }
+    },
+    "failures": [
+      {
+        "file": "apps/web/src/app/staff/__tests__/StaffCabinetPages.test.tsx",
+        "test": "Staff cabinet pages basic render StaffBookingsView отображает вкладки и базовую информацию о бронированиях",
+        "alsoFailedOn20261028": true
+      },
+      {
+        "file": "apps/web/src/__tests__/components/ProfileLoadFailureBoundary.test.tsx",
+        "test": "does not advertise an editable empty identity after the profile read fails",
+        "alsoFailedOn20261028": true
+      },
+      {
+        "file": "apps/web/src/__tests__/components/ProfileLoadFailureBoundary.test.tsx",
+        "test": "does not advertise an editable empty identity after authentication rejects",
+        "alsoFailedOn20261028": true
+      },
+      {
+        "file": "apps/web/src/__tests__/components/ProfileLoadFailureBoundary.test.tsx",
+        "test": "does not advertise an editable empty identity when authentication returns no user",
+        "alsoFailedOn20261028": true
+      },
+      {
+        "file": "apps/web/src/__tests__/components/RoleApplicationsReadState.test.tsx",
+        "test": "does not advertise a confirmed empty list after a network failure",
+        "alsoFailedOn20261028": true
+      },
+      {
+        "file": "apps/web/src/__tests__/components/RoleApplicationsReadState.test.tsx",
+        "test": "does not advertise a confirmed empty list after a http failure",
+        "alsoFailedOn20261028": true
+      },
+      {
+        "file": "apps/web/src/__tests__/components/RoleApplicationsReadState.test.tsx",
+        "test": "does not advertise a confirmed empty list after a json failure",
+        "alsoFailedOn20261028": true
+      }
+    ]
+  },
+  "mobile": {
+    "suites": 43,
+    "passedSuites": 43,
+    "failedSuites": 0,
+    "tests": 227,
+    "passed": 227,
+    "failed": 0,
+    "exitCode": 0,
+    "command": "pnpm -C apps/mobile test --runInBand --silent --json"
+  },
+  "typecheck": {
+    "web": "PASS",
+    "mobile": "PASS"
+  },
+  "lint": {
+    "command": "pnpm -C apps/web lint",
+    "exitCode": 1,
+    "errors": 52,
+    "warnings": 142,
+    "changedProductionFileErrors": 0,
+    "changedProductionFileWarnings": 14
+  },
+  "notRun": [
+    "application/remote migrations",
+    "provider/device E2E",
+    "release build",
+    "load/capacity test",
+    "restore/PITR",
+    "old WEB campaign"
+  ],
+  "rawReportHashes": {
+    "web-final.json": "ade921a4144a6e68966e8334b826dc03c401c95ffc3d300eb7581a9cf1a29013",
+    "mobile-final.json": "cea7dd2be90dd6bff92e79127b3d286fa80cc538d8823ac2a268ff64868cbded",
+    "web-lint-final.log": "aa856a4422ebc62da5c68b8c167f9def9399ff72421cf75e77d3dcd2f095b41a"
+  },
+  "sql": {
+    "environment": "disposable PostgreSQL16, synthetic predecessor schema, no network/host ports/persistent host volumes; own containers removed",
+    "auth": {
+      "command": "node scripts/test-mobile-auth-grants-isolated.cjs",
+      "exitCode": 0,
+      "concurrentAttemptsPerCase": 12,
+      "singleWinner": true,
+      "expiryProofOwnerAndRoleChecks": "PASS"
+    },
+    "finance": {
+      "command": "node scripts/test-finance-transactions.mjs",
+      "exitCode": 0,
+      "provenOverlappingLockScenarios": 5,
+      "rollbackAndDmlGuards": "PASS",
+      "packagesPromotionsRetriesAndAggregates": "PASS",
+      "deployment": "NOT_RUN"
+    }
+  },
+  "documentation": {
+    "toolsTestsPassed": 17,
+    "diffCheck": "PASS",
+    "currentReferenceDocuments": 113,
+    "localLinks": 2601,
+    "generatedCatalogs": "PASS"
+  }
+}

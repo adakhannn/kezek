@@ -51,5 +51,5 @@ export async function runTelegramProfileLinkHttp(req: Request): Promise<Response
         }
         if (result.error) return createErrorResponse(result.error, profileLinkErrorMessage(result.error), undefined, result.error === 'expired' ? 410 : 409);
         return createSuccessResponse(result);
-    });
+    }, "/api/auth/telegram/profile-link");
 }

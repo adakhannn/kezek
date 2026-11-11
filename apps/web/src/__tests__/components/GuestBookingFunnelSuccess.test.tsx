@@ -40,3 +40,22 @@ it('does not report success for a locally invalid guest request', async () => {
     expect(trackFunnelEvent).not.toHaveBeenCalled();
     expect(showError).toHaveBeenCalled();
 });
+
+it('submits only once when two clicks use the same render before loading updates', async () => {
+    let finish!: (value: { bookingId: string }) => void;
+    jest.mocked(createGuestBookingRequest).mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+    const { result } = setup();
+    act(() => {
+        result.current.openModal(new Date('2035-01-01T03:00:00Z'), 'synthetic-staff');
+        result.current.setForm({ client_name: 'Synthetic Guest', client_phone: '+996555000111', client_email: '' });
+    });
+    let first!: Promise<void>;
+    act(() => {
+        first = result.current.createGuestBooking();
+        void result.current.createGuestBooking();
+    });
+    expect(createGuestBookingRequest).toHaveBeenCalledTimes(1);
+    await act(async () => { finish({ bookingId: 'one-booking' }); await first; });
+    expect(created).toHaveBeenCalledTimes(1);
+    expect(trackFunnelEvent).toHaveBeenCalledTimes(1);
+});

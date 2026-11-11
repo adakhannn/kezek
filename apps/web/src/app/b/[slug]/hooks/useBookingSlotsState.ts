@@ -1,7 +1,7 @@
 'use client';
 
 import { resolveScheduleContext } from '@core-domain/schedule';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { Service, ServiceStaffRow, Slot, Staff } from '../types';
 
@@ -17,6 +17,8 @@ type TransferRow = {
     date: string;
     staff_id: string;
 };
+
+const EMPTY_SLOTS: Slot[] = [];
 
 type UseBookingSlotsStateParams = {
     bizId: string;
@@ -48,9 +50,10 @@ export function useBookingSlotsState({
     temporaryTransfers,
 }: UseBookingSlotsStateParams) {
     const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
-    const [slots, setSlots] = useState<Slot[]>([]);
+    const [snapshot, setSnapshot] = useState<{ request: { key: string }; source: Slot[]; slots: Slot[] } | null>(null);
 
-    const { error: slotsError, loading: slotsLoading, slots: slotsFromHook } = useSlotsLoader({
+    const { error: slotsError, loading: loaderLoading, slots: slotsFromHook, requestKey,
+        hasMore, loadingMore, loadMore, moreError } = useSlotsLoader({
         branchId,
         bizId,
         dayStr,
@@ -64,25 +67,24 @@ export function useBookingSlotsState({
         temporaryTransfers,
     });
 
+    const { targetBranchId } = resolveScheduleContext({
+        dayStr, selectedBranchId: branchId, staff: staffForSchedule, staffId, temporaryTransfers,
+    });
+    const filterKey = JSON.stringify([requestKey, bizId, branchId, dayStr, staffId, targetBranchId]);
+    const filterRequest = useMemo(() => ({ key: filterKey }), [filterKey]);
+    const current = snapshot?.request === filterRequest && snapshot.source === slotsFromHook ? snapshot : null;
+    const slots = staffId === 'any' ? slotsFromHook : !loaderLoading && slotsFromHook.length ? current?.slots ?? EMPTY_SLOTS : EMPTY_SLOTS;
+    const slotsLoading = loaderLoading || (staffId !== 'any' && slotsFromHook.length > 0 && !current);
+
     useEffect(() => {
-        if (!slotsFromHook.length) {
-            setSlots([]);
-            return;
-        }
+        // Paged any-staff results are filtered by authoritative SQL; querying
+        // bookings with staff_id='any' is neither a UUID nor a valid filter.
+        if (staffId === 'any' || loaderLoading || !slotsFromHook.length) return;
 
         let ignore = false;
 
         (async () => {
             try {
-                const scheduleContext = resolveScheduleContext({
-                    dayStr,
-                    selectedBranchId: branchId,
-                    staff: staffForSchedule,
-                    staffId,
-                    temporaryTransfers,
-                });
-                const targetBranchId = scheduleContext.targetBranchId;
-
                 const dayStartUTC = new Date(`${dayStr}T00:00:00Z`);
                 const dayEndUTC = new Date(`${dayStr}T23:59:59.999Z`);
                 const searchStart = new Date(dayStartUTC.getTime() - 12 * 60 * 60 * 1000);
@@ -91,6 +93,7 @@ export function useBookingSlotsState({
                 const { data: existingBookings, error: bookingsError } = await supabase
                     .from('bookings')
                     .select('start_at, end_at, status')
+                    .eq('biz_id', bizId)
                     .eq('staff_id', staffId)
                     .eq('branch_id', targetBranchId)
                     .not('status', 'eq', 'cancelled')
@@ -101,7 +104,7 @@ export function useBookingSlotsState({
 
                 if (bookingsError) {
                     logWarn('Booking', 'Error loading bookings for filtering', bookingsError);
-                    setSlots(slotsFromHook);
+                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: slotsFromHook });
                     return;
                 }
 
@@ -130,15 +133,15 @@ export function useBookingSlotsState({
                     });
 
                     logDebug('Booking', 'Filtered slots', { filtered: filtered.length, total: slotsFromHook.length });
-                    setSlots(filtered);
+                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: filtered });
                 } else {
                     logDebug('Booking', 'No existing bookings found, showing all slots');
-                    setSlots(slotsFromHook);
+                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: slotsFromHook });
                 }
             } catch (error) {
                 if (!ignore) {
                     logWarn('Booking', 'Error filtering slots by bookings', error);
-                    setSlots(slotsFromHook);
+                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: slotsFromHook });
                 }
             }
         })();
@@ -146,7 +149,7 @@ export function useBookingSlotsState({
         return () => {
             ignore = true;
         };
-    }, [branchId, dayStr, slotsFromHook, staffForSchedule, staffId, temporaryTransfers]);
+    }, [bizId, dayStr, slotsFromHook, staffId, targetBranchId, filterRequest, loaderLoading]);
 
     useEffect(() => {
         let lastUpdate = 0;
@@ -172,5 +175,6 @@ export function useBookingSlotsState({
         slots,
         slotsError,
         slotsLoading,
+        hasMore, loadingMore, loadMore, moreError,
     };
 }

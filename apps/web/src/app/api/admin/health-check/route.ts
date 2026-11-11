@@ -1,5 +1,5 @@
-import { withErrorHandler } from '@/lib/apiErrorHandler';
 import { runAdminHealthCheckHttp } from '@/lib/adminHealthCheckHttpService';
+import { withErrorHandler } from '@/lib/apiErrorHandler';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -10,5 +10,6 @@ export async function GET(req: Request) {
     req,
     RateLimitConfigs.normal,
     () => withErrorHandler('HealthCheck', () => runAdminHealthCheckHttp()),
+      "/api/admin/health-check",
   );
 }

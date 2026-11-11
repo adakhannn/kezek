@@ -1,62 +1,36 @@
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { createClient } from '@supabase/supabase-js';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 
-function createRoleClient(result: { data: unknown; error: unknown }) {
-    const calls: Array<[string, unknown]> = [];
-    const query = {
-        select: jest.fn((columns: string) => {
-            calls.push(['select', columns]);
-            return query;
-        }),
-        eq: jest.fn((column: string, value: string) => {
-            calls.push([`eq:${column}`, value]);
-            return query;
-        }),
-        is: jest.fn((column: string, value: null) => {
-            calls.push([`is:${column}`, value]);
-            return query;
-        }),
-        limit: jest.fn((count: number) => {
-            calls.push(['limit', count]);
-            return query;
-        }),
-        maybeSingle: jest.fn().mockResolvedValue(result),
-    };
-
-    const client = {
-        from: jest.fn((table: 'user_roles_with_user') => {
-            calls.push(['from', table]);
-            return query;
-        }),
-    } as SuperAdminRoleClient;
-
-    return { client, calls };
-}
-
-describe('checkCurrentUserIsSuperAdmin', () => {
-    test('scopes the super-admin lookup to the current user id', async () => {
-        const { client, calls } = createRoleClient({
-            data: { role_key: 'super_admin', biz_id: null },
-            error: null,
+describe('canonical caller-bound super-admin RPC', () => {
+    test('uses the supplied session token, no actor parameter or role-table inference', async () => {
+        const requests: Array<{ url: string; authorization: string | null; body: unknown }> = [];
+        const fakeFetch: typeof fetch = async (input, init) => {
+            const request = new Request(input, init);
+            requests.push({ url: request.url, authorization: request.headers.get('authorization'), body: JSON.parse(await request.text()) });
+            return Response.json(request.headers.get('authorization') === 'Bearer global-admin-session');
+        };
+        const client = (token: string) => createClient('https://synthetic.invalid', 'synthetic-anon-key', {
+            auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: 'Bearer ' + token }, fetch: fakeFetch },
         });
-
-        const result = await checkCurrentUserIsSuperAdmin(client, 'current-user-id');
-
-        expect(result.isSuperAdmin).toBe(true);
-        expect(calls).toEqual([
-            ['from', 'user_roles_with_user'],
-            ['select', 'role_key,biz_id'],
-            ['eq:user_id', 'current-user-id'],
-            ['eq:role_key', 'super_admin'],
-            ['is:biz_id', null],
-            ['limit', 1],
+        expect(await checkCurrentUserIsSuperAdmin(client('global-admin-session'), 'verified-global-admin')).toEqual({ isSuperAdmin: true, error: null });
+        expect(await checkCurrentUserIsSuperAdmin(client('ordinary-session'), 'another-user-id')).toEqual({ isSuperAdmin: false, error: null });
+        expect(requests).toEqual([
+            { url: 'https://synthetic.invalid/rest/v1/rpc/is_super_admin', authorization: 'Bearer global-admin-session', body: {} },
+            { url: 'https://synthetic.invalid/rest/v1/rpc/is_super_admin', authorization: 'Bearer ordinary-session', body: {} },
         ]);
     });
-
-    test('denies access when no role row exists for the current user', async () => {
-        const { client } = createRoleClient({ data: null, error: null });
-
-        const result = await checkCurrentUserIsSuperAdmin(client, 'current-user-id');
-
-        expect(result.isSuperAdmin).toBe(false);
+    test.each([null, undefined, 'true', 1, {}, [{ is_super_admin: true }]])('denies malformed non-boolean RPC result %p as dependency error', async data => {
+        const rpc = jest.fn().mockResolvedValue({ data, error: null });
+        expect(await checkCurrentUserIsSuperAdmin({ rpc }, 'verified-user')).toEqual({ isSuperAdmin: false, error: { message: 'Не удалось проверить права доступа' } });
+    });
+    test('even true plus error is denied; thrown lookup failure is closed', async () => {
+        const rpc = jest.fn().mockResolvedValueOnce({ data: true, error: new Error('DB failure') }).mockRejectedValueOnce(new Error('transport'));
+        expect((await checkCurrentUserIsSuperAdmin({ rpc }, 'verified')).isSuperAdmin).toBe(false);
+        expect((await checkCurrentUserIsSuperAdmin({ rpc }, 'verified')).error).toBeTruthy();
+    });
+    test('missing verified user ID never queries roles', async () => {
+        const rpc = jest.fn();
+        expect(await checkCurrentUserIsSuperAdmin({ rpc }, '')).toEqual({ isSuperAdmin: false, error: null });
+        expect(rpc).not.toHaveBeenCalled();
     });
 });

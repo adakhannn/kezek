@@ -5,18 +5,9 @@ import {
 
 describe('ratingsDebugEntitiesService', () => {
     test('returns forbidden when super admin row is missing', async () => {
-        const maybeSingle = jest.fn().mockResolvedValue({
-            data: null,
-            error: null,
-        });
-        const limit = jest.fn().mockReturnValue({ maybeSingle });
-        const is = jest.fn().mockReturnValue({ limit });
-        const eq = jest.fn().mockReturnValue({ is });
-        const select = jest.fn().mockReturnValue({ eq });
-
-        const result = await ensureSuperAdminAccess({
-            supabase: { from: jest.fn().mockReturnValue({ select }) } as never,
-        });
+        const rpc=jest.fn().mockResolvedValue({data:false,error:null});
+        const result=await ensureSuperAdminAccess({supabase:{rpc},userId:'caller'});
+        expect(rpc).toHaveBeenCalledWith('is_super_admin');
 
         expect(result).toEqual({
             ok: false,
@@ -27,23 +18,14 @@ describe('ratingsDebugEntitiesService', () => {
     });
 
     test('returns internal error when super admin lookup fails', async () => {
-        const maybeSingle = jest.fn().mockResolvedValue({
-            data: null,
-            error: { message: 'db failed' },
-        });
-        const limit = jest.fn().mockReturnValue({ maybeSingle });
-        const is = jest.fn().mockReturnValue({ limit });
-        const eq = jest.fn().mockReturnValue({ is });
-        const select = jest.fn().mockReturnValue({ eq });
-
-        const result = await ensureSuperAdminAccess({
-            supabase: { from: jest.fn().mockReturnValue({ select }) } as never,
-        });
+        const rpc=jest.fn().mockResolvedValue({data:false,error:{message:'db failed'}});
+        const result=await ensureSuperAdminAccess({supabase:{rpc},userId:'caller'});
+        expect(rpc).toHaveBeenCalledWith('is_super_admin');
 
         expect(result).toEqual({
             ok: false,
             error: 'internal',
-            message: 'db failed',
+            message: 'Не удалось проверить права доступа',
             status: 400,
         });
     });

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { PromotionsDebugClient } from './PromotionsDebugClient';
 
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 
 export default async function PromotionsDebugPage() {
     const cookieStore = await cookies();
@@ -19,16 +19,16 @@ export default async function PromotionsDebugPage() {
     });
 
     const {
-        data: { user },
+        data: { user }, error: authError,
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (authError || !user) {
         redirect('/auth/sign-in');
     }
 
     // Проверяем, что пользователь - суперадмин
     const { isSuperAdmin } = await checkCurrentUserIsSuperAdmin(
-        supabase as unknown as SuperAdminRoleClient,
+        supabase,
         user.id,
     );
 

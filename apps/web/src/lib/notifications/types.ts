@@ -25,6 +25,7 @@ export interface StaffRow {
 
 export interface BizRow {
     name: string;
+    tz?: string | null;
     email_notify_to: string[] | null;
     slug: string;
     address: string | null;
@@ -39,6 +40,7 @@ export interface BranchRow {
 
 export interface BookingRow {
     id: string;
+    notification_revision?: number;
     status: string;
     start_at: string; // ISO
     end_at: string;   // ISO

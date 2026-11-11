@@ -1,7 +1,9 @@
 # Cleanup And Next Phase Plan
 
-**Status:** historical architecture cleanup wave
-**Created:** 2026-03-30  
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
+**Status at original snapshot:** historical architecture cleanup wave
+**Created:** 2026-03-30
 **Purpose:** normalize docs/roadmap state after the large `Phase 6.1` completion and define the next architecture package of work.
 
 As of2026-10-14, current WEB work is ordered by [WEB_GLOBAL_READINESS_PLAN.md](./WEB_GLOBAL_READINESS_PLAN.md), not by the broad refactor candidates below. Preserve this completed-wave history; refactor only where needed for a confirmed defect or safe verification during stabilization.
@@ -31,8 +33,8 @@ Rules:
 
 Tasks:
 
-- Clean up [C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md) so statuses and “next step” sections match the current repo state.
-- Consolidate duplicated progress notes between the roadmap and [C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md).
+- Clean up [C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md](PROJECT_IMPROVEMENT_PLAN.md) so statuses and “next step” sections match the current repo state.
+- Consolidate duplicated progress notes between the roadmap and [C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md).
 - Leave one clear source for long-term roadmap and one clear source for latest progress.
 
 Done when:
@@ -43,9 +45,9 @@ Done when:
 
 Result on 2026-03-30:
 
-- [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md) was rewritten into a short normalized master roadmap.
-- The roadmap now marks Phases 1 through 6 as complete and points operational work to [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md).
-- The roadmap and [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md) now agree that `Phase 6.1` is complete.
+- [PROJECT_IMPROVEMENT_PLAN.md](PROJECT_IMPROVEMENT_PLAN.md) was rewritten into a short normalized master roadmap.
+- The roadmap now marks Phases 1 through 6 as complete and points operational work to [CLEANUP_AND_NEXT_PHASE_PLAN.md](CLEANUP_AND_NEXT_PHASE_PLAN.md).
+- The roadmap and [PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md) now agree that `Phase 6.1` is complete.
 
 ### A.2 Fix documentation index consistency
 
@@ -54,7 +56,7 @@ Result on 2026-03-30:
 
 Tasks:
 
-- Align [C:/projects/kezek/docs/README.md](/C:/projects/kezek/docs/README.md), [C:/projects/kezek/DOCUMENTS_OVERVIEW.md](/C:/projects/kezek/DOCUMENTS_OVERVIEW.md), and [C:/projects/kezek/README.md](/C:/projects/kezek/README.md) around the same set of “sources of truth”.
+- Align [C:/projects/kezek/docs/README.md](README.md), [C:/projects/kezek/DOCUMENTS_OVERVIEW.md](../DOCUMENTS_OVERVIEW.md), and [C:/projects/kezek/README.md](../README.md) around the same set of “sources of truth”.
 - Remove stale references to documents that are now historical-only.
 - Make the cleanup/next-phase document discoverable from the main docs index.
 
@@ -65,7 +67,7 @@ Done when:
 
 Result on 2026-03-30:
 
-- [docs/README.md](/C:/projects/kezek/docs/README.md), [DOCUMENTS_OVERVIEW.md](/C:/projects/kezek/DOCUMENTS_OVERVIEW.md), and [README.md](/C:/projects/kezek/README.md) now point to the same planning and documentation sources of truth.
+- [docs/README.md](README.md), [DOCUMENTS_OVERVIEW.md](../DOCUMENTS_OVERVIEW.md), and [README.md](../README.md) now point to the same planning and documentation sources of truth.
 - Archive and historical files are now described as context, not operational guidance.
 - The cleanup plan is visible from both the root README and the docs index.
 
@@ -88,10 +90,10 @@ Done when:
 Result on 2026-03-30:
 
 - The highest-value index and planning docs were rewritten into clean readable UTF-8 text:
-  - [README.md](/C:/projects/kezek/README.md)
-  - [docs/README.md](/C:/projects/kezek/docs/README.md)
-  - [DOCUMENTS_OVERVIEW.md](/C:/projects/kezek/DOCUMENTS_OVERVIEW.md)
-  - [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md)
+  - [README.md](../README.md)
+  - [docs/README.md](README.md)
+  - [DOCUMENTS_OVERVIEW.md](../DOCUMENTS_OVERVIEW.md)
+  - [PROJECT_IMPROVEMENT_PLAN.md](PROJECT_IMPROVEMENT_PLAN.md)
 
 ## Phase B. Choose The Next Architecture Package
 
@@ -126,7 +128,7 @@ Result on 2026-03-30:
   1. mobile architecture hardening after the earlier stabilization wave
   2. web presentation and finance/dashboard decomposition follow-up
   3. service typing and lint hardening in `apps/web/src/lib`
-- The chosen first package is mobile hardening because the largest remaining live complexity is concentrated in mobile screens such as [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx) and [ShiftsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftsScreen.tsx).
+- The chosen first package is mobile hardening because the largest remaining live complexity is concentrated in mobile screens such as [ShiftQuickScreen.tsx](../apps/mobile/src/screens/ShiftQuickScreen.tsx) and [ShiftsScreen.tsx](../apps/mobile/src/screens/ShiftsScreen.tsx).
 
 ### B.2 Create the next implementation roadmap
 
@@ -147,7 +149,7 @@ Done when:
 Result on 2026-03-30:
 
 - The next package now has a dedicated focused roadmap:
-  [MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
+  [MOBILE_ARCHITECTURE_HARDENING_PLAN.md](MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
 - The first execution task is `M.1 Decompose ShiftQuickScreen`.
 
 ## Next Task Recorded For The Architecture Wave

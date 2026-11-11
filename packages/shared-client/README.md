@@ -1,178 +1,68 @@
 # Shared Client Package
 
-Общий пакет для web и mobile приложений, содержащий:
+Статус: справочник исходников, сверка 2026-11-10. Аудитория: разработчики web/mobile. Пакет содержит клиентские утилиты и DTO; server credentials и привилегированные запросы в него не входят.
 
-- **Безопасное логирование** — автоматическое маскирование чувствительных данных
-- **Валидация данных** — общие валидаторы (телефон, email, UUID, цены, проценты)
-- **Базовые типы DTO** — типы для бронирований, смен, промо, рейтингов
+## Публичные входы
 
-## Установка
+Exports определяет [package.json](package.json), состав корневого экспорта — [src/index.ts](src/index.ts).
 
-Пакет уже включён в монорепозиторий через `pnpm-workspace.yaml`.
+| Импорт | Назначение и источник |
+| --- | --- |
+| @shared-client | Общий экспорт, включая createApiClient/ApiError, rating и остальные helpers |
+| @shared-client/log | [Logger](src/log.ts) и [маскирование](src/logSafe.ts) |
+| @shared-client/validation | [Валидаторы](src/validation.ts) формата и диапазонов |
+| @shared-client/types | [DTO](src/types.ts), включая BookingDto, Slot, StaffInfo |
+| @shared-client/i18n | [Имена услуг/мастеров и статусы](src/i18n.ts) |
+| @shared-client/formatters | [Форматирование](src/formatters.ts) |
+| @shared-client/generated-sdk | [Проверенный booking/shift subset](src/generated-sdk/README.md); собственный fetch transport и ApiError |
 
-## Использование
+Отдельного package export @shared-client/api нет; API client импортируется из корня пакета. Вспомогательные исходники не становятся публичными subpath автоматически.
 
-### Логирование
-
-#### Web приложение
-
-```typescript
-import { createLogger } from '@shared-client/log';
-
-const { logDebug, logWarn, logError } = createLogger(() => process.env.NODE_ENV !== 'production');
-
-logDebug('MyComponent', 'User action', { userId: '123' });
-logWarn('MyComponent', 'Warning message', { data: '...' });
-logError('MyComponent', 'Error occurred', { error: '...' });
-```
-
-#### Mobile приложение
+## Логирование
 
 ```typescript
 import { createLogger } from '@shared-client/log';
 
-const { logDebug, logWarn, logError } = createLogger(() => __DEV__);
+const { logDebug, logWarn, logError } =
+    createLogger(() => process.env.NODE_ENV !== 'production');
 
-logDebug('MyScreen', 'User action', { userId: '123' });
-logWarn('MyScreen', 'Warning message', { data: '...' });
-logError('MyScreen', 'Error occurred', { error: '...' });
+logError('Booking', 'Request failed', { outcome: 'dependency_error' });
 ```
 
-### Валидация
+Mobile передаёт () => __DEV__. При false debug/warn не выводятся, error содержит только scope/message. При true extra проходит sanitizeObject; scope/message не очищаются. Маскирование частично и зависит от имён ключей/шаблонов строк — [точные ограничения](../../apps/web/src/lib/LOGGING_SECURITY.md). Logger пишет в console, поэтому пакет целиком нельзя называть чистым и без побочных эффектов.
+
+## Валидация и типы
 
 ```typescript
-import { validateEmail, validatePhone, isUuid, validatePercent } from '@shared-client/validation';
+import { validateEmail, validatePhone, isUuid } from '@shared-client/validation';
 
-// Email
-const emailResult = validateEmail('user@example.com');
-if (!emailResult.valid) {
-    console.error(emailResult.error);
-}
-
-// Телефон
-const phoneResult = validatePhone('+996555123456', true);
-if (!phoneResult.valid) {
-    console.error(phoneResult.error);
-}
-
-// UUID
-if (isUuid(someId)) {
-    // валидный UUID
-}
-
-// Процент
-const percentResult = validatePercent(50);
-if (!percentResult.valid) {
-    console.error(percentResult.error);
-}
+const emailResult = validateEmail('user@example.invalid');
+const phoneResult = validatePhone('+996555000000', true);
+const uuidValid = isUuid('11111111-1111-4111-8111-111111111111');
 ```
 
-### Типы
+validateEmail принимает пустой email как optional. validatePhone имеет отдельный required flag; isUuid проверяет форму UUID v1–v5. Успешная проверка формата не доказывает владение контактом, существование записи или право её менять.
 
-```typescript
-import type { BookingDto, Slot, StaffInfo, BranchInfo } from '@shared-client/types';
+DTO и generic TypeScript не валидируют ответ сервера runtime. Контракт конкретной операции определяет [API guide](../../API_DOCUMENTATION.md); клиентские типы могут быть уже фактической формы API.
 
-function processBooking(booking: BookingDto) {
-    // ...
-}
+## HTTP client
 
-function filterSlots(slots: Slot[], staffId: string) {
-    return slots.filter(s => s.staff_id === staffId);
-}
-```
+[createApiClient](src/api.ts) принимает явно выбранный baseUrl, необязательные getAuthToken и onError. Для подключения импортировать createApiClient из @shared-client и передать адрес разрешённого стенда, без fallback на production.
 
-### API клиент
+Текущие ограничения:
 
-#### Web приложение
+- URL составляется конкатенацией baseUrl + endpoint; согласуйте разделяющий slash.
+- Bearer добавляется при наличии токена, если skipAuth не задан. Ошибка получения токена подавляется: запрос может уйти без него. Bearer не заменяет cookies для cookie-only handler.
+- JSON тела надо сериализовать вызывающему коду; request options передаются в fetch. Собственных retry, deadline и idempotency нет.
+- При успешном HTTP возвращается весь JSON, без unwrap data и без проверки ok. Не-JSON успешный ответ превращается в пустой объект, приведённый к T.
+- При HTTP-ошибке создаётся ApiError со status/details/response. Корневые message/error-string распознаются, вложенный error.message текущим parser не извлекается.
 
-```typescript
-import { createApiClient } from '@shared-client/api';
-import { supabase } from '@/lib/supabaseClient';
+Не используйте старый пример GET /api/bookings как существующий endpoint: нужный метод и путь выбираются по [каталогу](../../docs/api/ROUTE_CATALOG.md). API client выполняет сеть, а типизация не гарантирует контракт или безопасность повтора.
 
-const { apiRequest } = createApiClient({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://kezek.kg',
-    getAuthToken: async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        return session?.access_token || null;
-    },
-});
+## Сопровождение
 
-// Использование
-const data = await apiRequest<{ bookings: BookingDto[] }>('/api/bookings');
-```
+Пакет включён через workspace; отдельная переустановка/публикация для локального использования не требуется. Проверки изменений shared и потребителей указаны в [CONTRIBUTING](../../CONTRIBUTING.md). Для новых exports обновляйте package manifest, index и этот справочник. Каталог generated SDK имеет [отдельные ограничения](src/generated-sdk/README.md).
 
-#### Mobile приложение
+BookingStatus определяется единожды в types.ts; корневой export и прежний i18n subpath ссылаются на тот же union.
 
-```typescript
-import { createApiClient } from '@shared-client/api';
-import { supabase } from './supabase';
-
-const { apiRequest } = createApiClient({
-    baseUrl: process.env.EXPO_PUBLIC_API_URL || 'https://kezek.kg',
-    getAuthToken: async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        return session?.access_token || null;
-    },
-});
-
-// Использование
-const data = await apiRequest<{ bookings: BookingDto[] }>('/api/bookings');
-```
-
-### i18n хэлперы
-
-#### Web приложение
-
-```typescript
-import { getServiceName, formatStaffName, getStatusColorWeb, getStatusText } from '@shared-client/i18n';
-import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-
-function MyComponent() {
-    const { locale } = useLanguage();
-    
-    const serviceName = getServiceName(service, locale);
-    const staffName = formatStaffName(staff.full_name, locale);
-    const statusColor = getStatusColorWeb('confirmed');
-    const statusText = getStatusText('confirmed', locale);
-    
-    return (
-        <div className={statusColor.className}>
-            {statusText}
-        </div>
-    );
-}
-```
-
-#### Mobile приложение
-
-```typescript
-import { getServiceName, formatStaffName, getStatusColorMobile, getStatusText } from '@shared-client/i18n';
-
-const serviceName = getServiceName(service, 'ru');
-const staffName = formatStaffName(staff.full_name, 'ru');
-const statusColor = getStatusColorMobile('confirmed'); // '#3b82f6'
-const statusText = getStatusText('confirmed', 'ru'); // 'Подтверждено'
-
-<View style={{ backgroundColor: statusColor }}>
-    <Text>{statusText}</Text>
-</View>
-```
-
-## Структура
-
-- `log.ts` — фабрика функций логирования
-- `logSafe.ts` — утилиты для маскирования чувствительных данных
-- `validation.ts` — функции валидации
-- `types.ts` — базовые типы DTO
-- `api.ts` — базовый HTTP клиент для API запросов
-- `i18n.ts` — хэлперы для локализации (названия услуг, имена сотрудников, статусы)
-- `transliterate.ts` — транслитерация кириллицы в латиницу
-- `index.ts` — публичный API пакета
-
-## Принципы
-
-1. **Безопасность** — автоматическое маскирование токенов, паролей, ключей
-2. **Единообразие** — одинаковые валидаторы и типы для web и mobile
-3. **Типобезопасность** — все функции типизированы
-4. **Чистые функции** — без side effects, без зависимостей от внешних сервисов
-
+Проверки из корня: `pnpm -C packages/shared-client typecheck` выполняет отдельно build и test TypeScript config; `pnpm -C packages/shared-client test --runInBand --watchAll=false` исполняет все src/**/*.test.ts. Пакет переиспользует установленный Jest/Next SWC и @types/jest из apps/web, не загружая Next config/.env. Обе проверки обязательны в CI; исключение тестов из build config не исключает их из test gate.

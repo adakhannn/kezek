@@ -49,7 +49,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
         <div className="space-y-4">
             <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3">
                 <p className="type-caption text-[var(--text-secondary)]">
-                    {t('booking.step3.description', 'Сначала можно выбрать конкретного специалиста или доверить системе ближайший свободный слот у любого мастера.')}
+                    {t('booking.step3.description', 'Выберите конкретного специалиста или посмотрите свободное время у разных мастеров.')}
                 </p>
             </div>
 
@@ -77,7 +77,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
                             {t('booking.step3.anyMaster', 'Любой мастер')}
                         </span>
                         <div className="type-caption mt-1 text-[var(--text-secondary)]">
-                            {t('booking.step3.anyMasterHint', 'Покажем ближайший доступный слот без лишнего ручного выбора')}
+                            {t('booking.step3.anyMasterHint', 'Время у разных мастеров')}
                         </div>
                     </div>
                 </button>

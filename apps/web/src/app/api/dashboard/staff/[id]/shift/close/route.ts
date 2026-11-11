@@ -11,7 +11,8 @@ import { runDashboardStaffShiftCloseHttp } from '@/lib/dashboardStaffShiftCloseH
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: Request, context: unknown) {
-  return withRateLimit(req, RateLimitConfigs.critical, async () =>
+  return withRateLimit(req, RateLimitConfigs.authenticatedIngress, async () =>
     withErrorHandler('DashboardStaffShiftClose', () => runDashboardStaffShiftCloseHttp(req, context)),
+      "/api/dashboard/staff/[id]/shift/close",
   );
 }

@@ -71,6 +71,7 @@ export default function Client({
                 const raw = await getFreeSlotsForServiceDay({
                     bizId,
                     serviceId,
+                    staffId,
                     day: date,
                     perStaff: 400,
                     stepMinutes: 15,

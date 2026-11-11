@@ -1,4 +1,6 @@
 import { runYandexAuthCallbackRoute } from '@/lib/yandexAuthCallbackRouteService';
+// Exercise env injection without reading developer credentials via the dev fallback.
+jest.mock('node:fs', () => ({ existsSync: () => false, readFileSync: () => { throw new Error('No credential files in unit tests'); } }));
 
 jest.mock('@supabase/supabase-js', () => ({
     createClient: jest.fn(),

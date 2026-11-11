@@ -1,90 +1,41 @@
-# STAGING_ENVIRONMENT.md — staging-окружение Kezek
+# Staging-окружение
 
-Этот документ описывает, как организовать отдельное **staging‑окружение** для тестирования перед выкатыванием в прод:
+Актуализировано: 2026-10-30. Владелец: эксплуатация. Статус: требования к изоляции; существование и параметры реального staging не подтверждены.
 
-- отдельный проект Supabase (отдельная БД),
-- отдельные env‑переменные и URL,
-- деплой по отдельной ветке или тегам.
+Связанные документы: [OPERATIONS](docs/OPERATIONS.md), [ENV_GUIDE](ENV_GUIDE.md), [миграции](supabase/APPLY_MIGRATIONS.md), [тестирование](TESTING_GUIDE.md).
 
-## 1. Цели staging
+## Граница окружения
 
-- Проверять миграции БД и новые фичи на окружении, максимально похожем на прод.
-- Гонять E2E‑тесты и ручной регрессионный тест перед релизом.
-- Избежать влияния тестовых данных и экспериментов на боевых пользователей.
+Staging должен иметь собственные Supabase project reference, БД, Auth, Storage, ключи, API origin и настройки внешних провайдеров. Preview deployment, подключённый к production Supabase, не является изолированным staging. Использование копии production-данных требует отдельного решения о минимизации персональных данных.
 
----
+Тестовые аккаунты, роли, бизнесы, cron и исходящие email/Telegram/WhatsApp должны иметь явно определённые владельцем границы. Наличие seed-файла не разрешает его запуск и не доказывает наличие нужных fixtures.
 
-## 2. Staging‑БД (Supabase)
+## Что необходимо зафиксировать
 
-1. **Создайте отдельный проект Supabase** для staging (отдельный project ref и URL).
-2. **Примените те же миграции**, что и для prod:
-   - следуйте `supabase/APPLY_MIGRATIONS.md` (через SQL Editor или `supabase db push`);
-   - придерживайтесь того же порядка миграций, что и для боевой БД.
-3. **Инициализируйте тестовые данные**:
-   - используйте `supabase/seed.sql` или отдельные SQL‑скрипты;
-   - убедитесь, что есть хотя бы один тестовый бизнес, филиал, сотрудник и набор услуг для прогонов E2E.
+| Параметр | Подтверждённое состояние на дату документа |
+| --- | --- |
+| Staging URL и hosting project ID | `UNKNOWN` |
+| Supabase project reference и applied migration revision | `UNKNOWN` |
+| Регион приложения/БД, ресурсы и connection limits | `UNKNOWN` |
+| Способ выбора web deployment root и cron manifest | `UNKNOWN`; в репозитории два разных manifest |
+| Изолированные auth redirect URLs и callback origins | `UNKNOWN` |
+| Тестовые получатели уведомлений и режимы провайдеров | `UNKNOWN` |
+| Владелец fixtures, разрешённые тесты и cleanup | `UNKNOWN` |
+| Замеренная ёмкость и результат восстановления backup | `NOT_MEASURED` / `NOT_VERIFIED` |
 
-Важно: staging‑проект Supabase должен жить **совершенно отдельно** от prod (другой project ref, другой набор ключей и URL).
+Владелец эксплуатации заменяет неизвестное фактом только со ссылкой на запись конфигурации или результат проверки с датой. Не сохранять секреты, session tokens и персональные данные в этой таблице.
 
----
+## Переменные и запуск
 
-## 3. Env‑переменные для staging
+Web использует настройки Supabase, origin и провайдеров из [ENV_GUIDE](ENV_GUIDE.md). Mobile требует собственные `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` и `EXPO_PUBLIC_API_URL`, соответствующие тому же staging.
 
-Базовый справочник по env: `ENV_GUIDE.md`. Для staging используйте отдельные файлы/env‑наборы:
+Произвольный файл `apps/web/.env.staging.local` сам по себе не подключает окружение: в [web scripts](apps/web/package.json) нет команды, загружающей его. Способ передачи staging env должен быть указан в deployment/launch configuration. Не менять `NODE_ENV` на нестандартное значение ради выбора среды.
 
-- **Web (`apps/web`)**:
-  - локально можно завести `apps/web/.env.staging.local` (по аналогии с `.env.local`);
-  - на хостинге (например, Vercel/Render/другой провайдер) заведите отдельный проект/окружение `staging` и заполните env так же, как для prod, но:
-    - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — от staging‑проекта Supabase;
-    - `SUPABASE_SERVICE_ROLE_KEY` — отдельный ключ от staging‑проекта;
-    - `NEXT_PUBLIC_SITE_ORIGIN` — URL staging‑сайта (например, `https://staging.kezek.kg`).
+В [.github/workflows/ci.yml](.github/workflows/ci.yml) E2E base URL берётся из `E2E_TEST_BASE_URL` с fallback на localhost. Его наличие не доказывает, что CI подключён к staging. В workflow нет отдельного web deployment job, подтверждающего схему `main → production` или `staging → staging`; такие правила хостинга остаются внешней конфигурацией. Условие mobile job по тегу также не доказывает запуск по тегам: проверять нужно и верхнеуровневые triggers.
 
-- **Mobile (`apps/mobile`)**:
-  - используйте отдельный `.env.local` для подключения к staging‑API и staging‑Supabase:
-    - `EXPO_PUBLIC_SUPABASE_URL` — URL staging‑проекта Supabase;
-    - `EXPO_PUBLIC_SUPABASE_ANON_KEY` — anon‑ключ staging;
-    - `EXPO_PUBLIC_API_URL` — URL staging‑сайта.
+## Приёмка окружения
 
-### E2E‑тесты против staging
+Для отдельной разрешённой проверки сохраняют source/deployment revision, applied migrations, настройки ресурсов без секретов, разрешённые fixtures и результаты критичных сценариев. Нагрузочный отчёт дополнительно содержит объём данных, mix запросов, concurrency/RPS, p95/p99, ошибки, DB/CPU/память и внешние квоты. Успешная сборка не заменяет эти результаты.
 
-В `ci.yml` E2E‑тесты читают базовый URL из:
-
-- `PLAYWRIGHT_TEST_BASE_URL` (`secrets.E2E_TEST_BASE_URL`).
-
-Для прогонов по staging:
-
-- установите `E2E_TEST_BASE_URL` в GitHub Secrets равным URL staging‑сайта;
-- задайте тестовые логин/пароль/slug для staging‑данных (`E2E_TEST_*` secrets).
-
----
-
-## 4. Стратегия деплоя по ветке/тегам
-
-Рекомендуемая схема:
-
-- **ветка `main`** → деплой на **prod**;
-- **ветка `staging`** → деплой на **staging**.
-
-Альтернатива — использовать **теги**:
-
-- теги вида `staging-*` запускают деплой на staging;
-- теги вида `release-*` используются для релизных сборок (см. `mobile_build` в `ci.yml`).
-
-Конкретная реализация (Vercel, Docker‑деплой, собственный runner) зависит от выбранного хостинга:
-
-- в большинстве провайдеров можно настроить:
-  - auto‑deploy ветки `staging` в отдельный проект/окружение;
-  - auto‑deploy ветки `main` в прод;
-  - отдельные env‑наборы для каждого окружения.
-
----
-
-## 5. Чек‑лист перед релизом
-
-1. Все миграции применены на staging‑БД.
-2. Web‑приложение на staging успешно собирается и открывается.
-3. E2E‑тесты проходят против staging‑URL (ночные/ручные прогоны).
-4. Ключевые регрессионные сценарии (публичное бронирование, кабинет клиента, staff‑кабинет, админка) проверены вручную или через автоматизированные тесты.
-
-Документ дополняет `ENV_GUIDE.md`, `supabase/APPLY_MIGRATIONS.md` и `.github/workflows/ci.yml` и описывает именно **логическое разделение staging/prod**.
+Восстановление проверяется в отдельной целевой среде по [BACKUP_AND_RESTORE](supabase/BACKUP_AND_RESTORE.md), с измеренными RPO/RTO. Перечень проверок здесь — контракт будущего окружения, а не разрешение возобновить закрытую WEB-кампанию, запустить E2E, создать роли или применить миграции. Текущие ограничения — в [WEB_AGENT_HANDOFF](docs/WEB_AGENT_HANDOFF.md).
 

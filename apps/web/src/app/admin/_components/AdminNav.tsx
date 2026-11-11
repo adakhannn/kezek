@@ -267,14 +267,14 @@ const toSiteItem: NavItem = {
 };
 
 export function AdminNav() {
-    const { t } = useLanguage();
     const pathname = usePathname();
+    return <AdminNavContent key={pathname} pathname={pathname} />;
+}
+
+function AdminNavContent({ pathname }: { pathname: string }) {
+    const { t } = useLanguage();
     const [isSectionsOpen, setIsSectionsOpen] = useState(false);
     const sectionsRef = useRef<HTMLDivElement | null>(null);
-
-    useEffect(() => {
-        setIsSectionsOpen(false);
-    }, [pathname]);
 
     useEffect(() => {
         function onClickOutside(event: MouseEvent) {

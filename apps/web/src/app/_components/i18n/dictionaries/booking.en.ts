@@ -105,7 +105,7 @@ export const bookingEn = {
     'booking.step2.selectedDate': 'Selected date:',
     'booking.step2.title': 'Step 2. Select a day',
     'booking.step3.anyMaster': 'Any master',
-    'booking.step3.anyMasterHint': 'Nearest available slot',
+    'booking.step3.anyMasterHint': 'Times with different specialists',
     'booking.step3.noStaff': 'No available masters on the selected date in this branch.',
     'booking.step3.selectDayFirst': 'First select a day in step 2.',
     'booking.step3.title': 'Step 3. Select a master',

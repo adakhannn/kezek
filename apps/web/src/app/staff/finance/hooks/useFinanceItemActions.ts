@@ -145,8 +145,6 @@ export function useFinanceItemActions({
 
     const handleDeleteItem = useCallback(
         async (idx: number) => {
-            const itemToDelete = localItems[idx];
-
             setLocalItems((prev) => removeShiftItemAtIndex(prev, idx));
             setExpandedItems((prev) => shiftExpandedItemsAfterDelete(prev, idx));
 
@@ -157,7 +155,7 @@ export function useFinanceItemActions({
                 await mutations.saveItems(updatedItems);
                 markSaved(serializeShiftItems(updatedItems));
             } catch {
-                setLocalItems((prev) => insertShiftItemAtIndex(prev, idx, itemToDelete));
+                // Keep the user's deletion in the draft on conflict or uncertain outcome.
             }
         },
         [

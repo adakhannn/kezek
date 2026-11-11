@@ -2,8 +2,6 @@
 
 import { useCallback, useState } from 'react';
 
-import { notify } from '../notify';
-
 import { createInternalBooking, type CreateInternalBookingParams } from '@/lib/bookingDashboardService';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 
@@ -45,7 +43,8 @@ export function useQuickBooking(options: UseQuickBookingOptions) {
                 booking_id: bookingId,
                 session_id: getSessionId(),
             });
-            await notify('confirm', bookingId);
+            // Booking+outbox already committed atomically. Provider work must
+            // never turn a confirmed result into a create retry in the UI.
             onSuccess(bookingId);
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : String(error);

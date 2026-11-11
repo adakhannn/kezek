@@ -1,0 +1,10 @@
+[
+  { "id": "close-shifts", "path": "/api/cron/close-shifts", "schedule": "*/5 * * * *", "maxDelaySeconds": 900 },
+  { "id": "recalculate-ratings", "path": "/api/cron/recalculate-ratings", "schedule": "0 3 * * *", "maxDelaySeconds": 97200 },
+  { "id": "data-retention", "path": "/api/cron/data-retention", "schedule": "0 4 * * *", "maxDelaySeconds": 97200 },
+  { "id": "health-check-alerts", "path": "/api/cron/health-check-alerts", "schedule": "0 9 * * *", "maxDelaySeconds": 97200 },
+  { "id": "analytics-daily", "path": "/api/cron/analytics/daily", "schedule": "30 3 * * *", "maxDelaySeconds": 97200 },
+  { "id": "analytics-hourly-load", "path": "/api/cron/analytics/hourly-load", "schedule": "40 3 * * *", "maxDelaySeconds": 97200 },
+  { "id": "booking-notifications", "path": "/api/cron/booking-notifications", "schedule": "* * * * *", "maxDelaySeconds": 300, "enabledByEnv": "BOOKING_NOTIFICATION_WORKER_ENABLED" },
+  { "id": "whatsapp-inbox", "path": "/api/cron/whatsapp-inbox", "schedule": "* * * * *", "maxDelaySeconds": 300, "enabledByEnv": "WHATSAPP_INBOX_WORKER_ENABLED" }
+]

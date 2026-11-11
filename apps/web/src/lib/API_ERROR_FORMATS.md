@@ -1,360 +1,101 @@
-# Форматы ошибок API
+# Форматы ответов API
 
-## Стандартный формат ответов
+Актуализировано: 2026-10-30. Владелец: backend. По исходникам сверены контракт [apiErrorHandler.ts](apiErrorHandler.ts) и отдельные места вызова. **Существующий API неоднороден:** наличие helpers не означает одинаковую форму всех endpoint-ответов.
 
-Все API endpoints возвращают ответы в едином формате для обеспечения согласованности и простоты обработки на клиенте.
+Основной справочник — [API_DOCUMENTATION](../../../../API_DOCUMENTATION.md); правила новой реализации — [HOWTO](HOWTO_NEW_API_ENDPOINT.md) и [CONTRIBUTING](../../../../CONTRIBUTING.md). Ограничения авторизации, атомарности и достоверности успеха — [ENGINEERING_FINDINGS](../../../../docs/ENGINEERING_FINDINGS.md).
 
-### Успешный ответ
+## Success helper
 
-```json
-{
-  "ok": true,
-  "data": {
-    // Данные ответа
-  }
-}
-```
-
-**Примеры:**
+`createSuccessResponse(data?, additionalFields?)` возвращает HTTP 200. Переданный `data` помещается в поле `data`; при `undefined` поле отсутствует. Второй аргумент добавляет поля в корень. Helper не принимает HTTP status: иной код требует явного response construction в вызывающем коде.
 
 ```json
-// Простой успешный ответ
-{
-  "ok": true,
-  "data": { "id": "123" }
-}
-
-// Успешный ответ с дополнительными полями
-{
-  "ok": true,
-  "data": { "id": "123" },
-  "count": 1,
-  "user_linked": true
-}
+{ "ok": true, "data": { "id": "example-id" } }
 ```
 
-### Ответ с ошибкой
+Без payload:
 
 ```json
-{
-  "ok": false,
-  "error": "error_type",
-  "message": "Человеко-читаемое сообщение",
-  "details": {
-    // Дополнительные детали (только в dev режиме)
-  }
-}
+{ "ok": true }
 ```
 
-## Типы ошибок
+Поля additionalFields должны быть частью задокументированного контракта и не переопределять `ok`/`data`. Тип `ApiSuccessResponse<T>` допускает необязательный data и дополнительные поля; он не доказывает фактическое содержимое ответа выбранного endpoint.
 
-### `auth` (401) - Ошибка авторизации
+## Error helper
 
-Пользователь не авторизован или токен недействителен.
-
-```json
-{
-  "ok": false,
-  "error": "auth",
-  "message": "Не авторизован"
-}
-```
-
-**Примеры использования:**
-- Отсутствует токен авторизации
-- Токен истек
-- Неверный формат токена
-
-### `forbidden` (403) - Доступ запрещен
-
-Пользователь авторизован, но не имеет прав доступа к ресурсу.
-
-```json
-{
-  "ok": false,
-  "error": "forbidden",
-  "message": "Доступ запрещен"
-}
-```
-
-**Примеры использования:**
-- Попытка доступа к ресурсу другого пользователя
-- Недостаточно прав для выполнения действия
-- Попытка доступа к админ-панели без прав администратора
-
-### `validation` (400) - Ошибка валидации
-
-Неверные входные данные или отсутствуют обязательные поля.
+`createErrorResponse(error, message?, details?, status = 500)` формирует:
 
 ```json
 {
   "ok": false,
   "error": "validation",
-  "message": "Ошибка валидации",
+  "message": "Validation failed",
   "details": {
-    "errors": [
-      {
-        "path": "email",
-        "message": "Неверный формат email"
-      }
-    ]
+    "errors": [{ "path": "email", "message": "Invalid email" }]
   }
 }
 ```
 
-**Примеры использования:**
-- Отсутствуют обязательные поля
-- Неверный формат данных (email, телефон и т.д.)
-- Значения вне допустимого диапазона
-- Ошибки валидации Zod
+`message` включается, если truthy; `details` — если не undefined. **Details передаются и в production.** Helper не очищает и не маскирует их; вызывающий код отвечает за безопасные данные. `ApiErrorType` допускает произвольную строку, поэтому список кодов не является закрытым enum.
 
-### `not_found` (404) - Ресурс не найден
+Следующая таблица — соглашение для новых ответов. Код ошибки сам по себе **не выбирает HTTP status**: без четвёртого аргумента даже `createErrorResponse('auth')` вернёт 500.
 
-Запрашиваемый ресурс не существует.
+| Код | Обычно HTTP | Смысл |
+| --- | ---: | --- |
+| auth | 401 | Не установлена допустимая identity |
+| forbidden | 403 | Операция не разрешена |
+| validation | 400 | Неверный формат или недопустимые входные данные |
+| not_found | 404 | Ресурс не найден; отдельные helpers так скрывают чужие IDs |
+| conflict | 409 | Конфликт с текущим состоянием |
+| rate_limit | 429 | Ограничение частоты в коде, использующем этот helper |
+| internal | 500 | Непредвиденная серверная ошибка |
+| service_unavailable | 503 | Временная недоступность зависимости/операции |
+
+Пример явного статуса:
+
+```ts
+return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+```
+
+## Validation и exception wrapper
+
+[validateRequest / validateQuery](validation/apiValidation.ts) возвращают HTTP 400 с `error: validation`. Zod-ошибки содержат `details.errors[]` с dotted `path` и `message`. Некорректный JSON возвращает `Invalid JSON in request body` без details. Неизвестная validation-ошибка сейчас может передать строку исключения в details; отсутствие внутренних сведений автоматически не гарантируется.
+
+`withErrorHandler(scope, handler)` ловит exception и вызывает `handleApiError`. Он не проверяет корректность возвращённого handler ответа. Текущее поведение:
+
+- выброшенный `NextResponse` возвращается как есть;
+- `Error.message` проверяется по текстовым признакам auth/forbidden/validation/not found/conflict;
+- объект с `error` использует своё числовое `status`, иначе 500;
+- общий fallback — internal/500. Только в этой fallback-ветке raw details ограничены development; message всё ещё может происходить из exception.
+
+Для ожидаемых доменных отказов выбирайте код/status явно, не полагайтесь на текстовую эвристику. При миграции меняйте сервер и потребителей согласованно: помещение прежнего payload под `data` — изменение контракта.
+
+## Подтверждённые различия текущего API
+
+| Цепочка | Форма/особенность |
+| --- | --- |
+| [withRateLimit](rateLimit.ts) | 429 с `error: rate_limit_exceeded` и `retryAfter` в корне, плюс Retry-After и X-RateLimit-* headers |
+| [quick hold HTTP](quickHoldHttpService.ts) | Успех в `data.booking_id`/`data.confirmed`; slot conflict — `booking_slot_unavailable` с HTTP 409 |
+| [booking cancel HTTP](bookingCancelHttpService.ts) | Успех `{ ok: true }` без data |
+| [service create HTTP](serviceCreateHttpService.ts) | Успех через `createSuccessResponse(result.data)`; schema конкретного payload принадлежит service |
+| [admin metrics handler](../app/admin/api/metrics/route.ts) | Прямой NextResponse, собственные поля pagination и error; общий helper не используется |
+
+Ответ limiter, в отличие от примера с `rate_limit` выше:
 
 ```json
 {
   "ok": false,
-  "error": "not_found",
-  "message": "Ресурс не найден"
+  "error": "rate_limit_exceeded",
+  "message": "Превышен лимит запросов. Попробуйте через 60 секунд.",
+  "retryAfter": 60
 }
 ```
 
-**Примеры использования:**
-- Запрос несуществующего ID
-- Ресурс был удален
-- Неверный путь к ресурсу
+Проверяйте HTTP status и тело вместе; ошибка proxy/сети может вообще не иметь JSON envelope. Клиентский parser должен учитывать контракт выбранного маршрута и безопасно обрабатывать не-JSON/неизвестный код. Автоматический повтор записи после timeout допустим только при предусмотренной идемпотентности.
 
-### `conflict` (409) - Конфликт данных
+## Специальные контракты
 
-Конфликт с текущим состоянием ресурса.
+**Promotion validation.** [Create service](branchPromotionsService.ts) и [update service](branchPromotionService.ts) передают для известных ошибок `details.field: params.visit_count | params.discount_percent`; HTTP services сохраняют эти детали в validation/400. [Web mapper](promotionSaveErrorMessage.ts) локализует стабильный field ID. Не определяйте тип ошибки по тексту message; неизвестное поле требует общего локализованного сообщения.
 
-```json
-{
-  "ok": false,
-  "error": "conflict",
-  "message": "Ресурс уже существует"
-}
-```
+**Shift item draft identity.** `POST /api/staff/shift/items` поддерживает optional UUID `items[].clientId` для новой позиции. [Сервис сохранения](staffShiftItemsService.ts) использует его как row ID, проверяет принадлежность существующих строк/коллизий смене и для draft insert применяет upsert с ignoreDuplicates. Чужая row identity возвращает forbidden/403, ошибка её lookup — internal/500. [HTTP adapter](staffShiftItemsHttpService.ts) на успех возвращает `{ ok: true }`.
 
-**Примеры использования:**
-- Попытка создать дубликат
-- Ресурс уже существует
-- Конфликт версий
-
-### `rate_limit` (429) - Превышен лимит запросов
-
-Превышен лимит запросов для данного endpoint.
-
-```json
-{
-  "ok": false,
-  "error": "rate_limit",
-  "message": "Превышен лимит запросов",
-  "details": {
-    "retryAfter": 60
-  }
-}
-```
-
-**Примеры использования:**
-- Слишком много запросов за короткое время
-- Rate limiting сработал
-
-### `internal` (500) - Внутренняя ошибка сервера
-
-Непредвиденная ошибка на сервере.
-
-```json
-{
-  "ok": false,
-  "error": "internal",
-  "message": "Внутренняя ошибка сервера",
-  "details": {
-    // Детали ошибки (только в dev режиме)
-  }
-}
-```
-
-**Примеры использования:**
-- Ошибка базы данных
-- Неожиданное исключение
-- Ошибка внешнего сервиса
-
-### `service_unavailable` (503) - Сервис недоступен
-
-Временная недоступность сервиса.
-
-```json
-{
-  "ok": false,
-  "error": "service_unavailable",
-  "message": "Сервис временно недоступен"
-}
-```
-
-**Примеры использования:**
-- Внешний сервис недоступен
-- Техническое обслуживание
-- Перегрузка сервера
-
-## Примеры ответов для разных endpoints
-
-### POST /api/dashboard/staff/[id]/shift/close
-
-Закрытие смены сотрудника от имени менеджера/владельца.
-
-- **Query**: `date=YYYY-MM-DD` (опционально)
-- **Body**: соответствует `closeShiftSchema` (см. `@/lib/validation/schemas`): `items?: ShiftItem[]`, `totalAmount?: number`, `consumablesAmount?: number`
-  Для сотрудника закрытие финализирует уже сохранённые позиции, не создаёт их повторно и сохраняет их ID/время добавления. Несовпадение переданного финансового снимка с сохранёнными позициями возвращает `409`: сначала сохранить клиентов и обновить смену. Ошибка чтения позиций не позволяет закрыть смену. Путь закрытия владельцем проверяется отдельно.
-- **Успех**: возвращает обновлённую смену в `data.shift`
-
-### POST /api/staff/create
-
-**Успех:**
-```json
-{
-  "ok": true,
-  "data": {
-    "id": "uuid",
-    "user_linked": true,
-    "schedule_initialized": true,
-    "schedule_days_created": 14
-  }
-}
-```
-
-**Ошибка валидации:**
-```json
-{
-  "ok": false,
-  "error": "validation",
-  "message": "Имя и филиал обязательны"
-}
-```
-
-**Ошибка доступа:**
-```json
-{
-  "ok": false,
-  "error": "forbidden",
-  "message": "Доступ запрещен"
-}
-```
-
-### POST /api/bookings/[id]/cancel
-
-**Успех:**
-```json
-{
-  "ok": true
-}
-```
-
-**Ошибка доступа:**
-```json
-{
-  "ok": false,
-  "error": "forbidden",
-  "message": "Доступ запрещен"
-}
-```
-
-**Ошибка валидации:**
-```json
-{
-  "ok": false,
-  "error": "validation",
-  "message": "Не удалось отменить бронирование"
-}
-```
-
-### POST /api/services/create
-
-**Успех:**
-```json
-{
-  "ok": true,
-  "data": {
-    "count": 3,
-    "ids": ["uuid1", "uuid2", "uuid3"]
-  }
-}
-```
-
-**Ошибка валидации:**
-```json
-{
-  "ok": false,
-  "error": "validation",
-  "message": "Название услуги обязательно"
-}
-```
-
-## Обработка ошибок на клиенте
-
-### TypeScript типы
-
-```typescript
-import type { ApiErrorResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
-
-// Успешный ответ
-type MyData = { id: string; name: string };
-type MyResponse = ApiSuccessResponse<MyData>;
-
-// Ответ с ошибкой
-type MyError = ApiErrorResponse;
-```
-
-### Пример обработки
-
-```typescript
-async function createStaff(data: StaffData) {
-  const response = await fetch('/api/staff/create', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-
-  const result = await response.json();
-
-  if (!result.ok) {
-    // Обработка ошибки
-    switch (result.error) {
-      case 'auth':
-        // Перенаправить на страницу входа
-        break;
-      case 'forbidden':
-        // Показать сообщение о недостатке прав
-        break;
-      case 'validation':
-        // Показать ошибки валидации
-        break;
-      default:
-        // Общая ошибка
-    }
-    throw new Error(result.message || 'Произошла ошибка');
-  }
-
-  return result.data;
-}
-```
-
-## Миграция существующих endpoints
-
-При миграции существующих endpoints на новый формат:
-
-1. Замените `NextResponse.json({ ok: false, ... })` на `createErrorResponse()`
-2. Замените `NextResponse.json({ ok: true, ... })` на `createSuccessResponse()`
-3. Используйте `withErrorHandler()` для автоматической обработки ошибок
-4. Убедитесь, что все ошибки имеют правильный тип (`auth`, `validation`, и т.д.)
-
-См. `ERROR_HANDLING_GUIDE.md` для подробных инструкций по миграции.
-
-## Promotion validation feedback
-
-Promotion create/update failures keep the standard `{ ok: false, error: 'validation', message, details }` envelope and HTTP400. Known field metadata is `details.field: 'params.visit_count' | 'params.discount_percent'`. The web form localizes that stable field identifier; it never displays the machine `error` code or infers validation type from the human message. Unknown validation fields receive a localized general prompt; other save failures receive the localized save fallback. Server validation and ownership checks remain authoritative.
-
-## Shift item draft identity
-
-`POST /api/staff/shift/items` accepts optional UUID `items[].clientId` for a new draft. The web editor allocates it once, retains it across autosave/manual-save retries, and uses it as the persisted row ID. Existing `id` still denotes an acknowledged row of the current shift. Draft inserts ignore a repeated primary-key conflict instead of creating another row; acknowledged rows update within the shift. Foreign existing IDs or draft collisions return the standard HTTP403 `forbidden` envelope before financial writes; identity lookup failures return HTTP500. The response envelope is unchanged. Legacy callers without clientId remain supported but are not promised retry-idempotency. This is row identity, not a request-wide concurrency/versioning contract.
+Стабильный clientId помогает избежать повторной вставки строки; старые callers без clientId такой гарантии не получают. Это не request-wide transaction/versioning и не доказательство авторизации вложенных booking IDs. Открытые ограничения финансового сохранения и закрытия описаны в инженерном реестре; `ok:true` само по себе их не устраняет.

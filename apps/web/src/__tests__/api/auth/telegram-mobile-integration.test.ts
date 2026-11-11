@@ -1,5 +1,5 @@
 jest.mock('@/lib/telegramLoginService', () => ({
-    handleTelegramLogin: jest.fn(),
+    resolveTelegramIdentity: jest.fn(),
 }));
 jest.mock('@supabase/supabase-js', () => ({
     createClient: jest.fn(),
@@ -11,12 +11,15 @@ import { POST as startPOST } from '@/app/api/auth/telegram/mobile/start/route';
 import { GET as statusGET } from '@/app/api/auth/telegram/mobile/status/route';
 import { POST as confirmPOST } from '@/app/api/auth/telegram/mobile/confirm/route';
 import { POST as callbackPOST } from '@/app/api/auth/telegram/mobile/callback/route';
-import { GET as mobileExchangeGET } from '@/app/api/auth/mobile-exchange/route';
-import { __resetMobileExchangeStoreForTests } from '@/lib/mobileExchangeService';
+import { POST as mobileExchangePOST } from '@/app/api/auth/mobile-exchange/route';
+import { hashMobileExchangeSecret } from '@/lib/mobileExchangeService';
+const codeVerifier = 'v'.repeat(64);
+const codeChallenge = hashMobileExchangeSecret(codeVerifier);
+jest.mock('@/lib/verifiedIdentitySession', () => ({ issueSessionForVerifiedUser: jest.fn(async () => ({ accessToken: 'access-token', refreshToken: 'refresh-token' })) }));
 import { __resetTelegramMobileBotRequestReplayStoreForTests } from '@/lib/telegramMobileBotRequestAuth';
 import { __resetNonceProbeProtectionForTests } from '@/lib/telegramMobileNonceProbeProtection';
 import { __resetTelegramMobileAuthAttemptsForTests } from '@/lib/telegramMobileAuthAttemptService';
-import { handleTelegramLogin } from '@/lib/telegramLoginService';
+import { resolveTelegramIdentity } from '@/lib/telegramLoginService';
 import {
     createMockNextRequest,
     createMockRequest,
@@ -35,8 +38,8 @@ jest.mock('@/lib/supabaseService', () => ({
 describe('Telegram mobile auth integration', () => {
     const previousSecret = process.env.TELEGRAM_MOBILE_BOT_SECRET;
     const mockedCreateClient = createClient as unknown as jest.Mock;
-    const mockedHandleTelegramLogin = handleTelegramLogin as jest.MockedFunction<
-        typeof handleTelegramLogin
+    const mockedResolveTelegramIdentity = resolveTelegramIdentity as jest.MockedFunction<
+        typeof resolveTelegramIdentity
     >;
 
     beforeEach(async () => {
@@ -44,20 +47,9 @@ describe('Telegram mobile auth integration', () => {
         await __resetTelegramMobileAuthAttemptsForTests();
         __resetTelegramMobileBotRequestReplayStoreForTests();
         __resetNonceProbeProtectionForTests();
-        __resetMobileExchangeStoreForTests();
 
-        mockedHandleTelegramLogin.mockReset();
-        mockedHandleTelegramLogin.mockResolvedValue({
-            ok: true,
-            data: {
-                userId: 'user-1',
-                email: 'telegram_12345@telegram.local',
-                password: 'password-1',
-                needsSignIn: true,
-                redirect: '/',
-                linkage: 'existing',
-            },
-        });
+        mockedResolveTelegramIdentity.mockReset();
+        mockedResolveTelegramIdentity.mockResolvedValue({ ok: true, userId: '00000000-0000-4000-8000-000000000001', linkage: 'existing' });
 
         const authClient = {
             auth: {
@@ -97,6 +89,7 @@ describe('Telegram mobile auth integration', () => {
             {
                 method: 'POST',
                 body: {
+                    codeChallenge,
                     appName: 'Kezek Mobile',
                     device: 'Pixel 8',
                     platform: 'android',
@@ -142,10 +135,10 @@ describe('Telegram mobile auth integration', () => {
         expect(typeof exchangeCode).toBe('string');
 
         const exchangeRequest = createMockNextRequest(
-            `http://localhost/api/auth/mobile-exchange?code=${exchangeCode}`,
-            { method: 'GET' },
+            'http://localhost/api/auth/mobile-exchange',
+            { method: 'POST', body: { code: exchangeCode, codeVerifier } },
         );
-        const exchangeResponse = await mobileExchangeGET(exchangeRequest);
+        const exchangeResponse = await mobileExchangePOST(exchangeRequest);
         const exchangeData = await expectSuccessResponse(exchangeResponse, 200);
 
         expect(exchangeData).toHaveProperty('data.accessToken', 'access-token');
@@ -155,7 +148,7 @@ describe('Telegram mobile auth integration', () => {
     test('idempotent repeated confirm click returns approved and does not re-run login', async () => {
         const startRequest = createMockRequest(
             'http://localhost/api/auth/telegram/mobile/start',
-            { method: 'POST' },
+            { method: 'POST', body: { codeChallenge } },
         );
         const startResponse = await startPOST(startRequest);
         const startData = await expectSuccessResponse(startResponse, 200);
@@ -198,13 +191,13 @@ describe('Telegram mobile auth integration', () => {
         const secondData = await expectSuccessResponse(secondConfirmResponse, 200);
         expect(secondData).toHaveProperty('data.status', 'approved');
 
-        expect(mockedHandleTelegramLogin).toHaveBeenCalledTimes(1);
+        expect(mockedResolveTelegramIdentity).toHaveBeenCalledTimes(1);
     });
 
     test('handles race conditions and network retries', async () => {
         const startRequest = createMockRequest(
             'http://localhost/api/auth/telegram/mobile/start',
-            { method: 'POST' },
+            { method: 'POST', body: { codeChallenge } },
         );
         const startResponse = await startPOST(startRequest);
         const startData = await expectSuccessResponse(startResponse, 200);
@@ -263,26 +256,26 @@ describe('Telegram mobile auth integration', () => {
         ).data.exchangeCode;
 
         const exchangeRequestA = createMockNextRequest(
-            `http://localhost/api/auth/mobile-exchange?code=${exchangeCode}`,
-            { method: 'GET' },
+            'http://localhost/api/auth/mobile-exchange',
+            { method: 'POST', body: { code: exchangeCode, codeVerifier } },
         );
         const exchangeRequestB = createMockNextRequest(
-            `http://localhost/api/auth/mobile-exchange?code=${exchangeCode}`,
-            { method: 'GET' },
+            'http://localhost/api/auth/mobile-exchange',
+            { method: 'POST', body: { code: exchangeCode, codeVerifier } },
         );
         const [exchangeResponseA, exchangeResponseB] = await Promise.all([
-            mobileExchangeGET(exchangeRequestA),
-            mobileExchangeGET(exchangeRequestB),
+            mobileExchangePOST(exchangeRequestA),
+            mobileExchangePOST(exchangeRequestB),
         ]);
 
         const sortedExchangeStatuses = [
             exchangeResponseA.status,
             exchangeResponseB.status,
         ].sort((a, b) => a - b);
-        expect(sortedExchangeStatuses).toEqual([200, 409]);
+        expect(sortedExchangeStatuses).toEqual([200, 400]);
 
         const conflictResponse =
-            exchangeResponseA.status === 409 ? exchangeResponseA : exchangeResponseB;
-        await expectErrorResponse(conflictResponse, 409, 'conflict');
+            exchangeResponseA.status === 400 ? exchangeResponseA : exchangeResponseB;
+        await expectErrorResponse(conflictResponse, 400, 'invalid_grant');
     });
 });

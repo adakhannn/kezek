@@ -23,3 +23,8 @@ export function calculateTopupAmount(
     return 0;
 }
 
+
+/** The financial date is a local calendar day; DST may make it 23 or 25 hours. */
+export function isShiftDurationWithinDay(hoursWorked: number | null, dayHours: number): boolean {
+    return Number.isFinite(dayHours) && dayHours > 0 && (hoursWorked === null || (Number.isFinite(hoursWorked) && hoursWorked >= 0 && hoursWorked <= dayHours));
+}

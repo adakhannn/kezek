@@ -1,5 +1,7 @@
 # Project Improvement Progress 2026-03-30
 
+> Статус: исторический план или снимок анализа; классификация уточнена 30 октября 2026. Результаты, отметки выполнения и команды ниже относятся к исходной волне и не являются текущим поручением или подтверждением готовности продукта. Текущий приоритет: [PROJECT_STATUS.md](PROJECT_STATUS.md); навигация: [индекс документации](README.md).
+
 ## Phase 6.1 Status
 
 `Phase 6.1` is effectively complete. The `apps/web/src/app/api` layer has been normalized to the thin-route pattern:

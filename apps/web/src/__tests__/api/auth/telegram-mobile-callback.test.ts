@@ -80,6 +80,7 @@ describe('/api/auth/telegram/mobile/callback', () => {
     test('handles cancel decision', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });
@@ -110,6 +111,7 @@ describe('/api/auth/telegram/mobile/callback', () => {
     test('returns conflict when cancel requested by different telegram account', async () => {
         process.env.TELEGRAM_MOBILE_BOT_SECRET = 'expected-secret';
         const started = await createTelegramMobileAuthAttempt({
+            codeChallenge: 'a'.repeat(64),
             botUsername: 'kezek_auth_bot',
             ttlMs: 60_000,
         });

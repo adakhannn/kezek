@@ -11,5 +11,6 @@ export async function GET(req: Request) {
     RateLimitConfigs.normal,
     () =>
       withErrorHandler('WhatsAppAPI', async () => runWhatsAppPhoneNumbersLookupHttp(req)),
+      "/api/whatsapp/get-phone-numbers",
   );
 }

@@ -27,6 +27,7 @@ export async function POST(req: Request) {
 
     return withRateLimit(req, whatsAppMobileVerifyRateLimit, () =>
         withErrorHandler('WhatsAppMobileVerify', () => runWhatsAppMobileVerifyHttp(req)),
+        "/api/auth/whatsapp/mobile/verify",
     );
 }
 

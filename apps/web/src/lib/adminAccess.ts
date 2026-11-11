@@ -1,32 +1,20 @@
-type SuperAdminRoleRow = {
-    role_key: string;
-    biz_id: string | null;
-};
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-type SuperAdminRoleQuery = {
-    eq: (column: string, value: string) => SuperAdminRoleQuery;
-    is: (column: string, value: null) => SuperAdminRoleQuery;
-    limit: (count: number) => SuperAdminRoleQuery;
-    maybeSingle: () => Promise<{ data: SuperAdminRoleRow | null; error: unknown }>;
-};
+// Keep the SDK boundary: a handwritten recursive PostgREST interface causes
+// excessive type instantiation in Next's clean production typecheck.
+export type SuperAdminRoleClient = Pick<SupabaseClient, 'rpc'>;
 
-type SuperAdminRoleTable = {
-    select: (columns: string) => SuperAdminRoleQuery;
-};
-
-export type SuperAdminRoleClient = {
-    from: (table: string) => SuperAdminRoleTable;
-};
-
+/** Caller must pass the same user-session client whose getUser() was verified.
+ * SQL derives identity from auth.uid(); no target actor is accepted by the RPC.
+ */
 export async function checkCurrentUserIsSuperAdmin(client: SuperAdminRoleClient, userId: string) {
-    const { data, error } = await client
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('user_id', userId)
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
-
-    return { isSuperAdmin: !!data && !error, error };
+    if (!userId) return { isSuperAdmin: false, error: null };
+    const lookupError = { message: 'Не удалось проверить права доступа' };
+    try {
+        const { data, error } = await client.rpc('is_super_admin');
+        if (error || typeof data !== 'boolean') return { isSuperAdmin: false, error: lookupError };
+        return { isSuperAdmin: data === true, error: null };
+    } catch {
+        return { isSuperAdmin: false, error: lookupError };
+    }
 }

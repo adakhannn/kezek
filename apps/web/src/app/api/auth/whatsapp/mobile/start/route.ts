@@ -27,6 +27,7 @@ export async function POST(req: Request) {
 
     return withRateLimit(req, whatsAppMobileStartRateLimit, () =>
         withErrorHandler('WhatsAppMobileStart', () => runWhatsAppMobileStartHttp(req)),
+        "/api/auth/whatsapp/mobile/start",
     );
 }
 

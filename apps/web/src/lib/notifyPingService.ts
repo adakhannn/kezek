@@ -1,7 +1,7 @@
 type NotifyPingFailure = {
     ok: false;
-    status: 400;
-    error: 'validation';
+    status: 502 | 503;
+    error: 'service_unavailable';
     message: string;
     details?: Record<string, unknown>;
 };
@@ -11,7 +11,6 @@ type NotifyPingSuccess = {
     payload: {
         ok: boolean;
         status: number;
-        text: string;
     };
 };
 
@@ -19,50 +18,64 @@ export type NotifyPingResult = NotifyPingFailure | NotifyPingSuccess;
 
 export async function runNotifyPing({
     to,
-    from,
     env,
     fetchImpl = fetch,
 }: {
     to: string;
-    from?: string;
     env: NodeJS.ProcessEnv;
     fetchImpl?: typeof fetch;
 }): Promise<NotifyPingResult> {
     const apiKey = env.RESEND_API_KEY;
-    const resolvedFrom = from || env.EMAIL_FROM || 'Kezek <onboarding@resend.dev>';
+    const resolvedFrom = env.EMAIL_FROM?.trim();
 
-    if (!apiKey) {
+    if (!apiKey || !resolvedFrom) {
         return {
             ok: false,
-            status: 400,
-            error: 'validation',
-            message: 'RESEND_API_KEY не установлен',
-            details: { code: 'no RESEND_API_KEY' },
+            status: 503,
+            error: 'service_unavailable',
+            message: 'Отправка диагностических писем не настроена',
         };
     }
 
-    const response = await fetchImpl('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            from: resolvedFrom,
-            to,
-            subject: 'Kezek test',
-            html: '<b>Ping from Kezek</b>',
-        }),
-    });
+    try {
+        const response = await fetchImpl('https://api.resend.com/emails', {
+            method: 'POST',
+            signal: AbortSignal.timeout(5000),
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                from: resolvedFrom,
+                to,
+                subject: 'Kezek test',
+                html: '<b>Ping from Kezek</b>',
+            }),
+        });
 
-    const text = await response.text().catch(() => '');
+        if (!response.ok) {
+            return {
+                ok: false,
+                status: 502,
+                error: 'service_unavailable',
+                message: 'Провайдер не принял диагностическое письмо',
+                details: { providerStatus: response.status },
+            };
+        }
 
-    return {
-        ok: true,
-        payload: {
-            ok: response.ok,
-            status: response.status,
-            text,
-        },
-    };
+        return {
+            ok: true,
+            payload: {
+                ok: response.ok,
+                status: response.status,
+            },
+        };
+    } catch {
+        return {
+            ok: false,
+            status: 502,
+            error: 'service_unavailable',
+            message: 'Провайдер отправки недоступен',
+        };
+    }
 }

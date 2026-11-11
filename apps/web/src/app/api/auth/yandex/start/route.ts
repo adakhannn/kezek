@@ -1,13 +1,13 @@
-import { randomUUID } from 'node:crypto';
-
 import { NextResponse } from 'next/server';
 
 import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getYandexCallbackUrl, getYandexOAuthCredentials, getYandexPublicOrigin } from '@/lib/yandexOAuthConfig';
+import { createYandexOAuthState } from '@/lib/yandexOAuthState';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+async function startSignIn(request: Request) {
     const requestUrl = new URL(request.url);
     const credentials = getYandexOAuthCredentials();
     const redirect = sanitizeAuthReturnPath(requestUrl.searchParams.get('redirect'));
@@ -18,7 +18,12 @@ export async function GET(request: Request) {
         );
     }
 
-    const state = randomUUID();
+    let state: string;
+    try {
+        state = await createYandexOAuthState('sign_in', null, redirect);
+    } catch {
+        return NextResponse.redirect(new URL('/auth/sign-in?error=yandex_unavailable', getYandexPublicOrigin(request.url)));
+    }
     const authorizeUrl = new URL('https://oauth.yandex.ru/authorize');
     authorizeUrl.searchParams.set('response_type', 'code');
     authorizeUrl.searchParams.set('client_id', credentials.clientId);
@@ -41,4 +46,8 @@ export async function GET(request: Request) {
         maxAge: 10 * 60,
     });
     return response;
+}
+
+export async function GET(request: Request) {
+    return withRateLimit(request, { ...RateLimitConfigs.auth, keyPrefix: 'yandex-sign-in-start' }, () => startSignIn(request), "/api/auth/yandex/start");
 }

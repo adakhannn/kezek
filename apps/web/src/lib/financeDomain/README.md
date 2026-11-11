@@ -1,342 +1,45 @@
-# Finance Domain - Руководство для разработчиков
+# Finance Domain — слой совместимости web
 
-## Обзор
+Статус: справочник разработчика, сверено по исходникам **1 ноября 2026**. Сопровождение: разработчики финансового домена. Формулы и продуктовые правила — [финансовая модель](../../../../../SYSTEM_FEATURES_DOCUMENTATION.md#3-смены-и-финансовая-модель); HTTP-контракты — [STAFF_AND_FINANCE](../../../../../docs/api/STAFF_AND_FINANCE.md) и [BUSINESS_WORKFLOWS](../../../../../docs/api/BUSINESS_WORKFLOWS.md).
 
-`financeDomain` — единый доменный слой для финансовой логики системы Kezek. Этот модуль содержит все бизнес-правила для расчета финансовых показателей смен сотрудников и обеспечивает единообразие расчетов между фронтендом и бэкендом.
+## Где находится реализация
 
-## Архитектура
+Этот каталог оставлен для совместимости web-импортов. [index.ts](index.ts) помечен deprecated и переэкспортирует `@core-domain/finance`; файлы подмодулей также переэкспортируют общий пакет. Реализация — [packages/core-domain/src/finance](../../../../../packages/core-domain/src/finance/index.ts). Общие правила нужно изменять в пакете, проверяя фактических потребителей по [CONTRIBUTING](../../../../../CONTRIBUTING.md).
 
-Модуль разделен на несколько подмодулей, каждый из которых отвечает за определенный аспект финансовых расчетов:
+Модуль выполняет чистые вычисления и не читает БД, не проверяет права, не сохраняет смены и не отправляет платежи. Наличие общего модуля не означает, что все финансовые пути используют одну формулу: cron, корректировка часов и часть отчётов содержат самостоятельные расчёты.
 
-```
-financeDomain/
-├── normalize.ts      # Нормализация процентов
-├── shares.ts         # Расчет базовых долей (мастер/салон)
-├── guarantee.ts      # Расчет гарантированной суммы и доплат
-├── items.ts          # Расчет сумм из массива items
-├── shift.ts          # Полный расчет финансов смены
-├── display.ts        # Расчет долей для отображения
-└── index.ts          # Точка входа (экспорт всех функций)
-```
+## Карта функций
 
-## Основные функции
+| Модуль | Функции и назначение | Существенная граница |
+| --- | --- | --- |
+| [normalize](../../../../../packages/core-domain/src/finance/normalize.ts) | normalizePercentages — пропорциональная нормализация процентов | Неконечное/отрицательное значение заменяется отдельно на 60/40. При паре 0/0 результат master=0, salon=0, хотя поле sum=100; округления процентов до двух знаков нет |
+| [shares](../../../../../packages/core-domain/src/finance/shares.ts) | calculateBaseMasterShare, calculateBaseSalonShare, calculateBaseShares | calculateBaseShares отдаёт бизнесу остаток суммы после округления доли сотрудника; отдельный calculateBaseSalonShare независимо округляет процент бизнеса. Они не взаимозаменяемы на границах округления |
+| [guarantee](../../../../../packages/core-domain/src/finance/guarantee.ts) | calculateGuaranteedAmount, calculateTopupAmount | Гарантия — часы × ставка; доплата сравнивается с базовой долей сотрудника. Неположительные/пустые часы и ставка дают 0, но это не полная проверка finite-входов |
+| [items](../../../../../packages/core-domain/src/finance/items.ts) | calculateTotalServiceAmount, calculateTotalConsumables, applyAdjustmentsToTotals | Суммирование отбрасывает отрицательные/NaN/нечисловые суммы. Infinity отдельно не отвергается. Корректировки — утилита дельт, не реализованный журнал возвратов |
+| [shift](../../../../../packages/core-domain/src/finance/shift.ts) | calculateShiftFinancials; типы CalculateShiftFinancialsOptions и ShiftFinancials | Собирает базовые/итоговые доли, гарантию и доплату. Валидация сумм, полномочий и совместимости со сменой лежит вне функции |
+| [display](../../../../../packages/core-domain/src/finance/display.ts) | calculateDisplayShares | Для открытой смены учитывает переданную гарантию; для закрытой возвращает округлённые переданные доли. Сам не загружает сохранённые значения и не определяет их происхождение |
+| [modes](../../../../../packages/core-domain/src/finance/modes.ts) | PaymentMode | percent_only имеет отдельную ветку; percent_with_guarantee — default. fixed_per_shift/custom зарезервированы в типе, но текущая функция обрабатывает их обычной веткой гарантии |
 
-### 1. Нормализация процентов (`normalize.ts`)
+Расходники прибавляются к базовой доле бизнеса, однако доплата вычитается из всей этой доли. Поэтому утверждение «расходники всегда остаются бизнесу в полном объёме» неверно для итогового расчёта. Полные формулы, случай нулевых процентов, округление и примеры хранятся в одном месте — [функциональной модели](../../../../../SYSTEM_FEATURES_DOCUMENTATION.md#суммы-проценты-и-округление).
 
-```typescript
-import { normalizePercentages } from '@/lib/financeDomain';
+## От вычисления до сохранения
 
-// Нормализует проценты мастера и салона
-// Если сумма процентов не равна 100, нормализует их пропорционально
-const result = normalizePercentages(60, 40);
-// { master: 60, salon: 40, sum: 100 }
+| Путь | Реализация и ответственность |
+| --- | --- |
+| Ручное закрытие | [closeUseCase](../staffShift/closeUseCase.ts) выбирает настройки, суммы позиций и часы, затем вызывает общий расчёт |
+| Автозакрытие | [closeShiftsCronService](../closeShiftsCronService.ts) использует собственную оркестрацию и расчёт; не является вызовом общего use-case |
+| Корректировка часов | Точные поля, расчёт и ограничения описаны в [API update-hours](../../../../../docs/api/STAFF_AND_FINANCE.md#post-apidashboardstaff-shiftsidupdate-hours) |
+| Подробная статистика | [staffFinanceStatsService](../staffFinanceStatsService.ts) пересчитывает часть данных из позиций даже для closed; это не простая выдача сохранённой доли |
+| Общий дашборд | [financeAllDashboardService](../financeAllDashboardService.ts) объединяет агрегаты с отдельно прочитанными открытыми сменами/позициями |
 
-const result2 = normalizePercentages(30, 20);
-// { master: 60, salon: 40, sum: 100 } - нормализуется до 100%
-```
+Сохранение позиций, закрытие смены, изменение booking-статусов и уведомления — разные шаги. Закрытая смена может переоткрываться и корректироваться; стабильность истории или полнота аудита не следуют из слова snapshot. Открытые вопросы привязки booking к бизнесу и конкуренции save/close — [ENG-03 и ENG-05](../../../../../docs/ENGINEERING_FINDINGS.md).
 
-**Особенности:**
-- Автоматически нормализует проценты, если их сумма не равна 100
-- Обрабатывает отрицательные, NaN и Infinity значения (использует дефолтные 60/40)
-- Возвращает проценты, округленные до 2 знаков
+## Корректировки и режимы развития
 
-### 2. Расчет базовых долей (`shares.ts`)
+В общем пакете есть ShiftAdjustment с serviceDelta/consumablesDelta и утилита, ограничивающая скорректированные итоги снизу нулём. Это не доказательство подключения корректировок ко всем сценариям закрытия и отчётам. Отдельный журнал продаж/возвратов с объяснимыми дельтами остаётся проектным предложением; исторический [FINANCE_DOMAIN_TASKS](../../../../../FINANCE_DOMAIN_TASKS.md) не подтверждает внедрение и не назначает текущую работу.
 
-```typescript
-import { calculateBaseShares, calculateBaseMasterShare, calculateBaseSalonShare } from '@/lib/financeDomain';
+## Изменение правил и проверка
 
-// Расчет базовой доли мастера
-const masterShare = calculateBaseMasterShare(10000, 60, 40);
-// 6000 (60% от 10000)
+При новой формуле нужно согласовать продуктовый смысл и округление, изменить реализацию общего пакета, найти реальные вызывающие пути и самостоятельные вычисления, обновить соответствующие контракты и проверки. Нельзя считать задачу завершённой только после изменения реэкспорта.
 
-// Расчет базовой доли салона (с учетом расходников)
-const salonShare = calculateBaseSalonShare(10000, 500, 60, 40);
-// 4500 (40% от 10000 + 500 расходников)
-
-// Расчет обеих долей одновременно
-const shares = calculateBaseShares(10000, 500, 60, 40);
-// { masterShare: 6000, salonShare: 4500 }
-```
-
-**Важно:**
-- Расходники (consumables) всегда идут 100% салону
-- Результаты округляются до целого числа
-
-### 3. Гарантированная сумма и доплаты (`guarantee.ts`)
-
-```typescript
-import { calculateGuaranteedAmount, calculateTopupAmount } from '@/lib/financeDomain';
-
-// Расчет гарантированной суммы (часы × ставка)
-const guaranteed = calculateGuaranteedAmount(8, 500);
-// 4000 (8 часов × 500 сом/час)
-
-// Расчет доплаты (если гарантия больше базовой доли)
-const topup = calculateTopupAmount(5000, 3000);
-// 2000 (5000 - 3000)
-
-// Если гарантия меньше базовой доли, доплата = 0
-const topup2 = calculateTopupAmount(3000, 5000);
-// 0
-```
-
-**Логика:**
-- Гарантированная сумма = `hoursWorked × hourlyRate`
-- Доплата применяется только если гарантия > базовая доля мастера
-- Доплата вычитается из доли салона
-
-### 4. Расчет сумм из items (`items.ts`)
-
-```typescript
-import { calculateTotalServiceAmount, calculateTotalConsumables } from '@/lib/financeDomain';
-
-const items = [
-    { serviceAmount: 1000, consumablesAmount: 100 },
-    { serviceAmount: 2000, consumablesAmount: 200 },
-];
-
-const totalService = calculateTotalServiceAmount(items);
-// 3000
-
-const totalConsumables = calculateTotalConsumables(items);
-// 300
-```
-
-**Особенности:**
-- Игнорирует `null`, `undefined`, `NaN` и отрицательные значения
-- Безопасно обрабатывает пустые массивы
-
-### 5. Полный расчет финансов смены (`shift.ts`)
-
-```typescript
-import { calculateShiftFinancials } from '@/lib/financeDomain';
-
-const financials = calculateShiftFinancials({
-    totalAmount: 10000,
-    totalConsumables: 500,
-    percentMaster: 60,
-    percentSalon: 40,
-    hoursWorked: 8,
-    hourlyRate: 500,
-});
-
-// Возвращает полный объект с всеми расчетами:
-// {
-//   totalAmount: 10000,
-//   totalConsumables: 500,
-//   baseMasterShare: 6000,
-//   baseSalonShare: 4500,
-//   guaranteedAmount: 4000,
-//   topupAmount: 0,
-//   finalMasterShare: 6000,  // max(гарантия, базовая доля)
-//   finalSalonShare: 4500,   // базовая доля - доплата
-//   normalizedPercentMaster: 60,
-//   normalizedPercentSalon: 40
-// }
-```
-
-**Это основная функция для расчета финансов смены!**
-
-### 6. Расчет долей для отображения (`display.ts`)
-
-```typescript
-import { calculateDisplayShares } from '@/lib/financeDomain';
-
-// Для открытой смены с гарантией
-const displayShares = calculateDisplayShares(6000, 4000, 8000, true);
-// { masterShare: 8000, salonShare: 0 } - учитывает гарантию
-
-// Для закрытой смены
-const displayShares2 = calculateDisplayShares(6000, 4000, null, false);
-// { masterShare: 6000, salonShare: 4000 } - базовые доли
-```
-
-**Использование:**
-- Для открытых смен учитывает текущую гарантированную сумму
-- Для закрытых смен использует сохраненные значения из БД
-
-## Примеры использования
-
-### На фронтенде (React hooks)
-
-```typescript
-import { calculateShiftFinancials } from '@/lib/financeDomain';
-
-function useShiftCalculations(shift, items, isOpen) {
-    const financials = useMemo(() => {
-        if (!shift || !items) return null;
-        
-        return calculateShiftFinancials({
-            totalAmount: calculateTotalServiceAmount(items),
-            totalConsumables: calculateTotalConsumables(items),
-            percentMaster: shift.percent_master,
-            percentSalon: shift.percent_salon,
-            hoursWorked: isOpen ? currentHoursWorked : shift.hours_worked,
-            hourlyRate: isOpen ? currentHourlyRate : shift.hourly_rate,
-        });
-    }, [shift, items, isOpen]);
-    
-    return financials;
-}
-```
-
-### На бэкенде (API routes)
-
-```typescript
-import { calculateShiftFinancials } from '@/lib/financeDomain';
-
-export async function POST(req: Request) {
-    const { items, hoursWorked } = await req.json();
-    
-    // Получаем настройки сотрудника
-    const staff = await getStaff(staffId);
-    
-    // Рассчитываем финансовые показатели
-    const financials = calculateShiftFinancials({
-        totalAmount: calculateTotalServiceAmount(items),
-        totalConsumables: calculateTotalConsumables(items),
-        percentMaster: staff.percent_master,
-        percentSalon: staff.percent_salon,
-        hoursWorked,
-        hourlyRate: staff.hourly_rate,
-    });
-    
-    // Сохраняем в БД
-    await updateShift(shiftId, {
-        total_amount: financials.totalAmount,
-        master_share: financials.finalMasterShare,
-        salon_share: financials.finalSalonShare,
-        guaranteed_amount: financials.guaranteedAmount,
-        topup_amount: financials.topupAmount,
-    });
-}
-```
-
-## Важные правила
-
-### 1. Нормализация процентов
-
-Проценты всегда нормализуются, если их сумма не равна 100:
-- `(30, 20)` → `(60, 40)` (нормализуется до 100%)
-- `(60, 40)` → `(60, 40)` (уже нормализованы)
-
-### 2. Режимы оплаты смены
-
-В домене предусмотрены режимы оплаты (`PaymentMode`), чтобы формализовать разные схемы:
-
-- `percent_only` — только процент от выручки, без учета гарантии;
-- `percent_with_guarantee` — процент + гарантия (текущий фактический режим);
-- `fixed_per_shift` — фиксированная сумма за смену (зарезервировано);
-- `custom` — смешанные/кастомные схемы (зарезервировано).
-
-Сейчас `calculateShiftFinancials` учитывает режим так:
-
-- при `paymentMode = 'percent_with_guarantee'` (или если не указан) — работает как описано ниже: учитывает `hoursWorked` и `hourlyRate`;
-- при `paymentMode = 'percent_only'` — гарантированная сумма игнорируется (ведет себя так, как будто `hourlyRate = null`).
-
-Другие режимы могут быть реализованы позже на основе тех же примитивов (`shares`, `guarantee`).
-
-### 3. Гарантированная оплата
-
-- Если `guaranteedAmount > baseMasterShare`, то:
-  - `finalMasterShare = guaranteedAmount`
-  - `topupAmount = guaranteedAmount - baseMasterShare`
-  - `finalSalonShare = baseSalonShare - topupAmount` (минимум 0)
-
-- Если `guaranteedAmount <= baseMasterShare`, то:
-  - `finalMasterShare = baseMasterShare`
-  - `topupAmount = 0`
-  - `finalSalonShare = baseSalonShare`
-
-### 4. Расходники
-
-Расходники (consumables) всегда идут 100% салону и не участвуют в расчете долей мастера.
-
-### 5. Округление
-
-- Базовые доли округляются до целого числа
-- Финальные доли и гарантии округляются до 2 знаков после запятой
-
-## Возвраты и корректировки (модель)
-
-В текущей схеме **позиции смены (`staff_shift_items`) всегда неотрицательные**:
-
-- в БД есть CHECK‑ограничения, запрещающие отрицательные `service_amount` и `consumables_amount`;
-- в `calculateTotalServiceAmount` / `calculateTotalConsumables` отрицательные значения также отбрасываются.
-
-Поэтому для поддержки возвратов/корректировок используется отдельная концепция **корректирующих операций**, а не «минусовые» суммы в `staff_shift_items`:
-
-- исходные продажи по клиентам → `staff_shift_items` (только положительные суммы);
-- возвраты / ручные корректировки → отдельные операции (будущая таблица или тип данных), привязанные к смене/клиенту/услуге;
-- при расчёте «чистой» выручки смены домен должен учитывать и базовые items, и корректировки (см. план в `FINANCE_DOMAIN_TASKS.md`, раздел 2).
-
-Техническая модель корректировок (таблица/тип, какие поля нужны) описывается в `SYSTEM_FEATURES_DOCUMENTATION.md`, раздел 1.5 «Возвраты и корректировки». Реализация влияния на расчёт смены и unit‑тесты покрываются отдельным подпунктом плана.
-
-## Исторические vs «живые» расчёты
-
-- Для **закрытых смен**:
-  - источником правды являются сохранённые поля в `staff_shifts` (`total_amount`, `master_share`, `salon_share`, `guaranteed_amount`, `topup_amount`, `hours_worked`, `hourly_rate`);
-  - фронтенд (dashbord/staff finance) должен читать их напрямую и **не пересчитывать** смену заново через `calculateShiftFinancials`.
-
-- Для **открытых смен**:
-  - суммы считаются «на лету» по текущим `staff_shift_items` (через `calculateTotalServiceAmount` / `calculateTotalConsumables`);
-  - затем к ним могут применяться корректировки (`applyAdjustmentsToTotals`);
-  - итоговые значения для отображения (включая гарантию) резолвятся через `calculateShiftFinancials` и `calculateDisplayShares`.
-
-Такой подход гарантирует:
-
-- стабильность и аудитируемость закрытых смен (они не «плавают» при смене настроек);
-- актуальность отображения для открытых смен, где данные ещё могут меняться.
-
-## Тестирование
-
-Все функции модуля покрыты unit-тестами. Тесты находятся в:
-- `apps/web/src/__tests__/lib/financeDomain/`
-
-Запуск тестов:
-```bash
-pnpm test financeDomain
-```
-
-## Миграция со старого кода
-
-Если вы используете старые функции из `apps/web/src/app/staff/finance/utils/calculations.ts`, они теперь реэкспортируют функции из `financeDomain`. Рекомендуется обновить импорты:
-
-```typescript
-// Старый способ (все еще работает)
-import { calculateShiftFinancials } from '@/app/staff/finance/utils/calculations';
-
-// Новый способ (рекомендуется)
-import { calculateShiftFinancials } from '@/lib/financeDomain';
-```
-
-## FAQ
-
-**Q: Почему проценты нормализуются?**  
-A: Чтобы гарантировать, что сумма процентов всегда равна 100%, даже если в БД сохранены некорректные значения.
-
-**Q: Что происходит, если доплата больше доли салона?**  
-A: Доля салона становится 0 (не может быть отрицательной).
-
-**Q: Можно ли использовать функции на клиенте?**  
-A: Да, все функции работают как на сервере, так и на клиенте. Они не имеют зависимостей от БД или API.
-
-**Q: Как обрабатываются нулевые значения?**  
-A: Все функции безопасно обрабатывают нули, null, undefined, NaN и Infinity значения, возвращая разумные дефолты.
-
-## При добавлении новых типов выплат или формул
-
-При добавлении новых типов выплат или изменении формул расчёта необходимо:
-
-1. **Обновить SYSTEM_FEATURES_DOCUMENTATION** (корень репозитория) — раздел 1.5 «Финансовая система»: описание нового типа выплаты, формулы, граничные случаи (см. подраздел 1.5.6).
-2. **Реализовать в этом модуле** — добавить или изменить функции в соответствующих файлах (`normalize.ts`, `shares.ts`, `guarantee.ts`, `items.ts`, `shift.ts`, `display.ts`), экспортировать через `index.ts`. Добавить JSDoc с описанием и формулой.
-3. **Обновить этот README** — описать новую функцию в разделе «Основные функции», при необходимости в архитектуре.
-4. **Добавить или обновить unit-тесты** в `apps/web/src/__tests__/lib/financeDomain/`.
-
-## Дополнительные ресурсы
-
-- [Unit-тесты](../__tests__/lib/financeDomain/) - примеры использования всех функций
-- [API endpoints](../../app/api/staff/) - примеры использования в API routes
-- [React hooks](../../app/staff/finance/hooks/) - примеры использования в React компонентах
-- [SYSTEM_FEATURES_DOCUMENTATION](../../../../../SYSTEM_FEATURES_DOCUMENTATION.md) — раздел 1.5 (формулы и правила документирования)
-
+Исходники unit-тестов находятся в [web financeDomain tests](../../__tests__/lib/financeDomain/). Их наличие не является заявлением полного покрытия или успешного прогона. Команды и обязательные проверки для новой продуктовой задачи — [TESTING_GUIDE](../../../../../TESTING_GUIDE.md) и [CONTRIBUTING](../../../../../CONTRIBUTING.md). Эта редакция проверена чтением исходников; продуктовые тесты, runtime и БД не запускались.
