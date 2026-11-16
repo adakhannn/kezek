@@ -17,7 +17,7 @@ let created=false;
 (async()=>{
  try {
   await docker(['run','--detach','--rm','--network','none','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);created=true;
-  let ready=false;for(let i=0;i<60;i++){try{await sql('select 1');ready=true;break;}catch{await pause(500);}}
+  let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await pause(500);}
   assert.ok(ready,'PostgreSQL did not start');
   await sql('create role anon; create role authenticated; create role service_role;');
   await sql(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261110113500_cron_execution_tracking.sql'),'utf8'));

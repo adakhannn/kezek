@@ -19,7 +19,7 @@ let created=false;
 try {
  await docker(['info','--format','{{.ServerVersion}}']);
  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);created=true;
- let ready=false;for(let i=0;i<60;i++){try{await sql('select 1');ready=true;break;}catch{await delay(500);}}assert.ok(ready);
+ let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
  await setupFinanceFixture(sql);
  // Match the authoritative constraint name; the fixture previously used an inline check.
  await sql('alter table staff_shifts rename constraint staff_shifts_hours_worked_check to staff_shifts_hours_worked_range');

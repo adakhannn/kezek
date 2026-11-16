@@ -21,6 +21,7 @@ import { prepareShiftItemsForSave, serializeShiftItems } from '../utils/itemLogi
 
 import {
     FinanceClientsTabSection,
+    FinanceDraftErrorSection,
     FinanceHeaderSection,
     FinanceShiftTabSection,
     FinanceStatsTabSection,
@@ -236,13 +237,8 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
             />
 
             {draft.error && (
-                <div role="alert" className="my-4 rounded-lg border border-amber-400 bg-amber-50 p-4 text-slate-900">
-                    <p>{draft.error}</p>
-                    {draft.blocked && <p>Запись остановлена. Скопируйте нужные изменения перед отказом от черновика.</p>}
-                    <button type="button" disabled={!!draft.operation}
-                        onClick={() => { clearPendingSave(); void session.reload().catch(() => {}); }}
-                        className="mt-2 underline">Отказаться от черновика и загрузить актуальную смену</button>
-                </div>
+                <FinanceDraftErrorSection error={draft.error} blocked={!!draft.blocked} disabled={!!draft.operation}
+                    onDiscard={() => { clearPendingSave(); void session.reload().catch(() => {}); }} />
             )}
 
             {activeTab === 'shift' && (
@@ -317,6 +313,3 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
         </>
     );
 });
-
-
-

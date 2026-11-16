@@ -32,7 +32,7 @@ let created=false;
 (async()=>{
  try {
   await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']); created=true;
-  let ready=false; for(let i=0;i<60;i++){try{await sql('select 1');ready=true;break;}catch{await new Promise(r=>setTimeout(r,500));}}
+  let ready=false; for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await new Promise(r=>setTimeout(r,500));}
   assert.ok(ready,'PostgreSQL did not start');
   await sql(`create role anon; create role authenticated; create role service_role; create schema auth;
    create function auth.uid() returns uuid language sql stable as $$ select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;

@@ -18,7 +18,7 @@ async function overlap(query,name){const pending=sql(`set application_name='${na
 let created=false;
 try{
  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);created=true;
- let ready=false;for(let i=0;i<60;i++){try{await sql('select 1');ready=true;break;}catch{await delay(500);}}assert.ok(ready);
+ let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
  await setupFinanceFixture(sql);
  await sql(`alter table roles add column scope text not null default 'business';create table user_global_roles(user_id uuid,role_id uuid);create table super_admins_legacy(user_id uuid);
  alter table staff_shifts rename constraint staff_shifts_hours_worked_check to staff_shifts_hours_worked_range;`);

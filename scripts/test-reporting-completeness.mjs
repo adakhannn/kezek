@@ -21,7 +21,7 @@ let created=false;
 try {
  await docker(['info','--format','{{.ServerVersion}}']);
  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);created=true;
- let ready=false;for(let i=0;i<60;i++){try{await sql('select 1');ready=true;break;}catch{await delay(500);}}assert.ok(ready);
+ let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
  await setupFinanceFixture(sql);
  // Selected constraints confirmed in the schema-only metadata (PostgreSQL 17.4).
  // Business-specific scheduling/audit triggers are outside this synthetic read fixture.

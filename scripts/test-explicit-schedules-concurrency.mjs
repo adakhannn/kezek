@@ -23,7 +23,7 @@ try {
     await docker(['run','--detach','--rm','--network','none','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']); created=true;
     let ready=false;
     for(let i=0;i<60;i++) {
-        try { await docker(['exec',container,'pg_isready','-U','postgres']); ready=true; break; }
+        try { if ((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres') { await docker(['exec',container,'pg_isready','-U','postgres']); ready=true; break; } }
         catch { await delay(500); }
     }
     assert.ok(ready,'Isolated PostgreSQL failed to start');

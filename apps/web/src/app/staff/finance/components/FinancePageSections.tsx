@@ -353,3 +353,22 @@ export function FinanceStatsTabSection({
         </div>
     );
 }
+
+type FinanceDraftErrorSectionProps = {
+    error: string;
+    blocked: boolean;
+    disabled: boolean;
+    onDiscard: () => void;
+};
+
+export function FinanceDraftErrorSection({ error, blocked, disabled, onDiscard }: FinanceDraftErrorSectionProps) {
+    return (
+        <div role="alert" className="my-4 rounded-lg border border-amber-400 bg-amber-50 p-4 text-slate-900">
+            <p>{error}</p>
+            {blocked && <p>Запись остановлена. Скопируйте нужные изменения перед отказом от черновика.</p>}
+            <button type="button" disabled={disabled} onClick={onDiscard} className="mt-2 underline">
+                Отказаться от черновика и загрузить актуальную смену
+            </button>
+        </div>
+    );
+}

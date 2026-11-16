@@ -29,9 +29,18 @@ let created = false;
     try {
         await docker(['run', '--detach', '--rm', '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '--name', container, '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:16']);
         created = true;
+        // The image first runs a temporary socket-only server for initialisation and
+        // then restarts; it is ready only once postgres is PID 1 and accepts TCP.
         let ready = false;
-        for (let i = 0; i < 60; i += 1) {
-            try { await sql('select 1'); ready = true; break; } catch { await new Promise((r) => setTimeout(r, 500)); }
+        for (let i = 0; i < 120; i += 1) {
+            try {
+                if (await docker(['exec', container, 'cat', '/proc/1/comm']) === 'postgres') {
+                    await docker(['exec', container, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres']);
+                    ready = true;
+                    break;
+                }
+            } catch { /* still starting */ }
+            await new Promise((r) => setTimeout(r, 500));
         }
         assert.ok(ready, 'PostgreSQL did not start');
 

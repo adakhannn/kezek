@@ -26,7 +26,8 @@ const other = '00000000-0000-4000-8000-000000000002';
     run(['run', '-d', '--name', name, '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:16']);
     let ready = false;
     for (let i = 0; i < 60; i++) {
-      if (run(['exec', name, 'pg_isready', '-U', 'postgres'], undefined, true).status === 0) { ready = true; break; }
+      if (run(['exec', name, 'cat', '/proc/1/comm'], undefined, true).stdout.trim() === 'postgres' &&
+        run(['exec', name, 'pg_isready', '-U', 'postgres'], undefined, true).status === 0) { ready = true; break; }
       await new Promise(resolve => setTimeout(resolve, 250));
     }
     assert(ready, 'disposable Postgres startup');

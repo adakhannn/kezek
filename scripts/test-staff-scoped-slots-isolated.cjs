@@ -32,7 +32,8 @@ const failure = (statement, regex) => {
     run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);
     let ready = false;
     for (let index = 0; index < 60; index++) {
-      if (run(['exec',name,'pg_isready','-U','postgres'],undefined,true).status === 0) { ready = true; break; }
+      if (run(['exec',name,'cat','/proc/1/comm'],undefined,true).stdout.trim() === 'postgres' &&
+        run(['exec',name,'pg_isready','-U','postgres'],undefined,true).status === 0) { ready = true; break; }
       await new Promise(resolve => setTimeout(resolve,250));
     }
     assert(ready);

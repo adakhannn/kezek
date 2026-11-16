@@ -14,7 +14,7 @@ const call=async query=>JSON.parse(await sql(asActor()+query));
 let created=false;
 try {
  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);created=true;
- let ready=false;for(let i=0;i<60;i++){try{await sql('select 1');ready=true;break;}catch{await delay(500);}}assert.ok(ready);
+ let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
  await setupFinanceFixture(sql);
  const agg=await load('20260212000000_create_shift_aggregates.sql');await sql(agg.slice(agg.indexOf('create or replace function public.initialize_shift_aggregates'),agg.indexOf('comment on function public.initialize_shift_aggregates')));
  // This runner covers attendance and its shared locks; the complete booking123000 migration has its own runner/actual-schema replay.
