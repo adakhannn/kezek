@@ -7,7 +7,13 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {
+    canAssignBusinessRole,
+    parseBusinessMemberRoleKey,
+    resolveBusinessMemberActor,
+} from '@/lib/businessMemberRolePolicy';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { isUuid } from '@/lib/validation';
 
 export async function POST(req: Request, context: unknown) {
     try {
@@ -29,23 +35,19 @@ export async function POST(req: Request, context: unknown) {
         const {data: {user}} = await supa.auth.getUser();
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
-        // super_admin (global) ИЛИ owner/admin данного бизнеса
-        const {data: isSuper} = await supa.rpc('is_super_admin');
-
-        let allowed = !!isSuper;
-        if (!allowed) {
-            const {data: isOwner} = await supa.rpc('has_role', {p_role: 'owner', p_biz_id: biz_id});
-            const {data: isAdmin} = await supa.rpc('has_role', {p_role: 'admin', p_biz_id: biz_id});
-            allowed = !!isOwner || !!isAdmin;
-        }
-        if (!allowed) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
+        // super_admin (global) ИЛИ owner/admin данного бизнеса; дальше — иерархия ролей
+        const actor = await resolveBusinessMemberActor(supa, biz_id);
+        if (!actor) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         // входные данные
-        type Body = { user_id?: string; role_key?: 'owner' | 'admin' | 'manager' | 'staff' | 'client' };
-        const body = (await req.json()) as Body;
-        const user_id = (body.user_id ?? '').trim();
-        const role_key = body.role_key ?? 'client';
-        if (!user_id) return NextResponse.json({ok: false, error: 'bad user_id'}, {status: 400});
+        const body = (await req.json().catch(() => null)) as { user_id?: unknown; role_key?: unknown } | null;
+        const user_id = typeof body?.user_id === 'string' ? body.user_id.trim() : '';
+        if (!isUuid(user_id)) return NextResponse.json({ok: false, error: 'bad user_id'}, {status: 400});
+        const role_key = body?.role_key === undefined ? 'client' : parseBusinessMemberRoleKey(body.role_key);
+        if (!role_key) return NextResponse.json({ok: false, error: 'bad role_key'}, {status: 400});
+        if (!canAssignBusinessRole(actor, role_key)) {
+            return NextResponse.json({ok: false, error: 'forbidden_role'}, {status: 403});
+        }
 
         const admin = createClient(URL, SERVICE);
 

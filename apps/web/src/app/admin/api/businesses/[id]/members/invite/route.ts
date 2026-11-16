@@ -9,6 +9,13 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {
+    canAssignBusinessRole,
+    parseBusinessMemberRoleKey,
+    resolveBusinessMemberActor,
+    type BusinessMemberRoleKey,
+} from '@/lib/businessMemberRolePolicy';
+
 type Body = {
     full_name?: string | null;
     email?: string | null;
@@ -58,21 +65,23 @@ export async function POST(req: Request, context: unknown) {
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         // доступ: global super_admin ИЛИ owner/admin этого бизнеса
-        const { data: isSuper } = await supa.rpc('is_super_admin');
+        const actor = await resolveBusinessMemberActor(supa, biz_id);
+        if (!actor) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
-        let allowed = !!isSuper;
-        if (!allowed) {
-            const { data: isOwner } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: biz_id });
-            const { data: isAdmin } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: biz_id });
-            allowed = !!isOwner || !!isAdmin;
-        }
-        if (!allowed) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
-
-        const body = (await req.json()) as Body;
+        const body = ((await req.json().catch(() => null)) ?? {}) as Body;
         const full_name = norm(body.full_name);
         const email = norm(body.email);
         const phone = norm(body.phone);
-        const roles = Array.isArray(body.roles) ? body.roles.filter(Boolean) : [];
+        const rawRoles = Array.isArray(body.roles) ? body.roles.filter(Boolean) : [];
+        const roles: BusinessMemberRoleKey[] = [];
+        for (const raw of rawRoles) {
+            const key = parseBusinessMemberRoleKey(raw);
+            if (!key) return NextResponse.json({ ok: false, error: 'bad role_key' }, { status: 400 });
+            if (!canAssignBusinessRole(actor, key)) {
+                return NextResponse.json({ ok: false, error: 'forbidden_role' }, { status: 403 });
+            }
+            roles.push(key);
+        }
 
         if (!email && !phone) {
             return NextResponse.json({ ok: false, error: 'Нужен email или телефон' }, { status: 400 });

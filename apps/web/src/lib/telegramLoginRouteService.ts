@@ -20,10 +20,10 @@ type Success = {
     ok: true;
     payload: {
         userId: string;
-        email: string;
-        password: string;
-        needsSignIn: true;
+        accessToken: string;
+        refreshToken: string;
         redirect: '/';
+        linkage: 'existing' | 'created';
     };
 };
 

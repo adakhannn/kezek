@@ -1,4 +1,8 @@
 import { logError } from '@/lib/log';
+import {
+    MAX_PROFILE_WHATSAPP_OTP_ATTEMPTS,
+    type ProfileWhatsAppOtpStore,
+} from '@/lib/profileWhatsAppOtpStore';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 type UserLike = {
@@ -12,15 +16,24 @@ export type SupabaseServerClientLike = {
     from: (table: string) => any;
     auth: {
         getUser: () => Promise<{ data: { user: UserLike | null } }>;
-        updateUser: (payload: unknown) => Promise<{ data?: unknown; error?: { message?: string } | null }>;
     };
 };
 
+/** Writes verified identity columns; must be a privileged (service-role) client. */
+export type ProfileIdentityWriter = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
+};
+
 type VerifyExistingOtpInput = {
-    supabase: SupabaseServerClientLike;
     user: UserLike;
     code?: string;
     findAuthOwnerByPhone: (phone: string) => Promise<string | null>;
+    otpStore: ProfileWhatsAppOtpStore;
+    hashOtp: (code: string) => string;
+    secureEqual: (left: string, right: string) => boolean;
+    profileWriter: ProfileIdentityWriter;
+    now?: Date;
 };
 
 type VerifyExistingOtpResult =
@@ -38,11 +51,19 @@ type VerifyExistingOtpResult =
           status: number;
       };
 
+function internalError(code: string, message = 'Не удалось проверить код. Попробуйте позже.'): VerifyExistingOtpResult {
+    return { ok: false, error: 'internal', message, details: { code }, status: 500 };
+}
+
 export async function verifyExistingWhatsAppOtp({
-    supabase,
     user,
     code,
     findAuthOwnerByPhone,
+    otpStore,
+    hashOtp,
+    secureEqual,
+    profileWriter,
+    now = new Date(),
 }: VerifyExistingOtpInput): Promise<VerifyExistingOtpResult> {
     if (!code || !/^\d{6}$/.test(code)) {
         return {
@@ -54,17 +75,15 @@ export async function verifyExistingWhatsAppOtp({
         };
     }
 
-    const userMeta = (user.user_metadata ?? {}) as {
-        whatsapp_otp_code?: string;
-        whatsapp_otp_expires?: string;
-        whatsapp_otp_phone?: string;
-    };
+    let record;
+    try {
+        record = await otpStore.load(user.id);
+    } catch (error) {
+        logError('WhatsAppVerifyOtp', 'OTP load error', error);
+        return internalError('otp_load_failed');
+    }
 
-    const savedCode = userMeta.whatsapp_otp_code;
-    const expiresAt = userMeta.whatsapp_otp_expires;
-    const otpPhone = userMeta.whatsapp_otp_phone;
-
-    if (!savedCode) {
+    if (!record) {
         return {
             ok: false,
             error: 'validation',
@@ -74,7 +93,16 @@ export async function verifyExistingWhatsAppOtp({
         };
     }
 
-    if (expiresAt && new Date(expiresAt) < new Date()) {
+    const clearRecord = async () => {
+        try {
+            await otpStore.clear(user.id);
+        } catch (error) {
+            logError('WhatsAppVerifyOtp', 'OTP cleanup error', error);
+        }
+    };
+
+    if (new Date(record.expiresAt) < now) {
+        await clearRecord();
         return {
             ok: false,
             error: 'validation',
@@ -84,7 +112,24 @@ export async function verifyExistingWhatsAppOtp({
         };
     }
 
-    if (savedCode !== code) {
+    if (record.attempts >= MAX_PROFILE_WHATSAPP_OTP_ATTEMPTS) {
+        await clearRecord();
+        return {
+            ok: false,
+            error: 'rate_limit',
+            message: 'Слишком много попыток. Запросите новый код.',
+            details: { code: 'too_many_attempts' },
+            status: 429,
+        };
+    }
+
+    if (!secureEqual(hashOtp(code), record.codeHash)) {
+        try {
+            await otpStore.save(user.id, { ...record, attempts: record.attempts + 1 });
+        } catch (error) {
+            logError('WhatsAppVerifyOtp', 'OTP attempt save error', error);
+            return internalError('otp_attempt_save_failed');
+        }
         return {
             ok: false,
             error: 'validation',
@@ -94,8 +139,9 @@ export async function verifyExistingWhatsAppOtp({
         };
     }
 
-    const normalizedPhone = normalizePhoneToE164(otpPhone);
+    const normalizedPhone = normalizePhoneToE164(record.phone);
     if (!normalizedPhone) {
+        await clearRecord();
         return {
             ok: false,
             error: 'validation',
@@ -108,6 +154,7 @@ export async function verifyExistingWhatsAppOtp({
     try {
         const authOwnerId = await findAuthOwnerByPhone(normalizedPhone);
         if (authOwnerId && authOwnerId !== user.id) {
+            await clearRecord();
             return {
                 ok: false,
                 error: 'conflict',
@@ -118,42 +165,20 @@ export async function verifyExistingWhatsAppOtp({
         }
     } catch (error) {
         logError('WhatsAppVerifyOtp', 'Auth owner lookup error', error);
-        return {
-            ok: false,
-            error: 'internal',
-            message: 'Не удалось проверить владельца WhatsApp номера. Попробуйте позже.',
-            details: { code: 'auth_owner_lookup_failed' },
-            status: 500,
-        };
+        return internalError('auth_owner_lookup_failed', 'Не удалось проверить владельца WhatsApp номера. Попробуйте позже.');
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await profileWriter
         .from('profiles')
         .update({ whatsapp_phone: normalizedPhone, whatsapp_verified: true })
         .eq('id', user.id);
 
     if (updateError) {
         logError('WhatsAppVerifyOtp', 'Update profile error', updateError);
-        return {
-            ok: false,
-            error: 'internal',
-            message: updateError.message || 'Не удалось обновить профиль',
-            details: { code: 'update_failed' },
-            status: 500,
-        };
+        return internalError('update_failed', 'Не удалось обновить профиль');
     }
 
-    const { error: metaError } = await supabase.auth.updateUser({
-        data: {
-            whatsapp_otp_code: null,
-            whatsapp_otp_expires: null,
-            whatsapp_otp_phone: null,
-        },
-    });
-
-    if (metaError) {
-        logError('WhatsAppVerifyOtp', 'Metadata cleanup error', metaError);
-    }
+    await clearRecord();
 
     return {
         ok: true,

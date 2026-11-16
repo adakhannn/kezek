@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
+import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
 import { TimeoutError } from '../../lib/fetchWithTimeout';
 import { signOutSafely } from '../../lib/signOut';
@@ -59,7 +60,7 @@ export function useProfileScreenData() {
             const { data, error } = await withProfileTimeout(
                 supabase
                     .from('profiles')
-                    .select('id, full_name, phone, notify_email, notify_whatsapp')
+                    .select('id, full_name, phone, notify_email, notify_whatsapp, notify_sms, notify_telegram')
                     .eq('id', userQuery.data.id)
                     .maybeSingle(),
                 'Profile data request timed out',
@@ -100,37 +101,23 @@ export function useProfileScreenData() {
                 throw new Error('Profile user is not loaded');
             }
 
-            const { error } = await withProfileTimeout(
-                supabase.from('profiles').upsert(
-                    {
-                        id: userQuery.data.id,
+            // Server endpoint applies the same rules as web (e.g. WhatsApp/Telegram
+            // notifications only for verified channels) and mirrors the name to
+            // Auth metadata. Channels not edited here are sent back unchanged.
+            await withProfileTimeout(
+                apiRequest('/profile/update', {
+                    method: 'POST',
+                    body: JSON.stringify({
                         full_name: fullName.trim() || null,
                         phone: phone.trim() || null,
                         notify_email: notifyEmail,
                         notify_whatsapp: notifyWhatsApp,
-                    },
-                    { onConflict: 'id' },
-                ),
+                        notify_sms: profileQuery.data?.notify_sms ?? true,
+                        notify_telegram: profileQuery.data?.notify_telegram ?? true,
+                    }),
+                }),
                 'Profile update request timed out',
             );
-
-            if (error) {
-                throw error;
-            }
-
-            const { error: metadataError } = await withProfileTimeout(
-                supabase.auth.updateUser({
-                    data: {
-                        ...(userQuery.data.user_metadata ?? {}),
-                        full_name: fullName.trim() || null,
-                    },
-                }),
-                'Profile metadata update request timed out',
-            );
-
-            if (metadataError) {
-                throw metadataError;
-            }
 
             return {
                 ok: true,

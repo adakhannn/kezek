@@ -37,9 +37,8 @@ describe('telegramLoginHttpService', () => {
             ok: true,
             payload: {
                 userId: 'user-1',
-                email: 'telegram_1@telegram.local',
-                password: 'secret',
-                needsSignIn: true,
+                accessToken: 'access-token',
+                refreshToken: 'refresh-token',
                 redirect: '/',
             },
         });

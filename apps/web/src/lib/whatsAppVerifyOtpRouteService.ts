@@ -1,5 +1,9 @@
+import { hasUsableWhatsAppOtpHashSecret } from '@/lib/env';
+import { createProfileWhatsAppOtpStore, type ProfileWhatsAppOtpStore } from '@/lib/profileWhatsAppOtpStore';
+import { hashWhatsappOtp, secureEqualHex } from '@/lib/whatsAppOtpHash';
 import {
     verifyExistingWhatsAppOtp,
+    type ProfileIdentityWriter,
     type SupabaseServerClientLike,
 } from '@/lib/whatsAppVerifyOtpService';
 
@@ -22,12 +26,17 @@ export type WhatsAppVerifyOtpRouteResult = Failure | Success;
 
 export async function runWhatsAppVerifyOtpRoute({
     supabase,
+    admin,
     code,
     findAuthOwnerByPhone,
+    otpStore,
 }: {
     supabase: SupabaseServerClientLike;
+    /** Service-role client: identity columns are not writable with a user session. */
+    admin: ProfileIdentityWriter & Parameters<typeof createProfileWhatsAppOtpStore>[0];
     code?: string;
     findAuthOwnerByPhone: (phone: string) => Promise<string | null>;
+    otpStore?: ProfileWhatsAppOtpStore;
 }): Promise<WhatsAppVerifyOtpRouteResult> {
     const {
         data: { user },
@@ -42,10 +51,23 @@ export async function runWhatsAppVerifyOtpRoute({
         };
     }
 
+    if (!hasUsableWhatsAppOtpHashSecret()) {
+        return {
+            ok: false,
+            error: 'internal',
+            message: 'Подтверждение WhatsApp временно недоступно',
+            details: { code: 'otp_secret_not_configured' },
+            status: 503,
+        };
+    }
+
     return verifyExistingWhatsAppOtp({
-        supabase,
         user,
         code,
         findAuthOwnerByPhone,
+        otpStore: otpStore ?? createProfileWhatsAppOtpStore(admin),
+        hashOtp: hashWhatsappOtp,
+        secureEqual: secureEqualHex,
+        profileWriter: admin,
     });
 }

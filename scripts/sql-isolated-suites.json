@@ -13,5 +13,6 @@
   "test-shift-hours-adjustment-isolated.mjs",
   "test-platform-admin-commands-isolated.cjs",
   "test-privileged-maintenance-isolated.cjs",
-  "test-user-lifecycle-isolated.cjs"
+  "test-user-lifecycle-isolated.cjs",
+  "test-identity-surface-hardening-isolated.cjs"
 ]

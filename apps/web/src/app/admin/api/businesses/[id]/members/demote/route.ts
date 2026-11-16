@@ -6,6 +6,11 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {
+    canChangeBusinessMember,
+    loadBusinessMemberRoleKeys,
+    resolveBusinessMemberActor,
+} from '@/lib/businessMemberRolePolicy';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { isUuid } from '@/lib/validation';
 
@@ -37,23 +42,23 @@ export async function POST(req: Request, context: unknown) {
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         // доступ: super_admin глобально ИЛИ owner/admin этого бизнеса
-        const {data: isSuper} = await supa.rpc('is_super_admin');
+        const actor = await resolveBusinessMemberActor(supa, biz_id);
+        if (!actor) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
-        let allowed = !!isSuper;
-        if (!allowed) {
-            const {data: isOwner} = await supa.rpc('has_role', {p_role: 'owner', p_biz_id: biz_id});
-            const {data: isAdmin} = await supa.rpc('has_role', {p_role: 'admin', p_biz_id: biz_id});
-            allowed = !!isOwner || !!isAdmin;
-        }
-        if (!allowed) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
-
-        const body = (await req.json()) as Body;
-        const user_id = body?.user_id ?? '';
+        const body = (await req.json().catch(() => null)) as Body | null;
+        const user_id = typeof body?.user_id === 'string' ? body.user_id : '';
         if (!isUuid(user_id)) {
             return NextResponse.json({ok: false, error: 'bad user_id'}, {status: 400});
         }
 
         const admin = createClient(URL, SERVICE);
+
+        // demote снимает все роли кроме client — цель должна быть «ниже» вызывающего
+        const targetRoles = await loadBusinessMemberRoleKeys(admin, biz_id, user_id);
+        if (!targetRoles.ok) return NextResponse.json({ok: false, error: 'internal'}, {status: 500});
+        if (!canChangeBusinessMember(actor, targetRoles.keys)) {
+            return NextResponse.json({ok: false, error: 'forbidden_member'}, {status: 403});
+        }
 
         // найдём role_id для client
         const {data: clientRole, error: roleErr} = await admin

@@ -20,6 +20,7 @@ export async function runWhatsAppVerifyOtpHttp(req: Request): Promise<NextRespon
   const admin = createSupabaseAdminClient();
   const result = await runWhatsAppVerifyOtpRoute({
     supabase: (await createSupabaseServerClient()) as unknown as SupabaseServerClientLike,
+    admin,
     code,
     findAuthOwnerByPhone: (phone) => findWhatsAppOwnerByPhone(admin as never, phone),
   });

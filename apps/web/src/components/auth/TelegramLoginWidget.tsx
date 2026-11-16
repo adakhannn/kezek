@@ -97,10 +97,9 @@ function TelegramLoginWidgetComponent({
                 // успешный ответ: { ok: true, data: { ...payload }, ...additionalFields }
                 // Для этого виджета нам важно корректно вытащить payload:
                 type TelegramLoginPayload = TelegramAuthData & {
-                    needsSignIn?: boolean;
                     redirect?: string;
-                    email?: string;
-                    password?: string;
+                    accessToken?: string;
+                    refreshToken?: string;
                 };
 
                 const payload: TelegramLoginPayload =
@@ -113,32 +112,24 @@ function TelegramLoginWidgetComponent({
                     throw new Error(apiMessage);
                 }
 
-                // Отладка: смотрим, что вернул API
-                // eslint-disable-next-line no-console
-                console.log('[TelegramLoginWidget] API response', data);
-
-                // Если API вернул данные для входа — выполняем вход через Supabase
-                if (payload.needsSignIn && payload.email && payload.password) {
-                    // eslint-disable-next-line no-console
-                    console.log('[TelegramLoginWidget] Starting Supabase signInWithPassword');
+                // Сервер выдаёт короткоживущую сессию проверенного Telegram-пользователя
+                // (без смены пароля и без передачи учётных данных).
+                if (payload.accessToken && payload.refreshToken) {
                     const { supabase } = await import('@/lib/supabaseClient');
-                    const { error: signInError } = await supabase.auth.signInWithPassword({
-                        email: payload.email,
-                        password: payload.password,
+                    const { error: sessionError } = await supabase.auth.setSession({
+                        access_token: payload.accessToken,
+                        refresh_token: payload.refreshToken,
                     });
 
-                    if (signInError) {
-                         
-                        console.error('[TelegramLoginWidget] Supabase signIn error', signInError);
-                        throw new Error(signInError.message);
+                    if (sessionError) {
+                        throw new Error(sessionError.message);
                     }
-
-                    // eslint-disable-next-line no-console
-                    console.log('[TelegramLoginWidget] Supabase signIn success, refreshing router');
 
                     // Обновляем серверные компоненты и даём кукам установиться
                     router.refresh();
                     await new Promise((resolve) => setTimeout(resolve, 100));
+                } else {
+                    throw new Error('Не удалось подготовить сессию');
                 }
 
                 onSuccessRef.current?.();

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { logError } from '@/lib/log';
+import { issueSessionForVerifiedUser, type VerifiedIdentitySession } from '@/lib/verifiedIdentitySession';
 
 type TelegramNormalizedData = {
     telegram_id: number;
@@ -40,6 +41,7 @@ type TelegramLoginInput = {
     admin: TelegramLoginAdminClientLike;
     normalized: TelegramNormalizedData;
     randomHex?: (size: number) => string;
+    issueSession?: (userId: string) => Promise<VerifiedIdentitySession>;
 };
 
 type TelegramLoginResult =
@@ -47,9 +49,8 @@ type TelegramLoginResult =
           ok: true;
           data: {
               userId: string;
-              email: string;
-              password: string;
-              needsSignIn: true;
+              accessToken: string;
+              refreshToken: string;
               redirect: '/';
               linkage: 'existing' | 'created';
           };
@@ -177,37 +178,23 @@ export async function resolveTelegramIdentity({
     return { ok: true as const, userId, linkage };
 }
 
-export async function handleTelegramLogin({ admin, normalized, randomHex = defaultRandomHex }: TelegramLoginInput): Promise<TelegramLoginResult> {
+export async function handleTelegramLogin({
+    admin,
+    normalized,
+    randomHex = defaultRandomHex,
+    issueSession = issueSessionForVerifiedUser,
+}: TelegramLoginInput): Promise<TelegramLoginResult> {
     const identity = await resolveTelegramIdentity({ admin, normalized, randomHex });
     if (!identity.ok) return identity;
     const { userId, linkage } = identity;
 
-    const tempPassword = randomHex(16);
-    const tempEmail = `telegram_${normalized.telegram_id}@telegram.local`;
-
-    const { data: currentUser, error: getUserError } = await admin.auth.admin.getUserById(userId);
-    if (getUserError) {
-        logError('TelegramLogin', 'GetUserById error', getUserError);
-    }
-
-    if (!currentUser?.user?.email) {
-        const { error: updateEmailError } = await admin.auth.admin.updateUserById(userId, {
-            email: tempEmail,
-            email_confirm: true,
-        });
-
-        if (updateEmailError) {
-            logError('TelegramLogin', 'Update email error', updateEmailError);
-        }
-    }
-
-    const emailToUse = currentUser?.user?.email ?? tempEmail;
-    const { error: passwordError } = await admin.auth.admin.updateUserById(userId, {
-        password: tempPassword,
-    });
-
-    if (passwordError) {
-        logError('TelegramLogin', 'Set password error', passwordError);
+    // Never rotate the user's password or return credentials: issue a fresh
+    // short-lived session for the verified Telegram identity instead.
+    let session: VerifiedIdentitySession;
+    try {
+        session = await issueSession(userId);
+    } catch (error) {
+        logError('TelegramLogin', 'Issue session error', error);
         return {
             ok: false,
             error: 'internal',
@@ -221,9 +208,8 @@ export async function handleTelegramLogin({ admin, normalized, randomHex = defau
         ok: true,
         data: {
             userId,
-            email: emailToUse,
-            password: tempPassword,
-            needsSignIn: true,
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
             redirect: '/',
             linkage,
         },

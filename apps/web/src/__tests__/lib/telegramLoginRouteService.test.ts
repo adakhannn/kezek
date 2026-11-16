@@ -76,9 +76,8 @@ describe('telegramLoginRouteService', () => {
             ok: true,
             data: {
                 userId: 'user-1',
-                email: 'telegram_123@telegram.local',
-                password: 'secret',
-                needsSignIn: true,
+                accessToken: 'access-token',
+                refreshToken: 'refresh-token',
                 redirect: '/',
                 linkage: 'existing',
             },
@@ -96,9 +95,8 @@ describe('telegramLoginRouteService', () => {
             ok: true,
             payload: {
                 userId: 'user-1',
-                email: 'telegram_123@telegram.local',
-                password: 'secret',
-                needsSignIn: true,
+                accessToken: 'access-token',
+                refreshToken: 'refresh-token',
                 redirect: '/',
                 linkage: 'existing',
             },

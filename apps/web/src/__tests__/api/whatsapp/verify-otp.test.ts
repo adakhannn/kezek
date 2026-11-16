@@ -1,9 +1,11 @@
 /**
  * Тесты для /api/whatsapp/verify-otp
- * Проверка OTP кода и подтверждение WhatsApp номера
+ * Проверка OTP кода и подтверждение WhatsApp номера.
+ * Код хранится только как HMAC в app_metadata (пишет только service role).
  */
 
 import { POST } from '@/app/api/whatsapp/verify-otp/route';
+import { hashWhatsappOtp } from '@/lib/whatsAppOtpHash';
 import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 setupApiTestMocks();
@@ -24,199 +26,135 @@ jest.mock('@/lib/rateLimit', () => ({
     },
 }));
 
+type StoredOtp = { codeHash: string; phone: string; expiresAt: string; attempts: number } | undefined;
+
 describe('/api/whatsapp/verify-otp', () => {
     const mockSupabase = createMockSupabase();
+    let storedOtp: StoredOtp;
+    let profileUpdate: jest.Mock;
+    let updateUserById: jest.Mock;
+
+    function storeOtp(code: string, expiresInMs = 600000, attempts = 0) {
+        storedOtp = {
+            codeHash: hashWhatsappOtp(code),
+            phone: '+996555123456',
+            expiresAt: new Date(Date.now() + expiresInMs).toISOString(),
+            attempts,
+        };
+    }
+
+    function signIn(userMetadata: Record<string, unknown> = {}) {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: 'user-id', user_metadata: userMetadata } },
+            error: null,
+        });
+    }
+
+    async function verify(code: string) {
+        return POST(createMockRequest('http://localhost/api/whatsapp/verify-otp', {
+            method: 'POST',
+            body: { code },
+        }));
+    }
 
     beforeEach(() => {
         jest.clearAllMocks();
+        storedOtp = undefined;
+        profileUpdate = jest.fn(() => ({ eq: jest.fn().mockResolvedValue({ data: null, error: null }) }));
+        updateUserById = jest.fn(async (_id: string, payload: { app_metadata: { whatsapp_link_otp: StoredOtp | null } }) => {
+            storedOtp = payload.app_metadata.whatsapp_link_otp ?? undefined;
+            return { data: {}, error: null };
+        });
 
         (createSupabaseServerClient as jest.Mock).mockResolvedValue(mockSupabase);
         (createSupabaseAdminClient as jest.Mock).mockReturnValue({
             auth: {
                 admin: {
                     listUsers: jest.fn().mockResolvedValue({ data: { users: [] }, error: null }),
+                    getUserById: jest.fn(async (id: string) => ({
+                        data: { user: { id, app_metadata: storedOtp ? { whatsapp_link_otp: storedOtp } : {} } },
+                        error: null,
+                    })),
+                    updateUserById,
                 },
             },
-            from: jest.fn().mockReturnValue({
-                select: jest.fn().mockReturnValue({
+            from: jest.fn(() => {
+                const lookup = {
                     eq: jest.fn().mockReturnThis(),
                     limit: jest.fn().mockResolvedValue({ data: [], error: null }),
-                }),
+                };
+                return { select: jest.fn().mockReturnValue(lookup), update: profileUpdate };
             }),
         });
     });
 
     describe('Авторизация', () => {
         test('должен вернуть 401 если пользователь не авторизован', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: null,
-                },
-                error: null,
-            });
+            mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
 
-            const req = createMockRequest('http://localhost/api/whatsapp/verify-otp', {
-                method: 'POST',
-                body: {
-                    code: '123456',
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 401);
+            await expectErrorResponse(await verify('123456'), 401);
         });
     });
 
     describe('Валидация', () => {
         test('должен вернуть 400 при неверном формате кода', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
+            signIn();
 
-            const req = createMockRequest('http://localhost/api/whatsapp/verify-otp', {
-                method: 'POST',
-                body: {
-                    code: '12345', // Не 6 цифр
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'invalid_code');
+            await expectErrorResponse(await verify('12345'), 400, 'invalid_code');
         });
 
         test('должен вернуть 400 если код не найден', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                        user_metadata: {}, // Нет OTP кода
-                    },
-                },
-                error: null,
+            signIn();
+
+            await expectErrorResponse(await verify('123456'), 400, 'no_code');
+        });
+
+        test('не принимает код, подложенный в редактируемые пользователем метаданные', async () => {
+            signIn({
+                whatsapp_otp_code: '123456',
+                whatsapp_otp_expires: new Date(Date.now() + 600000).toISOString(),
+                whatsapp_otp_phone: '+996555123456',
             });
 
-            const req = createMockRequest('http://localhost/api/whatsapp/verify-otp', {
-                method: 'POST',
-                body: {
-                    code: '123456',
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'no_code');
+            await expectErrorResponse(await verify('123456'), 400, 'no_code');
+            expect(profileUpdate).not.toHaveBeenCalled();
         });
 
         test('должен вернуть 400 если код истек', async () => {
-            const expiredDate = new Date(Date.now() - 60000).toISOString(); // Прошедшая дата
+            signIn();
+            storeOtp('123456', -60000);
 
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                        user_metadata: {
-                            whatsapp_otp_code: '123456',
-                            whatsapp_otp_expires: expiredDate,
-                        },
-                    },
-                },
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/whatsapp/verify-otp', {
-                method: 'POST',
-                body: {
-                    code: '123456',
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'expired');
+            await expectErrorResponse(await verify('123456'), 400, 'expired');
         });
 
-        test('должен вернуть 400 если код неверный', async () => {
-            const futureDate = new Date(Date.now() + 600000).toISOString(); // Будущая дата
+        test('должен вернуть 400 если код неверный и учесть попытку', async () => {
+            signIn();
+            storeOtp('123456');
 
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                        user_metadata: {
-                            whatsapp_otp_code: '123456',
-                            whatsapp_otp_expires: futureDate,
-                            whatsapp_otp_phone: '+996555123456',
-                        },
-                    },
-                },
-                error: null,
-            });
+            await expectErrorResponse(await verify('999999'), 400, 'wrong_code');
+            expect(storedOtp?.attempts).toBe(1);
+        });
 
-            const req = createMockRequest('http://localhost/api/whatsapp/verify-otp', {
-                method: 'POST',
-                body: {
-                    code: '999999', // Неверный код
-                },
-            });
+        test('блокирует код после исчерпания попыток', async () => {
+            signIn();
+            storeOtp('123456', 600000, 5);
 
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'wrong_code');
+            await expectErrorResponse(await verify('123456'), 429, 'rate_limit');
+            expect(profileUpdate).not.toHaveBeenCalled();
         });
     });
 
     describe('Успешная проверка', () => {
-        test('должен успешно подтвердить WhatsApp номер', async () => {
-            const futureDate = new Date(Date.now() + 600000).toISOString();
+        test('должен успешно подтвердить WhatsApp номер через service-клиент', async () => {
+            signIn();
+            storeOtp('123456');
 
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                        user_metadata: {
-                            whatsapp_otp_code: '123456',
-                            whatsapp_otp_expires: futureDate,
-                            whatsapp_otp_phone: '+996555123456',
-                        },
-                    },
-                },
-                error: null,
-            });
-
-            // Мокаем обновление профиля
-            mockSupabase.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            // Мокаем удаление OTP из user_metadata
-            mockSupabase.auth.updateUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/whatsapp/verify-otp', {
-                method: 'POST',
-                body: {
-                    code: '123456',
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
+            const data = await expectSuccessResponse(await verify('123456'), 200);
 
             expect(data).toHaveProperty('ok', true);
+            expect(profileUpdate).toHaveBeenCalledWith({ whatsapp_phone: '+996555123456', whatsapp_verified: true });
+            expect(mockSupabase.from).not.toHaveBeenCalledWith('profiles');
+            expect(storedOtp).toBeUndefined();
         });
     });
 });
-
-

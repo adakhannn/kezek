@@ -5,14 +5,26 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import ProfileScreen from '../../screens/ProfileScreen';
 import { supabase } from '../../lib/supabase';
 import { createTestQueryClient } from '../testQueryClient';
+import { apiRequest } from '../../lib/api';
 
 const mockShowToast = jest.fn();
+
+jest.mock('../../lib/api', () => ({
+    apiRequest: jest.fn(),
+}));
 
 jest.mock('../../contexts/ToastContext', () => ({
     useToast: () => ({
         showToast: mockShowToast,
     }),
 }));
+
+const mockedApiRequest = apiRequest as jest.Mock;
+
+function savedBody() {
+    const call = mockedApiRequest.mock.calls.find(([endpoint]) => endpoint === '/profile/update');
+    return call ? JSON.parse(call[1].body as string) : null;
+}
 
 describe('ProfileScreen', () => {
     const mockedSupabase = supabase as unknown as {
@@ -37,6 +49,8 @@ describe('ProfileScreen', () => {
 
     beforeEach(() => {
         mockShowToast.mockReset();
+        mockedApiRequest.mockReset();
+        mockedApiRequest.mockResolvedValue({ ok: true });
 
         mockedSupabase.auth.getUser.mockResolvedValue({
             data: {
@@ -68,6 +82,8 @@ describe('ProfileScreen', () => {
                     phone: '+996555000111',
                     notify_email: true,
                     notify_whatsapp: true,
+                    notify_sms: false,
+                    notify_telegram: true,
                 },
                 error: null,
             }),
@@ -109,25 +125,22 @@ describe('ProfileScreen', () => {
         fireEvent.press(await screen.findByText('Сохранить'));
 
         await waitFor(() => {
-            expect(profileQuery.upsert).toHaveBeenCalledWith(
-                {
-                    id: 'test-user-id',
-                    full_name: 'Updated User',
-                    phone: '+996555222333',
-                    notify_email: true,
-                    notify_whatsapp: true,
-                },
-                { onConflict: 'id' },
-            );
-            expect(mockedSupabase.auth.updateUser).toHaveBeenCalledWith({
-                data: {
-                    full_name: 'Updated User',
-                },
-            });
+            expect(mockedApiRequest).toHaveBeenCalledWith('/profile/update', expect.objectContaining({ method: 'POST' }));
         });
+        expect(savedBody()).toEqual({
+            full_name: 'Updated User',
+            phone: '+996555222333',
+            notify_email: true,
+            notify_whatsapp: true,
+            notify_sms: false,
+            notify_telegram: true,
+        });
+        // Writes go through the server, never directly to profiles or Auth metadata.
+        expect(profileQuery.upsert).not.toHaveBeenCalled();
+        expect(mockedSupabase.auth.updateUser).not.toHaveBeenCalled();
     });
 
-    test('saves disabled notification preferences directly to profile storage', async () => {
+    test('saves disabled notification preferences through the profile API', async () => {
         renderWithProviders(<ProfileScreen />);
 
         await screen.findByText('Email уведомления');
@@ -139,13 +152,11 @@ describe('ProfileScreen', () => {
         fireEvent.press(await screen.findByText('Сохранить'));
 
         await waitFor(() => {
-            expect(profileQuery.upsert).toHaveBeenCalledWith(
+            expect(savedBody()).toEqual(
                 expect.objectContaining({
-                    id: 'test-user-id',
                     notify_email: false,
                     notify_whatsapp: false,
                 }),
-                { onConflict: 'id' },
             );
         });
     });
@@ -156,7 +167,7 @@ describe('ProfileScreen', () => {
         fireEvent.changeText(await screen.findByDisplayValue('Test User'), '   ');
         fireEvent.press(await screen.findByText('Сохранить'));
 
-        expect(profileQuery.upsert).not.toHaveBeenCalled();
+        expect(mockedApiRequest).not.toHaveBeenCalled();
         expect(mockShowToast).toHaveBeenCalledWith('Введите имя', 'error');
     });
 
@@ -166,15 +177,12 @@ describe('ProfileScreen', () => {
         fireEvent.changeText(await screen.findByDisplayValue('+996555000111'), 'bad-phone');
         fireEvent.press(await screen.findByText('Сохранить'));
 
-        expect(profileQuery.upsert).not.toHaveBeenCalled();
+        expect(mockedApiRequest).not.toHaveBeenCalled();
         expect(mockShowToast).toHaveBeenCalledWith('Введите корректный номер телефона', 'error');
     });
 
     test('shows understandable error toast when profile update fails', async () => {
-        profileQuery.upsert.mockResolvedValueOnce({
-            data: null,
-            error: new Error('Server validation failed'),
-        });
+        mockedApiRequest.mockRejectedValueOnce(new Error('Server validation failed'));
 
         renderWithProviders(<ProfileScreen />);
         fireEvent.press(await screen.findByText('Сохранить'));

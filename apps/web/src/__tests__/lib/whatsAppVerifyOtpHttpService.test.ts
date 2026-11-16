@@ -64,6 +64,7 @@ describe('whatsAppVerifyOtpHttpService', () => {
 
     expect(runWhatsAppVerifyOtpRoute).toHaveBeenCalledWith({
       supabase: mockSupabase,
+      admin: mockAdmin,
       code: '123456',
       findAuthOwnerByPhone: expect.any(Function),
     });

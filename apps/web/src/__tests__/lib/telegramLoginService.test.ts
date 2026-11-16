@@ -1,7 +1,52 @@
 import { handleTelegramLogin } from '@/lib/telegramLoginService';
 import { createMockSupabase } from '../api/testHelpers';
 
+const issueSession = jest.fn(async () => ({ accessToken: 'access-token', refreshToken: 'refresh-token' }));
+
 describe('telegramLoginService', () => {
+    beforeEach(() => {
+        issueSession.mockClear();
+    });
+
+    test('never rotates the password and fails closed when no session can be issued', async () => {
+        const admin = createMockSupabase();
+        const updateUserById = jest.fn();
+        (admin as unknown as { auth: { admin: Record<string, jest.Mock> } }).auth.admin = {
+            getUserById: jest.fn(),
+            updateUserById,
+            createUser: jest.fn(),
+        };
+        admin.from.mockImplementation(() => ({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: { id: 'existing-user-id', telegram_id: 1, full_name: 'X' },
+                error: null,
+            }),
+            update: jest.fn().mockReturnThis(),
+        }));
+        const failingSession = jest.fn(async () => {
+            throw new Error('Sign-in session unavailable');
+        });
+
+        const result = await handleTelegramLogin({
+            admin,
+            normalized: { telegram_id: 1, full_name: 'X', telegram_username: null, telegram_photo_url: null },
+            issueSession: failingSession,
+        });
+
+        expect(failingSession).toHaveBeenCalledWith('existing-user-id');
+        expect(updateUserById).not.toHaveBeenCalled();
+        expect(result).toEqual({
+            ok: false,
+            error: 'internal',
+            message: 'Не удалось подготовить сессию',
+            details: { code: 'session_error' },
+            status: 500,
+        });
+        expect(JSON.stringify(result)).not.toMatch(/password/i);
+    });
+
     test('returns sign-in payload for an existing Telegram profile', async () => {
         const admin = createMockSupabase();
         const updateProfile = jest.fn().mockReturnThis();
@@ -57,15 +102,15 @@ describe('telegramLoginService', () => {
                 telegram_photo_url: null,
             },
             randomHex: (size) => `hex-${size}`,
+            issueSession,
         });
 
         expect(result).toEqual({
             ok: true,
             data: {
                 userId: 'existing-user-id',
-                email: 'telegram_123456789@telegram.local',
-                password: 'hex-16',
-                needsSignIn: true,
+                accessToken: 'access-token',
+                refreshToken: 'refresh-token',
                 redirect: '/',
                 linkage: 'existing',
             },
@@ -120,6 +165,7 @@ describe('telegramLoginService', () => {
                 telegram_photo_url: null,
             },
             randomHex: (size) => `hex-${size}`,
+            issueSession,
         });
 
         expect(result.ok).toBe(true);
@@ -189,15 +235,15 @@ describe('telegramLoginService', () => {
                 telegram_photo_url: null,
             },
             randomHex: (size) => `hex-${size}`,
+            issueSession,
         });
 
         expect(result).toEqual({
             ok: true,
             data: {
                 userId: 'new-user-id',
-                email: 'telegram_222333444@telegram.local',
-                password: 'hex-16',
-                needsSignIn: true,
+                accessToken: 'access-token',
+                refreshToken: 'refresh-token',
                 redirect: '/',
                 linkage: 'created',
             },
@@ -251,6 +297,7 @@ describe('telegramLoginService', () => {
                 telegram_photo_url: null,
             },
             randomHex: (size) => `hex-${size}`,
+            issueSession,
         });
 
         expect(result).toEqual({

@@ -10,7 +10,7 @@ setupApiTestMocks();
 
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 // Мокаем зависимости
 jest.mock('@/lib/env', () => ({
@@ -29,6 +29,7 @@ jest.mock('@/lib/senders/whatsapp', () => ({
 
 jest.mock('@/lib/supabaseHelpers', () => ({
     createSupabaseServerClient: jest.fn(),
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
@@ -41,11 +42,14 @@ jest.mock('@/lib/rateLimit', () => ({
 
 describe('/api/whatsapp/send-otp', () => {
     const mockSupabase = createMockSupabase();
+    const updateUserById = jest.fn();
 
     beforeEach(() => {
         jest.clearAllMocks();
 
         (createSupabaseServerClient as jest.Mock).mockResolvedValue(mockSupabase);
+        updateUserById.mockResolvedValue({ data: {}, error: null });
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue({ auth: { admin: { updateUserById } } });
     });
 
     describe('Авторизация', () => {
@@ -161,16 +165,6 @@ describe('/api/whatsapp/send-otp', () => {
             (normalizePhoneToE164 as jest.Mock).mockReturnValue(phoneE164);
             (sendWhatsApp as jest.Mock).mockResolvedValue(undefined);
 
-            // Мокаем сохранение OTP в user_metadata
-            mockSupabase.auth.updateUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
-
             const req = createMockRequest('http://localhost/api/whatsapp/send-otp', {
                 method: 'POST',
                 body: {
@@ -183,6 +177,23 @@ describe('/api/whatsapp/send-otp', () => {
 
             expect(data).toHaveProperty('ok', true);
             expect(sendWhatsApp).toHaveBeenCalled();
+
+            // Код хранится только как HMAC в app_metadata (service role), не в user_metadata.
+            expect(mockSupabase.auth.updateUser).not.toHaveBeenCalled();
+            expect(updateUserById).toHaveBeenCalledWith('user-id', {
+                app_metadata: {
+                    whatsapp_link_otp: {
+                        codeHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+                        phone: phoneE164,
+                        expiresAt: expect.any(String),
+                        attempts: 0,
+                    },
+                },
+            });
+            const sentText = (sendWhatsApp as jest.Mock).mock.calls[0][0].text as string;
+            const sentCode = sentText.match(/(\d{6})/)?.[1];
+            expect(sentCode).toBeDefined();
+            expect(JSON.stringify(updateUserById.mock.calls)).not.toContain(sentCode);
         });
     });
 });

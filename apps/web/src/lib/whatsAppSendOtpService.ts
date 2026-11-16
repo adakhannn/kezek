@@ -1,16 +1,14 @@
+import crypto from 'crypto';
+
+import {
+  PROFILE_WHATSAPP_OTP_TTL_MS,
+  type ProfileWhatsAppOtpStore,
+} from '@/lib/profileWhatsAppOtpStore';
+
 export type WhatsAppSendOtpSupabaseLike = {
   auth: {
     getUser: () => Promise<{
       data: { user: { id: string } | null };
-    }>;
-        updateUser: (params: {
-      data: {
-        whatsapp_otp_code: string;
-        whatsapp_otp_expires: string;
-        whatsapp_otp_phone: string;
-      };
-    }) => Promise<{
-      error: { message: string } | null;
     }>;
   };
   from: (table: string) => {
@@ -51,6 +49,10 @@ export async function sendProfileWhatsAppOtp(params: {
   authTemplateName?: string;
   authTemplateLanguage?: string;
   requireTemplate?: boolean;
+  /** Server-only OTP storage; the code is never written to user-editable metadata. */
+  otpStore: ProfileWhatsAppOtpStore;
+  hashOtp: (code: string) => string;
+  generateCode?: () => string;
   now?: Date;
 }): Promise<WhatsAppSendOtpResult> {
   const {
@@ -125,16 +127,18 @@ export async function sendProfileWhatsAppOtp(params: {
   }
 
   const now = params.now ?? new Date();
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const { error: metadataError } = await params.supabase.auth.updateUser({
-    data: {
-      whatsapp_otp_code: otpCode,
-      whatsapp_otp_expires: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
-      whatsapp_otp_phone: phoneE164,
-    },
-  });
+  const otpCode = params.generateCode
+    ? params.generateCode()
+    : crypto.randomInt(100000, 1000000).toString();
 
-  if (metadataError) {
+  try {
+    await params.otpStore.save(user.id, {
+      codeHash: params.hashOtp(otpCode),
+      phone: phoneE164,
+      expiresAt: new Date(now.getTime() + PROFILE_WHATSAPP_OTP_TTL_MS).toISOString(),
+      attempts: 0,
+    });
+  } catch {
     return {
       ok: false,
       error: 'internal',

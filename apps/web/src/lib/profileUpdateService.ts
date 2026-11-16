@@ -48,6 +48,8 @@ export type ProfileUpdateResult =
 export async function updateProfileSettings(params: {
   supabase: ProfileUpdateSupabaseLike;
   body: ProfileUpdateBody;
+  /** Overrides the default auth.updateUser metadata mirror (bearer sessions). */
+  updateFullNameMetadata?: (fullName: string | null) => Promise<void>;
 }): Promise<ProfileUpdateResult> {
   const {
     data: { user },
@@ -93,7 +95,9 @@ export async function updateProfileSettings(params: {
   const telegramConnected = !!currentProfile?.telegram_id && !!currentProfile?.telegram_verified;
   const notify_telegram = telegramConnected && requestedNotifyTelegram;
 
-  const meta = (user.user_metadata ?? {}) as { telegram_id?: number | string | null };
+  // Identity columns (whatsapp_phone/whatsapp_verified, telegram_id/telegram_verified, ...)
+  // are written only by provider verification flows with a privileged client.
+  // user_metadata is editable by the user and must never be trusted as proof.
   const upsertData: Record<string, unknown> = {
     id: user.id,
     full_name,
@@ -101,17 +105,8 @@ export async function updateProfileSettings(params: {
     notify_email,
     notify_sms,
     notify_whatsapp,
-    whatsapp_verified,
     notify_telegram,
   };
-
-  if (meta.telegram_id != null) {
-    const telegramId = typeof meta.telegram_id === 'string' ? Number(meta.telegram_id) : meta.telegram_id;
-    if (!Number.isNaN(telegramId)) {
-      upsertData.telegram_id = telegramId;
-      upsertData.telegram_verified = true;
-    }
-  }
 
   const { error: profileError } = await (params.supabase.from('profiles') as {
     upsert: (...args: unknown[]) => Promise<{
@@ -146,10 +141,14 @@ export async function updateProfileSettings(params: {
     }
   }
 
-  const previousMetadata = (user.user_metadata ?? {}) as Record<string, unknown>;
-  await params.supabase.auth.updateUser({
-    data: { ...previousMetadata, full_name: full_name || null },
-  });
+  if (params.updateFullNameMetadata) {
+    await params.updateFullNameMetadata(full_name || null);
+  } else {
+    const previousMetadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+    await params.supabase.auth.updateUser({
+      data: { ...previousMetadata, full_name: full_name || null },
+    });
+  }
 
   return {
     ok: true,

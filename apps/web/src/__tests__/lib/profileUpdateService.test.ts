@@ -75,7 +75,7 @@ describe('profileUpdateService', () => {
     });
   });
 
-  test('includes telegram metadata in upsert when present', async () => {
+  test('never trusts user-editable metadata for identity columns', async () => {
     const supabase = createSupabase();
     const upsert = jest.fn().mockResolvedValue({ error: null });
     supabase.auth.getUser.mockResolvedValue({
@@ -107,13 +107,11 @@ describe('profileUpdateService', () => {
       body: { full_name: 'Updated Name' },
     });
 
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        telegram_id: 123456789,
-        telegram_verified: true,
-      }),
-      { onConflict: 'id' },
-    );
+    const written = upsert.mock.calls[0][0] as Record<string, unknown>;
+    expect(written).not.toHaveProperty('telegram_id');
+    expect(written).not.toHaveProperty('telegram_verified');
+    expect(written).not.toHaveProperty('whatsapp_verified');
+    expect(written).toEqual(expect.objectContaining({ notify_whatsapp: false, notify_telegram: false }));
   });
 
   test('updates selected notification emails through the database invariant', async () => {

@@ -296,6 +296,18 @@ export function getWhatsAppVerifyToken(): string {
  * Секрет для хеширования WhatsApp OTP кода и номера телефона.
  * В production рекомендуется задать WHATSAPP_OTP_HASH_SECRET.
  */
+/**
+ * True when a real WHATSAPP_OTP_HASH_SECRET is configured, or outside production.
+ * Flows whose OTP hash is visible to the user (e.g. app_metadata) must fail
+ * closed in production without a real secret: the dev default makes a 6-digit
+ * code trivially brute-forceable offline.
+ */
+export function hasUsableWhatsAppOtpHashSecret(): boolean {
+    const value = process.env.WHATSAPP_OTP_HASH_SECRET?.trim();
+    if (value) return true;
+    return process.env.NODE_ENV !== 'production';
+}
+
 export function getWhatsAppOtpHashSecret(): string {
     return getEnvVar('WHATSAPP_OTP_HASH_SECRET', {
         required: false,
