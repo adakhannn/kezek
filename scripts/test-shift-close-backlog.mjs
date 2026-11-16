@@ -14,7 +14,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const sql=text=>docker(['exec','-i',container,'psql','-X','-q','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-At'],text);
 const call=async text=>JSON.parse(await sql(`${asActor()} ${text}`));
 
-const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8');
+const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
 let created=false;
 try {
  await docker(['info','--format','{{.ServerVersion}}']);

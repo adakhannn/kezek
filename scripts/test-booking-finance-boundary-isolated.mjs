@@ -12,7 +12,7 @@ function docker(args,input='') { return new Promise((resolve,reject)=>{
 }); }
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const sql=text=>docker(['exec','-i',container,'psql','-X','-qAt','-U','postgres','-v','ON_ERROR_STOP=1'],text);
-const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8');
+const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
 const lit=value=>`'${JSON.stringify(value).replaceAll("'","''")}'::jsonb`;
 const item={clientId:ids.item,bookingId:ids.booking,clientName:'Synthetic',serviceName:'Service',serviceAmount:1000,consumablesAmount:100};
 const save=revision=>`select save_staff_shift_command('${ids.staff}','${ids.biz}','${day}',${lit([item])},'${ids.owner}',false,${revision},'${ids.shift}')`;

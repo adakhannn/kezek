@@ -12,7 +12,10 @@
       "tar": ">=7.5.8",
       "@isaacs/brace-expansion": ">=5.0.1",
       "axios": ">=1.13.5"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "supabase"
+    ]
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
@@ -20,7 +23,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "openapi-typescript-codegen": "^0.29.0",
-    "supabase": "^2.34.3",
+    "supabase": "^2.122.1",
     "typescript": "^5.9.2"
   },
   "scripts": {
@@ -42,7 +45,10 @@
     "test:sql:isolated": "node scripts/run-isolated-sql-tests.mjs",
     "generate:openapi": "node scripts/generate-openapi.mjs --write",
     "check:openapi": "node scripts/generate-openapi.mjs --check",
-    "check:crons": "node scripts/generate-cron-manifests.mjs --check"
+    "check:crons": "node scripts/generate-cron-manifests.mjs --check",
+    "db:start:check": "supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,postgres-meta,mailpit",
+    "generate:db-types": "node scripts/generate-db-types.mjs --write",
+    "check:db-types": "node scripts/generate-db-types.mjs --check"
   },
   "lint-staged": {
     "apps/web/**/*.{js,jsx,ts,tsx,mjs}": [

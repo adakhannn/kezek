@@ -222,7 +222,7 @@ Browser сохраняет только request ID под хешем actor/actio
 <!-- api-contract: POST /api/branches/[id]/schedule -->
 ### POST `/api/branches/[id]/schedule`
 
-Источники: [route](../../apps/web/src/app/api/branches/[id]/schedule/route.ts) → [HTTP](../../apps/web/src/lib/branchScheduleHttpService.ts) → [legacy service и типы](../../apps/web/src/lib/branchScheduleService.ts); [флаг](../../apps/web/src/lib/scheduling/config.ts), [SQL replace_branch_schedule](../../supabase/migrations/20260918130000_explicit_staff_schedules.sql).
+Источники: [route](../../apps/web/src/app/api/branches/[id]/schedule/route.ts) → [HTTP](../../apps/web/src/lib/branchScheduleHttpService.ts) → [legacy service и типы](../../apps/web/src/lib/branchScheduleService.ts); [флаг](../../apps/web/src/lib/scheduling/config.ts), [SQL replace_branch_schedule](../../supabase/migrations_archive/20260918130000_explicit_staff_schedules.sql).
 
 Доступ: management context; `[id]` — UUID; limiter `normal`. Тело: `{ schedule: Array<{ day_of_week: number, intervals: Array<{start: string, end: string}>, breaks: Array<{start: string, end: string}> }> }`. Нумерация дней здесь `0` — воскресенье, `1` — понедельник, …, `6` — суббота. Время интервалов задаётся строками `HH:mm`; это недельные часы, не UTC timestamps.
 

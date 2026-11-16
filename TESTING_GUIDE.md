@@ -61,6 +61,7 @@
 | `e2e_smoke_tests` | `test:e2e:smoke` | Страницы sign-in, terms, privacy; lifecycle не проверяется |
 | `e2e_visual_regressions` | `test:e2e:visual` | На main/schedule есть preflight трёх env; остальные условия/skip-sites остаются в specs |
 | `e2e_tests` | `test:e2e:full-seeded` | Job имеет `continue-on-error: true`; не все обязательные env переданы |
+| `db_bootstrap` | `supabase start` + `db reset` с нуля, `check:db-types` | Локальный стек в CI: baseline, миграции и seed; не проверяет удалённую БД |
 | `mobile_tests` | `test:runInBand` | Jest smoke, без доказательства реального устройства; mobile typecheck — в `lint_typecheck` |
 | `sql_tests` | Matrix из всех зарегистрированных disposable PostgreSQL suites: mobile/Yandex auth, finance transactions, booking requests, notification outbox, staff-scoped slots, cron execution heartbeat, reporting completeness, shift-close backlog и дополнительные gates из registry | Нет skip по secret; synthetic fixtures не доказывают полную deployed schema или bootstrap |
 | `redis_tests` | Production Lua в disposable Redis7: limiter concurrency/TTL/principal/tenant и shared performance merge/window/histogram/retention | Synthetic локальный Redis не доказывает Upstash deployment/ingress |

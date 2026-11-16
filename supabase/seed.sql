@@ -36,7 +36,7 @@ begin
     perform public.initialize_all_ratings(30);
 
     -- Пересчитываем рейтинги за вчерашний день, чтобы появились дневные метрики
-    perform public.recalculate_ratings_for_date(current_date - interval '1 day');
+    perform public.recalculate_ratings_for_date(current_date - 1);
 end;
 $$;
 

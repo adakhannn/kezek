@@ -19,7 +19,7 @@ await db.query('insert into services values($1,$2,$3,60,true),($4,$2,$3,1,true)'
 const services = [{ service_id: id(9), duration_min: 60, order_index: 0 }, { service_id: id(10), duration_min: 1, order_index: 1 }];
 const reserve = (time, items = services) => db.query('select hold_complex_slot($1,$2,$3,$4,$5) as booking', [biz, branch, staff, `2099-01-05T${time}:00+06:00`, items]);
 await assert.rejects(reserve('09:00'), /column "email" does not exist/);
-await db.exec(await readFile(new URL('../supabase/migrations/20261009104000_complex_booking_identity_contacts.sql', import.meta.url), 'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations_archive/20261009104000_complex_booking_identity_contacts.sql', import.meta.url), 'utf8'));
 const booking = (await reserve('09:00')).rows[0].booking;
 const saved = (await db.query('select *,extract(epoch from(end_at-start_at))/60 as minutes from bookings where id=$1', [booking])).rows[0];
 assert.equal(saved.client_id, owner);

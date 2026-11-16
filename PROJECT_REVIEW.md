@@ -113,7 +113,7 @@
 - ⚠️ Расширить тесты для проверки привязки к клиентам и бронированиям
 
 **Документация:**
-- Миграция: `supabase/migrations/20260218000000_create_whatsapp_messages.sql`
+- Миграция: `supabase/migrations_archive/20260218000000_create_whatsapp_messages.sql`
 - Webhook: `apps/web/src/app/api/webhooks/whatsapp/route.ts`
 
 **Приоритет**: 🟡 **СРЕДНИЙ** (функциональность и UX для WhatsApp‑канала)  

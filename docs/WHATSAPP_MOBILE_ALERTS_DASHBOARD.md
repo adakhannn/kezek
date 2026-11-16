@@ -2,7 +2,7 @@
 
 Статус: source-backed справочник и SQL-заготовки; сверка 2026-11-01. SQL execution, планы запросов, dashboard и alert delivery: `NOT_RUN`. Владелец: authentication / observability. Пороги ниже — **предлагаемая политика**, не измеренный SLO и не подтверждённая настройка production.
 
-Источники: [metric writer](../apps/web/src/lib/whatsAppMobileMetricsService.ts), [start](../apps/web/src/lib/whatsAppMobileStartRouteService.ts), [verify](../apps/web/src/lib/whatsAppMobileVerifyRouteService.ts), [migration analytics_events](../supabase/migrations/20260227000000_create_analytics_events.sql). Контракт API — [CLIENT_AND_AUTH_FLOWS](api/CLIENT_AND_AUTH_FLOWS.md); настройки — [provider guide](MOBILE_WHATSAPP_PROVIDER_SETUP.md); эксплуатация — [Operations](OPERATIONS.md).
+Источники: [metric writer](../apps/web/src/lib/whatsAppMobileMetricsService.ts), [start](../apps/web/src/lib/whatsAppMobileStartRouteService.ts), [verify](../apps/web/src/lib/whatsAppMobileVerifyRouteService.ts), [migration analytics_events](../supabase/migrations_archive/20260227000000_create_analytics_events.sql). Контракт API — [CLIENT_AND_AUTH_FLOWS](api/CLIENT_AND_AUTH_FLOWS.md); настройки — [provider guide](MOBILE_WHATSAPP_PROVIDER_SETUP.md); эксплуатация — [Operations](OPERATIONS.md).
 
 ## Смысл событий и полнота данных
 

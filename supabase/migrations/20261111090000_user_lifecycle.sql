@@ -229,7 +229,9 @@ begin
   end if;
   alter role authenticator set pgrst.db_pre_request='public.check_user_lifecycle_request';
   for t in select n.nspname,c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace
-    where n.nspname in ('public','storage') and c.relkind in ('r','p') and c.relrowsecurity
+    -- storage: only user-facing tables; internal ones (e.g. storage.migrations) are
+    -- owned by supabase_storage_admin and not open to policy changes by postgres.
+    where (n.nspname='public' or (n.nspname='storage' and c.relname in ('objects','buckets'))) and c.relkind in ('r','p') and c.relrowsecurity
   loop
     execute format('create policy kezek_lifecycle_access on %I.%I as restrictive for all to authenticated using ((select public.user_lifecycle_access_allowed())) with check ((select public.user_lifecycle_access_allowed()))',t.nspname,t.relname);
   end loop;

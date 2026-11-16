@@ -10,9 +10,9 @@ await db.query('select publish_staff_schedule($1,$2,$3,0,$4,$5,$6,$7)',[staff,bi
 await db.query('select publish_staff_schedule($1,$2,$3,1,$4,$5,$6,$7)',[staff,biz,owner,'day','2099-01-07',branch2,{day}]);
 await db.query('insert into services values($1,$2,$3,60,true)',[id(9),biz,branch2]);
 const reserve=(date,time,location=branch2,business=biz,name=' LIVE TEST ',phone=' test ')=>(db.query('select hold_slot_guest($1,$2,$3,$4,$5,$6,$7,null) as booking',[business,location,id(9),staff,`${date}T${time}:00+06:00`,name,phone]));
-await db.exec(await readFile(new URL('../supabase/migrations/20260128000001_fix_hold_slot_guest_status_type.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations_archive/20260128000001_fix_hold_slot_guest_status_type.sql',import.meta.url),'utf8'));
 await assert.rejects(reserve('2099-01-07','12:00'),/staff not found or inactive/);
-await db.exec(await readFile(new URL('../supabase/migrations/20261009110000_guest_booking_effective_schedule.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations_archive/20261009110000_guest_booking_effective_schedule.sql',import.meta.url),'utf8'));
 const booking=(await reserve('2099-01-07','12:00')).rows[0].booking;
 const saved=(await db.query('select * from bookings where id=$1',[booking])).rows[0];
 assert.equal(saved.status,'hold');assert.equal(saved.client_id,null);assert.equal(saved.client_name,'LIVE TEST');assert.equal(saved.client_phone,'test');assert.ok(saved.expires_at);

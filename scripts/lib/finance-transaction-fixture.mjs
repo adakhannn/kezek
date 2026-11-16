@@ -46,7 +46,7 @@ export async function setupFinanceFixture(sql) {
   client_name text,service_name text,service_amount numeric not null default 0 check(service_amount>=0),
   consumables_amount numeric not null default 0 check(consumables_amount>=0),booking_id uuid references bookings,note text,created_at timestamptz default now());
  `);
- const load=async name=>fs.readFile(new URL(`../../supabase/migrations/${name}`,import.meta.url),'utf8');
+ const load=async name=>fs.readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
  await sql(await load('20250102000000_update_booking_status_without_check.sql'));
  await sql(await load('20260125000001_optimize_finance_queries.sql'));
  await sql(await load('20260128000000_fix_nested_aggregate_error.sql'));

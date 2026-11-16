@@ -6,7 +6,7 @@
 
 ## Прежде чем выбирать миграции
 
-**Полный baseline схемы в репозитории отсутствует.** Ранние миграции требуют ранее созданные таблицы и `booking_status`; [подробное описание](README.md). Поэтому ни `db reset`, ни применение всего каталога к пустому проекту не являются готовой процедурой развёртывания.
+**Baseline схемы прода находится в репозитории** (squash 16 ноября 2026): новая БД поднимается `supabase db reset`. Для прода до первого `db push` нужна разовая синхронизация истории миграций — [описание](README.md#история-миграций-прода).
 
 Для отдельной разрешённой DB-задачи зафиксируйте:
 
@@ -29,8 +29,8 @@
 
 Установлены два расхождения истории:
 
-- Remote `20260731082333`, имя `public_business_contacts`: сохранённый statement совпал с локальным [20260731010000](migrations/20260731010000_public_business_contacts.sql) после нормализации комментариев/пробелов. Повторять backfill контактов не требуется.
-- Локальная [20261015075000](migrations/20261015075000_work_locations_include_home_days.sql) не записана в remote history, но действующее тело `read_staff_work_locations` уже включает home days и соответствует этому изменению; ACL остался service-only. Отсутствующий номер не доказывает отсутствующее поведение.
+- Remote `20260731082333`, имя `public_business_contacts`: сохранённый statement совпал с локальным [20260731010000](migrations_archive/20260731010000_public_business_contacts.sql) после нормализации комментариев/пробелов. Повторять backfill контактов не требуется.
+- Локальная [20261015075000](migrations_archive/20261015075000_work_locations_include_home_days.sql) не записана в remote history, но действующее тело `read_staff_work_locations` уже включает home days и соответствует этому изменению; ACL остался service-only. Отсутствующий номер не доказывает отсутствующее поведение.
 
 Поэтому **не запускать общий `db push --include-all`** на основании списка отсутствующих номеров. История ещё требует отдельного согласованного reconciliation; эти наблюдения не означают, что она уже исправлена. Новые ноябрьские миграции проверяют явным упорядоченным набором и фиксируют hash каждого файла. Изменение ACL/protocol требует согласованного rollout web/mobile; применение SQL без совместимого приложения может намеренно закрыть старые пути.
 
@@ -54,11 +54,11 @@ CLI и SQL Editor — способы выполнения, а не взаимо�
 
 | Область | Файлы для точечного изучения |
 | --- | --- |
-| Промоакции | [Таблицы](migrations/20260123000000_create_branch_promotions.sql), [функции](migrations/20260123000001_add_apply_promotion_function.sql) |
-| Рейтинги | [Инициализация](migrations/20260123000002_initialize_ratings.sql), [батчевые функции](migrations/20260226100000_rating_batched_support.sql) |
-| Ограничения смен | [CHECK constraints и изменения данных](migrations/20260213000000_add_shift_constraints_and_transactions.sql) |
-| Сохранение позиций | [Функция](migrations/20260213000001_add_save_shift_items_function.sql), [grant authenticated](migrations/20260213000002_grant_save_shift_items_permissions.sql), [grant service_role](migrations/20260213000003_grant_save_shift_items_service_role.sql), [комментарий](migrations/20260213000004_comment_save_shift_items_function.sql) |
-| Метрики frontend | [Таблица и функция](migrations/20250127000000_create_frontend_metrics_table.sql) |
+| Промоакции | [Таблицы](migrations_archive/20260123000000_create_branch_promotions.sql), [функции](migrations_archive/20260123000001_add_apply_promotion_function.sql) |
+| Рейтинги | [Инициализация](migrations_archive/20260123000002_initialize_ratings.sql), [батчевые функции](migrations_archive/20260226100000_rating_batched_support.sql) |
+| Ограничения смен | [CHECK constraints и изменения данных](migrations_archive/20260213000000_add_shift_constraints_and_transactions.sql) |
+| Сохранение позиций | [Функция](migrations_archive/20260213000001_add_save_shift_items_function.sql), [grant authenticated](migrations_archive/20260213000002_grant_save_shift_items_permissions.sql), [grant service_role](migrations_archive/20260213000003_grant_save_shift_items_service_role.sql), [комментарий](migrations_archive/20260213000004_comment_save_shift_items_function.sql) |
+| Метрики frontend | [Таблица и функция](migrations_archive/20250127000000_create_frontend_metrics_table.sql) |
 
 Ссылки показывают содержимое репозитория, а не проверенные безопасные права или текущую потребность в применении. При анализе действующего контракта необходимо учитывать более поздние определения и код вызывающей стороны.
 

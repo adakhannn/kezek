@@ -18,7 +18,7 @@ insert into bookings values('${id(4)}','confirmed','2099-01-05T09:00:00+06:00','
 insert into booking_services values('${id(4)}','${id(2)}',1,1),('${id(4)}','${id(1)}',60,0);
 alter table bookings enable row level security;
 `);
-await db.exec(await readFile(new URL('../supabase/migrations/20261009105000_public_booking_receipt_composition.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations_archive/20261009105000_public_booking_receipt_composition.sql',import.meta.url),'utf8'));
 await db.exec('set role anon');
 const receipt=(await db.query('select * from public.booking_receipt_public($1)',[id(4)])).rows[0];
 assert.equal(receipt.status,'confirmed');

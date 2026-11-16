@@ -16,7 +16,7 @@ const call=async text=>JSON.parse(await sql(`${asActor()} ${text}`));
 const report=(staff='null',branch='null')=>`select read_finance_report_snapshot('${ids.biz}','2026-11-01','2026-11-01',${staff},${branch});`;
 const daily=date=>`select recalculate_business_daily_stats('${date}','Asia/Bishkek');`;
 const hourly=date=>`select recalculate_business_hourly_load('${date}','Asia/Bishkek');`;
-const load=name=>fs.readFile(new URL(`../supabase/migrations/${name}`,import.meta.url),'utf8');
+const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
 let created=false;
 try {
  await docker(['info','--format','{{.ServerVersion}}']);

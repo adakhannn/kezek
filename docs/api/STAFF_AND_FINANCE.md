@@ -254,7 +254,7 @@ Save передаёт все позиции одним RPC `save_staff_shift_com
 
 Сначала обновляются основные поля, затем отдельными запросами выполняются запись аудита финансовых настроек и перенос назначений/основного филиала, если филиал изменился. Ошибка позднего шага не откатывает предыдущие HTTP-запросы к БД. Ошибка вставки аудита не проверяется. При установленном SQL guard explicit scheduling прямое изменение основного филиала может быть отклонено; для перевода существует отдельный endpoint ниже. HTTP 200 не доказывает полноту аудита.
 
-Источники: [route](../../apps/web/src/app/api/staff/[id]/update/route.ts), [HTTP](../../apps/web/src/lib/staffUpdateByIdHttpService.ts), [service и Body](../../apps/web/src/lib/staffUpdateByIdService.ts), [определение guard](../../supabase/migrations/20260918133000_atomic_staff_home_transfer.sql).
+Источники: [route](../../apps/web/src/app/api/staff/[id]/update/route.ts), [HTTP](../../apps/web/src/lib/staffUpdateByIdHttpService.ts), [service и Body](../../apps/web/src/lib/staffUpdateByIdService.ts), [определение guard](../../supabase/migrations_archive/20260918133000_atomic_staff_home_transfer.sql).
 
 ### POST `/api/staff/[id]/delete`
 
@@ -329,7 +329,7 @@ Explicit-ветка отображает RPC-коды следующим обр�
 
 Legacy-ветка возвращает 403 forbidden при недоступном staff/филиале, 400 validation при том же/неактивном филиале и ошибках основных записей. Она изменяет назначения и `staff.branch_id` отдельными запросами; fallback может создать назначение со следующего дня. При `copy_schedule` переустанавливает строки working_hours; ошибка копирования допускает успех с warning. Общей атомарности legacy-ветки нет. Все режимы также допускают 429 и ошибки общей внешней обёртки.
 
-Источники: [route](../../apps/web/src/app/api/staff/[id]/transfer/route.ts), [HTTP и таблица RPC-ошибок](../../apps/web/src/lib/staffTransferHttpService.ts), [legacy service](../../apps/web/src/lib/staffTransferService.ts), [SQL-определение](../../supabase/migrations/20260918133000_atomic_staff_home_transfer.sql).
+Источники: [route](../../apps/web/src/app/api/staff/[id]/transfer/route.ts), [HTTP и таблица RPC-ошибок](../../apps/web/src/lib/staffTransferHttpService.ts), [legacy service](../../apps/web/src/lib/staffTransferService.ts), [SQL-определение](../../supabase/migrations_archive/20260918133000_atomic_staff_home_transfer.sql).
 
 ### POST `/api/staff/create-from-user`
 

@@ -351,6 +351,41 @@ jobs:
           eas build --platform ios --profile production --non-interactive --no-wait
 
   # Required synthetic PostgreSQL gates. No linked project, secrets, host ports or provider calls.
+  db_bootstrap:
+    # Clean database from the repository: prod baseline + migrations + seed,
+    # then generated types must match. No linked project or secrets.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install deps (workspace)
+        run: pnpm install --frozen-lockfile
+
+      - name: Start local Supabase (applies baseline, migrations and seed)
+        run: pnpm db:start:check
+
+      - name: Re-run from scratch with db reset
+        run: pnpm exec supabase db reset
+
+      - name: Generated database types match the schema
+        run: pnpm check:db-types
+
+      - name: Stop local Supabase
+        if: always()
+        run: pnpm exec supabase stop --no-backup
+
   sql_tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15

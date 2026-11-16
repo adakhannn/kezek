@@ -189,7 +189,7 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | Успех | `data` — ScheduleSnapshot (`revision`, `timezone`, `today`, `days`) либо draft (`days`, `branchId`, `source`, `revision`) из RPC |
 | Ошибки | 503 выключено; SCHEDULE_NOT_FOUND →404, SCHEDULE_FORBIDDEN →403, SCHEDULE_STALE →409; прочие известные SCHEDULE-коды →400; неизвестные исключения — handleApiError |
 
-SQL `read_staff_schedule` дополнительно проверяет порядок диапазона и разницу <=62 дня, связывает staff с biz. Draft читает исходный план, а не массив effective days. Источники: [route](../../apps/web/src/app/api/staff/[id]/schedule/route.ts), [HTTP/readSchedule](../../apps/web/src/lib/scheduling/server.ts), [ScheduleSnapshot](../../apps/web/src/lib/scheduling/model.ts), [RPC definitions](../../supabase/migrations/20260918130000_explicit_staff_schedules.sql).
+SQL `read_staff_schedule` дополнительно проверяет порядок диапазона и разницу <=62 дня, связывает staff с biz. Draft читает исходный план, а не массив effective days. Источники: [route](../../apps/web/src/app/api/staff/[id]/schedule/route.ts), [HTTP/readSchedule](../../apps/web/src/lib/scheduling/server.ts), [ScheduleSnapshot](../../apps/web/src/lib/scheduling/model.ts), [RPC definitions](../../supabase/migrations_archive/20260918130000_explicit_staff_schedules.sql).
 
 ### GET `/api/staff/me/schedule`
 
@@ -218,7 +218,7 @@ SQL `read_staff_schedule` дополнительно проверяет поря
 
 RPC проверяет actor, активность staff/филиала, будущую дату и revision, создаёт версию расписания с проверкой бронирований. Reset создаёт версию дня, возвращающую обычную неделю, не удаляет историю. Эти свойства описывают репозиторный SQL, не доказанную установленную версию. Неверный JSON идёт в общий catch, без отдельной стабильной ветки JSON-validation.
 
-Источники: [route](../../apps/web/src/app/api/staff/[id]/schedule/route.ts), [handler](../../apps/web/src/lib/scheduling/server.ts), [тип/валидатор](../../apps/web/src/lib/scheduling/model.ts), [publish RPC](../../supabase/migrations/20260918130000_explicit_staff_schedules.sql), [reset RPC](../../supabase/migrations/20261008065051_complete_schedule_operations.sql).
+Источники: [route](../../apps/web/src/app/api/staff/[id]/schedule/route.ts), [handler](../../apps/web/src/lib/scheduling/server.ts), [тип/валидатор](../../apps/web/src/lib/scheduling/model.ts), [publish RPC](../../supabase/migrations_archive/20260918130000_explicit_staff_schedules.sql), [reset RPC](../../supabase/migrations_archive/20261008065051_complete_schedule_operations.sql).
 
 ### GET `/api/staff/[id]/time-off`
 
@@ -271,7 +271,7 @@ RPC проверяет actor, активность staff/филиала, буд�
 | Ошибки | 400 validation диапазона/формата бизнес-ID; прочие — handleApiError |
 | Ограничения | Explicit-ветка вызывает read_staff_work_locations; актуальное определение включает **основной филиал тоже**. Legacy выбирает только активные date-rules, availabilityComplete=false. Значение true отражает переключатель реализации, не доказательство полной доступности runtime |
 
-Источники: [route](../../apps/web/src/app/api/staff/work-locations/route.ts), [handler](../../apps/web/src/lib/scheduling/locations.ts), [позднее RPC definition](../../supabase/migrations/20261015075000_work_locations_include_home_days.sql).
+Источники: [route](../../apps/web/src/app/api/staff/work-locations/route.ts), [handler](../../apps/web/src/lib/scheduling/locations.ts), [позднее RPC definition](../../supabase/migrations_archive/20261015075000_work_locations_include_home_days.sql).
 
 ## Планы и клиентские пакеты визитов
 
@@ -482,4 +482,4 @@ UUID-format biz_id не проверяется отдельной schema; malfor
 
 Репозиторная функция `branch_admins_effective` получает бизнес **из переданного филиала**, возвращает owner/business-admin/branch-admin и не сверяет вызывающий manager-контекст. Поздняя миграция ограничивает EXECUTE для anon/authenticated и выдаёт service_role; этот route как раз использует service client. Поэтому нельзя описывать такой endpoint как доказанно изолированный по бизнесу. Достижимость/развёрнутые ACL не проверялись; возвращённые записи также могут повторять пользователя с разными source.
 
-Источники: [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/list/route.ts), [определение RPC](../../supabase/migrations/20250101000000_create_branch_admins_effective.sql), [поздние grants/revokes](../../supabase/migrations/20260307000000_security_advisor_rls_and_revokes.sql).
+Источники: [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/list/route.ts), [определение RPC](../../supabase/migrations_archive/20250101000000_create_branch_admins_effective.sql), [поздние grants/revokes](../../supabase/migrations_archive/20260307000000_security_advisor_rls_and_revokes.sql).

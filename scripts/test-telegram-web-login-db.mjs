@@ -7,7 +7,7 @@ const { PGlite } = await import(pathToFileURL(process.argv[2]).href);
 const db = new PGlite();
 await db.exec(`create role anon; create role authenticated; create role service_role;
 create table public.profiles(id uuid primary key, telegram_id bigint unique, telegram_verified boolean);`);
-await db.exec(await readFile(new URL('../supabase/migrations/20260917130000_telegram_web_login_attempts.sql', import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations_archive/20260917130000_telegram_web_login_attempts.sql', import.meta.url),'utf8'));
 const uid = '00000000-0000-0000-0000-000000000001';
 await db.query('insert into public.profiles values ($1,123,true)',[uid]);
 const browser = 'b'.repeat(64), other = 'c'.repeat(64);

@@ -339,7 +339,7 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 <!-- api-contract: GET /api/profile/notification-emails -->
 ### GET `/api/profile/notification-emails`
 
-Источники: [route](../../apps/web/src/app/api/profile/notification-emails/route.ts), [sync service](../../apps/web/src/lib/userNotificationEmailService.ts), [SQL RPC](../../supabase/migrations/20260723090000_user_notification_emails.sql).
+Источники: [route](../../apps/web/src/app/api/profile/notification-emails/route.ts), [sync service](../../apps/web/src/lib/userNotificationEmailService.ts), [SQL RPC](../../supabase/migrations_archive/20260723090000_user_notification_emails.sql).
 
 | Аспект | Контракт |
 | --- | --- |
@@ -353,7 +353,7 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 <!-- api-contract: GET /api/public/work-locations -->
 ### GET `/api/public/work-locations`
 
-Источники: [route](../../apps/web/src/app/api/public/work-locations/route.ts) → [locations.ts](../../apps/web/src/lib/scheduling/locations.ts), [date validator](../../apps/web/src/lib/scheduling/model.ts), [V2 flag](../../apps/web/src/lib/scheduling/config.ts), [SQL read_staff_work_locations](../../supabase/migrations/20260918130000_explicit_staff_schedules.sql).
+Источники: [route](../../apps/web/src/app/api/public/work-locations/route.ts) → [locations.ts](../../apps/web/src/lib/scheduling/locations.ts), [date validator](../../apps/web/src/lib/scheduling/model.ts), [V2 flag](../../apps/web/src/lib/scheduling/config.ts), [SQL read_staff_work_locations](../../supabase/migrations_archive/20260918130000_explicit_staff_schedules.sql).
 
 | Аспект | Контракт |
 | --- | --- |

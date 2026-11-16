@@ -34,7 +34,7 @@ P0 — блокер доступа/изоляции до широкого исп
 
 ## Пакет безопасности 16 ноября
 
-Отдельный прямой запрос 16 ноября разрешил исправить критичные находки архитектурного анализа. LOCAL_FIXED здесь означает локальный код, unit-тесты web/mobile и новый изолированный SQL-сьют; [миграция 120000](../supabase/migrations/20261116120000_identity_and_auth_surface_hardening.sql) к удалённой БД не применялась, а [SQL-сьют](../scripts/test-identity-surface-hardening-isolated.cjs) локально не запускался (нет Docker) и должен пройти в CI `sql_tests`.
+Отдельный прямой запрос 16 ноября разрешил исправить критичные находки архитектурного анализа. LOCAL_FIXED здесь означает локальный код, unit-тесты web/mobile и новый изолированный SQL-сьют; [миграция 120000](../supabase/migrations/20261116120000_identity_and_auth_surface_hardening.sql) к удалённой БД не применялась, а [SQL-сьют](../scripts/test-identity-surface-hardening-isolated.cjs) проходит локально (16 ноября, после запуска Docker) и включён в CI `sql_tests`.
 
 | ID | Приоритет | Исходный дефект | Текущее состояние |
 | --- | --- | --- | --- |
@@ -45,7 +45,17 @@ P0 — блокер доступа/изоляции до широкого исп
 | ENG-36 | P1 | Сессия пользователя могла писать `whatsapp_verified`/`telegram_*`/`yandex_*` в `profiles`; сервер брал `telegram_id` + `telegram_verified=true` из редактируемого `user_metadata`; мобилка писала профиль напрямую в обход серверных правил | LOCAL_FIXED: триггер `profiles_protect_identity_columns` сохраняет identity-поля для anon/authenticated; верификации пишут service-клиентом; профиль не доверяет `user_metadata`; мобилка сохраняет через `/api/profile/update` (принимает Bearer) |
 | ENG-37 | P2 | `get_client_visit_count`/`can_use_promotion` — SECURITY DEFINER без `search_path`, доступны всем (число визитов любого клиента в любом филиале); `frontend_metrics` читалась anon (`USING (true)`) | LOCAL_FIXED в миграции: фиксированный `search_path`, EXECUTE только service_role; политика чтения метрик удалена |
 
-Не исправлено в этом пакете: наличие `EXCLUDE`-constraint против двойного бронирования (см. «Условные риски») нужно проверить на живой схеме; `app/admin/api` в целом остаётся на старом паттерне (ad hoc auth, inline клиенты).
+Не исправлено в этом пакете: `app/admin/api` в целом остаётся на старом паттерне (ad hoc auth, inline клиенты).
+
+### Сверка с продом 16 ноября (schema-only дамп)
+
+Схема прода снята `supabase db dump` (без данных) по прямому разрешению владельца; в базу ничего не записывалось.
+
+- **ENG-35 подтверждён на проде:** у `telegram_mobile_auth_attempts` нет RLS и стоит `GRANT ALL` для `anon`/`authenticated`; миграции PKCE 9 ноября на проде нет. **Срочно закрыто на проде 16 ноября** по прямому разрешению владельца: `enable row level security` + REVOKE для `public/anon/authenticated`, доступ только `service_role` (ручной SQL одной транзакцией через `supabase db query`, без записи в историю миграций). Проверено запросом к каталогу: RLS включён, у anon/authenticated нет прав. [Миграция 120000](../supabase/migrations/20261116120000_identity_and_auth_surface_hardening.sql) повторяет эти шаги идемпотентно и остаётся нужной для остального пакета. Так же открыты `get_client_visit_count` и `frontend_metrics` (ENG-37).
+- **Двойное бронирование:** на проде есть `EXCLUDE`-ограничение `no_overlap` на `bookings` (`staff_id`, `time_range`, активные статусы); оно вошло в baseline.
+- **ENG-14 → LOCAL_FIXED:** squash в [baseline](../supabase/migrations/20261009110000_prod_baseline.sql) + справочные данные; `supabase db reset` поднимает схему, 24 последующие миграции и seed с нуля (локально и в CI `db_bootstrap`), типы перегенерированы и проверяются. История миграций прода требует разовой синхронизации ([описание](../supabase/README.md#история-миграций-прода)).
+- **ENG-31, исправление до выката:** цикл restrictive-политик в [user_lifecycle](../supabase/migrations/20261111090000_user_lifecycle.sql) задевал служебную `storage.migrations` (владелец `supabase_storage_admin`) и падал на реальном стеке Supabase; теперь в `storage` он охватывает только `objects` и `buckets`. Изолированный SQL-сьют ENG-31 проходит.
+- Все 16 изолированных SQL-сьютов, включая [сьют пакета 16 ноября](../scripts/test-identity-surface-hardening-isolated.cjs), проходят локально.
 
 ## Исходные условия находок
 
@@ -65,7 +75,7 @@ P0 — блокер доступа/изоляции до широкого исп
 
 **P0 · OPEN · определения и grants подтверждены в миграциях; deployed ACL неизвестны.** `update_booking_status_no_check`, `save_shift_items_atomic`, `get_business_finance_stats` используют SECURITY DEFINER, доступны authenticated и не проверяют право вызывающего на переданный объект/бизнес. Проверенные триггеры не восполняют actor/tenant check. Поздний отзыв этих grants в просмотренных миграциях не найден.
 
-Источники: [статус брони](../supabase/migrations/20250102000000_update_booking_status_without_check.sql), [позиции смены](../supabase/migrations/20260213000001_add_save_shift_items_function.sql), [grant позиций](../supabase/migrations/20260213000002_grant_save_shift_items_permissions.sql), [финансовая статистика](../supabase/migrations/20260128000000_fix_nested_aggregate_error.sql).
+Источники: [статус брони](../supabase/migrations_archive/20250102000000_update_booking_status_without_check.sql), [позиции смены](../supabase/migrations_archive/20260213000001_add_save_shift_items_function.sql), [grant позиций](../supabase/migrations_archive/20260213000002_grant_save_shift_items_permissions.sql), [финансовая статистика](../supabase/migrations_archive/20260128000000_fix_nested_aggregate_error.sql).
 
 Если эти определения действуют с владельцем, обходящим RLS, прямой RPC обходит проверку Next.js API. Выход: сверить владельцев/ACL через отдельно разрешённый процесс, ограничить внешнее выполнение служебных функций и проверять пользователя/бизнес внутри доверенной операции. Негативные межбизнесовые проверки обязательны; массовые grants/revokes вслепую не применять.
 
@@ -81,7 +91,7 @@ P0 — блокер доступа/изоляции до широкого исп
 
 **P1 · OPEN · дефект определения SQL.** `get_applicable_visit_package_for_booking` проверяет клиента, срок, остаток, услугу и филиалы, но не `plan.biz_id = booking.biz_id`. Универсальный пакет бизнеса A может подходить к посещению B.
 
-Источник: [подбор и списание пакета](../supabase/migrations/20260306000000_visit_package_apply_functions.sql).
+Источник: [подбор и списание пакета](../supabase/migrations_archive/20260306000000_visit_package_apply_functions.sql).
 
 Выход: определить и обеспечить бизнесовую границу универсального плана; проверить одного клиента с пакетами двух независимых бизнесов. Применённая версия функции в удалённой БД не проверялась.
 
@@ -91,7 +101,7 @@ P0 — блокер доступа/изоляции до широкого исп
 
 Закрытие сначала читает позиции и рассчитывает суммы в приложении, затем RPC блокирует смену и сохраняет готовые значения. Между чтением и RPC другой запрос может изменить позиции; проверка состава до RPC не закрывает это окно.
 
-Источники: [staffShiftItemsService](../apps/web/src/lib/staffShiftItemsService.ts), [staffShiftCloseService](../apps/web/src/lib/staffShiftCloseService.ts), [close_staff_shift_safe](../supabase/migrations/20260312001000_fix_close_staff_shift_safe_v_shift_record.sql).
+Источники: [staffShiftItemsService](../apps/web/src/lib/staffShiftItemsService.ts), [staffShiftCloseService](../apps/web/src/lib/staffShiftCloseService.ts), [close_staff_shift_safe](../supabase/migrations_archive/20260312001000_fix_close_staff_shift_safe_v_shift_record.sql).
 
 Выход: общая транзакция либо revision protocol для сохранения/закрытия; атомарные статусы, списания, позиции и суммы; безопасный повтор. Проверить конкурентное изменение, отказ посередине и согласованность итогов с независимым ожидаемым расчётом.
 
@@ -106,8 +116,8 @@ P0 — блокер доступа/изоляции до широкого исп
 | ENG-10 | P1 | Карта ограничена 500 бизнесами/500 филиалами; nearby — 500/2000 до фильтра расстояния. Город/категория применяются до лимита. API не сигнализирует о неполноте | [map](../apps/web/src/lib/branchesMapService.ts), [nearby](../apps/web/src/lib/branchesNearbyService.ts) | Географический запрос в БД, пагинация/граница viewport, проверка филиала за предварительным лимитом |
 | ENG-11 | P1 | Cron закрытия выбирает только вчера без страниц, обрабатывает последовательно, partial errors возвращает с ok:true. Пропущенные дни не наверстываются | [close shifts](../apps/web/src/lib/closeShiftsCronService.ts) | Все overdue задачи, batches/checkpoint/retry, контроль остатка и ошибок |
 | ENG-12 | P1 | Analytics и часть финансовых выборок агрегируют ответ без обхода страниц. При max_rows=1000 из local config 1001-я подходящая строка не учитывается; remote limit неизвестен | [daily](../apps/web/src/lib/analyticsDailyCronService.ts), [hourly](../apps/web/src/lib/analyticsHourlyLoadCronService.ts), [finance](../apps/web/src/lib/financeAllDashboardService.ts), [config](../supabase/config.toml) | SQL-агрегация или полный обход с проверкой полноты; сверка на данных выше лимита |
-| ENG-13 | P1 | Single-service slots RPC перебирает активных сотрудников бизнеса, хотя выбран один; web/mobile фильтруют после. В web ignore=false и cleanup не исключает устаревший in-flight ответ | [SQL](../supabase/migrations/20260918131000_explicit_schedule_booking_consumers.sql), [hook](../apps/web/src/app/b/[slug]/hooks/useSlotsLoader.ts) | Серверный фильтр, измеренный SQL-план; устаревший ответ не меняет текущие слоты/ошибки |
-| ENG-14 | P1 | Нет подтверждённого полного исходного bootstrap БД. Ранние миграции уже требуют основные таблицы и enum, создание которых не найдено в доступных SQL исходниках | [ранняя миграция](../supabase/migrations/20250102000000_update_booking_status_without_check.sql), [ALTER staff](../supabase/migrations/20250103000000_add_staff_avatar_url.sql), [Supabase guide](../supabase/README.md) | Версионированный baseline, воспроизводимая сборка чистой изолированной БД и сверка схемы |
+| ENG-13 | P1 | Single-service slots RPC перебирает активных сотрудников бизнеса, хотя выбран один; web/mobile фильтруют после. В web ignore=false и cleanup не исключает устаревший in-flight ответ | [SQL](../supabase/migrations_archive/20260918131000_explicit_schedule_booking_consumers.sql), [hook](../apps/web/src/app/b/[slug]/hooks/useSlotsLoader.ts) | Серверный фильтр, измеренный SQL-план; устаревший ответ не меняет текущие слоты/ошибки |
+| ENG-14 | P1 | Нет подтверждённого полного исходного bootstrap БД. Ранние миграции уже требуют основные таблицы и enum, создание которых не найдено в доступных SQL исходниках | [ранняя миграция](../supabase/migrations_archive/20250102000000_update_booking_status_without_check.sql), [ALTER staff](../supabase/migrations_archive/20250103000000_add_staff_avatar_url.sql), [Supabase guide](../supabase/README.md) | Версионированный baseline, воспроизводимая сборка чистой изолированной БД и сверка схемы |
 | ENG-15 | P1 | Full seeded E2E non-blocking; обязательные env не все переданы; SQL gate без ON_ERROR_STOP и может быть пропущен. SQL test закрытия сам записывает ожидаемые суммы | [CI](../.github/workflows/ci.yml), [SQL test](../supabase/tests_critical_scenarios.sql), [testing guide](../TESTING_GUIDE.md) | Обязательные checks, fail-fast fixtures, ошибки SQL краснят job, тест настоящей операции с независимым oracle |
 | ENG-16 | P2 | Performance Map локален; resolved Supabase error может считаться success; browser timings не входят в серверный экземпляр панели | [performance](../apps/web/src/lib/performance.ts), [stats](../apps/web/src/lib/performanceStatsService.ts) | Общие метрики/трассы, корректный business outcome, проверка намеренного отказа RPC |
 | ENG-17 | P2 | simpleCache удаляет expired entry только при чтении того же ключа; size/eviction не ограничены, ключи включают разные диапазоны дат | [cache](../apps/web/src/lib/simpleCache.ts), [consumer](../apps/web/src/lib/dashboardAnalyticsOverviewService.ts) | Ограниченный TTL/LRU и single-flight либо общий cache; измерение памяти |
@@ -115,7 +125,7 @@ P0 — блокер доступа/изоляции до широкого исп
 
 ## Условные риски, которые ещё нужно подтвердить
 
-- **Legacy booking concurrency:** [trigger](../supabase/migrations/20260918130000_explicit_staff_schedules.sql) берёт staff lock, но повторный overlap check выполняется при наличии новой schedule version. [hold_slot](../supabase/migrations/20261009103000_simple_booking_effective_schedule.sql) делает precheck до insert/lock. Возможность двойной записи зависит от неизвестных исходных constraints; live double-booking не доказан.
+- **Legacy booking concurrency:** [trigger](../supabase/migrations_archive/20260918130000_explicit_staff_schedules.sql) берёт staff lock, но повторный overlap check выполняется при наличии новой schedule version. [hold_slot](../supabase/migrations_archive/20261009103000_simple_booking_effective_schedule.sql) делает precheck до insert/lock. Возможность двойной записи зависит от неизвестных исходных constraints; live double-booking не доказан.
 - **Cron без конфигурации секрета:** [closeShiftsCronHttpService](../apps/web/src/lib/closeShiftsCronHttpService.ts) не отклоняет отсутствующий secret до сравнения заголовка. Наличие такого состояния в deployment не установлено.
 - **Ёмкость и восстановление:** ресурсный предел RPS, production topology, PITR и фактический restore time не измерены. Условия подтверждения описаны в [эксплуатации](OPERATIONS.md).
 

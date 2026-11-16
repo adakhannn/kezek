@@ -10,7 +10,7 @@
 
 Связанные исходники:
 
-- [Миграция ограничений](migrations/20260213000000_add_shift_constraints_and_transactions.sql) содержит также UPDATE существующих значений `hours_worked` до создания CHECK constraints.
+- [Миграция ограничений](migrations_archive/20260213000000_add_shift_constraints_and_transactions.sql) содержит также UPDATE существующих значений `hours_worked` до создания CHECK constraints.
 - [Старый скрипт исправления](manual-scripts/fix_hours_worked_before_migration.sql) хранится для изучения прежнего способа обработки данных. Его наличие не разрешает выполнение.
 
 ## Почему старые шаги нельзя повторять автоматически

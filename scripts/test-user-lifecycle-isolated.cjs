@@ -1,7 +1,7 @@
 // Real Auth + PostgREST + PostgreSQL, synthetic identities only. No .env files,
 // SMTP, remote project or existing containers. All resources are owned/ephemeral.
 const { spawnSync, spawn } = require('node:child_process');
-const { readFileSync } = require('node:fs');
+const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID, createHmac } = require('node:crypto');
 const path = require('node:path');
 const assert = require('node:assert/strict');
@@ -18,7 +18,7 @@ const sql = text => docker(sqlArgs, text).stdout.trim();
 const fails = (text, match) => {
   const r = docker(sqlArgs, text, true); assert.notEqual(r.status, 0); assert.match(r.stderr, match);
 };
-const source = file => readFileSync(path.join(__dirname, '../supabase/migrations', file), 'utf8');
+const source = file => readFileSync(path.join(__dirname, existsSync(path.join(__dirname, '../supabase/migrations', file)) ? '../supabase/migrations' : '../supabase/migrations_archive', file), 'utf8');
 const definition = (file, name) => { const s = source(file), start = s.indexOf('create or replace function public.' + name + '('); assert(start >= 0); return s.slice(start, s.indexOf('$$;', start) + 3); };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const wait = async check => { for (let n = 0; n < 120; n++) { if (await check()) return; await sleep(250); } throw new Error('Owned service not ready'); };

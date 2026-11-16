@@ -385,7 +385,7 @@ Evidence:
 
 Remaining gaps:
 
-- Apply `supabase/migrations/20260708010000_business_role_applications.sql` to production Supabase.
+- Apply `supabase/migrations_archive/20260708010000_business_role_applications.sql` to production Supabase.
 - Deploy the web code.
 - Live smoke:
   - `/business/role-apply` chooser as guest.

@@ -9,7 +9,7 @@
 | Источник | Содержимое и реализация | Ограничение |
 | --- | --- | --- |
 | `api_request_metrics` | Endpoint, метод, HTTP status, duration, error type, контекст пользователя/бизнеса, IP/User-Agent; [apiMetrics](apps/web/src/lib/apiMetrics.ts) | Явно инструментированные пути, не доказанная запись каждого запроса |
-| `staff_finance_operation_logs` | Тип операции, уровень, IDs, before/after, metadata и ошибка; [миграция логов](supabase/migrations/20260214000000_create_finance_operation_logs.sql) | Наличие таблицы/триггеров в source не доказывает applied schema или полный аудит всех каналов записи |
+| `staff_finance_operation_logs` | Тип операции, уровень, IDs, before/after, metadata и ошибка; [миграция логов](supabase/migrations_archive/20260214000000_create_finance_operation_logs.sql) | Наличие таблицы/триггеров в source не доказывает applied schema или полный аудит всех каналов записи |
 | Redis performance client series | Строгие browser RPC/vitals/load/render агрегаты; [frontendMetricsService](apps/web/src/lib/frontendMetricsService.ts). Текущий collector больше не пишет legacy frontend_metrics | Недоверенные client measurements, без PII; best effort и собственный TTL, отдельно от server series |
 | `analytics_events`, `funnel_events` | Продуктовые события и этапы воронки | События не тождественны подтверждённым операциям БД |
 | `business_daily_stats`, `business_hourly_load` | Дневные и часовые агрегаты | Зависят от запуска cron, исходной выборки и правил времени |

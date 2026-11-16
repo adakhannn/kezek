@@ -84,19 +84,19 @@ let created = false;
         // 2. Users keep editing ordinary fields but cannot claim identities.
         assert.equal(
             await asRole('authenticated', user, `update profiles set full_name='Renamed', notify_email=false, whatsapp_phone='+996555000111', whatsapp_verified=true, telegram_id=42, telegram_verified=true, yandex_id='y' where id='${user}' returning concat_ws('|', full_name, notify_email, coalesce(whatsapp_phone,'-'), whatsapp_verified, coalesce(telegram_id::text,'-'), telegram_verified, coalesce(yandex_id,'-'))`),
-            'Renamed|false|-|false|-|false|-',
+            'Renamed|f|-|f|-|f|-',
         );
         const newcomer = randomUUID();
         assert.equal(
             await asRole('authenticated', newcomer, `insert into profiles(id, full_name, whatsapp_phone, whatsapp_verified, telegram_id, telegram_verified) values ('${newcomer}', 'New', '+996555000222', true, 7, true) returning concat_ws('|', full_name, coalesce(whatsapp_phone,'-'), whatsapp_verified, coalesce(telegram_id::text,'-'), telegram_verified)`),
-            'New|-|false|-|false',
+            'New|-|f|-|f',
         );
 
         // Privileged writers (service role, definer commands) are unaffected.
         await asRole('service_role', other, `update profiles set whatsapp_phone='+996555000333', whatsapp_verified=true, telegram_id=99, telegram_verified=true where id='${other}'`);
-        assert.equal(await sql(`select concat_ws('|', whatsapp_phone, whatsapp_verified, telegram_id, telegram_verified) from profiles where id='${other}'`), '+996555000333|true|99|true');
+        assert.equal(await sql(`select concat_ws('|', whatsapp_phone, whatsapp_verified, telegram_id, telegram_verified) from profiles where id='${other}'`), '+996555000333|t|99|t');
         await asRole('authenticated', user, `select definer_link_whatsapp('+996555000444')`);
-        assert.equal(await sql(`select concat_ws('|', whatsapp_phone, whatsapp_verified) from profiles where id='${user}'`), '+996555000444|true');
+        assert.equal(await sql(`select concat_ws('|', whatsapp_phone, whatsapp_verified) from profiles where id='${user}'`), '+996555000444|t');
 
         // An upsert by the user (PostgREST on_conflict path) preserves verified identity.
         assert.equal(
@@ -104,7 +104,7 @@ let created = false;
                 on conflict (id) do update set full_name = excluded.full_name, notify_whatsapp = excluded.notify_whatsapp,
                     whatsapp_phone = excluded.whatsapp_phone, whatsapp_verified = excluded.whatsapp_verified
                 returning concat_ws('|', full_name, notify_whatsapp, whatsapp_phone, whatsapp_verified)`),
-            'Upserted|false|+996555000444|true',
+            'Upserted|f|+996555000444|t',
         );
 
         // 3. Promotion helpers: no direct execution, fixed search_path, definer callers still work.

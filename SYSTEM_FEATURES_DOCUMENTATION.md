@@ -176,9 +176,9 @@ salon  = round2(max(0, baseSalon - topup))
 | birthday_discount | Тип есть в CRUD, но `can_use_promotion` возвращает false; автоматическая скидка по дню рождения этой функцией не реализована |
 | first_visit_discount | Счётчик посещений равен 0; процент из discount_percent |
 
-`get_client_visit_count` считает paid-записи клиента в филиале с end_at < now. Он **не исключает явно текущий booking**; к моменту проверки статус уже может быть paid. Поэтому нельзя описывать его как гарантированное число предыдущих визитов или без оговорки обещать точный N-й визит независимо от времени отметки. Источник условий — [can_use_promotion/get_client_visit_count](supabase/migrations/20260123000000_create_branch_promotions.sql).
+`get_client_visit_count` считает paid-записи клиента в филиале с end_at < now. Он **не исключает явно текущий booking**; к моменту проверки статус уже может быть paid. Поэтому нельзя описывать его как гарантированное число предыдущих визитов или без оговорки обещать точный N-й визит независимо от времени отметки. Источник условий — [can_use_promotion/get_client_visit_count](supabase/migrations_archive/20260123000000_create_branch_promotions.sql).
 
-В определении выбора задан порядок: first_visit_discount → birthday_discount → referral_free → referral_discount_50 → free_after_n_visits; предполагается выбор одной акции, а не суммы скидок. База цены берётся из основной services-строки (среднее price_from/price_to при наличии обеих, иначе доступная цена/0); она не равна автоматически введённой фактической сумме смены или сумме всего комплекса. Для процентной скидки: `final = round2(base × (1 - percent/100))`. На guest booking без client_id функция возвращает «не применено». Ошибка применения также может быть возвращена как applied=false. [apply_promotion_to_booking](supabase/migrations/20260123000001_add_apply_promotion_function.sql).
+В определении выбора задан порядок: first_visit_discount → birthday_discount → referral_free → referral_discount_50 → free_after_n_visits; предполагается выбор одной акции, а не суммы скидок. База цены берётся из основной services-строки (среднее price_from/price_to при наличии обеих, иначе доступная цена/0); она не равна автоматически введённой фактической сумме смены или сумме всего комплекса. Для процентной скидки: `final = round2(base × (1 - percent/100))`. На guest booking без client_id функция возвращает «не применено». Ошибка применения также может быть возвращена как applied=false. [apply_promotion_to_booking](supabase/migrations_archive/20260123000001_add_apply_promotion_function.sql).
 
 Это описание репозиторного SQL, а не подтверждение применённости/исполнения всех веток. Поля promotion_applied и показываемая сумма — результат учёта скидки, не квитанция оплаты.
 
@@ -188,7 +188,7 @@ salon  = round2(max(0, baseSalon - topup))
 
 При штатном вызове `update_booking_status_with_promotion` для paid сначала пробуется пакет, и только при applied=false — промо. Подбор требует client_id, активный план, положительный остаток и неистёкший срок; услуга и филиал должны соответствовать ограничениям плана. При нескольких кандидатах выбирается ближайший valid_until. Использование записывается в client_visit_package_uses, booking получает subscription_applied с результатом.
 
-Для percent итог считается как процентная скидка от базовой цены основной услуги; для fixed_price — минимум фиксированной цены и базы, затем нижняя граница 0. **Известное отклонение:** универсальный план в проверенном подборе не сравнивает свой biz_id с бизнесом booking ([ENG-04](docs/ENGINEERING_FINDINGS.md)). Наличие списка филиалов не заменяет эту проверку. SQL — [visit package apply functions](supabase/migrations/20260306000000_visit_package_apply_functions.sql).
+Для percent итог считается как процентная скидка от базовой цены основной услуги; для fixed_price — минимум фиксированной цены и базы, затем нижняя граница 0. **Известное отклонение:** универсальный план в проверенном подборе не сравнивает свой biz_id с бизнесом booking ([ENG-04](docs/ENGINEERING_FINDINGS.md)). Наличие списка филиалов не заменяет эту проверку. SQL — [visit package apply functions](supabase/migrations_archive/20260306000000_visit_package_apply_functions.sql).
 
 Приоритет пакета над промо относится к этой ветке SQL; fallback прямого изменения статуса и повторные/частичные операции не дают общей гарантии «всегда списан ровно один визит и начислена ровно одна скидка». Дизайн возможных абонементов/пакетов — [SUBSCRIPTIONS_AND_PACKAGES_FEATURE](docs/SUBSCRIPTIONS_AND_PACKAGES_FEATURE.md); обещание безлимитного абонемента нельзя выводить из уже существующего счётчика визитов.
 
@@ -220,7 +220,7 @@ salon  = round2(max(0, baseSalon - topup))
 - дневная оценка филиала — среднее staff day_score, дневная оценка бизнеса — среднее branch day_score; итоговый rating_score — среднее **дневных оценок в окне**, а не всегда среднее текущих карточек сотрудников;
 - подсчёт distinct client_id не считает null как отдельного гостя: нельзя считать эту метрику полным числом всех посетителей.
 
-Источники: [дневные расчёты](supabase/migrations/20260122000001_create_rating_functions.sql), [поздние агрегаторы](supabase/migrations/20260124000000_improve_rating_calculation_for_inactive_periods.sql). Формулы/выборка — вычислительные правила реализации, не объективная оценка качества работы человека.
+Источники: [дневные расчёты](supabase/migrations_archive/20260122000001_create_rating_functions.sql), [поздние агрегаторы](supabase/migrations_archive/20260124000000_improve_rating_calculation_for_inactive_periods.sql). Формулы/выборка — вычислительные правила реализации, не объективная оценка качества работы человека.
 
 ### NULL, ноль и отсутствие активности
 

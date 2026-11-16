@@ -8,7 +8,7 @@ const container='kezek-hours-test-'+randomUUID();
 function docker(args,input=''){return new Promise((resolve,reject)=>{const p=spawn('docker',args,{windowsHide:true});let out='',err='';p.stdout.on('data',d=>out+=d);p.stderr.on('data',d=>err+=d);p.on('error',reject);p.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err||out)));p.stdin.end(input);});}
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const sql=text=>docker(['exec','-i',container,'psql','-X','-q','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-At'],text);
-const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8');
+const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
 const call=async text=>JSON.parse(await sql(asActor()+text));
 // Independent explicit oracle for persisted amount1001,consumables99,60/40,rate100.
 function calc(hours){const guarantee=Math.round(hours*10000)/100,topup=Math.max(0,guarantee-601);return {totalAmount:1001,totalConsumables:99,guaranteedAmount:guarantee,topupAmount:topup,finalMasterShare:Math.max(601,guarantee),finalSalonShare:Math.max(0,499-topup)};}

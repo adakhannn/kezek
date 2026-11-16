@@ -1,6 +1,6 @@
 // Local-only real platform-role command regressions. No env, remote DB or Auth calls.
 const { spawnSync, spawn } = require('node:child_process');
-const { readFileSync } = require('node:fs');
+const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const path = require('node:path');
 const assert = require('node:assert/strict');
@@ -18,7 +18,7 @@ const asyncSql = text => new Promise((resolve,reject) => {
   child.stdout.on('data',part=>out+=part);child.stderr.on('data',part=>err+=part);child.on('error',reject);
   child.on('exit',code=>resolve({code,out:out.trim(),err}));child.stdin.end(text);
 });
-const source=file=>readFileSync(path.join(root,'supabase/migrations',file),'utf8');
+const source=file=>readFileSync(path.join(root,existsSync(path.join(root,'supabase/migrations',file))?'supabase/migrations':'supabase/migrations_archive',file),'utf8');
 const definition=(file,name)=>{const text=source(file),start=text.indexOf('create or replace function public.'+name+'('),end=text.indexOf('$$;',start);assert(start>=0&&end>start);return text.slice(start,end+3);};
 const A=randomUUID(),B=randomUUID(),C=randomUUID(),ordinary=randomUUID(),role=randomUUID(),tenantRole=randomUUID(),business=randomUUID();
 const command=(actor,target,enabled)=>`set role service_role; select set_platform_admin_role('${actor}','${target}',${enabled});`;

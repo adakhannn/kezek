@@ -2,7 +2,7 @@
 // Uses real old/new slot SQL, but a controlled resolver fixture (not production schedules).
 // No .env, remote database, provider, network, host ports or volumes.
 const { spawnSync } = require('node:child_process');
-const { readFileSync } = require('node:fs');
+const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -15,7 +15,7 @@ const run = (args, input, allowError = false) => {
 };
 const psql = ['exec', '-i', name, 'psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres'];
 const sql = text => run(psql, text).stdout.trim();
-const source = file => readFileSync(path.join(root, 'supabase/migrations', file), 'utf8');
+const source = file => readFileSync(path.join(root, existsSync(path.join(root, 'supabase/migrations', file)) ? 'supabase/migrations' : 'supabase/migrations_archive', file), 'utf8');
 const id = number => '00000000-0000-4000-8000-' + String(number).padStart(12, '0');
 const biz = id(1), otherBiz = id(2), branch = id(3), otherBranch = id(4), service = id(5);
 const staff = id(10), transfer = id(11), inactive = id(12), unavailable = id(13), wrongBranch = id(14), foreign = id(15);

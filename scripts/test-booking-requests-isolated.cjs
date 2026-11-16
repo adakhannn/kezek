@@ -2,7 +2,7 @@
 // SQL in a synthetic minimal schema; schedule availability itself is not tested.
 // Never reads .env/connection URLs or sends provider messages.
 const { spawnSync, spawn } = require('node:child_process');
-const { readFileSync } = require('node:fs');
+const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -24,7 +24,7 @@ const asyncSql = text => new Promise((resolve, reject) => {
   child.on('exit', code => code === 0 ? resolve(out.trim()) : reject(new Error(err)));
   child.stdin.end(text);
 });
-const source = filename => readFileSync(path.join(root, 'supabase/migrations', filename), 'utf8');
+const source = filename => readFileSync(path.join(root, existsSync(path.join(root, 'supabase/migrations', filename)) ? 'supabase/migrations' : 'supabase/migrations_archive', filename), 'utf8');
 const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
 const id = digit => '00000000-0000-4000-8000-' + String(digit).padStart(12, '0');
 const user = id(1), other = id(2), biz = id(3), branch = id(4), staff = id(5), service = id(6), service2 = id(7);

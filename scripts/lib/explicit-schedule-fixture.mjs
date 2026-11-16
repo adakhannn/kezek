@@ -33,12 +33,12 @@ insert into branches values('${branch}','${biz}',true),('${branch2}','${biz}',tr
 insert into staff values('${staff}','${biz}','${branch}','${other}',true);
 insert into branch_working_hours select '${biz}',b,day,'[{"start":"08:00","end":"20:00"}]'::jsonb,'[]'::jsonb from unnest(array['${branch}'::uuid,'${branch2}'::uuid]) b cross join generate_series(0,6) day;
 `);
-const rollback = await readFile(new URL('../../supabase/migrations/20260918120000_revert_staff_schedule_inheritance.sql',import.meta.url),'utf8');
+const rollback = await readFile(new URL('../../supabase/migrations_archive/20260918120000_revert_staff_schedule_inheritance.sql',import.meta.url),'utf8');
 await db.exec(rollback.slice(rollback.indexOf('CREATE OR REPLACE FUNCTION'),rollback.indexOf('ALTER FUNCTION')));
-await db.exec(await readFile(new URL('../../supabase/migrations/20260918130000_explicit_staff_schedules.sql',import.meta.url),'utf8'));
-await db.exec(await readFile(new URL('../../supabase/migrations/20260918131000_explicit_schedule_booking_consumers.sql',import.meta.url),'utf8'));
-await db.exec(await readFile(new URL('../../supabase/migrations/20260918132000_explicit_schedule_complex_booking_writers.sql',import.meta.url),'utf8'));
-await db.exec(await readFile(new URL('../../supabase/migrations/20260918133000_atomic_staff_home_transfer.sql',import.meta.url),'utf8'));
-await db.exec(await readFile(new URL('../../supabase/migrations/20261008065051_complete_schedule_operations.sql',import.meta.url),'utf8'));
-await db.exec(await readFile(new URL('../../supabase/migrations/20261009090000_staff_absence_lifecycle.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations_archive/20260918130000_explicit_staff_schedules.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations_archive/20260918131000_explicit_schedule_booking_consumers.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations_archive/20260918132000_explicit_schedule_complex_booking_writers.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations_archive/20260918133000_atomic_staff_home_transfer.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations_archive/20261008065051_complete_schedule_operations.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations_archive/20261009090000_staff_absence_lifecycle.sql',import.meta.url),'utf8'));
 }

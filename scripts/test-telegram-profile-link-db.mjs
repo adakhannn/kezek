@@ -12,7 +12,7 @@ create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{
 create table public.profiles(id uuid primary key references auth.users(id), telegram_id bigint unique,
 telegram_username text, telegram_photo_url text, telegram_verified boolean);
 `);
-await db.exec(await readFile(new URL('../supabase/migrations/20260916120000_telegram_profile_link_attempts.sql', import.meta.url), 'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations_archive/20260916120000_telegram_profile_link_attempts.sql', import.meta.url), 'utf8'));
 const owner = '00000000-0000-0000-0000-000000000001';
 const other = '00000000-0000-0000-0000-000000000002';
 await db.query('insert into auth.users(id) values ($1),($2)', [owner,other]);

@@ -157,5 +157,5 @@
 ## 6. Ссылки
 
 - Задачи кабинета владельца: `OWNER_CABINET_RISKS_AND_IMPROVEMENTS_TASKS.md` (блок 4, задача «Дублирование логики…»; блок 5.1).
-- Миграции: `supabase/migrations/20260224000000_create_user_current_business.sql`, `20260224001000_backfill_user_current_business.sql`.
+- Миграции: `supabase/migrations_archive/20260224000000_create_user_current_business.sql`, `20260224001000_backfill_user_current_business.sql`.
 - RPC: `my_role_keys`, `is_super_admin` (типы в `apps/web/src/types/supabase.ts`).

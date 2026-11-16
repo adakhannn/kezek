@@ -24,7 +24,7 @@
 
 Новые lifecycle-источники: [booking outbox](supabase/migrations/20261110090000_booking_notification_outbox.sql), [WhatsApp inbox](supabase/migrations/20261110124000_whatsapp_inbox.sql). Ограничение 100 строк за запуск требует контроля backlog: срок eligibility не гарантирует удаление всех eligible строк в тот же день. Старую `whatsapp_messages` новая inbox migration не очищает. Tombstones остаются для защиты от повторной команды; это не полное удаление всех идентификаторов.
 
-Источники условий: [API metrics cleanup](supabase/migrations/20260215000000_create_api_metrics_table.sql), [finance logs cleanup](supabase/migrations/20260214000000_create_finance_operation_logs.sql), [funnel/bookings cleanup](supabase/migrations/20260222000000_data_retention_cleanup.sql), [актуальная profile activity проверка](supabase/migrations/20260727010000_fix_profile_retention_activity.sql), [Telegram cleanup](supabase/migrations/20260422011000_add_telegram_mobile_auth_attempts_cleanup.sql), [account deletion lifecycle](supabase/migrations/20260706020000_account_deletion_lifecycle.sql).
+Источники условий: [API metrics cleanup](supabase/migrations_archive/20260215000000_create_api_metrics_table.sql), [finance logs cleanup](supabase/migrations_archive/20260214000000_create_finance_operation_logs.sql), [funnel/bookings cleanup](supabase/migrations_archive/20260222000000_data_retention_cleanup.sql), [актуальная profile activity проверка](supabase/migrations_archive/20260727010000_fix_profile_retention_activity.sql), [Telegram cleanup](supabase/migrations_archive/20260422011000_add_telegram_mobile_auth_attempts_cleanup.sql), [account deletion lifecycle](supabase/migrations_archive/20260706020000_account_deletion_lifecycle.sql).
 
 ## Границы текущей политики
 
