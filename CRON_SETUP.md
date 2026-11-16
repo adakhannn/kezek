@@ -1,6 +1,6 @@
 # Cron: Vercel, выполнение и восстановление
 
-Актуализировано: 2026-11-10. Аудитория и владелец: эксплуатация. Статус: текущая реализация и локальные проверки; регистрация задач и доставка уведомлений в deployment не подтверждены. Целевой хостинг, выбранный владельцем проекта, — Vercel Pro / Enterprise.
+Актуализировано: 2026-11-17. Аудитория и владелец: эксплуатация. Статус: текущая реализация. Проект на тарифе **Vercel Hobby**, который разрешает только ежедневные cron-задачи: сборка с минутным расписанием падает с ошибкой «Hobby accounts are limited to daily cron jobs».
 
 Документ объясняет конфигурацию, наблюдение и восстановление фоновых операций. Предпосылки: применённые миграции соответствующего релиза, серверный доступ к Supabase, секрет cron и настроенные зависимости. Общий порядок выпуска — [OPERATIONS](docs/OPERATIONS.md), переменные — [ENV_GUIDE](ENV_GUIDE.md), состояние — [PROJECT_STATUS](docs/PROJECT_STATUS.md).
 
@@ -13,16 +13,18 @@ node scripts/generate-cron-manifests.mjs --write
 node scripts/generate-cron-manifests.mjs --check
 ```
 
-| Задание | Путь после `/api/cron/` | Расписание UTC | Допустимый возраст последнего успеха |
+Задания с `externalSchedule` (частые) в Vercel запускаются раз в сутки как запасной вариант, а каждые 5 минут их вызывает [workflow GitHub Actions](.github/workflows/cron-frequent.yml) с заголовком `Authorization: Bearer <CRON_SECRET>`. Ему нужен секрет репозитория `CRON_SECRET` (то же значение, что в Vercel) и, при необходимости, переменная `CRON_BASE_URL` (по умолчанию `https://kezek.kg`). GitHub может задерживать запуски по расписанию и отключает их после 60 дней без активности в репозитории; на Vercel Pro можно вернуть минутное расписание в `schedule` и убрать workflow.
+
+| Задание | Путь после `/api/cron/` | Расписание UTC (Vercel / внешнее) | Допустимый возраст последнего успеха |
 | --- | --- | --- | --- |
-| Закрытие смен | `close-shifts` | `*/5 * * * *` | 15 минут |
+| Закрытие смен | `close-shifts` | `10 0 * * *` / `*/5 * * * *` | 30 минут |
 | Рейтинги | `recalculate-ratings` | `0 3 * * *` | 27 часов |
 | Retention | `data-retention` | `0 4 * * *` | 27 часов |
 | Health alerts | `health-check-alerts` | `0 9 * * *` | 27 часов |
 | Daily analytics | `analytics/daily` | `30 3 * * *` | 27 часов |
 | Hourly analytics | `analytics/hourly-load` | `40 3 * * *` | 27 часов |
-| Уведомления о брони | `booking-notifications` | `* * * * *` | 5 минут, если worker включён |
-| WhatsApp inbox | `whatsapp-inbox` | `* * * * *` | 5 минут, если worker включён |
+| Уведомления о брони | `booking-notifications` | `20 0 * * *` / `*/5 * * * *` | 30 минут, если worker включён |
+| WhatsApp inbox | `whatsapp-inbox` | `30 0 * * *` / `*/5 * * * *` | 30 минут, если worker включён |
 
 Asia/Bishkek — UTC+6. Расписание хостинга задано в UTC; границы финансового дня и агрегатов определяются часовым поясом бизнеса. Pro / Enterprise допускают минутное расписание, но вызовы расходуют ресурсы Functions. Vercel не повторяет неуспешный cron автоматически: восстановление должно переживать следующий плановый запуск. [Лимиты Vercel](https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing), [поведение cron](https://vercel.com/docs/schedules/cron-jobs/manage-cron-jobs).
 

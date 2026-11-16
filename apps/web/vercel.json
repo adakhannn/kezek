@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/close-shifts",
-      "schedule": "*/5 * * * *"
+      "schedule": "10 0 * * *"
     },
     {
       "path": "/api/cron/recalculate-ratings",
@@ -26,11 +26,11 @@
     },
     {
       "path": "/api/cron/booking-notifications",
-      "schedule": "* * * * *"
+      "schedule": "20 0 * * *"
     },
     {
       "path": "/api/cron/whatsapp-inbox",
-      "schedule": "* * * * *"
+      "schedule": "30 0 * * *"
     }
   ]
 }

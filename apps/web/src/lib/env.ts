@@ -322,16 +322,17 @@ export function getWhatsAppOtpHashSecret(): string {
 }
 
 /**
- * Получает UPSTASH_REDIS_REST_URL
+ * Получает UPSTASH_REDIS_REST_URL. Интеграция Upstash из Vercel Marketplace
+ * создаёт KV_REST_API_URL — принимается как запасное имя.
  */
 export function getUpstashRedisUrl(): string | undefined {
-    return getOptionalEnvVar('UPSTASH_REDIS_REST_URL');
+    return getOptionalEnvVar('UPSTASH_REDIS_REST_URL') || getOptionalEnvVar('KV_REST_API_URL');
 }
 
 /**
- * Получает UPSTASH_REDIS_REST_TOKEN
+ * Получает UPSTASH_REDIS_REST_TOKEN (запасное имя — KV_REST_API_TOKEN, см. выше).
  */
 export function getUpstashRedisToken(): string | undefined {
-    return getOptionalEnvVar('UPSTASH_REDIS_REST_TOKEN');
+    return getOptionalEnvVar('UPSTASH_REDIS_REST_TOKEN') || getOptionalEnvVar('KV_REST_API_TOKEN');
 }
 

@@ -1,0 +1,48 @@
+name: Frequent cron
+
+# Vercel Hobby allows only daily cron jobs, so the jobs with an
+# `externalSchedule` in apps/web/src/config/cronJobs.json are triggered from
+# here every 5 minutes; vercel.json keeps a daily run as a fallback.
+# GitHub may delay scheduled runs under load and disables schedules after 60
+# days without repository activity.
+#
+# Requires the repository secret CRON_SECRET (same value as the Vercel env var)
+# and optionally the repository variable CRON_BASE_URL (default https://kezek.kg).
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: frequent-cron
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call cron endpoints
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASE_URL: ${{ vars.CRON_BASE_URL || 'https://kezek.kg' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Repository secret CRON_SECRET is not set"
+            exit 1
+          fi
+          failed=0
+          for path in /api/cron/booking-notifications /api/cron/whatsapp-inbox /api/cron/close-shifts; do
+            status=$(curl -sS -o response.json -w '%{http_code}' --max-time 90 \
+              -H "Authorization: Bearer ${CRON_SECRET}" "${BASE_URL}${path}" || echo 000)
+            echo "${path}: HTTP ${status}"
+            head -c 300 response.json 2>/dev/null; echo
+            if [ "$status" -ge 400 ] || [ "$status" = "000" ]; then
+              echo "::error::${path} returned HTTP ${status}"
+              failed=1
+            fi
+          done
+          exit $failed

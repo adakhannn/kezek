@@ -6,7 +6,7 @@ const row: CronHealthRow = { job: 'close-shifts', last_started_at: '2026-11-10T1
 const status = (patch: Partial<CronHealthRow>) => evaluateCronHealth([{ ...row, ...patch }], now, {})[0].status;
 test('distinguishes healthy, missed, failed and abandoned executions', () => {
     expect(status({})).toBe('healthy');
-    expect(status({ last_success_at: '2026-11-10T11:40:00Z' })).toBe('overdue');
+    expect(status({ last_success_at: '2026-11-10T11:20:00Z' })).toBe('overdue');
     expect(status({ last_failure_at: '2026-11-10T11:58:00Z' })).toBe('failed');
     expect(status({ oldest_running_at: '2026-11-10T11:30:00Z', running_count: 1 })).toBe('stuck');
 });
