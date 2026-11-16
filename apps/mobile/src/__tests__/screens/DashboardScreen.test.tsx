@@ -139,7 +139,7 @@ describe('DashboardScreen', () => {
 
         await waitFor(() => {
             expect(openUrl).toHaveBeenCalledWith(
-                'https://kezek.kg/auth/callback?next=%2Fselect-business' +
+                'https://kezek.vercel.app/auth/callback?next=%2Fselect-business' +
                     '#access_token=owner-access-token&refresh_token=owner-refresh-token',
             );
         });

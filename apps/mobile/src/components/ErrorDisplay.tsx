@@ -33,7 +33,7 @@ export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
                     <Text style={styles.envCode}>
                         EXPO_PUBLIC_SUPABASE_URL=...{'\n'}
                         EXPO_PUBLIC_SUPABASE_ANON_KEY=...{'\n'}
-                        EXPO_PUBLIC_API_URL=https://kezek.kg
+                        EXPO_PUBLIC_API_URL=https://kezek.vercel.app
                     </Text>
                     <Text style={styles.envText}>
                         3. Перезапустите Expo (остановите и запустите снова)

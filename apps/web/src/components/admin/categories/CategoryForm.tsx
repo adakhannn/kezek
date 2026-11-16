@@ -9,6 +9,7 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { getPublicSiteHost } from '@/lib/siteOrigin';
 
 type Props = {
     mode: 'create' | 'edit';
@@ -205,7 +206,7 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                                 Будущий адрес
                             </p>
                             <code className="mt-0.5 block truncate text-sm text-[var(--text-primary)]">
-                                kezek.kg/b/{makeSlug(slug)}
+                                {getPublicSiteHost()}/b/{makeSlug(slug)}
                             </code>
                         </div>
                         <ExternalLink className="h-4 w-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />

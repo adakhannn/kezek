@@ -3,6 +3,8 @@
  * Обеспечивает валидацию и безопасный доступ к env переменным
  */
 
+import { DEFAULT_SITE_ORIGIN } from './siteOrigin';
+
 type EnvVarConfig = {
     required?: boolean;
     defaultValue?: string;
@@ -147,13 +149,12 @@ export function getResendApiKey(): string {
 }
 
 /**
- * Получает EMAIL_FROM с дефолтным значением
+ * Получает EMAIL_FROM. Значения по умолчанию нет: домен отправителя должен
+ * принадлежать проекту и быть подтверждён в Resend. Пустая строка означает,
+ * что email-уведомления не отправляются.
  */
 export function getEmailFrom(): string {
-    return getEnvVar('EMAIL_FROM', {
-        required: false,
-        defaultValue: 'Kezek <noreply@mail.kezek.kg>'
-    });
+    return getEnvVar('EMAIL_FROM', { required: false });
 }
 
 /**
@@ -162,7 +163,7 @@ export function getEmailFrom(): string {
 export function getSiteOrigin(): string {
     return getEnvVar('NEXT_PUBLIC_SITE_ORIGIN', {
         required: false,
-        defaultValue: 'https://kezek.kg',
+        defaultValue: DEFAULT_SITE_ORIGIN,
         validator: isValidUrl
     });
 }

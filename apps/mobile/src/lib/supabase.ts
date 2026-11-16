@@ -35,7 +35,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 Please create apps/mobile/.env.local with:
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-EXPO_PUBLIC_API_URL=https://kezek.kg
+EXPO_PUBLIC_API_URL=https://kezek.vercel.app
 
 Then restart Expo with: npx expo start --clear`;
 

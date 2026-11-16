@@ -31,7 +31,7 @@ export async function prepareBookingNotificationContext(participants: Participan
     const details: BookingDetails = {
         booking, biz, staff, service: first(booking.services), branch: first(booking.branches),
         clientName: clientData.name, clientEmail: clientData.email, clientPhone: clientData.phone,
-        timezone, origin: origin.includes('vercel.app') ? 'https://kezek.kg' : origin,
+        timezone, origin,
     };
     return { details, clientData, staffData, ownerData };
 }

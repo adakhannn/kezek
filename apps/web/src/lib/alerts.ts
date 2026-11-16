@@ -1,6 +1,8 @@
 import { Resend } from 'resend';
 
+import { getEmailFrom, getSiteOrigin } from './env';
 import { logDebug, logError } from './log';
+import { DEFAULT_SITE_ORIGIN } from './siteOrigin';
 
 let resendClient: Resend | null = null;
 
@@ -13,8 +15,13 @@ function getResend(): Resend {
     return resendClient;
 }
 
-const ALERT_EMAIL_TO = process.env.ALERT_EMAIL_TO || process.env.EMAIL_FROM || 'admin@kezek.kg';
-const ALERT_EMAIL_FROM = process.env.EMAIL_FROM || 'Kezek <noreply@mail.kezek.kg>';
+function healthCheckUrl(): string {
+    try {
+        return `${getSiteOrigin()}/admin/health-check`;
+    } catch {
+        return `${DEFAULT_SITE_ORIGIN}/admin/health-check`;
+    }
+}
 
 type AlertType = 'error' | 'warning';
 
@@ -35,6 +42,15 @@ export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolea
 
     if (alerts.length === 0) {
         return { success: true };
+    }
+
+    // Alerts carry error details, so they go only to an explicitly configured
+    // inbox, never to a fallback address on a domain the project may not own.
+    const to = process.env.ALERT_EMAIL_TO?.trim();
+    const from = getEmailFrom();
+    if (!to || !from) {
+        logError('Alerts', 'ALERT_EMAIL_TO or EMAIL_FROM not configured, skipping email alert');
+        return { success: false, error: 'ALERT_EMAIL_TO or EMAIL_FROM not configured' };
     }
 
     const errorCount = alerts.filter((a) => a.type === 'error').length;
@@ -79,7 +95,7 @@ export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolea
         
         <div class="footer">
             <p>Это автоматическое уведомление от системы мониторинга Kezek.</p>
-            <p>Проверьте панель администрирования: <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://kezek.kg'}/admin/health-check">Health Check</a></p>
+            <p>Проверьте панель администрирования: <a href="${healthCheckUrl()}">Health Check</a></p>
         </div>
     </div>
 </body>
@@ -88,8 +104,8 @@ export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolea
 
     try {
         const { data, error } = await getResend().emails.send({
-            from: ALERT_EMAIL_FROM,
-            to: ALERT_EMAIL_TO,
+            from,
+            to,
             subject,
             html,
         });

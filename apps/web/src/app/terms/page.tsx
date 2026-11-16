@@ -2,6 +2,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { getPublicSiteOrigin } from '@/lib/siteOrigin';
+
 export const metadata: Metadata = {
     title: 'Пользовательское соглашение — Kezek',
     description: 'Пользовательское соглашение сервиса Kezek',
@@ -135,7 +137,7 @@ export default function TermsPage() {
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                                 Мы можем обновлять условия настоящего Соглашения. Актуальная версия всегда доступна по адресу{' '}
-                                <span className="font-mono text-sm text-indigo-600 dark:text-indigo-400">https://kezek.kg/terms</span>.
+                                <span className="font-mono text-sm text-indigo-600 dark:text-indigo-400">{getPublicSiteOrigin()}/terms</span>.
                                 Продолжение использования Сервиса после изменения условий означает согласие с новой версией
                                 Соглашения.
                             </p>

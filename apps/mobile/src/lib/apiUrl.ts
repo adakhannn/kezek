@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 
-const PROD_API_URL = 'https://kezek.kg';
+// kezek.kg was lost to a third party in November 2026: never send tokens there.
+const PROD_API_URL = 'https://kezek.vercel.app';
 
 function normalizeApiUrl(value: string): string {
     return value.trim().replace(/\/+$/, '');

@@ -5,7 +5,7 @@ import { RootStackParamList } from './types';
  * Конфигурация глубоких ссылок для навигации
  */
 export const linking: LinkingOptions<RootStackParamList> = {
-    prefixes: ['kezek://', 'https://kezek.kg', 'https://www.kezek.kg'],
+    prefixes: ['kezek://', 'https://kezek.vercel.app'],
     config: {
         screens: {
             Auth: {

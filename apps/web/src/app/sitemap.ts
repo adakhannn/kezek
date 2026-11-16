@@ -1,7 +1,9 @@
 import type { MetadataRoute } from 'next';
 
+import { getPublicSiteOrigin } from '@/lib/siteOrigin';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const base = getPublicSiteOrigin();
     const entries: MetadataRoute.Sitemap = [{ url: `${base}/`, changeFrequency: 'daily', priority: 0.8 }];
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

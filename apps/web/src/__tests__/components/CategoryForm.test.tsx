@@ -25,7 +25,7 @@ describe('CategoryForm', () => {
             target: { value: 'Женская парикмахерская' },
         });
 
-        expect(screen.getByText('kezek.kg/b/zhenskaya-parikmaherskaya')).toBeTruthy();
+        expect(screen.getByText('kezek.vercel.app/b/zhenskaya-parikmaherskaya')).toBeTruthy();
         expect(screen.getByLabelText('Доступна для выбора')).toBeTruthy();
         expect(screen.getByRole('link', { name: 'Отмена' }).getAttribute('href')).toBe('/admin/categories');
         expect(screen.getByRole('button', { name: 'Создать категорию' })).toBeTruthy();

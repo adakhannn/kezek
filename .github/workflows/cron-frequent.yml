@@ -7,7 +7,10 @@ name: Frequent cron
 # days without repository activity.
 #
 # Requires the repository secret CRON_SECRET (same value as the Vercel env var)
-# and optionally the repository variable CRON_BASE_URL (default https://kezek.kg).
+# and optionally the repository variable CRON_BASE_URL (default
+# https://kezek.vercel.app). The secret is sent to that origin, so it must be a
+# domain the project controls: kezek.kg was lost to a third party in 2026-11.
+# The repository is public, so response bodies are not printed to the log.
 
 on:
   schedule:
@@ -28,18 +31,21 @@ jobs:
       - name: Call cron endpoints
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          BASE_URL: ${{ vars.CRON_BASE_URL || 'https://kezek.kg' }}
+          BASE_URL: ${{ vars.CRON_BASE_URL || 'https://kezek.vercel.app' }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "::error::Repository secret CRON_SECRET is not set"
             exit 1
           fi
+          case "$BASE_URL" in
+            https://*) ;;
+            *) echo "::error::CRON_BASE_URL must be an https:// origin"; exit 1 ;;
+          esac
           failed=0
           for path in /api/cron/booking-notifications /api/cron/whatsapp-inbox /api/cron/close-shifts; do
-            status=$(curl -sS -o response.json -w '%{http_code}' --max-time 90 \
+            status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 90 \
               -H "Authorization: Bearer ${CRON_SECRET}" "${BASE_URL}${path}" || echo 000)
             echo "${path}: HTTP ${status}"
-            head -c 300 response.json 2>/dev/null; echo
             if [ "$status" -ge 400 ] || [ "$status" = "000" ]; then
               echo "::error::${path} returned HTTP ${status}"
               failed=1

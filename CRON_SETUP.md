@@ -13,7 +13,7 @@ node scripts/generate-cron-manifests.mjs --write
 node scripts/generate-cron-manifests.mjs --check
 ```
 
-Задания с `externalSchedule` (частые) в Vercel запускаются раз в сутки как запасной вариант, а каждые 5 минут их вызывает [workflow GitHub Actions](.github/workflows/cron-frequent.yml) с заголовком `Authorization: Bearer <CRON_SECRET>`. Ему нужен секрет репозитория `CRON_SECRET` (то же значение, что в Vercel) и, при необходимости, переменная `CRON_BASE_URL` (по умолчанию `https://kezek.kg`). GitHub может задерживать запуски по расписанию и отключает их после 60 дней без активности в репозитории; на Vercel Pro можно вернуть минутное расписание в `schedule` и убрать workflow.
+Задания с `externalSchedule` (частые) в Vercel запускаются раз в сутки как запасной вариант, а каждые 5 минут их вызывает [workflow GitHub Actions](.github/workflows/cron-frequent.yml) с заголовком `Authorization: Bearer <CRON_SECRET>`. Ему нужен секрет репозитория `CRON_SECRET` (то же значение, что в Vercel) и, при необходимости, переменная `CRON_BASE_URL` (по умолчанию `https://kezek.vercel.app`). Секрет уходит на этот адрес, поэтому домен должен принадлежать проекту: `kezek.kg` в 2026-11 перешёл к третьему лицу. Репозиторий публичный, поэтому workflow печатает только HTTP-статусы, без тел ответов. GitHub может задерживать запуски по расписанию и отключает их после 60 дней без активности в репозитории; на Vercel Pro можно вернуть минутное расписание в `schedule` и убрать workflow.
 
 | Задание | Путь после `/api/cron/` | Расписание UTC (Vercel / внешнее) | Допустимый возраст последнего успеха |
 | --- | --- | --- | --- |

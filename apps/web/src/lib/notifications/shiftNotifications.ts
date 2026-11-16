@@ -29,6 +29,10 @@ export async function sendShiftCloseNotification(data: ShiftCloseNotificationDat
     try {
         const apiKey = getResendApiKey();
         const from = getEmailFrom();
+        if (!from) {
+            logError('ShiftNotifications', 'EMAIL_FROM not configured, skipping shift close email');
+            return;
+        }
 
         const shiftDateFormatted = formatInTimeZone(new Date(data.shiftDate), TZ, 'dd.MM.yyyy');
         

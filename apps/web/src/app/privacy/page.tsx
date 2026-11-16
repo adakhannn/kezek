@@ -2,6 +2,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { getPublicSiteHost, getPublicSiteOrigin } from '@/lib/siteOrigin';
+
 export const metadata: Metadata = {
     title: 'Политика конфиденциальности — Kezek',
     description: 'Политика конфиденциальности сервиса Kezek',
@@ -242,7 +244,7 @@ export default function PrivacyPage() {
                             <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
                                 <p className="text-sm text-gray-700 dark:text-gray-300">
                                     <strong>Сервис:</strong> Kezek<br/>
-                                    <strong>Веб-сайт:</strong> <a href="https://kezek.kg" className="text-indigo-600 dark:text-indigo-400 hover:underline">kezek.kg</a><br/>
+                                    <strong>Веб-сайт:</strong> <a href={getPublicSiteOrigin()} className="text-indigo-600 dark:text-indigo-400 hover:underline">{getPublicSiteHost()}</a><br/>
                                     <strong>Email:</strong> Для связи используйте форму обратной связи в Сервисе
                                 </p>
                             </div>

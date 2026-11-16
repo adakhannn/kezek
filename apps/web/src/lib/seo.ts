@@ -2,19 +2,15 @@
  * Утилиты для SEO: hreflang, метаданные
  */
 
+import { getPublicSiteOrigin } from './siteOrigin';
+
 type Locale = 'ky' | 'ru' | 'en';
 
 /**
- * Получает базовый URL сайта
+ * Получает базовый URL сайта (NEXT_PUBLIC_SITE_ORIGIN)
  */
 export function getBaseUrl(): string {
-    if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_URL) {
-        return process.env.NEXT_PUBLIC_BASE_URL;
-    }
-    if (typeof window !== 'undefined') {
-        return `${window.location.protocol}//${window.location.host}`;
-    }
-    return 'https://kezek.app';
+    return getPublicSiteOrigin();
 }
 
 /**
