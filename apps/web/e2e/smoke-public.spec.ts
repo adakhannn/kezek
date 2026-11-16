@@ -17,13 +17,14 @@ test.describe('Public smoke pages', () => {
         expect(consoleErrors).toEqual([]);
     });
 
-    test('sign-in page renders the primary auth form', async ({ page }) => {
+    test('sign-in page renders the social sign-in options', async ({ page }) => {
         await page.goto('/auth/sign-in');
 
         await expect(page).toHaveURL(/\/auth\/sign-in$/);
         await expect(page.locator('h1').first()).toBeVisible();
-        await expect(page.locator('input[type="email"]').first()).toBeVisible();
-        await expect(page.locator('button[type="submit"]').first()).toBeVisible();
+        // Sign-in is social-only (Google, Yandex, WhatsApp, Telegram); there is no email form.
+        await expect(page.getByRole('button', { name: /google/i })).toBeVisible();
+        await expect(page.locator('a[href^="/auth/whatsapp"]').first()).toBeVisible();
     });
 
     test('terms page renders core legal content', async ({ page }) => {
