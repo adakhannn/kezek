@@ -26,7 +26,7 @@ pnpm -C apps/web dev
 
 ## Проверки и документация
 
-- [TESTING_GUIDE.md](../../TESTING_GUIDE.md) — команды и действительные границы CI. Порог 60% применяется к allowlist в [jest.config.js](jest.config.js), а не ко всему web.
+- [TESTING_GUIDE.md](../../TESTING_GUIDE.md) — команды и действительные границы CI. Coverage считается по всему `src/` с порогом-храповиком в [jest.config.js](jest.config.js).
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — правила изменений.
 - [Новый endpoint](src/lib/HOWTO_NEW_API_ENDPOINT.md) — локальный шаблон.
 - [Эксплуатация](../../docs/OPERATIONS.md) — конфигурация cron, развёртывание и восстановление.

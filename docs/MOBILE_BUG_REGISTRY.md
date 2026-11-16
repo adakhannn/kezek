@@ -420,9 +420,9 @@ MB-008 final verification (2026-06-01):
   - app shows success toast, then details surface says booking is not found.
   - mobile code expected `booking_id` at top level, but API returns success envelope data (`{ ok: true, data: { booking_id } }`).
 - evidence:
-  - [d3_create_confirm_dialog.png](/C:/projects/kezek/apps/mobile/d3_create_confirm_dialog.png)
-  - [d3_after_create.png](/C:/projects/kezek/apps/mobile/d3_after_create.png)
-  - [d3_details_wait.png](/C:/projects/kezek/apps/mobile/d3_details_wait.png)
+  - [d3_create_confirm_dialog.png](evidence/mobile-2026/d3_create_confirm_dialog.png)
+  - [d3_after_create.png](evidence/mobile-2026/d3_after_create.png)
+  - [d3_details_wait.png](evidence/mobile-2026/d3_details_wait.png)
   - [useConfirmBooking.ts](/C:/projects/kezek/apps/mobile/src/hooks/useConfirmBooking.ts)
   - [useConfirmBooking.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/hooks/useConfirmBooking.test.tsx)
 - status: `verified`
@@ -451,8 +451,8 @@ Resolution note (2026-06-02):
   - app hits error boundary with `Invalid time value`.
   - mobile details query treated API envelope as direct booking DTO, leaving `start_at` undefined.
 - evidence:
-  - [d3_retest_after_create_wait.png](/C:/projects/kezek/apps/mobile/d3_retest_after_create_wait.png)
-  - [d3_retest_details_after_unwrap_fix.png](/C:/projects/kezek/apps/mobile/d3_retest_details_after_unwrap_fix.png)
+  - [d3_retest_after_create_wait.png](evidence/mobile-2026/d3_retest_after_create_wait.png)
+  - [d3_retest_details_after_unwrap_fix.png](evidence/mobile-2026/d3_retest_details_after_unwrap_fix.png)
   - [useBookingDetailsData.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/useBookingDetailsData.ts)
   - [useCabinetScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/cabinet/useCabinetScreenData.ts)
 - status: `verified`
@@ -481,8 +481,8 @@ Resolution note (2026-06-02):
 - actual:
   - repeat action is visible, but cancel action is hidden because `canCancel` rejected `confirmed`.
 - evidence:
-  - [d3_retest_details_actions.png](/C:/projects/kezek/apps/mobile/d3_retest_details_actions.png)
-  - [d3_retest_actions_cancel_visible.png](/C:/projects/kezek/apps/mobile/d3_retest_actions_cancel_visible.png)
+  - [d3_retest_details_actions.png](evidence/mobile-2026/d3_retest_details_actions.png)
+  - [d3_retest_actions_cancel_visible.png](evidence/mobile-2026/d3_retest_actions_cancel_visible.png)
   - [useBookingDetailsData.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/useBookingDetailsData.ts)
 - status: `verified`
 - owner: `Codex + User`
@@ -510,9 +510,9 @@ Resolution note (2026-06-02):
   - request goes to `/api/bookings/:id/cancel`.
   - production API returns `403` with `������ ��������` because that route uses web/cookie-manager authorization path, not mobile Bearer ownership auth.
 - evidence:
-  - [d3_cancel_attempt2_dialog.png](/C:/projects/kezek/apps/mobile/d3_cancel_attempt2_dialog.png)
-  - [d3_cancel_attempt2_after_confirm.png](/C:/projects/kezek/apps/mobile/d3_cancel_attempt2_after_confirm.png)
-  - [d3_cancel_attempt2_logcat.txt](/C:/projects/kezek/apps/mobile/d3_cancel_attempt2_logcat.txt)
+  - [d3_cancel_attempt2_dialog.png](evidence/mobile-2026/d3_cancel_attempt2_dialog.png)
+  - [d3_cancel_attempt2_after_confirm.png](evidence/mobile-2026/d3_cancel_attempt2_after_confirm.png)
+  - [d3_cancel_attempt2_logcat.txt](evidence/mobile-2026/d3_cancel_attempt2_logcat.txt)
   - [useBookingDetailsData.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/useBookingDetailsData.ts)
   - [mobileBookingsHttpService.ts](/C:/projects/kezek/apps/web/src/lib/mobileBookingsHttpService.ts)
   - [mobileBookingsService.ts](/C:/projects/kezek/apps/web/src/lib/mobileBookingsService.ts)
@@ -539,9 +539,9 @@ MB-012 final verification (2026-06-02, post-deploy live recheck):
   - app returned to Cabinet.
   - Cabinet counters updated to `�����������: 0`, `�������: 2`.
 - evidence:
-  - [d3_post_deploy_cancel_dialog.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_cancel_dialog.png)
-  - [d3_post_deploy_after_cancel_confirm.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_confirm.png)
-  - [d3_post_deploy_after_cancel_logcat.txt](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_logcat.txt)
+  - [d3_post_deploy_cancel_dialog.png](evidence/mobile-2026/d3_post_deploy_cancel_dialog.png)
+  - [d3_post_deploy_after_cancel_confirm.png](evidence/mobile-2026/d3_post_deploy_after_cancel_confirm.png)
+  - [d3_post_deploy_after_cancel_logcat.txt](evidence/mobile-2026/d3_post_deploy_after_cancel_logcat.txt)
 
 ### MB-013
 - id: `MB-013`
@@ -562,9 +562,9 @@ MB-012 final verification (2026-06-02, post-deploy live recheck):
   - cancellation succeeds, but a dev-style error toast/log appears:
     - `[offlineBookingsStorage] Failed to save offline bookings {}`
 - evidence:
-  - [d3_post_deploy_after_cancel_confirm.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_confirm.png)
-  - [d3_post_deploy_after_cancel_confirm.xml](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_confirm.xml)
-  - [d3_post_deploy_after_cancel_logcat.txt](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_logcat.txt)
+  - [d3_post_deploy_after_cancel_confirm.png](evidence/mobile-2026/d3_post_deploy_after_cancel_confirm.png)
+  - [d3_post_deploy_after_cancel_confirm.xml](evidence/mobile-2026/d3_post_deploy_after_cancel_confirm.xml)
+  - [d3_post_deploy_after_cancel_logcat.txt](evidence/mobile-2026/d3_post_deploy_after_cancel_logcat.txt)
   - [offlineBookingsStorage.ts](/C:/projects/kezek/apps/mobile/src/lib/offlineBookingsStorage.ts)
 - status: `verified`
 - owner: `Codex + User`
@@ -583,9 +583,9 @@ MB-013 verification (2026-06-02):
   - live refresh on Android emulator Cabinet -> no visible `Console Error` / `Failed to save offline bookings` toast.
   - logcat now reports the event as info/debug (`I ReactNativeJS`), not error (`E ReactNativeJS`).
 - evidence:
-  - [mb013_live_after_refresh.png](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh.png)
-  - [mb013_live_after_refresh.xml](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh.xml)
-  - [mb013_live_after_refresh_logcat.txt](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh_logcat.txt)
+  - [mb013_live_after_refresh.png](evidence/mobile-2026/mb013_live_after_refresh.png)
+  - [mb013_live_after_refresh.xml](evidence/mobile-2026/mb013_live_after_refresh.xml)
+  - [mb013_live_after_refresh_logcat.txt](evidence/mobile-2026/mb013_live_after_refresh_logcat.txt)
 
 ### MB-014
 - id: `MB-014`

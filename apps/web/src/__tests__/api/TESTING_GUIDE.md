@@ -66,6 +66,6 @@ pnpm -C apps/web test --runInBand src/__tests__/api
 pnpm -C apps/web test --runInBand --runTestsByPath src/__tests__/api/quick-hold.test.ts
 ```
 
-Источник команд — [web package.json](../../../package.json). Корневой `pnpm test:api` запускает полный web Jest, а `pnpm test` сначала запускает SQL. Для coverage и CI используйте [канонический справочник](../../../../../TESTING_GUIDE.md#что-означает-coverage-60): текущий порог **60%** действует только на allowlist `collectCoverageFrom`; отдельного подтверждённого порога «80% всех критичных endpoints» нет.
+Источник команд — [web package.json](../../../package.json). Корневой `pnpm test:api` запускает полный web Jest, а `pnpm test` сначала запускает SQL. Для coverage и CI используйте [канонический справочник](../../../../../TESTING_GUIDE.md#что-означает-coverage): порог-храповик считается по всему `apps/web/src`; отдельного подтверждённого порога «80% всех критичных endpoints» нет.
 
 Сохраняйте точную команду, scope, ревизию, среду, exit code, failures и skipped. Наличие файлов и статическое чтение не заменяют отчёт запуска. Процесс изменений — в [CONTRIBUTING.md](../../../../../CONTRIBUTING.md); локальный гайд не создаёт отдельный источник приёмки.

@@ -24,17 +24,17 @@
 
 | Команда | Фактическое действие |
 | --- | --- |
-| `pnpm -C apps/web lint` | `eslint .` внутри web |
+| `pnpm -C apps/web lint` | `eslint . --max-warnings=213` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
 | `pnpm -C apps/web typecheck` | `tsc -p tsconfig.json --noEmit` внутри web |
 | `pnpm -C apps/web test` | Jest по текущему web config; Playwright E2E исключены |
-| `pnpm -C apps/web test:coverage` | Web Jest с coverage для списка `collectCoverageFrom` |
-| `pnpm -C apps/web test:ci:core` | Явно перечисленные lib/finance/notification suites с coverage |
+| `pnpm -C apps/web test:coverage` | Полный web Jest с coverage по всему `src/**` и порогом-храповиком |
+| `pnpm -C apps/web test:ci:core` | Явно перечисленные lib/finance/notification suites без coverage (быстрая обратная связь) |
 | `pnpm -C apps/web test:ci:extended` | Jest только под `src/__tests__/lib` и `src/__tests__/api`, без coverage gate |
 | `pnpm -C apps/mobile typecheck` | TypeScript mobile |
 | `pnpm -C apps/mobile test:runInBand` | Mobile Jest последовательно, без watch |
 | `pnpm -C packages/core-domain test` | Все test.ts shared domain package, включая файлы рядом с исходниками и __tests__ |
 | `pnpm -C packages/core-domain typecheck` | TypeScript shared domain package |
-| `pnpm typecheck` | Только web typecheck; это не проверка всего monorepo |
+| `pnpm typecheck` | Typecheck web и mobile; packages проверяются своими командами |
 | `pnpm test:api` | Полный web Jest script; имя не ограничивает запуск API-папкой |
 | `pnpm test:sql` | Однократный `psql -X --set=ON_ERROR_STOP=1` через Node; нужен явно заданный `SUPABASE_DB_URL` |
 | `pnpm test:sql:isolated` | Перечисленные в registry synthetic PostgreSQL contract/race runner в disposable Docker, без linked project и providers |
@@ -42,11 +42,9 @@
 
 Для изменения web-кода базовый набор — lint, typecheck и полный web Jest. Для логики сервисов, routes, repositories, validation и domain-adjacent кода добавляется coverage. Для shared packages выбираются проверки пакета и затронутых потребителей; минимум consumer typecheck указан в [CONTRIBUTING.md](CONTRIBUTING.md). Для документационных правок нужны проверка diff, ссылок и согласованности утверждений с источниками; продуктовые tests/build сами по себе не требуются.
 
-## Что означает coverage 60%
+## Что означает coverage
 
-[apps/web/jest.config.js](apps/web/jest.config.js) задаёт минимум **60%** для statements, branches, functions и lines. Он применяется к **allowlist `collectCoverageFrom`**, а не ко всему `apps/web`, всему API или всему monorepo.
-
-В выборку входят конкретные auth/booking/repository/rate-limit helpers, `financeDomain/**/*.ts`, `validation/**/*.ts` и `notifications/BookingDataService.ts`. Остальные routes, services и UI этим знаменателем автоматически не охватываются. Точный состав всегда брать из config, не из скопированного процента в отчёте.
+[apps/web/jest.config.js](apps/web/jest.config.js) считает coverage по **всему `apps/web/src`** (кроме тестов, `generated/` и `types/`). Порог — храповик по измерению 16 ноября 2026 на полном наборе (56,4% statements, 48,0% branches, 54,6% functions, 58,1% lines): падение ниже роняет `test:coverage`. Пороги поднимают по мере роста покрытия и не опускают, чтобы пропустить изменение. Mobile и packages этим знаменателем не охватываются.
 
 `test:ci:core`, `test:ci:extended` и полный Jest пересекаются; результаты нельзя складывать как независимые тесты. Успех core не заменяет полный Jest. Отчёт должен называть команду, scope, coverage denominator и оставшиеся failures.
 
@@ -56,14 +54,14 @@
 
 | Job | Настроенные проверки | Ограничения |
 | --- | --- | --- |
-| `lint_typecheck` | Root lint, docs links, offline OpenAPI/SDK generation + typed consumer, shared client build/test typechecks + Jest, SQL runner unit checks, generated cron manifest parity, hotspot guardrails, root typecheck | Root typecheck проверяет web; shared-client проверяется отдельными обязательными шагами |
+| `lint_typecheck` | Lint (root tooling + apps/web), docs links, offline OpenAPI/SDK generation + typed consumer, shared client build/test typechecks + Jest, SQL runner unit checks, generated cron manifest parity, hotspot guardrails, typecheck web + mobile | Mobile ESLint не подключён; shared-client проверяется отдельными обязательными шагами |
 | `build` | Web production build | Это сборка, не production smoke; при отсутствии Supabase secrets используются build placeholders |
-| `web_core_tests` | `test:ci:core` | Ограниченный список suites и coverage sources |
-| `web_full_tests` | Полный web Jest: `test --ci --watchAll=false --maxWorkers=50%` | Включает components; внешние сервисы остаются mocked |
+| `web_core_tests` | `test:ci:core` | Ограниченный список suites, без coverage |
+| `web_full_tests` | Полный web Jest с coverage-храповиком: `test:coverage --ci --watchAll=false --maxWorkers=50%` | Включает components; внешние сервисы остаются mocked |
 | `e2e_smoke_tests` | `test:e2e:smoke` | Страницы sign-in, terms, privacy; lifecycle не проверяется |
 | `e2e_visual_regressions` | `test:e2e:visual` | На main/schedule есть preflight трёх env; остальные условия/skip-sites остаются в specs |
 | `e2e_tests` | `test:e2e:full-seeded` | Job имеет `continue-on-error: true`; не все обязательные env переданы |
-| `mobile_tests` | `test:runInBand` | Jest smoke, без доказательства реального устройства или mobile typecheck |
+| `mobile_tests` | `test:runInBand` | Jest smoke, без доказательства реального устройства; mobile typecheck — в `lint_typecheck` |
 | `sql_tests` | Matrix из всех зарегистрированных disposable PostgreSQL suites: mobile/Yandex auth, finance transactions, booking requests, notification outbox, staff-scoped slots, cron execution heartbeat, reporting completeness, shift-close backlog и дополнительные gates из registry | Нет skip по secret; synthetic fixtures не доказывают полную deployed schema или bootstrap |
 | `redis_tests` | Production Lua в disposable Redis7: limiter concurrency/TTL/principal/tenant и shared performance merge/window/histogram/retention | Synthetic локальный Redis не доказывает Upstash deployment/ingress |
 | `security_audit` | `pnpm audit --audit-level=high` | Dependency audit, не проверка ACL/RLS или прикладной безопасности |

@@ -17,37 +17,27 @@ const customJestConfig = {
         '**/__tests__/**/*.test.[jt]s?(x)',
         '**/?(*.)+(spec|test).[jt]s?(x)',
     ],
-    testPathIgnorePatterns: ['<rootDir>/e2e/', '/node_modules/'],
+    // Separator-agnostic: `<rootDir>/e2e/` does not match Windows paths, which
+    // made Jest pick up Playwright specs locally.
+    testPathIgnorePatterns: ['[/\\\\]e2e[/\\\\]', '[/\\\\]node_modules[/\\\\]'],
+    // Coverage is measured over the whole web source, not a hand-picked allowlist.
     collectCoverageFrom: [
-        // Real coverage gate for the web unit/service/domain layer that we actively test.
-        'src/lib/authContext.ts',
-        'src/lib/bizContextResolver.ts',
-        'src/lib/bookingDashboardService.ts',
-        'src/lib/dashboardBookingsLogic.ts',
-        'src/lib/dateUtils.ts',
-        'src/lib/i18nHelpers.ts',
-        'src/lib/quickBookGuestClient.ts',
-        'src/lib/quickBookGuestService.ts',
-        'src/lib/quickHoldClient.ts',
-        'src/lib/quickHoldService.ts',
-        'src/lib/rateLimit.ts',
-        'src/lib/repositories.ts',
-        'src/lib/serverCancelBookingService.ts',
-        'src/lib/visitPackageLogic.ts',
-        'src/lib/whatsAppBookingActionService.ts',
-        'src/lib/withManagerContext.ts',
-        'src/lib/financeDomain/**/*.ts',
-        'src/lib/notifications/BookingDataService.ts',
-        'src/lib/validation/**/*.ts',
-        '!src/lib/**/*.d.ts',
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.d.ts',
+        '!src/__tests__/**',
+        '!src/**/*.test.{ts,tsx}',
+        '!src/generated/**',
+        '!src/types/**',
     ],
     testTimeout: 30000,
+    // Ratchet: measured on the full suite 2026-11-16 (56.4 / 48.0 / 54.6 / 58.1).
+    // Raise these when coverage grows; never lower them to make a change pass.
     coverageThreshold: {
         global: {
-            branches: 60,
-            functions: 60,
-            lines: 60,
-            statements: 60,
+            branches: 47,
+            functions: 54,
+            lines: 57,
+            statements: 56,
         },
     },
 };

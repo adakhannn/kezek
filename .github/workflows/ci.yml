@@ -26,14 +26,10 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Install deps (root)
+      - name: Install deps (workspace)
         run: pnpm install --frozen-lockfile
 
-      - name: Install deps (apps/web)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/web
-
-      - name: ESLint
+      - name: ESLint (root tooling + apps/web)
         run: pnpm lint
 
       - name: Check active docs links
@@ -58,7 +54,7 @@ jobs:
       - name: Check hotspot size guardrails
         run: pnpm check:hotspots
 
-      - name: Typecheck
+      - name: Typecheck (web + mobile)
         run: pnpm typecheck
 
   build:
@@ -112,20 +108,10 @@ jobs:
       - name: Install deps (root)
         run: pnpm install --frozen-lockfile
 
-      - name: Install deps (apps/web)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/web
-
-      - name: Run core web coverage gate
+      - name: Run core web suites (fast feedback)
         run: pnpm test:ci:core
         working-directory: apps/web
 
-      - name: Check coverage threshold
-        run: |
-          echo "✅ Покрытие тестами проверено автоматически через coverageThreshold в jest.config.js"
-          echo "Текущий минимальный порог: 60% (statements/branches/functions/lines)"
-          echo "Источник истины для порога: apps/web/jest.config.js"
-        working-directory: apps/web
 
   web_full_tests:
     runs-on: ubuntu-latest
@@ -147,12 +133,8 @@ jobs:
       - name: Install deps (root)
         run: pnpm install --frozen-lockfile
 
-      - name: Install deps (apps/web)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/web
-
-      - name: Run all web Jest suites including components
-        run: pnpm test --ci --watchAll=false --maxWorkers=50%
+      - name: Run all web Jest suites with the coverage ratchet (jest.config.js)
+        run: pnpm test:coverage --ci --watchAll=false --maxWorkers=50%
         working-directory: apps/web
 
   e2e_smoke_tests:
@@ -174,10 +156,6 @@ jobs:
 
       - name: Install deps (root)
         run: pnpm install --frozen-lockfile
-
-      - name: Install deps (apps/web)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/web
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -218,10 +196,6 @@ jobs:
 
       - name: Install deps (root)
         run: pnpm install --frozen-lockfile
-
-      - name: Install deps (apps/web)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/web
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -282,10 +256,6 @@ jobs:
       - name: Install deps (root)
         run: pnpm install --frozen-lockfile
 
-      - name: Install deps (apps/web)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/web
-
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
         working-directory: apps/web
@@ -329,21 +299,8 @@ jobs:
       - name: Install deps (root)
         run: pnpm install --frozen-lockfile
 
-      - name: Install deps (apps/mobile)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/mobile
-
       - name: Run mobile smoke tests
         run: pnpm test:runInBand
-        working-directory: apps/mobile
-
-      - name: Check smoke tests status
-        run: |
-          echo "✅ Smoke-тесты для mobile приложения проверены"
-          echo "Базовый набор тестов должен проходить перед каждым релизом:"
-          echo "- Auth экраны (SignIn, SignUp, Verify, WhatsApp)"
-          echo "- Основные экраны (StaffScreen, CabinetScreen, BookingDetailsScreen)"
-          echo "- Навигация между шагами бронирования"
         working-directory: apps/mobile
 
   mobile_build:
@@ -367,10 +324,6 @@ jobs:
 
       - name: Install deps (root)
         run: pnpm install --frozen-lockfile
-
-      - name: Install deps (apps/mobile)
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/mobile
 
       - name: Install EAS CLI
         run: pnpm add -g eas-cli

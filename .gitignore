@@ -22,9 +22,17 @@
 **/.pnpm-debug.log*
 **/.DS_Store
 
-# IDE
+# IDE / tool state
 .idea/
 .vscode/
+**/.expo/
+.encoding-backup-*/
+
+# Local device debugging artifacts (screenshots, UI dumps, logcat).
+# Evidence worth keeping belongs in docs/evidence/.
+apps/mobile/*.png
+apps/mobile/*.xml
+apps/mobile/*logcat*.txt
 
 # Misc
 coverage/

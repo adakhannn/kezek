@@ -53,7 +53,7 @@ pnpm -C apps/web test:coverage
 Coverage source of truth:
 
 - `apps/web/jest.config.js`
-- current threshold: `60%` for statements, branches, functions, and lines, applied only to the `collectCoverageFrom` allowlist, not to all web source
+- coverage is measured over all of `apps/web/src` (excluding tests, `generated/`, `types/`); thresholds are a ratchet at the measured baseline — raise them as coverage grows, never lower them to pass a change
 
 Run E2E when you changed critical user flows such as:
 

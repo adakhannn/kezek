@@ -15,30 +15,22 @@
     }
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^15.4.6",
     "@types/node": "^24.2.1",
-    "@typescript-eslint/eslint-plugin": "^8.39.1",
-    "@typescript-eslint/parser": "^8.39.1",
     "eslint": "^9.33.0",
-    "eslint-config-next": "^15.4.6",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-unused-imports": "^4.1.4",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "openapi-typescript-codegen": "^0.29.0",
     "supabase": "^2.34.3",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.39.1"
+    "typescript": "^5.9.2"
   },
   "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint . && pnpm -C apps/web lint",
+    "lint:fix": "eslint . --fix && pnpm -C apps/web exec eslint . --fix",
     "check:docs-links": "node scripts/check-doc-links.mjs",
     "check:hotspots": "node scripts/check-hotspot-sizes.mjs",
     "check:mobile-utf8": "node scripts/check-mobile-utf8.mjs",
-    "typecheck": "pnpm -C apps/web typecheck",
-    "prepare": "husky install",
+    "typecheck": "pnpm -C apps/web typecheck && pnpm -C apps/mobile typecheck",
+    "prepare": "husky",
     "supabase": "supabase",
     "db:push": "supabase db push",
     "test:sql": "node scripts/run-sql-tests.mjs",
@@ -53,16 +45,12 @@
     "check:crons": "node scripts/generate-cron-manifests.mjs --check"
   },
   "lint-staged": {
-    "**/jest.config.js": [],
-    "**/jest.setup.js": [],
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix --ignore-pattern '**/__tests__/**' --ignore-pattern '**/*.test.{ts,tsx}' --ignore-pattern '**/*.spec.{ts,tsx}' --ignore-pattern '**/jest.config.js' --ignore-pattern '**/jest.setup.js' --ignore-pattern 'e2e/**' --ignore-pattern 'playwright.config.ts' --no-warn-ignored"
+    "apps/web/**/*.{js,jsx,ts,tsx,mjs}": [
+      "pnpm -C apps/web exec eslint --fix --no-warn-ignored"
     ],
-    "e2e/**": [],
-    "playwright.config.ts": []
-  },
-  "dependencies": {
-    "resend": "^6.0.1"
+    "{scripts,packages}/**/*.{js,mjs,cjs}": [
+      "eslint --fix --no-warn-ignored"
+    ]
   },
   "packageManager": "pnpm@10.28.0"
 }

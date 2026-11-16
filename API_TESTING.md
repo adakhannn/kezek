@@ -26,13 +26,13 @@ pnpm -C apps/web test:ci:extended
 # Полный web Jest
 pnpm -C apps/web test
 
-# Web Jest с coverage по allowlist в jest.config.js
+# Web Jest с coverage по всему src и порогом-храповиком из jest.config.js
 pnpm -C apps/web test:coverage
 ```
 
 Источники: [web package.json](apps/web/package.json), [Jest config](apps/web/jest.config.js). Корневой `pnpm test:api` запускает полный web Jest, несмотря на название. Корневой `pnpm test` сначала запускает SQL и не подходит как синоним изолированного API unit run.
 
-Порог 60% относится к `collectCoverageFrom`, а не ко всем endpoints. `test:ci:extended` coverage не собирает. Точная интерпретация — в [основном справочнике](TESTING_GUIDE.md#что-означает-coverage-60).
+Порог покрытия считается по всему `apps/web/src`. `test:ci:core` и `test:ci:extended` coverage не собирают. Точная интерпретация — в [основном справочнике](TESTING_GUIDE.md#что-означает-coverage).
 
 ## Границы mocked tests
 
@@ -50,7 +50,7 @@ API-тесты обычно заменяют auth/context, Supabase, уведо�
 
 ## CI и результаты
 
-[Workflow](.github/workflows/ci.yml) вызывает `test:ci:core` с coverage и полный web Jest в `web_full_tests`, включая components. `test:ci:extended` остаётся доступной локальной выборкой. Это описание конфигурации, не свежая проверка CI. Общие открытые ограничения SQL, E2E и полноты gate перечислены один раз в [TESTING_GUIDE.md](TESTING_GUIDE.md#открытые-ограничения-проверок).
+[Workflow](.github/workflows/ci.yml) вызывает `test:ci:core` без coverage и полный web Jest с coverage в `web_full_tests`, включая components. `test:ci:extended` остаётся доступной локальной выборкой. Это описание конфигурации, не свежая проверка CI. Общие открытые ограничения SQL, E2E и полноты gate перечислены один раз в [TESTING_GUIDE.md](TESTING_GUIDE.md#открытые-ограничения-проверок).
 
 В отчёте указывать scope, exit code, failures и пропуски. Для принятия реальных ролей, RPC и пользовательских переходов использовать соответствующий метод; mocked PASS не переносится автоматически в [WEB ledger](docs/WEB_VERIFICATION_LEDGER.json).
 
