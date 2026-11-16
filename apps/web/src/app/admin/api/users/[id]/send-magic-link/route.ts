@@ -4,18 +4,21 @@ export const dynamic = 'force-dynamic';
 
 import {NextResponse} from 'next/server';
 
+import { getSiteOrigin } from '@/lib/env';
 import {logError} from '@/lib/log';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function POST(_req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
+    // Next.js 15+ passes params as a Promise; reading it synchronously yielded undefined.
+    let userId: string;
     try {
-        const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'http://localhost:3000';
+        userId = await getRouteParamUuid(context, 'id');
+    } catch {
+        return NextResponse.json({ok: false, error: 'bad user id'}, {status: 400});
+    }
+    try {
+        const SITE = getSiteOrigin();
 
         // Проверяем, что вызвавший — супер-админ
         const supa = await createSupabaseServerClient();
@@ -33,7 +36,7 @@ export async function POST(_req: Request, context: unknown) {
         const admin = createSupabaseAdminClient();
 
         // Берём email пользователя
-        const {data: userResp, error: eGet} = await admin.auth.admin.getUserById(params.id);
+        const {data: userResp, error: eGet} = await admin.auth.admin.getUserById(userId);
         if (eGet) return NextResponse.json({ok: false, error: eGet.message}, {status: 400});
 
         const email = userResp?.user?.email ?? null;
@@ -41,7 +44,8 @@ export async function POST(_req: Request, context: unknown) {
             return NextResponse.json({ok: false, error: 'У пользователя нет email'}, {status: 400});
         }
 
-        // Генерируем magic-link (Supabase также отправит письмо, если настроен SMTP)
+        // generateLink только создаёт ссылку: письмо не отправляется, ссылка
+        // возвращается супер-админу и даёт вход под этим пользователем.
         const {data: linkData, error: eGen} = await admin.auth.admin.generateLink({
             type: 'magiclink',
             email,

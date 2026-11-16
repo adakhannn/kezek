@@ -475,11 +475,11 @@ UUID-format biz_id не проверяется отдельной schema; malfor
 
 | Часть | Контракт |
 | --- | --- |
-| Доступ/вход | Manager direct; body/query не читаются, branchId из синхронного ctx.params.id; limiter отсутствует |
+| Доступ/вход | Manager-контекст; body/query не читаются, branchId из асинхронных route params, UUID; limiter отсутствует |
 | Успех | Плоский `{ ok: true, items }`; user_id,source (owner/biz_admin/branch_admin),email,phone,full_name |
-| Ошибки | 400 error при RPC; 500 error для пойманных исключений; ошибка metadata lookup отдельно не проверяется и может дать null-поля |
-| Ограничения | Сначала service client вызывает branch_admins_effective, затем читает auth_users_view для полученных IDs. Проверки, что branch принадлежит bizId manager-контекста, в route нет; проблема Promise params остаётся |
+| Ошибки | 401/403/503 по manager-контексту; 400 при невалидном branchId; 403, если филиал не принадлежит бизнесу manager-контекста; 503 при ошибке RPC или lookup контактов |
+| Ограничения | Принадлежность филиала проверяется сессией вызывающего (`branches.id` + `biz_id`) до service client. Только затем service client вызывает branch_admins_effective и читает auth_users_view для полученных IDs |
 
-Репозиторная функция `branch_admins_effective` получает бизнес **из переданного филиала**, возвращает owner/business-admin/branch-admin и не сверяет вызывающий manager-контекст. Поздняя миграция ограничивает EXECUTE для anon/authenticated и выдаёт service_role; этот route как раз использует service client. Поэтому нельзя описывать такой endpoint как доказанно изолированный по бизнесу. Достижимость/развёрнутые ACL не проверялись; возвращённые записи также могут повторять пользователя с разными source.
+Репозиторная функция `branch_admins_effective` получает бизнес **из переданного филиала** и сама не сверяет вызывающий manager-контекст; поэтому проверка выполняется в [HTTP service](../../apps/web/src/lib/branchAdminListHttpService.ts) до привилегированного вызова (исправлено 17 ноября 2026: раньше проверки не было, а синхронное чтение params давало undefined). Возвращённые записи могут повторять пользователя с разными source.
 
-Источники: [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/list/route.ts), [определение RPC](../../supabase/migrations_archive/20250101000000_create_branch_admins_effective.sql), [поздние grants/revokes](../../supabase/migrations_archive/20260307000000_security_advisor_rls_and_revokes.sql).
+Источники: [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/list/route.ts), [HTTP service](../../apps/web/src/lib/branchAdminListHttpService.ts), [определение RPC](../../supabase/migrations_archive/20250101000000_create_branch_admins_effective.sql), [поздние grants/revokes](../../supabase/migrations_archive/20260307000000_security_advisor_rls_and_revokes.sql).

@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 211,
+  "x-explicit-operation-count": 206,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/admin/api/analytics/conversion-funnel": {
@@ -1180,35 +1180,6 @@
         "x-manual-contract": "docs/api/ADMIN_API.md"
       }
     },
-    "/admin/api/businesses/{id}/members/invite": {
-      "post": {
-        "tags": [
-          "Inventory only"
-        ],
-        "summary": "Inventory only — see the source-reviewed manual contract",
-        "description": "Authentication, inputs, errors and side effects are described in docs/api/ADMIN_API.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
-        "x-contract-status": "inventory-only",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Route segment only; semantic validation is not modeled."
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "Unmodeled response. Consult the linked manual contract and source."
-          }
-        },
-        "x-next-route": "/admin/api/businesses/[id]/members/invite",
-        "x-source-file": "apps/web/src/app/admin/api/businesses/[id]/members/invite/route.ts",
-        "x-manual-contract": "docs/api/ADMIN_API.md"
-      }
-    },
     "/admin/api/businesses/{id}/members/list": {
       "get": {
         "tags": [
@@ -1349,93 +1320,6 @@
         },
         "x-next-route": "/admin/api/businesses/[id]/owner/save",
         "x-source-file": "apps/web/src/app/admin/api/businesses/[id]/owner/save/route.ts",
-        "x-manual-contract": "docs/api/ADMIN_API.md"
-      }
-    },
-    "/admin/api/businesses/{id}/owner/set": {
-      "post": {
-        "tags": [
-          "Inventory only"
-        ],
-        "summary": "Inventory only — see the source-reviewed manual contract",
-        "description": "Authentication, inputs, errors and side effects are described in docs/api/ADMIN_API.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
-        "x-contract-status": "inventory-only",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Route segment only; semantic validation is not modeled."
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "Unmodeled response. Consult the linked manual contract and source."
-          }
-        },
-        "x-next-route": "/admin/api/businesses/[id]/owner/set",
-        "x-source-file": "apps/web/src/app/admin/api/businesses/[id]/owner/set/route.ts",
-        "x-manual-contract": "docs/api/ADMIN_API.md"
-      }
-    },
-    "/admin/api/businesses/{id}/owner/update": {
-      "post": {
-        "tags": [
-          "Inventory only"
-        ],
-        "summary": "Inventory only — see the source-reviewed manual contract",
-        "description": "Authentication, inputs, errors and side effects are described in docs/api/ADMIN_API.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
-        "x-contract-status": "inventory-only",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Route segment only; semantic validation is not modeled."
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "Unmodeled response. Consult the linked manual contract and source."
-          }
-        },
-        "x-next-route": "/admin/api/businesses/[id]/owner/update",
-        "x-source-file": "apps/web/src/app/admin/api/businesses/[id]/owner/update/route.ts",
-        "x-manual-contract": "docs/api/ADMIN_API.md"
-      }
-    },
-    "/admin/api/businesses/{id}/owner/upsert": {
-      "post": {
-        "tags": [
-          "Inventory only"
-        ],
-        "summary": "Inventory only — see the source-reviewed manual contract",
-        "description": "Authentication, inputs, errors and side effects are described in docs/api/ADMIN_API.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
-        "x-contract-status": "inventory-only",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Route segment only; semantic validation is not modeled."
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "Unmodeled response. Consult the linked manual contract and source."
-          }
-        },
-        "x-next-route": "/admin/api/businesses/[id]/owner/upsert",
-        "x-source-file": "apps/web/src/app/admin/api/businesses/[id]/owner/upsert/route.ts",
         "x-manual-contract": "docs/api/ADMIN_API.md"
       }
     },
@@ -2141,35 +2025,6 @@
         },
         "x-next-route": "/admin/api/users/[id]/send-magic-link",
         "x-source-file": "apps/web/src/app/admin/api/users/[id]/send-magic-link/route.ts",
-        "x-manual-contract": "docs/api/ADMIN_API.md"
-      }
-    },
-    "/admin/api/users/{id}/set-password": {
-      "post": {
-        "tags": [
-          "Inventory only"
-        ],
-        "summary": "Inventory only — see the source-reviewed manual contract",
-        "description": "Authentication, inputs, errors and side effects are described in docs/api/ADMIN_API.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
-        "x-contract-status": "inventory-only",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Route segment only; semantic validation is not modeled."
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "Unmodeled response. Consult the linked manual contract and source."
-          }
-        },
-        "x-next-route": "/admin/api/users/[id]/set-password",
-        "x-source-file": "apps/web/src/app/admin/api/users/[id]/set-password/route.ts",
         "x-manual-contract": "docs/api/ADMIN_API.md"
       }
     },
