@@ -14,8 +14,6 @@
 
 | Инструмент | Реальное поведение | Ограничение |
 | --- | --- | --- |
-| [useWhyDidYouRender](src/hooks/useWhyDidYouRender.ts) | После commit в development сравнивает props через Object.is, пишет изменения через общий redacting logger | Не использует JSON.stringify как dependency: функции и циклические объекты допустимы. Не полная трассировка рендеров; не передавать чувствительные значения |
-| [useRenderCount](src/hooks/useRenderCount.ts) | Возвращает стабильный getter числа завершённых commits экземпляра; читать его в handler/effect. В development предупреждает после пятого, в остальных режимах getter возвращает 0 | Replay эффекта StrictMode не удваивает счётчик. Отброшенные renders не учитываются; порог 5 — эвристика, счётчик не измеряет длительность |
 | [apiLogger](src/lib/apiLogger.ts) | Только явные вызовы logApiCall в development; хранит до 10 записей на METHOD/URL и отмечает повторы в пределах секунды | Не перехватывает fetch автоматически. Поиск потребителей на дату сверки не нашёл подключения logApiCall в приложении; число разных URL не ограничено |
 | [PerformanceMonitor](src/components/dev/PerformanceMonitor.tsx) | В development отображает getApiStats и обновляет его каждые 2 секунды | Считает сохранённые записи apiLogger, а не все запросы или React renders. Подключения компонента в layout на дату сверки не найдено |
 | [PerformanceTracking](src/components/PerformanceTracking.tsx) и [webVitals](src/lib/webVitals.ts) | Отдельная цепочка frontend telemetry | Не объединять её показатели с process-local серверной Map; HTTP приём метрики не гарантирует её сохранение |

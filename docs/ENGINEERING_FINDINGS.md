@@ -73,6 +73,14 @@ P0 — блокер доступа/изоляции до широкого исп
 - Ручное создание клиентов (39 admin-роутов и страниц, `process.env.SUPABASE_SERVICE_ROLE_KEY` в 17 файлах) заменено фабриками `createSupabaseServerClient()` / `createSupabaseAdminClient()`; ключ service role теперь читает только `lib/env.ts`. ESLint запрещает прямое чтение ключа (`kezek/no-service-role-env`) и импорт `@supabase/ssr` / `createClient` в `src/app/**`.
 - Не сделано: перевод проверок `is_super_admin` в admin-роутах на общий guard `requireCurrentSuperAdmin()` (проверки корректны, но оформлены по-разному) и единый формат ошибок `createErrorResponse`.
 
+### Доменная логика, мёртвый код и i18n 16 ноября (группа 5)
+
+- `core-domain` подключён в mobile (`tsconfig` paths + jest). Мобильная отмена брони использует доменный `canCancel`, а набор «активных» статусов (`hold`/`confirmed`/`paid`, совпадает с `bookings.no_overlap`) вынесен в `ACTIVE_BOOKING_STATUSES` и используется в web и mobile вместо копий.
+- Форма записи сотрудника (`staff/bookings/CreateBookingForm`) фильтрует слоты общим `filterSlotsByContext`, как дашборд (поведение то же: мастер, филиал, начало позже чем через 30 минут).
+- Удалён код без импортёров вне тестов: `logger.ts`, `errors.ts`, `repositories.ts`, `dashboardBookingsLogic.ts`, `guestBookingNotificationDispatch.ts`, шесть модулей старой обработки WhatsApp-команд (`whatsAppCommandRouting`, `whatsAppBookingCommandFlow`, `whatsAppMessageContext`, `whatsAppMessagePersistence`, `whatsAppMediaStatusHandlers`, `whatsAppBookingActionService` — их заменил durable inbox), хуки `useWhyDidYouRender`/`useRenderCount`, мобильный дубликат `logSafe.ts`.
+- i18n: [check-i18n.mjs](../scripts/check-i18n.mjs) в CI. На 16 ноября 59 ключей отсутствуют в части языков (например, 19 в `staffRu`, 11 в `adminKy`) и 242 ключа из `t('…')` нет ни в одном словаре — для ky/en пользователей там показывается русский fallback. Оба числа — храповик; перевод — отдельная контентная задача (`pnpm check:i18n -- --report` выводит список).
+- Не сделано (осознанно): массовый перенос `lib/` по фичам и схлопывание слоёв HttpService/RouteService — большой churn без изменения поведения; разбор god-компонентов (`ProfileForm` и др.) требует ручной UI-проверки.
+
 ## Исходные условия находок
 
 Ниже сохранены первоначальные наблюдения 30 октября / 1 ноября; их OPEN и формулировки описывают исходное состояние. Для текущего состояния приоритет имеет таблица выше. У фактической таблицы bookings подтверждено exclusion-ограничение no_overlap: отсутствие защиты от пересечений не установлено. Изменения исходной схемы, чужие данные или состоявшаяся атака локальными проверками не утверждаются.

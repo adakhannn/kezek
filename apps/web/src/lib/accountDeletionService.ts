@@ -1,3 +1,5 @@
+import { ACTIVE_BOOKING_STATUSES } from '@core-domain/booking';
+
 export type AccountDeletionBlocker = {
     code: 'super_admin' | 'owned_businesses' | 'business_roles' | 'active_staff' | 'active_bookings';
     message: string;
@@ -33,7 +35,7 @@ export async function assessAccountDeletion(admin: AdminLike, userId: string): P
         countQuery(admin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', userId)),
         countQuery(admin.from('user_global_roles').select('user_id', { count: 'exact', head: true }).eq('user_id', userId)),
         countQuery(admin.from('staff').select('id', { count: 'exact', head: true }).eq('user_id', userId)),
-        countQuery(admin.from('bookings').select('id', { count: 'exact', head: true }).eq('client_id', userId).in('status', ['hold', 'confirmed', 'paid']).gte('start_at', now)),
+        countQuery(admin.from('bookings').select('id', { count: 'exact', head: true }).eq('client_id', userId).in('status', [...ACTIVE_BOOKING_STATUSES]).gte('start_at', now)),
     ]);
 
     const blockers: AccountDeletionBlocker[] = [];

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import type { BookingRow, StaffInfo, UpcomingBooking } from './types';
+import { ACTIVE_BOOKING_STATUSES } from '@core-domain/booking';
 
 export function useStaffScreenData() {
     const [refreshing, setRefreshing] = useState(false);
@@ -50,7 +51,7 @@ export function useStaffScreenData() {
                     service:services(name_ru)
                 `)
                 .eq('staff_id', staffQuery.data.id)
-                .in('status', ['hold', 'confirmed', 'paid'])
+                .in('status', [...ACTIVE_BOOKING_STATUSES])
                 .gte('start_at', now)
                 .order('start_at', { ascending: true })
                 .limit(10);

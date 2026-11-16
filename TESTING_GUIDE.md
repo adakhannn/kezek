@@ -24,7 +24,7 @@
 
 | Команда | Фактическое действие |
 | --- | --- |
-| `pnpm -C apps/web lint` | `eslint . --max-warnings=213` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
+| `pnpm -C apps/web lint` | `eslint . --max-warnings=212` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
 | `pnpm -C apps/web typecheck` | `tsc -p tsconfig.json --noEmit` внутри web |
 | `pnpm -C apps/web test` | Jest по текущему web config; Playwright E2E исключены |
 | `pnpm -C apps/web test:coverage` | Полный web Jest с coverage по всему `src/**` и порогом-храповиком |
@@ -35,6 +35,7 @@
 | `pnpm -C packages/core-domain test` | Все test.ts shared domain package, включая файлы рядом с исходниками и __tests__ |
 | `pnpm -C packages/core-domain typecheck` | TypeScript shared domain package |
 | `pnpm typecheck` | Typecheck web и mobile; packages проверяются своими командами |
+| `pnpm check:i18n` | Паритет ключей ru/ky/en и число `t('…')`-ключей, которых нет в словарях; оба числа — храповик (`--report` выводит список) |
 | `pnpm test:api` | Полный web Jest script; имя не ограничивает запуск API-папкой |
 | `pnpm test:sql` | Однократный `psql -X --set=ON_ERROR_STOP=1` через Node; нужен явно заданный `SUPABASE_DB_URL` |
 | `pnpm test:sql:isolated` | Перечисленные в registry synthetic PostgreSQL contract/race runner в disposable Docker, без linked project и providers |

@@ -4,6 +4,8 @@
 
 import type { BookingStatus } from '../types';
 import {
+    ACTIVE_BOOKING_STATUSES,
+    isActiveStatus,
     isTerminalStatus,
     canCancel,
     canConfirm,
@@ -12,6 +14,20 @@ import {
 } from '../statusTransitions';
 
 const ALL_STATUSES: BookingStatus[] = ['hold', 'confirmed', 'paid', 'no_show', 'cancelled'];
+
+describe('active booking statuses', () => {
+    it('match the statuses that occupy a staff slot (bookings.no_overlap)', () => {
+        expect([...ACTIVE_BOOKING_STATUSES]).toEqual(['hold', 'confirmed', 'paid']);
+    });
+
+    it.each(ALL_STATUSES)('isActiveStatus(%s) agrees with the list', (status) => {
+        expect(isActiveStatus(status)).toBe((ACTIVE_BOOKING_STATUSES as readonly string[]).includes(status));
+    });
+
+    it('every cancellable booking is active', () => {
+        for (const status of ALL_STATUSES) if (canCancel(status)) expect(isActiveStatus(status)).toBe(true);
+    });
+});
 
 describe('statusTransitions', () => {
     describe('isTerminalStatus', () => {

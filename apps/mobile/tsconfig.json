@@ -9,6 +9,9 @@
       ],
       "@shared-client/*": [
         "../../packages/shared-client/src/*"
+      ],
+      "@core-domain/*": [
+        "../../packages/core-domain/src/*"
       ]
     }
   },

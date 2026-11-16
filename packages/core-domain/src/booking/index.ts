@@ -46,6 +46,8 @@ export {
 // Правила переходов статусов
 export type { CanMarkAttendanceContext, CanChangeStatusOptions } from './statusTransitions';
 export {
+    ACTIVE_BOOKING_STATUSES,
+    isActiveStatus,
     isTerminalStatus,
     canCancel,
     canConfirm,

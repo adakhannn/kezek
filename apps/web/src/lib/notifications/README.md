@@ -6,7 +6,7 @@
 
 [SQL outbox](../../../../../supabase/migrations/20261110090000_booking_notification_outbox.sql) добавляет ревизию бронирования и триггер: переходы `hold`/`pending_hold`, `confirmed`, `cancelled` записывают намерение уведомить в той же транзакции. Уникальность `(booking_id, booking_revision, event_type)` предотвращает повторный enqueue. [Атомарная команда бронирования](../../../../../supabase/migrations/20261110101000_atomic_booking_requests.sql) использует тот же enqueue; повтор команды не создаёт новое событие.
 
-`POST /api/notify` проверяет пользователя и принадлежность бронирования, затем возвращает `{ "ok": true, "data": { "queued": true, "event_id": "event-uuid" } }`. Это подтверждение регистрации события, а не доставки. Несовпадение текущего статуса — 409; недоступная очередь — 503. [HTTP](../notifyHttpService.ts), [сервис](../notifyBookingService.ts), [частный гостевой адаптер](../guestBookingNotificationDispatch.ts).
+`POST /api/notify` проверяет пользователя и принадлежность бронирования, затем возвращает `{ "ok": true, "data": { "queued": true, "event_id": "event-uuid" } }`. Это подтверждение регистрации события, а не доставки. Несовпадение текущего статуса — 409; недоступная очередь — 503. [HTTP](../notifyHttpService.ts), [сервис](../notifyBookingService.ts).
 
 ## Подготовка и доставка
 

@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { filterSlotsByContext } from '@core-domain/schedule';
 import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
@@ -112,13 +113,14 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 }
                 if (ignore) return;
                 const cast = (raw || []) as RpcSlot[];
-                const now = new Date();
-                const minTime = addMinutes(now, 30);
-
-                const filtered = cast
-                    .filter((s) => s.branch_id === branchId)
-                    .filter((s) => s.staff_id === selectedStaffId)
-                    .filter((s) => new Date(s.start_at) > minTime);
+                // Same booking-window rule as the dashboard (core-domain): this staff
+                // member, this branch, starting more than 30 minutes from now.
+                const filtered = filterSlotsByContext(cast, {
+                    staffId: selectedStaffId,
+                    branchId,
+                    isTemporaryTransfer: false,
+                    minStart: addMinutes(new Date(), 30),
+                });
 
                 const uniq = Array.from(new Map(filtered.map((s) => [s.start_at, s])).values());
                 setSlots(uniq);

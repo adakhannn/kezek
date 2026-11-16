@@ -7,6 +7,7 @@ import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
 import { logError } from '../../lib/log';
 import { buildTimelineSteps, type BookingDetails } from './types';
+import { canCancel as canCancelBooking, type BookingStatus } from '@core-domain/booking';
 
 type ApiEnvelope<T> = {
     ok?: boolean;
@@ -72,11 +73,7 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
 
     const booking = bookingQuery.data?.id === bookingId ? bookingQuery.data : undefined;
     const primaryPhone = booking?.business?.phones?.[0] || null;
-    const canCancel =
-        !!booking &&
-        booking.status !== 'cancelled' &&
-        booking.status !== 'paid' &&
-        booking.status !== 'no_show';
+    const canCancel = !!booking && canCancelBooking(booking.status as BookingStatus);
     const timelineSteps = useMemo(
         () => buildTimelineSteps(booking?.status ?? 'created'),
         [booking?.status],

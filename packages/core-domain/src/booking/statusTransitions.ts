@@ -5,6 +5,17 @@
 
 import type { BookingStatus } from './types';
 
+/**
+ * Статусы, при которых бронь занимает время мастера (совпадает с ограничением
+ * `bookings.no_overlap` в БД): только они участвуют в пересечениях и «предстоящих».
+ */
+export const ACTIVE_BOOKING_STATUSES = ['hold', 'confirmed', 'paid'] as const satisfies readonly BookingStatus[];
+
+/** Активна ли бронь (занимает слот мастера). */
+export function isActiveStatus(status: BookingStatus): boolean {
+    return (ACTIVE_BOOKING_STATUSES as readonly BookingStatus[]).includes(status);
+}
+
 /** Статусы, после которых бронирование нельзя изменить (отмена, отметка посещения и т.д.) */
 const TERMINAL_STATUSES: BookingStatus[] = ['paid', 'no_show', 'cancelled'];
 

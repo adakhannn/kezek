@@ -37,7 +37,7 @@ const eslintConfig = [
   },
   {
     // Разрешаем console.* только в файлах логирования
-    files: ["src/lib/log.ts", "src/lib/logSafe.ts", "src/utils/debug.ts"],
+    files: ["src/lib/log.ts", "src/utils/debug.ts"],
     rules: {
       "no-console": "off",
     },

@@ -35,6 +35,9 @@ jobs:
       - name: Check active docs links
         run: pnpm check:docs-links
 
+      - name: Check i18n dictionaries (locale parity + undefined keys ratchet)
+        run: pnpm check:i18n
+
       - name: Check offline OpenAPI, SDK and typed consumer
         run: |
           pnpm check:openapi

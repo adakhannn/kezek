@@ -29,6 +29,7 @@ module.exports = {
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
         '^@shared-client/(.*)$': '<rootDir>/../../packages/shared-client/src/$1',
+        '^@core-domain/(.*)$': '<rootDir>/../../packages/core-domain/src/$1',
     },
     testEnvironment: 'node',
     globals: {
