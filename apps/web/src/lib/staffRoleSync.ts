@@ -71,7 +71,7 @@ async function ensureStaffRoleAssignment(params: {
             user_id: userId,
             biz_id: bizId,
             role_id: roleStaff.id,
-            biz_key: bizId,
+            // biz_key is GENERATED ALWAYS (coalesce(biz_id, nil uuid)); inserting it fails.
         });
 
     if (error) {

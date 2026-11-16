@@ -1,5 +1,4 @@
 
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
@@ -8,6 +7,7 @@ import { getRouteParamUuid } from '@/lib/routeParams';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { runStaffDeleteService } from '@/lib/staffDeleteService';
 import type { StaffDeleteAdminClientLike, StaffDeleteRoleClientLike } from '@/lib/staffDeleteService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function runStaffDeleteHttp(context: unknown): Promise<NextResponse> {
@@ -20,11 +20,7 @@ export async function runStaffDeleteHttp(context: unknown): Promise<NextResponse
 
   const result = await runStaffDeleteService({
     admin: getServiceClient() as unknown as StaffDeleteAdminClientLike,
-    roleClient: createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } },
-    ) as unknown as StaffDeleteRoleClientLike,
+    roleClient: createSupabaseAdminClient() as unknown as StaffDeleteRoleClientLike,
     bizId,
     staffId,
   });

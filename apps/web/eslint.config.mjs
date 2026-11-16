@@ -3,6 +3,33 @@
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
 
+const kezekPlugin = {
+  rules: {
+    "no-service-role-env": {
+      meta: {
+        type: "problem",
+        messages: {
+          direct: "Не читайте SUPABASE_SERVICE_ROLE_KEY напрямую: используйте getServiceClient() / createSupabaseAdminClient() или isSupabaseServiceRoleConfigured() из @/lib/env.",
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          MemberExpression(node) {
+            const key = node.computed ? node.property.value : node.property.name;
+            const obj = node.object;
+            if (key === "SUPABASE_SERVICE_ROLE_KEY" && obj.type === "MemberExpression"
+              && obj.object.type === "Identifier" && obj.object.name === "process"
+              && !obj.computed && obj.property.name === "env") {
+              context.report({ node, messageId: "direct" });
+            }
+          },
+        };
+      },
+    },
+  },
+};
+
 const eslintConfig = [
   ...nextVitals,
   ...nextTypescript,
@@ -31,8 +58,9 @@ const eslintConfig = [
       }],
       // Запрещаем использование any в production коде
       // Используйте конкретные типы или unknown
+      // No autofix to `unknown`: `eslint --fix` (lint-staged) must not change
+      // types silently — that breaks typecheck in the pre-commit hook.
       "@typescript-eslint/no-explicit-any": ["warn", {
-        fixToUnknown: true, // Предлагать замену на unknown
         ignoreRestArgs: false, // Запрещаем any в rest параметрах
       }],
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
@@ -52,6 +80,31 @@ const eslintConfig = [
           message: "Используйте createErrorResponse() вместо NextResponse.json({ ok: false, ... }). См. ERROR_HANDLING_GUIDE.md",
         },
       ],
+    },
+  },
+  {
+    // Service role (bypasses RLS) is reachable only through lib/env.ts and the
+    // client factories in lib/supabaseHelpers.ts / lib/supabaseService.ts.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/env.ts", "src/__tests__/**"],
+    plugins: { kezek: kezekPlugin },
+    rules: {
+      "kezek/no-service-role-env": "error",
+    },
+  },
+  {
+    // App code (pages, layouts, route handlers) uses the shared factories instead
+    // of constructing Supabase clients. The Google callback writes auth cookies
+    // itself and is the one documented exception.
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: ["src/app/auth/callback/google/route.ts", "src/**/__tests__/**", "src/**/*.test.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [
+          { name: "@supabase/ssr", message: "Используйте createSupabaseServerClient() из @/lib/supabaseHelpers." },
+          { name: "@supabase/supabase-js", importNames: ["createClient"], message: "Используйте фабрики из @/lib/supabaseHelpers (createSupabaseAdminClient / createSupabaseAnonClient)." },
+        ],
+      }],
     },
   },
 ];

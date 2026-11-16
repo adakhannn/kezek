@@ -1,12 +1,11 @@
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { logError } from '@/lib/log';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { isE164, isEmail } from '@/lib/validation';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 type Body = {
     email?: string | null;
@@ -20,19 +19,11 @@ function normStr(v?: string | null): string | null {
     return s.length ? s : null;
 }
 
-import { isE164, isEmail } from '@/lib/validation';
-
 export async function POST(req: Request) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
         // Проверка: только глобальный super_admin
-        const cookieStore = await cookies();
-        const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
+        const supa = await createSupabaseServerClient();
 
         const { data: me } = await supa.auth.getUser();
         if (!me.user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
@@ -79,7 +70,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         // Хелпер: апсерт профиля
         async function upsertProfile(userId?: string | null) {

@@ -1,7 +1,7 @@
 import type { ShiftFinancials } from '@/lib/financeDomain/shift';
 
 export type FinanceCommandClient = {
-    rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{
+    rpc(name: string, args: Record<string, unknown>): PromiseLike<{
         data: unknown;
         error: { code?: string; message?: string } | null;
     }>;

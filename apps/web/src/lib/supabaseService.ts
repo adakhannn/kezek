@@ -2,6 +2,8 @@ import {createClient} from "@supabase/supabase-js";
 
 import { getSupabaseUrl, getSupabaseServiceRoleKey } from './env';
 
+import type { Database } from '@/types/supabase';
+
 /**
  * Создает Supabase клиент с Service Role Key
  * 
@@ -21,5 +23,5 @@ import { getSupabaseUrl, getSupabaseServiceRoleKey } from './env';
 export function getServiceClient() {
     const url = getSupabaseUrl();
     const key = getSupabaseServiceRoleKey(); // Защита от клиентского использования встроена в функцию
-    return createClient(url, key, {auth: {persistSession: false}});
+    return createClient<Database>(url, key, {auth: {persistSession: false}});
 }

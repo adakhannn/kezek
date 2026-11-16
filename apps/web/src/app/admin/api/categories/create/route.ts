@@ -2,12 +2,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {createClient, PostgrestError} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
+import {PostgrestError} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { name_ru: string; slug?: string | null; is_active?: boolean };
 type InsertedId = { id: string };
@@ -37,18 +36,9 @@ function slugify(input: string) {
 
 export async function POST(req: Request) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-        const cookieStore = await cookies(); // без await
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+ // без await
+        const supa = await createSupabaseServerClient();
 
         // доступ только супер-админу
         const {
@@ -60,7 +50,7 @@ export async function POST(req: Request) {
         if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
         const b = (await req.json()) as Body;
 
         const name_ru = norm(b.name_ru);

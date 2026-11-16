@@ -13,10 +13,7 @@ export type NotificationEmailUser = {
 };
 
 type AdminLike = {
-    rpc: (
-        name: string,
-        params: Record<string, unknown>,
-    ) => PromiseLike<{ error: { message?: string } | null }>;
+    rpc(name: string, params: Record<string, unknown>): PromiseLike<{ error: { message?: string } | null }>;
 };
 
 function identityEmail(identity: AuthIdentity): string | null {

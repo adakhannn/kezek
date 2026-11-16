@@ -14,7 +14,7 @@ export type ReviewCreateSupabaseLike = {
       };
     }>;
   };
-  from: (table: string) => {
+  from(table: string): {
     select?: (...args: unknown[]) => unknown;
     update?: (...args: unknown[]) => unknown;
     insert?: (...args: unknown[]) => unknown;

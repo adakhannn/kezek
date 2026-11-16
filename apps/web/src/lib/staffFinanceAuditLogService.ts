@@ -20,7 +20,7 @@ type AuditRow = {
 };
 
 export type StaffFinanceAuditAdminLike = {
-    from: (table: 'finance_settings_audit_log' | 'profiles') => {
+    from(table: 'finance_settings_audit_log' | 'profiles'): {
         select: (query: string) => {
             eq: (column: string, value: unknown) => any;
             order: (column: string, options: { ascending: boolean }) => any;

@@ -6,8 +6,8 @@ import { publicContactPatchSchema } from '@/lib/validation/businessUpdateSchemas
 export type BusinessContactSettingsAdminLike = {
     // Kept structurally small so this service can be unit-tested without
     // coupling to the generated Supabase client type.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
 };
 
 export async function updateBusinessContactSettings(params: {

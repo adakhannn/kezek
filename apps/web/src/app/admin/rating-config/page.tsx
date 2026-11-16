@@ -1,6 +1,4 @@
 // apps/web/src/app/admin/rating-config/page.tsx
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -8,7 +6,7 @@ import { RatingConfigClient } from './RatingConfigClient';
 
 import { getT } from '@/app/_components/i18n/server';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
-
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,13 +24,8 @@ type RatingConfig = {
 };
 
 export default async function RatingConfigPage() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
 
-    const supabase = createServerClient(url, anon, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supabase = await createSupabaseServerClient();
 
     // 1) Авторизация
     const { data: { user }, error: authError } = await supabase.auth.getUser();

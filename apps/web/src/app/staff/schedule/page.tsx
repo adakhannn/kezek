@@ -1,8 +1,8 @@
 // apps/web/src/app/staff/schedule/page.tsx
 import { notFound } from 'next/navigation';
 
-import StaffSchedulePageClient from './StaffSchedulePageClient';
 import ExplicitStaffSchedule from './ExplicitStaffSchedule';
+import StaffSchedulePageClient from './StaffSchedulePageClient';
 
 import { getStaffContext } from '@/lib/authBiz';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
@@ -38,7 +38,7 @@ export default async function StaffSchedulePage() {
         return <main className="p-6 text-red-600">Ошибка филиалов: {eBranches.message}</main>;
     }
 
-    const activeBranches: Branch[] = (branches ?? []).filter((b) => b.is_active);
+    const activeBranches: Branch[] = (branches ?? []).filter((b): b is Branch => b.is_active === true);
 
     if (explicitSchedulingEnabled()) return <ExplicitStaffSchedule branches={activeBranches} />;
 

@@ -15,7 +15,8 @@ export async function createYandexOAuthState(flow: YandexOAuthFlow, userId: stri
     const { error } = await getServiceClient().rpc('create_yandex_oauth_state', {
         p_state_hash: hashState(state),
         p_flow: flow,
-        p_user_id: userId,
+        // NULL for the anonymous sign-in flow; generated types mark SQL args non-null.
+        p_user_id: userId as string,
         p_return_path: sanitizeAuthReturnPath(returnPath),
     });
     if (error) throw new Error('Yandex state storage unavailable');
@@ -27,9 +28,10 @@ export async function consumeYandexOAuthState(state: string, flow: YandexOAuthFl
     const { data, error } = await getServiceClient().rpc('consume_yandex_oauth_state', {
         p_state_hash: hashState(state),
         p_flow: flow,
-        p_user_id: userId,
+        p_user_id: userId as string,
     });
     if (error) throw new Error('Yandex state storage unavailable');
-    if (!data || typeof data !== 'object' || data.flow !== flow || data.user_id !== userId) return null;
-    return { returnPath: sanitizeAuthReturnPath(data.return_path) };
+    const row = data as { flow?: string; user_id?: string | null; return_path?: string } | null;
+    if (!row || typeof row !== 'object' || row.flow !== flow || row.user_id !== userId) return null;
+    return { returnPath: sanitizeAuthReturnPath(row.return_path) };
 }

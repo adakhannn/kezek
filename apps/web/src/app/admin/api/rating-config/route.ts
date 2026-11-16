@@ -1,17 +1,11 @@
 // apps/web/src/app/admin/api/rating-config/route.ts
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const DAYS_BACK_MIN = 1;
 const DAYS_BACK_MAX = 365;
@@ -34,10 +28,7 @@ type RatingConfigBody = {
  */
 export async function GET() {
     try {
-        const cookieStore = await cookies();
-        const supabase = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
+        const supabase = await createSupabaseServerClient();
 
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
@@ -83,10 +74,7 @@ export async function GET() {
  */
 export async function POST(req: Request) {
     try {
-        const cookieStore = await cookies();
-        const supabase = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
+        const supabase = await createSupabaseServerClient();
 
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
@@ -127,7 +115,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         // Деактивируем все старые конфигурации
         await admin

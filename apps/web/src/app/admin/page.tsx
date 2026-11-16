@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 import { getT } from '@/app/_components/i18n/server';
@@ -8,6 +7,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { isSupabaseServiceRoleConfigured } from '@/lib/env';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,8 +64,7 @@ export default async function AdminHomePage() {
     const t = await getT();
     const { startISO, endISO, label } = bishkekDayRange();
     const warnings: DashboardWarning[] = [];
-    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const dataConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && isSupabaseServiceRoleConfigured();
 
     let bizCount = 0;
     let branchCount = 0;
@@ -75,7 +75,7 @@ export default async function AdminHomePage() {
     let latestBiz: BizRow[] = [];
     let todayBookingsRaw: BookingRel[] = [];
 
-    if (!SUPABASE_URL || !SERVICE) {
+    if (!dataConfigured) {
         warnings.push({
             title: t('admin.home.warnings.env.title', 'Админка открылась без подключения к данным'),
             description: t(
@@ -85,7 +85,7 @@ export default async function AdminHomePage() {
         });
     } else {
         try {
-            const admin = createClient(SUPABASE_URL, SERVICE);
+            const admin = createSupabaseAdminClient();
             const countQueries = [
                 { key: 'bizCount', label: t('admin.home.stats.businesses', 'Бизнесы'), query: admin.from('businesses').select('*', { count: 'exact', head: true }) },
                 { key: 'branchCount', label: t('admin.home.stats.branches', 'Филиалы'), query: admin.from('branches').select('*', { count: 'exact', head: true }) },
@@ -193,7 +193,7 @@ export default async function AdminHomePage() {
     const cancelledCount = (statusCounts.cancelled ?? 0) + (statusCounts.canceled ?? 0);
 
     const checks = [
-        { ok: !!process.env.SUPABASE_SERVICE_ROLE_KEY, label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY задан') },
+        { ok: isSupabaseServiceRoleConfigured(), label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY задан') },
         { ok: !!process.env.NEXT_PUBLIC_SITE_ORIGIN, label: t('admin.home.systemChecks.siteOrigin', 'NEXT_PUBLIC_SITE_ORIGIN задан') },
         {
             ok: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,

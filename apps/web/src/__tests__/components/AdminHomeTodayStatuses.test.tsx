@@ -7,6 +7,14 @@ import AdminHomePage from '@/app/admin/page';
 let mockStatuses: string[] = [];
 let mockLocale: 'ru' | 'ky' | 'en' = 'ru';
 
+// Server pages run under jsdom here; the real runtime has no window, so the
+// browser guard in env getters is bypassed for these server-component tests.
+jest.mock('@/lib/env', () => ({
+    ...jest.requireActual('@/lib/env'),
+    getSupabaseServiceRoleKey: () => 'test-service-key',
+    isSupabaseServiceRoleConfigured: () => true,
+}));
+
 jest.mock('@/app/_components/i18n/server', () => ({
     getT: async () => {
         const dictionaries = jest.requireActual('@/app/_components/i18n/dictionaries');

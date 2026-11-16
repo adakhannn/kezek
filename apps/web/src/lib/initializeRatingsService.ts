@@ -10,10 +10,7 @@ type RpcResult = {
 };
 
 export type InitializeRatingsAdminLike = {
-  rpc: (
-    fn: string,
-    params: Record<string, unknown>,
-  ) => Promise<RpcResult>;
+  rpc(fn: string, params: Record<string, unknown>): Promise<RpcResult>;
 };
 
 export type InitializeRatingsPayload = {

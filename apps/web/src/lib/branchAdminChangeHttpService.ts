@@ -29,7 +29,7 @@ export async function runBranchAdminChangeHttp(req: Request, context: unknown, a
     // Keep the caller's authenticated session. The checked SQL function repeats
     // authorization under the branch row lock, including direct RPC requests.
     const { error } = await caller.supabase.rpc(action === 'add' ? 'grant_branch_admin' : 'revoke_branch_admin', {
-        p_branch_id: branchId, p_user_id: validation.data.user_id,
+        p_branch_id: branchId!, p_user_id: validation.data.user_id,
     });
     if (error?.code === '42501') return createErrorResponse('forbidden', 'Нет доступа к управлению филиалом', undefined, 403);
     if (error?.code === '23503') return createErrorResponse('validation', 'Пользователь не найден', undefined, 400);

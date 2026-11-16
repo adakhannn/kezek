@@ -1,30 +1,22 @@
 // apps/web/src/app/admin/businesses/[id]/branches/new/page.tsx
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 import { Card } from '@/components/ui/Card';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 type RouteParams = { id: string };
 export default async function BranchNewPage({ params }: { params: Promise<RouteParams> }) {
     const { id } = await params;
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const cookieStore = await cookies();
 
-    const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supa = await createSupabaseServerClient();
     const { data: { user } } = await supa.auth.getUser();
     if (!user) return <div className="p-4">Не авторизован</div>;
     const { data: isSuper } = await supa.rpc('is_super_admin');
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
 
-    const admin = createClient(URL, SERVICE);
+    const admin = createSupabaseAdminClient();
     const [{ data: biz }, { count: branchCount }] = await Promise.all([
         admin.from('businesses').select('id,name,branch_limit').eq('id', id).maybeSingle(),
         admin.from('branches').select('id', { count: 'exact', head: true }).eq('biz_id', id),

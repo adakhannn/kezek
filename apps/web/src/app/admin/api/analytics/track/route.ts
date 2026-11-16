@@ -4,6 +4,7 @@ import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
+import type { Json } from '@/types/supabase';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
       client_id: user?.id ?? null,
       source: payload.source,
       session_id: payload.session_id ?? null,
-      metadata: payload.metadata ?? {},
+      metadata: (payload.metadata ?? {}) as NonNullable<Json>,
     });
 
     if (error) {

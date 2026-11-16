@@ -24,16 +24,13 @@ export type ProfileUpdateSupabaseLike = {
       error: { message: string } | null;
     }>;
   };
-  from: (table: string) => {
+  from(table: string): {
     select?: (...args: unknown[]) => unknown;
     upsert?: (...args: unknown[]) => Promise<{
       error: { message: string } | null;
     }>;
   };
-  rpc: (
-    name: string,
-    params: Record<string, unknown>,
-  ) => Promise<{ error: { message: string } | null }>;
+  rpc(name: string, params: Record<string, unknown>): Promise<{ error: { message: string } | null }>;
 };
 
 export type ProfileUpdateResult =

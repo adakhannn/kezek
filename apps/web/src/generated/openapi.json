@@ -11,7 +11,7 @@
       "description": "Same origin. SDK consumers must configure their own approved base URL."
     }
   ],
-  "x-reviewed-source-sha256": "7c1b447a7c8557dec102a1b77e8bf04a1fd99075ffa5dffef662393bf3a683d6",
+  "x-reviewed-source-sha256": "5ab8f8148fc9781e2201b25a4ba947e12048d17aefdeb04bdfc3169c2222736c",
   "x-reviewed-sources": [
     "apps/web/src/app/api/quick-book-guest/route.ts",
     "apps/web/src/app/api/quick-hold/route.ts",
@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 213,
+  "x-explicit-operation-count": 211,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/admin/api/analytics/conversion-funnel": {
@@ -1947,25 +1947,6 @@
         "x-manual-contract": "docs/api/ADMIN_API.md"
       }
     },
-    "/admin/api/roles/add": {
-      "post": {
-        "tags": [
-          "Inventory only"
-        ],
-        "summary": "Inventory only — see the source-reviewed manual contract",
-        "description": "Authentication, inputs, errors and side effects are described in docs/api/ADMIN_API.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
-        "x-contract-status": "inventory-only",
-        "parameters": [],
-        "responses": {
-          "default": {
-            "description": "Unmodeled response. Consult the linked manual contract and source."
-          }
-        },
-        "x-next-route": "/admin/api/roles/add",
-        "x-source-file": "apps/web/src/app/admin/api/roles/add/route.ts",
-        "x-manual-contract": "docs/api/ADMIN_API.md"
-      }
-    },
     "/admin/api/roles/assign": {
       "post": {
         "tags": [
@@ -2037,25 +2018,6 @@
         },
         "x-next-route": "/admin/api/roles/list",
         "x-source-file": "apps/web/src/app/admin/api/roles/list/route.ts",
-        "x-manual-contract": "docs/api/ADMIN_API.md"
-      }
-    },
-    "/admin/api/roles/set-many": {
-      "post": {
-        "tags": [
-          "Inventory only"
-        ],
-        "summary": "Inventory only — see the source-reviewed manual contract",
-        "description": "Authentication, inputs, errors and side effects are described in docs/api/ADMIN_API.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
-        "x-contract-status": "inventory-only",
-        "parameters": [],
-        "responses": {
-          "default": {
-            "description": "Unmodeled response. Consult the linked manual contract and source."
-          }
-        },
-        "x-next-route": "/admin/api/roles/set-many",
-        "x-source-file": "apps/web/src/app/admin/api/roles/set-many/route.ts",
         "x-manual-contract": "docs/api/ADMIN_API.md"
       }
     },

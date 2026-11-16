@@ -1,9 +1,6 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {createClient} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import {
@@ -12,6 +9,7 @@ import {
     resolveBusinessMemberActor,
 } from '@/lib/businessMemberRolePolicy';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
 
 type Body = { user_id?: string };
@@ -24,18 +22,7 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
         }
 
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const cookieStore = await cookies();
-
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+        const supa = await createSupabaseServerClient();
 
         // auth
         const {data: {user}} = await supa.auth.getUser();
@@ -51,7 +38,7 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ok: false, error: 'bad user_id'}, {status: 400});
         }
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         // demote снимает все роли кроме client — цель должна быть «ниже» вызывающего
         const targetRoles = await loadBusinessMemberRoleKeys(admin, biz_id, user_id);

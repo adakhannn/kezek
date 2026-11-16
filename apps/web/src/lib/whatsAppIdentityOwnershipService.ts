@@ -16,8 +16,8 @@ type AdminLike = {
         };
     };
     // PostgREST builders vary between the two ownership lookups.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
 };
 
 function normalizedMetadataPhone(user: AuthUser) {

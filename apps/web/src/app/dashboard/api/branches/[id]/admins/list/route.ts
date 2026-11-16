@@ -20,7 +20,7 @@ export async function POST(_: Request, ctx: unknown) {
         if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
 
         // Подтянем e-mail/phone/full_name через service_role (auth_users_view недоступна для authenticated после Security Advisor)
-        const userIds: string[] = Array.from(new Set((data ?? []).map((x: { user_id: number }) => x.user_id)));
+        const userIds: string[] = Array.from(new Set((data ?? []).map((x: { user_id: string }) => x.user_id)));
         let metaMap = new Map<string, { email: string | null; phone: string | null; full_name: string | null }>();
         if (userIds.length) {
             const {data: users} = await admin

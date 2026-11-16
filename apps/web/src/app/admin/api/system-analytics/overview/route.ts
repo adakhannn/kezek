@@ -1,12 +1,10 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 import { readAnalyticsSnapshot, reportFailure } from '@/lib/analyticsReportSnapshot';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { logError } from '@/lib/log';
 import { getCached, setCached } from '@/lib/simpleCache';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 import { addDaysToDateString, getTimezone, todayDateString } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
@@ -26,17 +24,8 @@ const overviewQuerySchema = z.object({
 });
 
 async function ensureSuperAdmin() {
-  const url = getSupabaseUrl();
-  const anon = getSupabaseAnonKey();
-  const cookieStore = await cookies();
 
-  const supabase = createServerClient(url, anon, {
-    cookies: {
-      get: (name: string) => cookieStore.get(name)?.value,
-      set: () => {},
-      remove: () => {},
-    },
-  });
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },

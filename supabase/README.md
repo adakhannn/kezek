@@ -52,4 +52,4 @@ Docker требуется для локального Supabase. Пакет CLI �
 
 ## Типы приложения
 
-[apps/web/src/types/supabase.ts](../apps/web/src/types/supabase.ts) генерируется из локального стека (baseline + миграции) скриптом [generate-db-types.mjs](../scripts/generate-db-types.mjs); CI проверяет, что файл не отстаёт от миграций. Клиенты Supabase в web пока создаются без `<Database>`: типизация потребителей — отдельная задача (нужно обновить `@supabase/ssr`). Общие имена переменных подключения перечислены в [ENV_GUIDE.md](../ENV_GUIDE.md); значения секретов в документацию не включаются.
+[apps/web/src/types/supabase.ts](../apps/web/src/types/supabase.ts) генерируется из локального стека (baseline + миграции) скриптом [generate-db-types.mjs](../scripts/generate-db-types.mjs); CI проверяет, что файл не отстаёт от миграций. Фабрики клиентов web (`supabaseHelpers`, `supabaseService`) создают клиентов с `<Database>`, поэтому запросы через них проверяются типами. Клиенты, которые создаются прямо в старых admin-роутах и страницах, пока не типизированы. Общие имена переменных подключения перечислены в [ENV_GUIDE.md](../ENV_GUIDE.md); значения секретов в документацию не включаются.

@@ -1,6 +1,4 @@
 // apps/web/src/app/admin/businesses/[id]/members/page.tsx
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import MembersClient from './MembersClient';
@@ -8,6 +6,7 @@ import MembersClient from './MembersClient';
 export const dynamic = 'force-dynamic';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
 
 export default async function MembersPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,13 +20,7 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
         );
     }
 
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-
-    const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supa = await createSupabaseServerClient();
 
     // 1) auth
     const {
@@ -47,8 +40,8 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     if (superError) return <main className="p-4">Не удалось проверить права доступа</main>;
 
     // право на просмотр: супер или владелец/админ
-    const { data: isOwner, error: ownerError } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: id });
-    const { data: isAdmin, error: adminError } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: id });
+    const { data: isOwner, error: ownerError } = await supa.rpc('has_role', { p_role_key: 'owner', p_biz_id: id });
+    const { data: isAdmin, error: adminError } = await supa.rpc('has_role', { p_role_key: 'admin', p_biz_id: id });
     if (ownerError || adminError || typeof isOwner !== 'boolean' || typeof isAdmin !== 'boolean') {
         return <main className="p-4">Не удалось проверить права доступа</main>;
     }
@@ -66,9 +59,7 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     const canManage = isOwner === true || isAdmin === true;
 
     // Получаем информацию о бизнесе для заголовка
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const { createClient } = await import('@supabase/supabase-js');
-    const admin = createClient(URL, SERVICE);
+    const admin = createSupabaseAdminClient();
     const { data: biz } = await admin
         .from('businesses')
         .select('id,name')

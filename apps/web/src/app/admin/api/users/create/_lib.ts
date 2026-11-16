@@ -2,11 +2,7 @@
  * Общая логика создания пользователя
  * Используется как в API route, так и в Server Actions
  */
-
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isEmail, isE164 } from '@/lib/validation';
 
 export type CreateUserPayload = {
@@ -28,19 +24,12 @@ function normStr(v?: string | null): string | null {
 /**
  * Создаёт пользователя с проверкой прав доступа
  */
-import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
 
 export async function createUser(payload: CreateUserPayload): Promise<CreateUserResult> {
     try {
-        const URL = getSupabaseUrl();
-        const ANON = getSupabaseAnonKey();
-        const SERVICE = getSupabaseServiceRoleKey();
 
         // Проверка: только глобальный super_admin
-        const cookieStore = await cookies();
-        const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
+        const supa = await createSupabaseServerClient();
 
         const { data: me } = await supa.auth.getUser();
         if (!me.user) return { ok: false, error: 'auth', status: 401 };
@@ -76,7 +65,7 @@ export async function createUser(payload: CreateUserPayload): Promise<CreateUser
             return { ok: false, error: 'Для регистрации по телефону пароль не нужен (вход через OTP)', status: 400 };
         }
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         // Хелпер: апсерт профиля
         async function upsertProfile(userId?: string | null) {
@@ -134,5 +123,4 @@ export async function createUser(payload: CreateUserPayload): Promise<CreateUser
         return { ok: false, error: msg, status: 500 };
     }
 }
-
 

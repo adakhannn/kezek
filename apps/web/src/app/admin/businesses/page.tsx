@@ -1,6 +1,3 @@
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -12,13 +9,14 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Biz = {
     id: string;
     slug: string;
     name: string;
     owner_id: string | null;
-    created_at: string;
+    created_at: string | null;
     is_approved: boolean | null;
     categories: string[] | null;
     address: string | null;
@@ -27,14 +25,8 @@ type Biz = {
 export default async function Page() {
     const locale = await getServerLocale();
     const t = getT(locale);
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const cookieStore = await cookies();
 
-    const supabase = createServerClient(url, anon, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supabase = await createSupabaseServerClient();
 
     const {
         data: { user },
@@ -67,7 +59,7 @@ export default async function Page() {
 
     let ownersMap = new Map<string, string>();
     if (ownerIds.length) {
-        const admin = createClient(url, service);
+        const admin = createSupabaseAdminClient();
 
         const results = await Promise.all(
             ownerIds.map(async (oid) => {
@@ -90,7 +82,7 @@ export default async function Page() {
         ownersMap = new Map(results.map((r) => [r.id, (r.name ?? r.email ?? r.id)!]));
     }
 
-    const admin = createClient(url, service);
+    const admin = createSupabaseAdminClient();
     const businessIds = (list ?? []).map((b) => b.id);
 
     const [branchesData, staffData] = await Promise.all([
@@ -200,7 +192,7 @@ export default async function Page() {
                                 </div>
 
                                 <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                                    {t('admin.businesses.created', 'Создан')}: {new Date(b.created_at).toLocaleDateString(
+                                    {t('admin.businesses.created', 'Создан')}: {b.created_at === null ? '—' : new Date(b.created_at).toLocaleDateString(
                                         locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU',
                                         {
                                         year: 'numeric',

@@ -8,7 +8,7 @@ import { branchUpdateSchema } from '@/lib/validation/businessUpdateSchemas';
 export type BranchUpdateBody = z.infer<typeof branchUpdateSchema>;
 
 export type BranchUpdateAdminLike = {
-  from: (table: string) => {
+  from(table: string): {
     update: (...args: unknown[]) => {
       eq: (...args: unknown[]) => {
         eq: (...args: unknown[]) => Promise<{ error: { message: string } | null }>;

@@ -1,13 +1,9 @@
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
 import { OwnerForm } from './ui/OwnerForm';
 
 import { getT } from '@/app/_components/i18n/server';
-import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
 import {logWarn} from '@/lib/log';
-
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,19 +26,10 @@ type RouteParams = { id: string };
 export default async function OwnerPage({ params }: { params: Promise<RouteParams> }) {
     const { id } = await params;
 
-    const URL = getSupabaseUrl();
-    const ANON = getSupabaseAnonKey();
-    const SERVICE = getSupabaseServiceRoleKey();
-    const cookieStore = await cookies();
-
-    const supa = createServerClient(URL, ANON, {
-        cookies: {
-            get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {},
-        },
-    });
+    const supa = await createSupabaseServerClient();
 
     const t = await getT();
-    
+
     // 1) Авторизация
     const { data: { user } } = await supa.auth.getUser();
     if (!user) return <div className="p-4">{t('admin.error.unauthorized', 'Не авторизован')}</div>;
@@ -53,7 +40,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
     if (!isSuper) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа (нужен супер-админ)')}</div>;
 
     // 3) Сервисный клиент
-    const admin = createClient(URL, SERVICE);
+    const admin = createSupabaseAdminClient();
 
     // 4) Бизнес
     const { data: biz, error: eBiz } = await admin
@@ -82,7 +69,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
 
         if (!ownerRolesErr && ownerRoles) {
             const ownerIds = ownerRoles.map(r => r.user_id).filter(Boolean) as string[];
-            
+
             for (const ownerId of ownerIds) {
                 try {
                     const { data: ownerData, error: ownerErr } = await admin.auth.admin.getUserById(ownerId);
@@ -92,7 +79,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
                             .select('full_name')
                             .eq('id', ownerId)
                             .maybeSingle();
-                        
+
                         currentOwners.push({
                             id: ownerData.user.id,
                             email: ownerData.user.email ?? null,

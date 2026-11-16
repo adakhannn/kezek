@@ -28,7 +28,7 @@ type BusinessesQueryLike = {
 };
 
 type BusinessesAnonLike = {
-    from: (table: string) => {
+    from(table: string): {
         select: (columns: string) => {
             eq: (column: string, value: boolean) => BusinessesQueryLike;
         };

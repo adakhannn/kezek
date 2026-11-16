@@ -15,7 +15,7 @@ import { mapWhatsAppProviderError } from '@/lib/whatsAppMobileProviderErrorMappi
 import { hashWhatsappOtp, hashWhatsappPhone } from '@/lib/whatsAppOtpHash';
 
 type AdminLike = {
-    from: (table: string) => {
+    from(table: string): {
         insert: (payload: Record<string, unknown>) => {
             select: (columns: string) => {
                 single: () => unknown;

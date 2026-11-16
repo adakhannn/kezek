@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 import { ApplicationStatusButton } from './ApplicationStatusButton';
@@ -7,6 +6,7 @@ import { getServerLocale, getT, type I18nKey } from '@/app/_components/i18n/serv
 import { ApplicationReviewHistory } from '@/components/admin/ApplicationReviewHistory';
 import { Card } from '@/components/ui/Card';
 import { canModerateBusinessRegistrationApplication } from '@/lib/businessApplicationStatus';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +30,7 @@ type BusinessRegistrationApplication = {
 export default async function BusinessApplicationsPage() {
     const locale = await getServerLocale();
     const t = getT(locale);
-    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const admin = createSupabaseAdminClient();
     const [{ data: applications, error }, { data: categories, error: categoriesError }] = await Promise.all([
         admin
             .from('business_registration_applications')

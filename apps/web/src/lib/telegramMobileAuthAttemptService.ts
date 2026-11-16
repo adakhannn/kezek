@@ -111,7 +111,8 @@ async function getAttemptRow(nonce: string): Promise<AttemptRow | null> {
         return null;
     }
 
-    return data;
+    // jsonb columns (source, telegram_context) are written only by this service.
+    return data as AttemptRow | null;
 }
 
 async function markExpiredIfNeeded(row: AttemptRow): Promise<AttemptRow> {
@@ -139,7 +140,7 @@ async function markExpiredIfNeeded(row: AttemptRow): Promise<AttemptRow> {
                 reason: 'ttl_read_attempt',
             },
         });
-        return data;
+        return data as AttemptRow;
     }
 
     return row;
@@ -265,7 +266,7 @@ export async function consumePendingTelegramMobileAuthAttempt(nonce: string): Pr
     }
 
     if (consumed) {
-        return { ok: true, attempt: toAttempt(consumed) };
+        return { ok: true, attempt: toAttempt(consumed as AttemptRow) };
     }
 
     const current = await getAttemptRow(nonce);
@@ -400,7 +401,7 @@ export async function attachTelegramMobileAuthAttemptTelegramContext({
         .select('source,telegram_context,linkage,nonce,code_challenge,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
         .maybeSingle();
     if (error || !updated) return { ok: false, error: 'invalid_status' };
-    return { ok: true, attempt: toAttempt(updated) };
+    return { ok: true, attempt: toAttempt(updated as AttemptRow) };
 }
 
 export async function __resetTelegramMobileAuthAttemptsForTests() {

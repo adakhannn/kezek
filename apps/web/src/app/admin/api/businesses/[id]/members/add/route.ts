@@ -3,14 +3,13 @@ export const dynamic = 'force-dynamic';
 
 import crypto from 'crypto';
 
-import {createServerClient} from '@supabase/ssr';
-import {createClient, type SupabaseClient} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
+import {type SupabaseClient} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
 import { getRouteParamRequired } from '@/lib/routeParams';
 import {sendEmailPassword} from '@/lib/senders/email';
 import {sendSMS, normalizePhoneToE164} from '@/lib/senders/sms';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
     full_name?: string | null;
@@ -82,19 +81,9 @@ export async function POST(req: Request, context: unknown) {
     try {
         const bizId = await getRouteParamRequired(context, 'id');
         
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const cookieStore = await cookies();
 
         // auth: только глобальный super_admin
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+        const supa = await createSupabaseServerClient();
         const {data: {user}} = await supa.auth.getUser();
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
@@ -122,7 +111,7 @@ export async function POST(req: Request, context: unknown) {
             }, {status: 400});
         }
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         // найдём role_id
         const {data: roleRow, error: eRole} = await admin

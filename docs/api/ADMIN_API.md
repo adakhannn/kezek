@@ -61,8 +61,6 @@
 <!-- api-contract: POST /admin/api/roles/[id]/delete -->
 <!-- api-contract: DELETE /admin/api/roles/[id]/delete -->
 <!-- api-contract: POST /admin/api/roles/assign -->
-<!-- api-contract: POST /admin/api/roles/add -->
-<!-- api-contract: POST /admin/api/roles/set-many -->
 
 | METHOD / path и source | Auth / input | Успех и ошибки | Side effects и ограничения |
 | --- | --- | --- | --- |
@@ -71,8 +69,6 @@
 | POST, PATCH, PUT [`/admin/api/roles/[id]/update`](../../apps/web/src/app/admin/api/roles/[id]/update/route.ts) | `CURRENT`; path id; optional name/description, trim/empty→null | `R()` даже при пустом patch или update без совпавшей строки; 400 missing id/DB | Меняет только name/description, не key/is_system. Params извлекаются через getRouteParam с поддержкой Promise |
 | POST, DELETE [`/admin/api/roles/[id]/delete`](../../apps/web/src/app/admin/api/roles/[id]/delete/route.ts) | `CURRENT`; id, body игнорируется | `R()`; 404 missing role; 400 system role/FK/DB | Удаляет nonsystem role; FK error преобразуется в сообщение о назначениях. Params извлекаются через getRouteParam с поддержкой Promise |
 | POST [`/admin/api/roles/assign`](../../apps/web/src/app/admin/api/roles/assign/route.ts) | Только cookie user в TS; JSON user_id, optional biz_id→null, role; schema нет | `R()`; 401 auth, 400 RPC message; общего catch нет | Делегирует `grant_role_rpc(p_user,p_biz,p_role)` cookie client. Не приписывать этому route отдельный super_admin gate: он зависит от неизвестного здесь SQL RPC |
-| POST [`/admin/api/roles/add`](../../apps/web/src/app/admin/api/roles/add/route.ts) | `RPC`; user_id,biz_id обязательны; role из owner/manager/staff/admin/client | `R()`; 400 invalid input, profile/business отсутствуют, DB | Service upsert **всего body** в user_roles по `biz_id,user_id,role`; schema не отсекает лишние поля. Uses legacy `role` column, в отличие от role_id routes |
-| POST [`/admin/api/roles/set-many`](../../apps/web/src/app/admin/api/roles/set-many/route.ts) | `RPC`; user_id,biz_id; roles array из owner/manager/staff/admin/client, пустой разрешен | `R()`; 400 validation/delete/insert | Удаляет все business roles пользователя, затем вставляет новые через legacy `role`. Нет транзакции; ошибка insert оставляет уже удаленные роли |
 
 ## Категории
 

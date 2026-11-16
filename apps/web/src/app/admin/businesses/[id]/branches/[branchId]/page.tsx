@@ -1,13 +1,10 @@
 // apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
 import { Card } from '@/components/ui/Card';
-import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,20 +13,13 @@ type RouteParams = { id: string; branchId: string };
 export default async function BranchEditPage({ params }: { params: Promise<RouteParams> }) {
     const { id, branchId } = await params;
 
-    const URL = getSupabaseUrl();
-    const ANON = getSupabaseAnonKey();
-    const SERVICE = getSupabaseServiceRoleKey();
-    const cookieStore = await cookies();
-
-    const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supa = await createSupabaseServerClient();
     const { data: { user } } = await supa.auth.getUser();
     if (!user) return <div className="p-4">Не авторизован</div>;
     const { data: isSuper } = await supa.rpc('is_super_admin');
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
 
-    const admin = createClient(URL, SERVICE);
+    const admin = createSupabaseAdminClient();
     const { data: branch, error } = await admin
         .from('branches')
         .select('id,biz_id,name,address,is_active,lat,lon,directory_links,contact_phone,contact_whatsapp,contact_email,website_url,inherit_business_contacts')

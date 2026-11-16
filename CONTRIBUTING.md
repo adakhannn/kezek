@@ -111,6 +111,13 @@ In `apps/web`, routes should stay thin:
 
 Do not grow route handlers into large orchestration files.
 
+Supabase clients in `apps/web` come from the factories (enforced by ESLint):
+
+- `createSupabaseServerClient()` — the caller's cookie session (RLS applies);
+- `createSupabaseAdminClient()` / `getServiceClient()` — service role, bypasses RLS: only after the caller's permission is checked, never in client components;
+- `SUPABASE_SERVICE_ROLE_KEY` is read only by `src/lib/env.ts`; use `isSupabaseServiceRoleConfigured()` for presence checks;
+- `src/app/**` must not import `@supabase/ssr` or `createClient` directly (the Google OAuth callback, which writes auth cookies, is the documented exception).
+
 ## Documentation Rules
 
 Update docs when you change:

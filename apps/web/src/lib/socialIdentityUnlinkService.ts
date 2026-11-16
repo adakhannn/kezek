@@ -11,14 +11,14 @@ type AuthUser = {
 type AdminLike = {
     auth: {
         admin: {
-            getUserById: (id: string) => Promise<{ data: { user: AuthUser | null }; error: { message?: string } | null }>;
-            updateUserById: (id: string, payload: { user_metadata: Record<string, unknown> }) => Promise<{ error: { message?: string } | null }>;
+            getUserById(id: string): Promise<{ data: { user: AuthUser | null }; error: { message?: string } | null }>;
+            updateUserById(id: string, payload: { user_metadata: Record<string, unknown> }): Promise<{ error: { message?: string } | null }>;
         };
     };
     // Query builders differ for select and update operations in this narrow service boundary.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
-    rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: { message?: string } | null }>;
+
+    from(table: string): any;
+    rpc(name: string, params: Record<string, unknown>): Promise<{ data: unknown; error: { message?: string } | null }>;
 };
 
 type ProfileConnections = {

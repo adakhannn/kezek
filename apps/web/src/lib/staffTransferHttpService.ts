@@ -36,7 +36,8 @@ export async function runStaffTransferHttp(
     }
     const { data, error } = await getServiceClient().rpc('transfer_staff_home', {
       p_staff: staffId, p_biz: bizId, p_actor: userId,
-      p_expected_branch: body.expected_branch_id, p_target: body.target_branch_id,
+      // Both ids were validated as UUIDs above.
+      p_expected_branch: body.expected_branch_id as string, p_target: body.target_branch_id as string,
     });
     if (error) {
       const messages: Record<string, string> = {

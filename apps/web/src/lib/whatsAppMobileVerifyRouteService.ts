@@ -12,8 +12,8 @@ type AuthUser = {
 };
 
 type AdminLike = {
-    rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message?: string } | null }>;
-    from: (table: string) => {
+    rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message?: string } | null }>;
+    from(table: string): {
         select: (columns: string) => {
             eq: (column: string, value: string) => {
                 maybeSingle: () => unknown;

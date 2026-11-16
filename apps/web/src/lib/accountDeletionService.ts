@@ -6,12 +6,12 @@ export type AccountDeletionBlocker = {
 
 type AdminLike = {
     // Supabase query builders differ for count, select, and mutation calls.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
     auth: {
         admin: {
-            getUserById: (id: string) => Promise<{ data: { user: { user_metadata?: Record<string, unknown> | null } | null }; error: { message?: string } | null }>;
-            updateUserById: (id: string, payload: { user_metadata: Record<string, unknown> }) => Promise<{ error: { message?: string } | null }>;
+            getUserById(id: string): Promise<{ data: { user: { user_metadata?: Record<string, unknown> | null } | null }; error: { message?: string } | null }>;
+            updateUserById(id: string, payload: { user_metadata: Record<string, unknown> }): Promise<{ error: { message?: string } | null }>;
         };
     };
 };

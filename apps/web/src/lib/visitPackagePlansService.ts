@@ -32,7 +32,7 @@ export type VisitPackagePlanPatchBody = Partial<VisitPackagePlanCreateBody> & {
 };
 
 export type VisitPackagePlansAdminLike = {
-  from: (table: string) => {
+  from(table: string): {
     select?: (...args: unknown[]) => unknown;
     insert?: (...args: unknown[]) => unknown;
     update?: (...args: unknown[]) => unknown;

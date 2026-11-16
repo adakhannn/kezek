@@ -2,11 +2,10 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
 
 type Item = {
@@ -25,17 +24,7 @@ export async function GET(_req: Request, context: unknown) {
             return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
         }
 
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const cookieStore = await cookies();
-
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+        const supa = await createSupabaseServerClient();
 
         // 1) Пытаемся получить через RPC (быстрее и безопаснее)
         const {data: rpcData, error: rpcErr} = await supa.rpc('members_of_biz', {p_biz_id: id});

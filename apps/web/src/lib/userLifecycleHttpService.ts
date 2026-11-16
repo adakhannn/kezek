@@ -42,7 +42,7 @@ export async function runUserLifecycleHttp(req: Request, context: unknown, opera
     try {
         const service = getServiceClient();
         const { data, error } = await service.rpc('prepare_user_lifecycle', {
-            p_actor_id: access.user.id, p_user_id: id.data, p_action: action, p_reason: reason,
+            p_actor_id: access.user.id, p_user_id: id.data, p_action: action, p_reason: reason ?? undefined,
         });
         if (error) return commandError(error.message);
         const parsed = receiptSchema.safeParse(data);

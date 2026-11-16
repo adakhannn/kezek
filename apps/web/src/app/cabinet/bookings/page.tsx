@@ -1,28 +1,19 @@
 // apps/web/src/app/cabinet/bookings/page.tsx
-import { createServerClient } from '@supabase/ssr';
 import { formatInTimeZone } from 'date-fns-tz';
-import { cookies } from 'next/headers';
+import type { ComponentProps } from 'react';
 
 import ClientCabinet from '../ClientCabinet';
 
 import BookingsPageClient from './BookingsPageClient';
 
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function BookingsPage() {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value,
-            },
-        }
-    );
+    const supabase = await createSupabaseServerClient();
 
     const { data: auth } = await supabase.auth.getUser();
     const userId = auth.user?.id;
@@ -70,11 +61,12 @@ export default async function BookingsPage() {
         .or(`end_at.lt.${nowISO},status.in.(paid,cancelled,no_show)`)
         .order('start_at', { ascending: false });
 
+    // jsonb columns (promotion_applied, subscription_applied) are written by booking commands.
     return (
         <ClientCabinet
             userId={userId}
-            upcoming={upcoming ?? []}
-            past={past ?? []}
+            upcoming={(upcoming ?? []) as unknown as ComponentProps<typeof ClientCabinet>['upcoming']}
+            past={(past ?? []) as unknown as ComponentProps<typeof ClientCabinet>['past']}
         />
     );
 }

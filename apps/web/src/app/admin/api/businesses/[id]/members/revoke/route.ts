@@ -2,9 +2,6 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import {
@@ -15,19 +12,14 @@ import {
     resolveBusinessMemberActor,
 } from '@/lib/businessMemberRolePolicy';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
 
 export async function POST(req: Request, context: unknown) {
     try {
         const biz_id = await getRouteParamRequired(context, 'id');
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const cookieStore = await cookies();
 
-        const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
+        const supa = await createSupabaseServerClient();
 
         const { data: { user } } = await supa.auth.getUser();
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
@@ -44,7 +36,7 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ ok: false, error: 'forbidden_role' }, { status: 403 });
         }
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         const targetRoles = await loadBusinessMemberRoleKeys(admin, biz_id, user_id);
         if (!targetRoles.ok) return NextResponse.json({ ok: false, error: 'internal' }, { status: 500 });

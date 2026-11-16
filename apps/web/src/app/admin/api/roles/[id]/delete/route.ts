@@ -1,12 +1,12 @@
-import { getRouteParam } from '@/lib/routeParams';
-import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 // apps/web/src/app/admin/api/roles/[id]/delete/route.ts
+import {NextResponse} from 'next/server';
+
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { getRouteParam } from '@/lib/routeParams';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
-import {NextResponse} from 'next/server';
 
 export async function POST(_req: Request, context: unknown) {
     try {
@@ -16,17 +16,7 @@ export async function POST(_req: Request, context: unknown) {
             return NextResponse.json({ok: false, error: 'missing id'}, {status: 400});
         }
 
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const cookieStore = await cookies();
-
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+        const supa = await createSupabaseServerClient();
 
         // auth
         const { data: { user }, error: authError } = await supa.auth.getUser();

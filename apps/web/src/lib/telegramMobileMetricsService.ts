@@ -10,7 +10,7 @@ export type TelegramMobileMetricType =
     | 'telegram_mobile_login_failed';
 
 export type TelegramMobileMetricsAdminLike = {
-    from: (table: 'analytics_events') => {
+    from(table: 'analytics_events'): {
         insert: (payload: Record<string, unknown>) => PromiseLike<{
             error: { message?: string } | null;
         }>;

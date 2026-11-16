@@ -1,24 +1,18 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
 import { rejectApplicationWithPolicy } from '@/lib/applicationPolicy';
 import { approveBusinessApplicationAndCreateBusiness } from '@/lib/businessApplicationService';
 import { notifyBusinessApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 const statuses = new Set(['new', 'contacted', 'approved', 'rejected']);
 
 export async function POST(request: Request, context: unknown) {
     const id = await getRouteParamRequired(context, 'id');
-    const cookieStore = await cookies();
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-        cookies: { get: (name: string) => cookieStore.get(name)?.value, set: () => {}, remove: () => {} },
-    });
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return Response.json({ ok: false, error: 'auth' }, { status: 401 });
     const { data: isSuper } = await supabase.rpc('is_super_admin');
@@ -30,7 +24,7 @@ export async function POST(request: Request, context: unknown) {
     };
     if (typeof body.status !== 'string' || !statuses.has(body.status)) return Response.json({ ok: false, error: 'invalid status' }, { status: 400 });
 
-    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const admin = createSupabaseAdminClient();
     if (body.status === 'approved') {
         const result = await approveBusinessApplicationAndCreateBusiness({
             admin,

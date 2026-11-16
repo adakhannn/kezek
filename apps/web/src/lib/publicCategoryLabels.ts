@@ -1,7 +1,7 @@
 import { logWarn } from '@/lib/log';
 
 export type PublicCategoryClient = {
-    from: (table: string) => {
+    from(table: string): {
         select: (columns: string) => {
             in: (column: string, values: string[]) => PromiseLike<{
                 data: {slug: string; name_ru: string | null}[] | null;

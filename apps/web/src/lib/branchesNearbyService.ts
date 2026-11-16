@@ -48,7 +48,7 @@ type Failure = {
 };
 
 type SupabaseLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 function parseNearbyParams(requestUrl: string) {

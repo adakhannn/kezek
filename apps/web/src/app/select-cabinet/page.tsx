@@ -1,27 +1,14 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { SelectCabinetClient, type CabinetOption } from './SelectCabinetClient';
 
 import { countAvailableCabinetTypes, getUserRoleProfile } from '@/lib/authContext';
-import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SelectCabinetPage() {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        getSupabaseUrl(),
-        getSupabaseAnonKey(),
-        {
-            cookies: {
-                get: (name: string) => cookieStore.get(name)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        }
-    );
+    const supabase = await createSupabaseServerClient();
 
     const profile = await getUserRoleProfile(supabase);
     if (!profile) {

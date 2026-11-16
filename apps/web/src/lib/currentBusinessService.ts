@@ -22,7 +22,7 @@ export type CurrentBusinessServerClientLike = {
 };
 
 export type CurrentBusinessAdminClientLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 export async function getCurrentBusinessState({

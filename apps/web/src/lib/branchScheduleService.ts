@@ -9,7 +9,7 @@ export type BranchScheduleBody = {
 };
 
 export type BranchScheduleAdminLike = {
-  from: (table: string) => {
+  from(table: string): {
     select?: (...args: unknown[]) => unknown;
     delete?: () => unknown;
     insert?: (...args: unknown[]) => Promise<{ error: { message: string } | null }>;

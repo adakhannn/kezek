@@ -3,7 +3,7 @@ import type { TelegramAuthData } from '@/lib/telegram/verify';
 import { normalizeTelegramData, verifyTelegramAuth } from '@/lib/telegram/verify';
 
 export type TelegramLinkSupabaseLike = {
-  from: (table: string) => {
+  from(table: string): {
     select?: (...args: unknown[]) => unknown;
     update?: (...args: unknown[]) => unknown;
   };

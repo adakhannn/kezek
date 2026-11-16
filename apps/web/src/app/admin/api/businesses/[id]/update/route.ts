@@ -1,15 +1,14 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { validatePublicContactPatch } from '@/lib/businessContacts';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { businessUpdateSchema } from '@/lib/validation/businessUpdateSchemas';
+import type { Database } from '@/types/supabase';
 
 function validSlug(s: string): boolean {
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s);
@@ -19,18 +18,7 @@ export async function PATCH(req: Request, context: unknown) {
     try {
         const bizId = await getRouteParamRequired(context, 'id');
 
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const cookieStore = await cookies();
-
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        });
+        const supa = await createSupabaseServerClient();
 
         const {
             data: { user },
@@ -48,7 +36,7 @@ export async function PATCH(req: Request, context: unknown) {
         const validation = await validateRequest(req, businessUpdateSchema);
         if (!validation.success) return validation.response;
         const body = validation.data;
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         const { data: existing, error: fetchErr } = await admin
             .from('businesses')
@@ -60,7 +48,7 @@ export async function PATCH(req: Request, context: unknown) {
             return NextResponse.json({ ok: false, error: 'business not found' }, { status: 404 });
         }
 
-        const updates: Record<string, unknown> = {};
+        const updates: Database['public']['Tables']['businesses']['Update'] = {};
 
         if (body.name !== undefined) {
             const name = typeof body.name === 'string' ? body.name.trim() : '';

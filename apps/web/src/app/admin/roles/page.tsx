@@ -1,6 +1,5 @@
 // apps/web/src/app/admin/roles/page.tsx
-import { createServerClient } from '@supabase/ssr';
-import { cookies, headers } from 'next/headers';
+import {headers} from 'next/headers';
 import Link from 'next/link';
 
 import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
@@ -8,17 +7,13 @@ import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
 import RolesClient from './RolesClient';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function RolesPage() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
 
-    const supa = createServerClient(url, anon, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supa = await createSupabaseServerClient();
 
     const { data: { user }, error: authError } = await supa.auth.getUser();
     if (authError || !user) {

@@ -5,6 +5,8 @@
 
 import { getServiceClient } from './supabaseService';
 
+import type { Json } from '@/types/supabase';
+
 export interface ApiMetricOptions {
     endpoint: string;
     method: string;
@@ -40,16 +42,16 @@ export async function logApiMetric(options: ApiMetricOptions): Promise<void> {
             p_method: options.method,
             p_status_code: options.statusCode,
             p_duration_ms: options.durationMs,
-            p_user_id: options.userId || null,
-            p_staff_id: options.staffId || null,
-            p_biz_id: options.bizId || null,
-            p_error_message: options.errorMessage || null,
-            p_error_type: options.errorType || null,
-            p_request_size_bytes: options.requestSizeBytes || null,
-            p_response_size_bytes: options.responseSizeBytes || null,
-            p_metadata: options.metadata || null,
-            p_ip_address: options.ipAddress || null,
-            p_user_agent: options.userAgent || null,
+            p_user_id: options.userId || undefined,
+            p_staff_id: options.staffId || undefined,
+            p_biz_id: options.bizId || undefined,
+            p_error_message: options.errorMessage || undefined,
+            p_error_type: options.errorType || undefined,
+            p_request_size_bytes: options.requestSizeBytes || undefined,
+            p_response_size_bytes: options.responseSizeBytes || undefined,
+            p_metadata: (options.metadata as Json | undefined) || undefined,
+            p_ip_address: options.ipAddress || undefined,
+            p_user_agent: options.userAgent || undefined,
         });
         
         if (error) {

@@ -3,10 +3,10 @@ import { initializeStaffSchedule } from '@/lib/staffSchedule';
 
 type DbClient = {
     // Generated Supabase types are not fully synchronized in this repository.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rpc: (name: string, params: Record<string, unknown>) => any;
+
+    from(table: string): any;
+
+    rpc(name: string, params: Record<string, unknown>): any;
 };
 
 type ApprovalFailure = {
@@ -110,7 +110,7 @@ export async function approveStaffApplication(params: {
 
     const scheduleResult = explicitSchedulingEnabled() ? { success: false, daysCreated: 0, error: undefined } : await initializeStaffSchedule(
         // The runtime admin client implements the same query interface expected by the helper.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         params.admin as any,
         bizId,
         staffId,

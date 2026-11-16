@@ -20,8 +20,8 @@ type AuthUserLike = {
 
 export type YandexAuthAdminClientLike = {
     // Supabase query builders vary by operation in this service boundary.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
     auth: {
         admin: {
             createUser: (payload: unknown) => Promise<{ data?: { user?: AuthUserLike }; error?: { message?: string } | null }>;
@@ -34,10 +34,7 @@ export type YandexAuthAdminClientLike = {
             error?: { message?: string } | null;
         }>;
     };
-    rpc: (
-        name: string,
-        params: Record<string, unknown>,
-    ) => Promise<{ error: { message?: string } | null }>;
+    rpc(name: string, params: Record<string, unknown>): Promise<{ error: { message?: string } | null }>;
 };
 
 type RunYandexOAuthCallbackInput = {

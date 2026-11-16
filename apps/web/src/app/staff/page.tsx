@@ -33,7 +33,7 @@ export default async function Page() {
         supabase
             .from('branches')
             .select('id, name, address')
-            .eq('id', branchId)
+            .eq('id', branchId as string)
             .single(),
         // Услуги, которыми владеет сотрудник
         supabase

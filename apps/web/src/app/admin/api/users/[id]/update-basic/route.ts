@@ -1,13 +1,10 @@
-import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 type Body = {
     full_name?: string | null;
@@ -31,19 +28,8 @@ export async function POST(req: Request, ctx: unknown) {
         const email = body.email?.trim() || null;
         const phone = body.phone?.trim() || null;
 
-        const URL = getSupabaseUrl();
-        const ANON = getSupabaseAnonKey();
-        const SERVICE = getSupabaseServiceRoleKey();
-        const cookieStore = await cookies();
-
         // 1) Проверка авторизации и что вызывающий — global super_admin
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        });
+        const supa = await createSupabaseServerClient();
 
         const { data: { user }, error: authError } = await supa.auth.getUser();
         if (authError || !user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
@@ -53,7 +39,7 @@ export async function POST(req: Request, ctx: unknown) {
         if (!superRow) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         // 2) Обновляем auth.users через service role
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
 
         // Сначала читаем текущие метаданные, чтобы не потерять другие поля
         const { data: got, error: getErr } = await admin.auth.admin.getUserById(userId);

@@ -28,7 +28,7 @@ type QueryChain<T> = PromiseLike<QueryResult<T>> & {
 };
 
 type AdminClientLike = {
-    from: <T = unknown>(table: string) => QueryChain<T>;
+    from<T = unknown>(table: string): QueryChain<T>;
 };
 
 type EmailSenderLike = (alerts: Alert[]) => Promise<{ success: boolean; error?: string }>;

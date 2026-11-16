@@ -2,12 +2,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {createClient, PostgrestError} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
+import {PostgrestError} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { uuidSchema } from '@/lib/validation/schemas';
 
 type Body = {
@@ -20,7 +19,7 @@ type Body = {
 type CategoryRow = {
     id: string;
     slug: string;
-    name_ru: string | null;
+    name_ru: string;
     is_active: boolean;
 };
 
@@ -54,18 +53,9 @@ function isSlugValid(s: string) {
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-        const cookieStore = await cookies(); // без await
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+ // без await
+        const supa = await createSupabaseServerClient();
 
         // доступ только супер-админу
         const {data: {user}} = await supa.auth.getUser();
@@ -80,7 +70,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
             return NextResponse.json({ok: false, error: 'Некорректный идентификатор категории'}, {status: 400});
         }
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
         const body = (await req.json()) as Body;
 
         // текущая категория
@@ -130,7 +120,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         if (slugChanged && body.propagateSlug) {
             const {error: eRep} = await admin.rpc('cat_replace_slug', {
                 old_slug: cur.slug,
-                new_slug: patch.slug,
+                new_slug: patch.slug as string,
             });
             if (eRep) return NextResponse.json({ok: false, error: eRep.message}, {status: 400});
         }

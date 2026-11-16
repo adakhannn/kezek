@@ -13,10 +13,10 @@ export const SUBMITTABLE_BUSINESS_ROLE_OPTIONS: BusinessRoleKey[] = ['owner', 's
 
 type DbClient = {
     // Supabase generated types are not stable in this repo yet.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rpc: (name: string, args: Record<string, unknown>) => any;
+
+    from(table: string): any;
+
+    rpc(name: string, args: Record<string, unknown>): any;
 };
 
 type AuthUser = {

@@ -182,7 +182,7 @@ async function addStaffRole(admin: SupabaseClient, userId: string, bizId: string
             user_id: userId,
             biz_id: bizId,
             role_id: roleStaff.id,
-            biz_key: bizId,
+            // biz_key is GENERATED ALWAYS; the database computes it.
         });
         if (error) {
             logWarn('StaffUpdateService', 'Failed to add staff role', error);

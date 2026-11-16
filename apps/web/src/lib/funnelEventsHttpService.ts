@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { isSupabaseServiceRoleConfigured } from '@/lib/env';
 import { funnelEventSchema, saveFunnelEvent } from '@/lib/funnelEventsService';
 import { logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -12,7 +13,7 @@ export async function runFunnelEventsHttp(req: Request): Promise<NextResponse> {
         return bodyValidation.response;
     }
 
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!isSupabaseServiceRoleConfigured()) {
         logWarn('FunnelEventsAPI', 'Funnel event skipped because service role key is not configured', {
             event_type: bodyValidation.data.event_type,
         });

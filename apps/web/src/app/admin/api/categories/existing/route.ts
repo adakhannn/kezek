@@ -2,30 +2,18 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {createClient} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
-
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type BizCategoriesRow = { categories: string[] | null };
 
 export async function GET() {
     try {
         // проверяем, что вызвал супер-админ
-        const cookieStore = await cookies(); // без await
-        const supabase = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+ // без await
+        const supabase = await createSupabaseServerClient();
 
         const {
             data: {user},
@@ -37,7 +25,7 @@ export async function GET() {
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         // собираем уникальные категории из businesses.categories (text[])
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
         const {data, error} = await admin
             .from('businesses')
             .select('categories')

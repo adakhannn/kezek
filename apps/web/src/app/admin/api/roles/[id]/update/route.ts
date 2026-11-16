@@ -1,12 +1,13 @@
-import { getRouteParam } from '@/lib/routeParams';
-import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 // apps/web/src/app/admin/api/roles/[id]/update/route.ts
+import {NextResponse} from 'next/server';
+
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { getRouteParam } from '@/lib/routeParams';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import type { Database } from '@/types/supabase';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
-import {NextResponse} from 'next/server';
 
 type Body = { name?: string | null; description?: string | null };
 
@@ -23,17 +24,7 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ok: false, error: 'missing id'}, {status: 400});
         }
 
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const cookieStore = await cookies();
-
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+        const supa = await createSupabaseServerClient();
 
         const { data: { user }, error: authError } = await supa.auth.getUser();
         if (authError || !user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
@@ -48,16 +39,12 @@ export async function POST(req: Request, context: unknown) {
         const body = (await req.json()) as Body;
 
         // Собираем patch только из переданных полей
-        const patch: Record<string, unknown> = {};
+        const patch: Database['public']['Tables']['roles']['Update'] = {};
         if ('name' in body) {
             const v = norm(body.name);
-            if (v === null) {
-                // если пришла пустая строка — можно либо очистить, либо игнорировать;
-                // выберем «очистить», чтобы админ мог убрать название.
-                patch.name = null;
-            } else {
-                patch.name = v;
-            }
+            // roles.name is NOT NULL: an empty name is rejected instead of failing in the database.
+            if (v === null) return NextResponse.json({ok: false, error: 'Название обязательно'}, {status: 400});
+            patch.name = v;
         }
         if ('description' in body) {
             patch.description = norm(body.description); // null если пусто

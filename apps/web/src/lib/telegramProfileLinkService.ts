@@ -43,8 +43,8 @@ export async function transitionProfileLink(params: {
 }): Promise<ProfileLinkTransition> {
     const { data, error } = await getServiceClient().rpc('transition_telegram_profile_link', {
         p_hash: hashProfileLinkToken(params.token), p_action: params.action,
-        p_owner: params.ownerId ?? null, p_telegram: params.telegramId ?? null,
-        p_username: params.username ?? null, p_name: params.name ?? null,
+        p_owner: params.ownerId, p_telegram: params.telegramId,
+        p_username: params.username, p_name: params.name,
     });
     if (error) throw new Error('Telegram profile link transition failed');
     return data as ProfileLinkTransition;

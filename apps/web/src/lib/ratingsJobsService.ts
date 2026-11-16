@@ -1,5 +1,5 @@
 type AdminClientLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 export async function getRatingsJobs({

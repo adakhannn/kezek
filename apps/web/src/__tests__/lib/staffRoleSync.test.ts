@@ -112,7 +112,6 @@ describe('resolveStaffContext', () => {
             user_id: 'user-1',
             biz_id: 'biz-2',
             role_id: 'role-staff',
-            biz_key: 'biz-2',
         });
     });
 

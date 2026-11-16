@@ -20,7 +20,7 @@ export async function dispatchCreatedGuestBookingNotification(
         .eq('branch_id', command.branch_id)
         .eq('staff_id', command.staff_id)
         .eq('start_at', command.start_at)
-        .in('status', type === 'confirm' ? ['confirmed'] : ['hold', 'pending_hold'])
+        .in('status', type === 'confirm' ? ['confirmed'] : ['hold'])
         .is('client_id', null)
         .maybeSingle();
     if (error || !data) {

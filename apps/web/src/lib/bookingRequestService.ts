@@ -4,7 +4,7 @@ import { bookingCommandError, BookingSlotConflictError } from '@/lib/bookingSlot
 
 type BookingRpcResult = { data: unknown; error: { message: string; code?: string } | null };
 export type BookingRequestSupabasePort = {
-    rpc: (name: string, args: Record<string, unknown>) => {
+    rpc(name: string, args: Record<string, unknown>): {
         abortSignal: (signal: AbortSignal) => PromiseLike<BookingRpcResult>;
     };
 };

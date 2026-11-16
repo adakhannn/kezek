@@ -14,11 +14,11 @@ type CheckResourceLike = (
 ) => Promise<{ data?: StaffRecord | null; error?: unknown }>;
 
 type ServiceClientLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 type AdminClientLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 export async function runStaffRestore({

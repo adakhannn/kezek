@@ -55,7 +55,7 @@ export async function GET(request: Request) {
             .gt('blocked_until', new Date().toISOString())
             .is('released_at', null);
         if (blockError) return Response.json({ ok: false, message: blockError.message }, { status: 400 });
-        blocks = blockRows ?? [];
+        blocks = (blockRows ?? []).filter((b): b is typeof b & { subject_user_id: string } => b.subject_user_id !== null);
     }
 
     return Response.json({

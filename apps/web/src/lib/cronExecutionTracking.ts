@@ -15,7 +15,8 @@ export type CronExecutionStore = {
 export function createCronExecutionStore(): CronExecutionStore {
     const client = getServiceClient();
     const rpc = async (name: string, args: Record<string, unknown>) => {
-        const { error } = await client.rpc(name, args).abortSignal(AbortSignal.timeout(3000));
+        // Dynamic dispatch over two fixed tracking RPCs; argument shapes are checked by SQL.
+        const { error } = await client.rpc(name as never, args as never).abortSignal(AbortSignal.timeout(3000));
         if (error) throw new Error('CRON_TRACKING_UNAVAILABLE');
     };
     return {

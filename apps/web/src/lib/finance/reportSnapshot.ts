@@ -1,7 +1,7 @@
 import { isFinanceDate } from '@/lib/finance/calendar';
 import type { StaffFinanceStatsShiftItem } from '@/lib/finance/types';
 
-export type ReportClient = { rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }> };
+export type ReportClient = { rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message: string } | null }> };
 export type ReportStaff = {
     id: string; full_name: string | null; is_active: boolean; branch_id: string | null;
     hourly_rate: number | null; percent_master: number | null; percent_salon: number | null;

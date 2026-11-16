@@ -11,7 +11,7 @@ export type WhatsAppMobileMetricType =
     | 'mobile_whatsapp_login_expired';
 
 export type WhatsAppMobileMetricsAdminLike = {
-    from: (table: 'analytics_events') => {
+    from(table: 'analytics_events'): {
         insert: (payload: Record<string, unknown>) => PromiseLike<{
             error: { message?: string } | null;
         }>;

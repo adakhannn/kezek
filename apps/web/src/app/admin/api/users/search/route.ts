@@ -1,9 +1,9 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 /** простая защита от вредного запроса */
 function normQ(v: unknown): string {
@@ -12,13 +12,7 @@ function normQ(v: unknown): string {
 
 export async function GET(req: Request) {
     try {
-        const URL  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const cookieStore = await cookies();
-
-        const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
+        const supa = await createSupabaseServerClient();
 
         // доступ: только супер-админам
         const { data: { user } } = await supa.auth.getUser();

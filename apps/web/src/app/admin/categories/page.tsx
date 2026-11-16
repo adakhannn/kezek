@@ -1,6 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
 import { ArrowLeft, Building2, CheckCircle2, Pencil, Plus, Tag, TrendingUp } from 'lucide-react';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { getT } from '@/app/_components/i18n/server';
@@ -9,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,13 +21,8 @@ type CategoryUsageRow = {
 
 export default async function CategoriesPage() {
     const t = await getT();
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
 
-    const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supa = await createSupabaseServerClient();
 
     const {
         data: { user },

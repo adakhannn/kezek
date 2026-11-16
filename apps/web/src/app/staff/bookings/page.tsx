@@ -64,9 +64,10 @@ export default async function StaffBookingsPage() {
 
     const upcoming = upcomingResult.data ?? [];
     const past = pastResult.data ?? [];
-    const services = servicesResult.data ?? [];
-    const staff = staffResult.data ?? [];
-    const branches = branchesResult.data ?? [];
+    // Queries filter active rows; nullable columns are normalised for the client types.
+    const services = (servicesResult.data ?? []).map((s) => ({ ...s, active: s.active ?? true }));
+    const staff = (staffResult.data ?? []).map((s) => ({ ...s, is_active: s.is_active ?? true }));
+    const branches = (branchesResult.data ?? []).map((b) => ({ ...b, is_active: b.is_active ?? true }));
 
     return (
         <StaffBookingsView

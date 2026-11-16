@@ -14,8 +14,8 @@ export type BranchCreateBody = PublicContactFields & {
 export type BranchCreateAdminLike = {
   // Supabase's generated PostgREST types are intentionally not coupled to this
   // small service: the service is shared by admin and owner API clients.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  from: (table: string) => any;
+
+  from(table: string): any;
 };
 
 export type BranchCreateResult =

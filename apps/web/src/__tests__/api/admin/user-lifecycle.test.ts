@@ -47,7 +47,7 @@ test.each(['block', 'unblock', 'delete'])('performs %s and requires its durable 
     prepared(action); rpc.mockResolvedValueOnce({ data: true, error: null });
     const result = await (action === 'delete' ? remove(request(), context) : suspend(request(JSON.stringify({ block: action === 'block', reason: 'review' })), context));
     expect(result.status).toBe(200);
-    expect(rpc).toHaveBeenNthCalledWith(1, 'prepare_user_lifecycle', { p_actor_id: actor, p_user_id: target, p_action: action, p_reason: action === 'delete' ? null : 'review' });
+    expect(rpc).toHaveBeenNthCalledWith(1, 'prepare_user_lifecycle', { p_actor_id: actor, p_user_id: target, p_action: action, p_reason: action === 'delete' ? undefined : 'review' });
     expect(rpc).toHaveBeenNthCalledWith(2, 'read_user_lifecycle', { p_actor_id: actor, p_user_id: target, p_command_id: command });
     if (action === 'delete') expect(deleteUser).toHaveBeenCalledWith(target);
     else expect(updateUserById).toHaveBeenCalledWith(target, { ban_duration: action === 'block' ? '876000h' : 'none', app_metadata: { kezek_lifecycle_command: command } });

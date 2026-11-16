@@ -1,8 +1,8 @@
 import { logError } from '@/lib/log';
 
 type AdminClientLike = {
-    rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{ error?: { message: string } | null }>;
-    from: (table: string) => {
+    rpc(fn: string, params: Record<string, unknown>): PromiseLike<{ error?: { message: string } | null }>;
+    from(table: string): {
         insert: (payload: Record<string, unknown>) => PromiseLike<{ error?: { message: string } | null }>;
     };
 };

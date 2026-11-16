@@ -5,8 +5,8 @@ import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 type AdminLike = {
     // PostgREST builders differ for duplicate lookup and insert.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
 };
 
 type BusinessRegistrationApplicationRow = {

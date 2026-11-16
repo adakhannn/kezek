@@ -114,6 +114,11 @@ export function getSupabaseAnonKey(): string {
  * 
  * @throws Error если вызывается в клиентском коде (определяется через typeof window)
  */
+/** Whether the service-role key is configured (server only; never exposes the value). */
+export function isSupabaseServiceRoleConfigured(): boolean {
+    return typeof window === 'undefined' && !!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+}
+
 export function getSupabaseServiceRoleKey(): string {
     // Защита от использования в клиентском коде
     if (typeof window !== 'undefined') {

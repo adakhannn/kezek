@@ -2,24 +2,13 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
-import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function GET() {
-    const URL = getSupabaseUrl();
-    const ANON = getSupabaseAnonKey();
-    const cookieStore = await cookies();
 
-    const supa = createServerClient(URL, ANON, {
-        cookies: {
-            get: (n: string) => cookieStore.get(n)?.value, set: () => {
-            }, remove: () => {
-            }
-        },
-    });
+    const supa = await createSupabaseServerClient();
 
     const {data: {user}} = await supa.auth.getUser();
     if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});

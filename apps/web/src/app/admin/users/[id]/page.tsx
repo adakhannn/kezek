@@ -1,9 +1,5 @@
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-
 
 import { getT } from '@/app/_components/i18n/server';
 import { AdminEntityFlowTabs } from '@/app/admin/_components/AdminEntityFlowTabs';
@@ -13,6 +9,7 @@ import { UserSecurityActions } from '@/components/admin/users/UserSecurityAction
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { readPlatformAdminStates } from '@/lib/platformAdminState';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,14 +19,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
     const { id } = await params;
     const t = await getT();
 
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const cookieStore = await cookies();
-
-    const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supa = await createSupabaseServerClient();
 
     const { data: { user }, error: authError } = await supa.auth.getUser();
     if (authError || !user) return <div className="p-4">{t('admin.error.unauthorized', 'Unauthorized')}</div>;
@@ -39,7 +29,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
     if (superErr) return <div className="p-4">{t('admin.error.load', 'Load error')}: {superErr.message}</div>;
     if (!superRow) return <div className="p-4">{t('admin.noAccess.title', 'No access')}</div>;
 
-    const admin = createClient(URL, SERVICE);
+    const admin = createSupabaseAdminClient();
 
     const { data: got, error: eGet } = await admin.auth.admin.getUserById(id);
     if (eGet) return <div className="p-4">Load error: {eGet.message}</div>;

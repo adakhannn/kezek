@@ -4,18 +4,11 @@ export const dynamic = 'force-dynamic';
 
 import crypto from 'crypto';
 
-import {createServerClient} from '@supabase/ssr';
-import {
-    createClient,
-    type SupabaseClient,
-    type User,
-    type AuthError,
-} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
+import {type SupabaseClient, type User, type AuthError} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
-
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 // Админ-клиент без явных дженериков (избегаем TS2344/TS2589)
 type AdminClient = SupabaseClient;
@@ -123,28 +116,10 @@ export async function POST(req: Request, context: unknown) {
             ? (context as { params: Record<string, string> }).params
             : {};
     try {
-        // ---- ENV guard ----
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        if (!URL || !ANON || !SERVICE) {
-            return NextResponse.json(
-                {ok: false, error: 'ENV missing (URL/ANON/SERVICE)'},
-                {status: 500}
-            );
-        }
-
         const body = (await req.json()) as Body;
 
         // ---- Проверка прав: только super_admin ----
-        const cookieStore = await cookies();
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+        const supa = await createSupabaseServerClient();
 
         const {
             data: {user},
@@ -156,7 +131,7 @@ export async function POST(req: Request, context: unknown) {
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         // ---- Сервис-клиент после проверки ----
-        const admin: AdminClient = createClient(URL, SERVICE);
+        const admin: AdminClient = createSupabaseAdminClient();
 
         // 1) Создаём/находим пользователя
         const ownerId = await upsertOwnerUser(admin, body);

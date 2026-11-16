@@ -11,7 +11,7 @@ export type ServiceCreateBody = {
 };
 
 export type ServiceCreateAdminLike = {
-  from: (table: string) => {
+  from(table: string): {
     select?: (...args: unknown[]) => unknown;
     insert?: (...args: unknown[]) => unknown;
   };

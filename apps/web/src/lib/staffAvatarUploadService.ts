@@ -1,3 +1,4 @@
+import { isSupabaseServiceRoleConfigured } from '@/lib/env';
 import { logDebug, logError, logWarn } from '@/lib/log';
 
 type StaffAvatarUploadInput = {
@@ -89,7 +90,7 @@ export async function runStaffAvatarUpload({
             details: JSON.stringify(uploadError, null, 2),
         });
         logDebug('StaffAvatarUploadService', 'Using service role', {
-            isServiceRole: process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('eyJ'),
+            serviceRoleConfigured: isSupabaseServiceRoleConfigured(),
         });
         return {
             ok: false,

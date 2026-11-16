@@ -100,7 +100,10 @@ it('does not settle the route while its server identity lookup remains pending',
 it('provides only a read adapter to the supplied server cookie store', async () => {
     await ProfilePage();
     const options = (createServerClient as jest.Mock).mock.calls[0][2];
-    expect(Object.keys(options.cookies)).toEqual(['get']);
+    // Read-only adapter: no setAll, and set/remove (if present) never write.
+    expect(options.cookies).not.toHaveProperty('setAll');
+    expect(options.cookies.set?.('unit', 'value', {})).toBeUndefined();
+    expect(options.cookies.remove?.('unit', {})).toBeUndefined();
     readCookie.mockReturnValueOnce({ value: 'unit-synthetic-value' }).mockReturnValueOnce(undefined);
     expect(options.cookies.get('unit-existing')).toBe('unit-synthetic-value');
     expect(options.cookies.get('unit-missing')).toBeUndefined();

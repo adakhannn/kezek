@@ -1,5 +1,5 @@
 export type RatingsStatusAdminQueryLike = {
-  from: (table: string) => {
+  from(table: string): {
     select: (...args: unknown[]) => unknown;
   };
 };

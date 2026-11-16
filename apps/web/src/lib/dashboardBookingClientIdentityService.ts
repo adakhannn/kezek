@@ -4,7 +4,7 @@ type IdentityQuery = {
     in: (column: string, values: string[]) => PromiseLike<{ data: IdentityRow[] | null; error: unknown }>;
 };
 type IdentityTable = { select: (columns: string) => IdentityQuery };
-type QueryClient = { from: (table: string) => unknown };
+type QueryClient = { from(table: string): unknown };
 type LinkedBooking = { id: string; client_id: string | null; client_name: string | null };
 
 /** Resolve names only for bookings the manager can read in the current business. */

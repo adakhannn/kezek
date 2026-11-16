@@ -9,7 +9,7 @@ export type CronHealthRow = {
     oldest_running_at: string | null;
     running_count: number;
 };
-type HealthClient = { rpc: (name: string) => {
+type HealthClient = { rpc(name: string): {
     abortSignal: (signal: AbortSignal) => PromiseLike<{ data: unknown; error: unknown }>;
 } };
 export type CronHealthStatus = ReturnType<typeof evaluateCronHealth>[number];

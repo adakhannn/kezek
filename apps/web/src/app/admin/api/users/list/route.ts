@@ -1,17 +1,14 @@
-import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
-import { readPlatformAdminStates } from '@/lib/platformAdminState';
 // apps/web/src/app/admin/api/users/list/route.ts
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { readPlatformAdminStates } from '@/lib/platformAdminState';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { validateQuery } from '@/lib/validation/apiValidation';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const userListQuerySchema = z.object({
     q: z
@@ -53,15 +50,8 @@ export async function GET(req: Request) {
         }
         const { q, page, perPage, status } = queryValidation.data;
 
-        const SB_URL = getSupabaseUrl();
-        const SB_ANON = getSupabaseAnonKey();
-        const SB_SERVICE = getSupabaseServiceRoleKey();
-
         // 1) Проверка прав (текущий запрос выполняется от имени пользователя по anon-cookie)
-        const cookieStore = await cookies();
-        const supa = createServerClient(SB_URL, SB_ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
+        const supa = await createSupabaseServerClient();
 
         const { data: meData, error: authError } = await supa.auth.getUser();
         if (authError || !meData?.user) {
@@ -74,7 +64,7 @@ export async function GET(req: Request) {
         if (!superRow) return NextResponse.json({ ok: false, error: 'FORBIDDEN' } satisfies ListErr, { status: 403 });
 
         // 2) Админ-клиент (service role)
-        const admin = createClient(SB_URL, SB_SERVICE);
+        const admin = createSupabaseAdminClient();
 
         // Supabase Admin API не принимает offset/limit напрямую, но принимает "page" и "perPage"
         // поэтому считаем page/perPage как есть:

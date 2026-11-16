@@ -39,7 +39,7 @@ export async function scheduleHttp(request: Request, staffId?: string) {
                 const kind = params.get('draftKind'), date = params.get('draftDate') || '';
                 if (!['week', 'day'].includes(kind || '') || !validDate(date)) throw new Error('SCHEDULE_INVALID');
                 const { data, error } = await getServiceClient().rpc('read_staff_schedule_draft', {
-                    p_staff: selectedStaff, p_biz: context.bizId, p_kind: kind, p_day: date,
+                    p_staff: selectedStaff, p_biz: context.bizId, p_kind: kind as string, p_day: date,
                 });
                 if (error) throw error;
                 return createSuccessResponse(data);
@@ -63,7 +63,8 @@ export async function scheduleHttp(request: Request, staffId?: string) {
                 p_expected_revision: reset.expectedRevision, p_day: reset.from,
             });
             if (error) throw error;
-            if (!data?.ok) return createErrorResponse('conflict', 'Обычный график конфликтует с записями клиентов.', data?.conflicts, 409);
+            const resetResult = data as { ok?: boolean; conflicts?: unknown } | null;
+            if (!resetResult?.ok) return createErrorResponse('conflict', 'Обычный график конфликтует с записями клиентов.', resetResult?.conflicts, 409);
             return createSuccessResponse(data);
         }
         validatePublishSchedule(body);
@@ -73,7 +74,8 @@ export async function scheduleHttp(request: Request, staffId?: string) {
             p_branch: body.branchId, p_days: body.days,
         });
         if (error) throw error;
-        if (!data?.ok) return createErrorResponse('conflict', 'Изменение затрагивает записи клиентов. Сначала перенесите или отмените конфликтующие записи.', data?.conflicts, 409);
+        const publishResult = data as { ok?: boolean; conflicts?: unknown } | null;
+        if (!publishResult?.ok) return createErrorResponse('conflict', 'Изменение затрагивает записи клиентов. Сначала перенесите или отмените конфликтующие записи.', publishResult?.conflicts, 409);
         return createSuccessResponse(data);
     } catch (error) {
         const message = error instanceof Error ? error.message : (error as { message?: string })?.message || '';

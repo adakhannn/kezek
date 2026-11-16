@@ -2,13 +2,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {createClient} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { full_name?: string | null; email?: string | null; phone?: string | null };
 type BizOwnerRow = { owner_id: string | null };
@@ -27,26 +25,16 @@ export async function POST(req: Request, context: unknown) {
     try {
         const bizId = await getRouteParamRequired(context, 'id');
         
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const cookieStore = await cookies();
 
         // проверка прав
-        const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
-        });
+        const supa = await createSupabaseServerClient();
         const {data: {user}} = await supa.auth.getUser();
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
         const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
         if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
-        const admin = createClient(URL, SERVICE);
+        const admin = createSupabaseAdminClient();
         const body = (await req.json()) as Body;
 
         // узнаём owner_id (без .returns<> / дженериков)

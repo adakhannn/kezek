@@ -3,7 +3,7 @@ type UserLike = {
 };
 
 type PackagesAdminLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 type VisitPackageRow = {

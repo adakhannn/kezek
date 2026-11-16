@@ -1,10 +1,8 @@
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
 
 import BookingLayoutClient from './BookingLayoutClient';
 import NotFoundMessage from './NotFoundMessage';
 
-
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export default async function BookingPage({
                                               params,
@@ -13,20 +11,7 @@ export default async function BookingPage({
 }) {
     const {id} = await params;
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(url, anon, {
-        cookies: {
-            get: (n: string) => cookieStore.get(n)?.value,
-            // no-op’ы нужны, чтобы supabase/ssr не падал в RSC
-            set: () => {
-            },
-            remove: () => {
-            },
-        },
-    });
+    const supabase = await createSupabaseServerClient();
 
     // Пытаемся читать по RLS (клиент своей брони, сотрудник бизнеса, или супер-админ)
     const {data} = await supabase
@@ -90,18 +75,13 @@ export default async function BookingPage({
                 masterName={master?.full_name ?? '—'}
                 startAt={new Date(data.start_at)}
                 status={data.status}
-                promotionApplied={data.promotion_applied}
+                promotionApplied={data.promotion_applied as Record<string, unknown> | null}
             />
     );
 }
 
 async function FallbackBooking({ id }: { id: string }) {
-    const url  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-    const supabase = createServerClient(url, anon, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supabase = await createSupabaseServerClient();
 
     const { data, error } = await supabase.rpc('booking_receipt_public', { p_id: id });
     if (error || !data || data.length === 0) {
@@ -119,17 +99,16 @@ async function FallbackBooking({ id }: { id: string }) {
         .select('promotion_applied')
         .eq('id', id)
         .maybeSingle();
-    
+
     return (
             <BookingLayoutClient
                 id={String(row.id)}
-                services={Array.isArray(row.services) ? row.services : null}
+                services={Array.isArray(row.services) ? (row.services as Array<{ name_ru: string; name_ky: string | null; name_en: string | null; duration_min: number | null }>) : null}
                 masterName={row.staff_name}
                 startAt={new Date(row.start_at)}
                 status={row.status}
-                promotionApplied={bookingData?.promotion_applied || null}
+                promotionApplied={(bookingData?.promotion_applied as Record<string, unknown> | null | undefined) || null}
             />
     );
 }
-
 

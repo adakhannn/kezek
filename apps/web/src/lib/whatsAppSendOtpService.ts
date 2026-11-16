@@ -11,7 +11,7 @@ export type WhatsAppSendOtpSupabaseLike = {
       data: { user: { id: string } | null };
     }>;
   };
-  from: (table: string) => {
+  from(table: string): {
     select: (...args: unknown[]) => {
       eq: (...args: unknown[]) => {
         maybeSingle: <T>() => Promise<{

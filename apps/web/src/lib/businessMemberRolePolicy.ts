@@ -58,10 +58,10 @@ export async function resolveBusinessMemberActor(
     const { data: isSuper } = await userClient.rpc('is_super_admin');
     if (isSuper === true) return 'super_admin';
 
-    const { data: isOwner } = await userClient.rpc('has_role', { p_role: 'owner', p_biz_id: bizId });
+    const { data: isOwner } = await userClient.rpc('has_role', { p_role_key: 'owner', p_biz_id: bizId });
     if (isOwner === true) return 'owner';
 
-    const { data: isAdmin } = await userClient.rpc('has_role', { p_role: 'admin', p_biz_id: bizId });
+    const { data: isAdmin } = await userClient.rpc('has_role', { p_role_key: 'admin', p_biz_id: bizId });
     if (isAdmin === true) return 'admin';
 
     return null;

@@ -57,6 +57,22 @@ P0 — блокер доступа/изоляции до широкого исп
 - **ENG-31, исправление до выката:** цикл restrictive-политик в [user_lifecycle](../supabase/migrations/20261111090000_user_lifecycle.sql) задевал служебную `storage.migrations` (владелец `supabase_storage_admin`) и падал на реальном стеке Supabase; теперь в `storage` он охватывает только `objects` и `buckets`. Изолированный SQL-сьют ENG-31 проходит.
 - Все 16 изолированных SQL-сьютов, включая [сьют пакета 16 ноября](../scripts/test-identity-surface-hardening-isolated.cjs), проходят локально.
 
+### Типизация клиентов 16 ноября
+
+Фабрики клиентов web создают `SupabaseClient<Database>` (обновлены `@supabase/supabase-js` 2.119 и `@supabase/ssr` 0.12; старый интерфейс cookies поддерживается). Типы вскрыли расхождения кода со схемой:
+
+- **ENG-38 / P1, LOCAL_FIXED:** `staffRoleSync`, `staffSyncRolesService` и `staffUpdateService` вставляли `biz_key` в `user_roles`, а это `GENERATED ALWAYS` колонка; Postgres отклоняет такую вставку, поэтому автоматическая выдача роли `staff` сотруднику не срабатывала (ошибка только логировалась). Вставка больше не передаёт `biz_key`.
+- Мёртвый `guestBookingNotificationDispatch` фильтровал по несуществующему статусу `pending_hold`.
+- Необязательные параметры RPC передаются как `undefined` вместо `null` только там, где дефолт параметра `NULL` (поведение не меняется).
+
+### Admin API и service role 16 ноября (группа 4)
+
+- **Поправка к ENG-32:** все вызовы `has_role` в members-роутах и страницах передавали несуществующий параметр `p_role` (у функции — `p_role_key`), PostgREST отвечал ошибкой, а код читал только `data`. Поэтому проверка «owner/admin бизнеса» всегда была ложной: эскалация через эти роуты на проде **не эксплуатировалась**, а владельцы и админы бизнеса не могли управлять участниками вовсе. Вызовы исправлены; доступ owner/admin теперь работает в пределах [иерархии ролей](../apps/web/src/lib/businessMemberRolePolicy.ts).
+- **ENG-39 / P1, LOCAL_FIXED:** `/admin/api/roles/add` и `/admin/api/roles/set-many` писали в несуществующую колонку `user_roles.role` и потому всегда падали; `set-many` при этом сначала удалял все роли пользователя в бизнесе. Вызывающих в UI нет — оба роута удалены.
+- `/admin/api/roles/[id]/update` больше не пытается записать `NULL` в `roles.name` (NOT NULL) — пустое имя отклоняется 400.
+- Ручное создание клиентов (39 admin-роутов и страниц, `process.env.SUPABASE_SERVICE_ROLE_KEY` в 17 файлах) заменено фабриками `createSupabaseServerClient()` / `createSupabaseAdminClient()`; ключ service role теперь читает только `lib/env.ts`. ESLint запрещает прямое чтение ключа (`kezek/no-service-role-env`) и импорт `@supabase/ssr` / `createClient` в `src/app/**`.
+- Не сделано: перевод проверок `is_super_admin` в admin-роутах на общий guard `requireCurrentSuperAdmin()` (проверки корректны, но оформлены по-разному) и единый формат ошибок `createErrorResponse`.
+
 ## Исходные условия находок
 
 Ниже сохранены первоначальные наблюдения 30 октября / 1 ноября; их OPEN и формулировки описывают исходное состояние. Для текущего состояния приоритет имеет таблица выше. У фактической таблицы bookings подтверждено exclusion-ограничение no_overlap: отсутствие защиты от пересечений не установлено. Изменения исходной схемы, чужие данные или состоявшаяся атака локальными проверками не утверждаются.

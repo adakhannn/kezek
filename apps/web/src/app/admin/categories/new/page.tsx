@@ -1,21 +1,15 @@
-import { createServerClient } from '@supabase/ssr';
 import { ArrowLeft, FolderPlus } from 'lucide-react';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { CategoryForm } from '@/components/admin/categories/CategoryForm';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CategoryNewPage({ searchParams }: { searchParams: Promise<{ name?: string }> }) {
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
 
-    const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supa = await createSupabaseServerClient();
 
     const { data: { user } } = await supa.auth.getUser();
     if (!user) return <div className="p-4">Не авторизован</div>;

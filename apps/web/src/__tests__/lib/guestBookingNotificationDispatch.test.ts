@@ -17,7 +17,7 @@ test.each(['confirm', 'hold'] as const)('guest %s enqueue is constrained by the 
     await dispatchCreatedGuestBookingNotification('booking', type, command);
     for (const [column, value] of [['id', 'booking'], ['biz_id', 'biz'], ['branch_id', 'branch'], ['staff_id', 'staff'], ['start_at', command.start_at]]) expect(query.eq).toHaveBeenCalledWith(column, value);
     expect(query.is).toHaveBeenCalledWith('client_id', null);
-    expect(query.in).toHaveBeenCalledWith('status', type === 'confirm' ? ['confirmed'] : ['hold', 'pending_hold']);
+    expect(query.in).toHaveBeenCalledWith('status', type === 'confirm' ? ['confirmed'] : ['hold']);
     expect(enqueueStoredBookingNotification).toHaveBeenCalledWith(admin, 'booking', type);
 });
 test.each([{ data: null, error: null }, { data: null, error: { message: 'failed' } }])('missing/invalid ownership or state cannot enqueue', async result => {

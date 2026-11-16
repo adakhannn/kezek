@@ -9,11 +9,11 @@ type StaffRecord = {
 };
 
 export type StaffDeleteAdminClientLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 export type StaffDeleteRoleClientLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 type StaffDeleteResult =

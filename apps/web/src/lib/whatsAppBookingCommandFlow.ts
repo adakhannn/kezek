@@ -19,7 +19,7 @@ type CommandBookingRow = {
 
 export type BookingCommandDeps = {
     supabase: {
-        from: (table: string) => {
+        from(table: string): {
             select: (columns: string) => {
                 eq: (column: string, value: string) => {
                     maybeSingle: () => PromiseLike<{ data: CommandBookingRow | null }>;

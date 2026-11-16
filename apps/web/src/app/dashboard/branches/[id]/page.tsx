@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 
-
 // Временно скрыто
 // import BranchAdminsPanel from "@/app/dashboard/branches/[id]/BranchAdminsPanel";
 import BranchErrorDisplay from './BranchErrorDisplay';
@@ -8,8 +7,6 @@ import EditBranchPageClient from './EditBranchPageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
-
-
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -84,7 +81,7 @@ export default async function EditBranchPage({
 
     return (
         <EditBranchPageClient 
-            branch={branch} 
+            branch={{ ...branch, is_active: branch.is_active ?? false }}
             isSuperAdmin={isSuperAdmin}
             initialSchedule={initialSchedule}
             bizId={String(bizId)}

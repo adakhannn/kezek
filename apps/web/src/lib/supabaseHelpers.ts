@@ -15,6 +15,8 @@ import {
     getSupabaseServiceRoleKey 
 } from './env';
 
+import type { Database } from '@/types/supabase';
+
 /**
  * Создает Supabase клиент для серверных компонентов (с cookies)
  * Используется для операций с RLS политиками
@@ -24,7 +26,7 @@ export async function createSupabaseServerClient() {
     const url = getSupabaseUrl();
     const anon = getSupabaseAnonKey();
 
-    return createServerClient(url, anon, {
+    return createServerClient<Database>(url, anon, {
         cookies: {
             get: (n: string) => cookieStore.get(n)?.value,
             set: () => {},
@@ -41,7 +43,7 @@ export function createSupabaseAdminClient() {
     const url = getSupabaseUrl();
     const service = getSupabaseServiceRoleKey();
 
-    return createClient(url, service, {
+    return createClient<Database>(url, service, {
         auth: { persistSession: false },
     });
 }
@@ -54,7 +56,7 @@ export function createSupabaseAnonClient() {
     const url = getSupabaseUrl();
     const anon = getSupabaseAnonKey();
 
-    return createClient(url, anon, {
+    return createClient<Database>(url, anon, {
         auth: {
             persistSession: false,
             autoRefreshToken: false,

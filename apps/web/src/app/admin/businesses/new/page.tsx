@@ -1,14 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
 
 import { ManualBusinessCreateForm, type ManualBusinessCategory } from './ManualBusinessCreateForm';
+
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ManualBusinessCreatePage() {
-    const admin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
+    const admin = createSupabaseAdminClient();
 
     const { data, error } = await admin
         .from('categories')

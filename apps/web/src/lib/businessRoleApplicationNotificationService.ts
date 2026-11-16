@@ -18,8 +18,8 @@ type Recipient = {
 
 type AdminClient = {
     // Supabase generated types are not stable in this repository yet.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
     auth: {
         admin: {
             getUserById: (userId: string) => Promise<{ data: { user: { email?: string | null } | null }; error: unknown }>;

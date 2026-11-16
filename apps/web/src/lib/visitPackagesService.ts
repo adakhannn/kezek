@@ -36,7 +36,7 @@ type VisitPackagePlanSaleRow = {
 };
 
 export type VisitPackagesAdminLike = {
-  from: (table: string) => {
+  from(table: string): {
     select?: (...args: unknown[]) => unknown;
     insert?: (...args: unknown[]) => unknown;
   };

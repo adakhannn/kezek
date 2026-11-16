@@ -59,8 +59,8 @@ describe('businessMemberRolePolicy', () => {
 
     describe('resolveBusinessMemberActor', () => {
         function clientWith(results: Record<string, boolean>) {
-            const rpc = jest.fn(async (fn: string, args?: { p_role?: string }) => {
-                const key = fn === 'has_role' ? `has_role:${args?.p_role}` : fn;
+            const rpc = jest.fn(async (fn: string, args?: { p_role_key?: string }) => {
+                const key = fn === 'has_role' ? `has_role:${args?.p_role_key}` : fn;
                 return { data: results[key] ?? false, error: null };
             });
             return { rpc } as unknown as Parameters<typeof resolveBusinessMemberActor>[0];

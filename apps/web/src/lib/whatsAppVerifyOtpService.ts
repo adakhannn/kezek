@@ -12,8 +12,8 @@ type UserLike = {
 
 export type SupabaseServerClientLike = {
     // Supabase query builders vary by operation in this small service boundary.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
     auth: {
         getUser: () => Promise<{ data: { user: UserLike | null } }>;
     };
@@ -21,8 +21,8 @@ export type SupabaseServerClientLike = {
 
 /** Writes verified identity columns; must be a privileged (service-role) client. */
 export type ProfileIdentityWriter = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from: (table: string) => any;
+
+    from(table: string): any;
 };
 
 type VerifyExistingOtpInput = {

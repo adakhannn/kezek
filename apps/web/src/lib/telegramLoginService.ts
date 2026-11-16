@@ -27,7 +27,7 @@ type QueryChain<T> = PromiseLike<QueryResult<T>> & {
 };
 
 export type TelegramLoginAdminClientLike = {
-    from: <T = unknown>(table: string) => QueryChain<T>;
+    from<T = unknown>(table: string): QueryChain<T>;
     auth: {
         admin: {
             createUser: (payload: unknown) => Promise<{ data?: { user?: { id: string } }; error?: { message?: string } | null }>;

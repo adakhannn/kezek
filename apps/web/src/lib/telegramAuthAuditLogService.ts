@@ -22,7 +22,7 @@ export type TelegramAuthAuditEvent = {
 };
 
 type TelegramAuthAuditAdminLike = {
-    from: (table: 'telegram_auth_audit_log') => {
+    from(table: 'telegram_auth_audit_log'): {
         insert: (payload: Record<string, unknown>) => PromiseLike<{
             error: { message?: string } | null;
         }>;

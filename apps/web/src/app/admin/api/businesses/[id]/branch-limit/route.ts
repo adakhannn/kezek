@@ -1,19 +1,14 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function POST(request: Request, context: unknown) {
     const businessId = await getRouteParamRequired(context, 'id');
-    const cookieStore = await cookies();
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-        cookies: { get: (name: string) => cookieStore.get(name)?.value, set: () => {}, remove: () => {} },
-    });
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
     const { data: isSuper } = await supabase.rpc('is_super_admin');
@@ -25,7 +20,7 @@ export async function POST(request: Request, context: unknown) {
         return NextResponse.json({ ok: false, error: 'Лимит должен быть целым числом от 1 до 1000' }, { status: 400 });
     }
 
-    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const admin = createSupabaseAdminClient();
     const { count, error: countError } = await admin.from('branches').select('id', { count: 'exact', head: true }).eq('biz_id', businessId);
     if (countError) return NextResponse.json({ ok: false, error: countError.message }, { status: 400 });
     if (Number(branchLimit) < (count ?? 0)) {

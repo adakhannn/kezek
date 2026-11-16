@@ -47,7 +47,7 @@ export async function GET(req: Request) {
         const { data, error } = await serviceClient.rpc('get_api_metrics_stats', {
             p_endpoint: effectiveEndpoint,
             p_window_minutes: effectiveWindowMinutes,
-            p_method: method || null,
+            p_method: method || undefined,
         });
 
         if (error) {

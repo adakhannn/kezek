@@ -1,22 +1,14 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { AdminNav } from './_components/AdminNav';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
-import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
-
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    const url  = getSupabaseUrl();
-    const anon = getSupabaseAnonKey();
-    const cookieStore = await cookies();
 
-    const supabase = createServerClient(url, anon, {
-        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supabase = await createSupabaseServerClient();
 
     // 1) авторизация
     const { data: { user }, error: authError } = await supabase.auth.getUser();

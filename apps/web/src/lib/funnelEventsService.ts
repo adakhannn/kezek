@@ -31,7 +31,7 @@ export const funnelEventSchema = z.object({
 export type FunnelEventInput = z.infer<typeof funnelEventSchema>;
 
 export type FunnelEventsAdminLike = {
-    from: (table: 'funnel_events') => {
+    from(table: 'funnel_events'): {
         insert: (payload: Record<string, unknown>) => PromiseLike<{
             error: { message: string } | null;
         }>;

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { isSupabaseServiceRoleConfigured } from '@/lib/env';
 import { logWarn } from '@/lib/log';
 import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { getRateLimitIdentifier } from '@/lib/rateLimit';
@@ -79,7 +80,7 @@ export async function runWhatsAppMobileStartHttp(req: Request): Promise<NextResp
         }
     }
 
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!isSupabaseServiceRoleConfigured()) {
         logWarn('WhatsAppMobileStart', 'WhatsApp auth start unavailable because service role key is not configured');
         return createErrorResponse(
             'service_unavailable',

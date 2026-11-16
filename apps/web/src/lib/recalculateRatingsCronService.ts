@@ -12,7 +12,7 @@ type AlertPayload = {
 
 export type RecalculateRatingsSupabaseLike = {
     from: SupabaseClient['from'];
-    rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: { message?: string; code?: string } | null }>;
+    rpc(fn: string, params: Record<string, unknown>): Promise<{ data: unknown; error: { message?: string; code?: string } | null }>;
 };
 
 type MeasurePerformance = <T>(

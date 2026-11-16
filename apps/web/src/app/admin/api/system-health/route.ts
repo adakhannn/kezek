@@ -67,7 +67,7 @@ type SystemHealthResponse = {
  * Агрегированная панель здоровья системы
  * Объединяет статус cron-задач, API-метрики, ошибки UI и состояние интеграций
  */
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
     return withErrorHandler('SystemHealth', async () => {
         const supabase = await createSupabaseServerClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -150,13 +150,12 @@ export async function GET(req: Request) {
             const { data, error: metricsError } = await admin.rpc('get_api_metrics_stats', {
                 p_endpoint: '/api/staff/finance', // Используем популярный endpoint как пример
                 p_window_minutes: 60,
-                p_method: null,
             });
 
             if (metricsError) {
                 logError('SystemHealth', 'Error fetching API metrics', metricsError);
             } else {
-                apiMetricsData = data;
+                apiMetricsData = data as unknown as typeof apiMetricsData;
             }
         } catch (e) {
             logError('SystemHealth', 'Exception fetching API metrics', e);
@@ -229,7 +228,6 @@ export async function GET(req: Request) {
             .gte('created_at', oneHourAgo.toISOString());
 
         const totalRequests = allMetrics?.length || 0;
-        const successCount = allMetrics?.filter(m => m.status_code >= 200 && m.status_code < 300).length || 0;
         const errorCount = allMetrics?.filter(m => m.status_code >= 400).length || 0;
         const errorRate = totalRequests > 0 ? (errorCount / totalRequests) * 100 : 0;
         

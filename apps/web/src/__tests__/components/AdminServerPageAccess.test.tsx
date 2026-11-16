@@ -13,6 +13,14 @@ import RoleEditPage from '@/app/admin/roles/[id]/page';
 import NewRolePage from '@/app/admin/roles/new/page';
 import RatingConfigPage from '@/app/admin/rating-config/page';
 
+// Server pages run under jsdom here; the real runtime has no window, so the
+// browser guard in env getters is bypassed for these server-component tests.
+jest.mock('@/lib/env', () => ({
+    ...jest.requireActual('@/lib/env'),
+    getSupabaseServiceRoleKey: () => 'test-service-key',
+    isSupabaseServiceRoleConfigured: () => true,
+}));
+
 jest.mock('@supabase/ssr', () => ({ createServerClient: jest.fn() }));
 jest.mock('@supabase/supabase-js', () => ({ createClient: jest.fn() }));
 jest.mock('next/headers', () => ({
@@ -69,10 +77,10 @@ beforeEach(() => {
     ownerRole = result(false);
     adminRole = result(false);
     getUser.mockResolvedValue({ data: { user: { id: 'verified-global-only-admin' } }, error: null });
-    rpc.mockImplementation(async (name: string, args?: { p_role: string; p_biz_id: string }) => {
+    rpc.mockImplementation(async (name: string, args?: { p_role_key: string; p_biz_id: string }) => {
         if (name === 'is_super_admin') return superRole;
         if (name === 'categories_with_usage_v2') return result([]);
-        if (name === 'has_role' && args?.p_biz_id === bizId) return args.p_role === 'owner' ? ownerRole : adminRole;
+        if (name === 'has_role' && args?.p_biz_id === bizId) return args.p_role_key === 'owner' ? ownerRole : adminRole;
         throw new Error(`Unexpected RPC: ${name}`);
     });
     sessionFrom.mockImplementation(query);
@@ -144,7 +152,7 @@ describe.each([
         await visit(run);
         expect(screen.getByTestId(marker)).toBeTruthy();
         if (marker === 'members') expect(screen.getByTestId(marker).textContent).toBe('manage');
-        expect(rpc).toHaveBeenCalledWith('has_role', { p_role: role, p_biz_id: bizId });
+        expect(rpc).toHaveBeenCalledWith('has_role', { p_role_key: role, p_biz_id: bizId });
     });
     test.each([
         ['owner error', result(true, new Error('DB unavailable')), result(true)],

@@ -74,8 +74,8 @@ export function mapApplicationPolicyError(error: DatabaseErrorLike | null | unde
 type PolicyRpcClient = {
     // Supabase RPC builders are typed as PromiseLike filter builders and vary
     // with generated database types.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rpc: (name: string, args: Record<string, unknown>) => any;
+
+    rpc(name: string, args: Record<string, unknown>): any;
 };
 
 export async function rejectApplicationWithPolicy(params: {

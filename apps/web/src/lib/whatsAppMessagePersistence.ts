@@ -14,7 +14,7 @@ type WhatsAppMessageRecord = {
 };
 
 export type PersistenceClient = {
-    from: (table: string) => {
+    from(table: string): {
         select: (columns: string) => {
             eq: (column: string, value: string) => {
                 maybeSingle: () => PromiseLike<{ data: { id: string; whatsapp_message_id?: string } | null }>;

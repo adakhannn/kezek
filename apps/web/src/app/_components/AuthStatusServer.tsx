@@ -1,7 +1,5 @@
-import { createServerClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { unstable_noStore as noStore } from 'next/cache';
-import { cookies } from 'next/headers';
 
 import { PersonalCabinetButton } from './PersonalCabinetButton';
 import { SignInButton } from './SignInButton';
@@ -10,29 +8,18 @@ import { StaffCabinetButton } from './StaffCabinetButton';
 import { getT } from './i18n/server';
 
 import { getUserRoleProfile, resolveDefaultDashboard } from '@/lib/authContext';
-import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { logWarn } from '@/lib/log';
 import { isAuthSessionMissingError } from '@/lib/supabaseAuthRecovery';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function AuthStatusServer() {
     noStore();
 
-    const cookieStore = await cookies();
-    let supabase: ReturnType<typeof createServerClient>;
+    let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
     try {
-        supabase = createServerClient(
-            getSupabaseUrl(),
-            getSupabaseAnonKey(),
-            {
-                cookies: {
-                    get(name: string) {
-                        return cookieStore.get(name)?.value;
-                    },
-                },
-            }
-        );
+        supabase = await createSupabaseServerClient();
     } catch (error) {
         logWarn('AuthStatusServer', 'Supabase runtime configuration is invalid', error);
         return (

@@ -2,11 +2,11 @@ type ManagerSupabaseLike = {
     auth: {
         getUser: () => Promise<{ data: { user: { id: string } | null } }>;
     };
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 type AdminLike = {
-    from: (table: string) => any;
+    from(table: string): any;
 };
 
 export async function runStaffSyncRoles({
@@ -113,7 +113,7 @@ export async function runStaffSyncRoles({
                 user_id: staff.user_id,
                 biz_id: bizId,
                 role_id: roleStaff.id,
-                biz_key: bizId,
+                // biz_key is GENERATED ALWAYS; the database computes it.
             });
 
             if (error) {

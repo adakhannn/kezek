@@ -1,19 +1,10 @@
 // POST JSON: { user_id: string, biz_id?: string|null, role: string }
-import {createServerClient} from "@supabase/ssr";
-import {cookies} from "next/headers";
 import {NextResponse} from "next/server";
 
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+
 export async function POST(req: Request) {
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-    const supa = createServerClient(URL, ANON, {
-        cookies: {
-            get: (n: string) => cookieStore.get(n)?.value, set: () => {
-            }, remove: () => {
-            }
-        },
-    });
+    const supa = await createSupabaseServerClient();
 
     const {data: {user}} = await supa.auth.getUser();
     if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});

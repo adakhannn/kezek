@@ -1,6 +1,3 @@
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -15,6 +12,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,18 +46,8 @@ export default async function BusinessDetailPage({ params }: { params: Promise<R
     const { id } = await params;
     const locale = await getServerLocale();
     const t = getT(locale);
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const cookieStore = await cookies();
 
-    const supabase = createServerClient(url, anonKey, {
-        cookies: {
-            get: (name: string) => cookieStore.get(name)?.value,
-            set: () => {},
-            remove: () => {},
-        },
-    });
+    const supabase = await createSupabaseServerClient();
 
     const {
         data: { user },
@@ -72,7 +60,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<R
     if (roleError) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {roleError.message}</div>;
     if (!isSuperAdmin) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа')}</div>;
 
-    const admin = createClient(url, serviceRoleKey);
+    const admin = createSupabaseAdminClient();
     const { data: business, error: businessError } = await admin
         .from('businesses')
         .select('id,name,slug,categories,owner_id,is_approved,created_at,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,branch_limit')

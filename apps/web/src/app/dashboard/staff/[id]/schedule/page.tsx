@@ -55,7 +55,7 @@ export default async function StaffSchedulePage({
         );
     }
 
-    const activeBranches: Branch[] = (branches ?? []).filter((b) => b.is_active);
+    const activeBranches: Branch[] = (branches ?? []).filter((b): b is Branch => b.is_active === true);
 
     return (
         <main className="mx-auto max-w-6xl px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">

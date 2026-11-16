@@ -1,5 +1,4 @@
 // apps/web/src/app/admin/users/page.tsx
-import {createServerClient} from '@supabase/ssr';
 import {cookies, headers} from 'next/headers';
 import Link from 'next/link';
 import {redirect} from 'next/navigation';
@@ -12,6 +11,7 @@ import { getT } from '@/app/_components/i18n/server';
 import {Button} from '@/components/ui/Button';
 import { collectAdminUserStats, type AdminUserStats } from '@/lib/adminUserStats';
 import { logWarn } from '@/lib/log';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,17 +91,8 @@ export default async function UsersListPage(
 ) {
     const sp = await searchParams;
     const t = await getT();
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
 
-    const supa = createServerClient(url, anon, {
-        cookies: {
-            get: (n: string) => cookieStore.get(n)?.value, set: () => {
-            }, remove: () => {
-            }
-        },
-    });
+    const supa = await createSupabaseServerClient();
 
     const {data: {user}} = await supa.auth.getUser();
     if (!user) redirect('/auth/sign-in?redirect=/admin/users');

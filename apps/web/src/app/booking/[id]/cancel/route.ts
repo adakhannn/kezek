@@ -1,10 +1,9 @@
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import { bookingCancellationError } from '@/lib/bookingCancellationError';
 import {logError} from '@/lib/log';
 import { runServerCancelBooking } from '@/lib/serverCancelBookingService';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function POST(
     req: Request,
@@ -12,20 +11,7 @@ export async function POST(
 ) {
     const {id} = await params; // ← обязательно await
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(url, anon, {
-        cookies: {
-            get: (n: string) => cookieStore.get(n)?.value,
-            // no-op для RSC/route handlers
-            set: () => {
-            },
-            remove: () => {
-            },
-        },
-    });
+    const supabase = await createSupabaseServerClient();
 
     // Проверяем текущий статус брони
     const {data: booking} = await supabase

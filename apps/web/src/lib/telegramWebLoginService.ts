@@ -29,9 +29,9 @@ export async function readWebLogin(token: string, browser: string) {
 }
 export async function transitionWebLogin(token: string, action: string, browser?: string, telegramId?: number, name?: string): Promise<{ error?: string; status?: string; user_id?: string }> {
     const { data, error } = await getServiceClient().rpc('transition_telegram_web_login', {
-        p_hash: webLoginHash(token), p_action: action, p_browser: browser ? webLoginHash(browser) : null,
-        p_telegram: telegramId ?? null, p_name: name ?? null,
+        p_hash: webLoginHash(token), p_action: action, p_browser: browser ? webLoginHash(browser) : undefined,
+        p_telegram: telegramId, p_name: name,
     });
     if (error) throw new Error('Login transition unavailable');
-    return data;
+    return data as { error?: string; status?: string; user_id?: string };
 }
