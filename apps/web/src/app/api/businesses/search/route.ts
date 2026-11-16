@@ -1,18 +1,23 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
-
-function normalizeQuery(value: string | null) {
-    return (value ?? '').trim().slice(0, 80);
-}
+import { businessSearchFilter, normalizeBusinessSearchQuery } from '@/lib/businessSearch';
+import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { createSupabaseAnonClient } from '@/lib/supabaseHelpers';
 
 export async function GET(request: Request) {
-    const url = new URL(request.url);
-    const q = normalizeQuery(url.searchParams.get('q'));
-    const admin = createSupabaseAdminClient();
+    // Typeahead with a 250 ms debounce: the `normal` budget, not the strict public one.
+    return withRateLimit(request, RateLimitConfigs.normal, () => search(request), '/api/businesses/search');
+}
 
-    let query = admin
+async function search(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const q = normalizeBusinessSearchQuery(url.searchParams.get('q'));
+    // Approved businesses are public: the anon client and RLS are enough.
+    const supabase = createSupabaseAnonClient();
+
+    let query = supabase
         .from('businesses')
         .select('id,name,slug')
         .eq('is_approved', true)
@@ -20,12 +25,13 @@ export async function GET(request: Request) {
         .limit(25);
 
     if (q) {
-        query = query.or(`name.ilike.%${q}%,slug.ilike.%${q}%`);
+        query = query.or(businessSearchFilter(q));
     }
 
     const { data, error } = await query;
     if (error) {
-        return Response.json({ ok: false, message: error.message }, { status: 400 });
+        logError('BusinessSearch', 'Search query failed', error);
+        return Response.json({ ok: false, message: 'Не удалось загрузить бизнесы' }, { status: 500 });
     }
 
     return Response.json({

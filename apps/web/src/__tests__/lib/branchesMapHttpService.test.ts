@@ -31,7 +31,6 @@ describe('branchesMapHttpService', () => {
             supabase: expect.any(Object),
             cityId: 'city-1',
             categoryId: 'spa',
-            onlyActive: false,
         });
         expect(response.status).toBe(200);
         expect(body.data).toHaveLength(1);

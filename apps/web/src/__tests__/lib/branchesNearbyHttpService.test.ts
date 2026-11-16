@@ -1,25 +1,19 @@
-jest.mock('@supabase/supabase-js', () => ({
-    createClient: jest.fn(),
-}));
-
-jest.mock('@/lib/env', () => ({
-    getSupabaseUrl: jest.fn(() => 'https://example.supabase.co'),
-    getSupabaseAnonKey: jest.fn(() => 'anon-key'),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAnonClient: jest.fn(),
 }));
 
 jest.mock('@/lib/branchesNearbyService', () => ({
     buildNearbyBranches: jest.fn(),
 }));
 
-import { createClient } from '@supabase/supabase-js';
-
 import { buildNearbyBranches } from '@/lib/branchesNearbyService';
 import { runBranchesNearbyHttp } from '@/lib/branchesNearbyHttpService';
+import { createSupabaseAnonClient } from '@/lib/supabaseHelpers';
 
 describe('branchesNearbyHttpService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (createClient as jest.Mock).mockReturnValue({ from: jest.fn() });
+        (createSupabaseAnonClient as jest.Mock).mockReturnValue({ from: jest.fn() });
     });
 
     test('delegates valid request to nearby service', async () => {

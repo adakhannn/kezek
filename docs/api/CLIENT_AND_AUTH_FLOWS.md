@@ -365,14 +365,14 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 <!-- api-contract: GET /api/branches/map -->
 ### GET `/api/branches/map`
 
-Источники: [route](../../apps/web/src/app/api/branches/map/route.ts) → [HTTP](../../apps/web/src/lib/branchesMapHttpService.ts) → [service и BranchMapItem](../../apps/web/src/lib/branchesMapService.ts), [approved query](../../apps/web/src/lib/branches/buildApprovedBusinessesQuery.ts).
+Источники: [route](../../apps/web/src/app/api/branches/map/route.ts) → [HTTP](../../apps/web/src/lib/branchesMapHttpService.ts) → [service и BranchMapItem](../../apps/web/src/lib/branchesMapService.ts), [общий загрузчик филиалов](../../apps/web/src/lib/branches/approvedBranches.ts).
 
 | Аспект | Контракт |
 | --- | --- |
-| Auth / input | Публичный anon client; необязательные query `cityId`, `categoryId` (trim, без UUID-схемы), `onlyActive` default true; только точная строка `false` выключает active-filter |
+| Auth / input | Публичный anon client; необязательные query `cityId`, `categoryId` (trim, без UUID-схемы). Только активные филиалы: параметра `onlyActive` больше нет (до 17 ноября 2026 `onlyActive=false` отдавал скрытые бизнесом филиалы) |
 | Success | `S(BranchMapItem[])`: id/businessId/businessName/businessSlug/branchName/address/lat/lon/categoryId/categoryName; nullable значения определены в source type |
-| Errors | 500 internal при businesses/branches query; общий mapper, 429 |
-| Limiter / effects | `public/shared`; approved businesses по city/category, затем их филиалы с координатами. Ограничения **500 businesses и 500 branches**, без pagination. Это обрезанная выборка, не полный каталог; business limit применяется до загрузки филиалов. Записей нет |
+| Errors | 500 internal при ошибке запроса (текст ошибки БД только в серверном логе); общий mapper, 429 |
+| Limiter / effects | `public/shared`; один запрос филиалов с встроенным approved business (`businesses!branches_biz_id_fkey!inner`), city/category и координаты фильтруются в SQL, страницы читаются до пустой (не полагаясь на max_rows), предохранитель 10 000 строк пишет warning в лог. Записей нет |
 
 <!-- api-contract: GET /api/branches/nearby -->
 ### GET `/api/branches/nearby`
@@ -382,21 +382,21 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 | Аспект | Контракт |
 | --- | --- |
 | Auth / input | Публичный anon client. Query lat [-90,90], lon [-180,180] обязательны; `limit` default 20, положительное конечное число округляется вниз/max50; `radiusKm` default20, диапазон1..200; cityId/categoryId необязательны |
-| Success | `S(BranchNearbyItem[])`: поля map + distanceKm, округлённое до 2 знаков; categoryName здесь всегда null |
-| Errors | 400 validation координат/limit/radius; 500 internal queries/обработка; 429 |
-| Limiter / effects | `public/shared`; максимум 500 approved businesses и 2000 активных branches с координатами, затем расстояние/радиус/сортировка/limit вычисляются в JS. **Результат не гарантирует ближайшие филиалы всего каталога**: предварительный лимит способен исключить их до геофильтра. Это дефект полноты, не установленный RPS ceiling. Записей нет |
+| Success | `S(BranchNearbyItem[])`: поля map + distanceKm, округлённое до 2 знаков; categoryName из публичного справочника категорий |
+| Errors | 400 validation координат/limit/radius; 500 internal (текст ошибки БД только в серверном логе); 429 |
+| Limiter / effects | `public/shared`; bounding box вокруг точки (консервативный по долготе, без него у полюсов/антимеридиана) применяется в SQL к активным филиалам approved businesses вместе с city/category, затем точное расстояние, радиус, сортировка и limit в JS. Предварительного лимита до геофильтра нет (исправлено 17 ноября 2026, ENG-10). Записей нет |
 
 <!-- api-contract: GET /api/businesses/search -->
 ### GET `/api/businesses/search`
 
-Источник: [route](../../apps/web/src/app/api/businesses/search/route.ts), отдельного HTTP/service файла нет.
+Источники: [route](../../apps/web/src/app/api/businesses/search/route.ts), [нормализация и фильтр](../../apps/web/src/lib/businessSearch.ts).
 
 | Аспект | Контракт |
 | --- | --- |
-| Auth / input | Нет caller auth; service-role client. Query `q` trim/max80, необязателен |
+| Auth / input | Нет caller auth; публичный anon client (approved businesses читаются через RLS, service role не нужен). Query `q`: управляющие символы и `*` заменяются пробелом, trim, max80, необязателен |
 | Success | Корневой `{ok:true,items:Array<{id,name,slug}>}`, slug nullable; approved businesses, name ascending, максимум25 |
-| Errors | 400 `{ok:false,message:<DB error>}`, **без error code**; исключения вне этого ответа не унифицированы |
-| Limiter / effects | Нет. Непустой q подставляется в PostgREST OR ilike name/slug; отдельного escaping `%`, `_` или синтаксиса OR тут нет. Чтение, без pagination/total |
+| Errors | 500 `{ok:false,message:'Не удалось загрузить бизнесы'}`, **без error code**; текст ошибки БД только в серверном логе; 429 limiter |
+| Limiter / effects | `normal` (typeahead с debounce 250 мс). q передаётся в PostgREST OR ilike name/slug значением в двойных кавычках с экранированием `\` и `"`, а `%`/`_` экранируются для LIKE: синтаксис фильтра из q не исполняется (до 17 ноября 2026 q подставлялся без экранирования). Чтение, без pagination/total |
 
 <!-- api-contract: POST /api/users/search -->
 ### POST `/api/users/search`

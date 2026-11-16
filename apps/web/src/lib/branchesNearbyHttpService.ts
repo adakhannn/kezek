@@ -1,18 +1,13 @@
 import { NextResponse } from 'next/server';
 
-import { createClient } from '@supabase/supabase-js';
-
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { asDiscoveryClient } from '@/lib/branches/approvedBranches';
 import { buildNearbyBranches } from '@/lib/branchesNearbyService';
-import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
+import { createSupabaseAnonClient } from '@/lib/supabaseHelpers';
 
 export async function runBranchesNearbyHttp(req: Request): Promise<NextResponse> {
-    const supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-        auth: { persistSession: false, autoRefreshToken: false },
-    });
-
     const result = await buildNearbyBranches({
-        supabase,
+        supabase: asDiscoveryClient(createSupabaseAnonClient()),
         requestUrl: req.url,
     });
 

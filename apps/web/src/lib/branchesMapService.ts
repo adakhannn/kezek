@@ -1,23 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-import { buildApprovedBusinessesQuery } from '@/lib/branches/buildApprovedBusinessesQuery';
-import { loadPublicCategoryLabels } from '@/lib/publicCategoryLabels';
-
-type BranchRow = {
-    id: string | number;
-    name: string | null;
-    address: string | null;
-    biz_id: string | number;
-    lat: number | null;
-    lon: number | null;
-};
-
-type BusinessRow = {
-    id: string | number;
-    name: string | null;
-    slug: string | null;
-    categories: string[] | null;
-};
+import { businessOf, coordinate, loadApprovedBranches, type BranchDiscoveryClient } from '@/lib/branches/approvedBranches';
+import { logError } from '@/lib/log';
+import { loadPublicCategoryLabels, type PublicCategoryClient } from '@/lib/publicCategoryLabels';
 
 export type BranchMapItem = {
     id: string;
@@ -45,87 +28,44 @@ export type BranchesMapResult =
           status: number;
       };
 
+/** Active branches of approved businesses that have coordinates. */
 export async function listBranchesMap({
     supabase,
     cityId,
     categoryId,
-    onlyActive = true,
 }: {
-    supabase: SupabaseClient | any;
+    supabase: BranchDiscoveryClient & PublicCategoryClient;
     cityId?: string;
     categoryId?: string;
-    onlyActive?: boolean;
 }): Promise<BranchesMapResult> {
-    const bizQuery = buildApprovedBusinessesQuery(supabase, {
-        categoryId: categoryId || undefined,
-        cityId: cityId || undefined,
-    });
-
-    const { data: bizData, error: bizError } = await bizQuery.limit(500);
-    if (bizError) {
-        return {
-            ok: false,
-            error: 'internal',
-            message: 'Не удалось загрузить компании для карты филиалов',
-            details: bizError.message,
-            status: 500,
-        };
-    }
-
-    const businesses = (bizData ?? []) as BusinessRow[];
-    if (!businesses.length) {
-        return { ok: true, data: [] };
-    }
-
-    const bizIds = businesses.map((business) => business.id);
-
-    let branchesQuery = supabase
-        .from('branches')
-        .select('id,name,address,biz_id,lat,lon')
-        .in('biz_id', bizIds)
-        .not('lat', 'is', null)
-        .not('lon', 'is', null);
-
-    if (onlyActive) {
-        branchesQuery = branchesQuery.eq('is_active', true);
-    }
-
-    const { data: branchData, error: branchError } = await branchesQuery.limit(500);
-    if (branchError) {
+    const result = await loadApprovedBranches(supabase, { cityId, categoryId });
+    if (!result.ok) {
+        // Database error text stays in the server log; this endpoint is public.
+        logError('BranchesMap', 'Error loading branches', result.message);
         return {
             ok: false,
             error: 'internal',
             message: 'Не удалось загрузить филиалы для карты',
-            details: branchError.message,
             status: 500,
         };
     }
 
-    const branches = (branchData ?? []) as BranchRow[];
+    const branches = result.rows;
     if (!branches.length) {
         return { ok: true, data: [] };
     }
 
-    const businessById = new Map<string, BusinessRow>();
-    for (const business of businesses) {
-        businessById.set(String(business.id), business);
-    }
     const categoryLabels = await loadPublicCategoryLabels(supabase, categoryId
-        ? [categoryId] : businesses.flatMap(business => business.categories ?? []));
+        ? [categoryId] : branches.flatMap(branch => businessOf(branch)?.categories ?? []));
 
     return {
         ok: true,
         data: branches.map((branch) => {
-            const business = businessById.get(String(branch.biz_id)) ?? null;
+            const business = businessOf(branch);
             const categories = business?.categories ?? null;
-
-            let resolvedCategoryId: string | null = null;
-
-            if (categoryId) {
-                resolvedCategoryId = categoryId || null;
-            } else if (Array.isArray(categories) && categories.length > 0) {
-                resolvedCategoryId = String(categories[0] ?? '');
-            }
+            const resolvedCategoryId = categoryId
+                ? categoryId
+                : Array.isArray(categories) && categories.length > 0 ? String(categories[0] ?? '') : null;
 
             return {
                 id: String(branch.id),
@@ -134,8 +74,8 @@ export async function listBranchesMap({
                 businessSlug: business?.slug ? String(business.slug) : null,
                 branchName: String(branch.name ?? ''),
                 address: branch.address ?? null,
-                lat: typeof branch.lat === 'number' ? branch.lat : Number(branch.lat ?? 0),
-                lon: typeof branch.lon === 'number' ? branch.lon : Number(branch.lon ?? 0),
+                lat: coordinate(branch.lat),
+                lon: coordinate(branch.lon),
                 categoryId: resolvedCategoryId && resolvedCategoryId.length ? resolvedCategoryId : null,
                 categoryName: resolvedCategoryId && Object.hasOwn(categoryLabels, resolvedCategoryId)
                     ? categoryLabels[resolvedCategoryId] : null,
