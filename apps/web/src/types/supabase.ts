@@ -5059,12 +5059,6 @@ export type Database = {
                 };
                 Returns: Json;
             };
-            "apply_promotion_to_booking_impl_20261109": {
-                Args: {
-                    "p_booking_id": string;
-                };
-                Returns: Json;
-            };
             "apply_visit_package_to_booking": {
                 Args: {
                     "p_booking_id": string;
@@ -5435,17 +5429,6 @@ export type Database = {
                 Args: {
                     "p_biz_id": string;
                     "p_branch_id": string;
-                    "p_client_id": string;
-                    "p_minutes": number;
-                    "p_service_id": string;
-                    "p_staff_id": string;
-                    "p_start": string;
-                };
-                Returns: string;
-            } | {
-                Args: {
-                    "p_biz_id": string;
-                    "p_branch_id": string;
                     "p_client_id"?: string;
                     "p_client_name"?: string;
                     "p_client_phone"?: string;
@@ -5499,10 +5482,6 @@ export type Database = {
                 Args: {
                     "p_biz_id": string;
                 };
-                Returns: undefined;
-            };
-            "dev_become_superadmin": {
-                Args: Record<PropertyKey, never>;
                 Returns: undefined;
             };
             "disablelongtransactions": {
@@ -6015,21 +5994,6 @@ export type Database = {
                 };
                 Returns: undefined;
             };
-            "grant_role": {
-                Args: {
-                    "p_biz": string;
-                    "p_role_key": string;
-                    "p_user": string;
-                };
-                Returns: undefined;
-            } | {
-                Args: {
-                    "p_biz_id"?: string;
-                    "p_role_key": string;
-                    "p_user_id": string;
-                };
-                Returns: undefined;
-            };
             "grant_role_rpc": {
                 Args: {
                     "p_biz": string;
@@ -6404,12 +6368,6 @@ export type Database = {
                 Args: Record<PropertyKey, never>;
                 Returns: undefined;
             };
-            "purge_user": {
-                Args: {
-                    "p_user_id": string;
-                };
-                Returns: undefined;
-            };
             "read_analytics_report_snapshot": {
                 Args: {
                     "p_biz_id"?: string;
@@ -6686,21 +6644,6 @@ export type Database = {
             "revoke_branch_admin": {
                 Args: {
                     "p_branch_id": string;
-                    "p_user_id": string;
-                };
-                Returns: undefined;
-            };
-            "revoke_role": {
-                Args: {
-                    "p_biz": string;
-                    "p_role_key": string;
-                    "p_user": string;
-                };
-                Returns: undefined;
-            } | {
-                Args: {
-                    "p_biz_id"?: string;
-                    "p_role_key": string;
                     "p_user_id": string;
                 };
                 Returns: undefined;

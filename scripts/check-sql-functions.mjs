@@ -22,12 +22,7 @@ const knownErrors = [
     { fn: 'public.populate_geometry_columns', message: 'record "gc" is not assigned yet' },
     { fn: 'public.postgis_full_version', message: 'postgis_gdal_version' },
     { fn: 'public.st_findextent', message: 'record "myrec" is not assigned yet' },
-    // Dead project functions without callers (docs/ENGINEERING_FINDINGS.md, ENG-61).
-    { fn: 'public.apply_promotion_to_booking_impl_20261109', message: 'must appear in the GROUP BY clause' },
-    { fn: 'public.create_internal_booking', message: 'non-DEFAULT value into column "time_range"' },
-    { fn: 'public.grant_role', message: 'has_role(unknown, unknown) is not unique' },
-    { fn: 'public.revoke_role', message: 'has_role(unknown, unknown) is not unique' },
-    { fn: 'public.purge_user', message: 'relation "public.invitations" does not exist' },
+    // Dead project functions that failed on every call were dropped in 20261117190000 (ENG-61).
 ];
 
 const cli = path.join(root, 'node_modules/.bin', process.platform === 'win32' ? 'supabase.cmd' : 'supabase');
