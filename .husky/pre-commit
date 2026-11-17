@@ -4,5 +4,8 @@ pnpm exec lint-staged
 echo "→ Typecheck web"
 pnpm typecheck
 
-echo "→ Generated docs catalogs (same check as CI)"
+echo "→ Generated catalogs, OpenAPI, i18n and encoding (same offline checks as CI)"
 pnpm check:docs-links
+pnpm check:openapi
+pnpm check:i18n
+pnpm check:encoding
