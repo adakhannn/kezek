@@ -21,7 +21,8 @@ const fails = (text, match) => {
 const source = file => readFileSync(path.join(__dirname, existsSync(path.join(__dirname, '../supabase/migrations', file)) ? '../supabase/migrations' : '../supabase/migrations_archive', file), 'utf8');
 const definition = (file, name) => { const s = source(file), start = s.indexOf('create or replace function public.' + name + '('); assert(start >= 0); return s.slice(start, s.indexOf('$$;', start) + 3); };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-const wait = async check => { for (let n = 0; n < 120; n++) { if (await check()) return; await sleep(250); } throw new Error('Owned service not ready'); };
+// GoTrue runs its migrations on start; a loaded CI runner can need well over 30 s.
+const wait = async check => { for (let n = 0; n < 360; n++) { if (await check()) return; await sleep(250); } throw new Error('Owned service not ready'); };
 const token = claims => {
   const body = [ { alg: 'HS256', typ: 'JWT' }, { exp: Math.floor(Date.now()/1000)+3600, ...claims } ].map(x => Buffer.from(JSON.stringify(x)).toString('base64url')).join('.');
   return body + '.' + createHmac('sha256', secret).update(body).digest('base64url');
