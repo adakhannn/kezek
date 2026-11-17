@@ -13,9 +13,19 @@ node scripts/generate-cron-manifests.mjs --write
 node scripts/generate-cron-manifests.mjs --check
 ```
 
-Задания с `externalSchedule` (частые) в Vercel запускаются раз в сутки как запасной вариант, а каждые 5 минут их вызывает [workflow GitHub Actions](.github/workflows/cron-frequent.yml) с заголовком `Authorization: Bearer <CRON_SECRET>`. Ему нужен секрет репозитория `CRON_SECRET` (то же значение, что в Vercel) и, при необходимости, переменная `CRON_BASE_URL` (по умолчанию `https://kezek.vercel.app`). Секрет уходит на этот адрес, поэтому домен должен принадлежать проекту: `kezek.kg` в 2026-11 перешёл к третьему лицу. Репозиторий публичный, поэтому workflow печатает только HTTP-статусы, без тел ответов. GitHub может задерживать запуски по расписанию и отключает их после 60 дней без активности в репозитории; на Vercel Pro можно вернуть минутное расписание в `schedule` и убрать workflow.
+Задания с `externalSchedule` (частые) в Vercel запускаются раз в сутки как запасной вариант, а по `externalSchedule` их вызывает сама база: [миграция pg_cron](supabase/migrations/20261117090000_pg_cron_http_jobs.sql) планирует `private.call_cron_endpoint(...)`, который через pg_net отправляет `GET <origin>/api/cron/...` с заголовком `Authorization: Bearer <CRON_SECRET>`. Workflow GitHub Actions для этого не подошёл: GitHub запускал расписания этого репозитория с опозданием на часы, а частый workflow за 4 часа не стартовал ни разу.
 
-| Задание | Путь после `/api/cron/` | Расписание UTC (Vercel / внешнее) | Допустимый возраст последнего успеха |
+Адрес и секрет — данные окружения, а не схемы: они лежат в Supabase Vault под именами `kezek_cron_origin` (например, `https://kezek.vercel.app`, без пути) и `kezek_cron_secret` (то же значение, что `CRON_SECRET` в Vercel). Без них функция ничего не делает, поэтому локальные и CI-базы наружу не ходят. Задать или сменить их можно SQL-запросом от роли `postgres`:
+
+```sql
+select vault.create_secret('<CRON_SECRET>', 'kezek_cron_secret', 'Bearer secret for /api/cron/* calls made by pg_cron');
+select vault.create_secret('https://kezek.vercel.app', 'kezek_cron_origin', 'Origin called by pg_cron HTTP jobs');
+-- при ротации: select vault.update_secret(id, '<новое значение>') from vault.secrets where name = 'kezek_cron_secret';
+```
+
+При смене `CRON_SECRET` в Vercel нужен новый деплой и то же значение в Vault; при смене домена — новый `kezek_cron_origin`. Последние ответы видны в `net._http_response` (хранятся 6 часов), запуски — в `cron.job_run_details`.
+
+| Задание | Путь после `/api/cron/` | Расписание UTC (Vercel / pg_cron) | Допустимый возраст последнего успеха |
 | --- | --- | --- | --- |
 | Закрытие смен | `close-shifts` | `10 0 * * *` / `*/5 * * * *` | 30 минут |
 | Рейтинги | `recalculate-ratings` | `0 3 * * *` | 27 часов |
@@ -23,8 +33,8 @@ node scripts/generate-cron-manifests.mjs --check
 | Health alerts | `health-check-alerts` | `0 9 * * *` | 27 часов |
 | Daily analytics | `analytics/daily` | `30 3 * * *` | 27 часов |
 | Hourly analytics | `analytics/hourly-load` | `40 3 * * *` | 27 часов |
-| Уведомления о брони | `booking-notifications` | `20 0 * * *` / `*/5 * * * *` | 30 минут, если worker включён |
-| WhatsApp inbox | `whatsapp-inbox` | `30 0 * * *` / `*/5 * * * *` | 30 минут, если worker включён |
+| Уведомления о брони | `booking-notifications` | `20 0 * * *` / `*/2 * * * *` | 30 минут, если worker включён |
+| WhatsApp inbox | `whatsapp-inbox` | `30 0 * * *` / `*/2 * * * *` | 30 минут, если worker включён |
 
 Asia/Bishkek — UTC+6. Расписание хостинга задано в UTC; границы финансового дня и агрегатов определяются часовым поясом бизнеса. Pro / Enterprise допускают минутное расписание, но вызовы расходуют ресурсы Functions. Vercel не повторяет неуспешный cron автоматически: восстановление должно переживать следующий плановый запуск. [Лимиты Vercel](https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing), [поведение cron](https://vercel.com/docs/schedules/cron-jobs/manage-cron-jobs).
 
