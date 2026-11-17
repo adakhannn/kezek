@@ -24,7 +24,9 @@ const A=randomUUID(),B=randomUUID(),C=randomUUID(),ordinary=randomUUID(),role=ra
 const command=(actor,target,enabled)=>`set role service_role; select set_platform_admin_role('${actor}','${target}',${enabled});`;
 const fail=(statement,pattern)=>{const result=run(args,statement,true);assert.notEqual(result.status,0);assert.match(result.stderr,pattern);};
 const reset=()=>sql(`truncate user_global_roles,user_roles,super_admins_legacy; insert into user_global_roles(user_id,role_id) values('${A}','${role}');`);
-const eventually=async(predicate)=>{for(let n=0;n<40;n++){if(predicate())return;await new Promise(resolve=>setTimeout(resolve,50));}throw new Error('Expected concurrent SQL lock state was not observed');};
+// Each waiter is a separate `docker exec psql`, which can take seconds to start on
+// a loaded CI runner; the lock holder sleeps 30 s, so a 15 s window is safe.
+const eventually=async(predicate)=>{for(let n=0;n<300;n++){if(predicate())return;await new Promise(resolve=>setTimeout(resolve,50));}throw new Error('Expected concurrent SQL lock state was not observed');};
 (async()=>{
  try{
   run(['image','inspect','postgres:16']);run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);
