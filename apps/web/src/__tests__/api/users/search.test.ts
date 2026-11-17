@@ -84,7 +84,7 @@ describe('/api/users/search', () => {
 
             const data = await expectSuccessResponse(await POST(searchRequest({ q: 'user@example.com', page: 1, perPage: 50 })), 200);
 
-            expect(admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', { p_email: 'user@example.com', p_phone_digits: null });
+            expect(admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', { p_email: 'user@example.com' });
             expect(data).toMatchObject({ ok: true, page: 1, perPage: 50 });
             expect((data as { items: Row[] }).items).toEqual([{ id: 'user-2', email: 'user@example.com', phone: null, full_name: 'User 2' }]);
             expect(admin.auth.admin.listUsers).not.toHaveBeenCalled();

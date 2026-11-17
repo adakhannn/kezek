@@ -1,4 +1,9 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { getServiceClient } from '@/lib/supabaseService';
+import type { Database } from '@/types/supabase';
+
+type ServiceClient = ReturnType<typeof getServiceClient>;
 
 type UsersSearchInput = {
     q?: string;
@@ -7,7 +12,7 @@ type UsersSearchInput = {
 };
 
 type UsersSearchContext = {
-    supabase: any;
+    supabase: SupabaseClient<Database>;
     bizId: string;
     input: UsersSearchInput;
 };
@@ -51,17 +56,17 @@ function chunks<T>(values: T[], size: number): T[][] {
 }
 
 // A complete e-mail or phone: the accounts with that confirmed contact.
-async function findExactContact(admin: any, query: string): Promise<AccountRow[] | null> {
+async function findExactContact(admin: ServiceClient, query: string): Promise<AccountRow[] | null> {
     const email = EMAIL_RE.test(query) ? query : null;
     const phone = email ? null : phoneDigits(query);
     if (!email && !phone) return null;
-    const { data, error } = await admin.rpc('find_accounts_by_contact', { p_email: email, p_phone_digits: phone });
+    const { data, error } = await admin.rpc('find_accounts_by_contact', email ? { p_email: email } : { p_phone_digits: phone ?? undefined });
     if (error) throw new Error('User lookup unavailable');
     return (data ?? []) as AccountRow[];
 }
 
 // Any other text: only people who already booked with this business.
-async function findBusinessClients(admin: any, bizId: string, query: string): Promise<AccountRow[]> {
+async function findBusinessClients(admin: ServiceClient, bizId: string, query: string): Promise<AccountRow[]> {
     const { data: bookingRows, error: bookingsError } = await admin
         .from('bookings')
         .select('client_id')

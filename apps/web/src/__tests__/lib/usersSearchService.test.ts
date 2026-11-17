@@ -63,7 +63,7 @@ test.each([undefined, '', '   ', '\t\n'])('blank query %j never loads accounts',
 test('a complete e-mail finds the account with that confirmed e-mail, never the Auth directory', async () => {
     const c = setup({ exact: [account] });
     const result = await search(c, ' Known@Example.test ');
-    expect(c.admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', { p_email: 'Known@Example.test', p_phone_digits: null });
+    expect(c.admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', { p_email: 'Known@Example.test' });
     expect(result.items).toEqual([{ id: 'client-1', email: account.email, phone: account.phone, full_name: 'Edited Profile Name' }]);
     expect(c.profilesQuery.in).toHaveBeenCalledWith('id', ['client-1']);
     expect(c.admin.auth.admin.listUsers).not.toHaveBeenCalled();
@@ -78,7 +78,7 @@ test.each([
 ])('a complete phone %j is matched as %j', async (q, digits) => {
     const c = setup({ exact: [account] });
     await search(c, q);
-    expect(c.admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', { p_email: null, p_phone_digits: digits });
+    expect(c.admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', { p_phone_digits: digits });
 });
 
 test.each(['@@', 'a@b', '555', 'known@', 'Edited'])('partial text %j searches only the business clients', async (q) => {
