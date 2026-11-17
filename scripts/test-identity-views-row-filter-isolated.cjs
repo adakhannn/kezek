@@ -1,7 +1,8 @@
-// Access-control integration fixture for 20261117100000_identity_views_row_filter.
-// A disposable PostgreSQL reproduces the production exposure (owner-rights views over
-// auth.users readable by `authenticated`), applies the real migration and checks every
-// consumer: own-row RLS policies, a SECURITY DEFINER reader, the service role and super admins.
+// Access-control integration fixture for 20261117100000_identity_views_row_filter and
+// 20261117110000_members_of_biz_text_columns. A disposable PostgreSQL reproduces production:
+// owner-rights views over auth.users readable by `authenticated`, and members_of_biz failing
+// on auth.users.email varchar(255). It applies the real migrations and checks every consumer:
+// own-row RLS policies, the SECURITY DEFINER members reader, the service role and super admins.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -77,9 +78,20 @@ let created = false;
             create policy "Managers can view audit log for their biz" on public.finance_settings_audit_log for select to authenticated
                 using (exists (select 1 from public.user_roles_with_user ur where ur.user_id = auth.uid()
                     and ur.biz_id = finance_settings_audit_log.biz_id and ur.role_key = any (array['owner'::text, 'manager'::text])));
-            create function public.members_of_biz(p_biz_id uuid) returns table(user_id uuid, email text)
+            create function public.has_role(p_role text, p_biz uuid) returns boolean language sql stable security definer set search_path=public as $$
+                select exists(select 1 from public.user_roles u join public.roles r on r.id=u.role_id
+                    where u.user_id=auth.uid() and u.biz_id=p_biz and r.key=p_role) $$;
+            -- members_of_biz exactly as the production baseline defines it (no casts).
+            create function public.members_of_biz(p_biz_id uuid) returns table(user_id uuid, email text, phone text, full_name text, roles text[])
                 language plpgsql security definer set search_path to 'public' as $$
-                begin return query select u.user_id, u.email::text from public.user_roles_with_user u where u.biz_id = p_biz_id; end; $$;
+                begin
+                  if not (public.is_super_admin() or public.has_role('owner'::text, p_biz_id) or public.has_role('admin'::text, p_biz_id)) then
+                    raise exception 'forbidden' using errcode = 'P0001';
+                  end if;
+                  return query select u.user_id, u.email, u.phone, u.full_name, array_agg(distinct u.role_key order by u.role_key)::text[] as roles
+                    from public.user_roles_with_user u where u.biz_id = p_biz_id group by u.user_id, u.email, u.phone, u.full_name
+                    order by coalesce(u.full_name, u.email, u.phone, u.user_id::text);
+                end; $$;
 
             grant all on all tables in schema public to authenticated, service_role;
             grant usage on all sequences in schema public to authenticated, service_role;
@@ -102,9 +114,12 @@ let created = false;
         // The fixture reproduces the production exposure before the migration runs.
         assert.equal(await asRole('authenticated', client, 'select count(*) from public.auth_users_view'), '4');
         assert.equal(await asRole('authenticated', client, 'select count(*) from public.user_roles_with_user'), '3');
+        await assert.rejects(asRole('authenticated', owner, `select count(*) from public.members_of_biz('${biz}')`), /structure of query does not match function result type/);
         const before = { auth: await columns('auth_users_view'), roles: await columns('user_roles_with_user'), legacy: await columns('user_roles_legacy') };
 
-        await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261117100000_identity_views_row_filter.sql'), 'utf8'));
+        for (const migration of ['20261117100000_identity_views_row_filter.sql', '20261117110000_members_of_biz_text_columns.sql']) {
+            await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations', migration), 'utf8'));
+        }
 
         // Shape and grants are unchanged, so PostgREST clients and generated types keep working.
         assert.deepEqual({ auth: await columns('auth_users_view'), roles: await columns('user_roles_with_user'), legacy: await columns('user_roles_legacy') }, before);
@@ -131,6 +146,12 @@ let created = false;
 
         // 3. Privileged readers still see everything they saw before.
         assert.equal(await asRole('authenticated', owner, `select count(*) from public.members_of_biz('${biz}')`), '2');
+        assert.equal(
+            await asRole('authenticated', admin, `select string_agg(email || ':' || array_to_string(roles, '+'), ',' order by email) from public.members_of_biz('${biz}')`),
+            'owner@unit.test:owner,staff@unit.test:staff',
+        );
+        await assert.rejects(asRole('authenticated', staffUser, `select count(*) from public.members_of_biz('${biz}')`), /forbidden/);
+        await assert.rejects(asRole('authenticated', client, `select count(*) from public.members_of_biz('${biz}')`), /forbidden/);
         assert.equal(await asRole('authenticated', admin, 'select count(*) from public.auth_users_view'), '4');
         assert.equal(await asRole('authenticated', admin, 'select count(*) from public.user_roles_with_user'), '3');
         assert.equal(await asRole('service_role', client, 'select count(*) from public.auth_users_view'), '4');
@@ -138,7 +159,7 @@ let created = false;
         assert.equal(await asRole('service_role', client, 'select count(*) from public.user_roles_legacy'), '3');
         assert.equal(await sql('select count(*) from public.auth_users_view'), '4');
 
-        console.log('identity views row filter: ok');
+        console.log('identity views row filter and members_of_biz: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);
     }

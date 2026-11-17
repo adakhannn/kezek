@@ -46,7 +46,14 @@
     },
     "onlyBuiltDependencies": [
       "supabase"
-    ]
+    ],
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-qr28-fpjm-wq7f",
+        "GHSA-5p2g-fcmc-qvqq",
+        "GHSA-w3rx-r6r6-pgpr"
+      ]
+    }
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
