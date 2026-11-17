@@ -51,7 +51,9 @@ test('SSR finance payload and browser aggregation use the same final closed shar
     jest.useFakeTimers().setSystemTime(new Date('2026-10-17T01:00:00Z'));
     try {
         const supabase = {
-            rpc: jest.fn(async (name: string) => ({ data: name === 'read_staff_finance_calendar' ? { date: '2026-10-17', todayDate: '2026-10-17', timezone: 'Asia/Bishkek', dayStart: '2026-10-16T18:00Z', dayEnd: '2026-10-17T18:00Z', dayHours: 24 } : name === 'read_staff_shift_snapshot' ? null : [closed], error: null })),
+            rpc: jest.fn(async (name: string) => ({ data: name === 'read_staff_finance_calendar' ? { date: '2026-10-17', todayDate: '2026-10-17', timezone: 'Asia/Bishkek', dayStart: '2026-10-16T18:00Z', dayEnd: '2026-10-17T18:00Z', dayHours: 24 }
+                : name === 'staff_private_fields' ? [{ percent_master: 60, percent_salon: 40, hourly_rate: null }]
+                : name === 'read_staff_shift_snapshot' ? null : [closed], error: null })),
             from: jest.fn((table: string) => {
                 let single = false;
                 const builder: Record<string, unknown> = {};
@@ -60,8 +62,7 @@ test('SSR finance payload and browser aggregation use the same final closed shar
                 }
                 builder.maybeSingle = jest.fn(() => { single = true; return builder; });
                 builder.then = (resolve: (value: unknown) => unknown) => Promise.resolve({
-                    data: table === 'staff' ? { percent_master: 60, percent_salon: 40, hourly_rate: null }
-                        : table === 'staff_shifts' ? (single ? null : [closed]) : (single ? null : []),
+                    data: table === 'staff_shifts' ? (single ? null : [closed]) : (single ? null : []),
                     error: null,
                 }).then(resolve);
                 return builder;

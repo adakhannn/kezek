@@ -407,6 +407,7 @@ jobs:
           - test-spatial-ref-sys-guard-isolated.cjs
           - test-service-only-definer-functions-isolated.cjs
           - test-internal-tables-access-isolated.cjs
+          - test-staff-private-fields-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4

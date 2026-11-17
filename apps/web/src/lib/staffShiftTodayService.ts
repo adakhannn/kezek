@@ -4,6 +4,7 @@ import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { readScheduledDay } from '@/lib/scheduling/read';
+import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 import { TZ, formatDateInTz } from '@/lib/time';
 
 type StaffShiftTodayContext = {
@@ -32,11 +33,7 @@ export async function runStaffShiftToday({
     bizId,
     now = new Date(),
 }: StaffShiftTodayContext & { now?: Date }): Promise<StaffShiftTodayResult> {
-    const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('percent_master, percent_salon, hourly_rate')
-        .eq('id', staffId)
-        .maybeSingle();
+    const { data: staffData, error: staffError } = await readStaffPrivateFields(supabase, staffId);
 
     if (staffError) {
         logError('StaffShiftToday', 'Error loading staff for percent', staffError);

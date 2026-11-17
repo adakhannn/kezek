@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { logError } from '@/lib/log';
 import { sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
 import { measurePerformance } from '@/lib/performanceServer';
+import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 import { readShiftCloseSnapshot, shiftCloseTime } from '@/lib/staffShift/closeSnapshot';
 import { closeStaffShiftUseCase } from '@/lib/staffShift/closeUseCase';
 import { commitShiftClose, financeCommandFailure } from '@/lib/staffShift/financeCommand';
@@ -137,11 +138,8 @@ export async function runStaffShiftClose(params: {
         consumablesAmount = 0,
     } = params;
 
-    const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('percent_master, percent_salon, hourly_rate, full_name, user_id')
-        .eq('id', staffId)
-        .maybeSingle();
+    // Условия оплаты закрыты для чужих сессий; функция пускает сотрудника, руководство и service role.
+    const { data: staffData, error: staffError } = await readStaffPrivateFields(supabase, staffId);
 
     if (staffError) {
         logError('StaffShiftCloseService', 'Error loading staff for percent', staffError);

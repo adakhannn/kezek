@@ -4,6 +4,7 @@ import { POST } from '@/app/api/staff/shift/close/route';
 
 jest.mock('@/lib/authBiz', () => ({ getStaffContextForRequest: jest.fn() }));
 jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
+jest.mock('@/lib/staffPrivateFields', () => ({ readStaffPrivateFields: jest.fn() }));
 jest.mock('@/lib/rateLimit', () => ({
     checkVerifiedPrincipalRateLimit: jest.fn(async () => ({success: true})), withRateLimit: jest.fn((_req, _config, handler) => handler()), RateLimitConfigs: { critical: {} } }));
 jest.mock('@/lib/performanceServer', () => ({ measurePerformance: jest.fn((_operation, fn) => fn()) }));
@@ -13,6 +14,7 @@ jest.mock('@/lib/time', () => ({ TZ: 'Asia/Bishkek', formatDateInTz: jest.fn(() 
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 import { sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
+import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 
 function query(data: unknown) {
     return {
@@ -29,8 +31,8 @@ const request = (body: unknown) => new Request('http://localhost/api/staff/shift
 
 function setupRows(shift: unknown = openShift, rows: unknown[] = []) {
     readShiftCloseSnapshot.mockResolvedValue({ shift, staff, items: rows, timezone: 'Asia/Bishkek', dayHours: 24, dayStart: '2024-01-14T18:00Z', closeBoundary: '2024-01-15T18:00Z' });
+    (readStaffPrivateFields as jest.Mock).mockResolvedValue({ data: staff, error: null });
     supabase.from.mockImplementation((table: string) => {
-        if (table === 'staff') return query(staff);
         if (table === 'staff_shifts') return query(shift);
         if (table === 'staff_shift_items') return query(rows);
         throw new Error(`Unexpected table: ${table}`);

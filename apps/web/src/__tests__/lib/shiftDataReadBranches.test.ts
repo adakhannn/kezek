@@ -26,6 +26,8 @@ function makeClient(responses: Record<string, ReadResult> = {}) {
     };
     const client = {
         rpc: jest.fn(async (name: string, args: Record<string, string>) => {
+            // Pay terms come from staff_private_fields(): the columns are closed to other sessions.
+            if (name === 'staff_private_fields') return responses['staff:single'] ?? defaults['staff:single'];
             if (name === 'read_staff_finance_calendar') {
                 const date = args.p_date ?? (args.p_instant ?? today.toISOString()).slice(0,10);
                 const dayStart = new Date(date + 'T00:00:00+06:00');
@@ -87,7 +89,8 @@ test('historical reads skip today-only schedule and aggregate queries', async ()
     expect(result.today).toEqual({ exists: false, status: 'none', shift: null, items: [] });
     expect(result.stats).toBeUndefined();
     expect(result.allShifts).toEqual([]);
-    expect(reads.map(read => read.table)).toEqual(['staff', 'bookings', 'service_staff']);
+    expect(reads.map(read => read.table)).toEqual(['bookings', 'service_staff']);
+    expect(client.rpc).toHaveBeenCalledWith('staff_private_fields', { p_staff_id: 'staff-unit' });
 });
 
 test.each(['broken read', undefined])('shift read failure is rejected, not displayed as an empty shift: %s', async message => {
@@ -115,7 +118,9 @@ test('unavailable optional service client falls back only to the supplied in-mem
     const { client, reads } = makeClient();
     const result = await getShiftData({ ...options, supabase: client, useServiceClient: true });
     expect(getServiceClient).toHaveBeenCalledTimes(1);
-    expect(reads.length).toBe(6);
+    // Five table reads plus the pay terms through staff_private_fields on the same fallback client.
+    expect(reads.length).toBe(5);
+    expect(client.rpc).toHaveBeenCalledWith('staff_private_fields', { p_staff_id: 'staff-unit' });
     expect(result.today.exists).toBe(false);
     expect(logDebug).toHaveBeenCalledWith('ShiftDataService',
         'Failed to create service client, falling back to provided supabase client', expect.any(Error));

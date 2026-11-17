@@ -1,9 +1,11 @@
 import { GET } from '@/app/api/staff/shift/today/route';
 import { getStaffContext } from '@/lib/authBiz';
+import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 
 jest.mock('@/lib/authBiz', () => ({ getStaffContext: jest.fn() }));
 jest.mock('@/lib/time', () => ({ TZ: 'Asia/Bishkek', formatDateInTz: jest.fn(() => '2024-01-15') }));
 jest.mock('@/lib/scheduling/config', () => ({ explicitSchedulingEnabled: () => false }));
+jest.mock('@/lib/staffPrivateFields', () => ({ readStaffPrivateFields: jest.fn() }));
 
 function query(data: unknown) {
     const response = { data, error: null };
@@ -27,9 +29,10 @@ describe('/api/staff/shift/today', () => {
         jest.useFakeTimers().setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
         hourlyRate = null; dayOff = false;
         (getStaffContext as jest.Mock).mockResolvedValue({ supabase: mockSupabase, staffId: 'staff-1', bizId: 'biz-1' });
+        (readStaffPrivateFields as jest.Mock).mockImplementation(async () => ({
+            data: { percent_master: 60, percent_salon: 40, hourly_rate: hourlyRate }, error: null }));
         mockSupabase.from.mockImplementation((table: string) => {
             switch (table) {
-                case 'staff': return query({ percent_master: 60, percent_salon: 40, hourly_rate: hourlyRate });
                 case 'staff_time_off': return query(dayOff ? [{ id: 'time-off-1' }] : []);
                 case 'staff_schedule_rules': return query(null);
                 case 'working_hours': return query({ intervals: [{ start: '09:00', end: '18:00' }] });
@@ -57,6 +60,7 @@ describe('/api/staff/shift/today', () => {
         expect(payload.today.exists).toBe(true); expect(payload.today.status).toBe('open');
         expect(payload.today.items).toHaveLength(1); expect(payload.today.shift.ledger_revision).toBe(7);
         expect(payload.hourlyRate).toBe(100); expect(payload.currentHoursWorked).toBe(3);
+        expect(readStaffPrivateFields).toHaveBeenCalledWith(mockSupabase, 'staff-1');
         expect(payload.currentGuaranteedAmount).toBe(300); expect(payload.stats.totalAmount).toBe(5000);
         expect(mockSupabase.rpc).toHaveBeenNthCalledWith(1, 'read_staff_shift_snapshot', {
             p_biz_id: 'biz-1', p_staff_id: 'staff-1', p_shift_date: '2024-01-15',

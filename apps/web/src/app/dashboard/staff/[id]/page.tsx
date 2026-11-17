@@ -6,6 +6,7 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 import { logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { projectStaffDetailReviews } from '@/lib/staffDetailReviews';
+import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -25,11 +26,8 @@ export default async function Page({
         { data: branches, error: eBr },
         { data: ratingConfig },
     ] = await Promise.all([
-        supabase
-            .from('staff')
-            .select('id,full_name,email,phone,branch_id,is_active,biz_id,percent_master,percent_salon,hourly_rate,rating_score')
-            .eq('id', id)
-            .maybeSingle(),
+        // Контакты и условия оплаты доступны только руководству бизнеса и самому сотруднику.
+        readStaffPrivateFields(supabase, id),
         supabase
             .from('branches')
             .select('id,name,is_active')
@@ -50,6 +48,9 @@ export default async function Page({
             }>(),
     ]);
 
+    if (eStaff?.code === '42501') {
+        return notFound();
+    }
     if (eStaff) {
         return <main className="p-6 text-red-600">{eStaff.message}</main>;
     }

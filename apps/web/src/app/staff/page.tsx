@@ -4,6 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import StaffCabinet from './StaffCabinet';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -24,11 +25,8 @@ export default async function Page() {
         pastResult
     ] = await Promise.all([
         // Информация о сотруднике
-        supabase
-            .from('staff')
-            .select('full_name, email, phone, avatar_url')
-            .eq('id', staffId)
-            .single(),
+        // Свои контакты сотрудник читает через проверяющую функцию: колонки закрыты для чужих сессий.
+        readStaffPrivateFields(supabase, staffId),
         // Информация о филиале
         supabase
             .from('branches')

@@ -10,6 +10,7 @@ import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError, logDebug } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { readScheduledDay } from '@/lib/scheduling/read';
+import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 
 export interface ShiftDataServiceOptions {
     supabase: SupabaseClient;
@@ -144,11 +145,7 @@ export async function getShiftData({
     const basePromises = [
         // 1. Настройки сотрудника (проценты и ставка)
         measurePart('staff', () =>
-            client
-                .from('staff')
-                .select('percent_master, percent_salon, hourly_rate')
-                .eq('id', staffId)
-                .maybeSingle(),
+            readStaffPrivateFields(client, staffId),
         ),
 
         // 2. Смена за выбранную дату с позициями (объединенный запрос для уменьшения количества запросов)

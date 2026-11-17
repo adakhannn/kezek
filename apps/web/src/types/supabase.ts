@@ -8024,6 +8024,26 @@ export type Database = {
                 };
                 Returns: unknown;
             };
+            "staff_private_fields": {
+                Args: {
+                    "p_staff_id": string;
+                };
+                Returns: {
+                    "avatar_url": string;
+                    "biz_id": string;
+                    "branch_id": string;
+                    "email": string;
+                    "full_name": string;
+                    "hourly_rate": number;
+                    "id": string;
+                    "is_active": boolean;
+                    "percent_master": number;
+                    "percent_salon": number;
+                    "phone": string;
+                    "rating_score": number;
+                    "user_id": string;
+                }[];
+            };
             "start_cron_execution": {
                 Args: {
                     "p_id": string;

@@ -6,12 +6,14 @@ jest.mock('@/lib/performanceServer', () => ({ measurePerformance: (_name: string
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logDebug: jest.fn() }));
 jest.mock('@/lib/notifications/shiftNotifications', () => ({ sendShiftCloseNotification: jest.fn() }));
 jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
+jest.mock('@/lib/staffPrivateFields', () => ({ readStaffPrivateFields: jest.fn() }));
 jest.mock('@/lib/time', () => ({
     TZ: 'Asia/Bishkek', formatDateInTz: () => '2026-10-09',
     dateAtTz: () => new Date('2026-10-09T18:00:00Z'),
 }));
 
 const { getServiceClient } = jest.requireMock('@/lib/supabaseService');
+const { readStaffPrivateFields } = jest.requireMock('@/lib/staffPrivateFields');
 const row = { id: 'item-1', service_amount: 301, consumables_amount: 49, booking_id: null };
 const shift = { id: 'shift-1', staff_id: 'staff-1', biz_id: 'biz-1',
     shift_date: '2026-10-09', status: 'open', ledger_revision: 7, opened_at: '2026-10-08T21:25:00Z' };
@@ -31,9 +33,9 @@ function setup(rows = [row], itemsError: unknown = null) {
     if (itemsError) readShiftCloseSnapshot.mockRejectedValue(new Error('ledger unavailable'));
     else readShiftCloseSnapshot.mockResolvedValue({ shift, staff: { percent_master: 60, percent_salon: 40, hourly_rate: null }, items: rows,
         timezone: 'Asia/Bishkek', dayStart: '2026-10-08T18:00Z', closeBoundary: '2026-10-09T18:00Z', dayHours: 24 });
+    readStaffPrivateFields.mockResolvedValue({ data: { percent_master: 60, percent_salon: 40, hourly_rate: null, full_name: null, user_id: null }, error: null });
     const supabase = {
-        from: jest.fn((table: string) => table === 'staff' ? query({ data: { percent_master: 60, percent_salon: 40 } })
-            : table === 'staff_shifts' ? query({ data: shift }) : itemQuery),
+        from: jest.fn((table: string) => table === 'staff_shifts' ? query({ data: shift }) : itemQuery),
         rpc: jest.fn().mockResolvedValue({ data: { ok: true, shift: { ...shift, status: 'closed' } }, error: null }),
     };
     getServiceClient.mockReturnValue({ rpc: supabase.rpc, from: () => query({ data: [], error: null }) });
