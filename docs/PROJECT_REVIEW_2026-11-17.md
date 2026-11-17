@@ -20,10 +20,10 @@
 | DB-03 | P0 | Сотрудник переписывает свою строку `staff`: ставки (`percent_*`, `hourly_rate`) перед закрытием смены, `is_active` после увольнения, `biz_id` (вход в чужой бизнес) | политика «Staff can update own profile» | FIXED |
 | DB-04 | P0/P1 | Менеджер/админ меняет любые колонки `businesses` (`owner_id`, `is_approved`, `branch_limit`, `rating_score`) и удаляет бизнес каскадом | политики «manage/update businesses by role» | FIXED |
 | DB-05 | P0/P1 | `grant_role_rpc`/`revoke_role_rpc` (доступны всем) дают менеджеру выдать себе `owner`/`super_admin` бизнеса и снять роль владельца | baseline `grant_role_rpc` | FIXED |
-| DB-06 | P1 | Брони читаются по непроверенному `profiles.phone`: подставив чужой номер в профиль, видишь чужие записи во всех бизнесах | «Clients can view own bookings» | TODO |
-| DB-07 | P1 | Любая строка `user_roles` (включая `client` у уволенных) даёт чтение всех броней бизнеса | «read bookings by biz or client» | TODO |
+| DB-06 | P1 | Брони читаются по непроверенному `profiles.phone`: подставив чужой номер в профиль, видишь чужие записи во всех бизнесах | «Clients can view own bookings» | FIXED |
+| DB-07 | P1 | Любая строка `user_roles` (включая `client` у уволенных) даёт чтение всех броней бизнеса | «read bookings by biz or client» | FIXED |
 | DB-08 | P1 | Нет составных FK (`branch_id`,`biz_id`) и т. п.; односторонние политики позволяют вставлять строки чужого бизнеса (`staff_branch_assignments`, `service_staff`) | схема | TODO |
-| DB-09 | P2 | 161 политика, 92 вызова `auth.uid()` без `(select …)`, ~20 мёртвых write-политик; часть политик `branches` без фильтра `is_active` | все таблицы | TODO |
+| DB-09 | P2 | 161 политика, 92 вызова `auth.uid()` без `(select …)`, ~20 мёртвых write-политик; часть политик `branches` без фильтра `is_active` | все таблицы | TODO (на `bookings` 17 лишних политик удалены в ENG-65) |
 | DB-10 | P2 | Три хранилища ролей и четыре проверки суперадмина расходятся | `is_super_admin`, `has_role` | TODO |
 | DB-11 | P2 | Права по умолчанию для новых объектов — ALL для клиентских ролей (включая TRUNCATE) | baseline default privileges | TODO (TRUNCATE, REFERENCES, TRIGGER и MAINTAIN сняты в ENG-62) |
 | DB-12 | P2 | `purge_expired_holds` каждую минуту сканирует всю `bookings` без индекса | `bookings(expires_at) where status='hold'` | TODO |
@@ -49,6 +49,7 @@
 | API-09 | P2 | Приём аналитики без лимитов и привязки к сессии (`/api/funnel-events`, `/admin/api/analytics/track`) | `funnelEventsService.ts` | TODO |
 | API-10 | P2 | Отвязка WhatsApp оставляет номер в `auth.users.phone`/metadata | `socialIdentityUnlinkService` | TODO |
 | API-11 | P2 | Продажа пакетов визитов без идемпотентности; даты по UTC вместо времени бизнеса | `visitPackagesService.ts` | TODO |
+| API-12 | P3 | POST на несуществующий путь отвечает 200 со страницей «не найдено» (GET — 404): клиент API получает HTML вместо JSON-ошибки | not-found Next.js | TODO |
 
 ## Фронтенд
 
@@ -111,4 +112,6 @@
 
 DB-01…05, API-01, API-02 и FE-01 закрыты как ENG-62…64 в [реестре](ENGINEERING_FINDINGS.md): миграция `20261117200000_close_client_write_paths.sql` применена в проде 18 ноября и проверена от ролей в откатываемой транзакции, код в `main`. DB-11 закрыт частично: TRUNCATE, REFERENCES, TRIGGER и MAINTAIN у клиентских ролей сняты на всех таблицах проекта и в правах по умолчанию; остались только объекты PostGIS, принадлежащие `supabase_admin`.
 
-Дальше по порядку: P1 — DB-06/07/08, API-03…07, FE-02/03, ARCH-01…04, MOB-01, CI-01.
+DB-06 и DB-07 закрыты как ENG-65: миграция `20261118090000_bookings_read_scope.sql` применена в проде 18 ноября; настоящие аккаунты видят столько же броней, сколько до неё.
+
+Дальше по порядку: P1 — DB-08, API-03…07, FE-02/03, ARCH-01…04, MOB-01, CI-01.
