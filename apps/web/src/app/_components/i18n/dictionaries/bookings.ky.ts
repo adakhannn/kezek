@@ -154,4 +154,5 @@ export const bookingsKy = {
     'bookings.list.page': 'Барак',
     'bookings.list.prev': 'Мурунку',
     'bookings.workspace.emptyHint': 'Башка мезгилди, издөөнү же филиал боюнча чыпканы колдонуп көрүңүз.',
+    'bookings.list.loading': 'Жүктөлүүдө...',
 } as const;

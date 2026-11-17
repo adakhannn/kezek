@@ -219,7 +219,8 @@ export function useShiftManagement(
 
             setClosingProgress({
                 show: true,
-                message: t('staff.finance.closing.calculating', `Расчет сумм для ${items.length} клиентов...`),
+                message: t('staff.finance.closing.calculating', 'Расчёт сумм для {count} клиентов…')
+                    .replace('{count}', String(items.length)),
                 progress: 20,
                 canCancel: true,
             });

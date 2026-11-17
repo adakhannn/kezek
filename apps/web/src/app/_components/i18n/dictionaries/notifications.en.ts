@@ -19,4 +19,5 @@ export const notificationsEn = {
     'notifications.whatsapp.sending': 'Sending...',
     'notifications.whatsapp.submit': 'Connect',
     'notifications.whatsapp.updateError': 'Failed to update phone',
+    'notifications.whatsapp.message': 'Connect WhatsApp to get booking notifications. It is easier and faster!',
 } as const;

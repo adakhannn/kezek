@@ -154,4 +154,8 @@ export const bookingKy = {
     'booking.loading': 'Күтө туруңуз',
     'booking.retry': 'Кайталоо',
     'booking.summary.promotionFallback': 'Атайын сунуш бар',
+    'booking.finalAmount': 'Жыйынтык сумма:',
+    'booking.nav.confirm': 'Ырастоо',
+    'booking.promotionApplied': 'Колдонулган акция:',
+    'booking.summary.promotionWillApply': 'Төлөөдө акция колдонулат:',
 } as const;

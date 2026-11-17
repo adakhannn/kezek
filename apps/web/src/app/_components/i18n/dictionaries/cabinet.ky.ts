@@ -195,4 +195,5 @@ export const cabinetKy = {
     'cabinet.profile.deletion.blocker.business_roles': 'Администратордон системадагы жана бизнестеги ролдоруңузду өчүрүүнү сураныңыз.',
     'cabinet.profile.deletion.blocker.active_staff': 'Ээсинен кызматкер картчаңызды өчүрүүнү же жашырууну сураныңыз.',
     'cabinet.profile.deletion.blocker.active_bookings': 'Адегенде алдыдагы активдүү жазылууларды жокко чыгарыңыз же бүтүрүңүз.',
+    'cabinet.bookings.card.promotionApplied': 'Колдонулган акция:',
 } as const;

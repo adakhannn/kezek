@@ -273,10 +273,8 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 logError('StaffBookings', 'Failed to track booking_success funnel event', e);
             }
             toast.showSuccess(
-                t(
-                    'staff.cabinet.bookings.create.success',
-                    `Создана запись #${bookingId.slice(0, 8)}`,
-                ),
+                t('staff.cabinet.bookings.create.success', 'Создана запись #{id}')
+                    .replace('{id}', bookingId.slice(0, 8)),
             );
 
             setSelectedServiceIds([]);

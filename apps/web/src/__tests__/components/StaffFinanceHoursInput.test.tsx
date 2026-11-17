@@ -53,7 +53,7 @@ test('captures original revision at edit start across refreshed props and retain
     expect((screen.getByRole('spinbutton') as HTMLInputElement).disabled).toBe(true);
     expect((screen.getByRole('button',{name:'Сохранить',exact:true}) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button',{name:'Сохранить',exact:true}));expect(global.fetch).toHaveBeenCalledTimes(1);expect(refresh).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button',{name:'Discard input and reload shift'}));await waitFor(()=>expect(refresh).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole('button',{name:'Отменить ввод и загрузить смену заново'}));await waitFor(()=>expect(refresh).toHaveBeenCalledTimes(1));
     await waitFor(()=>expect(screen.queryByRole('spinbutton')).toBeNull());
     fireEvent.click(screen.getByRole('button',{name:'Исправить часы',exact:true}));
     expect((screen.getByRole('spinbutton') as HTMLInputElement).value).toBe('3.00');
