@@ -22,7 +22,7 @@ export default function DangerActions({ staffId, allowPermanentDelete = true }: 
             const res = await fetch(`/api/staff/${encodeURIComponent(staffId)}/dismiss`, { method: 'POST' });
             const json = await res.json().catch(() => ({}));
             if (!res.ok || !json.ok) {
-                setErr(json.error || json.message || `HTTP_${res.status}`);
+                setErr(json.message || json.error || `HTTP_${res.status}`);
                 return;
             }
             r.push('/dashboard/staff?dismissed=1');
@@ -41,7 +41,7 @@ export default function DangerActions({ staffId, allowPermanentDelete = true }: 
             const res = await fetch(`/api/staff/${encodeURIComponent(staffId)}/delete`, { method: 'POST' });
             const json = await res.json().catch(() => ({}));
             if (!res.ok || !json.ok) {
-                setErr(json.error || json.message || `HTTP_${res.status}`);
+                setErr(json.message || json.error || `HTTP_${res.status}`);
                 return;
             }
             r.push('/dashboard/staff?deleted=1');

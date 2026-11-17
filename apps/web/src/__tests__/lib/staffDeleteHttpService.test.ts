@@ -54,13 +54,23 @@ describe('staffDeleteHttpService', () => {
     expect(body.ok).toBe(true);
   });
 
-  test('refuses destructive legacy cleanup before any write in explicit mode', async () => {
+  test('maps a refusal from the database command to its HTTP status and message', async () => {
+    (runStaffDeleteService as jest.Mock).mockResolvedValue({ ok: false, error: 'conflict', message: 'History kept', status: 409 });
+
+    const response = await runStaffDeleteHttp({ params: { id: 'staff-1' } });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toMatchObject({ ok: false, error: 'conflict', message: 'History kept' });
+  });
+
+  test('the schedule mode does not change the rule: the database command decides', async () => {
     process.env.SCHEDULE_V2_ENABLED = 'true';
+    (runStaffDeleteService as jest.Mock).mockResolvedValue({ ok: true });
     try {
       const response = await runStaffDeleteHttp({ params: { id: 'staff-1' } });
-      expect(response.status).toBe(409);
-      expect(runStaffDeleteService).not.toHaveBeenCalled();
-      expect(getServiceClient).not.toHaveBeenCalled();
+      expect(response.status).toBe(200);
+      expect(runStaffDeleteService).toHaveBeenCalledTimes(1);
     } finally { delete process.env.SCHEDULE_V2_ENABLED; }
   });
 });

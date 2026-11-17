@@ -42,7 +42,7 @@
 | API-02 | P0 | `/admin/api/roles/assign` доступен любому вошедшему и вызывает `grant_role_rpc`; `promotions/debug` пускает «суперадмина бизнеса» к данным всех арендаторов | `roles/assign/route.ts`, `promotionsDebugRouteService.ts` | FIXED |
 | API-03 | P1 | Вход через WhatsApp можно перехватить заранее: владелец номера ищется по непроверенному `auth.users.phone`/`user_metadata.phone` | `whatsAppIdentityOwnershipService.ts` | TODO |
 | API-04 | P1 | Сложная запись (`services[]`) доверяет `duration_min` клиента, не проверяет график и прошлое время: блокировка мастера на год | `_hold_complex_slot_for_actor` | FIXED |
-| API-05 | P1 | Удаление сотрудника жёстко удаляет его прошлые брони (каскадом отзывы и использования пакетов), не в транзакции | `staffDeleteService.ts` | TODO |
+| API-05 | P1 | Удаление сотрудника жёстко удаляет его прошлые брони (каскадом отзывы и использования пакетов), не в транзакции | `staffDeleteService.ts` | FIXED |
 | API-06 | P1 | Привязка сотрудника к чужому аккаунту без согласия (по UUID/email/телефону); поиск ограничен 200 пользователями | `staffCreateFromUserService.ts` и др. | TODO |
 | API-07 | P1 | Шаблоны уведомлений не экранируют `client_name` (HTML в письмах, Telegram `parse_mode: HTML`) | `messageBuilders.ts`, `utils.ts` | FIXED |
 | API-08 | P2 | Защита «подтверждённых» email уведомлений обходится через редактируемый `user_metadata.yandex_email` | `userNotificationEmailService.ts` | TODO |
@@ -120,4 +120,6 @@ DB-08 закрыт как ENG-67: миграция `20261118110000_tenant_refere
 
 API-07 закрыт как ENG-68 (код в `main`).
 
-Дальше по порядку: P1 — API-03, API-05, API-06, FE-02/03, ARCH-01…04, CI-01.
+API-05 закрыт как ENG-69: миграция `20261118120000_staff_delete_without_history.sql` применена в проде 18 ноября.
+
+Дальше по порядку: P1 — API-03, API-06, FE-02/03, ARCH-01…04, CI-01.

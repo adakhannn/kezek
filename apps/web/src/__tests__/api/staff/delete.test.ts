@@ -1,7 +1,6 @@
 import { POST } from '@/app/api/staff/[id]/delete/route';
 import {
     createMockRequest,
-    createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
     setupApiTestMocks,
@@ -10,7 +9,6 @@ import {
 setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -26,140 +24,44 @@ jest.mock('@/lib/routeParams', () => ({
     getRouteParamUuid: jest.fn(),
 }));
 
-jest.mock('@/lib/dbHelpers', () => ({
-    checkResourceBelongsToBiz: jest.fn(),
-}));
-
 describe('/api/staff/[id]/delete', () => {
-    const mockAdmin = createMockSupabase();
     const staffId = 'staff-uuid';
     const bizId = 'biz-uuid';
-
-    function createFutureBookingsCheck(count: number) {
-        return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            neq: jest.fn().mockReturnThis(),
-            gt: jest.fn().mockResolvedValue({
-                count,
-                error: null,
-            }),
-        };
-    }
-
-    function createBizAndStaffDeleteWithLt() {
-        const query = {
-            delete: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            lt: jest.fn().mockResolvedValue({
-                data: null,
-                error: null,
-            }),
-        };
-
-        return query;
-    }
-
-    function createDoubleEqDelete() {
-        const query = {
-            delete: jest.fn().mockReturnThis(),
-            eq: jest.fn(),
-        };
-
-        let eqCalls = 0;
-        query.eq.mockImplementation(() => {
-            eqCalls += 1;
-            return eqCalls >= 2
-                ? Promise.resolve({ data: null, error: null })
-                : query;
-        });
-
-        return query;
-    }
-
-    function createSingleEqDelete() {
-        return {
-            delete: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockResolvedValue({
-                data: null,
-                error: null,
-            }),
-        };
-    }
+    const request = () => createMockRequest(`http://localhost/api/staff/${staffId}/delete`, { method: 'POST' });
+    const context = { params: Promise.resolve({ id: staffId }) };
+    let admin: { rpc: jest.Mock; from: jest.Mock };
 
     beforeEach(() => {
         jest.clearAllMocks();
-
+        delete process.env.SCHEDULE_V2_ENABLED;
+        admin = { rpc: jest.fn(), from: jest.fn() };
         (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId });
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
         (getRouteParamUuid as jest.Mock).mockResolvedValue(staffId);
+        (getServiceClient as jest.Mock).mockReturnValue(admin);
     });
 
-    test('returns 404 when staff is missing', async () => {
-        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-            data: null,
-            error: 'Resource not found',
-        });
+    test('returns 404 when the business has no such staff member', async () => {
+        admin.rpc.mockResolvedValue({ error: { message: 'STAFF_NOT_FOUND', code: 'P0002' } });
 
-        const req = createMockRequest(`http://localhost/api/staff/${staffId}/delete`, {
-            method: 'POST',
-        });
-
-        const res = await POST(req, { params: { id: staffId } });
-        await expectErrorResponse(res, 404);
+        await expectErrorResponse(await POST(request(), context), 404);
     });
 
-    test('returns 409 when future active bookings exist', async () => {
-        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-            data: {
-                id: staffId,
-                biz_id: bizId,
-                user_id: null,
-                is_active: true,
-                full_name: 'Test Staff',
-            },
-            error: null,
-        });
+    test('returns 409 with the dismissal advice when the staff member has history', async () => {
+        admin.rpc.mockResolvedValue({ error: { message: 'STAFF_HAS_HISTORY', code: 'P0001' } });
 
-        mockAdmin.from.mockReturnValueOnce(createFutureBookingsCheck(5));
+        const response = await POST(request(), context);
+        const body = await response.json();
 
-        const req = createMockRequest(`http://localhost/api/staff/${staffId}/delete`, {
-            method: 'POST',
-        });
-
-        const res = await POST(req, { params: { id: staffId } });
-        await expectErrorResponse(res, 409);
+        expect(response.status).toBe(409);
+        expect(body.message).toContain('увольте');
+        expect(admin.from).not.toHaveBeenCalled();
     });
 
-    test('deletes staff without future bookings', async () => {
-        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-            data: {
-                id: staffId,
-                biz_id: bizId,
-                user_id: null,
-                is_active: true,
-                full_name: 'Test Staff',
-            },
-            error: null,
-        });
+    test('deletes a staff member without history through one database command', async () => {
+        admin.rpc.mockResolvedValue({ error: null });
 
-        mockAdmin.from
-            .mockReturnValueOnce(createFutureBookingsCheck(0))
-            .mockReturnValueOnce(createBizAndStaffDeleteWithLt())
-            .mockReturnValueOnce(createDoubleEqDelete())
-            .mockReturnValueOnce(createSingleEqDelete())
-            .mockReturnValueOnce(createDoubleEqDelete())
-            .mockReturnValueOnce(createDoubleEqDelete())
-            .mockReturnValueOnce(createDoubleEqDelete())
-            .mockReturnValueOnce(createDoubleEqDelete());
-
-        const req = createMockRequest(`http://localhost/api/staff/${staffId}/delete`, {
-            method: 'POST',
-        });
-
-        const res = await POST(req, { params: { id: staffId } });
-        const data = await expectSuccessResponse(res, 200);
-
-        expect(data).toHaveProperty('ok', true);
+        await expectSuccessResponse(await POST(request(), context), 200);
+        expect(admin.rpc).toHaveBeenCalledWith('delete_staff_without_history', { p_biz_id: bizId, p_staff_id: staffId });
+        expect(admin.from).not.toHaveBeenCalled();
     });
 });

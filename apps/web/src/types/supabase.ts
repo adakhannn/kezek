@@ -5479,6 +5479,13 @@ export type Database = {
                 };
                 Returns: undefined;
             };
+            "delete_staff_without_history": {
+                Args: {
+                    "p_biz_id": string;
+                    "p_staff_id": string;
+                };
+                Returns: undefined;
+            };
             "disablelongtransactions": {
                 Args: Record<PropertyKey, never>;
                 Returns: string;
