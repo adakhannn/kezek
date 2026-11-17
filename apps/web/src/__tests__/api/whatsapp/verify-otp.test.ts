@@ -70,7 +70,6 @@ describe('/api/whatsapp/verify-otp', () => {
         (createSupabaseAdminClient as jest.Mock).mockReturnValue({
             auth: {
                 admin: {
-                    listUsers: jest.fn().mockResolvedValue({ data: { users: [] }, error: null }),
                     getUserById: jest.fn(async (id: string) => ({
                         data: { user: { id, app_metadata: storedOtp ? { whatsapp_link_otp: storedOtp } : {} } },
                         error: null,
@@ -78,6 +77,8 @@ describe('/api/whatsapp/verify-otp', () => {
                     updateUserById,
                 },
             },
+            // Owner lookup by a confirmed Auth phone (find_accounts_by_contact): no other owner.
+            rpc: jest.fn().mockResolvedValue({ data: [], error: null }),
             from: jest.fn(() => {
                 const lookup = {
                     eq: jest.fn().mockReturnThis(),
