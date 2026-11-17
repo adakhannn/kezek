@@ -20,7 +20,7 @@ type Props = {
 };
 
 type ApiOk = { ok: true; id?: string };
-type ApiErr = { ok: false; error?: string };
+type ApiErr = { ok: false; error?: string; message?: string };
 type ApiResp = ApiOk | ApiErr;
 
 export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }: Props) {
@@ -112,7 +112,8 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
             }
 
             if (!resp.ok || !('ok' in data) || !data.ok) {
-                const apiErr = (data && 'error' in data ? (data as ApiErr).error : undefined) ?? `HTTP ${resp.status}`;
+                const failure = data && 'error' in data ? (data as ApiErr) : undefined;
+                const apiErr = failure?.message ?? failure?.error ?? `HTTP ${resp.status}`;
                 throw new Error(apiErr);
             }
 

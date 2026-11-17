@@ -144,4 +144,39 @@ describe('branchUpdateService', () => {
       expect(admin.from).not.toHaveBeenCalled();
     },
   );
+
+  test('rejects directory links to foreign hosts without writing', async () => {
+    const admin = createAdmin();
+    (checkResourceBelongsToBiz as jest.Mock).mockResolvedValue({ data: { id: branchId, biz_id: bizId }, error: null });
+    const result = await updateBranch({
+      admin,
+      branchId,
+      bizId,
+      body: { directory_links: { instagram: 'https://instagram.com/salon', two_gis: 'https://kezek.kg/' } },
+    });
+    expect(result).toEqual({
+      ok: false,
+      error: 'validation',
+      message: 'Ссылка должна вести на сайт своего сервиса: 2ГИС',
+      status: 400,
+    });
+    expect(admin.from).not.toHaveBeenCalled();
+  });
+
+  test('stores normalized directory links for every service', async () => {
+    const admin = createAdmin();
+    (checkResourceBelongsToBiz as jest.Mock).mockResolvedValue({ data: { id: branchId, biz_id: bizId }, error: null });
+    const query = createUpdateQuery({ error: null });
+    admin.from.mockReturnValueOnce(query);
+    const result = await updateBranch({
+      admin,
+      branchId,
+      bizId,
+      body: { directory_links: { instagram: ' instagram.com/salon ', two_gis: '', extra: 'https://example.com' } },
+    });
+    expect(result.ok).toBe(true);
+    expect(query.update).toHaveBeenCalledWith({
+      directory_links: { instagram: 'https://instagram.com/salon', two_gis: null, google_maps: null, yandex_maps: null },
+    });
+  });
 });

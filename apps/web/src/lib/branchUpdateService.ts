@@ -2,6 +2,7 @@ import type { z } from 'zod';
 
 import { validatePublicContactPatch } from '@/lib/businessContacts';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
+import { validateDirectoryLinks } from '@/lib/directoryLinks';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
 import { branchUpdateSchema } from '@/lib/validation/businessUpdateSchemas';
 
@@ -83,8 +84,20 @@ export async function updateBranch(params: {
   }
 
   const updateData: Record<string, unknown> = { ...contacts.value };
-  for (const field of ['name', 'address', 'is_active', 'inherit_business_contacts', 'directory_links'] as const) {
+  for (const field of ['name', 'address', 'is_active', 'inherit_business_contacts'] as const) {
     if (Object.hasOwn(body, field)) updateData[field] = body[field];
+  }
+  if (Object.hasOwn(body, 'directory_links')) {
+    const links = validateDirectoryLinks(body.directory_links);
+    if (!links.ok) {
+      return {
+        ok: false,
+        error: 'validation',
+        message: links.message,
+        status: 400,
+      };
+    }
+    updateData.directory_links = links.value;
   }
 
   if ('lat' in body || 'lon' in body) {

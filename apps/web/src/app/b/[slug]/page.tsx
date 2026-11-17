@@ -6,6 +6,7 @@ import BusinessPageState from './BusinessPageState';
 
 import { getT, getServerLocale } from '@/app/_components/i18n/server';
 import { BusinessPageViewTracker } from '@/lib/analyticsTrackEvent';
+import { sanitizeDirectoryLinks } from '@/lib/directoryLinks';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { generateAlternates } from '@/lib/seo';
 
@@ -28,14 +29,14 @@ async function getData(slug: string) {
     }
 
     const [biz] = await q(
-        `businesses?select=id,slug,name,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,rating_score,tz&slug=eq.${slug}&is_approved=eq.true&limit=1`,
+        `businesses?select=id,slug,name,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,rating_score,tz&slug=eq.${encodeURIComponent(slug)}&is_approved=eq.true&limit=1`,
     );
 
     if (!biz) {
         return null;
     }
 
-    const [branches, services, staff] = await Promise.all([
+    const [rawBranches, services, staff] = await Promise.all([
         q(
             `branches?select=id,name,address,rating_score,directory_links,contact_phone,contact_whatsapp,contact_email,website_url,inherit_business_contacts&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`,
         ),
@@ -47,6 +48,11 @@ async function getData(slug: string) {
         ),
     ]);
 
+    // Кнопки «2ГИС», «Instagram» и карт показываем, только если ссылка ведёт на домен сервиса.
+    const branches = rawBranches.map((branch: Record<string, unknown>) => ({
+        ...branch,
+        directory_links: sanitizeDirectoryLinks(branch.directory_links),
+    }));
     const branchIds = branches.map((branch: { id: string }) => branch.id);
     let promotions: Array<{
         id: string;

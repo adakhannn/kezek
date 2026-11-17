@@ -171,4 +171,51 @@ describe('branchCreateService', () => {
       },
     }));
   });
+
+  test('rejects directory links to foreign hosts before any database call', async () => {
+    const admin = createAdmin();
+    const result = await createBranch({
+      admin,
+      bizId: 'biz-id',
+      body: { name: 'Branch', directory_links: { google_maps: 'https://kezek.kg/' } },
+    });
+    expect(result).toEqual({
+      ok: false,
+      error: 'validation',
+      message: 'Ссылка должна вести на сайт своего сервиса: Google Карты',
+      status: 400,
+    });
+    expect(admin.from).not.toHaveBeenCalled();
+  });
+
+  test('copies only service links from the application to the first branch', async () => {
+    const admin = createAdmin();
+    const insert = jest.fn().mockReturnThis();
+    admin.from.mockReturnValueOnce({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+    }).mockReturnValueOnce({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({
+        data: { directory_links: { instagram: 'https://kezek.kg/', two_gis: 'https://2gis.kg/firm/1' } },
+        error: null,
+      }),
+    }).mockReturnValueOnce({
+      insert,
+      select: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data: { id: 'branch-id' }, error: null }),
+    });
+
+    const result = await createBranch({ admin, bizId: 'biz-id', body: { name: 'First Branch' } });
+
+    expect(result.ok).toBe(true);
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      directory_links: { instagram: null, two_gis: 'https://2gis.kg/firm/1', google_maps: null, yandex_maps: null },
+    }));
+  });
 });

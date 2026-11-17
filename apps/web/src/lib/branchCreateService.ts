@@ -1,4 +1,5 @@
 import { type PublicContactFields, validatePublicContacts } from '@/lib/businessContacts';
+import { sanitizeDirectoryLinks, validateDirectoryLinks } from '@/lib/directoryLinks';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
 
 export type BranchCreateBody = PublicContactFields & {
@@ -70,8 +71,16 @@ export async function createBranch(params: {
     coordsWkt = coordsToEWKT(v.lat, v.lon);
   }
 
-  const explicitLinks = normalizeDirectoryLinks(body.directory_links);
-  const directoryLinks = await resolveInitialDirectoryLinks(admin, bizId, explicitLinks);
+  const explicitLinks = validateDirectoryLinks(body.directory_links);
+  if (!explicitLinks.ok) {
+    return {
+      ok: false,
+      error: 'validation',
+      message: explicitLinks.message,
+      status: 400,
+    };
+  }
+  const directoryLinks = await resolveInitialDirectoryLinks(admin, bizId, explicitLinks.value);
   const contacts = validatePublicContacts(body);
   if (!contacts.ok) {
     return {
@@ -107,11 +116,6 @@ export async function createBranch(params: {
   };
 }
 
-function normalizeDirectoryLinks(input?: Record<string, string | null>) {
-  const keys = ['instagram', 'two_gis', 'google_maps', 'yandex_maps'] as const;
-  return Object.fromEntries(keys.map((key) => [key, typeof input?.[key] === 'string' && input[key]?.trim() ? input[key]!.trim() : null]));
-}
-
 function hasDirectoryLinks(input: Record<string, string | null>) {
   return Object.values(input).some(Boolean);
 }
@@ -142,5 +146,6 @@ export async function resolveInitialDirectoryLinks(
     return explicitLinks;
   }
 
-  return normalizeDirectoryLinks(application.directory_links as Record<string, string | null>);
+  // Заявку заполняет сам бизнес; на публичный филиал переносим только ссылки на домены сервисов.
+  return sanitizeDirectoryLinks(application.directory_links);
 }
