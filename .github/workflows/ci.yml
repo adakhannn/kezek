@@ -403,6 +403,7 @@ jobs:
           - test-privileged-maintenance-isolated.cjs
           - test-user-lifecycle-isolated.cjs
           - test-identity-surface-hardening-isolated.cjs
+          - test-identity-views-row-filter-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
