@@ -14,7 +14,7 @@ describe('promotionsDebugRouteService', () => {
       auth: {
         getUser: jest.fn(),
       },
-      from: jest.fn(),
+      rpc: jest.fn(),
     } as unknown as jest.Mocked<PromotionsDebugAuthClientLike>;
   }
 
@@ -43,14 +43,7 @@ describe('promotionsDebugRouteService', () => {
     authClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'user-id' } },
     });
-    authClient.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({
-        data: null,
-        error: null,
-      }),
-    });
+    authClient.rpc.mockResolvedValueOnce({ data: false, error: null });
 
     const result = await runPromotionsDebugRoute({
       authClient,
@@ -66,19 +59,30 @@ describe('promotionsDebugRouteService', () => {
     });
   });
 
+  test('rejects a business-scoped super_admin role and rpc errors', async () => {
+    const authClient = createAuthClient();
+    authClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-id' } },
+    });
+    authClient.rpc.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
+
+    const result = await runPromotionsDebugRoute({
+      authClient,
+      serviceClient: {} as never,
+      requestUrl: 'http://localhost/api/admin/promotions/debug?bizId=123e4567-e89b-12d3-a456-426614174000',
+    });
+
+    expect(authClient.rpc).toHaveBeenCalledWith('is_super_admin');
+    expect(result).toMatchObject({ ok: false, error: 'forbidden', status: 403 });
+    expect(loadPromotionsDebugData).not.toHaveBeenCalled();
+  });
+
   test('validates missing identifiers', async () => {
     const authClient = createAuthClient();
     authClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'user-id' } },
     });
-    authClient.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({
-        data: { roles: { key: 'super_admin' } },
-        error: null,
-      }),
-    });
+    authClient.rpc.mockResolvedValueOnce({ data: true, error: null });
 
     const result = await runPromotionsDebugRoute({
       authClient,
@@ -99,14 +103,7 @@ describe('promotionsDebugRouteService', () => {
     authClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'user-id' } },
     });
-    authClient.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({
-        data: { roles: { key: 'super_admin' } },
-        error: null,
-      }),
-    });
+    authClient.rpc.mockResolvedValueOnce({ data: true, error: null });
     (loadPromotionsDebugData as jest.Mock).mockResolvedValue({
       client: { id: 'client-id' },
     });

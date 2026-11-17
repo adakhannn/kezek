@@ -59,15 +59,7 @@ describe('/api/admin/promotions/debug', () => {
             });
 
             // Мокаем проверку роли (не суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
+            mockSupabase.rpc.mockResolvedValueOnce({ data: false, error: null });
 
             const req = createMockRequest('http://localhost/api/admin/promotions/debug?clientId=client-id', {
                 method: 'GET',
@@ -90,19 +82,7 @@ describe('/api/admin/promotions/debug', () => {
             });
 
             // Мокаем проверку роли (суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        roles: {
-                            key: 'super_admin',
-                        },
-                    },
-                    error: null,
-                }),
-            });
+            mockSupabase.rpc.mockResolvedValueOnce({ data: true, error: null });
 
             const req = createMockRequest('http://localhost/api/admin/promotions/debug', {
                 method: 'GET',
@@ -123,19 +103,7 @@ describe('/api/admin/promotions/debug', () => {
             });
 
             // Мокаем проверку роли (суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        roles: {
-                            key: 'super_admin',
-                        },
-                    },
-                    error: null,
-                }),
-            });
+            mockSupabase.rpc.mockResolvedValueOnce({ data: true, error: null });
 
             const req = createMockRequest('http://localhost/api/admin/promotions/debug?clientId=invalid-uuid', {
                 method: 'GET',
@@ -160,19 +128,7 @@ describe('/api/admin/promotions/debug', () => {
             });
 
             // Мокаем проверку роли (суперадмин)
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        roles: {
-                            key: 'super_admin',
-                        },
-                    },
-                    error: null,
-                }),
-            });
+            mockSupabase.rpc.mockResolvedValueOnce({ data: true, error: null });
 
             mockAdmin.from.mockImplementation((table: string) => {
                 if (table === 'profiles') {

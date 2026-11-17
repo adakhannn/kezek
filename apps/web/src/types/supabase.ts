@@ -5098,13 +5098,6 @@ export type Database = {
                 };
                 Returns: undefined;
             };
-            "assign_business_owner": {
-                Args: {
-                    "p_biz_id": string;
-                    "p_user_id": string;
-                };
-                Returns: undefined;
-            };
             "begin_booking_notification_delivery": {
                 Args: {
                     "p_delivery_key": string;
@@ -5478,12 +5471,6 @@ export type Database = {
                 };
                 Returns: undefined;
             };
-            "delete_business_cascade": {
-                Args: {
-                    "p_biz_id": string;
-                };
-                Returns: undefined;
-            };
             "disablelongtransactions": {
                 Args: Record<PropertyKey, never>;
                 Returns: string;
@@ -5599,6 +5586,18 @@ export type Database = {
                     "p_actor_id": string;
                 };
                 Returns: boolean;
+            };
+            "find_accounts_by_contact": {
+                Args: {
+                    "p_email"?: string;
+                    "p_phone_digits"?: string;
+                };
+                Returns: {
+                    "email": string;
+                    "full_name": string;
+                    "id": string;
+                    "phone": string;
+                }[];
             };
             "finish_booking_notification": {
                 Args: {
@@ -5991,14 +5990,6 @@ export type Database = {
                 Args: {
                     "p_branch_id": string;
                     "p_user_id": string;
-                };
-                Returns: undefined;
-            };
-            "grant_role_rpc": {
-                Args: {
-                    "p_biz": string;
-                    "p_role": string;
-                    "p_user": string;
                 };
                 Returns: undefined;
             };
@@ -6645,14 +6636,6 @@ export type Database = {
                 Args: {
                     "p_branch_id": string;
                     "p_user_id": string;
-                };
-                Returns: undefined;
-            };
-            "revoke_role_rpc": {
-                Args: {
-                    "p_biz": string;
-                    "p_role": string;
-                    "p_user": string;
                 };
                 Returns: undefined;
             };
@@ -7986,6 +7969,13 @@ export type Database = {
                     "rating_score": number;
                     "user_id": string;
                 }[];
+            };
+            "staff_write_allowed": {
+                Args: {
+                    "p_biz_id": string;
+                    "p_branch_id": string;
+                };
+                Returns: boolean;
             };
             "start_cron_execution": {
                 Args: {

@@ -8,18 +8,10 @@ export type PromotionsDebugAuthClientLike = {
       data: { user: { id: string } | null };
     }>;
   };
-  from(table: string): {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => {
-          single: () => Promise<{
-            data: unknown;
-            error: unknown;
-          }>;
-        };
-      };
-    };
-  };
+  rpc(fn: 'is_super_admin'): PromiseLike<{
+    data: unknown;
+    error: unknown;
+  }>;
 };
 
 export type PromotionsDebugRouteResult =
@@ -66,14 +58,10 @@ export async function runPromotionsDebugRoute(params: {
     };
   }
 
-  const { data: roleData } = await params.authClient
-    .from('user_roles')
-    .select('roles!inner(key)')
-    .eq('user_id', user.id)
-    .eq('roles.key', 'super_admin')
-    .single();
+  // The platform check: a business-scoped 'super_admin' role row must not open every tenant's data.
+  const { data: isSuperAdmin, error: superAdminError } = await params.authClient.rpc('is_super_admin');
 
-  if (!roleData) {
+  if (superAdminError || isSuperAdmin !== true) {
     return {
       ok: false,
       error: 'forbidden',

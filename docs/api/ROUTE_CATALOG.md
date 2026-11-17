@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **177 route-файлов, 208 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **176 route-файлов, 207 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 513 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `a5331e02975103d8a772252df8a584dccec1b4b8b1424189cbe031bd1f08345b`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 512 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `8ef47eba55731f00846574eb9ff511d8920e82c7f21161f970a2a8a1b567d9ec`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -52,7 +52,6 @@
 | `/admin/api/role-applications` | GET | [route](../../apps/web/src/app/admin/api/role-applications/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/roles/[id]/delete` | POST, DELETE | [route](../../apps/web/src/app/admin/api/roles/[id]/delete/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/roles/[id]/update` | POST, PUT, PATCH | [route](../../apps/web/src/app/admin/api/roles/[id]/update/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
-| `/admin/api/roles/assign` | POST | [route](../../apps/web/src/app/admin/api/roles/assign/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/roles/create` | POST | [route](../../apps/web/src/app/admin/api/roles/create/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/roles/list` | GET, POST | [route](../../apps/web/src/app/admin/api/roles/list/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/system-analytics/overview` | GET | [route](../../apps/web/src/app/admin/api/system-analytics/overview/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |

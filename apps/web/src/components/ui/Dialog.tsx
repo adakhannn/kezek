@@ -23,6 +23,8 @@ const sizeStyles = {
     lg: 'max-w-2xl',
 };
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 export function Dialog({
     open,
     onClose,
@@ -39,6 +41,15 @@ export function Dialog({
     const previouslyFocusedRef = useRef<HTMLElement | null>(null);
     const titleId = useId();
     const descriptionId = useId();
+    // Parents usually pass an inline onClose, so it changes on every parent render. The effect
+    // below reads the latest handlers from refs and runs only when the dialog opens or closes;
+    // re-running it moved focus to the first control after each keystroke in a form (FE-01).
+    const onCloseRef = useRef(onClose);
+    const dismissibleRef = useRef(dismissible);
+    useEffect(() => {
+        onCloseRef.current = onClose;
+        dismissibleRef.current = dismissible;
+    });
 
     useEffect(() => {
         if (!open) return;
@@ -47,31 +58,23 @@ export function Dialog({
         previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         document.body.style.overflow = 'hidden';
 
-        const focusDialog = () => {
-            if (!dialogRef.current) return;
-            const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-            );
-            if (focusable.length > 0) {
-                focusable[0].focus();
-                return;
-            }
-            dialogRef.current.focus();
-        };
-
-        window.requestAnimationFrame(focusDialog);
+        // Initial focus: the first control, else the dialog itself; never taken from a control
+        // inside the dialog that already has it.
+        const frame = window.requestAnimationFrame(() => {
+            const dialog = dialogRef.current;
+            if (!dialog || dialog.contains(document.activeElement)) return;
+            (dialog.querySelector<HTMLElement>(FOCUSABLE) ?? dialog).focus();
+        });
 
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && dismissible) {
-                onClose();
+            if (event.key === 'Escape' && dismissibleRef.current) {
+                onCloseRef.current();
                 return;
             }
 
             if (event.key !== 'Tab' || !dialogRef.current) return;
 
-            const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-            );
+            const focusable = dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
             if (focusable.length === 0) {
                 event.preventDefault();
                 dialogRef.current.focus();
@@ -97,11 +100,12 @@ export function Dialog({
         window.addEventListener('keydown', handleKeyDown);
 
         return () => {
+            window.cancelAnimationFrame(frame);
             document.body.style.overflow = previousOverflow;
             window.removeEventListener('keydown', handleKeyDown);
             previouslyFocusedRef.current?.focus();
         };
-    }, [dismissible, onClose, open]);
+    }, [open]);
 
     if (!open) return null;
 

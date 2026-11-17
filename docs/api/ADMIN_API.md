@@ -58,7 +58,6 @@
 <!-- api-contract: PUT /admin/api/roles/[id]/update -->
 <!-- api-contract: POST /admin/api/roles/[id]/delete -->
 <!-- api-contract: DELETE /admin/api/roles/[id]/delete -->
-<!-- api-contract: POST /admin/api/roles/assign -->
 
 | METHOD / path и source | Auth / input | Успех и ошибки | Side effects и ограничения |
 | --- | --- | --- | --- |
@@ -66,7 +65,6 @@
 | POST [`/admin/api/roles/create`](../../apps/web/src/app/admin/api/roles/create/route.ts) | `CURRENT`; key regex `[a-z0-9_-]{2,32}`, непустое name; optional description | `R(id)`; 400 validation/DB, duplicate не выделен в 409 | Insert role через cookie client; key super_admin задает `is_system:true`, прочие false |
 | POST, PATCH, PUT [`/admin/api/roles/[id]/update`](../../apps/web/src/app/admin/api/roles/[id]/update/route.ts) | `CURRENT`; path id; optional name/description, trim/empty→null | `R()` даже при пустом patch или update без совпавшей строки; 400 missing id/DB | Меняет только name/description, не key/is_system. Params извлекаются через getRouteParam с поддержкой Promise |
 | POST, DELETE [`/admin/api/roles/[id]/delete`](../../apps/web/src/app/admin/api/roles/[id]/delete/route.ts) | `CURRENT`; id, body игнорируется | `R()`; 404 missing role; 400 system role/FK/DB | Удаляет nonsystem role; FK error преобразуется в сообщение о назначениях. Params извлекаются через getRouteParam с поддержкой Promise |
-| POST [`/admin/api/roles/assign`](../../apps/web/src/app/admin/api/roles/assign/route.ts) | Только cookie user в TS; JSON user_id, optional biz_id→null, role; schema нет | `R()`; 401 auth, 400 RPC message; общего catch нет | Делегирует `grant_role_rpc(p_user,p_biz,p_role)` cookie client. Не приписывать этому route отдельный super_admin gate: он зависит от неизвестного здесь SQL RPC |
 
 ## Категории
 

@@ -8,7 +8,7 @@
 
 ## Руководства и справочники
 
-Документов: 101.
+Документов: 102.
 
 | Документ | Путь |
 | --- | --- |
@@ -84,6 +84,7 @@
 | [Module Boundaries](MODULE_BOUNDARIES.md) | `docs/MODULE_BOUNDARIES.md` |
 | [Первая задача разработчика](ONBOARDING.md) | `docs/ONBOARDING.md` |
 | [Эксплуатация Kezek](OPERATIONS.md) | `docs/OPERATIONS.md` |
+| [Повторный глубокий анализ проекта — 17 ноября 2026](PROJECT_REVIEW_2026-11-17.md) | `docs/PROJECT_REVIEW_2026-11-17.md` |
 | [Текущее состояние Kezek](PROJECT_STATUS.md) | `docs/PROJECT_STATUS.md` |
 | [Как считается рейтинг в Kezek](RATINGS_HOW_IT_WORKS.md) | `docs/RATINGS_HOW_IT_WORKS.md` |
 | [Документация Kezek](README.md) | `docs/README.md` |
