@@ -26,7 +26,7 @@ export async function runDeprecatedStaffFinanceHttp(
             scope: 'StaffFinance',
             staffIdParamName: 'id',
             staffSelect: 'id, biz_id, percent_master, percent_salon, hourly_rate',
-            notFoundMessage: 'Р РЋР С•РЎвЂљРЎР‚РЎС“Р Т‘Р Р…Р С‘Р С” Р Р…Р Вµ Р Р…Р В°Р в„–Р Т‘Р ВµР Р… Р С‘Р В»Р С‘ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С— Р В·Р В°Р С—РЎР‚Р ВµРЎвЂ°Р ВµР Р…',
+            notFoundMessage: 'Сотрудник не найден или доступ запрещен',
         },
         async ({ supabase, admin, bizId, staffId, staff }) => {
             const result = await runDeprecatedStaffFinance({

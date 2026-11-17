@@ -49,7 +49,8 @@
     "db:start:check": "supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,postgres-meta,mailpit",
     "generate:db-types": "node scripts/generate-db-types.mjs --write",
     "check:db-types": "node scripts/generate-db-types.mjs --check",
-    "check:i18n": "node scripts/check-i18n.mjs"
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "check:encoding": "node scripts/check-encoding.mjs"
   },
   "lint-staged": {
     "apps/web/**/*.{js,jsx,ts,tsx,mjs}": [

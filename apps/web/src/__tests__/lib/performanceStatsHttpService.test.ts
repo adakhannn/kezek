@@ -45,7 +45,7 @@ describe('performanceStatsHttpService', () => {
     (getPerformanceStatsSnapshot as jest.Mock).mockResolvedValue({
       ok: false,
       error: 'auth',
-      message: 'РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ',
+      message: 'Не авторизован',
       status: 401,
     });
 

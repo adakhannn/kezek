@@ -117,7 +117,7 @@ export default function StaffServicesEditor({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                {t('staff.services.loading', 'Р—Р°РіСЂСѓР·РєР° СѓСЃР»СѓРі...')}
+                {t('staff.services.loading', 'Загрузка услуг...')}
             </div>
         );
     }
@@ -125,7 +125,7 @@ export default function StaffServicesEditor({
         return (
             <AlertBanner
                 variant="danger"
-                title={t('staff.services.error', 'РћС€РёР±РєР°')}
+                title={t('staff.services.error', 'Ошибка')}
                 message={err}
             />
         );
@@ -139,10 +139,10 @@ export default function StaffServicesEditor({
                     </svg>
                     <div>
                         <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                            {t('staff.services.empty.title', 'Р’ СЌС‚РѕРј С„РёР»РёР°Р»Рµ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… СѓСЃР»СѓРі')}
+                            {t('staff.services.empty.title', 'В этом филиале нет активных услуг')}
                         </p>
                         <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                            {t('staff.services.empty.desc', 'РЎРѕР·РґР°Р№С‚Рµ СѓСЃР»СѓРіРё РІ СЂР°Р·РґРµР»Рµ В«РЈСЃР»СѓРіРёВ», С‡С‚РѕР±С‹ РЅР°Р·РЅР°С‡РёС‚СЊ РёС… СЃРѕС‚СЂСѓРґРЅРёРєСѓ')}
+                            {t('staff.services.empty.desc', 'Создайте услуги в разделе «Услуги», чтобы назначить их сотруднику')}
                         </p>
                     </div>
                 </div>
@@ -154,7 +154,7 @@ export default function StaffServicesEditor({
         <>
             <div className="space-y-3">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t('staff.services.hint', 'Р’С‹Р±РµСЂРёС‚Рµ СѓСЃР»СѓРіРё, РєРѕС‚РѕСЂС‹Рµ РІС‹РїРѕР»РЅСЏРµС‚ СЌС‚РѕС‚ СЃРѕС‚СЂСѓРґРЅРёРє. РћС‚ РІС‹Р±СЂР°РЅРЅС‹С… СѓСЃР»СѓРі Р·Р°РІРёСЃРёС‚, РєР°РєРёРµ СѓСЃР»СѓРіРё РєР»РёРµРЅС‚С‹ СЃРјРѕРіСѓС‚ РІС‹Р±СЂР°С‚СЊ РїСЂРё Р·Р°РїРёСЃРё Рє СЌС‚РѕРјСѓ СЃРѕС‚СЂСѓРґРЅРёРєСѓ.')}
+                    {t('staff.services.hint', 'Выберите услуги, которые выполняет этот сотрудник. От выбранных услуг зависит, какие услуги клиенты смогут выбрать при записи к этому сотруднику.')}
                 </p>
                 <div className="grid gap-2">
                     {services.map((s) => {
@@ -193,9 +193,9 @@ export default function StaffServicesEditor({
                 </div>
                 {allowed.size > 0 && (
                     <p className="border-t border-gray-200 pt-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                        {t('staff.services.selected', 'Р’С‹Р±СЂР°РЅРѕ СѓСЃР»СѓРі:')}{' '}
+                        {t('staff.services.selected', 'Выбрано услуг:')}{' '}
                         <span className="font-semibold text-indigo-600 dark:text-indigo-400">{allowed.size}</span>{' '}
-                        {t('staff.services.selectedOf', 'РёР·')} {services.length}
+                        {t('staff.services.selectedOf', 'из')} {services.length}
                     </p>
                 )}
             </div>

@@ -31,7 +31,7 @@ export async function runStaffUpdateByIdHttp(
         body = await req.json();
     } catch (error) {
         logError('StaffUpdate', 'Error parsing JSON', error);
-        return createErrorResponse('validation', 'РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ JSON', undefined, 400);
+        return createErrorResponse('validation', 'Неверный формат JSON', undefined, 400);
     }
 
     const result = await runStaffUpdateById({

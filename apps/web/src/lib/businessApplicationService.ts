@@ -119,7 +119,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
             return { ok: false as const, status: 400, message: ownerRoleError.message };
         }
         if (!ownerRole?.id) {
-            return { ok: false as const, status: 400, message: 'РћСЃРЅРѕРІРЅР°СЏ СЂРѕР»СЊ РІР»Р°РґРµР»СЊС†Р° РЅРµ РЅР°Р№РґРµРЅР°.' };
+            return { ok: false as const, status: 400, message: 'Основная роль владельца не найдена.' };
         }
         ownerRoleId = ownerRole.id;
     }

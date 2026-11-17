@@ -103,21 +103,21 @@ export default function ServiceMastersEditor({
     if (loading) {
         return (
             <div className="text-sm text-gray-500">
-                {t('services.masters.loading', 'Р—Р°РіСЂСѓР·РєР°вЂ¦')}
+                {t('services.masters.loading', 'Загрузка…')}
             </div>
         );
     }
     if (err) {
         return (
             <div className="text-sm text-red-600">
-                {t('services.masters.error', 'РћС€РёР±РєР°:')} {err}
+                {t('services.masters.error', 'Ошибка:')} {err}
             </div>
         );
     }
     if (activeStaff.length === 0) {
         return (
             <div className="text-sm text-gray-500">
-                {t('services.masters.empty', 'Р’ СЌС‚РѕРј С„РёР»РёР°Р»Рµ РЅРµС‚ Р°РєС‚РёРІРЅС‹С… СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ.')}
+                {t('services.masters.empty', 'В этом филиале нет активных сотрудников.')}
             </div>
         );
     }

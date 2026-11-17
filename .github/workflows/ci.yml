@@ -36,6 +36,11 @@ jobs:
       - name: Check i18n dictionaries (locale parity + undefined keys ratchet)
         run: pnpm check:i18n
 
+      - name: Check source encoding (invalid UTF-8, Windows-1251 mojibake)
+        run: |
+          node --test scripts/check-encoding.test.mjs
+          pnpm check:encoding
+
       - name: Check offline OpenAPI, SDK and typed consumer
         run: |
           pnpm check:openapi

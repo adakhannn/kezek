@@ -38,7 +38,7 @@ export default function TransferStaffDialog({
 
         try {
             if (!target) {
-                setErr(t('staff.transfer.errors.selectBranch', 'Р’С‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р»'));
+                setErr(t('staff.transfer.errors.selectBranch', 'Выберите филиал'));
                 setLoading(false);
                 return;
             }
@@ -80,7 +80,7 @@ export default function TransferStaffDialog({
                     setErr(null);
                 }}
             >
-                {t('staff.transfer.button', 'РџРµСЂРµРІРµСЃС‚Рё СЃРѕС‚СЂСѓРґРЅРёРєР°')}
+                {t('staff.transfer.button', 'Перевести сотрудника')}
             </Button>
 
             <Dialog
@@ -88,15 +88,15 @@ export default function TransferStaffDialog({
                 onClose={() => {
                     if (!loading) setOpen(false);
                 }}
-                title={t('staff.transfer.title', 'РџРѕСЃС‚РѕСЏРЅРЅС‹Р№ РїРµСЂРµРІРѕРґ СЃРѕС‚СЂСѓРґРЅРёРєР°')}
-                description={t('staff.transfer.subtitle', 'РџРµСЂРµРІРµСЃС‚Рё СЃРѕС‚СЂСѓРґРЅРёРєР° РІ РґСЂСѓРіРѕР№ С„РёР»РёР°Р» РЅР° РїРѕСЃС‚РѕСЏРЅРЅРѕР№ РѕСЃРЅРѕРІРµ')}
+                title={t('staff.transfer.title', 'Постоянный перевод сотрудника')}
+                description={t('staff.transfer.subtitle', 'Перевести сотрудника в другой филиал на постоянной основе')}
                 size="md"
                 dismissible={!loading}
                 className="max-h-[90vh] overflow-y-auto"
                 footer={
                     <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={loading}>
-                            {t('staff.transfer.cancel', 'РћС‚РјРµРЅРёС‚СЊ')}
+                            {t('staff.transfer.cancel', 'Отменить')}
                         </Button>
                         <Button
                             type="button"
@@ -109,7 +109,7 @@ export default function TransferStaffDialog({
                                 </svg>
                             }
                         >
-                            {t('staff.transfer.submit', 'РџРѕРґС‚РІРµСЂРґРёС‚СЊ РїРµСЂРµРІРѕРґ')}
+                            {t('staff.transfer.submit', 'Подтвердить перевод')}
                         </Button>
                     </div>
                 }
@@ -122,7 +122,7 @@ export default function TransferStaffDialog({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             <span className="type-label text-[var(--text-secondary)]">
-                                {t('staff.transfer.current', 'РўРµРєСѓС‰РёР№ С„РёР»РёР°Р»:')}
+                                {t('staff.transfer.current', 'Текущий филиал:')}
                             </span>
                         </div>
                         <p className="type-section-title text-[var(--text-primary)]">{currentBranch?.name ?? 'вЂ”'}</p>
@@ -130,7 +130,7 @@ export default function TransferStaffDialog({
 
                     <div className="space-y-2">
                         <label className="type-label block text-[var(--text-primary)]">
-                            {t('staff.transfer.target.label', 'РќРѕРІС‹Р№ С„РёР»РёР°Р» *')}
+                            {t('staff.transfer.target.label', 'Новый филиал *')}
                         </label>
                         <select
                             className="min-h-[44px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition-colors focus:border-[var(--focus-ring)] focus:outline-none focus:ring-4 focus:ring-[color:color-mix(in_srgb,var(--focus-ring)_20%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
@@ -138,7 +138,7 @@ export default function TransferStaffDialog({
                             onChange={(event) => setTarget(event.target.value)}
                             disabled={loading}
                         >
-                            <option value="">{t('staff.transfer.target.select', 'вЂ” РІС‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р» вЂ”')}</option>
+                            <option value="">{t('staff.transfer.target.select', 'вЂ” выберите филиал —')}</option>
                             {otherBranches.map((branch) => (
                                 <option key={branch.id} value={branch.id}>
                                     {branch.name}
@@ -158,10 +158,10 @@ export default function TransferStaffDialog({
                             />
                             <div className="min-w-0 flex-1">
                                 <span className="type-body block text-[var(--text-primary)]">
-                                    {t('staff.transfer.copySchedule', 'РЎРєРѕРїРёСЂРѕРІР°С‚СЊ С€Р°Р±Р»РѕРЅ СЂР°СЃРїРёСЃР°РЅРёСЏ')}
+                                    {t('staff.transfer.copySchedule', 'Скопировать шаблон расписания')}
                                 </span>
                                 <span className="type-caption mt-1 block text-[var(--text-muted)]">
-                                    {t('staff.transfer.copyScheduleDesc', 'РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РµР¶РµРЅРµРґРµР»СЊРЅРѕРµ СЂР°СЃРїРёСЃР°РЅРёРµ РёР· С‚РµРєСѓС‰РµРіРѕ С„РёР»РёР°Р»Р° РІ РЅРѕРІС‹Р№')}
+                                    {t('staff.transfer.copyScheduleDesc', 'Скопировать еженедельное расписание из текущего филиала в новый')}
                                 </span>
                             </div>
                         </label>
@@ -169,11 +169,11 @@ export default function TransferStaffDialog({
 
                     <AlertBanner
                         variant="warning"
-                        title={t('staff.transfer.warning.title', 'Р’Р°Р¶РЅРѕ:')}
+                        title={t('staff.transfer.warning.title', 'Важно:')}
                         message={[
-                            t('staff.transfer.warning.permanent', 'Р­С‚Рѕ РїРѕСЃС‚РѕСЏРЅРЅС‹Р№ РїРµСЂРµРІРѕРґ вЂ” СЃРѕС‚СЂСѓРґРЅРёРє Р±СѓРґРµС‚ РїСЂРёРєСЂРµРїР»РµРЅ Рє РЅРѕРІРѕРјСѓ С„РёР»РёР°Р»Сѓ РЅР° РїРѕСЃС‚РѕСЏРЅРЅРѕР№ РѕСЃРЅРѕРІРµ'),
-                            t('staff.transfer.warning.bookings', 'Р‘СѓРґСѓС‰РёРµ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ РѕСЃС‚Р°РЅСѓС‚СЃСЏ Р±РµР· РёР·РјРµРЅРµРЅРёР№ (РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РёС… РЅСѓР¶РЅРѕ Р±СѓРґРµС‚ РїРµСЂРµРЅРµСЃС‚Рё РѕС‚РґРµР»СЊРЅРѕ)'),
-                            t('staff.transfer.warning.history', 'РСЃС‚РѕСЂРёСЏ РїРµСЂРµРІРѕРґРѕРІ СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ РІ СЃРёСЃС‚РµРјРµ'),
+                            t('staff.transfer.warning.permanent', 'Это постоянный перевод — сотрудник будет прикреплен к новому филиалу на постоянной основе'),
+                            t('staff.transfer.warning.bookings', 'Будущие бронирования останутся без изменений (при необходимости их нужно будет перенести отдельно)'),
+                            t('staff.transfer.warning.history', 'История переводов сохраняется в системе'),
                         ].join(' ')}
                     />
 

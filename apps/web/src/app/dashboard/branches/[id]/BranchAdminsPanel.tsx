@@ -108,7 +108,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
             const j = await res.json();
             if (!res.ok || !j.ok) throw new Error(j.error || `HTTP ${res.status}`);
             await load();
-            toast.showSuccess('РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РґРѕР±Р°РІР»РµРЅ');
+            toast.showSuccess('Администратор добавлен');
         } catch (e) {
             setErr(e instanceof Error ? e.message : String(e));
         }
@@ -129,7 +129,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
             if (!res.ok || !j.ok) throw new Error(j.error || `HTTP ${res.status}`);
             await load();
             setConfirmUserId(null);
-            toast.showSuccess('РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ СѓР±СЂР°РЅ');
+            toast.showSuccess('Администратор убран');
         } catch (e) {
             setErr(e instanceof Error ? e.message : String(e));
         }
@@ -175,7 +175,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                                 disabled={explicitIds.has(u.id)}
                                 type="button"
                             >
-                                {explicitIds.has(u.id) ? 'РЈР¶Рµ РґРѕР±Р°РІР»РµРЅ' : 'Р”РѕР±Р°РІРёС‚СЊ'}
+                                {explicitIds.has(u.id) ? 'Уже добавлен' : 'Добавить'}
                             </Button>
                         </div>
                     </div>
@@ -187,7 +187,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
     return (
         <section className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900">
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂС‹ С„РёР»РёР°Р»Р°
+                Администраторы филиала
             </h3>
 
             {err ? <AlertBanner variant="danger" message={err} /> : null}
@@ -197,13 +197,13 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                     <thead>
                         <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                             <th className="p-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                                РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ
+                                Пользователь
                             </th>
                             <th className="p-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                                РСЃС‚РѕС‡РЅРёРє
+                                Источник
                             </th>
                             <th className="w-40 p-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                                Р”РµР№СЃС‚РІРёСЏ
+                                Действия
                             </th>
                         </tr>
                     </thead>
@@ -211,14 +211,14 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                         {loading && (
                             <tr>
                                 <td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={3}>
-                                    Р—Р°РіСЂСѓР·РєР°вЂ¦
+                                    Загрузка…
                                 </td>
                             </tr>
                         )}
                         {!loading && list.length === 0 && (
                             <tr>
                                 <td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={3}>
-                                    РџРѕРєР° РїСѓСЃС‚Рѕ
+                                    Пока пусто
                                 </td>
                             </tr>
                         )}
@@ -253,10 +253,10 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                                             }`}
                                         >
                                             {row.source === 'owner'
-                                                ? 'РІР»Р°РґРµР»РµС† Р±РёР·РЅРµСЃР°'
+                                                ? 'владелец бизнеса'
                                                 : row.source === 'biz_admin'
-                                                  ? 'Р°РґРјРёРЅ Р±РёР·РЅРµСЃР°'
-                                                  : 'Р°РґРјРёРЅ С„РёР»РёР°Р»Р°'}
+                                                  ? 'админ бизнеса'
+                                                  : 'админ филиала'}
                                         </span>
                                     </td>
                                     <td className="p-4">
@@ -267,11 +267,11 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                                                 onClick={() => setConfirmUserId(row.user_id)}
                                                 type="button"
                                             >
-                                                РЈР±СЂР°С‚СЊ
+                                                Убрать
                                             </Button>
                                         ) : (
                                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                РЅР°СЃР»РµРґРѕРІР°РЅРѕ
+                                                наследовано
                                             </span>
                                         )}
                                     </td>
@@ -284,13 +284,13 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
             {!loading && total > 0 && (
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                        РџРѕРєР°Р·Р°РЅРѕ <span className="font-medium">{startIdx + 1}</span>вЂ“
-                        <span className="font-medium">{endIdx}</span> РёР·{' '}
+                        Показано <span className="font-medium">{startIdx + 1}</span>вЂ“
+                        <span className="font-medium">{endIdx}</span> из{' '}
                         <span className="font-medium">{total}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <label className="text-xs text-gray-600 dark:text-gray-400">
-                            РќР° СЃС‚СЂР°РЅРёС†Рµ
+                            На странице
                         </label>
                         <select
                             className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
@@ -310,7 +310,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={safePage <= 1}
                         >
-                            РќР°Р·Р°Рґ
+                            Назад
                         </Button>
                         <div className="min-w-[90px] text-center text-sm text-gray-700 dark:text-gray-300">
                             {safePage} / {totalPages}
@@ -322,7 +322,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                             disabled={safePage >= totalPages}
                         >
-                            Р’РїРµСЂС‘Рґ
+                            Вперёд
                         </Button>
                     </div>
                 </div>
@@ -330,17 +330,17 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
 
             <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Р”РѕР±Р°РІРёС‚СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° РёР· СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
+                    Добавить администратора из существующих пользователей
                 </div>
                 <div className="flex gap-3">
                     <Input
-                        placeholder="email / С‚РµР»РµС„РѕРЅ / РёРјСЏ"
+                        placeholder="email / телефон / имя"
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
                         className="flex-1"
                     />
                     <Button onClick={doSearch} disabled={searching} isLoading={searching}>
-                        {searching ? 'РС‰РµРјвЂ¦' : 'РќР°Р№С‚Рё'}
+                        {searching ? 'Ищем…' : 'Найти'}
                     </Button>
                 </div>
 
@@ -348,10 +348,10 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                     <div className="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
                         <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
                             <div className="grid grid-cols-4 gap-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                                <div>РРјСЏ</div>
+                                <div>Имя</div>
                                 <div>Email</div>
-                                <div>РўРµР»РµС„РѕРЅ</div>
-                                <div className="w-32">Р”РµР№СЃС‚РІРёСЏ</div>
+                                <div>Телефон</div>
+                                <div className="w-32">Действия</div>
                             </div>
                         </div>
                         {found.length > 50 ? (
@@ -390,8 +390,8 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                                                         type="button"
                                                     >
                                                         {explicitIds.has(u.id)
-                                                            ? 'РЈР¶Рµ РґРѕР±Р°РІР»РµРЅ'
-                                                            : 'Р”РѕР±Р°РІРёС‚СЊ'}
+                                                            ? 'Уже добавлен'
+                                                            : 'Добавить'}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -412,10 +412,10 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                         void remove(confirmUserId);
                     }
                 }}
-                title="РЈР±СЂР°С‚СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°?"
-                message="РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РїРµСЂРµСЃС‚Р°РЅРµС‚ Р±С‹С‚СЊ СЏРІРЅС‹Рј Р°РґРјРёРЅРѕРј СЌС‚РѕРіРѕ С„РёР»РёР°Р»Р°."
-                confirmLabel="РЈР±СЂР°С‚СЊ"
-                cancelLabel="РћС‚РјРµРЅР°"
+                title="Убрать администратора?"
+                message="Пользователь перестанет быть явным админом этого филиала."
+                confirmLabel="Убрать"
+                cancelLabel="Отмена"
                 confirmVariant="danger"
             />
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />

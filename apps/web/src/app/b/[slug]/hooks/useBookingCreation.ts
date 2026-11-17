@@ -16,7 +16,7 @@ type BookingFeedbackApi = {
 type UseBookingCreationParams = {
     bizId: string;
     branchId: string;
-    /** РћРґРЅР° РёР»Рё РЅРµСЃРєРѕР»СЊРєРѕ СѓСЃР»СѓРі (РєРѕРјРїР»РµРєСЃ); РїСЂРё РѕРґРЅРѕР№ РІС‹Р·С‹РІР°РµС‚СЃСЏ hold_slot, РїСЂРё РЅРµСЃРєРѕР»СЊРєРёС… - hold_complex_slot */
+    /** Одна или несколько услуг (комплекс); при одной вызывается hold_slot, при нескольких - hold_complex_slot */
     services: Service[];
     staffId: string;
     isAuthed: boolean;
@@ -49,7 +49,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             feedback.showError(
                 t(
                     'booking.selectService',
-                    'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ СѓСЃР»СѓРіСѓ РїРµСЂРµРґ РїСЂРѕРґРѕР»Р¶РµРЅРёРµРј.',
+                    'Пожалуйста, выберите услугу перед продолжением.',
                 ),
             );
             return;
@@ -61,7 +61,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 feedback.showError(
                     t(
                         'booking.selectMaster',
-                        'РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ РјР°СЃС‚РµСЂР° РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІСЂРµРјРµРЅРё. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РІСЂРµРјСЏ РµС‰Рµ СЂР°Р·.',
+                        'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время еще раз.',
                     ),
                 );
                 return;
@@ -75,7 +75,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             feedback.showError(
                 t(
                     'booking.selectMaster',
-                    'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РјР°СЃС‚РµСЂР° РїРµСЂРµРґ РїСЂРѕРґРѕР»Р¶РµРЅРёРµРј.',
+                    'Пожалуйста, выберите мастера перед продолжением.',
                 ),
             );
             return;
@@ -85,7 +85,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             feedback.showError(
                 t(
                     'booking.selectBranch',
-                    'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р» РїРµСЂРµРґ РїСЂРѕРґРѕР»Р¶РµРЅРёРµРј.',
+                    'Пожалуйста, выберите филиал перед продолжением.',
                 ),
             );
             return;
@@ -174,7 +174,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 fmtErr(e, t) ||
                 t(
                     'booking.error.technical',
-                    'РџСЂРѕРёР·РѕС€Р»Р° С‚РµС…РЅРёС‡РµСЃРєР°СЏ РѕС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.',
+                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте еще раз.',
                 );
             feedback.showError(message);
         } finally {

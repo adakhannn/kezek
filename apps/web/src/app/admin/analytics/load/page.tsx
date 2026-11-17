@@ -49,10 +49,10 @@ const WEEKDAY_LABELS: Record<number, string> = {
   0: 'Вс',
   1: 'Пн',
   2: 'Вт',
-  3: 'РЎСЂ',
+  3: 'Ср',
   4: 'Чт',
   5: 'Пт',
-  6: 'РЎР±',
+  6: 'Сб',
 };
 
 function getWeekday(dateStr: string): number {
@@ -224,7 +224,7 @@ export default function AdminAnalyticsLoadPage() {
       });
     });
     const sorted = cellsArr.sort((a, b) => {
-      const order = ['Пн', 'Вт', 'РЎСЂ', 'Чт', 'Пт', 'РЎР±', 'Вс'];
+      const order = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
       const ai = order.indexOf(a.labelY);
       const bi = order.indexOf(b.labelY);
       if (ai !== bi) return ai - bi;

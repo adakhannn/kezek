@@ -67,7 +67,7 @@ export async function AuthStatusServer() {
         })()) ||
         user.email ||
         (user.phone as string | undefined) ||
-        t('header.account', 'Р°РєРєР°СѓРЅС‚');
+        t('header.account', 'аккаунт');
 
     resolveDefaultDashboard(profile);
 

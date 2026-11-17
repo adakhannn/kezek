@@ -25,5 +25,8 @@ jest.mock('@/lib/supabaseClient', () => ({
 it('renders a readable localized duration for an assigned service option', async () => {
     render(<StaffServicesEditor staffId="staff" staffBranchId="branch" />);
     expect(await screen.findByText('60 мин')).toBeTruthy();
-    expect(screen.queryByText(/РјРёРЅ/)).toBeNull();
+    // "мин" saved through a Windows-1251 round trip, built from code points so the
+    // source itself stays clean for the encoding check.
+    const garbledMinutes = String.fromCharCode(0x420, 0x458, 0x420, 0x451, 0x420, 0x405);
+    expect(screen.queryByText(new RegExp(garbledMinutes))).toBeNull();
 });
