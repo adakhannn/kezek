@@ -16,7 +16,7 @@ interface ShiftHeaderProps {
     staffId?: string;
 }
 
-export function ShiftHeader({ timezone, shiftDate, onShiftDateChange, shift, status, staffId }: ShiftHeaderProps) {
+export function ShiftHeader({ timezone, shiftDate, shift, status }: ShiftHeaderProps) {
     const { t, locale } = useLanguage();
 
     return (

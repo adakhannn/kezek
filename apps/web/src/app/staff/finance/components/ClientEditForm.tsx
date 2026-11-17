@@ -214,13 +214,6 @@ function ClientEditFormInner({
         }
     }, [isOpen, isReadOnly, hasErrors, onSave, onCollapse, idx]);
 
-    const isMultipleServiceSelect = !item.bookingId;
-    const serviceSelectValue = isMultipleServiceSelect
-        ? (item.serviceName
-            ? item.serviceName.split('+').map((part) => part.trim()).filter(Boolean)
-            : [])
-        : (item.serviceName || '');
-
     return (
         <div className="p-5 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-gray-900 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 shadow-lg space-y-5">
             <div className="flex items-center justify-between pb-3 border-b-2 border-indigo-200 dark:border-indigo-800">

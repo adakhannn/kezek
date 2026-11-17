@@ -1,5 +1,5 @@
-import { withErrorHandler } from '@/lib/apiErrorHandler';
 import { runAnalyticsHourlyLoadCronHttp } from '@/lib/analyticsHourlyLoadCronHttpService';
+import { withErrorHandler } from '@/lib/apiErrorHandler';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

@@ -2,8 +2,9 @@
  * Утилиты для обработки сетевых ошибок и повторных попыток
  */
 
-import { logError, logWarn } from '@/lib/log';
 import { checkRateLimit, recordRequest, getRetryAfter } from './rateLimiter';
+
+import { logError, logWarn } from '@/lib/log';
 
 /**
  * Проверяет, является ли ошибка сетевой (например, недоступен интернет или сервер)

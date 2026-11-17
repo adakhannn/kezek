@@ -3,7 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getIntegrationsStatus } from '@/lib/integrationsStatusService';
-import { logError, logDebug } from '@/lib/log';
+import { logDebug } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
@@ -137,29 +137,6 @@ export async function GET(_req: Request) {
         }
 
         // 2. API-метрики (последний час)
-        // Используем агрегированную статистику по всем endpoint за последний час
-        let apiMetricsData: Array<{
-            total_requests: number;
-            error_rate: number;
-            avg_duration_ms: number;
-            p95_duration_ms: number;
-            p99_duration_ms: number;
-        }> | null = null;
-        
-        try {
-            const { data, error: metricsError } = await admin.rpc('get_api_metrics_stats', {
-                p_endpoint: '/api/staff/finance', // Используем популярный endpoint как пример
-                p_window_minutes: 60,
-            });
-
-            if (metricsError) {
-                logError('SystemHealth', 'Error fetching API metrics', metricsError);
-            } else {
-                apiMetricsData = data as unknown as typeof apiMetricsData;
-            }
-        } catch (e) {
-            logError('SystemHealth', 'Exception fetching API metrics', e);
-        }
 
         const { data: recentApiErrors } = await admin
             .from('api_request_metrics')

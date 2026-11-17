@@ -10,51 +10,6 @@ import 'react-day-picker/dist/style.css';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 // Локализованные названия месяцев
-const MONTHS_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
-    ru: [
-        'Январь',
-        'Февраль',
-        'Март',
-        'Апрель',
-        'Май',
-        'Июнь',
-        'Июль',
-        'Август',
-        'Сентябрь',
-        'Октябрь',
-        'Ноябрь',
-        'Декабрь',
-    ],
-    ky: [
-        'Январь',
-        'Февраль',
-        'Март',
-        'Апрель',
-        'Май',
-        'Июнь',
-        'Июль',
-        'Август',
-        'Сентябрь',
-        'Октябрь',
-        'Ноябрь',
-        'Декабрь',
-    ],
-    en: [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-    ],
-};
-
 // Отображаемые короткие названия дней недели (Пн–Вс)
 const WEEKDAYS_DISPLAY: Record<'ky' | 'ru' | 'en', string[]> = {
     ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],

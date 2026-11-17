@@ -9,9 +9,9 @@ import type {
     PeriodPreset,
 } from './types';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
-import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 function formatNumber(value: number, locale: string) {
     return value.toLocaleString(locale);

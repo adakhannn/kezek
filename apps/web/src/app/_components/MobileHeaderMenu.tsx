@@ -93,7 +93,6 @@ function MobileHeaderMenuContent() {
 }
 
 function MobileAuthStatus({ onAction }: { onAction: () => void }) {
-    const { t } = useLanguage();
     const [user, setUser] = useState<{ id: string; email?: string; phone?: string } | null>(null);
     const [label, setLabel] = useState<string>('');
     const [isStaff, setIsStaff] = useState(false);

@@ -22,7 +22,6 @@ interface FilterPresetsProps {
 export function FilterPresets({
     activePreset,
     onPresetChange,
-    timezone,
     currentStaffId,
     hasStaffAccess = false,
 }: FilterPresetsProps) {

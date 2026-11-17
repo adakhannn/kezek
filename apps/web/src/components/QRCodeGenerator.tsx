@@ -19,8 +19,6 @@ type QRCodeGeneratorProps = {
 export default function QRCodeGenerator({ 
     url, 
     branchName, 
-    branchAddress,
-    businessName,
     onClose 
 }: QRCodeGeneratorProps) {
     const { t } = useLanguage();

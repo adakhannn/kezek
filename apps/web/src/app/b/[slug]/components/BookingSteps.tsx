@@ -2,8 +2,8 @@
 
 import type { BookingStep } from '../types';
 
-import { Card } from '@/components/ui/Card';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { Card } from '@/components/ui/Card';
 
 type StepMeta = {
     id: BookingStep;

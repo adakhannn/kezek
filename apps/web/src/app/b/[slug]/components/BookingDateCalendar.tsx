@@ -37,9 +37,7 @@ export function BookingDateCalendar({ value, onChange, min, max, timezone, varia
     const calendarMin = min ? toBookingCalendarDate(min, timezone) : undefined;
     const calendarMax = max ? toBookingCalendarDate(max, timezone) : undefined;
     const monthStart = startOfMonth(calendarValue);
-    const monthEnd = endOfMonth(value);
     const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const calendarEnd = endOfMonth(monthEnd);
 
     const days = eachDayOfInterval({ start: calendarStart, end: endOfMonth(addMonths(monthStart, 0)) });
 

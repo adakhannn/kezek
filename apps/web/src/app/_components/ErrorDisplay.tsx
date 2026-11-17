@@ -34,7 +34,6 @@ export interface ErrorDisplayProps {
 export function ErrorDisplay({ 
     errorType, 
     errorMessage, 
-    context = 'staff',
     diagnostics 
 }: ErrorDisplayProps) {
     const { t } = useLanguage();

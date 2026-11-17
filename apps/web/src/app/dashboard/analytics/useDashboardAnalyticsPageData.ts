@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { analyticsPresetStart, analyticsRangeError } from './analyticsPeriod';
 import type {
     BranchOption,
     DashboardTrendChartData,
@@ -11,7 +12,6 @@ import type {
 } from './types';
 
 import { todayDateString } from '@/lib/time';
-import { analyticsPresetStart, analyticsRangeError } from './analyticsPeriod';
 
 export function useDashboardAnalyticsPageData() {
     const [loading, setLoading] = useState(true);

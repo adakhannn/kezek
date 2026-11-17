@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { branchBookingHref } from './branchBookingHref';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { bookingCountForm } from '@/lib/bookingCountForm';
 import { logError } from '@/lib/log';
 import { loadYandexMaps } from '@/lib/yamaps';
-import { branchBookingHref } from './branchBookingHref';
 
 type BranchItem = {
     id: string;

@@ -2,8 +2,8 @@ import type { BookingCommandsPort } from '@core-domain/booking';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 
-import { logDebug, logError, logWarn } from './log';
 import { bookingCommandError, BookingSlotConflictError } from './bookingSlotConflict';
+import { logDebug, logError, logWarn } from './log';
 
 type BookingCommandsContext = {
     userId?: string;

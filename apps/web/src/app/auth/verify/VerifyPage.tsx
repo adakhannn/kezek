@@ -183,7 +183,6 @@ export default function VerifyPage() {
     }
 
     const currentContact = mode === 'phone' ? phone : email;
-    const displayContact = editingContact ? newContact : currentContact;
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-indigo-950 dark:via-gray-900 dark:to-pink-950 flex items-center justify-center p-4">

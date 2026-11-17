@@ -21,13 +21,10 @@ interface ClientItemProps {
     onDuplicate?: () => void;
 }
 
-function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete, onDuplicate }: ClientItemProps) {
+function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete }: ClientItemProps) {
     const { t, locale } = useLanguage();
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const hasBooking = !!item.bookingId;
-    // Элемент считается новым (не сохранен), если у него нет id
-    // Но не показываем индикатор сохранения, так как есть полноэкранный лоадер
-    const isNew = !item.id;
     
     // Проверяем права доступа
     const permissionContext: PermissionContext = {

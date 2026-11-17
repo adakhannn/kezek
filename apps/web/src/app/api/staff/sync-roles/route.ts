@@ -7,7 +7,7 @@ import { runStaffSyncRolesHttp } from '@/lib/staffSyncRolesHttpService';
 /**
  * Синхронизирует роли staff для всех сотрудников бизнеса, у которых есть user_id, но нет роли staff
  */
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
     return withErrorHandler('StaffSyncRoles', async () => {
         return runStaffSyncRolesHttp();
     });

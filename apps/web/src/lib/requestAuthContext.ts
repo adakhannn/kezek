@@ -1,5 +1,5 @@
-import type { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
+import type { NextResponse } from 'next/server';
 
 import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';

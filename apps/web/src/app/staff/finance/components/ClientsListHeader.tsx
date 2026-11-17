@@ -32,7 +32,6 @@ interface ClientsListHeaderProps {
 export function ClientsListHeader({
     shiftDate,
     timezone,
-    onShiftDateChange,
     isOpen,
     isClosed,
     isReadOnly = false,

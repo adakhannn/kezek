@@ -1,12 +1,12 @@
 'use client';
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { unstable_rethrow } from 'next/navigation';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 import { ErrorDisplay } from './ErrorDisplay';
 
-import { reportErrorToMonitoring } from '@/lib/errorMonitoring';
 import { isRecoverableChunkError } from '@/lib/chunkLoadRecovery';
+import { reportErrorToMonitoring } from '@/lib/errorMonitoring';
 
 interface Props {
     children: ReactNode;

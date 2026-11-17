@@ -301,7 +301,6 @@ export function ScheduleWeekSection({
     saving,
     onApplyBranchSchedule,
     onSaveDay,
-    t,
     showApplyButton,
 }: {
     title: string;

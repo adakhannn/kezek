@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
-import { linkTelegramAccount, type TelegramLinkSupabaseLike } from '@/lib/telegramLinkService';
 import type { TelegramAuthData } from '@/lib/telegram/verify';
+import { linkTelegramAccount, type TelegramLinkSupabaseLike } from '@/lib/telegramLinkService';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { telegramAuthDataSchema } from '@/lib/validation/schemas';
 

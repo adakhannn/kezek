@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function Page() {
-    const { supabase, userId, staffId, bizId, branchId } = await getStaffContext();
+    const { supabase, userId, staffId, branchId } = await getStaffContext();
 
     // Текущее время в нужной TZ как ISO (с оффсетом)
     const nowISO = formatInTimeZone(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");

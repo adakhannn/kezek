@@ -21,10 +21,10 @@ import { adminEn } from './admin.en';
 import { adminKy } from './admin.ky';
 import { adminRu } from './admin.ru';
 import { analyticsRu, analyticsKy, analyticsEn } from './analytics';
-import { applicationHistoryRu, applicationHistoryKy, applicationHistoryEn } from './applicationHistory';
 import { apiDocsEn } from './apiDocs.en';
 import { apiDocsKy } from './apiDocs.ky';
 import { apiDocsRu } from './apiDocs.ru';
+import { applicationHistoryRu, applicationHistoryKy, applicationHistoryEn } from './applicationHistory';
 import { authEn } from './auth.en';
 import { authKy } from './auth.ky';
 import { authRu } from './auth.ru';
@@ -45,9 +45,30 @@ import { branchesRu } from './branches.ru';
 import { businessEn } from './business.en';
 import { businessKy } from './business.ky';
 import { businessRu } from './business.ru';
+import { cabinetEn } from './cabinet.en';
+import { cabinetKy } from './cabinet.ky';
+import { cabinetRu } from './cabinet.ru';
+import { commonEn } from './common.en';
+import { commonKy } from './common.ky';
+import { commonRu } from './common.ru';
+import { dashboardEn } from './dashboard.en';
 import { dashboardKy } from './dashboard.ky';
+import { dashboardRu } from './dashboard.ru';
+import { datePickerEn } from './datePicker.en';
+import { datePickerKy } from './datePicker.ky';
+import { datePickerRu } from './datePicker.ru';
+import { devEn } from './dev.en';
+import { devKy } from './dev.ky';
+import { devRu } from './dev.ru';
+import { financeEn } from './finance.en';
+import { financeKy } from './finance.ky';
+import { financeRu } from './finance.ru';
+import { footerEn } from './footer.en';
+import { footerKy } from './footer.ky';
+import { footerRu } from './footer.ru';
 import { headerEn } from './header.en';
 import { headerKy } from './header.ky';
+import { headerRu } from './header.ru';
 import { homeEn } from './home.en';
 import { homeKy } from './home.ky';
 import { homeRu } from './home.ru';
@@ -55,47 +76,41 @@ import { homeRu } from './home.ru';
 // Business
 
 // Header
-import { headerRu } from './header.ru';
 
 // Dashboard
-import { dashboardRu } from './dashboard.ru';
-import { dashboardEn } from './dashboard.en';
 
 // Staff
 import { monthPickerEn } from './monthPicker.en';
 import { monthPickerKy } from './monthPicker.ky';
+import { monthPickerRu } from './monthPicker.ru';
+import { notificationsEn } from './notifications.en';
+import { notificationsKy } from './notifications.ky';
+import { notificationsRu } from './notifications.ru';
 import { scheduleFormRu, scheduleFormKy, scheduleFormEn } from './scheduleForm';
 import { schedulingRu, schedulingKy, schedulingEn } from './scheduling';
+import { selectBusinessEn } from './selectBusiness.en';
+import { selectBusinessKy } from './selectBusiness.ky';
+import { selectBusinessRu } from './selectBusiness.ru';
 import { servicesEn } from './services.en';
 import { servicesKy } from './services.ky';
+import { servicesRu } from './services.ru';
 import { staffEn } from './staff.en';
 import { staffKy } from './staff.ky';
 import { staffRu } from './staff.ru';
 
 // Services
-import { servicesRu } from './services.ru';
 
 // Branches
 
 // Finance
-import { financeKy } from './finance.ky';
-import { financeRu } from './finance.ru';
-import { financeEn } from './finance.en';
 
 // Admin
 
 // Common
-import { commonKy } from './common.ky';
-import { commonRu } from './common.ru';
-import { commonEn } from './common.en';
 
 // DatePicker
-import { datePickerKy } from './datePicker.ky';
-import { datePickerRu } from './datePicker.ru';
-import { datePickerEn } from './datePicker.en';
 
 // MonthPicker
-import { monthPickerRu } from './monthPicker.ru';
 
 // TimeRange
 import { timeRangeEn } from './timeRange.en';
@@ -103,33 +118,18 @@ import { timeRangeKy } from './timeRange.ky';
 import { timeRangeRu } from './timeRange.ru';
 
 // Notifications
-import { notificationsKy } from './notifications.ky';
-import { notificationsRu } from './notifications.ru';
-import { notificationsEn } from './notifications.en';
 
 // Bookings
 
 // Footer
-import { footerKy } from './footer.ky';
-import { footerRu } from './footer.ru';
-import { footerEn } from './footer.en';
 
 // Cabinet
-import { cabinetKy } from './cabinet.ky';
-import { cabinetRu } from './cabinet.ru';
-import { cabinetEn } from './cabinet.en';
 
 // API Docs
 
 // Dev
-import { devKy } from './dev.ky';
-import { devRu } from './dev.ru';
-import { devEn } from './dev.en';
 
 // Business workspace selection
-import { selectBusinessKy } from './selectBusiness.ky';
-import { selectBusinessRu } from './selectBusiness.ru';
-import { selectBusinessEn } from './selectBusiness.en';
 
 
 // Re-export type for convenience

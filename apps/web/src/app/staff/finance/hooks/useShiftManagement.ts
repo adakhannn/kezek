@@ -39,7 +39,6 @@ export function useShiftManagement(
 
     const handleOpenShift = async () => {
         setSaving(true);
-        let errorOccurred = false;
         try {
             // Если передан staffId, используем endpoint для владельца
             let url = '/api/staff/shift/open';
@@ -53,7 +52,6 @@ export function useShiftManagement(
                 res = await fetch(url, { method: 'POST' });
             } catch (fetchError) {
                 // Ошибка сети или другая ошибка fetch
-                errorOccurred = true;
                 let errorMessage = t('staff.finance.error.openShift', 'Ошибка при открытии смены');
                 
                 if (fetchError instanceof TypeError) {
@@ -79,7 +77,6 @@ export function useShiftManagement(
             
             // Проверяем HTTP статус перед парсингом JSON
             if (!res.ok) {
-                errorOccurred = true;
                 let errorMessage = t('staff.finance.error.openShift', 'Не удалось открыть смену');
                 
                 // Пытаемся получить сообщение об ошибке из ответа
@@ -137,7 +134,6 @@ export function useShiftManagement(
             try {
                 const jsonText = await res.text();
                 if (!jsonText) {
-                    errorOccurred = true;
                     const errorMessage = t('staff.finance.error.openShift.emptyResponse', 'Сервер вернул пустой ответ. Попробуйте снова.');
                     toast.showError(errorMessage);
                     logError('UseShiftManagement', 'Empty response from server');
@@ -145,7 +141,6 @@ export function useShiftManagement(
                 }
                 json = JSON.parse(jsonText);
             } catch (parseError) {
-                errorOccurred = true;
                 const errorMessage = t('staff.finance.error.openShift.invalidResponse', 'Сервер вернул некорректный ответ. Попробуйте снова.');
                 toast.showError(errorMessage);
                 logError('UseShiftManagement', 'Failed to parse response JSON', parseError);
@@ -154,7 +149,6 @@ export function useShiftManagement(
             
             // Проверяем результат в JSON
             if (!json.ok) {
-                errorOccurred = true;
                 const errorMessage = json.error || json.message || t('staff.finance.error.openShift', 'Не удалось открыть смену');
                 toast.showError(errorMessage);
                 logError('UseShiftManagement', 'Error in response JSON', json);
@@ -165,7 +159,6 @@ export function useShiftManagement(
             toast.showSuccess(t('staff.finance.success.shiftOpened', 'Смена успешно открыта'));
             onShiftChanged?.();
         } catch (e) {
-            errorOccurred = true;
             let errorMessage = t('staff.finance.error.openShift', 'Ошибка при открытии смены');
             
             // Улучшенная обработка различных типов ошибок

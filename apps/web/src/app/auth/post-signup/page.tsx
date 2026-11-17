@@ -14,7 +14,6 @@ export default function PostSignup() {
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [fullName, setFullName] = useState('');
-    const [phone, setPhone] = useState('');
 
     useEffect(() => {
         let mounted = true;
@@ -49,10 +48,8 @@ export default function PostSignup() {
 
                 // Заполняем поля из localStorage или профиля
                 const storedName = localStorage.getItem('signup_full_name');
-                const storedPhone = localStorage.getItem('signup_phone');
                 
                 setFullName(profile?.full_name || storedName || user.user_metadata?.full_name || '');
-                setPhone(profile?.phone || storedPhone || '');
 
                 // Если имя уже есть в профиле, можно сразу завершить (телефон не обязателен)
                 if (profile?.full_name?.trim()) {

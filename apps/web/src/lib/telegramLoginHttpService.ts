@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { runTelegramLoginRoute } from '@/lib/telegramLoginRouteService';
 import type { TelegramAuthData } from '@/lib/telegram/verify';
+import { runTelegramLoginRoute } from '@/lib/telegramLoginRouteService';
 
 export async function runTelegramLoginHttp(req: Request): Promise<NextResponse> {
     const body = (await req.json()) as TelegramAuthData;

@@ -6,9 +6,9 @@
 
 'use client';
 
-import { ReactNode } from 'react';
-import { sizes, spacing } from './tokens';
 import { clsx } from 'clsx';
+import { ReactNode } from 'react';
+
 
 interface StatusPanelProps {
     title: string;

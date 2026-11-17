@@ -4,8 +4,8 @@ import { filterServicesForStaff, resolveScheduleContext } from '@core-domain/sch
 import { addDays } from 'date-fns';
 import { useMemo, useState } from 'react';
 
-import { QuickDeskClientSection } from './QuickDeskClientSection';
 import { QuickDeskBookingFields } from './QuickDeskBookingFields';
+import { QuickDeskClientSection } from './QuickDeskClientSection';
 import { useQuickBooking } from './useQuickBooking';
 import { useQuickDeskClient } from './useQuickDeskClient';
 import { useQuickDeskFormResets } from './useQuickDeskFormResets';

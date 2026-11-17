@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 type Branch = { id: string; name: string; is_active: boolean };
 
 export default async function StaffSchedulePage() {
-    const { supabase, staffId, bizId, branchId } = await getStaffContext();
+    const { supabase, staffId, bizId } = await getStaffContext();
 
     // Информация о сотруднике
     const { data: staff, error: eStaff } = await supabase

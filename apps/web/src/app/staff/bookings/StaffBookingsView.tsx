@@ -54,7 +54,6 @@ export default function StaffBookingsView({
     upcoming,
     past,
     services,
-    staff,
     branches,
 }: {
     bizId: string;

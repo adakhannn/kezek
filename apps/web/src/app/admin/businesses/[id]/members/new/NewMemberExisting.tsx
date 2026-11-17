@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
@@ -36,7 +35,6 @@ const ROLE_COLORS: Record<ElevatedRole, string> = {
 };
 
 export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string; bizId: string }) {
-    const router = useRouter();
     const api = useMemo(() => {
         return {
             search: `${baseURL}/admin/api/users/search`,

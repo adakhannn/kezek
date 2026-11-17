@@ -6,9 +6,10 @@
 
 'use client';
 
-import { useState, ReactNode } from 'react';
-import { shiftStatusColors, ShiftStatus, sizes, spacing } from './tokens';
 import { clsx } from 'clsx';
+import { useState, ReactNode } from 'react';
+
+import { shiftStatusColors, ShiftStatus } from './tokens';
 
 interface ShiftCardProps {
     shiftDate: string;

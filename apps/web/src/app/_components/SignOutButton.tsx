@@ -23,13 +23,13 @@ export function SignOutButton({ className, onAction }: { className?: string; onA
                 }
             }
             keysToRemove.forEach(key => localStorage.removeItem(key));
-        } catch (err) {
+        } catch {
             // Игнорируем ошибки
         }
 
         try {
             sessionStorage.clear();
-        } catch (err) {
+        } catch {
             // Игнорируем ошибки
         }
 

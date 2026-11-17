@@ -11,6 +11,7 @@ import {
     DashboardAnalyticsTrendsSection,
 } from './DashboardAnalyticsSections';
 import { useDashboardAnalyticsPageData } from './useDashboardAnalyticsPageData';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 export default function DashboardAnalyticsOverviewPage() {
