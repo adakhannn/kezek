@@ -2,6 +2,8 @@
 
 import type { RoleKey } from './types';
 
+import { escapeHtml } from '@/lib/htmlEscape';
+
 /**
  * Извлекает первый элемент из массива или возвращает сам элемент
  */
@@ -70,7 +72,7 @@ export function buildHtmlPersonal(
     role: RoleKey
 ): string {
     const header =
-        `<p style="margin:0 0 12px 0">${greet(name)} <i>(${roleRu(role)})</i></p>`;
+        `<p style="margin:0 0 12px 0">${escapeHtml(greet(name))} <i>(${escapeHtml(roleRu(role))})</i></p>`;
 
     // Вставляем приветствие внутрь первого <div ...>, после закрывающего символа '>'
     const idx = baseHtml.indexOf('>');

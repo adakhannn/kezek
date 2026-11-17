@@ -44,7 +44,7 @@
 | API-04 | P1 | Сложная запись (`services[]`) доверяет `duration_min` клиента, не проверяет график и прошлое время: блокировка мастера на год | `_hold_complex_slot_for_actor` | FIXED |
 | API-05 | P1 | Удаление сотрудника жёстко удаляет его прошлые брони (каскадом отзывы и использования пакетов), не в транзакции | `staffDeleteService.ts` | TODO |
 | API-06 | P1 | Привязка сотрудника к чужому аккаунту без согласия (по UUID/email/телефону); поиск ограничен 200 пользователями | `staffCreateFromUserService.ts` и др. | TODO |
-| API-07 | P1 | Шаблоны уведомлений не экранируют `client_name` (HTML в письмах, Telegram `parse_mode: HTML`) | `messageBuilders.ts`, `utils.ts` | TODO |
+| API-07 | P1 | Шаблоны уведомлений не экранируют `client_name` (HTML в письмах, Telegram `parse_mode: HTML`) | `messageBuilders.ts`, `utils.ts` | FIXED |
 | API-08 | P2 | Защита «подтверждённых» email уведомлений обходится через редактируемый `user_metadata.yandex_email` | `userNotificationEmailService.ts` | TODO |
 | API-09 | P2 | Приём аналитики без лимитов и привязки к сессии (`/api/funnel-events`, `/admin/api/analytics/track`) | `funnelEventsService.ts` | TODO |
 | API-10 | P2 | Отвязка WhatsApp оставляет номер в `auth.users.phone`/metadata | `socialIdentityUnlinkService` | TODO |
@@ -118,4 +118,6 @@ MOB-01 и API-04 закрыты как ENG-66: миграция `20261118100000_
 
 DB-08 закрыт как ENG-67: миграция `20261118110000_tenant_reference_guards.sql` применена в проде 18 ноября.
 
-Дальше по порядку: P1 — API-03, API-05…07, FE-02/03, ARCH-01…04, CI-01.
+API-07 закрыт как ENG-68 (код в `main`).
+
+Дальше по порядку: P1 — API-03, API-05, API-06, FE-02/03, ARCH-01…04, CI-01.

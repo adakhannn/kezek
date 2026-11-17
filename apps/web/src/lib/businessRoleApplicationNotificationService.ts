@@ -1,5 +1,6 @@
 import { buildApplicationTemplateComponents, getApplicationNotificationOrigin, getApplicationTemplateParameterNames } from '@/lib/applicationNotificationConfig';
 import { getWhatsAppTemplateLanguage, getWhatsAppTemplateName } from '@/lib/env';
+import { escapeHtml } from '@/lib/htmlEscape';
 import { logError } from '@/lib/log';
 import { sendEmail } from '@/lib/senders/email';
 import { sendTelegram } from '@/lib/senders/telegram';
@@ -58,15 +59,6 @@ type Notification = {
         parameters: string[];
     };
 };
-
-function escapeHtml(value: string) {
-    return value
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-}
 
 function uniqueEmails(values: Array<string | null | undefined>) {
     return [...new Set(values
@@ -128,7 +120,8 @@ async function notifyRecipient(recipient: Recipient, notification: Notification)
         for (const email of recipient.emails) deliveries.push(sendEmail({ ...notification, to: email }));
     }
     if (recipient.canReceiveTelegram && recipient.telegramId) {
-        deliveries.push(sendTelegram({ chatId: recipient.telegramId, text: notification.text }));
+        // sendTelegram uses parse_mode HTML; this text is plain and holds applicant and business names.
+        deliveries.push(sendTelegram({ chatId: recipient.telegramId, text: escapeHtml(notification.text) }));
     }
     const templateName = notification.whatsApp && getWhatsAppTemplateName(notification.whatsApp.templateKey);
     if (recipient.canReceiveWhatsApp && recipient.whatsappPhone && notification.whatsApp && templateName) {

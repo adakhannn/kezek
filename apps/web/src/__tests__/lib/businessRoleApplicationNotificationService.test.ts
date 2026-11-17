@@ -41,6 +41,14 @@ describe('staff application delivery', () => {
         expect(sendWhatsApp).toHaveBeenCalledWith(expect.objectContaining({ template: expect.objectContaining({ name: 'kezek_staff_application_owner', components: [{ type: 'body', parameters: [{ type: 'text', text: 'Test business', parameter_name: 'business_name' }, { type: 'text', text: 'Person', parameter_name: 'applicant_name' }] }] }) }));
         expect(sendEmail).not.toHaveBeenCalled();
     });
+    test('Telegram gets the plain text escaped for parse_mode HTML (API-07)', async () => {
+        await notifyStaffApplicationSubmitted(admin, { ...application, applicant: { id: 'staff', name: '<b>Eve & Co</b>' } });
+        expect(sendTelegram).toHaveBeenCalledTimes(2);
+        for (const [message] of (sendTelegram as jest.Mock).mock.calls) expect(message.text).not.toContain('<b>');
+        const owner = (sendTelegram as jest.Mock).mock.calls.map(([message]) => message.text).find((text: string) => text.includes('Eve'));
+        expect(owner).toContain('&lt;b&gt;Eve &amp; Co&lt;/b&gt;');
+    });
+
     test('bad WhatsApp config cannot stop independent Telegram delivery', async () => {
         process.env.WHATSAPP_APPLICATION_NAMED_PARAMETERS = '{';
         await expect(notifyStaffApplicationSubmitted(admin, application)).resolves.toBeUndefined();
