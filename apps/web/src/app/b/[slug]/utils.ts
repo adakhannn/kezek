@@ -2,6 +2,8 @@
  * Утилиты для формы бронирования
  */
 
+import { logWarn } from '@/lib/log';
+
 /**
  * Форматирует ошибку для отображения пользователю
  */
@@ -27,13 +29,14 @@ export function fmtErr(e: unknown, t?: (key: string, fallback?: string) => strin
         }
 
         if (errorObj.message) {
-            const parts = [
-                errorObj.message,
-                errorObj.details && `Details: ${errorObj.details}`,
-                errorObj.hint && `Hint: ${errorObj.hint}`,
-                errorObj.code && `Code: ${errorObj.code}`,
-            ].filter(Boolean);
-            return parts.join('\n');
+            // Clients see the message only; database details, hints and codes
+            // are for debugging and stay in the log.
+            if (errorObj.details || errorObj.hint || errorObj.code) {
+                logWarn('Booking', 'Booking error details', {
+                    details: errorObj.details, hint: errorObj.hint, code: errorObj.code,
+                });
+            }
+            return errorObj.message;
         }
     }
     if (e instanceof Error) return e.message;
