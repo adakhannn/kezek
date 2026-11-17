@@ -40,7 +40,7 @@
 | --- | --- | --- | --- | --- |
 | API-01 | P0 | `POST /api/users/search` отдаёт любому менеджеру весь каталог пользователей платформы (email, телефон) | `usersSearchService.ts` | FIXED |
 | API-02 | P0 | `/admin/api/roles/assign` доступен любому вошедшему и вызывает `grant_role_rpc`; `promotions/debug` пускает «суперадмина бизнеса» к данным всех арендаторов | `roles/assign/route.ts`, `promotionsDebugRouteService.ts` | FIXED |
-| API-03 | P1 | Вход через WhatsApp можно перехватить заранее: владелец номера ищется по непроверенному `auth.users.phone`/`user_metadata.phone` | `whatsAppIdentityOwnershipService.ts` | TODO |
+| API-03 | P1 | Вход через WhatsApp можно перехватить заранее: владелец номера ищется по непроверенному `auth.users.phone`/`user_metadata.phone` | `whatsAppIdentityOwnershipService.ts` | FIXED |
 | API-04 | P1 | Сложная запись (`services[]`) доверяет `duration_min` клиента, не проверяет график и прошлое время: блокировка мастера на год | `_hold_complex_slot_for_actor` | FIXED |
 | API-05 | P1 | Удаление сотрудника жёстко удаляет его прошлые брони (каскадом отзывы и использования пакетов), не в транзакции | `staffDeleteService.ts` | FIXED |
 | API-06 | P1 | Привязка сотрудника к чужому аккаунту без согласия (по UUID/email/телефону); поиск ограничен 200 пользователями | `staffCreateFromUserService.ts` и др. | TODO |
@@ -75,7 +75,7 @@
 
 | ID | P | Находка | Где | Статус |
 | --- | --- | --- | --- | --- |
-| ARCH-01 | P1 | Личность определяется по неподтверждённым телефону/email: `auth.users.phone` меняется без OTP, `user_metadata` редактируется пользователем; по ним идут WhatsApp-вход, привязка сотрудника, добавление участника | `userUpdatePhoneService.ts`, `whatsAppIdentityOwnershipService.ts`, `staffCreateService.ts` | TODO (вместе с API-03/06/08) |
+| ARCH-01 | P1 | Личность определяется по неподтверждённым телефону/email: `auth.users.phone` меняется без OTP, `user_metadata` редактируется пользователем; по ним идут WhatsApp-вход, привязка сотрудника, добавление участника | `userUpdatePhoneService.ts`, `whatsAppIdentityOwnershipService.ts`, `staffCreateService.ts` | TODO (WhatsApp-вход закрыт в ENG-70; остаются API-06/08) |
 | ARCH-02 | P1 | Сотрудник нескольких бизнесов теряет кабинет: `.maybeSingle()` по `staff.user_id` без бизнеса (web и mobile) | `staffRoleSync.ts`, `userRoleProfile.ts`, `useUserRole.ts` | TODO |
 | ARCH-03 | P1 | Поиск аккаунтов перебирает `listUsers` с жёсткими лимитами (первые 200 пользователей) | `staffCreateFromUserService.ts` и др. | TODO (есть `find_accounts_by_contact`) |
 | ARCH-04 | P1 | Ошибки в проде не видны: логгер выбрасывает детали и warn, обработчик API не шлёт в Sentry, клиентский Sentry не грузится под Turbopack | `shared-client/log.ts`, `apiErrorHandler.ts` | TODO |
@@ -122,4 +122,6 @@ API-07 закрыт как ENG-68 (код в `main`).
 
 API-05 закрыт как ENG-69: миграция `20261118120000_staff_delete_without_history.sql` применена в проде 18 ноября.
 
-Дальше по порядку: P1 — API-03, API-06, FE-02/03, ARCH-01…04, CI-01.
+API-03 закрыт как ENG-70: миграция `20261118130000_release_unconfirmed_phone.sql` применена в проде 18 ноября.
+
+Дальше по порядку: P1 — API-06, FE-02/03, ARCH-01…04, CI-01.

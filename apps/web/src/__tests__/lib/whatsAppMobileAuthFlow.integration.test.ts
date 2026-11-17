@@ -27,11 +27,20 @@ type AttemptRow = {
 function createInMemoryAdmin() {
     const attempts: AttemptRow[] = [];
     const profiles = new Map<string, { id: string; whatsapp_phone: string; whatsapp_verified: boolean }>();
-    const users: Array<{ id: string; phone: string; user_metadata?: Record<string, unknown> }> = [];
+    const users: Array<{ id: string; phone: string; phone_confirmed: boolean; user_metadata?: Record<string, unknown> }> = [];
     let seq = 1;
 
     const admin = {
         rpc: jest.fn(async (_name: string, args: Record<string, string>) => {
+            const spellings = [args.p_phone_digits, `+${args.p_phone_digits}`];
+            if (_name === 'find_accounts_by_contact') {
+                return { data: users.filter(it => it.phone_confirmed && spellings.includes(it.phone)).map(it => ({ id: it.id })), error: null };
+            }
+            if (_name === 'release_unconfirmed_phone') {
+                const claims = users.filter(it => !it.phone_confirmed && spellings.includes(it.phone));
+                for (const claim of claims) claim.phone = '';
+                return { data: claims.length, error: null };
+            }
             const row = attempts.find(it => it.id === args.p_attempt_id);
             if (_name === 'register_whatsapp_mobile_otp_failure') {
                 if (!row || row.used_at || row.status !== 'pending') return { data: 5, error: null };
@@ -49,10 +58,15 @@ function createInMemoryAdmin() {
                 listUsers: jest.fn(async () => ({ data: { users } })),
                 updateUserById: jest.fn(),
                 getUserById: jest.fn(),
-                createUser: jest.fn(async (payload: { phone: string; user_metadata?: Record<string, unknown> }) => {
+                createUser: jest.fn(async (payload: { phone: string; phone_confirm?: boolean; user_metadata?: Record<string, unknown> }) => {
+                    // auth.users.phone is unique (users_phone_key).
+                    if (users.some(it => it.phone && it.phone === payload.phone)) {
+                        return { data: {}, error: { message: 'Phone number already registered by another user' } };
+                    }
                     const user = {
                         id: `user-${users.length + 1}`,
                         phone: payload.phone,
+                        phone_confirmed: payload.phone_confirm === true,
                         user_metadata: payload.user_metadata ?? {},
                     };
                     users.push(user);
@@ -235,6 +249,61 @@ describe('whatsApp mobile auth integration', () => {
         expect(issueMobileSessionGrant).toHaveBeenCalledWith(
             expect.objectContaining({ userId: 'existing-user' }),
         );
+    });
+
+    test('a number claimed in advance without confirmation neither captures nor blocks the sign-in (API-03)', async () => {
+        const admin = createInMemoryAdmin();
+        // Another account wrote the number into its unconfirmed Auth phone and its metadata.
+        admin.__getUsers().push({ id: 'squatter', phone: '+996500574029', phone_confirmed: false, user_metadata: { phone: '+996500574029' } });
+
+        const start = await runWhatsAppMobileStartRoute({
+            admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
+            phone: '+996500574029',
+        });
+        expect(start.ok).toBe(true);
+        if (!start.ok) return;
+
+        const verify = await runWhatsAppMobileVerifyRoute({
+            admin: admin as never,
+            attemptId: start.payload.attemptId,
+            code: admin.__getAttempts()[0].code ?? '',
+            phone: '+996500574029',
+        });
+
+        expect(verify.ok).toBe(true);
+        if (!verify.ok) return;
+        expect(verify.payload.userId).not.toBe('squatter');
+        expect(verify.payload.linkage).toBe('created');
+        expect(admin.rpc).toHaveBeenCalledWith('release_unconfirmed_phone', { p_phone_digits: '996500574029' });
+        expect(admin.__getUsers().find(it => it.id === 'squatter')?.phone).toBe('');
+        expect(issueMobileSessionGrant).toHaveBeenCalledWith(expect.objectContaining({ userId: verify.payload.userId }));
+    });
+
+    test('signs in to the account whose phone is confirmed', async () => {
+        const admin = createInMemoryAdmin();
+        admin.__getUsers().push({ id: 'confirmed-user', phone: '996500574029', phone_confirmed: true });
+
+        const start = await runWhatsAppMobileStartRoute({
+            admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
+            phone: '+996500574029',
+        });
+        expect(start.ok).toBe(true);
+        if (!start.ok) return;
+
+        const verify = await runWhatsAppMobileVerifyRoute({
+            admin: admin as never,
+            attemptId: start.payload.attemptId,
+            code: admin.__getAttempts()[0].code ?? '',
+            phone: '+996500574029',
+        });
+
+        expect(verify.ok).toBe(true);
+        if (!verify.ok) return;
+        expect(verify.payload.userId).toBe('confirmed-user');
+        expect(verify.payload.linkage).toBe('existing');
+        expect(admin.auth.admin.createUser).not.toHaveBeenCalled();
     });
 
     test('wrong code then success', async () => {

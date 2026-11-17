@@ -1,64 +1,41 @@
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
-type AuthUser = {
-    id: string;
-    phone?: string | null;
-    user_metadata?: Record<string, unknown> | null;
-};
+const E164 = /^\+[1-9]\d{7,14}$/;
 
 type AdminLike = {
-    auth: {
-        admin: {
-            listUsers: (params: { page: number; perPage: number }) => Promise<{
-                data?: { users?: AuthUser[] } | null;
-                error?: { message?: string } | null;
-            }>;
-        };
-    };
-    // PostgREST builders vary between the two ownership lookups.
+    rpc(
+        fn: 'find_accounts_by_contact',
+        args: { p_phone_digits: string },
+    ): PromiseLike<{ data: Array<{ id: string }> | null; error: { message?: string } | null }>;
+    // PostgREST builder of the profile lookup.
 
     from(table: string): any;
 };
 
-function normalizedMetadataPhone(user: AuthUser) {
-    const metadataPhone = user.user_metadata?.phone;
-    return normalizePhoneToE164(typeof metadataPhone === 'string' ? metadataPhone : null);
-}
-
+/**
+ * The account that owns a WhatsApp number, by verified data only (API-03):
+ *   1. the profile that linked the number through a WhatsApp OTP (whatsapp_verified);
+ *   2. the Auth account whose phone is confirmed (Auth OTP, a WhatsApp sign-in, an admin).
+ * An unconfirmed auth.users.phone, user_metadata.phone or profiles.phone is a claim anyone can
+ * make about any number; trusting it handed the real owner's next sign-in to that account.
+ */
 export async function findWhatsAppOwnerByPhone(admin: AdminLike, phone: string): Promise<string | null> {
     const normalizedPhone = normalizePhoneToE164(phone);
-    if (!normalizedPhone) return null;
+    if (!normalizedPhone || !E164.test(normalizedPhone)) return null;
 
-    // A verified profile link is the canonical Kezek identity. Check it before
-    // auth.users so a stale or accidentally-created phone-only auth user cannot
-    // take ownership away from an account that explicitly linked the number.
-    const { data: modernProfiles, error: modernError } = await admin
+    const { data: linkedProfiles, error: linkedError } = await admin
         .from('profiles')
         .select('id')
         .eq('whatsapp_phone', normalizedPhone)
         .eq('whatsapp_verified', true)
         .limit(1);
-    if (modernError) throw modernError;
-    if (modernProfiles?.[0]?.id) return modernProfiles[0].id;
+    if (linkedError) throw linkedError;
+    if (linkedProfiles?.[0]?.id) return linkedProfiles[0].id;
 
-    const perPage = 1000;
-    for (let page = 1; page <= 100; page += 1) {
-        const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
-        if (error) throw error;
-        const users = data?.users ?? [];
-        const owner = users.find((candidate) =>
-            normalizePhoneToE164(candidate.phone) === normalizedPhone || normalizedMetadataPhone(candidate) === normalizedPhone,
-        );
-        if (owner) return owner.id;
-        if (users.length < perPage) break;
-    }
-
-    const { data: legacyProfiles, error: legacyError } = await admin
-        .from('profiles')
-        .select('id')
-        .eq('phone', normalizedPhone)
-        .eq('whatsapp_verified', true)
-        .limit(1);
-    if (legacyError) throw legacyError;
-    return legacyProfiles?.[0]?.id ?? null;
+    // GoTrue stores phones as digits without '+'; the function matches both spellings.
+    const { data: accounts, error: accountsError } = await admin.rpc('find_accounts_by_contact', {
+        p_phone_digits: normalizedPhone.slice(1),
+    });
+    if (accountsError) throw accountsError;
+    return accounts?.[0]?.id ?? null;
 }

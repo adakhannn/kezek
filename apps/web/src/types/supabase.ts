@@ -6590,6 +6590,12 @@ export type Database = {
                 };
                 Returns: undefined;
             };
+            "release_unconfirmed_phone": {
+                Args: {
+                    "p_phone_digits": string;
+                };
+                Returns: number;
+            };
             "release_whatsapp_inbox": {
                 Args: {
                     "p_id": string;

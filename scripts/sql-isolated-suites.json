@@ -24,5 +24,6 @@
   "test-bookings-read-scope-isolated.cjs",
   "test-booking-service-staff-isolated.cjs",
   "test-tenant-reference-guards-isolated.cjs",
-  "test-staff-delete-isolated.cjs"
+  "test-staff-delete-isolated.cjs",
+  "test-release-unconfirmed-phone-isolated.cjs"
 ]

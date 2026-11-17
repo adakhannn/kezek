@@ -124,6 +124,14 @@ async function resolveOrCreateUser(admin: AdminLike, phoneE164: string): Promise
         };
     }
 
+    // The OTP proved possession of the number. Another account's unconfirmed claim on it
+    // (users_phone_key is unique) would make Auth refuse the new account, so it is released
+    // first; a confirmed phone would have been found above and is never released (API-03).
+    const { error: releaseError } = await admin.rpc('release_unconfirmed_phone', { p_phone_digits: phoneE164.slice(1) });
+    if (releaseError) {
+        logWarn('WhatsAppMobileVerify', 'Unconfirmed phone release failed', { reason: releaseError.message });
+    }
+
     const { data: created, error } = await admin.auth.admin.createUser({
         phone: phoneE164,
         phone_confirm: true,
