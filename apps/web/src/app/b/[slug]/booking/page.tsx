@@ -23,7 +23,7 @@ async function getData(slug: string) {
 
     // Оптимизация: сначала получаем бизнес, затем параллельно загружаем все остальные данные
     const [biz] = await q(
-        `businesses?select=id,slug,name,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,rating_score,tz&slug=eq.${slug}&is_approved=eq.true&limit=1`
+        `businesses?select=id,slug,name,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,rating_score,tz&slug=eq.${encodeURIComponent(slug)}&is_approved=eq.true&limit=1`
     );
     if (!biz) return null;
 
