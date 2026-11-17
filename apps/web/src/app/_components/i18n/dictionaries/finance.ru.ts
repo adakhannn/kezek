@@ -99,4 +99,12 @@ export const financeRu = {
     'finance.auditLog.field.percentMaster': 'Доля мастера, %',
     'finance.auditLog.field.percentSalon': 'Доля салона, %',
     'finance.auditLog.field.hourlyRate': 'Ставка за час',
+    'finance.auditLog.loadErrorTitle': 'Не удалось загрузить журнал изменений',
+    'finance.biz.defaultName': 'Ваш бизнес в Kezek',
+    'finance.empty.description': 'Статистика появится после первых смен и начислений.',
+    'finance.empty.title': 'Пока нет данных',
+    'finance.error.title': 'Ошибка загрузки статистики',
+    'finance.refresh': 'Обновить',
+    'finance.retry': 'Попробовать снова',
+    'finance.staffStats.discardHoursReload': 'Отменить ввод и загрузить смену заново',
 } as const;

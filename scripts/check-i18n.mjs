@@ -84,10 +84,11 @@ if (report) {
     for (const [k, f] of [...unknownKeys].sort()) console.log(`  missing ${k}  (${f})`);
 }
 
-// Ratchet (2026-11-16 baseline): both numbers may only go down. Lower them when
-// translations are added; never raise them to let a change pass.
+// Ratchet (2026-11-16 baseline 59/242; customer-facing keys added 2026-11-17):
+// both numbers may only go down. Lower them when translations are added; never
+// raise them to let a change pass.
 const MAX_MISSING_PARITY_KEYS = 59;
-const MAX_UNKNOWN_KEYS = 242;
+const MAX_UNKNOWN_KEYS = 185;
 let failed = false;
 if (missingParityKeys > MAX_MISSING_PARITY_KEYS) {
     failed = true;

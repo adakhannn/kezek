@@ -99,4 +99,12 @@ export const financeKy = {
     'finance.auditLog.field.percentMaster': 'Устаттын үлүшү, %',
     'finance.auditLog.field.percentSalon': 'Салондун үлүшү, %',
     'finance.auditLog.field.hourlyRate': 'Сааттык ставка',
+    'finance.auditLog.loadErrorTitle': 'Өзгөрүүлөр журналын жүктөө мүмкүн болгон жок',
+    'finance.biz.defaultName': 'Kezekтеги бизнесиңиз',
+    'finance.empty.description': 'Статистика алгачкы сменалардан жана эсептөөлөрдөн кийин пайда болот.',
+    'finance.empty.title': 'Азырынча маалымат жок',
+    'finance.error.title': 'Статистиканы жүктөөдө ката кетти',
+    'finance.refresh': 'Жаңылоо',
+    'finance.retry': 'Кайра аракет кылуу',
+    'finance.staffStats.discardHoursReload': 'Киргизилгенди жокко чыгарып, сменаны кайра жүктөө',
 } as const;

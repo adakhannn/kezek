@@ -99,4 +99,12 @@ export const financeEn = {
     'finance.auditLog.field.percentMaster': 'Master share, %',
     'finance.auditLog.field.percentSalon': 'Salon share, %',
     'finance.auditLog.field.hourlyRate': 'Hourly rate',
+    'finance.auditLog.loadErrorTitle': 'Failed to load the change log',
+    'finance.biz.defaultName': 'Your business on Kezek',
+    'finance.empty.description': 'Statistics will appear after the first shifts and payouts.',
+    'finance.empty.title': 'No data yet',
+    'finance.error.title': 'Could not load statistics',
+    'finance.refresh': 'Refresh',
+    'finance.retry': 'Try again',
+    'finance.staffStats.discardHoursReload': 'Discard input and reload the shift',
 } as const;

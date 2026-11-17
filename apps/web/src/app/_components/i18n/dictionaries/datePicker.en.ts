@@ -11,4 +11,5 @@ export const datePickerEn = {
     'datePicker.prevMonth': 'Previous month',
     'datePicker.selected': 'Selected date: {value}',
     'datePicker.yearLabel': 'Year',
+    'datePicker.legend.today': 'Today',
 } as const;

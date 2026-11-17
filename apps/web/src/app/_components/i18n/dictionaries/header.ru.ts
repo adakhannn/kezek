@@ -24,4 +24,5 @@ export const headerRu = {
     'header.roleBusiness.captionRoles': 'Переключить кабинет',
     'header.roleBusiness.sections.cabinets': 'Кабинеты',
     'header.roleBusiness.sections.businesses': 'Бизнесы',
+    'header.menu': 'Меню',
 } as const;

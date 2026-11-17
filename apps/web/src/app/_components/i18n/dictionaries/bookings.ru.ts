@@ -146,4 +146,13 @@ export const bookingsRu = {
     'bookings.tabs.desk': 'Сегодня (QuickDesk)',
     'bookings.tabs.list': 'История и поиск',
     'bookings.title': 'Брони',
+    'bookings.desk.errors.nameRequired': 'Введите имя клиента',
+    'bookings.desk.errors.phoneRequired': 'Введите корректный номер телефона',
+    'bookings.error.message': 'Произошла ошибка при отображении записей. Попробуйте обновить страницу.',
+    'bookings.error.title': 'Ошибка при загрузке записей',
+    'bookings.list.cancelError': 'Не удалось отменить запись',
+    'bookings.list.next': 'Вперёд',
+    'bookings.list.page': 'Страница',
+    'bookings.list.prev': 'Назад',
+    'bookings.workspace.emptyHint': 'Попробуйте другой период, поиск или фильтр по филиалу.',
 } as const;

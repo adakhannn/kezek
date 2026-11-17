@@ -16,4 +16,7 @@ export const selectBusinessKy = {
     'selectBusiness.errorSubtitle': 'Баракты жаңыртыңыз же кайра кириңиз',
     'selectBusiness.error.generic': 'Бизнестердин тизмесин жүктөө мүмкүн болгон жок',
     'selectBusiness.error.change': 'Бизнести тандоо мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'selectCabinet.rememberChoice': 'Тандоону эстеп калып, кийинки жолу ушул жерден кирүү',
+    'selectCabinet.subtitle': 'Сизде бир нече кабинетке кирүү мүмкүнчүлүгү бар.',
+    'selectCabinet.title': 'Кайсы кабинетке кирүүнү каалайсыз?',
 } as const;

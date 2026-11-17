@@ -82,7 +82,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 feedback.showError(
                     t(
                         'booking.guest.missingStaffId',
-                        'РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ РјР°СЃС‚РµСЂР° РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІСЂРµРјРµРЅРё. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РІСЂРµРјСЏ РµС‰Рµ СЂР°Р·.',
+                        'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время еще раз.',
                     ),
                 );
                 return;
@@ -98,27 +98,28 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         });
 
         if (!services.length || !actualStaffId || !branchId || !slotTime) {
-            const missingFields = [];
+            // Nouns for the list; the booking.select* keys are imperative button labels.
+            const missingFields: string[] = [];
             if (!services.length) {
-                missingFields.push(t('booking.selectService', 'СѓСЃР»СѓРіР°'));
+                missingFields.push(t('booking.guest.missingField.service', 'услуга'));
             }
             if (!actualStaffId) {
-                missingFields.push(t('booking.selectMaster', 'РјР°СЃС‚РµСЂ'));
+                missingFields.push(t('booking.guest.missingField.master', 'мастер'));
             }
             if (!branchId) {
-                missingFields.push(t('booking.selectBranch', 'С„РёР»РёР°Р»'));
+                missingFields.push(t('booking.guest.missingField.branch', 'филиал'));
             }
             if (!slotTime) {
-                missingFields.push(t('booking.selectTime', 'РІСЂРµРјСЏ'));
+                missingFields.push(t('booking.guest.missingField.time', 'время'));
             }
 
             feedback.showError(
                 t(
                     'booking.guest.missingData',
-                    'Р”Р°РЅРЅС‹Рµ РґР»СЏ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ РЅРµРїРѕР»РЅС‹Рµ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р», РјР°СЃС‚РµСЂР°, СѓСЃР»СѓРіСѓ Рё РІСЂРµРјСЏ.',
+                    'Данные для бронирования неполные. Пожалуйста, выберите филиал, мастера, услугу и время.',
                 ) +
                     (missingFields.length > 0
-                        ? `\nРћС‚СЃСѓС‚СЃС‚РІСѓСЋС‚: ${missingFields.join(', ')}`
+                        ? `\n${t('booking.guest.missingFields', 'Не выбрано')}: ${missingFields.join(', ')}`
                         : ''),
             );
             return;
@@ -193,8 +194,8 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 feedback.showError(
                     t(
                         'booking.guest.missingData',
-                        'Р”Р°РЅРЅС‹Рµ РґР»СЏ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ РЅРµРїРѕР»РЅС‹Рµ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р», РјР°СЃС‚РµСЂР°, СѓСЃР»СѓРіСѓ Рё РІСЂРµРјСЏ.',
-                    ) + `\nРћС‚СЃСѓС‚СЃС‚РІСѓСЋС‚: ${missing.join(', ')}`,
+                        'Данные для бронирования неполные. Пожалуйста, выберите филиал, мастера, услугу и время.',
+                    ) + `\nОтсутствуют: ${missing.join(', ')}`,
                 );
                 return;
             }
@@ -270,13 +271,13 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 fmtErr(e, t) ||
                 t(
                     'booking.guest.error.technical',
-                    'РџСЂРѕРёР·РѕС€Р»Р° С‚РµС…РЅРёС‡РµСЃРєР°СЏ РѕС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.',
+                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте еще раз.',
                 );
 
             if (isNetworkError(e)) {
                 message = t(
                     'booking.guest.error.network',
-                    'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРІСЏР·Р°С‚СЊСЃСЏ СЃ СЃРµСЂРІРµСЂРѕРј. РџСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.',
+                    'Не удалось связаться с сервером. Проверьте подключение к интернету и попробуйте еще раз.',
                 );
             }
 

@@ -16,4 +16,7 @@ export const selectBusinessRu = {
     'selectBusiness.errorSubtitle': 'Попробуйте обновить страницу или войти заново',
     'selectBusiness.error.generic': 'Не удалось загрузить список бизнесов',
     'selectBusiness.error.change': 'Не удалось выбрать бизнес, попробуйте ещё раз',
+    'selectCabinet.rememberChoice': 'Запомнить выбор и в следующий раз заходить сюда',
+    'selectCabinet.subtitle': 'У вас есть доступ к нескольким кабинетам.',
+    'selectCabinet.title': 'Как вы хотите зайти?',
 } as const;

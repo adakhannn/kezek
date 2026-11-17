@@ -11,4 +11,5 @@ export const datePickerRu = {
     'datePicker.prevMonth': 'Предыдущий месяц',
     'datePicker.selected': 'Выбранная дата: {value}',
     'datePicker.yearLabel': 'Год',
+    'datePicker.legend.today': 'Сегодня',
 } as const;

@@ -11,8 +11,8 @@ import { Card, cardStyles } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { buttonStyles } from '@/components/ui/buttonStyles';
-import { resolvePublicContacts } from '@/lib/businessContacts';
 import { bookingCountForm } from '@/lib/bookingCountForm';
+import { resolvePublicContacts } from '@/lib/businessContacts';
 import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -450,7 +450,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     title={t('business.info.promotions', 'Акции')}
                                     description={t(
                                         'business.info.promotionsDescription',
-                                        'Спецпредложения видны до записи, поэтому пользователь понимает выгоду заранее.',
+                                        'Действующие скидки и специальные предложения',
                                     )}
                                     action={
                                         <Link

@@ -145,4 +145,13 @@ export const bookingsKy = {
     'bookings.tabs.desk': 'Стойка',
     'bookings.tabs.list': 'Тизме',
     'bookings.title': 'Брондоолор',
+    'bookings.desk.errors.nameRequired': 'Кардардын атын жазыңыз',
+    'bookings.desk.errors.phoneRequired': 'Туура телефон номерин жазыңыз',
+    'bookings.error.message': 'Жазылууларды көрсөтүүдө ката кетти. Баракты жаңылап көрүңүз.',
+    'bookings.error.title': 'Жазылууларды жүктөөдө ката кетти',
+    'bookings.list.cancelError': 'Жазылууну жокко чыгаруу мүмкүн болгон жок',
+    'bookings.list.next': 'Кийинки',
+    'bookings.list.page': 'Барак',
+    'bookings.list.prev': 'Мурунку',
+    'bookings.workspace.emptyHint': 'Башка мезгилди, издөөнү же филиал боюнча чыпканы колдонуп көрүңүз.',
 } as const;

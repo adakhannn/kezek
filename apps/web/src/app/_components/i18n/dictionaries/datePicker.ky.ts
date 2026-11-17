@@ -11,4 +11,5 @@ export const datePickerKy = {
     'datePicker.prevMonth': 'Мурунку ай',
     'datePicker.selected': 'Тандалган күн: {value}',
     'datePicker.yearLabel': 'Жыл',
+    'datePicker.legend.today': 'Бүгүн',
 } as const;

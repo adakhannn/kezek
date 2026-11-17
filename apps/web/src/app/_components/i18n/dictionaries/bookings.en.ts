@@ -146,4 +146,13 @@ export const bookingsEn = {
     'bookings.tabs.desk': 'Today (desk)',
     'bookings.tabs.list': 'History & search',
     'bookings.title': 'Bookings',
+    'bookings.desk.errors.nameRequired': 'Enter the client\'s name',
+    'bookings.desk.errors.phoneRequired': 'Enter a valid phone number',
+    'bookings.error.message': 'Something went wrong while showing the bookings. Try reloading the page.',
+    'bookings.error.title': 'Could not load bookings',
+    'bookings.list.cancelError': 'Could not cancel the booking',
+    'bookings.list.next': 'Next',
+    'bookings.list.page': 'Page',
+    'bookings.list.prev': 'Previous',
+    'bookings.workspace.emptyHint': 'Try another period, search or branch filter.',
 } as const;

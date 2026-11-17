@@ -16,4 +16,7 @@ export const selectBusinessEn = {
     'selectBusiness.errorSubtitle': 'Refresh the page or sign in again',
     'selectBusiness.error.generic': 'Unable to load the business list',
     'selectBusiness.error.change': 'Unable to select the business. Please try again.',
+    'selectCabinet.rememberChoice': 'Remember my choice and open this next time',
+    'selectCabinet.subtitle': 'You have access to several workspaces.',
+    'selectCabinet.title': 'How would you like to continue?',
 } as const;
