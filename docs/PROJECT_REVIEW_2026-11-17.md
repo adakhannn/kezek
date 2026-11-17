@@ -41,7 +41,7 @@
 | API-01 | P0 | `POST /api/users/search` отдаёт любому менеджеру весь каталог пользователей платформы (email, телефон) | `usersSearchService.ts` | FIXED |
 | API-02 | P0 | `/admin/api/roles/assign` доступен любому вошедшему и вызывает `grant_role_rpc`; `promotions/debug` пускает «суперадмина бизнеса» к данным всех арендаторов | `roles/assign/route.ts`, `promotionsDebugRouteService.ts` | FIXED |
 | API-03 | P1 | Вход через WhatsApp можно перехватить заранее: владелец номера ищется по непроверенному `auth.users.phone`/`user_metadata.phone` | `whatsAppIdentityOwnershipService.ts` | TODO |
-| API-04 | P1 | Сложная запись (`services[]`) доверяет `duration_min` клиента, не проверяет график и прошлое время: блокировка мастера на год | `_hold_complex_slot_for_actor` | TODO |
+| API-04 | P1 | Сложная запись (`services[]`) доверяет `duration_min` клиента, не проверяет график и прошлое время: блокировка мастера на год | `_hold_complex_slot_for_actor` | FIXED |
 | API-05 | P1 | Удаление сотрудника жёстко удаляет его прошлые брони (каскадом отзывы и использования пакетов), не в транзакции | `staffDeleteService.ts` | TODO |
 | API-06 | P1 | Привязка сотрудника к чужому аккаунту без согласия (по UUID/email/телефону); поиск ограничен 200 пользователями | `staffCreateFromUserService.ts` и др. | TODO |
 | API-07 | P1 | Шаблоны уведомлений не экранируют `client_name` (HTML в письмах, Telegram `parse_mode: HTML`) | `messageBuilders.ts`, `utils.ts` | TODO |
@@ -91,7 +91,7 @@
 
 | ID | P | Находка | Где | Статус |
 | --- | --- | --- | --- | --- |
-| MOB-01 | P1 | Слоты и удержание не проверяют `service_staff`: через mobile/API можно записать к мастеру, который не делает услугу | `get_free_slots_service_day_v2`, `_hold_slot_for_actor`, `useBookingStep3Staff.ts` | TODO |
+| MOB-01 | P1 | Слоты и удержание не проверяют `service_staff`: через mobile/API можно записать к мастеру, который не делает услугу | `get_free_slots_service_day_v2`, `_hold_slot_for_actor`, `useBookingStep3Staff.ts` | FIXED |
 | MOB-02 | P2 | Выход удаляет неотправленные операции смены без предупреждения | `signOut.ts` | TODO |
 | MOB-03 | P2 | Запросы API без таймаута | `shared-client/api.ts` | TODO |
 | MOB-04 | P2 | Списки броней устаревают до 5 минут после создания/отмены | `useBookingStep6Confirm.ts` | TODO |
@@ -114,4 +114,6 @@ DB-01…05, API-01, API-02 и FE-01 закрыты как ENG-62…64 в [рее
 
 DB-06 и DB-07 закрыты как ENG-65: миграция `20261118090000_bookings_read_scope.sql` применена в проде 18 ноября; настоящие аккаунты видят столько же броней, сколько до неё.
 
-Дальше по порядку: P1 — DB-08, API-03…07, FE-02/03, ARCH-01…04, MOB-01, CI-01.
+MOB-01 и API-04 закрыты как ENG-66: миграция `20261118100000_booking_service_staff_checks.sql` применена в проде 18 ноября, шаг выбора мастера в mobile фильтрует по услуге.
+
+Дальше по порядку: P1 — DB-08, API-03, API-05…07, FE-02/03, ARCH-01…04, CI-01.

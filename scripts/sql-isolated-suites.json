@@ -21,5 +21,6 @@
   "test-internal-tables-access-isolated.cjs",
   "test-staff-private-fields-isolated.cjs",
   "test-client-write-paths-isolated.cjs",
-  "test-bookings-read-scope-isolated.cjs"
+  "test-bookings-read-scope-isolated.cjs",
+  "test-booking-service-staff-isolated.cjs"
 ]
