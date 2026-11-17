@@ -3,3 +3,6 @@ pnpm exec lint-staged
 
 echo "→ Typecheck web"
 pnpm typecheck
+
+echo "→ Generated docs catalogs (same check as CI)"
+pnpm check:docs-links
