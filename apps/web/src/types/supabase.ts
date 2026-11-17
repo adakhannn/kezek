@@ -4990,6 +4990,14 @@ export type Database = {
                 };
                 Returns: boolean;
             };
+            "_staff_performs_service": {
+                Args: {
+                    "p_branch_id": string;
+                    "p_service_id": string;
+                    "p_staff_id": string;
+                };
+                Returns: boolean;
+            };
             "addauth": {
                 Args: {
                     "": string;

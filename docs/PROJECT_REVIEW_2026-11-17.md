@@ -22,7 +22,7 @@
 | DB-05 | P0/P1 | `grant_role_rpc`/`revoke_role_rpc` (доступны всем) дают менеджеру выдать себе `owner`/`super_admin` бизнеса и снять роль владельца | baseline `grant_role_rpc` | FIXED |
 | DB-06 | P1 | Брони читаются по непроверенному `profiles.phone`: подставив чужой номер в профиль, видишь чужие записи во всех бизнесах | «Clients can view own bookings» | FIXED |
 | DB-07 | P1 | Любая строка `user_roles` (включая `client` у уволенных) даёт чтение всех броней бизнеса | «read bookings by biz or client» | FIXED |
-| DB-08 | P1 | Нет составных FK (`branch_id`,`biz_id`) и т. п.; односторонние политики позволяют вставлять строки чужого бизнеса (`staff_branch_assignments`, `service_staff`) | схема | TODO |
+| DB-08 | P1 | Нет составных FK (`branch_id`,`biz_id`) и т. п.; односторонние политики позволяют вставлять строки чужого бизнеса (`staff_branch_assignments`, `service_staff`) | схема | FIXED |
 | DB-09 | P2 | 161 политика, 92 вызова `auth.uid()` без `(select …)`, ~20 мёртвых write-политик; часть политик `branches` без фильтра `is_active` | все таблицы | TODO (на `bookings` 17 лишних политик удалены в ENG-65) |
 | DB-10 | P2 | Три хранилища ролей и четыре проверки суперадмина расходятся | `is_super_admin`, `has_role` | TODO |
 | DB-11 | P2 | Права по умолчанию для новых объектов — ALL для клиентских ролей (включая TRUNCATE) | baseline default privileges | TODO (TRUNCATE, REFERENCES, TRIGGER и MAINTAIN сняты в ENG-62) |
@@ -116,4 +116,6 @@ DB-06 и DB-07 закрыты как ENG-65: миграция `20261118090000_bo
 
 MOB-01 и API-04 закрыты как ENG-66: миграция `20261118100000_booking_service_staff_checks.sql` применена в проде 18 ноября, шаг выбора мастера в mobile фильтрует по услуге.
 
-Дальше по порядку: P1 — DB-08, API-03, API-05…07, FE-02/03, ARCH-01…04, CI-01.
+DB-08 закрыт как ENG-67: миграция `20261118110000_tenant_reference_guards.sql` применена в проде 18 ноября.
+
+Дальше по порядку: P1 — API-03, API-05…07, FE-02/03, ARCH-01…04, CI-01.
