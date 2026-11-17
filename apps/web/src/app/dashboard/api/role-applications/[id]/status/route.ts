@@ -1,6 +1,9 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { NextResponse } from 'next/server';
+
+import { withErrorHandler } from '@/lib/apiErrorHandler';
 import { releaseApplicationBlock } from '@/lib/applicationPolicy';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { notifyStaffApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
@@ -26,6 +29,10 @@ type Body = {
 };
 
 export async function POST(request: Request, context: unknown) {
+    return withErrorHandler('DashboardRoleApplicationStatus', () => updateRoleApplicationStatus(request, context));
+}
+
+async function updateRoleApplicationStatus(request: Request, context: unknown): Promise<NextResponse> {
     const applicationId = await getRouteParamRequired(context, 'id');
     const { bizId, userId } = await getBizContextForManagers();
     const admin = createSupabaseAdminClient();
@@ -34,16 +41,16 @@ export async function POST(request: Request, context: unknown) {
     try {
         body = await request.json();
     } catch {
-        return Response.json({ ok: false, message: 'Неверный формат запроса.' }, { status: 400 });
+        return NextResponse.json({ ok: false, message: 'Неверный формат запроса.' }, { status: 400 });
     }
 
     if (body.action !== 'approve' && body.action !== 'reject' && body.action !== 'unblock') {
-        return Response.json({ ok: false, message: 'Неизвестное действие.' }, { status: 400 });
+        return NextResponse.json({ ok: false, message: 'Неизвестное действие.' }, { status: 400 });
     }
 
     const reviewerIsOwner = await isBusinessOwner({ admin, userId, bizId });
     if (!reviewerIsOwner) {
-        return Response.json({
+        return NextResponse.json({
             ok: false,
             message: 'Принимать и отклонять заявки сотрудников может только владелец бизнеса.',
         }, { status: 403 });
@@ -55,15 +62,15 @@ export async function POST(request: Request, context: unknown) {
         .eq('id', applicationId)
         .maybeSingle();
     if (applicationError) {
-        return Response.json({ ok: false, message: applicationError.message }, { status: 400 });
+        return NextResponse.json({ ok: false, message: applicationError.message }, { status: 400 });
     }
     if (!application || application.biz_id !== bizId) {
-        return Response.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });
+        return NextResponse.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });
     }
 
     const requestedRole = normalizeBusinessRole(application.requested_role);
     if (requestedRole !== 'staff') {
-        return Response.json({
+        return NextResponse.json({
             ok: false,
             message: 'В кабинете владельца обрабатываются только заявки сотрудников.',
         }, { status: 403 });
@@ -79,15 +86,15 @@ export async function POST(request: Request, context: unknown) {
             .eq('application_kind', 'staff')
             .eq('biz_id', bizId)
             .maybeSingle();
-        if (!block) return Response.json({ ok: false, message: 'Блокировка не найдена.' }, { status: 404 });
+        if (!block) return NextResponse.json({ ok: false, message: 'Блокировка не найдена.' }, { status: 404 });
         const result = await releaseApplicationBlock({
             admin,
             blockId,
             applicationId,
             reviewerUserId: userId,
         });
-        if (!result.ok) return Response.json({ ok: false, message: result.message }, { status: result.status });
-        return Response.json({ ok: true });
+        if (!result.ok) return NextResponse.json({ ok: false, message: result.message }, { status: result.status });
+        return NextResponse.json({ ok: true });
     }
 
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : null;
@@ -103,14 +110,14 @@ export async function POST(request: Request, context: unknown) {
             blockDays,
         });
         if (!result.ok) {
-            return Response.json({ ok: false, message: result.message }, { status: result.status });
+            return NextResponse.json({ ok: false, message: result.message }, { status: result.status });
         }
-        return Response.json({ ok: true });
+        return NextResponse.json({ ok: true });
     }
 
     const branchId = typeof body.branch_id === 'string' ? body.branch_id.trim() : '';
     if (!branchId) {
-        return Response.json({
+        return NextResponse.json({
             ok: false,
             message: 'Перед принятием сотрудника выберите филиал.',
         }, { status: 400 });
@@ -124,7 +131,7 @@ export async function POST(request: Request, context: unknown) {
         isActive: body.is_active !== false,
     });
     if (!result.ok) {
-        return Response.json({ ok: false, message: result.message }, { status: result.status });
+        return NextResponse.json({ ok: false, message: result.message }, { status: result.status });
     }
 
     if (application.applicant_user_id) {
@@ -139,7 +146,7 @@ export async function POST(request: Request, context: unknown) {
         }
     }
 
-    return Response.json({
+    return NextResponse.json({
         ok: true,
         staff_id: result.staffId,
         schedule_initialized: result.schedule.initialized,

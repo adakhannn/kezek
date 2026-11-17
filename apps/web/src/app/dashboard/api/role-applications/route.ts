@@ -1,10 +1,18 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { NextResponse } from 'next/server';
+
+import { withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
+// Без сессии резолвер бросает ошибку доступа: withErrorHandler превращает её в 401 вместо пустого 500.
 export async function GET() {
+    return withErrorHandler('DashboardRoleApplications', readRoleApplications);
+}
+
+async function readRoleApplications(): Promise<NextResponse> {
     const { bizId } = await getBizContextForManagers();
     const admin = createSupabaseAdminClient();
 
@@ -25,10 +33,10 @@ export async function GET() {
     ]);
 
     if (applicationsResult.error) {
-        return Response.json({ ok: false, message: applicationsResult.error.message }, { status: 400 });
+        return NextResponse.json({ ok: false, message: applicationsResult.error.message }, { status: 400 });
     }
     if (branchesResult.error) {
-        return Response.json({ ok: false, message: branchesResult.error.message }, { status: 400 });
+        return NextResponse.json({ ok: false, message: branchesResult.error.message }, { status: 400 });
     }
 
     const applications = applicationsResult.data ?? [];
@@ -43,11 +51,11 @@ export async function GET() {
             .in('subject_user_id', userIds)
             .gt('blocked_until', new Date().toISOString())
             .is('released_at', null);
-        if (blockError) return Response.json({ ok: false, message: blockError.message }, { status: 400 });
+        if (blockError) return NextResponse.json({ ok: false, message: blockError.message }, { status: 400 });
         blocks = (blockRows ?? []).filter((b): b is typeof b & { subject_user_id: string } => b.subject_user_id !== null);
     }
 
-    return Response.json({
+    return NextResponse.json({
         ok: true,
         items: applications.map((item) => ({
             ...item,

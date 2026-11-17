@@ -426,7 +426,7 @@ UUID-format biz_id не проверяется отдельной schema; malfor
 | Доступ/вход | Manager direct; query не читается; limiter отсутствует |
 | Успех | Плоский `{ ok: true, items, branches }`; до100 staff-заявок текущего бизнеса по created_at убыванию, все статусы; активные филиалы |
 | Поля items | id,applicant_user_id,biz_id,requested_role,status,applicant_name/email/phone,message,evidence_links,prior_submission_count,risk_flags,created_at,reviewed_at,review_note,active_block_id |
-| Ошибки/ограничения | 400 с message ошибки при запросе заявок/филиалов/блокировок; исключения auth/admin не обёрнуты здесь. active_block_id выбирается из действующих unreleased блокировок staff данного бизнеса; отсутствие page/cursor ограничивает историю100 строками |
+| Ошибки/ограничения | 400 с message ошибки при запросе заявок/филиалов/блокировок; без сессии или роли — 401/403 через `withErrorHandler` (раньше брошенная ошибка давала пустой 500), прочие исключения — 500 `internal`. active_block_id выбирается из действующих unreleased блокировок staff данного бизнеса; отсутствие page/cursor ограничивает историю100 строками |
 
 Это чтение, owner-only проверка выполняется у изменения статуса ниже. Источник: [route с полной реализацией](../../apps/web/src/app/dashboard/api/role-applications/route.ts).
 
@@ -444,7 +444,7 @@ UUID-format biz_id не проверяется отдельной schema; malfor
 | Успех | approve: плоские ok,staff_id,schedule_initialized,schedule_days_created,schedule_error; reject/unblock: только ok |
 | Ошибки | 400 JSON/action/филиал/часть DB-RPC ошибок; 403 не owner/не staff-заявка; 404 нет заявки/чужой бизнес/блокировка; 409 уже обработано/конфликт RPC/блок снят; 500 при отсутствующей staff-роли или неполном RPC-результате |
 
-В route нет limiter и общей catch-обёртки для всех исключений; брошенная ошибка service/RPC может уйти в framework-ответ. Explicit scheduling пропускает создание legacy-расписания. RPC успех и дальнейшие расписание/уведомления — разные шаги; ответ с schedule_error не означает откат одобрения, доставка уведомления не гарантируется. Полный mapper approve-ошибок — в service.
+В route нет limiter; брошенные исключения (включая отсутствие сессии) обрабатывает `withErrorHandler`: 401/403 для auth/forbidden, иначе 500 `internal`. Explicit scheduling пропускает создание legacy-расписания. RPC успех и дальнейшие расписание/уведомления — разные шаги; ответ с schedule_error не означает откат одобрения, доставка уведомления не гарантируется. Полный mapper approve-ошибок — в service.
 
 Источники: [route](../../apps/web/src/app/dashboard/api/role-applications/[id]/status/route.ts), [approveStaffApplication/isBusinessOwner](../../apps/web/src/lib/staffApplicationApprovalService.ts), [rejectBusinessRoleApplication](../../apps/web/src/lib/businessRoleApplicationService.ts), [reject/unblock RPC helpers](../../apps/web/src/lib/applicationPolicy.ts), [уведомления](../../apps/web/src/lib/businessRoleApplicationNotificationService.ts).
 

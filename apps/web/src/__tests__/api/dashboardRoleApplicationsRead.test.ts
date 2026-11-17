@@ -45,11 +45,20 @@ beforeEach(() => {
 // The caller resolver is mocked: these tests prove ordering at THIS route only,
 // not real-session authorization, HTTP denial status, RLS, or tenant isolation.
 it('does not construct the privileged client when context resolution rejects', async () => {
-    const rejection = new Error('unit context denied');
-    (getBizContextForManagers as jest.Mock).mockRejectedValue(rejection);
-    await expect(GET()).rejects.toBe(rejection);
+    (getBizContextForManagers as jest.Mock).mockRejectedValue(new Error('unit context denied'));
+    const response = await GET();
+    expect(response.status).toBe(500);
+    expect(await response.json()).toMatchObject({ ok: false, error: 'internal' });
     expect(createSupabaseAdminClient).not.toHaveBeenCalled();
     expect(from).not.toHaveBeenCalled();
+});
+
+it('answers 401 instead of an empty 500 when there is no session', async () => {
+    (getBizContextForManagers as jest.Mock).mockRejectedValue(new Error('UNAUTHORIZED'));
+    const response = await GET();
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ ok: false, error: 'auth', message: 'UNAUTHORIZED' });
+    expect(createSupabaseAdminClient).not.toHaveBeenCalled();
 });
 
 it('reads only staff applications and active branches for the resolved business', async () => {
@@ -129,7 +138,8 @@ it('maps a successful null block result to no active block', async () => {
 });
 
 it('does not turn an unexpected query-construction failure into an empty success', async () => {
-    const failure = new Error('unit query construction failed');
-    from.mockImplementationOnce(() => { throw failure; });
-    await expect(GET()).rejects.toBe(failure);
+    from.mockImplementationOnce(() => { throw new Error('unit query construction failed'); });
+    const response = await GET();
+    expect(response.status).toBe(500);
+    expect(await response.json()).toMatchObject({ ok: false, error: 'internal' });
 });
