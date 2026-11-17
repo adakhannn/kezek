@@ -1,9 +1,10 @@
 import React from 'react';
-import { Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 
 import DashboardScreen from '../../screens/DashboardScreen';
+import { apiRequest } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { useDashboardScreenData } from '../../screens/dashboard/useDashboardScreenData';
 import { createTestQueryClient } from '../testQueryClient';
@@ -11,6 +12,11 @@ import { createTestQueryClient } from '../testQueryClient';
 jest.mock('../../screens/dashboard/useDashboardScreenData', () => ({
     useDashboardScreenData: jest.fn(),
 }));
+jest.mock('../../lib/api', () => ({
+    apiRequest: jest.fn(),
+}));
+
+const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
 
 const mockedUseDashboardScreenData = useDashboardScreenData as jest.MockedFunction<
     typeof useDashboardScreenData
@@ -118,8 +124,9 @@ describe('DashboardScreen', () => {
         expect(onRefresh).toHaveBeenCalledTimes(1);
     });
 
-    test('opens the web dashboard from an owner widget', async () => {
+    test('opens the web dashboard through a one-time handoff, never with the app tokens', async () => {
         const openUrl = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+        mockedApiRequest.mockResolvedValue({ ok: true, url: 'https://kezek.vercel.app/auth/handoff?code=one-time-code' });
         mockedUseDashboardScreenData.mockReturnValue({
             ...baseState,
             isOwner: true,
@@ -138,10 +145,29 @@ describe('DashboardScreen', () => {
         fireEvent.press(screen.getByText('Открыть веб-кабинет'));
 
         await waitFor(() => {
-            expect(openUrl).toHaveBeenCalledWith(
-                'https://kezek.vercel.app/auth/callback?next=%2Fselect-business' +
-                    '#access_token=owner-access-token&refresh_token=owner-refresh-token',
-            );
+            expect(openUrl).toHaveBeenCalledWith('https://kezek.vercel.app/auth/handoff?code=one-time-code');
         });
+        expect(mockedApiRequest).toHaveBeenCalledWith('/auth/web-handoff', {
+            method: 'POST',
+            body: JSON.stringify({ next: '/select-business' }),
+        });
+        expect(JSON.stringify(openUrl.mock.calls)).not.toContain('owner-refresh-token');
+    });
+
+    test('refuses to open anything but the handoff page', async () => {
+        const openUrl = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+        const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+        mockedApiRequest.mockResolvedValue({ ok: true, url: 'https://evil.example/phish' });
+        mockedUseDashboardScreenData.mockReturnValue({
+            ...baseState,
+            isOwner: true,
+            businesses: [{ id: 'business-1', name: 'Low Fade', slug: 'low-fade', address: null, phones: null }],
+        });
+
+        renderWithQueryClient(<DashboardScreen />);
+        fireEvent.press(screen.getByText('Открыть веб-кабинет'));
+
+        await waitFor(() => expect(alert).toHaveBeenCalled());
+        expect(openUrl).not.toHaveBeenCalled();
     });
 });

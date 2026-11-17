@@ -83,6 +83,21 @@
 
 **Проверено локально:** unit/integration mocks и отдельный PostgreSQL без сети, 12 конкурентных consume → один победитель. [Воспроизводимая SQL проверка](../../scripts/test-mobile-auth-grants-isolated.cjs). **NOT_RUN:** применение на удалённой БД, provider end-to-end, реальные mobile builds и rollout. Это исправление не закрывает весь auth: legacy Telegram Widget по-прежнему использует password-reset путь, описанный выше.
 
+<!-- api-contract: POST /api/auth/web-handoff -->
+<!-- api-contract: GET /auth/handoff -->
+### POST `/api/auth/web-handoff` и GET `/auth/handoff` — вход в веб-кабинет из приложения
+
+Добавлено **2026-11-17**. Цепочка: [API route](../../apps/web/src/app/api/auth/web-handoff/route.ts) и [page route](../../apps/web/src/app/auth/handoff/route.ts) → [HTTP](../../apps/web/src/lib/webHandoffHttpService.ts) → [коды и хранилище](../../apps/web/src/lib/webHandoff.ts) → [выпуск сессии](../../apps/web/src/lib/verifiedIdentitySession.ts).
+
+| Method / input | Проверка и limiter | Ответ |
+| --- | --- | --- |
+| POST JSON `{next?}` (строгая схема, `next` ≤512) | Сессия вызывающего: bearer (приложение) или cookie; limiter `normal` | `200 {ok:true,url}` — `<NEXT_PUBLIC_SITE_ORIGIN>/auth/handoff?code=…`; 401 без сессии; 400 схема; 503 без общего хранилища |
+| GET `?code=` (43 символа base64url) | limiter `normal`; код одноразовый | 307 на `/auth/callback?next=…#access_token=…&refresh_token=…` с новой сессией; иначе 307 на `/auth/sign-in?error=handoff_expired|handoff_unavailable|handoff_failed` |
+
+Код — 32 случайных байта; в Upstash Redis хранится только SHA-256 кода с user ID и санитизированным `next` (`SET NX EX 60`), погашение атомарное (`GETDEL`). В production без Redis функция недоступна (503 / handoff_unavailable), без per-instance fallback. Сессия браузера выпускается заново (generateLink + verifyOtp) и не делит refresh token с приложением: раньше приложение открывало `/auth/callback#access_token=…&refresh_token=…` со своей сессией, и ротация refresh token в Supabase разлогинивала обе стороны. Все ответы: `Cache-Control: no-store`, `Referrer-Policy: no-referrer`.
+
+**Проверено локально:** unit-тесты кода/хранилища и HTTP-цепочки, повторное погашение отклоняется. **NOT_RUN:** реальный Redis и мобильная сборка с новым клиентом.
+
 ## Администрирование
 
 <!-- api-contract: GET /api/admin/health-check -->

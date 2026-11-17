@@ -3,11 +3,23 @@ import { Alert, Linking, ScrollView } from 'react-native';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { getMobileApiUrl } from '../lib/apiUrl';
-import { supabase } from '../lib/supabase';
+import { apiRequest } from '../lib/api';
 import { DashboardScreenSections } from './dashboard/DashboardScreenSections';
 import { useDashboardScreenData } from './dashboard/useDashboardScreenData';
 import { styles } from './dashboard/dashboardScreenStyles';
+
+type WebHandoffResponse = { ok: true; url: string };
+
+/** Only the web app's handoff page may be opened, whatever the response says. */
+function isWebHandoffUrl(value: unknown): value is string {
+    if (typeof value !== 'string') return false;
+    try {
+        const url = new URL(value);
+        return (url.protocol === 'https:' || (__DEV__ && url.protocol === 'http:')) && url.pathname === '/auth/handoff';
+    } catch {
+        return false;
+    }
+}
 
 export default function DashboardScreen() {
     const { businesses, isOwner, isLoading, loadError, refreshing, onRefresh } =
@@ -51,21 +63,18 @@ export default function DashboardScreen() {
 
     const openWebDashboard = async () => {
         try {
-            const {
-                data: { session },
-                error,
-            } = await supabase.auth.getSession();
-
-            if (error || !session?.access_token || !session.refresh_token) {
-                throw error ?? new Error('No active session');
+            // A one-time code instead of the app's own tokens: nothing long-lived
+            // lands in browser history, and the browser gets an independent session
+            // rather than sharing (and rotating away) the app's refresh token.
+            const response = await apiRequest<WebHandoffResponse>('/auth/web-handoff', {
+                method: 'POST',
+                body: JSON.stringify({ next: '/select-business' }),
+            });
+            if (!isWebHandoffUrl(response?.url)) {
+                throw new Error('Invalid web handoff URL');
             }
 
-            const callbackUrl =
-                `${getMobileApiUrl()}/auth/callback?next=${encodeURIComponent('/select-business')}` +
-                `#access_token=${encodeURIComponent(session.access_token)}` +
-                `&refresh_token=${encodeURIComponent(session.refresh_token)}`;
-
-            await Linking.openURL(callbackUrl);
+            await Linking.openURL(response.url);
         } catch {
             Alert.alert(
                 'Не удалось открыть веб-кабинет',

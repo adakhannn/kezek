@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **175 route-файлов, 206 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **177 route-файлов, 208 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 509 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `3edbea33c5707ab63971df615e9cf59cc7959fe63897d34ada71757b211ea113`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 513 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `cd4f5c08ce069e527e4842d000348941da0be97c5c7f4b50f5ea70be5237675f`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -90,6 +90,7 @@
 | `/api/auth/telegram/mobile/status` | GET | [route](../../apps/web/src/app/api/auth/telegram/mobile/status/route.ts) | [runTelegramMobileStatusHttp](../../apps/web/src/lib/telegramMobileStatusHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/auth/telegram/profile-link` | POST | [route](../../apps/web/src/app/api/auth/telegram/profile-link/route.ts) | [runTelegramProfileLinkHttp](../../apps/web/src/lib/telegramProfileLinkHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/auth/telegram/web-login` | POST | [route](../../apps/web/src/app/api/auth/telegram/web-login/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
+| `/api/auth/web-handoff` | POST | [route](../../apps/web/src/app/api/auth/web-handoff/route.ts) | [runCreateWebHandoffHttp](../../apps/web/src/lib/webHandoffHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
 | `/api/auth/whatsapp/create-session` | POST | [route](../../apps/web/src/app/api/auth/whatsapp/create-session/route.ts) | [runWhatsAppCreateSessionHttp](../../apps/web/src/lib/whatsAppCreateSessionHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/auth/whatsapp/mobile/start` | POST | [route](../../apps/web/src/app/api/auth/whatsapp/mobile/start/route.ts) | [runWhatsAppMobileStartHttp](../../apps/web/src/lib/whatsAppMobileStartHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/auth/whatsapp/mobile/verify` | POST | [route](../../apps/web/src/app/api/auth/whatsapp/mobile/verify/route.ts) | [runWhatsAppMobileVerifyHttp](../../apps/web/src/lib/whatsAppMobileVerifyHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
@@ -195,6 +196,7 @@
 | Путь | Явные методы | Исходник | Делегирование | Контракт |
 | --- | --- | --- | --- | --- |
 | `/auth/callback/google` | GET | [route](../../apps/web/src/app/auth/callback/google/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
+| `/auth/handoff` | GET | [route](../../apps/web/src/app/auth/handoff/route.ts) | [runRedeemWebHandoffHttp](../../apps/web/src/lib/webHandoffHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
 
 ## /booking
 

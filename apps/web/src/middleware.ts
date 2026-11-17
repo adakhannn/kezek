@@ -81,6 +81,7 @@ export async function middleware(req: NextRequest) {
         pathname.startsWith('/auth/sign-in') ||
         pathname.startsWith('/auth/whatsapp') ||
         pathname.startsWith('/auth/callback') ||
+        pathname.startsWith('/auth/handoff') ||
         pathname.startsWith('/auth/verify')
     ) {
         return NextResponse.next();

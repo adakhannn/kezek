@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { logDebug, logError } from '@/lib/log';
+import { buildSessionCallbackUrl } from '@/lib/sessionCallbackUrl';
 import { issueSessionForVerifiedUser } from '@/lib/verifiedIdentitySession';
 
 export type YandexUserInfo = {
@@ -242,23 +243,6 @@ async function createOrFindUser(
     };
 }
 
-function buildCallbackRedirect({
-    origin,
-    redirectTo,
-    accessToken,
-    refreshToken,
-}: {
-    origin: string;
-    redirectTo: string;
-    accessToken: string;
-    refreshToken: string;
-}) {
-    const redirectUrl = new URL('/auth/callback', origin);
-    redirectUrl.searchParams.set('next', redirectTo);
-    redirectUrl.hash = `access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`;
-    return redirectUrl.toString();
-}
-
 export async function runYandexOAuthCallback({
     admin,
     yandexUser,
@@ -310,9 +294,9 @@ export async function runYandexOAuthCallback({
     await syncYandexNotificationEmail(admin, userId, yandexUser);
     const session = await issueSessionForVerifiedUser(userId);
 
-    const redirectUrl = buildCallbackRedirect({
+    const redirectUrl = buildSessionCallbackUrl({
         origin,
-        redirectTo,
+        next: redirectTo,
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
     });
