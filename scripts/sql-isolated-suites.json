@@ -15,5 +15,6 @@
   "test-privileged-maintenance-isolated.cjs",
   "test-user-lifecycle-isolated.cjs",
   "test-identity-surface-hardening-isolated.cjs",
-  "test-identity-views-row-filter-isolated.cjs"
+  "test-identity-views-row-filter-isolated.cjs",
+  "test-spatial-ref-sys-guard-isolated.cjs"
 ]

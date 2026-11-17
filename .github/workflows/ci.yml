@@ -404,6 +404,7 @@ jobs:
           - test-user-lifecycle-isolated.cjs
           - test-identity-surface-hardening-isolated.cjs
           - test-identity-views-row-filter-isolated.cjs
+          - test-spatial-ref-sys-guard-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
