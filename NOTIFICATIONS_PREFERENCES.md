@@ -21,7 +21,7 @@
 
 ## Кто получает уведомления о брони
 
-[NotificationOrchestrator](apps/web/src/lib/notifications/NotificationOrchestrator.ts) обрабатывает `hold`, `confirm`, `cancel` и загружает клиента, владельца и мастера. Правила подтверждены непосредственно [WhatsApp sender service](apps/web/src/lib/notifications/WhatsAppNotificationService.ts) и [Telegram sender service](apps/web/src/lib/notifications/TelegramNotificationService.ts).
+[BookingNotificationPlanner](apps/web/src/lib/notifications/BookingNotificationPlanner.ts) планирует доставку в outbox для `hold`, `confirm`, `cancel` и загружает клиента, владельца и мастера через `ParticipantDataService` с service role (cron `booking-notifications`). Прежний `NotificationOrchestrator` удалён 17.11.2026: его никто не вызывал. Правила подтверждены непосредственно [WhatsApp sender service](apps/web/src/lib/notifications/WhatsAppNotificationService.ts) и [Telegram sender service](apps/web/src/lib/notifications/TelegramNotificationService.ts).
 
 | Получатель | Email | WhatsApp | Telegram |
 | --- | --- | --- | --- |

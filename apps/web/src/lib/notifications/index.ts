@@ -9,7 +9,6 @@ export { ParticipantDataService } from './ParticipantDataService';
 export { EmailNotificationService } from './EmailNotificationService';
 export { WhatsAppNotificationService } from './WhatsAppNotificationService';
 export { TelegramNotificationService } from './TelegramNotificationService';
-export { NotificationOrchestrator } from './NotificationOrchestrator';
 
 // Экспортируем утилиты
 export * from './utils';
