@@ -16,12 +16,12 @@ P0 — блокер доступа/изоляции до широкого исп
 | ENG-02–ENG-06 | LOCAL_FIXED для Save/Close: обязательные identity/revision, tenant/booking guards, атомарность, пакетная запись, сохранение конфликтного черновика web/mobile | Проверены конкурирующие операции, повторные списания и откат; это не полный аудит всей SQL-поверхности |
 | ENG-07 | LOCAL_FIXED: общий Redis, атомарный TTL, отдельные route/principal/tenant budgets, без production fallback | Реальный изолированный Redis, параллельные writers и отказ зависимости. Настройка trusted ingress и ресурсы deployment отдельно |
 | ENG-09, ENG-22, ENG-26 | LOCAL_FIXED для атомарной записи/повтора брони, transactional outbox и подписанного durable WhatsApp inbox | SQL receipt/rollback/lease/ACL, worker deadlines и неоднозначные отправки. Реальная доставка и пропускная способность провайдеров не измерены |
-| ENG-10 | OPEN | Map/nearby режут выборку до географического фильтра; geo-реализация в этот пакет не включалась |
+| ENG-10 | DEPLOYED 17 ноября: один запрос филиалов с approved business, bounding box и фильтры в SQL, чтение страниц до пустой | Unit-тесты и проверка формы запроса на production PostgREST (read-only); см. раздел 17 ноября |
 | ENG-11 | LOCAL_FIXED: overdue backlog, ограниченные claims/leases, честные ошибки и остаток | SQL concurrency/fairness, business-local day и DST; реальные Vercel-запуски не подтверждены |
 | ENG-12 | LOCAL_FIXED для изменённых финансовых/аналитических readers | Скалярные SQL snapshots/aggregates, проверки более 1000 строк. Полнота всех остальных endpoints не утверждается |
 | ENG-13 | LOCAL_FIXED: фильтр выбранного staff до resolver, ограниченные страницы, защита от устаревших ответов web/mobile | SQL ACL/курсор и синтетический benchmark; это не production RPS |
 | ENG-14 | PARTIAL | Фактический baseline сохранён частно, восстановлен, 22 новые миграции применены к копии. Чистый bootstrap всего Supabase из checkout и reconciliation истории остаются открытыми |
-| ENG-15 | PARTIAL | Обязательные full web/SQL CI gates, fail-fast runner и реальные SQL-команды. Полный seeded E2E и execution CI на remote не подтверждены |
+| ENG-15 | PARTIAL | С 17 ноября CI реально выполняется на GitHub (до этого все jobs падали на установке pnpm): lint/typecheck, build, web/mobile, db_bootstrap, 16 SQL-сьютов и public smoke E2E зелёные. Visual regressions и seeded E2E ждут секретов `E2E_TEST_*` тестового окружения; `security_audit` красный (ENG-46) |
 | ENG-16 | LOCAL_FIXED для общего bounded Redis collector и честных исходов | Изолированные writers/retention, разделение browser/server metrics; внешний monitoring/нагрузочная ёмкость отдельно |
 | ENG-17 | LOCAL_FIXED для ограниченного локального cache | TTL/LRU, 256 entries/4 MiB; distributed cache/single-flight и heap profile не сделаны |
 | ENG-18 | LOCAL_FIXED конфигурация/наблюдаемость | Единые восемь расписаний, fail-closed secret, durable last-success и queue health; регистрация Vercel cron и внешний монитор отдельно |
@@ -84,6 +84,24 @@ P0 — блокер доступа/изоляции до широкого исп
 - Удалён код без импортёров вне тестов: `logger.ts`, `errors.ts`, `repositories.ts`, `dashboardBookingsLogic.ts`, `guestBookingNotificationDispatch.ts`, шесть модулей старой обработки WhatsApp-команд (`whatsAppCommandRouting`, `whatsAppBookingCommandFlow`, `whatsAppMessageContext`, `whatsAppMessagePersistence`, `whatsAppMediaStatusHandlers`, `whatsAppBookingActionService` — их заменил durable inbox), хуки `useWhyDidYouRender`/`useRenderCount`, мобильный дубликат `logSafe.ts`.
 - i18n: [check-i18n.mjs](../scripts/check-i18n.mjs) в CI. На 16 ноября 59 ключей отсутствуют в части языков (например, 19 в `staffRu`, 11 в `adminKy`) и 242 ключа из `t('…')` нет ни в одном словаре — для ky/en пользователей там показывается русский fallback. Оба числа — храповик; перевод — отдельная контентная задача (`pnpm check:i18n -- --report` выводит список).
 - Не сделано (осознанно): массовый перенос `lib/` по фичам и схлопывание слоёв HttpService/RouteService — большой churn без изменения поведения; разбор god-компонентов (`ProfileForm` и др.) требует ручной UI-проверки.
+
+## Пакет 17 ноября
+
+Ночная автономная сессия по прямому запросу владельца. DEPLOYED — в `main` и на `kezek.vercel.app`, проверено запросами к проду; LOCAL_FIXED — код и тесты, ждёт внешнего шага.
+
+| ID | Приоритет | Дефект | Состояние |
+| --- | --- | --- | --- |
+| ENG-40 | P0 | `kezek.kg` перешёл к третьему лицу, а проект ему доверял: cron слал `CRON_SECRET`, уведомления подменяли ссылки на `kezek.kg`, алерты уходили на `admin@kezek.kg`, mobile отправлял bearer-токены и ссылку веб-кабинета с refresh token, Site URL и redirect-список Supabase Auth указывали на домен | DEPLOYED для кода и Vercel env (`NEXT_PUBLIC_SITE_ORIGIN`); внешние кабинеты и новая mobile-сборка — владельцу, см. [runbook](DOMAIN_LOSS_RUNBOOK.md) |
+| ENG-41 | P1 | CI с b424cd39 падал в первом шаге (pnpm `version` против `packageManager`); 11 SQL-фикстур объявляли PostgreSQL готовым во время init-рестарта; Playwright не ставился на ubuntu 26.04; smoke-тест ждал удалённую email-форму; устаревшие каталог роутов и hotspot | DEPLOYED: CI выполняется, всё зелёное кроме ENG-46 и секретов E2E (ENG-15). Флак `platform-admin` в CI локально не воспроизведён (3/3), окно ожидания блокировки расширено |
+| ENG-42 | P0 | `dashboard/api/branches/[id]/admins/list` через service role отдавал email/телефоны админов **любого** филиала любому менеджеру; скрывала это только ошибка синхронных params. Ещё пять admin-роутов читали params синхронно: `send-magic-link` не работал, `owner/upsert` создавал пользователя и падал на несуществующей `user_roles.role`, `owner/update` менял email владельца без подтверждения | DEPLOYED: принадлежность филиала проверяется сессией вызывающего до service role; `send-magic-link` починен; пять мёртвых роутов удалены |
+| ENG-43 | P1 | `/api/businesses/search` — service role и `q` без экранирования в PostgREST `or=(...)` (оракул по любым колонкам); публичные map/nearby/search отдавали текст ошибок БД; `onlyActive=false` показывал скрытые филиалы | DEPLOYED: anon + RLS, экранирование, rate limit; ошибки только в логе |
+| ENG-44 | P1 | Mobile открывал веб-кабинет с access/refresh token в URL; браузер и приложение делили один refresh token, и ротация Supabase разлогинивала обе стороны | Web DEPLOYED (одноразовый код в Redis, независимая сессия браузера); mobile LOCAL_FIXED, нужна новая сборка |
+| ENG-45 | P2 | Sitemap прода со ссылками `http://localhost:3000`, hreflang на `kezek.app`, относительный sitemap в robots; .ics без DTSTAMP и переносов, с буквальным «\n\n», отмена брони не отменяла событие | DEPLOYED |
+| ENG-46 | P1 | `pnpm audit`: 315 уязвимостей (156 high, 10 critical), в основном toolchain mobile (expo CLI); job `security_audit` красный | OPEN: нужен отдельный проход обновлений с ручной проверкой mobile-сборки |
+| ENG-47 | P2 | Около 99 ответов внутренних API для авторизованных пользователей содержат сырой текст ошибок БД | OPEN: общий паттерн, публичные эндпоинты исправлены в ENG-43 |
+| ENG-48 | P2 | В production опубликованы тестовые бизнесы (`testovyy-biznes-1/2`, `s1-test-…`), они попадают в sitemap, карту и поиск | Решение владельца: снять одобрение или удалить |
+
+Также: временные EXECUTE для `authenticated` на 5 booking-функциях, выданные 16 ноября до деплоя, отозваны после деплоя `7578520d` (ACL сверен запросом).
 
 ## Исходные условия находок
 

@@ -8,7 +8,7 @@
 
 ## Руководства и справочники
 
-Документов: 100.
+Документов: 101.
 
 | Документ | Путь |
 | --- | --- |
@@ -71,6 +71,7 @@
 | [Модель работы с датами](DATE_HANDLING_MODEL.md) | `docs/DATE_HANDLING_MODEL.md` |
 | [Известные риски дат и периодов](DATE_HANDLING_RISKS.md) | `docs/DATE_HANDLING_RISKS.md` |
 | [Каталог документов](DOCUMENTATION_MAP.md) | `docs/DOCUMENTATION_MAP.md` |
+| [Потеря домена kezek.kg: что сделано и что осталось владельцу](DOMAIN_LOSS_RUNBOOK.md) | `docs/DOMAIN_LOSS_RUNBOOK.md` |
 | [Инженерные проблемы Kezek](ENGINEERING_FINDINGS.md) | `docs/ENGINEERING_FINDINGS.md` |
 | [Явные расписания сотрудников — состояние реализации](EXPLICIT_STAFF_SCHEDULES.md) | `docs/EXPLICIT_STAFF_SCHEDULES.md` |
 | [Финансовый API: навигация по исходникам](FINANCE_API.md) | `docs/FINANCE_API.md` |
