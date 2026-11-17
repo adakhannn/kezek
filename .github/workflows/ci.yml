@@ -376,6 +376,9 @@ jobs:
       - name: Generated database types match the schema
         run: pnpm check:db-types
 
+      - name: SQL functions pass plpgsql_check
+        run: pnpm check:sql-functions
+
       - name: Stop local Supabase
         if: always()
         run: pnpm exec supabase stop --no-backup
