@@ -52,20 +52,6 @@ function createStaffListChain(rows: Card[] | null, error: { message: string } | 
     return chain;
 }
 
-function createFilterChain(result: unknown) {
-    const chain: any = {
-        select: jest.fn(() => chain),
-        eq: jest.fn(() => chain),
-        maybeSingle: jest.fn().mockResolvedValue({ data: result, error: null }),
-    };
-    return chain;
-}
-
-function createInsertChain(error: { message: string } | null = null) {
-    return {
-        insert: jest.fn().mockResolvedValue({ error }),
-    };
-}
 
 describe('resolveStaffContext', () => {
     const serverClient: any = {
@@ -78,12 +64,6 @@ describe('resolveStaffContext', () => {
         from: jest.fn(),
     };
 
-    function roleAlreadyAssigned() {
-        adminClient.from
-            .mockReturnValueOnce(createFilterChain({ id: 'role-staff' }))
-            .mockReturnValueOnce(createFilterChain({ id: 'existing-role' }));
-    }
-
     beforeEach(() => {
         jest.clearAllMocks();
         requestHeaders.clear();
@@ -94,6 +74,13 @@ describe('resolveStaffContext', () => {
             data: { user: { id: 'user-1' } },
             error: null,
         });
+    });
+
+    // ARCH-10: resolving the context never writes; the staff role follows the card in the database.
+    afterEach(() => {
+        expect(createSupabaseAdminClient).not.toHaveBeenCalled();
+        expect(adminClient.from).not.toHaveBeenCalled();
+        for (const [table] of serverClient.from.mock.calls) expect(table).toBe('staff');
     });
 
     it('throws NOT_AUTHENTICATED when user is missing', async () => {
@@ -117,7 +104,6 @@ describe('resolveStaffContext', () => {
 
     it('returns the only card when its staff role already exists', async () => {
         serverClient.from.mockReturnValueOnce(createStaffListChain([cardA]));
-        roleAlreadyAssigned();
 
         const result = await resolveStaffContext();
 
@@ -134,28 +120,21 @@ describe('resolveStaffContext', () => {
     it('ignores a stale remembered card when there is only one card', async () => {
         requestCookies.set('kezek_staff_id', FOREIGN);
         serverClient.from.mockReturnValueOnce(createStaffListChain([cardA]));
-        roleAlreadyAssigned();
 
         await expect(resolveStaffContext()).resolves.toMatchObject({ staffId: STAFF_A });
     });
 
     // ARCH-02: a master of two businesses was locked out (maybeSingle failed on two rows).
-    it('two cards and a remembered card B: acts as B and ensures the staff role in business B', async () => {
+    it('two cards and a remembered card B: acts as B', async () => {
         requestCookies.set('kezek_staff_id', STAFF_B);
         const staffList = createStaffListChain([cardB, cardA]);
         serverClient.from.mockReturnValueOnce(staffList);
-        const insertChain = createInsertChain();
-        adminClient.from
-            .mockReturnValueOnce(createFilterChain({ id: 'role-staff' }))
-            .mockReturnValueOnce(createFilterChain(null))
-            .mockReturnValueOnce(insertChain);
 
         const result = await resolveStaffContext();
 
         expect(staffList.maybeSingle).not.toHaveBeenCalled();
         expect(result).toMatchObject({ staffId: STAFF_B, bizId: 'biz-b', branchId: null });
         expect(result.staffOptions.map((option) => option.staffId)).toEqual([STAFF_A, STAFF_B]);
-        expect(insertChain.insert).toHaveBeenCalledWith({ user_id: 'user-1', biz_id: 'biz-b', role_id: 'role-staff' });
     });
 
     it('two cards and no choice: asks to choose, listing both cards oldest first', async () => {
@@ -176,7 +155,6 @@ describe('resolveStaffContext', () => {
         requestHeaders.set('x-kezek-staff-id', STAFF_B);
         requestCookies.set('kezek_staff_id', STAFF_A);
         serverClient.from.mockReturnValueOnce(createStaffListChain([cardA, cardB]));
-        roleAlreadyAssigned();
 
         await expect(resolveStaffContext()).resolves.toMatchObject({ staffId: STAFF_B, bizId: 'biz-b' });
     });
@@ -202,39 +180,14 @@ describe('resolveStaffContext', () => {
         expect(logWarn).toHaveBeenCalledWith('AuthBiz', 'Failed to list active staff cards', { message: 'timeout' });
     });
 
-    it('falls back to server client when service role client is unavailable', async () => {
-        serverClient.from
-            .mockReturnValueOnce(createStaffListChain([{ id: STAFF_A, biz_id: 'biz-3', branch_id: 'branch-3' }]))
-            .mockReturnValueOnce(createFilterChain({ id: 'role-staff' }))
-            .mockReturnValueOnce(createFilterChain({ id: 'existing-role' }));
+    it('works without the service role key: it needs only the caller\'s own cards', async () => {
+        serverClient.from.mockReturnValueOnce(createStaffListChain([{ id: STAFF_A, biz_id: 'biz-3', branch_id: 'branch-3' }]));
         (createSupabaseAdminClient as jest.Mock).mockImplementation(() => {
             throw new Error('missing service role key');
         });
 
-        const result = await resolveStaffContext();
-
-        expect(result.bizId).toBe('biz-3');
-        expect(logWarn).toHaveBeenCalledWith(
-            'AuthBiz',
-            'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)',
-            { error: 'missing service role key' },
-        );
-    });
-
-    it('logs warning but still returns context when role insert fails', async () => {
-        serverClient.from.mockReturnValueOnce(createStaffListChain([cardA]));
-
-        adminClient.from
-            .mockReturnValueOnce(createFilterChain({ id: 'role-staff' }))
-            .mockReturnValueOnce(createFilterChain(null))
-            .mockReturnValueOnce(createInsertChain({ message: 'insert failed' }));
-
-        const result = await resolveStaffContext();
-
-        expect(result.staffId).toBe(STAFF_A);
-        expect(logWarn).toHaveBeenCalledWith('AuthBiz', 'Failed to auto-add staff role', {
-            message: 'insert failed',
-        });
+        await expect(resolveStaffContext()).resolves.toMatchObject({ bizId: 'biz-3' });
+        expect(logWarn).not.toHaveBeenCalled();
     });
 });
 
@@ -251,9 +204,10 @@ describe('resolveStaffContextForRequest', () => {
         requestHeaders.clear();
         requestCookies.clear();
         (createSupabaseAdminClient as jest.Mock).mockReturnValue(adminClient);
-        adminClient.from
-            .mockReturnValueOnce(createFilterChain({ id: 'role-staff' }))
-            .mockReturnValueOnce(createFilterChain({ id: 'existing-role' }));
+    });
+
+    afterEach(() => {
+        expect(adminClient.from).not.toHaveBeenCalled();
     });
 
     it('a mobile Bearer request ignores the web cookie and must name the card', async () => {

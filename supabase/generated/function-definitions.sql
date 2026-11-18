@@ -31,6 +31,41 @@ end;
 $function$
 ;
 
+-- signature: private.ensure_staff_role()
+CREATE OR REPLACE FUNCTION private.ensure_staff_role()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+declare
+    v_role uuid;
+begin
+    if new.user_id is null or not coalesce(new.is_active, false) then
+        return new;
+    end if;
+    if tg_op = 'UPDATE'
+        and new.user_id is not distinct from old.user_id
+        and new.biz_id is not distinct from old.biz_id
+        and new.is_active is not distinct from old.is_active then
+        return new;
+    end if;
+    select id into v_role from public.roles where key = 'staff';
+    if v_role is null then
+        return new;
+    end if;
+    begin
+        insert into public.user_roles (user_id, biz_id, role_id)
+        values (new.user_id, new.biz_id, v_role)
+        on conflict (user_id, role_id, biz_key) do nothing;
+    exception when others then
+        raise warning 'staff role not granted to the account of staff card %: %', new.id, sqlerrm;
+    end;
+    return new;
+end;
+$function$
+;
+
 -- signature: private.is_valid_time_zone(text)
 CREATE OR REPLACE FUNCTION private.is_valid_time_zone(p_tz text)
  RETURNS boolean

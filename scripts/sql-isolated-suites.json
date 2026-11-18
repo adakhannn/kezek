@@ -40,5 +40,6 @@
   "test-visit-package-sale-identity-isolated.cjs",
   "test-closed-default-privileges-isolated.cjs",
   "test-rls-policy-hygiene-isolated.cjs",
-  "test-inactive-rows-visibility-isolated.cjs"
+  "test-inactive-rows-visibility-isolated.cjs",
+  "test-staff-role-follows-card-isolated.cjs"
 ]

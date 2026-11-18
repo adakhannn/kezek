@@ -3,7 +3,6 @@ import { isUuid } from '@shared-client/validation';
 import { cookies, headers } from 'next/headers';
 
 import { BizAccessError, StaffSelectionRequiredError, type StaffOption } from './authDiagnostics';
-import { createServiceRoleClientWithFallback } from './bizContextRuntimeHelpers';
 import { logWarn } from './log';
 import { resolveRequestAuthContext } from './requestAuthContext';
 import { STAFF_SELECTION_COOKIE, STAFF_SELECTION_HEADER } from './staffSelection';
@@ -98,73 +97,21 @@ async function readRequestStaffSelection(): Promise<{ header: string | null; coo
     }
 }
 
-async function ensureStaffRoleAssignment(params: {
-    serviceClient: StaffContext['supabase'];
-    userId: string;
-    bizId: string;
-}) {
-    const { serviceClient, userId, bizId } = params;
-
-    const { data: roleStaff } = await serviceClient
-        .from('roles')
-        .select('id')
-        .eq('key', 'staff')
-        .maybeSingle<{ id: string }>();
-
-    if (!roleStaff?.id) {
-        return;
-    }
-
-    const { data: existingRole } = await serviceClient
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('role_id', roleStaff.id)
-        .eq('biz_id', bizId)
-        .maybeSingle<{ id: string }>();
-
-    if (existingRole) {
-        return;
-    }
-
-    const { error } = await serviceClient
-        .from('user_roles')
-        .insert({
-            user_id: userId,
-            biz_id: bizId,
-            role_id: roleStaff.id,
-            // biz_key is GENERATED ALWAYS (coalesce(biz_id, nil uuid)); inserting it fails.
-        });
-
-    if (error) {
-        logWarn('AuthBiz', 'Failed to auto-add staff role', { message: error.message });
-    }
-}
-
+/**
+ * Builds the context from the caller's active cards. It only reads: the 'staff' role in user_roles
+ * follows the card in the database (trigger staff_ensure_staff_role, ARCH-10), so a GET no longer
+ * writes roles.
+ */
 async function buildStaffContext(params: {
     supabase: StaffContext['supabase'];
     userId: string;
-    scope: string;
-    missingKeyMessage: string;
     explicitStaffId: string | null | undefined;
     rememberedStaffId: string | null | undefined;
 }): Promise<StaffContext> {
-    const { supabase, userId, scope } = params;
+    const { supabase, userId } = params;
     const records = await listActiveStaffRecords(supabase, userId);
     const { record, options } = chooseStaffRecord(records, params.explicitStaffId, params.rememberedStaffId);
-
     const bizId = String(record.biz_id);
-    const serviceClient = createServiceRoleClientWithFallback({
-        scope,
-        serverClient: supabase,
-        missingKeyMessage: params.missingKeyMessage,
-    });
-
-    await ensureStaffRoleAssignment({
-        serviceClient,
-        userId,
-        bizId,
-    });
 
     return {
         supabase,
@@ -196,8 +143,6 @@ export async function resolveStaffContext(): Promise<StaffContext> {
     return buildStaffContext({
         supabase,
         userId: userData.user.id,
-        scope: 'AuthBiz',
-        missingKeyMessage: 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)',
         explicitStaffId: selection.header,
         rememberedStaffId: selection.cookie,
     });
@@ -228,8 +173,6 @@ export async function resolveStaffContextForRequest(
     return buildStaffContext({
         supabase: authContext.supabase as StaffContext['supabase'],
         userId: authContext.user.id,
-        scope,
-        missingKeyMessage: 'SUPABASE_SERVICE_ROLE_KEY not set, using request client (RLS)',
         explicitStaffId: selection.staffId ?? header,
         rememberedStaffId: remembered,
     });

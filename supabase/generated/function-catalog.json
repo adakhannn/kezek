@@ -46,6 +46,26 @@
       "strict": false,
       "volatility": "v"
     },
+    "private.ensure_staff_role()": {
+      "arguments": "",
+      "body": "cdf93a53bfe3a66fda9e88451326be4e",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
     "private.is_valid_time_zone(text)": {
       "arguments": "p_tz text",
       "body": "4d103365b841ccf930a5f479d8e0e7b3",
