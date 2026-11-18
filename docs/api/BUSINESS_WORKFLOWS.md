@@ -34,8 +34,8 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | --- | --- |
 | Доступ/вход | Cookie user через `auth.getUser`; query/body не читаются; limiter отсутствует |
 | Успех | `data: { currentBizId, businesses }`; businesses — `{ id, name, city, slug }`, city всегда null |
-| Ошибки | 401 auth без user; прочие исключения — общая обёртка |
-| Ограничения | Список объединяет бизнесы с owner_id пользователя и owner/admin/manager-роли. Отдельного super_admin-допуска здесь нет. Ошибки нескольких запросов не проверяются и могут дать неполный список/нулевой текущий бизнес при 200; выбранный currentBizId отдельно не подтверждается списком |
+| Ошибки | 401 auth без user; 500 internal, если не прочитался текущий выбор, список бизнесов или ролей (ARCH-06: частичный список больше не отдаётся как 200); прочие исключения — общая обёртка |
+| Ограничения | Список объединяет бизнесы с owner_id пользователя и owner/admin/manager-роли. Отдельного super_admin-допуска здесь нет. Выбранный currentBizId отдельно не подтверждается списком |
 
 Записи не изменяются. Используется service client с fallback на пользовательский. Источники: [route](../../apps/web/src/app/api/me/current-business/route.ts), [HTTP](../../apps/web/src/lib/currentBusinessHttpService.ts), [getCurrentBusinessState](../../apps/web/src/lib/currentBusinessService.ts).
 
@@ -48,10 +48,10 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | Доступ/вход | Cookie user; JSON `bizId` — непустая строка после trim. Отдельной UUID-schema нет |
 | Limiter | normal, keyPrefix `api/me/current-business`, без числового override |
 | Успех | Только ok; upsert `user_current_business` по user_id |
-| Ошибки | 401 auth; 400 validation при пустом bizId; 404 not_found при отсутствии/ошибке lookup бизнеса; 403 forbidden без owner_id либо owner/admin/manager-роли; 500 internal при ошибке upsert |
+| Ошибки | 401 auth; 400 validation при пустом bizId; 404 not_found, если бизнеса нет; 403 forbidden без owner_id либо owner/admin/manager-роли; 500 internal при ошибке чтения бизнеса или ролей и при ошибке upsert |
 | Ограничения | Некорректный JSON превращается в `{}` и даёт отсутствие bizId. Внешний catch маршрута также преобразует любое брошенное исключение helper в 400 `Invalid JSON body`, даже если причина иная |
 
-Не выдаёт новую роль, только выбирает разрешённый бизнес. Источники: [route](../../apps/web/src/app/api/me/current-business/route.ts), [HTTP](../../apps/web/src/lib/currentBusinessHttpService.ts), [setCurrentBusinessState](../../apps/web/src/lib/currentBusinessService.ts).
+Не выдаёт новую роль, только выбирает разрешённый бизнес. Правило доступа одно с кабинетом менеджера ([managerAccessToBusiness](../../apps/web/src/lib/businessManagerAccess.ts), ARCH-06): бизнес, выбранный владельцем без строки роли, кабинет больше не отклоняет, а сбой чтения при разрешении кабинета даёт 503, а не тихое переключение на другой бизнес. Источники: [route](../../apps/web/src/app/api/me/current-business/route.ts), [HTTP](../../apps/web/src/lib/currentBusinessHttpService.ts), [setCurrentBusinessState](../../apps/web/src/lib/currentBusinessService.ts).
 
 ### POST `/api/me/current-staff`
 

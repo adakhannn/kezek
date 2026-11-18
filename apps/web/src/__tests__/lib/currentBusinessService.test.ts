@@ -101,9 +101,9 @@ describe('currentBusinessService', () => {
 
             if (table === 'roles') {
                 return {
-                    select: jest.fn().mockReturnThis(),
-                    in: jest.fn().mockResolvedValue({
+                    select: jest.fn().mockResolvedValue({
                         data: [{ id: 'role-manager', key: 'manager' }],
+                        error: null,
                     }),
                 };
             }
@@ -144,5 +144,45 @@ describe('currentBusinessService', () => {
         });
 
         expect(result).toEqual({ ok: true });
+    });
+
+    // ARCH-06: a failed read is a 500, not "business not found" or "no access".
+    test('a failed business read is a server error, not a 404', async () => {
+        const supabase = createMockSupabase();
+        supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-id' } }, error: null });
+        const admin = {
+            from: () => ({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: { message: 'timeout' } }),
+            }),
+        };
+
+        const result = await setCurrentBusinessState({ supabase: supabase as never, admin: admin as never, bizId: 'biz-1' });
+
+        expect(result).toMatchObject({ ok: false, status: 500, error: 'internal' });
+    });
+
+    test('the owner by owner_id may select the business without a role row', async () => {
+        const supabase = createMockSupabase();
+        supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-id' } }, error: null });
+        const upsert = jest.fn().mockResolvedValue({ error: null });
+        const admin = {
+            from: (table: string) => {
+                if (table === 'businesses') {
+                    return {
+                        select: jest.fn().mockReturnThis(),
+                        eq: jest.fn().mockReturnThis(),
+                        maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'biz-1', owner_id: 'user-id' }, error: null }),
+                    };
+                }
+                if (table === 'user_current_business') return { upsert };
+                throw new Error(`no ${table} read is needed for the owner`);
+            },
+        };
+
+        await expect(setCurrentBusinessState({ supabase: supabase as never, admin: admin as never, bizId: 'biz-1' }))
+            .resolves.toEqual({ ok: true });
+        expect(upsert).toHaveBeenCalledWith({ user_id: 'user-id', biz_id: 'biz-1' }, { onConflict: 'user_id' });
     });
 });

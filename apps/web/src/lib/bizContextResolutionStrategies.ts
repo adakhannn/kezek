@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { MANAGER_ROLE_KEYS } from './authContext';
+import { BizAccessError } from './authDiagnostics';
+import { BusinessAccessReadError, managerAccessToBusiness } from './businessManagerAccess';
 import { logDebug, logError, logWarn } from './log';
 
 /** Диагностика процесса выбора бизнеса для логов и NO_BIZ_ACCESS. */
@@ -21,11 +23,15 @@ export async function resolveForSuperAdmin(
     admin: SupabaseClient,
     userId: string,
 ): Promise<string | undefined> {
-    const { data: current } = await admin
+    const { data: current, error: currentError } = await admin
         .from('user_current_business')
         .select('biz_id')
         .eq('user_id', userId)
         .maybeSingle<{ biz_id: string }>();
+    if (currentError) {
+        logError('AuthBiz', 'Error loading current business', { error: currentError.message, userId });
+        throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
+    }
 
     if (current?.biz_id) {
         const currentBizId = String(current.biz_id);
@@ -35,7 +41,11 @@ export async function resolveForSuperAdmin(
             .eq('id', currentBizId)
             .maybeSingle<{ id: string; slug: string | null; name: string | null }>();
 
-        if (!bizError && bizRow?.id) {
+        if (bizError) {
+            logError('AuthBiz', 'Error loading the current business of a super admin', { error: bizError.message, userId });
+            throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
+        }
+        if (bizRow?.id) {
             logDebug('AuthBiz', 'Using current business for super admin', {
                 userId,
                 bizId: bizRow.id,
@@ -61,7 +71,7 @@ export async function resolveForSuperAdmin(
             error: kezekError.message,
             userId,
         });
-        return undefined;
+        throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
     }
     if (bizKezek?.id) {
         logDebug('AuthBiz', 'Using Kezek business for super admin', {
@@ -78,11 +88,18 @@ export async function resolveFromCurrentBusiness(
     userId: string,
     diagnostics: BizContextDiagnostics,
 ): Promise<string | undefined> {
-    const { data: current } = await admin
+    const { data: current, error: currentError } = await admin
         .from('user_current_business')
         .select('biz_id')
         .eq('user_id', userId)
         .maybeSingle<{ biz_id: string }>();
+
+    // A failed read is not "no choice": auto-selecting would silently switch the manager to
+    // another business (ARCH-06).
+    if (currentError) {
+        logError('AuthBiz', 'Error loading current business', { error: currentError.message, userId });
+        throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
+    }
 
     if (!current?.biz_id) {
         logDebug('AuthBiz', 'No current business set for user, will auto select', { userId });
@@ -93,32 +110,19 @@ export async function resolveFromCurrentBusiness(
     diagnostics.hasCurrentBizRecord = true;
     diagnostics.currentBizId = currentBizId;
 
-    const [{ data: ur }, { data: roleRows }] = await Promise.all([
-        admin
-            .from('user_roles')
-            .select('biz_id, role_id')
-            .eq('user_id', userId)
-            .eq('biz_id', currentBizId),
-        admin.from('roles').select('id, key'),
-    ]);
-
-    if (!ur?.length || !roleRows?.length) {
-        diagnostics.currentBizHasAllowedRole = false;
-        logWarn('AuthBiz', 'No user_roles found for current business', { userId, currentBizId });
-        return undefined;
+    // The same rule as selecting it (POST /api/me/current-business): owner or manager role.
+    let access: Awaited<ReturnType<typeof managerAccessToBusiness>>;
+    try {
+        access = await managerAccessToBusiness(admin, userId, currentBizId);
+    } catch (error) {
+        if (!(error instanceof BusinessAccessReadError)) throw error;
+        logError('AuthBiz', 'Error checking access to the current business', { step: error.step, userId, currentBizId });
+        throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
     }
 
-    const rolesMap = new Map<string, string>(
-        roleRows.map((r: { id: string | number; key: string }) => [String(r.id), String(r.key)]),
-    );
-    const hasAllowedRole = ur.some((r: { role_id: string | number }) => {
-        const key = rolesMap.get(String(r.role_id));
-        return !!key && MANAGER_ROLE_KEYS.has(key);
-    });
-
-    if (hasAllowedRole) {
+    if (access === 'manager') {
         diagnostics.currentBizHasAllowedRole = true;
-        logDebug('AuthBiz', 'Using current business for user (validated by roles)', {
+        logDebug('AuthBiz', 'Using current business for user', {
             userId,
             bizId: currentBizId,
             resolutionMethod: 'current_biz',
@@ -127,9 +131,10 @@ export async function resolveFromCurrentBusiness(
     }
 
     diagnostics.currentBizHasAllowedRole = false;
-    logWarn('AuthBiz', 'Current business has no allowed roles for user, will not auto switch', {
+    logWarn('AuthBiz', 'Current business is not managed by the user, will not auto switch', {
         userId,
         currentBizId,
+        reason: access,
     });
     return undefined;
 }
@@ -147,15 +152,14 @@ export async function resolveFromUserRoles(
 
     diagnostics.checkedUserRoles = true;
 
+    // Falling through to owner_id after a failed read could pick a different business.
     if (urError) {
         logError('AuthBiz', 'Error loading user_roles', { error: urError.message, userId });
-        diagnostics.errors = diagnostics.errors || [];
-        diagnostics.errors.push({ step: 'load_user_roles', error: urError.message });
+        throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
     }
     if (rolesError) {
         logError('AuthBiz', 'Error loading roles', { error: rolesError.message });
-        diagnostics.errors = diagnostics.errors || [];
-        diagnostics.errors.push({ step: 'load_roles', error: rolesError.message });
+        throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
     }
 
     if (!ur?.length || !roleRows?.length) {
@@ -216,9 +220,7 @@ export async function resolveFromOwnerId(
 
     if (ownedError) {
         logError('AuthBiz', 'Error loading owned businesses', { error: ownedError.message, userId });
-        diagnostics.errors = diagnostics.errors || [];
-        diagnostics.errors.push({ step: 'load_owned_businesses', error: ownedError.message });
-        return undefined;
+        throw new BizAccessError('SERVICE_UNAVAILABLE', 'BUSINESS_CONTEXT_UNAVAILABLE');
     }
 
     if (owned?.id) {

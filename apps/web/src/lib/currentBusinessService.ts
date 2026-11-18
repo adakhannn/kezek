@@ -1,4 +1,14 @@
+import { BusinessAccessReadError, managerAccessToBusiness } from './businessManagerAccess';
+
 const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
+
+const readFailure = (details: unknown): Failure => ({
+    ok: false,
+    error: 'internal',
+    message: 'Не удалось проверить бизнесы. Повторите попытку.',
+    details,
+    status: 500,
+});
 
 type BusinessListItem = {
     id: string;
@@ -51,11 +61,17 @@ export async function getCurrentBusinessState({
 
     const userId = user.id;
 
-    const [{ data: current }, { data: ownedBusinesses }, { data: roleBusinesses }] = await Promise.all([
+    const [
+        { data: current, error: currentError },
+        { data: ownedBusinesses, error: ownedError },
+        { data: roleBusinesses, error: roleError },
+    ] = await Promise.all([
         admin.from('user_current_business').select('biz_id').eq('user_id', userId).maybeSingle(),
         admin.from('businesses').select('id, name, slug').eq('owner_id', userId),
         admin.from('user_roles').select('biz_id, role_id').eq('user_id', userId).not('biz_id', 'is', null),
     ]);
+    // A partial list would show the wrong businesses and current choice.
+    if (currentError || ownedError || roleError) return readFailure((currentError ?? ownedError ?? roleError)?.message);
 
     const bizMap = new Map<string, BusinessListItem>();
     (ownedBusinesses ?? []).forEach((business: { id: string; name: string | null; slug: string | null }) => {
@@ -68,7 +84,8 @@ export async function getCurrentBusinessState({
     });
 
     if (roleBusinesses?.length) {
-        const { data: roleRows } = await admin.from('roles').select('id, key');
+        const { data: roleRows, error: roleKeysError } = await admin.from('roles').select('id, key');
+        if (roleKeysError) return readFailure(roleKeysError.message);
         const roleKeyById = new Map<string, string>((roleRows ?? []).map((role: { id: string; key: string }) => [role.id, role.key]));
         const allowedBizIds = new Set<string>();
 
@@ -84,7 +101,8 @@ export async function getCurrentBusinessState({
 
         const missingIds = [...allowedBizIds].filter((id) => !bizMap.has(id));
         if (missingIds.length > 0) {
-            const { data: bizRows } = await admin.from('businesses').select('id, name, slug').in('id', missingIds);
+            const { data: bizRows, error: bizRowsError } = await admin.from('businesses').select('id, name, slug').in('id', missingIds);
+            if (bizRowsError) return readFailure(bizRowsError.message);
             (bizRows ?? []).forEach((business: { id: string; name: string | null; slug: string | null }) => {
                 bizMap.set(business.id, {
                     id: business.id,
@@ -126,25 +144,18 @@ export async function setCurrentBusinessState({
         return { ok: false, error: 'validation', message: 'bizId обязателен', status: 400 };
     }
 
-    const { data: biz } = await admin.from('businesses').select('id, owner_id').eq('id', bizId).maybeSingle();
-    if (!biz) {
+    const userId = user.id;
+    let access: Awaited<ReturnType<typeof managerAccessToBusiness>>;
+    try {
+        access = await managerAccessToBusiness(admin, userId, bizId);
+    } catch (error) {
+        if (error instanceof BusinessAccessReadError) return readFailure(error.step);
+        throw error;
+    }
+    if (access === 'missing') {
         return { ok: false, error: 'not_found', message: 'Бизнес не найден', status: 404 };
     }
-
-    const userId = user.id;
-    let hasAccess = biz.owner_id === userId;
-
-    if (!hasAccess) {
-        const { data: urRows } = await admin.from('user_roles').select('role_id').eq('user_id', userId).eq('biz_id', bizId);
-        if (urRows?.length) {
-            const roleIds = [...new Set((urRows as { role_id: string }[]).map((row) => row.role_id))];
-            const { data: roleRows } = await admin.from('roles').select('id, key').in('id', roleIds);
-            const keySet = new Set((roleRows ?? []).map((row: { key: string }) => row.key));
-            hasAccess = [...ALLOWED_ROLE_KEYS].some((key) => keySet.has(key));
-        }
-    }
-
-    if (!hasAccess) {
+    if (access === 'none') {
         return { ok: false, error: 'forbidden', message: 'Нет прав на этот бизнес', status: 403 };
     }
 

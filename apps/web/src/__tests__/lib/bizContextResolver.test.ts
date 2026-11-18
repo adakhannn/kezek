@@ -241,6 +241,41 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
         });
     });
 
+    // ARCH-06: the cabinet and the selector use one rule, and a failed read never switches business.
+    test('an owner by owner_id keeps the selected business without a role row', async () => {
+        (mockAdmin.from as jest.Mock).mockImplementation((table: string) => {
+            if (table === 'user_roles' || table === 'roles') throw new Error(`${table} must not be read for the owner`);
+            return mockAdmin;
+        });
+        (mockAdmin.maybeSingle as jest.Mock)
+            .mockResolvedValueOnce({ data: { biz_id: 'biz-owned-2' }, error: null }) // user_current_business
+            .mockResolvedValueOnce({ data: { id: 'biz-owned-2', owner_id: 'user-1' }, error: null }); // owner check
+
+        const result = await resolveBizContextForManagers();
+        expect(result.bizId).toBe('biz-owned-2');
+    });
+
+    test('a failed current-business read is SERVICE_UNAVAILABLE, not an auto-selected other business', async () => {
+        (mockAdmin.maybeSingle as jest.Mock).mockResolvedValueOnce({ data: null, error: { message: 'timeout' } });
+
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
+        expect(mockAdmin.from).not.toHaveBeenCalledWith('user_roles');
+    });
+
+    test('a failed role read during auto-select is SERVICE_UNAVAILABLE, not the owner_id fallback', async () => {
+        (mockAdmin.from as jest.Mock).mockImplementation((table: string) => {
+            if (table === 'user_roles') {
+                const chain: any = { select: () => chain, eq: () => chain, then: (resolve: (v: unknown) => void) => resolve({ data: null, error: { message: 'timeout' } }) };
+                return chain;
+            }
+            if (table === 'roles') return makeThenable([]);
+            return mockAdmin;
+        });
+        (mockAdmin.maybeSingle as jest.Mock).mockResolvedValueOnce({ data: null, error: null });
+
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
+    });
+
     test('бросает NOT_AUTHENTICATED при отсутствии пользователя', async () => {
         (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
             data: { user: null },
