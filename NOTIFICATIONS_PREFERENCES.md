@@ -17,7 +17,7 @@
 
 Источник загрузки — [ParticipantDataService](apps/web/src/lib/notifications/ParticipantDataService.ts). Здесь описаны fallback в коде, а не предположения о defaults фактической базы.
 
-[User notification email service](apps/web/src/lib/userNotificationEmailService.ts) синхронизирует источники подтверждённого account email, Google identity email и Yandex metadata через RPC. `/api/profile/notification-emails` и изменения предпочтений описаны в [CLIENT_AND_AUTH_FLOWS](docs/api/CLIENT_AND_AUTH_FLOWS.md). Пустой список enabled email **не является общим запретом отправки**: для этого в booking flow используется также `notify_email=false`.
+[User notification email service](apps/web/src/lib/userNotificationEmailService.ts) синхронизирует источники подтверждённого account email и Google identity email через RPC; Yandex email добавляет только OAuth callback Yandex из ответа самого Yandex. `user_metadata` пользователь редактирует сам, поэтому он ничего не доказывает, а SQL `sync_user_notification_email` отказывает (`NOTIFICATION_EMAIL_NOT_PROVEN`) адресу, который не подтверждён `auth.users`, `auth.identities` или защищённым `profiles.yandex_id` (ENG-81). `/api/profile/notification-emails` и изменения предпочтений описаны в [CLIENT_AND_AUTH_FLOWS](docs/api/CLIENT_AND_AUTH_FLOWS.md). Пустой список enabled email **не является общим запретом отправки**: для этого в booking flow используется также `notify_email=false`.
 
 ## Кто получает уведомления о брони
 

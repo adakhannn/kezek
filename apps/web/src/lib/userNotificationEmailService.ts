@@ -9,7 +9,6 @@ export type NotificationEmailUser = {
     email?: string | null;
     email_confirmed_at?: string | null;
     identities?: AuthIdentity[] | null;
-    user_metadata?: Record<string, unknown> | null;
 };
 
 type AdminLike = {
@@ -17,6 +16,8 @@ type AdminLike = {
 };
 
 function identityEmail(identity: AuthIdentity): string | null {
+    // A provider that explicitly reports the address as unverified does not prove it.
+    if (identity.identity_data?.email_verified === false) return null;
     const email = identity.identity_data?.email;
     return typeof email === 'string' && email.trim() ? email.trim() : null;
 }
@@ -25,7 +26,7 @@ async function syncSource(
     admin: AdminLike,
     userId: string,
     email: string,
-    source: 'account' | 'google' | 'yandex',
+    source: 'account' | 'google',
     providerSubject?: string | null,
 ) {
     const { error } = await admin.rpc('sync_user_notification_email', {
@@ -37,6 +38,13 @@ async function syncSource(
     if (error) throw new Error(error.message || `Failed to sync ${source} notification email`);
 }
 
+/**
+ * Refreshes only the addresses Auth itself verified: the confirmed account e-mail and the Google
+ * identities' e-mails. A Yandex address is added only by the Yandex OAuth callback, from Yandex's
+ * own answer. user_metadata is written by the user (supabase.auth.updateUser({ data })), so it
+ * never proves an address; reading user_metadata.yandex_email let any account register any
+ * address as a verified notification e-mail (API-08).
+ */
 export async function syncNotificationEmailsFromUser(
     admin: AdminLike,
     user: NotificationEmailUser,
@@ -49,17 +57,6 @@ export async function syncNotificationEmailsFromUser(
         if (identity.provider !== 'google') continue;
         const email = identityEmail(identity);
         if (email) await syncSource(admin, user.id, email, 'google', identity.id ?? null);
-    }
-
-    const yandexEmail = user.user_metadata?.yandex_email;
-    if (typeof yandexEmail === 'string' && yandexEmail.trim()) {
-        await syncSource(
-            admin,
-            user.id,
-            yandexEmail,
-            'yandex',
-            String(user.user_metadata?.yandex_id ?? ''),
-        );
     }
 }
 

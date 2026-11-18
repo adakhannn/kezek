@@ -45,7 +45,7 @@
 | API-05 | P1 | Удаление сотрудника жёстко удаляет его прошлые брони (каскадом отзывы и использования пакетов), не в транзакции | `staffDeleteService.ts` | FIXED |
 | API-06 | P1 | Привязка сотрудника к чужому аккаунту без согласия (по UUID/email/телефону); поиск ограничен 200 пользователями | `staffCreateFromUserService.ts` и др. | TODO |
 | API-07 | P1 | Шаблоны уведомлений не экранируют `client_name` (HTML в письмах, Telegram `parse_mode: HTML`) | `messageBuilders.ts`, `utils.ts` | FIXED |
-| API-08 | P2 | Защита «подтверждённых» email уведомлений обходится через редактируемый `user_metadata.yandex_email` | `userNotificationEmailService.ts` | TODO |
+| API-08 | P2 | Защита «подтверждённых» email уведомлений обходится через редактируемый `user_metadata.yandex_email` | `userNotificationEmailService.ts` | FIXED |
 | API-09 | P2 | Приём аналитики без лимитов и привязки к сессии (`/api/funnel-events`, `/admin/api/analytics/track`) | `funnelEventsService.ts` | TODO |
 | API-10 | P2 | Отвязка WhatsApp оставляет номер в `auth.users.phone`/metadata | `socialIdentityUnlinkService` | TODO |
 | API-11 | P2 | Продажа пакетов визитов без идемпотентности; даты по UTC вместо времени бизнеса | `visitPackagesService.ts` | TODO |
@@ -131,5 +131,7 @@ FE-11, FE-13 и FE-14 закрыты как ENG-75…77 (код в `main`).
 MOB-02 и MOB-04 закрыты как ENG-78, ENG-79 (код в `main`).
 
 DB-17 закрыт как ENG-80: миграция `20261118140000_drop_duplicate_indexes.sql` применена в проде 18 ноября.
+
+API-08 закрыт как ENG-81: код в `main`, миграция `20261118150000_notification_email_proven_sources.sql` применена в проде 18 ноября после выкладки кода.
 
 Дальше по порядку: P1 — API-06, FE-02/03, ARCH-01…04, CI-01.

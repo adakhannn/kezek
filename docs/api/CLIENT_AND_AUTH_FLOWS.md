@@ -345,8 +345,8 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 | --- | --- |
 | Auth / input | Cookie session; тело/query не используются |
 | Success | `S(Array<{email,verified,enabled,sources:string[]}>)`; SQL `get_my_notification_emails` ограничен auth.uid; при null data возвращается [] |
-| Errors | 401 `{ok:false,error:"auth"}`; 500 `{ok:false,error:"notification_email_lookup_failed"}` для RPC lookup. Ошибка sync не обёрнута общим JSON-handler |
-| Limiter / effects | Нет. **GET сначала выполняет записи** через `sync_user_notification_email` для подтверждённого account email, Google identities и Yandex metadata, затем читает результат. Это не чистый read endpoint |
+| Errors | 401 `{ok:false,error:"auth"}`; 500 `{ok:false,error:"notification_email_lookup_failed"}` для RPC lookup. Ошибка sync (например, `NOTIFICATION_EMAIL_NOT_PROVEN`) записывается в лог, а список всё равно возвращается |
+| Limiter / effects | Нет. **GET сначала выполняет записи** через `sync_user_notification_email` для подтверждённого account email и Google identities (не помеченных провайдером как неподтверждённые), затем читает результат; `user_metadata` не используется (ENG-81). Это не чистый read endpoint |
 
 ## Публичное расписание, карта и поиск
 
