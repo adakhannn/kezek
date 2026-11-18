@@ -6,7 +6,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
 import { TimeoutError } from '../../lib/fetchWithTimeout';
-import { signOutSafely } from '../../lib/signOut';
+import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../../lib/signOut';
 import { supabase } from '../../lib/supabase';
 import type { Profile } from './types';
 
@@ -157,10 +157,11 @@ export function useProfileScreenData() {
     };
 
     const confirmSignOut = async () => {
+        const text = signOutConfirmationText(await countPendingShiftOperations());
         const shouldSignOut = await confirm({
-            title: 'Выход',
-            message: 'Вы уверены, что хотите выйти?',
-            confirmLabel: 'Выйти',
+            title: text.title,
+            message: text.message,
+            confirmLabel: text.confirmLabel,
             cancelLabel: 'Отмена',
             variant: 'danger',
         });

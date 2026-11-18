@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-import { signOutSafely } from '../../lib/signOut';
+import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../../lib/signOut';
 import { queryClient } from '../../lib/queryClient';
 import { supabase } from '../../lib/supabase';
 
@@ -93,5 +93,31 @@ describe('signOutSafely', () => {
         await expect(result).resolves.toEqual({ usedLocalFallback: true });
         expect(auth.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
         jest.useRealTimers();
+    });
+});
+
+describe('sign-out confirmation (MOB-02)', () => {
+    test('names unsent shift changes with the right Russian plural', () => {
+        expect(signOutConfirmationText(0)).toEqual({ title: 'Выход', message: 'Вы уверены, что хотите выйти?', confirmLabel: 'Выйти' });
+        const one = signOutConfirmationText(1);
+        expect(one.confirmLabel).toBe('Выйти и удалить');
+        expect(one.message).toContain('1 изменение смены ещё не отправлены');
+        expect(signOutConfirmationText(3).message).toContain('3 изменения');
+        expect(signOutConfirmationText(5).message).toContain('5 изменений');
+        expect(signOutConfirmationText(12).message).toContain('12 изменений');
+        expect(signOutConfirmationText(21).message).toContain('21 изменение');
+    });
+
+    test('counts the offline shift queue; an unreadable queue is unknown, not empty', async () => {
+        const operation = { type: 'save_items', timestamp: '2026-11-18T10:00:00.000Z', data: {} };
+        (SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce(JSON.stringify([operation, operation]));
+        await expect(countPendingShiftOperations()).resolves.toBe(2);
+        (SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce(null);
+        await expect(countPendingShiftOperations()).resolves.toBe(0);
+        (SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce(JSON.stringify([{ id: 'damaged' }]));
+        await expect(countPendingShiftOperations()).resolves.toBeNull();
+        (SecureStore.getItemAsync as jest.Mock).mockRejectedValueOnce(new Error('locked'));
+        await expect(countPendingShiftOperations()).resolves.toBeNull();
+        expect(signOutConfirmationText(null).confirmLabel).toBe('Выйти и удалить');
     });
 });

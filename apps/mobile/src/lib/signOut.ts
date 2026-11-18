@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-import { clearShiftOfflineData } from '../screens/shiftQuick/offlineStorage';
+import { clearShiftOfflineData, getOfflineQueue } from '../screens/shiftQuick/offlineStorage';
 import { TRANSIENT_AUTH_STORAGE_KEYS } from './authStorageKeys';
 import { logWarn } from './log';
 import { clearOfflineBookings } from './offlineBookingsStorage';
@@ -21,6 +21,52 @@ const REMOTE_SIGN_OUT_TIMEOUT_MS = 4000;
 export type SignOutResult = {
     usedLocalFallback: boolean;
 };
+
+/**
+ * Shift changes saved offline and not yet sent. Sign-out deletes them with the rest of the
+ * account's local data (another account must not inherit them), so the confirmation names
+ * them first instead of deleting them silently (MOB-02).
+ */
+export async function countPendingShiftOperations(): Promise<number | null> {
+    try {
+        return (await getOfflineQueue()).length;
+    } catch {
+        // Unreadable or damaged queue: something may be pending; never report it as empty.
+        return null;
+    }
+}
+
+function shiftChangesWord(count: number): string {
+    const lastTwo = count % 100;
+    const last = count % 10;
+    if (lastTwo >= 11 && lastTwo <= 14) return 'изменений';
+    if (last === 1) return 'изменение';
+    if (last >= 2 && last <= 4) return 'изменения';
+    return 'изменений';
+}
+
+export function signOutConfirmationText(pendingShiftOperations: number | null): {
+    title: string;
+    message: string;
+    confirmLabel: string;
+} {
+    if (pendingShiftOperations === null) {
+        return {
+            title: 'Есть несохранённые данные смены',
+            message: 'Не удалось проверить, все ли изменения смены отправлены. После выхода данные смены на этом устройстве будут удалены.',
+            confirmLabel: 'Выйти и удалить',
+        };
+    }
+    if (pendingShiftOperations > 0) {
+        return {
+            title: 'Есть неотправленные изменения смены',
+            message: `${pendingShiftOperations} ${shiftChangesWord(pendingShiftOperations)} смены ещё не отправлены на сервер. ` +
+                'После выхода они будут удалены с этого устройства. Подключитесь к интернету и дождитесь отправки или выйдите всё равно.',
+            confirmLabel: 'Выйти и удалить',
+        };
+    }
+    return { title: 'Выход', message: 'Вы уверены, что хотите выйти?', confirmLabel: 'Выйти' };
+}
 
 async function removeLocalSession(auth: AuthWithLocalSessionRemoval): Promise<void> {
     try {

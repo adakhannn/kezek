@@ -3,7 +3,7 @@
  * Вынес из BookingStep6Confirm для переиспользования и разделения слоёв.
  */
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../lib/api';
 import { acknowledgeBookingRequest, getBookingRequestKey } from '../lib/bookingRequest';
 
@@ -64,10 +64,15 @@ export type UseConfirmBookingOptions = {
 
 export function useConfirmBooking(options: UseConfirmBookingOptions = {}) {
     const { onSuccess, onError } = options;
+    const queryClient = useQueryClient();
 
     const mutation = useMutation({
         mutationFn: createBooking,
         onSuccess: (data) => {
+            // The cabinet lists (staleTime 5 min) and the slot grid must show the new booking at
+            // once, as cancellation already does (MOB-04).
+            void queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            void queryClient.invalidateQueries({ queryKey: ['slots'] });
             onSuccess?.(data.booking_id);
         },
         onError: (error: Error) => {

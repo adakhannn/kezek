@@ -59,6 +59,24 @@ describe('useConfirmBooking', () => {
         expect(onSuccess).toHaveBeenCalledWith('booking-123');
     });
 
+    test('a created booking refreshes the booking lists and the slots at once (MOB-04)', async () => {
+        const queryClient = createTestQueryClient();
+        const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
+        mockApiRequest.mockResolvedValueOnce({ ok: true, data: { booking_id: 'booking-9', confirmed: true } });
+
+        const { result } = renderHook(() => useConfirmBooking(), {
+            wrapper: ({ children }: { children: React.ReactNode }) => (
+                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+            ),
+        });
+        await act(async () => {
+            await result.current.createBookingAsync(params);
+        });
+
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['bookings'] });
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['slots'] });
+    });
+
     test('fails instead of navigating when quick-hold response has no booking id', async () => {
         const onSuccess = jest.fn();
         const onError = jest.fn();

@@ -6,7 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { signOutSafely } from '../lib/signOut';
+import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../lib/signOut';
 import type { CabinetStackParamList, RootStackParamList } from '../navigation/types';
 import { CabinetScreenSections } from './cabinet/CabinetScreenSections';
 import { useCabinetScreenData } from './cabinet/useCabinetScreenData';
@@ -34,11 +34,13 @@ export default function CabinetScreen() {
         onRefresh,
     } = useCabinetScreenData();
 
-    const handleSignOut = () => {
-        Alert.alert('Выход из аккаунта', 'Вы уверены, что хотите выйти?', [
+    const handleSignOut = async () => {
+        const pending = await countPendingShiftOperations();
+        const text = signOutConfirmationText(pending);
+        Alert.alert(pending === 0 ? 'Выход из аккаунта' : text.title, text.message, [
             { text: 'Отмена', style: 'cancel' },
             {
-                text: 'Выйти',
+                text: text.confirmLabel,
                 style: 'destructive',
                 onPress: async () => {
                     setIsSigningOut(true);
