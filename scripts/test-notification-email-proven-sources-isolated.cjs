@@ -9,7 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -59,7 +59,9 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them.
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             grant usage on schema auth to service_role; grant usage on schema public to anon, authenticated, service_role;
             create table auth.users(id uuid primary key, email text, email_confirmed_at timestamptz, raw_user_meta_data jsonb default '{}');
             create table auth.identities(id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id), provider text, provider_id text, identity_data jsonb);
@@ -76,23 +78,15 @@ let created = false;
                 created_at timestamptz default now() not null, primary key (email_id, source));
             grant all on public.user_notification_emails, public.user_notification_email_sources to anon, authenticated, service_role;`);
 
-        // Baseline bodies, and the production trigger (absent from the baseline, DB-15).
+        // Baseline bodies (sync_user_notification_email is quoted with $_$), and the production trigger:
+        // absent from the baseline (DB-15), created for fresh databases by 20261119010000_schema_parity_with_prod.
         await sql([
-            extract('20261009110000_prod_baseline.sql', 'CREATE OR REPLACE FUNCTION "public"."sync_user_notification_email"', '\n$$;'),
+            extract('20261009110000_prod_baseline.sql', 'CREATE OR REPLACE FUNCTION "public"."sync_user_notification_email"', '\n$_$;'),
             extract('20261009110000_prod_baseline.sql', 'CREATE OR REPLACE FUNCTION "public"."remove_user_notification_email_source"', '\n$$;'),
-            `create function public.sync_auth_user_notification_email() returns trigger language plpgsql security definer set search_path = public as $$
-            begin
-                if tg_op = 'UPDATE' and old.email is distinct from new.email then
-                    perform public.remove_user_notification_email_source(new.id, 'account');
-                end if;
-                if new.email is not null and new.email_confirmed_at is not null then
-                    perform public.sync_user_notification_email(new.id, new.email, 'account', new.id::text);
-                end if;
-                return new;
-            end $$;
-            create trigger sync_auth_user_notification_email_trigger after insert or update on auth.users
-                for each row execute function public.sync_auth_user_notification_email();
-            revoke all on function public.sync_user_notification_email(uuid, text, text, text), public.remove_user_notification_email_source(uuid, text) from public, anon, authenticated;
+            extract('20261009110000_prod_baseline.sql', 'CREATE OR REPLACE FUNCTION "public"."sync_auth_user_notification_email"', '\n$$;'),
+            extract('20261119010000_schema_parity_with_prod.sql', 'do $$\nbegin\n    if not exists (\n        select 1 from pg_trigger', '\nend;\n$$;'),
+            // 20261117130000_service_only_unchecked_definer_functions.
+            `revoke all on function public.sync_user_notification_email(uuid, text, text, text), public.remove_user_notification_email_source(uuid, text) from public, anon, authenticated;
             grant execute on function public.sync_user_notification_email(uuid, text, text, text), public.remove_user_notification_email_source(uuid, text) to service_role;`,
         ].join('\n'));
 

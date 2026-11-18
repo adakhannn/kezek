@@ -1,6 +1,5 @@
 // Disposable synthetic SQL proof; never reads credentials or existing containers.
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor, day } from './lib/finance-transaction-fixture.mjs';
@@ -10,7 +9,6 @@ const container='kezek-hours-test-'+randomUUID();
 function docker(args,input=''){return new Promise((resolve,reject)=>{const p=spawn('docker',args,{windowsHide:true});let out='',err='';p.stdout.on('data',d=>out+=d);p.stderr.on('data',d=>err+=d);p.on('error',reject);p.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err||out)));p.stdin.end(input);});}
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const sql=text=>docker(['exec','-i',container,'psql','-X','-q','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-At'],text);
-const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
 const call=async text=>JSON.parse(await sql(asActor()+text));
 // Independent explicit oracle for persisted amount1001,consumables99,60/40,rate100.
 function calc(hours){const guarantee=Math.round(hours*10000)/100,topup=Math.max(0,guarantee-601);return {totalAmount:1001,totalConsumables:99,guaranteedAmount:guarantee,topupAmount:topup,finalMasterShare:Math.max(601,guarantee),finalSalonShare:Math.max(0,499-topup)};}
@@ -21,13 +19,8 @@ let created=false;
 try{
  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);created=true;
  let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
+ // The fixture runs the finance chain through 20261110131000_shift_hours_adjustment.
  await setupFinanceFixture(sql);
- await sql(`alter table roles add column scope text not null default 'business';create table user_global_roles(user_id uuid,role_id uuid);create table super_admins_legacy(user_id uuid);
- alter table staff_shifts rename constraint staff_shifts_hours_worked_check to staff_shifts_hours_worked_range;`);
- const reporting=await load('20261110110000_reporting_completeness.sql');await sql(reporting.slice(0,reporting.indexOf('create function public.recalculate_business_daily_stats'))+'commit;');
- await sql(await load('20261110113000_shift_close_backlog.sql'));
- await sql(await load('20261110114000_finance_calendar.sql'));
- await sql(await load('20261110131000_shift_hours_adjustment.sql'));
  await sql(`update staff_shifts set status='closed',closed_at='${day} 18:00+06',total_amount=1001,consumables_amount=99,percent_master=60,percent_salon=40,hourly_rate=100 where id='${ids.shift}';`);
  let snap=await get();assert.equal(snap.dayHours,24);
  for(const role of ['anon','authenticated'])await assert.rejects(sql(asActor(ids.owner,role)+command(ids.shift,snap.shift.ledger_revision)),/permission denied/);

@@ -9,7 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const container = `kezek-staff-delete-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -48,7 +48,9 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them; the suspension guard is the live one.
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create table auth.users(id uuid primary key);
             create table public.businesses(id uuid primary key);
             create table public.staff(id uuid primary key, biz_id uuid not null references public.businesses(id), user_id uuid references auth.users(id));
@@ -65,11 +67,7 @@ let created = false;
                 biz_id uuid references public.businesses(id), role_id uuid not null references public.roles(id));
             create unique index ux_user_roles_business on public.user_roles(user_id, biz_id, role_id) where biz_id is not null;
             create table public.user_suspensions(user_id uuid primary key);
-            create function public.prevent_roles_for_suspended() returns trigger language plpgsql as $$
-                begin
-                    if exists (select 1 from public.user_suspensions where user_id = new.user_id) then raise exception 'USER_SUSPENDED'; end if;
-                    return new;
-                end $$;
+            ${liveFunctionSql('public.prevent_roles_for_suspended()')}
             create trigger trg_prevent_roles_for_suspended before insert or update on public.user_roles
                 for each row execute function public.prevent_roles_for_suspended();
 

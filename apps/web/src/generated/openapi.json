@@ -11,7 +11,7 @@
       "description": "Same origin. SDK consumers must configure their own approved base URL."
     }
   ],
-  "x-reviewed-source-sha256": "f2f6b75ddb76c64f445dcbf1d75a8a3e6065b7e70a6a84704a6033c47073b0ea",
+  "x-reviewed-source-sha256": "b13b8c10132839e5d1a624405fb899c6d8744c040773f14fa4e01b621be04ca6",
   "x-reviewed-sources": [
     "apps/web/src/app/api/quick-book-guest/route.ts",
     "apps/web/src/app/api/quick-hold/route.ts",

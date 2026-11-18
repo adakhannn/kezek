@@ -10,7 +10,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migration = fs.readFileSync(
     path.join(__dirname, '..', 'supabase', 'migrations', '20261119000000_visit_package_sale_identity.sql'),
@@ -32,17 +32,29 @@ const sql = (input) => docker(['exec', '-i', container, 'psql', '-X', '-q', '-U'
 
 const ids = Object.fromEntries(['ahead', 'behind', 'client', 'branch', 'service', 'planAhead', 'planBehind', 'bookingAhead', 'bookingBehind'].map((key) => [key, randomUUID()]));
 
+// Functions get the grants the production baseline gave them; the finance access guard the lookup
+// calls first is the live one.
 const fixture = `
 create role anon nologin;
 create role authenticated nologin;
 create role service_role nologin;
-create table public.businesses (id uuid primary key, tz text);
-create table public.bookings (id uuid primary key, biz_id uuid not null, client_id uuid, branch_id uuid, service_id uuid, status text not null);
+${SUPABASE_DEFAULT_PRIVILEGES}
+create schema auth;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub', '')::uuid $$;
+create function auth.role() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'role' $$;
+create table public.businesses (id uuid primary key, tz text, owner_id uuid);
+create table public.staff (id uuid primary key, biz_id uuid not null, user_id uuid, is_active boolean not null default true);
+create table public.roles (id uuid primary key default gen_random_uuid(), key text unique, scope text);
+create table public.user_roles (user_id uuid, biz_id uuid, role_id uuid references public.roles(id));
+create table public.user_global_roles (user_id uuid, role_id uuid references public.roles(id));
+create table public.super_admins_legacy (user_id uuid primary key);
+create table public.bookings (id uuid primary key, biz_id uuid not null, client_id uuid, branch_id uuid, service_id uuid, status text not null, staff_id uuid);
 create table public.visit_package_plans (id uuid primary key, biz_id uuid not null, service_id uuid, branch_ids uuid[], is_active boolean not null default true);
 create table public.client_visit_packages (id uuid primary key default gen_random_uuid(), client_id uuid not null, plan_id uuid not null,
     remaining_visits integer not null, valid_until date not null, purchased_at timestamptz not null default now(), created_at timestamptz not null default now());
 create table public.client_visit_package_uses (id uuid primary key default gen_random_uuid(), booking_id uuid not null);
-create function public.assert_booking_finance_access(p_booking_id uuid) returns void language sql as 'select';
+${['public.finance_is_platform_admin(uuid)', 'public.finance_can_manage_business(uuid,uuid)', 'public.assert_finance_access(uuid,uuid,uuid)',
+        'public.assert_booking_finance_access(uuid)'].map(liveFunctionSql).join('\n')}
 
 insert into public.businesses values ('${ids.ahead}', 'Pacific/Kiritimati'), ('${ids.behind}', 'Pacific/Pago_Pago');
 insert into public.visit_package_plans(id, biz_id) values ('${ids.planAhead}', '${ids.ahead}'), ('${ids.planBehind}', '${ids.behind}');
@@ -52,7 +64,9 @@ insert into public.bookings values
 `;
 
 const localToday = (tz) => `(now() at time zone '${tz}')::date`;
-const lookup = (booking) => sql(`select coalesce(public.get_applicable_visit_package_for_booking('${booking}')::text, 'none')`);
+// Read as the service role, which the finance access guard lets through without an actor.
+const lookup = (booking) => sql(`set role service_role; set request.jwt.claims = '{"role":"service_role"}';
+    select coalesce(public.get_applicable_visit_package_for_booking('${booking}')::text, 'none')`);
 const packageFor = (plan, validUntil) => sql(`delete from public.client_visit_packages;
     insert into public.client_visit_packages(client_id, plan_id, remaining_visits, valid_until)
     values ('${ids.client}', '${plan}', 3, ${validUntil}) returning id`);

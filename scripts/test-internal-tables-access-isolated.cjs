@@ -8,7 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const container = `kezek-internal-tables-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -25,7 +25,8 @@ const sql = (input) => docker(['exec', '-i', container, 'psql', '-X', '-q', '-U'
 const asRole = (role, id, body) =>
     sql(`set role ${role}; set request.jwt.claims='{"sub":"${id}","role":"${role}"}'; ${body}`);
 
-const [staffUser, otherUser, superAdmin, staffA, staffB] = Array.from({ length: 5 }, () => randomUUID());
+const [staffUser, otherUser, superAdmin, staffA, staffB, biz] = Array.from({ length: 6 }, () => randomUUID());
+const writer = 'public.update_shift_aggregates(uuid,uuid,date,numeric,numeric,numeric,integer,numeric,numeric)';
 let created = false;
 
 (async () => {
@@ -45,23 +46,28 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them; the aggregate writer is the live one.
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create function auth.uid() returns uuid language sql stable as $$ select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
             grant usage on schema auth to anon, authenticated, service_role;
-            create table public.staff(id uuid primary key, user_id uuid, is_active boolean default true);
+            create table public.staff(id uuid primary key, user_id uuid, is_active boolean default true, biz_id uuid);
             alter table public.staff enable row level security;
             create policy staff_read on public.staff for select using (true);
+            create table public.staff_shifts(id uuid primary key default gen_random_uuid(), staff_id uuid, biz_id uuid, shift_date date,
+                status text, total_amount numeric(12,2) default 0, master_share numeric(12,2) default 0, salon_share numeric(12,2) default 0,
+                late_minutes integer default 0);
             create table public.staff_shift_aggregates(id uuid primary key default gen_random_uuid(), staff_id uuid, biz_id uuid,
                 period_type text, period_value text, shifts_count integer, total_amount numeric(12,2), total_master numeric(12,2),
-                total_salon numeric(12,2), total_late_minutes integer, updated_at timestamptz default now());
+                total_salon numeric(12,2), total_late_minutes integer, updated_at timestamptz default now(),
+                unique (staff_id, period_type, period_value));
             alter table public.staff_shift_aggregates enable row level security;
             create policy "Staff shift aggregates all" on public.staff_shift_aggregates to authenticated, anon, service_role using (true) with check (true);
             create policy "Staff shift aggregates own all" on public.staff_shift_aggregates to authenticated
                 using (exists (select 1 from public.staff s where s.id = staff_shift_aggregates.staff_id and s.user_id = auth.uid() and s.is_active = true))
                 with check (exists (select 1 from public.staff s where s.id = staff_shift_aggregates.staff_id and s.user_id = auth.uid() and s.is_active = true));
             create policy "Staff shift aggregates service_role all" on public.staff_shift_aggregates to service_role using (true) with check (true);
-            create function public.update_shift_aggregates(p_staff_id uuid) returns void language plpgsql security definer set search_path = public as $$
-                begin update public.staff_shift_aggregates set shifts_count = shifts_count + 1 where staff_id = p_staff_id; end; $$;
+            ${liveFunctionSql(writer)}
             create table public.whatsapp_otp_codes(id uuid primary key default gen_random_uuid(), phone text, otp_hash text, status text);
             alter table public.whatsapp_otp_codes enable row level security;
             create policy "Allow insert for OTP codes" on public.whatsapp_otp_codes for insert with check (true);
@@ -69,10 +75,11 @@ let created = false;
             alter table public.super_admins_legacy enable row level security;
             create policy "read super_admins (auth)" on public.super_admins_legacy for select to authenticated using (true);
             grant all on all tables in schema public to anon, authenticated, service_role;
-            grant execute on all functions in schema public to anon, authenticated, service_role;
-            insert into public.staff values ('${staffA}', '${staffUser}', true), ('${staffB}', '${otherUser}', true);
-            insert into public.staff_shift_aggregates(staff_id, period_type, period_value, shifts_count, total_amount, total_master, total_salon, total_late_minutes)
-                values ('${staffA}', 'day', '2026-11-17', 1, 1000, 600, 400, 0), ('${staffB}', 'day', '2026-11-17', 2, 3000, 1800, 1200, 5);
+            insert into public.staff(id, user_id, is_active, biz_id) values ('${staffA}', '${staffUser}', true, '${biz}'), ('${staffB}', '${otherUser}', true, '${biz}');
+            insert into public.staff_shifts(staff_id, biz_id, shift_date, status, total_amount, master_share, salon_share)
+                values ('${staffA}', '${biz}', '2026-11-17', 'closed', 1000, 600, 400);
+            insert into public.staff_shift_aggregates(staff_id, biz_id, period_type, period_value, shifts_count, total_amount, total_master, total_salon, total_late_minutes)
+                values ('${staffA}', '${biz}', 'day', '2026-11-17', 1, 1000, 600, 400, 0), ('${staffB}', '${biz}', 'day', '2026-11-17', 2, 3000, 1800, 1200, 5);
             insert into public.super_admins_legacy values ('${superAdmin}');`);
 
         // The fixture reproduces the exposure before the migration.
@@ -91,9 +98,15 @@ let created = false;
         assert.equal(await asRole('authenticated', staffUser, 'select string_agg(total_master::text, \',\') from public.staff_shift_aggregates'), '600.00');
         assert.equal(await asRole('authenticated', otherUser, `select count(*) from public.staff_shift_aggregates where staff_id = '${staffA}'`), '0');
         await assert.rejects(asRole('authenticated', staffUser, 'update public.staff_shift_aggregates set total_master = 9999'), /permission denied/);
-        await asRole('authenticated', staffUser, `select public.update_shift_aggregates('${staffA}')`);
-        assert.equal(await sql(`select shifts_count from public.staff_shift_aggregates where staff_id = '${staffA}'`), '2');
         assert.equal(await asRole('service_role', staffUser, 'select count(*) from public.staff_shift_aggregates'), '2');
+        // The definer writer still recomputes the rows. Since 20261109091100_atomic_shift_commands only the
+        // service role and definer commands call it; a client session cannot.
+        const recompute = `select public.update_shift_aggregates('${staffA}', '${biz}', '2026-11-17', 0, 0, 0, 0)`;
+        await assert.rejects(asRole('authenticated', staffUser, recompute), /permission denied for function update_shift_aggregates/);
+        await sql(`insert into public.staff_shifts(staff_id, biz_id, shift_date, status, total_amount, master_share, salon_share)
+            values ('${staffA}', '${biz}', '2026-11-17', 'closed', 500, 300, 200)`);
+        await asRole('service_role', staffUser, recompute);
+        assert.equal(await sql(`select shifts_count || '|' || total_master from public.staff_shift_aggregates where staff_id = '${staffA}' and period_type = 'day'`), '2|900.00');
 
         // whatsapp_otp_codes: only the service role writes.
         await assert.rejects(asRole('anon', staffUser, `insert into public.whatsapp_otp_codes(phone, status) values ('+996555000222', 'pending')`), /permission denied/);

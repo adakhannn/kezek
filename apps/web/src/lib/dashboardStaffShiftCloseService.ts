@@ -40,7 +40,7 @@ type CloseStaffShiftRpcResult = {
 };
 
 type Result =
-    | { ok: false; statusCode: number; errorType: 'validation' | 'internal' | 'not_found' | 'forbidden'; message: string }
+    | { ok: false; statusCode: number; errorType: 'validation' | 'internal' | 'not_found' | 'forbidden' | 'service_unavailable'; message: string }
     | { ok: true; shift: StaffShiftRow };
 
 export async function runDashboardStaffShiftClose({

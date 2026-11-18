@@ -55,7 +55,7 @@ type ShiftItemInput = {
 };
 
 type ServiceResult =
-    | { ok: false; statusCode: number; errorType: 'validation' | 'internal' | 'forbidden'; message: string }
+    | { ok: false; statusCode: number; errorType: 'validation' | 'internal' | 'forbidden' | 'service_unavailable'; message: string }
     | { ok: true; shift: StaffShiftRow };
 
 async function queueShiftCloseNotification(params: {

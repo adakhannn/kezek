@@ -7,7 +7,20 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+
+const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
+const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
+// One CREATE FUNCTION statement of an earlier migration, from its first line to its terminator.
+function extract(file, start, end) {
+    const text = read(file);
+    const from = text.indexOf(start);
+    assert.ok(from >= 0, `${start} not found in ${file}`);
+    const to = text.indexOf(end, from);
+    assert.ok(to > from, `${end} not found after ${start} in ${file}`);
+    return text.slice(from, to + end.length);
+}
+const baseline = '20261009110000_prod_baseline.sql';
 
 const container = `kezek-identity-surface-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -46,7 +59,9 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them (PUBLIC and every API role).
         await sql(`create role anon; create role authenticated; create role service_role; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create function auth.uid() returns uuid language sql stable as $$ select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
             grant usage on schema auth to anon,authenticated,service_role;
             create table profiles(
@@ -65,16 +80,19 @@ let created = false;
             alter table frontend_metrics enable row level security;
             create policy "Allow read access to frontend metrics" on frontend_metrics for select using (true);
             create table bookings(client_id uuid, branch_id uuid, status text, end_at timestamptz);
-            create function public.get_client_visit_count(p_client_id uuid, p_branch_id uuid) returns integer
-                language plpgsql security definer as $$ begin return (select count(*)::integer from bookings where client_id=p_client_id and branch_id=p_branch_id and status='paid'); end; $$;
-            create function public.can_use_promotion(p_client_id uuid, p_branch_id uuid, p_promotion_id uuid) returns boolean
-                language plpgsql security definer as $$ begin return public.get_client_visit_count(p_client_id, p_branch_id) >= 0; end; $$;
+            create table branch_promotions(id uuid primary key, branch_id uuid, promotion_type text, params jsonb default '{}',
+                is_active boolean default true, valid_from date, valid_to date);
+            create table client_referrals(referrer_id uuid, branch_id uuid, referrer_bonus_used boolean default false);
+            -- The promotion helpers exactly as the production baseline defines them: SECURITY DEFINER, no search_path.
+            ${extract(baseline, 'CREATE OR REPLACE FUNCTION "public"."get_client_visit_count"', '\n$$;')}
+            ${extract(baseline, 'CREATE OR REPLACE FUNCTION "public"."can_use_promotion"', '\n$$;')}
             create function public.definer_link_whatsapp(p_phone text) returns void language plpgsql security definer set search_path=public as $$
                 begin update profiles set whatsapp_phone = p_phone, whatsapp_verified = true where id = auth.uid(); end; $$;
             grant all on all tables in schema public to anon,authenticated,service_role;
-            grant execute on all functions in schema public to anon,authenticated,service_role;
             insert into profiles(id, full_name) values ('${user}', 'Original'), ('${other}', 'Other');
-            insert into bookings values ('${client}', '${branch}', 'paid', now());
+            insert into bookings values ('${client}', '${branch}', 'paid', now() - interval '1 day');
+            -- Free 2nd visit: the client with one paid visit qualifies.
+            insert into branch_promotions(id, branch_id, promotion_type, params) values ('${promo}', '${branch}', 'free_after_n_visits', '{"visit_count": 2}');
         `);
 
         // The fixture must reproduce every exposure before the migration runs.
@@ -127,6 +145,7 @@ let created = false;
             assert.equal(await sql(`select array_to_string(proconfig, ',') from pg_proc where oid='public.${sig}'::regprocedure`), 'search_path=public, pg_temp');
         }
         await assert.rejects(asRole('authenticated', user, `select get_client_visit_count('${client}','${branch}')`), /permission denied/);
+        // can_use_promotion (definer) still counts the paid visit through get_client_visit_count.
         assert.equal(await asRole('service_role', user, `select can_use_promotion('${client}','${branch}','${promo}')`), 't');
 
         // 4. Frontend metrics are no longer world-readable.

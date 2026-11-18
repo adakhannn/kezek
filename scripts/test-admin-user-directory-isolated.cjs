@@ -8,18 +8,10 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, installLiveFunction, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
-function extract(file, start, end) {
-    const text = read(file);
-    const from = text.indexOf(start);
-    assert.ok(from >= 0, `${start} not found in ${file}`);
-    const to = text.indexOf(end, from);
-    assert.ok(to > from, `${end} not found after ${start}`);
-    return text.slice(from, to + end.length);
-}
 
 const container = `kezek-admin-users-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -57,6 +49,7 @@ let created = false;
         assert.ok(ready, 'PostgreSQL did not start');
 
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create table auth.users(id uuid primary key, email varchar(255), phone text, last_sign_in_at timestamptz,
                 created_at timestamptz, deleted_at timestamptz, raw_user_meta_data jsonb default '{}');
             create table public.profiles(id uuid primary key, full_name text);
@@ -79,7 +72,8 @@ let created = false;
             insert into auth.users(id, email, created_at, deleted_at) values (gen_random_uuid(), 'deleted@example.com', now(), now());
             insert into auth.users(id, email, created_at) values ('${admin}', 'root@example.com', timestamptz '2020-01-01'), ('${plain}', 'plain@example.com', timestamptz '2020-01-02');
             insert into public.user_global_roles values ('${admin}', '00000000-0000-0000-0000-000000000001');`);
-        await sql(extract('20261110131000_shift_hours_adjustment.sql', 'create or replace function public.finance_is_platform_admin', '\n$$;'));
+        // The production platform-admin predicate, with its live ACL (callable only by its owner).
+        await installLiveFunction(sql, 'public.finance_is_platform_admin(uuid)');
         await sql(read('20261118180000_admin_user_directory.sql'));
 
         const page = (args) => json(`set role service_role; select public.admin_list_users('${admin}', ${args})::text`);

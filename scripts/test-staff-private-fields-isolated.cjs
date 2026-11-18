@@ -9,7 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const container = `kezek-staff-private-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -47,7 +47,9 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them; the finance access helpers are the live ones.
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create function auth.uid() returns uuid language sql stable as $$ select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
             create function auth.role() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role' $$;
             grant usage on schema auth to anon, authenticated, service_role;
@@ -61,8 +63,10 @@ let created = false;
                 is_active boolean default true, created_at timestamptz default now(), email text, phone text, user_id uuid, avatar_url text,
                 percent_master numeric(5,2), percent_salon numeric(5,2), hourly_rate numeric(10,2), rating_score numeric(5,2),
                 rating_updated_at timestamptz, last_rating_recalculated_at timestamptz);
-            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique);
+            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique, scope text);
             create table public.user_roles(user_id uuid, biz_id uuid, role_id uuid references public.roles(id));
+            create table public.user_global_roles(user_id uuid, role_id uuid references public.roles(id));
+            create table public.super_admins_legacy(user_id uuid primary key);
             create table public.bookings(id uuid primary key, biz_id uuid, staff_id uuid);
 
             -- Production-shaped access: public rows for everyone, sub-query policies on user_id / owner_id.
@@ -77,15 +81,8 @@ let created = false;
             create policy bookings_owner_read on public.bookings for select to authenticated
                 using (exists (select 1 from public.businesses b where b.id = bookings.biz_id and b.owner_id = auth.uid()));
 
-            create function public.finance_is_platform_admin(p_actor_id uuid) returns boolean language sql stable security definer as $$ select false $$;
-            create function public.finance_can_manage_business(p_actor_id uuid, p_biz_id uuid) returns boolean language sql stable security definer
-                set search_path = pg_catalog, public as $$
-                select p_actor_id is not null and (
-                    exists(select 1 from public.businesses b where b.id = p_biz_id and b.owner_id = p_actor_id)
-                    or exists(select 1 from public.user_roles u join public.roles r on r.id = u.role_id
-                        where u.user_id = p_actor_id and u.biz_id = p_biz_id and r.key in ('owner','admin','manager'))
-                    or public.finance_is_platform_admin(p_actor_id)) $$;
-            revoke all on function public.finance_can_manage_business(uuid, uuid) from public, anon, authenticated;
+            ${liveFunctionSql('public.finance_is_platform_admin(uuid)')}
+            ${liveFunctionSql('public.finance_can_manage_business(uuid,uuid)')}
 
             grant all on all tables in schema public to anon, authenticated, service_role;
 

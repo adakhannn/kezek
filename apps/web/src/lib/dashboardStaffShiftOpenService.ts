@@ -7,7 +7,7 @@ import { readScheduledDay } from '@/lib/scheduling/read';
 import { financeCommandFailure } from '@/lib/staffShift/financeCommand';
 import { dateAtTz } from '@/lib/time';
 
-type Result = { ok: true; shift: Record<string, unknown> } | { ok: false; statusCode: number; errorType: 'validation' | 'forbidden' | 'internal'; message: string; details?: Record<string, unknown> };
+type Result = { ok: true; shift: Record<string, unknown> } | { ok: false; statusCode: number; errorType: 'validation' | 'forbidden' | 'internal' | 'service_unavailable'; message: string; details?: Record<string, unknown> };
 export async function runDashboardStaffShiftOpen({ req, supabase, admin, bizId, staffId, staff }: {
     req: Request; supabase: SupabaseClient; admin: SupabaseClient; bizId: string; staffId: string; staff: { branch_id: string | null };
 }): Promise<Result> {

@@ -20,6 +20,12 @@ export function financeCommandFailure(error: { code?: string; message?: string }
         return { ok: false as const, statusCode: 400, errorType: 'validation' as const,
             message: 'Неверные данные смены или смена не открыта. Проверьте позиции и дату.' };
     }
+    // Shift commands run with lock_timeout and statement_timeout (close: 2 s / 10 s): another command
+    // holds the shift. Nothing was written, so the same request can simply be sent again.
+    if (error.code === '55P03' || error.code === '57014') {
+        return { ok: false as const, statusCode: 503, errorType: 'service_unavailable' as const,
+            message: 'Смена сейчас занята другой операцией. Изменения не сохранены — повторите через несколько секунд.' };
+    }
     return { ok: false as const, statusCode: 500, errorType: 'internal' as const,
         message: 'Не удалось сохранить финансовую операцию. Изменения не подтверждены.' };
 }

@@ -8,7 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const container = `kezek-tenant-refs-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -53,6 +53,7 @@ let created = false;
             create function auth.uid() returns uuid language sql stable as $$ select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
             grant usage on schema auth to anon, authenticated, service_role;
             alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
 
             create table public.businesses(id uuid primary key);
             create table public.branches(id uuid primary key, biz_id uuid not null);
@@ -71,11 +72,6 @@ let created = false;
             create table public.roles(id uuid primary key default gen_random_uuid(), key text unique);
             create table public.user_roles(user_id uuid, biz_id uuid, role_id uuid references public.roles(id));
             grant select on public.roles, public.user_roles to authenticated;
-
-            create function public.has_role(p_role_key text, p_biz_id uuid default null) returns boolean language sql stable security definer
-                set search_path = public as $$
-                select exists(select 1 from public.user_roles ur join public.roles r on r.id = ur.role_id
-                    where ur.user_id = auth.uid() and r.key = p_role_key and (p_biz_id is null and ur.biz_id is null or ur.biz_id = p_biz_id)) $$;
 
             -- Production policy shapes: the row's biz_id (or one side of the link) only.
             alter table public.staff_schedule_rules enable row level security;

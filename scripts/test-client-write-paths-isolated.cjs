@@ -8,7 +8,20 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+
+const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
+const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
+// One CREATE FUNCTION statement of an earlier migration, from its first line to its terminator.
+function extract(file, start, end) {
+    const text = read(file);
+    const from = text.indexOf(start);
+    assert.ok(from >= 0, `${start} not found in ${file}`);
+    const to = text.indexOf(end, from);
+    assert.ok(to > from, `${end} not found after ${start} in ${file}`);
+    return text.slice(from, to + end.length);
+}
+const baselineFunction = (name) => extract('20261009110000_prod_baseline.sql', `CREATE OR REPLACE FUNCTION "public"."${name}"(`, '\n$$;');
 
 const container = `kezek-client-writes-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -54,7 +67,7 @@ let created = false;
             create function auth.role() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role' $$;
             grant usage on schema auth to anon, authenticated, service_role;
             alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-            alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
 
             create table auth.users(id uuid primary key, email text, phone text, raw_user_meta_data jsonb, created_at timestamptz default now(),
                 email_confirmed_at timestamptz, phone_confirmed_at timestamptz, deleted_at timestamptz);
@@ -66,8 +79,10 @@ let created = false;
                 created_at timestamptz default now(), email text, phone text, user_id uuid, avatar_url text,
                 percent_master numeric default 60, percent_salon numeric default 40, hourly_rate numeric, rating_score numeric,
                 rating_updated_at timestamptz, last_rating_recalculated_at timestamptz);
-            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique);
+            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique, scope text);
             create table public.user_roles(user_id uuid, biz_id uuid, role_id uuid references public.roles(id));
+            create table public.user_global_roles(user_id uuid, role_id uuid references public.roles(id));
+            create table public.super_admins_legacy(user_id uuid primary key);
             create table public.branch_admins(branch_id uuid, user_id uuid);
             create table public.user_suspensions(user_id uuid primary key references auth.users(id), reason text,
                 created_at timestamptz default now(), created_by uuid);
@@ -76,54 +91,16 @@ let created = false;
                 where id = auth.uid() or current_user = any (array['postgres', 'service_role']::name[]);
             create view public.current_staff_branch as select distinct on (s.id) s.id as staff_id, s.branch_id from public.staff s order by s.id;
 
-            create function public.has_role(p_role_key text, p_biz_id uuid default null) returns boolean language sql stable security definer
-                set search_path = public as $$
-                select exists(select 1 from public.user_roles ur join public.roles r on r.id = ur.role_id
-                    where ur.user_id = auth.uid() and r.key = p_role_key and (p_biz_id is null and ur.biz_id is null or ur.biz_id = p_biz_id)) $$;
-            create function public.is_super_admin() returns boolean language sql stable security definer set search_path = public as $$
-                select auth.uid() is not null and public.has_role('super_admin', null) $$;
-            create function public.has_branch_admin(p_branch_id uuid) returns boolean language sql stable security definer set search_path = public as $$
-                select exists(select 1 from public.branch_admins ba where ba.branch_id = p_branch_id and ba.user_id = auth.uid()) $$;
-            create function public.finance_is_platform_admin(p_actor_id uuid) returns boolean language sql stable security definer as $$ select false $$;
-            create function public.finance_can_manage_business(p_actor_id uuid, p_biz_id uuid) returns boolean language sql stable security definer
-                set search_path = pg_catalog, public as $$
-                select p_actor_id is not null and (
-                    exists(select 1 from public.businesses b where b.id = p_biz_id and b.owner_id = p_actor_id)
-                    or exists(select 1 from public.user_roles u join public.roles r on r.id = u.role_id
-                        where u.user_id = p_actor_id and u.biz_id = p_biz_id and r.key in ('owner','admin','manager'))
-                    or public.finance_is_platform_admin(p_actor_id)) $$;
+            -- The role and finance access helpers as they are live.
+            ${liveFunctionSql('public.is_super_admin()')}
+            ${liveFunctionSql('public.has_role(text,uuid)')}
+            ${liveFunctionSql('public.has_branch_admin(uuid)')}
+            ${liveFunctionSql('public.finance_is_platform_admin(uuid)')}
+            ${liveFunctionSql('public.finance_can_manage_business(uuid,uuid)')}
 
-            -- Production bodies of the functions the migration drops or replaces.
-            create function public.grant_role_rpc(p_user uuid, p_biz uuid, p_role text) returns void language plpgsql security definer
-                set search_path = public as $$
-                declare v_role_id uuid;
-                begin
-                    select id into v_role_id from public.roles where key = p_role;
-                    if not (public.has_role('super_admin', null) or public.has_role('owner', p_biz) or public.has_role('admin', p_biz)
-                            or public.has_role('manager', p_biz)) then raise exception 'forbidden'; end if;
-                    insert into public.user_roles(user_id, biz_id, role_id) values (p_user, p_biz, v_role_id);
-                end $$;
-            create function public.revoke_role_rpc(p_user uuid, p_biz uuid, p_role text) returns void language sql security definer as $$ select $$;
-            create function public.assign_business_owner(p_biz_id uuid, p_user_id uuid) returns void language sql as $$
-                update public.businesses set owner_id = p_user_id where id = p_biz_id $$;
-            create function public.delete_business_cascade(p_biz_id uuid) returns void language sql security definer as $$
-                delete from public.businesses where id = p_biz_id $$;
-            create function public.cat_remove_slug(the_slug text) returns integer language plpgsql security definer set search_path = public as $$
-                declare v_count int := 0;
-                begin
-                    if not public.is_super_admin() then raise exception 'forbidden' using errcode = 'P0001'; end if;
-                    update public.businesses set categories = array(select x from unnest(coalesce(categories, '{}'::text[])) as t(x) where x <> the_slug)
-                     where categories @> array[the_slug] returning 1 into v_count;
-                    return coalesce(v_count, 0);
-                end $$;
-            create function public.cat_replace_slug(old_slug text, new_slug text) returns integer language plpgsql security definer set search_path = public as $$
-                declare v_count int := 0;
-                begin
-                    if not public.is_super_admin() then raise exception 'forbidden' using errcode = 'P0001'; end if;
-                    update public.businesses set categories = array(select case when x = old_slug then new_slug else x end
-                        from unnest(coalesce(categories, '{}'::text[])) as t(x)) where categories @> array[old_slug] returning 1 into v_count;
-                    return coalesce(v_count, 0);
-                end $$;
+            -- Production bodies of the functions the migration drops or replaces, from the baseline.
+            ${['grant_role_rpc', 'revoke_role_rpc', 'assign_business_owner', 'delete_business_cascade', 'cat_remove_slug', 'cat_replace_slug']
+                .map(baselineFunction).join('\n')}
             -- A checked command that writes staff as its owner (like the transfer and shift close commands).
             create function public.fixture_definer_set_rate(p_staff uuid, p_rate numeric) returns void language sql security definer as $$
                 update public.staff set hourly_rate = p_rate where id = p_staff $$;

@@ -1,14 +1,32 @@
 // Access-control integration fixture for 20261117130000_service_only_unchecked_definer_functions.
-// A disposable PostgreSQL reproduces production grants (every API role may execute the unchecked
-// SECURITY DEFINER helpers), shows the notification hijack, applies the real migration and checks
-// that only the service role and the postgres-owned auth.users trigger can still use them.
+// A disposable PostgreSQL holds the functions as the prod baseline created them, under the
+// production default grants (every API role may execute the unchecked SECURITY DEFINER helpers),
+// shows the notification hijack, applies the real migration and checks that only the service role
+// and the postgres-owned auth.users trigger can still use them. The later migrations that changed
+// these functions run too, so the trusted callers are checked on the live definitions.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+
+const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
+const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
+const baseline = read('20261009110000_prod_baseline.sql');
+// Every overload of a function as the prod baseline creates it: each CREATE up to its ALTER FUNCTION ... OWNER.
+function baselineFunctions(name) {
+    const marker = `CREATE OR REPLACE FUNCTION "public"."${name}"(`;
+    const definitions = [];
+    for (let from = baseline.indexOf(marker); from >= 0; from = baseline.indexOf(marker, from + marker.length)) {
+        const to = baseline.indexOf(`\nALTER FUNCTION "public"."${name}"(`, from);
+        assert.ok(to > from, `${name}: no ALTER FUNCTION after its definition in the prod baseline`);
+        definitions.push(baseline.slice(from, to));
+    }
+    assert.ok(definitions.length > 0, `${name} not found in the prod baseline`);
+    return definitions.join('\n');
+}
 
 const container = `kezek-definer-acl-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -35,6 +53,20 @@ const functions = [
     'get_slow_api_requests(text, integer, integer)',
     'branch_admins_effective(uuid)',
 ];
+// The later migrations that change these functions, in chain order: 20261117180000 repairs
+// get_api_metrics_stats (and revokes grant_role/revoke_role), 20261117190000 drops grant_role and
+// revoke_role, 20261118150000 makes sync_user_notification_email accept only proven addresses,
+// 20261119020000 drops the two API request readers.
+const later = [
+    '20261117180000_fix_api_metrics_stats.sql',
+    '20261117190000_drop_dead_functions.sql',
+    '20261118150000_notification_email_proven_sources.sql',
+    '20261119020000_dead_functions_and_cleanup_jobs.sql',
+];
+// pg_cron stand-in: vanilla PostgreSQL has no pg_cron and this suite runs no jobs, so cron.schedule
+// only accepts the job declarations of 20261119020000.
+const cron = `create schema cron;
+    create function cron.schedule(job_name text, schedule text, command text) returns bigint language sql as $$ select 0::bigint $$;`;
 let created = false;
 
 (async () => {
@@ -54,51 +86,35 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them (PUBLIC and every API role).
         await sql(`create role anon; create role authenticated; create role service_role; create role supabase_auth_admin;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create schema auth; grant usage on schema auth to supabase_auth_admin;
-            create table auth.users(id uuid primary key, email text);
+            create table auth.users(id uuid primary key, email text, email_confirmed_at timestamptz);
+            create table auth.identities(user_id uuid not null references auth.users(id), provider text not null, identity_data jsonb not null);
             grant insert, update on auth.users to supabase_auth_admin;
-            create table public.user_notification_emails(id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id),
-                email text not null, verified boolean not null default false, enabled boolean not null default false, unique(user_id, email));
+            create table public.profiles(id uuid primary key references auth.users(id), yandex_id text);
+            -- Columns and keys of the prod baseline.
+            create table public.user_notification_emails(id uuid primary key default gen_random_uuid(),
+                user_id uuid not null references auth.users(id) on delete cascade, email text not null check (email = lower(btrim(email))),
+                verified boolean not null default true, enabled boolean not null default false,
+                created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique(user_id, email));
             create table public.user_notification_email_sources(email_id uuid not null references public.user_notification_emails(id) on delete cascade,
-                source text not null, unique(email_id, source));
+                source text not null check (source in ('account', 'google', 'yandex')), provider_subject text,
+                created_at timestamptz not null default now(), primary key(email_id, source));
 
-            -- Same signatures and security as production; bodies reduced to the behaviour under test.
-            create function public.sync_user_notification_email(target_user_id uuid, target_email text, target_source text, target_provider_subject text default null)
-                returns void language plpgsql security definer set search_path = public as $$
-                declare v_id uuid;
-                begin
-                    insert into public.user_notification_emails(user_id, email, verified, enabled)
-                        values (target_user_id, lower(target_email), true, true)
-                        on conflict (user_id, email) do update set verified = true returning id into v_id;
-                    insert into public.user_notification_email_sources(email_id, source) values (v_id, target_source) on conflict do nothing;
-                end; $$;
-            create function public.remove_user_notification_email_source(target_user_id uuid, target_source text)
-                returns void language plpgsql security definer set search_path = public as $$
-                begin
-                    delete from public.user_notification_email_sources s using public.user_notification_emails e
-                        where s.email_id = e.id and e.user_id = target_user_id and s.source = target_source;
-                    delete from public.user_notification_emails e where e.user_id = target_user_id
-                        and not exists (select 1 from public.user_notification_email_sources s where s.email_id = e.id);
-                end; $$;
-            create function public.recalculate_ratings_for_date(p_date date) returns void language plpgsql security definer as $$ begin end; $$;
-            create function public.get_api_metrics_stats(p_endpoint text, p_window_minutes integer, p_method text default null)
-                returns jsonb language sql security definer as $$ select '{}'::jsonb $$;
-            create function public.get_failed_api_requests(p_endpoint text default null, p_window_minutes integer default 60, p_limit integer default 50)
-                returns table(id uuid) language sql security definer as $$ select null::uuid where false $$;
-            create function public.get_slow_api_requests(p_endpoint text default null, p_threshold_ms integer default 1000, p_limit integer default 50)
-                returns table(id uuid) language sql security definer as $$ select null::uuid where false $$;
-            create function public.branch_admins_effective(p_branch_id uuid) returns table(user_id uuid, source text)
-                language sql security definer as $$ select null::uuid, null::text where false $$;
-            grant execute on all functions in schema public to anon, authenticated, service_role;
+            -- Production before the migration: the prod baseline definitions. grant_role and revoke_role
+            -- are here because 20261117180000 revokes them before 20261117190000 drops them.
+            ${['sync_user_notification_email', 'remove_user_notification_email_source', 'recalculate_ratings_for_date',
+                'get_api_metrics_stats', 'get_failed_api_requests', 'get_slow_api_requests', 'branch_admins_effective',
+                'sync_auth_user_notification_email', 'grant_role', 'revoke_role'].map(baselineFunctions).join('\n')}
 
-            -- The auth.users trigger keeps the account e-mail in sync, as in production.
-            create function public.sync_auth_user_notification_email() returns trigger language plpgsql security definer set search_path = public as $$
-                begin perform public.sync_user_notification_email(new.id, new.email, 'account', new.id::text); return new; end; $$;
-            create trigger sync_auth_user_notification_email after insert or update of email on auth.users
+            -- The auth.users trigger keeps the confirmed account e-mail in sync, as in production (20261119010000).
+            create trigger sync_auth_user_notification_email_trigger after insert or update of email, email_confirmed_at on auth.users
                 for each row execute function public.sync_auth_user_notification_email();
 
-            insert into auth.users values ('${victim}', 'owner@unit.test');`);
+            insert into auth.users values ('${victim}', 'owner@unit.test', now());
+            insert into auth.identities values ('${victim}', 'google', '{"email": "google-login@unit.test", "email_verified": true}');`);
 
         // The fixture reproduces the hijack: the anon key attaches an address and drops the owner's.
         await asRole('anon', `select public.sync_user_notification_email('${victim}', 'attacker@unit.test', 'google', null)`);
@@ -109,7 +125,7 @@ let created = false;
             update auth.users set email = 'owner@unit.test' where id = '${victim}';
             delete from public.user_notification_emails where user_id = '${victim}' and email = 'owner2@unit.test';`);
 
-        await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261117130000_service_only_unchecked_definer_functions.sql'), 'utf8'));
+        await sql(read('20261117130000_service_only_unchecked_definer_functions.sql'));
 
         for (const fn of functions) {
             for (const role of ['anon', 'authenticated']) {
@@ -122,9 +138,16 @@ let created = false;
         await assert.rejects(asRole('anon', `select public.recalculate_ratings_for_date(current_date)`), /permission denied for function/);
         assert.equal(await sql(`select string_agg(email, ',') from public.user_notification_emails where user_id = '${victim}'`), 'owner@unit.test');
 
-        // Trusted callers keep working: the service role and the postgres-owned auth trigger.
+        await sql(cron);
+        for (const file of later) await sql(read(file));
+        for (const fn of ['get_failed_api_requests(text, integer, integer)', 'get_slow_api_requests(text, integer, integer)']) {
+            assert.equal(await sql(`select to_regprocedure('public.${fn}') is null`), 't', `${fn} is dropped`);
+        }
+
+        // Trusted callers keep working on the live definitions: the service role with an address the
+        // user's Google identity proves, and the postgres-owned auth trigger with a confirmed e-mail.
         await asRole('service_role', `select public.sync_user_notification_email('${victim}', 'google-login@unit.test', 'google', 'sub-1')`);
-        await asRole('supabase_auth_admin', `insert into auth.users values ('${newcomer}', 'NEW@unit.test')`);
+        await asRole('supabase_auth_admin', `insert into auth.users values ('${newcomer}', 'NEW@unit.test', now())`);
         assert.equal(await sql(`select count(*) from public.user_notification_emails where user_id = '${victim}'`), '2');
         assert.equal(await sql(`select email from public.user_notification_emails where user_id = '${newcomer}'`), 'new@unit.test');
 

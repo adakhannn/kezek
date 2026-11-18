@@ -33,11 +33,12 @@ try {
  alter table staff_shifts add constraint reporting_closed_at_check check(status<>'closed' or closed_at is not null);
  alter table bookings add column time_range tstzrange generated always as(tstzrange(start_at,end_at,'[)')) stored;
  alter table bookings add constraint reporting_no_overlap exclude using gist(staff_id with =,time_range with &&) where(status in ('hold','confirmed','paid'));`);
+ // Analytics table predecessors. The fixture already ran 20261110110000_reporting_completeness and
+ // 20261110131000, which replaced read_finance_report_snapshot.
  await sql(`create table analytics_events(id uuid primary key default gen_random_uuid(),biz_id uuid references businesses,created_at timestamptz,event_type text,metadata jsonb);`);
  await sql(await load('20260227000001_create_business_daily_stats.sql'));
  await sql(await load('20260227000002_create_business_hourly_load.sql'));
- await sql(await load('20261110110000_reporting_completeness.sql'));
- console.log('PASS reporting migrations compile');
+ console.log('PASS reporting tables on the live finance chain');
  for(const command of [report(),daily('2026-11-01'),hourly('2026-11-01')]) {
   await assert.rejects(sql(`${asActor(ids.owner,'authenticated')} ${command}`),/permission denied/);
   await assert.rejects(sql(`set role anon; ${command}`),/permission denied/);
@@ -60,6 +61,9 @@ try {
   +Array.from({length:1501},(_,i)=>((i+1)%17)+0.25).reduce((a,b)=>a+b,0);
  assert.equal(snapshot.shifts.flatMap(s=>s.items).reduce((sum,i)=>sum+i.service_amount,0),expectedAmount);
  assert.equal(snapshot.shifts.flatMap(s=>s.items).length,2702);
+ // Each shift carries its business-local day (20261110131000): a Bishkek day is 24 hours from local midnight.
+ assert.ok(snapshot.shifts.every(s=>s.timezone==='Asia/Bishkek'&&s.day_hours===24
+  &&Date.parse(s.day_start)===Date.parse('2026-10-31T18:00:00Z')&&Date.parse(s.day_end)===Date.parse('2026-11-01T18:00:00Z')));
  const detail=await call(report(`'${ids.staff}'`));assert.equal(detail.shifts[0].items.length,1501);
  // PostgREST max_rows caps returned SQL rows; this function returns exactly one scalar JSON row.
  assert.equal(await sql(`${asActor()} select count(*) from read_finance_report_snapshot('${ids.biz}','2026-11-01','2026-11-01');`),'1');
@@ -88,6 +92,16 @@ try {
  (md5('spring-hour-three')::uuid,'${ids.otherBiz}','${ids.otherBranch}','${ids.otherStaff}','${ids.otherService}','2026-03-08 07:00Z','2026-03-08 08:00Z','paid'),
  (md5('spring-next-midnight')::uuid,'${ids.otherBiz}','${ids.otherBranch}','${ids.otherStaff}','${ids.otherService}','2026-03-09 04:00Z','2026-03-09 05:00Z','paid');
  update bookings set promotion_applied='{"promotion_type":"free","final_amount":0}' where id=md5('fall-first-hour')::uuid;`);
+ // A DST business reports the local day it actually has: 23 hours in spring, 25 in autumn.
+ await sql(`insert into staff_shifts(id,staff_id,biz_id,branch_id,shift_date,opened_at) values
+ (md5('report-spring')::uuid,'${ids.otherStaff}','${ids.otherBiz}','${ids.otherBranch}','2026-03-08','2026-03-08 14:00Z'),
+ (md5('report-fall')::uuid,'${ids.otherStaff}','${ids.otherBiz}','${ids.otherBranch}','2026-11-01','2026-11-01 14:00Z');`);
+ const dst=await call(`select read_finance_report_snapshot('${ids.otherBiz}','2026-03-08','2026-11-01');`);
+ for(const [date,hours,start,end] of [['2026-03-08',23,'2026-03-08T05:00:00Z','2026-03-09T04:00:00Z'],['2026-11-01',25,'2026-11-01T04:00:00Z','2026-11-02T05:00:00Z']]) {
+  const shift=dst.shifts.find(s=>s.shift_date===date);
+  assert.equal(shift.timezone,'America/New_York');assert.equal(shift.day_hours,hours);
+  assert.equal(Date.parse(shift.day_start),Date.parse(start));assert.equal(Date.parse(shift.day_end),Date.parse(end));
+ }
  await call(daily('2026-11-01'));await call(hourly('2026-11-01'));
  const dailyRows=JSON.parse(await sql(`select jsonb_agg(to_jsonb(s)) from business_daily_stats s where date='2026-11-01'`));
  const a=dailyRows.find(r=>r.biz_id===ids.biz),b=dailyRows.find(r=>r.biz_id===ids.otherBiz);
@@ -168,6 +182,7 @@ try {
  await sql('drop trigger fail_reporting on business_daily_stats');
  await sql(`update businesses set tz='Invalid/Timezone' where id='${ids.otherBiz}'`);
  await assert.rejects(call(hourly('2026-11-01')),/time zone/);
+ await assert.rejects(call(`select read_finance_report_snapshot('${ids.otherBiz}','2026-11-01','2026-11-01');`),/time zone/);
  await sql(`update businesses set tz='America/New_York' where id='${ids.otherBiz}';
  update bookings set status='cancelled' where biz_id='${ids.biz}';`);
  await call(daily('2026-11-01'));await call(hourly('2026-11-01'));

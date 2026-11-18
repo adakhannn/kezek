@@ -6,7 +6,7 @@ const { randomUUID, createHmac } = require('node:crypto');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, installLiveFunction, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 const name = 'kezek-lifecycle-' + randomUUID();
 const db = name + '-db', auth = name + '-auth', rest = name + '-rest';
 const secret = 'isolated-lifecycle-only-secret-at-least-32-characters';
@@ -21,7 +21,6 @@ const fails = (text, match) => {
   const r = docker(sqlArgs, text, true); assert.notEqual(r.status, 0); assert.match(r.stderr, match);
 };
 const source = file => readFileSync(path.join(__dirname, existsSync(path.join(__dirname, '../supabase/migrations', file)) ? '../supabase/migrations' : '../supabase/migrations_archive', file), 'utf8');
-const definition = (file, name) => { const s = source(file), start = s.indexOf('create or replace function public.' + name + '('); assert(start >= 0); return s.slice(start, s.indexOf('$$;', start) + 3); };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 // GoTrue runs its migrations on start; a loaded CI runner can need well over 30 s.
 const wait = async check => { for (let n = 0; n < 360; n++) { if (await check()) return; await sleep(250); } throw new Error('Owned service not ready'); };
@@ -57,6 +56,8 @@ const created = [];
     ` .replace("select nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub'", "select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid"));
     sql(`create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
       grant usage on schema auth to anon,authenticated,service_role;`);
+    // Functions created in public get the grants of the production baseline (PUBLIC and every API role).
+    sql(SUPABASE_DEFAULT_PRIVILEGES);
     docker(['run', '-d', '--name', auth, '--label', 'kezek.test=' + name, '--network', name,
       '-e', 'GOTRUE_API_HOST=0.0.0.0', '-e', 'GOTRUE_API_PORT=9999', '-e', 'API_EXTERNAL_URL=http://localhost:9999',
       '-e', 'GOTRUE_SITE_URL=http://localhost', '-e', 'GOTRUE_DB_DRIVER=postgres', '-e', `GOTRUE_DB_DATABASE_URL=postgres://postgres@${db}:5432/postgres?search_path=auth`,
@@ -80,7 +81,7 @@ const created = [];
       create function lifecycle_probe() returns boolean language sql security definer as $$select true$$;
       revoke all on function lifecycle_probe() from public;grant execute on function lifecycle_probe() to authenticated;
       insert into roles(key,name,scope) values('super_admin','Platform','platform'),('staff','Staff','business');`);
-    sql(definition('20261110131000_shift_hours_adjustment.sql', 'finance_is_platform_admin'));
+    installLiveFunction(sql, 'public.finance_is_platform_admin(uuid)');
     sql(source('20261110134000_platform_admin_commands.sql'));
     const legacy=await http(authUrl,'/admin/users','POST',{email:'legacy@lifecycle.invalid',password:'Synthetic-only-password-319!',email_confirm:true});
     assert.equal(legacy.status,200);

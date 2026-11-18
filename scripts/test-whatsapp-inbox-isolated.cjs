@@ -7,7 +7,7 @@ const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, installLiveFunction, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-whatsapp-inbox-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -27,6 +27,19 @@ const asyncSql = text => new Promise((resolve, reject) => {
   child.stdin.end(text);
 });
 const source = filename => readFileSync(path.join(root, existsSync(path.join(root, 'supabase/migrations', filename)) ? 'supabase/migrations' : 'supabase/migrations_archive', filename), 'utf8');
+const baseline = source('20261009110000_prod_baseline.sql').replace(/\r\n/g, '\n');
+// A function as production had it on 2026-10-09 (definition, owner and grants from the prod
+// baseline): the predecessor that the migrations under test replace or revoke.
+const baselineFunction = name => {
+  const marker = `CREATE OR REPLACE FUNCTION "public"."${name}"(`;
+  const start = baseline.indexOf(marker);
+  assert(start >= 0 && baseline.indexOf(marker, start + 1) < 0, name);
+  const owner = baseline.indexOf('\nALTER FUNCTION ', start) + 1;
+  const identity = baseline.slice(owner + 'ALTER FUNCTION '.length, baseline.indexOf(' OWNER TO ', owner));
+  assert(identity.startsWith(`"public"."${name}"(`), identity);
+  const acl = baseline.split('\n').filter(line => /^(GRANT|REVOKE) ALL ON FUNCTION /.test(line) && line.includes(` ON FUNCTION ${identity} `));
+  return [baseline.slice(start, baseline.indexOf(';\n', owner) + 1), ...acl].join('\n');
+};
 const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
 const id = digit => '00000000-0000-4000-8000-' + String(digit).padStart(12, '0');
 const user = id(1), other = id(2), biz = id(3), branch = id(4), staff = id(5), service = id(6), service2 = id(7);
@@ -59,6 +72,7 @@ const expectFailure = (statement, pattern) => {
     assert(ready, 'disposable Postgres startup');
     sql(`
       create role anon; create role authenticated; create role service_role bypassrls;
+      ${SUPABASE_DEFAULT_PRIVILEGES}
       create schema auth;
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       create table auth.users(id uuid primary key, email text, phone text, raw_user_meta_data jsonb default '{}');
@@ -72,7 +86,8 @@ const expectFailure = (statement, pattern) => {
       create table user_global_roles(user_id uuid,role_id uuid);
       create table super_admins_legacy(user_id uuid);
       create table staff_schedule_versions(staff_id uuid references staff);
-      create table services(id uuid primary key, biz_id uuid references businesses, active boolean default true, duration_min integer);
+      create table services(id uuid primary key, biz_id uuid references businesses, branch_id uuid references branches, name_ru text, active boolean default true, duration_min integer);
+      create table service_staff(service_id uuid references services, staff_id uuid references staff, is_active boolean not null default true);
       create type booking_status as enum ('hold','confirmed','paid','cancelled','completed','no_show');
       create table bookings(id uuid primary key default gen_random_uuid(), biz_id uuid not null references businesses,
         branch_id uuid not null references branches, staff_id uuid not null references staff, service_id uuid not null references services,
@@ -82,35 +97,37 @@ const expectFailure = (statement, pattern) => {
       create table staff_shift_items(booking_id uuid references bookings);
       create table booking_services(booking_id uuid references bookings on delete cascade, service_id uuid references services,
         duration_min integer not null, order_index integer not null);
-      create function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) returns boolean language sql as $$select true$$;
       insert into auth.users(id,email) values('${user}','one@example.invalid'),('${other}','two@example.invalid');
       insert into profiles(id,full_name) values('${user}','Synthetic One'),('${other}','Synthetic Two');
       insert into businesses(id) values('${biz}'); insert into branches(id,biz_id) values('${branch}','${biz}');
       insert into staff(id,biz_id,branch_id) values('${staff}','${biz}','${branch}');
-      insert into services(id,biz_id,duration_min) values('${service}','${biz}',30),('${service2}','${biz}',20);
+      insert into services(id,biz_id,branch_id,duration_min) values('${service}','${biz}','${branch}',30),('${service2}','${biz}','${branch}',20);
     `);
-    sql(source('20261009103000_simple_booking_effective_schedule.sql'));
-    sql(source('20261009110000_guest_booking_effective_schedule.sql'));
-    sql(source('20261009104000_complex_booking_identity_contacts.sql'));
-    const complexSource = source('20260918132000_explicit_schedule_complex_booking_writers.sql');
-    const start = complexSource.indexOf('create or replace function public.hold_complex_slot_guest(');
-    assert(start >= 0);
-    const end = complexSource.indexOf('$$;', start);
-    assert(end > start);
-    sql(complexSource.slice(start, end + 3));
-    sql(source('20260205000003_fix_confirm_booking_idempotent.sql'));
+    // The booking commands production had before the inbox (prod baseline), browser-callable.
+    for (const predecessor of ['hold_slot','hold_complex_slot','hold_slot_guest','hold_complex_slot_guest','confirm_booking','cancel_booking']) {
+      sql(baselineFunction(predecessor));
+    }
     sql(source('20261110090000_booking_notification_outbox.sql'));
     sql(source('20261110101000_atomic_booking_requests.sql'));
-    const finance = source('20261109090100_tenant_finance_rpc_guards.sql');
-    const predicateStart = finance.indexOf('create or replace function public.finance_can_manage_business(');
-    sql(finance.slice(predicateStart,finance.indexOf('$$;',predicateStart)+3));
-    sql(readFileSync(path.join(root,'scripts/fixtures/booking-authority-helpers.sql'),'utf8'));
+    // Authorization helpers as the migration chain leaves them (20261110131000, 20261110132000, the baseline).
+    for (const signature of ['public.finance_is_platform_admin(uuid)','public.finance_can_manage_business(uuid,uuid)',
+      'public.is_super_admin()','public.has_branch_admin(uuid)']) installLiveFunction(sql, signature);
     expectFailure(source('20261110124000_whatsapp_inbox.sql'),/INBOX_REQUIRES_PROTECTED_BOOKING_COMMANDS/);
     assert.equal(sql("select to_regclass('public.whatsapp_inbox') is null;"),'t','unsafe predecessor fails before schema mutation');
     sql(source('20261110123000_service_only_booking_commands.sql'));
 
     sql(source('20260218000000_create_whatsapp_messages.sql'));
     sql(source('20261110124000_whatsapp_inbox.sql'));
+    // The rest of the chain for the booking functions created above: internal creation closed to client
+    // roles (20261110133000), the holds' service_staff checks (20261118100000; the slots function it also
+    // redefines comes from 20261110121000 with grants for the client roles) and the old outbox claim
+    // dropped (20261119020000). The inbox only confirms and cancels, so no schedule is needed.
+    sql(source('20261110133000_internal_booking_requests.sql'));
+    installLiveFunction(sql, 'public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)');
+    sql(source('20261118100000_booking_service_staff_checks.sql'));
+    // pg_cron is not installed here; besides the drops, 20261119020000 only schedules two cleanup jobs.
+    sql("create schema cron; create function cron.schedule(text,text,text) returns bigint language sql as 'select 1::bigint';");
+    sql(source('20261119020000_dead_functions_and_cleanup_jobs.sql'));
     const receiver='123456789';
     const incoming=(overrides={})=>({ receiver,message_id:'wamid.'+randomUUID(),sender:'+996555000000',
       provider_timestamp:new Date().toISOString(),message_type:'text',text:'подтвердить',command:'confirm',booking_number:null,payload_hash:'a'.repeat(64),...overrides });

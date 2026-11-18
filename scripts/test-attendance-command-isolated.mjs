@@ -1,6 +1,5 @@
-// Synthetic PostgreSQL only. Uses actual finance definitions plus the shared transition helper from123000.
+// Synthetic PostgreSQL only. Runs the live finance chain of the shared fixture, including the shared transition helper from 20261110123000.
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor, day } from './lib/finance-transaction-fixture.mjs';
@@ -10,24 +9,20 @@ const container='kezek-attendance-test-'+randomUUID();
 function docker(args,input=''){return new Promise((resolve,reject)=>{const p=spawn('docker',args,{windowsHide:true});let out='',err='';p.stdout.on('data',d=>out+=d);p.stderr.on('data',d=>err+=d);p.on('error',reject);p.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err||out)));p.stdin.end(input);});}
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const sql=text=>docker(['exec','-i',container,'psql','-X','-q','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-At'],text);
-const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
 const command=(id=ids.booking,biz=ids.biz,actor=ids.owner,attended=true)=>'select mark_booking_attendance_command('+[id,biz,actor].map(v=>v===null?'null':"'"+v+"'").join(',')+','+attended+');';
 const call=async query=>JSON.parse(await sql(asActor()+query));
 let created=false;
 try {
  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);created=true;
  let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
+ // The fixture runs the finance chain with 20261110130000_booking_attendance_command and the shared
+ // transition helper of 20261110123000; the complete booking migration has its own runner.
  await setupFinanceFixture(sql);
- const agg=await load('20260212000000_create_shift_aggregates.sql');await sql(agg.slice(agg.indexOf('create or replace function public.initialize_shift_aggregates'),agg.indexOf('comment on function public.initialize_shift_aggregates')));
- // This runner covers attendance and its shared locks; the complete booking123000 migration has its own runner/actual-schema replay.
- const shared=await load('20261110123000_service_only_booking_commands.sql');
- const start=shared.indexOf('create function public._assert_booking_transition_access('),end=shared.indexOf('create or replace function public.confirm_booking(',start);
- assert.ok(start>=0&&end>start);await sql(shared.slice(start,end));
- await sql(await load('20261110130000_booking_attendance_command.sql'));
- await assert.rejects(sql(asActor(ids.owner,'authenticated')+'select initialize_shift_aggregates(null,null);'),/permission denied/);
+ // 20261119020000 dropped the aggregate initializer that 20261110130000 had made service-only.
+ assert.equal(await sql("select to_regprocedure('public.initialize_shift_aggregates(uuid,uuid)') is null"),'t');
  for(const role of ['anon','authenticated'])await assert.rejects(sql(asActor(ids.owner,role)+command()),/permission denied/);
  for(const role of ['authenticated','service_role']) for(const rpc of ['update_booking_status_no_check','update_booking_status_with_promotion']) await assert.rejects(sql(asActor(ids.owner,role)+"select "+rpc+"('"+ids.booking+"','paid');"),/permission denied/);
- for(const rpc of ['apply_visit_package_to_booking','apply_promotion_to_booking'])await assert.rejects(sql(asActor(ids.owner,'authenticated')+"select "+rpc+"('"+ids.booking+"');"),/permission denied/);
+ for(const role of ['authenticated','service_role']) for(const rpc of ['apply_visit_package_to_booking','apply_promotion_to_booking'])await assert.rejects(sql(asActor(ids.owner,role)+"select "+rpc+"('"+ids.booking+"');"),/permission denied/);
  await assert.rejects(call(command(ids.booking,ids.biz,null)),/BOOKING_FORBIDDEN/);
  await assert.rejects(call(command(ids.booking,ids.biz,ids.otherOwner)),/BOOKING_FORBIDDEN/);
  await assert.rejects(call(command(ids.booking,ids.otherBiz,ids.otherOwner)),/BOOKING_FORBIDDEN/);
@@ -54,6 +49,16 @@ try {
  await assert.rejects(call(command(rollback)),/SYNTHETIC_DEBIT_FAILURE/);
  assert.equal(await sql("select status from bookings where id='"+rollback+"'"),'confirmed');assert.equal(await sql("select remaining_visits from client_visit_packages where id='"+ids.pack+"'"),'2');assert.equal(await sql("select count(*) from client_visit_package_uses where booking_id='"+rollback+"'"),'0');
  console.log('PASS future/final/ledger contradictions rejected and benefit failure rolls back status/debit/use together');
+ // A platform super_admin (user_global_roles, scope platform; 20261110131000) manages every business;
+ // the same role key with a business scope in that table does not.
+ const platformRole=randomUUID(),businessRole=randomUUID(),platformAdmin=randomUUID(),scopedAdmin=randomUUID();
+ await sql("insert into roles(id,key,scope) values('"+platformRole+"','super_admin','platform'),('"+businessRole+"','super_admin','business'); insert into user_global_roles values('"+platformAdmin+"','"+platformRole+"'),('"+scopedAdmin+"','"+businessRole+"');");
+ const adminBooking=await make('platform-admin');
+ await assert.rejects(call(command(adminBooking,ids.biz,scopedAdmin)),/BOOKING_FORBIDDEN/);
+ assert.equal(await sql("select status from bookings where id='"+adminBooking+"'"),'confirmed');
+ const byAdmin=await call(command(adminBooking,ids.biz,platformAdmin));assert.equal(byAdmin.status,'paid');assert.equal(byAdmin.subscription_applied,true);
+ assert.equal(await sql("select remaining_visits from client_visit_packages where id='"+ids.pack+"'"),'1');
+ console.log('PASS platform-scoped global super_admin allowed, business-scoped global role rejected');
  await assertLiveFunctions(sql, { suite: 'test-attendance-command-isolated.mjs' });
  console.log('PASS all isolated attendance command regressions');
 }finally{if(created)await docker(['rm','--force',container]);}

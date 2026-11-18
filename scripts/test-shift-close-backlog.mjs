@@ -1,6 +1,5 @@
 // Synthetic disposable PostgreSQL only: no network, ports, volumes, remote credentials or existing containers.
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor } from './lib/finance-transaction-fixture.mjs';
@@ -16,17 +15,14 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const sql=text=>docker(['exec','-i',container,'psql','-X','-q','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-At'],text);
 const call=async text=>JSON.parse(await sql(`${asActor()} ${text}`));
 
-const load=name=>fs.readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').catch(()=>fs.readFile(new URL('../supabase/migrations_archive/'+name,import.meta.url),'utf8'));
 let created=false;
 try {
  await docker(['info','--format','{{.ServerVersion}}']);
  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);created=true;
  let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
+ // The fixture runs the finance chain, 20261110113000_shift_close_backlog and 20261110114000_finance_calendar included.
  await setupFinanceFixture(sql);
- // Match the authoritative constraint name; the fixture previously used an inline check.
- await sql('alter table staff_shifts rename constraint staff_shifts_hours_worked_check to staff_shifts_hours_worked_range');
- await sql(await load('20261110113000_shift_close_backlog.sql'));
- console.log('PASS close backlog/timezone migration compiles');
+ console.log('PASS fixture with the live finance chain');
  const now='2026-11-10T00:00Z';
  const claim=(token,at=now,limit=25)=>`select claim_overdue_staff_shifts('${token}',${limit},'${at}');`;
  const tokenA=randomUUID(),tokenB=randomUUID();
@@ -96,7 +92,6 @@ try {
  assert.equal(await sql(`${asActor(ids.otherOwner,'authenticated')} select coalesce(read_staff_shift_snapshot('${ids.biz}','${ids.staff}','2026-10-12')::text,'NULL');`),'NULL');
  await assert.rejects(sql(`set role anon; select read_staff_shift_snapshot('${ids.biz}','${ids.staff}','2026-10-12');`),/permission denied/);
 
- await sql(await load('20261110114000_finance_calendar.sql'));
  await sql("update businesses set tz='America/New_York' where id='"+ids.otherBiz+"'");
  const calendar=await call("select read_staff_finance_calendar('"+ids.otherBiz+"','"+ids.otherStaff+"',null,'2026-11-10 02:00Z');");
  assert.equal(calendar.date,'2026-11-09');assert.equal(calendar.timezone,'America/New_York');

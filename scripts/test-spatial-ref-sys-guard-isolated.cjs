@@ -61,6 +61,8 @@ let created = false;
         assert.equal(await sql('select has_table_privilege(\'migrator\', \'public.spatial_ref_sys\', \'TRIGGER\') and not pg_has_role(\'migrator\', \'supabase_admin\', \'MEMBER\')'), 't');
 
         await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261117120000_spatial_ref_sys_read_only.sql'), 'utf8'), 'migrator');
+        // migrator stands in for postgres, which runs migrations and so owns what they create in production.
+        await sql('reassign owned by migrator to postgres');
 
         // API roles keep reading but can no longer change or empty the table.
         for (const role of ['anon', 'authenticated', 'service_role']) {

@@ -1,5 +1,5 @@
 // Integration fixture for 20261118220000_analytics_ingest_guards. A disposable PostgreSQL with the
-// production analytics tables (from the baseline), Supabase-style default grants and the ENG-67
+// production analytics tables (from the baseline), Supabase-style default grants and the live ENG-67
 // tenant guard shows client roles writing analytics rows directly and oversized events being
 // stored, applies the real migration and checks the grants, the size limits (existing rows are
 // kept), and that events cannot point at another business's branch, service or master.
@@ -9,7 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, installLiveFunction, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -62,6 +62,7 @@ let created = false;
         assert.ok(ready, 'PostgreSQL did not start');
 
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema private;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             grant usage on schema public to anon, authenticated, service_role;
             create table public.branches(id uuid primary key, biz_id uuid);
             create table public.services(id uuid primary key, biz_id uuid);
@@ -72,10 +73,11 @@ let created = false;
         await sql([
             extract(baseline, 'CREATE TABLE IF NOT EXISTS "public"."analytics_events"', '\n);\n'),
             extract(baseline, 'CREATE TABLE IF NOT EXISTS "public"."funnel_events"', '\n);\n'),
-            extract('20261118110000_tenant_reference_guards.sql', 'create or replace function private.tenant_reference_guard()', '\n$$;'),
             // Supabase default privileges: client roles hold full table grants.
             'grant all on public.analytics_events, public.funnel_events to anon, authenticated, service_role;',
         ].join('\n'));
+        // The ENG-67 guard with its live ACL: no client role may execute it, and firing a trigger needs no EXECUTE.
+        await installLiveFunction(sql, 'private.tenant_reference_guard()');
 
         // Before: a client role writes directly, any size; another business's branch is accepted.
         await sql(`set role anon; insert into public.analytics_events(event_type, source, metadata) values ('booking_created', 'system', jsonb_build_object('blob', repeat('x', 100000)))`);

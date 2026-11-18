@@ -9,7 +9,19 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+
+const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
+const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
+// One CREATE FUNCTION statement of an earlier migration, from its first line to its terminator.
+function extract(file, start, end) {
+    const text = read(file);
+    const from = text.indexOf(start);
+    assert.ok(from >= 0, `${start} not found in ${file}`);
+    const to = text.indexOf(end, from);
+    assert.ok(to > from, `${end} not found after ${start} in ${file}`);
+    return text.slice(from, to + end.length);
+}
 
 const container = `kezek-identity-views-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -47,16 +59,19 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them; the role helpers are the live ones.
         await sql(`create role anon; create role authenticated; create role service_role; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create function auth.uid() returns uuid language sql stable as $$ select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
             grant usage on schema auth to anon,authenticated,service_role;
             create table auth.users(id uuid primary key, email varchar(255), phone text, raw_user_meta_data jsonb, created_at timestamptz default now());
             create table public.user_suspensions(user_id uuid);
-            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique, name text);
+            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique, name text, scope text);
             create table public.user_roles(user_id uuid, biz_id uuid, role_id uuid references public.roles(id));
-            create function public.is_super_admin() returns boolean language sql stable security definer set search_path=pg_catalog,public as $$
-                select auth.uid() is not null and exists(select 1 from public.user_roles u join public.roles r on r.id=u.role_id
-                    where u.user_id=auth.uid() and u.biz_id is null and r.key='super_admin') $$;
+            create table public.user_global_roles(user_id uuid, role_id uuid references public.roles(id));
+            create table public.super_admins_legacy(user_id uuid primary key);
+            ${liveFunctionSql('public.is_super_admin()')}
+            ${liveFunctionSql('public.has_role(text,uuid)')}
 
             -- The views exactly as the production baseline defines them: no row filter.
             create view public.auth_users_view as select id, email, phone,
@@ -80,25 +95,12 @@ let created = false;
             create policy "Managers can view audit log for their biz" on public.finance_settings_audit_log for select to authenticated
                 using (exists (select 1 from public.user_roles_with_user ur where ur.user_id = auth.uid()
                     and ur.biz_id = finance_settings_audit_log.biz_id and ur.role_key = any (array['owner'::text, 'manager'::text])));
-            create function public.has_role(p_role text, p_biz uuid) returns boolean language sql stable security definer set search_path=public as $$
-                select exists(select 1 from public.user_roles u join public.roles r on r.id=u.role_id
-                    where u.user_id=auth.uid() and u.biz_id=p_biz and r.key=p_role) $$;
             -- members_of_biz exactly as the production baseline defines it (no casts).
-            create function public.members_of_biz(p_biz_id uuid) returns table(user_id uuid, email text, phone text, full_name text, roles text[])
-                language plpgsql security definer set search_path to 'public' as $$
-                begin
-                  if not (public.is_super_admin() or public.has_role('owner'::text, p_biz_id) or public.has_role('admin'::text, p_biz_id)) then
-                    raise exception 'forbidden' using errcode = 'P0001';
-                  end if;
-                  return query select u.user_id, u.email, u.phone, u.full_name, array_agg(distinct u.role_key order by u.role_key)::text[] as roles
-                    from public.user_roles_with_user u where u.biz_id = p_biz_id group by u.user_id, u.email, u.phone, u.full_name
-                    order by coalesce(u.full_name, u.email, u.phone, u.user_id::text);
-                end; $$;
+            ${extract('20261009110000_prod_baseline.sql', 'CREATE OR REPLACE FUNCTION "public"."members_of_biz"', '\n$$;')}
 
             grant all on all tables in schema public to authenticated, service_role;
             grant usage on all sequences in schema public to authenticated, service_role;
             revoke select on public.auth_users_view, public.user_roles_with_user, public.user_roles_legacy from anon;
-            grant execute on all functions in schema public to anon, authenticated, service_role;
 
             insert into auth.users(id, email, phone, raw_user_meta_data) values
                 ('${admin}', 'admin@unit.test', '+10000000001', '{"full_name":"Admin"}'),

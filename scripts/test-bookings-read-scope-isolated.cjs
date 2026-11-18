@@ -8,7 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const container = `kezek-bookings-read-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -54,29 +54,34 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them; the role and lifecycle helpers are the live ones.
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create function auth.uid() returns uuid language sql stable as $$ select nullif(nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub','')::uuid $$;
             create function auth.role() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role' $$;
+            create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''), '{}')::jsonb $$;
             grant usage on schema auth to anon, authenticated, service_role;
             grant usage on schema public to anon, authenticated, service_role;
+            create table auth.users(id uuid primary key, banned_until timestamptz);
+            create table auth.sessions(id uuid primary key default gen_random_uuid(), user_id uuid);
 
             create table public.businesses(id uuid primary key, owner_id uuid);
             create table public.staff(id uuid primary key, biz_id uuid, user_id uuid, is_active boolean);
-            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique);
+            create table public.roles(id uuid primary key default gen_random_uuid(), key text unique, scope text);
             create table public.user_roles(user_id uuid, biz_id uuid, role_id uuid references public.roles(id));
+            create table public.user_global_roles(user_id uuid, role_id uuid references public.roles(id));
+            create table public.super_admins_legacy(user_id uuid primary key);
+            create table public.user_suspensions(user_id uuid primary key);
+            create table public.user_lifecycle_commands(user_id uuid);
             create table public.profiles(id uuid primary key, phone text);
             create table public.bookings(id uuid primary key default gen_random_uuid(), label text, biz_id uuid, staff_id uuid,
                 client_id uuid, client_phone text, status text default 'confirmed');
             create table public.booking_services(id uuid primary key default gen_random_uuid(), booking_id uuid references public.bookings(id));
             create table public.reviews(id uuid primary key default gen_random_uuid(), booking_id uuid, client_id uuid);
 
-            create function public.has_role(p_role_key text, p_biz_id uuid default null) returns boolean language sql stable security definer
-                set search_path = public as $$
-                select exists(select 1 from public.user_roles ur join public.roles r on r.id = ur.role_id
-                    where ur.user_id = auth.uid() and r.key = p_role_key and (p_biz_id is null and ur.biz_id is null or ur.biz_id = p_biz_id)) $$;
-            create function public.is_super_admin() returns boolean language sql stable security definer set search_path = public as $$
-                select auth.uid() is not null and public.has_role('super_admin', null) $$;
-            create function public.user_lifecycle_access_allowed() returns boolean language sql stable as $$ select true $$;
+            ${liveFunctionSql('public.has_role(text,uuid)')}
+            ${liveFunctionSql('public.is_super_admin()')}
+            ${liveFunctionSql('public.user_lifecycle_access_allowed()')}
 
             grant select on public.businesses, public.staff, public.roles, public.user_roles, public.profiles, public.reviews
                 to anon, authenticated, service_role;
@@ -159,6 +164,9 @@ let created = false;
                 using (client_id = auth.uid() or exists (select 1 from bookings b join staff s on s.id = b.staff_id
                     join businesses biz on biz.id = s.biz_id where b.id = reviews.booking_id and biz.owner_id = auth.uid()));
 
+            -- Every account is active (not banned, suspended or being deleted), so the lifecycle policy lets it through.
+            insert into auth.users(id) values ('${client}'), ('${attacker}'), ('${staffUser}'), ('${colleagueUser}'), ('${formerStaffUser}'),
+                ('${roleOnlyUser}'), ('${manager}'), ('${superAdmin}'), ('${otherClient}');
             insert into public.roles(key) values ('owner'), ('admin'), ('manager'), ('staff'), ('client'), ('super_admin');
             insert into public.businesses values ('${biz}', '${manager}'), ('${otherBiz}', null);
             insert into public.staff values ('${staffRow}', '${biz}', '${staffUser}', true), ('${colleagueRow}', '${biz}', '${colleagueUser}', true),

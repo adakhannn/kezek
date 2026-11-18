@@ -1,13 +1,13 @@
 // Local synthetic availability correctness + operation-count benchmark.
-// Uses real old/new slot SQL, but a controlled resolver fixture (not production schedules).
+// Uses the real old/new slot SQL and the live resolver over a synthetic schedule (not production schedules).
 // No .env, remote database, provider, network, host ports or volumes.
 const { spawnSync } = require('node:child_process');
 const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { POSTGRES_IMAGE, POSTGRES_MAJOR } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions, installLiveFunction, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-staff-slots-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -18,6 +18,19 @@ const run = (args, input, allowError = false) => {
 const psql = ['exec', '-i', name, 'psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres'];
 const sql = text => run(psql, text).stdout.trim();
 const source = file => readFileSync(path.join(root, existsSync(path.join(root, 'supabase/migrations', file)) ? 'supabase/migrations' : 'supabase/migrations_archive', file), 'utf8');
+const baseline = source('20261009110000_prod_baseline.sql').replace(/\r\n/g, '\n');
+// A function as production had it on 2026-10-09 (definition, owner and grants from the prod
+// baseline): the predecessor that the migrations under test replace.
+const baselineFunction = name => {
+  const marker = `CREATE OR REPLACE FUNCTION "public"."${name}"(`;
+  const start = baseline.indexOf(marker);
+  assert(start >= 0 && baseline.indexOf(marker, start + 1) < 0, name);
+  const owner = baseline.indexOf('\nALTER FUNCTION ', start) + 1;
+  const identity = baseline.slice(owner + 'ALTER FUNCTION '.length, baseline.indexOf(' OWNER TO ', owner));
+  assert(identity.startsWith(`"public"."${name}"(`), identity);
+  const acl = baseline.split('\n').filter(line => /^(GRANT|REVOKE) ALL ON FUNCTION /.test(line) && line.includes(` ON FUNCTION ${identity} `));
+  return [baseline.slice(start, baseline.indexOf(';\n', owner) + 1), ...acl].join('\n');
+};
 const id = number => '00000000-0000-4000-8000-' + String(number).padStart(12, '0');
 const biz = id(1), otherBiz = id(2), branch = id(3), otherBranch = id(4), service = id(5);
 const staff = id(10), transfer = id(11), inactive = id(12), unavailable = id(13), wrongBranch = id(14), foreign = id(15);
@@ -41,18 +54,28 @@ const failure = (statement, regex) => {
     assert(ready);
     sql(`
       create role anon; create role authenticated; create role service_role; create role outsider;
+      ${SUPABASE_DEFAULT_PRIVILEGES}
       create table businesses(id uuid primary key, tz text);
       create table branches(id uuid primary key, biz_id uuid, is_active boolean default true);
-      create table services(id uuid primary key, biz_id uuid, branch_id uuid, active boolean default true, duration_min int);
+      create table services(id uuid primary key, biz_id uuid, branch_id uuid, active boolean default true, duration_min int, name_ru text);
       create table staff(id uuid primary key, biz_id uuid, branch_id uuid, is_active boolean default true);
       create index staff_biz on staff(biz_id);
+      create table service_staff(service_id uuid, staff_id uuid, is_active boolean not null default true);
       create table synthetic_schedule(staff_id uuid, day date, branch_id uuid, intervals jsonb, breaks jsonb, primary key(staff_id,day));
-      create function resolve_staff_day(p_staff uuid,p_day date)
-      returns table(branch_id uuid,intervals jsonb,breaks jsonb)
-      language plpgsql stable set search_path=public as $$begin
-        return query select s.branch_id,s.intervals,s.breaks from synthetic_schedule s where s.staff_id=p_staff and s.day=p_day;
+      -- The live resolve_staff_day (installed below) asks this for the day; the stub answers from
+      -- synthetic_schedule instead of the explicit schedule tables, which this suite does not test.
+      create function schedule_effective_day(p_staff uuid,p_day date) returns jsonb
+      language plpgsql stable security definer set search_path=public as $$
+      declare d record;
+      begin
+        select s.branch_id,s.intervals,s.breaks,coalesce(b.tz,'Asia/Bishkek') as tz into d
+          from synthetic_schedule s join staff st on st.id=s.staff_id join businesses b on b.id=st.biz_id
+          where s.staff_id=p_staff and s.day=p_day;
+        if not found then return jsonb_build_object('date',p_day,'source','unconfigured','intervals','[]'::jsonb,'breaks','[]'::jsonb); end if;
+        return jsonb_build_object('date',p_day,'branch_id',d.branch_id,'tz',d.tz,'source','day','intervals',d.intervals,'breaks',d.breaks);
       end$$;
-      revoke all on function resolve_staff_day(uuid,date) from public;
+      revoke all on function schedule_effective_day(uuid,date) from public;
+      grant execute on function schedule_effective_day(uuid,date) to anon,authenticated,service_role;
       create table bookings(id uuid primary key default gen_random_uuid(),biz_id uuid,staff_id uuid,start_at timestamptz,end_at timestamptz,status text,expires_at timestamptz);
       create index bookings_staff on bookings(staff_id);
       alter table bookings enable row level security;
@@ -68,15 +91,20 @@ const failure = (statement, regex) => {
         '[{"start":"08:00","end":"10:00"}]','[{"start":"09:00","end":"09:15"}]'
       from staff where id<>'${unavailable}';
     `);
-    const old = source('20260918131000_explicit_schedule_booking_consumers.sql');
-    const begin = old.indexOf('CREATE OR REPLACE FUNCTION public.get_free_slots_service_day_v2(');
-    sql(old.slice(begin, old.indexOf('END$function$;',begin) + 'END$function$;'.length));
+    installLiveFunction(sql, 'public.resolve_staff_day(uuid,date)');
+    // The pre-scoping slots function production ran is the reference result.
+    sql(baselineFunction('get_free_slots_service_day_v2'));
     const rows = query => JSON.parse(sql(`select coalesce(jsonb_agg(to_jsonb(s) order by staff_id,start_at),'[]') from ${query} s;`));
     const original = rows(call());
     assert.equal(original.length,10);
-    const complexBegin = old.indexOf('create or replace function public.get_free_slots_complex_day_v1(');
-    sql(old.slice(complexBegin,old.indexOf('$function$;',complexBegin)+'$function$;'.length));
+    sql(baselineFunction('get_free_slots_complex_day_v1'));
     sql(source('20261110121000_staff_scoped_slots.sql'));
+    // The live slots function is the one 20261118100000 redefines (with _staff_performs_service);
+    // the rest of that migration rewrites the hold commands, which the booking suites test.
+    const checks = source('20261118100000_booking_service_staff_checks.sql');
+    const checksStart = checks.indexOf('create or replace function public._staff_performs_service(');
+    assert(checksStart >= 0);
+    sql(checks.slice(checksStart, checks.indexOf('END$function$;', checksStart) + 'END$function$;'.length));
     assert.deepEqual(rows(call()),original,'five-argument compatibility');
     assert.deepEqual(rows(call(null)),original,'explicit any-staff compatibility');
     assert.deepEqual(rows(call(staff)),original.filter(row=>row.staff_id===staff),'scoped result equals original subset');
@@ -122,6 +150,15 @@ const failure = (statement, regex) => {
     for(const limit of [0,101,null]) failure(`select ${pageCall(null,{limit})};`,/INVALID_SLOTS_PAGE_INPUT/);
     failure(`set role outsider; select ${pageCall()};`,/permission denied for function/);
     assert.equal(JSON.parse(sql(`set role anon; select ${pageCall()};`)).slots.length,2);
+    // 20261118100000: once the business links services to staff, a master without the service has no
+    // slots, directly or in pages, and the page cursor still moves past them.
+    sql(`insert into service_staff(service_id,staff_id) values('${service}','${staff}');`);
+    assert.deepEqual(rows(call(staff)),original.filter(row=>row.staff_id===staff),'linked master keeps every slot');
+    assert.equal(count(transfer),0,'master without the service');
+    assert.deepEqual(rows(call()),original.filter(row=>row.staff_id===staff),'any-staff diagnostics skip the master without the service');
+    assert.deepEqual(ordered(collect({})),original.filter(row=>row.staff_id===staff),'paged any skips the master without the service');
+    assert.deepEqual(page(null,{staffId:transfer}),{slots:[],next_cursor:null},'paged master without the service');
+    sql('truncate service_staff;');
     sql(`insert into bookings(biz_id,staff_id,start_at,end_at,status) values('${biz}','${staff}','2035-01-01T02:00Z','2035-01-01T02:30Z','confirmed');`);
     assert.equal(count(staff),3,'confirmed blocks overlap but preserves adjacent start');
     sql(`insert into bookings(biz_id,staff_id,start_at,end_at,status) values('${biz}','${staff}','2035-01-01T03:30Z','2035-01-01T04:00Z','paid');`);
@@ -163,7 +200,12 @@ const failure = (statement, regex) => {
     sql(`update synthetic_schedule set intervals=(select jsonb_agg(jsonb_build_object('start','08:00','end','18:00')) from generate_series(1,20)) where staff_id='00000000-0000-4000-9000-000000000009';`);
     const dedup=collect({staffId:'00000000-0000-4000-9000-000000000009',limit:10});
     assert.equal(dedup.length,39);assert.equal(new Set(dedup.map(row=>row.start_at)).size,39);
-    await assertLiveFunctions(sql, { suite: 'test-staff-scoped-slots-isolated.cjs' });
-    console.log(JSON.stringify({result:'PASS',boundary:'synthetic resolver, local PostgreSQL16; not production RPS',page:{rows:100,resolverCalls:pageCalls,maxEmptyPageCalls:8},benchmarks:[scoped,all]}));
+    await assertLiveFunctions(sql, { suite: 'test-staff-scoped-slots-isolated.cjs', stubs: {
+      'public.schedule_effective_day(uuid,date)': {
+        reason: 'synthetic schedule for the live resolver; the explicit schedule tables it reads are outside this suite',
+        skip: ['body'],
+      },
+    } });
+    console.log(JSON.stringify({result:'PASS',boundary:`synthetic schedule, live resolver, local PostgreSQL${POSTGRES_MAJOR}; not production RPS`,page:{rows:100,resolverCalls:pageCalls,maxEmptyPageCalls:8},benchmarks:[scoped,all]}));
   } finally { run(['rm','-f',name],undefined,true); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

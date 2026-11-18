@@ -5,8 +5,8 @@ const { readFileSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { POSTGRES_IMAGE, POSTGRES_MAJOR } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-outbox-regression-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -28,7 +28,9 @@ const addBooking = () => {
   sql(`insert into bookings(id,status) values('${id}','confirmed');`);
   return id;
 };
-const claim = () => JSON.parse(sql("set role service_role; select row_to_json(e) from claim_booking_notifications(1,90) e;"));
+// The worker claims through claim_booking_notification_batch; 20261119020000 dropped the old row-set claim.
+const claim = () => JSON.parse(sql("set role service_role; select claim_booking_notification_batch(1,90,'{}')->0;"));
+const claimed = limit => sql(`set role service_role; select jsonb_array_length(claim_booking_notification_batch(${limit},90,'{}'));`);
 const eventArgs = event => `'${event.id}','${event.lease_token}'`;
 const call = statement => sql('set role service_role; ' + statement);
 const key = prefix => prefix + ':' + 'a'.repeat(64);
@@ -55,16 +57,21 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     }
     assert(ready);
     sql(`create role anon; create role authenticated; create role service_role bypassrls;
+      ${SUPABASE_DEFAULT_PRIVILEGES}
       create table bookings(id uuid primary key,status text,start_at timestamptz default now(),end_at timestamptz default now()+interval '30 minutes',
         staff_id uuid,branch_id uuid,biz_id uuid,service_id uuid);`);
     sql(readFileSync(migration,'utf8'));
     sql(readFileSync(path.join(root,'supabase/migrations/20261110125000_booking_outbox_throughput.sql'),'utf8'));
+    // pg_cron is not installed here; besides its drops, 20261119020000 only schedules two cleanup jobs.
+    sql("create schema cron; create function cron.schedule(text,text,text) returns bigint language sql as 'select 1::bigint';");
+    sql(readFileSync(path.join(root,'supabase/migrations/20261119020000_dead_functions_and_cleanup_jobs.sql'),'utf8'));
+    assert.equal(sql("select to_regprocedure('public.claim_booking_notifications(integer,integer)') is null;"),'t','the old claim is gone');
     const bookingId=addBooking();
     const firstEvent=call(`select enqueue_booking_notification('${bookingId}','confirm');`);
     assert.equal(call(`select enqueue_booking_notification('${bookingId}','confirm');`),firstEvent);
     assert.equal(sql('select count(*) from booking_notification_outbox;'),'1');
     for(let i=0;i<11;i++)addBooking();
-    const claims=await Promise.all(Array.from({length:9},()=>asyncSql("set role service_role; select id from claim_booking_notifications(2,90);")));
+    const claims=await Promise.all(Array.from({length:9},()=>asyncSql("set role service_role; select e->>'id' from jsonb_array_elements(claim_booking_notification_batch(2,90,'{}')) e;")));
     const ids=claims.flatMap(value=>value.split('\n').filter(Boolean));
     assert.equal(ids.length,12);assert.equal(new Set(ids).size,12,'SKIP LOCKED gives every event to one worker');
     assert.equal(sql("select count(*) from booking_notification_outbox where attempts=1 and status='processing';"),'12');
@@ -111,7 +118,7 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
       sql(`update booking_notification_outbox set available_at=now()-interval '1 second' where id='${event.id}';`);
     }
     assert.equal(sql(`select status from booking_notification_outbox where id='${event.id}';`),'failed');
-    assert.equal(call('select count(*) from claim_booking_notifications(2,90);'),'0');
+    assert.equal(claimed(2),'0');
 
     reset();const retainedBooking=addBooking();event=claim();prepare(event,[email]);assert.equal(begin(event,key('email')),'send');receipt(event,key('email'));finish(event,'sent');
     sql(`update booking_notification_outbox set completed_at=now()-interval '31 days' where id='${event.id}';`);
@@ -122,7 +129,7 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
 
     reset();addBooking();event=claim();prepare(event,[email]);finish(event,'retry');
     sql(`update booking_notification_outbox set created_at=now()-interval '31 days',prepared_at=now()-interval '31 days',available_at=now()-interval '1 second' where id='${event.id}';`);
-    assert.equal(call('select count(*) from claim_booking_notifications(1,90);'),'0');
+    assert.equal(claimed(1),'0');
     assert.equal(sql(`select last_error_code from booking_notification_outbox where id='${event.id}';`),'event_expired');
     assert.equal(call('select prune_booking_notifications(1);'),'1');
     assert.equal(sql('select count(*) from booking_notification_deliveries;'),'0','Old prepared PII expires even when the event was never delivered');
@@ -130,7 +137,7 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     reset();addBooking();event=claim();finish(event,'continue');
     assert.equal(sql(`select attempts from booking_notification_outbox where id='${event.id}';`),'0','Budget pagination does not exhaust retries');
     event=claim();sql(`update booking_notification_outbox set lease_until=now()-interval '1 second',attempts=8 where id='${event.id}';`);
-    assert.equal(call('select count(*) from claim_booking_notifications(1,90);'),'0');
+    assert.equal(claimed(1),'0');
     assert.equal(sql(`select status from booking_notification_outbox where id='${event.id}';`),'failed','Final-attempt worker crash becomes visible dead letter');
 
     reset();addBooking();event=claim();prepare(event,[]);
@@ -175,10 +182,10 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     const elapsedMs=Number(process.hrtime.bigint()-benchmarkStart)/1e6;
     assert.equal(sql("select count(*) from booking_notification_outbox where status='sent';"),'100');
     console.log(JSON.stringify({benchmark:'synthetic_outbox_database_waves',events:100,waves:50,elapsedMs,
-      providerCalls:0,boundary:'PostgreSQL16 one transaction, empty recipient plans, includes docker/psql overhead; not provider throughput or production capacity'}));
+      providerCalls:0,boundary:'PostgreSQL'+POSTGRES_MAJOR+' one transaction, empty recipient plans, includes docker/psql overhead; not provider throughput or production capacity'}));
 
     for(const role of ['anon','authenticated']) {
-      for(const statement of ['select * from booking_notification_outbox','select * from booking_notification_deliveries','select claim_booking_notifications(1,90)',`select enqueue_booking_notification('${bookingId}','confirm')`,`select begin_booking_notification_delivery(${eventArgs(event)},${quote(key('email'))})`]) {
+      for(const statement of ['select * from booking_notification_outbox','select * from booking_notification_deliveries',"select _claim_booking_notifications(1,90,'{}')",`select enqueue_booking_notification('${bookingId}','confirm')`,`select begin_booking_notification_delivery(${eventArgs(event)},${quote(key('email'))})`]) {
         failure(`set role ${role}; ${statement};`,/permission denied/);
       }
       for(const statement of ["select claim_booking_notification_batch(2,90,'{}')",'select booking_notification_backlog_health()',`select read_booking_notification_deliveries(${eventArgs(event)})`]) {
@@ -187,6 +194,7 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     }
     failure("set role service_role; update booking_notification_deliveries set payload='{}';",/permission denied/);
     failure("set role service_role; update booking_notification_outbox set status='sent';",/permission denied/);
+    failure("set role service_role; select _claim_booking_notifications(1,90,'{}');",/permission denied/);
     await assertLiveFunctions(sql, { suite: 'test-booking-notification-outbox-isolated.cjs' });
     console.log('PASS isolated outbox PostgreSQL: concurrent claim isolation, immutable preparation, lease fencing, partial receipts, non-idempotent ambiguity, email retry window, revision fencing, finite retries, retained tombstone/PII pruning, ACL. No provider calls.');
   } finally {

@@ -8,18 +8,10 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, installLiveFunction } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
-function extract(file, start, end) {
-    const text = read(file);
-    const from = text.indexOf(start);
-    assert.ok(from >= 0, `${start} not found in ${file}`);
-    const to = text.indexOf(end, from);
-    assert.ok(to > from, `${end} not found after ${start}`);
-    return text.slice(from, to + end.length);
-}
 
 const container = `kezek-maint-indexes-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -81,7 +73,8 @@ const pruneSelect = `select id from public.booking_notification_outbox where
             insert into public.booking_notification_outbox(status, prepared_at) values ('failed', now() - interval '31 days');
             insert into public.booking_notification_outbox(status, completed_at) select 'sent', now() from generate_series(1, 50);
             analyze public.bookings; analyze public.booking_notification_outbox;`);
-        await sql(extract('20261009110000_prod_baseline.sql', 'CREATE OR REPLACE FUNCTION "public"."purge_expired_holds"()', 'end $$;'));
+        // The live purge job, with its live ACL; the migration under test changes only indexes.
+        await installLiveFunction(sql, 'public.purge_expired_holds()');
 
         // Before: the purge walks a whole composite index or the table; the prune reads every outbox row.
         const purgeBefore = scans(await plan(`update public.bookings set status = 'cancelled', expires_at = null where ${purgeWhere}`));

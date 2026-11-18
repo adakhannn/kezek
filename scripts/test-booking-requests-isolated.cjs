@@ -7,7 +7,7 @@ const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, installLiveFunction, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-booking-regression-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -27,6 +27,24 @@ const asyncSql = text => new Promise((resolve, reject) => {
   child.stdin.end(text);
 });
 const source = filename => readFileSync(path.join(root, existsSync(path.join(root, 'supabase/migrations', filename)) ? 'supabase/migrations' : 'supabase/migrations_archive', filename), 'utf8');
+const baseline = source('20261009110000_prod_baseline.sql').replace(/\r\n/g, '\n');
+// A function as production had it on 2026-10-09 (definition, owner and grants from the prod
+// baseline): the predecessor that the migrations under test replace or revoke.
+const baselineFunction = name => {
+  const marker = `CREATE OR REPLACE FUNCTION "public"."${name}"(`;
+  const start = baseline.indexOf(marker);
+  assert(start >= 0 && baseline.indexOf(marker, start + 1) < 0, name);
+  const owner = baseline.indexOf('\nALTER FUNCTION ', start) + 1;
+  const identity = baseline.slice(owner + 'ALTER FUNCTION '.length, baseline.indexOf(' OWNER TO ', owner));
+  assert(identity.startsWith(`"public"."${name}"(`), identity);
+  const acl = baseline.split('\n').filter(line => /^(GRANT|REVOKE) ALL ON FUNCTION /.test(line) && line.includes(` ON FUNCTION ${identity} `));
+  return [baseline.slice(start, baseline.indexOf(';\n', owner) + 1), ...acl].join('\n');
+};
+const baselinePolicy = name => {
+  const start = baseline.indexOf(`CREATE POLICY "${name}" ON "public"."bookings" `);
+  assert(start >= 0, name);
+  return baseline.slice(start, baseline.indexOf(';\n', start) + 1);
+};
 const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
 const id = digit => '00000000-0000-4000-8000-' + String(digit).padStart(12, '0');
 const user = id(1), other = id(2), biz = id(3), branch = id(4), staff = id(5), service = id(6), service2 = id(7);
@@ -60,20 +78,23 @@ const expectFailure = (statement, pattern) => {
     assert(ready, 'disposable Postgres startup');
     sql(`
       create role anon; create role authenticated; create role service_role bypassrls;
+      ${SUPABASE_DEFAULT_PRIVILEGES}
       create schema auth;
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       create table auth.users(id uuid primary key, email text, phone text, raw_user_meta_data jsonb default '{}');
       create table profiles(id uuid primary key references auth.users, full_name text, phone text);
       create table businesses(id uuid primary key,owner_id uuid);
       create table branches(id uuid primary key, biz_id uuid references businesses, is_active boolean default true);
-      create table staff(id uuid primary key, biz_id uuid references businesses, branch_id uuid references branches, is_active boolean default true,user_id uuid);
+      create table staff(id uuid primary key, biz_id uuid references businesses, branch_id uuid references branches, is_active boolean default true,user_id uuid,full_name text);
       create table roles(id uuid primary key,key text,scope text);
       create table user_roles(user_id uuid,biz_id uuid,role_id uuid);
       create table branch_admins(branch_id uuid,user_id uuid);
       create table user_global_roles(user_id uuid,role_id uuid);
       create table super_admins_legacy(user_id uuid);
       create table staff_schedule_versions(staff_id uuid references staff);
-      create table services(id uuid primary key, biz_id uuid references businesses, active boolean default true, duration_min integer);
+      create table services(id uuid primary key, biz_id uuid references businesses, branch_id uuid references branches, name_ru text, active boolean default true, duration_min integer);
+      create table service_staff(service_id uuid references services, staff_id uuid references staff, is_active boolean not null default true);
+      create table working_hours(staff_id uuid,biz_id uuid,day_of_week integer,intervals jsonb);
       create type booking_status as enum ('hold','confirmed','paid','cancelled','completed','no_show');
       create table bookings(id uuid primary key default gen_random_uuid(), biz_id uuid not null references businesses,
         branch_id uuid not null references branches, staff_id uuid not null references staff, service_id uuid not null references services,
@@ -83,41 +104,35 @@ const expectFailure = (statement, pattern) => {
       create table staff_shift_items(booking_id uuid references bookings);
       create table booking_services(booking_id uuid references bookings on delete cascade, service_id uuid references services,
         duration_min integer not null, order_index integer not null);
-      create function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) returns boolean language sql as $$select true$$;
+      -- Schedule availability is not tested here: every requested time is inside working hours.
+      create function schedule_contains_booking(p_staff uuid,p_branch uuid,p_start timestamptz,p_end timestamptz) returns boolean
+        language plpgsql stable security definer set search_path=public as $$begin return true; end$$;
+      revoke all on function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) from public;
+      grant execute on function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) to anon,authenticated,service_role;
       insert into auth.users(id,email) values('${user}','one@example.invalid'),('${other}','two@example.invalid');
       insert into profiles(id,full_name) values('${user}','Synthetic One'),('${other}','Synthetic Two');
       insert into businesses(id) values('${biz}'); insert into branches(id,biz_id) values('${branch}','${biz}');
       insert into staff(id,biz_id,branch_id) values('${staff}','${biz}','${branch}');
-      insert into services(id,biz_id,duration_min) values('${service}','${biz}',30),('${service2}','${biz}',20);
+      insert into services(id,biz_id,branch_id,duration_min) values('${service}','${biz}','${branch}',30),('${service2}','${biz}','${branch}',20);
     `);
-    sql(source('20261009103000_simple_booking_effective_schedule.sql'));
-    sql(source('20261009110000_guest_booking_effective_schedule.sql'));
-    sql(source('20261009104000_complex_booking_identity_contacts.sql'));
-    const complexSource = source('20260918132000_explicit_schedule_complex_booking_writers.sql');
-    const start = complexSource.indexOf('create or replace function public.hold_complex_slot_guest(');
-    assert(start >= 0);
-    const end = complexSource.indexOf('$$;', start);
-    assert(end > start);
-    sql(complexSource.slice(start, end + 3));
-    sql(source('20260205000003_fix_confirm_booking_idempotent.sql'));
+    for (const predecessor of ['hold_slot','hold_complex_slot','hold_slot_guest','hold_complex_slot_guest','confirm_booking','cancel_booking',
+      'get_free_slots_service_day','booking_view_public']) sql(baselineFunction(predecessor));
     sql(source('20261110090000_booking_notification_outbox.sql'));
     sql(source('20261110101000_atomic_booking_requests.sql'));
-    const finance = source('20261109090100_tenant_finance_rpc_guards.sql');
-    const predicateStart = finance.indexOf('create or replace function public.finance_can_manage_business(');
-    sql(finance.slice(predicateStart,finance.indexOf('$$;',predicateStart)+3));
-    sql(readFileSync(path.join(root,'scripts/fixtures/booking-authority-helpers.sql'),'utf8'));
-    sql(readFileSync(path.join(root,'scripts/fixtures/legacy-internal-booking.sql'),'utf8'));
+    // Authorization helpers as the migration chain leaves them (20261110131000, 20261110132000, the baseline).
+    for (const signature of ['public.finance_is_platform_admin(uuid)','public.finance_can_manage_business(uuid,uuid)',
+      'public.is_super_admin()','public.has_branch_admin(uuid)']) installLiveFunction(sql, signature);
+    // Baseline table grants (20261110123000 revokes the writes) and the read policies that
+    // 20261118090000 keeps; it drops every write policy.
     sql(`alter table bookings enable row level security;
       grant all on bookings to anon,authenticated;
       grant update(status),insert(id),references(id) on bookings to authenticated;
       grant select on profiles,user_roles,roles,staff to authenticated;
-      create policy "Clients can create own bookings" on bookings for insert to authenticated with check(client_id=auth.uid() or client_id is null);
-      create policy "Clients can update own bookings" on bookings for update to authenticated
-        using(client_id=auth.uid() or (client_phone is not null and exists(select 1 from profiles where profiles.id=auth.uid() and profiles.phone=bookings.client_phone)))
-        with check(client_id=auth.uid() or (client_phone is not null and exists(select 1 from profiles where profiles.id=auth.uid() and profiles.phone=bookings.client_phone)));
-      create policy "biz update" on bookings for update to public using(is_super_admin() or exists(select 1 from user_roles where user_roles.user_id=auth.uid() and user_roles.biz_id=bookings.biz_id));
-      create policy "read bookings by biz or client" on bookings for select to public using(is_super_admin() or exists(select 1 from user_roles where user_roles.user_id=auth.uid() and user_roles.biz_id=bookings.biz_id) or auth.uid()=client_id);`);
+      ${['Business owners can view own bookings','Staff can view own bookings','bookings_select_client'].map(baselinePolicy).join('\n')}`);
     sql(source('20261110123000_service_only_booking_commands.sql'));
+    // 20261118100000 also redefines this slots function; 20261110121000 created it with grants for the client roles.
+    installLiveFunction(sql, 'public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)');
+    sql(source('20261118100000_booking_service_staff_checks.sql'));
 
     // Real first transaction overlaps concurrent retries; every caller gets the
     // identical committed receipt, not another attempt or an unavailable slot.
@@ -261,6 +276,27 @@ const expectFailure = (statement, pattern) => {
     await lockOwner;
     assert.equal(JSON.parse(sql(command(lockedRequest,payload(28)))).confirmed,true,'same request may retry after lock timeout');
 
+    // 20261118100000: the holds book only a master who performs the service (service_staff), never a
+    // start in the past, and take durations from the catalogue. The scenarios above run in a business
+    // without links, where every master performs every service.
+    const linkedBiz=id(50),linkedBranch=id(51),performer=id(52),newcomer=id(53),cut=id(54),wash=id(55);
+    sql(`insert into businesses(id) values('${linkedBiz}'); insert into branches(id,biz_id) values('${linkedBranch}','${linkedBiz}');
+      insert into staff(id,biz_id,branch_id) values('${performer}','${linkedBiz}','${linkedBranch}'),('${newcomer}','${linkedBiz}','${linkedBranch}');
+      insert into services(id,biz_id,branch_id,name_ru,duration_min) values('${cut}','${linkedBiz}','${linkedBranch}','Synthetic cut',30),
+        ('${wash}','${linkedBiz}','${linkedBranch}','Synthetic wash',20);
+      insert into service_staff(service_id,staff_id) values('${cut}','${performer}'),('${wash}','${performer}');`);
+    const linked=(staffId,start,services)=>({...payload(1),biz_id:linkedBiz,branch_id:linkedBranch,staff_id:staffId,service_id:cut,start_at:start,...(services?{services}:{})});
+    const unlinkedRequest=randomUUID();
+    expectFailure(command(unlinkedRequest,linked(newcomer,'2035-02-01T10:00:00Z')),/STAFF_DOES_NOT_PERFORM_SERVICE/);
+    assert.equal(sql(`select count(*) from booking_creation_requests where request_id='${unlinkedRequest}';`),'0','a rejected master leaves no receipt');
+    sql(`insert into service_staff(service_id,staff_id) values('${cut}','${newcomer}');`);
+    assert.equal(JSON.parse(sql(command(unlinkedRequest,linked(newcomer,'2035-02-01T10:00:00Z')))).confirmed,true,'the same request succeeds once the master performs the service');
+    expectFailure(command(randomUUID(),linked(performer,new Date(Date.now()-3600000).toISOString())),/SLOT_IN_PAST/);
+    const catalogue=JSON.parse(sql(command(randomUUID(),linked(performer,'2035-02-02T10:00:00Z',
+      [{service_id:cut,duration_min:525600},{service_id:wash,duration_min:525600}]))));
+    assert.equal(sql(`select (end_at-start_at)||'|'||(select string_agg(duration_min::text,',' order by order_index) from booking_services s where s.booking_id=b.id)
+      from bookings b where id='${catalogue.booking_id}';`),'00:50:00|30,20','durations come from the catalogue, not the request');
+
     const owner=id(20),manager=id(21),foreignManager=id(22),worker=id(23),branchAdmin=id(24),platformAdmin=id(25),biz2=id(26),branch2=id(27);
     sql(`update businesses set owner_id='${owner}' where id='${biz}';
       insert into businesses(id) values('${biz2}'); insert into branches(id,biz_id) values('${branch2}','${biz}');
@@ -324,8 +360,8 @@ const expectFailure = (statement, pattern) => {
     expectFailure(cancel(terminal),/BOOKING_STATUS_NOT_CANCELLABLE/);
     const serviceCancel=hold(null);sql(cancel(serviceCancel,null,'service_role'));
     assert.equal(sql(`select status from bookings where id='${serviceCancel}';`),'cancelled');
-    // Actual permissive owner/client policy predicates remain present, but even
-    // an own-client or business manager cannot bypass checked RPCs through DML.
+    // The live read policies let the own client and a business manager see the row, but neither
+    // can bypass the checked RPCs through DML: no table or column write grants remain.
     for(const actor of [user,manager]) {
       const prefix=`set role authenticated; set request.jwt.claim.sub='${actor}';`;
       assert.equal(sql(prefix+`select count(*) from bookings where id='${cancellable}';`),'1');
@@ -353,12 +389,8 @@ const expectFailure = (statement, pattern) => {
       }
     }
     assert.equal(sql("select has_function_privilege('authenticated','_assert_internal_booking_access(uuid,uuid,uuid)','execute')"),'f');
-    for(const role of ['anon','authenticated','service_role']) {
-      assert.equal(sql(`select has_function_privilege('${role}','create_internal_booking(uuid,uuid,uuid,uuid,timestamptz,integer,uuid)','execute')`),'f');
-      // PostgreSQL may reject at overload resolution because the nine-arg
-      // compatibility overload has defaults; exact ACL above still proves revocation.
-      expectFailure(`set role ${role};select create_internal_booking('${biz}'::uuid,'${branch}'::uuid,'${service}'::uuid,'${staff}'::uuid,now(),30,'${user}'::uuid);`,/permission denied|is not unique/);
-    }
+    // 20261117190000 dropped the unchecked seven-argument overload.
+    assert.equal(sql("select to_regprocedure('public.create_internal_booking(uuid,uuid,uuid,uuid,timestamptz,integer,uuid)') is null"),'t');
     {
     sql(source('20261110133000_internal_booking_requests.sql'));
     const internalPayload={mode:'simple',biz_id:biz,branch_id:branch,staff_id:staff,service_id:service,
@@ -386,6 +418,8 @@ const expectFailure = (statement, pattern) => {
     for(const role of ['anon','authenticated','service_role']) {
       expectFailure(internal(owner,false,role),/permission denied/);
       expectFailure(internal(owner,true,role),/permission denied/);
+      // A seven-argument call resolves to the nine-argument overload, closed to every client role.
+      expectFailure(`set role ${role};select create_internal_booking('${biz}'::uuid,'${branch}'::uuid,'${service}'::uuid,'${staff}'::uuid,now(),30,'${user}'::uuid);`,/permission denied/);
     }
     const complexInput={...internalPayload,mode:'complex',start_at:'2039-01-02T10:00:00Z',services:[{service_id:service,duration_min:30},{service_id:service2,duration_min:20}]};
     delete complexInput.service_id;delete complexInput.duration_min;
@@ -406,19 +440,25 @@ const expectFailure = (statement, pattern) => {
     sql('drop trigger reject_internal_item on booking_services');
     assert.equal(JSON.parse(sql(internalCommand(failedInternal,{...complexInput,start_at:'2039-01-03T10:00:00Z'}))).confirmed,true);
     }
-    sql(`alter table services add name_ru text;alter table staff add full_name text;
-      create table service_staff(service_id uuid,staff_id uuid);
-      create table working_hours(staff_id uuid,biz_id uuid,day_of_week integer,intervals jsonb);`);
-    sql(readFileSync(path.join(root,'scripts/fixtures/legacy-booking-readers.sql'),'utf8'));
     sql(source('20261110140000_booking_legacy_surface.sql'));
     for(const role of ['anon','authenticated']) {
       expectFailure(`set role ${role};select * from get_free_slots_service_day('${biz}','${service}','2039-01-01',2147483647,1,'Asia/Bishkek');`,/permission denied/);
-      expectFailure(`set role ${role};select * from booking_view_public('${first.booking_id}');`,/permission denied/);
     }
-    assert.equal(sql(`set role service_role;select count(*) from booking_view_public('${first.booking_id}');`),'1');
     assert.equal(sql(`set role service_role;select count(*) from get_free_slots_service_day('${biz}','${service}','2039-01-01',3,15,'Asia/Bishkek');`),'0');
-    await assertLiveFunctions(sql, { suite: 'test-booking-requests-isolated.cjs' });
-    console.log('PASS isolated PostgreSQL: guest/auth/internal single/complex parallel replay; explicit actor distinct from client/no JWT mutation; namespace/legacy receipt replay; caller/proof/payload binding; competing keys; rollback/outbox; direct RPC and table/column DML denied; private helper ACL; own-client/owner/manager/active staff/branch/platform/service lifecycle; financial cancellation guards; cross-tenant/other-branch/anonymous/role-spoof rejection. Real booking/outbox/authorization SQL, synthetic schedule and records, no external services.');
+    // 20261119020000 drops the booking view (booking_receipt_public replaced it) and the old outbox claim.
+    // pg_cron is not installed here; besides the drops, that migration only schedules two cleanup jobs.
+    sql("create schema cron; create function cron.schedule(text,text,text) returns bigint language sql as 'select 1::bigint';");
+    sql(source('20261119020000_dead_functions_and_cleanup_jobs.sql'));
+    for(const signature of ['booking_view_public(uuid)','claim_booking_notifications(integer,integer)']) {
+      assert.equal(sql(`select to_regprocedure('public.${signature}') is null;`),'t',signature);
+    }
+    await assertLiveFunctions(sql, { suite: 'test-booking-requests-isolated.cjs', stubs: {
+      'public.schedule_contains_booking(uuid,uuid,timestamp with time zone,timestamp with time zone)': {
+        reason: 'synthetic schedule: every requested time is inside working hours; the explicit schedule tables are outside this suite',
+        skip: ['body'],
+      },
+    } });
+    console.log('PASS isolated PostgreSQL: guest/auth/internal single/complex parallel replay; explicit actor distinct from client/no JWT mutation; namespace/legacy receipt replay; caller/proof/payload binding; competing keys; rollback/outbox; service_staff, past-start and catalogue-duration hold checks; direct RPC and table/column DML denied; private helper ACL; own-client/owner/manager/active staff/branch/platform/service lifecycle; financial cancellation guards; cross-tenant/other-branch/anonymous/role-spoof rejection. Live booking/outbox/authorization SQL, synthetic schedule and records, no external services.');
   } finally {
     if (!/^kezek-booking-regression-[0-9a-f-]{36}$/.test(name)) throw new Error('Invalid disposable name');
     run(['rm', '-f', '-v', name], undefined, true);

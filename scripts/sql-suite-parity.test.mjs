@@ -15,7 +15,7 @@ const suites = JSON.parse(fs.readFileSync(new URL('sql-isolated-suites.json', sc
 const read = (name) => fs.readFileSync(new URL(name, scripts), 'utf8');
 
 // Lower this whenever a suite is fixed; it must never grow. Zero means the ratchet file can go.
-const RATCHET_BUDGET = 211;
+const RATCHET_BUDGET = 0;
 
 test('every registered suite compares its functions with the migration chain under its own name', () => {
     for (const suite of suites) {

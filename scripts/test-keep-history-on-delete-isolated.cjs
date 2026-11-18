@@ -9,18 +9,10 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
-function extract(file, start, end) {
-    const text = read(file);
-    const from = text.indexOf(start);
-    assert.ok(from >= 0, `${start} not found in ${file}`);
-    const to = text.indexOf(end, from);
-    assert.ok(to > from, `${end} not found after ${start}`);
-    return text.slice(from, to + end.length);
-}
 
 const container = `kezek-keep-history-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -76,8 +68,10 @@ async function seedBusiness() {
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
-        // Production foreign keys (prod_baseline.sql) of every table the deletes touch.
+        // Production foreign keys (prod_baseline.sql) of every table the deletes touch; functions get
+        // the grants the production baseline gave them.
         await sql(`create role anon; create role authenticated; create role service_role bypassrls;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             grant usage on schema public to anon, authenticated, service_role;
             create table public.roles(id uuid primary key, key text);
             insert into public.roles values ('00000000-0000-0000-0000-000000000001', 'owner'), ('00000000-0000-0000-0000-000000000002', 'staff'), ('00000000-0000-0000-0000-000000000003', 'client');
@@ -122,7 +116,7 @@ async function seedBusiness() {
             create table public.visit_package_plans(id uuid primary key, biz_id uuid references public.businesses(id) on delete cascade, service_id uuid references public.services(id) on delete set null);
             create table public.client_visit_packages(id uuid primary key default gen_random_uuid(), plan_id uuid references public.visit_package_plans(id) on delete restrict);
             grant all on all tables in schema public to anon, authenticated, service_role;`);
-        await sql(extract('20261118120000_staff_delete_without_history.sql', 'create or replace function public.delete_staff_without_history', '\n$$;'));
+        await sql(liveFunctionSql('public.delete_staff_without_history(uuid,uuid)'));
 
         // Before: deleting the busy branch takes its booking, shift and promotion usage with it.
         const before = await seedBusiness();
@@ -191,6 +185,12 @@ async function seedBusiness() {
             await assert.rejects(sql(`set role ${role}; delete from public.branches where id = '${b.busy}'`), /permission denied for table branches/);
             await assert.rejects(sql(`set role ${role}; delete from public.client_visit_packages`), /permission denied for table client_visit_packages/);
         }
+
+        // 20261119020000_dead_functions_and_cleanup_jobs then drops the old entry point (the routes call
+        // delete_business_without_history): its drop statements, without the pg_cron jobs.
+        await sql(read('20261119020000_dead_functions_and_cleanup_jobs.sql').split('\n')
+            .filter((line) => line.startsWith('drop function if exists public.')).join('\n'));
+        assert.equal(await sql(`select count(*) from pg_proc where proname = 'force_delete_business_and_downgrade_owner'`), '0');
 
         await assertLiveFunctions(sql, { suite: 'test-keep-history-on-delete-isolated.cjs' });
         console.log('keep history on delete: ok');

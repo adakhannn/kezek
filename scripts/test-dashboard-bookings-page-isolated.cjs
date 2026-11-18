@@ -9,18 +9,10 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions } = require('./lib/live-schema.cjs');
+const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
-function extract(file, start, end) {
-    const text = read(file);
-    const from = text.indexOf(start);
-    assert.ok(from >= 0, `${start} not found in ${file}`);
-    const to = text.indexOf(end, from);
-    assert.ok(to > from, `${end} not found after ${start}`);
-    return text.slice(from, to + end.length);
-}
 
 const container = `kezek-dash-bookings-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -63,7 +55,9 @@ let created = false;
         }
         assert.ok(ready, 'PostgreSQL did not start');
 
+        // Functions get the grants the production baseline gave them.
         await sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
+            ${SUPABASE_DEFAULT_PRIVILEGES}
             create function auth.uid() returns uuid language sql stable as $$ select nullif(nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub','')::uuid $$;
             create function auth.role() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role' $$;
             grant usage on schema auth to anon, authenticated, service_role;
@@ -116,9 +110,10 @@ let created = false;
             insert into public.bookings(biz_id, branch_id, service_id, staff_id, client_name, client_phone, status, start_at, end_at) values
                 ('${bizB}', '${branchB}', '${serviceB}', '${staffB}', 'Айгерим Старая', '+996555123456', 'paid', '2024-01-05 10:00+06', '2024-01-05 11:00+06');
             grant select on all tables in schema public to anon, authenticated;`);
+        // The business-manager predicates as they are live, with their grants.
         await sql([
-            extract('20261110131000_shift_hours_adjustment.sql', 'create or replace function public.finance_is_platform_admin', '\n$$;'),
-            extract('20261110131000_shift_hours_adjustment.sql', 'create or replace function public.finance_can_manage_business', '\n$$;'),
+            liveFunctionSql('public.finance_is_platform_admin(uuid)'),
+            liveFunctionSql('public.finance_can_manage_business(uuid,uuid)'),
         ].join('\n'));
         await sql(read('20261118190000_dashboard_bookings_page.sql'));
 
