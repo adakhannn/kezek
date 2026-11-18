@@ -1,9 +1,12 @@
+// Disposable Docker PostgreSQL only (lib/explicit-schedule-postgres.mjs); no Supabase connection or credentials.
+// node scripts/test-schedule-reset.mjs
 import assert from 'node:assert/strict';
-import { pathToFileURL } from 'node:url';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
+import { rowsClient, withSchedulePostgres } from './lib/explicit-schedule-postgres.mjs';
 import { setupScheduleFixture, staff, biz, branch, owner, other } from './lib/explicit-schedule-fixture.mjs';
-const { PGlite } = await import(pathToFileURL(process.argv[2]).href);
-const db = new PGlite();
-await setupScheduleFixture(db);
+await withSchedulePostgres('kezek-schedule-reset', async (sql) => {
+const db = rowsClient(sql);
+await setupScheduleFixture(sql);
 const day={intervals:[{start:'09:00',end:'18:00'}],breaks:[]};
 const week=Object.fromEntries(Array.from({length:7},(_,i)=>[i+1,day]));
 const publish=async(revision,kind,days)=> (await db.query('select publish_staff_schedule($1,$2,$3,$4,$5,$6,$7,$8) result',[staff,biz,owner,revision,kind,'2099-01-05',branch,days])).rows[0].result;
@@ -23,5 +26,6 @@ await publish(3,'day',{day:{intervals:[{start:'09:00',end:'20:00'}],breaks:[]}})
 await db.query("insert into bookings(staff_id,biz_id,branch_id,start_at,end_at,status) values($1,$2,$3,'2099-01-05 19:00+06','2099-01-05 20:00+06','confirmed')",[staff,biz,branch]);
 assert.equal((await reset(4)).ok,false);
 assert.equal((await db.query('select max(revision)::int n from staff_schedule_versions')).rows[0].n,4);
-await db.close();
+await assertLiveFunctions(sql, { suite: 'test-schedule-reset.mjs' });
+});
 console.log('PASS: reset authorization, stale revision, missing week, history preserved, regular hours, absence conflict, failed reset rollback');

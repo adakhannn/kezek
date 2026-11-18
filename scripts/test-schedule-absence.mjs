@@ -1,10 +1,13 @@
+// Disposable Docker PostgreSQL only (lib/explicit-schedule-postgres.mjs); no Supabase connection or credentials.
+// node scripts/test-schedule-absence.mjs
 import assert from 'node:assert/strict';
-import { pathToFileURL } from 'node:url';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
+import { rowsClient, withSchedulePostgres } from './lib/explicit-schedule-postgres.mjs';
 import { setupScheduleFixture, staff, biz, branch, owner } from './lib/explicit-schedule-fixture.mjs';
 
-const { PGlite } = await import(pathToFileURL(process.argv[2]).href);
-const db = new PGlite();
-await setupScheduleFixture(db);
+await withSchedulePostgres('kezek-schedule-absence', async (sql) => {
+const db = rowsClient(sql);
+await setupScheduleFixture(sql);
 const day = { intervals: [{ start: '09:00', end: '18:00' }], breaks: [] };
 const week = Object.fromEntries(Array.from({ length: 7 }, (_, i) => [i + 1, day]));
 await db.query('select publish_staff_schedule($1,$2,$3,$4,$5,$6,$7,$8)', [staff,biz,owner,0,'week','2099-01-01',branch,week]);
@@ -22,5 +25,6 @@ assert.equal((await db.query('select count(*)::int n from staff_time_off where i
 await assert.rejects(db.query('update staff_time_off set cancelled_at=null where id=$1',[created]),/SCHEDULE_INVALID/);
 await db.query("insert into bookings(staff_id,biz_id,branch_id,start_at,end_at,status) values($1,$2,$3,'2099-01-05 09:00+06','2099-01-05 10:00+06','confirmed')",[staff,biz,branch]);
 await assert.rejects(insert(),/SCHEDULE_BOOKING_CONFLICT/);
-await db.close();
+await assertLiveFunctions(sql, { suite: 'test-schedule-absence.mjs' });
+});
 console.log('PASS: absence overrides schedule, overlap and booking conflict blocked, immutable cancellation restores schedule, history kept');

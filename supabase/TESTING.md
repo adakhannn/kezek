@@ -47,6 +47,7 @@ pnpm test:sql:isolated
 | [booking](../scripts/test-booking-requests-isolated.cjs) | Атомарный idempotency claim/create, гонки и выбранные права ролей |
 | [notification outbox](../scripts/test-booking-notification-outbox-isolated.cjs) | SQL lifecycle очереди, leases/receipts и конкурентность; детали assertions — в runner |
 | [staff-scoped slots](../scripts/test-staff-scoped-slots-isolated.cjs) | Фильтрация выбранных сотрудников до resolver, фактические calls/rows и EXPLAIN на synthetic 1000 staff |
+| [явные расписания](../scripts/test-explicit-schedules-db.mjs) и ещё шесть наборов расписаний и писателей броней | Публикация, слоты, отсутствия, возврат дня, гостевые и комплексные резервы, гонки на блокировке сотрудника; общий [стенд](../scripts/lib/explicit-schedule-fixture.mjs) |
 
 [CI](../.github/workflows/ci.yml) вызывает каждый runner из registry отдельным matrix job. Ни remote DB secret, ни условие «без secret пропустить» им не нужны. Это обязательные по workflow проверки без `continue-on-error`; настройки branch protection не подтверждены. Наличие конфигурации не является результатом CI. SQL gates не доказывают доставку реального provider, полный bootstrap проекта или совместимость всей удалённой схемы.
 

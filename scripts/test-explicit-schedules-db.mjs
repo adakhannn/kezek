@@ -1,12 +1,12 @@
-// node scripts/test-explicit-schedules-db.mjs <path-to-pglite/dist/index.js>
-// Disposable in-memory PostgreSQL only. No Supabase connection or credentials.
+// node scripts/test-explicit-schedules-db.mjs
+// Disposable Docker PostgreSQL only (lib/explicit-schedule-postgres.mjs). No Supabase connection or credentials.
 import assert from 'node:assert/strict';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
+import { rowsClient, withSchedulePostgres } from './lib/explicit-schedule-postgres.mjs';
 import { setupScheduleFixture, id, biz, branch, staff, owner, other, branch2 } from './lib/explicit-schedule-fixture.mjs';
-import { pathToFileURL } from 'node:url';
-process.on('uncaughtException', error => { console.error(error.message, error.position ?? '', error.where ?? ''); process.exit(1); });
-const { PGlite } = await import(pathToFileURL(process.argv[2]).href);
-const db = new PGlite();
-await setupScheduleFixture(db);
+await withSchedulePostgres('kezek-explicit-schedules', async (sql) => {
+const db = rowsClient(sql);
+await setupScheduleFixture(sql, { bookingWriters: true });
 const day = {intervals:[{start:'09:00',end:'18:00'}],breaks:[{start:'13:00',end:'14:00'}]};
 const week = Object.fromEntries(Array.from({length:7},(_,i)=>[i+1,day]));
 const from='2099-01-05';
@@ -29,7 +29,8 @@ await assert.rejects(db.query('select read_staff_schedule_draft($1,$2,$3,$4)',[s
 await assert.rejects(publish(),/SCHEDULE_STALE/);
 assert.deepEqual((await snapshot()).days[0].breaks,day.breaks);
 assert.equal((await snapshot()).days[13].source,'week');
-await db.query('insert into services values($1,$2,$3,60,true)',[id(9),biz,branch]);
+// One 60-minute service per branch: 20261118100000 books only the booked branch's own services.
+await db.query("insert into services(id,biz_id,branch_id,name_ru,duration_min) values($1,$2,$3,'Cut',60),($4,$2,$5,'Cut',60)",[id(9),biz,branch,id(19),branch2]);
 const slots = async () => (await db.query('select * from get_free_slots_service_day_v2($1,$2,$3)',[biz,id(9),from])).rows;
 assert.ok((await slots()).length>0);
 assert.equal((await db.query('select * from resolve_staff_day($1,$2)',[staff,from])).rows[0].intervals[0].end,'18:00');
@@ -77,11 +78,16 @@ assert.ok(!(await slots()).some(s=>new Date(s.start_at).toISOString()===`${from}
 await db.exec("update bookings set expires_at=now()-interval '1 minute' where status='hold'");
 assert.ok((await slots()).some(s=>new Date(s.start_at).toISOString()===`${from}T04:00:00.000Z`));
 // Actual complex reservation writers agree with slots and support published transfers.
-const guestHold = async (date, time, location=branch) => db.query(
+const serviceOf = location => (location===branch2?id(19):id(9));
+const guestHold = async (date, time, location=branch, service=serviceOf(location)) => db.query(
     'select hold_complex_slot_guest($1,$2,$3,$4,$5,$6,$7)',
-    [biz,location,staff,`${date}T${time}:00+06:00`,[{service_id:id(9),duration_min:60}],'Test','test-phone']);
+    [biz,location,staff,`${date}T${time}:00+06:00`,[{service_id:service,duration_min:60}],'Test','test-phone']);
+// The writer and the booking trigger skip an expired hold; production's no_overlap constraint (not in
+// the fixture) still rejects this insert until purge_expired_holds has cancelled that hold.
 await guestHold(from,'10:00'); // expired hold no longer blocks the actual writer
 await assert.rejects(guestHold(from,'10:00'),/already booked|SCHEDULE_SLOT_TAKEN/);
+// 20261118100000: the home branch's service is refused in the branch the staff member works in that day.
+await assert.rejects(guestHold('2099-01-07','09:00',branch2,id(9)),/service not found or inactive/);
 await guestHold('2099-01-07','09:00',branch2);
 await assert.rejects(guestHold('2099-01-07','15:00',branch),/SCHEDULE_OUTSIDE_WORKING_HOURS/);
 // Transfers preserve explicit plans and reject stale membership and unauthorized actors.
@@ -94,7 +100,7 @@ await assert.rejects(transfer(staff,branch,branch2),/SCHEDULE_STALE/);
 // Legacy inherited hours: conflicts roll back EVERY table, and history remains in the original branch.
 const legacyStaff=id(88);
 await db.query('insert into staff values($1,$2,$3,$4,true)',[legacyStaff,biz,branch,other]);
-await db.query(`insert into working_hours select $1,$2,d,'[{"start":"09:00","end":"18:00"}]','[]' from generate_series(0,6) d`,[legacyStaff,biz]);
+await db.query(`insert into working_hours(staff_id,biz_id,day_of_week,intervals,breaks) select $1,$2,d,'[{"start":"09:00","end":"18:00"}]','[]' from generate_series(0,6) d`,[legacyStaff,biz]);
 await db.query('insert into bookings(staff_id,biz_id,branch_id,start_at,end_at,status) values($1,$2,$3,$4,$5,$6)',[legacyStaff,biz,branch,`${from}T09:00:00+06:00`,`${from}T10:00:00+06:00`,'confirmed']);
 await assert.rejects(transfer(legacyStaff,branch,branch2),/SCHEDULE_BOOKING_CONFLICT/);
 assert.equal((await db.query('select branch_id from staff where id=$1',[legacyStaff])).rows[0].branch_id,branch);
@@ -108,5 +114,6 @@ for(const role of ['anon','authenticated']) {
     assert.equal((await db.query(`select has_function_privilege($1,'public.publish_staff_schedule(uuid,uuid,uuid,bigint,text,date,uuid,jsonb)','execute') as allowed`,[role])).rows[0].allowed,false);
     assert.equal((await db.query(`select has_function_privilege($1,'public.schedule_effective_day(uuid,date)','execute') as allowed`,[role])).rows[0].allowed,false);
 }
-await db.close();
+await assertLiveFunctions(sql, { suite: 'test-explicit-schedules-db.mjs' });
+});
 console.log('PASS: read-only snapshots, ownership, validation, revision conflicts, rollback, breaks, split intervals, legacy preservation, absence, transfers, boundaries, version history and permissions');

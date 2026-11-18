@@ -1,34 +1,13 @@
-// Dedicated, disposable Docker PostgreSQL; no host ports, volumes or production credentials.
+// Dedicated, disposable Docker PostgreSQL (lib/explicit-schedule-postgres.mjs); no host ports, volumes or production credentials.
 // node scripts/test-explicit-schedules-concurrency.mjs
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
-import { spawn } from 'node:child_process';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
+import { withSchedulePostgres } from './lib/explicit-schedule-postgres.mjs';
 import { setupScheduleFixture, biz, branch, branch2, staff, owner } from './lib/explicit-schedule-fixture.mjs';
-import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
 
-const container = `kezek-schedule-test-${randomUUID()}`;
-function docker(args, input='') {
-    return new Promise((resolve,reject) => {
-        const child=spawn('docker',args,{windowsHide:true}); let out='',err='';
-        child.stdout.on('data',d=>out+=d); child.stderr.on('data',d=>err+=d);
-        child.on('error',reject);
-        child.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err||out||`docker exit ${code}`)));
-        child.stdin.end(input);
-    });
-}
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-const sql=text=>docker(['exec','-i',container,'psql','-X','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-At'],text);
-await docker(['info','--format','{{.ServerVersion}}']);
-let created=false;
-try {
-    await docker(['run','--detach','--rm','--network','none','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]); created=true;
-    let ready=false;
-    for(let i=0;i<60;i++) {
-        try { if ((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres') { await docker(['exec',container,'pg_isready','-U','postgres']); ready=true; break; } }
-        catch { await delay(500); }
-    }
-    assert.ok(ready,'Isolated PostgreSQL failed to start');
-    await setupScheduleFixture({exec:sql});
+await withSchedulePostgres('kezek-schedule-test', async (sql) => {
+    await setupScheduleFixture(sql);
     const day={intervals:[{start:'09:00',end:'18:00'}],breaks:[]};
     const week=JSON.stringify(Object.fromEntries(Array.from({length:7},(_,i)=>[i+1,day])));
     const publish=`select publish_staff_schedule('${staff}','${biz}','${owner}',0,'week','2099-01-05','${branch}','${week}')`;
@@ -66,7 +45,6 @@ try {
     const transfer=`select transfer_staff_home('${staff}','${biz}','${owner}','${branch}','${branch2}')`;
     await race(transfer,transfer,/SCHEDULE_STALE/);
     assert.equal(await sql('select count(*) from staff_home_branch_changes'),'1');
-    console.log('PASS: concurrent publication, double booking, publication versus booking and competing transfers');
-} finally {
-    if(created) await docker(['rm','--force',container]);
-}
+    await assertLiveFunctions(sql, { suite: 'test-explicit-schedules-concurrency.mjs' });
+});
+console.log('PASS: concurrent publication, double booking, publication versus booking and competing transfers');

@@ -44,5 +44,12 @@
   "test-staff-role-follows-card-isolated.cjs",
   "test-public-booking-receipt.mjs",
   "test-telegram-profile-link-db.mjs",
-  "test-telegram-web-login-db.mjs"
+  "test-telegram-web-login-db.mjs",
+  "test-explicit-schedules-db.mjs",
+  "test-explicit-schedules-concurrency.mjs",
+  "test-schedule-absence.mjs",
+  "test-schedule-reset.mjs",
+  "test-simple-schedule-booking-writer.mjs",
+  "test-guest-schedule-booking-writer.mjs",
+  "test-complex-booking-identity.mjs"
 ]
