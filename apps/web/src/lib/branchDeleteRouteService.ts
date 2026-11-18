@@ -2,7 +2,7 @@ import { runBranchDelete } from '@/lib/branchDeleteService';
 
 type Failure = {
     ok: false;
-    status: 400 | 403 | 409;
+    status: 400 | 403 | 409 | 500;
     error: 'validation' | 'forbidden' | 'conflict' | 'internal';
     message: string;
     details?: Record<string, unknown>;

@@ -49,6 +49,6 @@ export async function runDeleteBranchPromotionHttp(
             return createErrorResponse(result.error, result.message, undefined, result.status);
         }
 
-        return createSuccessResponse();
+        return createSuccessResponse(undefined, result.payload?.archived ? { archived: true } : undefined);
     });
 }

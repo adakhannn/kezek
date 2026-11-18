@@ -63,6 +63,7 @@ export const branchesRu = {
     'branches.promotions.delete': 'Удалить',
     'branches.promotions.delete.confirm': 'Удалить акцию?',
     'branches.promotions.delete.success': 'Акция удалена',
+    'branches.promotions.delete.archived': 'Акцией уже пользовались, поэтому она не удалена, а выключена: история скидок сохранена.',
     'branches.promotions.discountPercent': 'Скидка {percent}%',
     'branches.promotions.discountPercent.help': 'Размер скидки в процентах (1-100)',
     'branches.promotions.discountPercent.label': 'Процент скидки',

@@ -175,7 +175,10 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
             const data = await res.json();
             if (data.ok) {
                 setConfirmDeleteId(null);
-                toast.showSuccess(t('branches.promotions.delete.success', 'Акция удалена'));
+                // A promotion clients already used is switched off instead of deleted (DB-14).
+                toast.showSuccess(data.archived
+                    ? t('branches.promotions.delete.archived', 'Акцией уже пользовались, поэтому она не удалена, а выключена: история скидок сохранена.')
+                    : t('branches.promotions.delete.success', 'Акция удалена'));
                 loadPromotions();
             } else {
                 toast.showError(data.error || t('branches.promotions.error.delete', 'Ошибка удаления акции'));

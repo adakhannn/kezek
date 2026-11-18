@@ -123,7 +123,7 @@ export async function deleteBranchPromotion({
     branchId: string;
     promotionId: string;
     bizId: string;
-}): Promise<Failure | Success<void>> {
+}): Promise<Failure | Success<{ archived: true } | undefined>> {
     const { data: promotion, error: promotionError } = await admin
         .from('branch_promotions')
         .select('id, branch_id, biz_id')
@@ -144,7 +144,23 @@ export async function deleteBranchPromotion({
     const { error: deleteError } = await admin
         .from('branch_promotions')
         .delete()
-        .eq('id', promotionId);
+        .eq('id', promotionId)
+        .eq('branch_id', branchId)
+        .eq('biz_id', bizId);
+
+    // A promotion that clients already used keeps its usage history (DB-14): switch it off instead.
+    if (deleteError?.code === '23503') {
+        const { error: archiveError } = await admin
+            .from('branch_promotions')
+            .update({ is_active: false })
+            .eq('id', promotionId)
+            .eq('branch_id', branchId)
+            .eq('biz_id', bizId);
+        if (archiveError) {
+            return { ok: false, status: 500, error: 'internal', message: 'Не удалось выключить акцию' };
+        }
+        return { ok: true, payload: { archived: true } };
+    }
 
     if (deleteError) {
         return {

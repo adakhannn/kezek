@@ -28,7 +28,7 @@
 | DB-11 | P2 | Права по умолчанию для новых объектов — ALL для клиентских ролей (включая TRUNCATE) | baseline default privileges | TODO (TRUNCATE, REFERENCES, TRIGGER и MAINTAIN сняты в ENG-62) |
 | DB-12 | P2 | `purge_expired_holds` каждую минуту сканирует всю `bookings` без индекса | `bookings(expires_at) where status='hold'` | FIXED |
 | DB-13 | P2 | Политики отзывов обходят `can_review`: отзыв до визита, бессрочное редактирование, перенос на другую бронь | политики `reviews` | FIXED |
-| DB-14 | P2 | `ON DELETE CASCADE` уничтожает смены, финансовые и аудит-логи при удалении сотрудника/филиала/бизнеса | FK | TODO |
+| DB-14 | P2 | `ON DELETE CASCADE` уничтожает смены, финансовые и аудит-логи при удалении сотрудника/филиала/бизнеса | FK | FIXED |
 | DB-15 | P2 | Baseline не содержит триггер `auth.users` → `sync_auth_user_notification_email`: свежие и CI-базы отличаются от прода | baseline | TODO |
 | DB-16 | P3 | Нет CHECK для процентов (0–100), цен, длительностей, скидок, `tz` | схема | TODO |
 | DB-17 | P3 | Дубли индексов и триггеров (`staff_shifts`, `bookings`, `user_roles`) | индексы | FIXED |
@@ -82,7 +82,7 @@
 | ARCH-05 | P2 | HTTP-статус выбирается по тексту ошибки (`NO_BIZ_ACCESS` → 500) | `apiErrorHandler.ts` | TODO |
 | ARCH-06 | P2 | Выбор текущего бизнеса по разным правилам в сеттере и резолвере; молчаливое переключение бизнеса при ошибке чтения | `currentBusinessService.ts`, `bizContextResolutionStrategies.ts` | TODO |
 | ARCH-07 | P2 | Сопоставление по имени (`name_ru`, `full_name`) и неатомарные многошаговые записи (перевод сотрудника, услуги) | `serviceUpdateRouteService.ts`, `staffTransferService.ts` | TODO |
-| ARCH-08 | P2 | Две реализации удаления филиала; одна падает на `staff_schedule_rules` | `branchDeleteService.ts` | TODO |
+| ARCH-08 | P2 | Две реализации удаления филиала; одна падает на `staff_schedule_rules` | `branchDeleteService.ts` | FIXED |
 | ARCH-09 | P2 | Типизация БД теряется на границах сервисов (46 «ClientLike», `as never`) | `lib/` | TODO |
 | ARCH-10 | P2 | Контекст авторизации пересчитывается на каждый запрос; синхронизация ролей пишет на GET | `authBiz`, `staffRoleSync.ts` | TODO |
 | ARCH-11 | P3 | Пять способов создать сервисный клиент, мёртвый код, `TZ` в 27 модулях, запасной секрет OTP в репозитории | см. отчёт | TODO |
@@ -153,5 +153,7 @@ API-10 закрыт как ENG-91: миграция `20261118210000_release_auth
 FE-12 закрыт как ENG-92 (только код).
 
 API-09 и CI-09 закрыты как ENG-93: миграция `20261118220000_analytics_ingest_guards.sql` применена в проде после выкладки кода.
+
+DB-14 и ARCH-08 закрыты как ENG-94: миграция `20261118230000_keep_history_on_delete.sql` применена в проде до выкладки кода (новый код вызывает новые функции).
 
 Дальше по порядку: P1 — API-06, ARCH-02, ARCH-04, CI-01.

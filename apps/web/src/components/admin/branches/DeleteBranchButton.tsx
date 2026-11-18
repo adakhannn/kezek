@@ -87,7 +87,7 @@ export function DeleteBranchButton({
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onDelete}
                 title="Удалить филиал"
-                message={`Удалить филиал «${name}»? Это действие необратимо.`}
+                message={`Удалить филиал «${name}»? Удалить можно только филиал без истории: без записей, смен и использованных акций. Иначе сделайте филиал неактивным — данные сохранятся.`}
                 confirmLabel="Удалить"
                 cancelLabel="Отмена"
                 confirmVariant="danger"

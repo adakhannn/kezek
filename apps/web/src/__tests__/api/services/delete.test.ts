@@ -49,29 +49,25 @@ describe('/api/services/[id]/delete', () => {
         };
     }
 
-    function createPastBookingsDeleteQuery() {
+    function createPlanCountQuery(count: number) {
         return {
-            delete: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            lt: jest.fn().mockResolvedValue({
-                data: null,
-                error: null,
-            }),
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockResolvedValue({ count, error: null }),
         };
     }
 
-    function createServiceDeleteQuery() {
+    // delete()/update() followed by .eq('id') and .eq('biz_id'); the second one resolves.
+    function createServiceWriteQuery(result: { error: { code?: string; message: string } | null }) {
         const query = {
             delete: jest.fn().mockReturnThis(),
+            update: jest.fn().mockReturnThis(),
             eq: jest.fn(),
         };
 
         let eqCalls = 0;
         query.eq.mockImplementation(() => {
             eqCalls += 1;
-            return eqCalls >= 2
-                ? Promise.resolve({ data: null, error: null })
-                : query;
+            return eqCalls >= 2 ? Promise.resolve({ data: null, ...result }) : query;
         });
 
         return query;
@@ -129,24 +125,53 @@ describe('/api/services/[id]/delete', () => {
         await expectErrorResponse(res, 409, 'conflict');
     });
 
-    test('deletes service when there are no future bookings', async () => {
+    async function deleteService() {
         (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
             data: { id: serviceId, biz_id: bizId },
             error: null,
         });
-
-        mockAdmin.from
-            .mockReturnValueOnce(createFutureBookingsQuery(0))
-            .mockReturnValueOnce(createPastBookingsDeleteQuery())
-            .mockReturnValueOnce(createServiceDeleteQuery());
-
         const req = createMockRequest(`http://localhost/api/services/${serviceId}/delete`, {
             method: 'POST',
         });
+        return POST(req, { params: { id: serviceId } });
+    }
 
-        const res = await POST(req, { params: { id: serviceId } });
-        const data = await expectSuccessResponse(res, 200);
+    test('deletes a service without history and never deletes bookings (DB-14)', async () => {
+        const serviceDelete = createServiceWriteQuery({ error: null });
+        mockAdmin.from
+            .mockReturnValueOnce(createFutureBookingsQuery(0))
+            .mockReturnValueOnce(createPlanCountQuery(0))
+            .mockReturnValueOnce(serviceDelete);
+
+        const data = await expectSuccessResponse(await deleteService(), 200);
 
         expect(data).toHaveProperty('ok', true);
+        expect(data).not.toHaveProperty('archived');
+        expect(serviceDelete.delete).toHaveBeenCalled();
+        expect(mockAdmin.from.mock.calls.map(([table]) => table)).toEqual(['bookings', 'visit_package_plans', 'services']);
+    });
+
+    test('switches off a service with past bookings instead of deleting it', async () => {
+        const archive = createServiceWriteQuery({ error: null });
+        mockAdmin.from
+            .mockReturnValueOnce(createFutureBookingsQuery(0))
+            .mockReturnValueOnce(createPlanCountQuery(0))
+            .mockReturnValueOnce(createServiceWriteQuery({ error: { code: '23503', message: 'violates foreign key constraint' } }))
+            .mockReturnValueOnce(archive);
+
+        const data = await expectSuccessResponse(await deleteService(), 200);
+
+        expect(data).toHaveProperty('archived', true);
+        expect(archive.update).toHaveBeenCalledWith({ active: false });
+    });
+
+    test('an unexpected delete error does not leak database text', async () => {
+        mockAdmin.from
+            .mockReturnValueOnce(createFutureBookingsQuery(0))
+            .mockReturnValueOnce(createPlanCountQuery(0))
+            .mockReturnValueOnce(createServiceWriteQuery({ error: { code: '42P01', message: 'relation services_secret does not exist' } }));
+
+        const data = await expectErrorResponse(await deleteService(), 400, 'validation');
+        expect(JSON.stringify(data)).not.toContain('services_secret');
     });
 });

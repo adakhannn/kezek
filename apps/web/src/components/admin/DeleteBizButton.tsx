@@ -80,7 +80,7 @@ export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: st
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onDelete}
                 title="Удалить бизнес"
-                message={`Удалить бизнес «${bizName}» вместе со всеми данными? Это действие необратимо.`}
+                message={`Удалить бизнес «${bizName}»? Удалить можно только бизнес без истории: без записей, смен, финансовых операций и проданных пакетов. Если история есть, снимите одобрение — бизнес скроется из каталога, данные сохранятся.`}
                 confirmLabel="Удалить"
                 cancelLabel="Отмена"
                 confirmVariant="danger"

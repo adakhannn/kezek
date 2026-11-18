@@ -49,7 +49,10 @@ export default function DeleteServiceButton({ id }: { id: string }) {
                 toast.showError(errorMessage);
                 return;
             }
-            toast.showSuccess(t('services.delete.success', 'Услуга удалена'));
+            // A service with history is switched off instead of deleted (DB-14).
+            toast.showSuccess(payload.archived
+                ? t('services.delete.archived', 'По услуге уже были записи, поэтому она не удалена, а выключена: записаться на неё нельзя, история сохранена.')
+                : t('services.delete.success', 'Услуга удалена'));
             setConfirmOpen(false);
             r.refresh();
         } finally {

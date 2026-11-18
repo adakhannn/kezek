@@ -63,6 +63,7 @@ export const branchesEn = {
     'branches.promotions.delete': 'Delete',
     'branches.promotions.delete.confirm': 'Delete promotion?',
     'branches.promotions.delete.success': 'Promotion deleted',
+    'branches.promotions.delete.archived': 'Clients already used this promotion, so it was switched off instead of deleted: the discount history is kept.',
     'branches.promotions.discountPercent': '{percent}% discount',
     'branches.promotions.discountPercent.help': 'Discount amount in percentage (1-100)',
     'branches.promotions.discountPercent.label': 'Discount Percentage',

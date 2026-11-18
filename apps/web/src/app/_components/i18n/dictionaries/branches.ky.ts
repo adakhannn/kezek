@@ -63,6 +63,7 @@ export const branchesKy = {
     'branches.promotions.delete': 'Жок кылуу',
     'branches.promotions.delete.confirm': 'Акцияны жок кылуу?',
     'branches.promotions.delete.success': 'Аkция жок кылынды',
+    'branches.promotions.delete.archived': 'Бул акцияны кардарлар колдонушкан, ошондуктан ал өчүрүлгөн жок, токтотулду: арзандатуулардын тарыхы сакталды.',
     'branches.promotions.discountPercent': '{percent}% арзандатуу',
     'branches.promotions.discountPercent.help': 'Чыгымдын көлөмү пайыздарда (1-100)',
     'branches.promotions.discountPercent.label': 'Чыгымдын пайызы',

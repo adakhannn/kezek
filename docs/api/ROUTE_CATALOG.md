@@ -6,7 +6,7 @@
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 515 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `b35841aee5a68f19aa0fefc738a13d0ec09e347b0187870f349af9c9c81fa1a1`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 515 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `cf46f5d38ce42934c78123f72dca20392e5aac0dcbd7dee227588825da6cd851`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -24,11 +24,11 @@
 | `/admin/api/analytics/track` | POST | [route](../../apps/web/src/app/admin/api/analytics/track/route.ts) | [runAnalyticsTrackHttp](../../apps/web/src/lib/analyticsTrackHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/business-applications/[id]/status` | POST | [route](../../apps/web/src/app/admin/api/business-applications/[id]/status/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branch-limit` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/branch-limit/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
-| `/admin/api/businesses/[id]/branches/[branchId]/delete` | POST, DELETE | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/delete/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
+| `/admin/api/businesses/[id]/branches/[branchId]/delete` | POST, DELETE | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/delete/route.ts) | [runBranchDelete](../../apps/web/src/lib/branchDeleteService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branches/[branchId]/schedule` | GET, POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/schedule/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branches/[branchId]/update` | POST, PUT, PATCH, OPTIONS | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branches/create` | POST, OPTIONS | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/create/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
-| `/admin/api/businesses/[id]/delete` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/delete/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
+| `/admin/api/businesses/[id]/delete` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/delete/route.ts) | [runBusinessDelete](../../apps/web/src/lib/businessDeleteService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/members/add` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/members/add/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/members/demote` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/members/demote/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/members/grant` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/members/grant/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |

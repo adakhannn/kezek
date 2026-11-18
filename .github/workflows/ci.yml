@@ -426,6 +426,7 @@ jobs:
           - test-maintenance-scan-indexes-isolated.cjs
           - test-release-auth-phone-isolated.cjs
           - test-analytics-ingest-guards-isolated.cjs
+          - test-keep-history-on-delete-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4

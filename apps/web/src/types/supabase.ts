@@ -5509,6 +5509,19 @@ export type Database = {
                 };
                 Returns: Json;
             };
+            "delete_branch_without_history": {
+                Args: {
+                    "p_biz_id": string;
+                    "p_branch_id": string;
+                };
+                Returns: undefined;
+            };
+            "delete_business_without_history": {
+                Args: {
+                    "p_biz_id": string;
+                };
+                Returns: undefined;
+            };
             "delete_staff_without_history": {
                 Args: {
                     "p_biz_id": string;

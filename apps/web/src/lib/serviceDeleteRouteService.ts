@@ -1,4 +1,5 @@
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
+import { logError } from '@/lib/log';
 
 type DeleteFailure = {
     ok: false;
@@ -10,6 +11,8 @@ type DeleteFailure = {
 
 type DeleteSuccess = {
     ok: true;
+    /** The service had history and was switched off instead of deleted (DB-14). */
+    archived?: boolean;
 };
 
 export type ServiceDeleteRouteResult = DeleteFailure | DeleteSuccess;
@@ -76,20 +79,16 @@ export async function runServiceDeleteRoute({
         };
     }
 
-    const { error: deletePastBookingsError } = await admin
-        .from('bookings')
-        .delete()
-        .eq('service_id', serviceId)
-        .lt('start_at', now);
-
-    if (deletePastBookingsError) {
-        return {
-            ok: false,
-            status: 400,
-            error: 'validation',
-            message: `Не удалось удалить прошедшие брони: ${deletePastBookingsError.message}`,
-        };
+    // Past bookings are history and are never deleted (DB-14): a service that has them, or that a
+    // visit package plan sells, is switched off instead; clients can no longer book it.
+    const { count: planCount, error: planError } = await admin
+        .from('visit_package_plans')
+        .select('id', { count: 'exact', head: true })
+        .eq('service_id', serviceId);
+    if (planError) {
+        return { ok: false, status: 400, error: 'validation', message: 'Не удалось проверить пакеты услуги' };
     }
+    if ((planCount ?? 0) > 0) return archiveService(admin, bizId, serviceId);
 
     const { error: deleteServiceError } = await admin
         .from('services')
@@ -97,14 +96,21 @@ export async function runServiceDeleteRoute({
         .eq('id', serviceId)
         .eq('biz_id', bizId);
 
+    // bookings and booking_services keep the service (foreign key): switch it off instead.
+    if (deleteServiceError?.code === '23503') return archiveService(admin, bizId, serviceId);
+
     if (deleteServiceError) {
-        return {
-            ok: false,
-            status: 400,
-            error: 'validation',
-            message: deleteServiceError.message,
-        };
+        logError('ServiceDelete', 'Service delete failed', { code: deleteServiceError.code, message: deleteServiceError.message });
+        return { ok: false, status: 400, error: 'validation', message: 'Не удалось удалить услугу' };
     }
 
     return { ok: true };
+}
+
+async function archiveService(admin: Parameters<typeof runServiceDeleteRoute>[0]['admin'], bizId: string, serviceId: string): Promise<ServiceDeleteRouteResult> {
+    const { error } = await admin.from('services').update({ active: false }).eq('id', serviceId).eq('biz_id', bizId);
+    if (error) {
+        return { ok: false, status: 400, error: 'validation', message: 'Не удалось выключить услугу' };
+    }
+    return { ok: true, archived: true };
 }

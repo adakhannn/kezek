@@ -188,14 +188,17 @@ describe('/api/dashboard/branches/[branchId]/promotions/[promotionId]', () => {
                 }),
             });
 
-            // Мокаем удаление акции
-            mockAdmin.from.mockReturnValueOnce({
+            // Мокаем удаление акции: delete() и три фильтра id, branch_id, biz_id (DB-14)
+            const deleteQuery = {
                 delete: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
+                eq: jest.fn(),
+            };
+            let eqCalls = 0;
+            deleteQuery.eq.mockImplementation(() => {
+                eqCalls += 1;
+                return eqCalls >= 3 ? Promise.resolve({ data: null, error: null }) : deleteQuery;
             });
+            mockAdmin.from.mockReturnValueOnce(deleteQuery);
 
             const req = createMockRequest(`http://localhost/api/dashboard/branches/${branchId}/promotions/${promotionId}`, {
                 method: 'DELETE',
@@ -205,6 +208,7 @@ describe('/api/dashboard/branches/[branchId]/promotions/[promotionId]', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
+            expect(deleteQuery.eq.mock.calls).toEqual([['id', promotionId], ['branch_id', branchId], ['biz_id', bizId]]);
         });
 
         test('должен вернуть 404 если акция не найдена', async () => {

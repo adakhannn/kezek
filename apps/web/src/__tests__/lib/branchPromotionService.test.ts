@@ -77,13 +77,7 @@ describe('branchPromotionService', () => {
                     error: null,
                 }),
             })
-            .mockReturnValueOnce({
-                delete: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
+            .mockReturnValueOnce(deleteChain({ error: null }));
 
         const result = await deleteBranchPromotion({
             admin,
@@ -94,4 +88,34 @@ describe('branchPromotionService', () => {
 
         expect(result).toEqual({ ok: true });
     });
+
+    test('a promotion clients already used is switched off instead of deleted (DB-14)', async () => {
+        const update = jest.fn().mockReturnThis();
+        admin.from
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'promo-1', branch_id: 'branch-1', biz_id: 'biz-1' }, error: null }),
+            })
+            .mockReturnValueOnce(deleteChain({ error: { code: '23503', message: 'client_promotion_usage_promotion_id_fkey' } }))
+            .mockReturnValueOnce({ update, ...deleteChain({ error: null }) });
+
+        const result = await deleteBranchPromotion({ admin, branchId: 'branch-1', promotionId: 'promo-1', bizId: 'biz-1' });
+
+        expect(result).toEqual({ ok: true, payload: { archived: true } });
+        expect(update).toHaveBeenCalledWith({ is_active: false });
+    });
 });
+
+// delete()/update() then three .eq() filters (id, branch_id, biz_id); the last one resolves.
+function deleteChain(result: { error: { code?: string; message: string } | null }) {
+    let eqCalls = 0;
+    const chain: Record<string, unknown> = {
+        delete: jest.fn(() => chain),
+        eq: jest.fn(() => {
+            eqCalls += 1;
+            return eqCalls % 3 === 0 ? Promise.resolve(result) : chain;
+        }),
+    };
+    return chain;
+}

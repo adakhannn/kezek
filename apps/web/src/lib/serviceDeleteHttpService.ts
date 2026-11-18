@@ -28,5 +28,5 @@ export async function runServiceDeleteHttp(
         );
     }
 
-    return createSuccessResponse();
+    return createSuccessResponse(undefined, result.archived ? { archived: true } : undefined);
 }
