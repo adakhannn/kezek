@@ -20,7 +20,7 @@ export function buildOpenApi() {
     const records = apiRouteRecords();
     const coverage = apiContractCoverage(records);
     if (coverage.failures.length) throw new Error(coverage.failures.join('\n'));
-    const inventory = records.flatMap(record => record.methods.map(method => ({
+    const inventory = records.filter(record => !record.fallback).flatMap(record => record.methods.map(method => ({
         method, route: record.route, file: record.file, guide: coverage.contracts.get(`${method} ${record.route}`),
     }))).sort((a, b) => `${a.route} ${a.method}`.localeCompare(`${b.route} ${b.method}`, 'en'));
     const known = new Set(inventory.map(item => `${item.method} ${item.route}`));

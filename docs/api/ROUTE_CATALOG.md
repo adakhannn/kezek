@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **175 route-файлов, 206 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **178 route-файлов, 221 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 509 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `cb37797ef9f052d69e70f15cab8f23d888e2fd622516359baa690c4204f53337`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 513 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `281370be642192bce3f105c7f285ca0479c432526907841fbb5527f6997a220c`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -16,6 +16,7 @@
 
 | Путь | Явные методы | Исходник | Делегирование | Контракт |
 | --- | --- | --- | --- | --- |
+| `/admin/api/[...path]` | GET, POST, PUT, PATCH, DELETE | [route](../../apps/web/src/app/admin/api/[...path]/route.ts) | Внутри route; читать исходник | [справочник](OPERATIONS_AND_TELEMETRY.md) |
 | `/admin/api/analytics/conversion-funnel` | GET | [route](../../apps/web/src/app/admin/api/analytics/conversion-funnel/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/analytics/load` | GET | [route](../../apps/web/src/app/admin/api/analytics/load/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/analytics/overview` | GET | [route](../../apps/web/src/app/admin/api/analytics/overview/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
@@ -69,6 +70,7 @@
 
 | Путь | Явные методы | Исходник | Делегирование | Контракт |
 | --- | --- | --- | --- | --- |
+| `/api/[...path]` | GET, POST, PUT, PATCH, DELETE | [route](../../apps/web/src/app/api/[...path]/route.ts) | Внутри route; читать исходник | [справочник](OPERATIONS_AND_TELEMETRY.md) |
 | `/api/account/deletion` | GET, POST, DELETE | [route](../../apps/web/src/app/api/account/deletion/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/admin/health-check` | GET | [route](../../apps/web/src/app/api/admin/health-check/route.ts) | [runAdminHealthCheckHttp](../../apps/web/src/lib/adminHealthCheckHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
 | `/api/admin/initialize-ratings` | POST | [route](../../apps/web/src/app/api/admin/initialize-ratings/route.ts) | [runInitializeRatingsHttp](../../apps/web/src/lib/initializeRatingsHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
@@ -206,6 +208,7 @@
 
 | Путь | Явные методы | Исходник | Делегирование | Контракт |
 | --- | --- | --- | --- | --- |
+| `/dashboard/api/[...path]` | GET, POST, PUT, PATCH, DELETE | [route](../../apps/web/src/app/dashboard/api/[...path]/route.ts) | Внутри route; читать исходник | [справочник](OPERATIONS_AND_TELEMETRY.md) |
 | `/dashboard/api/branches/[id]/admins/add` | POST | [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/add/route.ts) | [runBranchAdminChangeHttp](../../apps/web/src/lib/branchAdminChangeHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/dashboard/api/branches/[id]/admins/list` | POST | [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/list/route.ts) | [runBranchAdminListHttp](../../apps/web/src/lib/branchAdminListHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/dashboard/api/branches/[id]/admins/remove` | POST | [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/remove/route.ts) | [runBranchAdminChangeHttp](../../apps/web/src/lib/branchAdminChangeHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |

@@ -65,7 +65,10 @@ export function apiRouteRecords() {
         const exports = routeExports(path.join(repoRoot, file));
         if (!exports.methods.length) throw new Error(`No explicit HTTP export found: ${file}`);
         const route = '/' + file.replace(/^apps\/web\/src\/app\//, '').replace(/\/route\.(ts|tsx|js)$/, '').split('/').filter(part => !/^\([^)]*\)$/.test(part) && !part.startsWith('@')).join('/');
-        return { file, route, ...exports };
+        // API-12: catch-all handlers that only answer a JSON 404 for unknown API paths. They are
+        // documented like any route but are not operations of the HTTP API.
+        const fallback = /\/\[\.\.\.path\]$/.test(route) && /\bunknownApiRoute\b/.test(fs.readFileSync(path.join(repoRoot, file), 'utf8'));
+        return { file, route, fallback, ...exports };
     });
     return records;
 }

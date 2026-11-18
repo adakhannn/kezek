@@ -23,7 +23,7 @@ function removeTemporaryDirectory(directory) {
 
 test('inventory exactly covers AST exports, including .tsx, non-api routes and dynamic segments', () => {
     const { 'openapi.json': full, 'openapi-sdk.json': sdk } = buildOpenApi();
-    const expected = apiRouteRecords().flatMap(record => record.methods.map(method => `${method} ${openApiPath(record.route)}`)).sort();
+    const expected = apiRouteRecords().filter(record => !record.fallback).flatMap(record => record.methods.map(method => `${method} ${openApiPath(record.route)}`)).sort();
     assert.deepEqual(operations(full), expected);
     assert.ok(full.paths['/api/users/search'].post['x-source-file'].endsWith('route.tsx'));
     assert.ok(full.paths['/auth/callback/google'].GET === undefined);

@@ -106,3 +106,23 @@ Handler не требует session и не вызывает limiter. JSON пр�
 | `/api/whatsapp/test` | Без входов, без limiter | data.configured/details/message/troubleshooting. Проверяет наличие env и цифровой phone ID; не связывается с провайдером. Возвращает phone ID и признаки наличия настроек, но не значения access/verify token. [route](../../apps/web/src/app/api/whatsapp/test/route.ts), [HTTP](../../apps/web/src/lib/whatsAppTestHttpService.ts), [service](../../apps/web/src/lib/whatsAppTestService.ts) |
 
 `configured:true` в test означает только локальную проверку строк. Эти endpoints не следует считать подтверждением готовности интеграции, корректных прав провайдера или доставки сообщения.
+
+## Неизвестные пути API
+
+<!-- api-contract: GET /api/[...path] -->
+<!-- api-contract: POST /api/[...path] -->
+<!-- api-contract: PUT /api/[...path] -->
+<!-- api-contract: PATCH /api/[...path] -->
+<!-- api-contract: DELETE /api/[...path] -->
+<!-- api-contract: GET /admin/api/[...path] -->
+<!-- api-contract: POST /admin/api/[...path] -->
+<!-- api-contract: PUT /admin/api/[...path] -->
+<!-- api-contract: PATCH /admin/api/[...path] -->
+<!-- api-contract: DELETE /admin/api/[...path] -->
+<!-- api-contract: GET /dashboard/api/[...path] -->
+<!-- api-contract: POST /dashboard/api/[...path] -->
+<!-- api-contract: PUT /dashboard/api/[...path] -->
+<!-- api-contract: PATCH /dashboard/api/[...path] -->
+<!-- api-contract: DELETE /dashboard/api/[...path] -->
+
+Пути под `/api`, `/admin/api` и `/dashboard/api`, которым не соответствует ни один маршрут, отвечают на любой метод JSON `404 / not_found` (`{"ok":false,"error":"not_found","message":"Unknown API endpoint"}`) из [catch-all](../../apps/web/src/app/api/[...path]/route.ts) через [unknownApiRoute](../../apps/web/src/lib/unknownApiRoute.ts) (API-12). Раньше Next.js отдавал HTML-страницу «не найдено», для POST — со статусом 200, и клиент API принимал опечатку или удалённый endpoint за успех. Существующие маршруты (статические и с параметрами) имеют приоритет над catch-all.

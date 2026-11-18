@@ -9,6 +9,7 @@ import { useCalendarHistory } from './useCalendarHistory';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { BookingCard } from '@/components/dashboard';
 import { Tabs } from '@/components/ui/Tabs';
+import { toCsv } from '@/lib/csv';
 import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -113,7 +114,10 @@ export function CalendarDaySection({
             end_at: formatInTimeZone(new Date(item.end_at), timezone, 'yyyy-MM-dd HH:mm'),
             status: item.status,
         }));
-        const csv = `id,staff_id,start_at,end_at,status\n${rows.map((row) => `${row.id},${row.staff_id},${row.start_at},${row.end_at},${row.status}`).join('\n')}`;
+        const csv = toCsv([
+            ['id', 'staff_id', 'start_at', 'end_at', 'status'],
+            ...rows.map((row) => [row.id, row.staff_id, row.start_at, row.end_at, row.status]),
+        ]);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

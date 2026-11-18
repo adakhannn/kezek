@@ -9,6 +9,7 @@ import type { ShiftItem, Shift } from '../types';
 import { financeDateLabel } from './calendar';
 import { shiftSummaryAmounts } from './summaryAmounts';
 
+import { toCsv } from '@/lib/csv';
 import { TZ } from '@/lib/time';
 
 /**
@@ -52,9 +53,7 @@ export function exportClientsToCSV(
     });
 
     // Объединяем заголовки и данные
-    const csvContent = [headers, ...rows]
-        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-        .join('\n');
+    const csvContent = toCsv([headers, ...rows]);
 
     // Добавляем BOM для корректного отображения кириллицы в Excel
     const BOM = '\uFEFF';
@@ -111,9 +110,7 @@ export function exportShiftSummaryToCSV(
         ['Доплата', shift?.topup_amount ? `${shift.topup_amount.toFixed(2)} сом` : '-'],
     ];
 
-    const csvContent = [headers, ...rows]
-        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-        .join('\n');
+    const csvContent = toCsv([headers, ...rows]);
 
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
