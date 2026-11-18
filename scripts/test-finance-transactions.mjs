@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, day, asActor } from './lib/finance-transaction-fixture.mjs';
+import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
 const container=`kezek-finance-test-${randomUUID()}`;
 function docker(args,input='') {
  return new Promise((resolve,reject)=>{
@@ -24,7 +25,7 @@ const rev=async()=>Number(await sql(`select ledger_revision from staff_shifts wh
 let created=false;
 try {
  await docker(['info','--format','{{.ServerVersion}}']);
- await docker(['run','--detach','--rm','--network','none','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']); created=true;
+ await docker(['run','--detach','--rm','--network','none','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]); created=true;
  let ready=false; for(let i=0;i<60;i++){try{assert.equal(await docker(['exec',container,'cat','/proc/1/comm']),'postgres'); await sql('select 1');ready=true;break;}catch{await delay(500);}}
  assert.ok(ready,'PostgreSQL failed to start');
  await setupFinanceFixture(sql);

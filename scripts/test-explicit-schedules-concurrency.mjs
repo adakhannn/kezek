@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupScheduleFixture, biz, branch, branch2, staff, owner } from './lib/explicit-schedule-fixture.mjs';
+import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
 
 const container = `kezek-schedule-test-${randomUUID()}`;
 function docker(args, input='') {
@@ -20,7 +21,7 @@ const sql=text=>docker(['exec','-i',container,'psql','-X','-U','postgres','-d','
 await docker(['info','--format','{{.ServerVersion}}']);
 let created=false;
 try {
-    await docker(['run','--detach','--rm','--network','none','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']); created=true;
+    await docker(['run','--detach','--rm','--network','none','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]); created=true;
     let ready=false;
     for(let i=0;i<60;i++) {
         try { if ((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres') { await docker(['exec',container,'pg_isready','-U','postgres']); ready=true; break; } }

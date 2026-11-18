@@ -5,6 +5,7 @@ const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID, createHmac } = require('node:crypto');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 const name = 'kezek-lifecycle-' + randomUUID();
 const db = name + '-db', auth = name + '-auth', rest = name + '-rest';
 const secret = 'isolated-lifecycle-only-secret-at-least-32-characters';
@@ -47,7 +48,7 @@ const created = [];
   try {
     docker(['network', 'create', '--internal', '--label', 'kezek.test=' + name, name]);
     docker(['run','-d','--name',helper,'--label','kezek.test='+name,'--network',name,'node:22-alpine','node','-e','setInterval(()=>{},100000)']); created.push(helper);
-    docker(['run', '-d', '--name', db, '--label', 'kezek.test=' + name, '--network', name, '--tmpfs', '/var/lib/postgresql/data', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:16']); created.push(db);
+    docker(['run', '-d', '--name', db, '--label', 'kezek.test=' + name, '--network', name, '--tmpfs', '/var/lib/postgresql/data', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', POSTGRES_IMAGE]); created.push(db);
     await wait(() => docker(['exec', db, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres'], undefined, true).status === 0);
     sql(`create role anon; create role authenticated; create role service_role bypassrls;
       create role authenticator login noinherit; grant anon,authenticated,service_role to authenticator;

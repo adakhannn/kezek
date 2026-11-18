@@ -6,6 +6,7 @@ const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-booking-regression-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -46,8 +47,8 @@ const expectFailure = (statement, pattern) => {
 (async () => {
   try {
     // Existing image only. No network, published ports, mounts or project data.
-    run(['image', 'inspect', 'postgres:16']);
-    run(['run', '-d', '--name', name, '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:16']);
+    run(['image', 'inspect', POSTGRES_IMAGE]);
+    run(['run', '-d', '--name', name, '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', POSTGRES_IMAGE]);
     let ready = false;
     for (let i = 0; i < 60; i++) {
       const logs=run(['logs',name],undefined,true);

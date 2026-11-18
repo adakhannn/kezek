@@ -6,6 +6,7 @@ const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-staff-slots-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -28,8 +29,8 @@ const failure = (statement, regex) => {
 };
 (async () => {
   try {
-    run(['image','inspect','postgres:16']);
-    run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);
+    run(['image','inspect',POSTGRES_IMAGE]);
+    run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);
     let ready = false;
     for (let index = 0; index < 60; index++) {
       if (run(['exec',name,'cat','/proc/1/comm'],undefined,true).stdout.trim() === 'postgres' &&

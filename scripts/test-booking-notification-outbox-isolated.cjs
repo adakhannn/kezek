@@ -1,10 +1,11 @@
-// Local-only regression: existing postgres:16 image, no network/ports/volumes.
+// Local-only regression: the shared isolated PostgreSQL image (scripts/lib/isolated-postgres.cjs), no network/ports/volumes.
 // Synthetic minimal predecessor schema. Never reads project env or DB URLs.
 const { spawnSync, spawn } = require('node:child_process');
 const { readFileSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-outbox-regression-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -43,8 +44,8 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
 
 (async () => {
   try {
-    run(['image','inspect','postgres:16']);
-    run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);
+    run(['image','inspect',POSTGRES_IMAGE]);
+    run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);
     let ready = false;
     for (let i=0;i<60;i++) {
       if (run(['exec',name,'cat','/proc/1/comm'],undefined,true).stdout.trim()==='postgres' &&

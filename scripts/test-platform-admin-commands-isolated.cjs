@@ -4,6 +4,7 @@ const { readFileSync, existsSync } = require('node:fs');
 const { randomUUID } = require('node:crypto');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-platform-admin-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -29,7 +30,7 @@ const reset=()=>sql(`truncate user_global_roles,user_roles,super_admins_legacy; 
 const eventually=async(predicate)=>{for(let n=0;n<300;n++){if(predicate())return;await new Promise(resolve=>setTimeout(resolve,50));}throw new Error('Expected concurrent SQL lock state was not observed');};
 (async()=>{
  try{
-  run(['image','inspect','postgres:16']);run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);
+  run(['image','inspect',POSTGRES_IMAGE]);run(['run','-d','--name',name,'--network','none','--tmpfs','/var/lib/postgresql/data','-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);
   let ready=false;for(let n=0;n<60;n++){if(run(['exec',name,'cat','/proc/1/comm'],undefined,true).stdout.trim()==='postgres'&&run(['exec',name,'pg_isready','-U','postgres'],undefined,true).status===0){ready=true;break;}await new Promise(resolve=>setTimeout(resolve,250));}assert(ready);
   sql(`create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;

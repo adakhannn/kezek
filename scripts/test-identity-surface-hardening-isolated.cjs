@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 
 const container = `kezek-identity-surface-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -27,7 +28,7 @@ let created = false;
 
 (async () => {
     try {
-        await docker(['run', '--detach', '--rm', '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '--name', container, '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:16']);
+        await docker(['run', '--detach', '--rm', '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '--name', container, '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', POSTGRES_IMAGE]);
         created = true;
         // The image first runs a temporary socket-only server for initialisation and
         // then restarts; it is ready only once postgres is PID 1 and accepts TCP.

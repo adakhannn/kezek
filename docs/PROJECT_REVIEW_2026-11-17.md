@@ -26,7 +26,7 @@
 | DB-09 | P2 | 161 политика, 92 вызова `auth.uid()` без `(select …)`, ~20 мёртвых write-политик; часть политик `branches` без фильтра `is_active` | все таблицы | TODO (на `bookings` 17 лишних политик удалены в ENG-65) |
 | DB-10 | P2 | Три хранилища ролей и четыре проверки суперадмина расходятся | `is_super_admin`, `has_role` | TODO |
 | DB-11 | P2 | Права по умолчанию для новых объектов — ALL для клиентских ролей (включая TRUNCATE) | baseline default privileges | TODO (TRUNCATE, REFERENCES, TRIGGER и MAINTAIN сняты в ENG-62) |
-| DB-12 | P2 | `purge_expired_holds` каждую минуту сканирует всю `bookings` без индекса | `bookings(expires_at) where status='hold'` | TODO |
+| DB-12 | P2 | `purge_expired_holds` каждую минуту сканирует всю `bookings` без индекса | `bookings(expires_at) where status='hold'` | FIXED |
 | DB-13 | P2 | Политики отзывов обходят `can_review`: отзыв до визита, бессрочное редактирование, перенос на другую бронь | политики `reviews` | FIXED |
 | DB-14 | P2 | `ON DELETE CASCADE` уничтожает смены, финансовые и аудит-логи при удалении сотрудника/филиала/бизнеса | FK | TODO |
 | DB-15 | P2 | Baseline не содержит триггер `auth.users` → `sync_auth_user_notification_email`: свежие и CI-базы отличаются от прода | baseline | TODO |
@@ -98,7 +98,7 @@
 | MOB-05 | P2 | Deep links/App Links настроены неверно (`/booking/<id>` открывает экран бизнеса, нет assetlinks) | `linking.ts`, `app.json` | TODO |
 | MOB-06 | P2 | Любая сборка смотрит в прод (URL и ключ зашиты в `app.json`) | `app.json`, `eas.json` | TODO |
 | MOB-07 | P2 | Нет crash reporting в mobile | — | TODO |
-| CI-01 | P1 | SQL-наборы тестируют устаревшие версии функций (миграции загружаются не до конца), PG16 вместо 17 | `scripts/test-*.mjs` | TODO |
+| CI-01 | P1 | SQL-наборы тестируют устаревшие версии функций (миграции загружаются не до конца), PG16 вместо 17 | `scripts/test-*.mjs` | TODO (наборы на PostgreSQL 17 — ENG-89; сверка фикстур с живыми функциями ещё не сделана) |
 | CI-02 | P2 | Линт почти ничего не проверяет (корневой конфиг без правил, у mobile нет lint) | `eslint.config.mjs` | TODO |
 | CI-03 | P2 | Тесты `packages/core-domain` и 10 SQL-скриптов не запускаются | CI | TODO (legacy SQL scenarios: сценарий 2 обращается к удалённой `public.clients`) |
 | CI-04 | P2 | Моки Supabase не проверяют фильтры `biz_id`; `setupApiTestMocks` мокает после импорта | `__tests__/api/testHelpers.ts` | TODO |
@@ -145,5 +145,7 @@ ARCH-03 закрыт полностью как ENG-85: каталог польз
 FE-03 закрыт как ENG-86: список броней ищет по всей истории одной серверной выборкой, миграция `20261118190000_dashboard_bookings_page.sql` применена в проде раньше выкладки кода.
 
 FE-05 и API-12 закрыты как ENG-87 и ENG-88 (только код).
+
+CI-01 закрыт частично как ENG-89: все изолированные SQL-наборы работают на PostgreSQL 17. DB-12 закрыт как ENG-90: миграция `20261118200000_maintenance_scan_indexes.sql` применена в проде.
 
 Дальше по порядку: P1 — API-06, ARCH-02, ARCH-04, CI-01.

@@ -8,6 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 
 const container = `kezek-staff-private-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -30,7 +31,7 @@ let created = false;
 
 (async () => {
     try {
-        await docker(['run', '--detach', '--rm', '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '--name', container, '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:16']);
+        await docker(['run', '--detach', '--rm', '--network', 'none', '--tmpfs', '/var/lib/postgresql/data', '--name', container, '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', POSTGRES_IMAGE]);
         created = true;
         let ready = false;
         for (let i = 0; i < 120; i += 1) {

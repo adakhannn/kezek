@@ -423,6 +423,8 @@ jobs:
           - test-one-active-date-rule-isolated.cjs
           - test-admin-user-directory-isolated.cjs
           - test-dashboard-bookings-page-isolated.cjs
+          - test-maintenance-scan-indexes-isolated.cjs
+          - test-release-auth-phone-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -432,12 +434,13 @@ jobs:
         with:
           node-version: 22
 
-      - name: Pull disposable PostgreSQL image
+      - name: Pull disposable PostgreSQL image (the version production runs)
         run: |
           # Docker Hub pulls fail now and then on shared runners; retry before failing the job.
+          image="$(node scripts/lib/isolated-postgres.cjs)"
           for attempt in 1 2 3 4; do
-            docker pull postgres:16 && exit 0
-            echo "docker pull postgres:16 failed (attempt $attempt), retrying"
+            docker pull "$image" && exit 0
+            echo "docker pull $image failed (attempt $attempt), retrying"
             sleep $((attempt * 15))
           done
           exit 1

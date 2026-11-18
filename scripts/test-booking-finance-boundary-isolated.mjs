@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, day, asActor } from './lib/finance-transaction-fixture.mjs';
+import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
 const container=`kezek-booking-finance-${randomUUID()}`;
 function docker(args,input='') { return new Promise((resolve,reject)=>{
  const p=spawn('docker',args,{windowsHide:true});let out='',err='';
@@ -50,8 +51,8 @@ async function race(winner,loser,rejection) {
 }
 let created=false;
 try {
- await docker(['image','inspect','postgres:16']);
- await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);created=true;
+ await docker(['image','inspect',POSTGRES_IMAGE]);
+ await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);created=true;
  let ready=false;for(let i=0;i<60;i++){try{assert.equal(await docker(['exec',container,'cat','/proc/1/comm']),'postgres');await sql('select 1');ready=true;break;}catch{await delay(250);}}assert(ready);
  await setupFinanceFixture(sql);
  await sql('alter table staff_shifts rename constraint staff_shifts_hours_worked_check to staff_shifts_hours_worked_range');

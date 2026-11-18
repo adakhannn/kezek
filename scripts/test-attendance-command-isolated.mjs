@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor, day } from './lib/finance-transaction-fixture.mjs';
+import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
 const container='kezek-attendance-test-'+randomUUID();
 function docker(args,input=''){return new Promise((resolve,reject)=>{const p=spawn('docker',args,{windowsHide:true});let out='',err='';p.stdout.on('data',d=>out+=d);p.stderr.on('data',d=>err+=d);p.on('error',reject);p.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err||out)));p.stdin.end(input);});}
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -13,7 +14,7 @@ const command=(id=ids.booking,biz=ids.biz,actor=ids.owner,attended=true)=>'selec
 const call=async query=>JSON.parse(await sql(asActor()+query));
 let created=false;
 try {
- await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']);created=true;
+ await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]);created=true;
  let ready=false;for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await delay(500);}assert.ok(ready);
  await setupFinanceFixture(sql);
  const agg=await load('20260212000000_create_shift_aggregates.sql');await sql(agg.slice(agg.indexOf('create or replace function public.initialize_shift_aggregates'),agg.indexOf('comment on function public.initialize_shift_aggregates')));

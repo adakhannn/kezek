@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
+const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
 const container = `kezek-maintenance-acl-${randomUUID()}`;
 const signatures = [
  'cleanup_old_api_metrics(integer)', 'cleanup_old_finance_logs(integer)', 'cleanup_old_funnel_events(integer)',
@@ -31,7 +32,7 @@ const [owner, manager, stranger, platform, legacy, oldGlobal, target, biz, other
 let created=false;
 (async()=>{
  try {
-  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16']); created=true;
+  await docker(['run','--detach','--rm','--network','none','--tmpfs','/var/lib/postgresql/data','--name',container,'-e','POSTGRES_HOST_AUTH_METHOD=trust',POSTGRES_IMAGE]); created=true;
   let ready=false; for(let i=0;i<120;i++){try{if((await docker(['exec',container,'cat','/proc/1/comm'])).trim()==='postgres'){await sql('select 1');ready=true;break;}}catch{/* starting */}await new Promise(r=>setTimeout(r,500));}
   assert.ok(ready,'PostgreSQL did not start');
   await sql(`create role anon; create role authenticated; create role service_role; create schema auth;
