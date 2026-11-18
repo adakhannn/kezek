@@ -84,7 +84,7 @@ export default function ClientCabinet({
             <MyVisitPackagesBlock />
 
             <PageHeader
-                title={t('cabinet.bookings.title', 'Мои РВ·РВ°писи')}
+                title={t('cabinet.bookings.title', 'Мои записи')}
                 description={getSubtitle()}
                 actions={
                     <div className="w-full sm:w-[24rem]">
@@ -96,13 +96,13 @@ export default function ClientCabinet({
                                     key: 'upcoming',
                                     id: `${tabId}-upcoming-tab`,
                                     panelId: `${tabId}-upcoming-panel`,
-                                    label: t('cabinet.bookings.tabs.upcoming', 'РџСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёРВµ'),
+                                    label: t('cabinet.bookings.tabs.upcoming', 'Предстоящие'),
                                 },
                                 {
                                     key: 'past',
                                     id: `${tabId}-past-tab`,
                                     panelId: `${tabId}-past-panel`,
-                                    label: t('cabinet.bookings.tabs.past', 'Р СџРЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёРВµ'),
+                                    label: t('cabinet.bookings.tabs.past', 'История'),
                                 },
                             ]}
                             stretch
@@ -120,11 +120,11 @@ export default function ClientCabinet({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             }
-                            title={t('cabinet.bookings.empty.upcoming.title', 'РќРВµт РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–')}
-                            description={t('cabinet.bookings.empty.upcoming.desc', 'РвЂ”РВ°РїРёСв‚¬РёС‚РВµСЃСЊ РЅРВ° СѓСЃРВ»угу, чтРѕРВ±СвЂ№ РЎС“Р Р†Р С‘Р Т‘РВµтСЊ РВµСвЂ РВ·РТ‘РВµСЃСЊ')}
+                            title={t('cabinet.bookings.empty.upcoming.title', 'Нет предстоящих записей')}
+                            description={t('cabinet.bookings.empty.upcoming.desc', 'Запишитесь на услугу, чтобы увидеть её здесь')}
                             action={
                                 <Link href="/" className={buttonStyles({ variant: 'primary', size: 'lg' })}>
-                                    {t('cabinet.bookings.empty.upcoming.action', 'РќРВ°Рв„–тРё СѓСЃРВ»угу')}
+                                    {t('cabinet.bookings.empty.upcoming.action', 'Найти услугу')}
                                 </Link>
                             }
                         />
@@ -189,8 +189,8 @@ export default function ClientCabinet({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             }
-                            title={t('cabinet.bookings.empty.past.title', 'РќРВµт Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–')}
-                            description={t('cabinet.bookings.empty.past.desc', 'РвЂ”РТ‘РВµСЃСЊ РВ±СѓРТ‘СѓС‚ РѕС‚РѕРВ±СЂРВ°РВ¶РВ°С‚РЎРЉРЎРѓРЎРЏ РІРВ°Св‚¬Р С‘ РВ·РВ°РІРВµСЂСв‚¬СвЂРЅРЅСвЂ№РВµ РВ·РВ°писи')}
+                            title={t('cabinet.bookings.empty.past.title', 'История записей пока пуста')}
+                            description={t('cabinet.bookings.empty.past.desc', 'Здесь будут ваши прошедшие и отменённые записи, в том числе отмены будущих визитов')}
                         />
                     ) : (
                         past.map((b) => {

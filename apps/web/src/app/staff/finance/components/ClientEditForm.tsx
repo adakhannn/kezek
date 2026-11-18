@@ -93,7 +93,7 @@ function ClientEditFormInner({
         return Object.keys(fullValidation.errors).length > 0;
     }, [item]);
 
-    // Список всех текущих ошибок для блока В«Обнаружены ошибки валидацииВ» (чтобы пользователь видел, что именно исправить)
+    // Список всех текущих ошибок для блока «Обнаружены ошибки валидации» (чтобы пользователь видел, что именно исправить)
     const errorMessagesForSummary = useMemo(() => {
         const validation = validateShiftItem(item);
         const err = validation.errors;
@@ -304,7 +304,7 @@ function ClientEditFormInner({
                         )}
                     </div>
 
-                    {/* Для клиентов ИЗ ЗАПИСИ выбор услуг не нужен вЂ” они уже заданы в брони.
+                    {/* Для клиентов ИЗ ЗАПИСИ выбор услуг не нужен — они уже заданы в брони.
                         Блок ниже показывается только для клиентов "с улицы". */}
                     {isWalkIn && (
                         <div>

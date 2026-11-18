@@ -125,7 +125,7 @@ export default function TransferStaffDialog({
                                 {t('staff.transfer.current', 'Текущий филиал:')}
                             </span>
                         </div>
-                        <p className="type-section-title text-[var(--text-primary)]">{currentBranch?.name ?? 'вЂ”'}</p>
+                        <p className="type-section-title text-[var(--text-primary)]">{currentBranch?.name ?? '—'}</p>
                     </div>
 
                     <div className="space-y-2">
@@ -138,7 +138,7 @@ export default function TransferStaffDialog({
                             onChange={(event) => setTarget(event.target.value)}
                             disabled={loading}
                         >
-                            <option value="">{t('staff.transfer.target.select', 'вЂ” выберите филиал —')}</option>
+                            <option value="">{t('staff.transfer.target.select', '— выберите филиал —')}</option>
                             {otherBranches.map((branch) => (
                                 <option key={branch.id} value={branch.id}>
                                     {branch.name}

@@ -37,7 +37,7 @@ export function DashboardHomeHero({
                         <h1 className="type-page-title text-white">{displayBizName}</h1>
                         <p className="type-caption mt-1 text-indigo-100/90 sm:text-sm lg:text-base">
                             {formattedDateLocalized.charAt(0).toUpperCase() + formattedDateLocalized.slice(1)}
-                            {bizCity ? ` В· ${bizCity}` : ''}
+                            {bizCity ? ` · ${bizCity}` : ''}
                         </p>
                     </div>
                 </div>

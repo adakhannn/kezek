@@ -247,7 +247,7 @@ export default function Client({
                             </div>
                             <div className="flex flex-wrap gap-2.5">
                                 {uniq.map((s) => {
-                                    const label = `${formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}вЂ“${formatInTimeZone(new Date(s.end_at), TZ, 'HH:mm')}`;
+                                    const label = `${formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}–${formatInTimeZone(new Date(s.end_at), TZ, 'HH:mm')}`;
                                     return (
                                         <button
                                             key={s.start_at}

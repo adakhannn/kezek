@@ -147,7 +147,7 @@ export function SellVisitPackageModal({
                     <EmptyState
                         compact
                         title={t('dashboard.visitPackages.sell.noPlansTitle', 'Нет активных пакетов')}
-                        description={t('dashboard.visitPackages.sell.noPlans', 'Нет активных типов пакетов. Создайте пакет в разделе В«Пакеты визитовВ».')}
+                        description={t('dashboard.visitPackages.sell.noPlans', 'Нет активных типов пакетов. Создайте пакет в разделе «Пакеты визитовВ».')}
                     />
                 ) : null}
 

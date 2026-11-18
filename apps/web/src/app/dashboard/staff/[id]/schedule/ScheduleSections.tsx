@@ -62,7 +62,7 @@ function SingleTimeRange({
                 onChange={handleStartChange}
                 disabled={disabled}
             />
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">вЂ”</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">—</span>
             <input
                 type="time"
                 className="flex-1 min-w-0 rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"

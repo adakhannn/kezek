@@ -163,10 +163,10 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                 <div className="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
                     <div className="grid grid-cols-4 gap-3 px-3 py-3 text-sm">
                         <div className="font-medium text-gray-900 dark:text-gray-100">
-                            {u.full_name ?? 'вЂ”'}
+                            {u.full_name ?? '—'}
                         </div>
-                        <div className="text-gray-700 dark:text-gray-300">{u.email ?? 'вЂ”'}</div>
-                        <div className="text-gray-700 dark:text-gray-300">{u.phone ?? 'вЂ”'}</div>
+                        <div className="text-gray-700 dark:text-gray-300">{u.email ?? '—'}</div>
+                        <div className="text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</div>
                         <div>
                             <Button
                                 variant="outline"
@@ -233,13 +233,13 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                                             {row.user_id}
                                         </div>
                                         <div className="font-medium text-gray-900 dark:text-gray-100">
-                                            {row.full_name ?? 'вЂ”'}
+                                            {row.full_name ?? '—'}
                                         </div>
                                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            {row.email ?? 'вЂ”'}
+                                            {row.email ?? '—'}
                                         </div>
                                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            {row.phone ?? 'вЂ”'}
+                                            {row.phone ?? '—'}
                                         </div>
                                     </td>
                                     <td className="p-4">
@@ -284,7 +284,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
             {!loading && total > 0 && (
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Показано <span className="font-medium">{startIdx + 1}</span>вЂ“
+                        Показано <span className="font-medium">{startIdx + 1}</span>–
                         <span className="font-medium">{endIdx}</span> из{' '}
                         <span className="font-medium">{total}</span>
                     </div>
@@ -373,13 +373,13 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                                         >
                                             <div className="grid grid-cols-4 gap-3 px-3 py-3 text-sm">
                                                 <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {u.full_name ?? 'вЂ”'}
+                                                    {u.full_name ?? '—'}
                                                 </div>
                                                 <div className="text-gray-700 dark:text-gray-300">
-                                                    {u.email ?? 'вЂ”'}
+                                                    {u.email ?? '—'}
                                                 </div>
                                                 <div className="text-gray-700 dark:text-gray-300">
-                                                    {u.phone ?? 'вЂ”'}
+                                                    {u.phone ?? '—'}
                                                 </div>
                                                 <div>
                                                     <Button
