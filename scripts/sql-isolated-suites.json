@@ -41,5 +41,8 @@
   "test-closed-default-privileges-isolated.cjs",
   "test-rls-policy-hygiene-isolated.cjs",
   "test-inactive-rows-visibility-isolated.cjs",
-  "test-staff-role-follows-card-isolated.cjs"
+  "test-staff-role-follows-card-isolated.cjs",
+  "test-public-booking-receipt.mjs",
+  "test-telegram-profile-link-db.mjs",
+  "test-telegram-web-login-db.mjs"
 ]

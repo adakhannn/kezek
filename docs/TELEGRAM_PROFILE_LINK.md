@@ -82,7 +82,7 @@ updates: message/callback_query, очередь не сбрасывалась. �
 
 Jest: `telegramProfileLinkHttpService`, `telegramProfileLinkWebhookService`,
 `telegramProfileLinkWebhookAuth`, `TelegramBotLink`. Изолированный PostgreSQL:
-`node scripts/test-telegram-profile-link-db.mjs <путь к @electric-sql/pglite/dist/index.js>`.
-Этот тест создаёт только временную in-memory базу, не подключается к Supabase.
+`node scripts/test-telegram-profile-link-db.mjs` (одноразовый PostgreSQL 17 в Docker; входит в обязательную матрицу `sql_tests` CI).
+Тест поднимает только временный контейнер без сети и не подключается к Supabase; функции сверяются с каталогом цепочки миграций.
 Проверяются ownership, TTL, replay, запрет замены/конфликты, отмена, права и rollback
 при сбое записи metadata. Живая доставка через Telegram проверяется отдельно после настройки.
