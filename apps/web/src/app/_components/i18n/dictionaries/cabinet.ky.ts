@@ -125,6 +125,7 @@ export const cabinetKy = {
     'cabinet.review.description': 'Визитти баалаңыз жана, кааласаңыз, ээсине бир нече сөз жазыңыз.',
     'cabinet.review.edit': 'Пикирди түзөтүү',
     'cabinet.review.error.alreadyExists': 'Бул запись үчүн пикир мурунтан эле бар. Баракча жаңыланууда...',
+    'cabinet.review.error.notAllowed': 'Пикирди визиттен кийин гана калтырууга болот',
     'cabinet.review.error.submit': 'Пикирди жөнөтүү мүмкүн болгон жок',
     'cabinet.review.error.update': 'Пикирди жаңылоо мүмкүн болгон жок',
     'cabinet.review.optional': 'милдеттүү эмес',

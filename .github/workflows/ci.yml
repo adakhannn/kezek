@@ -419,6 +419,7 @@ jobs:
           - test-release-unconfirmed-phone-isolated.cjs
           - test-duplicate-indexes-isolated.cjs
           - test-notification-email-proven-sources-isolated.cjs
+          - test-review-write-rules-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -42,10 +42,10 @@ export default function ReviewDialog({
                     headers: { 'content-type':'application/json' },
                     body: JSON.stringify({ review_id: existingReview.id, rating, comment }),
                 });
-                const j = await r.json();
+                const j = await r.json().catch(() => ({ ok: false }));
                 if (!j.ok) {
                     setBusy(false);
-                    return setErr(j.error || t('cabinet.review.error.update', 'Не удалось обновить отзыв'));
+                    return setErr(t('cabinet.review.error.update', 'Не удалось обновить отзыв'));
                 }
                 // Обновляем состояние через callback
                 if (onReviewCreated) {
@@ -62,24 +62,27 @@ export default function ReviewDialog({
                     headers: { 'content-type':'application/json' },
                     body: JSON.stringify({ booking_id: bookingId, rating, comment }),
                 });
-                const j = await r.json();
+                const j = await r.json().catch(() => ({ ok: false }));
                 if (!j.ok) {
                     setBusy(false);
                     // Если отзыв уже существует, показываем понятное сообщение и обновляем состояние
-                    if (j.error === 'REVIEW_ALREADY_EXISTS') {
+                    if (j.error === 'conflict') {
                         setErr(t('cabinet.review.error.alreadyExists', 'Отзыв для этой записи уже существует. Обновляю страницу...'));
                         setTimeout(() => {
                             window.location.reload();
                         }, 1000);
                         return;
                     }
-                    return setErr(j.error || t('cabinet.review.error.submit', 'Не удалось отправить отзыв'));
+                    if (j.error === 'forbidden') {
+                        return setErr(t('cabinet.review.error.notAllowed', 'Отзыв можно оставить только после визита'));
+                    }
+                    return setErr(t('cabinet.review.error.submit', 'Не удалось отправить отзыв'));
                 }
                 
                 // Если отзыв был создан или обновлен, вызываем callback для оптимистичного обновления
-                if (j.id && onReviewCreated) {
+                if (j.data?.id && onReviewCreated) {
                     onReviewCreated({
-                        id: j.id,
+                        id: j.data.id,
                         rating,
                         comment: comment || null,
                     });

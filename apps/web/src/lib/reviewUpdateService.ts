@@ -1,3 +1,5 @@
+import { isValidReviewRating, REVIEW_RATING_MESSAGE } from '@/lib/reviewCreateService';
+
 type ReviewUpdateBody = {
     review_id?: string;
     rating?: number;
@@ -37,6 +39,15 @@ export async function runReviewUpdate({
             message: 'review_id и rating обязательны',
         };
     }
+    if (!isValidReviewRating(body.rating)) {
+        return {
+            ok: false,
+            status: 400,
+            error: 'validation',
+            message: REVIEW_RATING_MESSAGE,
+        };
+    }
+
 
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) {

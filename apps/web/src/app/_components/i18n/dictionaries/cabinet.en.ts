@@ -126,6 +126,7 @@ export const cabinetEn = {
     'cabinet.review.description': 'Rate your visit and, if desired, write a few words for the owner.',
     'cabinet.review.edit': 'Edit review',
     'cabinet.review.error.alreadyExists': 'Review for this booking already exists. Refreshing page...',
+    'cabinet.review.error.notAllowed': 'You can leave a review only after the visit',
     'cabinet.review.error.submit': 'Failed to send review',
     'cabinet.review.error.update': 'Failed to update review',
     'cabinet.review.optional': 'optional',

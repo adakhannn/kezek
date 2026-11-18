@@ -348,7 +348,7 @@ Browser сохраняет только request ID под хешем actor/actio
 
 Источники: [route](../../apps/web/src/app/api/reviews/create/route.ts) → [HTTP](../../apps/web/src/lib/reviewCreateHttpService.ts) → [service и ReviewCreateBody](../../apps/web/src/lib/reviewCreateService.ts).
 
-Доступ: cookie-сессия, бронь должна принадлежать пользователю (`client_id`). Limiter `normal`. Тело: обязательные `booking_id` и `rating`; необязательный `comment: string | null`. Реальная проверка service — truthiness `booking_id` / `rating`: UUID, числовой тип и диапазон 1–5 не проверяются этим HTTP/service-кодом. Число `0` отклоняется как отсутствующее. Возможные ограничения БД нельзя выдавать за подключённую API-схему. Статус брони читается, но **условия paid/прошедший визит здесь не проверяются**.
+Доступ: cookie-сессия, бронь должна принадлежать пользователю (`client_id`). Limiter `normal`. Тело: обязательные `booking_id` и `rating`; необязательный `comment: string | null`. `rating` — целое число от 1 до 5, иначе `400 / validation` до запроса к БД; UUID брони отдельно не проверяется. Новый отзыв принимается только для **своего оплаченного визита, который уже начался** (`status = paid`, `start_at <= now()`); то же правило держит политика `reviews_insert_self` (`public.can_review`, DB-13). `client_id` и `created_at` выставляет БД.
 
 ```json
 {
@@ -370,14 +370,14 @@ Browser сохраняет только request ID под хешем actor/actio
 }
 ```
 
-`updated: true` означает ветку обновления существующего отзыва. Ошибки: `401 / auth`; отсутствуют обязательные truthy-поля — `400 / validation`; бронь отсутствует или ошибка её query — `404 / not_found`; чужая бронь — `403 / forbidden`; существующий отзыв другого клиента — `409 / conflict`; ошибка insert/update — `400 / validation`; `429` и общая обработка исключений/JSON. Полного объекта review в ответе нет. Триггеры/пересчёт рейтингов вне этой HTTP-цепочки здесь не проверены.
+`updated: true` означает ветку обновления существующего отзыва. Ошибки: `401 / auth`; отсутствуют обязательные truthy-поля — `400 / validation`; бронь отсутствует или ошибка её query — `404 / not_found`; чужая бронь — `403 / forbidden`; визит не оплачен или не начался, либо вставку отклонила политика (`42501`) — `403 / forbidden` «Отзыв можно оставить только после визита»; существующий отзыв другого клиента или гонка двух отправок (`23505`) — `409 / conflict`; ошибка insert/update — `400 / validation`; `429` и общая обработка исключений/JSON. Полного объекта review в ответе нет. Триггеры/пересчёт рейтингов вне этой HTTP-цепочки здесь не проверены.
 
 <!-- api-contract: POST /api/reviews/update -->
 ### POST `/api/reviews/update`
 
 Источники: [route](../../apps/web/src/app/api/reviews/update/route.ts) → [HTTP](../../apps/web/src/lib/reviewUpdateHttpService.ts) → [service и ReviewUpdateBody](../../apps/web/src/lib/reviewUpdateService.ts).
 
-Доступ: cookie-сессия и принадлежность существующего отзыва пользователю; limiter `normal`. Тело требует **`review_id` и `rating`**, проверяемые на truthiness; `comment` необязателен и при отсутствии/`null` очищается. `booking_id` не заменяет `review_id`. Полной runtime-схемы UUID/рейтинга/комментария здесь также нет.
+Доступ: cookie-сессия и принадлежность существующего отзыва пользователю; limiter `normal`. Тело требует **`review_id` и `rating`** (целое 1–5, иначе `400 / validation`); срок правки не ограничен, `booking_id`, `client_id` и `created_at` клиент не меняет (`REVIEW_FIELD_READ_ONLY`), удалять отзывы клиентам нельзя; `comment` необязателен и при отсутствии/`null` очищается. `booking_id` не заменяет `review_id`. Полной runtime-схемы UUID/рейтинга/комментария здесь также нет.
 
 ```json
 {

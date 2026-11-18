@@ -126,6 +126,7 @@ export const cabinetRu = {
     'cabinet.review.description': 'Оцените визит и, при желании, напишите пару слов для владельца.',
     'cabinet.review.edit': 'Редактировать отзыв',
     'cabinet.review.error.alreadyExists': 'Отзыв для этой записи уже существует. Обновляю страницу...',
+    'cabinet.review.error.notAllowed': 'Отзыв можно оставить только после визита',
     'cabinet.review.error.submit': 'Не удалось отправить отзыв',
     'cabinet.review.error.update': 'Не удалось обновить отзыв',
     'cabinet.review.optional': 'опционально',

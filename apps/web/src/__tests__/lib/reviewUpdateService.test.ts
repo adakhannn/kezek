@@ -116,4 +116,12 @@ describe('reviewUpdateService', () => {
             },
         });
     });
+
+    test.each([0, 6, 3.5])('rejects rating %p without touching the database', async (rating) => {
+        const result = await runReviewUpdate({ supabase, body: { review_id: 'review-1', rating } });
+
+        expect(result).toMatchObject({ ok: false, status: 400, error: 'validation' });
+        expect(supabase.auth.getUser).not.toHaveBeenCalled();
+        expect(supabase.from).not.toHaveBeenCalled();
+    });
 });

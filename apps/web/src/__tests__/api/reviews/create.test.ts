@@ -100,7 +100,7 @@ describe('/api/reviews/create', () => {
                     select: jest.fn().mockReturnThis(),
                     eq: jest.fn().mockReturnThis(),
                     maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: BOOKING_ID, client_id: OTHER_USER_ID, status: 'completed' },
+                        data: { id: BOOKING_ID, client_id: OTHER_USER_ID, status: 'paid', start_at: '2026-01-10T10:00:00.000Z' },
                         error: null,
                     }),
                 };
@@ -130,7 +130,7 @@ describe('/api/reviews/create', () => {
                     select: jest.fn().mockReturnThis(),
                     eq: jest.fn().mockReturnThis(),
                     maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'completed' },
+                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'paid', start_at: '2026-01-10T10:00:00.000Z' },
                         error: null,
                     }),
                 };
@@ -180,7 +180,7 @@ describe('/api/reviews/create', () => {
                     select: jest.fn().mockReturnThis(),
                     eq: jest.fn().mockReturnThis(),
                     maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'completed' },
+                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'paid', start_at: '2026-01-10T10:00:00.000Z' },
                         error: null,
                     }),
                 };
@@ -238,7 +238,7 @@ describe('/api/reviews/create', () => {
                     select: jest.fn().mockReturnThis(),
                     eq: jest.fn().mockReturnThis(),
                     maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'completed' },
+                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'paid', start_at: '2026-01-10T10:00:00.000Z' },
                         error: null,
                     }),
                 };
@@ -266,5 +266,41 @@ describe('/api/reviews/create', () => {
 
         const res = await POST(req);
         await expectErrorResponse(res, 409, 'conflict');
+    });
+    test('returns 403 before the visit: only a paid, started visit can be reviewed (DB-13)', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: USER_ID } },
+            error: null,
+        });
+
+        const insert = jest.fn().mockReturnThis();
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'bookings') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'confirmed', start_at: '2999-01-01T10:00:00.000Z' },
+                        error: null,
+                    }),
+                };
+            }
+
+            return {
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+                insert,
+            };
+        });
+
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: { booking_id: BOOKING_ID, rating: 5 },
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 403, 'forbidden');
+        expect(insert).not.toHaveBeenCalled();
     });
 });

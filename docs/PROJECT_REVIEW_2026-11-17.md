@@ -27,7 +27,7 @@
 | DB-10 | P2 | Три хранилища ролей и четыре проверки суперадмина расходятся | `is_super_admin`, `has_role` | TODO |
 | DB-11 | P2 | Права по умолчанию для новых объектов — ALL для клиентских ролей (включая TRUNCATE) | baseline default privileges | TODO (TRUNCATE, REFERENCES, TRIGGER и MAINTAIN сняты в ENG-62) |
 | DB-12 | P2 | `purge_expired_holds` каждую минуту сканирует всю `bookings` без индекса | `bookings(expires_at) where status='hold'` | TODO |
-| DB-13 | P2 | Политики отзывов обходят `can_review`: отзыв до визита, бессрочное редактирование, перенос на другую бронь | политики `reviews` | TODO |
+| DB-13 | P2 | Политики отзывов обходят `can_review`: отзыв до визита, бессрочное редактирование, перенос на другую бронь | политики `reviews` | FIXED |
 | DB-14 | P2 | `ON DELETE CASCADE` уничтожает смены, финансовые и аудит-логи при удалении сотрудника/филиала/бизнеса | FK | TODO |
 | DB-15 | P2 | Baseline не содержит триггер `auth.users` → `sync_auth_user_notification_email`: свежие и CI-базы отличаются от прода | baseline | TODO |
 | DB-16 | P3 | Нет CHECK для процентов (0–100), цен, длительностей, скидок, `tz` | схема | TODO |
@@ -133,5 +133,7 @@ MOB-02 и MOB-04 закрыты как ENG-78, ENG-79 (код в `main`).
 DB-17 закрыт как ENG-80: миграция `20261118140000_drop_duplicate_indexes.sql` применена в проде 18 ноября.
 
 API-08 закрыт как ENG-81: код в `main`, миграция `20261118150000_notification_email_proven_sources.sql` применена в проде 18 ноября после выкладки кода.
+
+DB-13 закрыт как ENG-82: миграция `20261118160000_review_write_rules.sql` применена в проде 18 ноября, код создания отзыва проверяет то же правило.
 
 Дальше по порядку: P1 — API-06, FE-02/03, ARCH-01…04, CI-01.
