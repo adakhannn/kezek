@@ -29,6 +29,15 @@ jest.mock('@/lib/routeParams', () => ({
 const validPlanId = '550e8400-e29b-41d4-a716-446655440001';
 const validClientId = '550e8400-e29b-41d4-a716-446655440002';
 
+// The services read the business time zone (API-11) before computing dates.
+function businessTimeZone(tz: string | null = 'Asia/Bishkek') {
+    return {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({ data: { tz }, error: null }),
+    };
+}
+
 describe('POST /api/dashboard/clients/[clientId]/visit-packages', () => {
     const mockAdmin = createMockSupabase();
     const bizId = 'biz-uuid';
@@ -69,6 +78,7 @@ describe('POST /api/dashboard/clients/[clientId]/visit-packages', () => {
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({ data: plan, error: null }),
             })
+            .mockReturnValueOnce(businessTimeZone())
             .mockReturnValueOnce({
                 insert: jest.fn().mockReturnThis(),
                 select: jest.fn().mockReturnThis(),
@@ -181,6 +191,7 @@ describe('GET /api/dashboard/visit-packages', () => {
         ];
         const profiles = [{ id: 'client-1', full_name: 'Иван Иванов' }];
         mockAdmin.from
+            .mockReturnValueOnce(businessTimeZone())
             .mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockResolvedValue({ data: planRows, error: null }),
@@ -222,6 +233,7 @@ describe('GET /api/dashboard/visit-packages', () => {
     test('должен принять query status=active и отфильтровать', async () => {
         const planRows = [{ id: 'plan-1', name_ru: 'П', name_ky: null, name_en: null, visit_count: 5, branch_ids: null }];
         mockAdmin.from
+            .mockReturnValueOnce(businessTimeZone())
             .mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockResolvedValue({ data: planRows, error: null }),

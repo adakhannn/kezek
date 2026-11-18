@@ -129,13 +129,14 @@ ${data.topupAmount && data.topupAmount > 0 ? `- Доплата: ${data.topupAmou
         `;
 
         // Отправляем уведомление сотруднику
-        const recipients: Array<{ email: string; name: string }> = [
-            { email: data.staffEmail, name: data.staffName },
+        // role identifies the recipient in logs, which never carry the address itself.
+        const recipients: Array<{ email: string; name: string; role: 'staff' | 'owner' }> = [
+            { email: data.staffEmail, name: data.staffName, role: 'staff' },
         ];
 
         // Добавляем владельца, если email указан
         if (data.ownerEmail) {
-            recipients.push({ email: data.ownerEmail, name: 'Владелец бизнеса' });
+            recipients.push({ email: data.ownerEmail, name: 'Владелец бизнеса', role: 'owner' });
         }
 
         // Отправляем письма
@@ -159,16 +160,17 @@ ${data.topupAmount && data.topupAmount > 0 ? `- Доплата: ${data.topupAmou
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    logError('ShiftNotifications', `Failed to send email to ${recipient.email}`, {
+                    logError('ShiftNotifications', 'Failed to send shift close email', {
+                        recipient: recipient.role,
                         status: response.status,
                         error: errorData,
                     });
                 } else {
                     sentCount++;
-                    logDebug('ShiftNotifications', `Email sent to ${recipient.email}`);
+                    logDebug('ShiftNotifications', 'Shift close email sent', { recipient: recipient.role });
                 }
             } catch (error) {
-                logError('ShiftNotifications', `Error sending email to ${recipient.email}`, error);
+                logError('ShiftNotifications', 'Error sending shift close email', { recipient: recipient.role, error });
             }
         }
 

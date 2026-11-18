@@ -1,3 +1,5 @@
+jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
+import { logError } from '@/lib/log';
 import { parseInboxCommand, parseWhatsAppInboxBody } from '@/lib/whatsappInbox/parse';
 import { runWhatsAppInboxWorker } from '@/lib/whatsappInbox/worker';
 import { ProviderDeliveryError } from '@/lib/notifications/outboxTypes';
@@ -44,6 +46,7 @@ function setup() {
     return { store, send, receiver };
 }
 describe('durable worker boundaries', () => {
+    beforeEach(() => jest.mocked(logError).mockClear());
     test('process receipt and send-start precede provider; provider receipt follows', async () => {
         const deps = setup(); const result = await runWhatsAppInboxWorker(deps);
         expect(result).toMatchObject({ claimed: 1, sent: 1, errors: 0 });
@@ -52,15 +55,19 @@ describe('durable worker boundaries', () => {
         expect(deps.send.mock.invocationCallOrder[0]).toBeLessThan(deps.store.receipt.mock.invocationCallOrder[0]);
     });
     test('unknown command commit retries the durable receipt and never sends in this attempt', async () => {
-        const deps = setup(); deps.store.process.mockRejectedValue(new Error('DB timeout'));
+        const deps = setup(); const cause = new Error('DB timeout'); deps.store.process.mockRejectedValue(cause);
         await runWhatsAppInboxWorker(deps);
         expect(deps.send).not.toHaveBeenCalled();
         expect(deps.store.fail).toHaveBeenCalledWith(lease, 'retry', 'command_database_failed');
+        // ARCH-04: the swallowed cause is logged by event id, never with the lease token.
+        expect(logError).toHaveBeenCalledWith('WhatsAppInboxWorker', 'Inbox command failed', { eventId: 'inbox', error: cause });
+        expect(JSON.stringify(jest.mocked(logError).mock.calls)).not.toContain(lease.lease_token);
     });
     test('failed begin and accepted-send receipt loss never become retryable provider failure', async () => {
-        const deps = setup(); deps.store.begin.mockRejectedValueOnce(new Error('unknown begin'));
+        const deps = setup(); const cause = new Error('unknown begin'); deps.store.begin.mockRejectedValueOnce(cause);
         expect((await runWhatsAppInboxWorker(deps)).errors).toBe(1);
         expect(deps.send).not.toHaveBeenCalled(); expect(deps.store.fail).not.toHaveBeenCalled();
+        expect(logError).toHaveBeenCalledWith('WhatsAppInboxWorker', 'Inbox event processing failed', { eventId: 'inbox', error: cause });
         const accepted = setup(); accepted.store.receipt.mockRejectedValue(new Error('lost ack'));
         expect((await runWhatsAppInboxWorker(accepted)).errors).toBe(1);
         expect(accepted.send).toHaveBeenCalledTimes(1); expect(accepted.store.fail).not.toHaveBeenCalled();

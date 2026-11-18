@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { logError } from '@/lib/log';
 import {
   PROFILE_WHATSAPP_OTP_TTL_MS,
   type ProfileWhatsAppOtpStore,
@@ -138,7 +139,8 @@ export async function sendProfileWhatsAppOtp(params: {
       expiresAt: new Date(now.getTime() + PROFILE_WHATSAPP_OTP_TTL_MS).toISOString(),
       attempts: 0,
     });
-  } catch {
+  } catch (error) {
+    logError('WhatsAppSendOtp', 'Failed to store the OTP code', error);
     return {
       ok: false,
       error: 'internal',
@@ -170,6 +172,7 @@ export async function sendProfileWhatsAppOtp(params: {
         : {}),
     });
   } catch (error) {
+    logError('WhatsAppSendOtp', 'Failed to send the OTP message', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       ok: false,

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { logError } from '@/lib/log';
+
 /**
  * Role hierarchy for business membership mutations (grant / revoke / invite / demote).
  *
@@ -78,7 +80,10 @@ export async function loadBusinessMemberRoleKeys(
         .select('role_id')
         .eq('user_id', userId)
         .eq('biz_id', bizId);
-    if (error) return { ok: false };
+    if (error) {
+        logError('BusinessMemberRolePolicy', 'Failed to load member role ids', { bizId, userId, error });
+        return { ok: false };
+    }
 
     const roleIds = Array.from(
         new Set((rows ?? []).map((row: { role_id: unknown }) => String(row.role_id))),
@@ -89,7 +94,10 @@ export async function loadBusinessMemberRoleKeys(
         .from('roles')
         .select('id,key')
         .in('id', roleIds);
-    if (rolesError) return { ok: false };
+    if (rolesError) {
+        logError('BusinessMemberRolePolicy', 'Failed to load member role keys', { bizId, userId, error: rolesError });
+        return { ok: false };
+    }
 
     return { ok: true, keys: (roles ?? []).map((role: { key: unknown }) => String(role.key)) };
 }

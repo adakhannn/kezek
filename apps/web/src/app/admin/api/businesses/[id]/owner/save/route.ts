@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
-import {logWarn} from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -116,6 +116,7 @@ export async function POST(req: Request, ctx: unknown) {
 
         return NextResponse.json({ ok: true, owner_ids: userIds });
     } catch (e) {
+        logError('OwnerSave', 'Failed to save business owners', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

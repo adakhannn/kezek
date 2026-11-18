@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getYandexCallbackUrl, getYandexOAuthCredentials } from '@/lib/yandexOAuthConfig';
@@ -24,7 +25,8 @@ async function startLink(request: Request) {
     let state: string;
     try {
         state = await createYandexOAuthState('link', user.id, '/profile');
-    } catch {
+    } catch (error) {
+        logError('YandexLinkStart', 'Failed to create the OAuth state', error);
         return createErrorResponse('service_unavailable', 'Вход через Яндекс временно недоступен', undefined, 503);
     }
     const authUrl = new URL('https://oauth.yandex.ru/authorize');

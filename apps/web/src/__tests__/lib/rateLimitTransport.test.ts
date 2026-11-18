@@ -2,7 +2,7 @@ jest.mock('@/lib/env', () => ({
     getUpstashRedisUrl: () => 'https://synthetic-redis.invalid',
     getUpstashRedisToken: () => 'synthetic-test-token',
 }));
-jest.mock('@/lib/log', () => ({ logWarn: jest.fn() }));
+jest.mock('@/lib/log', () => ({ logWarn: jest.fn(), logError: jest.fn() }));
 import { checkRateLimit, RATE_LIMIT_SCRIPT, RATE_LIMIT_TIMEOUT_MS } from '@/lib/rateLimit';
 
 const originalFetch = global.fetch;

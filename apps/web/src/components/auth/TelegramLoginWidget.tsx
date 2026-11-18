@@ -152,11 +152,7 @@ function TelegramLoginWidgetComponent({
                 // Ожидаемые сообщения не логируем в консоль как ошибку — пользователь видит их на экране
                 const isExpectedUnavailable = /временно недоступен|обратитесь к администратору/i.test(msg);
                 const isRateLimit = /лимит запросов|rate limit/i.test(msg);
-                if (!isExpectedUnavailable && !isRateLimit) {
-                    logError('TelegramLoginWidget', `Error during login: ${msg}`);
-                }
-                 
-                console.error('[TelegramLoginWidget] Error during login', e);
+                if (!isExpectedUnavailable && !isRateLimit) logError('TelegramLoginWidget', 'Error during login', e);
                 // «Bot domain invalid» на проде: домен не добавлен в @BotFather → /setdomain
                 const displayMessage = /bot domain invalid|domain invalid/i.test(msg)
                     ? 'Домен сайта не привязан к боту Telegram. Администратору нужно в @BotFather выполнить /setdomain и указать домен этого сайта.'

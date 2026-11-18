@@ -30,7 +30,8 @@ export async function GET(request: Request) {
             .order('created_at', { ascending: false });
         if (error) return Response.json({ ok: false, message: error.message }, { status: 400 });
         return Response.json({ ok: true, items: data ?? [] });
-    } catch {
+    } catch (error) {
+        logError('BusinessRoleApplications', 'Failed to load role applications', error);
         return Response.json({
             ok: false,
             message: 'Сервис заявок не настроен в этом окружении.',
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
                     input,
                 });
             } catch (error) {
+                logError('BusinessRoleApplications', 'Role application submission failed', error);
                 return Response.json({
                     ok: false,
                     code: 'service_unavailable',

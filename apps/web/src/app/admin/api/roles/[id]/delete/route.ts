@@ -2,6 +2,7 @@
 import {NextResponse} from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { logError } from '@/lib/log';
 import { getRouteParam } from '@/lib/routeParams';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -54,6 +55,7 @@ export async function POST(_req: Request, context: unknown) {
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
+        logError('AdminRoles', 'Failed to delete role', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

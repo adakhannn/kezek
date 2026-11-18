@@ -113,17 +113,38 @@ const SENSITIVE_ASSIGNMENT_RE =
     /((?:access_token|refresh_token|bearer_token|api[_-]?key|apikey|secret(?:_key)?|password|authorization|anon[_-]?key|exchange_code|exchangecode|nonce|otp|code)=)([^&#\s]+)/gi;
 const BEARER_RE = /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi;
 const JWT_RE = /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g;
+// Contacts in free text (ARCH-04): bounded quantifiers and no lookbehind, so the scan stays
+// linear on long input without '@' (an HTML error page in a PostgREST message) and runs on
+// ES2017 / Hermes. The percent-encoded forms are what PostgREST filters look like in URLs.
+const EMAIL_RE = /[A-Z0-9._%+-]{1,64}@[A-Z0-9-]{1,63}(?:\.[A-Z0-9-]{1,63}){0,8}\.[A-Z]{2,24}(?![A-Z0-9-])/gi;
+const EMAIL_ENCODED_RE = /[A-Z0-9._%+-]{1,64}%40[A-Z0-9-]{1,63}(?:\.[A-Z0-9-]{1,63}){0,8}\.[A-Z]{2,24}(?![A-Z0-9-])/gi;
+const PHONE_RE = /(^|[^\w+-])(\+?\d{9,15})(?![\w-])/g;
+const PHONE_ENCODED_RE = /%2B\d{9,15}(?!\d)/gi;
+const MAX_TEXT_LENGTH = 2000;
 
-function sanitizeString(value: string): string {
+/**
+ * Redacts credentials (Bearer, token=..., JWT) and contacts (e-mail, phone, also %40/%2B
+ * encoded) in free text and caps it at 2000 characters. Runs of 9-15 digits standing alone
+ * (a phone, but also a long numeric id or an epoch-ms timestamp) are masked too; UUIDs, ISO
+ * dates and HTTP statuses stay readable.
+ */
+export function sanitizeText(value: string): string {
     if (!value) {
         return value;
     }
 
-    return value
+    const capped = value.length > MAX_TEXT_LENGTH ? `${value.slice(0, MAX_TEXT_LENGTH)}…[truncated]` : value;
+    return capped
         .replace(BEARER_RE, 'Bearer [REDACTED]')
         .replace(SENSITIVE_ASSIGNMENT_RE, (_match, prefix: string) => `${prefix}[REDACTED]`)
-        .replace(JWT_RE, '[REDACTED_JWT]');
+        .replace(JWT_RE, '[REDACTED_JWT]')
+        .replace(EMAIL_RE, '[REDACTED_EMAIL]')
+        .replace(EMAIL_ENCODED_RE, '[REDACTED_EMAIL]')
+        .replace(PHONE_ENCODED_RE, '[REDACTED_PHONE]')
+        .replace(PHONE_RE, (_match, lead: string) => `${lead}[REDACTED_PHONE]`);
 }
+
+const sanitizeString = sanitizeText;
 
 /**
  * Рекурсивно очищает объект от чувствительных данных
@@ -220,8 +241,88 @@ export function maskUrl(url: string | URL): string {
         });
 
         const query = sanitizedParams.toString();
-        return query ? `${base}?${query}` : base;
+        const safeBase = sanitizeText(base);
+        return query ? `${safeBase}?${query}` : safeBase;
     } catch {
         return sanitizeString(String(url));
     }
+}
+
+const MAX_LOGGABLE_DEPTH = 6;
+const MAX_LOGGABLE_ITEMS = 50;
+const MAX_STACK_LINES = 8;
+const ERROR_FIELDS = ['status', 'statusCode', 'digest', 'hint', 'details'] as const;
+
+type ErrorLike = {
+    name?: unknown;
+    message: unknown;
+    stack?: unknown;
+    code?: unknown;
+    cause?: unknown;
+    errors?: unknown;
+    [key: string]: unknown;
+};
+
+function isErrorLike(value: object): value is ErrorLike {
+    if (value instanceof Error) return true;
+    const candidate = value as Record<string, unknown>;
+    return typeof candidate.message === 'string' && ('code' in candidate || 'details' in candidate || 'hint' in candidate);
+}
+
+function errorToLoggable(error: ErrorLike, depth: number, seen: WeakSet<object>): Record<string, unknown> {
+    const out: Record<string, unknown> = {};
+    if (typeof error.name === 'string') out.name = error.name;
+    out.message = typeof error.message === 'string' ? error.message : String(error.message);
+    // `code` itself is treated as a credential (OAuth code) by sanitizeObject: keep it as errorCode.
+    if (error.code !== undefined && error.code !== null) out.errorCode = String(error.code);
+    for (const field of ERROR_FIELDS) {
+        if (error[field] !== undefined) out[field] = toLoggable(error[field], depth + 1, seen);
+    }
+    if (typeof error.stack === 'string') out.stack = error.stack.split('\n').slice(0, MAX_STACK_LINES).join('\n');
+    if (error.cause !== undefined) out.cause = toLoggable(error.cause, depth + 1, seen);
+    if (Array.isArray(error.errors)) out.errors = error.errors.slice(0, 5).map((item) => toLoggable(item, depth + 1, seen));
+    for (const [key, item] of Object.entries(error)) {
+        if (key in out || key === 'code' || key === 'message' || key === 'stack') continue;
+        out[key] = toLoggable(item, depth + 1, seen);
+    }
+    return out;
+}
+
+/**
+ * Turns any logged value into plain JSON-safe data (ARCH-04): an Error (or a PostgREST-like
+ * error object) keeps name, message, errorCode, status, hint, details, the first stack lines,
+ * cause and nested errors - JSON.stringify and sanitizeObject used to reduce it to {}. Dates
+ * become ISO strings, URLs are masked, cycles and depth are cut, arrays keep 50 items.
+ */
+export function toLoggable(value: unknown, depth = 0, seen: WeakSet<object> = new WeakSet()): unknown {
+    if (value === null || value === undefined) return value;
+    const type = typeof value;
+    if (type === 'string' || type === 'number' || type === 'boolean') return value;
+    if (type === 'bigint') return String(value);
+    if (type === 'function' || type === 'symbol') return undefined;
+    if (depth > MAX_LOGGABLE_DEPTH) return '[Max depth reached]';
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? 'Invalid Date' : value.toISOString();
+    if (typeof URL !== 'undefined' && value instanceof URL) return maskUrl(value);
+
+    const object = value as object;
+    if (seen.has(object)) return '[Circular]';
+    seen.add(object);
+
+    if (Array.isArray(object)) {
+        const items = object.slice(0, MAX_LOGGABLE_ITEMS).map((item) => toLoggable(item, depth + 1, seen));
+        if (object.length > MAX_LOGGABLE_ITEMS) items.push(`[+${object.length - MAX_LOGGABLE_ITEMS} more]`);
+        return items;
+    }
+    if (isErrorLike(object)) return errorToLoggable(object, depth, seen);
+
+    const out: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(object)) {
+        out[key] = toLoggable(item, depth + 1, seen);
+    }
+    return out;
+}
+
+/** What a log line or a monitoring event may carry: serialized, then redacted. */
+export function safeExtra(value: unknown): unknown {
+    return sanitizeObject(toLoggable(value));
 }

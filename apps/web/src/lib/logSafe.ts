@@ -5,10 +5,13 @@
  */
 import { createLogger } from '@shared-client/log';
 
+import { dispatchToMonitoring } from './monitoring';
+
 export { sanitizeObject, maskToken, maskUrl } from '@shared-client/log';
 
-// Preserve this API's existing production policy without changing severity.
-const alwaysLogger = createLogger(() => true);
+// Preserve this API's existing production policy without changing severity; its warnings and
+// errors also reach monitoring like the main logger's (ARCH-04).
+const alwaysLogger = createLogger(() => true, { sink: dispatchToMonitoring });
 const debugLogger = createLogger(() => process.env.NODE_ENV !== 'production');
 
 export function logSafe(scope: string, message: string, data?: unknown): void {

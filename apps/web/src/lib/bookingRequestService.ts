@@ -1,6 +1,7 @@
 import { createErrorResponse } from '@/lib/apiErrorHandler';
 import type { BookingRequestIdentity } from '@/lib/bookingRequestHttp';
 import { bookingCommandError, BookingSlotConflictError } from '@/lib/bookingSlotConflict';
+import { logError } from '@/lib/log';
 
 type BookingRpcResult = { data: unknown; error: { message: string; code?: string } | null };
 export type BookingRequestSupabasePort = {
@@ -41,9 +42,15 @@ async function executeBookingCommand(supabase: BookingRequestSupabasePort, name:
         });
         const pending = supabase.rpc(name, args).abortSignal(controller.signal);
         result = await Promise.race([pending, deadline]);
-    } catch {
+    } catch (error) {
         // The transaction may have committed before the transport failed. Only
         // the same request identity can resolve that uncertainty safely.
+        // The log names the command and the failure kind only: no payload, no error text.
+        logError('BookingRequest', 'Booking command outcome is unknown', {
+            command: name,
+            timedOut: error instanceof Error && error.message === 'BOOKING_COMMAND_TIMEOUT',
+            errorName: error instanceof Error ? error.name : typeof error,
+        });
         return createErrorResponse('service_unavailable', 'Booking result is unavailable. Retry the same request.', undefined, 503);
     } finally {
         if (timer !== undefined) clearTimeout(timer);
@@ -70,6 +77,8 @@ async function executeBookingCommand(supabase: BookingRequestSupabasePort, name:
         if (validationMessages.includes(error.message) || error.code?.startsWith('22') || error.code === '23503') {
             return createErrorResponse('validation', 'The booking parameters are no longer valid', undefined, 400);
         }
+        // SQLSTATE only: PostgREST messages and details may echo guest data.
+        logError('BookingRequest', 'Booking command failed', { command: name, sqlState: error.code ?? null });
         return createErrorResponse('service_unavailable', 'Booking could not be confirmed. Retry the same request.', undefined, 503);
     }
     if (!data || typeof data !== 'object' || !('booking_id' in data) ||

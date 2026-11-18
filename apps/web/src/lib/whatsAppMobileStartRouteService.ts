@@ -6,7 +6,7 @@ import {
     getWhatsAppOtpTemplateComponentsJson,
     getWhatsAppOtpTemplateType,
 } from '@/lib/env';
-import { logDebug, logWarn } from '@/lib/log';
+import { logDebug, logError, logWarn } from '@/lib/log';
 import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
@@ -241,6 +241,7 @@ export async function runWhatsAppMobileStartRoute({
             expiresAt: attempt.expires_at,
         });
     } catch (error) {
+        logError('WhatsAppMobileStart', 'Failed to create the OTP attempt', error);
         await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
             phoneHash,
             metadata: {

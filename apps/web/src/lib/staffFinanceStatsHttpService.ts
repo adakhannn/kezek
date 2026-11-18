@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { getStaffContextForRequest } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { runStaffFinanceStats } from '@/lib/staffFinanceStatsService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -91,6 +92,7 @@ async function runSelfStaffFinanceStats(req: Request, context: unknown): Promise
             message === 'UNAUTHORIZED' ||
             message.toLowerCase().includes('auth');
 
+        if (!isAuthError) logError('StaffFinanceStats', 'Failed to load staff finance stats', error);
         return createErrorResponse(isAuthError ? 'auth' : 'internal', message, undefined, isAuthError ? 401 : 500);
     }
 }

@@ -36,6 +36,7 @@
 | `pnpm -C packages/core-domain typecheck` | TypeScript shared domain package |
 | `pnpm typecheck` | Typecheck web и mobile; packages проверяются своими командами |
 | `pnpm check:i18n` | Паритет ключей ru/ky/en и число `t('…')`-ключей, которых нет в словарях; оба числа — храповик (`--report` выводит список) |
+| `pnpm check:silent-errors` | Ответ API с литеральным 5xx без `logError`/`logWarn`/`handleApiError`/`throw` в той же функции или catch — ошибка CI (ARCH-04); `createErrorResponse` логирует 5xx сам. Тесты сторожа — `node --test scripts/check-silent-server-errors.test.mjs` |
 | `pnpm test:api` | Полный web Jest script; имя не ограничивает запуск API-папкой |
 | `pnpm test:sql` | Legacy scenarios одним `psql -X --set=ON_ERROR_STOP=1` через Node внутри транзакции, которая откатывается; `SUPABASE_DB_URL` — только локальная база (localhost, контейнер) или хост из `KEZEK_SQL_TESTS_TARGET_HOST`, production отклоняется всегда |
 | `pnpm test:sql:isolated` | Перечисленные в registry synthetic PostgreSQL contract/race runner в disposable Docker, без linked project и providers |

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { logError } from '@/lib/log';
+
 type ServiceClientLike = Pick<SupabaseClient, 'rpc'>;
 type Summary = Record<string, number | string>;
 const STEPS = [
@@ -26,9 +28,10 @@ export async function runDataRetention({ supabase }: { supabase: ServiceClientLi
             if (error) result[step.error] = error.message || step.rpc + ' failed';
             else if (!Number.isSafeInteger(data) || data < 0) result[step.error] = 'Cleanup count is unconfirmed';
             else result[step.count] = data;
-        } catch {
+        } catch (error) {
             // A lost response may follow a committed cleanup. Do not turn it into
             // a zero counter or retry this step inside the same request.
+            logError('DataRetention', 'Cleanup step outcome is unconfirmed', { step: step.rpc, error });
             result[step.error] = 'Cleanup outcome is unconfirmed';
             return { ok: false, error: 'internal', message: 'Data retention outcome is unconfirmed', status: 500, details: result };
         }

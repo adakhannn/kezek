@@ -1,6 +1,6 @@
 'use client';
 
-import { logError } from './log';
+import { logError, maskUrl } from './log';
 
 /**
  * Структура полезной нагрузки для отправки ошибки во внешнюю систему мониторинга.
@@ -27,74 +27,37 @@ type ErrorMonitoringPayload = {
 };
 
 /**
- * Отправляет информацию об ошибке во внешнюю систему мониторинга (Sentry, LogRocket и т.п.).
+ * Отправляет ошибку ErrorBoundary в мониторинг (ARCH-04).
  *
- * Провайдер по умолчанию: Sentry. При заданном NEXT_PUBLIC_SENTRY_DSN инициализация в
- * sentry.client.config.ts выставляет window.Sentry, и все вызовы reportErrorToMonitoring
- * уходят в Sentry. См. документацию: PROJECT_DOCUMENTATION.md (раздел «Мониторинг ошибок»).
- *
- * Поведение:
- * - На сервере всегда логирует ошибку через `logError` (без обращения к `window`).
- * - В браузере пытается вызвать `window.Sentry.captureException` и/или `window.LogRocket.captureException`,
- *   добавляя в `extra` полный контекст `ErrorMonitoringPayload`.
- * - В любом случае делает локальный лог через `logError`, чтобы ошибка не потерялась даже без интеграций.
- *
- * Функция спроектирована так, чтобы не тянуть SDK мониторинга в основной бандл:
- * интеграции инициализируются отдельно и просто вешаются на `window`.
+ * Ошибка уходит через logError: логгер передаёт её в мониторинг (Sentry при заданном
+ * NEXT_PUBLIC_SENTRY_DSN, инициализация в instrumentation-client.ts) один раз, с очищенным
+ * контекстом; без DSN остаётся строка в консоли. URL маскируется, component stack обрезается.
+ * LogRocket, если подключён на странице, получает ту же ошибку.
  */
 export function reportErrorToMonitoring(payload: ErrorMonitoringPayload) {
     try {
-        if (typeof window === 'undefined') {
-            // На сервере просто логируем
-            logError(payload.scope, 'Captured error on server', payload);
-            return;
-        }
-
-        const withContext = {
-            ...payload,
-        };
-
-        const anyWindow = window as unknown as {
-            Sentry?: {
-                captureException: (error: unknown, context?: { tags?: Record<string, string>; extra?: unknown }) => void;
-            };
-            LogRocket?: {
-                captureException: (error: unknown, context?: { extra?: unknown }) => void;
-            };
-        };
-
-        const baseError = new Error(payload.error.message);
-        baseError.name = payload.error.name;
+        const error = new Error(payload.error.message);
+        error.name = payload.error.name;
         if (payload.error.stack) {
-            baseError.stack = payload.error.stack;
+            error.stack = payload.error.stack;
         }
 
-        // Интеграция с Sentry, если подключен на проекте
-        if (anyWindow.Sentry?.captureException) {
-            anyWindow.Sentry.captureException(baseError, {
-                tags: {
-                    scope: payload.scope,
-                },
-                extra: withContext,
-            });
-        }
+        const context = {
+            componentStack: payload.componentStack?.slice(0, 2000),
+            url: payload.url ? maskUrl(payload.url) : undefined,
+            timestamp: payload.timestamp,
+            extra: payload.extra,
+        };
+        logError(payload.scope, 'Captured error (ErrorBoundary)', { error, ...context });
 
-        // Интеграция с LogRocket, если подключен
-        if (anyWindow.LogRocket?.captureException) {
-            anyWindow.LogRocket.captureException(baseError, {
-                extra: withContext,
-            });
+        if (typeof window !== 'undefined') {
+            const logRocket = (window as unknown as {
+                LogRocket?: { captureException?: (error: unknown, context?: { extra?: unknown }) => void };
+            }).LogRocket;
+            logRocket?.captureException?.(error, { extra: { scope: payload.scope, ...context } });
         }
-
-        // Всегда логируем локально как fallback
-        logError(payload.scope, 'Captured error (ErrorBoundary)', withContext);
     } catch (err) {
         // В крайнем случае просто логируем сбой репортинга
-        logError('ErrorMonitoring', 'Failed to report error to monitoring', {
-            reportError: payload,
-            error: err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : String(err),
-        });
+        logError('ErrorMonitoring', 'Failed to report error to monitoring', err);
     }
 }
-
-

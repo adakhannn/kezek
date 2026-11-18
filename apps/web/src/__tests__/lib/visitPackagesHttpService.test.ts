@@ -80,8 +80,41 @@ describe('visitPackagesHttpService', () => {
       bizId,
       clientId: 'client-1',
       body: { plan_id: 'plan-1' },
+      requestId: null,
     });
     expect(response.status).toBe(200);
     expect(body.data).toEqual({ package: { id: 'pkg-1' } });
+  });
+});
+
+// API-11: the sale attempt's Idempotency-Key reaches the service; a malformed key is refused.
+describe('visit package sale idempotency key', () => {
+  const admin = { from: jest.fn() };
+  const context = { params: Promise.resolve({ clientId: 'client-1' }) };
+  const key = '6f1c2a3b-1111-4222-8333-444455556666';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (withManagerContext as jest.Mock).mockImplementation(async (_req, _action, callback) => callback({ admin, bizId: 'biz-uuid' }));
+    (getRouteParamUuid as jest.Mock).mockResolvedValue('client-1');
+    (validateRequest as jest.Mock).mockResolvedValue({ success: true, data: { plan_id: 'plan-1' } });
+    (sellVisitPackage as jest.Mock).mockResolvedValue({ ok: true, data: { replayed: true, package: { id: 'pkg-1' } } });
+  });
+
+  test('a valid key is passed to the sale and a replay is answered like a sale', async () => {
+    const req = new Request('http://localhost/api/dashboard/clients/client-1/visit-packages', { method: 'POST', headers: { 'Idempotency-Key': key } });
+    const response = await runSellVisitPackageHttp(req, context);
+
+    expect(sellVisitPackage).toHaveBeenCalledWith(expect.objectContaining({ requestId: key }));
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ ok: true, data: { replayed: true } });
+  });
+
+  test('a malformed key is a 400 and nothing is sold', async () => {
+    const req = new Request('http://localhost/api/dashboard/clients/client-1/visit-packages', { method: 'POST', headers: { 'Idempotency-Key': 'not-a-uuid' } });
+    const response = await runSellVisitPackageHttp(req, context);
+
+    expect(response.status).toBe(400);
+    expect(sellVisitPackage).not.toHaveBeenCalled();
   });
 });

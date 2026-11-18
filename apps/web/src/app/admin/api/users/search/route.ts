@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 /** простая защита от вредного запроса */
@@ -47,6 +48,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ ok:true, items: data ?? [] });
     } catch (e: unknown) {
+        logError('AdminUsersSearch', 'User search failed', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok:false, error: msg }, { status:500 });
     }

@@ -1,4 +1,5 @@
 import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { logError } from '@/lib/log';
 import { readPerformanceSnapshot, type PerformanceSnapshot } from '@/lib/performanceStore';
 
 export type PerformanceStatsAuthClientLike = SuperAdminRoleClient & {
@@ -13,8 +14,14 @@ export async function getPerformanceStatsSnapshot(supabase: PerformanceStatsAuth
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) return { ok: false, error: 'auth', message: 'Не авторизован', status: 401 };
         const { isSuperAdmin, error } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
-        if (error) return { ok: false, error: 'service_unavailable', message: 'Не удалось проверить права доступа', status: 503 };
+        if (error) {
+            logError('PerformanceStats', 'Super admin check failed', error);
+            return { ok: false, error: 'service_unavailable', message: 'Не удалось проверить права доступа', status: 503 };
+        }
         if (!isSuperAdmin) return { ok: false, error: 'forbidden', message: 'Доступ запрещен', status: 403 };
         return { ok: true, data: await readPerformanceSnapshot() };
-    } catch { return { ok: false, error: 'service_unavailable', message: 'Общее хранилище метрик недоступно', status: 503 }; }
+    } catch (error) {
+        logError('PerformanceStats', 'Failed to read the performance snapshot', error);
+        return { ok: false, error: 'service_unavailable', message: 'Общее хранилище метрик недоступно', status: 503 };
+    }
 }

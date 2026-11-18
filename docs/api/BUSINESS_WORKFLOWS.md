@@ -20,7 +20,7 @@
 
 Manager direct — [getBizContextForManagers](../../apps/web/src/lib/authBiz.ts), использующий cookie-сессию и resolver текущего бизнеса. Manager wrapper — [withManagerContext](../../apps/web/src/lib/withManagerContext.ts), явно отображающий отсутствие сессии в 401, прочие `BizAccessError` в 403. Manager + staff дополнительно проверяет UUID пути и принадлежность staff бизнесу ([helper](../../apps/web/src/lib/withManagerAndStaffContext.ts)); отсутствие/ошибка чтения/несовпадение дают 404. Staff cookie — одна активная карточка staff пользователя из [staffRoleSync](../../apps/web/src/lib/staffRoleSync.ts): из заголовка `X-Kezek-Staff-Id`, иначе запомненная (`POST /api/me/current-staff`), иначе единственная; у мастера нескольких бизнесов без выбора — 400 `STAFF_SELECTION_REQUIRED` (ARCH-02, подробно — [STAFF_AND_FINANCE](STAFF_AND_FINANCE.md)); с попыткой добавить отсутствующую роль staff в бизнесе выбранной карточки. Bearer-авторизацию эти контексты сами по себе не обещают; исключение finance stats описано в связанном контракте.
 
-Таблицы ошибок перечисляют явные ветки. У маршрутов с `withErrorHandler` к ним добавляется классификация исключений по тексту из [apiErrorHandler](../../apps/web/src/lib/apiErrorHandler.ts): например, `UNAUTHORIZED` → 401, неизвестное исключение → 500. Manager direct не гарантирует 403 для `NO_BIZ_ACCESS`. Где внешней обёртки/catch нет, формат неожиданной framework-ошибки не установлен.
+Таблицы ошибок перечисляют явные ветки. У маршрутов с `withErrorHandler` к ним добавляется классификация исключений по тексту из [apiErrorHandler](../../apps/web/src/lib/apiErrorHandler.ts): например, `UNAUTHORIZED` → 401, неизвестное исключение → 500. Ошибки доступа классифицируются по коду (ARCH-05): `NO_BIZ_ACCESS` → 403, `SERVICE_UNAVAILABLE` → 503; известные коды БД — 403/409/400 без текста БД. Где внешней обёртки/catch нет, формат неожиданной framework-ошибки не установлен.
 
 Limiter normal/critical означает вызванный preset. С 2026-11-10 wrapper требует стабильный routeId и разделяет HTTP methods; keyPrefix задаёт дополнительный bounded sub-action. Превышение —429, production missing/error Redis или неподтверждённый trusted ingress —503 до handler. [RATE_LIMITING](../../RATE_LIMITING.md) описывает точные scopes и ограничения; «нет в route/helper» не обещает отсутствие внешнего limiter.
 
@@ -348,10 +348,10 @@ Manager-операции ниже используют manager wrapper. К ук�
 
 | Часть | Контракт |
 | --- | --- |
-| Вход | UUID clientId пути; строгий JSON `{ plan_id: UUID }` |
-| Limiter/успех | normal; `data: { package }`: id,client_id,plan_id,remaining_visits,valid_until,purchased_at,created_at |
-| Ошибки | 400 validation ID/schema/неактивного плана; 404 not_found нет/ошибка плана в бизнесе; 500 server при вставке; общие ошибки |
-| Эффекты | Создаёт client_visit_packages с количеством из плана и сроком now + validity_days. Повторный POST может создать ещё один пакет; idempotency key не предусмотрен |
+| Вход | UUID clientId пути; строгий JSON `{ plan_id: UUID }`; заголовок `Idempotency-Key` (UUID) — один на попытку продажи, повтор после потерянного ответа отправляет тот же (API-11). Без заголовка запрос принимается, но защиты от повтора нет |
+| Limiter/успех | normal; `data: { package }`: id,client_id,plan_id,remaining_visits,valid_until,purchased_at,created_at; при повторе того же ключа — `data: { replayed: true, package }` с уже проданным пакетом |
+| Ошибки | 400 validation ID/schema/неактивного плана/некорректного ключа; 404 not_found нет/ошибка плана в бизнесе; 409 conflict — ключ уже оформил продажу другому клиенту или плану; 500 server при вставке (без текста БД); общие ошибки |
+| Эффекты | Создаёт client_visit_packages с количеством из плана; срок считается от сегодняшней даты в часовом поясе бизнеса (`businesses.tz`, по умолчанию Asia/Bishkek) + validity_days, а не по UTC. Ключ хранится в `request_id` (уникален): второй пакет по тому же ключу не создаётся |
 
 Проверяется план текущего бизнеса; отдельной проверки связи clientId с бизнесом, оплаты или платёжной транзакции в сервисе нет. Название sell не означает подтверждённый платёж. Источники: [route](../../apps/web/src/app/api/dashboard/clients/[clientId]/visit-packages/route.ts), [HTTP](../../apps/web/src/lib/visitPackagesHttpService.ts), [schema](../../apps/web/src/lib/validation/schemas.ts), [sellVisitPackage](../../apps/web/src/lib/visitPackagesService.ts).
 

@@ -10,21 +10,9 @@ type SendWhatsAppOpts = {
     };
 };
 
-import { sanitizeObject } from '@shared-client/log';
-
 import { getWhatsAppAccessToken, getWhatsAppPhoneNumberId } from '../env';
+import { logDebug, logError } from '../log';
 import { resolveWhatsAppGraphApiVersion } from '../whatsAppGraphApi';
-// Для обратной совместимости создаём обёртки
-const logDebugSafe = (scope: string, message: string, data?: unknown) => {
-    if (process.env.NODE_ENV === 'production') return;
-    const sanitized = data !== undefined ? sanitizeObject(data) : undefined;
-    // eslint-disable-next-line no-console
-    console.log(`[${scope}] ${message}`, sanitized ?? '');
-};
-const logErrorSafe = (scope: string, message: string, error?: unknown) => {
-    const sanitizedError = error !== undefined ? sanitizeObject(error) : undefined;
-    console.error(`[${scope}] ${message}`, sanitizedError ?? '');
-};
 
 /**
  * Отправка сообщения через WhatsApp Cloud API
@@ -92,7 +80,7 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
     };
 
     // Используем безопасное логирование (токены автоматически замаскируются)
-    logDebugSafe('WhatsApp', 'Sending message', { 
+    logDebug('WhatsApp', 'Sending message', {
         to: maskedPhoneNumber,
         url, 
         hasToken: !!accessToken, 
@@ -154,7 +142,7 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;
         }
-        logErrorSafe('WhatsApp', 'API error', { 
+        logError('WhatsApp', 'API error', {
             status: resp.status, 
             error: errorDetails, 
             response: errText,
@@ -165,7 +153,7 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
     }
 
     const result = await resp.json();
-    logDebugSafe('WhatsApp', 'Message sent successfully', { messageId: result.messages?.[0]?.id, to: maskedPhoneNumber });
+    logDebug('WhatsApp', 'Message sent successfully', { messageId: result.messages?.[0]?.id, to: maskedPhoneNumber });
     return result;
 }
 

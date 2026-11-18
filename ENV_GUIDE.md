@@ -32,7 +32,10 @@
 | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_OTP_HASH_SECRET` | WhatsApp integration и OTP | Приватные server settings; список templates зависит от сценария |
 | `WHATSAPP_APP_SECRET` | Проверка HMAC-SHA256 подписи входящего WhatsApp POST webhook | С 2026-11-09 обязателен: без него POST возвращает 503. Это Meta app secret, отдельный от access/verify token; [контракт](docs/api/AUTH_AND_INTEGRATIONS.md#post-apiwebhookswhatsapp--подписанный-входящий-запрос) |
 | `WHATSAPP_OTP_TEMPLATE_NAME`, `WHATSAPP_OTP_TEMPLATE_LANG`, `WHATSAPP_AUTH_TEMPLATE_NAME`, `WHATSAPP_AUTH_TEMPLATE_LANGUAGE` | Выбор шаблона и языка | Приоритеты/fallback сверять в `env.ts`; одобрение шаблона провайдером отдельно |
-| Sentry и health alert settings | Телеметрия и оповещения | [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md), [PERFORMANCE_MONITORING](PERFORMANCE_MONITORING.md) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Включает Sentry в браузере, на сервере и в edge | Публичный, встраивается при сборке: после изменения нужен новый деплой. Без него ничего не отправляется. Порядок включения — [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md#ошибки-приложения-логи-vercel-и-sentry) |
+| `SENTRY_ENVIRONMENT` | Метка окружения событий | Необязательно; по умолчанию `vercel-production`/`vercel-preview`, иначе NODE_ENV |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Загрузка source maps при сборке | Только в сборке Vercel; токен — секрет, в CI и репозиторий не попадает |
+| Health alert settings | Оповещения | [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md), [PERFORMANCE_MONITORING](PERFORMANCE_MONITORING.md) |
 | Telegram, Yandex OAuth и feature flags | Зависит от конкретного auth/notification flow | Тематические документы ниже и текущий код; не переносить старые значения между окружениями |
 
 Внешние отправки и auth callbacks проверяются только для разрешённого сценария и получателей. Пустая или недействительная конфигурация не является полноценной изоляцией интеграций.

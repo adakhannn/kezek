@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
-import { logWarn } from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 import { syncNotificationEmailsFromUser } from '@/lib/userNotificationEmailService';
 
@@ -25,6 +25,7 @@ export async function GET() {
     }
     const { data, error } = await supabase.rpc('get_my_notification_emails');
     if (error) {
+        logError('NotificationEmails', 'Failed to load notification emails', error);
         return NextResponse.json(
             { ok: false, error: 'notification_email_lookup_failed' },
             { status: 500 },

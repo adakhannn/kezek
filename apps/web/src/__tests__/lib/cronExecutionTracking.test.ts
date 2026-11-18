@@ -2,6 +2,7 @@ jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
 jest.mock('@/lib/log', () => ({ logError: jest.fn() }));
 import { NextResponse } from 'next/server';
 import { trackCronExecution, type CronExecutionStore } from '@/lib/cronExecutionTracking';
+import { logError } from '@/lib/log';
 
 function store(): jest.Mocked<CronExecutionStore> {
     return { start: jest.fn().mockResolvedValue(undefined), finish: jest.fn().mockResolvedValue(undefined) };
@@ -19,10 +20,14 @@ test('records execution before work and awaits a durable success receipt', async
     expect(await response.json()).toEqual({ ok: true, data: { closed: 2 } });
 });
 test('missing tracking prevents unrecorded execution', async () => {
-    const db = store(); db.start.mockRejectedValue(new Error('network'));
+    const cause = new Error('network');
+    const db = store(); db.start.mockRejectedValue(cause);
     const action = jest.fn();
     expect((await trackCronExecution('close-shifts', action, () => db)).status).toBe(503);
     expect(action).not.toHaveBeenCalled();
+    // ARCH-04: the cause of the 503 is logged with the job name.
+    expect(logError).toHaveBeenCalledWith('CronExecution', 'Execution tracking is unavailable; job not started',
+        expect.objectContaining({ job: 'close-shifts', error: cause }));
 });
 test('a thrown domain error is preserved and recorded as failed', async () => {
     const db = store(); const original = new Error('domain failed');

@@ -22,7 +22,7 @@ export async function runWhatsAppSendOtpHttp(req: Request): Promise<NextResponse
 
   if (!result.ok) {
     if (result.error === 'validation' || result.error === 'internal') {
-      logError('WhatsAppSendOtp', result.message, result.details);
+      logError('WhatsAppSendOtp', 'Send OTP request failed', { status: result.status, message: result.message, details: result.details });
     }
     return createErrorResponse(result.error, result.message, result.details, result.status);
   }

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { logError } from '@/lib/log';
 import {
     createManualBusiness,
     type ManualBusinessCreationInput,
@@ -41,6 +42,9 @@ export async function POST(request: Request) {
         });
 
         if (!result.ok) {
+            if (result.status >= 500) {
+                logError('AdminBusinessCreate', 'Manual business creation failed', { reason: result.code, message: result.message });
+            }
             return NextResponse.json(
                 {
                     ok: false,
@@ -54,6 +58,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ ok: true, id: result.businessId }, { status: 201 });
     } catch (error) {
+        logError('AdminBusinessCreate', 'Failed to create business', error);
         return NextResponse.json(
             {
                 ok: false,

@@ -92,6 +92,7 @@ export async function runAdminHealthCheck({ admin }: { admin: Pick<SupabaseClien
         admin.from('biz_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (staffError || branchError || bizError) {
+        logError('HealthCheck', 'Error checking rating metrics', { staffError, branchError, bizError });
         return { ok: false, statusCode: 500, errorType: 'internal', message: 'Rating health data is unavailable' };
     }
 
@@ -173,7 +174,10 @@ export async function runAdminHealthCheck({ admin }: { admin: Pick<SupabaseClien
     let cronStatuses: CronHealthStatus[];
     let queueStatuses: BackgroundQueueHealth[];
     try { [cronStatuses, queueStatuses] = await Promise.all([readCronExecutionHealth(admin, now), readBackgroundQueueHealth(admin)]); }
-    catch { return { ok: false, statusCode: 500, errorType: 'internal', message: 'Cron health data is unavailable' }; }
+    catch (error) {
+        logError('HealthCheck', 'Error reading cron and queue health', error);
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Cron health data is unavailable' };
+    }
     const unhealthyCron = cronStatuses.filter(job => ['failed', 'stuck', 'overdue', 'unobserved'].includes(job.status));
     for (const job of unhealthyCron) alerts.push({ type: job.status === 'unobserved' ? 'warning' : 'error',
         message: `Cron ${job.job}: ${job.status}`, details: { ...job } });

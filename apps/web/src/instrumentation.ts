@@ -1,6 +1,6 @@
 /**
  * Next.js Instrumentation: регистрация Sentry для сервера и edge.
- * Клиентская инициализация — в sentry.client.config.ts (подключается через withSentryConfig).
+ * Клиентская инициализация — в instrumentation-client.ts (Next.js загружает его сам, также под Turbopack).
  */
 import * as Sentry from '@sentry/nextjs';
 

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
-import {logWarn} from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -82,12 +82,13 @@ export async function GET(req: Request, ctx: unknown) {
                     full_name: profile?.full_name ?? (userData.user.user_metadata?.full_name as string | undefined) ?? null,
                 });
             } catch (e) {
-                logWarn('OwnerList', `Failed to fetch owner ${ownerId}`, e);
+                logWarn('OwnerList', 'Failed to fetch owner', { ownerId, error: e });
             }
         }
 
         return NextResponse.json({ ok: true, owners });
     } catch (e) {
+        logError('OwnerList', 'Failed to list business owners', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

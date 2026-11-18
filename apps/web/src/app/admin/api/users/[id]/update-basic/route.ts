@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const runtime = 'nodejs';
@@ -60,6 +61,7 @@ export async function POST(req: Request, ctx: unknown) {
 
         return NextResponse.json({ ok: true });
     } catch (e) {
+        logError('AdminUserUpdateBasic', 'Failed to update user', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

@@ -26,8 +26,8 @@
  */
 
 // Логирование
-export { createLogger, maskToken, maskUrl, sanitizeObject } from './log';
-export type { IsDevFn } from './log';
+export { createLogger, maskToken, maskUrl, safeExtra, sanitizeObject, sanitizeText, toLoggable } from './log';
+export type { IsDevFn, LogEvent, LoggerOptions, LogMeta, LogSink } from './log';
 
 // Валидация
 export {

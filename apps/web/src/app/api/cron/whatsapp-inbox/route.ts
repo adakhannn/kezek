@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { isAuthorizedCronRequest } from '@/lib/cronAuthorization';
 import { trackCronExecution } from '@/lib/cronExecutionTracking';
 import { getWhatsAppPhoneNumberId } from '@/lib/env';
+import { logError } from '@/lib/log';
 import { createOutboxAdminClient } from '@/lib/notifications/outboxStore';
 import { sendOutboxDelivery } from '@/lib/notifications/outboxTransport';
 import { createWhatsAppInboxStore } from '@/lib/whatsappInbox/store';
@@ -23,8 +24,10 @@ export async function GET(req: Request) {
             if (!/^\d{1,32}$/.test(receiver)) throw new Error('INBOX_RECEIVER_NOT_CONFIGURED');
             const result = await runWhatsAppInboxWorker({ store: createWhatsAppInboxStore(createOutboxAdminClient()), receiver, send: sendOutboxDelivery });
             const ok = result.errors === 0 && result.failed === 0;
+            if (!ok) logError('WhatsAppInboxCron', 'Inbox worker finished with failures', result);
             return NextResponse.json({ ok, enabled: true, ...result }, { status: ok ? 200 : 503 });
-        } catch {
+        } catch (error) {
+            logError('WhatsAppInboxCron', 'Inbox worker failed', error);
             return NextResponse.json({ ok: false, error: 'inbox_worker_failed' }, { status: 503 });
         }
     });

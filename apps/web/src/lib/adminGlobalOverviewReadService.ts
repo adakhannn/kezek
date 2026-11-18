@@ -1,6 +1,7 @@
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { getGlobalOverview, type GlobalOverviewClient } from '@/lib/adminGlobalOverviewService';
 import { ReportRangeError } from '@/lib/analyticsReportSnapshot';
+import { logError } from '@/lib/log';
 import { getCached, setCached } from '@/lib/simpleCache';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -21,6 +22,7 @@ export async function readGlobalOverviewForCaller(startDate: string, endDate: st
     return { ok: true as const, data };
   } catch (error) {
     if (error instanceof ReportRangeError) return { ok: false as const, error: 'validation', message: error.message, status: 400 };
+    logError('AdminGlobalOverview', 'Failed to load the global overview', error);
     return { ok: false as const, error: 'internal', message: 'Не удалось загрузить сводный обзор', status: 500 };
   }
 }

@@ -89,7 +89,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
                         });
                     }
                 } catch (e) {
-                    logWarn('OwnerPage', `Failed to fetch owner ${ownerId}`, e);
+                    logWarn('OwnerPage', 'Failed to fetch owner', { ownerId, error: e });
                 }
             }
         }

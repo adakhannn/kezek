@@ -1,9 +1,9 @@
 jest.mock('@/lib/env', () => ({ getUpstashRedisUrl: jest.fn(), getUpstashRedisToken: jest.fn() }));
 jest.mock('@upstash/redis', () => ({ Redis: jest.fn() }));
-jest.mock('@/lib/log', () => ({ logWarn: jest.fn() }));
+jest.mock('@/lib/log', () => ({ logWarn: jest.fn(), logError: jest.fn() }));
 import { Redis } from '@upstash/redis';
 import { getUpstashRedisUrl, getUpstashRedisToken } from '@/lib/env';
-import { logWarn } from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { checkRateLimit, withRateLimit, checkVerifiedPrincipalRateLimit, getRateLimitIdentifier,
     getTrustedRateLimitIdentifier, routeRateLimit, RateLimitConfigs, RATE_LIMIT_TIMEOUT_MS,
     RATE_LIMIT_MEMORY_CAP, RATE_LIMIT_SCRIPT } from '@/lib/rateLimit';
@@ -23,6 +23,7 @@ const redis = (value: unknown = [1, 60000]) => {
 beforeEach(() => {
     jest.clearAllMocks();
     (logWarn as jest.Mock).mockReset();
+    (logError as jest.Mock).mockReset();
     process.env.NODE_ENV = 'test';
     delete process.env.RATE_LIMIT_TRUSTED_IP_HEADER;
     (getUpstashRedisUrl as jest.Mock).mockReturnValue(undefined);
@@ -79,6 +80,7 @@ test.each([undefined, '', '   '])('production without complete Redis config fail
     const response = await withRateLimit(req(), config('prod-missing'), handler, '/prod');
     expect(response.status).toBe(503);
     expect(handler).not.toHaveBeenCalled();
+    expect(logError).toHaveBeenCalledWith('RateLimit', 'Shared limiter not configured; request denied');
 });
 
 test.each([[null], [1], [0, 60000], [1, -1], [1, 60001], ['1', 60000], [1, Number.NaN]])('malformed Redis tuple %j is denied', async (...value) => {
@@ -86,13 +88,31 @@ test.each([[null], [1], [0, 60000], [1, -1], [1, 60001], ['1', 60000], [1, Numbe
     expect(await checkRateLimit(req(), config('bad-reply'), '/bad')).toMatchObject({ success: false, unavailable: true });
 });
 
-test('Redis exception never resets a production budget into memory and logging failure stays closed', async () => {
+test('Redis exception never resets a production budget into memory and is logged without details', async () => {
     process.env.NODE_ENV = 'production';
     const evaluate = redis();
     evaluate.mockRejectedValue(new Error('network down'));
-    (logWarn as jest.Mock).mockImplementation(() => { throw new Error('logger down'); });
     const response = await withRateLimit(req(), config('no-fallback'), async () => new Response('bad'), '/failure');
     expect(response.status).toBe(503);
+    // No provider error, credential or client identifier in the log line.
+    expect(logError).toHaveBeenCalledWith('RateLimit', 'Shared limiter unavailable; request denied');
+    expect(logWarn).toHaveBeenCalledWith('RateLimit', 'Request denied: limiter unavailable');
+});
+
+test('a logger that throws in both the inner and the outer catch still answers 503', async () => {
+    process.env.NODE_ENV = 'production';
+    const evaluate = redis();
+    evaluate.mockRejectedValue(new Error('network down'));
+    (logError as jest.Mock).mockImplementation(() => { throw new Error('logger down'); });
+    (logWarn as jest.Mock).mockImplementation(() => { throw new Error('logger down'); });
+    const handler = jest.fn(async () => new Response('should not happen'));
+    const response = await withRateLimit(req(), config('logger-down'), handler, '/logger-down');
+    expect(response.status).toBe(503);
+    expect(handler).not.toHaveBeenCalled();
+    expect(logError).toHaveBeenCalledWith('RateLimit', 'Shared limiter unavailable; request denied');
+    expect(logError).toHaveBeenCalledWith('RateLimit', 'Limiter check failed', expect.objectContaining({ message: 'logger down' }));
+    const principal = await checkVerifiedPrincipalRateLimit(req(), '/logger-down', { userId: 'u', bizId: 'b' }, RateLimitConfigs.critical);
+    expect(principal).toMatchObject({ success: false, unavailable: true });
 });
 
 test('hanging provider is aborted and returns 503 within the bounded deadline', async () => {
@@ -127,8 +147,11 @@ test('no implicit trust of forwarded headers; configured single valid ingress ad
 test('production without a trusted ingress identity is denied before Redis', async () => {
     process.env.NODE_ENV = 'production';
     const evaluate = redis();
-    expect(await checkRateLimit(req(), RateLimitConfigs.public, '/ingress')).toMatchObject({ unavailable: true });
+    expect(await checkRateLimit(req('/', 'POST', { 'x-forwarded-for': '203.0.113.7' }), RateLimitConfigs.public, '/ingress')).toMatchObject({ unavailable: true });
     expect(evaluate).not.toHaveBeenCalled();
+    // The warning carries no client address.
+    expect(logWarn).toHaveBeenCalledWith('RateLimit', 'Trusted client address unavailable; request denied');
+    expect(JSON.stringify((logWarn as jest.Mock).mock.calls)).not.toContain('203.0.113.7');
 });
 
 test('mobile attempt fingerprint compatibility remains unchanged and is separate from trusted identity', () => {

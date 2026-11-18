@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 /**
  * Перехват ошибок рендера в App Router и отправка в Sentry.
- * ErrorBoundary в layout по-прежнему вызывает reportErrorToMonitoring (обёртка → Sentry через window.Sentry).
+ * ErrorBoundary в layout по-прежнему вызывает reportErrorToMonitoring (logError → репортёр мониторинга → Sentry при заданном DSN).
  * Этот компонент ловит ошибки выше boundary и отправляет их напрямую в Sentry.
  */
 export default function GlobalError({

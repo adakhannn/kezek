@@ -1,3 +1,7 @@
+import { formatInTimeZone } from 'date-fns-tz';
+
+import { logError } from '@/lib/log';
+
 export type VisitPackagesListQuery = {
   clientId?: string;
   branchId?: string;
@@ -27,6 +31,49 @@ type ClientVisitPackageRow = {
   created_at: string;
 };
 
+const SOLD_PACKAGE_COLUMNS = 'id, client_id, plan_id, remaining_visits, valid_until, purchased_at, created_at';
+const DEFAULT_TIME_ZONE = 'Asia/Bishkek';
+
+/**
+ * Today in the business's own time zone (API-11): a package's term and expiry follow the
+ * business calendar, not UTC (in Bishkek the UTC date is yesterday until 06:00).
+ */
+async function businessToday(admin: VisitPackagesAdminLike, bizId: string, now: Date): Promise<string> {
+  const lookup = admin.from('businesses') as {
+    select: (...args: unknown[]) => {
+      eq: (...args: unknown[]) => {
+        maybeSingle: () => Promise<{ data: { tz: string | null } | null; error: { message: string } | null }>;
+      };
+    };
+  };
+  try {
+    const { data } = await lookup.select('tz').eq('id', bizId).maybeSingle();
+    return formatInTimeZone(now, data?.tz || DEFAULT_TIME_ZONE, 'yyyy-MM-dd');
+  } catch {
+    // A failed lookup must not block a sale: the platform's home time zone is the default.
+    return formatInTimeZone(now, DEFAULT_TIME_ZONE, 'yyyy-MM-dd');
+  }
+}
+
+/** Calendar arithmetic on a YYYY-MM-DD date, independent of the server's time zone. */
+function addDays(date: string, days: number): string {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function soldPackage(row: ClientVisitPackageRow) {
+  return {
+    id: row.id,
+    client_id: row.client_id,
+    plan_id: row.plan_id,
+    remaining_visits: row.remaining_visits,
+    valid_until: row.valid_until,
+    purchased_at: row.purchased_at,
+    created_at: row.created_at,
+  };
+}
+
 type VisitPackagePlanSaleRow = {
   id: string;
   biz_id: string;
@@ -46,7 +93,7 @@ export type VisitPackagesResult<T> =
   | { ok: true; data: T }
   | {
       ok: false;
-      error: 'validation' | 'not_found' | 'server';
+      error: 'validation' | 'not_found' | 'server' | 'conflict';
       message: string;
       status: number;
       details?: string;
@@ -75,7 +122,7 @@ export async function listVisitPackages(params: {
     }>;
   }>
 > {
-  const today = params.today ?? new Date().toISOString().slice(0, 10);
+  const today = params.today ?? (await businessToday(params.admin, params.bizId, new Date()));
   const planQuery = params.admin.from('visit_package_plans') as {
     select: (...args: unknown[]) => {
       eq: (...args: unknown[]) => Promise<{
@@ -229,9 +276,13 @@ export async function sellVisitPackage(params: {
   bizId: string;
   clientId: string;
   body: SellVisitPackageBody;
+  /** Idempotency-Key of the sale attempt (API-11): a retry returns the package already sold. */
+  requestId?: string | null;
   now?: Date;
 }): Promise<
   VisitPackagesResult<{
+    /** True when this request was already served: the package is the one sold before. */
+    replayed?: boolean;
     package: {
       id: string;
       client_id: string;
@@ -281,16 +332,15 @@ export async function sellVisitPackage(params: {
   }
 
   const now = params.now ?? new Date();
-  const validUntil = new Date(now);
-  validUntil.setDate(validUntil.getDate() + plan.validity_days);
-  const validUntilDate = validUntil.toISOString().slice(0, 10);
+  const today = await businessToday(params.admin, params.bizId, now);
+  const validUntilDate = addDays(today, plan.validity_days);
 
   const insertQuery = params.admin.from('client_visit_packages') as {
     insert: (...args: unknown[]) => {
       select: (...args: unknown[]) => {
         single: () => Promise<{
           data: ClientVisitPackageRow | null;
-          error: { message: string } | null;
+          error: { message: string; code?: string } | null;
         }>;
       };
     };
@@ -299,20 +349,45 @@ export async function sellVisitPackage(params: {
   const { data: sold, error: insertError } = await insertQuery
     .insert({
       client_id: params.clientId,
-      plan_id: params.body.plan_id,
+      plan_id: plan.id,
       remaining_visits: plan.visit_count,
       valid_until: validUntilDate,
       purchased_at: now.toISOString(),
+      ...(params.requestId ? { request_id: params.requestId } : {}),
     })
-    .select('id, client_id, plan_id, remaining_visits, valid_until, purchased_at, created_at')
+    .select(SOLD_PACKAGE_COLUMNS)
     .single();
 
+  // The same sale request again (double click, retry after a lost answer): return what it sold.
+  if (insertError?.code === '23505' && params.requestId) {
+    const existingQuery = params.admin.from('client_visit_packages') as {
+      select: (...args: unknown[]) => {
+        eq: (...args: unknown[]) => {
+          maybeSingle: () => Promise<{ data: ClientVisitPackageRow | null; error: { message: string } | null }>;
+        };
+      };
+    };
+    const { data: existing } = await existingQuery
+      .select(SOLD_PACKAGE_COLUMNS)
+      .eq('request_id', params.requestId)
+      .maybeSingle();
+    if (existing && existing.client_id === params.clientId && existing.plan_id === plan.id) {
+      return { ok: true, data: { replayed: true, package: soldPackage(existing) } };
+    }
+    return {
+      ok: false,
+      error: 'conflict',
+      message: 'Этот запрос уже оформил другую продажу. Обновите страницу и повторите.',
+      status: 409,
+    };
+  }
+
   if (insertError || !sold) {
+    logError('VisitPackages', 'Visit package sale failed', insertError ?? { message: 'no row returned' });
     return {
       ok: false,
       error: 'server',
       message: 'Не удалось оформить пакет',
-      details: insertError?.message,
       status: 500,
     };
   }
@@ -320,15 +395,7 @@ export async function sellVisitPackage(params: {
   return {
     ok: true,
     data: {
-      package: {
-        id: sold.id,
-        client_id: sold.client_id,
-        plan_id: sold.plan_id,
-        remaining_visits: sold.remaining_visits,
-        valid_until: sold.valid_until,
-        purchased_at: sold.purchased_at,
-        created_at: sold.created_at,
-      },
+      package: soldPackage(sold),
     },
   };
 }

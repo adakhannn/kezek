@@ -47,7 +47,7 @@ export function verifyTelegramAuth(data: TelegramAuthData): boolean {
     const hmac = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
 
     if (hmac !== data.hash) {
-        logWarn('Telegram', 'Invalid hash', { expected: hmac, actual: data.hash });
+        logWarn('Telegram', 'Invalid hash');
         return false;
     }
 

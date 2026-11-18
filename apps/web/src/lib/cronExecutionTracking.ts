@@ -39,7 +39,8 @@ export async function trackCronExecution(
     try {
         store = storeFactory();
         await store.start(id, job);
-    } catch {
+    } catch (error) {
+        logError('CronExecution', 'Execution tracking is unavailable; job not started', { job, executionId: id, error });
         return createErrorResponse('service_unavailable', 'Cron execution tracking is unavailable', undefined, 503);
     }
     let response: NextResponse;

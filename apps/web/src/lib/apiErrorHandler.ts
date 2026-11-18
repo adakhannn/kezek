@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { BizAccessError, StaffSelectionRequiredError } from '@/lib/authDiagnostics';
-import { logError } from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 
 /**
  * Стандартный формат ответа об ошибке для API routes
@@ -51,6 +51,21 @@ export function createErrorResponse(
     details?: unknown,
     status: number = 500
 ): NextResponse<ApiErrorResponse> {
+    const response = buildErrorResponse(error, message, details, status);
+    // A 5xx answer always leaves a trace (ARCH-04); 4xx answers are the client's business.
+    if (status >= 500) {
+        report(() => logError('ApiErrorResponse', `HTTP ${status} ${error}`, { status, error, message, details }, serverErrorMeta(status)));
+        reportedResponses.add(response);
+    }
+    return response;
+}
+
+function buildErrorResponse(
+    error: ApiErrorType,
+    message: string | undefined,
+    details: unknown,
+    status: number,
+): NextResponse<ApiErrorResponse> {
     const response: ApiErrorResponse = {
         ok: false,
         error,
@@ -65,6 +80,22 @@ export function createErrorResponse(
     }
 
     return NextResponse.json(response, { status });
+}
+
+// Responses already reported, so that withErrorHandler does not report them a second time.
+const reportedResponses = new WeakSet<object>();
+
+function serverErrorMeta(status: number) {
+    return { kind: 'api_response' as const, tags: { 'http.status_code': String(status) } };
+}
+
+/** Reporting never changes a response: a failing logger, sink or test mock is ignored. */
+function report(write: () => void) {
+    try {
+        write();
+    } catch {
+        // The answer to the client matters more than its log line.
+    }
 }
 
 /**
@@ -108,13 +139,72 @@ export function handleApiError(
     const staffAccess = staffAccessErrorResponse(error);
     if (staffAccess) return staffAccess;
 
-    // Логируем ошибку
-    logError(scope, 'API error', error);
-
     // Если это уже NextResponse с ошибкой, возвращаем как есть
     if (error instanceof NextResponse) {
+        if (error.status >= 500 && !reportedResponses.has(error)) {
+            report(() => logError(scope, 'API error', { status: error.status }, serverErrorMeta(error.status)));
+            reportedResponses.add(error);
+        }
         return error;
     }
+
+    const response = classifyApiError(error, defaultMessage);
+    // 5xx: the cause goes to the log and monitoring once. 4xx: a server-side line only (it shows
+    // when the text-based classification turns a server failure into a client error).
+    if (response.status >= 500) {
+        report(() => logError(scope, 'API error', { error, status: response.status }, { tags: { 'http.status_code': String(response.status) } }));
+    } else {
+        report(() => logWarn(scope, 'API client error', { status: response.status, error: error instanceof Error ? error.message : undefined }));
+    }
+    reportedResponses.add(response);
+    return response;
+}
+
+// Database errors with a clear meaning (ARCH-05). Their text is not shown to the client.
+const DATABASE_ERRORS: Record<string, [ApiErrorType, string, number]> = {
+    '42501': ['forbidden', 'Доступ запрещен', 403],
+    '23505': ['conflict', 'Конфликт данных', 409],
+    '23503': ['conflict', 'Конфликт данных', 409],
+    '23502': ['validation', 'Ошибка валидации', 400],
+    '23514': ['validation', 'Ошибка валидации', 400],
+    '22P02': ['validation', 'Ошибка валидации', 400],
+    PGRST301: ['auth', 'Не авторизован', 401],
+};
+
+/**
+ * Typed errors first (ARCH-05): access errors by their code and well-known database codes. Only
+ * what neither covers falls back to the legacy classification by message text, which used to send
+ * NO_BIZ_ACCESS to 500 and AUTH_SERVICE_UNAVAILABLE to 401.
+ */
+function classifyTypedError(error: unknown): NextResponse<ApiErrorResponse> | null {
+    if (error instanceof BizAccessError) {
+        switch (error.code) {
+            case 'NOT_AUTHENTICATED':
+                return buildErrorResponse('auth', error.message || 'Не авторизован', undefined, 401);
+            case 'SERVICE_UNAVAILABLE':
+                return buildErrorResponse('service_unavailable', 'Сервис авторизации временно недоступен. Повторите позже.', { code: error.code }, 503);
+            case 'NO_BIZ_ACCESS':
+            case 'STAFF_ROLE_MISMATCH':
+                return buildErrorResponse('forbidden', 'Нет доступа к этому бизнесу', { code: error.code }, 403);
+            default:
+                return null;
+        }
+    }
+    if (error && typeof error === 'object') {
+        const code = (error as { code?: unknown }).code;
+        const known = typeof code === 'string' ? DATABASE_ERRORS[code] : undefined;
+        if (known && typeof (error as { message?: unknown }).message === 'string') {
+            const [type, message, status] = known;
+            return buildErrorResponse(type, message, undefined, status);
+        }
+    }
+    return null;
+}
+
+function classifyApiError(error: unknown, defaultMessage?: string): NextResponse<ApiErrorResponse> {
+    const typed = classifyTypedError(error);
+    if (typed) return typed;
+
 
     // Если это Error с известным типом
     if (error instanceof Error) {
@@ -122,27 +212,27 @@ export function handleApiError(
 
         // Ошибки авторизации
         if (message.includes('auth') || message.includes('unauthorized') || message.includes('не авторизован')) {
-            return createErrorResponse('auth', error.message || defaultMessage || 'Не авторизован', undefined, 401);
+            return buildErrorResponse('auth', error.message || defaultMessage || 'Не авторизован', undefined, 401);
         }
 
         // Ошибки доступа
         if (message.includes('forbidden') || message.includes('доступ запрещен')) {
-            return createErrorResponse('forbidden', error.message || defaultMessage || 'Доступ запрещен', undefined, 403);
+            return buildErrorResponse('forbidden', error.message || defaultMessage || 'Доступ запрещен', undefined, 403);
         }
 
         // Ошибки валидации
         if (message.includes('validation') || message.includes('invalid') || message.includes('неверный')) {
-            return createErrorResponse('validation', error.message || defaultMessage || 'Ошибка валидации', undefined, 400);
+            return buildErrorResponse('validation', error.message || defaultMessage || 'Ошибка валидации', undefined, 400);
         }
 
         // Ошибки "не найдено"
         if (message.includes('not found') || message.includes('не найден')) {
-            return createErrorResponse('not_found', error.message || defaultMessage || 'Ресурс не найден', undefined, 404);
+            return buildErrorResponse('not_found', error.message || defaultMessage || 'Ресурс не найден', undefined, 404);
         }
 
         // Конфликты
         if (message.includes('conflict') || message.includes('конфликт')) {
-            return createErrorResponse('conflict', error.message || defaultMessage || 'Конфликт данных', undefined, 409);
+            return buildErrorResponse('conflict', error.message || defaultMessage || 'Конфликт данных', undefined, 409);
         }
     }
 
@@ -153,7 +243,7 @@ export function handleApiError(
             ? (error as { status: number }).status
             : 500;
 
-        return createErrorResponse(
+        return buildErrorResponse(
             err.error,
             err.message || defaultMessage,
             err.details,
@@ -163,7 +253,7 @@ export function handleApiError(
 
     // Общая ошибка
     const message = error instanceof Error ? error.message : String(error);
-    return createErrorResponse(
+    return buildErrorResponse(
         'internal',
         defaultMessage || message || 'Внутренняя ошибка сервера',
         process.env.NODE_ENV === 'development' ? error : undefined,
@@ -187,7 +277,13 @@ export async function withErrorHandler<T>(
     handler: () => Promise<NextResponse<T | ApiErrorResponse>>
 ): Promise<NextResponse<T | ApiErrorResponse>> {
     try {
-        return await handler();
+        const response = await handler();
+        // A handler that answered 5xx without createErrorResponse still leaves a trace (ARCH-04).
+        if (response.status >= 500 && !reportedResponses.has(response)) {
+            report(() => logError(scope, `HTTP ${response.status} response`, { status: response.status }, serverErrorMeta(response.status)));
+            reportedResponses.add(response);
+        }
+        return response;
     } catch (error) {
         return handleApiError(error, scope);
     }

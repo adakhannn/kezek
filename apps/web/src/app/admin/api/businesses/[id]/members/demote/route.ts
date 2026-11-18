@@ -8,6 +8,7 @@ import {
     loadBusinessMemberRoleKeys,
     resolveBusinessMemberActor,
 } from '@/lib/businessMemberRolePolicy';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
@@ -42,7 +43,10 @@ export async function POST(req: Request, context: unknown) {
 
         // demote снимает все роли кроме client — цель должна быть «ниже» вызывающего
         const targetRoles = await loadBusinessMemberRoleKeys(admin, biz_id, user_id);
-        if (!targetRoles.ok) return NextResponse.json({ok: false, error: 'internal'}, {status: 500});
+        if (!targetRoles.ok) {
+            logError('AdminMembersDemote', 'Could not load the member roles', { bizId: biz_id });
+            return NextResponse.json({ok: false, error: 'internal'}, {status: 500});
+        }
         if (!canChangeBusinessMember(actor, targetRoles.keys)) {
             return NextResponse.json({ok: false, error: 'forbidden_member'}, {status: 403});
         }
@@ -94,6 +98,7 @@ export async function POST(req: Request, context: unknown) {
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
+        logError('AdminMembersDemote', 'Failed to demote business member', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

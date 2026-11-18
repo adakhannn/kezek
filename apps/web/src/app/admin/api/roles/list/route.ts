@@ -2,6 +2,7 @@
 import {NextResponse} from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const runtime = 'nodejs';
@@ -31,6 +32,7 @@ export async function GET() {
 
         return NextResponse.json({ok: true, items});
     } catch (e: unknown) {
+        logError('AdminRoles', 'Failed to list roles', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

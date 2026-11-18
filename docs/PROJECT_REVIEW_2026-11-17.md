@@ -48,7 +48,7 @@
 | API-08 | P2 | Защита «подтверждённых» email уведомлений обходится через редактируемый `user_metadata.yandex_email` | `userNotificationEmailService.ts` | FIXED |
 | API-09 | P2 | Приём аналитики без лимитов и привязки к сессии (`/api/funnel-events`, `/admin/api/analytics/track`) | `funnelEventsService.ts` | FIXED |
 | API-10 | P2 | Отвязка WhatsApp оставляет номер в `auth.users.phone`/metadata | `socialIdentityUnlinkService` | FIXED |
-| API-11 | P2 | Продажа пакетов визитов без идемпотентности; даты по UTC вместо времени бизнеса | `visitPackagesService.ts` | TODO |
+| API-11 | P2 | Продажа пакетов визитов без идемпотентности; даты по UTC вместо времени бизнеса | `visitPackagesService.ts` | FIXED |
 | API-12 | P3 | POST на несуществующий путь отвечает 200 со страницей «не найдено» (GET — 404): клиент API получает HTML вместо JSON-ошибки | not-found Next.js | FIXED |
 
 ## Фронтенд
@@ -63,7 +63,7 @@
 | FE-06 | P2 | Каждая страница грузит словари всех трёх языков (~783 КБ исходников) | `LanguageProvider.tsx` | TODO |
 | FE-07 | P2 | Оболочка повторяет одни и те же запросы личности при каждой загрузке; мёртвый realtime-канал | `ReminderBanners.tsx` и др. | TODO |
 | FE-08 | P2 | Ошибки загрузки показываются как пустые состояния («нет слотов», «выходной») | несколько экранов | TODO |
-| FE-09 | P2 | Один корневой error boundary на всё приложение | `layout.tsx` | TODO |
+| FE-09 | P2 | Один корневой error boundary на всё приложение | `layout.tsx` | FIXED |
 | FE-10 | P2 | ~770 строк русского текста вне `t()` (из них ~600 в админке) | разные | TODO |
 | FE-11 | P2 | Поиск на главной теряет введённые символы | `HomeClientComponents.tsx` | FIXED |
 | FE-12 | P2 | Один клик по свободному слоту создаёт анонимную бронь без подтверждения | `staff/[id]/slots/Client.tsx` | FIXED |
@@ -78,8 +78,8 @@
 | ARCH-01 | P1 | Личность определяется по неподтверждённым телефону/email: `auth.users.phone` меняется без OTP, `user_metadata` редактируется пользователем; по ним идут WhatsApp-вход, привязка сотрудника, добавление участника | `userUpdatePhoneService.ts`, `whatsAppIdentityOwnershipService.ts`, `staffCreateService.ts` | FIXED |
 | ARCH-02 | P1 | Сотрудник нескольких бизнесов теряет кабинет: `.maybeSingle()` по `staff.user_id` без бизнеса (web и mobile) | `staffRoleSync.ts`, `userRoleProfile.ts`, `useUserRole.ts` | FIXED |
 | ARCH-03 | P1 | Поиск аккаунтов перебирает `listUsers` с жёсткими лимитами (первые 200 пользователей) | `staffCreateFromUserService.ts` и др. | FIXED |
-| ARCH-04 | P1 | Ошибки в проде не видны: логгер выбрасывает детали и warn, обработчик API не шлёт в Sentry, клиентский Sentry не грузится под Turbopack | `shared-client/log.ts`, `apiErrorHandler.ts` | TODO |
-| ARCH-05 | P2 | HTTP-статус выбирается по тексту ошибки (`NO_BIZ_ACCESS` → 500) | `apiErrorHandler.ts` | TODO |
+| ARCH-04 | P1 | Ошибки в проде не видны: логгер выбрасывает детали и warn, обработчик API не шлёт в Sentry, клиентский Sentry не грузится под Turbopack | `shared-client/log.ts`, `apiErrorHandler.ts` | FIXED |
+| ARCH-05 | P2 | HTTP-статус выбирается по тексту ошибки (`NO_BIZ_ACCESS` → 500) | `apiErrorHandler.ts` | FIXED |
 | ARCH-06 | P2 | Выбор текущего бизнеса по разным правилам в сеттере и резолвере; молчаливое переключение бизнеса при ошибке чтения | `currentBusinessService.ts`, `bizContextResolutionStrategies.ts` | TODO |
 | ARCH-07 | P2 | Сопоставление по имени (`name_ru`, `full_name`) и неатомарные многошаговые записи (перевод сотрудника, услуги) | `serviceUpdateRouteService.ts`, `staffTransferService.ts` | TODO |
 | ARCH-08 | P2 | Две реализации удаления филиала; одна падает на `staff_schedule_rules` | `branchDeleteService.ts` | FIXED |
@@ -160,4 +160,10 @@ ARCH-02 закрыт как ENG-95 (без миграций): веб выход�
 
 DB-16 закрыт как ENG-96: миграция `20261118235000_value_range_checks.sql` применена в проде (нарушающих строк не было, ограничения проверены сразу); код не менялся.
 
-Дальше по порядку: P1 — API-06 (нужно решение владельца о согласии), ARCH-04, CI-01.
+API-11 закрыт как ENG-97: миграция `20261119000000_visit_package_sale_identity.sql` применена в проде до выкладки кода (новый код пишет `request_id`).
+
+ARCH-04 и ARCH-05 закрыты как ENG-98 и ENG-99 (только код). Sentry остаётся выключенным, пока владелец не задаст `NEXT_PUBLIC_SENTRY_DSN` (порядок — MONITORING_AND_ALERTS); обновление SDK до v10 и SQL-учёт ошибок пересчёта рейтингов — отдельные улучшения.
+
+FE-09 закрыт как ENG-100 (только код).
+
+Дальше по порядку: P1 — API-06 (нужно решение владельца о согласии), CI-01.

@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import {NextResponse} from 'next/server';
 
 import { contactPhoneDigits, findAccountIdByConfirmedContact } from '@/lib/accountContactLookup';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import {sendEmailPassword} from '@/lib/senders/email';
 import {sendSMS} from '@/lib/senders/sms';
@@ -111,6 +112,7 @@ export async function POST(req: Request, context: unknown) {
 
             const createdId = data?.user?.id;
             if (!createdId) {
+                logError('AdminMembersAdd', 'createUser returned no id', { bizId });
                 return NextResponse.json({ok: false, error: 'createUser returned no id'}, {status: 500});
             }
             userId = createdId;
@@ -171,6 +173,7 @@ export async function POST(req: Request, context: unknown) {
             ...(sendTemp && !created_user ? { temp_password_skipped: 'existing_account' } : {}),
         });
     } catch (e: unknown) {
+        logError('AdminMembersAdd', 'Failed to add business member', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

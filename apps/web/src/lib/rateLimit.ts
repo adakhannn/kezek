@@ -3,7 +3,7 @@ import { isIP } from 'node:net';
 
 import { NextResponse } from 'next/server';
 
-import { logWarn } from './log';
+import { logError, logWarn } from './log';
 
 export type RateLimitConfig = {
     maxRequests: number;
@@ -130,8 +130,10 @@ async function consumeBudgets(budgets: Budget[]): Promise<RateLimitResult[]> {
     const url = getUpstashRedisUrl();
     const token = getUpstashRedisToken();
     if (!url || !token) {
-        return process.env.NODE_ENV === 'production' || !!url || !!token
-            ? budgets.map(unavailable) : memoryBudgets(budgets);
+        if (process.env.NODE_ENV !== 'production' && !url && !token) return memoryBudgets(budgets);
+        // Production (or a half-configured Redis) without the shared limiter denies every request.
+        logError('RateLimit', 'Shared limiter not configured; request denied');
+        return budgets.map(unavailable);
     }
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -160,7 +162,7 @@ async function consumeBudgets(budgets: Budget[]): Promise<RateLimitResult[]> {
         });
     } catch {
         // Do not log credentials, raw client identifiers or provider response bodies.
-        logWarn('RateLimit', 'Shared limiter unavailable; request denied');
+        logError('RateLimit', 'Shared limiter unavailable; request denied');
         return budgets.map(unavailable);
     } finally { if (timer) clearTimeout(timer); }
 }
@@ -171,10 +173,16 @@ function combine(results: RateLimitResult[]): RateLimitResult {
 export async function checkRateLimit(req: Request, config: RateLimitConfig, routeId: string): Promise<RateLimitResult> {
     try {
         const identifier = config.identifier ?? getTrustedRateLimitIdentifier(req);
-        if (!identifier) return unavailable(config);
+        if (!identifier) {
+            logWarn('RateLimit', 'Trusted client address unavailable; request denied');
+            return unavailable(config);
+        }
         return combine(await consumeBudgets([budgetFor(req, routeId, config, identifier,
             config.identifier ? 'verified-identifier' : 'ingress')]));
-    } catch { return unavailable(config); }
+    } catch (error) {
+        try { logError('RateLimit', 'Limiter check failed', error); } catch { /* stay closed */ }
+        return unavailable(config);
+    }
 }
 
 /** Call only after authentication and tenant authorization; never pass decoded JWT claims. */
@@ -186,10 +194,18 @@ export async function checkVerifiedPrincipalRateLimit(req: Request, routeId: str
             budgetFor(req, routeId, config, `${principal.bizId}:${principal.userId}`, 'principal'),
             budgetFor(req, routeId, { ...config, maxRequests: config.maxRequests * 60 }, principal.bizId, 'tenant'),
         ]));
-    } catch { return unavailable(config); }
+    } catch (error) {
+        try { logError('RateLimit', 'Limiter check failed', error); } catch { /* stay closed */ }
+        return unavailable(config);
+    }
 }
 
 export function rateLimitDeniedResponse(result: RateLimitResult): NextResponse {
+    // The cause is logged where the check failed; this line ties it to the 503 the client gets.
+    // A throwing logger must not turn the fail-closed answer into an exception.
+    if (result.unavailable) {
+        try { logWarn('RateLimit', 'Request denied: limiter unavailable'); } catch { /* stay closed */ }
+    }
     return new NextResponse(JSON.stringify({ ok: false,
         error: result.unavailable ? 'service_unavailable' : 'rate_limit_exceeded',
         message: result.unavailable ? 'Проверка лимитов временно недоступна. Повторите позже.'

@@ -1832,6 +1832,7 @@ export type Database = {
                     "plan_id": string;
                     "purchased_at": string;
                     "remaining_visits": number;
+                    "request_id": string | null;
                     "valid_until": string;
                 };
                 ComputedFields: never;
@@ -1842,6 +1843,7 @@ export type Database = {
                     "plan_id": string;
                     "purchased_at"?: string;
                     "remaining_visits": number;
+                    "request_id"?: string | null;
                     "valid_until": string;
                 };
                 Update: {
@@ -1851,6 +1853,7 @@ export type Database = {
                     "plan_id"?: string;
                     "purchased_at"?: string;
                     "remaining_visits"?: number;
+                    "request_id"?: string | null;
                     "valid_until"?: string;
                 };
                 Relationships: [

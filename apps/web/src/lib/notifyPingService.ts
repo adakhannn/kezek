@@ -1,3 +1,5 @@
+import { logError } from '@/lib/log';
+
 type NotifyPingFailure = {
     ok: false;
     status: 502 | 503;
@@ -70,7 +72,8 @@ export async function runNotifyPing({
                 status: response.status,
             },
         };
-    } catch {
+    } catch (error) {
+        logError('NotifyPing', 'E-mail provider request failed', error);
         return {
             ok: false,
             status: 502,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
 import { runMobileExchangeGet, runMobileExchangePost } from '@/lib/mobileExchangeRouteService';
 
 function privateResponse(response: NextResponse) {
@@ -19,8 +20,10 @@ export async function runMobileExchangePostHttp(request: Request): Promise<NextR
         const result = await runMobileExchangePost(body);
         return privateResponse(result.ok ? createSuccessResponse(result.payload)
             : createErrorResponse(result.error, result.message, undefined, result.status));
-    } catch {
-        // Storage/Auth failures must not leak a grant, token or provider response.
+    } catch (error) {
+        // Storage/Auth failures must not leak a grant, token or provider response to the client;
+        // the server log keeps the cause (the logger masks tokens).
+        logError('MobileExchange', 'Mobile session exchange failed', error);
         return privateResponse(createErrorResponse('service_unavailable', 'Вход временно недоступен. Начните заново.', undefined, 503));
     }
 }

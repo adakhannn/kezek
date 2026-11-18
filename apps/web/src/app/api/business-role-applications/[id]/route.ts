@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -13,7 +14,8 @@ export async function DELETE(_request: Request, context: unknown) {
     let admin;
     try {
         admin = createSupabaseAdminClient();
-    } catch {
+    } catch (error) {
+        logError('BusinessRoleApplications', 'Service client unavailable', error);
         return Response.json({ ok: false, message: 'Сервис заявок не настроен в этом окружении.' }, { status: 503 });
     }
     const { data: application, error: applicationError } = await admin

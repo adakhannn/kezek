@@ -48,7 +48,10 @@ export async function runFinanceAllDashboard({
     const periodTyped = (period || 'day') as Period;
     let date: string;
     try { date = dateParam || await readFinanceReportToday(admin, bizId); }
-    catch { return { ok: false, statusCode: 500, errorType: 'internal', message: 'Не удалось получить бизнес-календарь отчёта' }; }
+    catch (error) {
+        logError('FinanceAll', 'Failed to read the finance report calendar', error);
+        return { ok: false, statusCode: 500, errorType: 'internal', message: 'Не удалось получить бизнес-календарь отчёта' };
+    }
     const { dateFrom, dateTo } = resolveDateRange(periodTyped, date);
 
     let report: FinanceReport;

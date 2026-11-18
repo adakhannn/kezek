@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { getLocalAuthPublicOrigin } from '@/lib/localAuthPublicOrigin';
+import { logError } from '@/lib/log';
 import { routeRateLimit, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -33,7 +34,10 @@ export async function runTelegramWebLoginHttp(req: NextRequest): Promise<Respons
             }
             if (body.action === 'create') {
                 const bot = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.replace(/^@/, '') || '';
-                if (!/^[A-Za-z0-9_]+$/.test(bot) || !process.env.TELEGRAM_WEBHOOK_SECRET?.trim()) return fail('Вход через бота не настроен.', 503);
+                if (!/^[A-Za-z0-9_]+$/.test(bot) || !process.env.TELEGRAM_WEBHOOK_SECRET?.trim()) {
+                    logError('TelegramWebLogin', 'Bot login is enabled but the bot is not configured');
+                    return fail('Вход через бота не настроен.', 503);
+                }
                 const secret = webLoginSecret();
                 const attempt = await createWebLogin(secret, bot);
                 const response = reply({ ok: true, data: attempt });
@@ -69,7 +73,8 @@ export async function runTelegramWebLoginHttp(req: NextRequest): Promise<Respons
             for (const cookie of pendingCookies) response.cookies.set(cookie.name, cookie.value, cookie.options);
             response.cookies.set(WEB_LOGIN_COOKIE, '', { httpOnly: true, secure: true, sameSite: 'strict', path: '/', maxAge: 0 });
             return response;
-        } catch {
+        } catch (error) {
+            logError('TelegramWebLogin', 'Web login step failed', { action: body.action, error });
             return fail('Не удалось завершить вход. Создайте новый запрос или войдите другим способом.', 503);
         }
     }, "/api/auth/telegram/web-login");

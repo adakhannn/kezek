@@ -29,14 +29,31 @@ test('legacy production diagnostics keep their levels and redact nested credenti
     expect(payload.nested.access_token).toBe('synthetic-access-credential');
 });
 
-test('shared app production policy remains debug/warn off and error message only', () => {
+// ARCH-04: server logs in production (Vercel) carry sanitized details and warnings; they used
+// to print the bare message, so a database failure showed up as "[Scope] Failure" and nothing else.
+test('server production logs carry one sanitized line with details, and warnings', () => {
     jest.replaceProperty(process.env, 'NODE_ENV', 'production');
+    const dbError = Object.assign(new Error('duplicate key value violates unique constraint'), {
+        code: '23505',
+        details: 'Key (phone)=(+996555123456) already exists.',
+    });
     logDebug('Example', 'Debug', { password: 'secret' });
-    logWarn('Example', 'Warning', { password: 'secret' });
-    logError('Example', 'Failure', { password: 'secret' });
+    logWarn('Example', 'Warning', { password: 'secret', status: 409 });
+    logError('Example', 'Failure', dbError);
+    logError('Example', 'Bare');
+
     expect(console.log).not.toHaveBeenCalled();
-    expect(console.warn).not.toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledWith('[Example] Failure');
+    const [warnLine] = jest.mocked(console.warn).mock.calls[0] as [string];
+    expect(warnLine.startsWith('[Example] Warning {')).toBe(true);
+    expect(warnLine).toContain('409');
+    expect(warnLine).not.toContain('secret');
+    const errorCall = jest.mocked(console.error).mock.calls[0] as [string];
+    expect(errorCall).toHaveLength(1);
+    expect(errorCall[0]).toContain('"errorCode":"23505"');
+    expect(errorCall[0]).toContain('duplicate key value');
+    expect(errorCall[0]).toContain('[REDACTED_PHONE]');
+    expect(errorCall[0]).not.toContain('555123456');
+    expect(console.error).toHaveBeenLastCalledWith('[Example] Bare');
 });
 
 test('debug diagnostics still emit safely in development', () => {

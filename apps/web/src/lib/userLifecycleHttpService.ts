@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
+import { logError, logWarn } from '@/lib/log';
 import { getRouteParam } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -20,7 +21,9 @@ function commandError(message: string) {
         case 'USER_LIFECYCLE_PROTECTED': return failure(409, message, 'Сначала снимите роль администратора платформы');
         case 'USER_LIFECYCLE_OWNER': return failure(409, message, 'Сначала передайте владение бизнесами другому пользователю');
         case 'USER_LIFECYCLE_PENDING': return failure(409, message, 'Предыдущее действие не завершено. Повторите его перед новым действием.');
-        default: return unavailable();
+        default:
+            logError('UserLifecycle', 'Lifecycle command failed', { message });
+            return unavailable();
     }
 }
 
@@ -46,7 +49,10 @@ export async function runUserLifecycleHttp(req: Request, context: unknown, opera
         });
         if (error) return commandError(error.message);
         const parsed = receiptSchema.safeParse(data);
-        if (!parsed.success || parsed.data.action !== action) return unavailable();
+        if (!parsed.success || parsed.data.action !== action) {
+            logError('UserLifecycle', 'Lifecycle command returned an unexpected receipt', { action });
+            return unavailable();
+        }
         if (!parsed.data.completed) {
             // Do not guess the outcome from an Auth error or a dropped response.
             // Read the durable receipt even if Auth throws after committing.
@@ -56,14 +62,21 @@ export async function runUserLifecycleHttp(req: Request, context: unknown, opera
                     ban_duration: action === 'block' ? '876000h' : 'none',
                     app_metadata: { kezek_lifecycle_command: parsed.data.commandId },
                 });
-            } catch { /* The authoritative receipt below resolves ambiguous delivery. */ }
+            } catch (error) {
+                // The authoritative receipt below resolves ambiguous delivery.
+                logWarn('UserLifecycle', 'Auth update failed; reading the durable receipt', { action, error });
+            }
             const confirmed = await service.rpc('read_user_lifecycle', {
                 p_actor_id: access.user.id, p_user_id: id.data, p_command_id: parsed.data.commandId,
             });
-            if (confirmed.error || confirmed.data !== true) return unavailable();
+            if (confirmed.error || confirmed.data !== true) {
+                logError('UserLifecycle', 'Lifecycle result is not confirmed', { action, error: confirmed.error });
+                return unavailable();
+            }
         }
         return NextResponse.json(action === 'delete' ? { ok: true } : { ok: true, blocked: action === 'block' });
-    } catch {
+    } catch (error) {
+        logError('UserLifecycle', 'Lifecycle command failed unexpectedly', { action, error });
         return unavailable();
     }
 }

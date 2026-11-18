@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
@@ -41,6 +41,8 @@ export function SellVisitPackageModal({
     const [selling, setSelling] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+    // One key per sale attempt (API-11): a retry after a lost answer cannot sell a second package.
+    const saleKey = useRef<{ planId: string; key: string | null } | null>(null);
 
     const fetchPlans = useCallback(async () => {
         setLoading(true);
@@ -69,6 +71,7 @@ export function SellVisitPackageModal({
         fetchPlans();
         setSelling(false);
         setError(null);
+        saleKey.current = null;
     }, [isOpen, fetchPlans]);
 
     const handleSubmit = async () => {
@@ -78,10 +81,16 @@ export function SellVisitPackageModal({
         }
         setSelling(true);
         setError(null);
+        if (saleKey.current?.planId !== selectedPlanId) {
+            // Without crypto.randomUUID (very old browsers) the sale is sent without a key, as before.
+            const key = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : null;
+            saleKey.current = { planId: selectedPlanId, key };
+        }
+        const keyHeader: Record<string, string> = saleKey.current.key ? { 'Idempotency-Key': saleKey.current.key } : {};
         try {
             const res = await fetch(`/api/dashboard/clients/${clientId}/visit-packages`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...keyHeader },
                 body: JSON.stringify({ plan_id: selectedPlanId }),
             });
             const json = await res.json();
@@ -91,6 +100,7 @@ export function SellVisitPackageModal({
                 setSelling(false);
                 return;
             }
+            saleKey.current = null;
             toast.showSuccess(t('dashboard.visitPackages.sell.success', 'Пакет успешно продан'));
             onSuccess?.();
             onClose();

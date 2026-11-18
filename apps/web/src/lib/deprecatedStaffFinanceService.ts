@@ -362,7 +362,8 @@ async function loadRecentClosedShifts({
     try {
         const rows = await readStaffHistory(admin, bizId, staffId, statsWindowStart);
         return { ok: true, data: rows.filter(row => row.status === 'closed') };
-    } catch {
+    } catch (error) {
+        logError('DeprecatedStaffFinance', 'Failed to read the staff finance history', error);
         return { ok: false, status: 500, error: 'internal', message: 'Failed to load complete staff finance history' };
     }
 }
@@ -380,7 +381,10 @@ async function loadAllShifts({
     | { ok: false; status: 500; error: 'internal'; message: string }
 > {
     try { return { ok: true, data: await readStaffHistory(admin, bizId, staffId) }; }
-    catch { return { ok: false, status: 500, error: 'internal', message: 'Failed to load complete staff finance history' }; }
+    catch (error) {
+        logError('DeprecatedStaffFinance', 'Failed to read the staff finance history', error);
+        return { ok: false, status: 500, error: 'internal', message: 'Failed to load complete staff finance history' };
+    }
 }
 
 function buildStats(entries: ShiftStatsRow[]) {

@@ -29,7 +29,7 @@ const { logDebug, logWarn, logError } =
 logError('Booking', 'Request failed', { outcome: 'dependency_error' });
 ```
 
-Mobile передаёт () => __DEV__. При false debug/warn не выводятся, error содержит только scope/message. При true extra проходит sanitizeObject; scope/message не очищаются. Маскирование частично и зависит от имён ключей/шаблонов строк — [точные ограничения](../../apps/web/src/lib/LOGGING_SECURITY.md). Logger пишет в console, поэтому пакет целиком нельзя называть чистым и без побочных эффектов.
+Mobile передаёт () => __DEV__ без опций: при false debug/warn не выводятся, error содержит только scope/message. При true extra сериализуется (toLoggable: Error сохраняет message, errorCode, stack) и проходит sanitizeObject; message проходит sanitizeText. Второй аргумент createLogger (ARCH-04) задаёт вывод production — `productionDetail: 'summary'` печатает одну строку с очищенным JSON, `productionWarnings` включает предупреждения — и `sink`, который получает каждое предупреждение и ошибку для мониторинга (его сбой не доходит до вызывающего кода); так настроен web-сервер. Маскирование частично и зависит от имён ключей/шаблонов строк — [точные ограничения](../../apps/web/src/lib/LOGGING_SECURITY.md). Logger пишет в console, поэтому пакет целиком нельзя называть чистым и без побочных эффектов.
 
 ## Валидация и типы
 

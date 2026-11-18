@@ -1,3 +1,4 @@
+import { isUuid } from '@shared-client/validation';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
@@ -38,6 +39,11 @@ export async function runSellVisitPackageHttp(
   context: { params: Promise<{ clientId: string }> },
 ): Promise<NextResponse> {
   const clientId = await getRouteParamUuid(context, 'clientId');
+  // One key per sale attempt (API-11); requests from older pages without it are still accepted.
+  const requestId = req.headers.get('idempotency-key')?.trim() || null;
+  if (requestId && !isUuid(requestId)) {
+    return createErrorResponse('validation', 'Некорректный заголовок Idempotency-Key', undefined, 400);
+  }
   const validationResult = await validateRequest(req, sellVisitPackageSchema);
   if (!validationResult.success) {
     return validationResult.response;
@@ -49,6 +55,7 @@ export async function runSellVisitPackageHttp(
       bizId,
       clientId,
       body: validationResult.data,
+      requestId,
     });
 
     if (!result.ok) {

@@ -41,6 +41,11 @@ jobs:
           node --test scripts/check-encoding.test.mjs
           pnpm check:encoding
 
+      - name: Check server 5xx responses leave a log line (ARCH-04)
+        run: |
+          node --test scripts/check-silent-server-errors.test.mjs
+          pnpm check:silent-errors
+
       - name: Check offline OpenAPI, SDK and typed consumer
         run: |
           pnpm check:openapi
@@ -428,6 +433,7 @@ jobs:
           - test-analytics-ingest-guards-isolated.cjs
           - test-keep-history-on-delete-isolated.cjs
           - test-value-range-checks-isolated.cjs
+          - test-visit-package-sale-identity-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4

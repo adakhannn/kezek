@@ -7,6 +7,8 @@ jest.mock('@/lib/notifications/outboxStore', () => ({ createOutboxAdminClient: j
 jest.mock('@/lib/notifications/outboxWorker', () => ({ runBookingNotificationWorker: jest.fn() }));
 jest.mock('@/lib/notifications/BookingNotificationPlanner', () => ({ planBookingNotifications: jest.fn() }));
 jest.mock('@/lib/notifications/outboxTransport', () => ({ sendOutboxDelivery: jest.fn() }));
+jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
+import { logError } from '@/lib/log';
 
 beforeEach(() => { jest.clearAllMocks(); process.env.CRON_SECRET = 'synthetic-cron'; delete process.env.VERCEL_CRON_SECRET; delete process.env.BOOKING_NOTIFICATION_WORKER_ENABLED; });
 test.each(['', ' ', ' padded '])('invalid configured secret %j cannot claim work', async secret => {
@@ -30,4 +32,15 @@ test('authorized enabled invocation returns bounded worker outcomes', async () =
     const result = await GET(new Request('http://localhost', { headers: { authorization: 'Bearer synthetic-cron' } }));
     expect(await result.json()).toEqual({ ok: true, enabled: true, claimed: 2, outcomes: ['sent', 'failed'], pruned: 1 });
     expect(runBookingNotificationWorker).toHaveBeenCalledTimes(1);
+    expect(logError).not.toHaveBeenCalled();
+});
+test('a worker failure keeps the 503 body and logs the thrown error (ARCH-04)', async () => {
+    process.env.BOOKING_NOTIFICATION_WORKER_ENABLED = 'true';
+    const failure = new Error('outbox claim timed out');
+    jest.mocked(runBookingNotificationWorker).mockRejectedValue(failure);
+    const result = await GET(new Request('http://localhost', { headers: { authorization: 'Bearer synthetic-cron' } }));
+    expect(result.status).toBe(503);
+    expect(await result.json()).toEqual({ ok: false, error: 'outbox_worker_failed' });
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith('BookingNotificationsCron', 'Outbox worker failed', failure);
 });

@@ -89,7 +89,8 @@
     "check:db-types": "node scripts/generate-db-types.mjs --check",
     "check:i18n": "node scripts/check-i18n.mjs",
     "check:encoding": "node scripts/check-encoding.mjs",
-    "check:sql-functions": "node scripts/check-sql-functions.mjs"
+    "check:sql-functions": "node scripts/check-sql-functions.mjs",
+    "check:silent-errors": "node scripts/check-silent-server-errors.mjs"
   },
   "lint-staged": {
     "apps/web/**/*.{js,jsx,ts,tsx,mjs}": [

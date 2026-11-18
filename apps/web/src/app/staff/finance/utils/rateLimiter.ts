@@ -64,7 +64,7 @@ class RateLimiter {
             this.isBlocked = true;
             this.blockUntil = now + retryAfter;
 
-            logWarn('RateLimiter', `Rate limit exceeded. Blocking requests for ${retryAfter}ms`, {
+            logWarn('RateLimiter', 'Rate limit exceeded; blocking requests', {
                 requestsCount: this.requests.length,
                 maxRequests: this.maxRequests,
                 windowMs: this.windowMs,
@@ -146,7 +146,7 @@ export function checkRateLimit(scope?: string): boolean {
     
     if (!canMake) {
         const retryAfter = globalRateLimiter.getRetryAfter();
-        logWarn(scope || 'RateLimit', `Rate limit exceeded. Retry after ${retryAfter}ms`);
+        logWarn(scope || 'RateLimit', 'Rate limit exceeded', { retryAfterMs: retryAfter });
     }
     
     return canMake;

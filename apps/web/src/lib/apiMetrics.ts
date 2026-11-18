@@ -3,6 +3,7 @@
  * Автоматически отслеживает время ответа и статусы для анализа производительности
  */
 
+import { logWarn } from './log';
 import { getServiceClient } from './supabaseService';
 
 import type { Json } from '@/types/supabase';
@@ -56,11 +57,11 @@ export async function logApiMetric(options: ApiMetricOptions): Promise<void> {
         
         if (error) {
             // Логируем ошибку, но не прерываем выполнение
-            console.error('[ApiMetrics] Failed to log metric:', error);
+            logWarn('ApiMetrics', 'Failed to record API metric', error);
         }
     } catch (error) {
         // Игнорируем ошибки логирования метрик, чтобы не влиять на основной поток
-        console.error('[ApiMetrics] Error logging metric:', error);
+        logWarn('ApiMetrics', 'Error recording API metric', error);
     }
 }
 

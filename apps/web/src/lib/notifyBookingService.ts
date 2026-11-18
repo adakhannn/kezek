@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
+import { logError } from '@/lib/log';
 import { BookingDataService } from '@/lib/notifications/BookingDataService';
 import type { NotifyType } from '@/lib/notifications/types';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
@@ -13,7 +14,7 @@ type NotifyBookingResult =
 /** Trusted adapter; public callers must complete ownership checks first. */
 export async function enqueueStoredBookingNotification(admin: SupabaseClient, bookingId: string, type: NotifyType): Promise<string> {
     const { data, error } = await admin.rpc('enqueue_booking_notification', { p_booking_id: bookingId, p_type: type });
-    if (error) throw new Error(error.message === 'NOTIFICATION_STATE_MISMATCH' ? 'NOTIFICATION_STATE_MISMATCH' : 'NOTIFICATION_ENQUEUE_FAILED');
+    if (error) throw new Error(error.message === 'NOTIFICATION_STATE_MISMATCH' ? 'NOTIFICATION_STATE_MISMATCH' : 'NOTIFICATION_ENQUEUE_FAILED', { cause: error });
     if (typeof data !== 'string' || !data) throw new Error('NOTIFICATION_ENQUEUE_FAILED');
     return data;
 }
@@ -44,6 +45,7 @@ export async function runNotifyBooking(
         return { ok: true, data: { queued: true, event_id: eventId } };
     } catch (error) {
         const mismatch = error instanceof Error && error.message === 'NOTIFICATION_STATE_MISMATCH';
+        if (!mismatch) logError('NotifyBooking', 'Notification could not be queued', { bookingId: booking_id, type, error });
         return { ok: false, status: mismatch ? 409 : 503, error: mismatch ? 'notification_state_mismatch' : 'service_unavailable',
             message: mismatch ? 'Booking state changed' : 'Notification could not be queued' };
     }

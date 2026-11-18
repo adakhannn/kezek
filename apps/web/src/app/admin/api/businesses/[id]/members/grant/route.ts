@@ -9,6 +9,7 @@ import {
     parseBusinessMemberRoleKey,
     resolveBusinessMemberActor,
 } from '@/lib/businessMemberRolePolicy';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
@@ -66,6 +67,7 @@ export async function POST(req: Request, context: unknown) {
 
         return NextResponse.json({ok: true});
     } catch (e) {
+        logError('AdminMembersGrant', 'Failed to grant business role', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

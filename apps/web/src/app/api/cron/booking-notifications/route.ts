@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { isAuthorizedCronRequest } from '@/lib/cronAuthorization';
 import { trackCronExecution } from '@/lib/cronExecutionTracking';
+import { logError } from '@/lib/log';
 import { planBookingNotifications } from '@/lib/notifications/BookingNotificationPlanner';
 import { createOutboxAdminClient, createOutboxStore } from '@/lib/notifications/outboxStore';
 import { sendOutboxDelivery } from '@/lib/notifications/outboxTransport';
@@ -26,7 +27,8 @@ export async function GET(req: Request) {
         const result = await runBookingNotificationWorker({ store: createOutboxStore(admin),
             plan: (booking, type) => planBookingNotifications(admin, booking, type), send: sendOutboxDelivery });
         return NextResponse.json({ ok: true, enabled: true, ...result });
-    } catch {
+    } catch (error) {
+        logError('BookingNotificationsCron', 'Outbox worker failed', error);
         return NextResponse.json({ ok: false, error: 'outbox_worker_failed' }, { status: 503 });
     }
     });

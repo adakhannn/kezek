@@ -3,7 +3,7 @@ import { GET } from '@/app/api/profile/notification-emails/route';
 jest.mock('@/lib/supabaseHelpers', () => ({ createSupabaseClients: jest.fn() }));
 jest.mock('@/lib/log', () => ({ logWarn: jest.fn(), logError: jest.fn(), logDebug: jest.fn() }));
 
-import { logWarn } from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 describe('GET /api/profile/notification-emails (API-08)', () => {
@@ -40,6 +40,19 @@ describe('GET /api/profile/notification-emails (API-08)', () => {
         expect(response.status).toBe(200);
         expect(body).toEqual({ ok: true, data: rows });
         expect(logWarn).toHaveBeenCalledWith('NotificationEmails', 'Failed to sync notification emails', expect.any(Error));
+    });
+
+    test('a failed address lookup answers 500 and logs the cause once (ARCH-04)', async () => {
+        const lookupError = { message: 'permission denied for function get_my_notification_emails' };
+        const { supabaseRpc } = setup({ id: 'user-1', email: null, identities: [] }, jest.fn().mockResolvedValue({ error: null }));
+        supabaseRpc.mockResolvedValue({ data: null, error: lookupError });
+
+        const response = await GET();
+
+        expect(response.status).toBe(500);
+        expect(await response.json()).toEqual({ ok: false, error: 'notification_email_lookup_failed' });
+        expect(logError).toHaveBeenCalledTimes(1);
+        expect(logError).toHaveBeenCalledWith('NotificationEmails', 'Failed to load notification emails', lookupError);
     });
 
     test('without a session the route answers 401', async () => {

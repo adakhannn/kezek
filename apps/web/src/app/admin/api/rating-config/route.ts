@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
@@ -55,6 +56,7 @@ export async function GET() {
             .maybeSingle();
 
         if (configError) {
+            logError('RatingConfig', 'Failed to load rating config', configError);
             return NextResponse.json({ ok: false, error: configError.message }, { status: 500 });
         }
 
@@ -63,6 +65,7 @@ export async function GET() {
             config: config || null,
         });
     } catch (error) {
+        logError('RatingConfig', 'Unexpected error loading rating config', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
@@ -139,6 +142,7 @@ export async function POST(req: Request) {
             .single();
 
         if (insertError) {
+            logError('RatingConfig', 'Failed to save rating config', insertError);
             return NextResponse.json({ ok: false, error: insertError.message }, { status: 500 });
         }
 
@@ -163,6 +167,7 @@ export async function POST(req: Request) {
             ...(recalcError != null && { recalculate_error: recalcError }),
         });
     } catch (error) {
+        logError('RatingConfig', 'Unexpected error saving rating config', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

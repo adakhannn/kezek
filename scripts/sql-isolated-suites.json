@@ -36,5 +36,6 @@
   "test-release-auth-phone-isolated.cjs",
   "test-analytics-ingest-guards-isolated.cjs",
   "test-keep-history-on-delete-isolated.cjs",
-  "test-value-range-checks-isolated.cjs"
+  "test-value-range-checks-isolated.cjs",
+  "test-visit-package-sale-identity-isolated.cjs"
 ]

@@ -1,5 +1,6 @@
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { createErrorResponse } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 /** Cookie-authenticated global administrator, checked before privileged work. */
@@ -12,13 +13,15 @@ export async function requireCurrentSuperAdmin() {
         }
         const { isSuperAdmin, error } = await checkCurrentUserIsSuperAdmin(supabase, data.user.id);
         if (error) {
+            logError('AdminHttpAccess', 'Super admin check failed', error);
             return { ok: false as const, response: createErrorResponse('service_unavailable', 'Не удалось проверить права доступа', undefined, 503) };
         }
         if (!isSuperAdmin) {
             return { ok: false as const, response: createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403) };
         }
         return { ok: true as const, user: data.user, supabase };
-    } catch {
+    } catch (error) {
+        logError('AdminHttpAccess', 'Admin access check failed', error);
         return { ok: false as const, response: createErrorResponse('service_unavailable', 'Не удалось проверить права доступа', undefined, 503) };
     }
 }

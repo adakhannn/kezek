@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { validatePublicContactPatch } from '@/lib/businessContacts';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
@@ -134,6 +135,7 @@ export async function PATCH(req: Request, context: unknown) {
 
         return NextResponse.json({ ok: true, data: updated });
     } catch (e) {
+        logError('AdminBusinessUpdate', 'Failed to update business', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

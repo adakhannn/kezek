@@ -1,5 +1,6 @@
 import type { BackgroundQueueHealth } from '@/lib/backgroundQueueHealth';
 import type { CronHealthStatus } from '@/lib/cronExecutionHealth';
+import { logError } from '@/lib/log';
 
 type Alert = {
     type: 'error' | 'warning';
@@ -49,13 +50,13 @@ function toIso(date: Date) {
 }
 
 function checkedData<T>(response: QueryResult<T>, source: string): T | null {
-    if (response.error) throw new Error(`HEALTH_SOURCE_UNAVAILABLE:${source}`);
+    if (response.error) throw new Error(`HEALTH_SOURCE_UNAVAILABLE:${source}`, { cause: response.error });
     return response.data;
 }
 
 function checkedCount(response: QueryResult<unknown>, source: string): number {
     if (response.error || !Number.isSafeInteger(response.count) || response.count == null || response.count < 0) {
-        throw new Error(`HEALTH_COUNT_UNAVAILABLE:${source}`);
+        throw new Error(`HEALTH_COUNT_UNAVAILABLE:${source}`, { cause: response.error ?? undefined });
     }
     return response.count;
 }
@@ -78,7 +79,10 @@ async function getAnalyticsEventCount(
 
 export async function runHealthCheckAlerts(params: Parameters<typeof collectHealthCheckAlerts>[0]): ReturnType<typeof collectHealthCheckAlerts> {
     try { return await collectHealthCheckAlerts(params); }
-    catch { return { ok: false, error: 'internal', message: 'Health check source data is unavailable', status: 500 }; }
+    catch (error) {
+        logError('HealthCheckAlerts', 'Health check source data is unavailable', error);
+        return { ok: false, error: 'internal', message: 'Health check source data is unavailable', status: 500 };
+    }
 }
 
 async function collectHealthCheckAlerts({

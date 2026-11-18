@@ -2,6 +2,7 @@
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getWhatsAppVerifyToken } from '@/lib/env';
+import { logError } from '@/lib/log';
 import { processWhatsAppWebhookBody } from '@/lib/whatsAppWebhookService';
 import { verifyWhatsAppWebhookSignature } from '@/lib/whatsAppWebhookSignature';
 import { InvalidWhatsAppPayload } from '@/lib/whatsappInbox/parse';
@@ -72,6 +73,7 @@ export async function runWhatsAppWebhookPostHttp(req: NextRequest): Promise<Next
         if (error instanceof WhatsAppInboxStoreError && error.code === 'INBOX_PAYLOAD_CONFLICT') {
             return createErrorResponse('conflict', 'Идентификатор сообщения уже связан с другим содержимым', undefined, 409);
         }
+        logError('WhatsAppWebhook', 'Failed to store the webhook', error);
         return createErrorResponse('service_unavailable', 'Не удалось надёжно сохранить webhook', undefined, 503);
     }
 

@@ -63,7 +63,10 @@ export async function runStaffFinanceStats({
     let defaultDate: string | undefined;
     if (!new URL(req.url).searchParams.get('date')) {
         try { defaultDate = await readFinanceReportToday(admin, bizId); }
-        catch { return { ok: false, status: 500, error: 'internal', message: 'Не удалось получить бизнес-календарь отчёта' }; }
+        catch (error) {
+            logError('StaffFinanceStats', 'Failed to read the finance report calendar', error);
+            return { ok: false, status: 500, error: 'internal', message: 'Не удалось получить бизнес-календарь отчёта' };
+        }
     }
     const parsed = parseStatsRequest(req, defaultDate);
     if (!parsed.ok) {

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { cancelAccountDeletion, getAccountDeletionState, requestAccountDeletion } from '@/lib/accountDeletionService';
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 async function context() {
@@ -17,6 +18,7 @@ export async function GET() {
     try {
         return createSuccessResponse(await getAccountDeletionState(admin as never, user.id));
     } catch (error) {
+        logError('AccountDeletion', 'Failed to load account deletion state', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка проверки аккаунта', undefined, 500);
     }
 }
@@ -35,6 +37,7 @@ export async function POST(request: Request) {
         if (!result.ok) return createErrorResponse('validation', result.message, { code: result.code, blockers: result.blockers }, result.status);
         return createSuccessResponse(result);
     } catch (error) {
+        logError('AccountDeletion', 'Failed to request account deletion', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка запроса удаления', undefined, 500);
     }
 }
@@ -45,6 +48,7 @@ export async function DELETE() {
     try {
         return createSuccessResponse(await cancelAccountDeletion(admin as never, user.id));
     } catch (error) {
+        logError('AccountDeletion', 'Failed to cancel account deletion', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка отмены удаления', undefined, 500);
     }
 }

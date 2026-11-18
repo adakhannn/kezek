@@ -55,6 +55,7 @@ export async function POST(request: Request) {
             }
             return Response.json({ ok: true, id: result.id });
         } catch (error) {
+            logError('BusinessApplications', 'Business application submission failed', error);
             if (
                 error instanceof Error
                 && error.message.includes('SUPABASE_SERVICE_ROLE_KEY')
