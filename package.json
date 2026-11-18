@@ -77,7 +77,7 @@
     "test:sql": "node scripts/run-sql-tests.mjs",
     "test:api": "pnpm -C apps/web test",
     "test:e2e": "pnpm -C apps/web test:e2e",
-    "test": "pnpm test:sql && pnpm test:api",
+    "test": "pnpm test:api",
     "generate:sdk": "node scripts/generate-sdk.mjs",
     "generate:api-route": "node scripts/generate-api-route.mjs",
     "test:sql:isolated": "node scripts/run-isolated-sql-tests.mjs",

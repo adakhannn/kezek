@@ -30,7 +30,7 @@ pnpm test:sql
 
 Нужен явно заданный `SUPABASE_DB_URL` и установленный `psql`. [Root script](../package.json) вызывает [единый Node runner](../scripts/run-sql-tests.mjs): один запуск `psql -X --no-password --set=ON_ERROR_STOP=1`, без shell interpolation, выбора linked project или fallback после ошибки. Отсутствующий target — nonzero exit до запуска процесса. [Bash](../scripts/run-tests.sh) делегирует через `exec`; [PowerShell](../scripts/run-tests.ps1) проверяет `$LASTEXITCODE`. Native nonzero и прерывание завершают runner ошибкой; success другого shell не может её скрыть. [Tooling tests](../scripts/sql-runner.test.mjs) проверяют аргументы и передачу exit code с синтетическим process boundary, без подключения к БД.
 
-Корневой `pnpm test` по-прежнему сначала запускает эти legacy scenarios, затем web Jest. Для unit-only работы использовать web Jest script из [основного справочника](../TESTING_GUIDE.md).
+Корневой `pnpm test` больше не запускает эти scenarios (CI-06): раньше он писал в любую базу из `SUPABASE_DB_URL`, включая production. Теперь runner принимает только локальную базу (localhost, ::1, контейнер или сервис без точки в имени) или один хост из `KEZEK_SQL_TESTS_TARGET_HOST`, production-проект отклоняет всегда и выполняет файл внутри транзакции, которая откатывается, так что тестовые строки и пересчитанные рейтинги не остаются. Состояние 18 ноября 2026 на копии схемы production: сценарий 1 проходит (после исправления `make_interval`), сценарий 2 обращается к удалённой таблице `public.clients` — scenarios требуют переработки (CI-03), контракты закрывают изолированные наборы ниже.
 
 Для отдельных PostgreSQL контрактов и конкурентности существует независимый набор:
 

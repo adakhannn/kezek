@@ -4,6 +4,7 @@
 -- Preserved Auth user: 125e60ab-eb79-4d92-bc6d-d84ae534eeee
 --
 -- Run only in Supabase Dashboard -> SQL Editor after checking the project ref.
+-- It refuses to run without the explicit confirmation set below (kezek.confirm_destructive_reset).
 -- The whole database cleanup runs in one transaction. Any SQL error rolls it back.
 -- Storage files are intentionally NOT deleted through SQL; see the final instructions.
 
@@ -11,6 +12,16 @@ begin;
 
 set local lock_timeout = '10s';
 set local statement_timeout = '5min';
+
+-- Deliberate confirmation (CI-07, 18 Nov 2026): opening and running this file alone must not
+-- wipe a project. First run, in the same SQL Editor session, with the target project ref:
+--   select set_config('kezek.confirm_destructive_reset', 'beulnmftzbmtbdlgurht', false);
+do $$
+begin
+    if coalesce(current_setting('kezek.confirm_destructive_reset', true), '') <> 'beulnmftzbmtbdlgurht' then
+        raise exception 'RESET ABORTED: confirm with select set_config(''kezek.confirm_destructive_reset'', ''<project ref>'', false) in this session first';
+    end if;
+end $$;
 
 -- Refuse to run unless the expected Auth user and the single platform super-admin
 -- assignment are present. This protects against running the script in another project.

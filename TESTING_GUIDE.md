@@ -37,9 +37,9 @@
 | `pnpm typecheck` | Typecheck web и mobile; packages проверяются своими командами |
 | `pnpm check:i18n` | Паритет ключей ru/ky/en и число `t('…')`-ключей, которых нет в словарях; оба числа — храповик (`--report` выводит список) |
 | `pnpm test:api` | Полный web Jest script; имя не ограничивает запуск API-папкой |
-| `pnpm test:sql` | Однократный `psql -X --set=ON_ERROR_STOP=1` через Node; нужен явно заданный `SUPABASE_DB_URL` |
+| `pnpm test:sql` | Legacy scenarios одним `psql -X --set=ON_ERROR_STOP=1` через Node внутри транзакции, которая откатывается; `SUPABASE_DB_URL` — только локальная база (localhost, контейнер) или хост из `KEZEK_SQL_TESTS_TARGET_HOST`, production отклоняется всегда |
 | `pnpm test:sql:isolated` | Перечисленные в registry synthetic PostgreSQL contract/race runner в disposable Docker, без linked project и providers |
-| `pnpm test` | Сначала SQL runner, затем web Jest; это не изолированный unit-only запуск |
+| `pnpm test` | Только web Jest (как `pnpm test:api`); legacy SQL scenarios запускаются отдельно и явно через `pnpm test:sql` |
 
 Для изменения web-кода базовый набор — lint, typecheck и полный web Jest. Для логики сервисов, routes, repositories, validation и domain-adjacent кода добавляется coverage. Для shared packages выбираются проверки пакета и затронутых потребителей; минимум consumer typecheck указан в [CONTRIBUTING.md](CONTRIBUTING.md). Для документационных правок нужны проверка diff, ссылок и согласованности утверждений с источниками; продуктовые tests/build сами по себе не требуются.
 

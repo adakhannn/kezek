@@ -39,7 +39,7 @@ begin
         v_biz_id,
         v_branch_id,
         'open',
-        now() - make_interval(hours => v_hours + 1),
+        now() - make_interval(hours => (v_hours + 1)::integer),
         (now() - interval '1 day')::date,
         0,
         0

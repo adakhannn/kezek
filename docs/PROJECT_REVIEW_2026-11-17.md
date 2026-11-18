@@ -58,7 +58,7 @@
 | FE-01 | P0 | Общий `Dialog` возвращает фокус на «✕» при каждом ререндере родителя: в форме гостевой записи нельзя печатать, на телефоне закрывается клавиатура | `components/ui/Dialog.tsx` | FIXED |
 | FE-02 | P1 | Старый редактор расписания пишет 14 дней правил при простом просмотре (закрытые дни — 09:00–21:00), ошибки записи игнорируются | `useStaffScheduleRules.ts` | TODO |
 | FE-03 | P1 | Поиск броней в кабинете — только по текущей странице из 30; гонки при смене фильтров | `useDashboardBookingsListController.ts` | TODO |
-| FE-04 | P2 | Остатки «кракозябр» (`вЂ“` и др.); проверка кодировки ловит только кириллицу | `slots/Client.tsx`, `check-encoding.mjs` | TODO |
+| FE-04 | P2 | Остатки «кракозябр» (`вЂ“` и др.); проверка кодировки ловит только кириллицу | `slots/Client.tsx`, `check-encoding.mjs` | FIXED |
 | FE-05 | P2 | CSV-экспорт финансов уязвим к формульной инъекции через имя гостя | `staff/finance/utils/export.ts` | TODO |
 | FE-06 | P2 | Каждая страница грузит словари всех трёх языков (~783 КБ исходников) | `LanguageProvider.tsx` | TODO |
 | FE-07 | P2 | Оболочка повторяет одни и те же запросы личности при каждой загрузке; мёртвый realtime-канал | `ReminderBanners.tsx` и др. | TODO |
@@ -93,18 +93,18 @@
 | --- | --- | --- | --- | --- |
 | MOB-01 | P1 | Слоты и удержание не проверяют `service_staff`: через mobile/API можно записать к мастеру, который не делает услугу | `get_free_slots_service_day_v2`, `_hold_slot_for_actor`, `useBookingStep3Staff.ts` | FIXED |
 | MOB-02 | P2 | Выход удаляет неотправленные операции смены без предупреждения | `signOut.ts` | TODO |
-| MOB-03 | P2 | Запросы API без таймаута | `shared-client/api.ts` | TODO |
+| MOB-03 | P2 | Запросы API без таймаута | `shared-client/api.ts` | FIXED |
 | MOB-04 | P2 | Списки броней устаревают до 5 минут после создания/отмены | `useBookingStep6Confirm.ts` | TODO |
 | MOB-05 | P2 | Deep links/App Links настроены неверно (`/booking/<id>` открывает экран бизнеса, нет assetlinks) | `linking.ts`, `app.json` | TODO |
 | MOB-06 | P2 | Любая сборка смотрит в прод (URL и ключ зашиты в `app.json`) | `app.json`, `eas.json` | TODO |
 | MOB-07 | P2 | Нет crash reporting в mobile | — | TODO |
 | CI-01 | P1 | SQL-наборы тестируют устаревшие версии функций (миграции загружаются не до конца), PG16 вместо 17 | `scripts/test-*.mjs` | TODO |
 | CI-02 | P2 | Линт почти ничего не проверяет (корневой конфиг без правил, у mobile нет lint) | `eslint.config.mjs` | TODO |
-| CI-03 | P2 | Тесты `packages/core-domain` и 10 SQL-скриптов не запускаются | CI | TODO |
+| CI-03 | P2 | Тесты `packages/core-domain` и 10 SQL-скриптов не запускаются | CI | TODO (legacy SQL scenarios: сценарий 2 обращается к удалённой `public.clients`) |
 | CI-04 | P2 | Моки Supabase не проверяют фильтры `biz_id`; `setupApiTestMocks` мокает после импорта | `__tests__/api/testHelpers.ts` | TODO |
 | CI-05 | P2 | E2E-спеки в основном ничего не проверяют; visual-тест без эталонов не может пройти (джобы `e2e_tests` и `e2e_visual_regressions` красные) | `e2e/` | TODO |
-| CI-06 | P2 | `pnpm test` пишет в ту БД, на которую указывает (`tests_critical_scenarios.sql`) | `package.json` | TODO |
-| CI-07 | P2 | В репозитории лежит скрипт очистки прода `manual_reset_test_data_keep_superadmin.sql` | `scripts/` | TODO |
+| CI-06 | P2 | `pnpm test` пишет в ту БД, на которую указывает (`tests_critical_scenarios.sql`) | `package.json` | FIXED |
+| CI-07 | P2 | В репозитории лежит скрипт очистки прода `manual_reset_test_data_keep_superadmin.sql` | `scripts/` | FIXED |
 | CI-08 | P2 | `mobile_build` никогда не запускается; дубли джоб | `ci.yml` | TODO |
 | CI-09 | P3 | Аналитика mobile принимается как анонимная (только cookie) | `admin/api/analytics/track` | TODO |
 
@@ -123,5 +123,7 @@ API-07 закрыт как ENG-68 (код в `main`).
 API-05 закрыт как ENG-69: миграция `20261118120000_staff_delete_without_history.sql` применена в проде 18 ноября.
 
 API-03 закрыт как ENG-70: миграция `20261118130000_release_unconfirmed_phone.sql` применена в проде 18 ноября.
+
+MOB-03, FE-04, CI-06 и CI-07 закрыты как ENG-71…74 (код в `main`).
 
 Дальше по порядку: P1 — API-06, FE-02/03, ARCH-01…04, CI-01.
