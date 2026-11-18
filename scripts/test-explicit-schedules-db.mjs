@@ -76,15 +76,18 @@ await db.query('insert into bookings(staff_id,biz_id,branch_id,start_at,end_at,s
     [staff,biz,branch,`${from}T10:00:00+06:00`,`${from}T11:00:00+06:00`,'hold']);
 assert.ok(!(await slots()).some(s=>new Date(s.start_at).toISOString()===`${from}T04:00:00.000Z`));
 await db.exec("update bookings set expires_at=now()-interval '1 minute' where status='hold'");
+const expiredHold=(await db.query("select id from bookings where status='hold' and expires_at<now()")).rows.map(r=>r.id);
+assert.equal(expiredHold.length,1);
 assert.ok((await slots()).some(s=>new Date(s.start_at).toISOString()===`${from}T04:00:00.000Z`));
 // Actual complex reservation writers agree with slots and support published transfers.
 const serviceOf = location => (location===branch2?id(19):id(9));
 const guestHold = async (date, time, location=branch, service=serviceOf(location)) => db.query(
     'select hold_complex_slot_guest($1,$2,$3,$4,$5,$6,$7)',
     [biz,location,staff,`${date}T${time}:00+06:00`,[{service_id:service,duration_min:60}],'Test','test-phone']);
-// The writer and the booking trigger skip an expired hold; production's no_overlap constraint (not in
-// the fixture) still rejects this insert until purge_expired_holds has cancelled that hold.
-await guestHold(from,'10:00'); // expired hold no longer blocks the actual writer
+// An expired hold no longer blocks the actual writer: the booking trigger cancels it as
+// purge_expired_holds would (20261119100000), and no_overlap admits the new hold.
+await guestHold(from,'10:00');
+assert.deepEqual((await db.query('select status::text as status,expires_at from bookings where id=$1',[expiredHold[0]])).rows[0],{status:'cancelled',expires_at:null});
 await assert.rejects(guestHold(from,'10:00'),/already booked|SCHEDULE_SLOT_TAKEN/);
 // 20261118100000: the home branch's service is refused in the branch the staff member works in that day.
 await assert.rejects(guestHold('2099-01-07','09:00',branch2,id(9)),/service not found or inactive/);

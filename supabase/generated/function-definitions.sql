@@ -97,6 +97,57 @@ end;
 $function$
 ;
 
+-- signature: private.release_expired_overlapping_holds()
+CREATE OR REPLACE FUNCTION private.release_expired_overlapping_holds()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+begin
+    if new.status not in ('hold', 'confirmed', 'paid') then
+        return new;
+    end if;
+    -- An active booking keeping its staff member and time cannot meet a new conflict.
+    if tg_op = 'UPDATE'
+        and old.status in ('hold', 'confirmed', 'paid')
+        and new.staff_id is not distinct from old.staff_id
+        and new.start_at is not distinct from old.start_at
+        and new.end_at is not distinct from old.end_at then
+        return new;
+    end if;
+    if not exists (
+        select 1
+          from public.bookings b
+         where b.staff_id = new.staff_id
+           and b.status = 'hold'
+           and b.expires_at <= now()
+           and b.id is distinct from new.id
+           and b.time_range && tstzrange(new.start_at, new.end_at, '[)')
+    ) then
+        return new;
+    end if;
+    begin
+        update public.bookings
+           set status = 'cancelled', expires_at = null
+         where id in (
+            select b.id
+              from public.bookings b
+             where b.staff_id = new.staff_id
+               and b.status = 'hold'
+               and b.expires_at <= now()
+               and b.id is distinct from new.id
+               and b.time_range && tstzrange(new.start_at, new.end_at, '[)')
+               for update skip locked
+         );
+    exception when others then
+        raise warning 'expired holds overlapping booking % were not released: %', new.id, sqlerrm;
+    end;
+    return new;
+end;
+$function$
+;
+
 -- signature: private.service_staff_same_business()
 CREATE OR REPLACE FUNCTION private.service_staff_same_business()
  RETURNS trigger

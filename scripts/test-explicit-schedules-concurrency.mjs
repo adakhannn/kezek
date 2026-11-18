@@ -39,6 +39,12 @@ await withSchedulePostgres('kezek-schedule-test', async (sql) => {
     assert.equal(await sql('select count(*) from staff_schedule_versions'),'1');
     await race(booking,booking,/SCHEDULE_SLOT_TAKEN/);
     assert.equal(await sql('select count(*) from bookings'),'1');
+    // An expired hold blocks neither racer (20261119100000): the first cancels it and takes the time,
+    // the second waits for the staff lock and then meets that booking.
+    await sql(`insert into bookings(staff_id,biz_id,branch_id,start_at,end_at,status,expires_at) values('${staff}','${biz}','${branch}','2099-01-05 11:00+06','2099-01-05 12:00+06','hold',now()-interval '1 minute')`);
+    const overExpiredHold=booking.replaceAll('09:00+06','11:00+06').replaceAll('10:00+06','12:00+06');
+    await race(overExpiredHold,overExpiredHold,/SCHEDULE_SLOT_TAKEN/);
+    assert.equal(await sql(`select string_agg(status::text||':'||(expires_at is null)::text,',' order by status) from bookings where start_at='2099-01-05 11:00+06'`),'confirmed:true,cancelled:true');
     // Publication holds staff lock: a racing reservation must observe the new day off.
     const off=`select publish_staff_schedule('${staff}','${biz}','${owner}',1,'day','2099-01-06','${branch}','{"day":{"intervals":[],"breaks":[]}}')`;
     await race(off,booking.replaceAll('2099-01-05','2099-01-06'),/SCHEDULE_OUTSIDE_WORKING_HOURS/);
@@ -47,4 +53,4 @@ await withSchedulePostgres('kezek-schedule-test', async (sql) => {
     assert.equal(await sql('select count(*) from staff_home_branch_changes'),'1');
     await assertLiveFunctions(sql, { suite: 'test-explicit-schedules-concurrency.mjs' });
 });
-console.log('PASS: concurrent publication, double booking, publication versus booking and competing transfers');
+console.log('PASS: concurrent publication, double booking, double booking over an expired hold, publication versus booking and competing transfers');

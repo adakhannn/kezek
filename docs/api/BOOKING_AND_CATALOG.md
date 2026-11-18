@@ -92,6 +92,8 @@ JSON-примеры ниже показывают форму данных; UUID,
 
 Прямой `create_confirmed_booking` с anon/authenticated ключом запрещён: старая three-argument функция отозвана, four-argument доступна только service role. Таким образом создание проходит через HTTP boundary с limiter; ключ service role остаётся только на сервере.
 
+Время занимают подтверждённые и оплаченные брони и действующие резервы. Истёкший резерв время не держит: запись новой брони отменяет его в БД так же, как минутная очистка ([ENG-121](../../supabase/migrations/20261119100000_release_expired_holds_on_booking.sql)), поэтому `409 / booking_slot_unavailable` не возникает из-за резерва, который слоты уже показали свободным.
+
 HTTP RPC deadline — 10 секунд, SQL lock timeout — 5 секунд, route maxDuration — 30 секунд. Timeout не доказывает rollback: клиент сохраняет request identity и повторяет ту же команду; сервер не делает внутреннего retry.
 
 <!-- api-contract: POST /api/quick-book-guest -->

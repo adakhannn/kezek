@@ -106,6 +106,26 @@
       "strict": false,
       "volatility": "v"
     },
+    "private.release_expired_overlapping_holds()": {
+      "arguments": "",
+      "body": "e2a716ab0e84714657110f310b350d4c",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
     "private.service_staff_same_business()": {
       "arguments": "",
       "body": "9f33e8586bb7226f122c4bf6eb8c2171",

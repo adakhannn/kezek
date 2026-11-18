@@ -26,13 +26,30 @@ await assert.rejects(reserve('2099-01-07','14:00',branch),/SCHEDULE_OUTSIDE_WORK
 await assert.rejects(reserve('2099-01-07','14:00',branch2,id(99)),/service not found/);
 await assert.rejects(reserve('2099-01-07','14:00',branch2,biz,''),/client_name is required/);
 await assert.rejects(reserve('2099-01-07','14:00',branch2,biz,'Test',''),/client_phone is required/);
-// Expired hold should not block: preserve deployed behaviour, not old migration. (Production's
-// no_overlap constraint, not in the fixture, blocks it until purge_expired_holds cancels the hold.)
+// An expired hold does not block (20261119100000): the booking trigger cancels it as
+// purge_expired_holds would, before the no_overlap constraint is checked.
 await db.query('update bookings set expires_at=now()-interval \'1 minute\' where id=$1',[booking]);
 const second=(await reserve('2099-01-07','12:00')).rows[0].booking;assert.notEqual(second,booking);
+const statusOf=async bookingId=>(await db.query('select status::text as status,expires_at from bookings where id=$1',[bookingId])).rows[0];
+assert.deepEqual(await statusOf(booking),{status:'cancelled',expires_at:null});
+// The same at the table, for any writer: a booking or a move takes the time of an expired hold, while a
+// hold without expires_at (the purge leaves it too) and a live hold still block.
+const direct=(time,end,status,expires)=>db.query('insert into bookings(staff_id,biz_id,branch_id,start_at,end_at,status,expires_at) values($1,$2,$3,$4,$5,$6,'+expires+') returning id',
+    [staff,biz,branch2,`2099-01-07T${time}:00+06:00`,`2099-01-07T${end}:00+06:00`,status]);
+const expiredAt15=(await direct('15:00','16:00','hold',"now()-interval '1 minute'")).rows[0].id;
+const confirmedAt15=(await direct('15:00','16:00','confirmed','null')).rows[0].id;
+assert.deepEqual(await statusOf(expiredAt15),{status:'cancelled',expires_at:null});
+const expiredAt17=(await direct('17:00','18:00','hold',"now()-interval '1 minute'")).rows[0].id;
+await db.query('update bookings set start_at=$2,end_at=$3 where id=$1',[confirmedAt15,'2099-01-07T17:00:00+06:00','2099-01-07T18:00:00+06:00']);
+assert.deepEqual(await statusOf(expiredAt17),{status:'cancelled',expires_at:null});
+assert.equal((await statusOf(confirmedAt15)).status,'confirmed');
+await direct('15:00','16:00','hold','null');
+await assert.rejects(direct('15:00','16:00','confirmed','null'),/no_overlap/);
+await direct('16:00','17:00','hold',"now()+interval '2 minutes'");
+await assert.rejects(direct('16:00','17:00','confirmed','null'),/SCHEDULE_SLOT_TAKEN/);
 await db.query('update staff set is_active=false where id=$1',[staff]);
 await assert.rejects(reserve('2099-01-07','14:00'),/staff not found/);
 assert.equal((await db.query('select branch_id from staff where id=$1',[staff])).rows[0].branch_id,branch);
 await assertLiveFunctions(sql, { suite: 'test-guest-schedule-booking-writer.mjs' });
 });
-console.log('PASS: live guest writer: temporary branch guest/break boundary/contacts/hold expiry preserved; livehold overlap, breaks, wrongbranch/tenant, service of another branch, emptycontacts, inactive staff rejected; expiredhold freed; homebranch unchanged');
+console.log('PASS: live guest writer: temporary branch guest/break boundary/contacts/hold expiry preserved; livehold overlap, breaks, wrongbranch/tenant, service of another branch, emptycontacts, inactive staff rejected; expiredhold released by any writer or move, holds without expiry and live holds still block; homebranch unchanged');

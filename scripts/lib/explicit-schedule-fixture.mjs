@@ -1,13 +1,12 @@
 // Shared fixture of the explicit-schedule suites (CI-03), not a Supabase baseline. The tables are
 // synthetic: the columns, defaults and constraints the schedule functions use, shaped as production
-// has them, except that bookings.service_id stays nullable so the suites can write bare reservations,
-// and bookings has no no_overlap exclusion constraint: in production that constraint keeps an expired
-// hold blocking its time (23P01) until purge_expired_holds cancels it (pg_cron, every minute). The
-// functions are the migration chain (CI-01): the schedule functions and their triggers come from the
-// prod baseline, where production last defined them; the booking writers, when a suite needs them,
-// run their later migrations (installBookingWriters); then the grant and config migrations of
-// 19 November apply to what the fixture has. Every suite on this fixture ends with
-// assertLiveFunctions, so a function that drifts from the chain fails the suite.
+// has them (bookings with its no_overlap exclusion constraint), except that bookings.service_id stays
+// nullable so the suites can write bare reservations. The functions are the migration chain (CI-01):
+// the schedule functions and their triggers come from the prod baseline, where production last
+// defined them; the booking writers, when a suite needs them, run their later migrations
+// (installBookingWriters); then the grant and config migrations of 19 November apply to what the
+// fixture has, and the release of expired holds (20261119100000) runs whole. Every suite on this
+// fixture ends with assertLiveFunctions, so a function that drifts from the chain fails the suite.
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 
@@ -96,6 +95,8 @@ export async function setupScheduleFixture(sql, { bookingWriters = false } = {})
 create role anon; create role authenticated; create role service_role bypassrls;
 ${SUPABASE_DEFAULT_PRIVILEGES}
 create schema auth;
+create schema private;
+create extension btree_gist;
 create table auth.users(id uuid primary key, email text, phone text, raw_user_meta_data jsonb);
 -- As in Supabase: the subject of the request's JWT claims, null without them.
 create function auth.uid() returns uuid language sql stable as $$
@@ -141,7 +142,10 @@ create table public.branch_working_hours(id uuid primary key default gen_random_
 create table public.bookings(id uuid primary key default gen_random_uuid(), biz_id uuid not null, branch_id uuid not null,
     service_id uuid, staff_id uuid not null, client_id uuid, status public.booking_status not null default 'hold',
     start_at timestamptz not null, end_at timestamptz not null, expires_at timestamptz,
-    client_name text, client_phone text, client_email text);
+    client_name text, client_phone text, client_email text,
+    time_range tstzrange generated always as (tstzrange(start_at, end_at, '[)')) stored,
+    constraint no_overlap exclude using gist (staff_id with =, time_range with &&)
+        where (status in ('hold', 'confirmed', 'paid')));
 create table public.booking_services(id uuid primary key default gen_random_uuid(),
     booking_id uuid not null references public.bookings on delete cascade, service_id uuid not null,
     duration_min integer not null, order_index integer not null default 0);
@@ -152,6 +156,7 @@ create table public.booking_services(id uuid primary key default gen_random_uuid
     if (bookingWriters) await installBookingWriters(sql, baseline);
     await applyMigrationWhereObjectsExist(sql, '20261119050000_privilege_parity_with_prod.sql');
     await applyMigrationWhereObjectsExist(sql, '20261119060000_definer_function_hardening.sql');
+    await sql(await migration('20261119100000_release_expired_holds_on_booking.sql'));
     await sql(`
 insert into public.businesses values ('${biz}', '${owner}', 'Asia/Bishkek');
 insert into public.branches values ('${branch}', '${biz}', true), ('${branch2}', '${biz}', true);
