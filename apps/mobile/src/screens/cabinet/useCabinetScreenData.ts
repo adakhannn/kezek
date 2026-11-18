@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import { useNow } from '../../hooks/useNow';
 import { apiRequest } from '../../lib/api';
 import { logDebug } from '../../lib/log';
 import { loadOfflineBookings, saveOfflineBookings, type OfflineBooking } from '../../lib/offlineBookingsStorage';
@@ -107,13 +108,15 @@ export function useCabinetScreenData() {
         enabled: !!userQuery.data?.id,
     });
 
+    // Upcoming and past bookings split by the current time, which moves while the screen is open.
+    const { now, refresh: refreshNow } = useNow();
+
     const onRefresh = async () => {
         setRefreshing(true);
         await bookingsQuery.refetch();
+        refreshNow();
         setRefreshing(false);
     };
-
-    const now = useMemo(() => new Date(), []);
 
     const upcomingBookings = useMemo(() => {
         const bookings = bookingsQuery.data ?? [];

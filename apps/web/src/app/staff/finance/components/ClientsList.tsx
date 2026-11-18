@@ -9,6 +9,7 @@ import { ClientEditForm } from './ClientEditForm';
 import { ClientItem } from './ClientItem';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useNow } from '@/hooks/useNow';
 
 interface ClientsListProps {
     items: ShiftItem[];
@@ -54,7 +55,8 @@ export function ClientsList({
         return new Set(items.map(it => it.bookingId).filter(Boolean));
     }, [items]);
 
-    const now = useMemo(() => new Date(), []);
+    // Bookings become selectable once they start, also while the screen stays open (FE-14).
+    const now = useNow();
     const availableBookingsBase = useMemo(() => {
         return bookings.filter((b) => {
             if (usedBookingIdsSet.has(b.id)) return false;
