@@ -27,7 +27,12 @@ function setup() {
     const rows = { data: [], error: null };
     const query = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), in: jest.fn().mockReturnThis(), order: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(), returns: jest.fn().mockResolvedValue(rows), maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }), then: (resolve: (value: typeof rows) => unknown) => Promise.resolve(rows).then(resolve) };
     const user = { id: target, email: 'target@example.test', user_metadata: {} };
-    const admin = { rpc: jest.fn().mockResolvedValue({ data: { [target]: true }, error: null }), from: jest.fn(() => query), auth: { admin: { listUsers: jest.fn().mockResolvedValue({ data: { users: [user] }, error: null }), getUserById: jest.fn().mockResolvedValue({ data: { user }, error: null }) } } };
+    const directory = { total: 1, items: [{ id: target, email: user.email, phone: null, full_name: null, last_sign_in_at: null, is_blocked: false, block_reason: null }] };
+    const admin = {
+        rpc: jest.fn(async (name: string) => (name === 'admin_list_users' ? { data: directory, error: null } : { data: { [target]: true }, error: null })),
+        from: jest.fn(() => query),
+        auth: { admin: { getUserById: jest.fn().mockResolvedValue({ data: { user }, error: null }) } },
+    };
     jest.mocked(createServerClient).mockReturnValue(caller as never);
     jest.mocked(createClient).mockReturnValue(admin as never);
     return { caller, admin };
@@ -45,8 +50,23 @@ test('list receives canonical target state, without reading the legacy role view
 });
 test('target lookup failure is a list failure, never false ordinary-user flags', async () => {
     const { admin } = setup();
-    admin.rpc.mockResolvedValue({ data: null, error: { message: 'unavailable' } } as never);
+    const directory = await admin.rpc('admin_list_users');
+    admin.rpc.mockImplementation(async (name: string) => (name === 'admin_list_users' ? directory : { data: null, error: { message: 'unavailable' } }) as never);
     expect((await GET(new Request('http://localhost/admin/api/users/list'))).status).toBe(500);
+});
+test('search, status, paging and the total come from the server-side directory read (ARCH-03)', async () => {
+    const { admin } = setup();
+    const response = await GET(new Request('http://localhost/admin/api/users/list?q=%D0%90%D0%B9%D0%B3%D0%B5%D1%80%D0%B8%D0%BC&status=blocked&page=3&perPage=20'));
+    expect(response.status).toBe(200);
+    expect(admin.rpc).toHaveBeenCalledWith('admin_list_users', { p_actor_id: actor, p_q: 'айгерим', p_status: 'blocked', p_limit: 20, p_offset: 40 });
+    expect((await response.json()).total).toBe(1);
+});
+test('a failed directory read is a 500 without database details', async () => {
+    const { admin } = setup();
+    admin.rpc.mockImplementation(async () => ({ data: null, error: { message: 'relation auth.users does not exist' } }) as never);
+    const response = await GET(new Request('http://localhost/admin/api/users/list'));
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ ok: false, error: 'users_unavailable' });
 });
 test('detail admits a canonical global-only caller and passes authoritative target state to UI', async () => {
     const { caller, admin } = setup();

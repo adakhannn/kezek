@@ -9,9 +9,9 @@ import UsersClient from './UsersClient';
 
 import { getT } from '@/app/_components/i18n/server';
 import {Button} from '@/components/ui/Button';
-import { collectAdminUserStats, type AdminUserStats } from '@/lib/adminUserStats';
+import { parseAdminUserStats, type AdminUserStats } from '@/lib/adminUserStats';
 import { logWarn } from '@/lib/log';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,9 +77,12 @@ async function fetchList(search: string, page: number, perPage: number, status: 
     return json;
 }
 
-async function fetchStats(): Promise<AdminUserStats | null> {
+/** Counts over the whole directory in one service-only read (ARCH-03); the caller is a verified super admin. */
+async function fetchStats(actorId: string): Promise<AdminUserStats | null> {
     try {
-        return await collectAdminUserStats((page, perPage) => fetchList('', page, perPage, 'all'));
+        const { data, error } = await createSupabaseAdminClient().rpc('admin_user_stats', { p_actor_id: actorId });
+        if (error) throw error;
+        return parseAdminUserStats(data);
     } catch (error) {
         logWarn('AdminUsers', 'User statistics are unavailable', error);
         return null;
@@ -106,7 +109,7 @@ export default async function UsersListPage(
     const perPage = Number(sp.perPage ?? '50');
     const status = (sp.status ?? 'all');
 
-    const [data, stats] = await Promise.all([fetchList(q, page, perPage, status), fetchStats()]);
+    const [data, stats] = await Promise.all([fetchList(q, page, perPage, status), fetchStats(user.id)]);
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">

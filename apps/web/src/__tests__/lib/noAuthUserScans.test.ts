@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// ARCH-03: account lookups go through exact paths (auth.admin.getUserById, find_accounts_by_contact),
-// never through paging Auth users and filtering a page in JavaScript. The super-admin user directory
-// is the one remaining caller; it moves to a server-side query next.
-const ALLOWED = new Set(['app/admin/api/users/list/route.ts']);
+// ARCH-03: account lookups go through exact paths (auth.admin.getUserById, find_accounts_by_contact)
+// and the super-admin directory through admin_list_users / admin_user_stats; nothing pages through
+// Auth users and filters a page in JavaScript.
+const ALLOWED = new Set<string>();
 const SOURCE_ROOT = path.resolve(__dirname, '..', '..');
 
 function sourceFiles(dir: string): string[] {

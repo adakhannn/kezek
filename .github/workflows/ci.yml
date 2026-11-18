@@ -421,6 +421,7 @@ jobs:
           - test-notification-email-proven-sources-isolated.cjs
           - test-review-write-rules-isolated.cjs
           - test-one-active-date-rule-isolated.cjs
+          - test-admin-user-directory-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -431,7 +432,14 @@ jobs:
           node-version: 22
 
       - name: Pull disposable PostgreSQL image
-        run: docker pull postgres:16
+        run: |
+          # Docker Hub pulls fail now and then on shared runners; retry before failing the job.
+          for attempt in 1 2 3 4; do
+            docker pull postgres:16 && exit 0
+            echo "docker pull postgres:16 failed (attempt $attempt), retrying"
+            sleep $((attempt * 15))
+          done
+          exit 1
 
       - name: Run isolated SQL contracts
         run: node scripts/${{ matrix.runner }}
@@ -445,7 +453,14 @@ jobs:
         with:
           node-version: 22
       - name: Pull disposable Redis image
-        run: docker pull redis:7-alpine
+        run: |
+          # Docker Hub pulls fail now and then on shared runners; retry before failing the job.
+          for attempt in 1 2 3 4; do
+            docker pull redis:7-alpine && exit 0
+            echo "docker pull redis:7-alpine failed (attempt $attempt), retrying"
+            sleep $((attempt * 15))
+          done
+          exit 1
       - name: Run atomic rate-limit contracts
         run: |
           node scripts/test-rate-limit-isolated.mjs

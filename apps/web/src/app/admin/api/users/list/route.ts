@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { parseAdminUserPage } from '@/lib/adminUserStats';
+import { logError } from '@/lib/log';
 import { readPlatformAdminStates } from '@/lib/platformAdminState';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { validateQuery } from '@/lib/validation/apiValidation';
@@ -66,97 +68,36 @@ export async function GET(req: Request) {
         // 2) Админ-клиент (service role)
         const admin = createSupabaseAdminClient();
 
-        // Supabase Admin API не принимает offset/limit напрямую, но принимает "page" и "perPage"
-        // поэтому считаем page/perPage как есть:
-        const listResp = await (admin).auth.admin.listUsers({
-            page,
-            perPage,
+        // 3) Поиск, фильтр, порядок, страница и честный total — в одной серверной выборке по всему
+        // каталогу (ARCH-03): прежде фильтровалась одна страница listUsers.
+        const { data: pageData, error: pageError } = await admin.rpc('admin_list_users', {
+            p_actor_id: meData.user.id,
+            p_q: q || undefined,
+            p_status: status,
+            p_limit: perPage,
+            p_offset: (page - 1) * perPage,
         });
-        if (listResp.error) {
-            return NextResponse.json({ ok: false, error: listResp.error.message } satisfies ListErr, { status: 400 });
+        if (pageError) {
+            logError('AdminUsersList', 'admin_list_users failed', pageError);
+            return NextResponse.json({ ok: false, error: 'users_unavailable' } satisfies ListErr, { status: 500 });
         }
+        const directory = parseAdminUserPage(pageData);
 
-        const users = listResp?.data?.users ?? [];
+        // 4) Флаг супера — каноническим чтением для строк этой страницы
+        const superStates = await readPlatformAdminStates(admin, meData.user.id, directory.items.map((item) => item.id));
+        const items: UserListItem[] = directory.items.map((item) => ({ ...item, is_super: superStates.get(item.id) === true }));
 
-        // 4) Подтягиваем profile.full_name
-        const ids = users.map((u) => u.id) as string[];
-        const profiles: Record<string, { full_name: string | null }> = {};
-        if (ids.length > 0) {
-            const { data: profRows } = await admin
-                .from('profiles')
-                .select('id,full_name')
-                .in('id', ids);
-            for (const r of profRows ?? []) {
-                profiles[r.id] = { full_name: r.full_name };
-            }
-        }
-
-        // 5) Флаг супера
-        const superStates = await readPlatformAdminStates(admin, meData.user.id, ids);
-
-        // 6) Флаг "заблокирован" (+ причина)
-        const blockedMap = new Map<string, { reason: string | null }>();
-        if (ids.length > 0) {
-            const { data: blocks } = await admin
-                .from('user_suspensions')
-                .select('user_id,reason')
-                .in('user_id', ids);
-            for (const b of blocks ?? []) blockedMap.set(b.user_id, { reason: b.reason ?? null });
-        }
-
-        // 7) Формируем список и применяем поиск/фильтр
-        let items: UserListItem[] = users.map((u) => {
-            const full_name = profiles[u.id]?.full_name ?? (u.user_metadata?.full_name ?? null);
-            const is_super = superStates.get(u.id) === true;
-            const blk = blockedMap.get(u.id);
-            return {
-                id: u.id,
-                full_name,
-                email: u.email ?? null,
-                phone: (u).phone ?? null,
-                last_sign_in_at: u.last_sign_in_at ?? null,
-                is_super,
-                is_blocked: !!blk,
-                block_reason: blk?.reason ?? null,
-            };
-        });
-
-        // поиск: по email/phone/full_name/id (кейс-инсensitive)
-        if (q) {
-            const ql = q.toLowerCase();
-            items = items.filter((it) => {
-                return (
-                    (it.email ?? '').toLowerCase().includes(ql) ||
-                    (it.phone ?? '').toLowerCase().includes(ql) ||
-                    (it.full_name ?? '').toLowerCase().includes(ql) ||
-                    it.id.toLowerCase().includes(ql)
-                );
-            });
-        }
-
-        // фильтр статуса
-        if (status === 'active') {
-            items = items.filter((it) => !it.is_blocked);
-        } else if (status === 'blocked') {
-            items = items.filter((it) => it.is_blocked);
-        }
-
-        // ВАЖНО: listUsers уже вернул ровно perPage, но после фильтра/поиска может стать меньше.
-        // Для корректной пагинации можно пересчитывать total по всем страницам,
-        // но это дороговато; сделаем pragmatic: total = (page-1)*perPage + items.length, если это последняя выборка.
-        // Проще: вернём total неизвестным образом — но для UI достаточно показать текущую страницу.
-        // Если хочешь точный total с поиском/статусом — можно добавить серверное индексированное представление.
         const payload: ListOk = {
             ok: true,
             items,
             page,
             perPage,
-            total: (page - 1) * perPage + items.length,
+            total: directory.total,
         };
 
         return NextResponse.json(payload);
     } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
+        logError('AdminUsersList', 'Unexpected error', e);
+        return NextResponse.json({ ok: false, error: 'users_unavailable' } satisfies ListErr, { status: 500 });
     }
 }

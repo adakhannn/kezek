@@ -5049,6 +5049,22 @@ export type Database = {
                 };
                 Returns: Json;
             };
+            "admin_list_users": {
+                Args: {
+                    "p_actor_id": string;
+                    "p_limit"?: number;
+                    "p_offset"?: number;
+                    "p_q"?: string;
+                    "p_status"?: string;
+                };
+                Returns: Json;
+            };
+            "admin_user_stats": {
+                Args: {
+                    "p_actor_id": string;
+                };
+                Returns: Json;
+            };
             "anonymize_inactive_profiles_pii": {
                 Args: {
                     "p_inactive_days"?: number;
