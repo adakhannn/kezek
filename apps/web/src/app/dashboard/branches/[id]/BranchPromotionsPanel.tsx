@@ -4,6 +4,7 @@
 import { useEffect, useId, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/Input';
@@ -45,6 +46,8 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
     const toast = useToast();
     const [promotions, setPromotions] = useState<Promotion[]>([]);
     const [loading, setLoading] = useState(true);
+    // FE-08: a failed load is an error with a retry, not the "no promotions yet" empty state.
+    const [loadFailed, setLoadFailed] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -76,13 +79,14 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
             const data = await res.json();
             if (data.ok) {
                 setPromotions(data.data?.promotions || []);
+                setLoadFailed(false);
             } else {
                 logError('BranchPromotions', 'Failed to load promotions', { error: data.error });
-                toast.showError(data.error || t('branches.promotions.error.load', 'Ошибка загрузки акций'));
+                setLoadFailed(true);
             }
         } catch (error) {
             logError('BranchPromotions', 'Failed to load promotions', error);
-            toast.showError(t('branches.promotions.error.load', 'Ошибка загрузки акций'));
+            setLoadFailed(true);
         } finally {
             setLoading(false);
         }
@@ -388,6 +392,11 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                         {t('branches.promotions.loading', 'Загрузка...')}
                     </div>
                 </div>
+            ) : loadFailed ? (
+                <LoadFailedNotice
+                    title={t('branches.promotions.error.load', 'Ошибка загрузки акций')}
+                    onRetry={() => void loadPromotions()}
+                />
             ) : promotions.length === 0 ? (
                 <div className="relative grid min-h-64 place-items-center overflow-hidden rounded-2xl border border-dashed border-indigo-400/25 bg-gradient-to-br from-indigo-400/[0.07] via-transparent to-fuchsia-400/[0.06] px-5 py-9 text-center">
                     <div aria-hidden="true" className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-fuchsia-500/10 blur-3xl" />

@@ -7,6 +7,8 @@ import AppPageError from '@/app/error';
 import { reportErrorToMonitoring } from '@/lib/errorMonitoring';
 
 jest.mock('@/lib/errorMonitoring', () => ({ reportErrorToMonitoring: jest.fn() }));
+const mockRefresh = jest.fn();
+jest.mock('next/navigation', () => ({ useRouter: () => ({ refresh: mockRefresh }) }));
 const mockLanguage = { locale: 'ru', t: (_key: string, fallback?: string) => fallback ?? _key };
 jest.mock('@/app/_components/i18n/LanguageProvider', () => ({ useLanguage: () => mockLanguage }));
 
@@ -37,6 +39,7 @@ describe('section error pages', () => {
         }));
         fireEvent.click(screen.getAllByRole('button')[0]);
         expect(reset).toHaveBeenCalledTimes(1);
+        expect(mockRefresh).toHaveBeenCalledTimes(1);
         expect(reload).not.toHaveBeenCalled();
     });
 

@@ -3,7 +3,9 @@ import { formatInTimeZone } from 'date-fns-tz';
 
 import StaffBookingsView from './StaffBookingsView';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getStaffPageContext } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
 export default async function StaffBookingsPage() {
@@ -64,6 +66,13 @@ export default async function StaffBookingsPage() {
             .eq('is_active', true)
             .order('name'),
     ]);
+
+    // FE-08: a failed read is an error, not "no bookings" or "no services in this branch".
+    const failed = [upcomingResult, pastResult, servicesResult, staffResult, branchesResult].find((result) => result.error);
+    if (failed) {
+        logError('StaffBookingsPage', 'Failed to load staff bookings data', { staffId, bizId, error: failed.error });
+        return <LoadFailedNotice page />;
+    }
 
     const upcoming = upcomingResult.data ?? [];
     const past = pastResult.data ?? [];

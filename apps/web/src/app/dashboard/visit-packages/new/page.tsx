@@ -1,6 +1,8 @@
 
 import VisitPackagePlanForm from '@/app/dashboard/visit-packages/VisitPackagePlanForm';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,8 +14,8 @@ export default async function VisitPackageNewPage() {
     const { supabase, bizId } = await getBizContextForManagers();
 
     const [
-        { data: branches },
-        { data: services },
+        { data: branches, error: branchesError },
+        { data: services, error: servicesError },
     ] = await Promise.all([
         supabase
             .from('branches')
@@ -28,6 +30,12 @@ export default async function VisitPackageNewPage() {
             .eq('active', true)
             .order('name_ru'),
     ]);
+
+    // FE-08: a failed read is an error, not "no branches" / "no services".
+    if (branchesError || servicesError) {
+        logError('VisitPackageNewPage', 'Failed to load branches or services', { bizId, branchesError, servicesError });
+        return <LoadFailedNotice page />;
+    }
 
     const branchList = (branches ?? []) as BranchRow[];
     const serviceList = (services ?? []) as ServiceRow[];

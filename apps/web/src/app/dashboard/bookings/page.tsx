@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import { BookingsClientWrapper } from './BookingsClientWrapper';
 
 import { getT } from '@/app/_components/i18n/server';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers, BizAccessError } from '@/lib/authBiz'; // <-- твой рабочий хелпер
+import { logError } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -14,7 +16,11 @@ export default async function Page() {
         const { supabase, bizId, business } = await getBizContextForManagers();
 
         // 1) Данные для страницы (ВАЖНО: branch_id у services и staff)
-        const [{ data: services }, { data: staff }, { data: branches }] = await Promise.all([
+        const [
+            { data: services, error: servicesError },
+            { data: staff, error: staffError },
+            { data: branches, error: branchesError },
+        ] = await Promise.all([
             supabase
                 .from('services')
                 .select('id,name_ru,name_ky,name_en,duration_min,active,branch_id')
@@ -36,6 +42,12 @@ export default async function Page() {
                 .eq('is_active', true)
                 .order('name'),
         ]);
+
+        // FE-08: failed option lists are an error, not "no masters" / "no services".
+        if (servicesError || staffError || branchesError) {
+            logError('DashboardBookingsPage', 'Failed to load booking options', { bizId, servicesError, staffError, branchesError });
+            return <LoadFailedNotice page />;
+        }
 
         // Вкладка «Список» сама загружает страницы через dashboard_bookings_page (FE-03): прежняя
         // SSR-страница без фильтра (с отменёнными, без имён клиентов) только мелькала под «Загрузка...».

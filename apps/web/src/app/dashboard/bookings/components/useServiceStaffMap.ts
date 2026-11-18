@@ -1,16 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 type StaffRow = { id: string };
+type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolean };
 
+/**
+ * Service-staff links for QuickDesk. A failed read is reported as `error` (FE-08): without the map
+ * `filterServicesForStaff` would offer every branch service, so the caller fails closed and retries.
+ */
 export function useServiceStaffMap(staff: StaffRow[]) {
-    const [serviceStaff, setServiceStaff] = useState<
-        Array<{ service_id: string; staff_id: string; is_active: boolean }> | null
-    >(null);
+    const [serviceStaff, setServiceStaff] = useState<ServiceStaffRow[] | null>(null);
+    const [failed, setFailed] = useState(false);
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let ignore = false;
@@ -18,25 +23,30 @@ export function useServiceStaffMap(staff: StaffRow[]) {
             const staffIds = staff.map((s) => s.id);
             if (staffIds.length === 0) {
                 setServiceStaff([]);
+                setFailed(false);
                 return;
             }
-            const { data, error } = await supabase
-                .from('service_staff')
-                .select('service_id,staff_id,is_active')
-                .eq('is_active', true)
-                .in('staff_id', staffIds);
-            if (ignore) return;
-            if (error) {
+            try {
+                const { data, error } = await supabase
+                    .from('service_staff')
+                    .select('service_id,staff_id,is_active')
+                    .eq('is_active', true)
+                    .in('staff_id', staffIds);
+                if (ignore) return;
+                if (error) throw error;
+                setServiceStaff((data ?? []) as ServiceStaffRow[]);
+                setFailed(false);
+            } catch (error) {
+                if (ignore) return;
                 logWarn('useServiceStaffMap', 'service_staff read error', error);
                 setServiceStaff(null);
-            } else {
-                setServiceStaff((data ?? []) as Array<{ service_id: string; staff_id: string; is_active: boolean }>);
+                setFailed(true);
             }
         })();
         return () => {
             ignore = true;
         };
-    }, [staff]);
+    }, [staff, attempt]);
 
     const serviceToStaffMap = useMemo(() => {
         if (!serviceStaff || serviceStaff.length === 0) return null;
@@ -49,5 +59,6 @@ export function useServiceStaffMap(staff: StaffRow[]) {
         return map;
     }, [serviceStaff]);
 
-    return serviceToStaffMap;
+    const retry = useCallback(() => setAttempt((value) => value + 1), []);
+    return { serviceToStaffMap, error: failed, retry };
 }

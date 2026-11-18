@@ -12,6 +12,7 @@ import { ShiftHeader } from './ShiftHeader';
 import { ShiftSummary } from './ShiftSummary';
 import { Tabs } from './Tabs';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 
@@ -22,6 +23,38 @@ type ShiftCalculations = {
     salonShare: number;
     displayTotalAmount: number;
 };
+
+type FinanceLoadState = {
+    isError: boolean;
+    error: Error | null;
+    isLoading: boolean;
+    refetch: () => Promise<void>;
+    invalidate: () => void;
+    data: FinanceData | null;
+};
+
+/** The finance load failed and nothing was loaded: tabs show the error, not zeros or "open a shift" (FE-08). */
+function financeLoadFailed(financeData: FinanceLoadState): boolean {
+    return financeData.isError && !financeData.data;
+}
+
+/** The finance load error with a retry; every tab shows it, not only the shift tab. */
+export function FinanceLoadErrorBanner({ financeData }: { financeData: FinanceLoadState }) {
+    const { t } = useLanguage();
+    if (!financeData.isError || !financeData.error) return null;
+    return (
+        <AlertBanner
+            variant="danger"
+            title={t('staff.finance.error.title', 'Ошибка загрузки данных')}
+            message={financeData.error.message}
+            action={
+                <Button type="button" variant="danger" size="sm" onClick={() => void financeData.refetch()}>
+                    {t('staff.finance.error.retry', 'Попробовать снова')}
+                </Button>
+            }
+        />
+    );
+}
 
 type FinanceHeaderSectionProps = {
     showHeader: boolean;
@@ -77,14 +110,7 @@ export function FinanceTabsSection({
 
 type FinanceShiftTabSectionProps = {
     staffId?: string;
-    financeData: {
-        isError: boolean;
-        error: Error | null;
-        isLoading: boolean;
-        refetch: () => Promise<void>;
-        invalidate: () => void;
-        data: FinanceData | null;
-    };
+    financeData: FinanceLoadState;
     shiftDate: Date;
     onShiftDateChange: (date: Date) => void;
     shift: Shift | null;
@@ -121,18 +147,7 @@ export function FinanceShiftTabSection({
 }: FinanceShiftTabSectionProps) {
     return (
         <div className={`space-y-4 ${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'}`}>
-            {financeData.isError && financeData.error ? (
-                <AlertBanner
-                    variant="danger"
-                    title={t('staff.finance.error.title', 'Ошибка загрузки данных')}
-                    message={financeData.error.message}
-                    action={
-                        <Button type="button" variant="danger" size="sm" onClick={() => void financeData.refetch()}>
-                            {t('staff.finance.error.retry', 'Попробовать снова')}
-                        </Button>
-                    }
-                />
-            ) : null}
+            <FinanceLoadErrorBanner financeData={financeData} />
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <ShiftHeader
@@ -237,6 +252,7 @@ export function FinanceShiftTabSection({
 }
 
 type FinanceClientsTabSectionProps = {
+    financeData: FinanceLoadState;
     timezone?: string;
     staffId?: string;
     shiftDate: Date;
@@ -263,6 +279,7 @@ type FinanceClientsTabSectionProps = {
 };
 
 export function FinanceClientsTabSection({
+    financeData,
     timezone,
     staffId,
     shiftDate,
@@ -289,6 +306,7 @@ export function FinanceClientsTabSection({
 }: FinanceClientsTabSectionProps) {
     return (
         <div className={`space-y-4 ${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'}`}>
+            <FinanceLoadErrorBanner financeData={financeData} />
             <ClientsListHeader
                 timezone={timezone}
                 shiftDate={shiftDate}
@@ -306,50 +324,57 @@ export function FinanceClientsTabSection({
                 onSaveNow={onSaveNow}
             />
 
-            <ClientsList
-                items={localItems}
-                bookings={bookings}
-                serviceOptions={serviceOptions}
-                shift={shift}
-                isOpen={isOpen}
-                isClosed={isClosed}
-                isReadOnly={isReadOnlyForOwner}
-                isSaving={isSaving}
-                staffId={staffId}
-                expandedItems={expandedItems}
-                onExpand={onExpand}
-                onCollapse={onCollapse}
-                onUpdateItem={onUpdateItem}
-                onSaveItem={onSaveItem}
-                onDeleteItem={onDeleteItem}
-                onDuplicateItem={onDuplicateItem}
-            />
+            {financeLoadFailed(financeData) ? null : (
+                <ClientsList
+                    items={localItems}
+                    bookings={bookings}
+                    serviceOptions={serviceOptions}
+                    shift={shift}
+                    isOpen={isOpen}
+                    isClosed={isClosed}
+                    isReadOnly={isReadOnlyForOwner}
+                    isSaving={isSaving}
+                    staffId={staffId}
+                    expandedItems={expandedItems}
+                    onExpand={onExpand}
+                    onCollapse={onCollapse}
+                    onUpdateItem={onUpdateItem}
+                    onSaveItem={onSaveItem}
+                    onDeleteItem={onDeleteItem}
+                    onDuplicateItem={onDuplicateItem}
+                />
+            )}
         </div>
     );
 }
 
 type FinanceStatsTabSectionProps = {
+    financeData: FinanceLoadState;
     staffId?: string;
     statsContent: ReactNode;
     loadingLabel: string;
 };
 
 export function FinanceStatsTabSection({
+    financeData,
     staffId,
     statsContent,
     loadingLabel,
 }: FinanceStatsTabSectionProps) {
     return (
-        <div className={`${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'} min-w-0`}>
-            <Suspense
-                fallback={
-                    <div className="flex items-center justify-center py-12">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{loadingLabel}</div>
-                    </div>
-                }
-            >
-                {statsContent}
-            </Suspense>
+        <div className={`${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'} min-w-0 space-y-4`}>
+            <FinanceLoadErrorBanner financeData={financeData} />
+            {financeLoadFailed(financeData) ? null : (
+                <Suspense
+                    fallback={
+                        <div className="flex items-center justify-center py-12">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{loadingLabel}</div>
+                        </div>
+                    }
+                >
+                    {statsContent}
+                </Suspense>
+            )}
         </div>
     );
 }

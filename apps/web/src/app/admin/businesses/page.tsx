@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getServerLocale, getT } from '@/app/_components/i18n/server';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -9,6 +10,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Biz = {
@@ -89,6 +91,11 @@ export default async function Page() {
         admin.from('branches').select('biz_id').in('biz_id', businessIds),
         admin.from('staff').select('biz_id').in('biz_id', businessIds),
     ]);
+    // FE-08: failed counts are unknown, not 0.
+    if (branchesData.error || staffData.error) {
+        logError('AdminBusinessesPage', 'Failed to count branches or staff', { branchesError: branchesData.error, staffError: staffData.error });
+        return <LoadFailedNotice page />;
+    }
 
     const branchesCount = new Map<string, number>();
     (branchesData.data || []).forEach((b) => {

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import EditServicePageClient from './EditServicePageClient';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -45,14 +46,11 @@ export default async function EditServicePage({
     ]);
 
     // Логируем ошибки для отладки
-    if (svcError) {
-        logError('EditServicePage', 'Error loading service', { serviceId: id, error: svcError });
-        return notFound();
-    }
-
-    if (branchesError) {
-        logError('EditServicePage', 'Error loading branches', { error: branchesError });
-        // Не возвращаем 404, т.к. это не критично
+    // FE-08: a failed read is an error, not "not found"; an empty branch choice would drop the
+    // service from its branches on save.
+    if (svcError || branchesError) {
+        logError('EditServicePage', 'Error loading service or branches', { serviceId: id, svcError, branchesError });
+        return <LoadFailedNotice page />;
     }
 
     // Проверяем, найдена ли услуга
@@ -73,12 +71,17 @@ export default async function EditServicePage({
 
     // Load branch copies with the same visibility as the selected management row.
     // A hidden service still needs its saved branch selection for safe editing.
-    const { data: allServiceBranches } = await admin
+    const { data: allServiceBranches, error: serviceBranchesError } = await admin
         .from('services')
         .select('branch_id')
         .eq('biz_id', bizId)
         .eq('name_ru', svc.name_ru)
         .eq('active', !!svc.active);
+
+    if (serviceBranchesError) {
+        logError('EditServicePage', 'Error loading service branch copies', { serviceId: id, error: serviceBranchesError });
+        return <LoadFailedNotice page />;
+    }
 
     // Получаем список ID филиалов, где есть эта услуга
     const serviceBranchIds = new Set(

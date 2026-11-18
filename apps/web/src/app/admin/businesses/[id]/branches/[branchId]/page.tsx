@@ -1,9 +1,11 @@
 // apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx
 import Link from 'next/link';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
 import { Card } from '@/components/ui/Card';
+import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
@@ -27,18 +29,27 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
         .eq('id', branchId)
         .maybeSingle();
 
-    if (error) return <div className="p-4">Ошибка: {error.message}</div>;
+    if (error) {
+        logError('AdminBranchEditPage', 'Failed to load branch', { bizId: id, branchId, error });
+        return <LoadFailedNotice page />;
+    }
     if (!branch) return <div className="p-4">Филиал не найден</div>;
 
     const { data: biz } = await admin.from('businesses').select('id,name').eq('id', id).maybeSingle();
 
     // Загружаем расписание филиала
-    const { data: scheduleData } = await admin
+    const { data: scheduleData, error: scheduleError } = await admin
         .from('branch_working_hours')
         .select('day_of_week, intervals, breaks')
         .eq('biz_id', id)
         .eq('branch_id', branchId)
         .order('day_of_week');
+
+    // FE-08: an unread schedule must not look like "closed every day" - saving it would erase the real hours.
+    if (scheduleError) {
+        logError('AdminBranchEditPage', 'Failed to load branch working hours', { bizId: id, branchId, error: scheduleError });
+        return <LoadFailedNotice page />;
+    }
 
     const initialSchedule = (scheduleData || []).map((s) => ({
         day_of_week: s.day_of_week,

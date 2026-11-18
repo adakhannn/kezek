@@ -32,7 +32,7 @@ import { trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
 import { resolvePublicContacts } from '@/lib/businessContacts';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 import { formatStaffName } from '@/lib/i18nHelpers';
-import { logDebug, logError } from '@/lib/log';
+import { logDebug, logError, logWarn } from '@/lib/log';
 import { getBusinessTimezone, toLabel } from '@/lib/time';
 
 export default function BookingForm({ data }: { data: Data }) {
@@ -74,7 +74,11 @@ export default function BookingForm({ data }: { data: Data }) {
         staff,
     });
 
-    const { data: branchPromotions = [] } = useBranchPromotions(branchId || null);
+    const { data: branchPromotions = [], error: branchPromotionsError } = useBranchPromotions(branchId || null);
+    useEffect(() => {
+        // Promotions stay optional on this page, but a failed load is reported, not silently lost (FE-08).
+        if (branchPromotionsError) logWarn('Booking', 'Branch promotions failed to load; they are hidden', branchPromotionsError);
+    }, [branchPromotionsError]);
     const selectedBranch = useMemo(
         () => branches.find((branch) => branch.id === branchId) ?? null,
         [branchId, branches],
@@ -85,8 +89,17 @@ export default function BookingForm({ data }: { data: Data }) {
     );
 
     const staffIds = useMemo(() => staff.map((person) => person.id), [staff]);
-    const { data: serviceStaffData, isLoading: serviceStaffLoading } = useServiceStaff(biz.id, staffIds);
-    const serviceStaff: ServiceStaffRow[] | null = serviceStaffLoading ? null : (serviceStaffData || null);
+    const {
+        data: serviceStaffData, isLoading: serviceStaffFirstLoad, isError: serviceStaffError,
+        isFetching: serviceStaffFetching, refetch: refetchServiceStaff,
+    } = useServiceStaff(biz.id, staffIds);
+    // FE-08: without the service-staff map nobody knows which services a master performs. A failed
+    // load is an error with a retry, not "this specialist has no services", and it must not drop
+    // services restored from the URL or a saved selection.
+    const serviceStaffMissing = serviceStaffError && !serviceStaffData;
+    const serviceStaffLoading = serviceStaffFirstLoad || (serviceStaffMissing && serviceStaffFetching);
+    const serviceStaffFailed = serviceStaffMissing && !serviceStaffFetching;
+    const serviceStaff: ServiceStaffRow[] | null = serviceStaffLoading || serviceStaffMissing ? null : (serviceStaffData || null);
 
     const serviceToStaffMap = useMemo(() => {
         if (!serviceStaff || serviceStaff.length === 0) return null;
@@ -123,7 +136,7 @@ export default function BookingForm({ data }: { data: Data }) {
         temporaryTransfers,
     });
 
-    const { data: clientBookingsCount = null, isLoading: clientBookingsLoading, refetch: refetchClientBookings } = useClientBookings(
+    const { data: clientBookingsCount = null, isLoading: clientBookingsLoading, isError: clientBookingsError, refetch: refetchClientBookings } = useClientBookings(
         biz.id,
         dayStr || null,
         isAuthed,
@@ -143,9 +156,15 @@ export default function BookingForm({ data }: { data: Data }) {
         staffId,
         t,
         temporaryTransfers,
+        // Slots for services that cannot be checked against the master are not offered (fail closed).
+        prerequisiteError: serviceStaffFailed ? t('booking.error.servicesTitle', 'Не удалось загрузить услуги мастера') : null,
     });
 
     const refreshAvailability = useBookingAvailabilityRefresh({ isAuthed, refreshSlots, refetchClientBookings });
+    const retryAvailability = () => {
+        if (serviceStaffFailed) void refetchServiceStaff();
+        refreshAvailability();
+    };
 
     const {
         dayLabel,
@@ -158,7 +177,7 @@ export default function BookingForm({ data }: { data: Data }) {
         totalPriceFromStep4,
         totalPriceToStep4,
     } = useBookingFlowDerived({
-        selectionReady: restoredFromStorage && !serviceStaffLoading && !transfersLoading && !transfersError,
+        selectionReady: restoredFromStorage && !serviceStaffLoading && !serviceStaffMissing && !transfersLoading && !transfersError,
         branchId,
         businessTz,
         day,
@@ -441,6 +460,8 @@ export default function BookingForm({ data }: { data: Data }) {
                     canGoPrev={canGoPrev}
                     clientBookingsCount={clientBookingsCount}
                     clientBookingsLoading={clientBookingsLoading}
+                    clientBookingsFailed={clientBookingsError && clientBookingsCount === null}
+                    onRetryClientBookings={() => void refetchClientBookings()}
                     createBooking={createBooking}
                     day={day}
                     dayLabel={dayLabel}
@@ -456,6 +477,9 @@ export default function BookingForm({ data }: { data: Data }) {
                     serviceIds={serviceIds}
                     serviceStaff={serviceStaff}
                     servicesFiltered={servicesFiltered}
+                    servicesLoading={serviceStaffLoading}
+                    servicesFailed={serviceStaffFailed}
+                    onRetryServices={() => void refetchServiceStaff()}
                     selectedServicesForStep4={selectedServicesForStep4}
                     slots={slots}
                     slotsError={slotsError}
@@ -481,7 +505,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     onServiceToggle={handleServiceToggle}
                     onSlotSelect={handleSlotSelect}
                     onStaffSelect={handleStaffSelect}
-                    onRetrySlots={refreshAvailability}
+                    onRetrySlots={retryAvailability}
                 />
             </div>
 

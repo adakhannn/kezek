@@ -2,6 +2,8 @@
 import BookingLayoutClient from './BookingLayoutClient';
 import NotFoundMessage from './NotFoundMessage';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
+import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export default async function BookingPage({
@@ -14,7 +16,7 @@ export default async function BookingPage({
     const supabase = await createSupabaseServerClient();
 
     // Пытаемся читать по RLS (клиент своей брони, сотрудник бизнеса, или супер-админ)
-    const {data} = await supabase
+    const {data, error} = await supabase
         .from('bookings')
         .select(`
       id,status,start_at,end_at,promotion_applied,
@@ -27,6 +29,12 @@ export default async function BookingPage({
     `)
         .eq('id', id)
         .maybeSingle();
+
+    // FE-08: a failed read is an error, not "booking not found".
+    if (error) {
+        logError('BookingPage', 'Failed to load booking', { bookingId: id, error });
+        return <LoadFailedNotice page />;
+    }
 
     // Guests use a narrow UUID-based receipt RPC, never a privileged table client.
     if (!data) {
@@ -84,7 +92,11 @@ async function FallbackBooking({ id }: { id: string }) {
     const supabase = await createSupabaseServerClient();
 
     const { data, error } = await supabase.rpc('booking_receipt_public', { p_id: id });
-    if (error || !data || data.length === 0) {
+    if (error) {
+        logError('BookingPage', 'Failed to load booking receipt', { bookingId: id, error });
+        return <LoadFailedNotice page />;
+    }
+    if (!data || data.length === 0) {
         return (
                 <main className="mx-auto max-w-xl p-6">
                     <NotFoundMessage id={id} />

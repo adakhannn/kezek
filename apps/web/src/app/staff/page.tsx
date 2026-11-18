@@ -3,7 +3,9 @@ import { formatInTimeZone } from 'date-fns-tz';
 
 import StaffCabinet from './StaffCabinet';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getStaffPageContext } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 import { TZ } from '@/lib/time';
 
@@ -81,6 +83,14 @@ export default async function Page() {
             .lt('end_at', nowISO)
             .order('start_at', { ascending: false }),
     ]);
+
+    // FE-08: a failed read is an error, not "no assigned services" or 0/0 bookings. A missing
+    // branch (staff without a branch) stays a hidden card.
+    const failed = [staffResult, servicesResult, upcomingResult, pastResult].find((result) => result.error);
+    if (failed) {
+        logError('StaffCabinetPage', 'Failed to load staff cabinet data', { staffId, error: failed.error });
+        return <LoadFailedNotice page />;
+    }
 
     const staff = staffResult.data;
     const branch = branchResult.data;

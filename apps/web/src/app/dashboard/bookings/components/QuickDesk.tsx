@@ -59,8 +59,8 @@ export function QuickDesk({
     const [staffId, setStaffId] = useState<string>('');
     const [date, setDate] = useState<string>(() => todayStringInTz(timezone));
 
-    const temporaryTransfers = useTemporaryTransfers(bizId, date, staff);
-    const serviceToStaffMap = useServiceStaffMap(staff);
+    const { rows: temporaryTransfers, error: transfersError, retry: retryTransfers } = useTemporaryTransfers(bizId, date, staff);
+    const { serviceToStaffMap, error: serviceStaffError, retry: retryServiceStaff } = useServiceStaffMap(staff);
 
     const staffForSchedule = useMemo(() => staff.map((member) => ({ id: member.id, branch_id: member.branch_id })), [staff]);
 
@@ -79,7 +79,8 @@ export function QuickDesk({
     );
 
     const servicesByBranch = useMemo(() => {
-        if (!branchId || !date || !staffId || !scheduleContext) return [];
+        // FE-08: fail closed. Without the service-staff map every branch service would be offered.
+        if (serviceStaffError || !branchId || !date || !staffId || !scheduleContext) return [];
         return filterServicesForStaff({
             services,
             targetBranchId: scheduleContext.targetBranchId,
@@ -87,7 +88,7 @@ export function QuickDesk({
             serviceToStaffMap,
             isTemporaryTransfer: scheduleContext.isTemporaryTransfer,
         });
-    }, [services, branchId, staffId, date, scheduleContext, serviceToStaffMap]);
+    }, [services, branchId, staffId, date, scheduleContext, serviceToStaffMap, serviceStaffError]);
 
     const slotsApi = useQuickDeskSlots({
         bizId,
@@ -110,13 +111,14 @@ export function QuickDesk({
         clearSlots: slotsApi.clearSlots,
     });
 
-    const staffByBranch = useMemo(() => staff.filter(member => {
+    // FE-08: without the day's transfers it is unknown who works in this branch, so no master is offered.
+    const staffByBranch = useMemo(() => transfersError ? [] : staff.filter(member => {
         const context = resolveScheduleContext({
             staffId: member.id, dayStr: date, selectedBranchId: branchId,
             temporaryTransfers, staff: staffForSchedule,
         });
         return (context.isTemporaryTransfer ? context.targetBranchId : context.homeBranchId) === branchId;
-    }), [staff, date, branchId, temporaryTransfers, staffForSchedule]);
+    }), [staff, date, branchId, temporaryTransfers, staffForSchedule, transfersError]);
 
     const client = useQuickDeskClient();
 
@@ -224,7 +226,10 @@ export function QuickDesk({
                         slotStartISO={slotsApi.slotStartISO} today={today} tomorrow={tomorrow}
                         timezone={timezone} locale={locale} slots={slotsApi.slots} slotsLoading={slotsApi.slotsLoading}
                         disabled={quickBooking.creating} setBranchId={setBranchId} setDate={setDate}
-                        setStaffId={setStaffId} setServiceId={setServiceId} setSlotStartISO={slotsApi.setSlotStartISO} t={t} />
+                        setStaffId={setStaffId} setServiceId={setServiceId} setSlotStartISO={slotsApi.setSlotStartISO} t={t}
+                        slotsError={slotsApi.slotsError} onRetrySlots={slotsApi.retrySlots}
+                        staffError={!!transfersError} onRetryStaff={retryTransfers}
+                        servicesError={serviceStaffError} onRetryServices={retryServiceStaff} />
 
                     <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

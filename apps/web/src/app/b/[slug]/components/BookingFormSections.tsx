@@ -27,6 +27,9 @@ type BookingFormSectionsProps = {
     canGoPrev: boolean;
     clientBookingsCount: number | null;
     clientBookingsLoading: boolean;
+    /** The existing-bookings check failed: a notice with a retry, not silence (FE-08). */
+    clientBookingsFailed?: boolean;
+    onRetryClientBookings?: () => void;
     createBooking: (slotTime: Date, slotStaffId?: string) => void;
     day: Date;
     dayLabel: string;
@@ -42,6 +45,10 @@ type BookingFormSectionsProps = {
     serviceIds: string[];
     serviceStaff: ServiceStaffRow[] | null;
     servicesFiltered: Service[];
+    servicesLoading?: boolean;
+    /** The service-staff map failed: the service step shows an error with a retry, not "no services". */
+    servicesFailed?: boolean;
+    onRetryServices?: () => void;
     selectedServicesForStep4: Service[];
     slots: Slot[];
     slotsError: string | null;
@@ -80,6 +87,8 @@ export function BookingFormSections({
     canGoPrev,
     clientBookingsCount,
     clientBookingsLoading,
+    clientBookingsFailed,
+    onRetryClientBookings,
     createBooking: _createBooking,
     day,
     dayLabel,
@@ -95,6 +104,9 @@ export function BookingFormSections({
     serviceIds,
     serviceStaff,
     servicesFiltered,
+    servicesLoading,
+    servicesFailed,
+    onRetryServices,
     selectedServicesForStep4,
     slots,
     slotsError,
@@ -246,6 +258,9 @@ export function BookingFormSections({
                             selectedServiceIds={serviceIds}
                             onToggle={onServiceToggle}
                             staffId={staffId}
+                            loading={servicesLoading}
+                            error={servicesFailed}
+                            onRetry={onRetryServices}
                         />
                         {selectedServicesForStep4.length > 0 ? (
                             <div className="mt-4">
@@ -293,6 +308,8 @@ export function BookingFormSections({
                             isAuthed={isAuthed}
                             clientBookingsCount={clientBookingsCount}
                             clientBookingsLoading={clientBookingsLoading}
+                            clientBookingsFailed={clientBookingsFailed}
+                            onRetryClientBookings={onRetryClientBookings}
                             bookingLoading={bookingLoading}
                             onRetry={onRetrySlots}
                         />

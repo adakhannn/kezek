@@ -3,7 +3,9 @@ import Link from 'next/link';
 
 import { getT } from '@/app/_components/i18n/server';
 import Client from '@/app/dashboard/staff/[id]/slots/Client';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -20,11 +22,17 @@ export default async function StaffSlotsPage({
     const t = await getT();
 
     // 1) сотрудник
-    const { data: staff } = await supabase
+    const { data: staff, error: staffError } = await supabase
         .from('staff')
         .select('id, full_name, is_active, biz_id')
         .eq('id', id)
         .maybeSingle();
+
+    // FE-08: a failed read is an error, not "staff not found".
+    if (staffError) {
+        logError('StaffSlotsPage', 'Failed to load staff', { staffId: id, bizId, error: staffError });
+        return <LoadFailedNotice page />;
+    }
 
     if (!staff || String(staff.biz_id) !== String(bizId)) {
         return (
@@ -35,12 +43,16 @@ export default async function StaffSlotsPage({
     }
 
     // 2) активные филиалы бизнеса
-    const { data: branches } = await supabase
+    const { data: branches, error: branchesError } = await supabase
         .from('branches')
         .select('id, name, is_active')
         .eq('biz_id', bizId)
         .eq('is_active', true)
         .order('name');
+    if (branchesError) {
+        logError('StaffSlotsPage', 'Failed to load branches', { bizId, error: branchesError });
+        return <LoadFailedNotice page />;
+    }
 
     // 3) услуги, которые этот мастер реально оказывает:
     // services INNER JOIN service_staff (service_staff.is_active = true, service_staff.staff_id = staff.id)

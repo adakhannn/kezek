@@ -3,7 +3,9 @@ import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 import { DashboardHomeClient } from './components/DashboardHomeClient';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { loadStaffApplicationSummary } from '@/lib/staffApplicationSummary';
 import { getBusinessTimezone } from '@/lib/time';
 
@@ -20,7 +22,7 @@ async function count(
     supabase: SupabaseServerClient,
     table: string,
     filters: { col: string; eq?: FilterValue; gte?: FilterValue; lte?: FilterValue }[] = []
-): Promise<number> {
+): Promise<number | null> {
     // Generic counter over caller-chosen tables/columns: use the untyped client view.
     let q = (supabase as unknown as SupabaseClient).from(table).select('id', { count: 'exact', head: true });
     for (const f of filters) {
@@ -28,7 +30,12 @@ async function count(
         if (f.gte !== undefined && f.gte !== null) q = q.gte(f.col, f.gte);
         if (f.lte !== undefined && f.lte !== null) q = q.lte(f.col, f.lte);
     }
-    const { count: c } = await q;
+    const { count: c, error } = await q;
+    // FE-08: a failed count is unknown, not 0 (zeros would also trigger the onboarding card).
+    if (error) {
+        logError('DashboardHome', 'Failed to count dashboard records', { table, error });
+        return null;
+    }
     return c ?? 0;
 }
 
@@ -94,12 +101,18 @@ export default async function DashboardHome() {
     const end = endOfDay.toISOString();
 
     // Пересчитываем bookingsToday с правильным диапазоном дат
-    const { count: bookingsTodayCount } = await supabase
+    const { count: bookingsTodayCount, error: bookingsTodayError } = await supabase
         .from('bookings')
         .select('id', { count: 'exact', head: true })
         .eq('biz_id', bizId)
         .gte('start_at', start)
         .lte('start_at', end);
+    if (bookingsTodayError) {
+        logError('DashboardHome', 'Failed to count today bookings', { bizId, error: bookingsTodayError });
+    }
+    if (bookingsTodayError || staffActive === null || servicesActive === null || branchesCount === null) {
+        return <LoadFailedNotice page />;
+    }
     const bookingsToday = bookingsTodayCount ?? 0;
 
     const bizName = biz?.name || null; // Передаем null, чтобы перевести на клиенте

@@ -38,6 +38,9 @@ type SlotPickerProps = {
     isAuthed: boolean;
     clientBookingsCount: number | null;
     clientBookingsLoading: boolean;
+    /** The existing-bookings check failed: the client is told, not left without the warning (FE-08). */
+    clientBookingsFailed?: boolean;
+    onRetryClientBookings?: () => void;
     bookingLoading: boolean;
     onRetry?: () => void;
     hasMore?: boolean;
@@ -63,6 +66,8 @@ export function SlotPicker({
     isAuthed,
     clientBookingsCount,
     clientBookingsLoading,
+    clientBookingsFailed = false,
+    onRetryClientBookings,
     bookingLoading,
     onRetry,
     hasMore = false,
@@ -107,6 +112,26 @@ export function SlotPicker({
                             ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
                             : t('booking.existingBookings.warning.many', 'Активных записей в этом заведении на выбранный день: {count}.')
                                 .replace('{count}', String(clientBookingsCount))
+                    }
+                />
+            ) : null}
+
+            {isAuthed && !clientBookingsLoading && clientBookingsFailed ? (
+                <AlertBanner
+                    variant="warning"
+                    compact
+                    title={t('booking.existingBookings.checkFailedTitle', 'Не удалось проверить ваши записи на этот день')}
+                    message={t('booking.existingBookings.checkFailed', 'Возможно, у вас уже есть запись на этот день. Повторите проверку или посмотрите свои записи в личном кабинете.')}
+                    action={
+                        onRetryClientBookings ? (
+                            <button
+                                type="button"
+                                onClick={onRetryClientBookings}
+                                className="inline-flex min-h-[36px] items-center justify-center rounded-[var(--radius-sm)] border border-current px-3 py-1.5 text-xs font-medium transition-all hover:bg-white/20"
+                            >
+                                {t('booking.retry', 'Повторить')}
+                            </button>
+                        ) : undefined
                     }
                 />
             ) : null}

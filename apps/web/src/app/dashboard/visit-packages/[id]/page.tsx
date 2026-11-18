@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation';
 
 import VisitPackagePlanForm from '@/app/dashboard/visit-packages/VisitPackagePlanForm';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -32,8 +34,8 @@ export default async function VisitPackageEditPage({
 
     const [
         { data: plan, error: planError },
-        { data: branches },
-        { data: services },
+        { data: branches, error: branchesError },
+        { data: services, error: servicesError },
     ] = await Promise.all([
         supabase
             .from('visit_package_plans')
@@ -55,7 +57,13 @@ export default async function VisitPackageEditPage({
             .order('name_ru'),
     ]);
 
-    if (planError || !plan) {
+    // FE-08: a failed read is an error, not "not found"; empty lists would drop the plan's
+    // service and branches on save.
+    if (planError || branchesError || servicesError) {
+        logError('VisitPackageEditPage', 'Failed to load the plan form', { planId: id, bizId, planError, branchesError, servicesError });
+        return <LoadFailedNotice page />;
+    }
+    if (!plan) {
         return notFound();
     }
 

@@ -66,12 +66,18 @@ export default async function EditBranchPage({
     if (!branch || !business) return notFound();
 
     // Загружаем расписание филиала
-    const { data: scheduleData } = await supabase
+    const { data: scheduleData, error: scheduleError } = await supabase
         .from('branch_working_hours')
         .select('day_of_week, intervals, breaks')
         .eq('biz_id', bizId)
         .eq('branch_id', branch.id)
         .order('day_of_week');
+
+    // FE-08: an unread schedule must not look like "closed every day" - saving it would erase the real hours.
+    if (scheduleError) {
+        logError('EditBranchPage', 'Failed to load branch working hours', { branchId: id, bizId, error: scheduleError });
+        return <BranchErrorDisplay />;
+    }
 
     const initialSchedule = (scheduleData || []).map((s) => ({
         day_of_week: s.day_of_week,

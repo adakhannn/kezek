@@ -59,6 +59,7 @@ export const cabinetEn = {
     'cabinet.packages.title': 'My packages',
     'cabinet.packages.subtitle': 'Active visit packages',
     'cabinet.packages.loading': 'Loading packages...',
+    'cabinet.packages.loadError': 'Could not load your visit packages',
     'cabinet.packages.noActive': 'No active packages',
     'cabinet.packages.remaining': 'Remaining',
     'cabinet.packages.of': 'of',

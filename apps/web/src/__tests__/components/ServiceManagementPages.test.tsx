@@ -108,6 +108,9 @@ describe('service management projections', () => {
         const db = database([row('hidden-1', 'branch-2', false)], true);
         mockContext.mockResolvedValue({ bizId: 'biz-1', supabase: db });
         mockServiceClient.mockReturnValue(db);
-        await expect(EditServicePage({ params: Promise.resolve({ id: 'hidden-1' }) })).rejects.toThrow('not found');
+        // FE-08: a failed read is an error with a retry, never an editable (blank) service.
+        const result = await EditServicePage({ params: Promise.resolve({ id: 'hidden-1' }) });
+        expect((result as { props: Record<string, unknown> }).props).toEqual({ page: true });
+        expect((result as { props: Record<string, unknown> }).props).not.toHaveProperty('svc');
     });
 });

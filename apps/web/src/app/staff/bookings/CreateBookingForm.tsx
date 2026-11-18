@@ -6,6 +6,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { Card } from '@/components/ui/Card';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
@@ -53,6 +54,9 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
     const [slots, setSlots] = useState<RpcSlot[]>([]);
     const [slotStartISO, setSlotStartISO] = useState<string>('');
     const [slotsLoading, setSlotsLoading] = useState(false);
+    // FE-08: a failed slot load is an error with a retry, not "no free slots".
+    const [slotsFailed, setSlotsFailed] = useState(false);
+    const [slotsAttempt, setSlotsAttempt] = useState(0);
     const [creating, setCreating] = useState(false);
 
     const [newClientName, setNewClientName] = useState('');
@@ -70,10 +74,12 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 setSlots([]);
                 setSlotStartISO('');
                 setSlotsLoading(false);
+                setSlotsFailed(false);
                 return;
             }
 
             setSlotsLoading(true);
+            setSlotsFailed(false);
             try {
                 let raw: RpcSlot[] = [];
 
@@ -137,12 +143,13 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 setSlots([]);
                 setSlotStartISO('');
                 setSlotsLoading(false);
+                setSlotsFailed(true);
             }
         })();
         return () => {
             ignore = true;
         };
-    }, [bizId, selectedServiceIds, selectedStaffId, date, branchId]);
+    }, [bizId, selectedServiceIds, selectedStaffId, date, branchId, slotsAttempt]);
 
     useEffect(() => {
         setSelectedServiceIds([]);
@@ -392,6 +399,11 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 <div className="text-center py-4 text-gray-500 dark:text-gray-400">
                     {t('staff.cabinet.bookings.create.loadingSlots', 'Загрузка слотов...')}
                 </div>
+            ) : slotsFailed ? (
+                <LoadFailedNotice
+                    title={t('staff.cabinet.bookings.create.slotsLoadError', 'Не удалось загрузить свободное время')}
+                    onRetry={() => setSlotsAttempt((attempt) => attempt + 1)}
+                />
             ) : slots.length > 0 ? (
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

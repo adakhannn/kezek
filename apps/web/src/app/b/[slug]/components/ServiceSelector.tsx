@@ -14,6 +14,10 @@ type ServiceSelectorProps = {
     selectedServiceIds: string[];
     onToggle: (serviceId: string) => void;
     staffId: string | null;
+    loading?: boolean;
+    /** The service-staff map failed to load: an error with a retry, never "no services" (FE-08). */
+    error?: boolean;
+    onRetry?: () => void;
 };
 
 export function ServiceSelector({
@@ -21,6 +25,9 @@ export function ServiceSelector({
     selectedServiceIds,
     onToggle,
     staffId,
+    loading = false,
+    error = false,
+    onRetry,
 }: ServiceSelectorProps) {
     const { t, locale } = useLanguage();
 
@@ -52,6 +59,29 @@ export function ServiceSelector({
                 type="info"
                 title={t('booking.empty.selectMasterFirstTitle', 'Сначала нужен специалист')}
                 message={t('booking.empty.selectMasterFirst', 'Сначала выберите мастера, и система покажет только доступные для него услуги.')}
+            />
+        );
+    }
+
+    if (loading) return <BookingEmptyState type="loading" message={t('common.loading', 'Загрузка...')} />;
+
+    if (error) {
+        return (
+            <BookingEmptyState
+                type="error"
+                title={t('booking.error.servicesTitle', 'Не удалось загрузить услуги мастера')}
+                message={t('booking.error.servicesLoad', 'Это ошибка загрузки, а не отсутствие услуг. Повторите попытку.')}
+                action={
+                    onRetry ? (
+                        <button
+                            type="button"
+                            onClick={onRetry}
+                            className="inline-flex min-h-[36px] items-center justify-center rounded-[var(--radius-sm)] border border-current px-3 py-1.5 text-xs font-medium transition-all hover:bg-white/20"
+                        >
+                            {t('booking.retry', 'Повторить')}
+                        </button>
+                    ) : undefined
+                }
             />
         );
     }

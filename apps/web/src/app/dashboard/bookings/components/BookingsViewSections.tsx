@@ -7,6 +7,7 @@ import type { BookingItem as BookingViewItem, BranchRow as BookingViewBranchRow,
 import { useCalendarHistory } from './useCalendarHistory';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { BookingCard } from '@/components/dashboard';
 import { Tabs } from '@/components/ui/Tabs';
 import { toCsv } from '@/lib/csv';
@@ -100,6 +101,9 @@ export function CalendarDaySection({
     const [items, setItems] = useState<
         { id: string; staff_id: string; start_at: string; end_at: string; status: BookingViewItem['status']; servicesSummary?: string }[]
     >([]);
+    // FE-08: a failed day load is an error with a retry, not a free-looking day of "—" cells.
+    const [loadFailed, setLoadFailed] = useState(false);
+    const [reloadKey, setReloadKey] = useState(0);
 
     const filteredStaff = useMemo(() => {
         if (selectedBranchId === 'all') return staff;
@@ -107,6 +111,7 @@ export function CalendarDaySection({
     }, [staff, selectedBranchId]);
 
     function exportCsv() {
+        if (loadFailed) return;
         const rows = items.map((item) => ({
             id: item.id,
             staff_id: item.staff_id,
@@ -159,6 +164,7 @@ export function CalendarDaySection({
             if (error) {
                 logError('CalendarDaySection', 'Error loading bookings', error);
                 setItems([]);
+                setLoadFailed(true);
                 return;
             }
 
@@ -222,12 +228,13 @@ export function CalendarDaySection({
             });
 
             setItems(mapped);
+            setLoadFailed(false);
         })();
 
         return () => {
             ignore = true;
         };
-    }, [bizId, date, locale, t, timezone]);
+    }, [bizId, date, locale, t, timezone, reloadKey]);
 
     const hours = hourRange(9, 21);
     const bookingsByStaff = useMemo(() => {
@@ -272,8 +279,9 @@ export function CalendarDaySection({
                         aria-label={t('bookings.calendar.date', 'Дата календаря')}
                     />
                     <button
-                        className="motion-interactive inline-flex min-h-[40px] items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
+                        className="motion-interactive inline-flex min-h-[40px] items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] disabled:cursor-not-allowed disabled:opacity-50"
                         onClick={exportCsv}
+                        disabled={loadFailed}
                         aria-label={t('bookings.calendar.exportCsv', 'Экспорт CSV')}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,6 +292,12 @@ export function CalendarDaySection({
                 </div>
             </div>
 
+            {loadFailed ? (
+                <LoadFailedNotice
+                    title={t('bookings.calendar.loadError', 'Не удалось загрузить записи на этот день')}
+                    onRetry={() => setReloadKey((key) => key + 1)}
+                />
+            ) : (
             <div className="overflow-x-auto">
                 <table className="min-w-full">
                     <thead className="sticky top-0 z-[96]">
@@ -336,6 +350,7 @@ export function CalendarDaySection({
                     </tbody>
                 </table>
             </div>
+            )}
         </section>
     );
 }

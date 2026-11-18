@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { startTransition, useEffect } from 'react';
 
 import { ErrorDisplay } from './ErrorDisplay';
 
@@ -21,6 +22,7 @@ export function SegmentError({
     reset: () => void;
     scope: string;
 }) {
+    const router = useRouter();
     useEffect(() => {
         reportErrorToMonitoring({
             scope,
@@ -37,7 +39,11 @@ export function SegmentError({
             window.location.reload();
             return;
         }
-        reset();
+        // A server render error needs fresh server data; reset() alone re-renders the failed payload.
+        startTransition(() => {
+            router.refresh();
+            reset();
+        });
     };
 
     return <ErrorDisplay error={error} onRetry={retry} />;

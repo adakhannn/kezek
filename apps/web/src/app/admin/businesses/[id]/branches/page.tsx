@@ -1,7 +1,9 @@
 // apps/web/src/app/admin/businesses/[id]/branches/page.tsx
 import Link from 'next/link';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { DeleteBranchButton } from '@/components/admin/branches/DeleteBranchButton';
+import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +21,7 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
 
     const admin = createSupabaseAdminClient();
 
-    const [{ data: biz }, { data: branches }] = await Promise.all([
+    const [{ data: biz, error: bizError }, { data: branches, error: branchesError }] = await Promise.all([
         admin.from('businesses').select('id,name,branch_limit').eq('id', id).maybeSingle(),
         admin
             .from('branches')
@@ -28,6 +30,11 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
             .order('created_at', { ascending: true }),
     ]);
 
+    // FE-08: a failed read is an error, not "not found" or "no branches yet".
+    if (bizError || branchesError) {
+        logError('AdminBranchesPage', 'Failed to load business branches', { bizId: id, bizError, branchesError });
+        return <LoadFailedNotice page />;
+    }
     if (!biz) return <div className="p-4">Бизнес не найден</div>;
 
     return (

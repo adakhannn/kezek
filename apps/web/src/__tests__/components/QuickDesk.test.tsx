@@ -9,8 +9,8 @@ const mockServiceMap = new Map([['service1', new Set(['staff1'])]]);
 jest.mock('@/app/_components/i18n/LanguageProvider', () => ({
     useLanguage: () => ({locale: 'ru', t: (key: string, fallback: string) => bookingsRu[key as keyof typeof bookingsRu] ?? fallback}),
 }));
-jest.mock('@/app/dashboard/bookings/components/useTemporaryTransfers', () => ({useTemporaryTransfers: () => mockTransfers}));
-jest.mock('@/app/dashboard/bookings/components/useServiceStaffMap', () => ({useServiceStaffMap: () => mockServiceMap}));
+jest.mock('@/app/dashboard/bookings/components/useTemporaryTransfers', () => ({useTemporaryTransfers: () => ({rows: mockTransfers, error: null, retry: () => {}})}));
+jest.mock('@/app/dashboard/bookings/components/useServiceStaffMap', () => ({useServiceStaffMap: () => ({serviceToStaffMap: mockServiceMap, error: false, retry: () => {}})}));
 jest.mock('@/app/dashboard/bookings/components/SellVisitPackageModal', () => ({SellVisitPackageModal: () => null}));
 jest.mock('@/lib/bookingDashboardService', () => ({getFreeSlotsForServiceDay: jest.fn(), createInternalBooking: jest.fn()}));
 jest.mock('@/lib/funnelEvents', () => ({trackFunnelEvent: jest.fn(), getSessionId: () => 'test-session'}));

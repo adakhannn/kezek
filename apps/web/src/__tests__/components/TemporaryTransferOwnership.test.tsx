@@ -22,7 +22,7 @@ const location = (params = base, branch = 'temporary-a'): WorkLocation => ({
 const row = (params = base, branch = 'temporary-a') => ({ staff_id: params.staff[0].id, branch_id: branch, date: params.date });
 const load = jest.mocked(loadWorkLocations);
 function mount(initialProps: Params = base) {
-    return renderHook(({ bizId, date, staff }) => useTemporaryTransfers(bizId, date, staff), { initialProps });
+    return renderHook(({ bizId, date, staff }) => useTemporaryTransfers(bizId, date, staff).rows, { initialProps });
 }
 beforeEach(() => { load.mockReset(); jest.mocked(logError).mockClear(); });
 

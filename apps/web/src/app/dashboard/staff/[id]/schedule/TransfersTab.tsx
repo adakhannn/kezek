@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import type { Branch } from './scheduleTypes';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
@@ -38,6 +40,9 @@ export function TransfersTab({
         }>
     >([]);
     const [loading, setLoading] = useState(true);
+    // FE-08: a failed read is an error with a retry, not "no temporary transfers".
+    const [loadFailed, setLoadFailed] = useState(false);
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let ignore = false;
@@ -46,7 +51,7 @@ export function TransfersTab({
             const weekStart = formatInTimeZone(getWeekDates(0)[0], TZ, 'yyyy-MM-dd');
             const weekEnd = formatInTimeZone(addDays(getWeekDates(1)[6], 1), TZ, 'yyyy-MM-dd');
 
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('staff_schedule_rules')
                 .select('id, date_on, branch_id')
                 .eq('biz_id', bizId)
@@ -59,6 +64,13 @@ export function TransfersTab({
                 .order('date_on', { ascending: true });
 
             if (ignore) return;
+            if (error) {
+                logError('TransfersTab', 'Failed to load temporary transfers', error);
+                setTransfers([]);
+                setLoadFailed(true);
+                setLoading(false);
+                return;
+            }
 
             const transfersData = (data ?? [])
                 .map((row) => {
@@ -73,12 +85,13 @@ export function TransfersTab({
                 .filter((transfer) => transfer.branch_name !== t('staff.schedule.transfers.unknownBranch', 'Неизвестный филиал'));
 
             setTransfers(transfersData);
+            setLoadFailed(false);
             setLoading(false);
         })();
         return () => {
             ignore = true;
         };
-    }, [bizId, staffId, homeBranchId, branches, t]);
+    }, [bizId, staffId, homeBranchId, branches, t, attempt]);
 
     const homeBranch = branches.find((branch) => branch.id === homeBranchId);
     const homeBranchName = homeBranch?.name || t('staff.schedule.transfers.homeBranchDefault', 'Основной филиал');
@@ -111,7 +124,21 @@ export function TransfersTab({
                 </p>
             </div>
 
-            {transfers.length === 0 ? (
+            {loadFailed ? (
+                <AlertBanner
+                    variant="danger"
+                    message={t('staff.schedule.transfers.loadError', 'Не удалось загрузить временные переводы')}
+                    action={(
+                        <button
+                            type="button"
+                            onClick={() => setAttempt((value) => value + 1)}
+                            className="rounded-md border border-current px-2 py-1 text-xs font-medium"
+                        >
+                            {t('staff.schedule.retry', 'Повторить')}
+                        </button>
+                    )}
+                />
+            ) : transfers.length === 0 ? (
                 <div className="text-center py-12">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
                         <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -59,6 +59,7 @@ export const cabinetRu = {
     'cabinet.packages.title': 'Мои пакеты',
     'cabinet.packages.subtitle': 'Активные пакеты визитов',
     'cabinet.packages.loading': 'Загрузка пакетов...',
+    'cabinet.packages.loadError': 'Не удалось загрузить ваши пакеты визитов',
     'cabinet.packages.noActive': 'Нет активных пакетов',
     'cabinet.packages.remaining': 'Осталось',
     'cabinet.packages.of': 'из',

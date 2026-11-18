@@ -14,14 +14,16 @@ export type UseQuickDeskSlotsParams = {
     scheduleContext: ScheduleContext | null;
 };
 type RequestIdentity = { key: string };
-type Snapshot = { request: RequestIdentity; slots: DashboardSlot[]; selected: string; resolved: boolean };
+type Snapshot = { request: RequestIdentity; slots: DashboardSlot[]; selected: string; resolved: boolean; failed?: boolean };
 const EMPTY_SLOTS: DashboardSlot[] = [];
 
 export function useQuickDeskSlots({ bizId, branchId, staffId, serviceId, date, scheduleContext }: UseQuickDeskSlotsParams) {
     const targetBranchId = scheduleContext?.targetBranchId ?? '';
     const isTemporaryTransfer = scheduleContext?.isTemporaryTransfer ?? false;
     const enabled = Boolean(bizId && branchId && staffId && staffId !== 'any' && serviceId && date && scheduleContext);
-    const requestKey = JSON.stringify([bizId, branchId, staffId, serviceId, date, targetBranchId, isTemporaryTransfer, enabled]);
+    // A retry is a new request: the failed snapshot gives way to loading, then to its own result.
+    const [attempt, setAttempt] = useState(0);
+    const requestKey = JSON.stringify([bizId, branchId, staffId, serviceId, date, targetBranchId, isTemporaryTransfer, enabled, attempt]);
     const request = useMemo(() => ({ key: requestKey }), [requestKey]);
     const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
     const requestGeneration = useRef(0);
@@ -60,12 +62,14 @@ export function useQuickDeskSlots({ bizId, branchId, staffId, serviceId, date, s
             .catch(error => {
                 if (ignore || requestGeneration.current !== generation) return;
                 logError('useQuickDeskSlots', 'get_free_slots_service_day_v2 error', error);
-                setSnapshot({ request, slots: [], selected: '', resolved: true });
+                // FE-08: a failed load is an error with a retry, not "no free slots".
+                setSnapshot({ request, slots: [], selected: '', resolved: true, failed: true });
             });
         return () => { ignore = true; };
     }, [bizId, branchId, staffId, serviceId, date, targetBranchId, isTemporaryTransfer, enabled, request]);
 
     const current = enabled && snapshot?.request === request ? snapshot : null;
+    const retrySlots = useCallback(() => setAttempt(value => value + 1), []);
     return { slots: current?.slots ?? EMPTY_SLOTS, slotStartISO: current?.selected ?? '', setSlotStartISO,
-        slotsLoading: enabled && !current?.resolved, clearSlots };
+        slotsLoading: enabled && !current?.resolved, slotsError: Boolean(current?.failed), retrySlots, clearSlots };
 }

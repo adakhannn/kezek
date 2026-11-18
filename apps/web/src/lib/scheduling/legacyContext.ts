@@ -10,6 +10,8 @@ export type LegacyScheduleContext = {
     branchHours: BranchHoursRow[] | null;
     /** Weekly or range rules or working_hours exist, so a day without a date rule still has hours. */
     hasRegularSchedule: boolean;
+    /** A read the editor depends on failed: show an error, never a guessed schedule (FE-08). */
+    failed: boolean;
 };
 
 /**
@@ -41,5 +43,6 @@ export async function readLegacyScheduleContext(bizId: string, staffId: string, 
                 intervals: Array.isArray(row.intervals) ? (row.intervals as BranchHoursRow['intervals']) : [],
             })),
         hasRegularSchedule: (regularRules.count ?? 0) + (workingHours.count ?? 0) > 0,
+        failed: Boolean(versions.error || regularRules.error || workingHours.error),
     };
 }

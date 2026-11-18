@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Client from './Client';
 import StaffSchedulePageClient from './StaffSchedulePageClient';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import ScheduleEditor from '@/components/scheduling/ScheduleEditor';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
@@ -69,7 +70,7 @@ export default async function StaffSchedulePage({
                 bizCity={bizCity}
             />
 
-            {explicitScheduling || !legacyContext ? <ScheduleEditor
+            {legacyContext?.failed ? <LoadFailedNotice /> : explicitScheduling || !legacyContext ? <ScheduleEditor
                 staffId={String(staff.id)}
                 branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
                 homeBranchId={String(staff.branch_id)}

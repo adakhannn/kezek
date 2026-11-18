@@ -33,6 +33,8 @@ type UseBookingSlotsStateParams = {
     staffId: string;
     t: TranslateFn;
     temporaryTransfers: TransferRow[];
+    /** A prerequisite (the service-staff map) failed: no slots are offered, only this error (FE-08). */
+    prerequisiteError?: string | null;
 };
 
 export function useBookingSlotsState({
@@ -48,9 +50,10 @@ export function useBookingSlotsState({
     staffId,
     t,
     temporaryTransfers,
+    prerequisiteError = null,
 }: UseBookingSlotsStateParams) {
     const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
-    const [snapshot, setSnapshot] = useState<{ request: { key: string }; source: Slot[]; slots: Slot[] } | null>(null);
+    const [snapshot, setSnapshot] = useState<{ request: { key: string }; source: Slot[]; slots: Slot[]; failed?: boolean } | null>(null);
 
     const { error: slotsError, loading: loaderLoading, slots: slotsFromHook, requestKey,
         hasMore, loadingMore, loadMore, moreError } = useSlotsLoader({
@@ -103,8 +106,9 @@ export function useBookingSlotsState({
                 if (ignore) return;
 
                 if (bookingsError) {
+                    // Unfiltered slots may include taken times: fail closed with a retry (FE-08).
                     logWarn('Booking', 'Error loading bookings for filtering', bookingsError);
-                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: slotsFromHook });
+                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: EMPTY_SLOTS, failed: true });
                     return;
                 }
 
@@ -141,7 +145,7 @@ export function useBookingSlotsState({
             } catch (error) {
                 if (!ignore) {
                     logWarn('Booking', 'Error filtering slots by bookings', error);
-                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: slotsFromHook });
+                    setSnapshot({ request: filterRequest, source: slotsFromHook, slots: EMPTY_SLOTS, failed: true });
                 }
             }
         })();
@@ -170,11 +174,13 @@ export function useBookingSlotsState({
         };
     }, [dayStr, serviceId, staffId]);
 
+    const filterFailed = staffId !== 'any' && !loaderLoading && !!current?.failed;
     return {
         refreshSlots: () => setSlotsRefreshKey((current) => current + 1),
-        slots,
-        slotsError,
-        slotsLoading,
-        hasMore, loadingMore, loadMore, moreError,
+        slots: prerequisiteError ? EMPTY_SLOTS : slots,
+        slotsError: prerequisiteError ?? slotsError
+            ?? (filterFailed ? t('booking.error.slotsCheckFailed', 'Не удалось проверить, какое время уже занято. Повторите попытку.') : null),
+        slotsLoading: !prerequisiteError && slotsLoading,
+        hasMore: !prerequisiteError && hasMore, loadingMore, loadMore, moreError,
     };
 }

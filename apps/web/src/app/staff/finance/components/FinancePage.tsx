@@ -264,6 +264,7 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
 
             {activeTab === 'clients' && (
                 <FinanceClientsTabSection
+                    financeData={financeData}
                     timezone={financeData.data?.calendar?.timezone}
                     staffId={staffId}
                     shiftDate={shiftDate}
@@ -292,6 +293,7 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
 
             {activeTab === 'stats' && stats && !staffId && (
                 <FinanceStatsTabSection
+                    financeData={financeData}
                     staffId={staffId}
                     loadingLabel={t('staff.finance.stats.loading', 'Загрузка статистики...')}
                     statsContent={

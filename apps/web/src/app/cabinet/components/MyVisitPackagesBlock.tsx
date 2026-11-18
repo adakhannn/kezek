@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 
 type PackageItem = {
   id: string;
@@ -27,6 +28,7 @@ export default function MyVisitPackagesBlock() {
   const { t, locale } = useLanguage();
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [expiredOpen, setExpiredOpen] = useState(false);
 
   const fetchPackages = useCallback(async () => {
@@ -36,11 +38,15 @@ export default function MyVisitPackagesBlock() {
       const json = await res.json();
       if (json?.ok && Array.isArray(json?.data?.packages)) {
         setPackages(json.data.packages);
+        setLoadFailed(false);
       } else {
+        // FE-08: a failed load is an error with a retry; the paid packages must not just vanish.
         setPackages([]);
+        setLoadFailed(true);
       }
     } catch {
       setPackages([]);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -79,6 +85,29 @@ export default function MyVisitPackagesBlock() {
     );
   }
 
+  const heading = (
+    <>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+        {t('cabinet.packages.title', 'Мои пакеты')}
+      </h2>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        {t('cabinet.packages.subtitle', 'Активные пакеты визитов')}
+      </p>
+    </>
+  );
+
+  if (loadFailed) {
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200 dark:border-gray-800">
+        {heading}
+        <LoadFailedNotice
+          title={t('cabinet.packages.loadError', 'Не удалось загрузить ваши пакеты визитов')}
+          onRetry={() => void fetchPackages()}
+        />
+      </div>
+    );
+  }
+
   if (packages.length === 0) {
     return null;
   }
@@ -86,12 +115,7 @@ export default function MyVisitPackagesBlock() {
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200 dark:border-gray-800">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-          {t('cabinet.packages.title', 'Мои пакеты')}
-        </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          {t('cabinet.packages.subtitle', 'Активные пакеты визитов')}
-        </p>
+        {heading}
 
         {activeList.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

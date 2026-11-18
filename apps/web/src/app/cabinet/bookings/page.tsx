@@ -6,6 +6,8 @@ import ClientCabinet from '../ClientCabinet';
 
 import BookingsPageClient from './BookingsPageClient';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
+import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { TZ } from '@/lib/time';
 
@@ -27,7 +29,7 @@ export default async function BookingsPage() {
     // Берём только свои брони (client_id = текущий пользователь)
     // Исключаем отменённые из предстоящих
     // Предстоящие брони - записи, которые еще не закончились (end_at >= now)
-    const { data: upcoming } = await supabase
+    const { data: upcoming, error: upcomingError } = await supabase
         .from('bookings')
         .select(`
       id, status, start_at, end_at, promotion_applied, subscription_applied,
@@ -45,7 +47,7 @@ export default async function BookingsPage() {
         .order('start_at', { ascending: true });
 
     // Terminal visits belong in own history even before their scheduled end.
-    const { data: past } = await supabase
+    const { data: past, error: pastError } = await supabase
         .from('bookings')
         .select(`
       id, status, start_at, end_at, promotion_applied, subscription_applied,
@@ -60,6 +62,12 @@ export default async function BookingsPage() {
         .eq('client_id', userId)
         .or(`end_at.lt.${nowISO},status.in.(paid,cancelled,no_show)`)
         .order('start_at', { ascending: false });
+
+    // FE-08: "no upcoming bookings" after a failed read would invite a duplicate booking.
+    if (upcomingError || pastError) {
+        logError('CabinetBookingsPage', 'Failed to load own bookings', { upcomingError, pastError });
+        return <LoadFailedNotice page />;
+    }
 
     // jsonb columns (promotion_applied, subscription_applied) are written by booking commands.
     return (

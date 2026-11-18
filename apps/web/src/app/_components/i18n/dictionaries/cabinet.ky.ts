@@ -58,6 +58,7 @@ export const cabinetKy = {
     'cabinet.packages.title': 'Менин пакеттерим',
     'cabinet.packages.subtitle': 'Активдүү визит пакеттери',
     'cabinet.packages.loading': 'Пакеттер жүктөлүүдө...',
+    'cabinet.packages.loadError': 'Визит пакеттериңизди жүктөө мүмкүн болгон жок',
     'cabinet.packages.noActive': 'Активдүү пакеттер жок',
     'cabinet.packages.remaining': 'Калды',
     'cabinet.packages.of': 'дан',

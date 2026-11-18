@@ -1,9 +1,11 @@
 import { BusinessContactSettingsForm } from './BusinessContactSettingsForm';
 
 import { getServerLocale, getT } from '@/app/_components/i18n/server';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { isBusinessOwner } from '@/lib/staffApplicationApprovalService';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -31,11 +33,17 @@ export default async function BusinessSettingsPage() {
         );
     }
 
-    const { data } = await admin
+    const { data, error } = await admin
         .from('businesses')
         .select('contact_phone,contact_whatsapp,contact_email,website_url')
         .eq('id', bizId)
         .maybeSingle();
+
+    // FE-08: a blank form after a failed read would erase the real contacts on save.
+    if (error) {
+        logError('BusinessSettingsPage', 'Failed to load business contacts', { bizId, error });
+        return <LoadFailedNotice page />;
+    }
 
     return (
         <main className="mx-auto max-w-4xl space-y-6 p-6 lg:p-8">

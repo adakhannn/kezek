@@ -1,6 +1,8 @@
 import { getT, getServerLocale } from '@/app/_components/i18n/server';
 import ServicesListClient from '@/app/dashboard/services/ServicesListClient';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +35,7 @@ export default async function ServicesListPage({
     const branchFilter =
         Array.isArray(sp.branch) ? (sp.branch[0] ?? '') : (sp.branch ?? '');
 
-    const [{ data: branches }, { data: services, error }] = await Promise.all([
+    const [{ data: branches, error: branchesError }, { data: services, error }] = await Promise.all([
         supabase
             .from('branches')
             .select('id,name')
@@ -46,6 +48,12 @@ export default async function ServicesListPage({
             .eq('biz_id', bizId)
             .order('name_ru'),
     ]);
+
+    // FE-08: an empty branch filter after a failed read would hide the business's branches.
+    if (branchesError) {
+        logError('ServicesPage', 'Failed to load branches', { bizId, error: branchesError });
+        return <LoadFailedNotice page />;
+    }
 
     if (error) {
         const locale = await getServerLocale();

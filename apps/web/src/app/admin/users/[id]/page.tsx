@@ -3,11 +3,13 @@ import { redirect } from 'next/navigation';
 
 import { getT } from '@/app/_components/i18n/server';
 import { AdminEntityFlowTabs } from '@/app/admin/_components/AdminEntityFlowTabs';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { UserBasicForm } from '@/components/admin/users/UserBasicForm';
 import { UserPageRedirect } from '@/components/admin/users/UserPageRedirect';
 import { UserSecurityActions } from '@/components/admin/users/UserSecurityActions';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { logError } from '@/lib/log';
 import { readPlatformAdminStates } from '@/lib/platformAdminState';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -47,28 +49,36 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
         return <div className="p-4">{t('admin.error.load', 'Load error')}</div>;
     }
 
-    const { data: ownerBusinesses } = await admin
+    const { data: ownerBusinesses, error: ownerBusinessesError } = await admin
         .from('businesses')
         .select('id,name,slug')
         .eq('owner_id', id)
         .order('name')
         .returns<Biz[]>();
 
-    const { data: viewRoles } = await admin
+    const { data: viewRoles, error: viewRolesError } = await admin
         .from('user_roles_with_user')
         .select('user_id,role_key,biz_id')
         .eq('user_id', id);
+
+    // FE-08: an admin acting on this account must not see "no roles, not blocked" after a failed read.
+    if (ownerBusinessesError || viewRolesError) {
+        logError('AdminUserPage', 'Failed to load user roles or businesses', { userId: id, ownerBusinessesError, viewRolesError });
+        return <LoadFailedNotice page />;
+    }
 
     const bizIds = Array.from(
         new Set((viewRoles ?? []).map(r => r.biz_id).filter(Boolean) as string[])
     );
     const bizMap = new Map<string, { name: string; slug: string | null }>();
     if (bizIds.length) {
-        const { data: relBiz } = await admin
+        const { data: relBiz, error: relBizError } = await admin
             .from('businesses')
             .select('id,name,slug')
             .in('id', bizIds)
             .returns<Biz[]>();
+        // Names are a label only: role badges fall back to the business id.
+        if (relBizError) logError('AdminUserPage', 'Failed to load role business names', { userId: id, error: relBizError });
         (relBiz ?? []).forEach(b => bizMap.set(b.id, { name: b.name, slug: b.slug ?? null }));
     }
 
@@ -88,19 +98,17 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
             );
         });
 
-    const { data: susp } = await admin
-        .from('user_suspensions')
-        .select('user_id')
-        .eq('user_id', id)
-        .limit(1)
-        .maybeSingle();
-    const isBlocked = !!susp;
-
-    const { data: suspensionData } = await admin
+    const { data: suspensionData, error: suspensionError } = await admin
         .from('user_suspensions')
         .select('reason, created_at')
         .eq('user_id', id)
         .maybeSingle();
+    // FE-08: an unread suspension must not show the account as "not blocked".
+    if (suspensionError) {
+        logError('AdminUserPage', 'Failed to load user suspension', { userId: id, error: suspensionError });
+        return <LoadFailedNotice page />;
+    }
+    const isBlocked = !!suspensionData;
 
     return (
         <>

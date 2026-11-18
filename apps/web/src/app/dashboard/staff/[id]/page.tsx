@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 
 import StaffDetailPageClient from './StaffDetailPageClient';
 
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logWarn } from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { projectStaffDetailReviews } from '@/lib/staffDetailReviews';
 import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
@@ -73,7 +74,7 @@ export default async function Page({
     }
 
     // Оптимизированный запрос: загружаем bookings с отзывами и услугами в одном запросе (фильтр по biz_id)
-    const { data: bookingsData } = await admin
+    const { data: bookingsData, error: bookingsError } = await admin
         .from('bookings')
         .select(`
             id,
@@ -90,6 +91,11 @@ export default async function Page({
         .order('start_at', { ascending: false })
         .limit(100);
 
+    // FE-08: a failed read is an error, not "no reviews yet".
+    if (bookingsError) {
+        logError('StaffDetailPage', 'Failed to load staff bookings and reviews', { staffId: id, bizId, error: bookingsError });
+        return <LoadFailedNotice page />;
+    }
     const reviews = projectStaffDetailReviews(bookingsData ?? []);
 
     const _activeBranches = (branches ?? []).filter((b) => b.is_active);
