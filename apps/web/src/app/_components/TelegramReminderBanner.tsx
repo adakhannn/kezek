@@ -1,12 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
-
-import { logWarn } from '@/lib/log';
-import { supabase } from '@/lib/supabaseClient';
 
 const TELEGRAM_REMINDER_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 const TELEGRAM_REMINDER_STORAGE_PREFIX = 'kezek:telegram-reminder:snoozed-until:';
@@ -17,102 +14,44 @@ export function isTelegramReminderSnoozed(value: string | null, now = Date.now()
     return Number.isFinite(snoozedUntil) && snoozedUntil > now;
 }
 
+function subscribeToStorage(onChange: () => void) {
+    window.addEventListener('storage', onChange);
+    return () => window.removeEventListener('storage', onChange);
+}
+
+function readSnoozed(userId: string): boolean {
+    try {
+        return isTelegramReminderSnoozed(window.localStorage.getItem(`${TELEGRAM_REMINDER_STORAGE_PREFIX}${userId}`));
+    } catch {
+        return false; // storage unavailable (private mode): remind
+    }
+}
+
 /**
- * Висящее уведомление, напоминающее пользователю подключить Telegram для уведомлений
+ * Висящее уведомление, напоминающее подключить Telegram для уведомлений. Показывать ли его, решает
+ * сервер (ReminderBanners); клиент хранит только отложенное напоминание этого аккаунта.
  */
-export function TelegramReminderBanner() {
+export function TelegramReminderBanner({ userId }: { userId: string }) {
     const { t } = useLanguage();
     const router = useRouter();
-    const [show, setShow] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [userId, setUserId] = useState<string | null>(null);
+    // The snooze lives in this browser's localStorage, so the server render stays hidden.
+    const snoozed = useSyncExternalStore(subscribeToStorage, () => readSnoozed(userId), () => true);
+    const [dismissed, setDismissed] = useState(false);
 
-    useEffect(() => {
-        let mounted = true;
-
-        const checkTelegram = async () => {
-            try {
-                const {
-                    data: { user },
-                } = await supabase.auth.getUser();
-                if (!user) {
-                    if (mounted) {
-                        setUserId(null);
-                        setShow(false);
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                if (mounted) setUserId(user.id);
-
-                // Суперадмину баннер не показываем
-                const { data: isSuper } = await supabase.rpc('is_super_admin');
-                if (isSuper) {
-                    if (mounted) {
-                        setShow(false);
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                // Проверяем профиль на наличие Telegram
-                const { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('telegram_id, telegram_verified')
-                    .eq('id', user.id)
-                    .maybeSingle<{ telegram_id: number | null; telegram_verified: boolean | null }>();
-
-                if (error) {
-                    logWarn('TelegramReminderBanner', 'failed to load profile', error);
-                }
-
-                const hasTelegram = !!profile?.telegram_id && !!profile?.telegram_verified;
-                const snoozed = isTelegramReminderSnoozed(
-                    window.localStorage.getItem(`${TELEGRAM_REMINDER_STORAGE_PREFIX}${user.id}`),
-                );
-
-                if (mounted) {
-                    // Показываем баннер, если Telegram ещё не подключен/не подтверждён
-                    setShow(!hasTelegram && !snoozed);
-                    setLoading(false);
-                }
-            } catch (error) {
-                logWarn('TelegramReminderBanner', 'error checking telegram', error);
-                if (mounted) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        checkTelegram();
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange(() => {
-            if (mounted) {
-                checkTelegram();
-            }
-        });
-
-        return () => {
-            mounted = false;
-            subscription.unsubscribe();
-        };
-    }, []);
-
-    if (loading || !show) {
+    if (snoozed || dismissed) {
         return null;
     }
 
     const handleRemindLater = () => {
-        if (userId) {
+        try {
             window.localStorage.setItem(
                 `${TELEGRAM_REMINDER_STORAGE_PREFIX}${userId}`,
                 String(Date.now() + TELEGRAM_REMINDER_SNOOZE_MS),
             );
+        } catch {
+            // Storage can be unavailable (private mode); hiding for this page view is still right.
         }
-        setShow(false);
+        setDismissed(true);
     };
 
     return (

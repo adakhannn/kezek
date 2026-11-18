@@ -5,7 +5,14 @@ import { MobileHeaderMenu } from './MobileHeaderMenu';
 import { RoleAndBusinessSwitcher } from './RoleAndBusinessSwitcher';
 import { LanguageSwitcher } from './i18n/LanguageSwitcher';
 
+import type { ShellAccount } from '@/lib/shellAccount';
+import { getShellViewer } from '@/lib/shellViewer';
+
 export async function AppShellHeader() {
+    const viewer = await getShellViewer();
+    const account: ShellAccount | null = viewer.status === 'signed-in'
+        ? { userId: viewer.userId, label: viewer.accountLabel, roles: viewer.roles }
+        : null;
     return (
         <AppShellHeaderFrame>
             <div className="mx-auto max-w-7xl">
@@ -18,7 +25,7 @@ export async function AppShellHeader() {
 
                         <div className="hidden lg:flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_76%,transparent)] px-2 py-1 shadow-[var(--shadow-xs)]">
                             <LanguageSwitcher />
-                            <RoleAndBusinessSwitcher />
+                            <RoleAndBusinessSwitcher key={account?.userId ?? 'anonymous'} account={account} />
                         </div>
 
                         <div className="hidden lg:block h-9 w-px bg-[var(--border-subtle)]" />
@@ -26,7 +33,7 @@ export async function AppShellHeader() {
                         <AuthStatusServer />
 
                         <div className="lg:hidden shrink-0">
-                            <MobileHeaderMenu />
+                            <MobileHeaderMenu account={account} />
                         </div>
                     </div>
                 </div>

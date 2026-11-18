@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { unstable_noStore as noStore } from 'next/cache';
 
 import { PersonalCabinetButton } from './PersonalCabinetButton';
@@ -7,21 +6,15 @@ import { SignOutButton } from './SignOutButton';
 import { StaffCabinetButton } from './StaffCabinetButton';
 import { getT } from './i18n/server';
 
-import { getUserRoleProfile, resolveDefaultDashboard } from '@/lib/authContext';
-import { logWarn } from '@/lib/log';
-import { isAuthSessionMissingError } from '@/lib/supabaseAuthRecovery';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { getShellViewer } from '@/lib/shellViewer';
 
 export const dynamic = 'force-dynamic';
 
 export async function AuthStatusServer() {
     noStore();
 
-    let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
-    try {
-        supabase = await createSupabaseServerClient();
-    } catch (error) {
-        logWarn('AuthStatusServer', 'Supabase runtime configuration is invalid', error);
+    const viewer = await getShellViewer();
+    if (viewer.status === 'unavailable') {
         return (
             <div className="hidden lg:flex items-center gap-3">
                 <span className="rounded-[var(--radius-md)] border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
@@ -31,21 +24,7 @@ export async function AuthStatusServer() {
         );
     }
 
-    let user = null;
-    try {
-        const { data: auth, error } = await supabase.auth.getUser();
-        if (error && !isAuthSessionMissingError(error)) {
-            logWarn('AuthStatusServer', 'Supabase user lookup failed', error);
-        } else {
-            user = auth.user;
-        }
-    } catch (error) {
-        if (!isAuthSessionMissingError(error)) {
-            logWarn('AuthStatusServer', 'Supabase user lookup failed', error);
-        }
-    }
-
-    if (!user) {
+    if (viewer.status === 'anonymous') {
         return (
             <div className="hidden lg:flex items-center gap-3">
                 <SignInButton className="inline-flex items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-2 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]" />
@@ -53,25 +32,9 @@ export async function AuthStatusServer() {
         );
     }
 
-    const profile = await getUserRoleProfile(supabase as SupabaseClient);
     const t = await getT();
-
-    const accountLabel =
-        (await (async () => {
-            const { data: profileRow } = await supabase
-                .from('profiles')
-                .select('full_name')
-                .eq('id', user.id)
-                .maybeSingle();
-            return profileRow?.full_name?.trim();
-        })()) ||
-        user.email ||
-        (user.phone as string | undefined) ||
-        t('header.account', 'аккаунт');
-
-    resolveDefaultDashboard(profile);
-
-    const isStaff = !!profile?.canStaff;
+    const accountLabel = viewer.accountLabel || t('header.account', 'аккаунт');
+    const isStaff = viewer.roles.hasStaff;
 
     return (
         <div className="hidden lg:flex items-center gap-3">

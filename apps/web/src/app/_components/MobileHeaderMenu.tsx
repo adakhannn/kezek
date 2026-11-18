@@ -11,14 +11,19 @@ import { StaffCabinetButton } from './StaffCabinetButton';
 import { useLanguage } from './i18n/LanguageProvider';
 import { LanguageSwitcher } from './i18n/LanguageSwitcher';
 
-import { supabase } from '@/lib/supabaseClient';
+import type { ShellAccount } from '@/lib/shellAccount';
 
-export function MobileHeaderMenu() {
+type MobileHeaderMenuProps = {
+    /** The signed-in account as the server rendered it; null when signed out. */
+    account: ShellAccount | null;
+};
+
+export function MobileHeaderMenu({ account }: MobileHeaderMenuProps) {
     const pathname = usePathname();
-    return <MobileHeaderMenuContent key={pathname} />;
+    return <MobileHeaderMenuContent key={pathname} account={account} />;
 }
 
-function MobileHeaderMenuContent() {
+function MobileHeaderMenuContent({ account }: MobileHeaderMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { t } = useLanguage();
 
@@ -75,14 +80,14 @@ function MobileHeaderMenuContent() {
                                 <p className="type-caption px-1 text-[var(--text-muted)]">
                                     {t('header.roleBusiness.sections.cabinets', 'Кабинеты')}
                                 </p>
-                                <RoleAndBusinessSwitcher mode="mobile" onNavigate={() => setIsOpen(false)} />
+                                <RoleAndBusinessSwitcher key={account?.userId ?? 'anonymous'} account={account} mode="mobile" onNavigate={() => setIsOpen(false)} />
                             </section>
 
                             <section className="space-y-2 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-emphasis)]/45 p-3">
                                 <p className="type-caption px-1 text-[var(--text-muted)]">
                                     {t('header.account', 'Аккаунт')}
                                 </p>
-                                <MobileAuthStatus onAction={() => setIsOpen(false)} />
+                                <MobileAuthStatus account={account} onAction={() => setIsOpen(false)} />
                             </section>
                         </div>
                     </div>
@@ -92,54 +97,10 @@ function MobileHeaderMenuContent() {
     );
 }
 
-function MobileAuthStatus({ onAction }: { onAction: () => void }) {
-    const [user, setUser] = useState<{ id: string; email?: string; phone?: string } | null>(null);
-    const [label, setLabel] = useState<string>('');
-    const [isStaff, setIsStaff] = useState(false);
+function MobileAuthStatus({ account, onAction }: { account: ShellAccount | null; onAction: () => void }) {
+    const { t } = useLanguage();
 
-    useEffect(() => {
-        let ignore = false;
-
-        (async () => {
-            const {
-                data: { user: authUser },
-            } = await supabase.auth.getUser();
-            if (ignore || !authUser) {
-                setUser(null);
-                return;
-            }
-
-            setUser(authUser);
-
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('full_name')
-                .eq('id', authUser.id)
-                .maybeSingle();
-
-            const userName =
-                profile?.full_name?.trim() ||
-                authUser.email ||
-                (authUser.phone as string | undefined) ||
-                'аккаунт';
-            setLabel(userName);
-
-            // A count, not a single row: a master of several businesses has one card per business (ARCH-02).
-            const { count: staffCount } = await supabase
-                .from('staff')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', authUser.id)
-                .eq('is_active', true);
-
-            setIsStaff((staffCount ?? 0) > 0);
-        })();
-
-        return () => {
-            ignore = true;
-        };
-    }, []);
-
-    if (!user) {
+    if (!account) {
         return (
             <SignInButton
                 onClick={onAction}
@@ -153,12 +114,12 @@ function MobileAuthStatus({ onAction }: { onAction: () => void }) {
             <div className="inline-flex w-full items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_82%,transparent)] px-3.5 py-2 text-sm shadow-[var(--shadow-xs)]">
                 <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
                 <span className="truncate text-[var(--text-secondary)]">
-                    <span className="font-medium text-[var(--text-primary)]">{label}</span>
+                    <span className="font-medium text-[var(--text-primary)]">{account.label || t('header.account', 'аккаунт')}</span>
                 </span>
             </div>
 
             <div className="flex flex-col gap-2">
-                {isStaff ? <StaffCabinetButton onClick={onAction} className="w-full py-3" /> : null}
+                {account.roles.hasStaff ? <StaffCabinetButton onClick={onAction} className="w-full py-3" /> : null}
                 <PersonalCabinetButton onClick={onAction} className="w-full justify-center py-3" />
                 <SignOutButton
                     onAction={onAction}

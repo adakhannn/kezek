@@ -9,24 +9,18 @@ import { RoleAndBusinessSwitcher } from '@/app/_components/RoleAndBusinessSwitch
 jest.mock('next/navigation', () => ({ usePathname: () => '/cabinet/bookings' }));
 jest.mock('@/app/_components/i18n/LanguageProvider', () => ({ useLanguage: jest.fn() }));
 jest.mock('@/lib/supabaseClient', () => ({ supabase: {
-    auth: {
-        getSession: jest.fn(async () => ({data:{session:{user:{id:'fixture-client'}}}})),
-        onAuthStateChange: jest.fn(() => ({data:{subscription:{unsubscribe:jest.fn()}}})),
-    },
-    rpc: jest.fn(async (name:string) => ({data:name==='is_super_admin'?false:[]})),
+    auth: { onAuthStateChange: jest.fn(() => ({data:{subscription:{unsubscribe:jest.fn()}}})) },
 } }));
 
+const clientAccount = { userId:'fixture-client', label:null, roles:{hasDashboard:false,hasStaff:false,hasCabinet:true,hasAdmin:false} };
+
 describe.each([['ru',ru],['en',en],['ky',ky]] as const)('cabinet menu focus %s', (locale,dictionary) => {
-    let savedFetch:typeof fetch;
     beforeEach(() => {
-        savedFetch=global.fetch;
-        global.fetch=jest.fn(async () => ({ok:true,json:async()=>({ok:true,data:{businesses:[]}})})) as jest.Mock;
         jest.mocked(useLanguage).mockReturnValue({locale,t:(key:string,fallback?:string)=>dictionary[key]??fallback??key} as ReturnType<typeof useLanguage>);
     });
-    afterEach(() => {global.fetch=savedFetch;});
 
     async function openMenu() {
-        render(<><RoleAndBusinessSwitcher /><input aria-label="Outside fixture" /></>);
+        render(<><RoleAndBusinessSwitcher account={clientAccount} /><input aria-label="Outside fixture" /></>);
         const trigger=await screen.findByRole('button',{name:dictionary['header.myBookings'],exact:true});
         trigger.focus(); fireEvent.click(trigger);
         return {trigger,item:screen.getByRole('menuitem',{name:dictionary['header.myBookings'],exact:true}),outside:screen.getByRole('textbox',{name:'Outside fixture'})};

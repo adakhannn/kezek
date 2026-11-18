@@ -2,113 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-
-import {logWarn} from '@/lib/log';
-import { supabase } from '@/lib/supabaseClient';
+import { useState } from 'react';
 
 /**
- * Висящее уведомление, напоминающее пользователю заполнить имя
+ * Висящее уведомление, напоминающее пользователю заполнить имя. Показывать ли его, решает сервер
+ * (ReminderBanners); внутри личного кабинета, где имя и заполняют, баннер скрыт.
  */
 export function NameReminderBanner() {
     const pathname = usePathname();
     if (pathname === '/cabinet' || pathname.startsWith('/cabinet/')) return null;
-    return <ActiveNameReminderBanner key={pathname} />;
+    return <DismissibleNameReminderBanner key={pathname} />;
 }
 
-function ActiveNameReminderBanner() {
-    const [show, setShow] = useState(false);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        let mounted = true;
-        let latestCheck = 0;
-
-        const checkName = async () => {
-            const check = ++latestCheck;
-            const isCurrent = () => mounted && check === latestCheck;
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!isCurrent()) return;
-                if (!user) {
-                    if (isCurrent()) {
-                        setShow(false);
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                // Проверяем, является ли пользователь суперадмином
-                const { data: isSuper } = await supabase.rpc('is_super_admin');
-                if (!isCurrent()) return;
-                if (isSuper) {
-                    // Для суперадмина не показываем баннер
-                    if (isCurrent()) {
-                        setShow(false);
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('full_name')
-                    .eq('id', user.id)
-                    .maybeSingle();
-
-                // Показываем уведомление, если имени нет
-                if (isCurrent()) {
-                    setShow(!profile?.full_name?.trim());
-                    setLoading(false);
-                }
-            } catch (error) {
-                if (!isCurrent()) return;
-                logWarn('NameReminderBanner', 'error checking name', error);
-                if (isCurrent()) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        checkName();
-
-        // Подписываемся на изменения авторизации
-        const {
-            data: { subscription: authSubscription },
-        } = supabase.auth.onAuthStateChange(() => {
-            if (mounted) {
-                checkName();
-            }
-        });
-
-        // Подписываемся на изменения в таблице profiles
-        const profileSubscription = supabase
-            .channel('profile-changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'profiles',
-                },
-                () => {
-                    if (mounted) {
-                        checkName();
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            mounted = false;
-            authSubscription.unsubscribe();
-            profileSubscription.unsubscribe();
-        };
-    }, []);
-
-    if (loading || !show) {
-        return null;
-    }
+function DismissibleNameReminderBanner() {
+    const [show, setShow] = useState(true);
+    if (!show) return null;
 
     return (
         <div className="sticky top-14 sm:top-16 z-[99] bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-lg">

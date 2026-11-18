@@ -7,27 +7,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
 
-import { hasBusinessDashboardAccess } from '@/lib/authContext';
-import { logWarn } from '@/lib/log';
+import type { ShellAccount } from '@/lib/shellAccount';
 import { supabase } from '@/lib/supabaseClient';
 
-type RoleSummary = {
-    hasDashboard: boolean;
-    hasStaff: boolean;
-    hasCabinet: boolean;
-    hasAdmin: boolean;
-};
-
-type BusinessSummary = {
-    id: string;
-};
-
-type SwitcherState =
-    | { status: 'loading' }
-    | { status: 'ready'; roles: RoleSummary }
-    | { status: 'error' };
-
 type RoleAndBusinessSwitcherProps = {
+    /** The signed-in account as the server rendered it; null when signed out. */
+    account: ShellAccount | null;
     mode?: 'desktop' | 'mobile';
     onNavigate?: () => void;
 };
@@ -42,97 +27,31 @@ function matchesCabinet(pathname: string, href: CabinetLink['href']) {
 }
 
 export function RoleAndBusinessSwitcher({
+    account,
     mode = 'desktop',
     onNavigate,
-}: RoleAndBusinessSwitcherProps = {}) {
+}: RoleAndBusinessSwitcherProps) {
     const { t } = useLanguage();
     const pathname = usePathname();
-    const [state, setState] = useState<SwitcherState>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
+    const [sessionChanged, setSessionChanged] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const triggerRef = useRef<HTMLButtonElement | null>(null);
     const isMobile = mode === 'mobile';
+    const accountId = account?.userId ?? null;
 
     useEffect(() => {
-        let cancelled = false;
-        let generation = 0;
-        let reloadTimer: ReturnType<typeof setTimeout> | null = null;
-
-        const load = async () => {
-            const requestGeneration = ++generation;
-            const isCurrent = () => !cancelled && requestGeneration === generation;
-            try {
-                const { data: sessionRes } = await supabase.auth.getSession();
-                if (!isCurrent()) return;
-                const user = sessionRes.session?.user;
-                if (!user) {
-                    setState({ status: 'error' });
-                    return;
-                }
-
-                const [{ data: isSuperData }, { data: roleKeys }, businessResponse] = await Promise.all([
-                    supabase.rpc('is_super_admin'),
-                    supabase.rpc('my_role_keys'),
-                    fetch('/api/me/current-business', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                        cache: 'no-store',
-                    }),
-                ]);
-
-                let businesses: BusinessSummary[] = [];
-                if (businessResponse.ok) {
-                    const businessJson = (await businessResponse.json()) as {
-                        ok?: boolean;
-                        data?: { businesses?: BusinessSummary[] };
-                    };
-                    if (businessJson.ok && businessJson.data) {
-                        businesses = Array.isArray(businessJson.data.businesses)
-                            ? businessJson.data.businesses
-                            : [];
-                    }
-                }
-
-                const rolesArr = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
-                const roles: RoleSummary = {
-                    hasDashboard: hasBusinessDashboardAccess(
-                        !!isSuperData,
-                        businesses.length > 0 || rolesArr.some((role) => ['owner', 'admin', 'manager'].includes(role)),
-                    ),
-                    hasStaff: rolesArr.includes('staff'),
-                    hasCabinet: true,
-                    hasAdmin: !!isSuperData,
-                };
-
-                if (isCurrent()) setState({ status: 'ready', roles });
-            } catch (error) {
-                logWarn('RoleAndBusinessSwitcher', 'failed to load cabinet access', error);
-                if (isCurrent()) setState({ status: 'error' });
-            }
-        };
-
-        void load();
+        if (!accountId) return;
+        // The server renders the switcher for one account (the header remounts it per account after
+        // AuthStatusUpdater refreshes). Until then, a sign-out or another account must not see these cabinets.
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            if (cancelled || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
-            // Invalidate old results and visible options before querying the next
-            // account. Keep SDK calls out of the synchronous auth notification.
-            generation += 1;
+            if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
+            if ((session?.user?.id ?? null) === accountId) return;
             setIsOpen(false);
-            if (reloadTimer) clearTimeout(reloadTimer);
-            if (!session?.user) {
-                setState({ status: 'error' });
-                return;
-            }
-            setState({ status: 'loading' });
-            reloadTimer = setTimeout(() => { if (!cancelled) void load(); }, 0);
+            setSessionChanged(true);
         });
-        return () => {
-            cancelled = true;
-            generation += 1;
-            if (reloadTimer) clearTimeout(reloadTimer);
-            subscription.unsubscribe();
-        };
-    }, []);
+        return () => subscription.unsubscribe();
+    }, [accountId]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -162,23 +81,9 @@ export function RoleAndBusinessSwitcher({
         };
     }, [isOpen]);
 
-    if (state.status === 'loading') {
-        return (
-            <div
-                className={clsx(
-                    isMobile ? 'flex w-full' : 'hidden md:flex',
-                    'items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-2 text-xs text-[var(--text-muted)] shadow-[var(--shadow-xs)]',
-                )}
-            >
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--accent-primary)] border-t-transparent" />
-                <span>{t('header.roleBusiness.loading')}</span>
-            </div>
-        );
-    }
+    if (!account || sessionChanged) return null;
 
-    if (state.status === 'error') return null;
-
-    const { roles } = state;
+    const { roles } = account;
     const cabinetLinks: CabinetLink[] = [];
     if (roles.hasDashboard) cabinetLinks.push({ href: '/dashboard', label: t('header.businessCabinet') });
     if (roles.hasStaff) cabinetLinks.push({ href: '/staff', label: t('header.staffCabinet') });
