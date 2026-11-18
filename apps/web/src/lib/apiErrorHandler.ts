@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { BizAccessError, StaffSelectionRequiredError } from '@/lib/authDiagnostics';
 import { logError } from '@/lib/log';
 
 /**
@@ -67,6 +68,29 @@ export function createErrorResponse(
 }
 
 /**
+ * Ответ на отказ в кабинете сотрудника (ARCH-02): какой карточкой сотрудника действует запрос.
+ * NO_STAFF_RECORD и NO_STAFF_ACCESS — 403; STAFF_SELECTION_REQUIRED — 400 со списком карточек
+ * вызывающего (именно 400: mobile откладывает каждый 409 на ручной разбор). Иначе null.
+ */
+export function staffAccessErrorResponse(error: unknown): NextResponse<ApiErrorResponse> | null {
+    if (error instanceof StaffSelectionRequiredError) {
+        return createErrorResponse(
+            'validation',
+            'Выберите бизнес в кабинете сотрудника',
+            {
+                code: 'STAFF_SELECTION_REQUIRED',
+                options: error.staffOptions.map(({ staffId, bizId }) => ({ staffId, bizId })),
+            },
+            400,
+        );
+    }
+    if (error instanceof BizAccessError && (error.code === 'NO_STAFF_RECORD' || error.code === 'NO_STAFF_ACCESS')) {
+        return createErrorResponse('forbidden', 'Нет доступа к кабинету сотрудника', { code: error.code }, 403);
+    }
+    return null;
+}
+
+/**
  * Обрабатывает ошибку и возвращает стандартизированный ответ.
  * По тексту сообщения или структуре ошибки определяет тип (auth, forbidden, validation, not_found, conflict) и HTTP статус.
  *
@@ -80,6 +104,10 @@ export function handleApiError(
     scope: string,
     defaultMessage?: string
 ): NextResponse<ApiErrorResponse> {
+    // Отказ в кабинете сотрудника — штатный ответ, а не ошибка сервера.
+    const staffAccess = staffAccessErrorResponse(error);
+    if (staffAccess) return staffAccess;
+
     // Логируем ошибку
     logError(scope, 'API error', error);
 

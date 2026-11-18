@@ -10,6 +10,7 @@ import { getOfflineQueue, saveOfflineQueue } from '../../screens/shiftQuick/offl
 import type { ShiftOfflineOperation } from '../../screens/shiftQuick/offlineStorage';
 import type { FinanceData, ShiftItem, ShiftLedgerSnapshot } from '../../screens/shiftQuick/types';
 import ShiftQuickScreen from '../../screens/ShiftQuickScreen';
+import { staffCard, staffCardsQuery } from '../staffCards';
 import { createTestQueryClient } from '../testQueryClient';
 
 const mockConfirm = jest.fn().mockResolvedValue(true);
@@ -61,8 +62,7 @@ beforeEach(() => {
     (SecureStore.getItemAsync as jest.Mock).mockImplementation(async (key: string) => storage.get(key) ?? null);
     (SecureStore.setItemAsync as jest.Mock).mockImplementation(async (key: string, value: string) => { storage.set(key, value); });
     (SecureStore.deleteItemAsync as jest.Mock).mockImplementation(async (key: string) => { storage.delete(key); });
-    (supabase.from as jest.Mock).mockReturnValue({ select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'staff-1', full_name: 'Test' }, error: null }) });
+    (supabase.from as jest.Mock).mockReturnValue(staffCardsQuery([staffCard({ id: 'staff-1', full_name: 'Test' })]));
     api.mockReset().mockImplementation(async (path, options) => {
         if (path === '/api/staff/finance') return { ok: true, data: server };
         return response(JSON.parse(String(options?.body)));
@@ -307,4 +307,36 @@ test('explicit review cannot silently transfer yesterday\'s draft into a differe
     expect(screen.queryByPlaceholderText('Имя клиента *')).toBeNull();
     expect(payloads()).toHaveLength(0);
     expect(await getOfflineQueue()).toEqual([operation]);
+});
+
+test('a queued command is replayed as the staff card that created it (ARCH-02)', async () => {
+    const operation: ShiftOfflineOperation = { type: 'addItem', owner, timestamp: 'queued', state: 'pending',
+        data: { expectedShiftId: 'shift-1', expectedRevision: 3, items: [item] } };
+    await saveOfflineQueue([operation]);
+    const { wrapper } = createWrapper();
+    renderHook(() => useShiftQuickScreenData(), { wrapper });
+    await waitFor(async () => expect(await getOfflineQueue()).toEqual([]));
+    const replay = api.mock.calls.filter(([path]) => path === '/api/staff/shift/items');
+    expect(replay).toHaveLength(1);
+    expect(replay[0][1]?.headers).toEqual({ 'Content-Type': 'application/json', 'x-kezek-staff-id': owner.staffId });
+    expect(api).toHaveBeenCalledWith('/api/staff/finance', { headers: { 'x-kezek-staff-id': owner.staffId } });
+});
+
+test('a command queued by another business card is never sent as the selected card (ARCH-02)', async () => {
+    (supabase.from as jest.Mock).mockReturnValue(staffCardsQuery([
+        staffCard({ id: 'staff-1', biz_id: 'biz-1', created_at: '2026-01-01T08:00:00Z' }),
+        staffCard({ id: 'staff-2', biz_id: 'biz-2', created_at: '2026-02-01T08:00:00Z' }),
+    ]));
+    storage.set('kezek_staff_selection_user-1', 'staff-2');
+    const operation: ShiftOfflineOperation = { type: 'addItem', owner, timestamp: 'other-business', state: 'pending',
+        data: { expectedShiftId: 'shift-1', expectedRevision: 3, items: [item] } };
+    await saveOfflineQueue([operation]);
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useShiftQuickScreenData(), { wrapper });
+    await waitFor(() => expect(result.current.reviewOperation).toBeDefined());
+    expect(result.current.staffInfo?.id).toBe('staff-2');
+    expect(payloads()).toHaveLength(0);
+    expect(api.mock.calls.every(([path, options]) => path === '/api/staff/finance'
+        && JSON.stringify(options?.headers) === JSON.stringify({ 'x-kezek-staff-id': 'staff-2' }))).toBe(true);
+    expect((await getOfflineQueue())[0]).toMatchObject({ owner, state: 'review', data: operation.data });
 });

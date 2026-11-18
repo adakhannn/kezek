@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import type { ScheduleSnapshot } from '@/lib/scheduling/model';
+import { staffSelectionHeaders } from '@/lib/staffSelection';
 
-export function useScheduleSnapshot(endpoint: string) {
+/** `staffId`: the staff cabinet's card on screen, sent with the request (ARCH-02). */
+export function useScheduleSnapshot(endpoint: string, staffId?: string | null) {
     const { t } = useLanguage();
     const [from, showPeriod] = useState('');
     const sequence = useRef(0);
@@ -17,14 +19,14 @@ export function useScheduleSnapshot(endpoint: string) {
         setLoading(true); setError('');
         try {
             const path = from ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}from=${encodeURIComponent(from)}` : endpoint;
-            const response = await fetch(path, { cache: 'no-store', signal });
+            const response = await fetch(path, { cache: 'no-store', signal, headers: staffSelectionHeaders(staffId) });
             const payload = await response.json();
             if (!response.ok || !payload.ok) throw new Error(payload.message || t('scheduleForm.loadError', "Не удалось загрузить график."));
             if (!signal?.aborted && requestId === sequence.current) setSnapshot(payload.data);
         } catch (cause) {
             if (!signal?.aborted && requestId === sequence.current) setError(cause instanceof Error ? cause.message : t('scheduleForm.loadError', "Не удалось загрузить график."));
         } finally { if (!signal?.aborted && requestId === sequence.current) setLoading(false); }
-    }, [endpoint, from, t]);
+    }, [endpoint, from, staffId, t]);
     useEffect(() => {
         const controller = new AbortController(); void refresh(controller.signal);
         return () => controller.abort();
@@ -32,9 +34,9 @@ export function useScheduleSnapshot(endpoint: string) {
     return { snapshot, error, loading, refresh, showPeriod };
 }
 
-export default function ScheduleCalendar({ endpoint, branches }: { endpoint: string; branches: { id: string; name: string }[] }) {
+export default function ScheduleCalendar({ endpoint, branches, staffId }: { endpoint: string; branches: { id: string; name: string }[]; staffId?: string | null }) {
     const { t } = useLanguage();
-    const { snapshot, error, loading, refresh, showPeriod } = useScheduleSnapshot(endpoint);
+    const { snapshot, error, loading, refresh, showPeriod } = useScheduleSnapshot(endpoint, staffId);
     if (loading) return <p role="status">{t('scheduleForm.loading', "Загружаем график…")}</p>;
     if (error) return <div role="alert">{error} <button onClick={() => void refresh()}>{t('scheduleForm.retry', "Повторить")}</button></div>;
     if (!snapshot) return null;

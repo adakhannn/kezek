@@ -10,7 +10,7 @@ import { staffEn } from '@/app/_components/i18n/dictionaries/staff.en';
 jest.mock('next/navigation', () => ({usePathname: () => '/staff/schedule', notFound: jest.fn()}));
 jest.mock('@/app/_components/i18n/LanguageProvider', () => ({useLanguage:jest.fn()}));
 jest.mock('@/lib/scheduling/config', () => ({explicitSchedulingEnabled: () => true}));
-jest.mock('@/lib/authBiz', () => ({getStaffContext: async () => ({staffId:'staff-test',bizId:'biz-test',branchId:'branch-test',supabase:{from: (table:string) => {
+jest.mock('@/lib/authBiz', () => ({getStaffPageContext: async () => ({staffId:'staff-test',bizId:'biz-test',branchId:'branch-test',supabase:{from: (table:string) => {
     const query = {select:jest.fn(),eq:jest.fn(),maybeSingle:async () => ({data:{id:'staff-test',biz_id:'biz-test',branch_id:'branch-test'}}),order:async () => ({data:[{id:'branch-test',name:'LIVE TEST',is_active:true}]})};
     query.select.mockReturnValue(query); query.eq.mockReturnValue(query);
     if (!['staff','branches'].includes(table)) throw new Error('Unexpected table');

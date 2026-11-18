@@ -79,14 +79,18 @@ export function useSignInRedirectDecision({
     const fetchActiveStaff = useCallback(async (userId?: string): Promise<boolean> => {
         if (!userId) return false;
 
-        const { data: staff } = await supabase
+        // A count, not a single row: a master of several businesses has one card per business (ARCH-02).
+        const { count, error } = await supabase
             .from('staff')
-            .select('id')
+            .select('id', { count: 'exact', head: true })
             .eq('user_id', userId)
-            .eq('is_active', true)
-            .maybeSingle();
+            .eq('is_active', true);
+        if (error) {
+            logWarn('SignInRedirect', 'Failed to check active staff cards', { message: error.message });
+            return false;
+        }
 
-        return !!staff;
+        return (count ?? 0) > 0;
     }, []);
 
     const decideRedirect = useCallback(

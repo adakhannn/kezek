@@ -18,12 +18,20 @@ export class ShiftsService {
      */
     public static closeShift({
         requestBody,
+        xKezekStaffId,
     }: {
         requestBody: CloseShiftInput,
+        /**
+         * The staff card (one per business) the request acts as. Required in practice for a master of several businesses: without it such a caller gets 400 with details.code STAFF_SELECTION_REQUIRED and the cards to choose from. A card that is not one of the caller's active cards gives 403 NO_STAFF_ACCESS; no active card gives 403 NO_STAFF_RECORD.
+         */
+        xKezekStaffId?: string,
     }): CancelablePromise<CloseShiftSuccess> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/staff/shift/close',
+            headers: {
+                'X-Kezek-Staff-Id': xKezekStaffId,
+            },
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -45,12 +53,20 @@ export class ShiftsService {
      */
     public static saveShiftItems({
         requestBody,
+        xKezekStaffId,
     }: {
         requestBody: SaveShiftItemsInput,
+        /**
+         * The staff card (one per business) the request acts as. Required in practice for a master of several businesses: without it such a caller gets 400 with details.code STAFF_SELECTION_REQUIRED and the cards to choose from. A card that is not one of the caller's active cards gives 403 NO_STAFF_ACCESS; no active card gives 403 NO_STAFF_RECORD.
+         */
+        xKezekStaffId?: string,
     }): CancelablePromise<SaveShiftItemsSuccess> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/staff/shift/items',
+            headers: {
+                'X-Kezek-Staff-Id': xKezekStaffId,
+            },
             body: requestBody,
             mediaType: 'application/json',
             errors: {

@@ -41,6 +41,7 @@ describe('signOutSafely', () => {
             'shift_offline_queue',
             'shift_offline_cache',
             'offline:bookings:user-1',
+            'kezek_staff_selection_user-1',
         ].forEach((key) => secureStore.set(key, 'sensitive'));
         auth.signOut.mockResolvedValue({ error: null });
 

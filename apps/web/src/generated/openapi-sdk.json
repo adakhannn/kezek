@@ -11,7 +11,7 @@
       "description": "Same origin. SDK consumers must configure their own approved base URL."
     }
   ],
-  "x-reviewed-source-sha256": "ba98c55c44ecc43de51d2649379084dea8aa7948a242b8e4830350206c189bba",
+  "x-reviewed-source-sha256": "9ebf2dc653f2971da6fca6cb9e0357e36e78e7f2f08be991d7327108180cf374",
   "x-reviewed-sources": [
     "apps/web/src/app/api/quick-book-guest/route.ts",
     "apps/web/src/app/api/quick-hold/route.ts",
@@ -904,6 +904,18 @@
           }
         ],
         "x-browser-auth": "Existing verified Supabase cookie session is also accepted. Cookie names/chunking are deployment-specific and not modeled as a fixed cookie security scheme.",
+        "parameters": [
+          {
+            "name": "X-Kezek-Staff-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The staff card (one per business) the request acts as. Required in practice for a master of several businesses: without it such a caller gets 400 with details.code STAFF_SELECTION_REQUIRED and the cards to choose from. A card that is not one of the caller's active cards gives 403 NO_STAFF_ACCESS; no active card gives 403 NO_STAFF_RECORD."
+          }
+        ],
         "x-next-route": "/api/staff/shift/close",
         "x-source-file": "apps/web/src/app/api/staff/shift/close/route.ts",
         "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
@@ -1017,6 +1029,18 @@
           }
         ],
         "x-browser-auth": "Existing verified Supabase cookie session is also accepted. Cookie names/chunking are deployment-specific and not modeled as a fixed cookie security scheme.",
+        "parameters": [
+          {
+            "name": "X-Kezek-Staff-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The staff card (one per business) the request acts as. Required in practice for a master of several businesses: without it such a caller gets 400 with details.code STAFF_SELECTION_REQUIRED and the cards to choose from. A card that is not one of the caller's active cards gives 403 NO_STAFF_ACCESS; no active card gives 403 NO_STAFF_RECORD."
+          }
+        ],
         "x-next-route": "/api/staff/shift/items",
         "x-source-file": "apps/web/src/app/api/staff/shift/items/route.ts",
         "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"

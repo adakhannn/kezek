@@ -1,6 +1,6 @@
 # API бизнес-процессов, расписаний и пакетов
 
-Статус: справочник реализации; статическая сверка **1 ноября 2026**. Ответственная роль: разработчик API бизнес-кабинета. Здесь описаны 33 METHOD/path, дополняющие [STAFF_AND_FINANCE](STAFF_AND_FINANCE.md), [BOOKING_AND_CATALOG](BOOKING_AND_CATALOG.md) и [AUTH_AND_INTEGRATIONS](AUTH_AND_INTEGRATIONS.md). Полный список явных route exports — [ROUTE_CATALOG](ROUTE_CATALOG.md); вход в документацию — [API-карта](../../API_DOCUMENTATION.md).
+Статус: справочник реализации; статическая сверка **1 ноября 2026**. Ответственная роль: разработчик API бизнес-кабинета. Здесь описаны 34 METHOD/path, дополняющие [STAFF_AND_FINANCE](STAFF_AND_FINANCE.md), [BOOKING_AND_CATALOG](BOOKING_AND_CATALOG.md) и [AUTH_AND_INTEGRATIONS](AUTH_AND_INTEGRATIONS.md). Полный список явных route exports — [ROUTE_CATALOG](ROUTE_CATALOG.md); вход в документацию — [API-карта](../../API_DOCUMENTATION.md).
 
 Сверены файлы route, вызываемые HTTP/helpers/services и схемы. SQL приведён как определение в репозитории; его применение на сервере не проверено. Первичная сверка 1 ноября не запускала приложение/DB/тесты. Для обновлённого ниже Close 10 ноября выполнены локальные API-тесты и изолированные SQL-регрессии на синтетических данных; live/deployment не проверялись. Это не runtime-верификация окружения и не закрытие [инженерных рисков](../ENGINEERING_FINDINGS.md). WEB-кампания остаётся закрытой, автоматизация PAUSED; границы работы — [handoff](../WEB_AGENT_HANDOFF.md).
 
@@ -18,7 +18,7 @@
 
 `data: …` означает HTTP 200 с обёрткой `ok: true, data: …`; «только ok» — `{"ok":true}`. Стандартная ошибка имеет `ok: false`, `error`, необязательные `message`/`details`. Маршруты заявок и `/dashboard/api` часто возвращают **плоские** ответы с `items`, `id`, `message` или `code`; они отмечены отдельно, нельзя автоматически добавлять `data`.
 
-Manager direct — [getBizContextForManagers](../../apps/web/src/lib/authBiz.ts), использующий cookie-сессию и resolver текущего бизнеса. Manager wrapper — [withManagerContext](../../apps/web/src/lib/withManagerContext.ts), явно отображающий отсутствие сессии в 401, прочие `BizAccessError` в 403. Manager + staff дополнительно проверяет UUID пути и принадлежность staff бизнесу ([helper](../../apps/web/src/lib/withManagerAndStaffContext.ts)); отсутствие/ошибка чтения/несовпадение дают 404. Staff cookie — активный staff пользователя из [staffRoleSync](../../apps/web/src/lib/staffRoleSync.ts), с попыткой добавить отсутствующую роль staff. Bearer-авторизацию эти контексты сами по себе не обещают; исключение finance stats описано в связанном контракте.
+Manager direct — [getBizContextForManagers](../../apps/web/src/lib/authBiz.ts), использующий cookie-сессию и resolver текущего бизнеса. Manager wrapper — [withManagerContext](../../apps/web/src/lib/withManagerContext.ts), явно отображающий отсутствие сессии в 401, прочие `BizAccessError` в 403. Manager + staff дополнительно проверяет UUID пути и принадлежность staff бизнесу ([helper](../../apps/web/src/lib/withManagerAndStaffContext.ts)); отсутствие/ошибка чтения/несовпадение дают 404. Staff cookie — одна активная карточка staff пользователя из [staffRoleSync](../../apps/web/src/lib/staffRoleSync.ts): из заголовка `X-Kezek-Staff-Id`, иначе запомненная (`POST /api/me/current-staff`), иначе единственная; у мастера нескольких бизнесов без выбора — 400 `STAFF_SELECTION_REQUIRED` (ARCH-02, подробно — [STAFF_AND_FINANCE](STAFF_AND_FINANCE.md)); с попыткой добавить отсутствующую роль staff в бизнесе выбранной карточки. Bearer-авторизацию эти контексты сами по себе не обещают; исключение finance stats описано в связанном контракте.
 
 Таблицы ошибок перечисляют явные ветки. У маршрутов с `withErrorHandler` к ним добавляется классификация исключений по тексту из [apiErrorHandler](../../apps/web/src/lib/apiErrorHandler.ts): например, `UNAUTHORIZED` → 401, неизвестное исключение → 500. Manager direct не гарантирует 403 для `NO_BIZ_ACCESS`. Где внешней обёртки/catch нет, формат неожиданной framework-ошибки не установлен.
 
@@ -52,6 +52,20 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | Ограничения | Некорректный JSON превращается в `{}` и даёт отсутствие bizId. Внешний catch маршрута также преобразует любое брошенное исключение helper в 400 `Invalid JSON body`, даже если причина иная |
 
 Не выдаёт новую роль, только выбирает разрешённый бизнес. Источники: [route](../../apps/web/src/app/api/me/current-business/route.ts), [HTTP](../../apps/web/src/lib/currentBusinessHttpService.ts), [setCurrentBusinessState](../../apps/web/src/lib/currentBusinessService.ts).
+
+### POST `/api/me/current-staff`
+
+<!-- api-contract: POST /api/me/current-staff -->
+
+| Часть | Контракт |
+| --- | --- |
+| Доступ/вход | Cookie user; JSON `staffId` — UUID одной из активных карточек staff пользователя |
+| Limiter | normal, keyPrefix `api/me/current-staff`, без числового override |
+| Успех | Только ok; cookie `kezek_staff_id` (HttpOnly, SameSite=Lax, Secure в production, год) запоминает выбранную карточку веб-кабинета сотрудника |
+| Ошибки | 401 auth; 400 validation при некорректном id; 403 forbidden, `details.code = NO_STAFF_ACCESS`, если карточка не активная карточка пользователя; 500 при сбое чтения карточек |
+| Ограничения | Cookie — только предпочтение: каждый staff-запрос заново проверяет карточку. Выход очищает cookie. Mobile хранит выбор у себя и отправляет заголовок `X-Kezek-Staff-Id` |
+
+Нужен мастеру нескольких бизнесов (ARCH-02): экран выбора и переключатель кабинета сотрудника. Записи в БД не изменяются. Источники: [route](../../apps/web/src/app/api/me/current-staff/route.ts), [HTTP](../../apps/web/src/lib/currentStaffHttpService.ts), [staffRoleSync](../../apps/web/src/lib/staffRoleSync.ts).
 
 ### GET `/api/dashboard/branches/list`
 

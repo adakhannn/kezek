@@ -63,6 +63,8 @@ describe('authSignOutService', () => {
     clearSupabaseAuthCookies(response);
 
     expect(response.cookies.delete).toHaveBeenCalledTimes(2);
-    expect(response.cookies.set).toHaveBeenCalledTimes(4);
+    // Two expired variants per auth cookie, plus the chosen staff card (ARCH-02).
+    expect(response.cookies.set).toHaveBeenCalledTimes(5);
+    expect(response.cookies.set).toHaveBeenCalledWith('kezek_staff_id', '', { expires: new Date(0), path: '/' });
   });
 });

@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
 
 export const styles = StyleSheet.create({
@@ -89,5 +90,47 @@ export const styles = StyleSheet.create({
     },
     secondaryAction: {
         marginTop: colors.layout.space3,
+    },
+    changeBusinessAction: {
+        marginTop: colors.layout.space4,
+    },
+    pickerError: {
+        marginBottom: colors.layout.space4,
+    },
+    pickerList: {
+        gap: colors.layout.space3,
+    },
+    pickerOption: {
+        minHeight: MIN_TOUCH_TARGET,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: colors.layout.space3,
+        paddingHorizontal: colors.layout.space4,
+        paddingVertical: colors.layout.space3,
+        borderRadius: colors.layout.radiusLg,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+        backgroundColor: colors.surface.card,
+    },
+    pickerOptionCurrent: {
+        borderColor: colors.accent.primary,
+    },
+    pickerOptionText: {
+        flex: 1,
+    },
+    pickerBusiness: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.text.primary,
+    },
+    pickerBranch: {
+        marginTop: 4,
+        fontSize: 14,
+        color: colors.text.secondary,
+    },
+    pickerCurrentMark: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.text.secondary,
     },
 });

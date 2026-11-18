@@ -32,7 +32,7 @@ describe('authContext', () => {
             isSuperAdmin: boolean;
             roleKeys: string[];
             ownedCount: number;
-            staffRow: { id: string } | null;
+            staffCount: number;
             ownedBusinesses: Array<{ id: string }>;
             userRolesRows: Array<{ biz_id: string; role_id: string }>;
             roles: Array<{ id: string; key: string }>;
@@ -42,7 +42,7 @@ describe('authContext', () => {
                 isSuperAdmin: false,
                 roleKeys: [] as string[],
                 ownedCount: 0,
-                staffRow: null as { id: string } | null,
+                staffCount: 0,
                 ownedBusinesses: [] as Array<{ id: string }>,
                 userRolesRows: [] as Array<{ biz_id: string; role_id: string }>,
                 roles: [] as Array<{ id: string; key: string }>,
@@ -58,16 +58,14 @@ describe('authContext', () => {
                 count: config.ownedCount,
             });
 
+            // A count of active cards (ARCH-02): a master of several businesses has one per business.
             const staffQuery = {
                 select: jest.fn(),
                 eq: jest.fn(),
-                maybeSingle: jest.fn(),
+                then: (resolve: (value: unknown) => unknown) => Promise.resolve({ count: config.staffCount, error: null }).then(resolve),
             };
             staffQuery.select.mockReturnValue(staffQuery);
             staffQuery.eq.mockReturnValue(staffQuery);
-            staffQuery.maybeSingle.mockResolvedValue({
-                data: config.staffRow,
-            });
 
             const ownedBusinessesQuery = {
                 select: jest.fn(),
@@ -190,7 +188,7 @@ describe('authContext', () => {
         it('derives staff access from staff record or staff role key', async () => {
             const fromRecord = await getUserRoleProfile(
                 createSupabaseMock({
-                    staffRow: { id: 'staff-1' },
+                    staffCount: 1,
                 }) as never,
             );
             const fromRole = await getUserRoleProfile(
@@ -201,6 +199,12 @@ describe('authContext', () => {
 
             expect(fromRecord).toMatchObject({ hasStaff: true, canStaff: true });
             expect(fromRole).toMatchObject({ hasStaff: true, canStaff: true });
+        });
+
+        it('a master of several businesses keeps staff access (ARCH-02)', async () => {
+            const profile = await getUserRoleProfile(createSupabaseMock({ staffCount: 2 }) as never);
+
+            expect(profile).toMatchObject({ hasStaff: true, canStaff: true });
         });
 
         it('does not grant the business dashboard to a super admin', async () => {

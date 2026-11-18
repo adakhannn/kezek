@@ -1,5 +1,6 @@
 import { getSupabaseUrl } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
+import { STAFF_SELECTION_COOKIE } from '@/lib/staffSelection';
 
 export type SignOutUserClientLike = {
   auth: {
@@ -63,6 +64,8 @@ export function clearSupabaseAuthCookies<T extends {
     response.cookies.set(name, '', { expires: new Date(0), path: '/' });
     response.cookies.set(name, '', { expires: new Date(0), path: '/', domain: undefined });
   });
+  // The next person on a shared browser must not inherit the chosen staff card (ARCH-02).
+  response.cookies.set(STAFF_SELECTION_COOKIE, '', { expires: new Date(0), path: '/' });
 
   return response;
 }

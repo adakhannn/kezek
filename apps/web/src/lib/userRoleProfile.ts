@@ -39,19 +39,19 @@ export async function getUserRoleProfile(
         { data: isSuperAdmin },
         { data: roleKeys },
         { count: ownedCount },
-        { data: staffRow },
+        { count: staffCount },
         { data: ownedBusinesses },
         { data: userRolesRows },
     ] = await Promise.all([
         supabase.rpc('is_super_admin'),
         supabase.rpc('my_role_keys'),
         supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
+        // A count, not a single row: a master of several businesses has one card per business (ARCH-02).
         supabase
             .from('staff')
-            .select('id')
+            .select('id', { count: 'exact', head: true })
             .eq('user_id', userId)
-            .eq('is_active', true)
-            .maybeSingle(),
+            .eq('is_active', true),
         supabase.from('businesses').select('id').eq('owner_id', userId),
         supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId).not('biz_id', 'is', null),
     ]);
@@ -59,7 +59,7 @@ export async function getUserRoleProfile(
     const keys = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
     const isSuper = !!isSuperAdmin;
     const hasOwnerBiz = (ownedCount ?? 0) > 0;
-    const hasStaffRecord = !!staffRow;
+    const hasStaffRecord = (staffCount ?? 0) > 0;
     const hasStaffRole = keys.includes(STAFF_ROLE_KEY);
     const hasStaff = hasStaffRecord || hasStaffRole;
     const hasManagerRoles = hasBusinessDashboardAccess(

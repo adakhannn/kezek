@@ -23,15 +23,17 @@
 
 | Контекст | Что делает реализация |
 | --- | --- |
-| Staff request | `getStaffContextForRequest`: Bearer-токен при подходящем `Authorization`, иначе cookie-сессия; требуется активная запись staff, связанная с пользователем |
-| Staff cookie | `getStaffContext`: серверная cookie-сессия и активная запись staff; request Bearer этой веткой не читается |
+| Staff request | `getStaffContextForRequest`: Bearer-токен при подходящем `Authorization`, иначе cookie-сессия; действует от одной активной карточки staff пользователя: из заголовка `X-Kezek-Staff-Id`, иначе (только cookie-сессия) запомненной, иначе единственной |
+| Staff cookie | `getStaffContext`: серверная cookie-сессия и та же выборка карточки (заголовок, cookie `kezek_staff_id`, единственная); request Bearer этой веткой не читается |
 | Manager direct | `getBizContextForManagers`: cookie-сессия и выбранный бизнес через resolver прав управления; тело запроса не выбирает `bizId` |
 | Manager wrapper | `withManagerContext`: тот же resolver; `NOT_AUTHENTICATED` преобразуется в 401, прочие `BizAccessError` — в 403 |
 | Manager + staff | `withManagerAndStaffContext`: manager wrapper, UUID пути и проверка staff.biz_id; отсутствие/ошибка чтения/другой бизнес возвращают 404 |
 
 Resolver управления учитывает owner/admin/manager, super_admin с выбранным бизнесом и owner_id fallback; это не обещание одинакового допуска для всех маршрутов: отдельные сервисы выполняют дополнительные проверки. Получение staff-контекста также пытается добавить отсутствующую роль staff, поэтому даже GET может иметь такой побочный эффект. Источники: [authBiz](../../apps/web/src/lib/authBiz.ts), [staffRoleSync](../../apps/web/src/lib/staffRoleSync.ts), [requestAuthContext](../../apps/web/src/lib/requestAuthContext.ts), [bizContextResolver](../../apps/web/src/lib/bizContextResolver.ts), [manager wrapper](../../apps/web/src/lib/withManagerContext.ts), [manager + staff](../../apps/web/src/lib/withManagerAndStaffContext.ts).
 
-**Ошибки исключений.** У manager direct и старых staff-cookie обработчиков внешняя `withErrorHandler` классифицирует исключения по тексту. `UNAUTHORIZED` даёт 401, но `NO_BIZ_ACCESS`/`NO_STAFF_RECORD` не дают автоматически 403/401 и могут закончиться 500. В разделе endpoint перечислены явные ветки сервиса; к ним добавляется обработка исключений из [apiErrorHandler](../../apps/web/src/lib/apiErrorHandler.ts). Где собственный HTTP catch отличается, это отмечено отдельно. Неверный UUID, проверенный `getRouteParamUuid`, обычно даёт 400 через внешнюю обёртку; `getRouteParamRequired` сам UUID не проверяет. [routeParams](../../apps/web/src/lib/routeParams.ts).
+**Карточка сотрудника (ARCH-02).** Человек может быть активным мастером в нескольких бизнесах — одна карточка staff на бизнес. Запрос действует ровно от одной: явная карточка (заголовок `X-Kezek-Staff-Id` или id в пути статистики; оба сразу должны совпасть) обязана быть активной карточкой вызывающего и никогда не подменяется; без неё — запомненная веб-кабинетом ([POST /api/me/current-staff](BUSINESS_WORKFLOWS.md#post-apimecurrent-staff), только cookie-сессия), иначе единственная. Ответы: несколько карточек без выбора — `400 / validation`, `details: { code: "STAFF_SELECTION_REQUIRED", options: [{ staffId, bizId }] }` (400, а не 409: mobile откладывает каждый 409 на ручной разбор); нет активной карточки — `403 / forbidden`, `details.code = NO_STAFF_RECORD`; чужая, неактивная или некорректная явная карточка — `403`, `NO_STAFF_ACCESS`; сбой чтения карточек — 500. Сотрудник с одной карточкой и запросы без заголовка (старые сборки mobile) работают как раньше. Веб-кабинет и mobile отправляют карточку на экране с каждым staff-запросом. Источники: [staffRoleSync](../../apps/web/src/lib/staffRoleSync.ts), [правило выбора](../../packages/core-domain/src/staff/selection.ts).
+
+**Ошибки исключений.** У manager direct и старых staff-cookie обработчиков внешняя `withErrorHandler` классифицирует исключения по тексту. `UNAUTHORIZED` даёт 401; отказы карточки сотрудника (`STAFF_SELECTION_REQUIRED`, `NO_STAFF_RECORD`, `NO_STAFF_ACCESS`) обрабатываются первыми и дают 400/403 как описано выше, а `NO_BIZ_ACCESS` не даёт автоматически 403 и может закончиться 500. В разделе endpoint перечислены явные ветки сервиса; к ним добавляется обработка исключений из [apiErrorHandler](../../apps/web/src/lib/apiErrorHandler.ts). Где собственный HTTP catch отличается, это отмечено отдельно. Неверный UUID, проверенный `getRouteParamUuid`, обычно даёт 400 через внешнюю обёртку; `getRouteParamRequired` сам UUID не проверяет. [routeParams](../../apps/web/src/lib/routeParams.ts).
 
 **Limiter.** С 2026-11-10 каждый wrapper имеет явный стабильный routeId и отдельный method budget; query/UUID не создают новый counter. Staff Open/Save/Close и manager Close используют ingress600/min, затем verified user5/30 и business×60 budgets после auth. Отказ429 `rate_limit_exceeded`; missing/error Redis или неподтверждённая trusted-ingress policy —503 `service_unavailable`, до handler. Остальные normal/critical presets относятся к scope конкретного callsite. Детали и границы — [RATE_LIMITING](../../RATE_LIMITING.md).
 
@@ -56,6 +58,7 @@ Resolver управления учитывает owner/admin/manager, super_admi
 - `403 / forbidden` — SQL отверг actor/scope или попытку staff повторно открыть закрытую смену.
 - `409 / validation` — день черновика изменился либо SQL отклонил выбранный день.
 - `401 / auth` — исключение контекста классифицировано HTTP-обработчиком как ошибка авторизации.
+- `400 / validation` с `details.code = STAFF_SELECTION_REQUIRED` и `details.options` — сотрудник нескольких бизнесов не выбрал карточку; `403 / forbidden` с `details.code` `NO_STAFF_RECORD` (нет активной карточки) или `NO_STAFF_ACCESS` (карточка из заголовка не его) — см. «Карточка сотрудника».
 - `429` — отказ limiter; ответ содержит `retryAfter` и заголовок `Retry-After`.
 - `500 / internal` — ошибка RPC, его неуспешный/неполный результат либо другое исключение.
 
@@ -89,7 +92,8 @@ Resolver управления учитывает owner/admin/manager, super_admi
 **Установленные ветки ошибок:**
 
 - `400 / validation` — query не соответствует schema.
-- `401 / auth` — HTTP catch получил `UNAUTHORIZED`, `NO_STAFF_RECORD` или `NO_BIZ_ACCESS`.
+- `401 / auth` — HTTP catch получил `UNAUTHORIZED` или `NO_BIZ_ACCESS`.
+- `400 / validation` с `details.code = STAFF_SELECTION_REQUIRED` и `details.options` — сотрудник нескольких бизнесов не выбрал карточку; `403 / forbidden` с `details.code` `NO_STAFF_RECORD` (нет активной карточки) или `NO_STAFF_ACCESS` (карточка из заголовка не его) — см. «Карточка сотрудника».
 - `404 / not_found` — в manager-ветке сотрудник не найден, его бизнес не совпал с контекстом либо запрос проверки сотрудника вернул ошибку.
 - `500 / internal` — другое исключение в цепочке.
 
@@ -129,6 +133,7 @@ Resolver управления учитывает owner/admin/manager, super_admi
 
 - `400 / validation` — неверный JSON/schema, выбранная expectedShiftId смена не найдена либо SQL отверг входные данные. Уже закрытая смена возвращается как идемпотентный успех.
 - `401 / auth` — исключение классифицировано HTTP catch как ошибка авторизации.
+- `400 / validation` с `details.code = STAFF_SELECTION_REQUIRED` и `details.options` — сотрудник нескольких бизнесов не выбрал карточку; `403 / forbidden` с `details.code` `NO_STAFF_RECORD` (нет активной карточки) или `NO_STAFF_ACCESS` (карточка из заголовка не его) — см. «Карточка сотрудника».
 - `403 / forbidden` — SQL отверг actor/business/staff или вложенную связь.
 - `409 / validation` — идентичность смены, версия исходного черновика, снимок позиций, настройки или применённая цена изменились; черновик нельзя автоматически отправлять со свежей версией.
 - `429` — отказ limiter с `retryAfter` и `Retry-After`.
@@ -177,7 +182,7 @@ SQL Save/Close и item-trigger сопоставляют дату booking с shif
 - `429` — отказ limiter с `retryAfter` и `Retry-After`.
 - `500 / internal` — прочие ошибки команды, неподтверждённый результат или общий HTTP catch.
 
-HTTP/service-ошибки имеют форму `{ ok: false, error, message? }`. Исключения из получения контекста попадают в общий catch 500, поэтому эта реализация не гарантирует 401 для каждого auth-сбоя.
+HTTP/service-ошибки имеют форму `{ ok: false, error, message? }`. Отказы карточки сотрудника — `400 / validation` с `details.code = STAFF_SELECTION_REQUIRED` и `details.options` — сотрудник нескольких бизнесов не выбрал карточку; `403 / forbidden` с `details.code` `NO_STAFF_RECORD` (нет активной карточки) или `NO_STAFF_ACCESS` (карточка из заголовка не его) — см. «Карточка сотрудника»; прочие исключения из получения контекста попадают в общий catch 500, поэтому эта реализация не гарантирует 401 для каждого auth-сбоя.
 
 Save передаёт все позиции одним RPC `save_staff_shift_command`: проверка actor/вложенных ID, статусы, пакет/акция, замена ledger и итоги входят в одну транзакцию. Максимум 1000 позиций ограничивает команду; отдельного запроса на каждую позицию больше нет. Повтор clientId сохраняет идентичность и created_at; одинаковые walk-in позиции с разными ID остаются разными. Один bookingId разрешён только в одной позиции; отменённая бронь не превращается в paid. Пакет выбирается в бизнесе booking. SQL-ошибка откатывает все эти записи.
 
@@ -456,7 +461,7 @@ Legacy-ветка возвращает 403 forbidden при недоступно
 
 Успех: `data: { stats: StaffFinanceStatsPayload }`. Полная форма `stats` — тип **StaffFinanceStatsPayload** в [finance/types.ts](../../apps/web/src/lib/finance/types.ts) и объект `stats` в сервисе. Он включает `period`, `dateFrom`, `dateTo`, `staffName`, количества смен/клиентов, финансовые итоги, признаки гарантированной оплаты и `shifts` с snake_case финансовыми полями и `items`. Соседний тип `StaffFinanceStatsResponse` в том же файле описывает плоскую `stats`; фактический HTTP использует **data.stats**, поэтому этот response-тип не служит точным описанием wire-обёртки.
 
-Ошибки: 400 validation от парсера даты; 500 internal при ошибке основного запроса смен. В Bearer catch `UNAUTHORIZED`/`NO_STAFF_RECORD`/auth-подобные исключения дают 401, остальные — 500 (в том числе исключение неверного UUID этой ветки); manager-ветка неверный UUID передаёт в общую обёртку как 400. Дополняются явными 403/404 выше.
+Ошибки: 400 validation от парсера даты; 500 internal при ошибке основного запроса смен. В Bearer-ветке id пути — явная карточка (заголовок, если есть, должен совпасть); отказы карточки — 400/403 как в «Карточка сотрудника», `UNAUTHORIZED`/auth-подобные исключения — 401, остальные — 500 (в том числе исключение неверного UUID этой ветки); manager-ветка неверный UUID передаёт в общую обёртку как 400. Дополняются явными 403/404 выше.
 
 **Календарь и версия:** снимок содержит ledger_revision, timezone, day_start/day_end и day_hours для каждой смены. Начальная дата в обоих web stats hooks берётся из server dateFrom, выбранная человеком дата остаётся буквальной календарной меткой. Устаревшие ответы другого периода/сотрудника не заменяют текущие данные. Открытая гарантия ограничена концом исходного локального дня; закрытая выплата и ставка берутся из сохранённой смены. [SQL календаря и снимка](../../supabase/migrations/20261110131000_shift_hours_adjustment.sql).
 

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
+import { useCurrentStaff } from '../../hooks/useCurrentStaff';
 import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
-import { supabase } from '../../lib/supabase';
+import { STAFF_ID_HEADER } from '../../lib/staffSelectionStorage';
 import { getOfflineQueue, getShiftCache, ownsOperation, saveOfflineQueue, saveShiftCache } from './offlineStorage';
 import type { ShiftOfflineOperation, ShiftOwner } from './offlineStorage';
 import { applySavedLedger, closeShiftLedger, editShiftLedger, errorStatus, isShiftLedgerSnapshot, readSavedLedger, UnconfirmedShiftCommandError } from './commandProtocol';
@@ -24,17 +25,9 @@ export function useShiftQuickScreenData() {
     const [queueError, setQueueError] = useState<string | null>(null);
     // Replay and interactive commands share a lock, including synchronous double taps.
     const lock = useRef(false);
-    const { data: staffInfo } = useQuery({
-        queryKey: ['staff-info', user?.id],
-        queryFn: async () => {
-            if (!user?.id) return null;
-            const { data, error } = await supabase.from('staff').select('id, full_name')
-                .eq('user_id', user.id).eq('is_active', true).maybeSingle();
-            if (error) throw error;
-            return data as StaffInfo | null;
-        },
-        enabled: !!user?.id,
-    });
+    // Every /api/staff/* request names the staff card it acts as (ARCH-02).
+    const currentStaff = useCurrentStaff();
+    const staffInfo: StaffInfo | null = currentStaff.staffInfo;
     const owner = useMemo<ShiftOwner | null>(() => user?.id && staffInfo?.id
         ? { userId: user.id, staffId: staffInfo.id } : null, [user?.id, staffInfo?.id]);
     const ownerRef = useRef(owner);
@@ -47,7 +40,9 @@ export function useShiftQuickScreenData() {
     const loadFinance = useCallback(async (allowCache: boolean): Promise<FinanceData> => {
         const currentOwner = assertOwner();
         try {
-            const response = await apiRequest<{ ok: boolean; data: FinanceData }>('/api/staff/finance');
+            const response = await apiRequest<{ ok: boolean; data: FinanceData }>('/api/staff/finance', {
+                headers: { [STAFF_ID_HEADER]: currentOwner.staffId },
+            });
             if (!response.ok || !response.data?.today) throw new Error('Не удалось загрузить смену.');
             assertOwner();
             await saveShiftCache(response.data, currentOwner);
@@ -100,15 +95,19 @@ export function useShiftQuickScreenData() {
     }, [assertOwner, queryClient, queryKey]);
     const sendOperation = useCallback(async (operation: ShiftOfflineOperation) => {
         const currentOwner = assertOwner();
-        if (!ownsOperation(operation, currentOwner) || !isShiftLedgerSnapshot(operation.data)
+        const operationOwner = operation.owner;
+        if (!operationOwner || !ownsOperation(operation, currentOwner) || !isShiftLedgerSnapshot(operation.data)
             || !['addItem', 'updateItem', 'close'].includes(operation.type)) {
             throw new Error('Эта сохранённая операция требует ручной проверки.');
         }
         await queryClient.cancelQueries({ queryKey });
         assertOwner();
+        // A command acts as the card that created it, never as a card chosen later.
         const response = await apiRequest<unknown>(operation.type === 'close'
             ? '/api/staff/shift/close' : '/api/staff/shift/items', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(operation.data),
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', [STAFF_ID_HEADER]: operationOwner.staffId },
+            body: JSON.stringify(operation.data),
         });
         if (operation.type === 'close') {
             const result = response as { ok?: boolean; data?: { shift?: FinanceData['today']['shift'] } };
@@ -199,11 +198,14 @@ export function useShiftQuickScreenData() {
     });
     const openShiftMutation = useMutation({
         mutationFn: () => runLocked(async () => {
-            assertOwner();
+            const currentOwner = assertOwner();
             if ((await readQueue()).length) throw new Error('Сначала проверьте офлайн-очередь.');
             await queryClient.cancelQueries({ queryKey });
             // Opening has no revision precondition; never automatically replay an unknown outcome.
-            const response = await apiRequest<{ ok: boolean }>('/api/staff/shift/open', { method: 'POST' });
+            const response = await apiRequest<{ ok: boolean }>('/api/staff/shift/open', {
+                method: 'POST',
+                headers: { [STAFF_ID_HEADER]: currentOwner.staffId },
+            });
             if (!response.ok) throw new Error('Не удалось открыть смену. Обновите данные перед повтором.');
             const data = await loadFinance(false);
             queryClient.setQueryData(queryKey, data);
@@ -257,7 +259,8 @@ export function useShiftQuickScreenData() {
     const reviewOperation = queue.find(item => item.state === 'review');
     const reviewItems = owner && reviewOperation && ownsOperation(reviewOperation, owner)
         && isShiftLedgerSnapshot(reviewOperation.data) ? reviewOperation.data.items : undefined;
-    return { staffInfo, financeData: financeQuery.data, isLoading: financeQuery.isLoading, error: financeQuery.error,
+    return { staffInfo, staffLoading: currentStaff.isLoading, needsSelection: currentStaff.needsSelection,
+        financeData: financeQuery.data, isLoading: financeQuery.isLoading, error: financeQuery.error,
         refreshing, isProcessingQueue: busy, pendingQueueCount: queue.length, reviewOperation, reviewItems,
         queueError, canRestoreDraft: queue.length === 1 && !!owner && !!reviewOperation?.edit
             && ownsOperation(reviewOperation, owner) && isShiftLedgerSnapshot(reviewOperation.data),

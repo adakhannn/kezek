@@ -3,11 +3,14 @@ import { formatInTimeZone } from 'date-fns-tz';
 
 import StaffBookingsView from './StaffBookingsView';
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffPageContext } from '@/lib/authBiz';
 import { TZ } from '@/lib/time';
 
 export default async function StaffBookingsPage() {
-    const { supabase, staffId, bizId, branchId } = await getStaffContext();
+    // The layout shows sign-in, the business chooser or the error; the page renders nothing then.
+    const context = await getStaffPageContext();
+    if (!context) return null;
+    const { supabase, staffId, bizId, branchId } = context;
 
     // Текущее время в нужной TZ как ISO (с оффсетом)
     const nowISO = formatInTimeZone(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");

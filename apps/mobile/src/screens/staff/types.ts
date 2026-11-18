@@ -1,6 +1,9 @@
+/** One active staff card: a person has one per business they work in (ARCH-02). */
 export type StaffInfo = {
     id: string;
     full_name: string;
+    biz_id: string;
+    created_at: string | null;
     branch: {
         id: string;
         name: string;

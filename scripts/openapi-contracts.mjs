@@ -65,6 +65,7 @@ const operation = (operationId, tag, summary, request, response, description, st
     'x-unmodeled-responses': 'Other infrastructure/framework responses are outside this typed contract.',
 });
 const requestIdentity = { name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', format: 'uuid', pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$' }, description: 'UUID v4 generated before sending. Reuse with identical payload for an uncertain response; a new attempt needs a new key.' };
+const staffCard = { name: 'X-Kezek-Staff-Id', in: 'header', required: false, schema: { type: 'string', format: 'uuid' }, description: 'The staff card (one per business) the request acts as. Required in practice for a master of several businesses: without it such a caller gets 400 with details.code STAFF_SELECTION_REQUIRED and the cards to choose from. A card that is not one of the caller\x27s active cards gives 403 NO_STAFF_ACCESS; no active card gives 403 NO_STAFF_RECORD.' };
 const authenticated = { security: [{ bearerAuth: [] }], 'x-browser-auth': 'Existing verified Supabase cookie session is also accepted. Cookie names/chunking are deployment-specific and not modeled as a fixed cookie security scheme.' };
 export const reviewedOperations = {
     'POST /api/quick-hold': {
@@ -77,11 +78,11 @@ export const reviewedOperations = {
     },
     'POST /api/staff/shift/items': {
         ...operation('saveShiftItems', 'Shifts', 'Replace a shift ledger using the original revision', 'SaveShiftItemsInput', 'SaveShiftItemsSuccess', 'Authenticated staff may save their existing shift; staffId selects manager cookie-session authorization for a tenant-owned staff member. Saves are atomic and return canonical rows/revision. A 409 requires explicit review of the preserved draft against a fresh snapshot. Serialize Save and Close; an uncertain response is not permission to overwrite using a new revision.', [400, 401, 403, 409, 429, 500, 503]),
-        ...authenticated,
+        ...authenticated, parameters: [staffCard],
     },
     'POST /api/staff/shift/close': {
         ...operation('closeShift', 'Shifts', 'Close the current staff shift', 'CloseShiftInput', 'CloseShiftSuccess', 'Verified staff context. Finalizes the saved ledger under an identity/revision guard. Repeating Close for the same already-closed shift returns it; a reopened shift with an old revision conflicts. Additional notification work after the commit is not a delivery guarantee.', [400, 401, 403, 409, 429, 500, 503]),
-        ...authenticated,
+        ...authenticated, parameters: [staffCard],
     },
 };
 

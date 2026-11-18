@@ -1,42 +1,20 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuth } from '../../hooks/useAuth';
+import { useCurrentStaff } from '../../hooks/useCurrentStaff';
 import { supabase } from '../../lib/supabase';
-import type { BookingRow, StaffInfo, UpcomingBooking } from './types';
+import type { BookingRow, UpcomingBooking } from './types';
 import { ACTIVE_BOOKING_STATUSES } from '@core-domain/booking';
 
 export function useStaffScreenData() {
     const [refreshing, setRefreshing] = useState(false);
-    const { user } = useAuth();
-
-    const staffQuery = useQuery({
-        queryKey: ['staff-info', user?.id],
-        queryFn: async () => {
-            if (!user?.id) return null;
-
-            const { data, error } = await supabase
-                .from('staff')
-                .select(`
-                    id,
-                    full_name,
-                    branch:branches(id, name),
-                    business:businesses(id, name)
-                `)
-                .eq('user_id', user.id)
-                .eq('is_active', true)
-                .maybeSingle();
-
-            if (error) throw error;
-            return data as StaffInfo | null;
-        },
-        enabled: !!user?.id,
-    });
+    const currentStaff = useCurrentStaff();
+    const staffId = currentStaff.staffInfo?.id;
 
     const bookingsQuery = useQuery<UpcomingBooking[]>({
-        queryKey: ['staff-bookings', staffQuery.data?.id],
+        queryKey: ['staff-bookings', staffId],
         queryFn: async () => {
-            if (!staffQuery.data?.id) return [];
+            if (!staffId) return [];
 
             const now = new Date().toISOString();
 
@@ -50,7 +28,7 @@ export function useStaffScreenData() {
                     client_phone,
                     service:services(name_ru)
                 `)
-                .eq('staff_id', staffQuery.data.id)
+                .eq('staff_id', staffId)
                 .in('status', [...ACTIVE_BOOKING_STATUSES])
                 .gte('start_at', now)
                 .order('start_at', { ascending: true })
@@ -70,23 +48,26 @@ export function useStaffScreenData() {
                 })) ?? []
             );
         },
-        enabled: !!staffQuery.data?.id,
+        enabled: !!staffId,
     });
 
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-            await Promise.all([staffQuery.refetch(), bookingsQuery.refetch()]);
+            await Promise.all([currentStaff.refetch(), bookingsQuery.refetch()]);
         } finally {
             setRefreshing(false);
         }
     };
 
     return {
-        staffInfo: staffQuery.data,
+        staffInfo: currentStaff.staffInfo,
+        staffRecords: currentStaff.staffRecords,
+        needsSelection: currentStaff.needsSelection,
+        selectStaff: currentStaff.select,
         upcomingBookings: bookingsQuery.data ?? [],
-        loadError: (staffQuery.error as Error | null) ?? (bookingsQuery.error as Error | null),
-        isLoading: (staffQuery.isLoading || bookingsQuery.isLoading) && !refreshing,
+        loadError: currentStaff.error ?? (bookingsQuery.error as Error | null),
+        isLoading: (currentStaff.isLoading || bookingsQuery.isLoading) && !refreshing,
         refreshing,
         onRefresh,
     };

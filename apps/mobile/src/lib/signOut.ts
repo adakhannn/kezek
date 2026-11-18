@@ -5,6 +5,7 @@ import { TRANSIENT_AUTH_STORAGE_KEYS } from './authStorageKeys';
 import { logWarn } from './log';
 import { clearOfflineBookings } from './offlineBookingsStorage';
 import { queryClient } from './queryClient';
+import { clearStaffSelection } from './staffSelectionStorage';
 import { supabase } from './supabase';
 
 type AuthWithLocalSessionRemoval = {
@@ -90,6 +91,7 @@ async function clearSensitiveLocalState(userId?: string): Promise<void> {
         ...TRANSIENT_AUTH_STORAGE_KEYS.map((key) => SecureStore.deleteItemAsync(key)),
         clearShiftOfflineData(),
         userId ? clearOfflineBookings(userId) : Promise.resolve(),
+        userId ? clearStaffSelection(userId) : Promise.resolve(),
     ]);
     queryClient.clear();
 }

@@ -3,10 +3,13 @@
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { StaffBusinessSwitcher } from '../StaffBusinessChooser';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { WorkspaceNavItem, WorkspaceSidebarShell } from '@/app/_components/workspace/WorkspaceNavigation';
+import type { StaffOptionLabel } from '@/lib/staffSelection';
 
-export function StaffMobileSidebar({ staffId }: { staffId: string }) {
+export function StaffMobileSidebar({ staffId, staffOptions = [] }: { staffId: string; staffOptions?: StaffOptionLabel[] }) {
     const pathname = usePathname();
     const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
@@ -64,10 +67,14 @@ export function StaffMobileSidebar({ staffId }: { staffId: string }) {
         [t],
     );
 
+    // A master of several businesses sees which one is open and can switch (ARCH-02).
+    const currentBusinessName = staffOptions.find((option) => option.staffId === staffId)?.businessName?.trim();
+
     return (
         <WorkspaceSidebarShell
             title={t('staff.cabinet.title', 'Кабинет сотрудника')}
-            subtitle={`${t('staff.cabinet.id', 'ID:')} ${staffId.slice(0, 8)}...`}
+            subtitle={currentBusinessName || `${t('staff.cabinet.id', 'ID:')} ${staffId.slice(0, 8)}...`}
+            headerSlot={staffOptions.length > 1 ? <StaffBusinessSwitcher options={staffOptions} currentStaffId={staffId} /> : undefined}
             badge={t('staff.sidebar.workspaceBadge', 'Staff Workspace')}
             items={navItems}
             pathname={pathname}

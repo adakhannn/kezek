@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import ShiftsScreen from '../../screens/ShiftsScreen';
 import { apiRequest } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { staffCard, staffCardsQuery } from '../staffCards';
 import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../hooks/useAuth', () => ({
@@ -15,6 +16,11 @@ jest.mock('../../hooks/useAuth', () => ({
 
 jest.mock('../../lib/api', () => ({
     apiRequest: jest.fn(),
+}));
+
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+    useNavigation: () => ({ navigate: mockNavigate }),
 }));
 
 describe('ShiftsScreen', () => {
@@ -30,14 +36,7 @@ describe('ShiftsScreen', () => {
     };
 
     beforeEach(() => {
-        mockedSupabase.from.mockReturnValue({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({
-                data: { id: 'staff-1', full_name: 'Test Staff' },
-                error: null,
-            }),
-        });
+        mockedSupabase.from.mockReturnValue(staffCardsQuery([staffCard({ id: 'staff-1', full_name: 'Test Staff' })]));
 
         mockedApiRequest.mockImplementation(async (endpoint: string) => {
             if (endpoint.includes('/api/dashboard/staff/staff-1/finance/stats')) {
@@ -273,6 +272,22 @@ describe('ShiftsScreen', () => {
 
         expect(await screen.findByText('Нет смен')).toBeTruthy();
         expect(await screen.findByText('За выбранный период смен не найдено')).toBeTruthy();
+    });
+
+    test('a master of two businesses without a choice is sent to the Work tab (ARCH-02)', async () => {
+        mockedSupabase.from.mockReturnValue(staffCardsQuery([
+            staffCard({ id: 'staff-1', biz_id: 'biz-1', created_at: '2026-01-01T08:00:00.000Z' }),
+            staffCard({ id: 'staff-2', biz_id: 'biz-2', created_at: '2026-02-01T08:00:00.000Z' }),
+        ]));
+
+        renderWithProviders(<ShiftsScreen />);
+
+        expect(await screen.findByText('Выберите бизнес на вкладке «Работа»')).toBeTruthy();
+        expect(screen.queryByText('Вы не являетесь сотрудником')).toBeNull();
+        expect(mockedApiRequest).not.toHaveBeenCalled();
+
+        fireEvent.press(screen.getByText('Открыть вкладку «Работа»'));
+        expect(mockNavigate).toHaveBeenCalledWith('Main', { screen: 'Staff' });
     });
 });
 

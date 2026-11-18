@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
+import { useSelectedStaffId } from '../../staffSelectionContext';
 import { FinanceWriteError, type FinanceTransport, type FinanceSaveReceipt } from '../services/financeDraftSession';
 import type { Shift, ShiftItem } from '../types';
 import { deduplicateServiceNameString } from '../utils';
@@ -8,9 +9,11 @@ import { financeDateLabel } from '../utils/calendar';
 
 import { fetchFinanceData } from './useFinanceData';
 
-async function command<T>(url: string, body?: unknown): Promise<T> {
+import { staffSelectionHeaders } from '@/lib/staffSelection';
+
+async function command<T>(url: string, body?: unknown, headers: Record<string, string> = {}): Promise<T> {
     const response = await fetch(url, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...headers },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     let json;
@@ -31,9 +34,14 @@ function wireItems(items: ShiftItem[]) {
 export function useFinanceMutations({ staffId, date }: { staffId?: string; date: Date | string | null }): FinanceTransport {
     const queryClient = useQueryClient();
     const dateStr = financeDateLabel(date);
+    // Own shift (no staffId): every request names the card on screen (ARCH-02). A string, not an
+    // object, goes into the memo: a new transport identity would start a new draft session.
+    const selectedStaffId = useSelectedStaffId();
+    const selfStaffId = staffId ? null : selectedStaffId;
     return useMemo(() => {
         // Capture primitive scope for the entire lifetime of this draft, including pending requests on navigation.
         const queryKey = ['finance', staffId || 'current', dateStr ?? 'today'];
+        const headers = staffSelectionHeaders(selfStaffId);
         const endpoint = (action: 'open' | 'close', selectedDate?: string) => {
             const base = staffId ? '/api/dashboard/staff/' + staffId + '/shift/' + action : '/api/staff/shift/' + action;
             return selectedDate ? base + '?date=' + selectedDate : base;
@@ -41,26 +49,26 @@ export function useFinanceMutations({ staffId, date }: { staffId?: string; date:
         const refresh = () => { void queryClient.invalidateQueries({ queryKey }); };
         return {
             load: async (selectedDate) => {
-                const payload = await fetchFinanceData(staffId, selectedDate ?? dateStr ?? null);
+                const payload = await fetchFinanceData(staffId, selectedDate ?? dateStr ?? null, undefined, headers);
                 queryClient.setQueryData(queryKey, payload);
                 return { shift: payload.today.shift, items: payload.today.items, calendarDate: payload.calendar?.date ?? payload.today.shift?.shift_date };
             },
-            open: (selectedDate) => command(endpoint('open', selectedDate ?? dateStr)),
+            open: (selectedDate) => command(endpoint('open', selectedDate ?? dateStr), undefined, headers),
             save: async (items, version) => {
                 const receipt = await command<FinanceSaveReceipt>('/api/staff/shift/items', {
                     items: wireItems(items), staffId, shiftDate: version.calendarDate ?? dateStr,
                     expectedShiftId: version.expectedShiftId, expectedRevision: version.expectedRevision,
-                });
+                }, headers);
                 refresh();
                 return receipt;
             },
             close: async (items, version) => {
                 const result = await command<{ shift: Shift }>(endpoint('close', version.calendarDate ?? dateStr), {
                     items: wireItems(items), totalAmount: items.reduce((sum, item) => sum + (item.serviceAmount ?? 0), 0), expectedShiftId: version.expectedShiftId, expectedRevision: version.expectedRevision,
-                });
+                }, headers);
                 refresh();
                 return result?.shift;
             },
         };
-    }, [dateStr, staffId, queryClient]);
+    }, [dateStr, staffId, selfStaffId, queryClient]);
 }

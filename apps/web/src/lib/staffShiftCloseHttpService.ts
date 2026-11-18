@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
@@ -77,14 +77,17 @@ export async function runStaffShiftCloseHttp(req: Request): Promise<NextResponse
 
         return createSuccessResponse({ shift: result.shift });
     } catch (error) {
-        logError('StaffShiftClose', 'Unexpected error', error);
+        // Staff card refusals (ARCH-02) are ordinary 400/403 answers, not server errors.
+        const access = staffAccessErrorResponse(error);
+        if (!access) logError('StaffShiftClose', 'Unexpected error', error);
         errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const isAuthError =
+            !access &&
             error instanceof Error &&
             (error.message === 'UNAUTHORIZED' ||
                 error.message.toLowerCase().includes('auth') ||
                 error.message.toLowerCase().includes('unauthorized'));
-        statusCode = isAuthError ? 401 : 500;
+        statusCode = access ? access.status : isAuthError ? 401 : 500;
 
         logApiMetric({
             endpoint,
@@ -100,6 +103,6 @@ export async function runStaffShiftCloseHttp(req: Request): Promise<NextResponse
             userAgent: req.headers.get('user-agent') || undefined,
         }).catch(() => {});
 
-        return createErrorResponse(isAuthError ? 'auth' : 'internal', errorMessage, undefined, statusCode);
+        return access ?? createErrorResponse(isAuthError ? 'auth' : 'internal', errorMessage, undefined, statusCode);
     }
 }

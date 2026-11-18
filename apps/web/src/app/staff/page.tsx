@@ -3,7 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 
 import StaffCabinet from './StaffCabinet';
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffPageContext } from '@/lib/authBiz';
 import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
 import { TZ } from '@/lib/time';
 
@@ -11,7 +11,10 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function Page() {
-    const { supabase, userId, staffId, branchId } = await getStaffContext();
+    // The layout shows sign-in, the business chooser or the error; the page renders nothing then.
+    const context = await getStaffPageContext();
+    if (!context) return null;
+    const { supabase, userId, staffId, branchId } = context;
 
     // Текущее время в нужной TZ как ISO (с оффсетом)
     const nowISO = formatInTimeZone(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");

@@ -7,6 +7,8 @@ import ShiftQuickScreen from '../../screens/ShiftQuickScreen';
 import { apiRequest } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { getOfflineQueue } from '../../screens/shiftQuick/offlineStorage';
+import type { StaffInfo } from '../../screens/staff/types';
+import { staffCard, staffCardsQuery } from '../staffCards';
 import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../hooks/useAuth', () => ({
@@ -17,6 +19,11 @@ jest.mock('../../hooks/useAuth', () => ({
 
 jest.mock('../../lib/api', () => ({
     apiRequest: jest.fn(),
+}));
+
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+    useNavigation: () => ({ navigate: mockNavigate }),
 }));
 
 const TEXT = {
@@ -49,13 +56,10 @@ describe('ShiftQuickScreen', () => {
         return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
     };
 
-    const mockStaff = (data: unknown = { id: 'staff-1', full_name: 'Test Staff' }, error: Error | null = null) => {
-        mockedSupabase.from.mockReturnValue({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({ data, error }),
-        });
+    const mockStaff = (cards: StaffInfo[] = [staffCard({ id: 'staff-1', full_name: 'Test Staff' })], error: Error | null = null) => {
+        mockedSupabase.from.mockReturnValue(staffCardsQuery(cards, error));
     };
+    const staffHeader = { 'x-kezek-staff-id': 'staff-1' };
 
     const financeData = (overrides: Record<string, unknown> = {}) => ({
         today: {
@@ -119,6 +123,7 @@ describe('ShiftQuickScreen', () => {
         expect(await screen.findByText(TEXT.title)).toBeTruthy();
         expect(await screen.findByText(TEXT.idleStatus)).toBeTruthy();
         expect(await screen.findByText(TEXT.openShift)).toBeTruthy();
+        expect(mockedApiRequest).toHaveBeenCalledWith('/api/staff/finance', { headers: staffHeader });
     });
 
     test('opens shift through staff shift API', async () => {
@@ -127,7 +132,7 @@ describe('ShiftQuickScreen', () => {
         fireEvent.press(await screen.findByText(TEXT.openShift));
 
         await waitFor(() => {
-            expect(mockedApiRequest).toHaveBeenCalledWith('/api/staff/shift/open', { method: 'POST' });
+            expect(mockedApiRequest).toHaveBeenCalledWith('/api/staff/shift/open', { method: 'POST', headers: staffHeader });
         });
     });
 
@@ -313,9 +318,12 @@ describe('ShiftQuickScreen', () => {
         await waitFor(async () => {
             expect(await getOfflineQueue()).toEqual([]);
         });
-        expect(mockedApiRequest.mock.calls.filter(([endpoint]) => endpoint === '/api/staff/shift/items')).toHaveLength(
-            2,
-        );
+        const itemCalls = mockedApiRequest.mock.calls.filter(([endpoint]) => endpoint === '/api/staff/shift/items');
+        expect(itemCalls).toHaveLength(2);
+        // The first attempt and its replay both act as the card that created the command.
+        for (const [, options] of itemCalls) {
+            expect(options?.headers).toEqual({ 'Content-Type': 'application/json', ...staffHeader });
+        }
     });
 
     test('does not report an offline operation as queued when secure storage fails', async () => {
@@ -386,10 +394,47 @@ describe('ShiftQuickScreen', () => {
     });
 
     test('renders non-staff state when staff lookup returns no active staff row', async () => {
-        mockStaff(null);
+        mockStaff([]);
 
         renderWithProviders(<ShiftQuickScreen />);
 
         expect(await screen.findByText(TEXT.nonStaff)).toBeTruthy();
+    });
+
+    test('a master of two businesses without a choice is sent to the Work tab (ARCH-02)', async () => {
+        mockStaff([
+            staffCard({ id: 'staff-1', biz_id: 'biz-1', created_at: '2026-01-01T08:00:00.000Z' }),
+            staffCard({ id: 'staff-2', biz_id: 'biz-2', created_at: '2026-02-01T08:00:00.000Z' }),
+        ]);
+
+        renderWithProviders(<ShiftQuickScreen />);
+
+        expect(await screen.findByText('Выберите бизнес на вкладке «Работа»')).toBeTruthy();
+        expect(screen.queryByText(TEXT.nonStaff)).toBeNull();
+        expect(mockedApiRequest).not.toHaveBeenCalled();
+
+        fireEvent.press(screen.getByText('Открыть вкладку «Работа»'));
+        expect(mockNavigate).toHaveBeenCalledWith('Main', { screen: 'Staff' });
+    });
+
+    test('works as the remembered business of a master of two businesses (ARCH-02)', async () => {
+        secureStorage.set('kezek_staff_selection_test-user-id', 'staff-2');
+        mockStaff([
+            staffCard({ id: 'staff-1', biz_id: 'biz-1', created_at: '2026-01-01T08:00:00.000Z' }),
+            staffCard({ id: 'staff-2', biz_id: 'biz-2', created_at: '2026-02-01T08:00:00.000Z' }),
+        ]);
+
+        renderWithProviders(<ShiftQuickScreen />);
+
+        fireEvent.press(await screen.findByText(TEXT.openShift));
+
+        await waitFor(() => {
+            expect(mockedApiRequest).toHaveBeenCalledWith('/api/staff/shift/open', {
+                method: 'POST',
+                headers: { 'x-kezek-staff-id': 'staff-2' },
+            });
+        });
+        expect(mockedApiRequest).toHaveBeenCalledWith('/api/staff/finance', { headers: { 'x-kezek-staff-id': 'staff-2' } });
+        expect(mockedApiRequest.mock.calls.some(([, options]) => JSON.stringify(options?.headers ?? {}).includes('staff-1'))).toBe(false);
     });
 });

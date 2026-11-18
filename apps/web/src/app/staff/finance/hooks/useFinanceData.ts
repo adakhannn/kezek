@@ -6,6 +6,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useMemo, useRef } from 'react';
 
+import { useSelectedStaffId } from '../../staffSelectionContext';
 import type { Booking, ServiceName, Shift, ShiftItem, Stats } from '../types';
 import { financeDateLabel } from '../utils/calendar';
 import { fetchWithRetry } from '../utils/networkRetry';
@@ -13,6 +14,7 @@ import { fetchWithRetry } from '../utils/networkRetry';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useToast } from '@/hooks/useToast';
 import type { FinanceCalendar } from '@/lib/finance/calendar';
+import { staffSelectionHeaders } from '@/lib/staffSelection';
 
 export interface FinanceData {
     calendar?: FinanceCalendar;
@@ -95,7 +97,8 @@ interface UseFinanceDataReturn {
 export async function fetchFinanceData(
     staffId: string | undefined,
     date: Date | string | null,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    headers: Record<string, string> = {},
 ): Promise<FinanceDataResponse> {
     const dateStr = financeDateLabel(date);
     const params = new URLSearchParams();
@@ -130,6 +133,7 @@ export async function fetchFinanceData(
             {
                 cache: 'no-store',
                 signal: controller.signal,
+                headers,
             },
             {
                 // Для основного запроса финансов полностью отключаем повторы:
@@ -191,6 +195,8 @@ export function useFinanceData({
 
     const dateStr = financeDateLabel(date);
     const queryKey = ['finance', staffId || 'current', dateStr ?? 'today'];
+    // Own shift: reads name the card on screen like the writes do (ARCH-02).
+    const selectedStaffId = useSelectedStaffId();
 
     // Определяем, является ли дата сегодняшней
     const isToday = !dateStr;
@@ -211,7 +217,7 @@ export function useFinanceData({
 
     const query = useQuery({
         queryKey,
-        queryFn: ({ signal }) => fetchFinanceData(staffId, date, signal),
+        queryFn: ({ signal }) => fetchFinanceData(staffId, date, signal, staffSelectionHeaders(staffId ? null : selectedStaffId)),
         enabled,
         initialData: isToday && initialDataProp ? initialDataProp : undefined,
         staleTime,

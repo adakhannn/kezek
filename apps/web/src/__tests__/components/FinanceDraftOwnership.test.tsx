@@ -2,6 +2,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { useFinanceDraft } from '@/app/staff/finance/hooks/useFinanceDraft';
 import { useFinanceMutations } from '@/app/staff/finance/hooks/useFinanceMutations';
+import { StaffSelectionProvider } from '@/app/staff/staffSelectionContext';
 import type { FinanceData } from '@/app/staff/finance/hooks/useFinanceData';
 import type { FinanceTransport } from '@/app/staff/finance/services/financeDraftSession';
 import type { Shift, ShiftItem } from '@/app/staff/finance/types';
@@ -78,4 +79,25 @@ test('default today transport sends snapshot calendar date, not the current brow
     expect(mockFetch.mock.calls[1][0]).toBe('/api/dashboard/staff/staff-a/shift/close?date=2026-11-09');
     expect(JSON.parse(mockFetch.mock.calls[1][1].body)).not.toHaveProperty('calendarDate');
     expect(JSON.parse(mockFetch.mock.calls[1][1].body)).not.toHaveProperty('shiftDate');
+});
+
+// ARCH-02: a master of several businesses. Own-shift requests name the card shown in this tab, and
+// the transport identity (and with it the draft session) survives re-renders inside the provider.
+test('own-shift requests carry the card on screen; manager mode does not; the transport stays the same', async () => {
+    const mockFetch = jest.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ ok: true, data: { shiftId: shift.id, revision: 8, items: [item], shift } }) });
+    global.fetch = mockFetch;
+    const wrapper = ({ children }: { children: React.ReactNode }) => <StaffSelectionProvider staffId="card-b">{children}</StaffSelectionProvider>;
+    const own = renderHook(() => useFinanceMutations({ date: null }), { wrapper });
+    const first = own.result.current;
+    own.rerender();
+    expect(own.result.current).toBe(first);
+
+    const version = { expectedShiftId: shift.id, expectedRevision: 7, calendarDate: '2026-11-09' };
+    await first.open(); await first.save([item], version); await first.close([item], version);
+    for (const [, init] of mockFetch.mock.calls) expect(init.headers).toMatchObject({ 'x-kezek-staff-id': 'card-b' });
+
+    mockFetch.mockClear();
+    const manager = renderHook(() => useFinanceMutations({ staffId: 'staff-a', date: null }), { wrapper });
+    await manager.result.current.save([item], version);
+    expect(mockFetch.mock.calls[0][1].headers).not.toHaveProperty('x-kezek-staff-id');
 });

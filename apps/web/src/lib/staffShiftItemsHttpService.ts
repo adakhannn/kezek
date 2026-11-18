@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { logError } from '@/lib/log';
 import { rateLimitDeniedResponse } from '@/lib/rateLimit';
@@ -65,9 +65,11 @@ export async function runStaffShiftItemsHttp(req: Request): Promise<NextResponse
 
         return createSuccessResponse(result.data);
     } catch (error) {
-        logError('StaffShiftItems', 'Error saving shift items', error);
-        errorMessage = 'Ошибка при сохранении данных';
-        statusCode = 500;
+        // Staff card refusals (ARCH-02) are ordinary 400/403 answers, not server errors.
+        const access = staffAccessErrorResponse(error);
+        if (!access) logError('StaffShiftItems', 'Error saving shift items', error);
+        errorMessage = access && error instanceof Error ? error.message : 'Ошибка при сохранении данных';
+        statusCode = access ? access.status : 500;
 
         logApiMetric({
             endpoint,
@@ -83,6 +85,6 @@ export async function runStaffShiftItemsHttp(req: Request): Promise<NextResponse
             userAgent: req.headers.get('user-agent') || undefined,
         }).catch(() => {});
 
-        return createErrorResponse('internal', errorMessage, undefined, 500);
+        return access ?? createErrorResponse('internal', errorMessage, undefined, 500);
     }
 }

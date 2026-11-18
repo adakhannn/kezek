@@ -8,10 +8,12 @@
  * - schedule — расписания и слоты
  * - finance  — финансовые расчёты смен
  * - ports    — интерфейсы репозиториев и внешних сервисов
+ * - staff    — выбор карточки сотрудника нескольких бизнесов
  */
 
 export * from './booking';
 export * from './schedule';
 export * from './finance';
 export * from './ports';
+export * from './staff';
 

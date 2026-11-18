@@ -76,7 +76,7 @@
 | ID | P | Находка | Где | Статус |
 | --- | --- | --- | --- | --- |
 | ARCH-01 | P1 | Личность определяется по неподтверждённым телефону/email: `auth.users.phone` меняется без OTP, `user_metadata` редактируется пользователем; по ним идут WhatsApp-вход, привязка сотрудника, добавление участника | `userUpdatePhoneService.ts`, `whatsAppIdentityOwnershipService.ts`, `staffCreateService.ts` | FIXED |
-| ARCH-02 | P1 | Сотрудник нескольких бизнесов теряет кабинет: `.maybeSingle()` по `staff.user_id` без бизнеса (web и mobile) | `staffRoleSync.ts`, `userRoleProfile.ts`, `useUserRole.ts` | TODO |
+| ARCH-02 | P1 | Сотрудник нескольких бизнесов теряет кабинет: `.maybeSingle()` по `staff.user_id` без бизнеса (web и mobile) | `staffRoleSync.ts`, `userRoleProfile.ts`, `useUserRole.ts` | FIXED |
 | ARCH-03 | P1 | Поиск аккаунтов перебирает `listUsers` с жёсткими лимитами (первые 200 пользователей) | `staffCreateFromUserService.ts` и др. | FIXED |
 | ARCH-04 | P1 | Ошибки в проде не видны: логгер выбрасывает детали и warn, обработчик API не шлёт в Sentry, клиентский Sentry не грузится под Turbopack | `shared-client/log.ts`, `apiErrorHandler.ts` | TODO |
 | ARCH-05 | P2 | HTTP-статус выбирается по тексту ошибки (`NO_BIZ_ACCESS` → 500) | `apiErrorHandler.ts` | TODO |
@@ -156,4 +156,6 @@ API-09 и CI-09 закрыты как ENG-93: миграция `20261118220000_a
 
 DB-14 и ARCH-08 закрыты как ENG-94: миграция `20261118230000_keep_history_on_delete.sql` применена в проде до выкладки кода (новый код вызывает новые функции).
 
-Дальше по порядку: P1 — API-06, ARCH-02, ARCH-04, CI-01.
+ARCH-02 закрыт как ENG-95 (без миграций): веб выходит сразу, мобильная часть — со следующей сборкой из магазинов (OTA в приложении нет); старые сборки продолжают работать у сотрудников с одной карточкой.
+
+Дальше по порядку: P1 — API-06 (нужно решение владельца о согласии), ARCH-04, CI-01.

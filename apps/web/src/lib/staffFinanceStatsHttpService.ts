@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { runStaffFinanceStats } from '@/lib/staffFinanceStatsService';
@@ -48,7 +48,8 @@ async function runSelfStaffFinanceStats(req: Request, context: unknown): Promise
             return createErrorResponse('validation', 'Отсутствует ID сотрудника', undefined, 400);
         }
 
-        const staffContext = await getStaffContextForRequest(req, 'StaffFinanceStats');
+        // The route names the card: it must be one of the caller's active cards (ARCH-02).
+        const staffContext = await getStaffContextForRequest(req, 'StaffFinanceStats', { staffId: requestedStaffId });
         if (requestedStaffId !== staffContext.staffId) {
             return createErrorResponse('forbidden', 'Доступ к статистике другого сотрудника запрещен', undefined, 403);
         }
@@ -83,10 +84,11 @@ async function runSelfStaffFinanceStats(req: Request, context: unknown): Promise
 
         return createSuccessResponse({ stats: result.stats });
     } catch (error) {
+        const access = staffAccessErrorResponse(error);
+        if (access) return access;
         const message = error instanceof Error ? error.message : 'UNAUTHORIZED';
         const isAuthError =
             message === 'UNAUTHORIZED' ||
-            message === 'NO_STAFF_RECORD' ||
             message.toLowerCase().includes('auth');
 
         return createErrorResponse(isAuthError ? 'auth' : 'internal', message, undefined, isAuthError ? 401 : 500);

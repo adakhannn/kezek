@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import ExplicitStaffSchedule from './ExplicitStaffSchedule';
 import StaffSchedulePageClient from './StaffSchedulePageClient';
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffPageContext } from '@/lib/authBiz';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,10 @@ export const runtime = 'nodejs';
 type Branch = { id: string; name: string; is_active: boolean };
 
 export default async function StaffSchedulePage() {
-    const { supabase, staffId, bizId } = await getStaffContext();
+    // The layout shows sign-in, the business chooser or the error; the page renders nothing then.
+    const context = await getStaffPageContext();
+    if (!context) return null;
+    const { supabase, staffId, bizId } = context;
 
     // Информация о сотруднике
     const { data: staff, error: eStaff } = await supabase

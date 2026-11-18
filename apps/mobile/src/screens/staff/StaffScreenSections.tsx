@@ -14,6 +14,8 @@ type Props = {
     onRefresh: () => Promise<void>;
     onOpenShiftQuick: () => void;
     onOpenShifts: () => void;
+    /** Shown when the person works in several businesses. */
+    onChangeBusiness?: () => void;
 };
 
 export function StaffScreenSections({
@@ -23,6 +25,7 @@ export function StaffScreenSections({
     onRefresh,
     onOpenShiftQuick,
     onOpenShifts,
+    onChangeBusiness,
 }: Props) {
     return (
         <ScrollView
@@ -43,10 +46,22 @@ export function StaffScreenSections({
                 </Card>
             )}
 
-            {staffInfo.business && (
+            {(staffInfo.business || onChangeBusiness) && (
                 <Card style={styles.card}>
                     <Text style={styles.sectionTitle}>Бизнес</Text>
-                    <Text style={styles.businessName}>{staffInfo.business.name}</Text>
+                    {staffInfo.business ? (
+                        <Text style={styles.businessName}>{staffInfo.business.name}</Text>
+                    ) : null}
+                    {onChangeBusiness ? (
+                        <Button
+                            title="Сменить бизнес"
+                            onPress={onChangeBusiness}
+                            variant="outline"
+                            fullWidth
+                            accessibilityHint="Открывает список ваших бизнесов"
+                            style={staffInfo.business ? styles.changeBusinessAction : undefined}
+                        />
+                    ) : null}
                 </Card>
             )}
 

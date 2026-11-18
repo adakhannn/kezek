@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { logDebug, logError } from '@/lib/log';
 import { runStaffFinanceRoute } from '@/lib/staffFinanceRouteService';
@@ -71,14 +71,16 @@ export async function runStaffFinanceHttp(req: Request): Promise<NextResponse> {
         return createSuccessResponse(result.data);
     } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        logError('StaffFinance', 'Unexpected error in /api/staff/finance', error);
+        // Staff card refusals (ARCH-02) are ordinary 400/403 answers, not server errors.
+        const access = staffAccessErrorResponse(error);
+        if (!access) logError('StaffFinance', 'Unexpected error in /api/staff/finance', error);
 
         errorMessage = msg;
-        statusCode =
-            error instanceof Error &&
-            (error.message === 'UNAUTHORIZED' || error.message === 'NO_STAFF_RECORD' || error.message === 'NO_BIZ_ACCESS')
-                ? 401
-                : 500;
+        statusCode = access
+            ? access.status
+            : error instanceof Error && (error.message === 'UNAUTHORIZED' || error.message === 'NO_BIZ_ACCESS')
+              ? 401
+              : 500;
 
         logApiMetric({
             endpoint,
@@ -94,6 +96,6 @@ export async function runStaffFinanceHttp(req: Request): Promise<NextResponse> {
             userAgent: req.headers.get('user-agent') || undefined,
         }).catch(() => {});
 
-        return createErrorResponse(statusCode === 401 ? 'auth' : 'internal', msg, undefined, statusCode);
+        return access ?? createErrorResponse(statusCode === 401 ? 'auth' : 'internal', msg, undefined, statusCode);
     }
 }

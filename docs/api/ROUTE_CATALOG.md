@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **178 route-файлов, 221 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **179 route-файлов, 222 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 515 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `cf46f5d38ce42934c78123f72dca20392e5aac0dcbd7dee227588825da6cd851`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 518 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `3e71ac1d1de771c6fb392a86bb662ea8a022cbbf7ace9a6a28ee1ec0e63e9ac6`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -143,6 +143,7 @@
 | `/api/dashboard/visit-packages` | GET | [route](../../apps/web/src/app/api/dashboard/visit-packages/route.ts) | [runListVisitPackagesHttp](../../apps/web/src/lib/visitPackagesHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/funnel-events` | POST | [route](../../apps/web/src/app/api/funnel-events/route.ts) | [runFunnelEventsHttp](../../apps/web/src/lib/funnelEventsHttpService.ts) | [справочник](OPERATIONS_AND_TELEMETRY.md) |
 | `/api/me/current-business` | GET, POST | [route](../../apps/web/src/app/api/me/current-business/route.ts) | [runGetCurrentBusinessHttp, runSetCurrentBusinessHttp](../../apps/web/src/lib/currentBusinessHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
+| `/api/me/current-staff` | POST | [route](../../apps/web/src/app/api/me/current-staff/route.ts) | [runSetCurrentStaffHttp](../../apps/web/src/lib/currentStaffHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/me/visit-packages` | GET | [route](../../apps/web/src/app/api/me/visit-packages/route.ts) | [runMeVisitPackagesHttp](../../apps/web/src/lib/meVisitPackagesHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/metrics/frontend` | POST | [route](../../apps/web/src/app/api/metrics/frontend/route.ts) | [runFrontendMetricsHttp](../../apps/web/src/lib/frontendMetricsHttpService.ts) | [справочник](OPERATIONS_AND_TELEMETRY.md) |
 | `/api/mobile/bookings/[id]` | GET, POST | [route](../../apps/web/src/app/api/mobile/bookings/[id]/route.ts) | [runCancelMobileBookingHttp, runGetMobileBookingDetailsHttp](../../apps/web/src/lib/mobileBookingsHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |

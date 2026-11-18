@@ -2,11 +2,14 @@
 
 import React, {useEffect, useRef, useState} from 'react';
 
+import { useSelectedStaffId } from '../staffSelectionContext';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import {Button} from '@/components/ui/Button';
 import {ToastContainer} from '@/components/ui/Toast';
 import {useToast} from '@/hooks/useToast';
 import {logError} from '@/lib/log';
+import { staffSelectionHeaders } from '@/lib/staffSelection';
 
 async function createImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
@@ -70,6 +73,8 @@ export default function StaffAvatarUpload({
 }) {
     const { t } = useLanguage();
     const toast = useToast();
+    // The staff card on screen: a master of several businesses edits this card's photo (ARCH-02).
+    const selectedStaffId = useSelectedStaffId();
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(currentAvatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -118,6 +123,7 @@ export default function StaffAvatarUpload({
             const response = await fetch('/api/staff/avatar/upload', {
                 method: 'POST',
                 body: formData,
+                headers: staffSelectionHeaders(selectedStaffId),
             });
 
             const result = await response.json();
@@ -149,6 +155,7 @@ export default function StaffAvatarUpload({
         try {
             const response = await fetch('/api/staff/avatar/remove', {
                 method: 'POST',
+                headers: staffSelectionHeaders(selectedStaffId),
             });
 
             const result = await response.json();

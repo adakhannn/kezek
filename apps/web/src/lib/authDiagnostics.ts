@@ -7,6 +7,7 @@ export type AuthErrorCode =
     | 'NO_BIZ_ACCESS'
     | 'NO_STAFF_RECORD'
     | 'NO_STAFF_ACCESS'
+    | 'STAFF_SELECTION_REQUIRED'
     | 'STAFF_ROLE_MISMATCH';
 
 /**
@@ -37,5 +38,28 @@ export class BizAccessError extends Error {
         this.name = 'BizAccessError';
         this.code = code;
         this.diagnostics = diagnostics;
+    }
+}
+
+/**
+ * One of the caller's active staff cards (one per business).
+ */
+export type StaffOption = {
+    staffId: string;
+    bizId: string;
+    branchId: string | null;
+};
+
+/**
+ * The caller is an active master in several businesses and no card was chosen (ARCH-02).
+ * Carries the cards to choose from; never a generic access failure.
+ */
+export class StaffSelectionRequiredError extends BizAccessError {
+    public readonly staffOptions: StaffOption[];
+
+    constructor(staffOptions: StaffOption[]) {
+        super('STAFF_SELECTION_REQUIRED');
+        this.name = 'StaffSelectionRequiredError';
+        this.staffOptions = staffOptions;
     }
 }

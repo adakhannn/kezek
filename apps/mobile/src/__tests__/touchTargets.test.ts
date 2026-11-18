@@ -23,6 +23,7 @@ describe('critical touch target contracts', () => {
         'screens/booking/BookingStep3Staff.tsx',
         'screens/booking/BookingStep5Time.tsx',
         'screens/shifts/shiftsScreenStyles.ts',
+        'screens/staff/staffScreenStyles.ts',
     ])('%s uses the shared minimum touch target', (relativePath) => {
         expect(readSource(relativePath)).toContain('MIN_TOUCH_TARGET');
     });

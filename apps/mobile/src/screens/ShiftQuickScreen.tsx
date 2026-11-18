@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
@@ -6,6 +8,7 @@ import { useConfirm } from '../contexts/ConfirmContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useToast } from '../contexts/ToastContext';
 import { getErrorMessage } from '../lib/errors';
+import type { RootStackParamList } from '../navigation/types';
 import { ShiftQuickSections } from './shiftQuick/ShiftQuickSections';
 import { useShiftQuickScreenData } from './shiftQuick/useShiftQuickScreenData';
 import { captureShiftLedger, createShiftClientId, isShiftLedgerSnapshot } from './shiftQuick/commandProtocol';
@@ -24,7 +27,10 @@ const ADD_CLIENT_QUEUED =
 const ADD_CLIENT_ERROR =
     '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
 
+type ShiftQuickNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ShiftQuick'>;
+
 export default function ShiftQuickScreen() {
+    const navigation = useNavigation<ShiftQuickNavigationProp>();
     const [showAddClient, setShowAddClient] = useState(false);
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [editorBase, setEditorBase] = useState<ShiftLedgerSnapshot | null>(null);
@@ -41,6 +47,8 @@ export default function ShiftQuickScreen() {
 
     const {
         staffInfo,
+        staffLoading,
+        needsSelection,
         financeData,
         isLoading,
         error,
@@ -231,8 +239,25 @@ export default function ShiftQuickScreen() {
         );
     };
 
-    if (isLoading && !financeData) {
+    if (staffLoading || (isLoading && !financeData)) {
         return <LoadingSpinner message="Загрузка..." />;
+    }
+
+    if (needsSelection) {
+        return (
+            <EmptyState
+                icon="briefcase"
+                title="Выберите бизнес на вкладке «Работа»"
+                message="Вы работаете в нескольких бизнесах. Смена ведётся в выбранном."
+                action={
+                    <Button
+                        title="Открыть вкладку «Работа»"
+                        onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
+                        fullWidth
+                    />
+                }
+            />
+        );
     }
 
     if (!staffInfo) {

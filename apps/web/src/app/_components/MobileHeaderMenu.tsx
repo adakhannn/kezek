@@ -124,14 +124,14 @@ function MobileAuthStatus({ onAction }: { onAction: () => void }) {
                 'аккаунт';
             setLabel(userName);
 
-            const { data: staff } = await supabase
+            // A count, not a single row: a master of several businesses has one card per business (ARCH-02).
+            const { count: staffCount } = await supabase
                 .from('staff')
-                .select('id, biz_id')
+                .select('id', { count: 'exact', head: true })
                 .eq('user_id', authUser.id)
-                .eq('is_active', true)
-                .maybeSingle();
+                .eq('is_active', true);
 
-            setIsStaff(!!staff);
+            setIsStaff((staffCount ?? 0) > 0);
         })();
 
         return () => {
