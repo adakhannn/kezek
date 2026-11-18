@@ -36,6 +36,7 @@ export default function ViewSchedule({
     homeBranchId: string;
 }) {
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState(false);
     const { t, locale } = useLanguage();
     const [rules, setRules] = useState<
         Array<{
@@ -60,7 +61,7 @@ export default function ViewSchedule({
             const weekStart = formatInTimeZone(currentWeekDates[0], TZ, 'yyyy-MM-dd');
             const weekEnd = formatInTimeZone(addDays(nextWeekDates[6], 1), TZ, 'yyyy-MM-dd');
 
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('staff_schedule_rules')
                 .select('id, date_on, intervals, branch_id')
                 .eq('biz_id', bizId)
@@ -72,6 +73,12 @@ export default function ViewSchedule({
                 .order('date_on', { ascending: true });
 
             if (ignore) return;
+            if (error) {
+                // A failed read is not "no schedule" (FE-02).
+                setLoadError(true);
+                setLoading(false);
+                return;
+            }
             setRules(
                 (data ?? []).map((r) => ({
                     id: r.id,
@@ -116,6 +123,14 @@ export default function ViewSchedule({
         return (
             <div className="text-center py-8">
                 <p className="text-gray-600 dark:text-gray-400">{t('staff.schedule.loading', 'Загрузка расписания...')}</p>
+            </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <div role="alert" className="text-center py-8">
+                <p className="text-red-600 dark:text-red-400">{t('staff.schedule.loadError', 'Не удалось загрузить расписание')}</p>
             </div>
         );
     }
@@ -173,11 +188,8 @@ export default function ViewSchedule({
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                                                     {t('staff.schedule.workingHours', 'Рабочее время')}
                                                 </div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    09:00 - 21:00
-                                                </div>
-                                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                                    ({t('staff.schedule.default', 'по умолчанию')})
+                                                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                    {t('staff.schedule.notConfigured', 'Не настроено')}
                                                 </div>
                                             </div>
                                         )}
@@ -269,11 +281,8 @@ export default function ViewSchedule({
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                                                     {t('staff.schedule.workingHours', 'Рабочее время')}
                                                 </div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    09:00 - 21:00
-                                                </div>
-                                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                                    ({t('staff.schedule.default', 'по умолчанию')})
+                                                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                    {t('staff.schedule.notConfigured', 'Не настроено')}
                                                 </div>
                                             </div>
                                         )}
@@ -316,7 +325,7 @@ export default function ViewSchedule({
 
             <div className="text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <p>• {t('staff.schedule.managedByOwner', 'Расписание управляется владельцем бизнеса')}</p>
-                <p>• {t('staff.schedule.defaultScheduleHint', 'Если для дня не указано специальное расписание, действует расписание по умолчанию (09:00-21:00)')}</p>
+                <p>• {t('staff.schedule.defaultScheduleHint', 'День без сохранённого графика не настроен: записи на него нет, пока руководитель не задаст часы')}</p>
             </div>
         </section>
     );

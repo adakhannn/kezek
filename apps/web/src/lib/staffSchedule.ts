@@ -2,14 +2,15 @@ import { startOfWeek, addDays, addWeeks } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { logDebug, logError } from './log';
+import { branchDayIntervals, LEGACY_DEFAULT_INTERVAL, type BranchHoursRow } from './scheduling/legacyDefaults';
 import { getServiceClient } from './supabaseService';
 import { TZ } from './time';
 
-type TimeRange = { start: string; end: string };
-
 /**
- * Инициализирует расписание для сотрудника на текущую и следующую недели.
- * Функция идемпотентна: создаёт только отсутствующие дни.
+ * Инициализирует расписание для сотрудника на текущую и следующую недели (старая модель).
+ * Функция идемпотентна: создаёт только отсутствующие дни, начиная с сегодняшнего. Часы берутся из
+ * основного филиала; закрытый день филиала становится выходным. 09:00–21:00 ставится, только если
+ * у филиала вообще не заданы часы (FE-02).
  * @param admin - Supabase admin client
  * @param bizId - ID бизнеса
  * @param staffId - ID сотрудника
@@ -36,6 +37,8 @@ export async function initializeStaffSchedule(
             const dateStrings = weekDates.map((d) => formatInTimeZone(d, TZ, 'yyyy-MM-dd'));
             allDates.push(...dateStrings);
         }
+        const todayYmd = formatInTimeZone(today, TZ, 'yyyy-MM-dd');
+        const futureDates = allDates.filter((date) => date >= todayYmd);
 
         logDebug('StaffSchedule', 'Generated dates', { count: allDates.length, first: allDates[0], last: allDates[allDates.length - 1] });
 
@@ -61,7 +64,7 @@ export async function initializeStaffSchedule(
         }
 
         const existingDates = new Set((existingRules ?? []).map((r: { date_on: string | null }) => r.date_on).filter((d): d is string => d !== null));
-        const missingDates = allDates.filter((d) => !existingDates.has(d));
+        const missingDates = futureDates.filter((d) => !existingDates.has(d));
 
         logDebug('StaffSchedule', 'Found existing and missing dates', { existing: existingDates.size, missing: missingDates.length });
 
@@ -72,33 +75,24 @@ export async function initializeStaffSchedule(
         }
 
         // Загружаем расписание филиала
-        const { data: branchSchedule } = await admin
+        const { data: branchSchedule, error: branchError } = await admin
             .from('branch_working_hours')
             .select('day_of_week, intervals')
             .eq('biz_id', bizId)
             .eq('branch_id', branchId);
 
-        // Создаем карту расписания филиала по дням недели
-        const branchScheduleMap = new Map<number, TimeRange[]>();
-        (branchSchedule || []).forEach((s) => {
-            const intervals = (s.intervals || []) as TimeRange[];
-            if (intervals.length > 0) {
-                branchScheduleMap.set(s.day_of_week, intervals);
-            }
-        });
+        if (branchError) {
+            logError('StaffSchedule', 'Failed to read branch hours', branchError);
+            throw new Error(`Failed to read branch hours: ${branchError.message}`);
+        }
+        const branchRows: BranchHoursRow[] = (branchSchedule ?? []).map((row) => ({
+            day_of_week: row.day_of_week,
+            intervals: Array.isArray(row.intervals) ? (row.intervals as BranchHoursRow['intervals']) : [],
+        }));
 
-        // Создаем правила для отсутствующих дней, используя расписание филиала
-        const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
+        // Правила для отсутствующих дней по часам филиала: закрытый день — выходной ([]).
         const inserts = missingDates.map((date) => {
-            // Определяем день недели (0 = воскресенье, 1 = понедельник, ..., 6 = суббота)
-            const dateObj = new Date(date + 'T12:00:00');
-            const dayOfWeek = dateObj.getDay();
-
-            // Получаем расписание филиала для этого дня недели
-            const branchIntervals = branchScheduleMap.get(dayOfWeek);
-            const intervals = branchIntervals && branchIntervals.length > 0
-                ? branchIntervals
-                : [defaultInterval]; // Fallback, если расписание не задано
+            const intervals = branchDayIntervals(branchRows, date) ?? [LEGACY_DEFAULT_INTERVAL];
 
             return {
                 biz_id: bizId,
@@ -130,8 +124,8 @@ export async function initializeStaffSchedule(
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         logError('StaffSchedule', 'Error during initialization', { staffId, error: errorMsg, originalError: error });
-        // Не пробрасываем ошибку дальше, чтобы не сломать создание сотрудника
-        // Расписание можно будет создать позже при первом открытии страницы
+        // Не пробрасываем ошибку дальше, чтобы не сломать создание сотрудника.
+        // Расписание задаётся в редакторе: «Применить часы филиала» или сохранение дня.
         return { success: false, daysCreated: 0, error: errorMsg };
     }
 }

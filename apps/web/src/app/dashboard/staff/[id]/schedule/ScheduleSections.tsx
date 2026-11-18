@@ -7,6 +7,7 @@ import type { Branch, TimeRange } from './scheduleTypes';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Tabs } from '@/components/ui/Tabs';
+import { branchDayIntervals, type BranchHoursRow } from '@/lib/scheduling/legacyDefaults';
 import { TZ } from '@/lib/time';
 
 function SingleTimeRange({
@@ -81,6 +82,8 @@ function DayRow({
     branchId,
     branches,
     homeBranchId,
+    branchIntervals,
+    hasRegularSchedule = false,
     saving,
     onSave,
 }: {
@@ -90,6 +93,9 @@ function DayRow({
     branchId: string | null;
     branches: Branch[];
     homeBranchId: string;
+    /** Home-branch hours of this date: undefined = unknown, [] = branch closed. */
+    branchIntervals?: TimeRange[];
+    hasRegularSchedule?: boolean;
     saving: boolean;
     onSave: (date: string, interval: TimeRange | null, branchId: string) => void;
 }) {
@@ -108,13 +114,20 @@ function DayRow({
         t('staff.schedule.dayOfWeek.saturday', 'Сб'),
     ];
 
+    // No saved rule: nothing is written until the manager saves the day (FE-02). The draft starts
+    // from the branch hours of that weekday; a closed branch day starts as a day off.
+    const isUnsaved = intervals === null;
     const isDayOffFromDb = intervals !== null && intervals !== undefined && Array.isArray(intervals) && intervals.length === 0;
+    const branchClosed = isUnsaved && Array.isArray(branchIntervals) && branchIntervals.length === 0;
     const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
 
-    const [isDayOff, setIsDayOff] = useState(isDayOffFromDb);
+    const [isDayOff, setIsDayOff] = useState(isDayOffFromDb || branchClosed);
     const [interval, setInterval] = useState<TimeRange>(() => {
         if (intervals && intervals.length > 0 && intervals[0].start && intervals[0].end) {
             return intervals[0];
+        }
+        if (isUnsaved && branchIntervals && branchIntervals.length > 0) {
+            return branchIntervals[0];
         }
         return defaultInterval;
     });
@@ -147,6 +160,13 @@ function DayRow({
                     <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {formatInTimeZone(date, TZ, 'dd.MM.yyyy')}
                     </div>
+                    {isUnsaved && (
+                        <div className="text-[10px] sm:text-xs font-medium text-amber-700 dark:text-amber-300 mt-1">
+                            {hasRegularSchedule
+                                ? t('staff.schedule.unsaved.regular', 'Не сохранено: действует обычный график сотрудника')
+                                : t('staff.schedule.unsaved.none', 'Не настроено: запись к сотруднику на этот день недоступна')}
+                        </div>
+                    )}
                 </div>
                 <button
                     className="inline-flex items-center gap-1 rounded-md sm:rounded-lg border border-indigo-600 bg-indigo-600 px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600 whitespace-nowrap flex-shrink-0"
@@ -246,7 +266,7 @@ function DayRow({
                         {selectedBranchId !== homeBranchId && !isPastDate && (
                             <div className="mt-1.5 p-2 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
                                 <p className="text-[10px] text-indigo-700 dark:text-indigo-300 font-medium">
-                                    вњ“ {t('staff.schedule.transferHint', 'Сотрудник будет временно переведен в филиал "{branch}" на этот день').replace('{branch}', branches.find((branch) => branch.id === selectedBranchId)?.name || '')}
+                                    ✓ {t('staff.schedule.transferHint', 'Сотрудник будет временно переведен в филиал "{branch}" на этот день').replace('{branch}', branches.find((branch) => branch.id === selectedBranchId)?.name || '')}
                                 </p>
                             </div>
                         )}
@@ -298,10 +318,13 @@ export function ScheduleWeekSection({
     rulesByDate,
     branches,
     homeBranchId,
+    branchHours,
+    hasRegularSchedule,
     saving,
     onApplyBranchSchedule,
     onSaveDay,
     showApplyButton,
+    t,
 }: {
     title: string;
     rangeLabel: string;
@@ -309,6 +332,9 @@ export function ScheduleWeekSection({
     rulesByDate: Map<string, { intervals: TimeRange[]; branch_id: string }>;
     branches: Branch[];
     homeBranchId: string;
+    /** Home-branch hours (legacy editor); undefined or null when unknown. */
+    branchHours?: BranchHoursRow[] | null;
+    hasRegularSchedule?: boolean;
     saving: boolean;
     onApplyBranchSchedule?: () => void;
     onSaveDay: (date: string, interval: TimeRange | null, branchId: string) => void;
@@ -340,14 +366,14 @@ export function ScheduleWeekSection({
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span className="hidden sm:inline">Применение...</span>
+                                    <span className="hidden sm:inline">{t('staff.schedule.applying', 'Применение...')}</span>
                                 </>
                             ) : (
                                 <>
                                     <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
-                                    <span>Применить расписание филиала</span>
+                                    <span>{t('staff.schedule.applyBranch', 'Применить часы филиала')}</span>
                                 </>
                             )}
                         </button>
@@ -370,6 +396,8 @@ export function ScheduleWeekSection({
                                 branchId={ruleData?.branch_id || null}
                                 branches={branches}
                                 homeBranchId={homeBranchId}
+                                branchIntervals={branchHours ? branchDayIntervals(branchHours, dateStr) : undefined}
+                                hasRegularSchedule={hasRegularSchedule}
                                 saving={saving}
                                 onSave={onSaveDay}
                             />
@@ -390,6 +418,8 @@ export function ScheduleWeekSection({
                                 branchId={ruleData?.branch_id || null}
                                 branches={branches}
                                 homeBranchId={homeBranchId}
+                                branchIntervals={branchHours ? branchDayIntervals(branchHours, dateStr) : undefined}
+                                hasRegularSchedule={hasRegularSchedule}
                                 saving={saving}
                                 onSave={onSaveDay}
                             />
@@ -411,7 +441,7 @@ export function ScheduleInstructions({ t }: { t: (key: string, fallback: string)
                 <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     <p className="font-medium">{t('staff.schedule.instructions.title', 'Как работает расписание')}</p>
                     <ul className="list-disc list-inside space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
-                        <li>{t('staff.schedule.instructions.default', 'По умолчанию все дни рабочие (09:00-21:00)')}</li>
+                        <li>{t('staff.schedule.instructions.default', 'День без сохранённого графика не настроен: запись к сотруднику на него недоступна. «Применить часы филиала» заполняет дни с сегодняшнего по часам основного филиала, закрытые дни филиала становятся выходными')}</li>
                         <li>{t('staff.schedule.instructions.dayOff', 'Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим')}</li>
                         <li>
                             <strong>{t('staff.schedule.instructions.transfer.prefix', 'Временный перевод:')}</strong>{' '}

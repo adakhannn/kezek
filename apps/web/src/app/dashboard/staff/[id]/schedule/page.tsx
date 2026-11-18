@@ -6,6 +6,7 @@ import StaffSchedulePageClient from './StaffSchedulePageClient';
 import ScheduleEditor from '@/components/scheduling/ScheduleEditor';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { readLegacyScheduleContext } from '@/lib/scheduling/legacyContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -56,6 +57,8 @@ export default async function StaffSchedulePage({
     }
 
     const activeBranches: Branch[] = (branches ?? []).filter((b): b is Branch => b.is_active === true);
+    const explicitScheduling = explicitSchedulingEnabled();
+    const legacyContext = explicitScheduling ? null : await readLegacyScheduleContext(String(bizId), String(staff.id), String(staff.branch_id));
 
     return (
         <main className="mx-auto max-w-6xl px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
@@ -66,7 +69,7 @@ export default async function StaffSchedulePage({
                 bizCity={bizCity}
             />
 
-            {explicitSchedulingEnabled() ? <ScheduleEditor
+            {explicitScheduling || !legacyContext ? <ScheduleEditor
                 staffId={String(staff.id)}
                 branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
                 homeBranchId={String(staff.branch_id)}
@@ -75,6 +78,9 @@ export default async function StaffSchedulePage({
                 staffId={String(staff.id)}
                 branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
                 homeBranchId={String(staff.branch_id)}
+                branchHours={legacyContext.branchHours}
+                usesPublishedSchedule={legacyContext.usesPublishedSchedule}
+                hasRegularSchedule={legacyContext.hasRegularSchedule}
             />}
         </main>
     );
