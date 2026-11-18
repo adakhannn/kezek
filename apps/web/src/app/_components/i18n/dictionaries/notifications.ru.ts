@@ -19,6 +19,5 @@ export const notificationsRu = {
     'notifications.whatsapp.phoneLabel': 'Номер телефона',
     'notifications.whatsapp.sending': 'Отправка...',
     'notifications.whatsapp.submit': 'Подключить',
-    'notifications.whatsapp.confirmedPhoneLocked': 'Подтверждённый номер нельзя заменить без кода из SMS на новый номер',
     'notifications.whatsapp.updateError': 'Не удалось обновить телефон',
 } as const;

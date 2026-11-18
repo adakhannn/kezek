@@ -4,6 +4,7 @@ function createAdmin(options?: {
     identities?: Array<{ provider: string }>;
     profile?: Record<string, unknown>;
     userMetadata?: Record<string, unknown>;
+    authPhone?: { phone: string; phone_confirmed_at: string | null };
 }) {
     const profile = {
         yandex_id: null,
@@ -21,7 +22,7 @@ function createAdmin(options?: {
         auth: {
             admin: {
                 getUserById: jest.fn().mockResolvedValue({
-                    data: { user: { id: 'user-id', identities: options?.identities ?? [], user_metadata: options?.userMetadata ?? {} } },
+                    data: { user: { id: 'user-id', identities: options?.identities ?? [], user_metadata: options?.userMetadata ?? {}, ...options?.authPhone } },
                     error: null,
                 }),
                 updateUserById: jest.fn().mockResolvedValue({ error: null }),
@@ -96,6 +97,52 @@ describe('unlinkSocialIdentity', () => {
                 yandex_email: null,
                 auth_provider: null,
             },
+        });
+    });
+
+    describe('WhatsApp (API-10)', () => {
+        test('the linked number and a confirmed Auth phone leave the Auth record before the profile link', async () => {
+            const { admin, update } = createAdmin({
+                identities: [{ provider: 'google' }, { provider: 'phone' }],
+                profile: { whatsapp_phone: '+996555123456', whatsapp_verified: true },
+                userMetadata: { phone: '+996555123456', full_name: 'Айгерим' },
+                authPhone: { phone: '996700000001', phone_confirmed_at: '2026-11-01T00:00:00Z' },
+            });
+
+            const result = await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'whatsapp' });
+
+            expect(result).toEqual({ ok: true, data: { provider: 'whatsapp', remainingMethods: 1 } });
+            expect(admin.rpc).toHaveBeenCalledWith('release_auth_phone', { p_user_id: 'user-id', p_phone_digits: '996555123456' });
+            expect(admin.rpc).toHaveBeenCalledWith('release_auth_phone', { p_user_id: 'user-id', p_phone_digits: '996700000001' });
+            expect(admin.rpc.mock.invocationCallOrder[1]).toBeLessThan(update.mock.invocationCallOrder[0]);
+            // the metadata write-back must not restore the released copy
+            expect(admin.auth.admin.updateUserById).toHaveBeenCalledWith('user-id', {
+                user_metadata: expect.objectContaining({ phone: null, full_name: 'Айгерим', whatsapp_verified: null }),
+            });
+        });
+
+        test('a failed release keeps the link and reports it', async () => {
+            const { admin, update } = createAdmin({
+                identities: [{ provider: 'google' }],
+                profile: { whatsapp_phone: '+996555123456', whatsapp_verified: true },
+            });
+            admin.rpc.mockResolvedValue({ data: null, error: { message: 'unavailable' } });
+
+            const result = await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'whatsapp' });
+
+            expect(result).toMatchObject({ ok: false, status: 500, details: { code: 'auth_phone_release_failed' } });
+            expect(update).not.toHaveBeenCalled();
+        });
+
+        test('other providers release no phone', async () => {
+            const { admin } = createAdmin({
+                profile: { yandex_id: 'yandex-id', telegram_id: 123, telegram_verified: true },
+                authPhone: { phone: '996700000001', phone_confirmed_at: '2026-11-01T00:00:00Z' },
+            });
+
+            await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'telegram' });
+
+            expect(admin.rpc).not.toHaveBeenCalledWith('release_auth_phone', expect.anything());
         });
     });
 });

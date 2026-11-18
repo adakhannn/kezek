@@ -23,6 +23,7 @@ export type SupabaseServerClientLike = {
 export type ProfileIdentityWriter = {
 
     from(table: string): any;
+    rpc(name: string, args: Record<string, unknown>): PromiseLike<{ error: { message?: string } | null }>;
 };
 
 type VerifyExistingOtpInput = {
@@ -166,6 +167,26 @@ export async function verifyExistingWhatsAppOtp({
     } catch (error) {
         logError('WhatsAppVerifyOtp', 'Auth owner lookup error', error);
         return internalError('auth_owner_lookup_failed', 'Не удалось проверить владельца WhatsApp номера. Попробуйте позже.');
+    }
+
+    // A verified number replaced by another one stops being this account's Auth phone (API-10):
+    // otherwise its confirmed Auth phone would keep receiving WhatsApp sign-ins.
+    const { data: previous, error: previousError } = await profileWriter
+        .from('profiles')
+        .select('whatsapp_phone, whatsapp_verified')
+        .eq('id', user.id)
+        .maybeSingle();
+    if (previousError) {
+        logError('WhatsAppVerifyOtp', 'Profile lookup error', previousError);
+        return internalError('profile_lookup_failed');
+    }
+    const previousDigits = previous?.whatsapp_verified ? String(previous.whatsapp_phone ?? '').replace(/\D/g, '') : '';
+    if (/^\d{8,15}$/.test(previousDigits) && previousDigits !== normalizedPhone.slice(1)) {
+        const { error: releaseError } = await profileWriter.rpc('release_auth_phone', { p_user_id: user.id, p_phone_digits: previousDigits });
+        if (releaseError) {
+            logError('WhatsAppVerifyOtp', 'Auth phone release error', releaseError);
+            return internalError('auth_phone_release_failed');
+        }
     }
 
     const { error: updateError } = await profileWriter

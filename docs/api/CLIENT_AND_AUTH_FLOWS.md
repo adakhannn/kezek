@@ -27,9 +27,9 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 | --- | --- |
 | Auth / input | Cookie session; JSON `provider` — ровно `google`, `yandex`, `telegram` или `whatsapp`. Ручная проверка, без Zod |
 | Success | `S({ provider, remainingMethods: number })` |
-| Errors | 401 `auth`; 400 `validation` с `details.code` = `invalid_json` / `invalid_provider`; 404 `not_found` / `identity_not_connected`; 409 `conflict` / `last_login_method`; 500 `internal` для lookup/unlink/metadata cleanup |
+| Errors | 401 `auth`; 400 `validation` с `details.code` = `invalid_json` / `invalid_provider`; 404 `not_found` / `identity_not_connected`; 409 `conflict` / `last_login_method`; 500 `internal` для lookup/unlink/metadata cleanup, для WhatsApp также `auth_phone_release_failed` |
 | Limiter | Нет |
-| Effects | Считает подключённые Google/Yandex/Telegram/WhatsApp, запрещает удалять последний из этих методов. Google отвязывается RPC `unlink_auth_identity`; другие — через profile и metadata. Для Google/Yandex удаляется источник notification email. Операции не атомарны: `metadata_cleanup_failed` возможен после уже изменённого profile. Email/password как отдельный способ входа в этом счётчике не учитывается |
+| Effects | Считает подключённые Google/Yandex/Telegram/WhatsApp, запрещает удалять последний из этих методов. Google отвязывается RPC `unlink_auth_identity`; другие — через profile и metadata. WhatsApp сначала освобождает номер привязки и подтверждённый Auth-телефон аккаунта (service-only RPC `release_auth_phone`: телефон, его подтверждение, ожидающая смена, phone identity и копия в metadata; API-10), иначе номер продолжал бы получать входы WhatsApp; при ошибке привязка остаётся и запрос можно повторить. Для Google/Yandex удаляется источник notification email. Операции не атомарны: `metadata_cleanup_failed` возможен после уже изменённого profile. Email/password как отдельный способ входа в этом счётчике не учитывается |
 
 <!-- api-contract: GET /auth/callback/google -->
 ### GET `/auth/callback/google`

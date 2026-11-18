@@ -83,6 +83,7 @@ describe('/api/whatsapp/verify-otp', () => {
                 const lookup = {
                     eq: jest.fn().mockReturnThis(),
                     limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
                 };
                 return { select: jest.fn().mockReturnValue(lookup), update: profileUpdate };
             }),

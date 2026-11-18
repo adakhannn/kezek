@@ -6613,6 +6613,13 @@ export type Database = {
                 };
                 Returns: boolean;
             };
+            "release_auth_phone": {
+                Args: {
+                    "p_phone_digits": string;
+                    "p_user_id": string;
+                };
+                Returns: number;
+            };
             "release_staff_shift_claims": {
                 Args: {
                     "p_claim_token": string;

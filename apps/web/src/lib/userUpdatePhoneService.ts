@@ -1,11 +1,9 @@
 type UserUpdatePhoneFailure = {
     ok: false;
-    status: 400 | 401 | 409;
-    error: 'validation' | 'auth' | 'conflict';
+    status: 400 | 401 | 500;
+    error: 'validation' | 'auth' | 'internal';
     message: string;
 };
-
-export const CONFIRMED_PHONE_CHANGE_MESSAGE = 'Подтверждённый номер нельзя заменить без кода из SMS на новый номер';
 
 type UserUpdatePhoneSuccess = {
     ok: true;
@@ -60,15 +58,19 @@ export async function runUserUpdatePhone({
 
     // GoTrue keeps phone_confirmed_at when the admin API replaces the number, so a new number set
     // here would look confirmed without any code, and exact contact lookups trust confirmed phones
-    // (ARCH-01). This route therefore only sets a phone on an account without a confirmed one; the
-    // SMS code that follows confirms it.
-    if (user.phone_confirmed_at) {
-        return {
-            ok: false,
-            status: 409,
-            error: 'conflict',
-            message: CONFIRMED_PHONE_CHANGE_MESSAGE,
-        };
+    // (ARCH-01). The previous number is released first (release_auth_phone, API-10): the new one
+    // starts unconfirmed and the SMS code that follows confirms it.
+    const previousDigits = digits(user.phone);
+    if (/^\d{8,15}$/.test(previousDigits)) {
+        const { error: releaseError } = await admin.rpc('release_auth_phone', { p_user_id: user.id, p_phone_digits: previousDigits });
+        if (releaseError) {
+            return {
+                ok: false,
+                status: 500,
+                error: 'internal',
+                message: 'Не удалось обновить телефон',
+            };
+        }
     }
 
     const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {

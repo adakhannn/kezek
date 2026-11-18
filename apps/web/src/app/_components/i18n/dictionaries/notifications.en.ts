@@ -18,7 +18,6 @@ export const notificationsEn = {
     'notifications.whatsapp.phoneLabel': 'Phone number',
     'notifications.whatsapp.sending': 'Sending...',
     'notifications.whatsapp.submit': 'Connect',
-    'notifications.whatsapp.confirmedPhoneLocked': 'A confirmed number cannot be replaced without an SMS code sent to the new number',
     'notifications.whatsapp.updateError': 'Failed to update phone',
     'notifications.whatsapp.message': 'Connect WhatsApp to get booking notifications. It is easier and faster!',
 } as const;

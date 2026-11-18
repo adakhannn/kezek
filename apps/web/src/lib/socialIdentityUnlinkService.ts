@@ -4,6 +4,8 @@ export type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
 
 type AuthUser = {
     id: string;
+    phone?: string | null;
+    phone_confirmed_at?: string | null;
     identities?: Array<{ provider?: string | null }> | null;
     user_metadata?: Record<string, unknown> | null;
 };
@@ -40,7 +42,12 @@ const connectionLabels: Record<SocialProvider, string> = {
     whatsapp: 'WhatsApp',
 };
 
-function cleanMetadata(metadata: Record<string, unknown> | null | undefined, provider: SocialProvider) {
+function phoneDigits(value: unknown): string {
+    const digits = typeof value === 'string' ? value.replace(/\D/g, '') : '';
+    return /^\d{8,15}$/.test(digits) ? digits : '';
+}
+
+function cleanMetadata(metadata: Record<string, unknown> | null | undefined, provider: SocialProvider, releasedPhones: readonly string[] = []) {
     const next = { ...(metadata ?? {}) };
     if (provider === 'yandex') {
         next.yandex_id = null;
@@ -55,6 +62,8 @@ function cleanMetadata(metadata: Record<string, unknown> | null | undefined, pro
         next.whatsapp_otp_code = null;
         next.whatsapp_otp_expires = null;
         next.whatsapp_otp_phone = null;
+        // The write-back merges keys: without an explicit null it would restore the released copy.
+        if (releasedPhones.includes(phoneDigits(next.phone))) next.phone = null;
     }
     return next;
 }
@@ -105,6 +114,19 @@ export async function unlinkSocialIdentity(params: {
         }
         await removeNotificationEmailSource(params.admin, params.userId, 'google');
     } else {
+        // WhatsApp sign-up made the number a confirmed Auth phone, which still counts as ownership
+        // of the number (API-10). Release it first: if this fails the link is intact and the
+        // request can be repeated; the release is idempotent.
+        const releasedPhones = params.provider === 'whatsapp'
+            ? [...new Set([phoneDigits(profile?.whatsapp_phone), authData.user.phone_confirmed_at ? phoneDigits(authData.user.phone) : ''].filter(Boolean))]
+            : [];
+        for (const digits of releasedPhones) {
+            const { error } = await params.admin.rpc('release_auth_phone', { p_user_id: params.userId, p_phone_digits: digits });
+            if (error) {
+                return { ok: false, error: 'internal', message: 'Не удалось отвязать WhatsApp.', status: 500, details: { code: 'auth_phone_release_failed' } };
+            }
+        }
+
         const update = params.provider === 'yandex'
             ? { yandex_id: null }
             : params.provider === 'telegram'
@@ -116,7 +138,7 @@ export async function unlinkSocialIdentity(params: {
         }
 
         const { error: metadataError } = await params.admin.auth.admin.updateUserById(params.userId, {
-            user_metadata: cleanMetadata(authData.user.user_metadata, params.provider),
+            user_metadata: cleanMetadata(authData.user.user_metadata, params.provider, releasedPhones),
         });
         if (metadataError) {
             return { ok: false, error: 'internal', message: 'Связь удалена из профиля, но не удалось очистить данные входа. Обратитесь в поддержку.', status: 500, details: { code: 'metadata_cleanup_failed' } };

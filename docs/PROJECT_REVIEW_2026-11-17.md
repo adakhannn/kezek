@@ -47,7 +47,7 @@
 | API-07 | P1 | Шаблоны уведомлений не экранируют `client_name` (HTML в письмах, Telegram `parse_mode: HTML`) | `messageBuilders.ts`, `utils.ts` | FIXED |
 | API-08 | P2 | Защита «подтверждённых» email уведомлений обходится через редактируемый `user_metadata.yandex_email` | `userNotificationEmailService.ts` | FIXED |
 | API-09 | P2 | Приём аналитики без лимитов и привязки к сессии (`/api/funnel-events`, `/admin/api/analytics/track`) | `funnelEventsService.ts` | TODO |
-| API-10 | P2 | Отвязка WhatsApp оставляет номер в `auth.users.phone`/metadata | `socialIdentityUnlinkService` | TODO |
+| API-10 | P2 | Отвязка WhatsApp оставляет номер в `auth.users.phone`/metadata | `socialIdentityUnlinkService` | FIXED |
 | API-11 | P2 | Продажа пакетов визитов без идемпотентности; даты по UTC вместо времени бизнеса | `visitPackagesService.ts` | TODO |
 | API-12 | P3 | POST на несуществующий путь отвечает 200 со страницей «не найдено» (GET — 404): клиент API получает HTML вместо JSON-ошибки | not-found Next.js | FIXED |
 
@@ -147,5 +147,7 @@ FE-03 закрыт как ENG-86: список броней ищет по все
 FE-05 и API-12 закрыты как ENG-87 и ENG-88 (только код).
 
 CI-01 закрыт частично как ENG-89: все изолированные SQL-наборы работают на PostgreSQL 17. DB-12 закрыт как ENG-90: миграция `20261118200000_maintenance_scan_indexes.sql` применена в проде.
+
+API-10 закрыт как ENG-91: миграция `20261118210000_release_auth_phone.sql` применена в проде раньше выкладки кода.
 
 Дальше по порядку: P1 — API-06, ARCH-02, ARCH-04, CI-01.

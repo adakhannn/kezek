@@ -19,10 +19,12 @@ function storeWith(record: ProfileWhatsAppOtpRecord | null) {
     return { store, state };
 }
 
-function profileWriter(error: { message: string } | null = null) {
+function profileWriter(error: { message: string } | null = null, previous: { whatsapp_phone: string | null; whatsapp_verified: boolean } | null = null) {
     const eq = jest.fn().mockResolvedValue({ data: null, error });
     const update = jest.fn(() => ({ eq }));
-    return { writer: { from: jest.fn(() => ({ update })) }, update, eq };
+    const select = jest.fn(() => ({ eq: jest.fn(() => ({ maybeSingle: jest.fn().mockResolvedValue({ data: previous, error: null }) })) }));
+    const rpc = jest.fn().mockResolvedValue({ error: null });
+    return { writer: { from: jest.fn(() => ({ update, select })), rpc }, update, eq, rpc };
 }
 
 const validRecord = (overrides: Partial<ProfileWhatsAppOtpRecord> = {}): ProfileWhatsAppOtpRecord => ({
@@ -144,5 +146,25 @@ describe('whatsAppVerifyOtpService', () => {
         const result = await run(store, '123456');
 
         expect(result).toMatchObject({ ok: false, status: 500, details: { code: 'otp_load_failed' } });
+    });
+
+    test('a replaced verified number is released from the Auth record before the new one is linked (API-10)', async () => {
+        const { store } = storeWith(validRecord());
+        const { writer, update, rpc } = profileWriter(null, { whatsapp_phone: '+996700000001', whatsapp_verified: true });
+
+        const result = await run(store, '123456', { profileWriter: writer });
+
+        expect(result.ok).toBe(true);
+        expect(rpc).toHaveBeenCalledWith('release_auth_phone', { p_user_id: expect.any(String), p_phone_digits: '996700000001' });
+        expect(rpc.mock.invocationCallOrder[0]).toBeLessThan(update.mock.invocationCallOrder[0]);
+    });
+
+    test('re-verifying the same number releases nothing', async () => {
+        const { store } = storeWith(validRecord());
+        const { writer, rpc } = profileWriter(null, { whatsapp_phone: '+996555123456', whatsapp_verified: true });
+
+        await run(store, '123456', { profileWriter: writer });
+
+        expect(rpc).not.toHaveBeenCalled();
     });
 });
