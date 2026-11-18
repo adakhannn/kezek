@@ -75,7 +75,8 @@ const failure = (statement, regex) => {
         return jsonb_build_object('date',p_day,'branch_id',d.branch_id,'tz',d.tz,'source','day','intervals',d.intervals,'breaks',d.breaks);
       end$$;
       revoke all on function schedule_effective_day(uuid,date) from public;
-      grant execute on function schedule_effective_day(uuid,date) to anon,authenticated,service_role;
+      revoke all on function schedule_effective_day(uuid,date) from anon,authenticated;
+      grant execute on function schedule_effective_day(uuid,date) to service_role;
       create table bookings(id uuid primary key default gen_random_uuid(),biz_id uuid,staff_id uuid,start_at timestamptz,end_at timestamptz,status text,expires_at timestamptz);
       create index bookings_staff on bookings(staff_id);
       alter table bookings enable row level security;

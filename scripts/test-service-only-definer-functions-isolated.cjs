@@ -10,7 +10,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+const { applyMigrationWhereObjectsExist, assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -151,6 +151,7 @@ let created = false;
         assert.equal(await sql(`select count(*) from public.user_notification_emails where user_id = '${victim}'`), '2');
         assert.equal(await sql(`select email from public.user_notification_emails where user_id = '${newcomer}'`), 'new@unit.test');
 
+        await applyMigrationWhereObjectsExist(sql, '20261119060000_definer_function_hardening.sql');
         await assertLiveFunctions(sql, { suite: 'test-service-only-definer-functions-isolated.cjs' });
         console.log('service-only definer functions: ok');
     } finally {

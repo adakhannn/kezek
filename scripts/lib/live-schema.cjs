@@ -243,6 +243,32 @@ function installLiveFunction(query, signature) {
     return query(liveFunctionSql(signature));
 }
 
+/**
+ * SQL that runs each statement of a grant-and-config migration (statements like `revoke ... on
+ * function f(...) from ...;` or `alter function f(...) set ...;`) and skips the ones whose function,
+ * table or role the suite database does not have. A suite that builds only part of the schema can
+ * then apply the real migration file to the part it has, instead of copying its grants by hand.
+ */
+function migrationWhereObjectsExistSql(file) {
+    const text = fs.readFileSync(path.join(ROOT, 'supabase', 'migrations', file), 'utf8')
+        .replace(/\r/g, '')
+        .replace(/--[^\n]*/g, '');
+    const statements = text.split(';').map((statement) => statement.trim()).filter(Boolean);
+    for (const statement of statements) {
+        if (!/^(revoke|grant|alter\s+function)\b/i.test(statement) || statement.includes('$')) {
+            throw new Error(`${file}: only grant, revoke and alter function statements can be applied per object: ${statement.slice(0, 60)}`);
+        }
+    }
+    return statements.map((statement) => `do $guard$ begin
+    execute $statement$${statement}$statement$;
+exception when undefined_function or undefined_table or undefined_object then null;
+end $guard$;`).join('\n');
+}
+
+function applyMigrationWhereObjectsExist(query, file) {
+    return query(migrationWhereObjectsExistSql(file));
+}
+
 module.exports = {
     CATALOG_PATH,
     DEFINITIONS_PATH,
@@ -251,6 +277,7 @@ module.exports = {
     DEFINITIONS_SQL,
     SUPABASE_DEFAULT_PRIVILEGES,
     STUB_SKIPPABLE,
+    applyMigrationWhereObjectsExist,
     assertLiveFunctions,
     checkAgainstRatchet,
     compareFunctions,
@@ -260,5 +287,6 @@ module.exports = {
     liveFunctionSql,
     loadCatalog,
     loadRatchet,
+    migrationWhereObjectsExistSql,
     sortKeys,
 };

@@ -8,7 +8,7 @@
 import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require=createRequire(import.meta.url);
-const { SUPABASE_DEFAULT_PRIVILEGES, installLiveFunction }=require('./live-schema.cjs');
+const { SUPABASE_DEFAULT_PRIVILEGES, applyMigrationWhereObjectsExist, installLiveFunction }=require('./live-schema.cjs');
 export const ids = {
  biz:'a0000000-0000-4000-8000-000000000001', otherBiz:'a0000000-0000-4000-8000-000000000002',
  staff:'b0000000-0000-4000-8000-000000000001', otherStaff:'b0000000-0000-4000-8000-000000000002',
@@ -102,6 +102,9 @@ export async function setupFinanceFixture(sql) {
  for(const name of ['20261110130000_booking_attendance_command.sql','20261110131000_shift_hours_adjustment.sql',
   '20261117190000_drop_dead_functions.sql','20261119000000_visit_package_sale_identity.sql']) await sql(await migration(name));
  await dropRetiredFunctions(sql);
+ // Later grant and config migrations, for the functions this fixture builds.
+ await applyMigrationWhereObjectsExist(sql,'20261119050000_privilege_parity_with_prod.sql');
+ await applyMigrationWhereObjectsExist(sql,'20261119060000_definer_function_hardening.sql');
  await sql(`grant usage on schema public,auth to anon,authenticated,service_role;
  grant execute on function auth.uid(),auth.role() to anon,authenticated,service_role;
  grant all on all tables in schema public,auth to service_role;

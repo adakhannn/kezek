@@ -108,7 +108,8 @@ const expectFailure = (statement, pattern) => {
       create function schedule_contains_booking(p_staff uuid,p_branch uuid,p_start timestamptz,p_end timestamptz) returns boolean
         language plpgsql stable security definer set search_path=public as $$begin return true; end$$;
       revoke all on function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) from public;
-      grant execute on function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) to anon,authenticated,service_role;
+      revoke all on function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) from anon,authenticated;
+      grant execute on function schedule_contains_booking(uuid,uuid,timestamptz,timestamptz) to service_role;
       insert into auth.users(id,email) values('${user}','one@example.invalid'),('${other}','two@example.invalid');
       insert into profiles(id,full_name) values('${user}','Synthetic One'),('${other}','Synthetic Two');
       insert into businesses(id) values('${biz}'); insert into branches(id,biz_id) values('${branch}','${biz}');

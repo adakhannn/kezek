@@ -510,13 +510,15 @@
     "public.apply_visit_package_to_booking_impl_20261109(uuid)": {
       "arguments": "p_booking_id uuid",
       "body": "95d7034794771cf5063eb2c9a6e5803a",
-      "config": [],
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
       "definer": true,
       "execute": {
         "anon": false,
         "authenticated": false,
         "public": false,
-        "service_role": true
+        "service_role": false
       },
       "kind": "f",
       "language": "plpgsql",
@@ -533,8 +535,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -729,7 +731,9 @@
     "public.branch_admins_effective(uuid)": {
       "arguments": "p_branch_id uuid",
       "body": "e887d385983ab5d9497a54dd2f4a25bf",
-      "config": [],
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
       "definer": true,
       "execute": {
         "anon": false,
@@ -961,8 +965,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -1059,8 +1063,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -1990,7 +1994,7 @@
         "anon": false,
         "authenticated": false,
         "public": false,
-        "service_role": true
+        "service_role": false
       },
       "kind": "f",
       "language": "plpgsql",
@@ -2168,7 +2172,7 @@
         "anon": false,
         "authenticated": false,
         "public": false,
-        "service_role": true
+        "service_role": false
       },
       "kind": "f",
       "language": "plpgsql",
@@ -2243,8 +2247,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -2283,8 +2287,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -2303,8 +2307,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -2935,8 +2939,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3155,8 +3159,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3175,8 +3179,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3255,8 +3259,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3330,7 +3334,9 @@
     "public.recalculate_ratings_for_date(date)": {
       "arguments": "p_date date DEFAULT (CURRENT_DATE - '1 day'::interval)",
       "body": "4cac0710e2066ee1471a5178e88d9249",
-      "config": [],
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
       "definer": true,
       "execute": {
         "anon": false,
@@ -3453,8 +3459,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3473,8 +3479,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3596,8 +3602,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3616,8 +3622,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3636,8 +3642,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3654,8 +3660,8 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3729,7 +3735,9 @@
     "public.save_shift_items_atomic(uuid,jsonb)": {
       "arguments": "p_shift_id uuid, p_items jsonb",
       "body": "36ad76ba2165ffd07666a963438c683f",
-      "config": [],
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
       "definer": true,
       "execute": {
         "anon": false,
@@ -3792,8 +3800,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3812,8 +3820,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3832,8 +3840,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3852,8 +3860,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -3872,8 +3880,8 @@
       ],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -4071,8 +4079,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -4091,8 +4099,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -4111,8 +4119,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },
@@ -4131,8 +4139,8 @@
       ],
       "definer": true,
       "execute": {
-        "anon": true,
-        "authenticated": true,
+        "anon": false,
+        "authenticated": false,
         "public": false,
         "service_role": true
       },

@@ -10,7 +10,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+const { applyMigrationWhereObjectsExist, assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 // The schedule fixture replaces the resolver of versioned schedules; everything that reads it is live.
 const stubs = {
@@ -117,7 +117,8 @@ const minutes = (result) => sql(`select (extract(epoch from end_at - start_at) /
                         from public.staff s join public.businesses b on b.id = s.biz_id where s.id = p_staff);
                 end $$;
             revoke all on function public.schedule_effective_day(uuid, date) from public;
-            grant execute on function public.schedule_effective_day(uuid, date) to anon, authenticated, service_role;
+            revoke all on function public.schedule_effective_day(uuid, date) from anon, authenticated;
+            grant execute on function public.schedule_effective_day(uuid, date) to service_role;
             ${liveFunctionSql('public.resolve_staff_day(uuid,date)')}
             create function public.fixture_try(p_sql text) returns text language plpgsql as $$
                 declare v text;
@@ -225,6 +226,9 @@ const minutes = (result) => sql(`select (extract(epoch from end_at - start_at) /
             or has_function_privilege('anon', 'public._staff_performs_service(uuid,uuid,uuid)', 'execute')
             or has_function_privilege('service_role', 'public._staff_performs_service(uuid,uuid,uuid)', 'execute')`), 'f');
 
+        // The baseline grants of the extracted functions replay under the platform defaults; production
+        // has the narrower set (20261119050000).
+        await applyMigrationWhereObjectsExist(sql, '20261119050000_privilege_parity_with_prod.sql');
         await assertLiveFunctions(sql, { suite: 'test-booking-service-staff-isolated.cjs', stubs });
         console.log('booking service staff checks: ok');
     } finally {

@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { SUPABASE_DEFAULT_PRIVILEGES, checkAgainstRatchet, compareFunctions, lastJsonLine, liveFunctionSql, loadCatalog } = require('./lib/live-schema.cjs');
+const { SUPABASE_DEFAULT_PRIVILEGES, checkAgainstRatchet, compareFunctions, lastJsonLine, liveFunctionSql, loadCatalog, migrationWhereObjectsExistSql } = require('./lib/live-schema.cjs');
 
 const fingerprint = (overrides = {}) => ({
     arguments: 'p_biz_id uuid, p_window_minutes integer DEFAULT 60',
@@ -95,4 +95,13 @@ test('the catalog covers the chain and its definitions install with the catalogu
     const sql = liveFunctionSql('private.is_valid_time_zone(text)');
     assert.match(sql, /^CREATE OR REPLACE FUNCTION private\.is_valid_time_zone\(/);
     assert.match(sql, /foreach r in array array\[[^\]]*'public'[^\]]*\]::text\[\]/);
+});
+
+test('a grant migration applies per object and skips objects the suite lacks', () => {
+    const sql = migrationWhereObjectsExistSql('20261119060000_definer_function_hardening.sql');
+    assert.equal((sql.match(/do \$guard\$/g) || []).length, 7);
+    assert.ok(sql.includes('execute $statement$alter function public.branch_admins_effective(uuid) set search_path = pg_catalog, public$statement$;'));
+    assert.match(sql, /exception when undefined_function or undefined_table or undefined_object then null;/);
+    // Only grant, revoke and alter function statements qualify: a migration that creates or changes data does not.
+    assert.throws(() => migrationWhereObjectsExistSql('20261119040000_rls_policy_hygiene.sql'), /only grant, revoke and alter function/);
 });

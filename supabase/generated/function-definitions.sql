@@ -1077,6 +1077,7 @@ CREATE OR REPLACE FUNCTION public.apply_visit_package_to_booking_impl_20261109(p
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
 AS $function$
 declare
     v_cvp_id uuid;
@@ -1522,6 +1523,7 @@ CREATE OR REPLACE FUNCTION public.branch_admins_effective(p_branch_id uuid)
  RETURNS TABLE(user_id uuid, source text)
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
 AS $function$
 DECLARE
     v_biz_id uuid;
@@ -7191,6 +7193,7 @@ CREATE OR REPLACE FUNCTION public.recalculate_ratings_for_date(p_date date DEFAU
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
 AS $function$
 declare
     v_staff record;
@@ -7776,6 +7779,7 @@ CREATE OR REPLACE FUNCTION public.save_shift_items_atomic(p_shift_id uuid, p_ite
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
 AS $function$
 declare
     v_shift_status text;
