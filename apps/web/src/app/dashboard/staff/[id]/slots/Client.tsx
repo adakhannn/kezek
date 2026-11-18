@@ -2,11 +2,14 @@
 
 import { filterSlotsByContext, type Slot as ScheduleSlot } from '@core-domain/schedule';
 import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { QuickDeskClientSection } from '@/app/dashboard/bookings/components/QuickDeskClientSection';
+import { useQuickDeskClient } from '@/app/dashboard/bookings/components/useQuickDeskClient';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { createInternalBooking, getFreeSlotsForServiceDay } from '@/lib/bookingDashboardService';
@@ -28,15 +31,27 @@ export default function Client({
     services,
     branches,
     defaultDate,
+    staffName,
 }: {
     bizId: string;
     staffId: string;
     services: Service[];
     branches: Branch[];
     defaultDate: string;
+    staffName: string;
 }) {
     const { t, locale } = useLanguage();
     const toast = useToast();
+    const client = useQuickDeskClient();
+    const titleId = useId();
+    // A click on a slot only selects it; the booking is created by the explicit confirmation
+    // below, with a client (or an openly chosen walk-in). One stray click created an anonymous
+    // confirmed booking before (FE-12).
+    const [selectedStart, setSelectedStart] = useState('');
+    const [creating, setCreating] = useState(false);
+    const [reloadKey, setReloadKey] = useState(0);
+    const inFlight = useRef(false);
+    const panelRef = useRef<HTMLElement | null>(null);
 
     const [branchId, setBranchId] = useState('');
     const servicesByBranch = useMemo(
@@ -59,6 +74,14 @@ export default function Client({
     }, [branchId]);
 
     useEffect(() => {
+        setSelectedStart('');
+    }, [branchId, serviceId, date]);
+
+    useEffect(() => {
+        if (selectedStart) panelRef.current?.scrollIntoView?.({ block: 'nearest' });
+    }, [selectedStart]);
+
+    useEffect(() => {
         let ignore = false;
         (async () => {
             if (!branchId || !serviceId || !date) {
@@ -67,6 +90,8 @@ export default function Client({
             }
             setLoading(true);
             setErr(null);
+            // Never show another day's or service's slots while loading or after a failure.
+            setSlots([]);
             try {
                 const raw = await getFreeSlotsForServiceDay({
                     bizId,
@@ -88,6 +113,10 @@ export default function Client({
                     minStart: minTime,
                 });
                 setSlots(filtered);
+                setSelectedStart((previous) => (previous && filtered.some((slot) => slot.start_at === previous) ? previous : ''));
+            } catch (error) {
+                // A failed load is an error, not "no free slots".
+                if (!ignore) setErr(error instanceof Error ? error.message : String((error as { message?: unknown })?.message ?? error));
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -95,33 +124,43 @@ export default function Client({
         return () => {
             ignore = true;
         };
-    }, [bizId, serviceId, date, staffId, branchId]);
+    }, [bizId, serviceId, date, staffId, branchId, reloadKey]);
 
-    async function createBooking(startISO: string) {
-        const svc = services.find((s) => s.id === serviceId);
-        if (!svc) {
-            toast.showError(t('bookings.desk.errors.selectService', 'Не найдена услуга'));
+    const selectedSlot = uniq.find((slot) => slot.start_at === selectedStart) ?? null;
+    const selectedService = servicesByBranch.find((service) => service.id === serviceId) ?? null;
+    const selectedBranch = branches.find((branch) => branch.id === branchId) ?? null;
+    const canConfirm = Boolean(selectedSlot && selectedService) && !loading && !creating && client.canSubmitClient;
+
+    async function confirmBooking() {
+        if (inFlight.current || !selectedSlot || !selectedService) return;
+        const clientResult = client.getClientPayload(t);
+        if (!clientResult.ok) {
+            toast.showError(clientResult.error);
             return;
         }
-
+        inFlight.current = true;
+        setCreating(true);
         try {
             const bookingId = await createInternalBooking({
                 bizId,
                 branchId,
-                serviceId,
+                serviceId: selectedService.id,
                 staffId,
-                startAtISO: startISO,
-                minutes: svc.duration_min,
-                clientId: null,
-                clientName: null,
-                clientPhone: null,
+                startAtISO: selectedSlot.start_at,
+                minutes: selectedService.duration_min,
+                ...clientResult.payload,
             });
-            toast.showSuccess(
-                `${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`,
-            );
+            toast.showSuccess(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
+            setSelectedStart('');
+            client.reset();
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
-            toast.showError(message);
+            // The selection and the client stay, so a retry sends the same booking.
+            toast.showError(error instanceof Error ? error.message : String(error));
+        } finally {
+            inFlight.current = false;
+            setCreating(false);
+            // A taken slot disappears, and a booking whose response was lost shows up.
+            setReloadKey((key) => key + 1);
         }
     }
 
@@ -143,6 +182,7 @@ export default function Client({
                             <select
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                 value={branchId}
+                                disabled={creating}
                                 onChange={(e) => setBranchId(e.target.value)}
                             >
                                 <option value="">
@@ -161,7 +201,7 @@ export default function Client({
                             </label>
                             <select
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                disabled={!branchId}
+                                disabled={!branchId || creating}
                                 value={serviceId}
                                 onChange={(e) => setServiceId(e.target.value)}
                             >
@@ -248,12 +288,18 @@ export default function Client({
                             <div className="flex flex-wrap gap-2.5">
                                 {uniq.map((s) => {
                                     const label = `${formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}–${formatInTimeZone(new Date(s.end_at), TZ, 'HH:mm')}`;
+                                    const selected = s.start_at === selectedStart;
                                     return (
                                         <button
                                             key={s.start_at}
-                                            className="group inline-flex items-center gap-2 rounded-xl border-2 border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition-all hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md active:scale-95 dark:border-indigo-800 dark:bg-gray-800 dark:text-indigo-300 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/40"
-                                            onClick={() => createBooking(s.start_at)}
-                                            title={t('staff.slots.createInSlot', 'Создать запись в этот слот')}
+                                            type="button"
+                                            aria-pressed={selected}
+                                            disabled={creating}
+                                            className={`group inline-flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-semibold shadow-sm transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${selected
+                                                ? 'border-indigo-600 bg-indigo-600 text-white dark:border-indigo-500 dark:bg-indigo-500'
+                                                : 'border-indigo-200 bg-white text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md dark:border-indigo-800 dark:bg-gray-800 dark:text-indigo-300 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/40'}`}
+                                            onClick={() => setSelectedStart(s.start_at)}
+                                            title={t('staff.slots.selectSlot', 'Выбрать это время')}
                                         >
                                             <svg className="h-4 w-4 flex-shrink-0 text-indigo-500 group-hover:text-indigo-600 dark:text-indigo-400 dark:group-hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -265,6 +311,66 @@ export default function Client({
                             </div>
                         </div>
                     )}
+
+                    {selectedSlot && selectedService ? (
+                        <section ref={panelRef} aria-labelledby={titleId} className="mt-6 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 dark:border-indigo-800 dark:bg-indigo-950/30">
+                            <div>
+                                <h3 id={titleId} className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                    {t('booking.confirm.title', 'Подтвердить запись')}
+                                </h3>
+                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                    {t('booking.confirm.description', 'Проверьте детали. Запись будет создана только после подтверждения.')}
+                                </p>
+                            </div>
+                            <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                                <div>
+                                    <dt className="text-gray-500 dark:text-gray-400">{t('booking.confirm.when', 'Когда')}</dt>
+                                    <dd className="font-medium text-gray-900 dark:text-gray-100">
+                                        {formatInTimeZone(new Date(selectedSlot.start_at), TZ, 'dd.MM.yyyy')}{' '}
+                                        {formatInTimeZone(new Date(selectedSlot.start_at), TZ, 'HH:mm')}–{formatInTimeZone(new Date(selectedSlot.end_at), TZ, 'HH:mm')}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-gray-500 dark:text-gray-400">{t('booking.confirm.branch', 'Филиал')}</dt>
+                                    <dd className="font-medium text-gray-900 dark:text-gray-100">{selectedBranch?.name ?? '—'}</dd>
+                                </div>
+                                <div>
+                                    <dt className="text-gray-500 dark:text-gray-400">{t('booking.confirm.staff', 'Сотрудник')}</dt>
+                                    <dd className="font-medium text-gray-900 dark:text-gray-100">{staffName || '—'}</dd>
+                                </div>
+                                <div>
+                                    <dt className="text-gray-500 dark:text-gray-400">{t('bookings.desk.service', 'Услуга')}</dt>
+                                    <dd className="font-medium text-gray-900 dark:text-gray-100">
+                                        {selectedService.name} {locale === 'en' ? `(${selectedService.duration_min} min)` : `(${selectedService.duration_min} мин)`}
+                                    </dd>
+                                </div>
+                            </dl>
+                            <QuickDeskClientSection
+                                clientMode={client.clientMode}
+                                setClientMode={client.setClientMode}
+                                searchQ={client.searchQ}
+                                setSearchQ={client.setSearchQ}
+                                foundUsers={client.foundUsers}
+                                selectedClientId={client.selectedClientId}
+                                setSelectedClientId={client.setSelectedClientId}
+                                newClientName={client.newClientName}
+                                setNewClientName={client.setNewClientName}
+                                newClientPhone={client.newClientPhone}
+                                setNewClientPhone={client.setNewClientPhone}
+                                searchLoading={client.searchLoading}
+                                searchErr={client.searchErr}
+                                t={t}
+                            />
+                            <div className="flex flex-wrap justify-end gap-2">
+                                <Button variant="secondary" onClick={() => setSelectedStart('')} disabled={creating}>
+                                    {t('booking.confirm.cancel', 'Вернуться')}
+                                </Button>
+                                <Button onClick={() => void confirmBooking()} disabled={!canConfirm}>
+                                    {creating ? t('booking.confirm.saving', 'Создаём запись…') : t('booking.confirm.submit', 'Подтвердить запись')}
+                                </Button>
+                            </div>
+                        </section>
+                    ) : null}
                 </div>
             </section>
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />

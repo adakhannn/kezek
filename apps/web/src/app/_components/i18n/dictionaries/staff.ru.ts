@@ -364,6 +364,7 @@ export const staffRu = {
     'staff.sidebar.openMenu': 'Открыть меню',
     'staff.sidebar.more': 'Ещё',
     'staff.slots.createInSlot': 'Создать запись в этот слот',
+    'staff.slots.selectSlot': 'Выбрать это время',
     'staff.slots.error.loadServices': 'Ошибка загрузки услуг',
     'staff.slots.filters.title': 'Фильтры свободных слотов',
     'staff.slots.found': 'Найдено свободных слотов:',

@@ -369,6 +369,7 @@ export const staffKy = {
     'staff.sidebar.openMenu': 'Менюну ачуу',
     'staff.sidebar.more': 'Дагы',
     'staff.slots.createInSlot': 'Бул слотко жазылыш түзүү',
+    'staff.slots.selectSlot': 'Бул убакытты тандоо',
     'staff.slots.filters.title': 'Эркин слоттор үчүн фильтрлер',
     'staff.slots.found': 'Табылган эркин слоттор:',
     'staff.slots.noSlotsHint': 'Тандалган параметрлер боюнча эркин слоттор жок. Башка күндү же кызматты тандап көрүңүз.',
