@@ -42,16 +42,16 @@
 
 ## Mobile
 
-Потребители: [supabase.ts](apps/mobile/src/lib/supabase.ts), [apiUrl.ts](apps/mobile/src/lib/apiUrl.ts).
+Потребители: [supabase.ts](apps/mobile/src/lib/supabase.ts), [apiUrl.ts](apps/mobile/src/lib/apiUrl.ts). Окружение сборки и адреса бэкенда задаёт [app.config.ts](apps/mobile/app.config.ts) (MOB-06). Прод по умолчанию получает только сборка профиля `production` (`EAS_BUILD_PROFILE` или `APP_ENV=production` из [eas.json](apps/mobile/eas.json)). Сборки `development` и `preview` и `expo start` берут адреса только из переменных ниже, обычно из `apps/mobile/.env.local` по [образцу](apps/mobile/.env.example). Без них приложение сразу сообщает, что окружение не задано, и не обращается к проду.
 
 | Имя | Назначение |
 | --- | --- |
 | `EXPO_PUBLIC_SUPABASE_URL` | URL согласованного Supabase-проекта |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Публичный ключ того же проекта |
 | `EXPO_PUBLIC_API_URL` | Разрешённый web API, доступный устройству/эмулятору |
-| `EXPO_PUBLIC_APP_ENV` | Учитывается resolver при определении non-production режима |
+| `EXPO_PUBLIC_APP_ENV` | Окружение сборки (`production`, `preview`, `development`); по умолчанию берётся из профиля EAS, без профиля — `development` |
 
-Код допускает значения из `expo.extra`; они также попадают в приложение и не подходят для серверных секретов. Non-production resolver требует API URL. В некоторых других ветках, включая `NODE_ENV=test`, код имеет fallback на production URL — поэтому для изолированной проверки следует явно задать URL и контролировать/mock network. Это описание текущего кода, а не рекомендация выполнять тесты против production.
+Переменные попадают в приложение через `expo.extra` и не подходят для серверных секретов. Сборка не production требует и Supabase, и API URL. В некоторых других ветках, включая `NODE_ENV=test`, код имеет fallback на production URL — поэтому для изолированной проверки следует явно задать URL и контролировать/mock network. Это описание текущего кода, а не рекомендация выполнять тесты против production.
 
 На телефоне `localhost` означает сам телефон. Адрес или tunnel выбирается для согласованного стенда. При диагностике загрузки env проверять путь, имя и наличие настройки; не публиковать сессию или значения ключей. Перезапуск bundler и очистка кэша применяются к конкретной разрешённой dev-сессии, а не как автоматический шаг по старому руководству.
 

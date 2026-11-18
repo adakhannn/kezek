@@ -57,6 +57,40 @@ describe('apiUrl resolver', () => {
         });
     });
 
+    test('a preview build without an API URL fails instead of falling back to production', () => {
+        delete process.env.EXPO_PUBLIC_API_URL;
+        delete process.env.EXPO_PUBLIC_APP_ENV;
+        process.env.NODE_ENV = 'production';
+        (global as { __DEV__?: boolean }).__DEV__ = false;
+
+        jest.doMock('expo-constants', () => ({
+            __esModule: true,
+            default: { expoConfig: { extra: { appEnv: 'preview' } } },
+        }));
+
+        jest.isolateModules(() => {
+            const { resolveMobileApiUrl } = require('../../lib/apiUrl');
+            expect(() => resolveMobileApiUrl()).toThrow('Missing API URL config for non-production build');
+        });
+    });
+
+    test('a production build falls back to the production API URL', () => {
+        delete process.env.EXPO_PUBLIC_API_URL;
+        delete process.env.EXPO_PUBLIC_APP_ENV;
+        process.env.NODE_ENV = 'production';
+        (global as { __DEV__?: boolean }).__DEV__ = false;
+
+        jest.doMock('expo-constants', () => ({
+            __esModule: true,
+            default: { expoConfig: { extra: { appEnv: 'production' } } },
+        }));
+
+        jest.isolateModules(() => {
+            const { resolveMobileApiUrl, PROD_API_URL } = require('../../lib/apiUrl');
+            expect(resolveMobileApiUrl()).toBe(PROD_API_URL);
+        });
+    });
+
     test('throws when EXPO_PUBLIC_API_URL is malformed', () => {
         process.env.EXPO_PUBLIC_API_URL = 'ht!tp://bad';
         process.env.NODE_ENV = 'production';

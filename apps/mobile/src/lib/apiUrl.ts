@@ -25,6 +25,7 @@ function isNonProdAppEnv(envValue: string | undefined): boolean {
     return (
         normalized === 'dev' ||
         normalized === 'development' ||
+        normalized === 'preview' ||
         normalized === 'stage' ||
         normalized === 'staging' ||
         normalized === 'test'
@@ -35,7 +36,8 @@ export function resolveMobileApiUrl(): string {
     const fromPublicEnv = process.env.EXPO_PUBLIC_API_URL;
     const fromExpoExtra = Constants.expoConfig?.extra?.apiUrl;
     const fromNodeEnv = process.env.NODE_ENV;
-    const fromAppEnv = process.env.EXPO_PUBLIC_APP_ENV;
+    // app.config.ts records the build's environment; only production builds default to production.
+    const fromAppEnv = process.env.EXPO_PUBLIC_APP_ENV || Constants.expoConfig?.extra?.appEnv;
 
     const configured = fromPublicEnv || fromExpoExtra;
     if (configured && String(configured).trim()) {
