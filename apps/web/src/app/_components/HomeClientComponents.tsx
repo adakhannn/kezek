@@ -140,10 +140,16 @@ export function HomeHeader({q, cat, categories, totalResults, categoryLabels = {
     const {t, locale} = useLanguage();
     const router = useRouter();
     const [query, setQuery] = useState(q);
-
-    useEffect(() => {
-        setQuery(q);
-    }, [q]);
+    // The last query this header sent to the URL. When the page re-renders with it, the user may
+    // have typed more in the meantime, so only a different q (back/forward, a link) resets the
+    // field; resetting on our own echo dropped the characters typed after the debounce (FE-11).
+    const [sentQuery, setSentQuery] = useState<string | null>(null);
+    const [previousQ, setPreviousQ] = useState(q);
+    if (q !== previousQ) {
+        setPreviousQ(q);
+        setSentQuery(null);
+        if (q !== sentQuery) setQuery(q);
+    }
 
     useEffect(() => {
         const normalizedQuery = query.trim();
@@ -153,6 +159,7 @@ export function HomeHeader({q, cat, categories, totalResults, categoryLabels = {
         }
 
         const timeoutId = window.setTimeout(() => {
+            setSentQuery(normalizedQuery);
             router.replace(buildMarketplaceHref(normalizedQuery, cat));
         }, 500);
 
@@ -161,6 +168,7 @@ export function HomeHeader({q, cat, categories, totalResults, categoryLabels = {
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setSentQuery(query.trim());
         router.push(buildMarketplaceHref(query.trim(), cat));
     };
 
