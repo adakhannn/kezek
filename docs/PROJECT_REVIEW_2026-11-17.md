@@ -92,9 +92,9 @@
 | ID | P | Находка | Где | Статус |
 | --- | --- | --- | --- | --- |
 | MOB-01 | P1 | Слоты и удержание не проверяют `service_staff`: через mobile/API можно записать к мастеру, который не делает услугу | `get_free_slots_service_day_v2`, `_hold_slot_for_actor`, `useBookingStep3Staff.ts` | FIXED |
-| MOB-02 | P2 | Выход удаляет неотправленные операции смены без предупреждения | `signOut.ts` | TODO |
+| MOB-02 | P2 | Выход удаляет неотправленные операции смены без предупреждения | `signOut.ts` | FIXED |
 | MOB-03 | P2 | Запросы API без таймаута | `shared-client/api.ts` | FIXED |
-| MOB-04 | P2 | Списки броней устаревают до 5 минут после создания/отмены | `useBookingStep6Confirm.ts` | TODO |
+| MOB-04 | P2 | Списки броней устаревают до 5 минут после создания/отмены | `useBookingStep6Confirm.ts` | FIXED |
 | MOB-05 | P2 | Deep links/App Links настроены неверно (`/booking/<id>` открывает экран бизнеса, нет assetlinks) | `linking.ts`, `app.json` | TODO |
 | MOB-06 | P2 | Любая сборка смотрит в прод (URL и ключ зашиты в `app.json`) | `app.json`, `eas.json` | TODO |
 | MOB-07 | P2 | Нет crash reporting в mobile | — | TODO |
@@ -127,5 +127,7 @@ API-03 закрыт как ENG-70: миграция `20261118130000_release_unco
 MOB-03, FE-04, CI-06 и CI-07 закрыты как ENG-71…74 (код в `main`).
 
 FE-11, FE-13 и FE-14 закрыты как ENG-75…77 (код в `main`).
+
+MOB-02 и MOB-04 закрыты как ENG-78, ENG-79 (код в `main`).
 
 Дальше по порядку: P1 — API-06, FE-02/03, ARCH-01…04, CI-01.
