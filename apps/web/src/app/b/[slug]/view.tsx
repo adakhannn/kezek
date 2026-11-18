@@ -127,6 +127,7 @@ export default function BookingForm({ data }: { data: Data }) {
         biz.id,
         dayStr || null,
         isAuthed,
+        businessTz,
     );
 
     const { refreshSlots, slots, slotsError, slotsLoading, hasMore, loadingMore, loadMore, moreError } = useBookingSlotsState({

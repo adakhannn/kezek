@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabaseClient';
+import { dayBoundsInTz, getBusinessTimezone } from '@/lib/time';
 
 type Branch = {
     id: string;
@@ -161,9 +162,10 @@ export function useServiceStaff(bizId: string, staffIds: string[]) {
 /**
  * Хук для загрузки бронирований клиента на выбранный день
  */
-export function useClientBookings(bizId: string, dayStr: string | null, enabled: boolean) {
+export function useClientBookings(bizId: string, dayStr: string | null, enabled: boolean, timezone?: string | null) {
+    const tz = getBusinessTimezone(timezone);
     return useQuery<number>({
-        queryKey: ['client-bookings', bizId, dayStr],
+        queryKey: ['client-bookings', bizId, dayStr, tz],
         queryFn: async () => {
             if (!dayStr) return 0;
 
@@ -171,11 +173,9 @@ export function useClientBookings(bizId: string, dayStr: string | null, enabled:
             const userId = auth.user?.id;
             if (!userId) return 0;
 
-            // Ищем все брони клиента в этом бизнесе на выбранный день
-            const dayStartUTC = new Date(dayStr + 'T00:00:00Z');
-            const dayEndUTC = new Date(dayStr + 'T23:59:59.999Z');
-            const searchStart = new Date(dayStartUTC.getTime() - 12 * 60 * 60 * 1000);
-            const searchEnd = new Date(dayEndUTC.getTime() + 12 * 60 * 60 * 1000);
+            // Брони клиента в этом бизнесе в выбранный день по времени бизнеса. Окно ±12 ч
+            // вокруг суток UTC (48 часов) ловило записи соседних дней (FE-13).
+            const { start: dayStart, end: dayEnd } = dayBoundsInTz(dayStr, tz);
 
             const { data, error } = await supabase
                 .from('bookings')
@@ -183,8 +183,8 @@ export function useClientBookings(bizId: string, dayStr: string | null, enabled:
                 .eq('biz_id', bizId)
                 .eq('client_id', userId)
                 .in('status', ['hold', 'confirmed', 'paid'])
-                .gte('start_at', searchStart.toISOString())
-                .lte('start_at', searchEnd.toISOString());
+                .gte('start_at', dayStart.toISOString())
+                .lt('start_at', dayEnd.toISOString());
 
             if (error) throw error;
             return (data?.length || 0);

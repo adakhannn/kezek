@@ -5,6 +5,7 @@
 import {
   addDaysToDateString,
   dateRangeInclusive,
+  dayBoundsInTz,
   getTimezone,
   todayDateString,
   toDateString,
@@ -93,4 +94,25 @@ describe('getTimezone', () => {
         delete process.env.NEXT_PUBLIC_TZ;
         expect(getTimezone()).toBe('Asia/Bishkek');
     });
+});
+
+describe('dayBoundsInTz (FE-13)', () => {
+  test('a Bishkek day is 24 hours from local midnight', () => {
+    const { start, end } = dayBoundsInTz('2026-11-20', 'Asia/Bishkek');
+    expect(start.toISOString()).toBe('2026-11-19T18:00:00.000Z');
+    expect(end.toISOString()).toBe('2026-11-20T18:00:00.000Z');
+  });
+
+  test('a booking on the next local evening is outside the day', () => {
+    const { end } = dayBoundsInTz('2026-11-20', 'Asia/Bishkek');
+    // 21 Nov 01:00 in Bishkek; the old window (UTC day +12 h) counted it as the 20th.
+    expect(new Date('2026-11-20T19:00:00.000Z') >= end).toBe(true);
+  });
+
+  test('a day with a DST change keeps its real length', () => {
+    const spring = dayBoundsInTz('2026-03-29', 'Europe/Berlin');
+    expect(spring.end.getTime() - spring.start.getTime()).toBe(23 * 3600 * 1000);
+    const autumn = dayBoundsInTz('2026-10-25', 'Europe/Berlin');
+    expect(autumn.end.getTime() - autumn.start.getTime()).toBe(25 * 3600 * 1000);
+  });
 });

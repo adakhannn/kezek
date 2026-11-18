@@ -100,6 +100,12 @@ export function dateAtTz(ymd: string, hhmm: string, timezone?: string): Date {
     return fromZonedTime(s, tz);
 }
 
+/** A calendar day of a time zone as the instants [start, end): 23 or 25 hours on DST changes. */
+export function dayBoundsInTz(ymd: string, timezone?: string): { start: Date; end: Date } {
+    const tz = timezone || TZ;
+    return { start: dateAtTz(ymd, '00:00', tz), end: dateAtTz(addDaysToDateString(ymd, 1, tz), '00:00', tz) };
+}
+
 export function toLabel(d: Date, timezone?: string) {
     const tz = timezone || TZ;
     return formatInTimeZone(d, tz, 'HH:mm');
