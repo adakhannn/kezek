@@ -12,6 +12,13 @@ global.fetch = jest.fn(() =>
 process.env.CRON_SECRET = 'test-cron-secret';
 process.env.VERCEL_CRON_SECRET = 'test-cron-secret';
 
+// Tests render every locale synchronously; the app loads en/ky on demand (FE-06).
+{
+    const { rememberDictionary } = require('./src/app/_components/i18n/dictionaryLoader');
+    rememberDictionary('en', require('./src/app/_components/i18n/dictionaries/en').en);
+    rememberDictionary('ky', require('./src/app/_components/i18n/dictionaries/ky').ky);
+}
+
 // Увеличиваем таймаут для асинхронных операций
 jest.setTimeout(30000);
 

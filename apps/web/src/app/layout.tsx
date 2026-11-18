@@ -8,11 +8,17 @@ import { AuthStatusUpdater } from './_components/AuthStatusWrapper';
 import { Footer } from './_components/Footer';
 import { ReminderBanners } from './_components/ReminderBanners';
 import { LanguageProvider } from './_components/i18n/LanguageProvider';
+import { en as enDictionary, ky as kyDictionary } from './_components/i18n/dictionaries';
 import { getServerLocale } from './_components/i18n/server';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PerformanceTracking } from '@/components/PerformanceTracking';
 import { ReactQueryProvider } from '@/lib/react-query';
+
+// Russian is in every client bundle; a page in English or Kyrgyz gets its dictionary from here (FE-06).
+function pageDictionary(locale: string) {
+    return locale === 'en' ? enDictionary : locale === 'ky' ? kyDictionary : undefined;
+}
 
 const geistSans = localFont({
     src: './fonts/Geist.ttf',
@@ -60,7 +66,7 @@ export default async function RootLayout({
                 <ErrorBoundary>
                     <PerformanceTracking />
                     <ReactQueryProvider>
-                        <LanguageProvider initialLocale={locale}>
+                        <LanguageProvider initialLocale={locale} initialDictionary={pageDictionary(locale)}>
                             <div className="relative flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.1),transparent_30%),linear-gradient(180deg,color-mix(in_srgb,var(--surface-base)_92%,white)_0%,var(--surface-base)_42%,var(--surface-base)_100%)]">
                                 <AppShellHeader />
                                 <AuthStatusUpdater />

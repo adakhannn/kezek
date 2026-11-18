@@ -1,8 +1,9 @@
 'use client';
 
-import {createContext, useContext, useEffect, useMemo, useSyncExternalStore} from 'react';
+import {createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore} from 'react';
 
-import { ky as kyModules, ru as ruModules, en as enModules, type I18nKey } from './dictionaries';
+import type { I18nKey } from './dictionaries';
+import { loadDictionary, loadedDictionary, rememberDictionary, russianDictionary } from './dictionaryLoader';
 
 import { getLocaleFromCookie, setLocaleInCookie } from '@/lib/cookies';
 import { logWarn } from '@/lib/log';
@@ -11,7 +12,7 @@ type Locale = 'ky' | 'ru' | 'en';
 
 export type Translations = Record<string, string>;
 
-type Dictionaries = Record<Locale, Translations>;
+type Dictionaries = Partial<Record<Locale, Translations>>;
 
 const STORAGE_KEY = 'kezek_locale'; // Для обратной совместимости с localStorage
 const LOCALE_CHANGED = 'kezek-locale-changed';
@@ -21,13 +22,6 @@ const defaultLocale: Locale = 'ru';
 // Re-export I18nKey для удобства использования в других местах
 export type { I18nKey };
 
-const dictionaries: Dictionaries = {
-    ky: kyModules,
-    ru: ruModules,
-    en: enModules,
-};
-
-// Старые встроенные словари удалены - теперь используются модули из dictionaries/
 
 interface LanguageContextValue {
     locale: Locale;
@@ -97,12 +91,41 @@ function createLocaleStore(fallback: Locale) {
     return { getSnapshot, subscribe, setLocale };
 }
 
-export function LanguageProvider({children, initialLocale = defaultLocale}: {
+export function LanguageProvider({children, initialLocale = defaultLocale, initialDictionary}: {
     children: React.ReactNode;
     initialLocale?: Locale;
+    /** The page's dictionary for en/ky, sent by the server layout so SSR and hydration match (FE-06). */
+    initialDictionary?: Translations;
 }) {
     const store = useMemo(() => createLocaleStore(initialLocale), [initialLocale]);
     const locale = useSyncExternalStore(store.subscribe, store.getSnapshot, () => initialLocale);
+
+    // Dictionaries loaded on demand (a language switch); Russian is always available.
+    const [loaded, setLoaded] = useState<Dictionaries>(() => ({ en: loadedDictionary('en'), ky: loadedDictionary('ky') }));
+    const dictionaries = useMemo<Dictionaries>(() => ({
+        ...loaded,
+        ru: russianDictionary,
+        ...(initialDictionary ? { [initialLocale]: initialDictionary } : {}),
+    }), [loaded, initialDictionary, initialLocale]);
+    const current = dictionaries[locale];
+
+    useEffect(() => {
+        if (initialDictionary) rememberDictionary(initialLocale, initialDictionary);
+    }, [initialDictionary, initialLocale]);
+
+    useEffect(() => {
+        if (current) return;
+        let cancelled = false;
+        loadDictionary(locale).then(
+            (dictionary) => {
+                if (!cancelled) setLoaded((previous) => ({ ...previous, [locale]: dictionary }));
+            },
+            (error: unknown) => logWarn('LanguageProvider', 'Failed to load dictionary; Russian is shown', { locale, error }),
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [current, locale]);
 
     useEffect(() => {
         // During hydration the rendered locale is still the server snapshot.
@@ -114,12 +137,11 @@ export function LanguageProvider({children, initialLocale = defaultLocale}: {
         locale,
         setLocale: store.setLocale,
         t: <K extends I18nKey>(key: K, fallback?: string): string => {
-            const dict = dictionaries[locale];
-            if (Object.prototype.hasOwnProperty.call(dict, key)) return dict[key];
-            if (Object.prototype.hasOwnProperty.call(dictionaries.ru, key)) return dictionaries.ru[key];
+            if (current && Object.prototype.hasOwnProperty.call(current, key)) return current[key];
+            if (Object.prototype.hasOwnProperty.call(russianDictionary, key)) return russianDictionary[key];
             return fallback ?? key;
         },
-    }), [locale, store]);
+    }), [current, locale, store]);
 
     return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
