@@ -417,6 +417,7 @@ jobs:
           - test-tenant-reference-guards-isolated.cjs
           - test-staff-delete-isolated.cjs
           - test-release-unconfirmed-phone-isolated.cjs
+          - test-duplicate-indexes-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
