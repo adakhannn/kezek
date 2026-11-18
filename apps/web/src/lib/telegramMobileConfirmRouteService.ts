@@ -1,9 +1,7 @@
 import crypto from 'crypto';
 
-import { createClient } from '@supabase/supabase-js';
-
-import { getSupabaseServiceRoleKey, getSupabaseUrl } from '@/lib/env';
 import { issueMobileSessionGrant, MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
+import { getServiceClient } from '@/lib/supabaseService';
 import { resolveTelegramIdentity } from '@/lib/telegramLoginService';
 import {
     consumePendingTelegramMobileAuthAttempt,
@@ -181,9 +179,7 @@ export async function runTelegramMobileConfirmRoute({
         return { ok: false, status: 409, error: 'conflict', message: 'Начните вход заново в обновлённом приложении.' };
     }
 
-    const serviceRoleKey = getSupabaseServiceRoleKey();
-    const supabaseUrl = getSupabaseUrl();
-    const admin = createClient(supabaseUrl, serviceRoleKey) as unknown as Parameters<
+    const admin = getServiceClient() as unknown as Parameters<
         typeof resolveTelegramIdentity
     >[0]['admin'];
 

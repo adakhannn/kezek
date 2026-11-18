@@ -6,11 +6,14 @@ jest.mock('@supabase/supabase-js', () => ({
     createClient: jest.fn(),
 }));
 
+jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
+
 jest.mock('@/lib/yandexAuthCallbackService', () => ({
     runYandexOAuthCallback: jest.fn(),
 }));
 
 import { createClient } from '@supabase/supabase-js';
+import { getServiceClient } from '@/lib/supabaseService';
 import { runYandexOAuthCallback } from '@/lib/yandexAuthCallbackService';
 
 describe('yandexAuthCallbackRouteService', () => {
@@ -19,6 +22,7 @@ describe('yandexAuthCallbackRouteService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (createClient as jest.Mock).mockReturnValue(admin);
+        (getServiceClient as jest.Mock).mockReturnValue(admin);
     });
 
     test('returns redirect when oauth error is present', async () => {
@@ -78,10 +82,7 @@ describe('yandexAuthCallbackRouteService', () => {
             fetchImpl: fetchImpl as never,
         });
 
-        expect(createClient).toHaveBeenCalledWith(
-            'http://localhost:54321',
-            'service-role-key',
-        );
+        expect(getServiceClient).toHaveBeenCalledTimes(1);
         expect(runYandexOAuthCallback).toHaveBeenCalledWith(
             expect.objectContaining({
                 admin,

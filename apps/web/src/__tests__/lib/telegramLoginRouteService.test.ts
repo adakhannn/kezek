@@ -89,7 +89,8 @@ describe('telegramLoginRouteService', () => {
             auth_date: Date.now(),
         });
 
-        expect(createClient).toHaveBeenCalledWith('http://localhost:54321', 'service-role-key');
+        expect(createClient).toHaveBeenCalledWith('http://localhost:54321', 'service-role-key',
+            expect.objectContaining({ auth: expect.objectContaining({ persistSession: false }) }));
         expect(handleTelegramLogin).toHaveBeenCalled();
         expect(result).toEqual({
             ok: true,

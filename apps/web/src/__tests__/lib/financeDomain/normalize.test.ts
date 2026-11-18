@@ -2,7 +2,7 @@
  * Unit-тесты для normalizePercentages
  */
 
-import { normalizePercentages } from '@/lib/financeDomain/normalize';
+import { normalizePercentages } from '@/lib/financeDomain';
 
 describe('normalizePercentages', () => {
     test('должен нормализовать проценты, которые в сумме дают 100', () => {

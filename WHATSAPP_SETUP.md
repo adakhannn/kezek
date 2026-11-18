@@ -25,7 +25,7 @@ Service-only `whatsapp_inbox_backlog_health()` возвращает точные
 | Привязка номера вошедшему пользователю | `/api/whatsapp/send-otp` и `/api/whatsapp/verify-otp`; cookie session обязательна. Шестизначный код хранится в metadata, срок 10 минут. Отправка требует настроенного OTP-шаблона; подтверждение меняет профиль, сессию не создаёт |
 | Снятый с поддержки web-протокол | `/api/auth/whatsapp/send-otp`, `/verify-otp`, `/create-session` возвращают 410 `auth_protocol_retired`; не вызывают Auth, БД или провайдера. Старые внешние клиенты требуют обновления |
 | Web/mobile OTP | `/api/auth/whatsapp/mobile/start` принимает S256 challenge; `/verify` проверяет и атомарно погашает OTP. Срок попытки 5 минут. Выдаётся одноразовый exchange-code, привязанный к verifier инициатора; сессия выпускается сервером только после обмена. Новые SQL миграции обязательны |
-| Брони | [WhatsAppNotificationService](apps/web/src/lib/notifications/WhatsAppNotificationService.ts) отправляет текст. Это не OTP-шаблон. Правила выбора получателей различаются по ролям — см. [предпочтения](NOTIFICATIONS_PREFERENCES.md) |
+| Брони | Outbox ([BookingNotificationPlanner](apps/web/src/lib/notifications/BookingNotificationPlanner.ts), [получатели](apps/web/src/lib/notifications/whatsappRecipients.ts)) отправляет текст. Это не OTP-шаблон. Правила выбора получателей различаются по ролям — см. [предпочтения](NOTIFICATIONS_PREFERENCES.md) |
 | Заявки и согласования | Отдельные шаблоны из `getWhatsAppTemplateName`; это другая политика отправки, не booking orchestrator |
 | Входящие сообщения | `/api/webhooks/whatsapp`: GET проверяет verification token; POST проверяет HMAC/receiver и сохраняет inbox. Отдельный cron worker исполняет команды. Проверка GET не защищает POST |
 
@@ -44,7 +44,7 @@ Service-only `whatsapp_inbox_backlog_health()` возвращает точные
 | `WHATSAPP_APP_SECRET` | Meta app secret для HMAC-SHA256 исходных bytes POST webhook; без значения handler закрыт с 503. Не подменять verify/access token |
 | `WHATSAPP_OTP_TEMPLATE_NAME` | Приоритетное имя OTP-шаблона; fallback `WHATSAPP_AUTH_TEMPLATE_NAME` |
 | `WHATSAPP_OTP_TEMPLATE_LANG` | Приоритетный language code; fallback `WHATSAPP_AUTH_TEMPLATE_LANGUAGE`, затем `ru`. Должен совпадать с выбранным шаблоном |
-| `WHATSAPP_OTP_HASH_SECRET` | Секрет хеширования mobile OTP и телефона. В коде есть фиксированный dev fallback: production-конфигурация должна задавать отдельный секрет |
+| `WHATSAPP_OTP_HASH_SECRET` | Секрет хеширования OTP и телефона. Обязателен в production: без него привязка номера и мобильный вход через WhatsApp отвечают 503 `otp_secret_not_configured`. Ключ разработки действует только вне production |
 | `WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON` | Только mobile start: JSON-массив компонентов, строки `{{OTP_CODE}}` заменяются кодом. Невалидный JSON приводит к fallback body с одним text-параметром, а не к отказу настройки |
 | `WHATSAPP_OTP_TEMPLATE_TYPE` | `utility` по умолчанию либо `authentication`; в текущем mobile start записывается в metadata метрики. Сам по себе не меняет структуру компонентов или категорию шаблона у провайдера |
 | `MOBILE_WHATSAPP_AUTH` | Server flag, затем fallback `NEXT_PUBLIC_MOBILE_WHATSAPP_AUTH`; по коду default `true` |

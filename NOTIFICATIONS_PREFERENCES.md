@@ -1,6 +1,6 @@
 # Предпочтения и доставка уведомлений
 
-Статус: текущая модель по исходникам, сверка 2026-11-01. Runtime и доставка провайдерами: `NOT_RUN`. Владелец: backend / notifications. Этот документ описывает существующие различия по каналам и ролям; наличие preference в профиле не означает, что каждый отправщик его применяет.
+Статус: текущая модель по исходникам, сверка 2026-11-18. Runtime и доставка провайдерами: `NOT_RUN`. Владелец: backend / notifications. Этот документ описывает существующие различия по каналам и ролям; наличие preference в профиле не означает, что каждый отправщик его применяет.
 
 Контракты: [notify и интеграции](docs/api/AUTH_AND_INTEGRATIONS.md), [профиль и auth flows](docs/api/CLIENT_AND_AUTH_FLOWS.md). Конфигурация: [WhatsApp](WHATSAPP_SETUP.md), [Telegram](TELEGRAM_AUTH_IMPLEMENTATION.md). Эксплуатация и риски: [Operations](docs/OPERATIONS.md), [Engineering findings](docs/ENGINEERING_FINDINGS.md).
 
@@ -21,13 +21,13 @@
 
 ## Кто получает уведомления о брони
 
-[BookingNotificationPlanner](apps/web/src/lib/notifications/BookingNotificationPlanner.ts) планирует доставку в outbox для `hold`, `confirm`, `cancel` и загружает клиента, владельца и мастера через `ParticipantDataService` с service role (cron `booking-notifications`). Прежний `NotificationOrchestrator` удалён 17.11.2026: его никто не вызывал. Правила подтверждены непосредственно [WhatsApp sender service](apps/web/src/lib/notifications/WhatsAppNotificationService.ts) и [Telegram sender service](apps/web/src/lib/notifications/TelegramNotificationService.ts).
+[BookingNotificationPlanner](apps/web/src/lib/notifications/BookingNotificationPlanner.ts) планирует доставку в outbox для `hold`, `confirm`, `cancel` и загружает клиента, владельца и мастера через `ParticipantDataService` с service role (cron `booking-notifications`). Прежний `NotificationOrchestrator` удалён 17.11.2026: его никто не вызывал. Получателей выбирают [emailRecipients](apps/web/src/lib/notifications/emailRecipients.ts), [whatsappRecipients](apps/web/src/lib/notifications/whatsappRecipients.ts) и [telegramRecipients](apps/web/src/lib/notifications/telegramRecipients.ts). Прежние отправители `EmailNotificationService`, `WhatsAppNotificationService` и `TelegramNotificationService` удалены 18.11.2026: после перехода на outbox их никто не вызывал.
 
 | Получатель | Email | WhatsApp | Telegram |
 | --- | --- | --- | --- |
 | Клиент | Enabled verified notification emails; fallback Auth view, затем `booking.client_email`. Нужен `notifyEmail`; клиентская копия содержит `.ics` | Нужны `whatsapp_phone`, `notify_whatsapp=true`, `whatsapp_verified=true` | Нужны Telegram ID, `notify_telegram=true`, `telegram_verified=true` |
-| Мастер | Enabled verified emails по `staff.user_id`; fallback `staff.email`. Profile `notify_email` учитывается | Profile WhatsApp phone либо fallback `staff.phone`. **Sender не проверяет `notify_whatsapp` или `whatsapp_verified`**, хотя loader их читает | Profile по `staff.user_id`; ID и `notify_telegram` обязательны, `telegram_verified` не обязателен |
-| Владелец | Enabled verified emails по `business.owner_id`; fallback Auth admin / Auth view. Profile `notify_email` учитывается | `profiles.whatsapp_phone`. **Sender не проверяет `notify_whatsapp` или `whatsapp_verified`**; loader владельца эти два поля не загружает | Profile по owner ID; ID и `notify_telegram` обязательны, `telegram_verified` не обязателен |
+| Мастер | Enabled verified emails по `staff.user_id`; fallback `staff.email`. Profile `notify_email` учитывается | Profile WhatsApp phone либо fallback `staff.phone`. Нужен `notify_whatsapp=true` (пустое значение считается `true`); `whatsapp_verified` не обязателен | Profile по `staff.user_id`; ID и `notify_telegram` обязательны, `telegram_verified` не обязателен |
+| Владелец | Enabled verified emails по `business.owner_id`; fallback Auth admin / Auth view. Profile `notify_email` учитывается | `profiles.whatsapp_phone`. Нужен `notify_whatsapp=true` (пустое значение считается `true`); `whatsapp_verified` не обязателен и не загружается | Profile по owner ID; ID и `notify_telegram` обязательны, `telegram_verified` не обязателен |
 | Дополнительные адреса бизнеса | Нормализованные `email_notify_to`; общего profile opt-out для этих адресов в этой ветке нет | Не используются этой веткой | Не используются этой веткой |
 
 Для гостевой брони `client_phone` — контакт, он сам не становится проверенным WhatsApp-адресом. Email гостя может использоваться как fallback. При отсутствии связанного `staff.user_id` личные preferences мастера загрузить нельзя, остаются runtime defaults и данные staff.
@@ -48,24 +48,23 @@ HTTP handler делает type cast body, а не полную Zod-валида�
 
 ## Что означает результат отправки
 
-`POST /api/notify` принимает booking ID и тип события, проверяет пользователя и право на бронь, затем собирает получателей из сохранённых данных. До auth в [notifyBookingService](apps/web/src/lib/notifyBookingService.ts) проверяется `RESEND_API_KEY`; при его отсутствии весь путь прекращается, даже если WhatsApp/Telegram настроены. Email sender использует `EMAIL_FROM`; конфигурация остальных каналов описана в связанных руководствах.
+`POST /api/notify` принимает booking ID и тип события, проверяет пользователя и право на бронь и ставит событие в outbox (`enqueue_booking_notification`, [notifyBookingService](apps/web/src/lib/notifyBookingService.ts)). Получателей и тексты собирает [BookingNotificationPlanner](apps/web/src/lib/notifications/BookingNotificationPlanner.ts), отправляет cron `booking-notifications` ([outboxWorker](apps/web/src/lib/notifications/outboxWorker.ts)). Email использует `EMAIL_FROM`; конфигурация каналов описана в связанных руководствах.
 
-Пример **формы** успешного ответа, не результат проведённой отправки:
+Пример **формы** успешного ответа:
 
 ```json
 {
   "ok": true,
   "data": {
-    "sent": 1,
-    "whatsappSent": 0,
-    "telegramSent": 1
+    "queued": true,
+    "event_id": "00000000-0000-0000-0000-000000000000"
   }
 }
 ```
 
-Счётчики отражают успешные ответы отправщиков внутри запроса. Нули могут означать отсутствие подходящих адресатов, выключенный/ненастроенный канал или ошибку провайдера; HTTP 200 не доказывает доставку каждому участнику.
+HTTP 200 означает, что событие поставлено в очередь, а не что сообщение доставлено. Если бронь уже в другом состоянии, ответ — 409 `notification_state_mismatch`; если очередь недоступна — 503.
 
-[EmailNotificationService](apps/web/src/lib/notifications/EmailNotificationService.ts) отправляет письма последовательно, с паузой 600 ms между адресатами; при HTTP 429 делает один повтор после `Retry-After` либо 2 секунд. WhatsApp и Telegram используют `Promise.allSettled` по получателям, каналы запускаются параллельно. Это inline-отправка: в данной цепочке нет durable outbox, общего worker retry или атомарности с записью брони. Повторный notify может повторить доставку; provider fetch не имеет заданного здесь deadline. Нагрузка увеличивает время HTTP-запросов — [Operations](docs/OPERATIONS.md) не объявляет измеренную пропускную способность.
+Событие уникально для брони, её ревизии и типа: повторный `notify` возвращает то же событие и не отправляет сообщения второй раз, а каждая доставка внутри события имеет свой ключ. [outboxTransport](apps/web/src/lib/notifications/outboxTransport.ts) ограничивает ожидание провайдера; HTTP 429 и неизвестный исход письма возвращают событие в очередь с учётом `Retry-After`, а неизвестный исход WhatsApp или Telegram помечается для проверки, чтобы не отправить сообщение дважды. Измеренной пропускной способности [Operations](docs/OPERATIONS.md) не объявляет.
 
 `POST /api/notify/ping` — **OPEN risk**, не health check: [HTTP](apps/web/src/lib/notifyPingHttpService.ts) и [service](apps/web/src/lib/notifyPingService.ts) отправляют настоящее Resend email по переданному адресу, без проверки пользователя в этой цепочке. Внешний `ok:true` возможен даже при отказе провайдера (`data.ok=false`). Использовать его как обычную production-проверку или доказательство готовности каналов нельзя.
 

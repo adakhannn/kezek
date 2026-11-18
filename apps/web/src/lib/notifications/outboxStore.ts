@@ -1,10 +1,10 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { BookingDataService } from './BookingDataService';
 import type { DeliveryOutcome, OutboxEvent, PreparedDelivery, StoredDelivery } from './outboxTypes';
 import type { BookingRow } from './types';
 
-import { getSupabaseServiceRoleKey, getSupabaseUrl } from '@/lib/env';
+import { getServiceClient } from '@/lib/supabaseService';
 
 export class OutboxStoreError extends Error {
     constructor(readonly code: string) { super(code); this.name = 'OutboxStoreError'; }
@@ -23,13 +23,8 @@ export interface OutboxStore {
 }
 
 /** Every DB HTTP request has its own deadline, including auth-admin lookups in preparation. */
-export function createOutboxAdminClient() {
-    return createClient(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
-        auth: { persistSession: false, autoRefreshToken: false },
-        global: { fetch: (input, init) => fetch(input, { ...init,
-            signal: init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(5000)]) : AbortSignal.timeout(5000),
-        }) },
-    });
+export function createOutboxAdminClient(): SupabaseClient {
+    return getServiceClient({ timeoutMs: 5000 }) as unknown as SupabaseClient;
 }
 
 export function createOutboxStore(admin: SupabaseClient): OutboxStore {

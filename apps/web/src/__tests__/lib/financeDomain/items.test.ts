@@ -6,7 +6,7 @@ import {
     calculateTotalServiceAmount,
     calculateTotalConsumables,
     applyAdjustmentsToTotals,
-} from '@/lib/financeDomain/items';
+} from '@/lib/financeDomain';
 
 describe('calculateTotalServiceAmount', () => {
     test('должен рассчитать общую сумму услуг', () => {

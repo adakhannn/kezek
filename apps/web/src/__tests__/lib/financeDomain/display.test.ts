@@ -2,7 +2,7 @@
  * Unit-тесты для расчета долей для отображения
  */
 
-import { calculateDisplayShares } from '@/lib/financeDomain/display';
+import { calculateDisplayShares } from '@/lib/financeDomain';
 
 describe('calculateDisplayShares', () => {
     test('должен использовать базовые доли для закрытой смены', () => {

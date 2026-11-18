@@ -6,7 +6,7 @@ import {
     calculateBaseMasterShare,
     calculateBaseSalonShare,
     calculateBaseShares,
-} from '@/lib/financeDomain/shares';
+} from '@/lib/financeDomain';
 
 describe('calculateBaseMasterShare', () => {
     test('должен рассчитать базовую долю мастера', () => {

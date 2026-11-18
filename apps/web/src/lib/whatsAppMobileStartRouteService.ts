@@ -5,6 +5,7 @@ import {
     getWhatsAppAuthTemplateName,
     getWhatsAppOtpTemplateComponentsJson,
     getWhatsAppOtpTemplateType,
+    hasUsableWhatsAppOtpHashSecret,
 } from '@/lib/env';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
@@ -177,6 +178,16 @@ export async function runWhatsAppMobileStartRoute({
     phone?: string | null;
     codeChallenge: string;
 }): Promise<WhatsAppMobileStartRouteResult> {
+    if (!hasUsableWhatsAppOtpHashSecret()) {
+        logError('WhatsAppMobileAuth', 'WHATSAPP_OTP_HASH_SECRET is not configured');
+        return {
+            ok: false,
+            status: 503,
+            error: 'service_unavailable',
+            message: 'Вход через WhatsApp временно недоступен',
+            details: { code: 'otp_secret_not_configured' },
+        };
+    }
     if (!MOBILE_CODE_CHALLENGE_RE.test(codeChallenge)) {
         return { ok: false, status: 400, error: 'validation', message: 'Начните вход заново.' };
     }

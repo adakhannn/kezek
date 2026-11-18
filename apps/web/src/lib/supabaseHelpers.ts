@@ -12,8 +12,8 @@ import { cookies } from 'next/headers';
 import { 
     getSupabaseUrl, 
     getSupabaseAnonKey, 
-    getSupabaseServiceRoleKey 
 } from './env';
+import { getServiceClient } from './supabaseService';
 
 import type { Database } from '@/types/supabase';
 
@@ -35,17 +35,9 @@ export async function createSupabaseServerClient() {
     });
 }
 
-/**
- * Создает Supabase клиент с service role key (обход RLS)
- * Используется для административных операций
- */
+/** Service-role client (bypasses RLS); the same client as getServiceClient. */
 export function createSupabaseAdminClient() {
-    const url = getSupabaseUrl();
-    const service = getSupabaseServiceRoleKey();
-
-    return createClient<Database>(url, service, {
-        auth: { persistSession: false },
-    });
+    return getServiceClient();
 }
 
 /**

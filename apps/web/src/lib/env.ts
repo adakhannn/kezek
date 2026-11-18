@@ -298,15 +298,14 @@ export function getWhatsAppVerifyToken(): string {
     });
 }
 
-/**
- * Секрет для хеширования WhatsApp OTP кода и номера телефона.
- * В production рекомендуется задать WHATSAPP_OTP_HASH_SECRET.
- */
+/** Development-only HMAC key. It is public (it is in this repository), so production never uses it. */
+const DEV_WHATSAPP_OTP_HASH_SECRET = 'kezek_whatsapp_otp_dev_secret';
+
 /**
  * True when a real WHATSAPP_OTP_HASH_SECRET is configured, or outside production.
- * Flows whose OTP hash is visible to the user (e.g. app_metadata) must fail
- * closed in production without a real secret: the dev default makes a 6-digit
- * code trivially brute-forceable offline.
+ * Every WhatsApp OTP flow checks this first and answers 503 when it is false: with
+ * the public development key a 6-digit code and a phone number are trivially
+ * recovered offline from their HMAC.
  */
 export function hasUsableWhatsAppOtpHashSecret(): boolean {
     const value = process.env.WHATSAPP_OTP_HASH_SECRET?.trim();
@@ -314,12 +313,17 @@ export function hasUsableWhatsAppOtpHashSecret(): boolean {
     return process.env.NODE_ENV !== 'production';
 }
 
+/**
+ * HMAC key for WhatsApp OTP codes and phone numbers. Outside production it falls back
+ * to the development key; in production a missing secret is an error, never a fallback.
+ */
 export function getWhatsAppOtpHashSecret(): string {
-    return getEnvVar('WHATSAPP_OTP_HASH_SECRET', {
-        required: false,
-        defaultValue: 'kezek_whatsapp_otp_dev_secret',
-        validator: isNonEmpty,
-    });
+    const value = process.env.WHATSAPP_OTP_HASH_SECRET;
+    if (value && isNonEmpty(value)) return value;
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error('WHATSAPP_OTP_HASH_SECRET is not configured');
+    }
+    return DEV_WHATSAPP_OTP_HASH_SECRET;
 }
 
 /**

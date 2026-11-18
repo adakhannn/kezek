@@ -13,7 +13,7 @@
 | `WHATSAPP_OTP_TEMPLATE_NAME`, `WHATSAPP_OTP_TEMPLATE_LANG` | Приоритетный template contract; fallback соответственно `WHATSAPP_AUTH_TEMPLATE_NAME`, `WHATSAPP_AUTH_TEMPLATE_LANGUAGE`, затем язык `ru` |
 | `WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON` | Mobile start принимает JSON-массив, рекурсивно заменяет `{{OTP_CODE}}` в строках. Отсутствующее или неверное значение даёт body с одним text-параметром. Кнопки/другие компоненты автоматически по категории не добавляются |
 | `WHATSAPP_OTP_TEMPLATE_TYPE` | Парсер допускает `authentication`, иначе `utility`. Mobile start записывает это значение в metadata метрики; оно **не переключает структуру payload или категорию шаблона** |
-| `WHATSAPP_OTP_HASH_SECRET` | Используется для hash OTP/телефона. В коде есть фиксированный dev fallback; отдельный server secret нужен в конфигурации целевой среды |
+| `WHATSAPP_OTP_HASH_SECRET` | Используется для hash OTP/телефона. Обязателен в production: без него `/api/auth/whatsapp/mobile/start` и `/verify` отвечают 503 `otp_secret_not_configured`; ключ разработки действует только вне production |
 | `MOBILE_WHATSAPP_AUTH` и rollout | Учитываются [featureFlags.ts](../apps/web/src/lib/featureFlags.ts). Mobile default — `true`; rollout percent ограничивает start, общий flag — start/verify. Старые auth routes и общий exchange этим не отключаются |
 
 Реализация payload и срока попытки — [whatsAppMobileStartRouteService.ts](../apps/web/src/lib/whatsAppMobileStartRouteService.ts); имена/fallback — [env.ts](../apps/web/src/lib/env.ts). Mobile OTP живёт 5 минут. Это не 10-минутный код legacy web/profile OTP.

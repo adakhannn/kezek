@@ -1,6 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-
 import { logWarn } from '@/lib/log';
+import { getServiceClient } from '@/lib/supabaseService';
 import { runYandexOAuthCallback } from '@/lib/yandexAuthCallbackService';
 import type {
     YandexAuthAdminClientLike,
@@ -109,10 +108,7 @@ export async function runYandexAuthCallbackRoute({
         logWarn('YandexAuth', 'OAuth callback request failed', error);
         return buildAuthFailureRedirect(origin, 'yandex_exchange_failed');
     }
-    const admin = createClient(
-        env.NEXT_PUBLIC_SUPABASE_URL!,
-        env.SUPABASE_SERVICE_ROLE_KEY!,
-    ) as unknown as YandexAuthAdminClientLike;
+    const admin = getServiceClient() as unknown as YandexAuthAdminClientLike;
 
     const result = await runYandexOAuthCallback({
         admin,

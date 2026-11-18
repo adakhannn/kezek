@@ -175,7 +175,40 @@ function createInMemoryAdmin() {
     return admin;
 }
 
+const originalEnv = { NODE_ENV: process.env.NODE_ENV, WHATSAPP_OTP_HASH_SECRET: process.env.WHATSAPP_OTP_HASH_SECRET };
+
 describe('whatsApp mobile auth integration', () => {
+    afterEach(() => {
+        for (const [key, value] of Object.entries(originalEnv)) {
+            if (value === undefined) delete process.env[key];
+            else process.env[key] = value;
+        }
+    });
+
+    test('both steps answer 503 in production without a configured OTP hash secret', async () => {
+        const admin = createInMemoryAdmin();
+        Object.assign(process.env, { NODE_ENV: 'production' });
+        delete process.env.WHATSAPP_OTP_HASH_SECRET;
+
+        const start = await runWhatsAppMobileStartRoute({
+            admin: admin as never,
+            codeChallenge: 'a'.repeat(64),
+            phone: '+996500574029',
+        });
+        expect(start).toMatchObject({ ok: false, status: 503, details: { code: 'otp_secret_not_configured' } });
+        expect(sendWhatsApp).not.toHaveBeenCalled();
+        expect(admin.__getAttempts()).toHaveLength(0);
+
+        const verify = await runWhatsAppMobileVerifyRoute({
+            admin: admin as never,
+            attemptId: '00000000-0000-4000-8000-000000000001',
+            code: '123456',
+            phone: '+996500574029',
+        });
+        expect(verify).toMatchObject({ ok: false, status: 503, details: { code: 'otp_secret_not_configured' } });
+        expect(admin.rpc).not.toHaveBeenCalled();
+        expect(issueMobileSessionGrant).not.toHaveBeenCalled();
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();

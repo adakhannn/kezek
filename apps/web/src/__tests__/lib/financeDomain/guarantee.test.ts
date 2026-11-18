@@ -5,7 +5,7 @@
 import {
     calculateGuaranteedAmount,
     calculateTopupAmount,
-} from '@/lib/financeDomain/guarantee';
+} from '@/lib/financeDomain';
 
 describe('calculateGuaranteedAmount', () => {
     test('должен рассчитать гарантированную сумму', () => {
