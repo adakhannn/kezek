@@ -21,7 +21,7 @@ describe('staffCreateFromUserService', () => {
         admin = {
             auth: {
                 admin: {
-                    listUsers: jest.fn(),
+                    getUserById: jest.fn(),
                 },
             },
             from: jest.fn(),
@@ -56,16 +56,14 @@ describe('staffCreateFromUserService', () => {
     });
 
     test('creates a staff member and initializes schedule', async () => {
-        admin.auth.admin.listUsers.mockResolvedValue({
+        admin.auth.admin.getUserById.mockResolvedValue({
             data: {
-                users: [
-                    {
+                user: {
                         id: userId,
                         email: 'test@example.com',
                         phone: '+996555123456',
                         user_metadata: { full_name: 'Test User' },
                     },
-                ],
             },
             error: null,
         });
@@ -154,10 +152,7 @@ describe('staffCreateFromUserService', () => {
     });
 
     test('returns not_found when auth admin user is missing', async () => {
-        admin.auth.admin.listUsers.mockResolvedValue({
-            data: { users: [] },
-            error: null,
-        });
+        admin.auth.admin.getUserById.mockResolvedValue({ data: { user: null }, error: { message: 'User not found' } });
 
         const result = await runStaffCreateFromUser({
             admin,

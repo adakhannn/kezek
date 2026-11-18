@@ -31,10 +31,6 @@ type AdminLike = {
     };
     auth: {
         admin: {
-            listUsers: (params?: { page: number; perPage: number }) => Promise<{
-                data?: { users?: AuthUser[] } | null;
-                error?: { message?: string } | null;
-            }>;
             updateUserById: (id: string, payload: unknown) => Promise<unknown>;
             createUser: (payload: unknown) => Promise<{ data?: { user?: AuthUser }; error?: { message?: string } | null }>;
             getUserById: (id: string) => Promise<unknown>;

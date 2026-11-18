@@ -187,4 +187,57 @@ describe('yandexAuthCallbackService', () => {
         expect((admin as any).auth.signInWithPassword).not.toHaveBeenCalled();
         expect(issueSessionForVerifiedUser).not.toHaveBeenCalled();
     });
+    describe('an e-mail that already has an account (ARCH-03)', () => {
+        function setup(accounts: Array<{ id: string }>) {
+            const admin = createMockSupabase();
+            const tables: string[] = [];
+            admin.rpc.mockImplementation(async (name: string) => (
+                name === 'find_accounts_by_contact' ? { data: accounts, error: null } : { data: null, error: null }
+            ));
+            (admin as unknown as { auth: { admin: Record<string, jest.Mock>; signInWithPassword: jest.Mock } }).auth.admin = {
+                createUser: jest.fn().mockResolvedValue({ data: { user: undefined }, error: { message: 'A user with this email address has already been registered' } }),
+                getUserById: jest.fn(),
+                updateUserById: jest.fn(),
+            };
+            (admin as unknown as { auth: { signInWithPassword: jest.Mock } }).auth.signInWithPassword = jest.fn();
+            admin.from.mockImplementation((table: string) => {
+                tables.push(table);
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+                    insert: jest.fn().mockResolvedValue({ error: null }),
+                };
+            });
+            return { admin, tables };
+        }
+
+        const run = (admin: ReturnType<typeof createMockSupabase>) => runYandexOAuthCallback({
+            admin,
+            yandexUser: { id: '777', login: 'owner', default_email: 'Owner@Yandex.ru' },
+            origin: 'https://kezek.kg',
+            redirectTo: '/',
+            randomHex: () => 'temp-password',
+        });
+
+        test('joins the account that confirmed the address, found by an exact lookup', async () => {
+            const { admin, tables } = setup([{ id: 'confirmed-user' }]);
+
+            const result = await run(admin);
+
+            expect(admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', { p_email: 'Owner@Yandex.ru' });
+            expect(issueSessionForVerifiedUser).toHaveBeenCalledWith('confirmed-user');
+            expect(result.redirectUrl).toContain('#access_token=access');
+            expect(tables).not.toContain('auth_users_view');
+        });
+
+        test('an account that never confirmed the address is not joined', async () => {
+            const { admin } = setup([]);
+
+            const result = await run(admin);
+
+            expect(issueSessionForVerifiedUser).not.toHaveBeenCalled();
+            expect(result.redirectUrl).toContain('/auth/sign-in?error=');
+        });
+    });
 });

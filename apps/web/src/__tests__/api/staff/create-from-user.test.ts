@@ -92,16 +92,14 @@ describe('/api/staff/create-from-user', () => {
             });
 
             // Мокаем список пользователей
-            mockAdmin.auth.admin.listUsers.mockResolvedValue({
+            mockAdmin.auth.admin.getUserById.mockResolvedValue({
                 data: {
-                    users: [
-                        {
+                    user: {
                             id: userId,
                             email: 'test@example.com',
                             phone: '+996555123456',
                             user_metadata: { full_name: 'Test User' },
                         },
-                    ],
                 },
                 error: null,
             });
@@ -128,12 +126,7 @@ describe('/api/staff/create-from-user', () => {
             });
 
             // Мокаем список пользователей (пользователь не найден)
-            mockAdmin.auth.admin.listUsers.mockResolvedValue({
-                data: {
-                    users: [],
-                },
-                error: null,
-            });
+            mockAdmin.auth.admin.getUserById.mockResolvedValue({ data: { user: null }, error: { message: 'User not found' } });
 
             const req = createMockRequest('http://localhost/api/staff/create-from-user', {
                 method: 'POST',
@@ -159,16 +152,14 @@ describe('/api/staff/create-from-user', () => {
             });
 
             // Мокаем список пользователей
-            mockAdmin.auth.admin.listUsers.mockResolvedValue({
+            mockAdmin.auth.admin.getUserById.mockResolvedValue({
                 data: {
-                    users: [
-                        {
+                    user: {
                             id: userId,
                             email: 'test@example.com',
                             phone: '+996555123456',
                             user_metadata: { full_name: 'Test User' },
                         },
-                    ],
                 },
                 error: null,
             });
@@ -259,16 +250,14 @@ describe('/api/staff/create-from-user', () => {
             });
 
             // Мокаем список пользователей
-            mockAdmin.auth.admin.listUsers.mockResolvedValue({
+            mockAdmin.auth.admin.getUserById.mockResolvedValue({
                 data: {
-                    users: [
-                        {
+                    user: {
                             id: userId,
                             email: 'test@example.com',
                             phone: '+996555123456',
                             user_metadata: { full_name: 'Test User' },
                         },
-                    ],
                 },
                 error: null,
             });

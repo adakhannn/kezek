@@ -1,9 +1,11 @@
 type UserUpdatePhoneFailure = {
     ok: false;
-    status: 400 | 401;
-    error: 'validation' | 'auth';
+    status: 400 | 401 | 409;
+    error: 'validation' | 'auth' | 'conflict';
     message: string;
 };
+
+export const CONFIRMED_PHONE_CHANGE_MESSAGE = 'Подтверждённый номер нельзя заменить без кода из SMS на новый номер';
 
 type UserUpdatePhoneSuccess = {
     ok: true;
@@ -48,6 +50,24 @@ export async function runUserUpdatePhone({
             status: 400,
             error: 'validation',
             message: 'Некорректный формат телефона',
+        };
+    }
+
+    const digits = (value: unknown) => (typeof value === 'string' ? value.replace(/\D/g, '') : '');
+    if (digits(user.phone) === digits(normalizedPhone)) {
+        return { ok: true };
+    }
+
+    // GoTrue keeps phone_confirmed_at when the admin API replaces the number, so a new number set
+    // here would look confirmed without any code, and exact contact lookups trust confirmed phones
+    // (ARCH-01). This route therefore only sets a phone on an account without a confirmed one; the
+    // SMS code that follows confirms it.
+    if (user.phone_confirmed_at) {
+        return {
+            ok: false,
+            status: 409,
+            error: 'conflict',
+            message: CONFIRMED_PHONE_CHANGE_MESSAGE,
         };
     }
 

@@ -67,20 +67,10 @@ export async function runStaffCreateFromUser({
         };
     }
 
-    const { data: list, error: listError } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 200,
-    });
-    if (listError) {
-        return {
-            ok: false,
-            status: 400,
-            error: 'validation',
-            message: listError.message,
-        };
-    }
-
-    const user = (list.users ?? []).find((candidate: { id: string }) => candidate.id === body.user_id);
+    // Exact lookup by id (ARCH-03): the first 200 users of listUsers did not contain older
+    // accounts, which the manager search (find_accounts_by_contact) already finds.
+    const { data: found, error: userError } = await admin.auth.admin.getUserById(body.user_id);
+    const user = userError ? null : found?.user ?? null;
     if (!user) {
         return {
             ok: false,

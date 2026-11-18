@@ -126,10 +126,7 @@ describe('/api/staff/create', () => {
 
             return mockSupabase;
         });
-        mockServiceClient.auth.admin.listUsers.mockResolvedValue({
-            data: { users: [] },
-            error: null,
-        });
+        mockServiceClient.rpc.mockResolvedValue({ data: [], error: null });
         mockServiceClient.from.mockImplementation((table: string) => {
             if (table === 'staff_branch_assignments') {
                 return {
@@ -188,10 +185,7 @@ describe('/api/staff/create', () => {
 
             return mockSupabase;
         });
-        mockServiceClient.auth.admin.listUsers.mockResolvedValue({
-            data: { users: [] },
-            error: null,
-        });
+        mockServiceClient.rpc.mockResolvedValue({ data: [], error: null });
 
         const req = createMockRequest('http://localhost/api/staff/create', {
             method: 'POST',

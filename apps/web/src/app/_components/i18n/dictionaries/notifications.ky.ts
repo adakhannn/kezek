@@ -19,5 +19,6 @@ export const notificationsKy = {
     'notifications.whatsapp.phoneLabel': 'Телефон номери',
     'notifications.whatsapp.sending': 'Жөнөтүп жатабыз...',
     'notifications.whatsapp.submit': 'Туташтыруу',
+    'notifications.whatsapp.confirmedPhoneLocked': 'Ырасталган номерди жаңы номерге келген SMS кодусуз алмаштырууга болбойт',
     'notifications.whatsapp.updateError': 'Телефонду жаңыртуу мүмкүн болгон жок',
 } as const;

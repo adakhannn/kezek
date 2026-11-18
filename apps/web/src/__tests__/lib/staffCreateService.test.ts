@@ -15,12 +15,8 @@ describe('staffCreateService', () => {
             from: jest.fn(),
         };
         admin = {
-            auth: {
-                admin: {
-                    listUsers: jest.fn(),
-                },
-            },
             from: jest.fn(),
+            rpc: jest.fn().mockResolvedValue({ data: [], error: null }),
         };
         (initializeStaffSchedule as jest.Mock).mockResolvedValue({
             success: true,
@@ -96,14 +92,8 @@ describe('staffCreateService', () => {
             return supabase;
         });
 
-        admin.auth.admin.listUsers.mockResolvedValue({
-            data: {
-                users: [
-                    { id: 'linked-user-id', email: 'test@example.com', phone: null },
-                ],
-            },
-            error: null,
-        });
+        // The account that confirmed this e-mail, found by the exact lookup (ARCH-03).
+        admin.rpc.mockResolvedValue({ data: [{ id: 'linked-user-id' }], error: null });
         admin.from
             .mockReturnValueOnce({
                 insert: jest.fn().mockResolvedValue({
@@ -157,5 +147,6 @@ describe('staffCreateService', () => {
                 schedule_error: null,
             },
         });
+        expect(admin.rpc).toHaveBeenCalledWith('find_accounts_by_contact', expect.objectContaining({ p_email: 'test@example.com' }));
     });
 });

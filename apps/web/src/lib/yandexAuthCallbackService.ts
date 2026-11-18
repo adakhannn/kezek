@@ -26,7 +26,6 @@ export type YandexAuthAdminClientLike = {
     auth: {
         admin: {
             createUser: (payload: unknown) => Promise<{ data?: { user?: AuthUserLike }; error?: { message?: string } | null }>;
-            listUsers: () => Promise<{ data: { users: AuthUserLike[] } }>;
             getUserById: (id: string) => Promise<{ data?: { user?: AuthUserLike }; error?: { message?: string } | null }>;
             updateUserById: (id: string, payload: unknown) => Promise<{ data?: unknown; error?: { message?: string } | null }>;
         };
@@ -35,7 +34,7 @@ export type YandexAuthAdminClientLike = {
             error?: { message?: string } | null;
         }>;
     };
-    rpc(name: string, params: Record<string, unknown>): Promise<{ error: { message?: string } | null }>;
+    rpc(name: string, params: Record<string, unknown>): Promise<{ data?: unknown; error: { message?: string } | null }>;
 };
 
 type RunYandexOAuthCallbackInput = {
@@ -156,26 +155,18 @@ async function resolveUserViaEmailDuplicate(
     yandexUser: YandexUserInfo
 ) {
     try {
-        const authUsersViewResponse = (admin
-            .from('auth_users_view')
-            .select('id')
-            .eq('email', email)
-            .maybeSingle() as Promise<{ data: { id: string } | null }>);
-        const { data: userByEmail } = await authUsersViewResponse;
+        // Join the existing account only when it has confirmed this address (ARCH-03). An account
+        // that merely registered the address without confirming it was never proven to belong to
+        // the owner of the Yandex mailbox: joining it would hand that mailbox owner's sign-in to
+        // whoever pre-registered the address (and knows its password). The lookup is exact and
+        // case-insensitive, without paging through Auth users.
+        const { data, error } = await admin.rpc('find_accounts_by_contact', { p_email: email });
+        if (error) throw error;
+        const accounts = Array.isArray(data) ? (data as Array<{ id?: string }>) : [];
 
-        if (userByEmail?.id) {
-            await ensureProfile(admin, userByEmail.id, yandexUser);
-            return { ok: true as const, userId: userByEmail.id };
-        }
-
-        const {
-            data: { users },
-        } = await admin.auth.admin.listUsers();
-        const existingUser = users?.find((user) => user.email === email);
-
-        if (existingUser) {
-            await ensureProfile(admin, existingUser.id, yandexUser);
-            return { ok: true as const, userId: existingUser.id };
+        if (accounts.length === 1 && accounts[0].id) {
+            await ensureProfile(admin, accounts[0].id, yandexUser);
+            return { ok: true as const, userId: accounts[0].id };
         }
     } catch (error) {
         logError('YandexAuth', 'Error finding user by email', error);

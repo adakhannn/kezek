@@ -80,6 +80,7 @@ type MockSupabaseClient = {
         updateUser?: jest.Mock;
         admin?: {
             listUsers: jest.Mock;
+            getUserById: jest.Mock;
             updateUserById: jest.Mock;
             createUser: jest.Mock;
             generateLink: jest.Mock;
@@ -119,6 +120,7 @@ export function createMockSupabase(): MockSupabaseClient {
             updateUser: jest.fn(),
             admin: {
                 listUsers: jest.fn(),
+                getUserById: jest.fn(),
                 updateUserById: jest.fn(),
                 createUser: jest.fn(),
                 generateLink: jest.fn(),

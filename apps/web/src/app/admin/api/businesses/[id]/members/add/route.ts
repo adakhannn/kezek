@@ -3,12 +3,12 @@ export const dynamic = 'force-dynamic';
 
 import crypto from 'crypto';
 
-import {type SupabaseClient} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
+import { contactPhoneDigits, findAccountIdByConfirmedContact } from '@/lib/accountContactLookup';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import {sendEmailPassword} from '@/lib/senders/email';
-import {sendSMS, normalizePhoneToE164} from '@/lib/senders/sms';
+import {sendSMS} from '@/lib/senders/sms';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
@@ -18,8 +18,6 @@ type Body = {
     role_key: 'owner' | 'manager' | 'staff' | 'admin' | 'client';
     sendTempPassword?: boolean;
 };
-
-type AdminClient = SupabaseClient;
 
 const norm = (s?: string | null) => {
     const v = (s ?? '').trim();
@@ -38,43 +36,6 @@ function generateTempPassword(): string {
     if (needsDigit) pwd = pwd.slice(0, 3) + '7' + pwd.slice(4);
     if (needsSpec) pwd = pwd.slice(0, 4) + '!' + pwd.slice(5);
     return pwd;
-}
-
-async function findUserIdByEmailOrPhone(
-    admin: AdminClient,
-    email?: string | null,
-    phone?: string | null
-) {
-    // listUsers нет параметров фильтра — листаем страницы и сравниваем вручную
-    const api = admin.auth.admin as {
-        listUsers: (args: { page?: number; perPage?: number }) => Promise<{
-            data: {
-                users: Array<{ id: string; email?: string | null; phone?: string | null; user_metadata?: unknown }>
-            } | null;
-            error: { message: string } | null;
-        }>;
-    };
-
-    const emailLc = email?.toLowerCase();
-    const phoneNorm = phone ?? undefined;
-
-    for (let page = 1; page <= 10; page++) {
-        const {data, error} = await api.listUsers({page, perPage: 1000});
-        if (error) throw new Error(error.message);
-        const users = data?.users ?? [];
-        const found = users.find((u) => {
-            const byEmail = emailLc && (u.email ?? '').toLowerCase() === emailLc;
-            const metaPhone =
-                (u.user_metadata && typeof u.user_metadata === 'object'
-                    ? (u.user_metadata as { phone?: string }).phone
-                    : undefined) ?? undefined;
-            const byPhone = phoneNorm && (u.phone === phoneNorm || metaPhone === phoneNorm);
-            return Boolean(byEmail || byPhone);
-        });
-        if (found) return found.id;
-        if (users.length < 1000) break;
-    }
-    return null;
 }
 
 export async function POST(req: Request, context: unknown) {
@@ -96,7 +57,9 @@ export async function POST(req: Request, context: unknown) {
         // body
         const raw = (await req.json()) as Body;
         const email = norm(raw.email);
-        const phoneE164 = normalizePhoneToE164(norm(raw.phone));
+        // One normalization for the lookup, the new account and the SMS (0555… becomes +996555…).
+        const phoneDigits = contactPhoneDigits(norm(raw.phone));
+        const phoneE164 = phoneDigits ? `+${phoneDigits}` : null;
         const full_name = norm(raw.full_name);
         const roleKey = raw.role_key;
         const sendTemp = !!raw.sendTempPassword;
@@ -126,12 +89,16 @@ export async function POST(req: Request, context: unknown) {
         }
         const role_id = roleRow.id as string;
 
-        // найти/создать пользователя
-        let userId = await findUserIdByEmailOrPhone(admin, email, phoneE164);
+        // Найти аккаунт, который подтвердил этот email или телефон, или создать новый (ARCH-03).
+        // Неподтверждённые адреса и user_metadata.phone (его пишет сам пользователь) не в счёт:
+        // иначе роль ушла бы тому, кто заранее вписал себе чужой контакт.
+        let userId = await findAccountIdByConfirmedContact(admin, { email, phone: phoneDigits });
         let created_user = false;
+        let tempPassword: string | null = null;
 
         if (!userId) {
-            const provisional = sendTemp ? generateTempPassword() : crypto.randomBytes(8).toString('base64url');
+            tempPassword = sendTemp ? generateTempPassword() : null;
+            const provisional = tempPassword ?? crypto.randomBytes(8).toString('base64url');
             const {data, error} = await admin.auth.admin.createUser({
                 email: email ?? undefined,
                 phone: phoneE164 ?? undefined,
@@ -180,26 +147,29 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ok: false, error: hint}, {status: 400});
         }
 
-        // если попросили — выдаём временный пароль и шлём уведомления
+        // Временный пароль — только аккаунту, созданному этим запросом. Пароль существующего
+        // аккаунта не сбрасывается: это заперло бы владельца без его согласия (ARCH-03).
         let sent_temp_email = false;
         let sent_temp_sms = false;
 
-        if (sendTemp) {
-            const temp = generateTempPassword();
-            const {error: ePwd} = await admin.auth.admin.updateUserById(userId, {password: temp});
-            if (ePwd) return NextResponse.json({ok: false, error: ePwd.message}, {status: 400});
-
+        if (tempPassword) {
             if (email) {
-                await sendEmailPassword({to: email, subject: 'Ваш временный пароль', tempPassword: temp});
+                await sendEmailPassword({to: email, subject: 'Ваш временный пароль', tempPassword});
                 sent_temp_email = true;
             }
             if (phoneE164) {
-                await sendSMS({to: phoneE164, text: `Ваш временный пароль: ${temp}`});
+                await sendSMS({to: phoneE164, text: `Ваш временный пароль: ${tempPassword}`});
                 sent_temp_sms = true;
             }
         }
 
-        return NextResponse.json({ok: true, created_user, sent_temp_email, sent_temp_sms});
+        return NextResponse.json({
+            ok: true,
+            created_user,
+            sent_temp_email,
+            sent_temp_sms,
+            ...(sendTemp && !created_user ? { temp_password_skipped: 'existing_account' } : {}),
+        });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});

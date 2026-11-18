@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **176 route-файлов, 207 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **175 route-файлов, 206 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 512 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `6c9e03c87125b35390df8928316109cc006ab6a67a6368db2d0ef7507768e18c`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 509 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `aab02be7f9101feadb69fbaf3926b5da2b89f4a2061daddc01b4c4c9f71252cc`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -176,7 +176,6 @@
 | `/api/staff/shift/open` | POST | [route](../../apps/web/src/app/api/staff/shift/open/route.ts) | [runStaffShiftOpenHttp](../../apps/web/src/lib/staffShiftOpenHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/shift/today` | GET | [route](../../apps/web/src/app/api/staff/shift/today/route.ts) | [runStaffShiftTodayHttp](../../apps/web/src/lib/staffShiftTodayHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/sync-roles` | POST | [route](../../apps/web/src/app/api/staff/sync-roles/route.ts) | [runStaffSyncRolesHttp](../../apps/web/src/lib/staffSyncRolesHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
-| `/api/staff/update` | POST | [route](../../apps/web/src/app/api/staff/update/route.ts) | [runStaffUpdateHttp](../../apps/web/src/lib/staffUpdateHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/work-locations` | GET | [route](../../apps/web/src/app/api/staff/work-locations/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/swagger.json` | GET | [route](../../apps/web/src/app/api/swagger.json/route.ts) | Внутри route; читать исходник | [справочник](OPERATIONS_AND_TELEMETRY.md) |
 | `/api/user/update-phone` | POST | [route](../../apps/web/src/app/api/user/update-phone/route.ts) | [runUserUpdatePhoneHttp](../../apps/web/src/lib/userUpdatePhoneHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |

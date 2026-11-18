@@ -56,9 +56,11 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
             });
 
             if (!response.ok) {
-                const data = await response.json();
+                const data = await response.json().catch(() => ({}));
                 throw new Error(
-                    data.error || t('notifications.whatsapp.updateError', 'Не удалось обновить телефон')
+                    data.error === 'conflict'
+                        ? t('notifications.whatsapp.confirmedPhoneLocked', 'Подтверждённый номер нельзя заменить без кода из SMS на новый номер')
+                        : t('notifications.whatsapp.updateError', 'Не удалось обновить телефон')
                 );
             }
 

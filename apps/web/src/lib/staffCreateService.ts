@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { findAccountIdByConfirmedContact } from '@/lib/accountContactLookup';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
@@ -171,18 +172,14 @@ async function resolveLinkedUserId({
         return null;
     }
 
-    const { data: userList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    const foundUser = userList?.users?.find((user: { email?: string; phone?: string; id: string }) => {
-        if (email && user.email === email) {
-            return true;
-        }
-        if (phone && user.phone === phone) {
-            return true;
-        }
-        return false;
-    });
-
-    return foundUser?.id ?? null;
+    // Exact lookup of the account that confirmed this e-mail or phone (ARCH-03). A failed lookup
+    // leaves the staff member unlinked; it does not block creating them.
+    try {
+        return await findAccountIdByConfirmedContact(admin, { email, phone });
+    } catch (error) {
+        logWarn('StaffCreate', 'Account lookup by contact failed', error);
+        return null;
+    }
 }
 
 async function createInitialBranchAssignment({

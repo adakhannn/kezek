@@ -75,9 +75,9 @@
 
 | ID | P | Находка | Где | Статус |
 | --- | --- | --- | --- | --- |
-| ARCH-01 | P1 | Личность определяется по неподтверждённым телефону/email: `auth.users.phone` меняется без OTP, `user_metadata` редактируется пользователем; по ним идут WhatsApp-вход, привязка сотрудника, добавление участника | `userUpdatePhoneService.ts`, `whatsAppIdentityOwnershipService.ts`, `staffCreateService.ts` | TODO (WhatsApp-вход закрыт в ENG-70; остаются API-06/08) |
+| ARCH-01 | P1 | Личность определяется по неподтверждённым телефону/email: `auth.users.phone` меняется без OTP, `user_metadata` редактируется пользователем; по ним идут WhatsApp-вход, привязка сотрудника, добавление участника | `userUpdatePhoneService.ts`, `whatsAppIdentityOwnershipService.ts`, `staffCreateService.ts` | FIXED |
 | ARCH-02 | P1 | Сотрудник нескольких бизнесов теряет кабинет: `.maybeSingle()` по `staff.user_id` без бизнеса (web и mobile) | `staffRoleSync.ts`, `userRoleProfile.ts`, `useUserRole.ts` | TODO |
-| ARCH-03 | P1 | Поиск аккаунтов перебирает `listUsers` с жёсткими лимитами (первые 200 пользователей) | `staffCreateFromUserService.ts` и др. | TODO (есть `find_accounts_by_contact`) |
+| ARCH-03 | P1 | Поиск аккаунтов перебирает `listUsers` с жёсткими лимитами (первые 200 пользователей) | `staffCreateFromUserService.ts` и др. | TODO (точные поиски — ENG-84; остался каталог пользователей супер-админа) |
 | ARCH-04 | P1 | Ошибки в проде не видны: логгер выбрасывает детали и warn, обработчик API не шлёт в Sentry, клиентский Sentry не грузится под Turbopack | `shared-client/log.ts`, `apiErrorHandler.ts` | TODO |
 | ARCH-05 | P2 | HTTP-статус выбирается по тексту ошибки (`NO_BIZ_ACCESS` → 500) | `apiErrorHandler.ts` | TODO |
 | ARCH-06 | P2 | Выбор текущего бизнеса по разным правилам в сеттере и резолвере; молчаливое переключение бизнеса при ошибке чтения | `currentBusinessService.ts`, `bizContextResolutionStrategies.ts` | TODO |
@@ -137,5 +137,7 @@ API-08 закрыт как ENG-81: код в `main`, миграция `202611181
 DB-13 закрыт как ENG-82: миграция `20261118160000_review_write_rules.sql` применена в проде 18 ноября, код создания отзыва проверяет то же правило.
 
 FE-02 закрыт как ENG-83: старый редактор расписания больше не пишет при просмотре, миграция `20261118170000_one_active_date_rule.sql` применена в проде после выкладки кода. В проде `SCHEDULE_V2_ENABLED` выключен, поэтому график сотрудника с опубликованными версиями там не редактируется, пока владелец не включит новую модель.
+
+ARCH-01 закрыт и ARCH-03 закрыт частично как ENG-84 (только код, без миграций): вход Yandex, привязка сотрудника, создание сотрудника из аккаунта и добавление участника ищут аккаунт точно и только по подтверждённым контактам; подтверждённый телефон нельзя заменить без кода. Каталог пользователей супер-админа (`/admin/api/users/list`, статистика) ещё листает Auth-пользователей — следующий шаг ARCH-03.
 
 Дальше по порядку: P1 — API-06, FE-03, ARCH-01…04, CI-01.

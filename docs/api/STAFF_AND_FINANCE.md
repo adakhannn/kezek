@@ -223,7 +223,7 @@ Save передаёт все позиции одним RPC `save_staff_shift_com
 | Успех | `data`: `id`, `user_linked`, `schedule_initialized`, `schedule_days_created`, `schedule_error` |
 | Ошибки | 400 validation при неверном JSON, отсутствии имени/филиала или ошибке вставки; 403 forbidden при провале дополнительной проверки роли; 500 internal если не получен ID; исключения — по общей обёртке |
 
-`Body` — TypeScript-тип, строгой JSON-schema здесь нет. Сервис проверяет truthiness `full_name`/`branch_id`, приводит `is_active` через `!!` (пропуск даёт false). Поля `biz_id` и `user_id` из прежнего примера не выбирают бизнес/пользователя: бизнес берётся из контекста, привязка пользователя ищется по email/phone среди **первых 200** auth users. Сервис не выполняет отдельную проверку UUID/принадлежности филиала перед вставкой; ограничения БД не заменяют документированную проверку HTTP-слоя.
+`Body` — TypeScript-тип, строгой JSON-schema здесь нет. Сервис проверяет truthiness `full_name`/`branch_id`, приводит `is_active` через `!!` (пропуск даёт false). Поля `biz_id` и `user_id` из прежнего примера не выбирают бизнес/пользователя: бизнес берётся из контекста, привязывается аккаунт, который подтвердил этот email или телефон (`find_accounts_by_contact`, ARCH-03); если email и телефон указывают на разные аккаунты или поиск не удался, сотрудник создаётся без привязки. Сервис не выполняет отдельную проверку UUID/принадлежности филиала перед вставкой; ограничения БД не заменяют документированную проверку HTTP-слоя.
 
 После вставки отдельно создаётся назначение филиала, добавляется роль связанного пользователя и в legacy-ветке инициализируется расписание. При explicit scheduling инициализация пропускается. Эти действия не составляют подтверждённую общую транзакцию; `schedule_initialized: false` и `schedule_error` следует обрабатывать отдельно, а не считать 200 гарантией готового расписания.
 
@@ -343,23 +343,11 @@ Legacy-ветка возвращает 403 forbidden при недоступно
 | Успех | `data`: `id`, `schedule_initialized`, `schedule_days_created`, `schedule_error` |
 | Ошибки | 400 validation при неверном JSON/отсутствии обязательных полей/ошибках auth list или записей; 403 forbidden при недоступном филиале; 404 not_found если user не найден в полученной странице; 500 internal при отсутствии роли staff/ID; исключения — по общей обёртке |
 
-`full_name` из тела не используется: имя берётся из metadata (`full_name`, затем `fullName`), email либо «Без имени». Пользователь ищется только в `listUsers(page: 1, perPage: 200)` — 404 не доказывает отсутствия пользователя за этой страницей.
+`full_name` из тела не используется: имя берётся из metadata (`full_name`, затем `fullName`), email либо «Без имени». Пользователь ищется точно по id (`auth.admin.getUserById`, ARCH-03); 404 значит, что аккаунта с таким id нет.
 
 Существующий staff ищется по **совпадению full_name в бизнесе**, а не по user_id. При совпадении запись переиспользуется; user_id назначается только если он пустой, а имеющаяся связь не заменяется. Поэтому это не контракт «создать ровно одну новую запись или отклонить уже существующего пользователя». Роль переданному user, назначение филиала и legacy-расписание обрабатываются отдельно; часть ошибок только логируется. Explicit scheduling пропускает инициализацию расписания. Успешный ответ не подтверждает согласованность всех этих сущностей.
 
 Источники: [route](../../apps/web/src/app/api/staff/create-from-user/route.ts), [HTTP](../../apps/web/src/lib/staffCreateFromUserHttpService.ts), [service](../../apps/web/src/lib/staffCreateFromUserService.ts).
-
-### POST `/api/staff/update`
-
-<!-- api-contract: POST /api/staff/update -->
-
-Старый статический маршрут. Для интеграций используется `/api/staff/[id]/update` выше.
-
-**Обнаруженная несовместимость исходников:** маршрут `/api/staff/update` не содержит `[id]`, но HTTP-helper первым действием требует `getRouteParamUuid(context, 'id')`. ID из body/query не читается. При обычном внешнем вызове без этого route-параметра цепочка выбрасывает `Missing required route parameter: id`; внешняя обёртка классифицирует его как 500 internal. Runtime здесь не проверялся; документировать этот маршрут как рабочую альтернативу нельзя.
-
-Limiter — `normal` (429 возможен до helper). За проверкой ID код предусматривает Manager direct и дополнительную проверку роли owner/admin/manager, Body с `full_name`, `branch_id`, `is_active`, optional `email`/`phone` и условный успех `data: { user_linked }`. Этот внутренний контракт не устраняет несовместимость пути и не означает, что тело с `id` позволит его вызвать.
-
-Источники: [route](../../apps/web/src/app/api/staff/update/route.ts), [HTTP](../../apps/web/src/lib/staffUpdateHttpService.ts), [внутренний service](../../apps/web/src/lib/staffUpdateService.ts), [routeParams](../../apps/web/src/lib/routeParams.ts).
 
 ### POST `/api/staff/avatar/upload`
 
