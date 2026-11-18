@@ -95,7 +95,7 @@
 | MOB-02 | P2 | Выход удаляет неотправленные операции смены без предупреждения | `signOut.ts` | FIXED |
 | MOB-03 | P2 | Запросы API без таймаута | `shared-client/api.ts` | FIXED |
 | MOB-04 | P2 | Списки броней устаревают до 5 минут после создания/отмены | `useBookingStep6Confirm.ts` | FIXED |
-| MOB-05 | P2 | Deep links/App Links настроены неверно (`/booking/<id>` открывает экран бизнеса, нет assetlinks) | `linking.ts`, `app.json` | TODO |
+| MOB-05 | P2 | Deep links/App Links настроены неверно (`/booking/<id>` открывает экран бизнеса, нет assetlinks) | `linking.ts`, `app.json` | TODO (маршруты ссылок и `assetlinks.json` — ENG-118; осталось у владельца: отпечаток ключа подписи в `ANDROID_APP_LINK_SHA256_FINGERPRINTS` и iOS Universal Links) |
 | MOB-06 | P2 | Любая сборка смотрит в прод (URL и ключ зашиты в `app.json`) | `app.json`, `eas.json` | FIXED |
 | MOB-07 | P2 | Нет crash reporting в mobile | — | TODO |
 | CI-01 | P1 | SQL-наборы тестируют устаревшие версии функций (миграции загружаются не до конца), PG16 вместо 17 | `scripts/test-*.mjs` | FIXED |
@@ -193,5 +193,7 @@ CI-01 закрыт как ENG-111 (только тесты): все 41 изол�
 DB-09 закрыт полностью как ENG-115: миграция `20261119080000_inactive_rows_visibility.sql` применена в проде — архивные филиалы и уволенные сотрудники больше не видны всем подряд, а клиенту, владельцу и участникам бизнеса видны как раньше.
 
 MOB-06 закрыт как ENG-117 (только код): прод по умолчанию получает только сборка профиля `production`; development, preview и `expo start` берут адреса бэкенда только из `EXPO_PUBLIC_*`.
+
+MOB-05 закрыт частично как ENG-118: ссылки `/booking/<id>` открывают в приложении бронь, `/b/<slug>` — бизнес; файл проверки Android App Links готов и включается переменной с отпечатком ключа подписи.
 
 Дальше по порядку: P1 — API-06 (нужно решение владельца о согласии), CI-01.

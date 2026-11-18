@@ -29,14 +29,18 @@ export const linking: LinkingOptions<RootStackParamList> = {
                 },
             },
             Map: 'map',
+            // The same paths as the web app (MOB-05): /b/<slug> is a business's booking page and
+            // /booking/<id> is one booking, the link that notifications and the cabinet share.
             Booking: {
-                path: 'booking/:slug',
+                path: 'b/:slug',
                 parse: {
                     slug: (slug: string) => slug,
                 },
             },
             BookingDetails: {
-                path: 'booking-detail/:id',
+                path: 'booking/:id',
+                // Links the app produced before MOB-05.
+                alias: ['booking-detail/:id'],
                 parse: {
                     id: (id: string) => id,
                 },

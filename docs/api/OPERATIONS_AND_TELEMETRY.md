@@ -107,6 +107,19 @@ Session не нужна, но с API-09 действует limiter `telemetry` (
 
 `configured:true` в test означает только локальную проверку строк. Эти endpoints не следует считать подтверждением готовности интеграции, корректных прав провайдера или доставки сообщения.
 
+## Android App Links
+
+<!-- api-contract: GET /.well-known/assetlinks.json -->
+
+| Часть | Контракт |
+| --- | --- |
+| Доступ/вход | Публичный, без сессии и тела |
+| Успех | 200 JSON: одно утверждение `delegate_permission/common.handle_all_urls` для пакета `kg.kezek.app` с отпечатками SHA-256 из `ANDROID_APP_LINK_SHA256_FINGERPRINTS` (через запятую); `Cache-Control: public, max-age=3600` |
+| Ошибки | 404 без тела, пока переменная не задана или хотя бы один отпечаток не в формате `AB:CD:…` из 32 байт |
+| Ограничения | Отпечаток относится к ключу подписи сборки (EAS: `eas credentials`), поэтому задаётся в окружении, а не в коде. Без файла Android открывает ссылки в браузере. iOS Universal Links требуют отдельно Team ID и entitlement `associatedDomains` |
+
+Android проверяет этот файл, чтобы ссылки `https://kezek.vercel.app/booking/<id>` и `/b/<slug>` открывались в приложении (MOB-05; `autoVerify` в [app.json](../../apps/mobile/app.json)). Источники: [route](../../apps/web/src/app/.well-known/assetlinks.json/route.ts), [утверждения](../../apps/web/src/lib/androidAssetLinks.ts).
+
 ## Неизвестные пути API
 
 <!-- api-contract: GET /api/[...path] -->

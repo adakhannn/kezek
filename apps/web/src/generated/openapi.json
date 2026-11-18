@@ -558,9 +558,28 @@
       }
     }
   },
-  "x-explicit-operation-count": 207,
+  "x-explicit-operation-count": 208,
   "x-reviewed-operation-count": 4,
   "paths": {
+    "/.well-known/assetlinks.json": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/OPERATIONS_AND_TELEMETRY.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/.well-known/assetlinks.json",
+        "x-source-file": "apps/web/src/app/.well-known/assetlinks.json/route.ts",
+        "x-manual-contract": "docs/api/OPERATIONS_AND_TELEMETRY.md"
+      }
+    },
     "/admin/api/analytics/conversion-funnel": {
       "get": {
         "tags": [

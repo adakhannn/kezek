@@ -34,6 +34,7 @@
 | `WHATSAPP_OTP_TEMPLATE_NAME`, `WHATSAPP_OTP_TEMPLATE_LANG`, `WHATSAPP_AUTH_TEMPLATE_NAME`, `WHATSAPP_AUTH_TEMPLATE_LANGUAGE` | Выбор шаблона и языка | Приоритеты/fallback сверять в `env.ts`; одобрение шаблона провайдером отдельно |
 | `NEXT_PUBLIC_SENTRY_DSN` | Включает Sentry в браузере, на сервере и в edge | Публичный, встраивается при сборке: после изменения нужен новый деплой. Без него ничего не отправляется. Порядок включения — [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md#ошибки-приложения-логи-vercel-и-sentry) |
 | `SENTRY_ENVIRONMENT` | Метка окружения событий | Необязательно; по умолчанию `vercel-production`/`vercel-preview`, иначе NODE_ENV |
+| `ANDROID_APP_LINK_SHA256_FINGERPRINTS` | Отпечатки SHA-256 ключа подписи Android-приложения для `/.well-known/assetlinks.json` (MOB-05) | Через запятую, формат `AB:CD:…` (32 байта; EAS: `eas credentials`). Пока не задано, файла нет и ссылки открываются в браузере |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Загрузка source maps при сборке | Только в сборке Vercel; токен — секрет, в CI и репозиторий не попадает |
 | Health alert settings | Оповещения | [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md), [PERFORMANCE_MONITORING](PERFORMANCE_MONITORING.md) |
 | Telegram, Yandex OAuth и feature flags | Зависит от конкретного auth/notification flow | Тематические документы ниже и текущий код; не переносить старые значения между окружениями |
