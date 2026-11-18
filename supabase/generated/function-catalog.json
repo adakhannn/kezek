@@ -854,9 +854,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -872,9 +872,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -890,9 +890,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -908,9 +908,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -926,9 +926,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -944,9 +944,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -2584,9 +2584,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -3437,9 +3437,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
@@ -4237,9 +4237,9 @@
       "config": [],
       "definer": false,
       "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
+        "anon": false,
+        "authenticated": false,
+        "public": false,
         "service_role": true
       },
       "kind": "f",
