@@ -28,7 +28,7 @@
 | `pnpm -C apps/web typecheck` | `tsc -p tsconfig.json --noEmit` внутри web |
 | `pnpm -C apps/web test` | Jest по текущему web config; Playwright E2E исключены |
 | `pnpm -C apps/web test:coverage` | Полный web Jest с coverage по всему `src/**` и порогом-храповиком |
-| `pnpm -C apps/web test:ci:core` | Явно перечисленные lib/finance/notification suites без coverage (быстрая обратная связь) |
+| `pnpm -C apps/web test:ci:core` | Явно перечисленные lib/finance/notification suites без coverage (локальная быстрая обратная связь; в CI их запускает полный `web_full_tests`) |
 | `pnpm -C apps/web test:ci:extended` | Jest только под `src/__tests__/lib` и `src/__tests__/api`, без coverage gate |
 | `pnpm -C apps/mobile typecheck` | TypeScript mobile |
 | `pnpm -C apps/mobile test:runInBand` | Mobile Jest последовательно, без watch |
@@ -58,13 +58,13 @@
 | --- | --- | --- |
 | `lint_typecheck` | Lint (root tooling + apps/web), docs links, offline OpenAPI/SDK generation + typed consumer, shared client build/test typechecks + Jest, SQL runner unit checks, generated cron manifest parity, hotspot guardrails, typecheck web + mobile | Mobile ESLint не подключён; shared-client проверяется отдельными обязательными шагами |
 | `build` | Web production build | Это сборка, не production smoke; при отсутствии Supabase secrets используются build placeholders |
-| `web_core_tests` | `test:ci:core` | Ограниченный список suites, без coverage |
 | `web_full_tests` | Полный web Jest с coverage-храповиком: `test:coverage --ci --watchAll=false --maxWorkers=50%` | Включает components; внешние сервисы остаются mocked |
 | `e2e_smoke_tests` | `test:e2e:smoke` | Страницы sign-in, terms, privacy; lifecycle не проверяется |
 | `e2e_visual_regressions` | `test:e2e:visual` | На main/schedule есть preflight трёх env; остальные условия/skip-sites остаются в specs |
 | `e2e_tests` | `test:e2e:full-seeded` | Job имеет `continue-on-error: true`; не все обязательные env переданы |
 | `db_bootstrap` | `supabase start` + `db reset` с нуля, `check:db-types`, `check:sql-functions`, `check:function-catalog` | Локальный стек в CI: baseline, миграции и seed; не проверяет удалённую БД |
 | `mobile_tests` | `test:runInBand` | Jest smoke, без доказательства реального устройства; mobile typecheck — в `lint_typecheck` |
+| `mobile_build` | Metro-бандлы Android и iOS (`expo export`) на каждом прогоне; на тегах `mobile-*` и `release-*` — сборки EAS | Бандл не подписывается и не запускается на устройстве; без `EXPO_TOKEN` шаги EAS пропускаются |
 | `sql_tests` | Matrix из всех зарегистрированных disposable PostgreSQL suites: mobile/Yandex auth, finance transactions, booking requests, notification outbox, staff-scoped slots, cron execution heartbeat, reporting completeness, shift-close backlog и дополнительные gates из registry | Нет skip по secret; synthetic fixtures не доказывают полную deployed schema или bootstrap |
 | `redis_tests` | Production Lua в disposable Redis7: limiter concurrency/TTL/principal/tenant и shared performance merge/window/histogram/retention | Synthetic локальный Redis не доказывает Upstash deployment/ingress |
 | `security_audit` | `pnpm audit --audit-level=high` | Dependency audit, не проверка ACL/RLS или прикладной безопасности |

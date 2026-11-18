@@ -50,7 +50,7 @@ API-тесты обычно заменяют auth/context, Supabase, уведо�
 
 ## CI и результаты
 
-[Workflow](.github/workflows/ci.yml) вызывает `test:ci:core` без coverage и полный web Jest с coverage в `web_full_tests`, включая components. `test:ci:extended` остаётся доступной локальной выборкой. Это описание конфигурации, не свежая проверка CI. Общие открытые ограничения SQL, E2E и полноты gate перечислены один раз в [TESTING_GUIDE.md](TESTING_GUIDE.md#открытые-ограничения-проверок).
+[Workflow](.github/workflows/ci.yml) запускает полный web Jest с coverage в `web_full_tests`, включая components. `test:ci:core` и `test:ci:extended` остаются локальными выборками: отдельная джоба с `test:ci:core` удалена 19 ноября, потому что повторяла часть того же полного прогона. Это описание конфигурации, не свежая проверка CI. Общие открытые ограничения SQL, E2E и полноты gate перечислены один раз в [TESTING_GUIDE.md](TESTING_GUIDE.md#открытые-ограничения-проверок).
 
 В отчёте указывать scope, exit code, failures и пропуски. Для принятия реальных ролей, RPC и пользовательских переходов использовать соответствующий метод; mocked PASS не переносится автоматически в [WEB ledger](docs/WEB_VERIFICATION_LEDGER.json).
 
