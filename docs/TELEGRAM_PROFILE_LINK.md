@@ -60,7 +60,8 @@ updates: message/callback_query, очередь не сбрасывалась. �
    При смене туннеля обновлять webhook; настройка домена legacy Login Widget этому
    бот-сценарию не нужна.
 4. Пройти ручные сценарии ниже. Только после этого отдельно согласовать production rollout.
-5. Подключить `select public.cleanup_telegram_profile_links()` к ежедневному обслуживанию:
+5. Ежедневная очистка подключена миграцией 20261119020000 (ENG-104): pg_cron-задача
+   `kezek_cleanup_telegram_profile_links` (`17 3 * * *`) вызывает `public.cleanup_telegram_profile_links()`,
    удаляются запросы, истёкшие больше суток назад. Function доступна только service_role.
 
 Откат включения: убрать флаг и перезапустить/пересобрать приложение. Таблицу не удалять,

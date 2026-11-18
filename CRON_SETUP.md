@@ -36,6 +36,8 @@ select vault.create_secret('https://kezek.vercel.app', 'kezek_cron_origin', 'Ori
 | Уведомления о брони | `booking-notifications` | `20 0 * * *` / `*/2 * * * *` | 30 минут, если worker включён |
 | WhatsApp inbox | `whatsapp-inbox` | `30 0 * * *` / `*/2 * * * *` | 30 минут, если worker включён |
 
+Помимо HTTP-заданий pg_cron выполняет SQL-обслуживание без вызова приложения: `purge_expired_holds` (каждую минуту), `cleanup_expired_whatsapp_otp_codes_hourly` (`0 * * * *`, удаляет коды старше суток) и `kezek_cleanup_telegram_profile_links` (`17 3 * * *`, удаляет запросы привязки Telegram, истёкшие больше суток назад). С 18 ноября все они объявлены в миграциях (WhatsApp-задача до этого существовала только в проде, Telegram-очистка не запускалась вовсе — ENG-104).
+
 Asia/Bishkek — UTC+6. Расписание хостинга задано в UTC; границы финансового дня и агрегатов определяются часовым поясом бизнеса. Pro / Enterprise допускают минутное расписание, но вызовы расходуют ресурсы Functions. Vercel не повторяет неуспешный cron автоматически: восстановление должно переживать следующий плановый запуск. [Лимиты Vercel](https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing), [поведение cron](https://vercel.com/docs/schedules/cron-jobs/manage-cron-jobs).
 
 ## Авторизация и журнал выполнения

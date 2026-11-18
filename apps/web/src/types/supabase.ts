@@ -5157,19 +5157,6 @@ export type Database = {
                     "status": Database["public"]['Enums']["booking_status"];
                 }[];
             };
-            "booking_view_public": {
-                Args: {
-                    "p_id": string;
-                };
-                Returns: {
-                    "end_at": string;
-                    "id": string;
-                    "service_name": string;
-                    "staff_name": string;
-                    "start_at": string;
-                    "status": Database["public"]['Enums']["booking_status"];
-                }[];
-            };
             "branch_admins_effective": {
                 Args: {
                     "p_branch_id": string;
@@ -5286,34 +5273,6 @@ export type Database = {
                 };
                 Returns: Json;
             };
-            "claim_booking_notifications": {
-                Args: {
-                    "p_lease_seconds"?: number;
-                    "p_limit"?: number;
-                };
-                Returns: {
-                    "attempts": number;
-                    "available_at": string;
-                    "booking_id": string;
-                    "booking_revision": number;
-                    "completed_at": string | null;
-                    "created_at": string;
-                    "event_type": string;
-                    "id": string;
-                    "last_error_code": string | null;
-                    "lease_token": string | null;
-                    "lease_until": string | null;
-                    "payloads_pruned_at": string | null;
-                    "prepared_at": string | null;
-                    "status": string;
-                }[];
-                SetofOptions: {
-                    from: "*";
-                    to: "booking_notification_outbox";
-                    isOneToOne: false;
-                    isSetofReturn: true;
-                };
-            };
             "claim_overdue_staff_shifts": {
                 Args: {
                     "p_claim_token": string;
@@ -5365,12 +5324,6 @@ export type Database = {
             };
             "cleanup_telegram_profile_links": {
                 Args: Record<PropertyKey, never>;
-                Returns: undefined;
-            };
-            "clear_business_owner": {
-                Args: {
-                    "p_biz_id": string;
-                };
                 Returns: undefined;
             };
             "close_staff_shift_command": {
@@ -5595,14 +5548,6 @@ export type Database = {
                 };
                 Returns: boolean;
             };
-            "exec_grant_owner": {
-                Args: {
-                    "p_biz_id": string;
-                    "p_role_id": string;
-                    "p_user_id": string;
-                };
-                Returns: undefined;
-            };
             "fail_booking_notification_delivery": {
                 Args: {
                     "p_delivery_key": string;
@@ -5676,12 +5621,6 @@ export type Database = {
                     "p_http_status": number;
                     "p_id": string;
                     "p_outcome": string;
-                };
-                Returns: undefined;
-            };
-            "force_delete_business_and_downgrade_owner": {
-                Args: {
-                    "p_biz_id": string;
                 };
                 Returns: undefined;
             };
@@ -5906,23 +5845,6 @@ export type Database = {
                 };
                 Returns: number;
             };
-            "get_failed_api_requests": {
-                Args: {
-                    "p_endpoint"?: string;
-                    "p_limit"?: number;
-                    "p_window_minutes"?: number;
-                };
-                Returns: {
-                    "created_at": string;
-                    "duration_ms": number;
-                    "endpoint": string;
-                    "error_message": string;
-                    "error_type": string;
-                    "id": string;
-                    "method": string;
-                    "status_code": number;
-                }[];
-            };
             "get_free_slots_complex_day_v1": {
                 Args: {
                     "p_biz_id": string;
@@ -6007,22 +5929,6 @@ export type Database = {
                     "verified": boolean;
                 }[];
             };
-            "get_slow_api_requests": {
-                Args: {
-                    "p_endpoint"?: string;
-                    "p_limit"?: number;
-                    "p_threshold_ms"?: number;
-                };
-                Returns: {
-                    "created_at": string;
-                    "duration_ms": number;
-                    "endpoint": string;
-                    "error_message": string;
-                    "id": string;
-                    "method": string;
-                    "status_code": number;
-                }[];
-            };
             "get_staff_finance_stats": {
                 Args: {
                     "p_biz_id": string;
@@ -6054,14 +5960,6 @@ export type Database = {
                 };
                 Returns: undefined;
             };
-            "grant_user_role": {
-                Args: {
-                    "p_biz_id": string;
-                    "p_role_key": string;
-                    "p_user_id": string;
-                };
-                Returns: undefined;
-            };
             "has_branch_admin": {
                 Args: {
                     "p_branch_id": string;
@@ -6069,12 +5967,6 @@ export type Database = {
                 Returns: boolean;
             };
             "has_role": {
-                Args: {
-                    "p_biz_id": string;
-                    "p_roles": (string)[];
-                };
-                Returns: boolean;
-            } | {
                 Args: {
                     "p_biz_id"?: string;
                     "p_role_key": string;
@@ -6140,13 +6032,6 @@ export type Database = {
                 };
                 Returns: undefined;
             };
-            "initialize_shift_aggregates": {
-                Args: {
-                    "p_biz_id"?: string;
-                    "p_staff_id"?: string;
-                };
-                Returns: number;
-            };
             "is_super_admin": {
                 Args: Record<PropertyKey, never>;
                 Returns: boolean;
@@ -6189,18 +6074,6 @@ export type Database = {
                 };
                 Returns: string;
             };
-            "log_frontend_metric": {
-                Args: {
-                    "p_ip_address"?: unknown;
-                    "p_metric_data": Json;
-                    "p_metric_type": string;
-                    "p_page"?: string;
-                    "p_timestamp"?: string;
-                    "p_user_agent"?: string;
-                    "p_user_id"?: string;
-                };
-                Returns: string;
-            };
             "longtransactionsenabled": {
                 Args: Record<PropertyKey, never>;
                 Returns: boolean;
@@ -6231,18 +6104,6 @@ export type Database = {
                 Returns: (string)[];
             };
             "open_staff_shift_safe": {
-                Args: {
-                    "p_biz_id": string;
-                    "p_branch_id": string;
-                    "p_expected_start"?: string;
-                    "p_late_minutes"?: number;
-                    "p_opened_at": string;
-                    "p_shift_date": string;
-                    "p_staff_id": string;
-                };
-                Returns: Json;
-            };
-            "open_staff_shift_safe_impl_20261109": {
                 Args: {
                     "p_biz_id": string;
                     "p_branch_id": string;
@@ -6713,26 +6574,11 @@ export type Database = {
                 };
                 Returns: undefined;
             };
-            "revoke_user_role": {
-                Args: {
-                    "p_biz_id": string;
-                    "p_role_key": string;
-                    "p_user_id": string;
-                };
-                Returns: undefined;
-            };
             "role_id": {
                 Args: {
                     "p_key": string;
                 };
                 Returns: string;
-            };
-            "rule_branch_is_not_home": {
-                Args: {
-                    "p_branch_id": string;
-                    "p_staff_id": string;
-                };
-                Returns: boolean;
             };
             "save_shift_items_atomic": {
                 Args: {

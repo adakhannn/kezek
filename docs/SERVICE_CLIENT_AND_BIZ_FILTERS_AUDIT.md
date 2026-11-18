@@ -102,7 +102,7 @@
 |------|----------|------------|
 | `api/users/search/route.tsx` | getBizContextForManagers → bizId | `.eq('biz_id', bizId)` (staff) |
 | `api/funnel-events/route.ts` | Публичный: biz_id из тела запроса (валидация zod) | Запись аналитики; biz_id приходит от клиента (страница бронирования), проверка принадлежности к пользователю не требуется. |
-| `api/metrics/frontend/route.ts` | Нет контекста бизнеса | RPC `log_frontend_metric`: системные метрики (Core Web Vitals, page load); не привязаны к biz_id. |
+| `api/metrics/frontend/route.ts` | Нет контекста бизнеса | Системные метрики (Core Web Vitals, page load) в Redis-агрегаты, без biz_id; прежний RPC `log_frontend_metric` не вызывался и удалён (ENG-104). |
 | `api/webhooks/whatsapp/route.ts` | bizId из бронирований/профиля (не из сессии пользователя) | Работа с бронированиями по их biz_id; не контекст менеджера. |
 
 ---
