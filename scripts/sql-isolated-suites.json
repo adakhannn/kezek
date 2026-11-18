@@ -33,5 +33,6 @@
   "test-admin-user-directory-isolated.cjs",
   "test-dashboard-bookings-page-isolated.cjs",
   "test-maintenance-scan-indexes-isolated.cjs",
-  "test-release-auth-phone-isolated.cjs"
+  "test-release-auth-phone-isolated.cjs",
+  "test-analytics-ingest-guards-isolated.cjs"
 ]

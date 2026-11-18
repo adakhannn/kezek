@@ -46,7 +46,7 @@
 | API-06 | P1 | Привязка сотрудника к чужому аккаунту без согласия (по UUID/email/телефону); поиск ограничен 200 пользователями | `staffCreateFromUserService.ts` и др. | TODO |
 | API-07 | P1 | Шаблоны уведомлений не экранируют `client_name` (HTML в письмах, Telegram `parse_mode: HTML`) | `messageBuilders.ts`, `utils.ts` | FIXED |
 | API-08 | P2 | Защита «подтверждённых» email уведомлений обходится через редактируемый `user_metadata.yandex_email` | `userNotificationEmailService.ts` | FIXED |
-| API-09 | P2 | Приём аналитики без лимитов и привязки к сессии (`/api/funnel-events`, `/admin/api/analytics/track`) | `funnelEventsService.ts` | TODO |
+| API-09 | P2 | Приём аналитики без лимитов и привязки к сессии (`/api/funnel-events`, `/admin/api/analytics/track`) | `funnelEventsService.ts` | FIXED |
 | API-10 | P2 | Отвязка WhatsApp оставляет номер в `auth.users.phone`/metadata | `socialIdentityUnlinkService` | FIXED |
 | API-11 | P2 | Продажа пакетов визитов без идемпотентности; даты по UTC вместо времени бизнеса | `visitPackagesService.ts` | TODO |
 | API-12 | P3 | POST на несуществующий путь отвечает 200 со страницей «не найдено» (GET — 404): клиент API получает HTML вместо JSON-ошибки | not-found Next.js | FIXED |
@@ -106,7 +106,7 @@
 | CI-06 | P2 | `pnpm test` пишет в ту БД, на которую указывает (`tests_critical_scenarios.sql`) | `package.json` | FIXED |
 | CI-07 | P2 | В репозитории лежит скрипт очистки прода `manual_reset_test_data_keep_superadmin.sql` | `scripts/` | FIXED |
 | CI-08 | P2 | `mobile_build` никогда не запускается; дубли джоб | `ci.yml` | TODO |
-| CI-09 | P3 | Аналитика mobile принимается как анонимная (только cookie) | `admin/api/analytics/track` | TODO |
+| CI-09 | P3 | Аналитика mobile принимается как анонимная (только cookie) | `admin/api/analytics/track` | FIXED |
 
 ## Выкладка 18 ноября
 
@@ -151,5 +151,7 @@ CI-01 закрыт частично как ENG-89: все изолированн
 API-10 закрыт как ENG-91: миграция `20261118210000_release_auth_phone.sql` применена в проде раньше выкладки кода.
 
 FE-12 закрыт как ENG-92 (только код).
+
+API-09 и CI-09 закрыты как ENG-93: миграция `20261118220000_analytics_ingest_guards.sql` применена в проде после выкладки кода.
 
 Дальше по порядку: P1 — API-06, ARCH-02, ARCH-04, CI-01.

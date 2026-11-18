@@ -224,6 +224,8 @@ export const RateLimitConfigs = {
     auth: { maxRequests: 5, windowMs: 15 * 60000 },
     // Shared NAT admission for authenticated mutations; principal budgets remain 5/30.
     authenticatedIngress: { maxRequests: 600, windowMs: 60000 },
+    // Analytics beacons: several per booking step, often behind shared mobile NAT (API-09).
+    telemetry: { maxRequests: 120, windowMs: 60000 },
 } as const;
 
 export function routeRateLimit(routeId: string, baseConfig: RateLimitConfig, overrides?: Partial<RateLimitConfig>): RateLimitConfig {

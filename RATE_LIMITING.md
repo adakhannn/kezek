@@ -21,6 +21,7 @@ withRateLimit(req, RateLimitConfigs.normal, handler, '/api/example/[id]');
 | `normal` | 30 | 60 секунд | Обычные действия и отдельные telemetry routes |
 | `auth` | 5 | 15 минут | Выбранные auth actions |
 | `authenticatedIngress` | 600 | 60 секунд | Предварительный IP budget четырёх финансовых mutations ниже |
+| `telemetry` | 120 | 60 секунд | Публичные analytics beacons: `/api/funnel-events`, `/admin/api/analytics/track` (API-09) |
 
 Методы и маршруты изолированы: telemetry не расходует budget auth или finance. Это не означает, что каждый endpoint проекта уже имеет limiter.
 

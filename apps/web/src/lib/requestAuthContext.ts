@@ -64,3 +64,27 @@ export async function resolveRequestAuthContext(
 
     return { supabase, user, authSource: 'cookie' };
 }
+
+/**
+ * The signed-in caller of a public endpoint, or null (anonymous; never a 401). A mobile Bearer
+ * token and the web session cookie both identify the caller (API-09, CI-09: mobile beacons were
+ * stored as anonymous because only cookies were read).
+ */
+export async function resolveOptionalRequestUser(req: Request): Promise<User | null> {
+    try {
+        const header = req.headers.get('Authorization') ?? '';
+        if (/^Bearer [^.s]+.[^.s]+.[^.s]+$/.test(header)) {
+            const supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+                global: { headers: { Authorization: header } },
+                auth: { persistSession: false, autoRefreshToken: false },
+            });
+            const { data, error } = await supabase.auth.getUser();
+            return error ? null : data.user ?? null;
+        }
+        const supabase = await createSupabaseServerClient();
+        const { data, error } = await supabase.auth.getUser();
+        return error ? null : data.user ?? null;
+    } catch {
+        return null;
+    }
+}

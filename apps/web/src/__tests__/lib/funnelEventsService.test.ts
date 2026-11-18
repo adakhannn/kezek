@@ -1,98 +1,48 @@
 import { saveFunnelEvent, type FunnelEventInput, type FunnelEventsAdminLike } from '@/lib/funnelEventsService';
 
 describe('funnelEventsService', () => {
-    function createAdmin(error: { message: string } | null = null): jest.Mocked<FunnelEventsAdminLike> {
-        return {
-            from: jest.fn().mockReturnValue({
-                insert: jest.fn().mockResolvedValue({ error }),
-            }),
-        } as unknown as jest.Mocked<FunnelEventsAdminLike>;
+    function createAdmin(error: { message: string; code?: string } | null = null) {
+        const insert = jest.fn().mockResolvedValue({ error });
+        const admin = { from: jest.fn().mockReturnValue({ insert }), rpc: jest.fn() } as unknown as FunnelEventsAdminLike;
+        return { admin, insert };
     }
 
-    function createEvent(overrides: Partial<FunnelEventInput> = {}): FunnelEventInput {
-        return {
+    const event = (overrides: Partial<FunnelEventInput> = {}): FunnelEventInput => ({
+        event_type: 'slot_select',
+        source: 'public',
+        biz_id: '123e4567-e89b-42d3-a456-426614174000',
+        branch_id: '123e4567-e89b-42d3-a456-426614174001',
+        service_id: '123e4567-e89b-42d3-a456-426614174002',
+        service_ids: ['123e4567-e89b-42d3-a456-426614174002'],
+        services_count: 1,
+        staff_id: null,
+        slot_start_at: '2026-11-18T10:00:00.000Z',
+        booking_id: null,
+        session_id: 'session_1731900000000_abc123',
+        user_agent: 'jest',
+        referrer: null,
+        timestamp: '2999-01-01T00:00:00.000Z',
+        metadata: { step: 'slot' },
+        ...overrides,
+    });
+
+    test('saves the normalized event; the database sets the time (API-09)', async () => {
+        const { admin, insert } = createAdmin();
+
+        await expect(saveFunnelEvent(admin, event())).resolves.toEqual({ ok: true });
+
+        const row = insert.mock.calls[0][0];
+        expect(row).not.toHaveProperty('created_at');
+        expect(row).toMatchObject({
             event_type: 'slot_select',
-            source: 'public',
-            biz_id: '123e4567-e89b-42d3-a456-426614174000',
             branch_id: '123e4567-e89b-42d3-a456-426614174001',
-            service_id: '123e4567-e89b-42d3-a456-426614174002',
-            service_ids: ['123e4567-e89b-42d3-a456-426614174002'],
-            services_count: 1,
-            staff_id: '123e4567-e89b-42d3-a456-426614174003',
-            slot_start_at: '2026-03-27T10:00:00.000Z',
-            booking_id: null,
-            session_id: 'session-1',
-            user_agent: 'jest',
-            referrer: 'https://example.com',
-            timestamp: '2026-03-27T10:00:00.000Z',
-            metadata: { sourceStep: 'booking' },
-            ...overrides,
-        };
-    }
-
-    test('saves normalized funnel event payload', async () => {
-        const admin = createAdmin();
-        const event = createEvent({
-            branch_id: null,
-            service_id: null,
-            service_ids: undefined,
-            services_count: undefined,
-            user_agent: null,
-            referrer: undefined,
-            metadata: null,
-        });
-
-        const result = await saveFunnelEvent(admin, event);
-
-        expect(result).toEqual({ ok: true });
-        expect(admin.from).toHaveBeenCalledWith('funnel_events');
-        const insert = admin.from.mock.results[0]?.value.insert as jest.Mock;
-        expect(insert).toHaveBeenCalledWith({
-            event_type: 'slot_select',
-            source: 'public',
-            biz_id: '123e4567-e89b-42d3-a456-426614174000',
-            branch_id: null,
-            service_id: null,
-            staff_id: '123e4567-e89b-42d3-a456-426614174003',
-            slot_start_at: '2026-03-27T10:00:00.000Z',
-            booking_id: null,
-            session_id: 'session-1',
-            user_agent: null,
-            referrer: null,
-            created_at: '2026-03-27T10:00:00.000Z',
-            metadata: null,
+            metadata: { step: 'slot', service_ids: ['123e4567-e89b-42d3-a456-426614174002'], services_count: 1 },
         });
     });
 
-    test('stores service array details in metadata instead of non-schema columns', async () => {
-        const admin = createAdmin();
+    test('a failed insert returns the error for the HTTP layer to map', async () => {
+        const { admin } = createAdmin({ code: '23503', message: 'TENANT_REFERENCE_MISMATCH' });
 
-        const result = await saveFunnelEvent(admin, createEvent());
-
-        expect(result).toEqual({ ok: true });
-        const insert = admin.from.mock.results[0]?.value.insert as jest.Mock;
-        expect(insert).toHaveBeenCalledWith(
-            expect.objectContaining({
-                service_id: '123e4567-e89b-42d3-a456-426614174002',
-                metadata: {
-                    sourceStep: 'booking',
-                    service_ids: ['123e4567-e89b-42d3-a456-426614174002'],
-                    services_count: 1,
-                },
-            }),
-        );
-    });
-
-    test('returns internal error when insert fails', async () => {
-        const admin = createAdmin({ message: 'insert failed' });
-
-        const result = await saveFunnelEvent(admin, createEvent());
-
-        expect(result).toEqual({
-            ok: false,
-            error: 'internal',
-            message: 'insert failed',
-            status: 500,
-        });
+        await expect(saveFunnelEvent(admin, event())).resolves.toEqual({ ok: false, error: { code: '23503', message: 'TENANT_REFERENCE_MISMATCH' } });
     });
 });

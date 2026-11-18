@@ -425,6 +425,7 @@ jobs:
           - test-dashboard-bookings-page-isolated.cjs
           - test-maintenance-scan-indexes-isolated.cjs
           - test-release-auth-phone-isolated.cjs
+          - test-analytics-ingest-guards-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
