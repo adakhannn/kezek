@@ -100,7 +100,7 @@
 | MOB-07 | P2 | Нет crash reporting в mobile | — | TODO |
 | CI-01 | P1 | SQL-наборы тестируют устаревшие версии функций (миграции загружаются не до конца), PG16 вместо 17 | `scripts/test-*.mjs` | FIXED |
 | CI-02 | P2 | Линт почти ничего не проверяет (корневой конфиг без правил, у mobile нет lint) | `eslint.config.mjs` | TODO |
-| CI-03 | P2 | Тесты `packages/core-domain` и 10 SQL-скриптов не запускаются | CI | TODO (legacy SQL scenarios: сценарий 2 обращается к удалённой `public.clients`) |
+| CI-03 | P2 | Тесты `packages/core-domain` и 10 SQL-скриптов не запускаются | CI | TODO (тесты `core-domain` в CI — ENG-116; осталось: 10 SQL-скриптов на PGlite и устаревшие сценарии `tests_critical_scenarios.sql`) |
 | CI-04 | P2 | Моки Supabase не проверяют фильтры `biz_id`; `setupApiTestMocks` мокает после импорта | `__tests__/api/testHelpers.ts` | TODO |
 | CI-05 | P2 | E2E-спеки в основном ничего не проверяют; visual-тест без эталонов не может пройти (джобы `e2e_tests` и `e2e_visual_regressions` красные) | `e2e/` | TODO |
 | CI-06 | P2 | `pnpm test` пишет в ту БД, на которую указывает (`tests_critical_scenarios.sql`) | `package.json` | FIXED |

@@ -61,6 +61,9 @@ jobs:
       - name: Check SQL runner failure propagation
         run: node --test scripts/sql-runner.test.mjs scripts/isolated-sql-runner.test.mjs scripts/live-schema.test.mjs scripts/sql-suite-parity.test.mjs
 
+      - name: Core domain tests (booking, finance, schedule rules shared by web and mobile)
+        run: pnpm -C packages/core-domain exec jest --ci
+
       - name: Check generated cron manifests
         run: pnpm check:crons
 
