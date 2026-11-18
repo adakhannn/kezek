@@ -14,7 +14,16 @@ export type ApiClientConfig = {
     baseUrl: string;
     getAuthToken?: () => Promise<string | null>;
     onError?: (error: ApiError) => void;
+    /** Milliseconds before a request is abandoned (default DEFAULT_API_TIMEOUT_MS). */
+    timeoutMs?: number;
 };
+
+/**
+ * A request without an answer is abandoned after 30 s: longer than the server's own deadlines
+ * (booking commands 10 s, Vercel functions up to 30 s), so a slow success is not cut off, but a
+ * dead connection no longer leaves the app waiting forever (MOB-03).
+ */
+export const DEFAULT_API_TIMEOUT_MS = 30_000;
 
 /**
  * Ошибка API запроса
@@ -38,6 +47,7 @@ export class ApiError extends Error {
  */
 export type ApiRequestOptions = RequestInit & {
     skipAuth?: boolean; // Пропустить добавление токена авторизации
+    timeoutMs?: number; // Таймаут этого запроса вместо таймаута клиента
 };
 
 /**
@@ -45,6 +55,7 @@ export type ApiRequestOptions = RequestInit & {
  */
 export function createApiClient(config: ApiClientConfig) {
     const { baseUrl, getAuthToken, onError } = config;
+    const clientTimeoutMs = config.timeoutMs ?? DEFAULT_API_TIMEOUT_MS;
 
     /**
      * Выполняет API запрос с автоматической обработкой ошибок и авторизацией
@@ -65,6 +76,21 @@ export function createApiClient(config: ApiClientConfig) {
             }
         }
         
+        // One controller per request: aborted by the timeout or by the caller's own signal.
+        const timeoutMs = options.timeoutMs ?? clientTimeoutMs;
+        const controller = new AbortController();
+        const callerSignal = options.signal ?? null;
+        const abortFromCaller = () => controller.abort();
+        if (callerSignal) {
+            if (callerSignal.aborted) controller.abort();
+            else callerSignal.addEventListener('abort', abortFromCaller);
+        }
+        let timedOut = false;
+        const timer = setTimeout(() => {
+            timedOut = true;
+            controller.abort();
+        }, timeoutMs);
+
         try {
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
@@ -93,6 +119,7 @@ export function createApiClient(config: ApiClientConfig) {
             const response = await fetch(url, {
                 ...options,
                 headers,
+                signal: controller.signal,
             });
 
             if (!response.ok) {
@@ -167,6 +194,18 @@ export function createApiClient(config: ApiClientConfig) {
             if (error instanceof ApiError) {
                 throw error;
             }
+
+            if (timedOut) {
+                const timeoutError = new ApiError(
+                    'Сервер не ответил вовремя. Проверьте соединение и попробуйте снова',
+                    undefined,
+                    { code: 'timeout', timeoutMs },
+                );
+                if (onError) {
+                    onError(timeoutError);
+                }
+                throw timeoutError;
+            }
             
             // Если это сетевая ошибка
             if (error instanceof Error) {
@@ -197,6 +236,9 @@ export function createApiClient(config: ApiClientConfig) {
                 onError(apiError);
             }
             throw apiError;
+        } finally {
+            clearTimeout(timer);
+            callerSignal?.removeEventListener('abort', abortFromCaller);
         }
     }
 
