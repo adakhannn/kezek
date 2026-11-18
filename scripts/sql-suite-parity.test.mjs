@@ -21,7 +21,8 @@ test('every registered suite compares its functions with the migration chain und
     for (const suite of suites) {
         const source = read(suite);
         assert.match(source, /require\('\.\/lib\/live-schema\.cjs'\)|from '\.\/lib\/live-schema\.cjs'/, `${suite} imports live-schema`);
-        assert.ok(source.includes(`assertLiveFunctions(sql, { suite: '${suite}'`), `${suite} calls assertLiveFunctions with its own name`);
+        const call = new RegExp(`assertLiveFunctions\\(sql,\\s*\\{\\s*suite:\\s*'${suite.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`);
+        assert.match(source, call, `${suite} calls assertLiveFunctions with its own name`);
     }
 });
 

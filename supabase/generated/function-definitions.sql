@@ -121,6 +121,28 @@ end;
 $function$
 ;
 
+-- signature: private.viewer_booked_branch(uuid)
+CREATE OR REPLACE FUNCTION private.viewer_booked_branch(p_branch_id uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+    select exists (select 1 from public.bookings b where b.branch_id = p_branch_id and b.client_id = auth.uid());
+$function$
+;
+
+-- signature: private.viewer_booked_staff(uuid)
+CREATE OR REPLACE FUNCTION private.viewer_booked_staff(p_staff_id uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+    select exists (select 1 from public.bookings b where b.staff_id = p_staff_id and b.client_id = auth.uid());
+$function$
+;
+
 -- signature: public._assert_booking_transition_access(uuid)
 CREATE OR REPLACE FUNCTION public._assert_booking_transition_access(p_booking_id uuid)
  RETURNS public.bookings
