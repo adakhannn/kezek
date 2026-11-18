@@ -9,6 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -141,6 +142,7 @@ let created = false;
             or has_table_privilege('authenticated', 'public.user_notification_email_sources', 'INSERT')
             or has_function_privilege('authenticated', 'public.sync_user_notification_email(uuid,text,text,text)', 'execute')`), 'f');
 
+        await assertLiveFunctions(sql, { suite: 'test-notification-email-proven-sources-isolated.cjs' });
         console.log('notification email proven sources: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

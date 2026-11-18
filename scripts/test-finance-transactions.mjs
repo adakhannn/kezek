@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, day, asActor } from './lib/finance-transaction-fixture.mjs';
 import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
 const container=`kezek-finance-test-${randomUUID()}`;
 function docker(args,input='') {
  return new Promise((resolve,reject)=>{
@@ -140,5 +141,6 @@ try {
  await race(createCommand,createCommand,/SHIFT_STALE/);
  assert.equal(await sql(`select count(*) from staff_shifts where staff_id='${ids.staff}' and shift_date='2026-10-15'`),'1');
  console.log('PASS absent-shift create/create overlap, required revision and canonical acknowledgement');
+ await assertLiveFunctions(sql, { suite: 'test-finance-transactions.mjs' });
  console.log('PASS all isolated finance transaction regressions');
 } finally { if(created) await docker(['rm','--force',container]); }

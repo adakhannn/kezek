@@ -5,6 +5,7 @@ const { randomUUID } = require('node:crypto');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-platform-admin-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -97,6 +98,7 @@ const eventually=async(predicate)=>{for(let n=0;n<300;n++){if(predicate())return
   assert.equal(sql(command(A,B,false)),'f');
   sql(`insert into super_admins_legacy values('${A}'); update roles set scope='business' where id='${role}';`);
   fail(command(A,C,true),/PLATFORM_ADMIN_ROLE_NOT_CONFIGURED/);
+  await assertLiveFunctions(sql, { suite: 'test-platform-admin-commands-isolated.cjs' });
   console.log('PASS isolated platform admin: real three-store predicate, caller binding, service ACL, canonical idempotent grant, atomic all-store revoke/rollback, preserved tenant roles, missing target/config and serialized last-admin guard. No Auth/provider calls.');
  }finally{if(!/^kezek-platform-admin-[0-9a-f-]{36}$/.test(name))throw Error('Invalid container');run(['rm','-f','-v',name],undefined,true);}
 })().catch(error=>{console.error(error.stack);process.exitCode=1;});

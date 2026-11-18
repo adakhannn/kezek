@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor } from './lib/finance-transaction-fixture.mjs';
 import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
 const container=`kezek-reporting-test-${randomUUID()}`;
 function docker(args,input='') { return new Promise((resolve,reject)=>{
  const p=spawn('docker',args,{windowsHide:true});let out='',err='';
@@ -179,5 +180,6 @@ try {
  assert.equal(await sql(`select count(*) from business_hourly_load where date='2026-11-01'`),'0');
  assert.equal(await sql(`select count(*) from business_hourly_load where date='2026-03-08'`),'2');
  console.log('PASS dependency/write failures rollback, invalid timezone rejection and stale/zero buckets after cancel/delete');
+ await assertLiveFunctions(sql, { suite: 'test-reporting-completeness.mjs' });
  console.log('PASS all isolated reporting completeness regressions');
 } finally { if(created) await docker(['rm','--force',container]); }

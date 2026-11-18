@@ -5,6 +5,7 @@ const path=require('node:path');
 const {spawn}=require('node:child_process');
 const {randomUUID}=require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const container=`kezek-cron-test-${randomUUID()}`;
 const docker=(args,input='')=>new Promise((resolve,reject)=>{
  const child=spawn('docker',args,{windowsHide:true});let out='',err='';
@@ -41,6 +42,7 @@ let created=false;
     set role service_role;select start_cron_execution('${randomUUID()}','close-shifts');`);
   assert.equal(await sql(`select outcome||':'||error_code from cron_executions where id='${abandoned}'`),'failed:execution_expired');
   assert.equal(await sql("select count(*) from cron_executions where job='old-job'"),'50');
+  await assertLiveFunctions(sql, { suite: 'test-cron-execution-isolated.cjs' });
   console.log('PASS cron: concurrent idempotent starts, independent overlapping receipts, failure persistence, invalid transitions, ACL, bounded retention, abandoned-run recovery');
  }finally{if(created){await docker(['rm','--force',container]);console.log('Removed owned isolated cron container');}}
 })().catch(error=>{console.error(error.message);process.exitCode=1;});

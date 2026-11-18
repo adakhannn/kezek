@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-internal-tables-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -104,6 +105,7 @@ let created = false;
         assert.equal(await asRole('authenticated', superAdmin, 'select count(*) from public.super_admins_legacy'), '1');
         await assert.rejects(asRole('anon', otherUser, 'select count(*) from public.super_admins_legacy'), /permission denied/);
 
+        await assertLiveFunctions(sql, { suite: 'test-internal-tables-access-isolated.cjs' });
         console.log('internal tables access: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

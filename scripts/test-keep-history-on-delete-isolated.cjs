@@ -9,6 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -191,6 +192,7 @@ async function seedBusiness() {
             await assert.rejects(sql(`set role ${role}; delete from public.client_visit_packages`), /permission denied for table client_visit_packages/);
         }
 
+        await assertLiveFunctions(sql, { suite: 'test-keep-history-on-delete-isolated.cjs' });
         console.log('keep history on delete: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

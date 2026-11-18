@@ -10,6 +10,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migration = fs.readFileSync(
     path.join(__dirname, '..', 'supabase', 'migrations', '20261118235000_value_range_checks.sql'),
@@ -150,6 +151,7 @@ let created = false;
         assert.equal(await sql(`select provolatile::text from pg_proc where oid = 'private.is_valid_time_zone(text)'::regprocedure`), 'i');
         assert.equal(await sql(`select count(*) from pg_constraint where contype = 'c' and not convalidated and conrelid::regclass::text like 'public.%'`), '0');
 
+        await assertLiveFunctions(sql, { suite: 'test-value-range-checks-isolated.cjs' });
         console.log('Value range checks (DB-16): bad values refused for every role, edges allowed, migration refuses over bad rows.');
     } finally {
         if (created) await docker(['rm', '-f', container]).catch(() => {});

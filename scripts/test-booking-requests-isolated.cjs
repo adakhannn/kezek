@@ -7,6 +7,7 @@ const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-booking-regression-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -416,6 +417,7 @@ const expectFailure = (statement, pattern) => {
     }
     assert.equal(sql(`set role service_role;select count(*) from booking_view_public('${first.booking_id}');`),'1');
     assert.equal(sql(`set role service_role;select count(*) from get_free_slots_service_day('${biz}','${service}','2039-01-01',3,15,'Asia/Bishkek');`),'0');
+    await assertLiveFunctions(sql, { suite: 'test-booking-requests-isolated.cjs' });
     console.log('PASS isolated PostgreSQL: guest/auth/internal single/complex parallel replay; explicit actor distinct from client/no JWT mutation; namespace/legacy receipt replay; caller/proof/payload binding; competing keys; rollback/outbox; direct RPC and table/column DML denied; private helper ACL; own-client/owner/manager/active staff/branch/platform/service lifecycle; financial cancellation guards; cross-tenant/other-branch/anonymous/role-spoof rejection. Real booking/outbox/authorization SQL, synthetic schedule and records, no external services.');
   } finally {
     if (!/^kezek-booking-regression-[0-9a-f-]{36}$/.test(name)) throw new Error('Invalid disposable name');

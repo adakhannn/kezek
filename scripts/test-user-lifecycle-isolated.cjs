@@ -6,6 +6,7 @@ const { randomUUID, createHmac } = require('node:crypto');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const name = 'kezek-lifecycle-' + randomUUID();
 const db = name + '-db', auth = name + '-auth', rest = name + '-rest';
 const secret = 'isolated-lifecycle-only-secret-at-least-32-characters';
@@ -177,6 +178,7 @@ const created = [];
     assert.equal(sql(`select count(*) from auth.users where id='${due}'`),'0','due self-deletion compatibility');
     sql(`insert into account_deletion_requests values('${admin}','pending',now()-interval '1 day');`);
     fails(`delete from auth.users where id='${admin}';`,/USER_LIFECYCLE_DELETION_BLOCKED/);
+    await assertLiveFunctions(sql, { suite: 'test-user-lifecycle-isolated.cjs' });
     console.log('PASS ENG-31 real Auth/PostgREST lifecycle, rollback, retained history, revocation, replay, ACL and stale command fencing');
   } finally {
     for (const container of created.reverse()) {

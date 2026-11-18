@@ -1,0 +1,4284 @@
+{
+  "serverVersionMajor": 17,
+  "dropped": [
+    "public.apply_promotion_to_booking_impl_20261109",
+    "public.assign_business_owner",
+    "public.booking_view_public",
+    "public.branches_sync_lat_lon_from_coords",
+    "public.claim_booking_notifications",
+    "public.clear_business_owner",
+    "public.delete_business_cascade",
+    "public.dev_become_superadmin",
+    "public.exec_grant_owner",
+    "public.force_delete_business_and_downgrade_owner",
+    "public.get_failed_api_requests",
+    "public.get_slow_api_requests",
+    "public.grant_role",
+    "public.grant_role_rpc",
+    "public.grant_user_role",
+    "public.initialize_shift_aggregates",
+    "public.log_frontend_metric",
+    "public.open_staff_shift_safe_impl_20261109",
+    "public.purge_user",
+    "public.revoke_role",
+    "public.revoke_role_rpc",
+    "public.revoke_user_role",
+    "public.rule_branch_is_not_home"
+  ],
+  "functions": {
+    "private.call_cron_endpoint(text)": {
+      "arguments": "p_path text",
+      "body": "cbb41c2c0dcc1503ec5b18d926b401a8",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "bigint",
+      "strict": false,
+      "volatility": "v"
+    },
+    "private.is_valid_time_zone(text)": {
+      "arguments": "p_tz text",
+      "body": "4d103365b841ccf930a5f479d8e0e7b3",
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": true,
+      "volatility": "i"
+    },
+    "private.reject_spatial_ref_sys_change()": {
+      "arguments": "",
+      "body": "6937971e0ba9080882a6d0fc86c94f31",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "private.service_staff_same_business()": {
+      "arguments": "",
+      "body": "9f33e8586bb7226f122c4bf6eb8c2171",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "private.tenant_reference_guard()": {
+      "arguments": "",
+      "body": "7df9827645410b31eb7ac2a3ccfb2065",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._assert_booking_transition_access(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "7414181d76b39c5f0ea6a1cc379d1cd3",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "public.bookings",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._assert_internal_booking_access(uuid,uuid,uuid)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_staff_id uuid",
+      "body": "e061fd60800bf1a98ed3f00151e76ee9",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._claim_booking_notifications(integer,integer,uuid[])": {
+      "arguments": "p_limit integer, p_lease_seconds integer, p_exclude_ids uuid[]",
+      "body": "6b64024b846015bf78321515a1910861",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "SETOF public.booking_notification_outbox",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._confirm_booking_transition(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "ff3186bed4a6e02d865cfa6a7b02aa92",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._confirm_created_booking(uuid,uuid)": {
+      "arguments": "p_booking_id uuid, p_actor_id uuid",
+      "body": "87f256967d00b767a75ebdda250d4e55",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._hold_complex_slot_for_actor(uuid,uuid,uuid,timestamp with time zone,jsonb,uuid)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_staff_id uuid, p_start timestamp with time zone, p_services jsonb, p_actor_id uuid",
+      "body": "d0ba362e39b7878792760638df1503cb",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._hold_slot_for_actor(uuid,uuid,uuid,uuid,timestamp with time zone,uuid)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_service_id uuid, p_staff_id uuid, p_start timestamp with time zone, p_actor_id uuid",
+      "body": "9770f3b021cff60214b64c7ba246aaa9",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._internal_booking_actor_allowed(uuid,uuid,uuid,uuid)": {
+      "arguments": "p_actor uuid, p_biz uuid, p_branch uuid, p_staff uuid",
+      "body": "45ab620c428568957950515ee446cb1f",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public._locked_whatsapp_inbox(uuid,uuid)": {
+      "arguments": "p_id uuid, p_token uuid",
+      "body": "1a0d3560037883d125c9a17d19db7dae",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "public.whatsapp_inbox",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._require_whatsapp_inbox_service()": {
+      "arguments": "",
+      "body": "80238ed4c383f50b2ec479866a146bb1",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public._staff_performs_service(uuid,uuid,uuid)": {
+      "arguments": "p_staff_id uuid, p_service_id uuid, p_branch_id uuid",
+      "body": "0efa919af92c853a7cb58b3cfd9878b5",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.adjust_closed_shift_hours_command(uuid,uuid,uuid,bigint,numeric,jsonb)": {
+      "arguments": "p_shift_id uuid, p_biz_id uuid, p_actor_id uuid, p_expected_revision bigint, p_hours_worked numeric, p_calculation jsonb",
+      "body": "a600b6c8fda53d37f84dc5b0d8d56c2b",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.admin_list_users(uuid,text,text,integer,integer)": {
+      "arguments": "p_actor_id uuid, p_q text DEFAULT NULL::text, p_status text DEFAULT 'all'::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0",
+      "body": "0ae63d4a36ae17ae867f87fe49e18aa7",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.admin_user_stats(uuid)": {
+      "arguments": "p_actor_id uuid",
+      "body": "a3142153ba715a43b5e25ece11e1fdef",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.anonymize_inactive_profiles_pii(integer)": {
+      "arguments": "p_inactive_days integer DEFAULT 1095",
+      "body": "8f565b4c2f675409cb77d08a7bd4093c",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.anonymize_old_bookings_pii(integer)": {
+      "arguments": "p_older_than_days integer DEFAULT 2555",
+      "body": "01e36f34cfa1d9017280f6d85d9dea07",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.apply_promotion_to_booking(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "9cbb790a8385623e6e2b41015bf3ed3c",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.apply_registration_links_to_first_branch()": {
+      "arguments": "",
+      "body": "d720fb826208f937eb8d04e171dbc675",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.apply_visit_package_to_booking(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "c117bc40d2de621c9e02ee6448bf345e",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.apply_visit_package_to_booking_impl_20261109(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "95d7034794771cf5063eb2c9a6e5803a",
+      "config": [],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.approve_staff_application(uuid,uuid,uuid,boolean)": {
+      "arguments": "p_application_id uuid, p_reviewer_user_id uuid, p_branch_id uuid, p_is_active boolean DEFAULT true",
+      "body": "2334e43780b71e8fc1477f4bb9dc2ffd",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(staff_id uuid, biz_id uuid, branch_id uuid)",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.assert_booking_finance_access(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "63c7af022aed8e6a4c22f5d07533afab",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.assert_finance_access(uuid,uuid,uuid)": {
+      "arguments": "p_biz_id uuid, p_staff_id uuid DEFAULT NULL::uuid, p_actor_id uuid DEFAULT NULL::uuid",
+      "body": "3887a1e88e1d00f9e3ab5a0a18d810cd",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.audit_business_creation()": {
+      "arguments": "",
+      "body": "1717ebe6cb10bad681528fdcc7b99006",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.begin_booking_notification_delivery(uuid,uuid,text)": {
+      "arguments": "p_event_id uuid, p_lease_token uuid, p_delivery_key text",
+      "body": "f665afd587ea8f367e7b9051e6670ce3",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "text",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.begin_whatsapp_inbox_reply(uuid,uuid)": {
+      "arguments": "p_id uuid, p_token uuid",
+      "body": "a9c7da8979ec3fddc1e37afbd7a4703c",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.booking_notification_backlog_health()": {
+      "arguments": "",
+      "body": "214d1facaed6d6919a2ac3ba3be7d875",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.booking_notification_enqueue_trigger()": {
+      "arguments": "",
+      "body": "ec71587812932b7e8226e207437abc81",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.booking_notification_revision_guard()": {
+      "arguments": "",
+      "body": "2e88e6162f97f2e80975ab4cb1fb6c61",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.booking_receipt_public(uuid)": {
+      "arguments": "p_id uuid",
+      "body": "8c51b7b57928104946c8ac120f19a9df",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "TABLE(id uuid, status public.booking_status, start_at timestamp with time zone, end_at timestamp with time zone, staff_name text, services jsonb)",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.branch_admins_effective(uuid)": {
+      "arguments": "p_branch_id uuid",
+      "body": "e887d385983ab5d9497a54dd2f4a25bf",
+      "config": [],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(user_id uuid, source text)",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.bump_shift_ledger_revision()": {
+      "arguments": "",
+      "body": "17317c96a3a901084d95802e34914698",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.calculate_biz_day_metrics(uuid,date)": {
+      "arguments": "p_biz_id uuid, p_metric_date date",
+      "body": "bc7167f21d3011756ed865ede0d9e876",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.calculate_biz_rating(uuid)": {
+      "arguments": "p_biz_id uuid",
+      "body": "b2ec153e8bcf8aabbe0d2b9dbc629690",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "numeric",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.calculate_branch_day_metrics(uuid,date)": {
+      "arguments": "p_branch_id uuid, p_metric_date date",
+      "body": "4cad418ac5634a4fe21edefaaea17145",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.calculate_branch_rating(uuid)": {
+      "arguments": "p_branch_id uuid",
+      "body": "987c34476f4defd5f730cfffa040d1ef",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "numeric",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.calculate_staff_day_metrics(uuid,date)": {
+      "arguments": "p_staff_id uuid, p_metric_date date",
+      "body": "afab5b5ba43d2af634e8ba1d1adb29d3",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.calculate_staff_rating(uuid)": {
+      "arguments": "p_staff_id uuid",
+      "body": "fc58f24c77da4423f1aae0160cd0f038",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "numeric",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.can_edit_review(uuid)": {
+      "arguments": "p_id uuid",
+      "body": "a2e3027dff5783252e08eb61081d9042",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.can_review(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "25eb329645ad004eec416e96aa979c31",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.can_use_promotion(uuid,uuid,uuid)": {
+      "arguments": "p_client_id uuid, p_branch_id uuid, p_promotion_id uuid",
+      "body": "222df883185a09571b5dfa190b027a48",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cancel_booking(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "516ddd2214bb1a39df047f2bd09de84b",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cancel_business_role_application(uuid,uuid)": {
+      "arguments": "p_application_id uuid, p_user_id uuid",
+      "body": "614a4eb44614cef635fb831de8437661",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cat_remove_slug(text)": {
+      "arguments": "the_slug text",
+      "body": "48448a42f2dbd4fad1650f499729edaf",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cat_replace_slug(text,text)": {
+      "arguments": "old_slug text, new_slug text",
+      "body": "f2c926c708d2a0ffb30b2094269da0c2",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.categories_with_usage_v2()": {
+      "arguments": "",
+      "body": "89dca0b202067ae3897eba3622361a17",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "TABLE(id uuid, name_ru text, slug text, is_active boolean, usage_count integer)",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.check_booking_branch_match()": {
+      "arguments": "",
+      "body": "715d63751ef1db1ad37947ebca1dc013",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.check_explicit_schedule_booking()": {
+      "arguments": "",
+      "body": "43e67959d18e68205bd25cff01e7c962",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.check_owner_not_suspended()": {
+      "arguments": "",
+      "body": "e9851221506bdc1ea873d15f33af514a",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.check_user_lifecycle_request()": {
+      "arguments": "",
+      "body": "c085540f7e1990f6b92a8224b21f52e4",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.claim_booking_notification_batch(integer,integer,uuid[])": {
+      "arguments": "p_limit integer, p_lease_seconds integer, p_exclude_ids uuid[]",
+      "body": "9fd7155727862967b64be03123c658d0",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.claim_overdue_staff_shifts(uuid,integer,timestamp with time zone)": {
+      "arguments": "p_claim_token uuid, p_limit integer DEFAULT 25, p_now timestamp with time zone DEFAULT now()",
+      "body": "457569652627d0839e37aaf859fe93b8",
+      "config": [
+        "lock_timeout=2s",
+        "search_path=pg_catalog, public",
+        "statement_timeout=10s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.claim_whatsapp_inbox(text,integer)": {
+      "arguments": "p_receiver text, p_limit integer DEFAULT 4",
+      "body": "69e8cd4e1681d2062525d59a3c0c06dd",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(id uuid, lease_token uuid, attempts integer)",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cleanup_expired_telegram_mobile_auth_attempts(integer)": {
+      "arguments": "p_keep_minutes integer DEFAULT 1440",
+      "body": "16bb11d037d0d51397e4d0c00e158bba",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cleanup_expired_whatsapp_otp_codes(integer)": {
+      "arguments": "p_keep_minutes integer DEFAULT 1440",
+      "body": "4d799765e7db6a92f550c94db1dba71d",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cleanup_old_api_metrics(integer)": {
+      "arguments": "p_keep_days integer DEFAULT 30",
+      "body": "c52fc6621e5c4485d3446e53c4872da6",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cleanup_old_finance_logs(integer)": {
+      "arguments": "p_keep_days integer DEFAULT 90",
+      "body": "e40ee6e0a68c6f4ef8840f9a4c1b8165",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cleanup_old_funnel_events(integer)": {
+      "arguments": "p_keep_days integer DEFAULT 400",
+      "body": "8413bdb69b6c10fc468edf8676dd9955",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.cleanup_telegram_profile_links()": {
+      "arguments": "",
+      "body": "b2143d1bae65aa94deaf151c71c3ebed",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.close_staff_shift_command(uuid,uuid,bigint,jsonb,jsonb)": {
+      "arguments": "p_shift_id uuid, p_actor_id uuid, p_expected_revision bigint, p_expected_settings jsonb, p_calculation jsonb",
+      "body": "917756b40c880e60fd2b9b7d73f64646",
+      "config": [
+        "lock_timeout=2s",
+        "search_path=pg_catalog, public",
+        "statement_timeout=10s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.close_staff_shift_safe(uuid,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,numeric,timestamp with time zone)": {
+      "arguments": "p_shift_id uuid, p_total_amount numeric DEFAULT 0, p_consumables_amount numeric DEFAULT 0, p_percent_master numeric DEFAULT 60, p_percent_salon numeric DEFAULT 40, p_master_share numeric DEFAULT 0, p_salon_share numeric DEFAULT 0, p_hours_worked numeric DEFAULT NULL::numeric, p_hourly_rate numeric DEFAULT NULL::numeric, p_guaranteed_amount numeric DEFAULT 0, p_topup_amount numeric DEFAULT 0, p_closed_at timestamp with time zone DEFAULT NULL::timestamp with time zone",
+      "body": "5da8491fc101a7e13d43a21b7397a905",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.commit_user_lifecycle()": {
+      "arguments": "",
+      "body": "cea82959decffa0ead8b2f0ba3b9352c",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.confirm_booking(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "c7da51bb0ec615789a1b2428c9361f3b",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.consume_mobile_session_grant(text,text)": {
+      "arguments": "p_code_hash text, p_code_challenge text",
+      "body": "253e56786451f53e9a7804a3a70dc1b9",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.consume_whatsapp_mobile_otp(uuid,text,text)": {
+      "arguments": "p_attempt_id uuid, p_otp_hash text, p_code_challenge text",
+      "body": "adbf6f06489faf9268f369a63dc14444",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.consume_yandex_oauth_state(text,text,uuid)": {
+      "arguments": "p_state_hash text, p_flow text, p_user_id uuid",
+      "body": "241c37a6b16dcf7be23b093b2467bc95",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.create_confirmed_booking(uuid,jsonb,text)": {
+      "arguments": "p_request_id uuid, p_payload jsonb, p_guest_secret text DEFAULT NULL::text",
+      "body": "21598b197c4a14b09f18caf67da66530",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.create_confirmed_booking(uuid,jsonb,text,uuid)": {
+      "arguments": "p_request_id uuid, p_payload jsonb, p_guest_secret text, p_actor_id uuid",
+      "body": "594ae0a4808fd6db485a66dc770ab089",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.create_internal_booking(uuid,uuid,uuid,uuid,timestamp with time zone,integer,uuid,text,text)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_service_id uuid, p_staff_id uuid, p_start timestamp with time zone, p_minutes integer, p_client_id uuid DEFAULT NULL::uuid, p_client_name text DEFAULT NULL::text, p_client_phone text DEFAULT NULL::text",
+      "body": "ebcc73cfbd869b5da5cf259315c9a6cb",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.create_internal_booking_request(uuid,jsonb,uuid)": {
+      "arguments": "p_request_id uuid, p_payload jsonb, p_actor_id uuid",
+      "body": "9cf48425378b139ec2b021e96a616c08",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.create_internal_complex_booking(uuid,uuid,uuid,timestamp with time zone,jsonb,uuid,text,text,text)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_staff_id uuid, p_start timestamp with time zone, p_services jsonb, p_client_id uuid DEFAULT NULL::uuid, p_client_name text DEFAULT NULL::text, p_client_phone text DEFAULT NULL::text, p_client_email text DEFAULT NULL::text",
+      "body": "96618cc79babbea07af0c3ea3f745b8f",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.create_mobile_session_grant(text,text,uuid)": {
+      "arguments": "p_code_hash text, p_code_challenge text, p_user_id uuid",
+      "body": "7fb37e9287942fadf919f6da50b7eba2",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.create_yandex_oauth_state(text,text,uuid,text)": {
+      "arguments": "p_state_hash text, p_flow text, p_user_id uuid, p_return_path text",
+      "body": "062e7652ea99589b4b68101a7d876241",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.dashboard_bookings_page(uuid,text,uuid,uuid,timestamp with time zone,timestamp with time zone,text,integer,integer)": {
+      "arguments": "p_biz_id uuid, p_status text DEFAULT 'notCancelled'::text, p_branch_id uuid DEFAULT NULL::uuid, p_staff_id uuid DEFAULT NULL::uuid, p_start_from timestamp with time zone DEFAULT NULL::timestamp with time zone, p_start_before timestamp with time zone DEFAULT NULL::timestamp with time zone, p_search text DEFAULT NULL::text, p_limit integer DEFAULT 30, p_offset integer DEFAULT 0",
+      "body": "94d7eae189c72f53916c93ba4bc78e52",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.delete_branch_without_history(uuid,uuid)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid",
+      "body": "25deedda9802f1b3de95c15d0b4915b4",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.delete_business_without_history(uuid)": {
+      "arguments": "p_biz_id uuid",
+      "body": "a770e826b0961ed32f9264adab0d6e6b",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.delete_staff_without_history(uuid,uuid)": {
+      "arguments": "p_biz_id uuid, p_staff_id uuid",
+      "body": "15a8472393d688575a87f1231a23d13f",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.enforce_business_branch_limit()": {
+      "arguments": "",
+      "body": "2f16d8459fa6a73c3f05330c3f1db3be",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.enforce_business_registration_application_policy()": {
+      "arguments": "",
+      "body": "1263e42410e8339bcf86d56fe35830d7",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.enforce_business_role_application_policy()": {
+      "arguments": "",
+      "body": "d085182467aa48ff2821279745766eb5",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.enqueue_booking_notification(uuid,text)": {
+      "arguments": "p_booking_id uuid, p_type text",
+      "body": "c87eb11ff2eeb7930908a4a7e7eb5e63",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.fail_booking_notification_delivery(uuid,uuid,text,text,text)": {
+      "arguments": "p_event_id uuid, p_lease_token uuid, p_delivery_key text, p_outcome text, p_error_code text",
+      "body": "28a739c5e88d3a437e53a975668b9865",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.fail_whatsapp_inbox(uuid,uuid,text,text,integer)": {
+      "arguments": "p_id uuid, p_token uuid, p_outcome text, p_code text, p_retry_after integer DEFAULT 0",
+      "body": "8f40be12e9fd13e3bd8c410a91d2e9a3",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.finalize_due_account_deletions(integer)": {
+      "arguments": "batch_limit integer DEFAULT 50",
+      "body": "f93c659bf764ec9cc51d570d78f5f509",
+      "config": [
+        "search_path=public, auth"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.finance_business_timezone(uuid)": {
+      "arguments": "p_biz_id uuid",
+      "body": "d69e2aff635ac81c942caec7d848afdc",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "text",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.finance_can_manage_business(uuid,uuid)": {
+      "arguments": "p_actor_id uuid, p_biz_id uuid",
+      "body": "16af9b06848170b5ebb9bd89afcfc669",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.finance_is_platform_admin(uuid)": {
+      "arguments": "p_actor_id uuid",
+      "body": "1c71701b233c5129000938dde1964dec",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.find_accounts_by_contact(text,text)": {
+      "arguments": "p_email text DEFAULT NULL::text, p_phone_digits text DEFAULT NULL::text",
+      "body": "e386f7b849bec9aaf03b5f117733c300",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "TABLE(id uuid, email text, phone text, full_name text)",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.finish_booking_notification(uuid,uuid,text,text,integer)": {
+      "arguments": "p_event_id uuid, p_lease_token uuid, p_outcome text, p_error_code text DEFAULT NULL::text, p_retry_after_seconds integer DEFAULT 0",
+      "body": "9ed719c59d384bbaec97f6023f408d5e",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.finish_cron_execution(uuid,text,integer,text)": {
+      "arguments": "p_id uuid, p_outcome text, p_http_status integer, p_error_code text DEFAULT NULL::text",
+      "body": "c858eb0a4fb62fbec722c63fc06c3423",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.get_api_metrics_stats(text,integer,text)": {
+      "arguments": "p_endpoint text, p_window_minutes integer DEFAULT 60, p_method text DEFAULT NULL::text",
+      "body": "42dcc7ff811ecc874ddc32b0a93bc8bc",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.get_applicable_visit_package_for_booking(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "71f862a6bd5f19fe91332f6c0a46f81f",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.get_business_finance_stats(uuid,date,date,uuid,boolean)": {
+      "arguments": "p_biz_id uuid, p_date_from date, p_date_to date, p_branch_id uuid DEFAULT NULL::uuid, p_include_open boolean DEFAULT true",
+      "body": "837de8666d2d1cf1d17c66fcdc7e88ac",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.get_business_finance_stats_impl_20261109(uuid,date,date,uuid,boolean)": {
+      "arguments": "p_biz_id uuid, p_date_from date, p_date_to date, p_branch_id uuid DEFAULT NULL::uuid, p_include_open boolean DEFAULT true",
+      "body": "07ca63c4e0867141bf1d82a790d30a4e",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.get_client_visit_count(uuid,uuid)": {
+      "arguments": "p_client_id uuid, p_branch_id uuid",
+      "body": "04308e411ab06b08b7733fc19cd5504a",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.get_free_slots_complex_day_v1(uuid,uuid,uuid,date,integer,integer,integer)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_staff_id uuid, p_day date, p_duration_min integer, p_step_min integer DEFAULT 15, p_per_staff integer DEFAULT 200",
+      "body": "9c40dc193c409bcf4a2c9a259de51464",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(staff_id uuid, branch_id uuid, start_at timestamp with time zone, end_at timestamp with time zone)",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.get_free_slots_page_v1(uuid,uuid,date,uuid,integer,uuid,jsonb,integer)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_day date, p_service_id uuid, p_duration_min integer, p_staff_id uuid, p_cursor jsonb, p_limit integer DEFAULT 100",
+      "body": "2694bc7feeb2cf8ee8efcd106d751774",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.get_free_slots_service_day(uuid,uuid,date,integer,integer,text)": {
+      "arguments": "p_biz_id uuid, p_service_id uuid, p_day date, p_per_staff integer DEFAULT 3, p_step_min integer DEFAULT 15, p_tz text DEFAULT 'Asia/Bishkek'::text",
+      "body": "ee697a8e019b8f4f40b4489d633bcd23",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "TABLE(staff_id uuid, start_at timestamp with time zone, end_at timestamp with time zone)",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer)": {
+      "arguments": "p_biz_id uuid, p_service_id uuid, p_day date, p_per_staff integer DEFAULT 200, p_step_min integer DEFAULT 15",
+      "body": "095347cb97d682f95ed252d507ff1efe",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "TABLE(staff_id uuid, branch_id uuid, start_at timestamp with time zone, end_at timestamp with time zone)",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)": {
+      "arguments": "p_biz_id uuid, p_service_id uuid, p_day date, p_per_staff integer, p_step_min integer, p_staff_id uuid",
+      "body": "bbbdc2b95c07bac911dcf77bf79c5ff8",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(staff_id uuid, branch_id uuid, start_at timestamp with time zone, end_at timestamp with time zone)",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.get_my_notification_emails()": {
+      "arguments": "",
+      "body": "2a0727683355400cd5aeb02c40edb44a",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "TABLE(email text, verified boolean, enabled boolean, sources text[])",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.get_staff_finance_stats(uuid,uuid,date,date,boolean)": {
+      "arguments": "p_staff_id uuid, p_biz_id uuid, p_date_from date, p_date_to date, p_include_open boolean DEFAULT true",
+      "body": "ad734c6f3d1b7979150fadddbe27ce15",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)": {
+      "arguments": "p_staff_id uuid, p_biz_id uuid, p_date_from date, p_date_to date, p_include_open boolean DEFAULT true",
+      "body": "29d31a7d8004b49b898fedd050ab4e4f",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.grant_branch_admin(uuid,uuid)": {
+      "arguments": "p_branch_id uuid, p_user_id uuid",
+      "body": "3c39d701a5703b49d73eb6ff35a0dd32",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_direct_shift_finance_write()": {
+      "arguments": "",
+      "body": "eae543f65ca512218867b991f799db5b",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_last_super_admin()": {
+      "arguments": "",
+      "body": "5292d051ffa67f12c16d92f86fc4f2cc",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_legacy_staff_schedule_write()": {
+      "arguments": "",
+      "body": "21cb4bbec5305ccf89b4f9a69cfdad9b",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_shift_day_hours()": {
+      "arguments": "",
+      "body": "ae1e1bef3b2139beebdc950da3a1a232",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_staff_absence_booking()": {
+      "arguments": "",
+      "body": "0b1dcc9ac8b32ef2da6510a9b742a5b5",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_staff_home_change()": {
+      "arguments": "",
+      "body": "cf266e62a6bc6a4382d932d0ac6614ec",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_user_lifecycle_assignment()": {
+      "arguments": "",
+      "body": "c8c377ab1b1ec6e3804321e3e5fc86ee",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.guard_user_lifecycle_session()": {
+      "arguments": "",
+      "body": "0ab1302d51655b7a34609106a2a4d0e6",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.has_branch_admin(uuid)": {
+      "arguments": "p_branch_id uuid",
+      "body": "d7641bac2082fbcff067646bd1a67bde",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.has_role(text,uuid)": {
+      "arguments": "p_role_key text, p_biz_id uuid DEFAULT NULL::uuid",
+      "body": "37727aac478befca174c1a4befdc280a",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.has_role(uuid,uuid,text)": {
+      "arguments": "p_user_id uuid, p_biz_id uuid, p_role_key text",
+      "body": "787127f9f998993936f4f68055b7b19b",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.hold_complex_slot(uuid,uuid,uuid,timestamp with time zone,jsonb)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_staff_id uuid, p_start timestamp with time zone, p_services jsonb",
+      "body": "a1cd1ba2427c6c4f6cdf6d84dcb3cc50",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.hold_complex_slot_guest(uuid,uuid,uuid,timestamp with time zone,jsonb,text,text,text)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_staff_id uuid, p_start timestamp with time zone, p_services jsonb, p_client_name text, p_client_phone text, p_client_email text DEFAULT NULL::text",
+      "body": "a351061d986b071047d1fb9a74b5f16d",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.hold_slot(uuid,uuid,uuid,uuid,timestamp with time zone)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_service_id uuid, p_staff_id uuid, p_start timestamp with time zone",
+      "body": "471621199447c809bebbf2fc29360efb",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.hold_slot_guest(uuid,uuid,uuid,uuid,timestamp with time zone,text,text,text)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_service_id uuid, p_staff_id uuid, p_start timestamp with time zone, p_client_name text, p_client_phone text, p_client_email text DEFAULT NULL::text",
+      "body": "53ace1f198e8249a855ad65ab7eea641",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.initialize_all_ratings(integer)": {
+      "arguments": "p_days_back integer DEFAULT 30",
+      "body": "7f7ea250594c31fb950912d7fa73ce23",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.is_super_admin()": {
+      "arguments": "",
+      "body": "93a633b27ef8dce61b5c8414072b2279",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.lock_shift_for_item_write()": {
+      "arguments": "",
+      "body": "bcefa22ec5383d13730a662e1d7c92b6",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.log_api_metric(text,text,integer,integer,uuid,uuid,uuid,text,text,integer,integer,jsonb,inet,text)": {
+      "arguments": "p_endpoint text, p_method text, p_status_code integer, p_duration_ms integer, p_user_id uuid DEFAULT NULL::uuid, p_staff_id uuid DEFAULT NULL::uuid, p_biz_id uuid DEFAULT NULL::uuid, p_error_message text DEFAULT NULL::text, p_error_type text DEFAULT NULL::text, p_request_size_bytes integer DEFAULT NULL::integer, p_response_size_bytes integer DEFAULT NULL::integer, p_metadata jsonb DEFAULT NULL::jsonb, p_ip_address inet DEFAULT NULL::inet, p_user_agent text DEFAULT NULL::text",
+      "body": "ed3283a2985f12c44dde2a0af2aed0fc",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.log_booking_analytics_event()": {
+      "arguments": "",
+      "body": "65b57d4413faf495c3096b7b74a3716c",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.log_finance_operation(uuid,uuid,text,text,text,uuid,date,jsonb,jsonb,jsonb,text,text,inet,text)": {
+      "arguments": "p_staff_id uuid, p_biz_id uuid, p_operation_type text, p_message text, p_log_level text DEFAULT 'info'::text, p_shift_id uuid DEFAULT NULL::uuid, p_shift_date date DEFAULT NULL::date, p_metadata jsonb DEFAULT NULL::jsonb, p_before_data jsonb DEFAULT NULL::jsonb, p_after_data jsonb DEFAULT NULL::jsonb, p_error_message text DEFAULT NULL::text, p_error_stack text DEFAULT NULL::text, p_ip_address inet DEFAULT NULL::inet, p_user_agent text DEFAULT NULL::text",
+      "body": "fb039e2388ca6e0af28ef3a29e2c377a",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.log_shift_close_trigger()": {
+      "arguments": "",
+      "body": "0b9aeef91f4b57b2443d33071e429d6c",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.log_shift_items_trigger()": {
+      "arguments": "",
+      "body": "e31721fe8780694ca350efbdc702d2be",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.log_shift_open_trigger()": {
+      "arguments": "",
+      "body": "5ee8d2ca58dc2bd30c3f0fbeee8441cd",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.mark_booking_attendance_command(uuid,uuid,uuid,boolean)": {
+      "arguments": "p_booking_id uuid, p_biz_id uuid, p_actor_id uuid, p_attended boolean",
+      "body": "246a79a6443b754ba955c2ecfbba71b2",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.members_of_biz(uuid)": {
+      "arguments": "p_biz_id uuid",
+      "body": "56b5ed175c392f28f27b3da6e90c978f",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(user_id uuid, email text, phone text, full_name text, roles text[])",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.my_role_keys()": {
+      "arguments": "",
+      "body": "4a1a1fa6a3e47e4b082c9a66881eb998",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "text[]",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.open_staff_shift_safe(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)": {
+      "arguments": "p_staff_id uuid, p_biz_id uuid, p_branch_id uuid, p_shift_date date, p_opened_at timestamp with time zone, p_expected_start timestamp with time zone DEFAULT NULL::timestamp with time zone, p_late_minutes integer DEFAULT 0",
+      "body": "a8857fbc0aff0b13a7cd89c232a0c8ce",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.prepare_booking_notification_deliveries(uuid,uuid,jsonb)": {
+      "arguments": "p_event_id uuid, p_lease_token uuid, p_deliveries jsonb",
+      "body": "fdbfb7308300e18c301e8e94c220309f",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.prepare_user_lifecycle(uuid,uuid,text,text)": {
+      "arguments": "p_actor_id uuid, p_user_id uuid, p_action text, p_reason text DEFAULT NULL::text",
+      "body": "9d299f5bb7074f685111149033655151",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.prevent_application_for_existing_business()": {
+      "arguments": "",
+      "body": "b43c8f0b21762e17f5fab53520a5d8e1",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.prevent_owner_suspended()": {
+      "arguments": "",
+      "body": "b2fd8d6eebd57973242c03147ba32071",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.prevent_roles_for_suspended()": {
+      "arguments": "",
+      "body": "09d112ff50cd7b696de6396497eb0400",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.process_whatsapp_inbox(uuid,uuid,text)": {
+      "arguments": "p_id uuid, p_token uuid, p_receiver text",
+      "body": "a8ac2150ccee9159a94e10fdebb20588",
+      "config": [
+        "lock_timeout=3s",
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.protect_profile_identity_columns()": {
+      "arguments": "",
+      "body": "02c200286d37dcd9c8280e087fe04726",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.prune_booking_notifications(integer)": {
+      "arguments": "p_limit integer DEFAULT 1000",
+      "body": "587e11f568e005fe5e3f84d9ac99ae09",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.prune_whatsapp_inbox(integer)": {
+      "arguments": "p_limit integer DEFAULT 100",
+      "body": "7528068f541fc87187c204da2d3cb044",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.publish_staff_schedule(uuid,uuid,uuid,bigint,text,date,uuid,jsonb)": {
+      "arguments": "p_staff uuid, p_biz uuid, p_actor uuid, p_expected_revision bigint, p_kind text, p_from date, p_branch uuid, p_days jsonb",
+      "body": "955a5bec5ef74a6b87f778c772ad1a99",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.purge_expired_holds()": {
+      "arguments": "",
+      "body": "bc53c0b32745efb99f3396694213c1ac",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.read_analytics_report_snapshot(date,date,uuid,uuid,text)": {
+      "arguments": "p_date_from date, p_date_to date, p_biz_id uuid DEFAULT NULL::uuid, p_branch_id uuid DEFAULT NULL::uuid, p_kind text DEFAULT 'daily'::text",
+      "body": "2507a8217aaa9e7a136fc007878505ec",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_booking_notification_deliveries(uuid,uuid)": {
+      "arguments": "p_event_id uuid, p_lease_token uuid",
+      "body": "9ad8440e6023737629d079642213c0af",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.read_business_finance_calendar(uuid)": {
+      "arguments": "p_biz_id uuid",
+      "body": "e07210b4c8e1bba50cc530b83f495fba",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_cron_execution_health()": {
+      "arguments": "",
+      "body": "04d914de1b2ea8a75a8b4f4dea786283",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_finance_report_snapshot(uuid,date,date,uuid,uuid)": {
+      "arguments": "p_biz_id uuid, p_date_from date, p_date_to date, p_staff_id uuid DEFAULT NULL::uuid, p_branch_id uuid DEFAULT NULL::uuid",
+      "body": "b973c5be14a5f9cb6210a0070e93f841",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_platform_admin_states(uuid,uuid[])": {
+      "arguments": "p_actor_id uuid, p_target_ids uuid[]",
+      "body": "994d1a1ca1f8c108fd07eb13ff62b15e",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_promotion_analytics_snapshot(uuid,date,date,uuid,text)": {
+      "arguments": "p_biz_id uuid, p_date_from date, p_date_to date, p_branch_id uuid DEFAULT NULL::uuid, p_default_tz text DEFAULT 'Asia/Bishkek'::text",
+      "body": "d5525cce1f0df3afe93bc23fcc3567df",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_finance_calendar(uuid,uuid,date,timestamp with time zone)": {
+      "arguments": "p_biz_id uuid, p_staff_id uuid, p_date date DEFAULT NULL::date, p_instant timestamp with time zone DEFAULT NULL::timestamp with time zone",
+      "body": "4ae0342b062d89f73aeb26857a8a28c5",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_finance_history(uuid,uuid,date,date)": {
+      "arguments": "p_biz_id uuid, p_staff_id uuid, p_date_from date DEFAULT NULL::date, p_date_to date DEFAULT NULL::date",
+      "body": "bff2bd035bc027fbc138f79e4ab7347f",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_schedule(uuid,uuid,date,date)": {
+      "arguments": "p_staff uuid, p_biz uuid, p_from date, p_to date",
+      "body": "0cc4c52ed0f48d408aa136a5f00fdfed",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_schedule_draft(uuid,uuid,date,text)": {
+      "arguments": "p_staff uuid, p_biz uuid, p_day date, p_kind text",
+      "body": "7ceccbf57af6a161d6d5ca920f53e53a",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_shift_adjustment_snapshot(uuid,uuid,uuid)": {
+      "arguments": "p_shift_id uuid, p_biz_id uuid, p_actor_id uuid",
+      "body": "b65a53cc1555101cc25643d2c730a520",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_shift_close_snapshot(uuid,uuid,uuid)": {
+      "arguments": "p_biz_id uuid, p_staff_id uuid, p_shift_id uuid",
+      "body": "7dbb9f394e2b1ce984e42f53008bad0a",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_shift_snapshot(uuid,uuid,date)": {
+      "arguments": "p_biz_id uuid, p_staff_id uuid, p_shift_date date",
+      "body": "5280a17efc55cd319147cd6673e98682",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_staff_work_locations(uuid,date,date)": {
+      "arguments": "p_biz uuid, p_from date, p_to date",
+      "body": "b252bb36dedafa4821cae0371654c002",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(staff_id uuid, branch_id uuid, date_on date)",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.read_user_lifecycle(uuid,uuid,uuid)": {
+      "arguments": "p_actor_id uuid, p_user_id uuid, p_command_id uuid",
+      "body": "2021f56e24912fdcfae77112f9e95e53",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.recalculate_business_daily_stats(date,text)": {
+      "arguments": "p_date date, p_default_tz text DEFAULT 'Asia/Bishkek'::text",
+      "body": "0d916775f0df1bd30dc41394f40b59c2",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.recalculate_business_hourly_load(date,text)": {
+      "arguments": "p_date date, p_default_tz text DEFAULT 'Asia/Bishkek'::text",
+      "body": "b5d819cd7be95a247a3f2fb5c65b37da",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.recalculate_ratings_for_date(date)": {
+      "arguments": "p_date date DEFAULT (CURRENT_DATE - '1 day'::interval)",
+      "body": "4cac0710e2066ee1471a5178e88d9249",
+      "config": [],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.recalculate_ratings_for_date_range(date,date)": {
+      "arguments": "p_start_date date, p_end_date date",
+      "body": "c2a9c6527d2152e3bdd34ee62b1bd0e4",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.receive_whatsapp_inbox(text,jsonb)": {
+      "arguments": "p_receiver text, p_messages jsonb",
+      "body": "bea1d5a8431591e0b5689a62e58232a6",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.record_booking_notification_delivery(uuid,uuid,text,text)": {
+      "arguments": "p_event_id uuid, p_lease_token uuid, p_delivery_key text, p_provider_id text DEFAULT NULL::text",
+      "body": "3c60a736ca8d7ec9152b9e3cc0293b7f",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.record_whatsapp_inbox_reply(uuid,uuid,text)": {
+      "arguments": "p_id uuid, p_token uuid, p_provider_id text",
+      "body": "3288ec0c8160c6b9f6937193ffdd4cf1",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.register_whatsapp_mobile_otp_failure(uuid)": {
+      "arguments": "p_attempt_id uuid",
+      "body": "e08bb05d2045e630793be74ca927fc2a",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.reject_application_with_policy(text,uuid,uuid,text,integer)": {
+      "arguments": "p_application_kind text, p_application_id uuid, p_reviewer_user_id uuid, p_reason text DEFAULT NULL::text, p_block_days integer DEFAULT 0",
+      "body": "4bfd7e7660dbcb334ece924f98c33ac8",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.release_application_submission_block(uuid,uuid,uuid)": {
+      "arguments": "p_block_id uuid, p_application_id uuid, p_reviewer_user_id uuid",
+      "body": "16ab40ed06cc86b79d30eb87e7e94297",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.release_auth_phone(uuid,text)": {
+      "arguments": "p_user_id uuid, p_phone_digits text",
+      "body": "193ae0fcf4505c11333e8b826cabd56a",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.release_staff_shift_claims(uuid,uuid[])": {
+      "arguments": "p_claim_token uuid, p_shift_ids uuid[]",
+      "body": "825eefb7d579fba28d9a9f9eefeb6738",
+      "config": [
+        "lock_timeout=1s",
+        "search_path=pg_catalog, public",
+        "statement_timeout=3s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.release_unconfirmed_phone(text)": {
+      "arguments": "p_phone_digits text",
+      "body": "8d6ae08e1a329ac47539bb62eea34c8c",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.release_whatsapp_inbox(uuid,uuid)": {
+      "arguments": "p_id uuid, p_token uuid",
+      "body": "b72ca524ba022305322a7a02b36b95bf",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.remove_user_notification_email_source(uuid,text)": {
+      "arguments": "target_user_id uuid, target_source text",
+      "body": "65a5f758517959f1c0b65db287161ea2",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.replace_branch_schedule(uuid,uuid,uuid,jsonb)": {
+      "arguments": "p_biz uuid, p_branch uuid, p_actor uuid, p_days jsonb",
+      "body": "8b7179aa018b6f2306daf78eb0b03b65",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.reset_staff_schedule_day(uuid,uuid,uuid,bigint,date)": {
+      "arguments": "p_staff uuid, p_biz uuid, p_actor uuid, p_expected_revision bigint, p_day date",
+      "body": "804a69da3499a37a34ba249c30d986cd",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.resolve_staff_day(uuid,date)": {
+      "arguments": "p_staff_id uuid, p_date date",
+      "body": "1c05074b41471de4b36d161c1ccb0b8f",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(branch_id uuid, tz text, intervals jsonb, breaks jsonb)",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.resolve_staff_day_legacy(uuid,date)": {
+      "arguments": "p_staff_id uuid, p_date date",
+      "body": "55b9ac3dfd089b10cac672f670411fb2",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(branch_id uuid, tz text, intervals jsonb, breaks jsonb)",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.reviews_set_client_id()": {
+      "arguments": "",
+      "body": "03d6f2c72b65ada504622cfe0b8c7b44",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.revoke_branch_admin(uuid,uuid)": {
+      "arguments": "p_branch_id uuid, p_user_id uuid",
+      "body": "6311122640f539b81f71cb95f27c48a7",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.role_id(text)": {
+      "arguments": "p_key text",
+      "body": "6d8777183bbe488f91c1203b0bc608da",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.save_shift_items_atomic(uuid,jsonb)": {
+      "arguments": "p_shift_id uuid, p_items jsonb",
+      "body": "36ad76ba2165ffd07666a963438c683f",
+      "config": [],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.save_staff_shift_command(uuid,uuid,date,jsonb,uuid,boolean,bigint,uuid)": {
+      "arguments": "p_staff_id uuid, p_biz_id uuid, p_shift_date date, p_items jsonb, p_actor_id uuid DEFAULT NULL::uuid, p_allow_create boolean DEFAULT false, p_expected_revision bigint DEFAULT NULL::bigint, p_expected_shift_id uuid DEFAULT NULL::uuid",
+      "body": "a9ced53f1e4d62448224be248928e20d",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.save_staff_shift_command_internal_v1(uuid,uuid,date,jsonb,uuid,boolean,bigint)": {
+      "arguments": "p_staff_id uuid, p_biz_id uuid, p_shift_date date, p_items jsonb, p_actor_id uuid DEFAULT NULL::uuid, p_allow_create boolean DEFAULT false, p_expected_revision bigint DEFAULT NULL::bigint",
+      "body": "5afbfcf5ea8289ea143cf6f4339825dc",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.schedule_actor_can_manage(uuid,uuid)": {
+      "arguments": "p_actor uuid, p_biz uuid",
+      "body": "bc9e07955872609930bf015e299795f0",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.schedule_bound_to_branch(jsonb,uuid,date)": {
+      "arguments": "p_day jsonb, p_biz uuid, p_date date",
+      "body": "094b6037824428bbb0048cc2d780f176",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.schedule_contains_booking(uuid,uuid,timestamp with time zone,timestamp with time zone)": {
+      "arguments": "p_staff uuid, p_branch uuid, p_start timestamp with time zone, p_end timestamp with time zone",
+      "body": "87701fdee98636bd41a65363d99f4c7f",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.schedule_effective_day(uuid,date)": {
+      "arguments": "p_staff uuid, p_day date",
+      "body": "8ab9edd0cd5029dbea2efa69215ab674",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.schedule_validate_day(jsonb)": {
+      "arguments": "p_day jsonb",
+      "body": "363aa72540be39c9958e62dfb8be889b",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "i"
+    },
+    "public.set_my_notification_email_preferences(boolean,text[])": {
+      "arguments": "target_enabled boolean, target_emails text[]",
+      "body": "b517abd5138b105b31764cdb76bdc5e6",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.set_platform_admin_role(uuid,uuid,boolean)": {
+      "arguments": "p_actor_id uuid, p_target_user_id uuid, p_enabled boolean",
+      "body": "651f7734a9f33410b0ee8806adb28686",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.set_timestamp_updated_at()": {
+      "arguments": "",
+      "body": "f07f52650a8efcc92519940ff86b017a",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.staff_guard_client_write()": {
+      "arguments": "",
+      "body": "9e5704996c875bd3db4be868954daa85",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": false,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.staff_private_fields(uuid)": {
+      "arguments": "p_staff_id uuid",
+      "body": "aee49eccd5a19d9a5f72952a5ded2515",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "TABLE(id uuid, biz_id uuid, branch_id uuid, full_name text, email text, phone text, user_id uuid, avatar_url text, is_active boolean, percent_master numeric, percent_salon numeric, hourly_rate numeric, rating_score numeric)",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.staff_write_allowed(uuid,uuid)": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid",
+      "body": "571334279a7b67ac21ed4460a10977e6",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.start_cron_execution(uuid,text)": {
+      "arguments": "p_id uuid, p_job text",
+      "body": "deb6203b0d31730bd3b9878bb2562c78",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.sync_auth_user_notification_email()": {
+      "arguments": "",
+      "body": "400f03ffc1ecd51adce23ecbc90ffd35",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.sync_user_notification_email(uuid,text,text,text)": {
+      "arguments": "target_user_id uuid, target_email text, target_source text, target_provider_subject text DEFAULT NULL::text",
+      "body": "9f2766ce86f4269f8ec0f2ec375dce11",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.transfer_staff_home(uuid,uuid,uuid,uuid,uuid)": {
+      "arguments": "p_staff uuid, p_biz uuid, p_actor uuid, p_expected_branch uuid, p_target uuid",
+      "body": "32150f0d065434f75048e8e8edcea8c0",
+      "config": [
+        "search_path=public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.transition_telegram_profile_link(text,text,uuid,bigint,text,text)": {
+      "arguments": "p_hash text, p_action text, p_owner uuid DEFAULT NULL::uuid, p_telegram bigint DEFAULT NULL::bigint, p_username text DEFAULT NULL::text, p_name text DEFAULT NULL::text",
+      "body": "57c9dd7051697b3768fef372dc0e20ee",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.transition_telegram_web_login(text,text,text,bigint,text)": {
+      "arguments": "p_hash text, p_action text, p_browser text DEFAULT NULL::text, p_telegram bigint DEFAULT NULL::bigint, p_name text DEFAULT NULL::text",
+      "body": "5c48e35c989edcfa3058797b40bd6f46",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.unlink_auth_identity(uuid,text)": {
+      "arguments": "target_user_id uuid, target_provider text",
+      "body": "7bc0c8dfaeb601ed5498864792bde9d1",
+      "config": [
+        "search_path=public, auth"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.update_all_aggregated_ratings()": {
+      "arguments": "",
+      "body": "ea69bdb65a79f9a8e9ace7164ef60077",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.update_booking_status_no_check(uuid,public.booking_status)": {
+      "arguments": "p_booking_id uuid, p_new_status public.booking_status",
+      "body": "33569326223e384202016de34eaf2e1c",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.update_booking_status_with_promotion(uuid,public.booking_status)": {
+      "arguments": "p_booking_id uuid, p_new_status public.booking_status",
+      "body": "5cf3be09d434f36ec6af9345a8122b2b",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.update_shift_aggregates(uuid,uuid,date,numeric,numeric,numeric,integer,numeric,numeric)": {
+      "arguments": "p_staff_id uuid, p_biz_id uuid, p_shift_date date, p_total_amount numeric, p_master_share numeric, p_salon_share numeric, p_late_minutes integer, p_guaranteed_amount numeric DEFAULT 0, p_topup_amount numeric DEFAULT 0",
+      "body": "be4cfad2fbd3e6ddda8d324a172838fd",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.user_current_business_set_updated_at()": {
+      "arguments": "",
+      "body": "dc1be7e0237a31d5a54717e490d60b75",
+      "config": [],
+      "definer": false,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": true,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.user_lifecycle_access_allowed()": {
+      "arguments": "",
+      "body": "6ac8875e42fb0dedc50587a48b0df193",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": true,
+        "authenticated": true,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "boolean",
+      "strict": false,
+      "volatility": "s"
+    },
+    "public.whatsapp_inbox_backlog_health()": {
+      "arguments": "",
+      "body": "93ae6c952964f31cffe6182802727459",
+      "config": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=4s"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    }
+  }
+}

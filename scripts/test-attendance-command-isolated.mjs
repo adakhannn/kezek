@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor, day } from './lib/finance-transaction-fixture.mjs';
 import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
 const container='kezek-attendance-test-'+randomUUID();
 function docker(args,input=''){return new Promise((resolve,reject)=>{const p=spawn('docker',args,{windowsHide:true});let out='',err='';p.stdout.on('data',d=>out+=d);p.stderr.on('data',d=>err+=d);p.on('error',reject);p.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err||out)));p.stdin.end(input);});}
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -53,5 +54,6 @@ try {
  await assert.rejects(call(command(rollback)),/SYNTHETIC_DEBIT_FAILURE/);
  assert.equal(await sql("select status from bookings where id='"+rollback+"'"),'confirmed');assert.equal(await sql("select remaining_visits from client_visit_packages where id='"+ids.pack+"'"),'2');assert.equal(await sql("select count(*) from client_visit_package_uses where booking_id='"+rollback+"'"),'0');
  console.log('PASS future/final/ledger contradictions rejected and benefit failure rolls back status/debit/use together');
+ await assertLiveFunctions(sql, { suite: 'test-attendance-command-isolated.mjs' });
  console.log('PASS all isolated attendance command regressions');
 }finally{if(created)await docker(['rm','--force',container]);}

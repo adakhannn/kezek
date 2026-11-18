@@ -10,6 +10,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migration = fs.readFileSync(
     path.join(__dirname, '..', 'supabase', 'migrations', '20261119000000_visit_package_sale_identity.sql'),
@@ -117,6 +118,7 @@ let created = false;
         assert.equal(await sql(`select string_agg(r, ',' order by r) from unnest(array['anon','authenticated','service_role']) r
             where has_function_privilege(r, 'public.get_applicable_visit_package_for_booking(uuid)', 'execute')`), 'authenticated,service_role');
 
+        await assertLiveFunctions(sql, { suite: 'test-visit-package-sale-identity-isolated.cjs' });
         console.log('Visit package sale identity (API-11): one package per sale key, last day in the business time zone.');
     } finally {
         if (created) await docker(['rm', '-f', container]).catch(() => {});

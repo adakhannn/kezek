@@ -6,6 +6,7 @@ const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-auth-regression-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -66,6 +67,7 @@ const other = '00000000-0000-4000-8000-000000000002';
         assert.match(result.stderr, /permission denied/);
       }
     }
+    await assertLiveFunctions(sql, { suite: 'test-mobile-auth-grants-isolated.cjs' });
     console.log('PASS isolated Postgres: grant/OTP/OAuth parallel one-use, wrong proof, expiry, failed-attempt cap, role denials. No network, ports, volumes or remote migration.');
   } finally {
     // Only this process-created, UUID-named disposable container is removed.

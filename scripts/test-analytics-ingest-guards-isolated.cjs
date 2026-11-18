@@ -9,6 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -105,6 +106,7 @@ let created = false;
         await sql(`insert into public.analytics_events(event_type, source, biz_id, branch_id) values ('business_page_view', 'web', '${bizA}', '${branchA}')`);
 
 
+        await assertLiveFunctions(sql, { suite: 'test-analytics-ingest-guards-isolated.cjs' });
         console.log('analytics ingest guards: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

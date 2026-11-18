@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-srs-guard-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -75,6 +76,7 @@ let created = false;
         assert.equal(await sql('begin; update public.spatial_ref_sys set auth_name = auth_name where srid = 4326 returning srid; rollback;'), '4326');
         assert.equal(await sql('select count(*) from public.spatial_ref_sys'), '1');
 
+        await assertLiveFunctions(sql, { suite: 'test-spatial-ref-sys-guard-isolated.cjs' });
         console.log('spatial_ref_sys guard: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

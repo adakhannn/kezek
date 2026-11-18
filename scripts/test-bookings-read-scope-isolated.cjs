@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-bookings-read-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -219,6 +220,7 @@ let created = false;
         await assert.rejects(asRole('authenticated', manager, `update public.bookings set status = 'cancelled'`), /permission denied for table bookings/);
         assert.equal(await asRole('service_role', null, `update public.bookings set status = 'paid' where label = 'own' returning label`), 'own');
 
+        await assertLiveFunctions(sql, { suite: 'test-bookings-read-scope-isolated.cjs' });
         console.log('bookings read scope: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

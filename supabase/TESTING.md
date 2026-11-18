@@ -38,7 +38,7 @@ pnpm test:sql
 pnpm test:sql:isolated
 ```
 
-Он требует Docker и образ PostgreSQL 16. Runners создают собственные disposable контейнеры с `--network none`, без host ports и host mounts; fixtures полностью synthetic. Они не читают `.env`, не выбирают linked Supabase и не отправляют сообщения провайдерам. Контейнер удаляется в cleanup; сбой Docker/SQL/assertion — ошибка, а не skip.
+Он требует Docker и образ PostgreSQL 17 ([isolated-postgres](../scripts/lib/isolated-postgres.cjs)). В конце каждый набор сверяет свои функции с каталогом, построенным из полной цепочки миграций ([порядок](../TESTING_GUIDE.md)). Runners создают собственные disposable контейнеры с `--network none`, без host ports и host mounts; fixtures полностью synthetic. Они не читают `.env`, не выбирают linked Supabase и не отправляют сообщения провайдерам. Контейнер удаляется в cleanup; сбой Docker/SQL/assertion — ошибка, а не skip.
 
 | Runner | Проверяемая граница |
 | --- | --- |

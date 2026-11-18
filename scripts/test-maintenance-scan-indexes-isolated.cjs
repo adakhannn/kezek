@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -109,6 +110,7 @@ const pruneSelect = `select id from public.booking_notification_outbox where
         assert.equal(await sql(`select string_agg(status::text || ':' || coalesce((expires_at > now())::text, 'null'), ',' order by status, expires_at nulls last)
             from public.bookings where start_at > now()`), 'hold:true,hold:null,cancelled:null,cancelled:null');
 
+        await assertLiveFunctions(sql, { suite: 'test-maintenance-scan-indexes-isolated.cjs' });
         console.log(`maintenance scan indexes: ok (purge reads ${pages} pages of 100k bookings)`);
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

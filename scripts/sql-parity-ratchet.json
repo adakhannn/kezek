@@ -1,0 +1,273 @@
+{
+  "test-finance-transactions.mjs": [
+    "public.apply_promotion_to_booking(uuid)",
+    "public.apply_promotion_to_booking_impl_20261109(uuid)",
+    "public.apply_visit_package_to_booking(uuid)",
+    "public.apply_visit_package_to_booking_impl_20261109(uuid)",
+    "public.assert_booking_finance_access(uuid)",
+    "public.assert_finance_access(uuid,uuid,uuid)",
+    "public.can_use_promotion(uuid,uuid,uuid)",
+    "public.claim_overdue_staff_shifts(uuid,integer,timestamp with time zone)",
+    "public.close_staff_shift_command(uuid,uuid,bigint,jsonb,jsonb)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.get_applicable_visit_package_for_booking(uuid)",
+    "public.get_client_visit_count(uuid,uuid)",
+    "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)",
+    "public.is_super_admin()",
+    "public.open_staff_shift_safe(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.open_staff_shift_safe_impl_20261109(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.release_staff_shift_claims(uuid,uuid[])",
+    "public.save_staff_shift_command(uuid,uuid,date,jsonb,uuid,boolean,bigint,uuid)",
+    "public.set_timestamp_updated_at()",
+    "public.update_booking_status_no_check(uuid,public.booking_status)",
+    "public.update_booking_status_with_promotion(uuid,public.booking_status)"
+  ],
+  "test-booking-requests-isolated.cjs": [
+    "public._hold_complex_slot_for_actor(uuid,uuid,uuid,timestamp with time zone,jsonb,uuid)",
+    "public._hold_slot_for_actor(uuid,uuid,uuid,uuid,timestamp with time zone,uuid)",
+    "public.booking_notification_enqueue_trigger()",
+    "public.booking_notification_revision_guard()",
+    "public.booking_view_public(uuid)",
+    "public.claim_booking_notifications(integer,integer)",
+    "public.create_internal_booking(uuid,uuid,uuid,uuid,timestamp with time zone,integer,uuid)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.get_free_slots_service_day(uuid,uuid,date,integer,integer,text)",
+    "public.hold_complex_slot_guest(uuid,uuid,uuid,timestamp with time zone,jsonb,text,text,text)",
+    "public.hold_slot_guest(uuid,uuid,uuid,uuid,timestamp with time zone,text,text,text)",
+    "public.is_super_admin()",
+    "public.schedule_contains_booking(uuid,uuid,timestamp with time zone,timestamp with time zone)"
+  ],
+  "test-booking-notification-outbox-isolated.cjs": [
+    "public.booking_notification_enqueue_trigger()",
+    "public.booking_notification_revision_guard()",
+    "public.claim_booking_notifications(integer,integer)"
+  ],
+  "test-staff-scoped-slots-isolated.cjs": [
+    "public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)",
+    "public.resolve_staff_day(uuid,date)"
+  ],
+  "test-reporting-completeness.mjs": [
+    "public.apply_promotion_to_booking(uuid)",
+    "public.apply_promotion_to_booking_impl_20261109(uuid)",
+    "public.apply_visit_package_to_booking(uuid)",
+    "public.apply_visit_package_to_booking_impl_20261109(uuid)",
+    "public.assert_booking_finance_access(uuid)",
+    "public.assert_finance_access(uuid,uuid,uuid)",
+    "public.can_use_promotion(uuid,uuid,uuid)",
+    "public.close_staff_shift_command(uuid,uuid,bigint,jsonb,jsonb)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.get_applicable_visit_package_for_booking(uuid)",
+    "public.get_client_visit_count(uuid,uuid)",
+    "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)",
+    "public.is_super_admin()",
+    "public.lock_shift_for_item_write()",
+    "public.open_staff_shift_safe(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.open_staff_shift_safe_impl_20261109(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.read_finance_report_snapshot(uuid,date,date,uuid,uuid)",
+    "public.save_staff_shift_command(uuid,uuid,date,jsonb,uuid,boolean,bigint,uuid)",
+    "public.save_staff_shift_command_internal_v1(uuid,uuid,date,jsonb,uuid,boolean,bigint)",
+    "public.set_timestamp_updated_at()",
+    "public.update_booking_status_no_check(uuid,public.booking_status)",
+    "public.update_booking_status_with_promotion(uuid,public.booking_status)"
+  ],
+  "test-shift-close-backlog.mjs": [
+    "public.apply_promotion_to_booking(uuid)",
+    "public.apply_promotion_to_booking_impl_20261109(uuid)",
+    "public.apply_visit_package_to_booking(uuid)",
+    "public.apply_visit_package_to_booking_impl_20261109(uuid)",
+    "public.assert_booking_finance_access(uuid)",
+    "public.assert_finance_access(uuid,uuid,uuid)",
+    "public.can_use_promotion(uuid,uuid,uuid)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.get_applicable_visit_package_for_booking(uuid)",
+    "public.get_client_visit_count(uuid,uuid)",
+    "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)",
+    "public.is_super_admin()",
+    "public.open_staff_shift_safe_impl_20261109(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.set_timestamp_updated_at()",
+    "public.update_booking_status_no_check(uuid,public.booking_status)",
+    "public.update_booking_status_with_promotion(uuid,public.booking_status)"
+  ],
+  "test-whatsapp-inbox-isolated.cjs": [
+    "public._hold_complex_slot_for_actor(uuid,uuid,uuid,timestamp with time zone,jsonb,uuid)",
+    "public._hold_slot_for_actor(uuid,uuid,uuid,uuid,timestamp with time zone,uuid)",
+    "public.booking_notification_enqueue_trigger()",
+    "public.booking_notification_revision_guard()",
+    "public.claim_booking_notifications(integer,integer)",
+    "public.create_internal_booking(uuid,uuid,uuid,uuid,timestamp with time zone,integer,uuid,text,text)",
+    "public.create_internal_complex_booking(uuid,uuid,uuid,timestamp with time zone,jsonb,uuid,text,text,text)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.hold_complex_slot_guest(uuid,uuid,uuid,timestamp with time zone,jsonb,text,text,text)",
+    "public.hold_slot_guest(uuid,uuid,uuid,uuid,timestamp with time zone,text,text,text)",
+    "public.is_super_admin()",
+    "public.schedule_contains_booking(uuid,uuid,timestamp with time zone,timestamp with time zone)"
+  ],
+  "test-booking-finance-boundary-isolated.mjs": [
+    "public._confirm_booking_transition(uuid)",
+    "public._confirm_created_booking(uuid,uuid)",
+    "public.apply_promotion_to_booking(uuid)",
+    "public.apply_promotion_to_booking_impl_20261109(uuid)",
+    "public.apply_visit_package_to_booking(uuid)",
+    "public.apply_visit_package_to_booking_impl_20261109(uuid)",
+    "public.assert_booking_finance_access(uuid)",
+    "public.assert_finance_access(uuid,uuid,uuid)",
+    "public.booking_notification_enqueue_trigger()",
+    "public.booking_notification_revision_guard()",
+    "public.can_use_promotion(uuid,uuid,uuid)",
+    "public.claim_booking_notifications(integer,integer)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.get_applicable_visit_package_for_booking(uuid)",
+    "public.get_client_visit_count(uuid,uuid)",
+    "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)",
+    "public.is_super_admin()",
+    "public.open_staff_shift_safe_impl_20261109(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.set_timestamp_updated_at()",
+    "public.update_booking_status_no_check(uuid,public.booking_status)",
+    "public.update_booking_status_with_promotion(uuid,public.booking_status)"
+  ],
+  "test-attendance-command-isolated.mjs": [
+    "public.apply_promotion_to_booking_impl_20261109(uuid)",
+    "public.apply_visit_package_to_booking_impl_20261109(uuid)",
+    "public.assert_booking_finance_access(uuid)",
+    "public.assert_finance_access(uuid,uuid,uuid)",
+    "public.can_use_promotion(uuid,uuid,uuid)",
+    "public.close_staff_shift_command(uuid,uuid,bigint,jsonb,jsonb)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.get_applicable_visit_package_for_booking(uuid)",
+    "public.get_client_visit_count(uuid,uuid)",
+    "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)",
+    "public.initialize_shift_aggregates(uuid,uuid)",
+    "public.is_super_admin()",
+    "public.lock_shift_for_item_write()",
+    "public.open_staff_shift_safe(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.open_staff_shift_safe_impl_20261109(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.save_staff_shift_command(uuid,uuid,date,jsonb,uuid,boolean,bigint,uuid)",
+    "public.save_staff_shift_command_internal_v1(uuid,uuid,date,jsonb,uuid,boolean,bigint)",
+    "public.set_timestamp_updated_at()"
+  ],
+  "test-shift-hours-adjustment-isolated.mjs": [
+    "public.apply_promotion_to_booking(uuid)",
+    "public.apply_promotion_to_booking_impl_20261109(uuid)",
+    "public.apply_visit_package_to_booking(uuid)",
+    "public.apply_visit_package_to_booking_impl_20261109(uuid)",
+    "public.assert_booking_finance_access(uuid)",
+    "public.assert_finance_access(uuid,uuid,uuid)",
+    "public.can_use_promotion(uuid,uuid,uuid)",
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.get_applicable_visit_package_for_booking(uuid)",
+    "public.get_client_visit_count(uuid,uuid)",
+    "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)",
+    "public.is_super_admin()",
+    "public.open_staff_shift_safe_impl_20261109(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)",
+    "public.set_timestamp_updated_at()",
+    "public.update_booking_status_no_check(uuid,public.booking_status)",
+    "public.update_booking_status_with_promotion(uuid,public.booking_status)"
+  ],
+  "test-privileged-maintenance-isolated.cjs": [
+    "public.anonymize_inactive_profiles_pii(integer)",
+    "public.anonymize_old_bookings_pii(integer)",
+    "public.cleanup_expired_telegram_mobile_auth_attempts(integer)",
+    "public.cleanup_expired_whatsapp_otp_codes(integer)",
+    "public.cleanup_old_api_metrics(integer)",
+    "public.cleanup_old_finance_logs(integer)",
+    "public.cleanup_old_funnel_events(integer)",
+    "public.cleanup_telegram_profile_links()",
+    "public.clear_business_owner(uuid)",
+    "public.dev_become_superadmin()",
+    "public.exec_grant_owner(uuid,uuid,uuid)",
+    "public.finalize_due_account_deletions(integer)",
+    "public.force_delete_business_and_downgrade_owner(uuid)",
+    "public.grant_branch_admin(uuid,uuid)",
+    "public.has_role(text,uuid)",
+    "public.log_api_metric(text,text,integer,integer,uuid,uuid,uuid,text,text,integer,integer,jsonb,inet,text)",
+    "public.log_finance_operation(uuid,uuid,text,text,text,uuid,date,jsonb,jsonb,jsonb,text,text,inet,text)",
+    "public.log_frontend_metric(text,jsonb,timestamp with time zone,uuid,text,text,inet)",
+    "public.purge_expired_holds()",
+    "public.purge_user(uuid)",
+    "public.revoke_branch_admin(uuid,uuid)"
+  ],
+  "test-user-lifecycle-isolated.cjs": [
+    "public.finance_is_platform_admin(uuid)"
+  ],
+  "test-identity-surface-hardening-isolated.cjs": [
+    "public.can_use_promotion(uuid,uuid,uuid)",
+    "public.get_client_visit_count(uuid,uuid)",
+    "public.protect_profile_identity_columns()"
+  ],
+  "test-identity-views-row-filter-isolated.cjs": [
+    "public.has_role(text,uuid)",
+    "public.is_super_admin()"
+  ],
+  "test-spatial-ref-sys-guard-isolated.cjs": [
+    "private.reject_spatial_ref_sys_change()"
+  ],
+  "test-service-only-definer-functions-isolated.cjs": [
+    "public.branch_admins_effective(uuid)",
+    "public.get_api_metrics_stats(text,integer,text)",
+    "public.get_failed_api_requests(text,integer,integer)",
+    "public.get_slow_api_requests(text,integer,integer)",
+    "public.recalculate_ratings_for_date(date)",
+    "public.remove_user_notification_email_source(uuid,text)",
+    "public.sync_auth_user_notification_email()",
+    "public.sync_user_notification_email(uuid,text,text,text)"
+  ],
+  "test-internal-tables-access-isolated.cjs": [
+    "public.update_shift_aggregates(uuid)"
+  ],
+  "test-staff-private-fields-isolated.cjs": [
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.finance_is_platform_admin(uuid)"
+  ],
+  "test-client-write-paths-isolated.cjs": [
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.finance_is_platform_admin(uuid)",
+    "public.has_branch_admin(uuid)",
+    "public.has_role(text,uuid)",
+    "public.is_super_admin()"
+  ],
+  "test-bookings-read-scope-isolated.cjs": [
+    "public.has_role(text,uuid)",
+    "public.is_super_admin()",
+    "public.user_lifecycle_access_allowed()"
+  ],
+  "test-booking-service-staff-isolated.cjs": [
+    "public._hold_complex_slot_for_actor(uuid,uuid,uuid,timestamp with time zone,jsonb,uuid)",
+    "public._hold_slot_for_actor(uuid,uuid,uuid,uuid,timestamp with time zone,uuid)",
+    "public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)",
+    "public.hold_complex_slot_guest(uuid,uuid,uuid,timestamp with time zone,jsonb,text,text,text)",
+    "public.hold_slot_guest(uuid,uuid,uuid,uuid,timestamp with time zone,text,text,text)",
+    "public.resolve_staff_day(uuid,date)",
+    "public.schedule_contains_booking(uuid,uuid,timestamp with time zone,timestamp with time zone)",
+    "public.schedule_effective_day(uuid,date)"
+  ],
+  "test-tenant-reference-guards-isolated.cjs": [
+    "public.has_role(text,uuid)"
+  ],
+  "test-staff-delete-isolated.cjs": [
+    "public.prevent_roles_for_suspended()"
+  ],
+  "test-notification-email-proven-sources-isolated.cjs": [
+    "public.sync_auth_user_notification_email()",
+    "public.transfer_staff_home(uuid,uuid,uuid,uuid,uuid)"
+  ],
+  "test-admin-user-directory-isolated.cjs": [
+    "public.finance_is_platform_admin(uuid)"
+  ],
+  "test-dashboard-bookings-page-isolated.cjs": [
+    "public.finance_can_manage_business(uuid,uuid)",
+    "public.finance_is_platform_admin(uuid)"
+  ],
+  "test-maintenance-scan-indexes-isolated.cjs": [
+    "public.purge_expired_holds()"
+  ],
+  "test-analytics-ingest-guards-isolated.cjs": [
+    "private.tenant_reference_guard()"
+  ],
+  "test-keep-history-on-delete-isolated.cjs": [
+    "public.delete_staff_without_history(uuid,uuid)",
+    "public.force_delete_business_and_downgrade_owner(uuid)"
+  ],
+  "test-visit-package-sale-identity-isolated.cjs": [
+    "public.assert_booking_finance_access(uuid)"
+  ]
+}

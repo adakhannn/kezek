@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-client-writes-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -271,6 +272,7 @@ let created = false;
         assert.equal(await lookup('null', 'null'), 'none');
         await assert.rejects(asRole('authenticated', owner, `select * from public.find_accounts_by_contact('x@unit.test', null)`), /permission denied for function/);
 
+        await assertLiveFunctions(sql, { suite: 'test-client-write-paths-isolated.cjs' });
         console.log('client write paths: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

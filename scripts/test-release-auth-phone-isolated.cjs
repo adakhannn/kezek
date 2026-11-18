@@ -9,6 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261118210000_release_auth_phone.sql'), 'utf8').replace(/\r/g, '');
 const container = `kezek-release-auth-phone-${randomUUID()}`;
@@ -94,6 +95,7 @@ let created = false;
         }
         assert.equal(await state(other), '996700000001|true|-|-|+996700000001|other@example.test|phone|1');
 
+        await assertLiveFunctions(sql, { suite: 'test-release-auth-phone-isolated.cjs' });
         console.log('release auth phone: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

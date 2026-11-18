@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor } from './lib/finance-transaction-fixture.mjs';
 import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
 const container=`kezek-close-backlog-test-${randomUUID()}`;
 function docker(args,input='') { return new Promise((resolve,reject)=>{
  const p=spawn('docker',args,{windowsHide:true});let out='',err='';
@@ -129,5 +130,6 @@ try {
  const todayOpen=await call(openSql('null'));assert.equal(todayOpen.ok,true);assert.equal(todayOpen.shift.shift_date,(await call("select read_staff_finance_calendar('"+ids.biz+"','"+ids.staff+"');")).todayDate);
  console.log('PASS calendar DST, scoped access, existing-date Save, historical/future create fencing, manager-only original-time reopen and stale revision');
 
+ await assertLiveFunctions(sql, { suite: 'test-shift-close-backlog.mjs' });
  console.log('PASS all isolated shift-close backlog regressions');
 } finally { if(created) await docker(['rm','--force',container]); }

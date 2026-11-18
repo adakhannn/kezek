@@ -7,6 +7,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-identity-surface-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -134,6 +135,7 @@ let created = false;
         }
         assert.equal(await sql(`select count(*) from pg_policies where tablename='frontend_metrics' and policyname='Allow read access to frontend metrics'`), '0');
 
+        await assertLiveFunctions(sql, { suite: 'test-identity-surface-hardening-isolated.cjs' });
         console.log('identity and auth surface hardening: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

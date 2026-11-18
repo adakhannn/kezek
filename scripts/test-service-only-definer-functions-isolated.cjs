@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-definer-acl-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -127,6 +128,7 @@ let created = false;
         assert.equal(await sql(`select count(*) from public.user_notification_emails where user_id = '${victim}'`), '2');
         assert.equal(await sql(`select email from public.user_notification_emails where user_id = '${newcomer}'`), 'new@unit.test');
 
+        await assertLiveFunctions(sql, { suite: 'test-service-only-definer-functions-isolated.cjs' });
         console.log('service-only definer functions: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

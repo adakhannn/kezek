@@ -11,6 +11,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migration = fs.readFileSync(
     path.join(__dirname, '..', 'supabase', 'migrations', '20261119030000_closed_default_privileges.sql'),
@@ -150,6 +151,7 @@ grant insert, select on public.notes_after, public.drafts_after to authenticated
         assert.match(once, /\*:f:\{postgres=X\/postgres\}/, 'the global function default is owner-only');
         assert.doesNotMatch(once, /anon=|authenticated=/, 'no default grants to client roles remain');
 
+        await assertLiveFunctions(sql, { suite: 'test-closed-default-privileges-isolated.cjs' });
         console.log('Closed default privileges (DB-11): new tables, views, sequences and functions are owner + service_role only; explicit grants and earlier objects unchanged.');
     } finally {
         if (created) await docker(['rm', '-f', container]).catch(() => {});

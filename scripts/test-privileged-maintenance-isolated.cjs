@@ -7,6 +7,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const container = `kezek-maintenance-acl-${randomUUID()}`;
 const signatures = [
  'cleanup_old_api_metrics(integer)', 'cleanup_old_finance_logs(integer)', 'cleanup_old_funnel_events(integer)',
@@ -91,6 +92,7 @@ let created=false;
   await assert.rejects(sql(`set role anon;select grant_branch_admin('${branch}','${target}')`),/permission denied/);
   await assert.rejects(caller(owner,`insert into branch_admins values('${branch}','${target}')`),/permission denied/);
   await assert.rejects(sql(`set role anon;select purge_user('${target}')`),/permission denied/);
+  await assertLiveFunctions(sql, { suite: 'test-privileged-maintenance-isolated.cjs' });
   console.log('PASS maintenance ACL: 17 server-only RPCs, role/log table and column DML denied, checked cross-tenant branch grants, all three caller-bound global role stores, retired dev shortcut');
  } finally { if(created) { await docker(['rm','--force',container]); console.log('Removed owned isolated maintenance ACL container'); } }
 })().catch(error=>{console.error(error.message);process.exitCode=1;});

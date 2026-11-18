@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, day, asActor } from './lib/finance-transaction-fixture.mjs';
 import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
 const container=`kezek-booking-finance-${randomUUID()}`;
 function docker(args,input='') { return new Promise((resolve,reject)=>{
  const p=spawn('docker',args,{windowsHide:true});let out='',err='';
@@ -91,6 +92,7 @@ try {
  assert.equal(await sql(`select row_to_json(i) from staff_shift_items i where id='${ids.item}'`),snapshot);
  assert.equal(await sql('select count(*) from client_visit_package_uses'),'1');
  assert.equal(await sql(`select count(*) from booking_notification_outbox where booking_id='${ids.booking}' and event_type='cancel'`),'1','only the first successful cancellation enqueued');
+ await assertLiveFunctions(sql, { suite: 'test-booking-finance-boundary-isolated.mjs' });
  console.log('PASS actual cancellation vs Save/Close: real concurrent row-lock waits; cancel-first save rollback; save/close-first cancellation conflict; ledger/package/status/outbox invariants preserved. PostgreSQL16, synthetic records only.');
 } finally {
  if(created&&/^kezek-booking-finance-[0-9a-f-]{36}$/.test(container))await docker(['rm','-f','-v',container]);

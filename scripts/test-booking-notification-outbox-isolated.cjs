@@ -6,6 +6,7 @@ const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-outbox-regression-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -186,6 +187,7 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     }
     failure("set role service_role; update booking_notification_deliveries set payload='{}';",/permission denied/);
     failure("set role service_role; update booking_notification_outbox set status='sent';",/permission denied/);
+    await assertLiveFunctions(sql, { suite: 'test-booking-notification-outbox-isolated.cjs' });
     console.log('PASS isolated outbox PostgreSQL: concurrent claim isolation, immutable preparation, lease fencing, partial receipts, non-idempotent ambiguity, email retry window, revision fencing, finite retries, retained tombstone/PII pruning, ACL. No provider calls.');
   } finally {
     if(!/^kezek-outbox-regression-[0-9a-f-]{36}$/.test(name))throw new Error('Invalid disposable container name');

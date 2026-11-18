@@ -10,6 +10,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -195,6 +196,7 @@ const minutes = (result) => sql(`select (extract(epoch from end_at - start_at) /
             or has_function_privilege('anon', 'public._staff_performs_service(uuid,uuid,uuid)', 'execute')
             or has_function_privilege('service_role', 'public._staff_performs_service(uuid,uuid,uuid)', 'execute')`), 'f');
 
+        await assertLiveFunctions(sql, { suite: 'test-booking-service-staff-isolated.cjs' });
         console.log('booking service staff checks: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

@@ -7,6 +7,7 @@ const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-staff-slots-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -162,6 +163,7 @@ const failure = (statement, regex) => {
     sql(`update synthetic_schedule set intervals=(select jsonb_agg(jsonb_build_object('start','08:00','end','18:00')) from generate_series(1,20)) where staff_id='00000000-0000-4000-9000-000000000009';`);
     const dedup=collect({staffId:'00000000-0000-4000-9000-000000000009',limit:10});
     assert.equal(dedup.length,39);assert.equal(new Set(dedup.map(row=>row.start_at)).size,39);
+    await assertLiveFunctions(sql, { suite: 'test-staff-scoped-slots-isolated.cjs' });
     console.log(JSON.stringify({result:'PASS',boundary:'synthetic resolver, local PostgreSQL16; not production RPS',page:{rows:100,resolverCalls:pageCalls,maxEmptyPageCalls:8},benchmarks:[scoped,all]}));
   } finally { run(['rm','-f',name],undefined,true); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -9,6 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-staff-delete-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -121,6 +122,7 @@ let created = false;
         await assert.rejects(asRole('anon', `select public.delete_staff_without_history('${biz}', '${withBooking}')`), /permission denied for function/);
         await assert.rejects(asRole('service_role', `select public.delete_staff_without_history('${biz}', '${withBooking}')`), /STAFF_HAS_HISTORY/);
 
+        await assertLiveFunctions(sql, { suite: 'test-staff-delete-isolated.cjs' });
         console.log('staff delete without history: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

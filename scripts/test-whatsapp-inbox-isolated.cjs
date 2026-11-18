@@ -7,6 +7,7 @@ const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 const root = path.resolve(__dirname, '..');
 const name = 'kezek-whatsapp-inbox-' + randomUUID();
 const run = (args, input, allowError = false) => {
@@ -243,6 +244,7 @@ const expectFailure = (statement, pattern) => {
         expectFailure(`set role ${role}; ${statement};`,/permission denied/);
     }
     expectFailure("set role service_role; update whatsapp_inbox set status='sent';",/permission denied/);
+    await assertLiveFunctions(sql, { suite: 'test-whatsapp-inbox-isolated.cjs' });
     console.log('PASS isolated WhatsApp inbox: concurrent receive/claim, receiver/phone ownership, real protected confirm/cancel + transactional outbox and receipt rollback, immutable replay, invalid choice, paid review, lease fencing, ambiguous replies, bounded retries, tombstone retention, legacy quarantine and ACL. No provider calls.');
   } finally {
     if(!/^kezek-whatsapp-inbox-[0-9a-f-]{36}$/.test(name))throw new Error('Invalid disposable container name');

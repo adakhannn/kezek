@@ -28,7 +28,7 @@
 
 Проверено локально и в CI (`db_bootstrap`): `supabase start` / `supabase db reset` поднимают baseline, все миграции и [seed](seed.sql) с нуля, а [типы](../apps/web/src/types/supabase.ts) совпадают со схемой (`pnpm check:db-types`).
 
-Локальный стек: `pnpm db:start:check` (без Studio/Realtime и прочих необязательных сервисов), затем `pnpm generate:db-types` после новых миграций. `project_id` в [config.toml](config.toml) — `kezek`: `db reset` в этой папке стирает локальную БД этого стека.
+Локальный стек: `pnpm db:start:check` (без Studio/Realtime и прочих необязательных сервисов), затем `pnpm generate:db-types` и `pnpm generate:function-catalog` после новых миграций: каталог функций сверяют изолированные SQL-наборы, а `db_bootstrap` в CI проверяет, что оба файла не отстают от миграций. `project_id` в [config.toml](config.toml) — `kezek`: `db reset` в этой папке стирает локальную БД этого стека.
 
 ### История миграций прода
 

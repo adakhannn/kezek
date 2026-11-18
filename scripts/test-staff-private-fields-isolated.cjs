@@ -9,6 +9,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const container = `kezek-staff-private-${randomUUID()}`;
 const docker = (args, input = '') => new Promise((resolve, reject) => {
@@ -135,6 +136,7 @@ let created = false;
         await assert.rejects(asRole('anon', stranger, privateRow(staffA)), /permission denied for function/);
         assert.equal(await asRole('authenticated', owner, `select count(*) from public.staff_private_fields('${randomUUID()}')`), '0');
 
+        await assertLiveFunctions(sql, { suite: 'test-staff-private-fields-isolated.cjs' });
         console.log('staff private fields and authenticated column privileges: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

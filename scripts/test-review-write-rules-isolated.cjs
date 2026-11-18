@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
+const { assertLiveFunctions } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -136,6 +137,7 @@ let created = false;
         assert.equal(await sql(`select string_agg(policyname || ':' || cmd, ',' order by policyname collate "C") from pg_policies where tablename = 'reviews'`),
             'Users can select own reviews:SELECT,reviews_insert_self:INSERT,reviews_select_self:SELECT,reviews_update_self:UPDATE');
 
+        await assertLiveFunctions(sql, { suite: 'test-review-write-rules-isolated.cjs' });
         console.log('review write rules: ok');
     } finally {
         if (created) await docker(['rm', '--force', container]).catch(() => undefined);

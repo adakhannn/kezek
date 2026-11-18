@@ -57,7 +57,7 @@ jobs:
           pnpm -C packages/shared-client test --runInBand --watchAll=false
 
       - name: Check SQL runner failure propagation
-        run: node --test scripts/sql-runner.test.mjs scripts/isolated-sql-runner.test.mjs
+        run: node --test scripts/sql-runner.test.mjs scripts/isolated-sql-runner.test.mjs scripts/live-schema.test.mjs scripts/sql-suite-parity.test.mjs
 
       - name: Check generated cron manifests
         run: pnpm check:crons
@@ -383,6 +383,9 @@ jobs:
 
       - name: SQL functions pass plpgsql_check
         run: pnpm check:sql-functions
+
+      - name: Function catalog matches the migrations
+        run: pnpm check:function-catalog
 
       - name: Stop local Supabase
         if: always()

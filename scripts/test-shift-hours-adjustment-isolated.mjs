@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setupFinanceFixture, ids, asActor, day } from './lib/finance-transaction-fixture.mjs';
 import { POSTGRES_IMAGE } from './lib/isolated-postgres.cjs';
+import { assertLiveFunctions } from './lib/live-schema.cjs';
 const container='kezek-hours-test-'+randomUUID();
 function docker(args,input=''){return new Promise((resolve,reject)=>{const p=spawn('docker',args,{windowsHide:true});let out='',err='';p.stdout.on('data',d=>out+=d);p.stderr.on('data',d=>err+=d);p.on('error',reject);p.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err||out)));p.stdin.end(input);});}
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -75,5 +76,6 @@ try{
  assert.equal(calendar.timezone,'America/New_York');assert.equal(calendar.todayDate,await sql("select (statement_timestamp() at time zone 'America/New_York')::date"));
  await assert.rejects(sql(asActor(ids.owner,'authenticated')+"select read_business_finance_calendar('"+ids.biz+"');"),/permission denied/);
  console.log('PASS actual 23/24/25-hour day limit and guaranteed amounts; ordinary 25-hour input rejected');
+ await assertLiveFunctions(sql, { suite: 'test-shift-hours-adjustment-isolated.mjs' });
  console.log('PASS all isolated shift-hours adjustment regressions');
 }finally{if(created)await docker(['rm','--force',container]);}
