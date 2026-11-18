@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { BookingsViewTabs, CalendarDaySection } from './components/BookingsViewSections';
 import { DashboardBookingsListSection } from './components/DashboardBookingsListSection';
 import { QuickDesk } from './components/QuickDesk';
-import type { BookingItem, BranchRow, ServiceRow, StaffRow, TabKey } from './components/bookingsViewTypes';
+import type { BranchRow, ServiceRow, StaffRow, TabKey } from './components/bookingsViewTypes';
 import { notify } from './notify';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -18,14 +18,12 @@ export default function AdminBookingsView({
     services,
     staff,
     branches,
-    initial,
 }: {
     bizId: string;
     businessTz?: string | null;
     services: ServiceRow[];
     staff: StaffRow[];
     branches: BranchRow[];
-    initial: BookingItem[];
 }) {
     const { t } = useLanguage();
     const [tab, setTab] = useState<TabKey>('calendar');
@@ -113,7 +111,6 @@ export default function AdminBookingsView({
             {tab === 'list' && (
                 <DashboardBookingsListSection
                     bizId={bizId}
-                    initial={initial}
                     branches={branches}
                     timezone={timezone}
                     notify={notify}

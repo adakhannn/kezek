@@ -5495,6 +5495,20 @@ export type Database = {
                 };
                 Returns: undefined;
             };
+            "dashboard_bookings_page": {
+                Args: {
+                    "p_biz_id": string;
+                    "p_branch_id"?: string;
+                    "p_limit"?: number;
+                    "p_offset"?: number;
+                    "p_search"?: string;
+                    "p_staff_id"?: string;
+                    "p_start_before"?: string;
+                    "p_start_from"?: string;
+                    "p_status"?: string;
+                };
+                Returns: Json;
+            };
             "delete_staff_without_history": {
                 Args: {
                     "p_biz_id": string;

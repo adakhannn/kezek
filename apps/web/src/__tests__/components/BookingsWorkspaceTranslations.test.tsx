@@ -18,7 +18,7 @@ test.each([['ru', bookingsRu], ['ky', bookingsKy], ['en', bookingsEn]] as const)
         jest.mocked(useLanguage).mockReturnValue({locale, t: (key: string, fallback?: string) =>
             (dictionary as Record<string, string>)[key] ?? fallback ?? key,
         } as ReturnType<typeof useLanguage>);
-        render(<AdminBookingsView bizId="biz" services={[]} staff={[]} branches={[]} initial={[]} />);
+        render(<AdminBookingsView bizId="biz" services={[]} staff={[]} branches={[]} />);
         expect(screen.getByText(dictionary['bookings.desk.today'], {selector: 'p'})).toBeTruthy();
         expect(screen.getByText(dictionary['bookings.workspace.summary.historyTitle'])).toBeTruthy();
         expect(dictionary['bookings.desk.primaryActionDesc']).not.toContain('action bar');

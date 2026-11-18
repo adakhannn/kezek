@@ -34,6 +34,9 @@ type BookingsListProps = {
     onCancel: (id: string) => void;
     onMarkAttendance: (id: string, attended: boolean) => void;
     isLoading: boolean;
+    /** The last load failed: an empty list is an error, not "no bookings" (FE-03). */
+    loadFailed?: boolean;
+    onRetry?: () => void;
     currentPage: number;
     totalCount: number;
     itemsPerPage?: number;
@@ -47,6 +50,8 @@ export function BookingsList({
     onCancel,
     onMarkAttendance,
     isLoading,
+    loadFailed = false,
+    onRetry,
     currentPage,
     totalCount,
     itemsPerPage = 30,
@@ -72,8 +77,20 @@ export function BookingsList({
         return t(`bookings.status.${booking.status}`, booking.status);
     };
 
-    if (isLoading) {
-        return <div className="py-6 text-center text-sm text-[var(--text-muted)]">{t('bookings.list.loading', 'Загрузка...')}</div>;
+    // Rows stay on screen while the next page or a refresh loads (FE-03).
+    if (isLoading && bookings.length === 0) {
+        return <div role="status" className="py-6 text-center text-sm text-[var(--text-muted)]">{t('bookings.list.loading', 'Загрузка...')}</div>;
+    }
+
+    if (bookings.length === 0 && loadFailed) {
+        return (
+            <EmptyState
+                title={t('bookings.list.loadError', 'Не удалось загрузить брони')}
+                description={t('bookings.list.loadErrorHint', 'Проверьте соединение и попробуйте ещё раз.')}
+                action={onRetry ? <Button onClick={onRetry}>{t('bookings.list.retry', 'Повторить')}</Button> : undefined}
+                className="border border-dashed border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
+            />
+        );
     }
 
     if (bookings.length === 0) {
@@ -90,7 +107,7 @@ export function BookingsList({
     }
 
     return (
-        <>
+        <div aria-busy={isLoading} className={isLoading ? 'opacity-60 transition-opacity' : undefined}>
             <div className="hidden lg:block overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
                 <table className="min-w-full">
                     <thead className="sticky top-0 z-[96] bg-[var(--surface-emphasis)]">
@@ -264,6 +281,6 @@ export function BookingsList({
                     </div>
                 </div>
             ) : null}
-        </>
+        </div>
     );
 }

@@ -422,6 +422,7 @@ jobs:
           - test-review-write-rules-isolated.cjs
           - test-one-active-date-rule-isolated.cjs
           - test-admin-user-directory-isolated.cjs
+          - test-dashboard-bookings-page-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4

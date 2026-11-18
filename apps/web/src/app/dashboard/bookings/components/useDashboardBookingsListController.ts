@@ -1,54 +1,77 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FilterPreset, applyPreset } from './FilterPresets';
+import type { FilterPreset } from './FilterPresets';
 import type { BookingItem } from './bookingsViewTypes';
 
+import { useNow } from '@/hooks/useNow';
 import { bookingCancellationError } from '@/lib/bookingCancellationError';
 import { cancelBooking, confirmBooking } from '@/lib/bookingDashboardService';
-import { filterDashboardBookings } from '@/lib/dashboardBookingSearch';
+import {
+    DASHBOARD_BOOKINGS_PAGE_SIZE,
+    dashboardBookingsRpcArgs,
+    fetchDashboardBookingsPage,
+    type DashboardBookingRow,
+    type DashboardBookingsRpcArgs,
+} from '@/lib/dashboardBookingsPage';
 import { logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
+import { dayBoundsInTz, formatDateInTz } from '@/lib/time';
 
-const ITEMS_PER_PAGE = 30;
+const ITEMS_PER_PAGE = DASHBOARD_BOOKINGS_PAGE_SIZE;
+const SEARCH_DEBOUNCE_MS = 300;
 
-function useDashboardBookingsFilters(initialTotal: number) {
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [branchFilter, setBranchFilter] = useState<string>('all');
-    const [searchQuery, setSearchQuery] = useState<string>('');
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const [totalCount, setTotalCount] = useState<number>(initialTotal);
-    const [activePreset, setActivePreset] = useState<FilterPreset>(null);
+type Translate = (key: string, fallback?: string) => string;
 
-    return {
-        statusFilter,
-        branchFilter,
-        searchQuery,
-        currentPage,
-        totalCount,
-        activePreset,
-        setStatusFilter,
-        setBranchFilter,
-        setSearchQuery,
-        setCurrentPage,
-        setTotalCount,
-        setActivePreset,
+function toBookingItem(row: DashboardBookingRow, locale: string, t: Translate): BookingItem {
+    const item: BookingItem = {
+        id: row.id,
+        status: row.status,
+        start_at: row.start_at,
+        end_at: row.end_at,
+        branch_id: row.branch_id,
+        staff_id: row.staff_id,
+        services: row.service ? [row.service] : undefined,
+        staff: row.staff_name ? [{ full_name: row.staff_name }] : undefined,
+        client_id: row.client_id,
+        client_name: row.client_name ?? undefined,
+        client_phone: row.client_phone ?? undefined,
     };
+
+    if (row.booking_services.length > 0) {
+        const minutes = t('booking.duration.min', 'мин');
+        let totalDuration = 0;
+        const parts = row.booking_services.map((bookingService) => {
+            const service = bookingService.service;
+            const name = (locale === 'ky' && service?.name_ky) || (locale === 'en' && service?.name_en) || service?.name_ru || '';
+            const duration = typeof bookingService.duration_min === 'number' ? bookingService.duration_min : 0;
+            totalDuration += duration;
+            return name ? `${name} (${duration} ${minutes})` : `${duration} ${minutes}`;
+        });
+        const total = totalDuration > 0 ? ` — ${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${minutes}` : '';
+        item.servicesSummary = `${parts.join('; ')}${total}`;
+    }
+
+    return item;
 }
 
 type UseDashboardBookingsListControllerOptions = {
     bizId: string;
-    initial: BookingItem[];
     timezone: string;
     locale: string;
-    t: (key: string, fallback?: string) => string;
+    t: Translate;
     notify: (kind: 'confirm' | 'cancel', id: string) => Promise<void>;
     showError: (message: string) => void;
     showSuccess: (message: string) => void;
 };
 
+/**
+ * The dashboard bookings list (FE-03). Filters, search over the whole history, the order and the
+ * total of matches come from one read (public.dashboard_bookings_page); the browser no longer
+ * searches the 30 loaded rows. Only the latest request may change the list, a filter change goes
+ * to page 1 in the same update, typing is debounced, and a failed load is shown as such.
+ */
 export function useDashboardBookingsListController({
     bizId,
-    initial,
     timezone,
     locale,
     t,
@@ -56,211 +79,143 @@ export function useDashboardBookingsListController({
     showError,
     showSuccess,
 }: UseDashboardBookingsListControllerOptions) {
-    const [list, setList] = useState<BookingItem[]>(initial);
-    const {
-        statusFilter,
-        branchFilter,
-        searchQuery,
-        currentPage,
-        totalCount,
-        activePreset,
-        setStatusFilter,
-        setBranchFilter,
-        setSearchQuery,
-        setCurrentPage,
-        setTotalCount,
-        setActivePreset,
-    } = useDashboardBookingsFilters(initial.length);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [statusFilter, setStatusFilterState] = useState<string>('all');
+    const [branchFilter, setBranchFilterState] = useState<string>('all');
+    const [activePreset, setActivePresetState] = useState<FilterPreset>(null);
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [search, setSearch] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [rows, setRows] = useState<DashboardBookingRow[]>([]);
+    const [totalCount, setTotalCount] = useState<number>(0);
+    const [settled, setSettled] = useState<{ key: string; ok: boolean } | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
     const [currentStaffId, setCurrentStaffId] = useState<string | null>(null);
     const [hasStaffAccess, setHasStaffAccess] = useState<boolean>(false);
-    const visibleList = useMemo(() => filterDashboardBookings(list, searchQuery), [list, searchQuery]);
+
+    // The business day moves at midnight while the page stays open (FE-14).
+    const today = formatDateInTz(useNow(), timezone);
+    const presetStaffId = activePreset === 'myStaff' ? currentStaffId : null;
+    const args = useMemo(() => dashboardBookingsRpcArgs({
+        bizId,
+        statusFilter,
+        branchFilter,
+        preset: activePreset,
+        search,
+        page: currentPage,
+        todayBounds: activePreset === 'today' ? dayBoundsInTz(today, timezone) : null,
+        currentStaffId: presetStaffId,
+    }), [bizId, statusFilter, branchFilter, activePreset, search, currentPage, today, timezone, presetStaffId]);
+    const argsKey = JSON.stringify(args);
+
+    const sequence = useRef(0);
+    const inFlight = useRef<AbortController | null>(null);
+    const shownKey = useRef<string | null>(null);
+    const latestArgs = useRef(args);
+    const messages = useRef({ t, showError });
+    useEffect(() => {
+        latestArgs.current = args;
+        messages.current = { t, showError };
+    });
+
+    const load = useCallback(async (next: DashboardBookingsRpcArgs) => {
+        const id = ++sequence.current;
+        inFlight.current?.abort();
+        const abort = new AbortController();
+        inFlight.current = abort;
+        const key = JSON.stringify(next);
+        try {
+            const page = await fetchDashboardBookingsPage(next, abort.signal);
+            if (id !== sequence.current) return;
+            if (page.rows.length === 0 && next.p_offset > 0) {
+                // The page is past the end (bookings were cancelled or filtered away): show the last page.
+                setCurrentPage(Math.max(1, Math.ceil(page.total / ITEMS_PER_PAGE)));
+                return;
+            }
+            shownKey.current = key;
+            setRows(page.rows);
+            setTotalCount(page.total);
+            setSettled({ key, ok: true });
+        } catch (error) {
+            if (id !== sequence.current || abort.signal.aborted) return;
+            logWarn('useDashboardBookingsListController', 'Bookings page failed', error);
+            if (shownKey.current !== key) {
+                // Never leave another selection's rows under this one.
+                shownKey.current = null;
+                setRows([]);
+                setTotalCount(0);
+            }
+            setSettled({ key, ok: false });
+            messages.current.showError(messages.current.t('bookings.list.loadError', 'Не удалось загрузить брони'));
+        } finally {
+            if (id === sequence.current) setRefreshing(false);
+        }
+    }, []);
 
     useEffect(() => {
-        async function fetchCurrentStaff() {
-            try {
-                const {
-                    data: { user },
-                } = await supabase.auth.getUser();
-                if (!user) return;
+        void load(args);
+    }, [load, args]);
 
+    useEffect(() => () => {
+        sequence.current += 1;
+        inFlight.current?.abort();
+    }, []);
+
+    useEffect(() => {
+        const next = searchQuery.trim();
+        if (next === search) return undefined;
+        const timer = window.setTimeout(() => {
+            setSearch(next);
+            setCurrentPage(1);
+        }, next ? SEARCH_DEBOUNCE_MS : 0);
+        return () => window.clearTimeout(timer);
+    }, [searchQuery, search]);
+
+    useEffect(() => {
+        let active = true;
+        (async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user || !active) return;
+                // The staff row of this business only: a manager who is also staff elsewhere must not
+                // get that business's staff id for "Мой мастер".
                 const { data: staff } = await supabase
                     .from('staff')
                     .select('id')
+                    .eq('biz_id', bizId)
                     .eq('user_id', user.id)
                     .eq('is_active', true)
                     .maybeSingle();
-
-                if (staff) {
-                    setCurrentStaffId(staff.id);
-                    setHasStaffAccess(true);
-                }
+                if (!active) return;
+                setCurrentStaffId(staff?.id ?? null);
+                setHasStaffAccess(Boolean(staff));
             } catch (error) {
                 logWarn('useDashboardBookingsListController', 'Failed to fetch current staff', error);
             }
-        }
+        })();
+        return () => {
+            active = false;
+        };
+    }, [bizId]);
 
-        void fetchCurrentStaff();
-    }, []);
+    const refresh = useCallback(async () => {
+        setRefreshing(true);
+        await load(latestArgs.current);
+    }, [load]);
 
-    async function refresh() {
-        setIsLoading(true);
-        try {
-            let query = supabase
-                .from('bookings')
-                .select(
-                    `
-                    id,
-                    status,
-                    start_at,
-                    end_at,
-                    branch_id,
-                    staff_id,
-                    services (name_ru, name_ky, name_en),
-                    staff (full_name),
-                    client_id,
-                    client_name,
-                    client_phone,
-                    booking_services (
-                        duration_min,
-                        service:services (name_ru, name_ky, name_en)
-                    )
-                `,
-                    { count: 'exact' },
-                )
-                .eq('biz_id', bizId);
-
-            if (activePreset) {
-                const presetFilters = applyPreset(activePreset, timezone, currentStaffId);
-
-                if (presetFilters.dateFilter) {
-                    query = query.gte('start_at', presetFilters.dateFilter.gte);
-                    query = query.lte('start_at', presetFilters.dateFilter.lte);
-                }
-
-                if (presetFilters.staffFilter) {
-                    query = query.eq('staff_id', presetFilters.staffFilter);
-                }
-
-                if (presetFilters.statusFilter === 'holdConfirmed') {
-                    query = query.in('status', ['hold', 'confirmed']);
-                }
-            }
-
-            if (statusFilter !== 'all' && !activePreset) {
-                if (statusFilter === 'active') {
-                    query = query.in('status', ['confirmed']);
-                } else {
-                    query = query.eq('status', statusFilter);
-                }
-            } else if (!activePreset) {
-                query = query.neq('status', 'cancelled');
-            }
-
-            if (branchFilter !== 'all') {
-                query = query.eq('branch_id', branchFilter);
-            }
-
-            const from = (currentPage - 1) * ITEMS_PER_PAGE;
-            const to = from + ITEMS_PER_PAGE - 1;
-
-            type ListBookingRow = {
-                id: string | number;
-                status: BookingItem['status'];
-                start_at: string | Date;
-                end_at: string | Date;
-                branch_id: string | null;
-                staff_id: string | null;
-                services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
-                staff?: { full_name: string }[] | null;
-                client_name?: string | null;
-                client_id?: string | null;
-                client_phone?: string | null;
-                booking_services?: {
-                    duration_min: number | null;
-                    service?: { name_ru?: string; name_ky?: string | null; name_en?: string | null } | null;
-                }[] | null;
-            };
-
-            const { data, count } = await query.order('start_at', { ascending: false }).range(from, to);
-            setTotalCount(count ?? 0);
-
-            const rawRows = (data ?? []) as ListBookingRow[];
-            const missingNames = rawRows.filter(row => row.client_id && !row.client_name?.trim()).map(row => String(row.id));
-            const clientNames = new Map<string, string>();
-            if (missingNames.length) {
-                try {
-                    const response = await fetch('/api/bookings/client-identities', {
-                        method: 'POST', headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({ bookingIds: missingNames }),
-                    });
-                    if (!response.ok) throw new Error('Client name lookup failed');
-                    const result = await response.json() as { identities?: { bookingId: string; name: string }[] };
-                    for (const identity of result.identities ?? []) clientNames.set(identity.bookingId, identity.name);
-                } catch (error) {
-                    logWarn('useDashboardBookingsListController', 'Client names unavailable', error);
-                }
-            }
-            const mapped: BookingItem[] = rawRows.map((row) => {
-                const base: BookingItem = {
-                    id: String(row.id),
-                    status: row.status as BookingItem['status'],
-                    start_at: String(row.start_at),
-                    end_at: String(row.end_at),
-                    branch_id: row.branch_id,
-                    staff_id: row.staff_id,
-                    services: row.services as BookingItem['services'],
-                    staff: row.staff as BookingItem['staff'],
-                    client_id: row.client_id,
-                    client_name: row.client_name?.trim() || clientNames.get(String(row.id)),
-                    client_phone: row.client_phone ?? undefined,
-                };
-
-                const rawServices = Array.isArray(row.booking_services) ? row.booking_services : [];
-                if (rawServices.length > 0) {
-                    const parts: string[] = [];
-                    let totalDuration = 0;
-
-                    for (const bookingService of rawServices) {
-                        const service = bookingService.service || {};
-                        const name =
-                            (locale === 'ky' && service.name_ky) ||
-                            (locale === 'en' && service.name_en) ||
-                            service.name_ru ||
-                            '';
-                        const duration = typeof bookingService.duration_min === 'number' ? bookingService.duration_min : 0;
-                        totalDuration += duration;
-                        const label = name
-                            ? `${name} (${duration} ${t('booking.duration.min', 'мин')})`
-                            : `${duration} ${t('booking.duration.min', 'мин')}`;
-                        parts.push(label);
-                    }
-
-                    const summaryBase = parts.join('; ');
-                    const summaryTotal =
-                        totalDuration > 0
-                            ? ` — ${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${t('booking.duration.min', 'мин')}`
-                            : '';
-
-                    base.servicesSummary = `${summaryBase}${summaryTotal}`;
-                }
-
-                return base;
-            });
-
-            setList(mapped);
-        } finally {
-            setIsLoading(false);
-        }
+    function setStatusFilter(value: string) {
+        setStatusFilterState(value);
+        setCurrentPage(1);
     }
 
-    useEffect(() => {
+    function setBranchFilter(value: string) {
+        setBranchFilterState(value);
         setCurrentPage(1);
-    }, [statusFilter, branchFilter, activePreset]);
+    }
 
-    useEffect(() => {
-        void refresh();
-    }, [statusFilter, branchFilter, currentPage, bizId, activePreset]);
+    function setActivePreset(value: FilterPreset) {
+        setActivePresetState(value);
+        setCurrentPage(1);
+    }
 
     async function confirm(id: string) {
         try {
@@ -306,15 +261,18 @@ export function useDashboardBookingsListController({
         showSuccess(attended ? t('bookings.actions.attended', 'Клиент пришёл') : t('bookings.actions.noShow', 'Клиент не пришёл'));
     }
 
+    const list = useMemo(() => rows.map((row) => toBookingItem(row, locale, t)), [rows, locale, t]);
+
     return {
-        list: visibleList,
+        list,
         statusFilter,
         branchFilter,
         searchQuery,
         currentPage,
         totalCount,
         activePreset,
-        isLoading,
+        isLoading: settled?.key !== argsKey || refreshing,
+        loadFailed: settled?.key === argsKey && !settled.ok,
         currentStaffId,
         hasStaffAccess,
         setStatusFilter,

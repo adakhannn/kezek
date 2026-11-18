@@ -37,14 +37,8 @@ export default async function Page() {
                 .order('name'),
         ]);
 
-        // 2) Последние брони (для вкладки «Список») - загружаем только первую страницу
-        // Клиентский компонент сам реализует пагинацию и загружает данные по мере необходимости
-        const { data: bookings } = await supabase
-            .from('bookings')
-            .select('id,status,start_at,end_at,client_id,client_name,client_phone,services(name_ru,name_ky),staff(full_name)')
-            .eq('biz_id', bizId)
-            .order('start_at', { ascending: false })
-            .limit(30); // Начальная загрузка для SSR, клиентский компонент загрузит остальное
+        // Вкладка «Список» сама загружает страницы через dashboard_bookings_page (FE-03): прежняя
+        // SSR-страница без фильтра (с отменёнными, без имён клиентов) только мелькала под «Загрузка...».
 
         return (
             <BookingsClientWrapper
@@ -53,7 +47,6 @@ export default async function Page() {
                 services={services || []}
                 staff={staff || []}
                 branches={branches || []}
-                initial={bookings || []}
             />
         );
     } catch (e: unknown) {

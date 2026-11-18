@@ -155,4 +155,7 @@ export const bookingsKy = {
     'bookings.list.prev': 'Мурунку',
     'bookings.workspace.emptyHint': 'Башка мезгилди, издөөнү же филиал боюнча чыпканы колдонуп көрүңүз.',
     'bookings.list.loading': 'Жүктөлүүдө...',
+    'bookings.list.loadError': 'Брондорду жүктөө мүмкүн болгон жок',
+    'bookings.list.loadErrorHint': 'Байланышты текшерип, кайра аракет кылыңыз.',
+    'bookings.list.retry': 'Кайталоо',
 } as const;

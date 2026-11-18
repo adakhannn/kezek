@@ -7,7 +7,6 @@
 'use client';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { todayStringInTz } from '@/lib/time';
 
 export type FilterPreset = 'today' | 'myStaff' | 'holdConfirmed' | null;
 
@@ -85,45 +84,3 @@ export function FilterPresets({
         </div>
     );
 }
-
-/**
- * Применяет пресет фильтров к параметрам запроса
- */
-export function applyPreset(
-    preset: FilterPreset,
-    timezone: string,
-    currentStaffId?: string | null
-): {
-    statusFilter?: string;
-    branchFilter?: string;
-    dateFilter?: { gte: string; lte: string };
-    staffFilter?: string;
-} {
-    const today = todayStringInTz(timezone);
-    const todayStart = `${today}T00:00:00`;
-    const todayEnd = `${today}T23:59:59`;
-
-    switch (preset) {
-        case 'today':
-            return {
-                dateFilter: {
-                    gte: todayStart,
-                    lte: todayEnd,
-                },
-            };
-        case 'myStaff':
-            if (currentStaffId) {
-                return {
-                    staffFilter: currentStaffId,
-                };
-            }
-            return {};
-        case 'holdConfirmed':
-            return {
-                statusFilter: 'holdConfirmed', // Специальное значение для обработки в запросе
-            };
-        default:
-            return {};
-    }
-}
-

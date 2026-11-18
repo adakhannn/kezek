@@ -2,7 +2,7 @@
 
 import { BookingFilters } from './BookingFilters';
 import { BookingsList } from './BookingsList';
-import type { BookingItem, BranchRow } from './bookingsViewTypes';
+import type { BranchRow } from './bookingsViewTypes';
 import { useDashboardBookingsListController } from './useDashboardBookingsListController';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -11,13 +11,11 @@ import { useToast } from '@/hooks/useToast';
 
 export function DashboardBookingsListSection({
     bizId,
-    initial,
     branches,
     timezone,
     notify,
 }: {
     bizId: string;
-    initial: BookingItem[];
     branches: BranchRow[];
     timezone: string;
     notify: (kind: 'confirm' | 'cancel', id: string) => Promise<void>;
@@ -33,6 +31,7 @@ export function DashboardBookingsListSection({
         totalCount,
         activePreset,
         isLoading,
+        loadFailed,
         currentStaffId,
         hasStaffAccess,
         setStatusFilter,
@@ -47,7 +46,6 @@ export function DashboardBookingsListSection({
         itemsPerPage,
     } = useDashboardBookingsListController({
         bizId,
-        initial,
         timezone,
         locale,
         t,
@@ -85,6 +83,8 @@ export function DashboardBookingsListSection({
                     onCancel={cancel}
                     onMarkAttendance={markAttendance}
                     isLoading={isLoading}
+                    loadFailed={loadFailed}
+                    onRetry={() => void refresh()}
                     currentPage={currentPage}
                     totalCount={totalCount}
                     itemsPerPage={itemsPerPage}

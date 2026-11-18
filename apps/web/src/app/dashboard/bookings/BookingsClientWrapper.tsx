@@ -13,7 +13,6 @@ type BookingsClientProps = {
     services: unknown[];
     staff: unknown[];
     branches: unknown[];
-    initial: unknown[];
 };
 
 // Используем dynamic без жёсткой проверки типов модуля и приводим к ожидаемым пропсам

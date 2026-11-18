@@ -121,7 +121,7 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | Ошибки | 400 validation для JSON/schema; исключения контекста/чтения — общая обёртка, ошибки чтения имён дают 500 |
 | Ограничения | Сначала читает bookings пользовательским клиентом с biz_id; затем service client читает профили только для найденных bookings без заполненного client_name. Возвращает только непустые восстановленные имена: пропущенный ID не обязательно ошибка или отсутствие клиента |
 
-Записи не меняются. Источники: [route](../../apps/web/src/app/api/bookings/client-identities/route.ts), [HTTP/schema](../../apps/web/src/lib/dashboardBookingClientIdentityHttpService.ts), [service](../../apps/web/src/lib/dashboardBookingClientIdentityService.ts).
+Список броней кабинета этот маршрут больше не вызывает: имена приходят из `dashboard_bookings_page` (FE-03); маршрут оставлен на один выпуск для уже открытых вкладок. Записи не меняются. Источники: [route](../../apps/web/src/app/api/bookings/client-identities/route.ts), [HTTP/schema](../../apps/web/src/lib/dashboardBookingClientIdentityHttpService.ts), [service](../../apps/web/src/lib/dashboardBookingClientIdentityService.ts).
 
 ## Дополнительные финансы и роли сотрудников
 
