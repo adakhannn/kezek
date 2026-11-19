@@ -1,5 +1,6 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, {useEffect, useRef, useState} from 'react';
 
 import { useSelectedStaffId } from '../staffSelectionContext';
@@ -184,7 +185,10 @@ export default function StaffAvatarUpload({
             <div className="flex items-center gap-4">
                 <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-gray-300 bg-gray-200 dark:border-gray-600 dark:bg-gray-700">
                     {preview ? (
-                        <img
+                        <NextImage
+                            unoptimized
+                            width={96}
+                            height={96}
                             src={preview}
                             alt={t('staff.avatar.alt', 'Avatar')}
                             className="h-full w-full object-cover"

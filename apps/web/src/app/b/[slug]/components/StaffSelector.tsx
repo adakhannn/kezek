@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { BookingEmptyState } from '../BookingEmptyState';
 import type { Staff } from '../types';
 
@@ -104,7 +106,10 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
                             ].join(' ')}
                         >
                             {person.avatar_url ? (
-                                <img
+                                <Image
+                                    unoptimized
+                                    width={48}
+                                    height={48}
                                     src={person.avatar_url}
                                     alt={formatName(person.full_name)}
                                     className="h-12 w-12 shrink-0 rounded-full object-cover"

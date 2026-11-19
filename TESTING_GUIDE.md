@@ -25,7 +25,7 @@
 | Команда | Фактическое действие |
 | --- | --- |
 | `pnpm lint` | Корневой ESLint (рекомендованные правила JS для `scripts/` и `packages/`, `typescript-eslint` и запрет `console` для TypeScript в `packages/`), затем web и mobile (CI-02) |
-| `pnpm -C apps/web lint` | `eslint . --max-warnings=17` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
+| `pnpm -C apps/web lint` | `eslint . --max-warnings=13` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
 | `pnpm -C apps/mobile lint` | `eslint . --max-warnings=4` внутри mobile по конфигу Expo (`eslint-config-expo`): ошибки и новые предупреждения роняют проверку; четыре оставшихся — `react-hooks/exhaustive-deps` в потоках входа |
 | `pnpm -C apps/web typecheck` | `tsc -p tsconfig.json --noEmit` внутри web |
 | `pnpm -C apps/web test` | Jest по текущему web config; Playwright E2E исключены. Тесты API получают общие моки из `jest.setup.js` и проверяют фильтр по бизнесу через `expectBusinessScoped` ([справочник](apps/web/src/__tests__/api/TESTING_GUIDE.md)) |

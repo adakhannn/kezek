@@ -1,6 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -396,7 +397,10 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                             >
                                                 <div className="flex items-center gap-3">
                                                     {person.avatar_url ? (
-                                                        <img
+                                                        <Image
+                                                            unoptimized
+                                                            width={48}
+                                                            height={48}
                                                             src={person.avatar_url}
                                                             alt={formatName(person.full_name)}
                                                             className="h-12 w-12 rounded-full object-cover"

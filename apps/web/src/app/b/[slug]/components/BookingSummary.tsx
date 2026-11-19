@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import type { Service, Staff } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -166,7 +168,10 @@ export function BookingSummary({
                             {staffCurrent ? (
                                 <div className="flex items-center gap-3">
                                     {staffCurrent.avatar_url ? (
-                                        <img
+                                        <Image
+                                            unoptimized
+                                            width={40}
+                                            height={40}
                                             src={staffCurrent.avatar_url}
                                             alt={formatName(staffCurrent.full_name)}
                                             className="h-10 w-10 rounded-full object-cover"
