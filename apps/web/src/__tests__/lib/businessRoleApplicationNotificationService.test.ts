@@ -27,6 +27,7 @@ describe('staff application delivery', () => {
                 then(resolve: (value: unknown) => unknown) { return Promise.resolve(resolve({ data: [] })); },
             };
         },
+        rpc: jest.fn().mockResolvedValue({ data: [], error: null }),
         auth: { admin: { getUserById: jest.fn().mockResolvedValue({ data: { user: {} }, error: null }) } },
     };
     const application = { id: 'application', businessId: 'biz', origin: 'https://localhost:3000', applicant: { id: 'staff', name: 'Person' } };

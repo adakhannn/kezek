@@ -16,6 +16,7 @@
     "public.grant_role",
     "public.grant_role_rpc",
     "public.grant_user_role",
+    "public.guard_last_super_admin",
     "public.initialize_shift_aggregates",
     "public.log_frontend_metric",
     "public.open_staff_shift_safe_impl_20261109",
@@ -49,6 +50,26 @@
     "private.ensure_staff_role()": {
       "arguments": "",
       "body": "cdf93a53bfe3a66fda9e88451326be4e",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
+    "private.guard_last_super_admin()": {
+      "arguments": "",
+      "body": "c4d53e333ae06fc9d71173dae794b0ab",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -145,6 +166,26 @@
       "result": "trigger",
       "strict": false,
       "volatility": "v"
+    },
+    "private.super_admin_ids()": {
+      "arguments": "",
+      "body": "b1939ef8a19353c38d2bc19d6821aef8",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "SETOF uuid",
+      "strict": false,
+      "volatility": "s"
     },
     "private.tenant_reference_guard()": {
       "arguments": "",
@@ -2301,24 +2342,6 @@
       "strict": false,
       "volatility": "v"
     },
-    "public.guard_last_super_admin()": {
-      "arguments": "",
-      "body": "5292d051ffa67f12c16d92f86fc4f2cc",
-      "config": [],
-      "definer": false,
-      "execute": {
-        "anon": true,
-        "authenticated": true,
-        "public": true,
-        "service_role": true
-      },
-      "kind": "f",
-      "language": "plpgsql",
-      "owner": "postgres",
-      "result": "trigger",
-      "strict": false,
-      "volatility": "v"
-    },
     "public.guard_legacy_staff_schedule_write()": {
       "arguments": "",
       "body": "21cb4bbec5305ccf89b4f9a69cfdad9b",
@@ -4110,6 +4133,26 @@
       "result": "uuid",
       "strict": false,
       "volatility": "v"
+    },
+    "public.super_admin_user_ids()": {
+      "arguments": "",
+      "body": "6b80436dc3e696e83c9b2fde09a151b6",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "uuid[]",
+      "strict": false,
+      "volatility": "s"
     },
     "public.sync_auth_user_notification_email()": {
       "arguments": "",

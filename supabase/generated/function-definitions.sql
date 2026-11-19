@@ -66,6 +66,56 @@ end;
 $function$
 ;
 
+-- signature: private.guard_last_super_admin()
+CREATE OR REPLACE FUNCTION private.guard_last_super_admin()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+declare
+    v_role uuid;
+    v_grants boolean;
+    v_keeps boolean;
+begin
+    select id into v_role from public.roles where key = 'super_admin';
+    if tg_table_name = 'user_roles' then
+        v_grants := old.role_id = v_role and old.biz_id is null;
+    elsif tg_table_name = 'user_global_roles' then
+        v_grants := old.role_id = v_role;
+    else
+        v_grants := true;
+    end if;
+    v_keeps := false;
+    if tg_op = 'UPDATE' then
+        if tg_table_name = 'user_roles' then
+            v_keeps := new.role_id = v_role and new.biz_id is null and new.user_id = old.user_id;
+        elsif tg_table_name = 'user_global_roles' then
+            v_keeps := new.role_id = v_role and new.user_id = old.user_id;
+        else
+            v_keeps := new.user_id = old.user_id;
+        end if;
+    end if;
+    if v_role is not null and coalesce(v_grants, false) and not coalesce(v_keeps, false) and not (
+        -- another account keeps the role, or this account keeps it through another store
+        exists (select 1 from private.super_admin_ids() s where s <> old.user_id)
+        or (tg_table_name <> 'user_roles' and exists (select 1 from public.user_roles u
+            where u.user_id = old.user_id and u.role_id = v_role and u.biz_id is null))
+        or (tg_table_name <> 'user_global_roles' and exists (select 1 from public.user_global_roles g
+            where g.user_id = old.user_id and g.role_id = v_role))
+        or (tg_table_name <> 'super_admins_legacy' and exists (select 1 from public.super_admins_legacy l
+            where l.user_id = old.user_id))
+    ) then
+        raise exception using errcode = 'P0001', message = 'Нельзя удалить последнего super_admin';
+    end if;
+    if tg_op = 'DELETE' then
+        return old;
+    end if;
+    return new;
+end;
+$function$
+;
+
 -- signature: private.is_valid_time_zone(text)
 CREATE OR REPLACE FUNCTION private.is_valid_time_zone(p_tz text)
  RETURNS boolean
@@ -167,6 +217,27 @@ begin
     end if;
     return new;
 end;
+$function$
+;
+
+-- signature: private.super_admin_ids()
+CREATE OR REPLACE FUNCTION private.super_admin_ids()
+ RETURNS SETOF uuid
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+    select g.user_id
+      from public.user_global_roles g
+      join public.roles r on r.id = g.role_id
+     where r.scope = 'platform' and r.key = 'super_admin'
+    union
+    select l.user_id from public.super_admins_legacy l
+    union
+    select u.user_id
+      from public.user_roles u
+      join public.roles r on r.id = u.role_id
+     where u.biz_id is null and r.key = 'super_admin';
 $function$
 ;
 
@@ -5216,28 +5287,6 @@ end;
 $function$
 ;
 
--- signature: public.guard_last_super_admin()
-CREATE OR REPLACE FUNCTION public.guard_last_super_admin()
- RETURNS trigger
- LANGUAGE plpgsql
-AS $function$
-declare
-  v_sa uuid;
-begin
-  select id into v_sa from public.roles where key='super_admin';
-  if OLD.role_id = v_sa and OLD.biz_id is null then
-    perform 1
-      from public.user_roles
-      where biz_id is null and role_id = v_sa and user_id <> OLD.user_id
-      limit 1;
-    if not found then
-      raise exception 'Нельзя удалить последнего super_admin' using errcode='P0001';
-    end if;
-  end if;
-  return OLD;
-end $function$
-;
-
 -- signature: public.guard_legacy_staff_schedule_write()
 CREATE OR REPLACE FUNCTION public.guard_legacy_staff_schedule_write()
  RETURNS trigger
@@ -8504,6 +8553,17 @@ begin
     if v_job<>p_job then raise exception using errcode='22023',message='CRON_EXECUTION_CONFLICT'; end if;
     return p_id;
 end $function$
+;
+
+-- signature: public.super_admin_user_ids()
+CREATE OR REPLACE FUNCTION public.super_admin_user_ids()
+ RETURNS uuid[]
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+    select coalesce(array_agg(id order by id), '{}') from private.super_admin_ids() id;
+$function$
 ;
 
 -- signature: public.sync_auth_user_notification_email()

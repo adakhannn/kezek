@@ -21,6 +21,7 @@ type AdminClient = {
     // Supabase generated types are not stable in this repository yet.
 
     from(table: string): any;
+    rpc(fn: 'super_admin_user_ids'): PromiseLike<{ data: string[] | null; error: unknown }>;
     auth: {
         admin: {
             getUserById: (userId: string) => Promise<{ data: { user: { email?: string | null } | null }; error: unknown }>;
@@ -101,16 +102,13 @@ async function getRecipient(admin: AdminClient, userId: string, fallback: { name
 }
 
 async function getSuperAdminRecipients(admin: AdminClient) {
-    const { data, error } = await admin
-        .from('user_roles_with_user')
-        .select('user_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null);
+    // Every store of the platform role (DB-10): user_global_roles, the legacy list and user_roles.
+    const { data, error } = await admin.rpc('super_admin_user_ids');
     if (error) {
         logError('ApplicationNotification', 'Could not find super admins', error);
         return [];
     }
-    const userIds = [...new Set((data ?? []).map((row: { user_id?: string | null }) => row.user_id).filter(Boolean) as string[])];
+    const userIds = [...new Set((data ?? []).filter(Boolean))];
     return Promise.all(userIds.map((userId) => getRecipient(admin, userId, {})));
 }
 

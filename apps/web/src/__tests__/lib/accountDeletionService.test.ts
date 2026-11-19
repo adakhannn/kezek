@@ -16,9 +16,10 @@ function countChain(count: number) {
     return chain;
 }
 
-function createAssessmentAdmin(counts: Record<string, number>) {
+function createAssessmentAdmin(counts: Record<string, number>, superAdmins: string[] = []) {
     return {
         from: jest.fn((table: string) => countChain(counts[table] ?? 0)),
+        rpc: jest.fn().mockResolvedValue({ data: superAdmins, error: null }),
     };
 }
 
@@ -34,6 +35,24 @@ describe('accountDeletionService', () => {
             'active_staff',
             'active_bookings',
         ]);
+    });
+
+    // DB-10: a super admin recorded in any store blocks the deletion, not only one in user_roles.
+    test('blocks a super admin found by the shared rule', async () => {
+        const admin = createAssessmentAdmin({}, ['other-admin', 'user-id']);
+
+        const blockers = await assessAccountDeletion(admin as never, 'user-id');
+
+        expect(blockers.map((blocker) => blocker.code)).toEqual(['super_admin']);
+        expect(admin.rpc).toHaveBeenCalledWith('super_admin_user_ids');
+        expect(admin.from).not.toHaveBeenCalledWith('user_roles_with_user');
+    });
+
+    test('a failed super-admin read fails the assessment', async () => {
+        const admin = createAssessmentAdmin({});
+        admin.rpc.mockResolvedValue({ data: null, error: { message: 'timeout' } });
+
+        await expect(assessAccountDeletion(admin as never, 'user-id')).rejects.toThrow('timeout');
     });
 
     test('rejects an unrecognized confirmation phrase before accessing persistence', async () => {

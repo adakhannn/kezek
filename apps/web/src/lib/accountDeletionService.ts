@@ -10,6 +10,7 @@ type AdminLike = {
     // Supabase query builders differ for count, select, and mutation calls.
 
     from(table: string): any;
+    rpc(fn: 'super_admin_user_ids'): PromiseLike<{ data: string[] | null; error: { message?: string } | null }>;
     auth: {
         admin: {
             getUserById(id: string): Promise<{ data: { user: { user_metadata?: Record<string, unknown> | null } | null }; error: { message?: string } | null }>;
@@ -21,6 +22,13 @@ type AdminLike = {
 export const ACCOUNT_DELETION_GRACE_DAYS = 7;
 const ACCOUNT_DELETION_CONFIRMATION_PHRASES = new Set(['УДАЛИТЬ', 'DELETE', 'ӨЧҮРҮҮ']);
 
+// Every store of the platform role (DB-10), not only user_roles: 1 when the account is a super admin.
+async function superAdminCount(admin: AdminLike, userId: string) {
+    const { data, error } = await admin.rpc('super_admin_user_ids');
+    if (error) throw new Error(error.message || 'Account deletion assessment failed');
+    return (data ?? []).includes(userId) ? 1 : 0;
+}
+
 async function countQuery(query: PromiseLike<{ count: number | null; error: { message?: string } | null }>) {
     const { count, error } = await query;
     if (error) throw new Error(error.message || 'Account deletion assessment failed');
@@ -30,7 +38,7 @@ async function countQuery(query: PromiseLike<{ count: number | null; error: { me
 export async function assessAccountDeletion(admin: AdminLike, userId: string): Promise<AccountDeletionBlocker[]> {
     const now = new Date().toISOString();
     const [superAdmin, ownedBusinesses, businessRoles, globalRoles, staffRecords, activeBookings] = await Promise.all([
-        countQuery(admin.from('user_roles_with_user').select('user_id', { count: 'exact', head: true }).eq('user_id', userId).eq('role_key', 'super_admin')),
+        superAdminCount(admin, userId),
         countQuery(admin.from('businesses').select('id', { count: 'exact', head: true }).eq('owner_id', userId)),
         countQuery(admin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', userId)),
         countQuery(admin.from('user_global_roles').select('user_id', { count: 'exact', head: true }).eq('user_id', userId)),

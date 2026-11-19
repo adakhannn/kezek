@@ -7906,6 +7906,10 @@ export type Database = {
                 };
                 Returns: string;
             };
+            "super_admin_user_ids": {
+                Args: Record<PropertyKey, never>;
+                Returns: (string)[];
+            };
             "sync_user_notification_email": {
                 Args: {
                     "target_email": string;
