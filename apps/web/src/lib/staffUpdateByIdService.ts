@@ -1,9 +1,11 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 import { todayDateString } from '@/lib/time';
 
 type StaffUpdateByIdInput = {
-    admin: any;
+    admin: SupabaseClient;
     staffId: string;
     bizId: string;
     userId?: string;
@@ -231,7 +233,7 @@ async function insertFinanceAuditLog({
     previous,
     updateData,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     userId?: string;
     staffId: string;
@@ -288,7 +290,7 @@ async function transferBranchAssignment({
     staffId,
     branchId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     staffId: string;
     branchId: string;

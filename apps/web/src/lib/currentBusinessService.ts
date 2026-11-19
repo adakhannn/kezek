@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { BusinessAccessReadError, managerAccessToBusiness } from './businessManagerAccess';
 
 const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
@@ -32,7 +34,7 @@ export type CurrentBusinessServerClientLike = {
 };
 
 export type CurrentBusinessAdminClientLike = {
-    from(table: string): any;
+    from: SupabaseClient['from'];
 };
 
 export async function getCurrentBusinessState({

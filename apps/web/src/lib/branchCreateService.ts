@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { type PublicContactFields, validatePublicContacts } from '@/lib/businessContacts';
 import { sanitizeDirectoryLinks, validateDirectoryLinks } from '@/lib/directoryLinks';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
@@ -16,7 +18,7 @@ export type BranchCreateAdminLike = {
   // Supabase's generated PostgREST types are intentionally not coupled to this
   // small service: the service is shared by admin and owner API clients.
 
-  from(table: string): any;
+  from: SupabaseClient['from'];
 };
 
 export type BranchCreateResult =

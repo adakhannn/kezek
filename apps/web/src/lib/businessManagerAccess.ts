@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { MANAGER_ROLE_KEYS } from './userRoleProfile';
 
 /** A read the access decision depends on failed; callers must not guess another business. */
@@ -8,7 +10,7 @@ export class BusinessAccessReadError extends Error {
     }
 }
 
-type AdminLike = { from(table: string): any };
+type AdminLike = { from: SupabaseClient['from'] };
 
 /**
  * The one rule for choosing (POST /api/me/current-business) and resolving (manager cabinet) the

@@ -1,7 +1,9 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logError, logWarn } from '@/lib/log';
 
 type StaffAvatarRemoveInput = {
-    admin: any;
+    admin: SupabaseClient;
     staffId: string;
     bizId: string;
 };

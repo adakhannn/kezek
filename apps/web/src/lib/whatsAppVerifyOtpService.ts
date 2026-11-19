@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logError } from '@/lib/log';
 import {
     MAX_PROFILE_WHATSAPP_OTP_ATTEMPTS,
@@ -13,7 +15,7 @@ type UserLike = {
 export type SupabaseServerClientLike = {
     // Supabase query builders vary by operation in this small service boundary.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
     auth: {
         getUser: () => Promise<{ data: { user: UserLike | null } }>;
     };
@@ -22,7 +24,7 @@ export type SupabaseServerClientLike = {
 /** Writes verified identity columns; must be a privileged (service-role) client. */
 export type ProfileIdentityWriter = {
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
     rpc(name: string, args: Record<string, unknown>): PromiseLike<{ error: { message?: string } | null }>;
 };
 

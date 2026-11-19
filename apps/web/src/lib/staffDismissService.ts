@@ -1,8 +1,10 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 type StaffDismissInput = {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     staffId: string;
 };

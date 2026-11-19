@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 export type BusinessRoleKey = 'owner' | 'admin' | 'manager' | 'staff';
 export type BusinessRoleApplicationStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
@@ -23,9 +24,9 @@ export const SUBMITTABLE_BUSINESS_ROLE_OPTIONS: BusinessRoleKey[] = ['owner', 's
 type DbClient = {
     // Supabase generated types are not stable in this repo yet.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
 
-    rpc(name: string, args: Record<string, unknown>): any;
+    rpc: SupabaseClient['rpc'];
 };
 
 type AuthUser = {

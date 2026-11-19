@@ -1,5 +1,7 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 type AdminClientLike = {
-    from(table: string): any;
+    from: SupabaseClient['from'];
 };
 
 export async function getRatingsJobs({

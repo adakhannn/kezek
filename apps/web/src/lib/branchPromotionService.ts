@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { toNormalizedDateString } from '@/lib/dateUtils';
 
 type PromotionType =
@@ -41,7 +43,7 @@ export async function updateBranchPromotion({
     bizId,
     body,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     branchId: string;
     promotionId: string;
     bizId: string;
@@ -119,7 +121,7 @@ export async function deleteBranchPromotion({
     promotionId,
     bizId,
 }: {
-    admin: any;
+    admin: SupabaseClient;
     branchId: string;
     promotionId: string;
     bizId: string;

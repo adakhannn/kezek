@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 const E164 = /^\+[1-9]\d{7,14}$/;
@@ -9,7 +11,7 @@ type AdminLike = {
     ): PromiseLike<{ data: Array<{ id: string }> | null; error: { message?: string } | null }>;
     // PostgREST builder of the profile lookup.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
 };
 
 /**

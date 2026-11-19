@@ -1,8 +1,10 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { isSupabaseServiceRoleConfigured } from '@/lib/env';
 import { logDebug, logError, logWarn } from '@/lib/log';
 
 type StaffAvatarUploadInput = {
-    admin: any;
+    admin: SupabaseClient;
     staffId: string;
     bizId: string;
     file: File | null;
@@ -129,7 +131,7 @@ export async function runStaffAvatarUpload({
     };
 }
 
-async function removeOldAvatar(admin: any, avatarUrl: string | null | undefined) {
+async function removeOldAvatar(admin: SupabaseClient, avatarUrl: string | null | undefined) {
     if (!avatarUrl) {
         return;
     }

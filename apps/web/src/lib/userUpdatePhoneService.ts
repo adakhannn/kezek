@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 type UserUpdatePhoneFailure = {
     ok: false;
     status: 400 | 401 | 500;
@@ -16,8 +18,8 @@ export async function runUserUpdatePhone({
     admin,
     phone,
 }: {
-    supabase: any;
-    admin: any;
+    supabase: SupabaseClient;
+    admin: SupabaseClient;
     phone: unknown;
 }): Promise<UserUpdatePhoneResult> {
     const { data: auth } = await supabase.auth.getUser();

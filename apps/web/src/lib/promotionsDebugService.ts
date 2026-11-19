@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 type PromotionsDebugResult = {
     client?: {
         id: string;
@@ -163,7 +165,7 @@ function appendReferralAnomalies(result: PromotionsDebugResult) {
     });
 }
 
-async function loadClientDebugData(result: PromotionsDebugResult, serviceClient: any, clientId: string) {
+async function loadClientDebugData(result: PromotionsDebugResult, serviceClient: SupabaseClient, clientId: string) {
     const { data: clientData } = await serviceClient
         .from('profiles')
         .select('id, email, phone, full_name')
@@ -350,7 +352,7 @@ async function loadClientDebugData(result: PromotionsDebugResult, serviceClient:
     }
 }
 
-async function loadBranchDebugData(result: PromotionsDebugResult, serviceClient: any, branchId: string) {
+async function loadBranchDebugData(result: PromotionsDebugResult, serviceClient: SupabaseClient, branchId: string) {
     const { data: branchData } = await serviceClient
         .from('branches')
         .select('id, name, biz_id')
@@ -384,7 +386,7 @@ async function loadBranchDebugData(result: PromotionsDebugResult, serviceClient:
     }
 }
 
-async function loadBizDebugData(result: PromotionsDebugResult, serviceClient: any, bizId: string) {
+async function loadBizDebugData(result: PromotionsDebugResult, serviceClient: SupabaseClient, bizId: string) {
     const { data: bizData } = await serviceClient
         .from('businesses')
         .select('id, name, slug')
@@ -401,7 +403,7 @@ async function loadBizDebugData(result: PromotionsDebugResult, serviceClient: an
 }
 
 export async function loadPromotionsDebugData(params: {
-    serviceClient: any;
+    serviceClient: SupabaseClient;
     clientId: string | null;
     branchId: string | null;
     bizId: string | null;

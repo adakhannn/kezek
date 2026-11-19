@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 
@@ -23,7 +25,7 @@ export async function runServiceDeleteRoute({
     serviceId,
     now = new Date().toISOString(),
 }: {
-    admin: any;
+    admin: SupabaseClient;
     bizId: string;
     serviceId: string;
     now?: string;

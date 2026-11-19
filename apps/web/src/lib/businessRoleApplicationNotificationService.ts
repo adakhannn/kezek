@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { buildApplicationTemplateComponents, getApplicationNotificationOrigin, getApplicationTemplateParameterNames } from '@/lib/applicationNotificationConfig';
 import { getWhatsAppTemplateLanguage, getWhatsAppTemplateName } from '@/lib/env';
 import { escapeHtml } from '@/lib/htmlEscape';
@@ -20,7 +22,7 @@ type Recipient = {
 type AdminClient = {
     // Supabase generated types are not stable in this repository yet.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
     rpc(fn: 'super_admin_user_ids'): PromiseLike<{ data: string[] | null; error: unknown }>;
     auth: {
         admin: {

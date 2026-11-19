@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 export type DashboardBranchesListResult =
   | { ok: true; data: Array<{ id: string; name: string }> }
   | { ok: false; error: 'server'; message: string; details?: unknown; status: number };
@@ -6,7 +8,7 @@ export async function listDashboardBranches({
   supabase,
   bizId,
 }: {
-  supabase: any;
+  supabase: SupabaseClient;
   bizId: string;
 }): Promise<DashboardBranchesListResult> {
   const { data, error } = await supabase

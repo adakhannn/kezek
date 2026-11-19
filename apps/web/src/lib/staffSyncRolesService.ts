@@ -1,12 +1,14 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 type ManagerSupabaseLike = {
     auth: {
         getUser: () => Promise<{ data: { user: { id: string } | null } }>;
     };
-    from(table: string): any;
+    from: SupabaseClient['from'];
 };
 
 type AdminLike = {
-    from(table: string): any;
+    from: SupabaseClient['from'];
 };
 
 export async function runStaffSyncRoles({

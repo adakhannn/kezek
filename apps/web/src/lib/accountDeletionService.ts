@@ -1,4 +1,5 @@
 import { ACTIVE_BOOKING_STATUSES } from '@core-domain/booking';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type AccountDeletionBlocker = {
     code: 'super_admin' | 'owned_businesses' | 'business_roles' | 'active_staff' | 'active_bookings';
@@ -9,7 +10,7 @@ export type AccountDeletionBlocker = {
 type AdminLike = {
     // Supabase query builders differ for count, select, and mutation calls.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
     rpc(fn: 'super_admin_user_ids'): PromiseLike<{ data: string[] | null; error: { message?: string } | null }>;
     auth: {
         admin: {

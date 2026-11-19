@@ -1,9 +1,11 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 type UserLike = {
     id: string;
 };
 
 type PackagesAdminLike = {
-    from(table: string): any;
+    from: SupabaseClient['from'];
 };
 
 type VisitPackageRow = {

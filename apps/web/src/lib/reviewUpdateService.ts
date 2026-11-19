@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { isValidReviewRating, REVIEW_RATING_MESSAGE } from '@/lib/reviewCreateService';
 
 type ReviewUpdateBody = {
@@ -27,7 +29,7 @@ export async function runReviewUpdate({
     body,
     now = new Date().toISOString(),
 }: {
-    supabase: any;
+    supabase: SupabaseClient;
     body: ReviewUpdateBody;
     now?: string;
 }): Promise<ReviewUpdateResult> {

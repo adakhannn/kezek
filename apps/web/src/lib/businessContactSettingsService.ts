@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import {
     validatePublicContactPatch,
 } from '@/lib/businessContacts';
@@ -7,7 +9,7 @@ export type BusinessContactSettingsAdminLike = {
     // Kept structurally small so this service can be unit-tested without
     // coupling to the generated Supabase client type.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
 };
 
 export async function updateBusinessContactSettings(params: {

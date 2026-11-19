@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { runBranchDelete } from '@/lib/branchDeleteService';
 
 type Failure = {
@@ -20,8 +22,8 @@ export async function runBranchDeleteRoute({
     branchId,
     bizId,
 }: {
-    supabase: any;
-    admin: any;
+    supabase: SupabaseClient;
+    admin: SupabaseClient;
     branchId: string;
     bizId: string;
 }): Promise<BranchDeleteRouteResult> {

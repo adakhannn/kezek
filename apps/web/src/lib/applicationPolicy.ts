@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 export type ApplicationKind = 'business_registration' | 'owner' | 'staff';
 
 type DatabaseErrorLike = {
@@ -75,7 +77,7 @@ type PolicyRpcClient = {
     // Supabase RPC builders are typed as PromiseLike filter builders and vary
     // with generated database types.
 
-    rpc(name: string, args: Record<string, unknown>): any;
+    rpc: SupabaseClient['rpc'];
 };
 
 export async function rejectApplicationWithPolicy(params: {

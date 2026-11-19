@@ -1,10 +1,12 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 
 type DbClient = {
     // Generated Supabase types are not fully synchronized in this repository.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
 
     rpc(name: string, params: Record<string, unknown>): any;
 };

@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { removeNotificationEmailSource } from '@/lib/userNotificationEmailService';
 
 export type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
@@ -19,7 +21,7 @@ type AdminLike = {
     };
     // Query builders differ for select and update operations in this narrow service boundary.
 
-    from(table: string): any;
+    from: SupabaseClient['from'];
     rpc(name: string, params: Record<string, unknown>): Promise<{ data: unknown; error: { message?: string } | null }>;
 };
 
