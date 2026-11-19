@@ -195,7 +195,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                     t(
                         'booking.guest.missingData',
                         'Данные для бронирования неполные. Пожалуйста, выберите филиал, мастера, услугу и время.',
-                    ) + `\nОтсутствуют: ${missing.join(', ')}`,
+                    ) + '\n' + t('booking.guest.missingIds', 'Отсутствуют: {fields}').replace('{fields}', missing.join(', ')),
                 );
                 return;
             }

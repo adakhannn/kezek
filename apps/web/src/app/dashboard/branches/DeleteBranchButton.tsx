@@ -32,16 +32,24 @@ export default function DeleteBranchButton({ id }: { id: string }) {
 
                 if (payload.details && payload.error === 'HAS_BOOKINGS') {
                     const { total, active, cancelled, bookings } = payload.details;
-                    errorMessage += `\n\n${t('branches.delete.error.totalBookings', 'Всего броней:')} ${total}`;
-                    if (active > 0) errorMessage += `\n${t('branches.delete.error.activeBookings', 'Активных:')} ${active}`;
-                    if (cancelled > 0) errorMessage += `\n${t('branches.delete.error.cancelledBookings', 'Отменённых:')} ${cancelled}`;
+                    const label = {
+                        total: t('branches.delete.error.totalBookings', 'Всего броней:'),
+                        active: t('branches.delete.error.activeBookings', 'Активных:'),
+                        cancelled: t('branches.delete.error.cancelledBookings', 'Отменённых:'),
+                        examples: t('branches.delete.error.examples', 'Примеры броней:'),
+                        booking: t('branches.delete.error.bookingExample', 'Бронь #'),
+                        firstCancel: t('branches.delete.error.firstCancel', 'Сначала отмените или удалите все брони, связанные с этим филиалом.'),
+                    };
+                    errorMessage += `\n\n${label.total} ${total}`;
+                    if (active > 0) errorMessage += `\n${label.active} ${active}`;
+                    if (cancelled > 0) errorMessage += `\n${label.cancelled} ${cancelled}`;
                     if (bookings && bookings.length > 0) {
-                        errorMessage += `\n\n${t('branches.delete.error.examples', 'Примеры броней:')}`;
+                        errorMessage += `\n\n${label.examples}`;
                         bookings.forEach((b: { id: string; status: string; client_name?: string }) => {
-                            errorMessage += `\n- ${t('branches.delete.error.bookingExample', 'Бронь #')}${b.id.slice(0, 8)} (${b.status})${b.client_name ? ` - ${b.client_name}` : ''}`;
+                            errorMessage += `\n- ${label.booking}${b.id.slice(0, 8)} (${b.status})${b.client_name ? ` - ${b.client_name}` : ''}`;
                         });
                     }
-                    errorMessage += `\n\n${t('branches.delete.error.firstCancel', 'Сначала отмените или удалите все брони, связанные с этим филиалом.')}`;
+                    errorMessage += `\n\n${label.firstCancel}`;
                 }
 
                 toast.showError(errorMessage);

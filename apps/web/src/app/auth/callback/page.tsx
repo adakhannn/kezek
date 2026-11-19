@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useSignInRedirectDecision } from '@/app/auth/sign-in/useSignInRedirectDecision';
 import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 import {logDebug, logError, logWarn} from '@/lib/log';
@@ -15,6 +16,7 @@ import { supabase } from '@/lib/supabaseClient';
 function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { t } = useLanguage();
     const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
 
     const { decideRedirect } = useSignInRedirectDecision({ router });
@@ -160,12 +162,11 @@ function AuthCallbackContent() {
     if (status === 'error') {
         return (
             <FullScreenStatus
-                title="Не удалось завершить авторизацию"
-                subtitle="Попробуйте перезагрузить страницу или войти ещё раз"
-                message="Если проблема повторяется, закройте вкладку, откройте сайт заново и выполните вход ещё раз. 
-Мы автоматически восстановим ваш сеанс, когда это возможно."
+                title={t('auth.callback.error.title', 'Не удалось завершить авторизацию')}
+                subtitle={t('auth.callback.error.subtitle', 'Попробуйте перезагрузить страницу или войти ещё раз')}
+                message={t('auth.callback.error.message', 'Если проблема повторяется, закройте вкладку, откройте сайт заново и выполните вход ещё раз. Мы автоматически восстановим ваш сеанс, когда это возможно.')}
                 actionHref="/auth/sign-in"
-                actionLabel="Вернуться ко входу"
+                actionLabel={t('auth.callback.error.action', 'Вернуться ко входу')}
                 loading={false}
             />
         );
@@ -173,20 +174,22 @@ function AuthCallbackContent() {
 
     return (
         <FullScreenStatus
-            title="Авторизация…"
-            subtitle="Подтверждаем вход и настраиваем ваш кабинет"
-            message="Обычно это занимает не больше пары секунд. Пожалуйста, не закрывайте эту вкладку — вы будете автоматически перенаправлены в нужный раздел."
+            title={t('auth.callback.title', 'Авторизация…')}
+            subtitle={t('auth.callback.subtitle', 'Подтверждаем вход и настраиваем ваш кабинет')}
+            message={t('auth.callback.message', 'Обычно это занимает не больше пары секунд. Пожалуйста, не закрывайте эту вкладку — вы будете автоматически перенаправлены в нужный раздел.')}
             loading
         />
     );
 }
 
 export default function AuthCallback() {
+    const { t } = useLanguage();
+
     return (
         <Suspense fallback={
             <FullScreenStatus
-                title="Загрузка…"
-                subtitle="Готовим страницу авторизации"
+                title={t('auth.callback.loading.title', 'Загрузка…')}
+                subtitle={t('auth.callback.loading.subtitle', 'Готовим страницу авторизации')}
                 loading
             />
         }>

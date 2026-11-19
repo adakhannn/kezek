@@ -469,7 +469,7 @@ export default function ProfileForm() {
         <form onSubmit={handleSubmit} className="space-y-5">
             <ConnectionUnlinkConfirmation
                 open={!!pendingUnlink}
-                title={`${t('cabinet.profile.connections.unlink', 'Отвязать')} ${pendingUnlink?.label || ''}?`}
+                title={t('cabinet.profile.connections.unlinkTitle', 'Отвязать {provider}?').replace('{provider}', pendingUnlink?.label || '')}
                 message={t('cabinet.profile.connections.unlinkConfirm', 'После отвязки вход через этот способ будет недоступен.')}
                 confirmLabel={t('cabinet.profile.connections.unlink', 'Отвязать')}
                 cancelLabel={t('common.cancel', 'Отмена')}

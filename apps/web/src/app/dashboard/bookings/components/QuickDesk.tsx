@@ -181,7 +181,8 @@ export function QuickDesk({
             };
         },
         onSuccess: (bookingId) => {
-            toast.showSuccess(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
+            const created = t('bookings.desk.created', 'Создана запись');
+            toast.showSuccess(`${created} #${bookingId.slice(0, 8)}`);
             setServiceId('');
             setStaffId('');
             slotsApi.clearSlots();

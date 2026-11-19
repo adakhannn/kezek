@@ -372,7 +372,7 @@ function ClientEditFormInner({
                     <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             {t('staff.finance.clients.servicePrice', 'Цена за услугу')}
-                            <span className="text-gray-500 ml-1">(сом)</span>
+                            <span className="text-gray-500 ml-1">({t('staff.finance.shift.som', 'сом')})</span>
                             <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
                                 ({t('staff.finance.clients.amountHint', '0 - 100,000,000')})
                             </span>
@@ -395,7 +395,7 @@ function ClientEditFormInner({
                                 disabled={!isOpen || isReadOnly}
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
-                                сом
+                                {t('staff.finance.shift.som', 'сом')}
                             </span>
                         </div>
                     </div>
@@ -403,7 +403,7 @@ function ClientEditFormInner({
                     <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             {t('staff.finance.clients.consumablesAmount', 'Расходники')}
-                            <span className="text-gray-500 ml-1">(сом)</span>
+                            <span className="text-gray-500 ml-1">({t('staff.finance.shift.som', 'сом')})</span>
                             <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
                                 ({t('staff.finance.clients.amountHint', '0 - 100,000,000')})
                             </span>
@@ -426,7 +426,7 @@ function ClientEditFormInner({
                                 disabled={!isOpen || isReadOnly}
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
-                                сом
+                                {t('staff.finance.shift.som', 'сом')}
                             </span>
                         </div>
                         {validationErrors.consumablesAmount && (

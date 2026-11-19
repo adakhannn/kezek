@@ -98,4 +98,9 @@ export const commonKy = {
     'error.unauthorized.action.signIn': 'Кирүү',
     'error.unauthorized.description': 'Бул баракты көрүү үчүн системага кириңиз.',
     'error.unauthorized.title': 'Кирүү талап кылынат',
+    'common.notFound.title': 'Барак табылган жок',
+    'common.notFound.description': 'Шилтеме эскирген же даректе ката бар болушу мүмкүн. Башкы бетке кайтыңыз же ишти улантуу үчүн аккаунтка кириңиз.',
+    'common.globalError.description': 'Биз билдирүү алдык жана катаны оңдоп жатабыз.',
+    'common.nameReminder.message': 'Кызматты ыңгайлуу колдонуу үчүн профилге атыңызды жазыңыз.',
+    'common.nameReminder.action': 'Профилди толтуруу',
 } as const;

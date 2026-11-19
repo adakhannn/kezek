@@ -2,6 +2,8 @@ import { JSX } from 'react';
 
 import PromotionsPageClient from './PromotionsPageClient';
 
+import { getT } from '@/app/_components/i18n/server';
+
 async function getData(slug: string) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -60,7 +62,10 @@ export default async function PromotionsPage({
 }): Promise<JSX.Element> {
     const { slug } = await params;
     const data = await getData(slug);
-    if (!data) return <main className="p-6">Бизнес не найден</main>;
+    if (!data) {
+        const t = await getT();
+        return <main className="p-6">{t('business.notFound.title', 'Бизнес не найден')}</main>;
+    }
     return <PromotionsPageClient data={data} />;
 }
 

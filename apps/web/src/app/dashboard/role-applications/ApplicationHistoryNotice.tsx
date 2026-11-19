@@ -8,6 +8,9 @@ export function ApplicationHistoryNotice({ count, flags }: { count: number; flag
     const rejected = flags.includes('prior_rejection');
     const other = flags.some((flag) => !['repeat_applicant', 'high_submission_volume', 'prior_rejection'].includes(flag));
     if (!repeated && !rejected && !other) return null;
+    const countText = count > 0
+        ? t('dashboard.applicationHistory.count', 'Предыдущих заявок: {count}').replace('{count}', String(count))
+        : null;
 
     return (
         <details className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-emphasis)] p-3 text-sm text-[var(--text-secondary)]">
@@ -15,7 +18,7 @@ export function ApplicationHistoryNotice({ count, flags }: { count: number; flag
                 {repeated
                     ? t('dashboard.applicationHistory.repeat', 'Повторная заявка')
                     : t('dashboard.applicationHistory.title', 'Сведения о предыдущих подачах')}
-                {count > 0 ? ` · ${t('dashboard.applicationHistory.count', 'Предыдущих заявок: {count}').replace('{count}', String(count))}` : ''}
+                {countText ? ` · ${countText}` : ''}
             </summary>
             <div className="mt-3 space-y-2">
                 {repeated && <p>{t('dashboard.applicationHistory.scope', 'Учтены предыдущие заявки на роль сотрудника во все бизнесы Kezek на момент этой подачи. Повторная подача сама по себе не означает нарушение.')}</p>}

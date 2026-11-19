@@ -64,6 +64,12 @@ export const scheduleFormRu = {
     'scheduleForm.absenceCancel': "Отменить отсутствие",
     'scheduleForm.absenceCancelReview': "Открыть запись на эти даты?",
     'scheduleForm.absenceCancelConfirm': "Да, отменить отсутствие",
+    'scheduleForm.planLoadError': "Не удалось загрузить план.",
+    'scheduleForm.branchHoursLoadError': "Не удалось загрузить часы филиала.",
+    'scheduleForm.genericLoadError': "Ошибка загрузки.",
+    'scheduleForm.resetReview': "Для {date} будет применена обычная неделя. История сохранится; отсутствие сотрудника останется в силе.",
+    'scheduleForm.resetDay': "Вернуть обычный график на эту дату",
+    'scheduleForm.resetConfirm': "Подтвердить возврат обычного графика",
 } as const;
 export const scheduleFormKy = {
     'scheduleForm.loading': "График жүктөлүүдө…",
@@ -131,6 +137,12 @@ export const scheduleFormKy = {
     'scheduleForm.absenceCancel': "Жок болууну жокко чыгаруу",
     'scheduleForm.absenceCancelReview': "Бул күндөргө жазылууну ачуу керекпи?",
     'scheduleForm.absenceCancelConfirm': "Ооба, жокко чыгаруу",
+    'scheduleForm.planLoadError': "Планды жүктөө мүмкүн болгон жок.",
+    'scheduleForm.branchHoursLoadError': "Филиалдын иш убактысын жүктөө мүмкүн болгон жок.",
+    'scheduleForm.genericLoadError': "Жүктөө катасы.",
+    'scheduleForm.resetReview': "{date}: кадимки жумалык график колдонулат. Тарых жана жок болуу сакталат.",
+    'scheduleForm.resetDay': "Бул күнгө кадимки графикти кайтаруу",
+    'scheduleForm.resetConfirm': "Кадимки графикти кайтарууну ырастоо",
 } as const;
 export const scheduleFormEn = {
     'scheduleForm.loading': "Loading schedule…",
@@ -198,5 +210,11 @@ export const scheduleFormEn = {
     'scheduleForm.absenceCancel': "Cancel absence",
     'scheduleForm.absenceCancelReview': "Reopen bookings on these dates?",
     'scheduleForm.absenceCancelConfirm': "Yes, cancel absence",
+    'scheduleForm.planLoadError': "Could not load the plan.",
+    'scheduleForm.branchHoursLoadError': "Could not load the branch hours.",
+    'scheduleForm.genericLoadError': "Could not load.",
+    'scheduleForm.resetReview': "The regular week will apply on {date}. History and absences are preserved.",
+    'scheduleForm.resetDay': "Restore regular schedule on this date",
+    'scheduleForm.resetConfirm': "Confirm restoring regular schedule",
 } as const;
 

@@ -15,10 +15,11 @@ export async function AuthStatusServer() {
 
     const viewer = await getShellViewer();
     if (viewer.status === 'unavailable') {
+        const t = await getT();
         return (
             <div className="hidden lg:flex items-center gap-3">
                 <span className="rounded-[var(--radius-md)] border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
-                    Сервис временно недоступен
+                    {t('header.auth.serviceUnavailable', 'Сервис временно недоступен')}
                 </span>
             </div>
         );

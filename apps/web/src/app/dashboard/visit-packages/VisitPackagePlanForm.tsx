@@ -80,27 +80,27 @@ export default function VisitPackagePlanForm({ initial, branches, services }: Pr
         try {
             const nameRu = form.name_ru.trim();
             if (!nameRu) {
-                setErr('Название (русский) обязательно');
+                setErr(t('dashboard.visitPackages.form.error.nameRequired', 'Название (русский) обязательно'));
                 setSaving(false);
                 return;
             }
             if (form.visit_count < 1 || form.visit_count > 1000) {
-                setErr('Количество визитов: от 1 до 1000');
+                setErr(t('dashboard.visitPackages.form.error.visitCount', 'Количество визитов: от 1 до 1000'));
                 setSaving(false);
                 return;
             }
             if (form.validity_days < 1 || form.validity_days > 3650) {
-                setErr('Срок действия: от 1 до 3650 дней');
+                setErr(t('dashboard.visitPackages.form.error.validityDays', 'Срок действия: от 1 до 3650 дней'));
                 setSaving(false);
                 return;
             }
             if (form.discount_type === 'percent' && form.discount_value > 100) {
-                setErr('При типе «Процент» значение не должно превышать 100');
+                setErr(t('dashboard.visitPackages.form.error.percentMax', 'При типе «Процент» значение не должно превышать 100'));
                 setSaving(false);
                 return;
             }
             if (form.discount_value < 0 || form.discount_value > 100000) {
-                setErr('Значение скидки: от 0 до 100000');
+                setErr(t('dashboard.visitPackages.form.error.discountRange', 'Значение скидки: от 0 до 100000'));
                 setSaving(false);
                 return;
             }
@@ -135,7 +135,7 @@ export default function VisitPackagePlanForm({ initial, branches, services }: Pr
             }
             router.push('/dashboard/visit-packages');
         } catch (e) {
-            setErr(e instanceof Error ? e.message : 'Ошибка сохранения');
+            setErr(e instanceof Error ? e.message : t('dashboard.visitPackages.form.error.save', 'Ошибка сохранения'));
             setSaving(false);
         }
     };
@@ -152,7 +152,7 @@ export default function VisitPackagePlanForm({ initial, branches, services }: Pr
                     value={form.name_ru}
                     onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
                     required
-                    placeholder="Например: 5 визитов"
+                    placeholder={t('dashboard.visitPackages.form.namePlaceholder', 'Например: 5 визитов')}
                 />
                 <Input
                     label={t('dashboard.visitPackages.form.nameKy', 'Название (кыргызский)')}
@@ -300,7 +300,7 @@ export default function VisitPackagePlanForm({ initial, branches, services }: Pr
                     })}
                     {branches.length === 0 && (
                         <p className="text-sm text-gray-500 dark:text-gray-400 p-2">
-                            Нет активных филиалов
+                            {t('dashboard.visitPackages.form.noBranches', 'Нет активных филиалов')}
                         </p>
                     )}
                 </div>
@@ -319,7 +319,7 @@ export default function VisitPackagePlanForm({ initial, branches, services }: Pr
                         className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                     />
                     <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                        Активен (доступен для продажи)
+                        {t('dashboard.visitPackages.form.active', 'Активен (доступен для продажи)')}
                     </label>
                 </div>
             )}

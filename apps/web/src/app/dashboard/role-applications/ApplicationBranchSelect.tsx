@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Select } from '@/components/ui/Select';
 
 type Branch = { id: string; name: string; address: string | null };
@@ -11,10 +12,11 @@ export function ApplicationBranchSelect({ id, branches, value, onChange, disable
     onChange: (value: string) => void;
     disabled?: boolean;
 }) {
+    const { t } = useLanguage();
     const selected = branches.find((branch) => branch.id === value);
     return (
         <div className="min-w-0 space-y-2">
-            <Select id={id} label="Филиал сотрудника" value={value}
+            <Select id={id} label={t('dashboard.roleApplications.branchLabel', 'Филиал сотрудника')} value={value}
                 disabled={disabled} onChange={(event) => onChange(event.target.value)}
                 containerClassName="min-w-0" className="min-w-0 max-w-full truncate"
                 aria-describedby={selected?.address ? `${id}-address` : undefined}>

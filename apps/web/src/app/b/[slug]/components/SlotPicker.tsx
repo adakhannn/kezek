@@ -13,12 +13,14 @@ function formatVisitDuration(totalMin: number, t: (key: string, fallback?: strin
     const hours = Math.floor(totalMin / 60);
     const mins = totalMin % 60;
     if (hours > 0 && mins > 0) {
-        return `${hours} ${t('booking.duration.hour', 'ч')} ${mins} ${t('booking.duration.min', 'мин')}`;
+        return t('booking.duration.hoursMinutesValue', '{hours} ч {minutes} мин')
+            .replace('{hours}', String(hours))
+            .replace('{minutes}', String(mins));
     }
     if (hours > 0) {
-        return `${hours} ${t('booking.duration.hour', 'ч')}`;
+        return t('booking.duration.hoursValue', '{hours} ч').replace('{hours}', String(hours));
     }
-    return `${mins} ${t('booking.duration.min', 'мин')}`;
+    return t('booking.duration.minutesValue', '{minutes} мин').replace('{minutes}', String(mins));
 }
 
 type SlotPickerProps = {

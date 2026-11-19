@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import ExplicitStaffSchedule from './ExplicitStaffSchedule';
 import StaffSchedulePageClient from './StaffSchedulePageClient';
 
+import { getT } from '@/app/_components/i18n/server';
 import { getStaffPageContext } from '@/lib/authBiz';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 
@@ -26,7 +27,8 @@ export default async function StaffSchedulePage() {
         .maybeSingle();
 
     if (eStaff) {
-        return <main className="p-6 text-red-600">Ошибка: {eStaff.message}</main>;
+        const t = await getT();
+        return <main className="p-6 text-red-600">{t('staff.schedule.error', 'Ошибка:')} {eStaff.message}</main>;
     }
     if (!staff || String(staff.biz_id) !== String(bizId)) return notFound();
 
@@ -38,7 +40,8 @@ export default async function StaffSchedulePage() {
         .order('name');
 
     if (eBranches) {
-        return <main className="p-6 text-red-600">Ошибка филиалов: {eBranches.message}</main>;
+        const t = await getT();
+        return <main className="p-6 text-red-600">{t('staff.schedule.error.branches', 'Ошибка филиалов:')} {eBranches.message}</main>;
     }
 
     const activeBranches: Branch[] = (branches ?? []).filter((b): b is Branch => b.is_active === true);

@@ -25,4 +25,6 @@ export const headerEn = {
     'header.roleBusiness.sections.cabinets': 'Cabinets',
     'header.roleBusiness.sections.businesses': 'Businesses',
     'header.menu': 'Menu',
+    'header.auth.serviceUnavailable': 'Service temporarily unavailable',
+    'header.logo.alt': 'Kezek CRM system',
 } as const;

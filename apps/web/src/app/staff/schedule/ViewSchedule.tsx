@@ -12,10 +12,6 @@ import { transliterate } from '@/lib/transliterate';
 
 type TimeRange = { start: string; end: string };
 
-const DOW_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-const DOW_KY = ['Жк', 'Дү', 'Шй', 'Шр', 'Бй', 'Жм', 'Иш'];
-const DOW_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 // Получаем даты текущей и следующей недели
 function getWeekDates(weekOffset: number): Date[] {
     const today = new Date();
@@ -47,7 +43,16 @@ export default function ViewSchedule({
         }>
     >([]);
     
-    const DOW = locale === 'ky' ? DOW_KY : locale === 'en' ? DOW_EN : DOW_RU;
+    // Indexed by Date.getDay(): 0 is Sunday.
+    const DOW = [
+        t('staff.schedule.dayOfWeek.sunday', 'Вс'),
+        t('staff.schedule.dayOfWeek.monday', 'Пн'),
+        t('staff.schedule.dayOfWeek.tuesday', 'Вт'),
+        t('staff.schedule.dayOfWeek.wednesday', 'Ср'),
+        t('staff.schedule.dayOfWeek.thursday', 'Чт'),
+        t('staff.schedule.dayOfWeek.friday', 'Пт'),
+        t('staff.schedule.dayOfWeek.saturday', 'Сб'),
+    ];
 
     // Получаем даты текущей и следующей недели
     const currentWeekDates = useMemo(() => getWeekDates(0), []);

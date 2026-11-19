@@ -1,5 +1,6 @@
 export const financeRu = {
     'finance.biz.context': 'Бизнес',
+    'finance.money': '{amount} сом',
     'finance.branch.all': 'Все филиалы',
     'finance.shifts.openCount': 'Открытые: {count}',
     'finance.shifts.closedCount': 'Закрытые: {count}',

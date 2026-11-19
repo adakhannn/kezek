@@ -221,7 +221,7 @@ export function FinanceShiftTabSection({
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-600 dark:text-gray-400">
-                                        {t('staff.finance.details.businessShare', 'Бизнес')} <span className="text-xs">({financeData.data?.staffPercentSalon ?? 40}% + расходники)</span>
+                                        {t('staff.finance.details.businessShare', 'Бизнес')} <span className="text-xs">{t('staff.finance.details.businessSharePercent', '({percent}% + расходники)').replace('{percent}', String(financeData.data?.staffPercentSalon ?? 40))}</span>
                                     </span>
                                     <span className="font-semibold text-indigo-600 dark:text-indigo-400">{calculations.salonShare.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
                                 </div>
@@ -387,12 +387,13 @@ type FinanceDraftErrorSectionProps = {
 };
 
 export function FinanceDraftErrorSection({ error, blocked, disabled, onDiscard }: FinanceDraftErrorSectionProps) {
+    const { t } = useLanguage();
     return (
         <div role="alert" className="my-4 rounded-lg border border-amber-400 bg-amber-50 p-4 text-slate-900">
             <p>{error}</p>
-            {blocked && <p>Запись остановлена. Скопируйте нужные изменения перед отказом от черновика.</p>}
+            {blocked && <p>{t('staff.finance.draft.writeStopped', 'Запись остановлена. Скопируйте нужные изменения перед отказом от черновика.')}</p>}
             <button type="button" disabled={disabled} onClick={onDiscard} className="mt-2 underline">
-                Отказаться от черновика и загрузить актуальную смену
+                {t('staff.finance.draft.discardAndReload', 'Отказаться от черновика и загрузить актуальную смену')}
             </button>
         </div>
     );

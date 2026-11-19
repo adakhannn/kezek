@@ -1,5 +1,6 @@
 import NewStaffPageClient from './NewStaffPageClient';
 
+import { getT } from '@/app/_components/i18n/server';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
@@ -27,7 +28,8 @@ export default async function NewStaffPage() {
         }
         branches = data ?? [];
     } catch (e: unknown) {
-        errorMessage = e instanceof Error ? e.message : 'Нет доступа';
+        const t = await getT();
+        errorMessage = e instanceof Error ? e.message : t('staff.new.errors.noAccess', 'Нет доступа');
     }
     if (errorMessage !== null) return <main className="p-6 text-red-600">{errorMessage}</main>;
     if (loadFailed) return <LoadFailedNotice page />;

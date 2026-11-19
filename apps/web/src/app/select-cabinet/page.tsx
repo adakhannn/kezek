@@ -22,16 +22,16 @@ export default async function SelectCabinetPage() {
 
     const options: CabinetOption[] = [];
     if (profile.canAdmin) {
-        options.push({ path: '/admin', labelKey: 'selectCabinet.optionAdmin', defaultLabel: 'Админ-панель' });
+        options.push({ path: '/admin', labelKey: 'selectCabinet.optionAdmin' });
     }
     if (profile.canDashboard) {
-        options.push({ path: '/dashboard', labelKey: 'selectCabinet.optionDashboard', defaultLabel: 'Кабинет бизнеса' });
+        options.push({ path: '/dashboard', labelKey: 'selectCabinet.optionDashboard' });
     }
     if (profile.canStaff) {
-        options.push({ path: '/staff', labelKey: 'selectCabinet.optionStaff', defaultLabel: 'Кабинет сотрудника' });
+        options.push({ path: '/staff', labelKey: 'selectCabinet.optionStaff' });
     }
     if (profile.canCabinet) {
-        options.push({ path: '/cabinet', labelKey: 'selectCabinet.optionCabinet', defaultLabel: 'Мои записи' });
+        options.push({ path: '/cabinet', labelKey: 'selectCabinet.optionCabinet' });
     }
 
     return <SelectCabinetClient options={options} />;

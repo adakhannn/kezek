@@ -40,7 +40,7 @@ export default function Client({
     defaultDate: string;
     staffName: string;
 }) {
-    const { t, locale } = useLanguage();
+    const { t } = useLanguage();
     const toast = useToast();
     const client = useQuickDeskClient();
     const titleId = useId();
@@ -150,7 +150,7 @@ export default function Client({
                 minutes: selectedService.duration_min,
                 ...clientResult.payload,
             });
-            toast.showSuccess(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
+            toast.showSuccess(t('staff.slots.bookingCreated', 'Создана запись #{id}').replace('{id}', bookingId.slice(0, 8)));
             setSelectedStart('');
             client.reset();
         } catch (error: unknown) {
@@ -212,7 +212,7 @@ export default function Client({
                                 </option>
                                 {servicesByBranch.map((s) => (
                                     <option key={s.id} value={s.id}>
-                                        {s.name} {locale === 'en' ? `(${s.duration_min} min)` : `(${s.duration_min} мин)`}
+                                        {s.name} {t('staff.slots.serviceDuration', '({minutes} мин)').replace('{minutes}', String(s.duration_min))}
                                     </option>
                                 ))}
                                 {branchId && servicesByBranch.length === 0 && (
@@ -341,7 +341,7 @@ export default function Client({
                                 <div>
                                     <dt className="text-gray-500 dark:text-gray-400">{t('bookings.desk.service', 'Услуга')}</dt>
                                     <dd className="font-medium text-gray-900 dark:text-gray-100">
-                                        {selectedService.name} {locale === 'en' ? `(${selectedService.duration_min} min)` : `(${selectedService.duration_min} мин)`}
+                                        {selectedService.name} {t('staff.slots.serviceDuration', '({minutes} мин)').replace('{minutes}', String(selectedService.duration_min))}
                                     </dd>
                                 </div>
                             </dl>

@@ -55,4 +55,13 @@ export const homeRu = {
     'home.business.feature3': 'Команда и финансы',
     'home.seo.title': 'Kezek — онлайн-запись на услуги в Кыргызстане',
     'home.seo.description': 'Найдите подходящий сервис, сравните варианты и запишитесь онлайн без звонков и переписок.',
+    'home.unavailable.title': 'Каталог временно недоступен',
+    'home.unavailable.description': 'Не удалось загрузить данные. Обновите страницу или попробуйте ещё раз позже.',
+    'home.card.ratingLabel': 'Рейтинг {score}',
+    'home.results.queryFilter': 'Поиск: {query}',
+    'home.results.categoryFilter': 'Категория: {category}',
+    'home.pagination.prev': '← Назад',
+    'home.pagination.next': 'Вперёд →',
+    'home.pagination.page': 'Страница {page}',
+    'home.pagination.of': 'из {pages}',
 } as const;

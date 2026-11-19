@@ -1,4 +1,5 @@
 // apps/web/src/app/dashboard/branches/page.tsx  (или ваш путь)
+import { getT } from '@/app/_components/i18n/server';
 import BranchesListClient from '@/app/dashboard/branches/BranchesListClient';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
@@ -30,7 +31,8 @@ export default async function BranchesListPage() {
     const canCreateBranch = canManageBranches && (branches?.length ?? 0) < branchLimit;
 
     if (error) {
-        return <main className="p-6 text-red-600">Ошибка: {error.message}</main>;
+        const t = await getT();
+        return <main className="p-6 text-red-600">{t('branches.error', 'Ошибка')}: {error.message}</main>;
     }
 
     return (

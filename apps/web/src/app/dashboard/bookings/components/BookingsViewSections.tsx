@@ -71,6 +71,7 @@ function BookingPill({
     title?: string;
 }) {
     const { t } = useLanguage();
+    const openBooking = t('bookings.calendar.openBooking', 'Открыть бронь');
 
     return (
         <BookingCard
@@ -80,7 +81,7 @@ function BookingPill({
             status={status}
             timezone={timezone}
             href={`/booking/${id}`}
-            title={title ?? `${t('bookings.calendar.openBooking', 'Открыть бронь')} #${id.slice(0, 8)}`}
+            title={title ?? `${openBooking} #${id.slice(0, 8)}`}
         />
     );
 }
@@ -181,6 +182,8 @@ export function CalendarDaySection({
             };
 
             const rows = (data ?? []) as CalendarBookingRow[];
+            const minutes = t('booking.duration.min', 'мин');
+            const totalLabel = t('cabinet.bookings.card.totalDuration', 'Всего:');
             const mapped = rows.map((row) => {
                 const rawServices = Array.isArray(row.booking_services) ? row.booking_services : [];
                 if (rawServices.length === 0) {
@@ -206,15 +209,15 @@ export function CalendarDaySection({
                     const duration = typeof serviceRow.duration_min === 'number' ? serviceRow.duration_min : 0;
                     totalDuration += duration;
                     const label = name
-                        ? `${name} (${duration} ${t('booking.duration.min', 'мин')})`
-                        : `${duration} ${t('booking.duration.min', 'мин')}`;
+                        ? `${name} (${duration} ${minutes})`
+                        : `${duration} ${minutes}`;
                     parts.push(label);
                 }
 
                 const summaryBase = parts.join('; ');
                 const summaryTotal =
                     totalDuration > 0
-                        ? ` — ${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${t('booking.duration.min', 'мин')}`
+                        ? ` — ${totalLabel} ${totalDuration} ${minutes}`
                         : '';
 
                 return {

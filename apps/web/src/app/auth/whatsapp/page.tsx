@@ -10,6 +10,7 @@ import {
   type VerifyResponseData,
 } from './whatsAppWebAuthClient';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { createAuthProof } from '@/lib/authPkceClient';
@@ -21,6 +22,7 @@ type Step = 'phone' | 'otp';
 function WhatsAppAuthContent() {
   const router = useRouter();
   const sp = useSearchParams();
+  const { t } = useLanguage();
   const redirect = sanitizeAuthReturnPath(sp.get('redirect'));
 
   const [step, setStep] = useState<Step>('phone');
@@ -47,7 +49,7 @@ function WhatsAppAuthContent() {
 
     try {
       const proof = await createAuthProof();
-      const payload = await startWhatsAppWebAuth(fetch, phone, proof.codeChallenge);
+      const payload = await startWhatsAppWebAuth(fetch, phone, proof.codeChallenge, t);
       setCodeVerifier(proof.codeVerifier);
       setAttemptId(payload.attemptId);
       setMaskedDestination(payload.maskedDestination ?? null);
@@ -68,21 +70,21 @@ function WhatsAppAuthContent() {
 
     try {
       if (!attemptId || !codeVerifier) {
-        throw new Error('Сессия подтверждения не найдена. Запросите код заново.');
+        throw new Error(t('auth.whatsapp.error.noSession', 'Сессия подтверждения не найдена. Запросите код заново.'));
       }
       if (otp.trim().length !== 6) {
-        throw new Error('Введите 6-значный код.');
+        throw new Error(t('auth.whatsapp.error.codeLength', 'Введите 6-значный код.'));
       }
 
       const payload: VerifyResponseData = await verifyWhatsAppWebOtp(fetch, {
         attemptId,
         phone,
         code: otp,
-      });
+      }, t);
       if (payload.status !== 'approved' || !payload.exchangeCode) {
-        throw new Error('Проверка не завершена. Попробуйте снова.');
+        throw new Error(t('auth.whatsapp.error.notApproved', 'Проверка не завершена. Попробуйте снова.'));
       }
-      const exchangeData = await exchangeWhatsAppWebSession(fetch, payload.exchangeCode, codeVerifier);
+      const exchangeData = await exchangeWhatsAppWebSession(fetch, payload.exchangeCode, codeVerifier, t);
       setCodeVerifier(null);
 
       const { error: sessionError } = await supabase.auth.setSession({
@@ -90,7 +92,7 @@ function WhatsAppAuthContent() {
         refresh_token: exchangeData.refreshToken,
       });
       if (sessionError) {
-        throw new Error(`Не удалось установить сессию: ${sessionError.message}`);
+        throw new Error(t('auth.whatsapp.error.session', 'Не удалось установить сессию: {error}').replace('{error}', () => sessionError.message));
       }
 
       router.refresh();
@@ -112,12 +114,12 @@ function WhatsAppAuthContent() {
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Вход через WhatsApp
+            {t('auth.whatsapp.title', 'Вход через WhatsApp')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             {step === 'phone'
-              ? 'Введите номер телефона, на него придет код в WhatsApp.'
-              : 'Введите код, который пришел вам в WhatsApp.'}
+              ? t('auth.whatsapp.phoneHint', 'Введите номер телефона, на него придет код в WhatsApp.')
+              : t('auth.whatsapp.codeHint', 'Введите код, который пришел вам в WhatsApp.')}
           </p>
         </div>
 
@@ -127,7 +129,7 @@ function WhatsAppAuthContent() {
           <form onSubmit={handleSendOtp} className="mt-8 space-y-6">
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Номер телефона
+                {t('auth.phone.label', 'Номер телефона')}
               </label>
               <input
                 id="phone"
@@ -146,7 +148,7 @@ function WhatsAppAuthContent() {
                 disabled={sending}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {sending ? 'Отправка...' : 'Отправить код'}
+                {sending ? t('auth.whatsapp.sending', 'Отправка...') : t('auth.whatsapp.sendCode', 'Отправить код')}
               </button>
             </div>
           </form>
@@ -154,7 +156,7 @@ function WhatsAppAuthContent() {
           <form onSubmit={handleVerifyOtp} className="mt-8 space-y-6">
             <div>
               <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Код подтверждения
+                {t('auth.whatsapp.codeLabel', 'Код подтверждения')}
               </label>
               <input
                 id="otp"
@@ -167,7 +169,7 @@ function WhatsAppAuthContent() {
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm bg-white dark:bg-gray-700 text-center text-2xl tracking-widest"
               />
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Код отправлен на {maskedDestination || phone}
+                {t('auth.whatsapp.codeSentTo', 'Код отправлен на {destination}').replace('{destination}', () => maskedDestination || phone)}
               </p>
             </div>
 
@@ -182,7 +184,7 @@ function WhatsAppAuthContent() {
                 }}
                 className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
               >
-                Изменить номер
+                {t('auth.whatsapp.changePhone', 'Изменить номер')}
               </button>
               <button
                 type="button"
@@ -190,7 +192,9 @@ function WhatsAppAuthContent() {
                 disabled={countdown > 0 || sending}
                 className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {countdown > 0 ? `Отправить снова (${countdown}с)` : 'Отправить код снова'}
+                {countdown > 0
+                  ? t('auth.whatsapp.resendIn', 'Отправить снова ({seconds}с)').replace('{seconds}', String(countdown))
+                  : t('auth.whatsapp.resend', 'Отправить код снова')}
               </button>
             </div>
 
@@ -200,7 +204,7 @@ function WhatsAppAuthContent() {
                 disabled={verifying || otp.length !== 6}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {verifying ? 'Проверка...' : 'Войти'}
+                {verifying ? t('auth.whatsapp.verifying', 'Проверка...') : t('auth.whatsapp.submit', 'Войти')}
               </button>
             </div>
           </form>
@@ -211,7 +215,7 @@ function WhatsAppAuthContent() {
             onClick={() => router.push('/auth/sign-in')}
             className="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300"
           >
-            Вернуться к другим способам входа
+            {t('auth.whatsapp.back', 'Вернуться к другим способам входа')}
           </button>
         </div>
       </div>
@@ -220,6 +224,8 @@ function WhatsAppAuthContent() {
 }
 
 export default function WhatsAppAuthPage() {
+  const { t } = useLanguage();
+
   return (
     <ErrorBoundary>
       <Suspense
@@ -228,7 +234,7 @@ export default function WhatsAppAuthPage() {
             <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка...</p>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">{t('common.loading', 'Загрузка...')}</p>
               </div>
             </div>
           </main>

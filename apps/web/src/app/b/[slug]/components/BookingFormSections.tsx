@@ -268,11 +268,14 @@ export function BookingFormSections({
                                     variant="success"
                                     compact
                                     title={t('booking.step4.selectedSummary', 'Визит собран')}
-                                    message={`${totalDurationStep4} ${t('booking.duration.min', 'мин')}${
+                                    message={t('booking.duration.minutesValue', '{minutes} мин').replace('{minutes}', String(totalDurationStep4)) + (
                                         totalPriceFromStep4 > 0 || totalPriceToStep4 > 0
-                                            ? ` · ${totalPriceFromStep4}${totalPriceToStep4 !== totalPriceFromStep4 && totalPriceToStep4 > 0 ? `–${totalPriceToStep4}` : ''} ${t('booking.currency', 'сом')}`
+                                            ? ' · ' + t('booking.price.value', '{price} сом').replace(
+                                                '{price}',
+                                                `${totalPriceFromStep4}${totalPriceToStep4 !== totalPriceFromStep4 && totalPriceToStep4 > 0 ? `–${totalPriceToStep4}` : ''}`,
+                                            )
                                             : ''
-                                    }`}
+                                    )}
                                 />
                             </div>
                         ) : null}

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from './i18n/LanguageProvider';
+
 /**
  * Висящее уведомление, напоминающее пользователю заполнить имя. Показывать ли его, решает сервер
  * (ReminderBanners); внутри личного кабинета, где имя и заполняют, баннер скрыт.
@@ -15,6 +17,7 @@ export function NameReminderBanner() {
 }
 
 function DismissibleNameReminderBanner() {
+    const { t } = useLanguage();
     const [show, setShow] = useState(true);
     if (!show) return null;
 
@@ -27,7 +30,7 @@ function DismissibleNameReminderBanner() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p className="text-sm font-medium">
-                            Пожалуйста, заполните ваше имя в профиле для лучшего опыта использования сервиса.
+                            {t('common.nameReminder.message', 'Пожалуйста, заполните ваше имя в профиле для лучшего опыта использования сервиса.')}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -35,12 +38,12 @@ function DismissibleNameReminderBanner() {
                             href="/cabinet"
                             className="px-4 py-2 bg-white text-indigo-600 font-medium rounded-lg hover:bg-gray-100 transition-colors text-sm whitespace-nowrap"
                         >
-                            Заполнить профиль
+                            {t('common.nameReminder.action', 'Заполнить профиль')}
                         </Link>
                         <button
                             onClick={() => setShow(false)}
                             className="text-white/80 hover:text-white transition-colors"
-                            aria-label="Закрыть"
+                            aria-label={t('common.close', 'Закрыть')}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

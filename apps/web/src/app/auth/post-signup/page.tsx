@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import {logDebug, logError, logWarn} from '@/lib/log';
@@ -9,6 +10,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export default function PostSignup() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -81,7 +83,7 @@ export default function PostSignup() {
         
         // Проверяем, что имя заполнено
         if (!fullName.trim()) {
-            setError('Пожалуйста, введите ваше имя');
+            setError(t('auth.postSignup.error.nameRequired', 'Пожалуйста, введите ваше имя'));
             return;
         }
         
@@ -92,7 +94,7 @@ export default function PostSignup() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                throw new Error('Не авторизован');
+                throw new Error(t('auth.postSignup.error.notSignedIn', 'Не авторизован'));
             }
 
             logDebug('PostSignup', 'Saving profile', { fullName: fullName.trim() });
@@ -110,22 +112,22 @@ export default function PostSignup() {
             logDebug('PostSignup', 'Response status', { status: res.status });
 
             if (!res.ok) {
-                const errorData = await res.json().catch(() => ({ message: 'Ошибка при сохранении' }));
-                throw new Error(errorData.message || errorData.error || 'Ошибка при сохранении');
+                const errorData = await res.json().catch(() => ({ message: t('auth.postSignup.error.save', 'Ошибка при сохранении') }));
+                throw new Error(errorData.message || errorData.error || t('auth.postSignup.error.save', 'Ошибка при сохранении'));
             }
 
             const data = await res.json();
             logDebug('PostSignup', 'Response data', data);
             
             if (!data.ok) {
-                throw new Error(data.message || data.error || 'Ошибка при сохранении');
+                throw new Error(data.message || data.error || t('auth.postSignup.error.save', 'Ошибка при сохранении'));
             }
 
             // Очищаем localStorage
             localStorage.removeItem('signup_full_name');
             localStorage.removeItem('signup_phone');
 
-            setMessage('Профиль сохранен');
+            setMessage(t('auth.postSignup.saved', 'Профиль сохранен'));
             
             // Обновляем страницу, чтобы middleware увидел новое имя, затем редиректим
             router.refresh();
@@ -153,7 +155,7 @@ export default function PostSignup() {
             <main className="min-h-screen flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    <div className="text-sm text-gray-600">Загрузка...</div>
+                    <div className="text-sm text-gray-600">{t('common.loading', 'Загрузка...')}</div>
                 </div>
             </main>
         );
@@ -163,14 +165,14 @@ export default function PostSignup() {
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-indigo-950 dark:via-gray-900 dark:to-pink-950 flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8 space-y-6">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Завершение регистрации</h1>
-                    <p className="text-gray-600 dark:text-gray-400">Укажите ваше имя для завершения регистрации</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('auth.postSignup.title', 'Завершение регистрации')}</h1>
+                    <p className="text-gray-600 dark:text-gray-400">{t('auth.postSignup.subtitle', 'Укажите ваше имя для завершения регистрации')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Имя <span className="text-red-500">*</span>
+                            {t('auth.postSignup.name.label', 'Имя')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -178,7 +180,7 @@ export default function PostSignup() {
                             className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            placeholder="Ваше имя"
+                            placeholder={t('auth.postSignup.name.placeholder', 'Ваше имя')}
                         />
                     </div>
                     {message ? <AlertBanner variant="success" message={message} compact /> : null}
@@ -189,7 +191,7 @@ export default function PostSignup() {
                         isLoading={saving}
                         className="w-full"
                     >
-                        {saving ? 'Сохранение...' : 'Завершить регистрацию'}
+                        {saving ? t('auth.postSignup.saving', 'Сохранение...') : t('auth.postSignup.submit', 'Завершить регистрацию')}
                     </Button>
                 </form>
             </div>

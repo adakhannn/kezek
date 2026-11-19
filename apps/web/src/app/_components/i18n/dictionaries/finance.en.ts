@@ -1,5 +1,6 @@
 export const financeEn = {
     'finance.biz.context': 'Business',
+    'finance.money': '{amount} som',
     'finance.branch.all': 'All branches',
     'finance.shifts.openCount': 'Open: {count}',
     'finance.shifts.closedCount': 'Closed: {count}',

@@ -1,5 +1,6 @@
 export const financeKy = {
     'finance.biz.context': 'Бизнес',
+    'finance.money': '{amount} сом',
     'finance.branch.all': 'Бардык филиалдар',
     'finance.shifts.openCount': 'Ачык: {count}',
     'finance.shifts.closedCount': 'Жабык: {count}',

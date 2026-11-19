@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { TelegramAccountSwitchHelp } from '@/components/auth/TelegramAccountSwitchHelp';
 import { clearTelegramAuthFragment } from '@/lib/clearTelegramAuthFragment';
 import {logError} from '@/lib/log';
@@ -37,18 +38,21 @@ export function TelegramLinkWidget({
     size = 'medium',
 }: TelegramLinkWidgetProps) {
     const router = useRouter();
+    const { t } = useLanguage();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(false);
     const [widgetReloadKey, setWidgetReloadKey] = useState(0);
     
-    // Храним последние версии callback'ов в ref, чтобы не перезапускать useEffect
+    // Храним последние версии callback'ов и переводчика в ref, чтобы не перезапускать useEffect
     const onSuccessRef = useRef(onSuccess);
     const onErrorRef = useRef(onError);
+    const tRef = useRef(t);
     
     useEffect(() => {
         onSuccessRef.current = onSuccess;
         onErrorRef.current = onError;
-    }, [onSuccess, onError]);
+        tRef.current = t;
+    }, [onSuccess, onError, t]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -62,6 +66,7 @@ export function TelegramLinkWidget({
         // Регистрируем callback в window
         const w = window as typeof window & Record<string, TelegramCallback>;
         w[callbackName] = async (user: TelegramUser) => {
+            const t = tRef.current;
             clearTelegramAuthFragment();
             setLoading(true);
             try {
@@ -77,7 +82,7 @@ export function TelegramLinkWidget({
                 if (!resp.ok || data?.ok !== true) {
                     const message = typeof data?.message === 'string'
                         ? data.message
-                        : 'Ошибка привязки Telegram';
+                        : t('cabinet.telegramWidget.linkError', 'Ошибка привязки Telegram');
                     // Expected API rejections belong in the profile notice, not the dev error overlay.
                     if (resp.status >= 400 && resp.status < 500 && data?.ok === false
                         && ['auth', 'forbidden', 'validation', 'conflict', 'rate_limit'].includes(data.error)) {
@@ -93,7 +98,7 @@ export function TelegramLinkWidget({
 
                 onSuccessRef.current?.();
             } catch (e) {
-                const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
+                const msg = e instanceof Error ? e.message : t('cabinet.telegramWidget.unknownError', 'Неизвестная ошибка');
                 logError('TelegramLinkWidget', 'Error linking Telegram', e);
                 onErrorRef.current?.(msg);
             } finally {
@@ -140,7 +145,7 @@ export function TelegramLinkWidget({
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                         </svg>
-                        <span>Привязка...</span>
+                        <span>{t('cabinet.telegramWidget.linking', 'Привязка...')}</span>
                     </div>
                 </div>
             )}

@@ -198,7 +198,7 @@ export function BusinessApplicationForm({
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <Input label="Instagram" type="url" placeholder="https://instagram.com/..." {...field('instagram')} />
-                            <Input label="2ГИС" type="url" placeholder="https://2gis.ru/..." {...field('two_gis')} />
+                            <Input label={t('business.apply.links.twoGis', '2ГИС')} type="url" placeholder="https://2gis.ru/..." {...field('two_gis')} />
                             <Input label={t('business.apply.links.googleMaps')} type="url" placeholder="https://maps.google.com/..." {...field('google_maps')} />
                             <Input label={t('business.apply.links.yandexMaps')} type="url" placeholder="https://yandex.ru/maps/..." {...field('yandex_maps')} />
                         </div>

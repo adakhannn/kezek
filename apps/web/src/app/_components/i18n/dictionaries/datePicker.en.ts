@@ -12,4 +12,11 @@ export const datePickerEn = {
     'datePicker.selected': 'Selected date: {value}',
     'datePicker.yearLabel': 'Year',
     'datePicker.legend.today': 'Today',
+    'datePicker.weekdays.monday': 'Mon',
+    'datePicker.weekdays.tuesday': 'Tue',
+    'datePicker.weekdays.wednesday': 'Wed',
+    'datePicker.weekdays.thursday': 'Thu',
+    'datePicker.weekdays.friday': 'Fri',
+    'datePicker.weekdays.saturday': 'Sat',
+    'datePicker.weekdays.sunday': 'Sun',
 } as const;

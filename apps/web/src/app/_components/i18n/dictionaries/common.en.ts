@@ -98,4 +98,9 @@ export const commonEn = {
     'error.unauthorized.action.signIn': 'Sign in',
     'error.unauthorized.description': 'You need to sign in to access this page.',
     'error.unauthorized.title': 'Sign-in required',
+    'common.notFound.title': 'Page not found',
+    'common.notFound.description': 'The link may be outdated or the address may contain a mistake. Go back to the home page or sign in to continue.',
+    'common.globalError.description': 'We have been notified and are working on a fix.',
+    'common.nameReminder.message': 'Please add your name to your profile for a better experience.',
+    'common.nameReminder.action': 'Complete profile',
 } as const;

@@ -69,6 +69,7 @@ export async function generateMetadata({
     const { slug } = await params;
     const locale = await getServerLocale();
     const t = getT(locale);
+    const fallbackName = t('booking.seo.businessFallback', 'Бизнес');
     
     // Получаем данные о бизнесе для метаданных
     const data = await getData(slug);
@@ -76,13 +77,13 @@ export async function generateMetadata({
         const titleTemplate = t('booking.seo.title');
         const descTemplate = t('booking.seo.description');
         return {
-            title: titleTemplate.replace('{businessName}', 'Бизнес'),
-            description: descTemplate.replace('{businessName}', 'Бизнес'),
+            title: titleTemplate.replace('{businessName}', fallbackName),
+            description: descTemplate.replace('{businessName}', fallbackName),
             alternates: generateAlternates(`/b/${slug}/booking`),
         };
     }
     
-    const businessName = data.biz.name || 'Бизнес';
+    const businessName = data.biz.name || fallbackName;
     const titleTemplate = t('booking.seo.title');
     const descTemplate = t('booking.seo.description');
     
@@ -100,7 +101,10 @@ export default async function Page({
 }): Promise<JSX.Element> {
     const { slug } = await params;
     const data = await getData(slug);
-    if (!data) return <main className="p-6">Бизнес не найден</main>;
+    if (!data) {
+        const t = await getT();
+        return <main className="p-6">{t('business.notFound.title', 'Бизнес не найден')}</main>;
+    }
     return <BookingFormClient data={data} />;
 }
 

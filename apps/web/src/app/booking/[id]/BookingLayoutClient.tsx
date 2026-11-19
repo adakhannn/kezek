@@ -27,13 +27,15 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
             if (locale === 'en' && s.name_en) return s.name_en;
             return s.name_ru;
         };
+        const minutes = (value: number): string =>
+            t('booking.duration.minutesValue', '{minutes} мин').replace('{minutes}', String(value));
 
         if (services.length === 1) {
             const s = services[0];
             const name = pickName(s);
             if (s.duration_min && s.duration_min > 0) {
                 return {
-                    primary: `${name} (${s.duration_min} ${t('booking.duration.min', 'мин')})`,
+                    primary: `${name} (${minutes(s.duration_min)})`,
                 };
             }
             return { primary: name };
@@ -47,7 +49,7 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
             if (duration) totalDuration += duration;
             parts.push(
                 duration
-                    ? `${name} (${duration} ${t('booking.duration.min', 'мин')})`
+                    ? `${name} (${minutes(duration)})`
                     : name,
             );
         }
@@ -55,10 +57,7 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
         const primary = parts.join('; ');
         const details =
             totalDuration > 0
-                ? `${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${t(
-                      'booking.duration.min',
-                      'мин',
-                  )}`
+                ? t('booking.details.totalMinutes', 'Всего: {minutes} мин').replace('{minutes}', String(totalDuration))
                 : undefined;
 
         return { primary, details };

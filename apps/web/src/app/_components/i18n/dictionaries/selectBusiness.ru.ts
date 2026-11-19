@@ -19,4 +19,8 @@ export const selectBusinessRu = {
     'selectCabinet.rememberChoice': 'Запомнить выбор и в следующий раз заходить сюда',
     'selectCabinet.subtitle': 'У вас есть доступ к нескольким кабинетам.',
     'selectCabinet.title': 'Как вы хотите зайти?',
+    'selectCabinet.optionAdmin': 'Админ-панель',
+    'selectCabinet.optionDashboard': 'Кабинет бизнеса',
+    'selectCabinet.optionStaff': 'Кабинет сотрудника',
+    'selectCabinet.optionCabinet': 'Мои записи',
 } as const;

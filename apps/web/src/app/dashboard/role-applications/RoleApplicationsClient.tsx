@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react';
 import { ApplicationBranchSelect } from './ApplicationBranchSelect';
 import { ApplicationHistoryNotice } from './ApplicationHistoryNotice';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { bookingCountForm } from '@/lib/bookingCountForm';
 
 type ApplicationRow = {
     id: string;
@@ -48,14 +50,14 @@ type MutationResponse = {
     schedule_error?: string | null;
 };
 
-const statusLabels: Record<ApplicationRow['status'], string> = {
-    pending: 'Ожидает решения',
-    approved: 'Принят',
-    rejected: 'Отклонён',
-    cancelled: 'Отменён',
-};
-
 export function RoleApplicationsClient() {
+    const { t, locale } = useLanguage();
+    const statusLabels: Record<ApplicationRow['status'], string> = {
+        pending: t('dashboard.roleApplications.status.pending', 'Ожидает решения'),
+        approved: t('dashboard.roleApplications.status.approved', 'Принят'),
+        rejected: t('dashboard.roleApplications.status.rejected', 'Отклонён'),
+        cancelled: t('dashboard.roleApplications.status.cancelled', 'Отменён'),
+    };
     const [items, setItems] = useState<ApplicationRow[]>([]);
     const [branches, setBranches] = useState<BranchRow[]>([]);
     const [loadStatus, setLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -75,14 +77,15 @@ export function RoleApplicationsClient() {
             const response = await fetch('/dashboard/api/role-applications', { cache: 'no-store' });
             const payload = (await response.json()) as ListResponse;
             if (!response.ok || !payload.ok) {
-                throw new Error(!payload.ok ? payload.message || 'Не удалось загрузить заявки' : 'Не удалось загрузить заявки');
+                // Without a server message the error state shows the translated default.
+                throw new Error(!payload.ok ? payload.message || '' : '');
             }
             setItems(payload.items);
             setBranches(payload.branches);
             setBranchId((current) => current || payload.branches[0]?.id || '');
             setLoadStatus('ready');
         } catch (loadError) {
-            setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить заявки');
+            setError(loadError instanceof Error ? loadError.message : null);
             setLoadStatus('error');
         }
     }
@@ -101,7 +104,7 @@ export function RoleApplicationsClient() {
 
     async function decide(id: string, action: 'approve' | 'reject' | 'unblock', blockDays = 0, blockId?: string) {
         if (action === 'approve' && !branchId) {
-            setError('Сначала создайте активный филиал и выберите его для сотрудника.');
+            setError(t('dashboard.roleApplications.branchRequired', 'Сначала создайте активный филиал и выберите его для сотрудника.'));
             return;
         }
 
@@ -122,40 +125,52 @@ export function RoleApplicationsClient() {
             });
             const payload = (await response.json()) as MutationResponse;
             if (!response.ok || !payload.ok) {
-                throw new Error(payload.message || 'Не удалось выполнить действие');
+                throw new Error(payload.message || t('dashboard.roleApplications.actionError', 'Не удалось выполнить действие'));
             }
 
             if (action === 'approve') {
-                const scheduleText = payload.schedule_initialized
-                    ? ` Расписание подготовлено на ${payload.schedule_days_created ?? 0} дней.`
-                    : ' Настройте рабочий график в карточке сотрудника, чтобы открыть запись клиентов.';
-                setNotice(`Сотрудник принят и получил рабочий кабинет.${scheduleText}`);
+                const days = payload.schedule_days_created ?? 0;
+                setNotice(payload.schedule_initialized
+                    ? t(
+                        `dashboard.roleApplications.approved.scheduled.${bookingCountForm(days, locale)}`,
+                        'Сотрудник принят и получил рабочий кабинет. Расписание подготовлено на {days} дней.',
+                    ).replace('{days}', String(days))
+                    : t(
+                        'dashboard.roleApplications.approved.unscheduled',
+                        'Сотрудник принят и получил рабочий кабинет. Настройте рабочий график в карточке сотрудника, чтобы открыть запись клиентов.',
+                    ));
             } else if (action === 'reject') {
-                setNotice('Заявка сотрудника отклонена.');
+                setNotice(t('dashboard.roleApplications.rejected', 'Заявка сотрудника отклонена.'));
             } else {
-                setNotice('Блокировка подачи заявок снята.');
+                setNotice(t('dashboard.roleApplications.unblocked', 'Блокировка подачи заявок снята.'));
             }
             setEditingId(null);
             setRejectingId(null);
             setRejectNote('');
             await load();
         } catch (actionError) {
-            setError(actionError instanceof Error ? actionError.message : 'Не удалось выполнить действие');
+            setError(actionError instanceof Error
+                ? actionError.message
+                : t('dashboard.roleApplications.actionError', 'Не удалось выполнить действие'));
         } finally {
             setActionId(null);
         }
     }
 
     if (loadStatus === 'loading') {
-        return <Card padding="lg">Загружаем заявки…</Card>;
+        return <Card padding="lg">{t('dashboard.roleApplications.loading', 'Загружаем заявки…')}</Card>;
     }
 
     if (loadStatus === 'error') {
         return (
             <AlertBanner
                 variant="danger"
-                message={error || 'Не удалось загрузить заявки'}
-                action={<Button type="button" onClick={() => void load()}>Повторить загрузку</Button>}
+                message={error || t('dashboard.roleApplications.loadError', 'Не удалось загрузить заявки')}
+                action={(
+                    <Button type="button" onClick={() => void load()}>
+                        {t('dashboard.roleApplications.retry', 'Повторить загрузку')}
+                    </Button>
+                )}
             />
         );
     }
@@ -168,11 +183,11 @@ export function RoleApplicationsClient() {
             {!branches.length ? (
                 <AlertBanner
                     variant="warning"
-                    title="Нужен филиал"
-                    message="Принять сотрудника можно только после создания активного филиала."
+                    title={t('dashboard.roleApplications.noBranch.title', 'Нужен филиал')}
+                    message={t('dashboard.roleApplications.noBranch.message', 'Принять сотрудника можно только после создания активного филиала.')}
                     action={(
                         <Link href="/dashboard/branches" className="font-semibold underline">
-                            Перейти к филиалам
+                            {t('dashboard.roleApplications.noBranch.action', 'Перейти к филиалам')}
                         </Link>
                     )}
                 />
@@ -180,21 +195,27 @@ export function RoleApplicationsClient() {
 
             {!items.length ? (
                 <EmptyState
-                    title="Заявок сотрудников пока нет"
-                    description="Когда человек отправит заявку на работу в этом бизнесе, она появится здесь."
+                    title={t('dashboard.roleApplications.empty.title', 'Заявок сотрудников пока нет')}
+                    description={t('dashboard.roleApplications.empty.description', 'Когда человек отправит заявку на работу в этом бизнесе, она появится здесь.')}
                 />
             ) : null}
 
             {items.map((application) => {
                 const isPending = application.status === 'pending';
                 const isEditing = editingId === application.id;
+                const createdText = t('dashboard.roleApplications.createdAt', 'Создана: {date}')
+                    .replace('{date}', new Date(application.created_at).toLocaleString('ru-RU'));
+                const reviewedText = application.reviewed_at
+                    ? t('dashboard.roleApplications.reviewedAt', 'Рассмотрена: {date}')
+                        .replace('{date}', new Date(application.reviewed_at).toLocaleString('ru-RU'))
+                    : null;
 
                 return (
                     <Card key={application.id} variant="outlined" padding="md" className="space-y-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                                    {application.applicant_name || 'Пользователь Kezek'}
+                                    {application.applicant_name || t('dashboard.roleApplications.userFallback', 'Пользователь Kezek')}
                                 </h2>
                                 <p className="break-words text-sm text-[var(--text-muted)]">
                                     {[application.applicant_email, application.applicant_phone].filter(Boolean).join(' · ') || application.applicant_user_id}
@@ -202,7 +223,7 @@ export function RoleApplicationsClient() {
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
-                                    Сотрудник
+                                    {t('dashboard.roleApplications.role.staff', 'Сотрудник')}
                                 </span>
                                 <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
                                     {statusLabels[application.status]}
@@ -217,8 +238,8 @@ export function RoleApplicationsClient() {
                         ) : null}
 
                         <div className="text-xs text-[var(--text-muted)]">
-                            Создана: {new Date(application.created_at).toLocaleString('ru-RU')}
-                            {application.reviewed_at ? ` · Рассмотрена: ${new Date(application.reviewed_at).toLocaleString('ru-RU')}` : ''}
+                            {createdText}
+                            {reviewedText ? ` · ${reviewedText}` : ''}
                         </div>
 
                         <ApplicationHistoryNotice count={application.prior_submission_count} flags={application.risk_flags ?? []} />
@@ -231,7 +252,7 @@ export function RoleApplicationsClient() {
                                     onClick={() => startApproval(application.id)}
                                     disabled={!branches.length}
                                 >
-                                    Настроить и принять
+                                    {t('dashboard.roleApplications.approveSetup', 'Настроить и принять')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -243,7 +264,7 @@ export function RoleApplicationsClient() {
                                     }}
                                     isLoading={actionId === `${application.id}:reject`}
                                 >
-                                    Отклонить
+                                    {t('dashboard.roleApplications.reject', 'Отклонить')}
                                 </Button>
                             </div>
                         ) : null}
@@ -254,18 +275,18 @@ export function RoleApplicationsClient() {
                                     value={rejectNote}
                                     onChange={(event) => setRejectNote(event.target.value)}
                                     maxLength={1000}
-                                    placeholder="Укажите причину отклонения"
+                                    placeholder={t('dashboard.roleApplications.rejectReason', 'Укажите причину отклонения')}
                                     className="min-h-24 w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-3 text-sm"
                                 />
                                 <div className="flex flex-wrap gap-2">
                                     <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject')}>
-                                        Отклонить
+                                        {t('dashboard.roleApplications.reject', 'Отклонить')}
                                     </Button>
                                     <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject', 30)}>
-                                        Отклонить и блокировать 30 дней
+                                        {t('dashboard.roleApplications.rejectAndBlock', 'Отклонить и блокировать 30 дней')}
                                     </Button>
                                     <Button type="button" size="sm" variant="outline" onClick={() => setRejectingId(null)}>
-                                        Отмена
+                                        {t('common.cancel', 'Отмена')}
                                     </Button>
                                 </div>
                             </div>
@@ -285,8 +306,8 @@ export function RoleApplicationsClient() {
                                         className="mt-1 h-4 w-4 shrink-0 accent-indigo-500"
                                     />
                                     <span>
-                                        <b className="text-[var(--text-primary)]">Активировать сотрудника сразу</b><br />
-                                        Активный сотрудник получит рабочий кабинет. Услуги можно назначить после принятия.
+                                        <b className="text-[var(--text-primary)]">{t('dashboard.roleApplications.activateNow', 'Активировать сотрудника сразу')}</b><br />
+                                        {t('dashboard.roleApplications.activateNowHint', 'Активный сотрудник получит рабочий кабинет. Услуги можно назначить после принятия.')}
                                     </span>
                                 </label>
 
@@ -299,7 +320,7 @@ export function RoleApplicationsClient() {
                                         disabled={actionId !== null || !branchId}
                                         isLoading={actionId === `${application.id}:approve`}
                                     >
-                                        Принять сотрудника
+                                        {t('dashboard.roleApplications.approve', 'Принять сотрудника')}
                                     </Button>
                                     <Button
                                         type="button"
@@ -309,7 +330,7 @@ export function RoleApplicationsClient() {
                                         className="min-h-11 w-full justify-center sm:w-auto"
                                         disabled={actionId !== null}
                                     >
-                                        Отмена
+                                        {t('common.cancel', 'Отмена')}
                                     </Button>
                                 </div>
                             </div>
@@ -317,7 +338,9 @@ export function RoleApplicationsClient() {
 
                         {application.active_block_id ? (
                             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-                                <span className="text-sm text-amber-800 dark:text-amber-200">Подача заявок этого пользователя в бизнес заблокирована.</span>
+                                <span className="text-sm text-amber-800 dark:text-amber-200">
+                                    {t('dashboard.roleApplications.blocked', 'Подача заявок этого пользователя в бизнес заблокирована.')}
+                                </span>
                                 <Button
                                     type="button"
                                     size="sm"
@@ -325,7 +348,7 @@ export function RoleApplicationsClient() {
                                     onClick={() => decide(application.id, 'unblock', 0, application.active_block_id ?? undefined)}
                                     isLoading={actionId === `${application.id}:unblock`}
                                 >
-                                    Снять блокировку
+                                    {t('dashboard.roleApplications.unblock', 'Снять блокировку')}
                                 </Button>
                             </div>
                         ) : null}

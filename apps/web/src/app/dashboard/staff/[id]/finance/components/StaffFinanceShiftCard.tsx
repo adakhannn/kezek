@@ -7,8 +7,10 @@ import { bookingCountForm } from '@/lib/bookingCountForm';
 import type { StaffFinanceStatsShift } from '@/lib/finance/types';
 import { logError } from '@/lib/log';
 
-function formatMoney(value: number, locale: string) {
-    return `${value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`;
+// The unit comes from the dictionaries: 'сом' in ru and ky, 'som' in en (FE-10).
+function formatMoney(value: number, locale: string, t: (key: 'finance.money', fallback: string) => string) {
+    const amount = value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
+    return t('finance.money', '{amount} сом').replace('{amount}', () => amount);
 }
 
 export function StaffFinanceShiftCard({
@@ -112,15 +114,15 @@ export function StaffFinanceShiftCard({
                 </div>
 
                 <div className="min-w-[220px] space-y-1 text-right">
-                    <p className="type-label text-[var(--text-primary)]">{formatMoney(shift.total_amount + shift.consumables_amount, locale)}</p>
+                    <p className="type-label text-[var(--text-primary)]">{formatMoney(shift.total_amount + shift.consumables_amount, locale, t)}</p>
                     <p className="type-caption text-[var(--text-muted)]">
-                        {t('finance.staffStats.consumables', 'Consumables')}: {formatMoney(shift.consumables_amount, locale)}
+                        {t('finance.staffStats.consumables', 'Consumables')}: {formatMoney(shift.consumables_amount, locale, t)}
                     </p>
                     <p className="type-caption text-emerald-600 dark:text-emerald-400">
-                        {t('finance.staffStats.toEmployee', 'Employee')}: {formatMoney(guaranteeDominates ? shift.guaranteed_amount : shift.master_share, locale)}
+                        {t('finance.staffStats.toEmployee', 'Employee')}: {formatMoney(guaranteeDominates ? shift.guaranteed_amount : shift.master_share, locale, t)}
                     </p>
                     <p className="type-caption text-indigo-600 dark:text-indigo-400">
-                        {t('finance.staffStats.toBusiness', 'Business')}: {formatMoney(shift.salon_share, locale)}
+                        {t('finance.staffStats.toBusiness', 'Business')}: {formatMoney(shift.salon_share, locale, t)}
                     </p>
                 </div>
 
@@ -139,11 +141,11 @@ export function StaffFinanceShiftCard({
                     <div className="grid gap-3 sm:grid-cols-3">
                         <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                             <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.baseShare', 'Base share')}</p>
-                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.base_master_share ?? shift.master_share, locale)}</p>
+                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.base_master_share ?? shift.master_share, locale, t)}</p>
                         </div>
                         <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                             <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.guaranteedAmount', 'Guarantee')}</p>
-                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.guaranteed_amount, locale)}</p>
+                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.guaranteed_amount, locale, t)}</p>
                         </div>
                         <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                             <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.hours', 'Hours')}</p>
@@ -244,10 +246,10 @@ export function StaffFinanceShiftCard({
                                                     {item.service_name || '—'}
                                                 </td>
                                                 <td className="px-3 py-2 text-right text-[var(--text-primary)]">
-                                                    {formatMoney(item.service_amount, locale)}
+                                                    {formatMoney(item.service_amount, locale, t)}
                                                 </td>
                                                 <td className="px-3 py-2 text-right text-amber-500">
-                                                    {formatMoney(item.consumables_amount, locale)}
+                                                    {formatMoney(item.consumables_amount, locale, t)}
                                                 </td>
                                                 <td className="px-3 py-2 text-right text-[var(--text-muted)]">{createdAt}</td>
                                             </tr>

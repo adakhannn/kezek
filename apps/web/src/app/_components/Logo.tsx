@@ -4,11 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { useLanguage } from './i18n/LanguageProvider';
+
 /**
  * Компонент логотипа Kezek
  * Поддерживает как изображение, так и текстовый вариант
  */
 export function Logo() {
+    const { t } = useLanguage();
     const [imageError, setImageError] = useState(false);
 
     return (
@@ -18,7 +21,7 @@ export function Logo() {
                 <div className="relative h-8 sm:h-12 md:h-14 w-auto max-w-[120px] sm:max-w-[150px] md:max-w-none">
                     <Image
                         src="/logo.png"
-                        alt="КЕЗЕК CRM СИСТЕМА"
+                        alt={t('header.logo.alt', 'КЕЗЕК CRM СИСТЕМА')}
                         width={200}
                         height={56}
                         style={{ width: 'auto' }}

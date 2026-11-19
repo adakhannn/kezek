@@ -23,6 +23,7 @@ interface ClientItemProps {
 
 function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete }: ClientItemProps) {
     const { t, locale } = useLanguage();
+    const currency = t('staff.finance.shift.som', 'сом');
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const hasBooking = !!item.bookingId;
     
@@ -81,14 +82,14 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                     <div className={`text-sm font-bold ${(item.serviceAmount ?? 0) > 0 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
                         {(item.serviceAmount ?? 0) === 0 && !deduplicateServiceNameString(item.serviceName)
                             ? <span className="text-gray-400">—</span>
-                            : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
+                            : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${currency}`}
                     </div>
                 </div>
                 <div className="text-right">
                     <div className={`text-sm font-semibold ${(item.consumablesAmount ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>
                         {(item.consumablesAmount ?? 0) === 0
                             ? <span className="text-gray-400">0</span>
-                            : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {t('staff.finance.shift.som', 'сом')}
+                            : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {currency}
                     </div>
                 </div>
                 <div className="text-right">
@@ -134,7 +135,7 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                         <div className={`text-sm font-bold ${(item.serviceAmount ?? 0) > 0 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
                             {(item.serviceAmount ?? 0) === 0 && !deduplicateServiceNameString(item.serviceName)
                                 ? <span className="text-gray-400">—</span>
-                                : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
+                                : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${currency}`}
                         </div>
                     </div>
                     <div>
@@ -142,7 +143,7 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                         <div className={`text-sm font-semibold ${(item.consumablesAmount ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>
                             {(item.consumablesAmount ?? 0) === 0
                                 ? <span className="text-gray-400">0</span>
-                                : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {t('staff.finance.shift.som', 'сом')}
+                                : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {currency}
                         </div>
                     </div>
                 </div>

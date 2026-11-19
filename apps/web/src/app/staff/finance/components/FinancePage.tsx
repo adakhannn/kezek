@@ -113,7 +113,7 @@ export const FinancePage = memo(function FinancePage({ staffId, viewScope, showH
     } : financeData.data;
     const changeShiftDate = (next: Date) => {
         if (session.dirty || draft.blocked || draft.operation) {
-            toast.showError('Сначала сохраните черновик или явно загрузите актуальную смену, отказавшись от черновика.');
+            toast.showError(t('staff.finance.draft.saveOrDiscardFirst', 'Сначала сохраните черновик или явно загрузите актуальную смену, отказавшись от черновика.'));
             return;
         }
         setShiftDate(next);

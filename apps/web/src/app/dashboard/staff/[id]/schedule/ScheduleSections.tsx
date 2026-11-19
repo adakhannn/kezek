@@ -135,6 +135,7 @@ function DayRow({
 
 
     const isToday = dateStr === todayStr;
+    const homeBranchLabel = t('staff.schedule.homeBranch', 'основной');
 
     return (
         <div
@@ -259,7 +260,7 @@ function DayRow({
                         >
                             {branches.map((branch) => (
                                 <option key={branch.id} value={branch.id}>
-                                    {branch.name} {branch.id === homeBranchId ? `(${t('staff.schedule.homeBranch', 'основной')})` : ''}
+                                    {branch.name} {branch.id === homeBranchId ? `(${homeBranchLabel})` : ''}
                                 </option>
                             ))}
                         </select>

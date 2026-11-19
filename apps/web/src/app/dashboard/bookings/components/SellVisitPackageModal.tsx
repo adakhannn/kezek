@@ -105,26 +105,33 @@ export function SellVisitPackageModal({
             onSuccess?.();
             onClose();
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Ошибка');
+            setError(e instanceof Error ? e.message : t('common.error', 'Ошибка'));
             setSelling(false);
         }
     };
 
     const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
+    const termLabel = {
+        visits: t('dashboard.visitPackages.sell.visitsLabel', 'Визиты'),
+        validityDays: t('dashboard.visitPackages.sell.validityDaysLabel', 'Срок (дней)'),
+        discount: t('dashboard.visitPackages.sell.discountLabel', 'Скидка'),
+        pricePerVisit: t('dashboard.visitPackages.sell.pricePerVisitLabel', 'Цена за визит'),
+    };
     const planTerms = (plan: Plan) => [
-        `${t('dashboard.visitPackages.sell.visitsLabel', 'Визиты')}: ${plan.visit_count}`,
-        `${t('dashboard.visitPackages.sell.validityDaysLabel', 'Срок (дней)')}: ${plan.validity_days}`,
+        `${termLabel.visits}: ${plan.visit_count}`,
+        `${termLabel.validityDays}: ${plan.validity_days}`,
         plan.discount_type === 'percent'
-            ? `${t('dashboard.visitPackages.sell.discountLabel', 'Скидка')}: ${plan.discount_value}%`
-            : `${t('dashboard.visitPackages.sell.pricePerVisitLabel', 'Цена за визит')}: ${plan.discount_value}`,
+            ? `${termLabel.discount}: ${plan.discount_value}%`
+            : `${termLabel.pricePerVisit}: ${plan.discount_value}`,
     ].join(', ');
+    const clientLabel = t('dashboard.visitPackages.sell.clientLabel', 'Клиент');
 
     return (
         <Dialog
             open={isOpen}
             onClose={onClose}
             title={t('dashboard.visitPackages.sell.title', 'Продать пакет визитов')}
-            description={`${t('dashboard.visitPackages.sell.clientLabel', 'Клиент')}: ${clientName}`}
+            description={`${clientLabel}: ${clientName}`}
             size="sm"
             footer={
                 <div className="flex flex-wrap items-center justify-end gap-2">

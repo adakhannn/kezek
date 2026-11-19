@@ -48,6 +48,9 @@ export function BranchSelector({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {branches.map((branch) => {
                         const active = branch.id === selectedBranchId;
+                        const stateLabel = active
+                            ? t('booking.step1.selectedBranch', 'Выбрано для записи')
+                            : t('booking.step1.availableBranch', 'Доступно для выбора');
 
                         return (
                             <button
@@ -56,7 +59,7 @@ export function BranchSelector({
                                 data-testid="branch-card"
                                 onClick={() => onSelect(branch.id)}
                                 aria-pressed={active}
-                                aria-label={`${formatBranchName(branch.name)}: ${active ? t('booking.step1.selectedBranch', 'Выбрано для записи') : t('booking.step1.availableBranch', 'Доступно для выбора')}`}
+                                aria-label={`${formatBranchName(branch.name)}: ${stateLabel}`}
                                 className={cardStyles({
                                     variant: active ? 'glass' : 'default',
                                     padding: 'md',
@@ -103,9 +106,7 @@ export function BranchSelector({
 
                                 <div className="flex flex-wrap items-center gap-2">
                                     <Badge variant={active ? 'accent' : 'neutral'}>
-                                        {active
-                                            ? t('booking.step1.selectedBranch', 'Выбрано для записи')
-                                            : t('booking.step1.availableBranch', 'Доступно для выбора')}
+                                        {stateLabel}
                                     </Badge>
                                 </div>
                             </button>

@@ -10,8 +10,7 @@ const COOKIE_MAX_AGE_YEAR = 365 * 24 * 60 * 60;
 
 export type CabinetOption = {
     path: string;
-    labelKey: string;
-    defaultLabel: string;
+    labelKey: 'selectCabinet.optionAdmin' | 'selectCabinet.optionDashboard' | 'selectCabinet.optionStaff' | 'selectCabinet.optionCabinet';
 };
 
 type Props = {
@@ -27,6 +26,12 @@ export function SelectCabinetClient({ options }: Props) {
     const { t } = useLanguage();
     const router = useRouter();
     const [rememberChoice, setRememberChoice] = useState(true);
+    const labels: Record<CabinetOption['labelKey'], string> = {
+        'selectCabinet.optionAdmin': t('selectCabinet.optionAdmin', 'Админ-панель'),
+        'selectCabinet.optionDashboard': t('selectCabinet.optionDashboard', 'Кабинет бизнеса'),
+        'selectCabinet.optionStaff': t('selectCabinet.optionStaff', 'Кабинет сотрудника'),
+        'selectCabinet.optionCabinet': t('selectCabinet.optionCabinet', 'Мои записи'),
+    };
 
     const handleSelect = (path: string) => {
         if (rememberChoice) {
@@ -49,14 +54,14 @@ export function SelectCabinetClient({ options }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                    {options.map(({ path, labelKey, defaultLabel }) => (
+                    {options.map(({ path, labelKey }) => (
                         <button
                             key={path}
                             type="button"
                             onClick={() => handleSelect(path)}
                             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/30"
                         >
-                            <span className="text-sm font-medium">{t(labelKey, defaultLabel)}</span>
+                            <span className="text-sm font-medium">{labels[labelKey]}</span>
                         </button>
                     ))}
                 </div>

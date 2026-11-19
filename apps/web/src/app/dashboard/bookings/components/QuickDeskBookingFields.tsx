@@ -85,7 +85,7 @@ export function QuickDeskBookingFields(props: Props) {
                     {!ready ? t('bookings.desk.selectParamsFirst', 'Выбери филиал, услугу и мастера')
                         : slotsLoading ? t('bookings.desk.loadingSlots', 'Загрузка слотов...')
                             : !slots.length ? t('bookings.desk.noSlots', 'Нет свободных слотов')
-                                : `${slots.length} ${t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}`}
+                                : <>{slots.length} {t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}</>}
                 </p>
             )}
         </div>

@@ -68,7 +68,7 @@ export function GuestBookingModal({
                 </div>
 
                 <Input
-                    label={`${t('booking.guest.name', 'Ваше имя')} *`}
+                    label={t('booking.guest.name', 'Ваше имя') + ' *'}
                     value={form.client_name}
                     onChange={(e) => onFormChange({ ...form, client_name: e.target.value })}
                     helperText={t('booking.guest.nameHelper', 'Имя поможет сотруднику подтвердить, что запись оформлена на вас.')}
@@ -77,7 +77,7 @@ export function GuestBookingModal({
                     autoFocus
                 />
                 <Input
-                    label={`${t('booking.guest.phone', 'Телефон')} *`}
+                    label={t('booking.guest.phone', 'Телефон') + ' *'}
                     type="tel"
                     value={form.client_phone}
                     onChange={(e) => onFormChange({ ...form, client_phone: e.target.value })}
@@ -86,7 +86,7 @@ export function GuestBookingModal({
                     disabled={loading}
                 />
                 <Input
-                    label={`${t('booking.guest.email', 'Email')} (${t('booking.guest.optional', 'необязательно')})`}
+                    label={t('booking.guest.optionalField', '{label} (необязательно)').replace('{label}', t('booking.guest.email', 'Email'))}
                     type="email"
                     value={form.client_email}
                     onChange={(e) => onFormChange({ ...form, client_email: e.target.value })}

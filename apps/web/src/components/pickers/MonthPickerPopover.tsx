@@ -7,56 +7,37 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
+type Translate = ReturnType<typeof useLanguage>['t'];
+
 // Локализованные названия месяцев и дней недели
-const MONTHS_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
-    ru: [
-        'Январь',
-        'Февраль',
-        'Март',
-        'Апрель',
-        'Май',
-        'Июнь',
-        'Июль',
-        'Август',
-        'Сентябрь',
-        'Октябрь',
-        'Ноябрь',
-        'Декабрь',
-    ],
-    ky: [
-        'Январь',
-        'Февраль',
-        'Март',
-        'Апрель',
-        'Май',
-        'Июнь',
-        'Июль',
-        'Август',
-        'Сентябрь',
-        'Октябрь',
-        'Ноябрь',
-        'Декабрь',
-    ],
-    en: [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-    ],
-};
-const WEEKDAYS_SHORT_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
-    ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
-    ky: ['Жк', 'Дш', 'Шш', 'Шр', 'Бш', 'Жм', 'Иш'],
-    en: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
-};
+function monthNames(t: Translate): string[] {
+    return [
+        t('monthPicker.months.january', 'Январь'),
+        t('monthPicker.months.february', 'Февраль'),
+        t('monthPicker.months.march', 'Март'),
+        t('monthPicker.months.april', 'Апрель'),
+        t('monthPicker.months.may', 'Май'),
+        t('monthPicker.months.june', 'Июнь'),
+        t('monthPicker.months.july', 'Июль'),
+        t('monthPicker.months.august', 'Август'),
+        t('monthPicker.months.september', 'Сентябрь'),
+        t('monthPicker.months.october', 'Октябрь'),
+        t('monthPicker.months.november', 'Ноябрь'),
+        t('monthPicker.months.december', 'Декабрь'),
+    ];
+}
+// Indexed by Date.getDay(): Sunday first.
+function weekdayShortNames(t: Translate): string[] {
+    return [
+        t('monthPicker.weekdays.sunday', 'Вс'),
+        t('monthPicker.weekdays.monday', 'Пн'),
+        t('monthPicker.weekdays.tuesday', 'Вт'),
+        t('monthPicker.weekdays.wednesday', 'Ср'),
+        t('monthPicker.weekdays.thursday', 'Чт'),
+        t('monthPicker.weekdays.friday', 'Пт'),
+        t('monthPicker.weekdays.saturday', 'Сб'),
+    ];
+}
 
 // --- helpers: локальное форматирование/парсинг YYYY-MM-DD без UTC-сдвига
 function toYmdLocal(d: Date): string {
@@ -85,8 +66,8 @@ export default function MonthPickerPopover({
 
     const selected = value ? fromYmdLocal(value) : undefined;
     const { locale, t } = useLanguage();
-    const MONTHS = MONTHS_BY_LOCALE[locale];
-    const WEEKDAYS_SHORT = WEEKDAYS_SHORT_BY_LOCALE[locale];
+    const MONTHS = monthNames(t);
+    const WEEKDAYS_SHORT = weekdayShortNames(t);
 
     // Закрытие при клике вне попапа и при нажатии Escape
     useEffect(() => {

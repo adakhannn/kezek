@@ -9,13 +9,14 @@ import { Dialog } from '@/components/ui/Dialog';
 
 type Attempt = { token: string; botDeepLink: string; code: string; expiresAt: string };
 type LoginState = { status: string; account?: { id: number; name: string | null } | null };
+type Translate = ReturnType<typeof useLanguage>['t'];
 export function safeTelegramLoginRedirect(value: string, origin: string) {
     try {
         const url = new URL(value, origin);
         return url.origin === origin ? `${url.pathname}${url.search}${url.hash}` : '/';
     } catch { return '/'; }
 }
-async function requestLogin(body: object, signal?: AbortSignal) {
+async function requestLogin(body: object, t: Translate, signal?: AbortSignal) {
     const controller = new AbortController();
     const abort = () => controller.abort();
     signal?.addEventListener('abort', abort, { once: true });
@@ -27,7 +28,7 @@ async function requestLogin(body: object, signal?: AbortSignal) {
             body: JSON.stringify(body), cache: 'no-store', signal: controller.signal,
         });
         const result = await response.json();
-        if (!response.ok || !result.ok) throw new Error(result.message || 'Не удалось связаться с сервером.');
+        if (!response.ok || !result.ok) throw new Error(result.message || t('auth.botLogin.serverError', 'Не удалось связаться с сервером.'));
         return result.data;
     } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
 }
@@ -46,16 +47,16 @@ export function TelegramBotLogin({ redirectTo = '/' }: { redirectTo?: string }) 
         if (busyRef.current) return;
         busyRef.current = true; setBusy(true); setOpen(true); setError('');
         try {
-            if (attempt) await requestLogin({ action: 'cancel', token: attempt.token }).catch(() => {});
+            if (attempt) await requestLogin({ action: 'cancel', token: attempt.token }, t).catch(() => {});
             setAttempt(null); setState({ status: 'pending' });
-            const next = await requestLogin({ action: 'create' });
+            const next = await requestLogin({ action: 'create' }, t);
             if (alive.current) setAttempt(next);
         } catch (e) { if (alive.current) setError(e instanceof Error ? e.message : t('auth.botLogin.error')); }
         finally { busyRef.current = false; if (alive.current) setBusy(false); }
     }
     function close() {
         if (busyRef.current) return;
-        if (attempt) void requestLogin({ action: 'cancel', token: attempt.token }).catch(() => {});
+        if (attempt) void requestLogin({ action: 'cancel', token: attempt.token }, t).catch(() => {});
         setOpen(false); setAttempt(null); setError('');
     }
     useEffect(() => {
@@ -68,7 +69,7 @@ export function TelegramBotLogin({ redirectTo = '/' }: { redirectTo?: string }) 
             if (Date.parse(attempt!.expiresAt) <= Date.now()) { setState({ status: 'expired' }); return; }
             if (document.hidden) { timer = setTimeout(poll, 3000); return; }
             try {
-                const next = await requestLogin({ action: 'status', token: attempt!.token }, controller.signal);
+                const next = await requestLogin({ action: 'status', token: attempt!.token }, t, controller.signal);
                 if (controller.signal.aborted) return;
                 setState(next); setError(''); failures = 0;
                 if (next.status !== 'pending') return;
@@ -85,7 +86,7 @@ export function TelegramBotLogin({ redirectTo = '/' }: { redirectTo?: string }) 
         if (busyRef.current || !attempt || !state.account) return;
         busyRef.current = true; setBusy(true); setError('');
         try {
-            await requestLogin({ action: 'finish', token: attempt.token, telegramId: state.account.id });
+            await requestLogin({ action: 'finish', token: attempt.token, telegramId: state.account.id }, t);
             if (alive.current) window.location.assign(safeTelegramLoginRedirect(redirectTo, window.location.origin));
         } catch (e) {
             if (alive.current) { setError(e instanceof Error ? e.message : t('auth.botLogin.error')); setState({ status: 'failed' }); }

@@ -9,12 +9,13 @@ const baseClass =
     'inline-flex min-h-9 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-base)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:border-[var(--accent-primary)] hover:bg-[var(--surface-emphasis)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]';
 
 export function PublicContactActions({ contacts, compact = false, className = '' }: Props) {
-    const { locale } = useLanguage();
+    const { t } = useLanguage();
     const labels = {
-        ru: { call: 'Позвонить', email: 'Email', website: 'Сайт', aria: 'Контакты бизнеса' },
-        ky: { call: 'Чалуу', email: 'Email', website: 'Сайт', aria: 'Бизнестин байланыштары' },
-        en: { call: 'Call', email: 'Email', website: 'Website', aria: 'Business contacts' },
-    }[locale] ?? { call: 'Позвонить', email: 'Email', website: 'Сайт', aria: 'Контакты бизнеса' };
+        call: t('booking.contacts.call', 'Позвонить'),
+        email: 'Email',
+        website: t('booking.contacts.website', 'Сайт'),
+        aria: t('booking.contacts.ariaLabel', 'Контакты бизнеса'),
+    };
     const items = [
         contacts.phone ? { label: compact ? labels.call : contacts.phone, href: phoneHref(contacts.phone), external: false } : null,
         contacts.whatsapp ? { label: 'WhatsApp', href: whatsAppHref(contacts.whatsapp), external: true } : null,

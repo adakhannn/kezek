@@ -196,10 +196,13 @@ export function BookingSummary({
                                         {t('booking.summary.total', 'Итого')}
                                     </span>
                                     <span className="type-label text-[var(--text-primary)]" data-testid="final-price">
-                                        {totalDurationMin > 0 ? `${totalDurationMin} ${t('booking.duration.min', 'мин')}` : ''}
+                                        {totalDurationMin > 0 ? t('booking.duration.minutesValue', '{minutes} мин').replace('{minutes}', String(totalDurationMin)) : ''}
                                         {totalDurationMin > 0 && hasPrice ? ', ' : ''}
                                         {hasPrice
-                                            ? `${totalPriceFrom}${totalPriceTo > 0 && totalPriceTo !== totalPriceFrom ? `–${totalPriceTo}` : ''} ${t('booking.currency', 'сом')}`
+                                            ? t('booking.price.value', '{price} сом').replace(
+                                                '{price}',
+                                                `${totalPriceFrom}${totalPriceTo > 0 && totalPriceTo !== totalPriceFrom ? `–${totalPriceTo}` : ''}`,
+                                            )
                                             : ''}
                                     </span>
                                 </div>

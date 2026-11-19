@@ -19,4 +19,8 @@ export const selectBusinessEn = {
     'selectCabinet.rememberChoice': 'Remember my choice and open this next time',
     'selectCabinet.subtitle': 'You have access to several workspaces.',
     'selectCabinet.title': 'How would you like to continue?',
+    'selectCabinet.optionAdmin': 'Admin panel',
+    'selectCabinet.optionDashboard': 'Business cabinet',
+    'selectCabinet.optionStaff': 'Staff cabinet',
+    'selectCabinet.optionCabinet': 'My bookings',
 } as const;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
@@ -21,16 +21,25 @@ export function AccountDeletionPanel() {
     const [confirmation, setConfirmation] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // load() also runs from the mount effect, which must not run again on a language switch.
+    const tRef = useRef(t);
+    useEffect(() => {
+        tRef.current = t;
+    }, [t]);
 
     async function load() {
+        const t = tRef.current;
         const response = await fetch('/api/account/deletion', { cache: 'no-store' });
         const payload = (await response.json()) as { ok?: boolean; data?: State; message?: string };
-        if (!response.ok || !payload.ok || !payload.data) throw new Error(payload.message || 'Не удалось проверить возможность удаления');
+        if (!response.ok || !payload.ok || !payload.data) throw new Error(payload.message || t('cabinet.profile.deletion.error.check', 'Не удалось проверить возможность удаления'));
         setState(payload.data);
     }
 
     useEffect(() => {
-        load().catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Ошибка загрузки'));
+        load().catch((loadError) => {
+            const t = tRef.current;
+            setError(loadError instanceof Error ? loadError.message : t('cabinet.profile.deletion.error.load', 'Ошибка загрузки'));
+        });
     }, []);
 
     async function requestDeletion() {
@@ -43,11 +52,11 @@ export function AccountDeletionPanel() {
                 body: JSON.stringify({ confirmation }),
             });
             const payload = (await response.json()) as { ok?: boolean; message?: string };
-            if (!response.ok || !payload.ok) throw new Error(payload.message || 'Не удалось запросить удаление');
+            if (!response.ok || !payload.ok) throw new Error(payload.message || t('cabinet.profile.deletion.error.request', 'Не удалось запросить удаление'));
             setConfirmation('');
             await load();
         } catch (requestError) {
-            setError(requestError instanceof Error ? requestError.message : 'Ошибка запроса удаления');
+            setError(requestError instanceof Error ? requestError.message : t('cabinet.profile.deletion.error.requestFailed', 'Ошибка запроса удаления'));
         } finally {
             setBusy(false);
         }
@@ -59,10 +68,10 @@ export function AccountDeletionPanel() {
         try {
             const response = await fetch('/api/account/deletion', { method: 'DELETE' });
             const payload = (await response.json()) as { ok?: boolean; message?: string };
-            if (!response.ok || !payload.ok) throw new Error(payload.message || 'Не удалось отменить удаление');
+            if (!response.ok || !payload.ok) throw new Error(payload.message || t('cabinet.profile.deletion.error.cancel', 'Не удалось отменить удаление'));
             await load();
         } catch (cancelError) {
-            setError(cancelError instanceof Error ? cancelError.message : 'Ошибка отмены удаления');
+            setError(cancelError instanceof Error ? cancelError.message : t('cabinet.profile.deletion.error.cancelFailed', 'Ошибка отмены удаления'));
         } finally {
             setBusy(false);
         }

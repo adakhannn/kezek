@@ -9,13 +9,20 @@ import 'react-day-picker/dist/style.css';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
-// Локализованные названия месяцев
+type Translate = ReturnType<typeof useLanguage>['t'];
+
 // Отображаемые короткие названия дней недели (Пн–Вс)
-const WEEKDAYS_DISPLAY: Record<'ky' | 'ru' | 'en', string[]> = {
-    ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-    ky: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-    en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-};
+function weekdayLabels(t: Translate): string[] {
+    return [
+        t('datePicker.weekdays.monday', 'Пн'),
+        t('datePicker.weekdays.tuesday', 'Вт'),
+        t('datePicker.weekdays.wednesday', 'Ср'),
+        t('datePicker.weekdays.thursday', 'Чт'),
+        t('datePicker.weekdays.friday', 'Пт'),
+        t('datePicker.weekdays.saturday', 'Сб'),
+        t('datePicker.weekdays.sunday', 'Вс'),
+    ];
+}
 
 // date-fns локали (ky пока используем как ru)
 const DATE_FNS_LOCALES: Record<'ky' | 'ru' | 'en', Locale> = {
@@ -251,7 +258,7 @@ export default function DatePickerPopover({
                 >
                     <div className="w-full">
                         <div className="mb-2 grid grid-cols-7 text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 text-center">
-                            {WEEKDAYS_DISPLAY[locale].map((label) => (
+                            {weekdayLabels(t).map((label) => (
                                 <span key={label}>{label}</span>
                             ))}
                         </div>

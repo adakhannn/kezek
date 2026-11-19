@@ -9,6 +9,7 @@
 import { clsx } from 'clsx';
 import { ReactNode } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 interface StatusPanelProps {
     title: string;
@@ -25,6 +26,7 @@ export function StatusPanel({
     children,
     className,
 }: StatusPanelProps) {
+    const { t } = useLanguage();
     return (
         <div className={clsx(
             'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800',
@@ -41,7 +43,7 @@ export function StatusPanel({
                 )}
             </div>
             {loading ? (
-                <div className="text-sm text-gray-500 dark:text-gray-400">Загрузка...</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{t('common.loading', 'Загрузка...')}</div>
             ) : (
                 children
             )}

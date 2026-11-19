@@ -150,6 +150,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             map.geoObjects.removeAll();
         } catch {}
         placemarksRef.current = [];
+        const bookLabel = escapeHtml(t('common.map.book', 'Записаться'));
         list.forEach((b) => {
             const pm = new ym.Placemark(
                 [b.lat, b.lon],
@@ -159,7 +160,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                         `<div class="font-semibold">${escapeHtml(b.branchName)}</div>`,
                         b.address ? `<div class="text-sm text-gray-600 mt-1">${escapeHtml(b.address)}</div>` : '',
                         b.businessSlug
-                            ? `<a href="${escapeHtml(branchBookingHref(b.businessSlug, b.id))}" class="inline-block mt-2 text-indigo-600 font-medium">${escapeHtml(t('common.map.book', 'Записаться'))}</a>`
+                            ? `<a href="${escapeHtml(branchBookingHref(b.businessSlug, b.id))}" class="inline-block mt-2 text-indigo-600 font-medium">${bookLabel}</a>`
                             : '',
                         `</div>`,
                     ].join(''),

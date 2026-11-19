@@ -113,10 +113,13 @@ export default function VisitPackagesListClient() {
 
     const formatBinding = (p: VisitPackagePlan) => {
         const parts: string[] = [];
-        if (p.service_id) parts.push('услуга');
-        else parts.push('любая услуга');
-        if (p.branch_ids && p.branch_ids.length > 0) parts.push(`${p.branch_ids.length} фил.`);
-        else parts.push('все филиалы');
+        if (p.service_id) parts.push(t('dashboard.visitPackages.bindingService', 'услуга'));
+        else parts.push(t('dashboard.visitPackages.bindingAnyService', 'любая услуга'));
+        if (p.branch_ids && p.branch_ids.length > 0) {
+            parts.push(t('dashboard.visitPackages.bindingBranches', '{count} фил.').replace('{count}', String(p.branch_ids.length)));
+        } else {
+            parts.push(t('dashboard.visitPackages.bindingAllBranches', 'все филиалы'));
+        }
         return parts.join(', ');
     };
 
@@ -195,7 +198,7 @@ export default function VisitPackagesListClient() {
                                 </th>
                                 <th
                                     className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300"
-                                    aria-label="Действия"
+                                    aria-label={t('dashboard.visitPackages.actions', 'Действия')}
                                 >
                                     {' '}
                                 </th>

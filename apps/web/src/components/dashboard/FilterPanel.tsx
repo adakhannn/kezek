@@ -9,6 +9,7 @@
 import { clsx } from 'clsx';
 import { ReactNode } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 interface FilterPanelProps {
     searchPlaceholder?: string;
@@ -20,13 +21,14 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({
-    searchPlaceholder = 'Поиск...',
+    searchPlaceholder,
     searchValue,
     onSearchChange,
     filters,
     actions,
     className,
 }: FilterPanelProps) {
+    const { t } = useLanguage();
     return (
         <div className={clsx(
             'bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800',
@@ -37,7 +39,7 @@ export function FilterPanel({
                 {onSearchChange && (
                     <input
                         type="text"
-                        placeholder={searchPlaceholder}
+                        placeholder={searchPlaceholder ?? t('dashboard.filterPanel.searchPlaceholder', 'Поиск...')}
                         value={searchValue || ''}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm flex-1"

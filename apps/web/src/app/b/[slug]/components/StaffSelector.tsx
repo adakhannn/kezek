@@ -84,6 +84,9 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
 
                 {staff.map((person) => {
                     const active = person.id === selectedStaffId;
+                    const stateLabel = active
+                        ? t('booking.step3.selectedMaster', 'Выбран для визита')
+                        : t('booking.step3.availableMaster', 'Можно выбрать');
 
                     return (
                         <button
@@ -92,7 +95,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
                             data-testid="master-card"
                             onClick={() => onSelect(person.id)}
                             aria-pressed={active}
-                            aria-label={`${formatName(person.full_name)}: ${active ? t('booking.step3.selectedMaster', 'Выбран для визита') : t('booking.step3.availableMaster', 'Можно выбрать')}`}
+                            aria-label={`${formatName(person.full_name)}: ${stateLabel}`}
                             className={[
                                 'flex items-center gap-3 rounded-[22px] border p-4 text-sm font-medium transition-all',
                                 active
@@ -124,9 +127,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
                                 </div>
                                 <div className="mt-2">
                                     <Badge variant={active ? 'accent' : 'neutral'}>
-                                        {active
-                                            ? t('booking.step3.selectedMaster', 'Выбран для визита')
-                                            : t('booking.step3.availableMaster', 'Можно выбрать')}
+                                        {stateLabel}
                                     </Badge>
                                 </div>
                             </div>

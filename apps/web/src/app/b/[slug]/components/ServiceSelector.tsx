@@ -111,6 +111,9 @@ export function ServiceSelector({
                         typeof service.price_from === 'number' &&
                         typeof service.price_to === 'number' &&
                         service.price_to !== service.price_from;
+                    const stateLabel = selected
+                        ? t('booking.step4.selected', 'Добавлено в визит')
+                        : t('booking.step4.available', 'Можно выбрать');
 
                     return (
                         <button
@@ -120,7 +123,7 @@ export function ServiceSelector({
                             data-selected={selected}
                             onClick={() => onToggle(service.id)}
                             aria-pressed={selected}
-                            aria-label={`${formatServiceName(service)}: ${selected ? t('booking.step4.selected', 'Добавлено в визит') : t('booking.step4.available', 'Можно выбрать')}`}
+                            aria-label={`${formatServiceName(service)}: ${stateLabel}`}
                             className={[
                                 'flex w-full items-start justify-between gap-3 rounded-[22px] border px-4 py-4 text-left transition-all',
                                 selected
@@ -149,9 +152,7 @@ export function ServiceSelector({
                                     </div>
                                     <div className="mt-2">
                                         <Badge variant={selected ? 'accent' : 'neutral'}>
-                                            {selected
-                                                ? t('booking.step4.selected', 'Добавлено в визит')
-                                                : t('booking.step4.available', 'Можно выбрать')}
+                                            {stateLabel}
                                         </Badge>
                                     </div>
                                 </div>

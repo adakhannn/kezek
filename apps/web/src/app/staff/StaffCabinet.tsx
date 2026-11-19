@@ -132,11 +132,11 @@ export default function StaffCabinet({
                                                 <span>⏱ {service.duration_min} {t('staff.cabinet.services.duration', 'мин')}</span>
                                                 {(service.price_from || service.price_to) && (
                                                     <span>
-                                                        💰 {service.price_from && service.price_to 
-                                                            ? `${service.price_from} ${t('staff.cabinet.services.priceRange', '-')} ${service.price_to} ${t('staff.cabinet.services.priceCurrency', 'сом')}`
-                                                            : service.price_from 
-                                                            ? `${t('staff.cabinet.services.priceFrom', 'от')} ${service.price_from} ${t('staff.cabinet.services.priceCurrency', 'сом')}`
-                                                            : `${t('staff.cabinet.services.priceTo', 'до')} ${service.price_to} ${t('staff.cabinet.services.priceCurrency', 'сом')}`}
+                                                        💰 {service.price_from && service.price_to
+                                                            ? t('staff.cabinet.services.priceBetween', '{from} - {to} сом').replace('{from}', String(service.price_from)).replace('{to}', String(service.price_to))
+                                                            : service.price_from
+                                                            ? t('staff.cabinet.services.priceFromValue', 'от {price} сом').replace('{price}', String(service.price_from))
+                                                            : t('staff.cabinet.services.priceToValue', 'до {price} сом').replace('{price}', String(service.price_to))}
                                                     </span>
                                                 )}
                                             </div>

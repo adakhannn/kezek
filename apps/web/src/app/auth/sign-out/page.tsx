@@ -3,10 +3,13 @@
 import { useEffect } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function SignOutPage() {
+    const { t } = useLanguage();
+
     useEffect(() => {
         let mounted = true;
 
@@ -94,9 +97,9 @@ export default function SignOutPage() {
 
     return (
         <FullScreenStatus
-            title="Выходим из аккаунта…"
-            subtitle="Завершаем сеанс и очищаем данные"
-            message="Это займёт не больше пары секунд. После выхода вы сможете снова войти с любого устройства."
+            title={t('auth.signOut.title', 'Выходим из аккаунта…')}
+            subtitle={t('auth.signOut.subtitle', 'Завершаем сеанс и очищаем данные')}
+            message={t('auth.signOut.message', 'Это займёт не больше пары секунд. После выхода вы сможете снова войти с любого устройства.')}
             loading
         />
     );

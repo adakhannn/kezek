@@ -32,43 +32,20 @@ type RoleApplicationMode = 'owner' | 'staff';
 
 const staffRoleOptions: BusinessRoleKey[] = ['staff'];
 
+// The texts of each mode come from the dictionary (`copy` in the component).
 const modeCopy: Record<RoleApplicationMode, {
     defaultRole: BusinessRoleKey;
     allowedRoles: BusinessRoleKey[];
-    authTitle: string;
-    authMessage: string;
-    roleLabel: string;
-    roleHint: string;
-    commentLabel: string;
-    commentPlaceholder: string;
-    info: string;
-    successPrefix: string;
     signInNext: string;
 }> = {
     owner: {
         defaultRole: 'owner',
         allowedRoles: ['owner'],
-        authTitle: 'Нужно войти',
-        authMessage: 'Заявка владельца привязывается к вашему аккаунту. Войдите через Google, Яндекс, Telegram или WhatsApp, затем вернитесь сюда.',
-        roleLabel: 'Роль',
-        roleHint: 'Заявки на владельца рассматривает только супер-админ Kezek. После одобрения этот аккаунт станет владельцем бизнеса.',
-        commentLabel: 'Как подтвердить, что вы владелец',
-        commentPlaceholder: 'Например: я основатель бизнеса, могу подтвердить номером/документами/соцсетями. Укажите, кто может подтвердить заявку.',
-        info: 'Если бизнес ещё не создан в Kezek, используйте заявку на подключение нового бизнеса. Эта форма — только для существующих бизнесов.',
-        successPrefix: 'Заявка владельца отправлена',
         signInNext: '/business/owner-apply',
     },
     staff: {
         defaultRole: 'staff',
         allowedRoles: staffRoleOptions,
-        authTitle: 'Нужно войти',
-        authMessage: 'Заявка сотрудника привязывается к вашему аккаунту. Войдите через Google, Яндекс, Telegram или WhatsApp, затем вернитесь сюда.',
-        roleLabel: 'Роль',
-        roleHint: 'Заявку сотрудника рассматривает владелец выбранного бизнеса.',
-        commentLabel: 'Комментарий для владельца',
-        commentPlaceholder: 'Например: я мастер филиала на Киевской, работаю по графику 2/2, меня может подтвердить администратор Алина.',
-        info: 'При одобрении владелец выберет филиал. Система создаст рабочую карточку, назначит роль сотрудника и подготовит расписание.',
-        successPrefix: 'Заявка сотрудника отправлена',
         signInNext: '/business/staff-apply',
     },
 };
@@ -107,6 +84,11 @@ export function RoleApplicationForm({
             ? 'business.roleApply.form.success.owner'
             : 'business.roleApply.form.success.staff'),
     };
+    // Messages set inside the load effects; as strings they keep the effects' dependencies stable.
+    const emptyResponseMessage = t('business.roleApply.form.errors.emptyResponse', 'Сервис заявок вернул пустой ответ.');
+    const loadActiveMessage = t('business.roleApply.form.errors.loadActive', 'Не удалось загрузить активные заявки.');
+    const loadActiveRetryMessage = t('business.roleApply.form.errors.loadActiveRetry', 'Не удалось загрузить активные заявки. Попробуйте обновить страницу.');
+    const loadBusinessesMessage = t('business.roleApply.form.errors.loadBusinesses', 'Не удалось загрузить бизнесы');
     const [query, setQuery] = useState('');
     const [businesses, setBusinesses] = useState<BusinessOption[]>([]);
     const [bizId, setBizId] = useState('');
@@ -142,16 +124,16 @@ export function RoleApplicationForm({
             const raw = await response.text();
             const payload = raw
                 ? JSON.parse(raw) as MyApplicationsResponse
-                : { ok: false as const, message: 'Сервис заявок вернул пустой ответ.' };
+                : { ok: false as const, message: emptyResponseMessage };
             if (response.ok && payload.ok) {
                 setMyApplications(payload.items);
             } else if (!payload.ok) {
-                setError(payload.message || 'Не удалось загрузить активные заявки.');
+                setError(payload.message || loadActiveMessage);
             }
         } catch {
-            setError('Не удалось загрузить активные заявки. Попробуйте обновить страницу.');
+            setError(loadActiveRetryMessage);
         }
-    }, [isAuthenticated, mode]);
+    }, [isAuthenticated, mode, emptyResponseMessage, loadActiveMessage, loadActiveRetryMessage]);
 
     useEffect(() => {
         setRole(copy.defaultRole);
@@ -181,12 +163,12 @@ export function RoleApplicationForm({
                 });
                 const payload = (await response.json()) as SearchResponse;
                 if (!response.ok || !payload.ok) {
-                    throw new Error(!payload.ok ? payload.message || 'Не удалось загрузить бизнесы' : 'Не удалось загрузить бизнесы');
+                    throw new Error(!payload.ok ? payload.message || loadBusinessesMessage : loadBusinessesMessage);
                 }
                 setBusinesses(payload.items);
             } catch (loadError) {
                 if (!(loadError instanceof DOMException && loadError.name === 'AbortError')) {
-                    setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить бизнесы');
+                    setError(loadError instanceof Error ? loadError.message : loadBusinessesMessage);
                 }
             } finally {
                 setLoadingBusinesses(false);
@@ -197,7 +179,7 @@ export function RoleApplicationForm({
             controller.abort();
             window.clearTimeout(timer);
         };
-    }, [hasSearchQuery, query]);
+    }, [hasSearchQuery, query, loadBusinessesMessage]);
 
     async function submit(event: React.FormEvent) {
         event.preventDefault();
@@ -205,15 +187,15 @@ export function RoleApplicationForm({
         setSuccess(null);
 
         if (!isAuthenticated) {
-            setError('Сначала войдите в аккаунт Kezek, чтобы заявка была привязана именно к вам.');
+            setError(t('business.roleApply.form.errors.signInFirst', 'Сначала войдите в аккаунт Kezek, чтобы заявка была привязана именно к вам.'));
             return;
         }
         if (!bizId) {
-            setError('Выберите бизнес.');
+            setError(t('business.roleApply.form.errors.selectBusiness', 'Выберите бизнес.'));
             return;
         }
         if (!copy.allowedRoles.includes(role)) {
-            setError('Выберите корректную роль для этой заявки.');
+            setError(t('business.roleApply.form.errors.invalidRole', 'Выберите корректную роль для этой заявки.'));
             return;
         }
         if (
@@ -221,10 +203,11 @@ export function RoleApplicationForm({
             && message.trim().length < 20
             && !Object.values(evidenceLinks).some((value) => value.trim())
         ) {
-            setError('Для заявки владельца добавьте подробное пояснение или хотя бы одну подтверждающую ссылку.');
+            setError(t('business.roleApply.form.errors.ownerEvidence', 'Для заявки владельца добавьте подробное пояснение или хотя бы одну подтверждающую ссылку.'));
             return;
         }
 
+        const submitFailedMessage = t('business.roleApply.form.errors.submit', 'Не удалось отправить заявку');
         setSending(true);
         try {
             const response = await fetch('/api/business-role-applications', {
@@ -239,30 +222,34 @@ export function RoleApplicationForm({
             });
             const payload = (await response.json()) as SubmitResponse;
             if (!response.ok || !payload.ok) {
-                throw new Error(!payload.ok ? payload.message || 'Не удалось отправить заявку' : 'Не удалось отправить заявку');
+                throw new Error(!payload.ok ? payload.message || submitFailedMessage : submitFailedMessage);
             }
-            setSuccess(`${copy.successPrefix}${selectedBusiness ? ` в ${selectedBusiness.name}` : ''}.`);
+            const sentTo = mode === 'owner'
+                ? t('business.roleApply.form.success.ownerTo', 'Заявка владельца отправлена в {business}.')
+                : t('business.roleApply.form.success.staffTo', 'Заявка сотрудника отправлена в {business}.');
+            setSuccess(selectedBusiness ? sentTo.replace('{business}', selectedBusiness.name) : `${copy.successPrefix}.`);
             setMessage('');
             setEvidenceLinks({ instagram: '', two_gis: '', google_maps: '', yandex_maps: '' });
             await loadMyApplications();
         } catch (submitError) {
-            setError(submitError instanceof Error ? submitError.message : 'Не удалось отправить заявку');
+            setError(submitError instanceof Error ? submitError.message : submitFailedMessage);
         } finally {
             setSending(false);
         }
     }
 
     async function cancelApplication(applicationId: string) {
+        const cancelFailedMessage = t('business.roleApply.form.errors.cancel', 'Не удалось отозвать заявку.');
         setCancellingId(applicationId);
         setError(null);
         try {
             const response = await fetch(`/api/business-role-applications/${applicationId}`, { method: 'DELETE' });
             const payload = (await response.json()) as { ok?: boolean; message?: string };
-            if (!response.ok || !payload.ok) throw new Error(payload.message || 'Не удалось отозвать заявку.');
+            if (!response.ok || !payload.ok) throw new Error(payload.message || cancelFailedMessage);
             setMyApplications((current) => current.filter((application) => application.id !== applicationId));
-            setSuccess('Заявка отозвана. Теперь вы можете отправить другую.');
+            setSuccess(t('business.roleApply.form.cancelled', 'Заявка отозвана. Теперь вы можете отправить другую.'));
         } catch (cancelError) {
-            setError(cancelError instanceof Error ? cancelError.message : 'Не удалось отозвать заявку.');
+            setError(cancelError instanceof Error ? cancelError.message : cancelFailedMessage);
         } finally {
             setCancellingId(null);
         }
@@ -401,9 +388,9 @@ export function RoleApplicationForm({
                         <div className="grid gap-3 sm:grid-cols-2">
                             {([
                                 ['instagram', 'Instagram'],
-                                ['two_gis', '2ГИС'],
-                                ['google_maps', 'Google Карты'],
-                                ['yandex_maps', 'Яндекс Карты'],
+                                ['two_gis', t('business.apply.links.twoGis', '2ГИС')],
+                                ['google_maps', t('business.apply.links.googleMaps', 'Google Карты')],
+                                ['yandex_maps', t('business.apply.links.yandexMaps', 'Яндекс Карты')],
                             ] as const).map(([key, label]) => (
                                 <Input
                                     key={key}

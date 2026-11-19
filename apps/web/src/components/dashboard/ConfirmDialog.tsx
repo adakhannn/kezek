@@ -8,6 +8,7 @@
 
 import { clsx } from 'clsx';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 
@@ -27,13 +28,14 @@ export function ConfirmDialog({
     isOpen,
     title,
     message,
-    confirmLabel = 'Подтвердить',
-    cancelLabel = 'Отмена',
+    confirmLabel,
+    cancelLabel,
     variant = 'info',
     onConfirm,
     onCancel,
     className,
 }: ConfirmDialogProps) {
+    const { t } = useLanguage();
     const confirmVariant = variant === 'danger' ? 'danger' : variant === 'warning' ? 'secondary' : 'primary';
 
     return (
@@ -47,10 +49,10 @@ export function ConfirmDialog({
             footer={
                 <div className="flex items-center justify-end gap-3">
                     <Button type="button" variant="secondary" onClick={onCancel}>
-                        {cancelLabel}
+                        {cancelLabel ?? t('common.cancel', 'Отмена')}
                     </Button>
                     <Button type="button" variant={confirmVariant} onClick={onConfirm}>
-                        {confirmLabel}
+                        {confirmLabel ?? t('dashboard.confirmDialog.confirm', 'Подтвердить')}
                     </Button>
                 </div>
             }

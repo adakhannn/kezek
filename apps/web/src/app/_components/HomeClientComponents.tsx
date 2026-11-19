@@ -282,9 +282,10 @@ function buildMarketplaceHref(query: string, category: string): string {
 export function HomeResultsHeader({ totalResults, q, cat, categoryLabels = {} }: HomeResultsHeaderProps) {
     const { t } = useLanguage();
 
+    // Replacer functions: a `$` in the query or the category label is kept as typed.
     const activeFilters = [
-        q ? `${t('home.results.query', 'Поиск')}: ${q}` : null,
-        cat ? `${t('home.results.category', 'Категория')}: ${publicCategoryLabel(categoryLabels, cat)}` : null,
+        q ? t('home.results.queryFilter', 'Поиск: {query}').replace('{query}', () => q) : null,
+        cat ? t('home.results.categoryFilter', 'Категория: {category}').replace('{category}', () => publicCategoryLabel(categoryLabels, cat)) : null,
     ].filter(Boolean) as string[];
 
     return (

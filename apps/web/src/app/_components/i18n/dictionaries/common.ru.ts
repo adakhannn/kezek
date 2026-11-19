@@ -98,4 +98,9 @@ export const commonRu = {
     'error.unauthorized.action.signIn': 'Войти в систему',
     'error.unauthorized.description': 'Для доступа к этой странице необходимо войти в систему.',
     'error.unauthorized.title': 'Требуется авторизация',
+    'common.notFound.title': 'Страница не найдена',
+    'common.notFound.description': 'Возможно, ссылка устарела или в адресе есть ошибка. Вернитесь на главную страницу или войдите в аккаунт, чтобы продолжить работу.',
+    'common.globalError.description': 'Мы уже получили уведомление и работаем над исправлением.',
+    'common.nameReminder.message': 'Пожалуйста, заполните ваше имя в профиле для лучшего опыта использования сервиса.',
+    'common.nameReminder.action': 'Заполнить профиль',
 } as const;

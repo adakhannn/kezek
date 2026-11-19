@@ -55,4 +55,13 @@ export const homeEn = {
     'home.business.feature3': 'Team and finances',
     'home.seo.title': 'Kezek — online service booking in Kyrgyzstan',
     'home.seo.description': 'Find the right service, compare options, and book online without calls or chats.',
+    'home.unavailable.title': 'The catalog is temporarily unavailable',
+    'home.unavailable.description': 'Could not load the data. Reload the page or try again later.',
+    'home.card.ratingLabel': 'Rating {score}',
+    'home.results.queryFilter': 'Search: {query}',
+    'home.results.categoryFilter': 'Category: {category}',
+    'home.pagination.prev': '← Previous',
+    'home.pagination.next': 'Next →',
+    'home.pagination.page': 'Page {page}',
+    'home.pagination.of': 'of {pages}',
 } as const;

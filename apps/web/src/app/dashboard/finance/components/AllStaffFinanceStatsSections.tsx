@@ -5,8 +5,10 @@ import Link from 'next/link';
 import type { BranchOption, Period, StaffStat, TotalStats } from './allStaffFinanceStatsTypes';
 import { financeDateAnchor, financePeriodDate } from './financePeriodDate';
 
-function formatMoney(value: number, locale: string) {
-    return `${value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`;
+// The unit comes from the dictionaries: 'сом' in ru and ky, 'som' in en (FE-10).
+function formatMoney(value: number, locale: string, t: (key: 'finance.money', fallback: string) => string) {
+    const amount = value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
+    return t('finance.money', '{amount} сом').replace('{amount}', () => amount);
 }
 
 function StaffStatus({
@@ -161,10 +163,10 @@ export function AllStaffFinanceStatsTotals({
                 <div className="text-xs uppercase tracking-wide text-indigo-100 mb-2">
                     {t('finance.totalWithConsumables', 'Услуги и расходники')}
                 </div>
-                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalWithConsumables, locale)}</div>
+                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalWithConsumables, locale, t)}</div>
                 <div className="text-xs text-indigo-100 mt-1">
-                    {t('finance.servicesRevenue', 'Услуги')}: {formatMoney(totalStats.totalAmount, locale)}
-                    {' · '}{t('finance.consumablesRevenue', 'Расходники')}: {formatMoney(totalStats.totalConsumables, locale)}
+                    {t('finance.servicesRevenue', 'Услуги')}: {formatMoney(totalStats.totalAmount, locale, t)}
+                    {' · '}{t('finance.consumablesRevenue', 'Расходники')}: {formatMoney(totalStats.totalConsumables, locale, t)}
                 </div>
                 <div className="text-xs text-indigo-100 mt-1">{periodLabel}</div>
             </div>
@@ -173,7 +175,7 @@ export function AllStaffFinanceStatsTotals({
                 <div className="text-xs uppercase tracking-wide text-emerald-100 mb-2">
                     {t('finance.toEmployees', 'Сотрудникам')}
                 </div>
-                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalStats.totalMaster, locale)}</div>
+                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalStats.totalMaster, locale, t)}</div>
                 <div className="text-xs text-emerald-100 mt-1">
                     {shareOfTotal(totalStats.totalMaster)} {t('finance.ofTotal', 'от общей суммы')}
                 </div>
@@ -183,7 +185,7 @@ export function AllStaffFinanceStatsTotals({
                 <div className="text-xs uppercase tracking-wide text-blue-100 mb-2">
                     {t('finance.toBusiness', 'Бизнесу')}
                 </div>
-                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalStats.totalSalon, locale)}</div>
+                <div className="text-xl sm:text-2xl font-bold">{formatMoney(totalStats.totalSalon, locale, t)}</div>
                 <div className="text-xs text-blue-100 mt-1">
                     {shareOfTotal(totalStats.totalSalon)} {t('finance.ofTotal', 'от общей суммы')}
                 </div>
@@ -259,7 +261,7 @@ export function AllStaffFinanceStatsTable({
                                         {t('finance.servicesRevenue', 'Услуги')}
                                     </div>
                                     <div className="font-semibold text-gray-900 dark:text-gray-100">
-                                        {formatMoney(stat.totalAmount, locale)}
+                                        {formatMoney(stat.totalAmount, locale, t)}
                                     </div>
                                 </div>
                                 <div>
@@ -280,7 +282,7 @@ export function AllStaffFinanceStatsTable({
                                         {t('finance.staffStats.toEmployee', 'Сотруднику')}
                                     </div>
                                     <div className="font-medium text-emerald-600 dark:text-emerald-400">
-                                        {formatMoney(stat.totalMaster, locale)}
+                                        {formatMoney(stat.totalMaster, locale, t)}
                                     </div>
                                 </div>
                                 <div>
@@ -288,7 +290,7 @@ export function AllStaffFinanceStatsTable({
                                         {t('finance.staffStats.toBusiness', 'Бизнесу')}
                                     </div>
                                     <div className="font-medium text-indigo-600 dark:text-indigo-400">
-                                        {formatMoney(stat.totalSalon, locale)}
+                                        {formatMoney(stat.totalSalon, locale, t)}
                                     </div>
                                 </div>
                             </div>
@@ -364,17 +366,17 @@ export function AllStaffFinanceStatsTable({
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {formatMoney(stat.totalAmount, locale)}
+                                            {formatMoney(stat.totalAmount, locale, t)}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                                            {formatMoney(stat.totalMaster, locale)}
+                                            {formatMoney(stat.totalMaster, locale, t)}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                                            {formatMoney(stat.totalSalon, locale)}
+                                            {formatMoney(stat.totalSalon, locale, t)}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">

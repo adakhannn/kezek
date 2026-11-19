@@ -12,4 +12,11 @@ export const datePickerKy = {
     'datePicker.selected': 'Тандалган күн: {value}',
     'datePicker.yearLabel': 'Жыл',
     'datePicker.legend.today': 'Бүгүн',
+    'datePicker.weekdays.monday': 'Дш',
+    'datePicker.weekdays.tuesday': 'Шш',
+    'datePicker.weekdays.wednesday': 'Шр',
+    'datePicker.weekdays.thursday': 'Бш',
+    'datePicker.weekdays.friday': 'Жм',
+    'datePicker.weekdays.saturday': 'Иш',
+    'datePicker.weekdays.sunday': 'Жк',
 } as const;

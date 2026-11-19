@@ -16,8 +16,10 @@ test.each([['ru',financeRu],['ky',financeKy],['en',financeEn]] as const)(
         const t = (key: string,fallback?: string) => (dictionary as Record<string,string>)[key] ?? fallback ?? key;
         render(<AllStaffFinanceStatsTotals totalStats={totals} locale={locale} periodLabel="LIVE TEST" t={t} />);
         expect(screen.getByText(dictionary['finance.totalWithConsumables'])).toBeTruthy();
-        expect(screen.getByText('350 сом')).toBeTruthy();
-        expect(screen.getByText(`${dictionary['finance.servicesRevenue']}: 301 сом · ${dictionary['finance.consumablesRevenue']}: 49 сом`)).toBeTruthy();
+        // The currency comes from the dictionary: 'сом' in ru and ky, 'som' in en (FE-10).
+        const money = (amount: number) => dictionary['finance.money'].replace('{amount}', String(amount));
+        expect(screen.getByText(money(350))).toBeTruthy();
+        expect(screen.getByText(`${dictionary['finance.servicesRevenue']}: ${money(301)} · ${dictionary['finance.consumablesRevenue']}: ${money(49)}`)).toBeTruthy();
         expect(screen.getByText(`51.7% ${dictionary['finance.ofTotal']}`)).toBeTruthy();
         expect(screen.getByText(`48.3% ${dictionary['finance.ofTotal']}`)).toBeTruthy();
         expect(screen.queryByText('56.1%')).toBeNull();

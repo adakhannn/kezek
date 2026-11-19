@@ -11,6 +11,9 @@ import { useState, ReactNode } from 'react';
 
 import { shiftStatusColors, ShiftStatus } from './tokens';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { bookingCountForm } from '@/lib/bookingCountForm';
+
 interface ShiftCardProps {
     shiftDate: string;
     status: ShiftStatus;
@@ -34,6 +37,7 @@ export function ShiftCard({
     onExpand,
     className,
 }: ShiftCardProps) {
+    const { t, locale: language } = useLanguage();
     const [isExpanded, setIsExpanded] = useState(status === 'open');
     
     const statusStyles = shiftStatusColors[status];
@@ -65,23 +69,25 @@ export function ShiftCard({
                                 statusStyles.text
                             )}
                         >
-                            {status === 'open' ? 'Открыта' : 'Закрыта'}
+                            {status === 'open'
+                                ? t('finance.staffStats.status.open', 'Открыта')
+                                : t('finance.staffStats.status.closed', 'Закрыта')}
                         </span>
                         {clientCount !== undefined && clientCount > 0 && (
                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                                ({clientCount} клиентов)
+                                ({clientCount} {t(`finance.staffStats.clientCount.${bookingCountForm(clientCount, language)}`, 'клиентов')})
                             </span>
                         )}
                     </div>
                     {openedAt && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Открыта: {openedAt}
+                            {t('finance.staffStats.openedAt', 'Открыта')}: {openedAt}
                         </div>
                     )}
                 </div>
                 <div className="text-right mr-4 min-w-[160px]">
                     <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                        {totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                        {totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
                     </div>
                 </div>
                 <button

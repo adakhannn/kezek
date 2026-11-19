@@ -4,6 +4,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useCallback, useEffect } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -18,6 +19,7 @@ type Mode = 'phone' | 'email';
 export default function VerifyPage() {
     const sp = useSearchParams();
     const router = useRouter();
+    const { t } = useLanguage();
 
     const mode: Mode = (sp.get('mode') as Mode) || 'phone';
     const phone = sp.get('phone') || '';
@@ -183,19 +185,22 @@ export default function VerifyPage() {
     }
 
     const currentContact = mode === 'phone' ? phone : email;
+    const [codeSentBefore, codeSentAfter] = t('auth.verify.codeSentTo', 'Мы отправили код на {contact}').split('{contact}');
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-indigo-950 dark:via-gray-900 dark:to-pink-950 flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8 space-y-6">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Подтверждение</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('auth.verify.title', 'Подтверждение')}</h1>
                     {!editingContact ? (
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Мы отправили код на <b className="text-gray-900 dark:text-gray-100">{currentContact}</b>
+                            {codeSentBefore}<b className="text-gray-900 dark:text-gray-100">{currentContact}</b>{codeSentAfter}
                         </div>
                     ) : (
                         <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            {mode === 'phone' ? 'Введите новый номер телефона' : 'Введите новый e-mail'}
+                            {mode === 'phone'
+                                ? t('auth.verify.newPhone', 'Введите новый номер телефона')
+                                : t('auth.verify.newEmail', 'Введите новый e-mail')}
                         </div>
                     )}
                 </div>
@@ -216,7 +221,7 @@ export default function VerifyPage() {
                                 onClick={handleCancelEdit}
                                 className="flex-1"
                             >
-                                Отмена
+                                {t('common.cancel', 'Отмена')}
                             </Button>
                             <Button
                                 type="button"
@@ -225,7 +230,7 @@ export default function VerifyPage() {
                                 isLoading={resending}
                                 className="flex-1"
                             >
-                                Отправить код
+                                {t('auth.verify.sendCode', 'Отправить код')}
                             </Button>
                         </div>
                     </div>
@@ -249,7 +254,7 @@ export default function VerifyPage() {
                             isLoading={verifying}
                             className="w-full"
                         >
-                            Подтвердить
+                            {t('auth.verify.submit', 'Подтвердить')}
                         </Button>
                     </form>
                 )}
@@ -265,8 +270,8 @@ export default function VerifyPage() {
                             className="w-full"
                         >
                             {resendCooldown > 0
-                                ? `Повторно отправить код (${resendCooldown}с)`
-                                : 'Повторно отправить код'}
+                                ? t('auth.verify.resendIn', 'Повторно отправить код ({seconds}с)').replace('{seconds}', String(resendCooldown))
+                                : t('auth.verify.resend', 'Повторно отправить код')}
                         </Button>
                         <Button
                             type="button"
@@ -274,7 +279,9 @@ export default function VerifyPage() {
                             onClick={handleChangeContact}
                             className="w-full text-sm"
                         >
-                            Изменить {mode === 'phone' ? 'номер' : 'e-mail'}
+                            {mode === 'phone'
+                                ? t('auth.verify.changePhone', 'Изменить номер')
+                                : t('auth.verify.changeEmail', 'Изменить e-mail')}
                         </Button>
                         <Button
                             type="button"
@@ -282,7 +289,7 @@ export default function VerifyPage() {
                             onClick={() => router.push('/auth/sign-in')}
                             className="w-full text-sm text-gray-500 dark:text-gray-400"
                         >
-                            ← Назад
+                            {t('auth.verify.back', '← Назад')}
                         </Button>
                     </div>
                 )}

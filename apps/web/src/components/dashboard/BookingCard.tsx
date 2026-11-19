@@ -12,6 +12,8 @@ import Link from 'next/link';
 
 import { bookingStatusColors, BookingStatus } from './tokens';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 
 interface BookingCardProps {
     id: string;
@@ -37,6 +39,7 @@ export function BookingCard({
     className,
     onClick,
 }: BookingCardProps) {
+    const { t } = useLanguage();
     const start = new Date(startISO);
     const end = new Date(endISO);
     const label = `${formatInTimeZone(start, timezone, 'HH:mm')}–${formatInTimeZone(end, timezone, 'HH:mm')}`;
@@ -51,7 +54,8 @@ export function BookingCard({
         className
     );
 
-    const computedTitle = title ?? `Открыть бронь #${id.slice(0, 8)}`;
+    const openBooking = t('bookings.calendar.openBooking', 'Открыть бронь');
+    const computedTitle = title ?? `${openBooking} #${id.slice(0, 8)}`;
 
     if (href) {
         return (

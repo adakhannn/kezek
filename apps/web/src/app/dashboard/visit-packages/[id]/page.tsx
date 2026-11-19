@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 
+import { getT } from '@/app/_components/i18n/server';
 import VisitPackagePlanForm from '@/app/dashboard/visit-packages/VisitPackagePlanForm';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -70,13 +71,14 @@ export default async function VisitPackageEditPage({
     const branchList = (branches ?? []) as BranchRow[];
     const serviceList = (services ?? []) as ServiceRow[];
     const row = plan as PlanRow;
+    const t = await getT();
 
     return (
         <div className="px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
             <div className="max-w-2xl mx-auto">
                 <div className="mb-6">
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
-                        Редактирование пакета
+                        {t('dashboard.visitPackages.form.editTitle', 'Редактирование пакета')}
                     </h1>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                         {row.name_ru}

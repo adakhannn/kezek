@@ -203,7 +203,7 @@ export default function StaffDetailPageClient({
                     <p className="type-metric mt-2 text-[var(--text-primary)]">{reviews.length}</p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
                         {reviewAverage !== null
-                            ? `${t('staff.detail.overview.avgRating', 'Средний рейтинг')}: ${reviewAverage.toFixed(1)}`
+                            ? <>{t('staff.detail.overview.avgRating', 'Средний рейтинг')}: {reviewAverage.toFixed(1)}</>
                             : t('staff.detail.reviews.empty', 'Пока нет отзывов')}
                     </p>
                 </Card>

@@ -16,12 +16,6 @@ type BookingDateCalendarProps = {
     className?: string;
 };
 
-const WEEKDAYS_LABELS: Record<'ru' | 'ky' | 'en', string[]> = {
-    ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-    ky: ['Дш', 'Шш', 'Шр', 'Бш', 'Жм', 'Иш', 'Жк'],
-    en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-};
-
 const DATE_LOCALES = {
     ru,
     en: enGB,
@@ -31,7 +25,15 @@ const DATE_LOCALES = {
 export function BookingDateCalendar({ value, onChange, min, max, timezone, variant = 'public', className = '' }: BookingDateCalendarProps): JSX.Element {
     const { locale, t } = useLanguage();
     const dateLocale = DATE_LOCALES[locale] ?? ru;
-    const weekdayLabels = WEEKDAYS_LABELS[locale] ?? WEEKDAYS_LABELS.ru;
+    const weekdayLabels = [
+        t('booking.calendar.weekdayMon', 'Пн'),
+        t('booking.calendar.weekdayTue', 'Вт'),
+        t('booking.calendar.weekdayWed', 'Ср'),
+        t('booking.calendar.weekdayThu', 'Чт'),
+        t('booking.calendar.weekdayFri', 'Пт'),
+        t('booking.calendar.weekdaySat', 'Сб'),
+        t('booking.calendar.weekdaySun', 'Вс'),
+    ];
 
     const calendarValue = toBookingCalendarDate(value, timezone);
     const calendarMin = min ? toBookingCalendarDate(min, timezone) : undefined;

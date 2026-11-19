@@ -19,4 +19,8 @@ export const selectBusinessKy = {
     'selectCabinet.rememberChoice': 'Тандоону эстеп калып, кийинки жолу ушул жерден кирүү',
     'selectCabinet.subtitle': 'Сизде бир нече кабинетке кирүү мүмкүнчүлүгү бар.',
     'selectCabinet.title': 'Кайсы кабинетке кирүүнү каалайсыз?',
+    'selectCabinet.optionAdmin': 'Админ-панель',
+    'selectCabinet.optionDashboard': 'Бизнес кабинети',
+    'selectCabinet.optionStaff': 'Кызматкер кабинети',
+    'selectCabinet.optionCabinet': 'Менин жазылыштарым',
 } as const;

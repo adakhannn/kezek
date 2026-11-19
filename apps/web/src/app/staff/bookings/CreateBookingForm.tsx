@@ -383,7 +383,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                                             <span className="flex-1">
                                                 {getServiceName(s)}{' '}
                                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                    ({s.duration_min}м)
+                                                    {t('staff.cabinet.bookings.create.serviceDuration', '({minutes}м)').replace('{minutes}', String(s.duration_min))}
                                                 </span>
                                             </span>
                                         </label>

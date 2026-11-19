@@ -218,9 +218,9 @@ export default async function Home({
                                 data-testid="marketplace-service-unavailable"
                                 className="rounded-[24px] border border-amber-300 bg-amber-50 px-5 py-5 text-amber-900 shadow-[var(--shadow-sm)] dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
                             >
-                                <h3 className="type-section-title">Каталог временно недоступен</h3>
+                                <h3 className="type-section-title">{t('home.unavailable.title', 'Каталог временно недоступен')}</h3>
                                 <p className="type-body mt-2">
-                                    Не удалось загрузить данные. Обновите страницу или попробуйте ещё раз позже.
+                                    {t('home.unavailable.description', 'Не удалось загрузить данные. Обновите страницу или попробуйте ещё раз позже.')}
                                 </p>
                             </section>
                         ) : (
@@ -228,7 +228,7 @@ export default async function Home({
                         )}
                     </div>
 
-                    <Pagination q={q} cat={cat} page={pageNum} pages={pages} />
+                    <Pagination q={q} cat={cat} page={pageNum} pages={pages} t={t} />
                 </section>
 
                 <BusinessAudienceSection t={t} />
@@ -277,7 +277,9 @@ function MarketplaceBusinessCard({
                                     ? 'border-[color:color-mix(in_srgb,var(--status-warning)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--status-warning)_14%,transparent)] text-[var(--status-warning)]'
                                     : 'border-[var(--border-subtle)] bg-[var(--surface-emphasis)] text-[var(--text-muted)]'
                             }`}
-                            aria-label={hasRating ? `${t('home.card.rating', 'Рейтинг')} ${formatPublicRatingScore(Number(business.rating_score))}` : undefined}
+                            aria-label={hasRating
+                                ? t('home.card.ratingLabel', 'Рейтинг {score}').replace('{score}', formatPublicRatingScore(Number(business.rating_score)))
+                                : undefined}
                         >
                             <span aria-hidden="true">{hasRating ? '★' : '—'}</span>
                             <span>{hasRating ? formatPublicRatingScore(Number(business.rating_score)) : t('home.card.new', 'Новый')}</span>
@@ -412,11 +414,13 @@ function Pagination({
     cat,
     page,
     pages,
+    t,
 }: {
     q: string;
     cat: string;
     page: number;
     pages: number;
+    t: Translator;
 }) {
     if (pages <= 1) {
         return null;
@@ -437,15 +441,15 @@ function Pagination({
                             : 'border border-[var(--border-default)] bg-[var(--surface-base)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]'
                     }`}
                 >
-                    {`← ${'Назад'}`}
+                    {t('home.pagination.prev', '← Назад')}
                 </Link>
 
                 <div className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-2 text-center">
                     <div className="type-label text-[var(--text-primary)]">
-                        {`Страница ${page}`}
+                        {t('home.pagination.page', 'Страница {page}').replace('{page}', String(page))}
                     </div>
                     <div className="type-caption text-[var(--text-muted)]">
-                        {`из ${pages}`}
+                        {t('home.pagination.of', 'из {pages}').replace('{pages}', String(pages))}
                     </div>
                 </div>
 
@@ -458,7 +462,7 @@ function Pagination({
                             : 'border border-[var(--border-default)] bg-[var(--surface-base)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]'
                     }`}
                 >
-                    {`${'Вперёд'} →`}
+                    {t('home.pagination.next', 'Вперёд →')}
                 </Link>
             </div>
         </nav>

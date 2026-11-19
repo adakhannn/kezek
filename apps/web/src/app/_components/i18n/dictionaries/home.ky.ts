@@ -55,4 +55,13 @@ export const homeKy = {
     'home.business.feature3': 'Команда жана финансы',
     'home.seo.title': 'Kezek — Кыргызстандагы кызматтарга онлайн жазылуу',
     'home.seo.description': 'Ыңгайлуу кызматты таап, варианттарды салыштырып, чалуусуз жана кат алышуусуз онлайн жазылыңыз.',
+    'home.unavailable.title': 'Каталог убактылуу жеткиликсиз',
+    'home.unavailable.description': 'Маалыматтарды жүктөө мүмкүн болгон жок. Баракты жаңылаңыз же кийинчерээк кайра аракет кылыңыз.',
+    'home.card.ratingLabel': 'Рейтинг {score}',
+    'home.results.queryFilter': 'Издөө: {query}',
+    'home.results.categoryFilter': 'Категория: {category}',
+    'home.pagination.prev': '← Мурунку',
+    'home.pagination.next': 'Кийинки →',
+    'home.pagination.page': 'Барак {page}',
+    'home.pagination.of': '{pages} ичинен',
 } as const;

@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { TelegramAccountSwitchHelp } from '@/components/auth/TelegramAccountSwitchHelp';
 import { clearTelegramAuthFragment } from '@/lib/clearTelegramAuthFragment';
 import {logError} from '@/lib/log';
@@ -46,6 +47,7 @@ function TelegramLoginWidgetComponent({
     requestAccess = 'write',
 }: TelegramLoginWidgetProps) {
     const router = useRouter();
+    const { t } = useLanguage();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(false);
     const [currentHostname, setCurrentHostname] = useState<string | null>(null);
@@ -59,12 +61,14 @@ function TelegramLoginWidgetComponent({
     const onSuccessRef = useRef(onSuccess);
     const onErrorRef = useRef(onError);
     const redirectToRef = useRef(redirectTo);
+    const tRef = useRef(t);
     
     useEffect(() => {
         onSuccessRef.current = onSuccess;
         onErrorRef.current = onError;
         redirectToRef.current = redirectTo;
-    }, [onSuccess, onError, redirectTo]);
+        tRef.current = t;
+    }, [onSuccess, onError, redirectTo, t]);
 
     useEffect(() => {
         const isLocalHostname =
@@ -81,6 +85,7 @@ function TelegramLoginWidgetComponent({
         // Регистрируем callback в window с типом
         const w = window as typeof window & Record<string, TelegramCallback>;
         w[callbackName] = async (user: TelegramUser) => {
+            const t = tRef.current;
             clearTelegramAuthFragment();
             setLoading(true);
             try {
@@ -108,7 +113,7 @@ function TelegramLoginWidgetComponent({
                         : (data as TelegramLoginPayload);
 
                 if (!data?.ok) {
-                    const apiMessage = data?.message || 'Ошибка авторизации через Telegram';
+                    const apiMessage = data?.message || t('auth.telegramWidget.error', 'Ошибка авторизации через Telegram');
                     throw new Error(apiMessage);
                 }
 
@@ -129,7 +134,7 @@ function TelegramLoginWidgetComponent({
                     router.refresh();
                     await new Promise((resolve) => setTimeout(resolve, 100));
                 } else {
-                    throw new Error('Не удалось подготовить сессию');
+                    throw new Error(t('auth.telegramWidget.sessionError', 'Не удалось подготовить сессию'));
                 }
 
                 onSuccessRef.current?.();
@@ -148,14 +153,14 @@ function TelegramLoginWidgetComponent({
                     router.push(targetUrl);
                 }
             } catch (e) {
-                const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
+                const msg = e instanceof Error ? e.message : t('auth.telegramWidget.unknownError', 'Неизвестная ошибка');
                 // Ожидаемые сообщения не логируем в консоль как ошибку — пользователь видит их на экране
                 const isExpectedUnavailable = /временно недоступен|обратитесь к администратору/i.test(msg);
                 const isRateLimit = /лимит запросов|rate limit/i.test(msg);
                 if (!isExpectedUnavailable && !isRateLimit) logError('TelegramLoginWidget', 'Error during login', e);
                 // «Bot domain invalid» на проде: домен не добавлен в @BotFather → /setdomain
                 const displayMessage = /bot domain invalid|domain invalid/i.test(msg)
-                    ? 'Домен сайта не привязан к боту Telegram. Администратору нужно в @BotFather выполнить /setdomain и указать домен этого сайта.'
+                    ? t('auth.telegramWidget.domainInvalid', 'Домен сайта не привязан к боту Telegram. Администратору нужно в @BotFather выполнить /setdomain и указать домен этого сайта.')
                     : msg;
                 onErrorRef.current?.(displayMessage);
             } finally {
@@ -176,8 +181,9 @@ function TelegramLoginWidgetComponent({
         script.async = true;
         
         script.onerror = () => {
+            const t = tRef.current;
             logError('TelegramLoginWidget', 'Failed to load Telegram widget script');
-            onErrorRef.current?.('Не удалось загрузить виджет Telegram. Проверьте подключение к интернету.');
+            onErrorRef.current?.(t('auth.telegramWidget.scriptError', 'Не удалось загрузить виджет Telegram. Проверьте подключение к интернету.'));
         };
 
         containerRef.current.appendChild(script);
@@ -197,7 +203,11 @@ function TelegramLoginWidgetComponent({
         <div className="relative w-full">
             {isLocalhost && (
                 <p className="mb-2 text-xs text-amber-600 dark:text-amber-400 text-center">
-                    Telegram не поддерживает <code className="bg-black/5 dark:bg-white/10 px-1 rounded">localhost</code> в @BotFather. Чтобы тестировать вход локально: запустите туннель (ngrok, localhost.run), откройте сайт по выданному URL и добавьте этот домен в @BotFather → <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code>. Или проверяйте вход на проде.
+                    {t('auth.telegramWidget.localhostHint', 'Telegram не поддерживает {localhost} в @BotFather. Чтобы тестировать вход локально: запустите туннель (ngrok, localhost.run), откройте сайт по выданному URL и добавьте этот домен в @BotFather → {setdomain}. Или проверяйте вход на проде.')
+                        .split(/\{(localhost|setdomain)\}/)
+                        .map((part, index) => index % 2 === 1
+                            ? <code key={index} className="bg-black/5 dark:bg-white/10 px-1 rounded">{part === 'setdomain' ? '/setdomain' : part}</code>
+                            : part)}
                 </p>
             )}
             {loading && (
@@ -218,7 +228,7 @@ function TelegramLoginWidgetComponent({
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                         </svg>
-                        <span>Авторизация...</span>
+                        <span>{t('auth.telegramWidget.authorizing', 'Авторизация...')}</span>
                     </div>
                 </div>
             )}

@@ -10,8 +10,10 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { bookingCountForm } from '@/lib/bookingCountForm';
 import type { StaffFinanceStatsPayload, StaffFinanceStatsPeriod } from '@/lib/finance/types';
 
-function formatMoney(value: number, locale: string) {
-    return `${value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`;
+// The unit comes from the dictionaries: 'сом' in ru and ky, 'som' in en (FE-10).
+function formatMoney(value: number, locale: string, t: (key: 'finance.money', fallback: string) => string) {
+    const amount = value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
+    return t('finance.money', '{amount} сом').replace('{amount}', () => amount);
 }
 
 function formatPercent(value: number, total: number) {
@@ -135,10 +137,10 @@ export function StaffFinanceStatsSummary({
             ? `${t('finance.flags.late', 'Late minutes')}: ${stats.totalLateMinutes}`
             : null,
         stats.totalConsumables > 0
-            ? `${t('finance.flags.consumables', 'Consumables')}: ${formatMoney(stats.totalConsumables, locale)}`
+            ? `${t('finance.flags.consumables', 'Consumables')}: ${formatMoney(stats.totalConsumables, locale, t)}`
             : null,
         guaranteeUsed
-            ? `${t('finance.flags.guarantee', 'Guarantee top-up')}: ${formatMoney(topup, locale)}`
+            ? `${t('finance.flags.guarantee', 'Guarantee top-up')}: ${formatMoney(topup, locale, t)}`
             : null,
     ].filter((value): value is string => Boolean(value));
 
@@ -147,13 +149,13 @@ export function StaffFinanceStatsSummary({
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Card variant="default" padding="md">
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.staffStats.turnover', 'Turnover')}</p>
-                    <p className="type-metric mt-2 text-[var(--text-primary)]">{formatMoney(turnover, locale)}</p>
+                    <p className="type-metric mt-2 text-[var(--text-primary)]">{formatMoney(turnover, locale, t)}</p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">{periodLabel}</p>
                 </Card>
 
                 <Card variant="default" padding="md">
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.staffStats.toEmployee', 'Employee share')}</p>
-                    <p className="type-metric mt-2 text-emerald-500">{formatMoney(stats.totalMaster, locale)}</p>
+                    <p className="type-metric mt-2 text-emerald-500">{formatMoney(stats.totalMaster, locale, t)}</p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
                         {formatPercent(stats.totalMaster, turnover)} • {t('finance.share.split', 'of turnover')}
                     </p>
@@ -161,7 +163,7 @@ export function StaffFinanceStatsSummary({
 
                 <Card variant="default" padding="md">
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.staffStats.toBusiness', 'Business share')}</p>
-                    <p className="type-metric mt-2 text-indigo-500">{formatMoney(stats.totalSalon, locale)}</p>
+                    <p className="type-metric mt-2 text-indigo-500">{formatMoney(stats.totalSalon, locale, t)}</p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
                         {formatPercent(stats.totalSalon, turnover)} • {t('finance.share.split', 'of turnover')}
                     </p>
@@ -170,11 +172,11 @@ export function StaffFinanceStatsSummary({
                 <Card variant="default" padding="md">
                     <p className="type-label text-[var(--text-secondary)]">{t('finance.guarantees.title', 'Guarantee impact')}</p>
                     <p className="type-metric mt-2 text-amber-500">
-                        {guaranteeUsed ? formatMoney(topup, locale) : '0 сом'}
+                        {formatMoney(guaranteeUsed ? topup : 0, locale, t)}
                     </p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
                         {guaranteeUsed
-                            ? `${t('finance.guarantees.baseShare', 'Base share')}: ${formatMoney(stats.totalBaseMasterShare, locale)}`
+                            ? `${t('finance.guarantees.baseShare', 'Base share')}: ${formatMoney(stats.totalBaseMasterShare, locale, t)}`
                             : t('finance.guarantees.notUsed', 'No guarantee top-up in this period')}
                     </p>
                 </Card>
@@ -204,7 +206,7 @@ export function StaffFinanceStatsSummary({
                     </div>
                     <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                         <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.consumables', 'Consumables')}</p>
-                        <p className="type-section-title mt-1 text-[var(--text-primary)]">{formatMoney(stats.totalConsumables, locale)}</p>
+                        <p className="type-section-title mt-1 text-[var(--text-primary)]">{formatMoney(stats.totalConsumables, locale, t)}</p>
                     </div>
                     <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
                         <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.late', 'Late')}</p>

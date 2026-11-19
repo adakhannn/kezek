@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Client from './Client';
 import StaffSchedulePageClient from './StaffSchedulePageClient';
 
+import { getT } from '@/app/_components/i18n/server';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import ScheduleEditor from '@/components/scheduling/ScheduleEditor';
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -30,9 +31,10 @@ export default async function StaffSchedulePage({
         .maybeSingle();
 
     if (eStaff) {
+        const t = await getT();
         return (
             <main className="p-6 text-red-600">
-                Ошибка: {eStaff.message}
+                {t('staff.schedule.error', 'Ошибка:')} {eStaff.message}
             </main>
         );
     }
@@ -50,9 +52,10 @@ export default async function StaffSchedulePage({
         .order('name');
 
     if (eBranches) {
+        const t = await getT();
         return (
             <main className="p-6 text-red-600">
-                Ошибка филиалов: {eBranches.message}
+                {t('staff.schedule.error.branches', 'Ошибка филиалов:')} {eBranches.message}
             </main>
         );
     }

@@ -26,24 +26,29 @@ export default function DeleteServiceButton({ id }: { id: string }) {
 
                 if (payload.details && payload.error === 'HAS_BOOKINGS') {
                     const { total, active, cancelled, bookings } = payload.details;
-                    errorMessage += `\n\n${t('services.delete.totalBookings', 'Всего броней')}: ${total}`;
+                    const label = {
+                        total: t('services.delete.totalBookings', 'Всего броней'),
+                        active: t('services.delete.activeBookings', 'Активных'),
+                        cancelled: t('services.delete.cancelledBookings', 'Отменённых'),
+                        examples: t('services.delete.examples', 'Примеры броней'),
+                        booking: t('services.delete.bookingPrefix', 'Бронь'),
+                        hint: t('services.delete.hint', 'Сначала отмените или удалите все брони, связанные с этой услугой.'),
+                    };
+                    errorMessage += `\n\n${label.total}: ${total}`;
                     if (active > 0) {
-                        errorMessage += `\n${t('services.delete.activeBookings', 'Активных')}: ${active}`;
+                        errorMessage += `\n${label.active}: ${active}`;
                     }
                     if (cancelled > 0) {
-                        errorMessage += `\n${t('services.delete.cancelledBookings', 'Отменённых')}: ${cancelled}`;
+                        errorMessage += `\n${label.cancelled}: ${cancelled}`;
                     }
                     if (bookings && bookings.length > 0) {
-                        errorMessage += `\n\n${t('services.delete.examples', 'Примеры броней')}:`;
+                        errorMessage += `\n\n${label.examples}:`;
                         bookings.forEach((b: { id: string; status: string; client_name?: string }) => {
-                            const base = `\n- ${t('services.delete.bookingPrefix', 'Бронь')} #${b.id.slice(0, 8)} (${b.status})`;
+                            const base = `\n- ${label.booking} #${b.id.slice(0, 8)} (${b.status})`;
                             errorMessage += b.client_name ? `${base} - ${b.client_name}` : base;
                         });
                     }
-                    errorMessage += `\n\n${t(
-                        'services.delete.hint',
-                        'Сначала отмените или удалите все брони, связанные с этой услугой.'
-                    )}`;
+                    errorMessage += `\n\n${label.hint}`;
                 }
 
                 toast.showError(errorMessage);

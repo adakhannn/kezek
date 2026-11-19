@@ -99,8 +99,9 @@ export default function BusinessInfo({ data }: { data: Data }) {
     };
 
     const formatName = (name: string): string => formatStaffName(name, locale);
-    const countLabel = (count: number, key: string, fallback: string): string =>
-        t(`${key}.${bookingCountForm(count, locale)}`, t(key, fallback));
+    // `label` is the key's own translation, shown when a plural form is missing.
+    const countLabel = (count: number, key: string, label: string): string =>
+        t(`${key}.${bookingCountForm(count, locale)}`, label);
     const ratedBranches = branches.filter((branch) => typeof branch.rating_score === 'number').length;
     const ratedStaff = staff.filter((person) => typeof person.rating_score === 'number').length;
 
@@ -245,7 +246,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                                            {branches.length} {countLabel(branches.length, 'business.info.branchesCount', 'локаций')}
+                                            {branches.length} {countLabel(branches.length, 'business.info.branchesCount', t('business.info.branchesCount', 'локаций'))}
                                         </span>
                                     }
                                 />
@@ -311,7 +312,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                                            {services.length} {countLabel(services.length, 'business.info.servicesCount', 'услуг')}
+                                            {services.length} {countLabel(services.length, 'business.info.servicesCount', t('business.info.servicesCount', 'услуг'))}
                                         </span>
                                     }
                                 />
@@ -376,7 +377,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                                            {staff.length} {countLabel(staff.length, 'business.info.staffCount', 'специалистов')}
+                                            {staff.length} {countLabel(staff.length, 'business.info.staffCount', t('business.info.staffCount', 'специалистов'))}
                                         </span>
                                     }
                                 />

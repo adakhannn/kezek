@@ -88,7 +88,9 @@ export default function BranchesListClient({
                             {t('branches.subtitle', 'Управление филиалами бизнеса')}
                         </p>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Использовано филиалов: {branches.length} из {branchLimit}
+                            {t('branches.usage', 'Использовано филиалов: {used} из {limit}')
+                                .replace('{used}', String(branches.length))
+                                .replace('{limit}', String(branchLimit))}
                         </p>
                     </div>
                     {canCreateBranch && (
@@ -114,7 +116,7 @@ export default function BranchesListClient({
                     )}
                     {!canCreateBranch && branches.length >= branchLimit ? (
                         <span className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-                            Лимит филиалов достигнут
+                            {t('branches.new.limit.title', 'Лимит филиалов достигнут')}
                         </span>
                     ) : null}
                 </div>

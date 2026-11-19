@@ -4,6 +4,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { logWarn } from '@/lib/log';
@@ -12,6 +13,7 @@ import { supabase } from '@/lib/supabaseClient';
 export default function VerifyOtpPage() {
     const router = useRouter();
     const sp = useSearchParams();
+    const { t } = useLanguage();
     const phone = useMemo(() => sp.get('phone') ?? '', [sp]);
     const fromWhatsApp = useMemo(() => sp.get('from') === 'whatsapp-setup', [sp]);
     const [token, setToken] = useState('');
@@ -26,7 +28,7 @@ export default function VerifyOtpPage() {
 
     async function verify() {
         if (!token.trim()) {
-            toast.showError('Введите код из SMS');
+            toast.showError(t('auth.verifyOtp.codeRequired', 'Введите код из SMS'));
             return;
         }
         setLoading(true);
@@ -66,6 +68,8 @@ export default function VerifyOtpPage() {
         }
     }
 
+    const [sentToBefore, sentToAfter] = t('auth.verifyOtp.sentTo', 'Мы отправили SMS на: {phone}').split('{phone}');
+
     return (
         <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-4 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
             <div className="w-full max-w-md">
@@ -76,17 +80,18 @@ export default function VerifyOtpPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Подтверждение телефона</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('auth.verifyOtp.title', 'Подтверждение телефона')}</h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Мы отправили SMS на:{' '}
+                            {sentToBefore}
                             <span className="font-semibold text-gray-900 dark:text-gray-100">{phone}</span>
+                            {sentToAfter}
                         </p>
                     </div>
 
                     <div className="space-y-4">
                         <div>
                             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                Код подтверждения
+                                {t('auth.verifyOtp.codeLabel', 'Код подтверждения')}
                             </label>
                             <input
                                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-center text-2xl font-mono tracking-widest text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
@@ -98,7 +103,7 @@ export default function VerifyOtpPage() {
                                 autoFocus
                             />
                             <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-                                Введите 6-значный код из SMS
+                                {t('auth.verifyOtp.codeHint', 'Введите 6-значный код из SMS')}
                             </p>
                         </div>
 
@@ -113,11 +118,11 @@ export default function VerifyOtpPage() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Проверяю...
+                                    {t('auth.verifyOtp.verifying', 'Проверяю...')}
                                 </>
                             ) : (
                                 <>
-                                    Подтвердить
+                                    {t('auth.verifyOtp.submit', 'Подтвердить')}
                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>

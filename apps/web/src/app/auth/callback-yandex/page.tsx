@@ -5,11 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 
 function YandexCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { t } = useLanguage();
 
     useEffect(() => {
         const code = searchParams.get('code');
@@ -48,21 +50,23 @@ function YandexCallbackContent() {
 
     return (
         <FullScreenStatus
-            title="Авторизация через Яндекс…"
-            subtitle="Обрабатываем данные и настраиваем ваш кабинет"
-            message="Пожалуйста, не закрывайте эту вкладку — вы будете автоматически перенаправлены."
+            title={t('auth.yandexCallback.title', 'Авторизация через Яндекс…')}
+            subtitle={t('auth.yandexCallback.subtitle', 'Обрабатываем данные и настраиваем ваш кабинет')}
+            message={t('auth.yandexCallback.message', 'Пожалуйста, не закрывайте эту вкладку — вы будете автоматически перенаправлены.')}
             loading
         />
     );
 }
 
 export default function YandexCallback() {
+    const { t } = useLanguage();
+
     return (
         <Suspense
             fallback={
                 <FullScreenStatus
-                    title="Загрузка…"
-                    subtitle="Готовим страницу авторизации"
+                    title={t('auth.callback.loading.title', 'Загрузка…')}
+                    subtitle={t('auth.callback.loading.subtitle', 'Готовим страницу авторизации')}
                     loading
                 />
             }

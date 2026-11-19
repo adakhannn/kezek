@@ -129,7 +129,7 @@ export default function MyVisitPackagesBlock() {
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {t('cabinet.packages.remaining', 'Осталось')}: {pkg.remaining_visits}
-                  {pkg.plan_visit_count != null && ` ${t('cabinet.packages.of', 'из')} ${pkg.plan_visit_count}`}{' '}
+                  {pkg.plan_visit_count != null && <> {t('cabinet.packages.of', 'из')} {pkg.plan_visit_count}</>}{' '}
                   {t('cabinet.packages.visits', 'визитов')}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">

@@ -81,6 +81,7 @@ export async function generateMetadata({
     const { slug } = await params;
     const locale = await getServerLocale();
     const t = getT(locale);
+    const fallbackName = t('booking.seo.businessFallback', 'Бизнес');
 
     const data = await getData(slug);
 
@@ -89,13 +90,13 @@ export async function generateMetadata({
         const descTemplate = t('business.seo.description');
 
         return {
-            title: titleTemplate.replace('{businessName}', 'Бизнес'),
-            description: descTemplate.replace('{businessName}', 'Бизнес'),
+            title: titleTemplate.replace('{businessName}', fallbackName),
+            description: descTemplate.replace('{businessName}', fallbackName),
             alternates: generateAlternates(`/b/${slug}`),
         };
     }
 
-    const businessName = data.biz.name || 'Бизнес';
+    const businessName = data.biz.name || fallbackName;
     const titleTemplate = t('business.seo.title');
     const descTemplate = t('business.seo.description');
 

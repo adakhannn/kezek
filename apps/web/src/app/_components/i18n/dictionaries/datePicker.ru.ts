@@ -12,4 +12,11 @@ export const datePickerRu = {
     'datePicker.selected': 'Выбранная дата: {value}',
     'datePicker.yearLabel': 'Год',
     'datePicker.legend.today': 'Сегодня',
+    'datePicker.weekdays.monday': 'Пн',
+    'datePicker.weekdays.tuesday': 'Вт',
+    'datePicker.weekdays.wednesday': 'Ср',
+    'datePicker.weekdays.thursday': 'Чт',
+    'datePicker.weekdays.friday': 'Пт',
+    'datePicker.weekdays.saturday': 'Сб',
+    'datePicker.weekdays.sunday': 'Вс',
 } as const;
