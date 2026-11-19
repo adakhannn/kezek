@@ -71,7 +71,6 @@ const other = '00000000-0000-4000-8000-000000000002';
     console.log('PASS isolated Postgres: grant/OTP/OAuth parallel one-use, wrong proof, expiry, failed-attempt cap, role denials. No network, ports, volumes or remote migration.');
   } finally {
     // Only this process-created, UUID-named disposable container is removed.
-    if (!/^kezek-auth-regression-[0-9a-f-]{36}$/.test(name)) throw new Error('Invalid disposable name');
-    run(['rm','-f','-v',name], undefined, true);
+    if (/^kezek-auth-regression-[0-9a-f-]{36}$/.test(name)) run(['rm','-f','-v',name], undefined, true);
   }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

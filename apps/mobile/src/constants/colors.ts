@@ -1,4 +1,4 @@
-﻿export const colors = {
+export const colors = {
     brand: {
         primaryFrom: '#4f46e5',
         primaryTo: '#db2777',

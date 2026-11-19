@@ -51,6 +51,9 @@
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Публичный ключ того же проекта |
 | `EXPO_PUBLIC_API_URL` | Разрешённый web API, доступный устройству/эмулятору |
 | `EXPO_PUBLIC_APP_ENV` | Окружение сборки (`production`, `preview`, `development`); по умолчанию берётся из профиля EAS, без профиля — `development` |
+| `EXPO_PUBLIC_SENTRY_DSN` | Включает отчёты о сбоях и ошибках приложения (MOB-07); без него и в development-сборке ничего не отправляется. Порядок включения — [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md#ошибки-приложения-логи-vercel-и-sentry) |
+
+`SENTRY_ORG` и `SENTRY_PROJECT` (переменные сборки EAS) включают плагин Sentry, который загружает source maps и отладочные символы; ему нужен и `SENTRY_AUTH_TOKEN` — секрет EAS, не в репозитории и не в CI. Без них сборка отправляет отчёты с DSN, но стек остаётся минифицированным.
 
 Переменные попадают в приложение через `expo.extra` и не подходят для серверных секретов. Сборка не production требует и Supabase, и API URL. В некоторых других ветках, включая `NODE_ENV=test`, код имеет fallback на production URL — поэтому для изолированной проверки следует явно задать URL и контролировать/mock network. Это описание текущего кода, а не рекомендация выполнять тесты против production.
 

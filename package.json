@@ -56,17 +56,20 @@
     }
   },
   "devDependencies": {
+    "@eslint/js": "^9.33.0",
     "@types/node": "^24.2.1",
     "eslint": "^9.33.0",
+    "globals": "^17.14.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "openapi-typescript-codegen": "^0.29.0",
     "supabase": "^2.122.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.73.0"
   },
   "scripts": {
-    "lint": "eslint . && pnpm -C apps/web lint",
-    "lint:fix": "eslint . --fix && pnpm -C apps/web exec eslint . --fix",
+    "lint": "eslint . && pnpm -C apps/web lint && pnpm -C apps/mobile lint",
+    "lint:fix": "eslint . --fix && pnpm -C apps/web exec eslint . --fix && pnpm -C apps/mobile exec eslint . --fix",
     "check:docs-links": "node scripts/check-doc-links.mjs",
     "check:hotspots": "node scripts/check-hotspot-sizes.mjs",
     "check:mobile-utf8": "node scripts/check-mobile-utf8.mjs",
@@ -98,8 +101,11 @@
     "apps/web/**/*.{js,jsx,ts,tsx,mjs}": [
       "pnpm -C apps/web exec eslint --fix --no-warn-ignored"
     ],
-    "{scripts,packages}/**/*.{js,mjs,cjs}": [
+    "{scripts,packages}/**/*.{js,mjs,cjs,ts,tsx}": [
       "eslint --fix --no-warn-ignored"
+    ],
+    "apps/mobile/**/*.{js,jsx,ts,tsx,mjs}": [
+      "pnpm -C apps/mobile exec eslint --fix --no-warn-ignored"
     ]
   },
   "packageManager": "pnpm@10.28.0"

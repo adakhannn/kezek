@@ -1,7 +1,8 @@
 const path = require('path');
-const { getDefaultConfig } = require('expo/metro-config');
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
-const config = getDefaultConfig(__dirname);
+// Expo's default config plus the debug IDs that tie bundles to uploaded source maps (MOB-07).
+const config = getSentryExpoConfig(__dirname);
 
 // Keep the mobile entry point local while allowing workspace packages.
 config.projectRoot = __dirname;

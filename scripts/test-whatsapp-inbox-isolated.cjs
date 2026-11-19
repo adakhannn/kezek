@@ -43,15 +43,6 @@ const baselineFunction = name => {
 const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
 const id = digit => '00000000-0000-4000-8000-' + String(digit).padStart(12, '0');
 const user = id(1), other = id(2), biz = id(3), branch = id(4), staff = id(5), service = id(6), service2 = id(7);
-const secret = 'a'.repeat(64);
-const payload = day => ({
-  biz_id: biz, branch_id: branch, staff_id: staff, service_id: service,
-  start_at: `2035-01-${String(day).padStart(2, '0')}T10:00:00Z`,
-  client_name: 'Synthetic Guest', client_phone: '+996555000000', client_email: 'synthetic@example.invalid',
-});
-const command = (requestId, input, guest = true, actor = user, proof = secret) =>
-  `set role service_role; set request.jwt.claim.sub = '${other}'; ` +
-  `select create_confirmed_booking(${quote(requestId)},${quote(JSON.stringify(input))}::jsonb,${guest ? quote(proof) : 'null'},${guest || !actor ? 'null' : quote(actor)});`;
 const expectFailure = (statement, pattern) => {
   const result = run(psqlArgs, statement, true);
   assert.notEqual(result.status, 0, 'statement must fail');
@@ -264,7 +255,7 @@ const expectFailure = (statement, pattern) => {
     await assertLiveFunctions(sql, { suite: 'test-whatsapp-inbox-isolated.cjs' });
     console.log('PASS isolated WhatsApp inbox: concurrent receive/claim, receiver/phone ownership, real protected confirm/cancel + transactional outbox and receipt rollback, immutable replay, invalid choice, paid review, lease fencing, ambiguous replies, bounded retries, tombstone retention, legacy quarantine and ACL. No provider calls.');
   } finally {
-    if(!/^kezek-whatsapp-inbox-[0-9a-f-]{36}$/.test(name))throw new Error('Invalid disposable container name');
-    run(['rm','-f','-v',name],undefined,true);
+    // Only this run's UUID-named disposable container is removed.
+    if(/^kezek-whatsapp-inbox-[0-9a-f-]{36}$/.test(name))run(['rm','-f','-v',name],undefined,true);
   }
 })().catch(error=>{console.error(error.stack);process.exitCode=1;});

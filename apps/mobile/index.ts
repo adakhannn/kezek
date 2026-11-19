@@ -1,3 +1,6 @@
+// Crash reporting starts before anything else loads (MOB-07).
+import './src/lib/startMonitoring';
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';

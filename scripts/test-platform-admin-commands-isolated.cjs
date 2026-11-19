@@ -100,5 +100,5 @@ const eventually=async(predicate)=>{for(let n=0;n<300;n++){if(predicate())return
   fail(command(A,C,true),/PLATFORM_ADMIN_ROLE_NOT_CONFIGURED/);
   await assertLiveFunctions(sql, { suite: 'test-platform-admin-commands-isolated.cjs' });
   console.log('PASS isolated platform admin: real three-store predicate, caller binding, service ACL, canonical idempotent grant, atomic all-store revoke/rollback, preserved tenant roles, missing target/config and serialized last-admin guard. No Auth/provider calls.');
- }finally{if(!/^kezek-platform-admin-[0-9a-f-]{36}$/.test(name))throw Error('Invalid container');run(['rm','-f','-v',name],undefined,true);}
+ }finally{if(/^kezek-platform-admin-[0-9a-f-]{36}$/.test(name))run(['rm','-f','-v',name],undefined,true);}
 })().catch(error=>{console.error(error.stack);process.exitCode=1;});

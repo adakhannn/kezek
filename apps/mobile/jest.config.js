@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Jest configuration for React Native / Expo mobile app
  * 
  * Smoke tests for key screens:

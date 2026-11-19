@@ -26,10 +26,11 @@ for (let byte = 0; byte < 256; byte++) toCp1251Byte.set(cp1251.decode(Uint8Array
 
 // Candidate run: non-ASCII text containing a two-byte UTF-8 Cyrillic lead byte
 // rendered in Windows-1251 (Р = 0xD0, С = 0xD1).
+// eslint-disable-next-line no-control-regex -- \x00-\x7F is the ASCII range this check excludes.
 const CANDIDATE = /[^\x00-\x7F]*[РС][^\x00-\x7F]+(?:[\x20-\x7E]{0,3}[^\x00-\x7F]+)*/g;
 // A garbled punctuation token: UTF-8 E2 xx xx (в + two) or C2 xx (В + one) read as Windows-1251.
 const PUNCTUATION_CANDIDATE = /в[\u0080-￿]{2}|В[\u0080-￿]/g;
-const TYPOGRAPHIC = /^[ -¿ -⁯℀-⅏←-⇿∀-⋿]$/u;
+const TYPOGRAPHIC = /^[\u00a0-\u00bf\u2000-\u206f\u2100-\u214f\u2190-\u21ff\u2200-\u22ff]$/u;
 // Р/С followed by a Windows-1251 character of bytes 0x80-0xBF that never follows them in Russian
 // or Kyrgyz text: the second byte of a garbled Cyrillic letter.
 const GARBLED_PAIR = /[РС][ЂЃ‚ѓ„†‡€‰Љ‹ЊЌЋЏђ‘’•™љ›њќћџЎўЈ¤Ґ¦Є¬®Ї±Ііґµ¶·єјЅѕї]/g;

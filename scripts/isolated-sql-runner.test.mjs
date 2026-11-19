@@ -6,7 +6,7 @@ import { isolatedSqlSuites, runIsolatedSqlSuites } from './run-isolated-sql-test
 
 test('required CI SQL matrix matches the canonical isolated suite registry', () => {
     const ci = fs.readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
-    const matrix = ci.match(/  sql_tests:[\s\S]*?        runner:\s*\r?\n((?:          - [^\r\n]+\r?\n)+)/)?.[1];
+    const matrix = ci.match(/ {2}sql_tests:[\s\S]*? {8}runner:\s*\r?\n((?: {10}- [^\r\n]+\r?\n)+)/)?.[1];
     assert.ok(matrix, 'update this strict parity check if the matrix structure changes');
     const files = [...matrix.matchAll(/- (test-[a-z0-9-]+\.(?:mjs|cjs))/g)].map(match => match[1]);
     assert.deepEqual(files, isolatedSqlSuites);

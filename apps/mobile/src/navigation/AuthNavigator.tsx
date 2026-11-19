@@ -1,4 +1,4 @@
-﻿import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthStackParamList } from './types';
 import { colors } from '../constants/colors';
 import SignInScreen from '../screens/auth/SignInScreen';

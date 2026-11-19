@@ -1,4 +1,4 @@
-﻿import Button from '../components/ui/Button';
+import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { ProfileScreenSections } from './profile/ProfileScreenSections';

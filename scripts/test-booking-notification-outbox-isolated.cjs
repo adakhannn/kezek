@@ -198,7 +198,7 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     await assertLiveFunctions(sql, { suite: 'test-booking-notification-outbox-isolated.cjs' });
     console.log('PASS isolated outbox PostgreSQL: concurrent claim isolation, immutable preparation, lease fencing, partial receipts, non-idempotent ambiguity, email retry window, revision fencing, finite retries, retained tombstone/PII pruning, ACL. No provider calls.');
   } finally {
-    if(!/^kezek-outbox-regression-[0-9a-f-]{36}$/.test(name))throw new Error('Invalid disposable container name');
-    run(['rm','-f','-v',name],undefined,true);
+    // Only this run's UUID-named disposable container is removed.
+    if(/^kezek-outbox-regression-[0-9a-f-]{36}$/.test(name))run(['rm','-f','-v',name],undefined,true);
   }
 })().catch(error=>{console.error(error.message);process.exitCode=1;});

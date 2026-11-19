@@ -32,9 +32,21 @@ export function backendExtra(env: Record<string, string | undefined> = process.e
     };
 }
 
+/**
+ * The Sentry plugin uploads source maps and native debug files during EAS builds (MOB-07). It needs an
+ * organization and a project here and SENTRY_AUTH_TOKEN as an EAS secret; without them a build carries
+ * the SDK, reports with EXPO_PUBLIC_SENTRY_DSN and uploads nothing.
+ */
+export function sentryPlugins(env: Record<string, string | undefined> = process.env): NonNullable<ExpoConfig['plugins']> {
+    const organization = env.SENTRY_ORG?.trim();
+    const project = env.SENTRY_PROJECT?.trim();
+    return organization && project ? [['@sentry/react-native/expo', { organization, project }]] : [];
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: config.name ?? 'Kezek',
     slug: config.slug ?? 'kezek-mobile',
+    plugins: [...(config.plugins ?? []), ...sentryPlugins()],
     extra: { ...config.extra, ...backendExtra() },
 });

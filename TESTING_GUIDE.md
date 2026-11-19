@@ -24,7 +24,9 @@
 
 | Команда | Фактическое действие |
 | --- | --- |
+| `pnpm lint` | Корневой ESLint (рекомендованные правила JS для `scripts/` и `packages/`, `typescript-eslint` и запрет `console` для TypeScript в `packages/`), затем web и mobile (CI-02) |
 | `pnpm -C apps/web lint` | `eslint . --max-warnings=212` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
+| `pnpm -C apps/mobile lint` | `eslint . --max-warnings=4` внутри mobile по конфигу Expo (`eslint-config-expo`): ошибки и новые предупреждения роняют проверку; четыре оставшихся — `react-hooks/exhaustive-deps` в потоках входа |
 | `pnpm -C apps/web typecheck` | `tsc -p tsconfig.json --noEmit` внутри web |
 | `pnpm -C apps/web test` | Jest по текущему web config; Playwright E2E исключены |
 | `pnpm -C apps/web test:coverage` | Полный web Jest с coverage по всему `src/**` и порогом-храповиком |
@@ -56,7 +58,7 @@
 
 | Job | Настроенные проверки | Ограничения |
 | --- | --- | --- |
-| `lint_typecheck` | Lint (root tooling + apps/web), docs links, offline OpenAPI/SDK generation + typed consumer, shared client build/test typechecks + Jest, SQL runner unit checks, generated cron manifest parity, hotspot guardrails, typecheck web + mobile | Mobile ESLint не подключён; shared-client проверяется отдельными обязательными шагами |
+| `lint_typecheck` | Lint (scripts, packages, apps/web и apps/mobile), docs links, offline OpenAPI/SDK generation + typed consumer, shared client build/test typechecks + Jest, SQL runner unit checks, generated cron manifest parity, hotspot guardrails, typecheck web + mobile | Shared-client проверяется отдельными обязательными шагами |
 | `build` | Web production build | Это сборка, не production smoke; при отсутствии Supabase secrets используются build placeholders |
 | `web_full_tests` | Полный web Jest с coverage-храповиком: `test:coverage --ci --watchAll=false --maxWorkers=50%` | Включает components; внешние сервисы остаются mocked |
 | `e2e_smoke_tests` | `test:e2e:smoke` | Страницы sign-in, terms, privacy; lifecycle не проверяется |

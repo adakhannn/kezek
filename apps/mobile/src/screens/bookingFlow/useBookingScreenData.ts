@@ -17,11 +17,11 @@ export type BookingInitialData = {
         slug: string;
         rating_score: number | null;
     };
-    branches: Array<{
+    branches: {
         id: string;
         name: string;
         rating_score: number | null;
-    }>;
+    }[];
 };
 
 export function useBookingScreenData({ slug }: Options) {

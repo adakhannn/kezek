@@ -29,7 +29,6 @@ function makeBooking(overrides: Partial<{
 }
 
 describe('decideMarkAttendanceUseCase', () => {
-    const past = new Date('2024-01-01T09:00:00Z'); // до начала брони
     const now = new Date('2024-06-01T12:00:00Z');  // после начала брони
 
     describe('ok: false — каждый reason', () => {

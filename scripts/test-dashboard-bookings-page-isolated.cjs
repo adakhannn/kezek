@@ -29,7 +29,7 @@ const sql = (input) => docker(['exec', '-i', container, 'psql', '-X', '-q', '-U'
 const as = (role, sub) => `set role ${role}; set request.jwt.claims='${JSON.stringify({ sub: sub ?? '', role })}';`;
 
 const [bizA, bizB, branchA, branchA2, branchB] = Array.from({ length: 5 }, () => randomUUID());
-const [owner, manager, stranger, managerB, superAdmin, ownerOnly, client] = Array.from({ length: 7 }, () => randomUUID());
+const [owner, manager, stranger, managerB, superAdmin, client] = Array.from({ length: 6 }, () => randomUUID());
 const [staffA, staffA2, staffB] = Array.from({ length: 3 }, () => randomUUID());
 const [haircut, manicure, serviceB] = Array.from({ length: 3 }, () => randomUUID());
 const oldest = randomUUID();

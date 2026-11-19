@@ -1,4 +1,4 @@
-import appConfig, { backendExtra, PRODUCTION_BACKEND, resolveAppEnv } from '../../app.config';
+import appConfig, { backendExtra, PRODUCTION_BACKEND, resolveAppEnv, sentryPlugins } from '../../app.config';
 
 describe('app.config backend selection (MOB-06)', () => {
     test('only a production build defaults to the production backend', () => {
@@ -42,5 +42,20 @@ describe('app.config backend selection (MOB-06)', () => {
         expect(result.name).toBe('Kezek');
         expect(result.extra).toMatchObject({ eas: { projectId: 'x' } });
         expect(result.extra).toHaveProperty('appEnv');
+    });
+});
+
+describe('app.config Sentry uploads (MOB-07)', () => {
+    test('the upload plugin needs both an organization and a project', () => {
+        expect(sentryPlugins({})).toEqual([]);
+        expect(sentryPlugins({ SENTRY_ORG: 'kezek' })).toEqual([]);
+        expect(sentryPlugins({ SENTRY_ORG: ' kezek ', SENTRY_PROJECT: ' mobile ' })).toEqual([
+            ['@sentry/react-native/expo', { organization: 'kezek', project: 'mobile' }],
+        ]);
+    });
+
+    test('app.json plugins are kept', () => {
+        const result = appConfig({ config: { name: 'Kezek', slug: 'kezek-mobile', plugins: ['expo-secure-store'] } } as never);
+        expect(result.plugins?.[0]).toBe('expo-secure-store');
     });
 });

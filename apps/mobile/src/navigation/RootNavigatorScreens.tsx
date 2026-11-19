@@ -1,5 +1,5 @@
 import React from 'react';
-import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
+import type { createNativeStackNavigator, NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
 import BookingCancelButton from '../components/BookingCancelButton';
 import BookingDetailsScreen from '../screens/BookingDetailsScreen';
@@ -21,6 +21,10 @@ import {
     detailStackScreenOptions,
 } from './mainNavigatorConfig';
 import { withStaffRouteGuard } from './StaffRouteGuard';
+import type { RootStackParamList } from './types';
+
+/** The root navigator these screens belong to (RootNavigator.tsx). */
+type RootStack = ReturnType<typeof createNativeStackNavigator<RootStackParamList>>;
 
 const GuardedShiftsScreen = withStaffRouteGuard(ShiftsScreen);
 const GuardedShiftQuickScreen = withStaffRouteGuard(ShiftQuickScreen);
@@ -36,7 +40,7 @@ const bookingStepOptions = (
         headerRight: () => <BookingCancelButton />,
     });
 
-export function AuthStackScreen(Stack: any) {
+export function AuthStackScreen(Stack: RootStack) {
     return (
         <Stack.Screen
             name="Auth"
@@ -46,7 +50,7 @@ export function AuthStackScreen(Stack: any) {
     );
 }
 
-export function SignedInStackScreens(Stack: any) {
+export function SignedInStackScreens(Stack: RootStack) {
     return (
         <>
             <Stack.Screen

@@ -461,7 +461,7 @@ const expectFailure = (statement, pattern) => {
     } });
     console.log('PASS isolated PostgreSQL: guest/auth/internal single/complex parallel replay; explicit actor distinct from client/no JWT mutation; namespace/legacy receipt replay; caller/proof/payload binding; competing keys; rollback/outbox; service_staff, past-start and catalogue-duration hold checks; direct RPC and table/column DML denied; private helper ACL; own-client/owner/manager/active staff/branch/platform/service lifecycle; financial cancellation guards; cross-tenant/other-branch/anonymous/role-spoof rejection. Live booking/outbox/authorization SQL, synthetic schedule and records, no external services.');
   } finally {
-    if (!/^kezek-booking-regression-[0-9a-f-]{36}$/.test(name)) throw new Error('Invalid disposable name');
-    run(['rm', '-f', '-v', name], undefined, true);
+    // Only this run's UUID-named disposable container is removed.
+    if (/^kezek-booking-regression-[0-9a-f-]{36}$/.test(name)) run(['rm', '-f', '-v', name], undefined, true);
   }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

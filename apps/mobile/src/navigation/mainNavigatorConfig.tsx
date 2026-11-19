@@ -97,7 +97,11 @@ export const detailStackScreenOptions: NativeStackNavigationOptions = buildBaseH
 export const flowStackScreenOptions: NativeStackNavigationOptions = buildBaseHeaderOptions(colors.surface.card);
 
 export function createNavigationHeaderTitle(title: string, eyebrow?: string) {
-    return () => <NavigationHeaderTitle title={title} eyebrow={eyebrow} />;
+    // A named component: React Navigation renders it, and DevTools and errors show its name.
+    function HeaderTitle() {
+        return <NavigationHeaderTitle title={title} eyebrow={eyebrow} />;
+    }
+    return HeaderTitle;
 }
 
 export function createFlowScreenOptions(
@@ -113,21 +117,25 @@ export function createFlowScreenOptions(
 }
 
 export function renderTabIcon(name: React.ComponentProps<typeof Ionicons>['name']) {
-    return ({ color, focused }: { color: string; size: number; focused: boolean }) => (
-        <View
-            style={[styles.tabIconWrap, focused ? styles.tabIconWrapActive : null]}
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-        >
-            <Ionicons
-                name={name}
-                size={focused ? 20 : 19}
-                color={focused ? colors.text.light : color}
+    // A named component, as for the header title.
+    function TabIcon({ color, focused }: { color: string; size: number; focused: boolean }) {
+        return (
+            <View
+                style={[styles.tabIconWrap, focused ? styles.tabIconWrapActive : null]}
                 accessible={false}
-                importantForAccessibility="no"
-            />
-        </View>
-    );
+                importantForAccessibility="no-hide-descendants"
+            >
+                <Ionicons
+                    name={name}
+                    size={focused ? 20 : 19}
+                    color={focused ? colors.text.light : color}
+                    accessible={false}
+                    importantForAccessibility="no"
+                />
+            </View>
+        );
+    }
+    return TabIcon;
 }
 
 const styles = StyleSheet.create({

@@ -21,7 +21,7 @@ export function generateDocsCatalog() {
         result.push(`## ${title}`, '', `Документов: ${group.length}.`, '', '| Документ | Путь |', '| --- | --- |');
         for (const record of group) {
             const target = path.posix.relative('docs', record.file);
-            result.push(`| [${record.title.replace(/\|/g, '\\|').replace(/[\[\]]/g, '')}](${target}) | \`${record.file}\` |`);
+            result.push(`| [${record.title.replace(/\|/g, '\\|').replace(/[[\]]/g, '')}](${target}) | \`${record.file}\` |`);
         }
         result.push('');
     }

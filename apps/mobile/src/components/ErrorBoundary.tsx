@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import ErrorDisplay from './ErrorDisplay';
 import { logError } from '../lib/log';
 
@@ -23,7 +22,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        logError('ErrorBoundary', 'Caught an error', { error: error.message, errorInfo });
+        // The Error itself, so monitoring reports it as an exception with its stack (MOB-07).
+        logError('ErrorBoundary', 'Caught an error', { error, componentStack: errorInfo.componentStack });
     }
 
     handleReset = () => {
