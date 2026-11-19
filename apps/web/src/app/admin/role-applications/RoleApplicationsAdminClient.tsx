@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLanguage, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
 import { ApplicationReviewHistory, ApplicationReviewStatus } from '@/components/admin/ApplicationReviewHistory';
@@ -64,7 +64,11 @@ export function RoleApplicationsAdminClient() {
     const [rejectingId, setRejectingId] = useState<string | null>(null);
     const [rejectNote, setRejectNote] = useState('');
 
-    async function load(nextStatus = status) {
+    const tRef = useRef(t);
+    useEffect(() => { tRef.current = t; }, [t]);
+
+    const load = useCallback(async (nextStatus: typeof status) => {
+        const t = tRef.current;
         setLoading(true);
         setHasLoaded(false);
         setError(null);
@@ -83,11 +87,12 @@ export function RoleApplicationsAdminClient() {
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
 
+    // The locale is a trigger: the messages come back in the new language.
     useEffect(() => {
         void load(status);
-    }, [status, locale]);
+    }, [load, status, locale]);
 
     async function decide(id: string, action: 'approve' | 'reject' | 'unblock', blockDays = 0, blockId?: string) {
         setActionId(`${id}:${action}`);
@@ -102,7 +107,7 @@ export function RoleApplicationsAdminClient() {
             if (!response.ok || !payload.ok) {
                 throw new Error(!payload.ok ? payload.message || t('admin.roleApplications.error.action') : t('admin.roleApplications.error.action'));
             }
-            await load();
+            await load(status);
             setRejectingId(null);
             setRejectNote('');
         } catch (actionError) {

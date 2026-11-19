@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
@@ -42,7 +42,7 @@ export default function FunnelAnalyticsClient() {
         source: '' as 'public' | 'quickdesk' | '',
     });
 
-    const loadAnalytics = async () => {
+    const loadAnalytics = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -72,11 +72,11 @@ export default function FunnelAnalyticsClient() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters]);
 
     useEffect(() => {
-        loadAnalytics();
-    }, [filters]);
+        void loadAnalytics();
+    }, [loadAnalytics]);
 
     const getConversionColor = (rate: number) => {
         if (rate >= 50) return 'text-emerald-600 dark:text-emerald-400';

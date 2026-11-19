@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
@@ -59,7 +59,7 @@ export default function MembersClient({
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [confirmDemoteUserId, setConfirmDemoteUserId] = useState<string | null>(null);
 
-    async function load() {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             setErr(null);
@@ -72,11 +72,11 @@ export default function MembersClient({
         } finally {
             setLoading(false);
         }
-    }
+    }, [api.list]);
 
     useEffect(() => {
         void load();
-    }, [api.list]);
+    }, [load]);
 
     async function grant(user_id: string, role: RoleKey) {
         if (!canManage) return;

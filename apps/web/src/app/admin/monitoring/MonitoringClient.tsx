@@ -235,6 +235,8 @@ export default function MonitoringClient() {
         } else if (activeTab === 'stats') {
             loadStats();
         }
+        // Filters apply when the tab is opened, not on every keystroke in a filter field.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     const formatDuration = (ms: number) => {

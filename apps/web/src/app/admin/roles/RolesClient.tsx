@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AdminDataTable } from '../_components/AdminDataTable';
 import { AdminFilterBar } from '../_components/AdminFilterBar';
@@ -47,7 +47,7 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
     const [page, setPage] = useState(1);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    async function load() {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -62,11 +62,11 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
         } finally {
             setLoading(false);
         }
-    }
+    }, [api.list]);
 
     useEffect(() => {
         void load();
-    }, []);
+    }, [load]);
 
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();

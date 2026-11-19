@@ -1,6 +1,6 @@
 // apps/web/src/app/staff/finance/hooks/useShiftStats.ts
 
-import { startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { startOfYear, endOfYear } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useMemo } from 'react';
 
@@ -41,7 +41,6 @@ export function useShiftStats({
     // Это предотвращает пересчет при каждом рендере, даже если Date объекты технически "новые"
     const dateStr = useMemo(() => formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd'), [selectedDate]);
     const monthStr = useMemo(() => formatInTimeZone(selectedMonth, TZ, 'yyyy-MM'), [selectedMonth]);
-    const yearStr = useMemo(() => String(selectedYear), [selectedYear]);
 
     // Мемоизируем стабильную сигнатуру allShifts
     const shiftsSignature = useMemo(() => {
@@ -75,8 +74,9 @@ export function useShiftStats({
         if (statsPeriod === 'day') {
             filtered = closedShifts.filter((s) => s.shift_date === dateStr);
         } else if (statsPeriod === 'month') {
-            const monthStart = formatInTimeZone(startOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
-            const monthEnd = formatInTimeZone(endOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
+            const [year, month] = monthStr.split('-').map(Number);
+            const monthStart = `${monthStr}-01`;
+            const monthEnd = `${monthStr}-${String(new Date(Date.UTC(year, month, 0)).getUTCDate()).padStart(2, '0')}`;
             filtered = closedShifts.filter((s) => s.shift_date >= monthStart && s.shift_date <= monthEnd);
         } else if (statsPeriod === 'year') {
             const yearStart = formatInTimeZone(startOfYear(new Date(selectedYear, 0, 1)), TZ, 'yyyy-MM-dd');
@@ -105,6 +105,6 @@ export function useShiftStats({
             totalLateMinutes,
             shiftsCount: filtered.length,
         };
-    }, [shiftsSignature, statsPeriod, dateStr, selectedMonth, selectedYear]);
+    }, [shiftsSignature, statsPeriod, dateStr, monthStr, selectedYear]);
 }
 

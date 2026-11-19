@@ -50,7 +50,7 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
     const [role, setRole] = useState<ElevatedRole>('staff');
     const [granting, setGranting] = useState<string | null>(null);
 
-    const searchUsers = useCallback(async (searchQuery: string = q) => {
+    const searchUsers = useCallback(async (searchQuery: string) => {
         setLoading(true);
         setErr(null);
         try {
