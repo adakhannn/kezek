@@ -388,8 +388,6 @@ export const staffKy = {
     'staff.title': 'Кызматкерлер',
     'staff.transfer.button': 'Кызматкерди которуу',
     'staff.transfer.cancel': 'Жокко чыгаруу',
-    'staff.transfer.copySchedule': 'Графиктин үлгүсүн көчүрүү',
-    'staff.transfer.copyScheduleDesc': 'Эски филиалдан жумалык графикти жаңы филиалга көчүрүү',
     'staff.transfer.current': 'Учурдагы филиал:',
     'staff.transfer.errors.selectBranch': 'Филиалды тандаңыз',
     'staff.transfer.note': 'Которуу дароо ишке ашат. Келечектеги брондоолорго тийгизбейбиз (которуу — бөлүнчө милдет).',

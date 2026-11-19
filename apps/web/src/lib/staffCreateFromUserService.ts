@@ -85,13 +85,24 @@ export async function runStaffCreateFromUser({
     const email = user.email ?? null;
     const phone = user.phone ?? null;
 
-    const { data: existingStaff } = await admin
+    // A card already linked to this account is reused, so a repeated request creates nothing. A card is
+    // never matched by name (ARCH-07): a namesake's unlinked card, with its bookings and finances, was
+    // linked to this account, and a namesake's linked card was returned as this account's.
+    const { data: existingStaff, error: existingError } = await admin
         .from('staff')
         .select('id')
         .eq('biz_id', bizId)
-        .eq('full_name', fullName)
+        .eq('user_id', body.user_id)
         .limit(1)
         .maybeSingle();
+    if (existingError) {
+        return {
+            ok: false,
+            status: 500,
+            error: 'internal',
+            message: 'Не удалось проверить сотрудников бизнеса',
+        };
+    }
 
     let staffId = existingStaff?.id as string | undefined;
 
@@ -120,19 +131,6 @@ export async function runStaffCreateFromUser({
         }
 
         staffId = inserted?.id as string | undefined;
-    } else {
-        const { data: staffRecord } = await admin
-            .from('staff')
-            .select('user_id')
-            .eq('id', staffId)
-            .maybeSingle();
-
-        if (staffRecord && !staffRecord.user_id) {
-            await admin
-                .from('staff')
-                .update({ user_id: body.user_id })
-                .eq('id', staffId);
-        }
     }
 
     await ensureStaffBranchAssignment({

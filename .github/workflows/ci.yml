@@ -450,6 +450,7 @@ jobs:
           - test-guest-schedule-booking-writer.mjs
           - test-complex-booking-identity.mjs
           - test-rating-functions-service-only-isolated.cjs
+          - test-service-group-update-isolated.cjs
     steps:
       - name: Checkout
         uses: actions/checkout@v4

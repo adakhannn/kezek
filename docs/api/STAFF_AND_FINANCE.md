@@ -314,14 +314,9 @@ Save передаёт все позиции одним RPC `save_staff_shift_com
 
 <!-- api-contract: POST /api/staff/[id]/transfer -->
 
-Доступ — Manager direct, limiter — `normal`. Тело JSON; неверный JSON даёт 400 validation. Контракт существенно зависит от [explicit scheduling](../../apps/web/src/lib/scheduling/config.ts).
+Доступ — Manager direct, limiter — `normal`. Тело JSON; неверный JSON даёт 400 validation. UUID пути, `target_branch_id` и **`expected_branch_id`** обязательны при любом значении [explicit scheduling](../../apps/web/src/lib/scheduling/config.ts): перевод всегда выполняет одна команда `transfer_staff_home` (ARCH-07). `copy_schedule` не используется. Успех: `data` передаётся непосредственно из RPC; определение возвращает `note: HOME_BRANCH_CHANGED_SCHEDULE_PRESERVED`.
 
-| Режим | Вход и действия | Успех |
-| --- | --- | --- |
-| Explicit scheduling | UUID пути, `target_branch_id` и **`expected_branch_id`** обязательны; вызывает `transfer_staff_home`. `copy_schedule` не используется | `data` передаётся непосредственно из RPC; репозиторное определение возвращает `note: HOME_BRANCH_CHANGED_SCHEDULE_PRESERVED` |
-| Legacy | `target_branch_id` — непустая после trim строка; необязательный `copy_schedule` приводится к boolean. Проверяются staff/целевой филиал в бизнесе и активность филиала | Обычно только `{"ok":true}`; возможны `data.note: ALREADY_ACTIVE_IN_TARGET` либо `data.warning: SCHEDULE_COPY_FAILED` и `data.detail` |
-
-Explicit-ветка отображает RPC-коды следующим образом:
+Коды RPC отображаются следующим образом:
 
 | HTTP | `error` |
 | --- | --- |
@@ -331,11 +326,9 @@ Explicit-ветка отображает RPC-коды следующим обр�
 | 409 | `SCHEDULE_STALE`, `SCHEDULE_BOOKING_CONFLICT`, `SCHEDULE_FUTURE_ASSIGNMENT` |
 | 500 | `internal` для нераспознанной ошибки RPC |
 
-Определение SQL блокирует целевой филиал/staff, проверяет ожидаемый основной филиал, будущие назначения и совместимость бронирований; изменение членства, назначения и аудит выполняются внутри RPC. Это факт определения, не гарантия, что сервер использует эту версию. Опубликованные планы сохраняют свой филиал.
+Команда блокирует целевой филиал и staff, проверяет ожидаемый основной филиал, будущие назначения и совместимость бронирований; изменение членства, назначения и аудит выполняются внутри неё. Опубликованные планы сохраняют свой филиал. Прежняя ветка без explicit scheduling меняла назначения и `staff.branch_id` отдельными запросами; БД разрешает менять `staff.branch_id` только внутри команды (`guard_staff_home_change`), поэтому та ветка падала уже после смены назначений. Она удалена вместе с `copy_schedule`. Все режимы также допускают 429 и ошибки общей внешней обёртки.
 
-Legacy-ветка возвращает 403 forbidden при недоступном staff/филиале, 400 validation при том же/неактивном филиале и ошибках основных записей. Она изменяет назначения и `staff.branch_id` отдельными запросами; fallback может создать назначение со следующего дня. При `copy_schedule` переустанавливает строки working_hours; ошибка копирования допускает успех с warning. Общей атомарности legacy-ветки нет. Все режимы также допускают 429 и ошибки общей внешней обёртки.
-
-Источники: [route](../../apps/web/src/app/api/staff/[id]/transfer/route.ts), [HTTP и таблица RPC-ошибок](../../apps/web/src/lib/staffTransferHttpService.ts), [legacy service](../../apps/web/src/lib/staffTransferService.ts), [SQL-определение](../../supabase/migrations_archive/20260918133000_atomic_staff_home_transfer.sql).
+Источники: [route](../../apps/web/src/app/api/staff/[id]/transfer/route.ts), [HTTP и таблица RPC-ошибок](../../apps/web/src/lib/staffTransferHttpService.ts), [SQL-определение](../../supabase/migrations_archive/20260918133000_atomic_staff_home_transfer.sql).
 
 ### POST `/api/staff/create-from-user`
 
@@ -351,7 +344,7 @@ Legacy-ветка возвращает 403 forbidden при недоступно
 
 `full_name` из тела не используется: имя берётся из metadata (`full_name`, затем `fullName`), email либо «Без имени». Пользователь ищется точно по id (`auth.admin.getUserById`, ARCH-03); 404 значит, что аккаунта с таким id нет.
 
-Существующий staff ищется по **совпадению full_name в бизнесе**, а не по user_id. При совпадении запись переиспользуется; user_id назначается только если он пустой, а имеющаяся связь не заменяется. Поэтому это не контракт «создать ровно одну новую запись или отклонить уже существующего пользователя». Роль переданному user, назначение филиала и legacy-расписание обрабатываются отдельно; часть ошибок только логируется. Explicit scheduling пропускает инициализацию расписания. Успешный ответ не подтверждает согласованность всех этих сущностей.
+Существующий staff ищется по **user_id в бизнесе**: карточка, уже привязанная к этому аккаунту, переиспользуется, и повторный запрос ничего не создаёт. По имени карточка не сопоставляется (ARCH-07): прежде однофамильцу доставалась чужая непривязанная карточка с её бронями и финансами. Сбой этой проверки даёт 500 internal, а не новую запись. Роль переданному user, назначение филиала и legacy-расписание обрабатываются отдельно; часть ошибок только логируется. Explicit scheduling пропускает инициализацию расписания. Успешный ответ не подтверждает согласованность всех этих сущностей.
 
 Источники: [route](../../apps/web/src/app/api/staff/create-from-user/route.ts), [HTTP](../../apps/web/src/lib/staffCreateFromUserHttpService.ts), [service](../../apps/web/src/lib/staffCreateFromUserService.ts).
 

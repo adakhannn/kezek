@@ -4289,6 +4289,27 @@
       "strict": false,
       "volatility": "v"
     },
+    "public.update_service_group(uuid,uuid,uuid[],text,text,text,integer,numeric,numeric,boolean)": {
+      "arguments": "p_biz_id uuid, p_service_id uuid, p_branch_ids uuid[], p_name_ru text, p_name_ky text, p_name_en text, p_duration_min integer, p_price_from numeric, p_price_to numeric, p_active boolean",
+      "body": "24c0c4076aba420fe5c3b87f2d207dcb",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
     "public.update_shift_aggregates(uuid,uuid,date,numeric,numeric,numeric,integer,numeric,numeric)": {
       "arguments": "p_staff_id uuid, p_biz_id uuid, p_shift_date date, p_total_amount numeric, p_master_share numeric, p_salon_share numeric, p_late_minutes integer, p_guaranteed_amount numeric DEFAULT 0, p_topup_amount numeric DEFAULT 0",
       "body": "be4cfad2fbd3e6ddda8d324a172838fd",

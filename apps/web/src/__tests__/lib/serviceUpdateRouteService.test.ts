@@ -1,212 +1,95 @@
 import { runServiceUpdateFlow } from '@/lib/serviceUpdateRouteService';
 
-jest.mock('@/lib/dbHelpers', () => ({
-    checkResourceBelongsToBiz: jest.fn(),
-}));
+jest.mock('@/lib/log', () => ({ logError: jest.fn() }));
 
-import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
-import { createMockSupabase } from '../api/testHelpers';
+const body = {
+    name_ru: ' Massage ',
+    name_ky: ' ',
+    name_en: 'Massage',
+    duration_min: 60,
+    price_from: 1000,
+    price_to: 1500,
+    active: true,
+    branch_ids: ['branch-1', 'branch-2'],
+};
+
+function adminWith(result: { data?: unknown; error: { code?: string; message: string; details?: string | null } | null }) {
+    const rpc = jest.fn().mockResolvedValue({ data: result.data ?? null, error: result.error });
+    // ARCH-07: every write goes through the one command; a table call means a step outside its transaction.
+    return { rpc, from: jest.fn(() => { throw new Error('no table access outside update_service_group'); }) };
+}
 
 describe('serviceUpdateRouteService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    test('updates, inserts and removes branch copies successfully', async () => {
-        const admin = createMockSupabase();
-        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValue({
-            data: { id: 'service-id', biz_id: 'biz-id', name_ru: 'Massage' },
-        });
+    test('saves the whole group with one command', async () => {
+        const admin = adminWith({ data: { updated: 1, added: 1, deleted: 1, archived: 0 }, error: null });
 
-        admin.from.mockImplementation((table: string) => {
-            if (table === 'branches') {
-                return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    in: jest.fn().mockResolvedValue({
-                        data: [{ id: 'branch-1' }, { id: 'branch-2' }],
-                        error: null,
-                    }),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { name: 'Branch 3' },
-                        error: null,
-                    }),
-                };
-            }
-
-            if (table === 'services') {
-                return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    in: jest.fn().mockResolvedValue({
-                        data: [
-                            { id: 'service-1', branch_id: 'branch-1' },
-                            { id: 'service-3', branch_id: 'branch-3' },
-                        ],
-                        error: null,
-                    }),
-                    update: jest.fn().mockReturnThis(),
-                    insert: jest.fn().mockResolvedValue({ error: null }),
-                    delete: jest.fn().mockReturnThis(),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: 'service-3' },
-                        error: null,
-                    }),
-                };
-            }
-
-            if (table === 'bookings') {
-                return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    gte: jest.fn().mockReturnThis(),
-                    neq: jest.fn().mockResolvedValue({
-                        count: 0,
-                        error: null,
-                    }),
-                };
-            }
-
-            throw new Error(`Unexpected table ${table}`);
-        });
-
-        const result = await runServiceUpdateFlow({
-            admin: admin as never,
-            bizId: 'biz-id',
-            serviceId: 'service-id',
-            body: {
-                name_ru: 'Massage',
-                duration_min: 60,
-                price_from: 1000,
-                price_to: 1500,
-                active: true,
-                branch_ids: ['branch-1', 'branch-2'],
-            },
-        });
+        const result = await runServiceUpdateFlow({ admin: admin as never, bizId: 'biz-id', serviceId: 'service-id', body });
 
         expect(result).toEqual({ ok: true });
+        expect(admin.rpc).toHaveBeenCalledTimes(1);
+        expect(admin.rpc).toHaveBeenCalledWith('update_service_group', {
+            p_biz_id: 'biz-id',
+            p_service_id: 'service-id',
+            p_branch_ids: ['branch-1', 'branch-2'],
+            p_name_ru: 'Massage',
+            p_name_ky: null,
+            p_name_en: 'Massage',
+            p_duration_min: 60,
+            p_price_from: 1000,
+            p_price_to: 1500,
+            p_active: true,
+        });
     });
 
-    test('rejects a negative price before reading or changing a service', async () => {
-        const admin = createMockSupabase();
+    test('falls back to branch_id when branch_ids is absent', async () => {
+        const admin = adminWith({ error: null });
+        const { branch_ids: _omit, ...rest } = body;
 
-        const result = await runServiceUpdateFlow({
-            admin: admin as never,
-            bizId: 'biz-id',
-            serviceId: 'service-id',
-            body: {
-                name_ru: 'Massage',
-                duration_min: 60,
-                price_from: 0,
-                price_to: -300,
-                active: true,
-                branch_ids: ['branch-1'],
-            },
-        });
+        await runServiceUpdateFlow({ admin: admin as never, bizId: 'biz-id', serviceId: 'service-id', body: { ...rest, branch_id: 'branch-9' } });
 
-        expect(result).toEqual({
-            ok: false,
-            error: 'validation',
-            message: 'Цена не может быть отрицательной',
-            status: 400,
-        });
-        expect(admin.from).not.toHaveBeenCalled();
+        expect(admin.rpc).toHaveBeenCalledWith('update_service_group', expect.objectContaining({ p_branch_ids: ['branch-9'] }));
     });
 
-    test('returns conflict when removed branch still has future bookings', async () => {
-        const admin = createMockSupabase();
-        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValue({
-            data: { id: 'service-id', biz_id: 'biz-id', name_ru: 'Massage' },
-        });
+    test.each([
+        ['a negative price', { price_from: 0, price_to: -300 }, 'Цена не может быть отрицательной'],
+        ['a minimum above the maximum', { price_from: 500, price_to: 0 }, 'Минимальная цена не может быть больше максимальной'],
+        ['a fractional duration', { duration_min: 1.5 }, 'Длительность должна быть больше 0'],
+        ['an empty name', { name_ru: '  ' }, 'Имя обязательно'],
+        ['no branch', { branch_ids: [] }, 'Необходимо указать хотя бы один филиал'],
+    ])('rejects %s before calling the command', async (_label, change, message) => {
+        const admin = adminWith({ error: null });
 
-        let servicesCall = 0;
-        admin.from.mockImplementation((table: string) => {
-            if (table === 'branches') {
-                return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    in: jest.fn().mockResolvedValue({
-                        data: [{ id: 'branch-1' }],
-                        error: null,
-                    }),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { name: 'Branch 2' },
-                        error: null,
-                    }),
-                };
-            }
+        const result = await runServiceUpdateFlow({ admin: admin as never, bizId: 'biz-id', serviceId: 'service-id', body: { ...body, ...change } });
 
-            if (table === 'services') {
-                servicesCall += 1;
-                if (servicesCall === 1) {
-                    let eqCalls = 0;
-                    return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockImplementation(function () {
-                            eqCalls += 1;
-                            if (eqCalls >= 2) {
-                                return Promise.resolve({
-                                    data: [
-                                        { id: 'service-1', branch_id: 'branch-1' },
-                                        { id: 'service-2', branch_id: 'branch-2' },
-                                    ],
-                                });
-                            }
-                            return this;
-                        }),
-                        insert: jest.fn().mockResolvedValue({ error: null }),
-                    };
-                }
+        expect(result).toEqual({ ok: false, error: 'validation', message, status: 400 });
+        expect(admin.rpc).not.toHaveBeenCalled();
+    });
 
-                return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    update: jest.fn().mockReturnThis(),
-                    insert: jest.fn().mockResolvedValue({ error: null }),
-                    in: jest.fn().mockResolvedValue({ error: null }),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: 'service-2' },
-                        error: null,
-                    }),
-                };
-            }
+    test('a removed branch with future bookings is a conflict, and nothing is saved', async () => {
+        const admin = adminWith({ error: { code: 'P0001', message: 'SERVICE_BRANCH_HAS_FUTURE_BOOKINGS', details: 'Branch 2, Branch 3' } });
 
-            if (table === 'bookings') {
-                return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    gte: jest.fn().mockReturnThis(),
-                    neq: jest.fn().mockResolvedValue({
-                        count: 2,
-                        error: null,
-                    }),
-                };
-            }
+        const result = await runServiceUpdateFlow({ admin: admin as never, bizId: 'biz-id', serviceId: 'service-id', body });
 
-            throw new Error(`Unexpected table ${table}`);
-        });
+        expect(result).toMatchObject({ ok: false, error: 'conflict', status: 409, details: { branches: ['Branch 2', 'Branch 3'] } });
+        expect((result as { message: string }).message).toContain('филиалов "Branch 2, Branch 3"');
+        expect((result as { message: string }).message).toContain('Изменения не сохранены');
+    });
 
-        const result = await runServiceUpdateFlow({
-            admin: admin as never,
-            bizId: 'biz-id',
-            serviceId: 'service-id',
-            body: {
-                name_ru: 'Massage',
-                duration_min: 60,
-                price_from: 1000,
-                price_to: 1500,
-                active: true,
-                branch_ids: ['branch-1'],
-            },
-        });
+    test.each([
+        ['SERVICE_FORBIDDEN', '42501', null, { error: 'forbidden', status: 403, message: 'Услуга не принадлежит этому бизнесу' }],
+        ['SERVICE_BRANCH_FORBIDDEN', '42501', 'b-1,b-2', { error: 'forbidden', status: 403, details: { missing: ['b-1', 'b-2'] } }],
+        ['new row violates check constraint "services_price_range_check"', '23514', null, { error: 'validation', status: 400 }],
+        ['canceling statement due to lock timeout', '55P03', null, { error: 'service_unavailable', status: 503 }],
+        ['deadlock detected', '40P01', null, { error: 'internal', status: 500 }],
+    ])('maps %s', async (message, code, details, expected) => {
+        const admin = adminWith({ error: { code, message, details } });
 
-        expect(result).toEqual({
-            ok: false,
-            error: 'conflict',
-            message:
-                'Невозможно отвязать услугу от филиала "Branch 2": к нему привязаны будущие брони. Сначала отмените или удалите все будущие брони.',
-            details: { branches: ['Branch 2'] },
-            status: 409,
-        });
+        const result = await runServiceUpdateFlow({ admin: admin as never, bizId: 'biz-id', serviceId: 'service-id', body });
+
+        expect(result).toMatchObject({ ok: false, ...expected });
     });
 });

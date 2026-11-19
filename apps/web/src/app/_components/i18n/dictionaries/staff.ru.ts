@@ -385,8 +385,6 @@ export const staffRu = {
     'staff.title': 'Сотрудники',
     'staff.transfer.button': 'Перевести сотрудника',
     'staff.transfer.cancel': 'Отменить',
-    'staff.transfer.copySchedule': 'Скопировать шаблон расписания',
-    'staff.transfer.copyScheduleDesc': 'Скопировать еженедельное расписание из текущего филиала в новый',
     'staff.transfer.current': 'Текущий филиал:',
     'staff.transfer.errors.selectBranch': 'Выберите филиал',
     'staff.transfer.note': 'Перевод выполняется сразу. Будущие брони не трогаем (перенос — отдельной задачей).',

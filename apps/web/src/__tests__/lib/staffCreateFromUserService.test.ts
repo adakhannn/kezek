@@ -151,6 +151,58 @@ describe('staffCreateFromUserService', () => {
         );
     });
 
+    // ARCH-07: a namesake's card is never linked to this account or returned as its card.
+    test('reuses the card linked to the account and never matches a card by name', async () => {
+        admin.auth.admin.getUserById.mockResolvedValue({
+            data: { user: { id: userId, email: 'a@example.com', phone: null, user_metadata: { full_name: 'Aigerim' } } },
+            error: null,
+        });
+        const lookup = {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'own-card' }, error: null }),
+        };
+        const rest = () => {
+            const chain: Record<string, unknown> = { then: (resolve: (value: unknown) => void) => resolve({ data: null, error: null }) };
+            for (const method of ['select', 'eq', 'is', 'limit', 'insert', 'update', 'upsert']) chain[method] = jest.fn(() => chain);
+            chain.maybeSingle = jest.fn().mockResolvedValue({ data: { id: 'existing-row' }, error: null });
+            return chain;
+        };
+        const tables: string[] = [];
+        admin.from.mockImplementation((table: string) => {
+            tables.push(table);
+            return tables.length === 1 ? lookup : rest();
+        });
+
+        const result = await runStaffCreateFromUser({ admin, bizId, body: { user_id: userId, branch_id: branchId } });
+
+        expect(lookup.eq).toHaveBeenCalledWith('biz_id', bizId);
+        expect(lookup.eq).toHaveBeenCalledWith('user_id', userId);
+        expect(lookup.eq).not.toHaveBeenCalledWith('full_name', expect.anything());
+        // One read of staff: no new card and no card relinked.
+        expect(tables.filter((table) => table === 'staff')).toHaveLength(1);
+        expect(result).toMatchObject({ ok: true, data: { id: 'own-card' } });
+    });
+
+    test('a failed lookup of existing cards is a server error, not a new card', async () => {
+        admin.auth.admin.getUserById.mockResolvedValue({
+            data: { user: { id: userId, email: 'a@example.com', phone: null, user_metadata: {} } },
+            error: null,
+        });
+        admin.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: null, error: { message: 'timeout' } }),
+        });
+
+        const result = await runStaffCreateFromUser({ admin, bizId, body: { user_id: userId, branch_id: branchId } });
+
+        expect(result).toMatchObject({ ok: false, status: 500, error: 'internal' });
+        expect(admin.from).toHaveBeenCalledTimes(1);
+    });
+
     test('returns not_found when auth admin user is missing', async () => {
         admin.auth.admin.getUserById.mockResolvedValue({ data: { user: null }, error: { message: 'User not found' } });
 

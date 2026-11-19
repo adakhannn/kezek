@@ -8890,6 +8890,102 @@ end;
 $function$
 ;
 
+-- signature: public.update_service_group(uuid,uuid,uuid[],text,text,text,integer,numeric,numeric,boolean)
+CREATE OR REPLACE FUNCTION public.update_service_group(p_biz_id uuid, p_service_id uuid, p_branch_ids uuid[], p_name_ru text, p_name_ky text, p_name_en text, p_duration_min integer, p_price_from numeric, p_price_to numeric, p_active boolean)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+ SET lock_timeout TO '5s'
+AS $function$
+declare
+    v_name text;
+    v_branches uuid[];
+    v_missing uuid[];
+    v_keep uuid[];
+    v_remove uuid[];
+    v_add uuid[];
+    v_busy text[];
+    v_copy uuid;
+    v_updated integer := 0;
+    v_deleted integer := 0;
+    v_archived integer := 0;
+begin
+    select name_ru into v_name from public.services where id = p_service_id and biz_id = p_biz_id;
+    if not found then
+        raise exception using errcode = '42501', message = 'SERVICE_FORBIDDEN';
+    end if;
+
+    select array_agg(distinct b) into v_branches from unnest(p_branch_ids) b where b is not null;
+    if v_branches is null then
+        raise exception using errcode = '22023', message = 'SERVICE_BRANCH_REQUIRED';
+    end if;
+    select array_agg(b order by b) into v_missing from unnest(v_branches) b
+     where not exists (select 1 from public.branches br where br.id = b and br.biz_id = p_biz_id);
+    if v_missing is not null then
+        raise exception using errcode = '42501', message = 'SERVICE_BRANCH_FORBIDDEN', detail = array_to_string(v_missing, ',');
+    end if;
+
+    -- The group as the editor shows it: every copy of the business with the edited row's name.
+    -- Concurrent edits of one service, and bookings checking a copy, wait for this transaction.
+    perform 1 from public.services where biz_id = p_biz_id and name_ru = v_name order by id for update;
+
+    select coalesce(array_agg(distinct branch_id) filter (where branch_id = any(v_branches)), '{}'),
+           coalesce(array_agg(distinct branch_id) filter (where not branch_id = any(v_branches)), '{}')
+      into v_keep, v_remove
+      from public.services
+     where biz_id = p_biz_id and name_ru = v_name;
+    select coalesce(array_agg(b order by b), '{}') into v_add from unnest(v_branches) b where not b = any(v_keep);
+
+    -- A removed copy with future bookings blocks the whole edit: nothing is saved.
+    select array_agg(distinct coalesce(br.name, s.branch_id::text) order by coalesce(br.name, s.branch_id::text))
+      into v_busy
+      from public.services s
+      left join public.branches br on br.id = s.branch_id
+     where s.biz_id = p_biz_id and s.name_ru = v_name and s.branch_id = any(v_remove)
+       and (exists (select 1 from public.bookings bk
+                     where bk.service_id = s.id and bk.start_at >= now() and bk.status <> 'cancelled')
+            or exists (select 1 from public.booking_services bs join public.bookings bk on bk.id = bs.booking_id
+                        where bs.service_id = s.id and bk.start_at >= now() and bk.status <> 'cancelled'));
+    if v_busy is not null then
+        raise exception using errcode = 'P0001', message = 'SERVICE_BRANCH_HAS_FUTURE_BOOKINGS', detail = array_to_string(v_busy, ', ');
+    end if;
+
+    update public.services
+       set name_ru = p_name_ru, name_ky = p_name_ky, name_en = p_name_en, duration_min = p_duration_min,
+           price_from = p_price_from, price_to = p_price_to, active = p_active
+     where biz_id = p_biz_id and name_ru = v_name and branch_id = any(v_keep);
+    get diagnostics v_updated = row_count;
+
+    insert into public.services (biz_id, branch_id, name_ru, name_ky, name_en, duration_min, price_from, price_to, active)
+    select p_biz_id, b, p_name_ru, p_name_ky, p_name_en, p_duration_min, p_price_from, p_price_to, p_active
+      from unnest(v_add) b;
+
+    for v_copy in
+        select id from public.services
+         where biz_id = p_biz_id and name_ru = v_name and branch_id = any(v_remove)
+         order by id
+    loop
+        -- History and sold packages keep the copy: it is switched off instead (DB-14).
+        if exists (select 1 from public.visit_package_plans where service_id = v_copy) then
+            update public.services set active = false where id = v_copy;
+            v_archived := v_archived + 1;
+            continue;
+        end if;
+        begin
+            delete from public.services where id = v_copy;
+            v_deleted := v_deleted + 1;
+        exception when foreign_key_violation then
+            update public.services set active = false where id = v_copy;
+            v_archived := v_archived + 1;
+        end;
+    end loop;
+
+    return jsonb_build_object('updated', v_updated, 'added', cardinality(v_add), 'deleted', v_deleted, 'archived', v_archived);
+end;
+$function$
+;
+
 -- signature: public.update_shift_aggregates(uuid,uuid,date,numeric,numeric,numeric,integer,numeric,numeric)
 CREATE OR REPLACE FUNCTION public.update_shift_aggregates(p_staff_id uuid, p_biz_id uuid, p_shift_date date, p_total_amount numeric, p_master_share numeric, p_salon_share numeric, p_late_minutes integer, p_guaranteed_amount numeric DEFAULT 0, p_topup_amount numeric DEFAULT 0)
  RETURNS void

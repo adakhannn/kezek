@@ -7977,6 +7977,21 @@ export type Database = {
                 };
                 Returns: Json;
             };
+            "update_service_group": {
+                Args: {
+                    "p_active": boolean;
+                    "p_biz_id": string;
+                    "p_branch_ids": (string)[];
+                    "p_duration_min": number;
+                    "p_name_en": string;
+                    "p_name_ky": string;
+                    "p_name_ru": string;
+                    "p_price_from": number;
+                    "p_price_to": number;
+                    "p_service_id": string;
+                };
+                Returns: Json;
+            };
             "update_shift_aggregates": {
                 Args: {
                     "p_biz_id": string;

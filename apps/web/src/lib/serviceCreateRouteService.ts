@@ -64,7 +64,8 @@ export async function createServiceRouteEntry(params: {
       status: 400,
     };
   }
-  if (price_to && price_from && price_to < price_from) {
+  // The database requires price_to >= price_from (services_price_range_check).
+  if (price_to < price_from) {
     return {
       ok: false,
       error: 'validation',

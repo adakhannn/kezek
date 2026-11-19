@@ -1,6 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
+import { logError } from '@/lib/log';
 
 export type ServiceUpdateBody = {
     name_ru: string;
@@ -25,10 +23,10 @@ type BaseError = {
 
 type Success = { ok: true };
 
-type ServiceRecord = { id: string; biz_id: string; name_ru: string };
+type RpcError = { code?: string; message: string; details?: string | null };
 
 export type ServiceUpdateAdminClientLike = {
-    from: SupabaseClient['from'];
+    rpc(fn: 'update_service_group', args: Record<string, unknown>): PromiseLike<{ data: unknown; error: RpcError | null }>;
 };
 
 function normalizeOptionalName(value?: string | null) {
@@ -39,6 +37,12 @@ function validationError(message: string): BaseError {
     return { ok: false, error: 'validation', message, status: 400 };
 }
 
+/**
+ * Saves the edit form of a service across its branches (ARCH-07). A service offered in several
+ * branches is one row per branch, grouped by name; update_service_group locks the group, checks the
+ * branches and the future bookings of the branches being removed, and saves every change in one
+ * transaction, so an error leaves the service as it was.
+ */
 export async function runServiceUpdateFlow({
     admin,
     bizId,
@@ -66,171 +70,70 @@ export async function runServiceUpdateFlow({
         return validationError('Цена не может быть отрицательной');
     }
 
-    if (body.price_from > 0 && body.price_to > 0 && body.price_from > body.price_to) {
+    // The database requires price_to >= price_from (services_price_range_check).
+    if (body.price_from > body.price_to) {
         return validationError('Минимальная цена не может быть больше максимальной');
     }
 
-    const serviceCheck = await checkResourceBelongsToBiz<ServiceRecord>(
-        admin as never,
-        'services',
-        serviceId,
-        bizId,
-        'id, biz_id, name_ru'
-    );
-
-    if (serviceCheck.error || !serviceCheck.data) {
-        return {
-            ok: false,
-            error: 'forbidden',
-            message: 'Услуга не принадлежит этому бизнесу',
-            status: 403,
-        };
-    }
-
-    const svc = serviceCheck.data;
     const branchIds: string[] = body.branch_ids ?? (body.branch_id ? [body.branch_id] : []);
     if (branchIds.length === 0) {
         return validationError('Необходимо указать хотя бы один филиал');
     }
 
-    const { data: brRows, error: brErr } = await admin.from('branches').select('id,biz_id').eq('biz_id', bizId).in('id', branchIds);
-    if (brErr) {
-        return { ok: false, error: 'validation', message: brErr.message, status: 400 };
-    }
+    const { error } = await admin.rpc('update_service_group', {
+        p_biz_id: bizId,
+        p_service_id: serviceId,
+        p_branch_ids: branchIds,
+        p_name_ru: body.name_ru.trim(),
+        p_name_ky: normalizeOptionalName(body.name_ky),
+        p_name_en: normalizeOptionalName(body.name_en),
+        p_duration_min: body.duration_min,
+        p_price_from: body.price_from,
+        p_price_to: body.price_to,
+        p_active: !!body.active,
+    });
+    if (!error) return { ok: true };
 
-    const found = new Set((brRows ?? []).map((row: { id: string }) => String(row.id)));
-    const missing = branchIds.filter((id) => !found.has(String(id)));
-    if (missing.length) {
+    const message = error.message ?? '';
+    if (message.includes('SERVICE_FORBIDDEN')) {
+        return { ok: false, error: 'forbidden', message: 'Услуга не принадлежит этому бизнесу', status: 403 };
+    }
+    if (message.includes('SERVICE_BRANCH_REQUIRED')) {
+        return validationError('Необходимо указать хотя бы один филиал');
+    }
+    if (message.includes('SERVICE_BRANCH_FORBIDDEN')) {
         return {
             ok: false,
             error: 'forbidden',
             message: 'Некоторые филиалы не принадлежат этому бизнесу',
-            details: { missing },
+            details: { missing: (error.details ?? '').split(',').filter(Boolean) },
             status: 403,
         };
     }
-
-    const { data: existingServices } = await admin
-        .from('services')
-        .select('id,branch_id')
-        .eq('biz_id', bizId)
-        .eq('name_ru', svc.name_ru);
-
-    const existingBranchIds = new Set<string>((existingServices ?? []).map((service: { branch_id: string }) => service.branch_id));
-    const toAdd = branchIds.filter((id) => !existingBranchIds.has(id));
-    const toUpdate = branchIds.filter((id) => existingBranchIds.has(id));
-    const toRemove = Array.from(existingBranchIds).filter((id) => !branchIds.includes(id));
-
-    const name_ky = normalizeOptionalName(body.name_ky);
-    const name_en = normalizeOptionalName(body.name_en);
-    const updatePayload = {
-        name_ru: body.name_ru.trim(),
-        name_ky,
-        name_en,
-        duration_min: body.duration_min,
-        price_from: body.price_from ?? 0,
-        price_to: body.price_to ?? 0,
-        active: !!body.active,
-    };
-
-    if (toUpdate.length > 0) {
-        const { error } = await admin
-            .from('services')
-            .update(updatePayload)
-            .eq('biz_id', bizId)
-            .eq('name_ru', svc.name_ru)
-            .in('branch_id', toUpdate);
-
-        if (error) {
-            return { ok: false, error: 'validation', message: error.message, status: 400 };
-        }
+    if (message.includes('SERVICE_BRANCH_HAS_FUTURE_BOOKINGS')) {
+        const branches = (error.details ?? '').split(', ').filter(Boolean);
+        const many = branches.length > 1;
+        return {
+            ok: false,
+            error: 'conflict',
+            message: `Невозможно отвязать услугу от филиал${many ? 'ов' : 'а'} "${branches.join(', ')}": к ${many ? 'ним' : 'нему'} привязаны будущие брони. Сначала отмените или удалите все будущие брони. Изменения не сохранены.`,
+            details: { branches },
+            status: 409,
+        };
     }
-
-    if (toAdd.length > 0) {
-        const rows = toAdd.map((branch_id) => ({
-            biz_id: bizId,
-            branch_id,
-            ...updatePayload,
-        }));
-        const { error } = await admin.from('services').insert(rows);
-        if (error) {
-            return { ok: false, error: 'validation', message: error.message, status: 400 };
-        }
+    // services_price_range_check or services_duration_min_check.
+    if (error.code === '23514') {
+        return validationError('Проверьте длительность и цены услуги');
     }
-
-    if (toRemove.length > 0) {
-        const branchesWithBookings: string[] = [];
-
-        for (const branchId of toRemove) {
-            const { data: existingService } = await admin
-                .from('services')
-                .select('id')
-                .eq('biz_id', bizId)
-                .eq('name_ru', svc.name_ru)
-                .eq('branch_id', branchId)
-                .maybeSingle();
-
-            if (!existingService) {
-                continue;
-            }
-
-            const now = new Date().toISOString();
-            const { count: bookingCount } = await admin
-                .from('bookings')
-                .select('id', { count: 'exact', head: true })
-                .eq('service_id', existingService.id)
-                .gte('start_at', now)
-                .neq('status', 'cancelled');
-
-            if ((bookingCount ?? 0) > 0) {
-                const { data: branchData } = await admin.from('branches').select('name').eq('id', branchId).maybeSingle();
-                branchesWithBookings.push(branchData?.name || branchId);
-                continue;
-            }
-
-            const { error: deleteError } = await admin.from('services').delete().eq('id', existingService.id).eq('biz_id', bizId);
-            if (!deleteError) {
-                continue;
-            }
-
-            const errorMessage = String(deleteError.message || '').toLowerCase();
-            if (errorMessage.includes('foreign key') || errorMessage.includes('bookings_service_id_fkey')) {
-                const { error: softDeleteError } = await admin
-                    .from('services')
-                    .update({ active: false })
-                    .eq('id', existingService.id)
-                    .eq('biz_id', bizId);
-
-                if (softDeleteError) {
-                    return {
-                        ok: false,
-                        error: 'validation',
-                        message: `Не удалось отвязать услугу из филиала: ${softDeleteError.message}`,
-                        status: 400,
-                    };
-                }
-                continue;
-            }
-
-            return {
-                ok: false,
-                error: 'validation',
-                message: `Не удалось удалить услугу из филиала: ${deleteError.message}`,
-                status: 400,
-            };
-        }
-
-        if (branchesWithBookings.length > 0) {
-            const branchNames = branchesWithBookings.join(', ');
-            return {
-                ok: false,
-                error: 'conflict',
-                message: `Невозможно отвязать услугу от филиала${branchesWithBookings.length > 1 ? 'ов' : ''} "${branchNames}": к ${branchesWithBookings.length > 1 ? 'ним' : 'нему'} привязаны будущие брони. Сначала отмените или удалите все будущие брони.`,
-                details: { branches: branchesWithBookings },
-                status: 409,
-            };
-        }
+    // lock_timeout of the command: another request is changing this service right now.
+    if (error.code === '55P03' || error.code === '57014') {
+        return {
+            ok: false,
+            error: 'service_unavailable',
+            message: 'Услугу сейчас изменяет другой запрос. Изменения не сохранены — повторите через несколько секунд.',
+            status: 503,
+        };
     }
-
-    return { ok: true };
+    logError('ServiceUpdate', 'update_service_group failed', { code: error.code, message });
+    return { ok: false, error: 'internal', message: 'Не удалось сохранить услугу. Изменения не сохранены.', status: 500 };
 }

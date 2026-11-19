@@ -398,8 +398,6 @@ export const staffEn = {
     'staff.title': 'Staff',
     'staff.transfer.button': 'Transfer staff',
     'staff.transfer.cancel': 'Cancel',
-    'staff.transfer.copySchedule': 'Copy schedule template',
-    'staff.transfer.copyScheduleDesc': 'Copy weekly schedule from current branch to new branch',
     'staff.transfer.current': 'Current branch:',
     'staff.transfer.errors.selectBranch': 'Select branch',
     'staff.transfer.note': 'Transfer is performed immediately. We do not touch future bookings (transfer is a separate task).',

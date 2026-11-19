@@ -25,7 +25,6 @@ export default function TransferStaffDialog({
     const router = useRouter();
     const [open, setOpen] = useState(false);
     const [target, setTarget] = useState<string>('');
-    const [copySchedule, setCopySchedule] = useState<boolean>(true);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
 
@@ -46,7 +45,7 @@ export default function TransferStaffDialog({
             const res = await fetch(`/api/staff/${encodeURIComponent(staffId)}/transfer`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ target_branch_id: target, expected_branch_id: currentBranchId, copy_schedule: explicitScheduling ? false : copySchedule }),
+                body: JSON.stringify({ target_branch_id: target, expected_branch_id: currentBranchId }),
             });
             const json = await res.json().catch(() => ({ ok: false, error: 'NON_JSON_RESPONSE' }));
             if (!res.ok || !json.ok) {
@@ -147,25 +146,7 @@ export default function TransferStaffDialog({
                         </select>
                     </div>
 
-                    {explicitScheduling ? <AlertBanner variant="info" message={t('scheduling.transferHint')} /> : <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3 sm:p-4">
-                        <label className="inline-flex cursor-pointer items-start gap-3">
-                            <input
-                                type="checkbox"
-                                checked={copySchedule}
-                                onChange={(event) => setCopySchedule(event.target.checked)}
-                                disabled={loading}
-                                className="mt-0.5 h-4 w-4 rounded border-[var(--border-default)] text-[var(--accent-primary)] focus:ring-[var(--focus-ring)]"
-                            />
-                            <div className="min-w-0 flex-1">
-                                <span className="type-body block text-[var(--text-primary)]">
-                                    {t('staff.transfer.copySchedule', 'Скопировать шаблон расписания')}
-                                </span>
-                                <span className="type-caption mt-1 block text-[var(--text-muted)]">
-                                    {t('staff.transfer.copyScheduleDesc', 'Скопировать еженедельное расписание из текущего филиала в новый')}
-                                </span>
-                            </div>
-                        </label>
-                    </div>}
+                    {explicitScheduling ? <AlertBanner variant="info" message={t('scheduling.transferHint')} /> : null}
 
                     <AlertBanner
                         variant="warning"
