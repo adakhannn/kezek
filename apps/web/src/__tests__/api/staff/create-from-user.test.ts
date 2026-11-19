@@ -262,8 +262,8 @@ describe('/api/staff/create-from-user', () => {
                 error: null,
             });
 
-            // Мокаем проверку существующего сотрудника (найден)
-            mockAdmin.from.mockReturnValueOnce({
+            // Карточка, уже привязанная к этому аккаунту (ARCH-07: поиск по user_id, не по имени)
+            const existingLookup = {
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 limit: jest.fn().mockReturnThis(),
@@ -273,28 +273,8 @@ describe('/api/staff/create-from-user', () => {
                     },
                     error: null,
                 }),
-            });
-
-            // Мокаем проверку user_id существующего сотрудника
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        user_id: null, // user_id еще не установлен
-                    },
-                    error: null,
-                }),
-            });
-
-            // Мокаем обновление user_id
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
+            };
+            mockAdmin.from.mockReturnValueOnce(existingLookup);
 
             // Мокаем создание назначения на филиал
             mockAdmin.from.mockReturnValueOnce({
@@ -346,6 +326,8 @@ describe('/api/staff/create-from-user', () => {
             expect(data).toHaveProperty('id', 'existing-staff-id');
             expect(data).toHaveProperty('schedule_initialized', true);
             expect(data).toHaveProperty('schedule_days_created', 14);
+            expect(existingLookup.eq).toHaveBeenCalledWith('user_id', userId);
+            expect(existingLookup.eq).not.toHaveBeenCalledWith('full_name', expect.anything());
         });
     });
 });
