@@ -5,9 +5,7 @@ import cronJobs from '@/config/cronJobs.json';
  */
 
 import { GET } from '@/app/api/admin/health-check/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';

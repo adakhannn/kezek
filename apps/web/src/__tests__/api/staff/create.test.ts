@@ -4,10 +4,7 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';

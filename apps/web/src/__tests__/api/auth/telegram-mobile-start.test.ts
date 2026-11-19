@@ -3,10 +3,7 @@ import {
     createMockRequest,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 // Route tests exercise the HTTP envelope/feature gate, not persistent attempts.
 // Keep the database/audit boundary explicit after the async-service extraction.

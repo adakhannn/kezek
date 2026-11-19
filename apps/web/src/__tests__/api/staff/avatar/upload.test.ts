@@ -3,10 +3,7 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../../testHelpers';
-
-setupApiTestMocks();
 
 import { getStaffContext } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';

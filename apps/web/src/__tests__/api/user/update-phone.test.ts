@@ -4,9 +4,7 @@
  */
 
 import { POST } from '@/app/api/user/update-phone/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 import { withRateLimit } from '@/lib/rateLimit';

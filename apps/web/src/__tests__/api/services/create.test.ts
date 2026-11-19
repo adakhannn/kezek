@@ -2,12 +2,11 @@ import { POST } from '@/app/api/services/create/route';
 import {
     createMockRequest,
     createMockSupabase,
+    createTableMock,
+    expectBusinessScoped,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -23,25 +22,14 @@ jest.mock('@/lib/supabaseService', () => ({
 describe('/api/services/create', () => {
     const mockServiceClient = createMockSupabase();
 
-    function createBranchesQuery(branchIds: string[]) {
-        return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            in: jest.fn().mockResolvedValue({
-                data: branchIds.map((id) => ({ id })),
-                error: null,
-            }),
-        };
-    }
-
-    function createServicesInsertQuery(inserted: Array<{ id: string; branch_id: string }>) {
-        return {
-            insert: jest.fn().mockReturnThis(),
-            select: jest.fn().mockResolvedValue({
-                data: inserted,
-                error: null,
-            }),
-        };
+    // CI-04: a recording client, so the tests can check that both queries are limited to the business.
+    function useTables(branchIds: string[], inserted: Array<{ id: string; branch_id: string }>) {
+        const client = createTableMock({
+            branches: { data: branchIds.map((id) => ({ id })) },
+            services: { data: inserted },
+        });
+        (getServiceClient as jest.Mock).mockReturnValue(client);
+        return client;
     }
 
     beforeEach(() => {
@@ -95,11 +83,7 @@ describe('/api/services/create', () => {
     });
 
     test('creates service for a single branch via branch_id', async () => {
-        mockServiceClient.from
-            .mockReturnValueOnce(createBranchesQuery(['branch-id']))
-            .mockReturnValueOnce(
-                createServicesInsertQuery([{ id: 'service-id', branch_id: 'branch-id' }])
-            );
+        const client = useTables(['branch-id'], [{ id: 'service-id', branch_id: 'branch-id' }]);
 
         const req = createMockRequest('http://localhost/api/services/create', {
             method: 'POST',
@@ -118,17 +102,15 @@ describe('/api/services/create', () => {
         expect(data.ok).toBe(true);
         expect(data.count).toBe(1);
         expect(data.ids).toEqual(['service-id']);
+        expectBusinessScoped(client, 'branches', 'biz-id');
+        expectBusinessScoped(client, 'services', 'biz-id');
     });
 
     test('creates service for multiple branches via branch_ids', async () => {
-        mockServiceClient.from
-            .mockReturnValueOnce(createBranchesQuery(['branch-id-1', 'branch-id-2']))
-            .mockReturnValueOnce(
-                createServicesInsertQuery([
-                    { id: 'service-id-1', branch_id: 'branch-id-1' },
-                    { id: 'service-id-2', branch_id: 'branch-id-2' },
-                ])
-            );
+        const client = useTables(['branch-id-1', 'branch-id-2'], [
+            { id: 'service-id-1', branch_id: 'branch-id-1' },
+            { id: 'service-id-2', branch_id: 'branch-id-2' },
+        ]);
 
         const req = createMockRequest('http://localhost/api/services/create', {
             method: 'POST',
@@ -149,5 +131,7 @@ describe('/api/services/create', () => {
         expect(data.ok).toBe(true);
         expect(data.count).toBe(2);
         expect(data.ids).toEqual(['service-id-1', 'service-id-2']);
+        expectBusinessScoped(client, 'branches', 'biz-id');
+        expectBusinessScoped(client, 'services', 'biz-id');
     });
 });

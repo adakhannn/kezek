@@ -4,9 +4,7 @@
  */
 
 import { POST } from '@/app/api/users/search/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';

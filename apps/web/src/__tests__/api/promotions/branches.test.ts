@@ -4,9 +4,7 @@
  */
 
 import { GET, POST } from '@/app/api/dashboard/branches/[branchId]/promotions/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';

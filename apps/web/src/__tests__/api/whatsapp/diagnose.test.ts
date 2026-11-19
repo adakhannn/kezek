@@ -5,9 +5,7 @@ jest.mock('@/lib/adminHttpAccess', () => ({ requireCurrentSuperAdmin: jest.fn(as
  */
 
 import { GET } from '@/app/api/whatsapp/diagnose/route';
-import { setupApiTestMocks, createMockRequest, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 // Мокаем fetch для внешних запросов
 global.fetch = jest.fn();

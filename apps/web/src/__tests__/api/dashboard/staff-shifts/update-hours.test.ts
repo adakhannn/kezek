@@ -1,8 +1,7 @@
 import { POST } from '@/app/api/dashboard/staff-shifts/[id]/update-hours/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
-setupApiTestMocks();
 jest.mock('@/lib/authBiz', () => ({ getBizContextForManagers: jest.fn() }));
 jest.mock('@/lib/supabaseHelpers', () => ({ createSupabaseAdminClient: jest.fn() }));
 const shiftId='f0000000-0000-4000-8000-000000000001';

@@ -3,9 +3,7 @@
  */
 
 import { GET } from '@/app/api/admin/performance/stats/route';
-import { expectErrorResponse, expectSuccessResponse, setupApiTestMocks, createMockRequest } from '../testHelpers';
-
-setupApiTestMocks();
+import { expectErrorResponse, expectSuccessResponse, createMockRequest } from '../testHelpers';
 
 jest.mock('@/lib/performanceStatsHttpService', () => ({
     runPerformanceStatsHttp: jest.fn(),

@@ -6,9 +6,7 @@
 
 import { POST } from '@/app/api/whatsapp/verify-otp/route';
 import { hashWhatsappOtp } from '@/lib/whatsAppOtpHash';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 

@@ -4,10 +4,7 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../../testHelpers';
-
-setupApiTestMocks();
 
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 import { normalizeTelegramData, verifyTelegramAuth } from '@/lib/telegram/verify';

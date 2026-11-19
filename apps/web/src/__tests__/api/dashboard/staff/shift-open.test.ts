@@ -5,10 +5,7 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../../testHelpers';
-
-setupApiTestMocks();
 
 import { withManagerAndStaffContext } from '@/lib/withManagerAndStaffContext';
 

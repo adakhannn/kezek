@@ -25,10 +25,10 @@
 | Команда | Фактическое действие |
 | --- | --- |
 | `pnpm lint` | Корневой ESLint (рекомендованные правила JS для `scripts/` и `packages/`, `typescript-eslint` и запрет `console` для TypeScript в `packages/`), затем web и mobile (CI-02) |
-| `pnpm -C apps/web lint` | `eslint . --max-warnings=212` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
+| `pnpm -C apps/web lint` | `eslint . --max-warnings=81` внутри web: ошибки и рост предупреждений сверх зафиксированного потолка роняют проверку |
 | `pnpm -C apps/mobile lint` | `eslint . --max-warnings=4` внутри mobile по конфигу Expo (`eslint-config-expo`): ошибки и новые предупреждения роняют проверку; четыре оставшихся — `react-hooks/exhaustive-deps` в потоках входа |
 | `pnpm -C apps/web typecheck` | `tsc -p tsconfig.json --noEmit` внутри web |
-| `pnpm -C apps/web test` | Jest по текущему web config; Playwright E2E исключены |
+| `pnpm -C apps/web test` | Jest по текущему web config; Playwright E2E исключены. Тесты API получают общие моки из `jest.setup.js` и проверяют фильтр по бизнесу через `expectBusinessScoped` ([справочник](apps/web/src/__tests__/api/TESTING_GUIDE.md)) |
 | `pnpm -C apps/web test:coverage` | Полный web Jest с coverage по всему `src/**` и порогом-храповиком |
 | `pnpm -C apps/web test:ci:core` | Явно перечисленные lib/finance/notification suites без coverage (локальная быстрая обратная связь; в CI их запускает полный `web_full_tests`) |
 | `pnpm -C apps/web test:ci:extended` | Jest только под `src/__tests__/lib` и `src/__tests__/api`, без coverage gate |

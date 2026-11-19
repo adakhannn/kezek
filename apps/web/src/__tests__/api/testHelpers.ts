@@ -110,9 +110,22 @@ type MockSupabaseClient = {
     csv: jest.Mock;
     geojson: jest.Mock;
     rpc: jest.Mock;
+    /** Queries built through this mock's own chain (CI-04); see expectBusinessScoped. */
+    queries: RecordedQuery[];
 };
 
+/** One query the code built: the table and every builder call after from() (CI-04). */
+export type RecordedQuery = { table: string; calls: Array<[method: string, ...args: unknown[]]> };
+
 export function createMockSupabase(): MockSupabaseClient {
+    const queries: RecordedQuery[] = [];
+    let current: RecordedQuery | undefined;
+    // Builder calls are recorded on the query the last from() started. A test that replaces from()
+    // with its own chains records nothing; createTableMock records those cases.
+    const step = (method: string) => jest.fn((...args: unknown[]) => {
+        current?.calls.push([method, ...args]);
+        return mockSupabase;
+    });
     const mockSupabase: MockSupabaseClient = {
         auth: {
             getUser: jest.fn(),
@@ -126,64 +139,119 @@ export function createMockSupabase(): MockSupabaseClient {
                 generateLink: jest.fn(),
             },
         },
-        from: jest.fn(() => mockSupabase),
-        select: jest.fn(() => mockSupabase),
-        insert: jest.fn(() => mockSupabase),
-        upsert: jest.fn(() => mockSupabase),
-        update: jest.fn(() => mockSupabase),
-        delete: jest.fn(() => mockSupabase),
-        eq: jest.fn(() => mockSupabase),
-        neq: jest.fn(() => mockSupabase),
-        gt: jest.fn(() => mockSupabase),
-        gte: jest.fn(() => mockSupabase),
-        lt: jest.fn(() => mockSupabase),
-        lte: jest.fn(() => mockSupabase),
-        in: jest.fn(() => mockSupabase),
-        like: jest.fn(() => mockSupabase),
-        ilike: jest.fn(() => mockSupabase),
-        is: jest.fn(() => mockSupabase),
-        order: jest.fn(() => mockSupabase),
-        limit: jest.fn(() => mockSupabase),
-        range: jest.fn(() => mockSupabase),
+        from: jest.fn((table: string) => {
+            current = { table, calls: [] };
+            queries.push(current);
+            return mockSupabase;
+        }) as jest.Mock<MockSupabaseClient>,
+        select: step('select'),
+        insert: step('insert'),
+        upsert: step('upsert'),
+        update: step('update'),
+        delete: step('delete'),
+        eq: step('eq'),
+        neq: step('neq'),
+        gt: step('gt'),
+        gte: step('gte'),
+        lt: step('lt'),
+        lte: step('lte'),
+        in: step('in'),
+        like: step('like'),
+        ilike: step('ilike'),
+        is: step('is'),
+        order: step('order'),
+        limit: step('limit'),
+        range: step('range'),
         single: jest.fn(),
         maybeSingle: jest.fn(),
         csv: jest.fn(),
         geojson: jest.fn(),
         rpc: jest.fn(),
+        queries,
     };
 
     return mockSupabase;
 }
 
+type QueryResult = { data?: unknown; error?: unknown; count?: number | null };
+
+const BUILDER_METHODS = [
+    'select', 'insert', 'upsert', 'update', 'delete', 'eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'like', 'ilike',
+    'is', 'not', 'or', 'match', 'filter', 'contains', 'order', 'limit', 'range', 'returns',
+] as const;
+
 /**
- * Настраивает стандартные моки для тестов API routes
+ * A Supabase client whose from(table) answers with `results[table]` (CI-04): a result object, or a
+ * function of the recorded query when the answer depends on its filters. Every query is recorded, so a
+ * test can check that it is limited to the business (expectBusinessScoped). rpc() and auth are jest.fn.
  */
-export function setupApiTestMocks() {
-    // Мокируем rate limiting
-    jest.mock('@/lib/rateLimit', () => ({
-        withRateLimit: jest.fn((req, config, handler) => handler()),
-        RateLimitConfigs: {},
-    }));
+export function createTableMock(results: Record<string, QueryResult | ((query: RecordedQuery) => QueryResult)> = {}) {
+    const queries: RecordedQuery[] = [];
+    const answer = (query: RecordedQuery) => {
+        const result = results[query.table];
+        const value = typeof result === 'function' ? result(query) : result;
+        return { data: null, error: null, count: null, ...(value ?? {}) };
+    };
+    const chain = (query: RecordedQuery) => {
+        const builder: Record<string, unknown> = {};
+        for (const method of BUILDER_METHODS) {
+            builder[method] = jest.fn((...args: unknown[]) => {
+                query.calls.push([method, ...args]);
+                return builder;
+            });
+        }
+        builder.single = jest.fn(() => {
+            query.calls.push(['single']);
+            return Promise.resolve(answer(query));
+        });
+        builder.maybeSingle = jest.fn(() => {
+            query.calls.push(['maybeSingle']);
+            return Promise.resolve(answer(query));
+        });
+        builder.then = (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
+            Promise.resolve(answer(query)).then(resolve, reject);
+        return builder;
+    };
+    return {
+        queries,
+        from: jest.fn((table: string) => {
+            const query: RecordedQuery = { table, calls: [] };
+            queries.push(query);
+            return chain(query);
+        }),
+        rpc: jest.fn(),
+        auth: {
+            getUser: jest.fn(),
+            admin: { getUserById: jest.fn(), listUsers: jest.fn(), updateUserById: jest.fn(), createUser: jest.fn(), generateLink: jest.fn() },
+        },
+    };
+}
 
-    // Мокаем next/headers
-    jest.mock('next/headers', () => ({
-        cookies: jest.fn(),
-        headers: jest.fn(),
-    }));
-
-    // Мокаем supabase-js и ssr клиенты
-    jest.mock('@supabase/supabase-js', () => ({
-        createClient: jest.fn(),
-    }));
-
-    jest.mock('@supabase/ssr', () => ({
-        createServerClient: jest.fn(),
-    }));
-
-    // Мокаем env переменные
-    process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321';
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+/**
+ * Every recorded query on `table` is limited to the business (CI-04): reads, updates and deletes filter
+ * `column` (biz_id by default) by `bizId` with eq() or match(), and inserted or upserted rows carry
+ * it. The mocks answer any query, so without this a query that lost its business filter, and would
+ * read or change another business's rows through the service role, passes every test.
+ */
+export function expectBusinessScoped(client: { queries: RecordedQuery[] }, table: string, bizId: string, column = 'biz_id'): void {
+    const onTable = client.queries.filter((query) => query.table === table);
+    if (onTable.length === 0) throw new Error(`no query on ${table} was recorded`);
+    for (const query of onTable) {
+        const write = query.calls.find(([method]) => method === 'insert' || method === 'upsert');
+        if (write) {
+            const rows = Array.isArray(write[1]) ? write[1] : [write[1]];
+            for (const row of rows) {
+                if ((row as Record<string, unknown> | null)?.[column] !== bizId) {
+                    throw new Error(`${table}: a written row is not for business ${bizId}: ${JSON.stringify(row)}`);
+                }
+            }
+            continue;
+        }
+        const scoped = query.calls.some(([method, first, second]) =>
+            (method === 'eq' && first === column && second === bizId)
+            || (method === 'match' && (first as Record<string, unknown> | null)?.[column] === bizId));
+        if (!scoped) throw new Error(`${table}: a query without ${column} = ${bizId}: ${JSON.stringify(query.calls)}`);
+    }
 }
 
 /**

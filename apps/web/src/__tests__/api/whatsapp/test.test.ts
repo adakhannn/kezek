@@ -5,9 +5,7 @@ jest.mock('@/lib/adminHttpAccess', () => ({ requireCurrentSuperAdmin: jest.fn(as
  */
 
 import { GET } from '@/app/api/whatsapp/test/route';
-import { setupApiTestMocks, createMockRequest, expectSuccessResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, expectSuccessResponse } from '../testHelpers';
 
 const originalEnv = process.env;
 

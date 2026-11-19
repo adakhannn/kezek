@@ -3,7 +3,6 @@ import {
     createMockNextRequest,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
 import {
     __setTelegramMobileAuthAttemptStatusForTests,
@@ -11,8 +10,6 @@ import {
     createTelegramMobileAuthAttempt,
 } from '@/lib/telegramMobileAuthAttemptService';
 import { __resetNonceProbeProtectionForTests } from '@/lib/telegramMobileNonceProbeProtection';
-
-setupApiTestMocks();
 
 jest.mock('@/lib/supabaseService', () => ({
     getServiceClient: () => jest.requireActual('@/__tests__/fixtures/telegramAttemptPersistence').telegramAttemptPersistence.client,

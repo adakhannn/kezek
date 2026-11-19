@@ -4,10 +4,7 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 

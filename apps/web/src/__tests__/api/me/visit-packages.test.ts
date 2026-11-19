@@ -4,10 +4,7 @@ import {
   createMockSupabase,
   expectErrorResponse,
   expectSuccessResponse,
-  setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 jest.mock('@/lib/supabaseHelpers', () => ({
   createSupabaseClients: jest.fn(),

@@ -5,9 +5,7 @@ import { POST } from '@/app/api/funnel-events/route';
 import { resolveOptionalRequestUser } from '@/lib/requestAuthContext';
 import { getServiceClient } from '@/lib/supabaseService';
 
-import { createMockRequest, expectErrorResponse, expectSuccessResponse, setupApiTestMocks } from './testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, expectErrorResponse, expectSuccessResponse } from './testHelpers';
 
 jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
 jest.mock('@/lib/requestAuthContext', () => ({ resolveOptionalRequestUser: jest.fn() }));

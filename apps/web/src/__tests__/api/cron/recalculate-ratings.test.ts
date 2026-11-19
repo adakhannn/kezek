@@ -1,7 +1,5 @@
 import { GET } from '@/app/api/cron/recalculate-ratings/route';
-import { createMockRequest, expectErrorResponse, expectSuccessResponse, setupApiTestMocks } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, expectErrorResponse, expectSuccessResponse } from '../testHelpers';
 
 jest.mock('@/lib/recalculateRatingsCronHttpService', () => ({
   runRecalculateRatingsCronHttp: jest.fn(),

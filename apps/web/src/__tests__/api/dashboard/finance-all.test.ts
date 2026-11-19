@@ -4,9 +4,7 @@
  */
 
 import { GET } from '@/app/api/dashboard/finance/all/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -51,6 +49,8 @@ describe('/api/dashboard/finance/all', () => {
         const data = await expectSuccessResponse(res, 200);
 
         expect(data).toHaveProperty('ok', true);
+        // CI-04: the report is read for the manager's business only.
+        expect(mockAdmin.rpc).toHaveBeenCalledWith('read_finance_report_snapshot', expect.objectContaining({ p_biz_id: bizId }));
     });
 });
 

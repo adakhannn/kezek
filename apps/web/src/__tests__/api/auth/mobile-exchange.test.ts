@@ -2,8 +2,7 @@ import { POST, GET } from '@/app/api/auth/mobile-exchange/route';
 import { hashMobileExchangeSecret, issueMobileSessionGrant } from '@/lib/mobileExchangeService';
 import { issueSessionForVerifiedUser } from '@/lib/verifiedIdentitySession';
 import { telegramAttemptPersistence } from '@/__tests__/fixtures/telegramAttemptPersistence';
-import { setupApiTestMocks, createMockNextRequest, expectErrorResponse, expectSuccessResponse } from '../testHelpers';
-setupApiTestMocks();
+import { createMockNextRequest, expectErrorResponse, expectSuccessResponse } from '../testHelpers';
 // Limiter has its own tests; isolate this contract from cross-test IP counters.
 jest.mock('@/lib/rateLimit', () => ({
     ...jest.requireActual('@/lib/rateLimit'),

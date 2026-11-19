@@ -4,9 +4,7 @@
  */
 
 import { POST } from '@/app/api/auth/sign-out/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse } from '../testHelpers';
 
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 

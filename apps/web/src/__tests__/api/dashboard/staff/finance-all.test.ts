@@ -4,9 +4,7 @@
  */
 
 import { GET } from '@/app/api/dashboard/staff/finance/all/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -71,6 +69,8 @@ describe('/api/dashboard/staff/finance/all', () => {
             expect(data).toHaveProperty('ok', true);
             expect(data.data).toHaveProperty('staffStats');
             expect(data.data).toHaveProperty('totalStats');
+            // CI-04: the report is read for the manager's business only.
+            expect(mockAdmin.rpc).toHaveBeenCalledWith('read_finance_report_snapshot', expect.objectContaining({ p_biz_id: bizId }));
         });
 
         test('должен успешно вернуть статистику за месяц', async () => {

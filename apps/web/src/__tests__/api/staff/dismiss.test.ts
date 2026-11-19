@@ -2,12 +2,11 @@ import { POST } from '@/app/api/staff/[id]/dismiss/route';
 import {
     createMockRequest,
     createMockSupabase,
+    createTableMock,
+    expectBusinessScoped,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
@@ -89,59 +88,23 @@ describe('/api/staff/[id]/dismiss', () => {
             data: { id: staffId, biz_id: bizId, user_id: userId, is_active: true, full_name: 'Test Staff' },
             error: null,
         });
-
-        mockAdmin.from
-            .mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                neq: jest.fn().mockReturnThis(),
-                gt: jest.fn().mockResolvedValue({
-                    count: 0,
-                    error: null,
-                }),
-            })
-            .mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-            });
-
-        let rolesCall = 0;
-        mockAdminClient.from.mockImplementation((table: string) => {
-            if (table === 'roles') {
-                rolesCall += 1;
-                return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: 'client-role-id' },
-                        error: null,
-                    }),
-                };
-            }
-
-            if (table === 'user_roles') {
-                return {
-                    delete: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    neq: jest.fn().mockResolvedValue({
-                        data: null,
-                        error: null,
-                    }),
-                    upsert: jest.fn().mockResolvedValue({
-                        data: null,
-                        error: null,
-                    }),
-                };
-            }
-
-            return mockAdminClient;
-        });
+        // CI-04: recording clients, so the test checks that every write stays in this business.
+        const admin = createTableMock({ bookings: { count: 0 }, staff: {} });
+        const svc = createTableMock({ roles: { data: { id: 'client-role-id' } }, user_roles: {} });
+        (getServiceClient as jest.Mock).mockReturnValue(admin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(svc);
 
         const req = createMockRequest(`http://localhost/api/staff/${staffId}/dismiss`, { method: 'POST' });
         const res = await POST(req, { params: { id: staffId } });
         const data = await expectSuccessResponse(res, 200);
 
         expect(data.ok).toBe(true);
+        expectBusinessScoped(admin, 'bookings', bizId);
+        expectBusinessScoped(admin, 'staff', bizId);
+        // Removing the staff roles and adding the client role touch this business's rows only.
+        expectBusinessScoped(svc, 'user_roles', bizId);
+        expect(svc.queries.find((query) => query.calls.some(([method]) => method === 'upsert'))?.calls)
+            .toContainEqual(['upsert', { user_id: userId, biz_id: bizId, role_id: 'client-role-id' }, { onConflict: 'user_id,role_id,biz_key' }]);
     });
 
     test('dismisses staff member without linked user role updates', async () => {

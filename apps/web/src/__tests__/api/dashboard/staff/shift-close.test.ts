@@ -17,10 +17,7 @@ import {
     createMockRequest,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../../testHelpers';
-
-setupApiTestMocks();
 
 jest.mock('@/lib/withManagerContext', () => ({
     withManagerContext: jest.fn(),

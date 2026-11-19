@@ -6,9 +6,7 @@
 
 import { GET, POST } from '@/app/api/dashboard/visit-package-plans/route';
 import { PATCH } from '@/app/api/dashboard/visit-package-plans/[id]/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';

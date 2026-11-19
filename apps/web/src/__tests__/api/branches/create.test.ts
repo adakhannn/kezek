@@ -4,9 +4,7 @@
  */
 
 import { POST } from '@/app/api/branches/create/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { withRateLimit } from '@/lib/rateLimit';
@@ -126,6 +124,8 @@ describe('/api/branches/create', () => {
             expect(data.data.id).toBe('branch-id');
             expect(mockSupabase.eq).toHaveBeenCalledWith('owner_id', 'user-id');
             expect(mockServiceClient.insert).toHaveBeenCalledWith(expect.objectContaining({ biz_id: 'biz-id', name: 'Owner Branch' }));
+            // CI-04: every service-role query on branches (the limit count and the insert) is for this business.
+            expectBusinessScoped(mockServiceClient, 'branches', 'biz-id');
         });
 
         test('должен успешно создать филиал без координат', async () => {

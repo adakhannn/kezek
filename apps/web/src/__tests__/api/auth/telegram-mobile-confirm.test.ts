@@ -11,10 +11,7 @@ import {
     createTelegramMobileSignedHeaders,
     createMockRequest,
     expectErrorResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 // The route keeps real signature/replay/validation handling. Persistence is a
 // deterministic async fixture: these tests must not call the development DB or

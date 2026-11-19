@@ -1,8 +1,6 @@
 import { GET, POST } from '@/app/api/me/current-business/route';
 
-import { createMockRequest, expectErrorResponse, expectSuccessResponse, setupApiTestMocks } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, expectErrorResponse, expectSuccessResponse } from '../testHelpers';
 
 jest.mock('@/lib/currentBusinessHttpService', () => ({
     runGetCurrentBusinessHttp: jest.fn(),

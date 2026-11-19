@@ -1,7 +1,6 @@
 import { bookingRpcResult } from '../lib/bookingRpcMock';
-import { createMockRequest, createMockSupabase, expectErrorResponse, expectSuccessResponse, setupApiTestMocks } from './testHelpers';
+import { createMockRequest, createMockSupabase, expectErrorResponse, expectSuccessResponse } from './testHelpers';
 
-setupApiTestMocks();
 const { createClient } = require('@supabase/supabase-js');
 const { createServerClient } = require('@supabase/ssr');
 const { POST } = require('@/app/api/quick-hold/route');

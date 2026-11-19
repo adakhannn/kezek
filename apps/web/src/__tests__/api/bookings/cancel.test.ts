@@ -5,14 +5,11 @@
 
 import { POST } from '@/app/api/bookings/[id]/cancel/route';
 import {
-    setupApiTestMocks,
     createMockRequest,
     createMockSupabase,
     expectSuccessResponse,
     expectErrorResponse,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 jest.mock('next/headers', () => ({
     cookies: jest.fn(),

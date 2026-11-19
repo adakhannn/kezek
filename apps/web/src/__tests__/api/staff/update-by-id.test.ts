@@ -3,10 +3,7 @@ import {
     createMockRequest,
     expectErrorResponse,
     expectSuccessResponse,
-    setupApiTestMocks,
 } from '../testHelpers';
-
-setupApiTestMocks();
 
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),

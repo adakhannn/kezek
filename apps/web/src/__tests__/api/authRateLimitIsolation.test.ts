@@ -1,3 +1,5 @@
+// This suite tests the real limiter: it opts out of the API tests' shared withRateLimit mock (jest.setup.js).
+jest.unmock('@/lib/rateLimit');
 jest.mock('@/lib/env', () => ({ getUpstashRedisUrl: jest.fn(), getUpstashRedisToken: jest.fn() }));
 jest.mock('@upstash/redis', () => ({ Redis: jest.fn() }));
 jest.mock('@/lib/log', () => ({ logWarn: jest.fn(), logError: jest.fn() }));

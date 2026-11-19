@@ -4,9 +4,7 @@
  */
 
 import { POST } from '@/app/api/admin/initialize-ratings/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
-
-setupApiTestMocks();
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 import { getServiceClient } from '@/lib/supabaseService';
 
