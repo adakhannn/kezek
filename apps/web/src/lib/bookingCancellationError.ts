@@ -1,5 +1,21 @@
-/** Stable public errors shared by mobile, dashboard and HTTP cancellation. */
-export function bookingCancellationError(error: unknown): {
+/** The keys of the cancellation messages (bookings dictionaries). */
+export type BookingCancellationMessageKey =
+    | 'bookings.cancelError.notFound'
+    | 'bookings.cancelError.forbidden'
+    | 'bookings.cancelError.financialReversalRequired'
+    | 'bookings.cancelError.notCancellable'
+    | 'bookings.cancelError.changed';
+type Translate = (key: BookingCancellationMessageKey, fallback: string) => string;
+
+// Server callers (HTTP routes, mobile) keep the Russian text, which src/lib/serverMessages.ts translates
+// in API responses (the server.booking.* dictionaries).
+const russian: Translate = (_key, fallback) => fallback;
+
+/**
+ * Stable public errors shared by mobile, dashboard and HTTP cancellation. The dashboard passes its t,
+ * so the message is in the UI language (FE-10).
+ */
+export function bookingCancellationError(error: unknown, t: Translate = russian): {
     ok: false;
     error: 'not_found' | 'forbidden' | 'financial_reversal_required' | 'not_cancellable' | 'booking_changed';
     message: string;
@@ -9,16 +25,16 @@ export function bookingCancellationError(error: unknown): {
         ? String(error.message) : '';
     switch (code) {
         case 'BOOKING_NOT_FOUND':
-            return { ok: false, error: 'not_found', status: 404, message: 'Бронирование не найдено' };
+            return { ok: false, error: 'not_found', status: 404, message: t('bookings.cancelError.notFound', 'Бронирование не найдено') };
         case 'BOOKING_FORBIDDEN':
-            return { ok: false, error: 'forbidden', status: 403, message: 'Нет доступа к отмене этой записи' };
+            return { ok: false, error: 'forbidden', status: 403, message: t('bookings.cancelError.forbidden', 'Нет доступа к отмене этой записи') };
         case 'BOOKING_FINANCIAL_REVERSAL_REQUIRED':
             return { ok: false, error: 'financial_reversal_required', status: 409,
-                message: 'Запись оплачена, учтена в смене или использует списанную льготу. Обратитесь в организацию для финансового возврата перед отменой.' };
+                message: t('bookings.cancelError.financialReversalRequired', 'Запись оплачена, учтена в смене или использует списанную льготу. Обратитесь в организацию для финансового возврата перед отменой.') };
         case 'BOOKING_STATUS_NOT_CANCELLABLE':
-            return { ok: false, error: 'not_cancellable', status: 409, message: 'Запись в этом статусе нельзя отменить' };
+            return { ok: false, error: 'not_cancellable', status: 409, message: t('bookings.cancelError.notCancellable', 'Запись в этом статусе нельзя отменить') };
         case 'BOOKING_CHANGED':
-            return { ok: false, error: 'booking_changed', status: 409, message: 'Запись изменилась. Обновите её перед повторной отменой.' };
+            return { ok: false, error: 'booking_changed', status: 409, message: t('bookings.cancelError.changed', 'Запись изменилась. Обновите её перед повторной отменой.') };
         default:
             return null;
     }

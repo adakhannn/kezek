@@ -5,6 +5,7 @@ import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { getLocalAuthPublicOrigin } from '@/lib/localAuthPublicOrigin';
 import { logError } from '@/lib/log';
 import { routeRateLimit, withRateLimit } from '@/lib/rateLimit';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 import { createWebLogin, readWebLogin, transitionWebLogin, WEB_LOGIN_TOKEN, webLoginSecret } from '@/lib/telegramWebLoginService';
@@ -13,7 +14,8 @@ export const WEB_LOGIN_COOKIE = '__Host-kezek-telegram-login';
 const reply = (data: object, status = 200) => NextResponse.json(data, { status, headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
 const fail = (message: string, status = 400) => reply({ ok: false, message }, status);
 
-export async function runTelegramWebLoginHttp(req: NextRequest): Promise<Response> {
+// Every answer, the checks before the rate limit included, in the language of the request (FE-10).
+export const runTelegramWebLoginHttp = withLocalizedMessages(async function runTelegramWebLoginHttp(req: NextRequest): Promise<Response> {
     if (process.env.NEXT_PUBLIC_TELEGRAM_BOT_LOGIN_ENABLED !== 'true') return fail('Вход через бота ещё не включён.', 503);
     const origin = getLocalAuthPublicOrigin(req.url);
     if (!origin.startsWith('https://') || req.headers.get('origin') !== origin) return fail('Недопустимый источник запроса.', 403);
@@ -78,4 +80,4 @@ export async function runTelegramWebLoginHttp(req: NextRequest): Promise<Respons
             return fail('Не удалось завершить вход. Создайте новый запрос или войдите другим способом.', 503);
         }
     }, "/api/auth/telegram/web-login");
-}
+});

@@ -1,0 +1,86 @@
+// Server messages (FE-10): each value is the exact Russian text a service returns in an API response, or a
+// pattern of it with {placeholders}; ky and en translate it. Not part of the client bundle: only
+// src/lib/serverMessages.ts imports these, to answer in the language of the request.
+export const serverBusinessRu = {
+    // Business registration applications (/api/business-applications)
+    'server.business.applicationSignInRequired': 'Войдите в аккаунт Kezek перед отправкой заявки.',
+    'server.business.applicationSubmitFailed': 'Не удалось отправить заявку',
+    'server.business.applicationRequiredFields': 'Укажите имя, название бизнеса, телефон и email.',
+    'server.business.applicationInvalidEmail': 'Укажите корректный email.',
+    'server.business.businessNameCheckFailed': 'Не удалось проверить название бизнеса',
+    'server.business.applicationCheckFailed': 'Не удалось проверить заявку',
+    'server.business.applicationRecentDuplicate': 'Заявка с этим номером уже отправлена. Мы скоро свяжемся с вами.',
+    'server.business.applicationSaveFailed': 'Не удалось сохранить заявку',
+
+    // Application policy (applicationPolicy.ts)
+    'server.business.policyBusinessExists': 'Бизнес с таким названием уже есть в Kezek. Запросите доступ владельца вместо создания повторной карточки.',
+    'server.business.policyBlocked': 'Отправка заявок временно заблокирована модератором. Если это ошибка, обратитесь в поддержку.',
+    'server.business.policyPendingDuplicate': 'Такая заявка уже ожидает рассмотрения.',
+    'server.business.policyActiveLimit': 'У вас уже есть максимальное количество активных заявок. Дождитесь решения или отмените ненужную заявку.',
+    'server.business.policyMonthlyLimit': 'Достигнут лимит заявок за 30 дней. Попробуйте позже или обратитесь в поддержку.',
+    'server.business.policyCooldown24h': 'После отклонения новую заявку можно отправить через 24 часа.',
+    'server.business.policyCooldown3d': 'После отклонения повторную заявку сотрудника можно отправить через 3 дня.',
+    'server.business.policyCooldown7d': 'После отклонения повторную заявку владельца можно отправить через 7 дней.',
+    'server.business.policyOwnerEvidenceRequired': 'Для заявки владельца добавьте пояснение не короче 20 символов или ссылку, подтверждающую связь с бизнесом.',
+    'server.business.policyOwnerCannotBeStaff': 'Владелец этого бизнеса не может одновременно подать заявку сотрудника в тот же бизнес.',
+    'server.business.policyUnsupportedRole': 'Для самостоятельной заявки доступны только роли владельца и сотрудника.',
+    'server.business.applicationRejectFailed': 'Не удалось отклонить заявку.',
+    'server.business.applicationProcessedOrUnavailable': 'Заявка уже обработана или недоступна.',
+    'server.business.blockReleaseFailed': 'Не удалось снять блокировку.',
+    'server.business.blockAlreadyReleased': 'Блокировка уже снята или истекла.',
+
+    // Role applications (/api/business-role-applications, businessRoleApplicationService.ts)
+    'server.business.roleApplicationTypeInvalid': 'Некорректный тип заявки.',
+    'server.business.applicationsServiceNotConfigured': 'Сервис заявок не настроен в этом окружении.',
+    'server.business.roleApplicationSignInRequired': 'Войдите в аккаунт, чтобы подать заявку на роль.',
+    'server.business.requestFormatInvalid': 'Неверный формат запроса.',
+    'server.business.applicationsServiceUnavailable': 'Сервис заявок временно недоступен.',
+    'server.business.signInRequired': 'Войдите в аккаунт.',
+    'server.business.applicationNotFound': 'Заявка не найдена.',
+    'server.business.applicationAlreadyProcessed': 'Заявка уже обработана.',
+    'server.business.profileLoadFailed': 'Не удалось загрузить данные профиля. Попробуйте ещё раз.',
+    'server.business.roleApplicationBusinessAndRoleRequired': 'Выберите бизнес и роль.',
+    'server.business.roleApplicationRoleUnavailable': 'Сейчас можно отправить заявку только на роль владельца или сотрудника.',
+    'server.business.businessNotFoundOrNotApproved': 'Бизнес не найден или ещё не одобрен.',
+    'server.business.roleNotConfigured': 'Эта роль ещё не настроена в системе.',
+    'server.business.alreadyHasOwnerRole': 'У вас уже есть роль «Владелец» в этом бизнесе.',
+    'server.business.alreadyHasAdminRole': 'У вас уже есть роль «Администратор» в этом бизнесе.',
+    'server.business.alreadyHasManagerRole': 'У вас уже есть роль «Менеджер» в этом бизнесе.',
+    'server.business.alreadyHasStaffRole': 'У вас уже есть роль «Сотрудник» в этом бизнесе.',
+
+    // Staff applications in the owner workspace (/dashboard/api/role-applications, staffApplicationApprovalService.ts)
+    'server.business.unknownAction': 'Неизвестное действие.',
+    'server.business.onlyOwnerReviewsStaffApplications': 'Принимать и отклонять заявки сотрудников может только владелец бизнеса.',
+    'server.business.ownerWorkspaceStaffApplicationsOnly': 'В кабинете владельца обрабатываются только заявки сотрудников.',
+    'server.business.blockNotFound': 'Блокировка не найдена.',
+    'server.business.approvalBranchRequired': 'Перед принятием сотрудника выберите филиал.',
+    'server.business.staffApprovalFailed': 'Не удалось принять сотрудника.',
+    'server.business.selectedBranchUnavailable': 'Выбранный филиал не найден или неактивен.',
+    'server.business.notStaffApplication': 'Эта заявка не является заявкой сотрудника.',
+    'server.business.staffRoleNotConfigured': 'Роль сотрудника не настроена в системе.',
+    'server.business.staffCreatedWithoutContext': 'Сотрудник создан, но база не вернула его рабочий контекст.',
+
+    // Business search, public contacts, current business
+    'server.business.businessesLoadFailed': 'Не удалось загрузить бизнесы',
+    'server.business.onlyOwnerEditsPublicContacts': 'Только владелец бизнеса может изменять публичные контакты',
+    'server.business.businessNotFound': 'Бизнес не найден',
+    'server.business.businessesCheckFailed': 'Не удалось проверить бизнесы. Повторите попытку.',
+    'server.business.bizIdRequired': 'bizId обязателен',
+    'server.business.noRightsToBusiness': 'Нет прав на этот бизнес',
+    'server.business.currentBusinessSaveFailed': 'Не удалось сохранить текущий бизнес',
+
+    // Request validation (src/lib/validation/businessUpdateSchemas.ts, schemas.ts)
+    'server.business.fieldsToChangeRequired': 'Укажите поля для изменения',
+    'server.business.nameRequired': 'Имя обязательно',
+    'server.business.coordinatesTogether': 'Координаты lat и lon передаются вместе: два числа или два null',
+    'server.business.dayDateFormatInvalid': 'Неверный формат даты. Ожидается YYYY-MM-DD для периода "день"',
+    'server.business.monthDateFormatInvalid': 'Неверный формат даты. Ожидается YYYY-MM для периода "месяц"',
+    'server.business.monthOutOfRange': 'Месяц вне допустимого диапазона',
+    'server.business.yearDateFormatInvalid': 'Неверный формат даты. Ожидается YYYY для периода "год"',
+    'server.business.yearOutOfRange': 'Год вне допустимого диапазона',
+    'server.business.titleRequired': 'Название обязательно',
+    'server.business.titleTooLong': 'Название слишком длинное',
+    'server.business.validityDaysPositive': 'Срок действия в днях должен быть больше 0',
+    'server.business.discountNotNegative': 'Значение скидки не может быть отрицательным',
+    'server.business.percentDiscountMax': 'При типе "percent" значение не должно превышать 100',
+} as const;

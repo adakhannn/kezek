@@ -8,9 +8,10 @@ import {
 import { submitBusinessRoleApplication } from '@/lib/businessRoleApplicationService';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-export async function GET(request: Request) {
+export const GET = withLocalizedMessages(async function GET(request: Request) {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return Response.json({ ok: false, message: 'auth' }, { status: 401 });
@@ -37,9 +38,10 @@ export async function GET(request: Request) {
             message: 'Сервис заявок не настроен в этом окружении.',
         }, { status: 503 });
     }
-}
+});
 
-export async function POST(request: Request) {
+// The sign-in answer comes before withRateLimit, which translates the other messages (FE-10).
+export const POST = withLocalizedMessages(async function POST(request: Request) {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -116,4 +118,4 @@ export async function POST(request: Request) {
         },
         "/api/business-role-applications",
     );
-}
+});

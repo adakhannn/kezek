@@ -1,0 +1,86 @@
+// Server messages (FE-10): each value is the exact Russian text a service returns in an API response, or a
+// pattern of it with {placeholders}; ky and en translate it. Not part of the client bundle: only
+// src/lib/serverMessages.ts imports these, to answer in the language of the request.
+export const serverBusinessEn = {
+    // Business registration applications (/api/business-applications)
+    'server.business.applicationSignInRequired': 'Sign in to your Kezek account before submitting an application.',
+    'server.business.applicationSubmitFailed': 'Could not submit the application',
+    'server.business.applicationRequiredFields': 'Enter your name, business name, phone, and email.',
+    'server.business.applicationInvalidEmail': 'Enter a valid email address.',
+    'server.business.businessNameCheckFailed': 'Could not check the business name',
+    'server.business.applicationCheckFailed': 'Could not check the application',
+    'server.business.applicationRecentDuplicate': 'An application with this phone number has already been submitted. We will contact you soon.',
+    'server.business.applicationSaveFailed': 'Could not save the application',
+
+    // Application policy (applicationPolicy.ts)
+    'server.business.policyBusinessExists': 'A business with this name already exists in Kezek. Request owner access instead of creating a duplicate listing.',
+    'server.business.policyBlocked': 'Applications have been temporarily blocked by a moderator. Contact support if you think this is a mistake.',
+    'server.business.policyPendingDuplicate': 'This application is already waiting for review.',
+    'server.business.policyActiveLimit': 'You already have the maximum number of active applications. Wait for a decision or cancel an unnecessary application.',
+    'server.business.policyMonthlyLimit': 'You have reached the 30-day application limit. Try again later or contact support.',
+    'server.business.policyCooldown24h': 'You can submit a new application 24 hours after a rejection.',
+    'server.business.policyCooldown3d': 'You can submit a staff application again 3 days after a rejection.',
+    'server.business.policyCooldown7d': 'You can submit an owner application again 7 days after a rejection.',
+    'server.business.policyOwnerEvidenceRequired': 'For an owner application, add an explanation of at least 20 characters or a link that confirms your connection to the business.',
+    'server.business.policyOwnerCannotBeStaff': 'The owner of this business cannot also submit a staff application to the same business.',
+    'server.business.policyUnsupportedRole': 'Only the owner and staff roles are available for self-submitted applications.',
+    'server.business.applicationRejectFailed': 'Could not reject the application.',
+    'server.business.applicationProcessedOrUnavailable': 'The application has already been processed or is unavailable.',
+    'server.business.blockReleaseFailed': 'Could not remove the block.',
+    'server.business.blockAlreadyReleased': 'The block has already been removed or has expired.',
+
+    // Role applications (/api/business-role-applications, businessRoleApplicationService.ts)
+    'server.business.roleApplicationTypeInvalid': 'Invalid application type.',
+    'server.business.applicationsServiceNotConfigured': 'The applications service is not configured in this environment.',
+    'server.business.roleApplicationSignInRequired': 'Sign in to apply for a role.',
+    'server.business.requestFormatInvalid': 'Invalid request format.',
+    'server.business.applicationsServiceUnavailable': 'The applications service is temporarily unavailable.',
+    'server.business.signInRequired': 'Sign in to your account.',
+    'server.business.applicationNotFound': 'Application not found.',
+    'server.business.applicationAlreadyProcessed': 'The application has already been processed.',
+    'server.business.profileLoadFailed': 'Could not load your profile details. Please try again.',
+    'server.business.roleApplicationBusinessAndRoleRequired': 'Choose a business and a role.',
+    'server.business.roleApplicationRoleUnavailable': 'For now, you can only apply for the owner or staff role.',
+    'server.business.businessNotFoundOrNotApproved': 'Business not found or not approved yet.',
+    'server.business.roleNotConfigured': 'This role is not set up in the system yet.',
+    'server.business.alreadyHasOwnerRole': 'You already have the “Owner” role in this business.',
+    'server.business.alreadyHasAdminRole': 'You already have the “Administrator” role in this business.',
+    'server.business.alreadyHasManagerRole': 'You already have the “Manager” role in this business.',
+    'server.business.alreadyHasStaffRole': 'You already have the “Employee” role in this business.',
+
+    // Staff applications in the owner workspace (/dashboard/api/role-applications, staffApplicationApprovalService.ts)
+    'server.business.unknownAction': 'Unknown action.',
+    'server.business.onlyOwnerReviewsStaffApplications': 'Only the business owner can accept or reject staff applications.',
+    'server.business.ownerWorkspaceStaffApplicationsOnly': 'Only staff applications are handled in the owner workspace.',
+    'server.business.blockNotFound': 'Block not found.',
+    'server.business.approvalBranchRequired': 'Choose a branch before accepting the staff member.',
+    'server.business.staffApprovalFailed': 'Could not accept the staff member.',
+    'server.business.selectedBranchUnavailable': 'The selected branch was not found or is inactive.',
+    'server.business.notStaffApplication': 'This is not a staff application.',
+    'server.business.staffRoleNotConfigured': 'The staff role is not set up in the system.',
+    'server.business.staffCreatedWithoutContext': 'The staff member was created, but the database did not return their work context.',
+
+    // Business search, public contacts, current business
+    'server.business.businessesLoadFailed': 'Could not load businesses',
+    'server.business.onlyOwnerEditsPublicContacts': 'Only the business owner can change public contacts',
+    'server.business.businessNotFound': 'Business not found',
+    'server.business.businessesCheckFailed': 'Could not check your businesses. Please try again.',
+    'server.business.bizIdRequired': 'bizId is required',
+    'server.business.noRightsToBusiness': 'You have no permissions for this business',
+    'server.business.currentBusinessSaveFailed': 'Could not save the current business',
+
+    // Request validation (src/lib/validation/businessUpdateSchemas.ts, schemas.ts)
+    'server.business.fieldsToChangeRequired': 'Specify the fields to change',
+    'server.business.nameRequired': 'Name is required',
+    'server.business.coordinatesTogether': 'Send the lat and lon coordinates together: two numbers or two nulls',
+    'server.business.dayDateFormatInvalid': 'Invalid date format. YYYY-MM-DD is expected for the "day" period',
+    'server.business.monthDateFormatInvalid': 'Invalid date format. YYYY-MM is expected for the "month" period',
+    'server.business.monthOutOfRange': 'Month is out of range',
+    'server.business.yearDateFormatInvalid': 'Invalid date format. YYYY is expected for the "year" period',
+    'server.business.yearOutOfRange': 'Year is out of range',
+    'server.business.titleRequired': 'Name is required',
+    'server.business.titleTooLong': 'Name is too long',
+    'server.business.validityDaysPositive': 'Validity in days must be greater than 0',
+    'server.business.discountNotNegative': 'Discount value cannot be negative',
+    'server.business.percentDiscountMax': 'With the "percent" type, the value must not exceed 100',
+} as const;

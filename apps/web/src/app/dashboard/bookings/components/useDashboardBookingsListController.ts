@@ -47,7 +47,8 @@ function toBookingItem(row: DashboardBookingRow, locale: string, t: Translate): 
             totalDuration += duration;
             return name ? `${name} (${duration} ${minutes})` : `${duration} ${minutes}`;
         });
-        const total = totalDuration > 0 ? ` — ${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${minutes}` : '';
+        const totalLabel = t('cabinet.bookings.card.totalDuration', 'Всего:');
+        const total = totalDuration > 0 ? ` — ${totalLabel} ${totalDuration} ${minutes}` : '';
         item.servicesSummary = `${parts.join('; ')}${total}`;
     }
 
@@ -235,7 +236,7 @@ export function useDashboardBookingsListController({
         try {
             await cancelBooking(id);
         } catch (error: unknown) {
-            const message = bookingCancellationError(error)?.message
+            const message = bookingCancellationError(error, t)?.message
                 ?? (error instanceof Error ? error.message : t('bookings.list.cancelError', 'Не удалось отменить запись'));
             showError(message);
             return;

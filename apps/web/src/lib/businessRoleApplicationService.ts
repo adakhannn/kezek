@@ -8,6 +8,15 @@ export const BUSINESS_ROLE_LABELS: Record<BusinessRoleKey, string> = {
     staff: 'Сотрудник',
 };
 
+// A whole message per role, not a label inserted into one: the API answers in the language of the
+// request (FE-10).
+const ALREADY_HAS_ROLE_MESSAGES: Record<BusinessRoleKey, string> = {
+    owner: 'У вас уже есть роль «Владелец» в этом бизнесе.',
+    admin: 'У вас уже есть роль «Администратор» в этом бизнесе.',
+    manager: 'У вас уже есть роль «Менеджер» в этом бизнесе.',
+    staff: 'У вас уже есть роль «Сотрудник» в этом бизнесе.',
+};
+
 export const BUSINESS_ROLE_OPTIONS: BusinessRoleKey[] = ['owner', 'admin', 'manager', 'staff'];
 export const SUBMITTABLE_BUSINESS_ROLE_OPTIONS: BusinessRoleKey[] = ['owner', 'staff'];
 
@@ -164,7 +173,7 @@ export async function submitBusinessRoleApplication(params: {
             ok: false as const,
             status: 409,
             code: 'already_has_role',
-            message: `У вас уже есть роль «${BUSINESS_ROLE_LABELS[requestedRole]}» в этом бизнесе.`,
+            message: ALREADY_HAS_ROLE_MESSAGES[requestedRole],
         };
     }
 

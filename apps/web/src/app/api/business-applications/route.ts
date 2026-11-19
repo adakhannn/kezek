@@ -5,9 +5,11 @@ import { submitBusinessApplication, type BusinessApplicationInput } from '@/lib/
 import { notifyBusinessApplicationSubmitted } from '@/lib/businessRoleApplicationNotificationService';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-export async function POST(request: Request) {
+// The sign-in answer comes before withRateLimit, which translates the other messages (FE-10).
+export const POST = withLocalizedMessages(async function POST(request: Request) {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -73,4 +75,4 @@ export async function POST(request: Request) {
             }, { status: 500 });
         }
     }, "/api/business-applications");
-}
+});

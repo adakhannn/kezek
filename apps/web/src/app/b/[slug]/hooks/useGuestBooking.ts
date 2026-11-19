@@ -113,13 +113,14 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 missingFields.push(t('booking.guest.missingField.time', 'время'));
             }
 
+            const missingLabel = t('booking.guest.missingFields', 'Не выбрано');
             feedback.showError(
                 t(
                     'booking.guest.missingData',
                     'Данные для бронирования неполные. Пожалуйста, выберите филиал, мастера, услугу и время.',
                 ) +
                     (missingFields.length > 0
-                        ? `\n${t('booking.guest.missingFields', 'Не выбрано')}: ${missingFields.join(', ')}`
+                        ? `\n${missingLabel}: ${missingFields.join(', ')}`
                         : ''),
             );
             return;

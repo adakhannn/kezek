@@ -56,6 +56,10 @@
 return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
 ```
 
+## Язык сообщений
+
+`withErrorHandler`, `withRateLimit` и `withLocalizedMessages` переводят ответ на язык cookie `kezek_lang` (FE-10, [serverMessages](serverMessages.ts)): строковые `message` и `error` верхнего уровня и `message` каждой ошибки в `details.errors[]`. Перевод берётся из серверных словарей `server*.ru/ky/en.ts`: там точный русский текст или шаблон с `{параметром}`. Ответ не меняется без cookie, для `ru`, для текста вне словарей, для тела не-JSON или длиннее 64 КБ, а также при любой ошибке перевода. Коды `error` (`validation`, `forbidden` …) в словарях отсутствуют и остаются как есть. Тип ошибки клиент определяет по коду и `details`, а не по тексту `message`: текст теперь зависит от языка. Новое русское сообщение добавляется в словарь своей группы ([README словарей](../app/_components/i18n/dictionaries/README.md)); `pnpm check:i18n` за этим следит.
+
 ## Validation и exception wrapper
 
 [validateRequest / validateQuery](validation/apiValidation.ts) возвращают HTTP 400 с `error: validation`. Zod-ошибки содержат `details.errors[]` с dotted `path` и `message`. Некорректный JSON возвращает `Invalid JSON in request body` без details. Неизвестная validation-ошибка сейчас может передать строку исключения в details; отсутствие внутренних сведений автоматически не гарантируется.

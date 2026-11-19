@@ -4,10 +4,11 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { logError, logWarn } from '@/lib/log';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 import { syncNotificationEmailsFromUser } from '@/lib/userNotificationEmailService';
 
-export async function GET() {
+export const GET = withLocalizedMessages(async function GET() {
     const { supabase, admin } = await createSupabaseClients();
     const {
         data: { user },
@@ -33,4 +34,4 @@ export async function GET() {
     }
 
     return NextResponse.json({ ok: true, data: data ?? [] });
-}
+});

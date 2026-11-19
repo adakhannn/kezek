@@ -1,0 +1,86 @@
+// Server messages (FE-10): each value is the exact Russian text a service returns in an API response, or a
+// pattern of it with {placeholders}; ky and en translate it. Not part of the client bundle: only
+// src/lib/serverMessages.ts imports these, to answer in the language of the request.
+export const serverBusinessKy = {
+    // Business registration applications (/api/business-applications)
+    'server.business.applicationSignInRequired': 'Арыз жөнөтүүдөн мурун Kezek аккаунтуна кириңиз.',
+    'server.business.applicationSubmitFailed': 'Арызды жөнөтүү мүмкүн болгон жок',
+    'server.business.applicationRequiredFields': 'Атыңызды, бизнестин аталышын, телефонду жана email дарегин көрсөтүңүз.',
+    'server.business.applicationInvalidEmail': 'Туура email дарегин көрсөтүңүз.',
+    'server.business.businessNameCheckFailed': 'Бизнестин аталышын текшерүү мүмкүн болгон жок',
+    'server.business.applicationCheckFailed': 'Арызды текшерүү мүмкүн болгон жок',
+    'server.business.applicationRecentDuplicate': 'Бул номер менен арыз жөнөтүлгөн. Жакында сиз менен байланышабыз.',
+    'server.business.applicationSaveFailed': 'Арызды сактоо мүмкүн болгон жок',
+
+    // Application policy (applicationPolicy.ts)
+    'server.business.policyBusinessExists': 'Мындай аталыштагы бизнес Kezek системасында бар. Кайталанган карточка түзбөстөн, ээсинин мүмкүнчүлүгүн сураңыз.',
+    'server.business.policyBlocked': 'Арыз жөнөтүү модератор тарабынан убактылуу бөгөттөлгөн. Эгер бул ката болсо, колдоо кызматына кайрылыңыз.',
+    'server.business.policyPendingDuplicate': 'Мындай арыз кароону күтүп жатат.',
+    'server.business.policyActiveLimit': 'Активдүү арыздардын максималдуу санына жеттиңиз. Чечимди күтүңүз же керексиз арызды жокко чыгарыңыз.',
+    'server.business.policyMonthlyLimit': '30 күндүк арыз чегине жеттиңиз. Кийинчерээк аракет кылыңыз же колдоо кызматына кайрылыңыз.',
+    'server.business.policyCooldown24h': 'Арыз четке кагылгандан кийин жаңысын 24 сааттан соң жөнөтүүгө болот.',
+    'server.business.policyCooldown3d': 'Арыз четке кагылгандан кийин кызматкердин арызын кайра 3 күндөн соң жөнөтүүгө болот.',
+    'server.business.policyCooldown7d': 'Арыз четке кагылгандан кийин ээсинин арызын кайра 7 күндөн соң жөнөтүүгө болот.',
+    'server.business.policyOwnerEvidenceRequired': 'Ээсинин арызы үчүн кеминде 20 белгиден турган түшүндүрмө же бизнес менен байланышыңызды ырастаган шилтеме кошуңуз.',
+    'server.business.policyOwnerCannotBeStaff': 'Бул бизнестин ээси ошол эле бизнеске кызматкердин арызын бере албайт.',
+    'server.business.policyUnsupportedRole': 'Өз алдынча арыз берүү үчүн ээсинин жана кызматкердин ролдору гана жеткиликтүү.',
+    'server.business.applicationRejectFailed': 'Арызды четке кагуу мүмкүн болгон жок.',
+    'server.business.applicationProcessedOrUnavailable': 'Арыз буга чейин каралган же жеткиликсиз.',
+    'server.business.blockReleaseFailed': 'Бөгөттү алып салуу мүмкүн болгон жок.',
+    'server.business.blockAlreadyReleased': 'Бөгөт буга чейин алынып салынган же мөөнөтү бүткөн.',
+
+    // Role applications (/api/business-role-applications, businessRoleApplicationService.ts)
+    'server.business.roleApplicationTypeInvalid': 'Арыздын түрү туура эмес.',
+    'server.business.applicationsServiceNotConfigured': 'Арыздар кызматы бул чөйрөдө жөндөлгөн эмес.',
+    'server.business.roleApplicationSignInRequired': 'Ролго арыз берүү үчүн аккаунтка кириңиз.',
+    'server.business.requestFormatInvalid': 'Суроо-талаптын форматы туура эмес.',
+    'server.business.applicationsServiceUnavailable': 'Арыздар кызматы убактылуу иштебей турат.',
+    'server.business.signInRequired': 'Аккаунтка кириңиз.',
+    'server.business.applicationNotFound': 'Арыз табылган жок.',
+    'server.business.applicationAlreadyProcessed': 'Арыз буга чейин каралган.',
+    'server.business.profileLoadFailed': 'Профилдин маалыматтарын жүктөө мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'server.business.roleApplicationBusinessAndRoleRequired': 'Бизнести жана ролду тандаңыз.',
+    'server.business.roleApplicationRoleUnavailable': 'Азыр ээсинин же кызматкердин ролуна гана арыз жөнөтүүгө болот.',
+    'server.business.businessNotFoundOrNotApproved': 'Бизнес табылган жок же али жактырыла элек.',
+    'server.business.roleNotConfigured': 'Бул роль системада али жөндөлө элек.',
+    'server.business.alreadyHasOwnerRole': 'Сизде бул бизнесте «Ээси» ролу бар.',
+    'server.business.alreadyHasAdminRole': 'Сизде бул бизнесте «Администратор» ролу бар.',
+    'server.business.alreadyHasManagerRole': 'Сизде бул бизнесте «Менеджер» ролу бар.',
+    'server.business.alreadyHasStaffRole': 'Сизде бул бизнесте «Кызматкер» ролу бар.',
+
+    // Staff applications in the owner workspace (/dashboard/api/role-applications, staffApplicationApprovalService.ts)
+    'server.business.unknownAction': 'Белгисиз аракет.',
+    'server.business.onlyOwnerReviewsStaffApplications': 'Кызматкерлердин арыздарын бизнестин ээси гана кабыл алып же четке кага алат.',
+    'server.business.ownerWorkspaceStaffApplicationsOnly': 'Ээсинин кабинетинде кызматкерлердин арыздары гана каралат.',
+    'server.business.blockNotFound': 'Бөгөт табылган жок.',
+    'server.business.approvalBranchRequired': 'Кызматкерди кабыл алуудан мурун филиалды тандаңыз.',
+    'server.business.staffApprovalFailed': 'Кызматкерди кабыл алуу мүмкүн болгон жок.',
+    'server.business.selectedBranchUnavailable': 'Тандалган филиал табылган жок же активдүү эмес.',
+    'server.business.notStaffApplication': 'Бул арыз кызматкердин арызы эмес.',
+    'server.business.staffRoleNotConfigured': 'Кызматкердин ролу системада жөндөлгөн эмес.',
+    'server.business.staffCreatedWithoutContext': 'Кызматкер түзүлдү, бирок маалымат базасы анын жумуш контекстин кайтарган жок.',
+
+    // Business search, public contacts, current business
+    'server.business.businessesLoadFailed': 'Бизнестерди жүктөө мүмкүн болгон жок',
+    'server.business.onlyOwnerEditsPublicContacts': 'Жалпыга ачык байланыштарды бизнестин ээси гана өзгөртө алат',
+    'server.business.businessNotFound': 'Бизнес табылган жок',
+    'server.business.businessesCheckFailed': 'Бизнестерди текшерүү мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'server.business.bizIdRequired': 'bizId милдеттүү',
+    'server.business.noRightsToBusiness': 'Бул бизнеске укугуңуз жок',
+    'server.business.currentBusinessSaveFailed': 'Учурдагы бизнести сактоо мүмкүн болгон жок',
+
+    // Request validation (src/lib/validation/businessUpdateSchemas.ts, schemas.ts)
+    'server.business.fieldsToChangeRequired': 'Өзгөртүлө турган талааларды көрсөтүңүз',
+    'server.business.nameRequired': 'Аты милдеттүү',
+    'server.business.coordinatesTogether': 'lat жана lon координаттары чогуу берилет: эки сан же эки null',
+    'server.business.dayDateFormatInvalid': 'Датанын форматы туура эмес. "Күн" мезгили үчүн YYYY-MM-DD күтүлөт',
+    'server.business.monthDateFormatInvalid': 'Датанын форматы туура эмес. "Ай" мезгили үчүн YYYY-MM күтүлөт',
+    'server.business.monthOutOfRange': 'Ай жол берилген чектен тышкары',
+    'server.business.yearDateFormatInvalid': 'Датанын форматы туура эмес. "Жыл" мезгили үчүн YYYY күтүлөт',
+    'server.business.yearOutOfRange': 'Жыл жол берилген чектен тышкары',
+    'server.business.titleRequired': 'Аталышы милдеттүү',
+    'server.business.titleTooLong': 'Аталышы өтө узун',
+    'server.business.validityDaysPositive': 'Күн менен эсептелген мөөнөт 0дөн чоң болушу керек',
+    'server.business.discountNotNegative': 'Арзандатуу мааниси терс болушу мүмкүн эмес',
+    'server.business.percentDiscountMax': '"percent" түрүндө маани 100дөн ашпашы керек',
+} as const;

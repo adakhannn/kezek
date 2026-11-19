@@ -3,9 +3,10 @@ export const dynamic = 'force-dynamic';
 
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-export async function DELETE(_request: Request, context: unknown) {
+export const DELETE = withLocalizedMessages(async function DELETE(_request: Request, context: unknown) {
     const applicationId = await getRouteParamRequired(context, 'id');
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -39,4 +40,4 @@ export async function DELETE(_request: Request, context: unknown) {
     if (!cancelled) return Response.json({ ok: false, message: 'Заявка уже обработана.' }, { status: 409 });
 
     return Response.json({ ok: true });
-}
+});

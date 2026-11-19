@@ -35,11 +35,19 @@ export type UnlinkResult =
     | { ok: true; data: { provider: SocialProvider; remainingMethods: number } }
     | { ok: false; error: 'validation' | 'not_found' | 'conflict' | 'internal'; message: string; status: number; details?: { code: string } };
 
-const connectionLabels: Record<SocialProvider, string> = {
-    google: 'Google',
-    yandex: 'Яндекс',
-    telegram: 'Telegram',
-    whatsapp: 'WhatsApp',
+// One whole message per provider (FE-10): the API translates each of them, and no Russian provider
+// name is inserted into a sentence.
+const notConnectedMessages: Record<SocialProvider, string> = {
+    google: 'Google уже не подключён.',
+    yandex: 'Яндекс уже не подключён.',
+    telegram: 'Telegram уже не подключён.',
+    whatsapp: 'WhatsApp уже не подключён.',
+};
+const unlinkFailedMessages: Record<SocialProvider, string> = {
+    google: 'Не удалось отвязать Google.',
+    yandex: 'Не удалось отвязать Яндекс.',
+    telegram: 'Не удалось отвязать Telegram.',
+    whatsapp: 'Не удалось отвязать WhatsApp.',
 };
 
 function phoneDigits(value: unknown): string {
@@ -98,7 +106,7 @@ export async function unlinkSocialIdentity(params: {
     const connectedCount = Object.values(connected).filter(Boolean).length;
 
     if (!connected[params.provider]) {
-        return { ok: false, error: 'not_found', message: `${connectionLabels[params.provider]} уже не подключён.`, status: 404, details: { code: 'identity_not_connected' } };
+        return { ok: false, error: 'not_found', message: notConnectedMessages[params.provider], status: 404, details: { code: 'identity_not_connected' } };
     }
     if (connectedCount <= 1) {
         return { ok: false, error: 'conflict', message: 'Нельзя отвязать последний способ входа. Сначала подключите другой.', status: 409, details: { code: 'last_login_method' } };
@@ -110,7 +118,7 @@ export async function unlinkSocialIdentity(params: {
             target_provider: 'google',
         });
         if (error || Number(data) !== 1) {
-            return { ok: false, error: 'internal', message: 'Не удалось отвязать Google.', status: 500, details: { code: 'google_unlink_failed' } };
+            return { ok: false, error: 'internal', message: unlinkFailedMessages.google, status: 500, details: { code: 'google_unlink_failed' } };
         }
         await removeNotificationEmailSource(params.admin, params.userId, 'google');
     } else {
@@ -123,7 +131,7 @@ export async function unlinkSocialIdentity(params: {
         for (const digits of releasedPhones) {
             const { error } = await params.admin.rpc('release_auth_phone', { p_user_id: params.userId, p_phone_digits: digits });
             if (error) {
-                return { ok: false, error: 'internal', message: 'Не удалось отвязать WhatsApp.', status: 500, details: { code: 'auth_phone_release_failed' } };
+                return { ok: false, error: 'internal', message: unlinkFailedMessages.whatsapp, status: 500, details: { code: 'auth_phone_release_failed' } };
             }
         }
 
@@ -134,7 +142,7 @@ export async function unlinkSocialIdentity(params: {
                 : { whatsapp_phone: null, whatsapp_verified: false, notify_whatsapp: false };
         const { error } = await params.admin.from('profiles').update(update).eq('id', params.userId);
         if (error) {
-            return { ok: false, error: 'internal', message: `Не удалось отвязать ${connectionLabels[params.provider]}.`, status: 500, details: { code: 'profile_unlink_failed' } };
+            return { ok: false, error: 'internal', message: unlinkFailedMessages[params.provider], status: 500, details: { code: 'profile_unlink_failed' } };
         }
 
         const { error: metadataError } = await params.admin.auth.admin.updateUserById(params.userId, {

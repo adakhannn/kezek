@@ -112,11 +112,14 @@ export async function runServiceUpdateFlow({
     }
     if (message.includes('SERVICE_BRANCH_HAS_FUTURE_BOOKINGS')) {
         const branches = (error.details ?? '').split(', ').filter(Boolean);
-        const many = branches.length > 1;
+        const names = branches.join(', ');
         return {
             ok: false,
             error: 'conflict',
-            message: `Невозможно отвязать услугу от филиал${many ? 'ов' : 'а'} "${branches.join(', ')}": к ${many ? 'ним' : 'нему'} привязаны будущие брони. Сначала отмените или удалите все будущие брони. Изменения не сохранены.`,
+            // One whole sentence for one branch and one for several, so the API can translate it (FE-10).
+            message: branches.length > 1
+                ? `Невозможно отвязать услугу от филиалов "${names}": к ним привязаны будущие брони. Сначала отмените или удалите все будущие брони. Изменения не сохранены.`
+                : `Невозможно отвязать услугу от филиала "${names}": к нему привязаны будущие брони. Сначала отмените или удалите все будущие брони. Изменения не сохранены.`,
             details: { branches },
             status: 409,
         };

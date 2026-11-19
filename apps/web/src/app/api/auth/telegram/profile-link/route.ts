@@ -1,9 +1,11 @@
 import { handleApiError } from '@/lib/apiErrorHandler';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { runTelegramProfileLinkHttp } from '@/lib/telegramProfileLinkHttpService';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export async function POST(req: Request) {
+// Every answer, the checks before the rate limit included, in the language of the request (FE-10).
+export const POST = withLocalizedMessages(async function POST(req: Request) {
     let response: Response;
     try {
         response = await runTelegramProfileLinkHttp(req);
@@ -12,4 +14,4 @@ export async function POST(req: Request) {
     }
     response.headers.set('Cache-Control', 'no-store');
     return response;
-}
+});

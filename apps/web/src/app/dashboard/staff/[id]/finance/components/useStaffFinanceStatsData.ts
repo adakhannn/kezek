@@ -51,14 +51,14 @@ export function useStaffFinanceStatsData({
 
             if (requestId !== sequence.current) return;
             if (!response.ok || !json.ok) {
-                throw new Error(('error' in json && json.error) || t('finance.loading', 'Не удалось загрузить статистику'));
+                throw new Error(('error' in json && json.error) || t('finance.loadError', 'Не удалось загрузить статистику'));
             }
 
             const payload =
                 (json as { data?: { stats?: StaffFinanceStatsPayload }; stats?: StaffFinanceStatsPayload }).data?.stats ??
                 (json as { stats?: StaffFinanceStatsPayload }).stats;
 
-            if (!payload) throw new Error('Неполный финансовый отчёт');
+            if (!payload) throw new Error(t('finance.incompleteReport', 'Неполный финансовый отчёт'));
             setSnapshotOwner(request);
             setServerDate(payload.dateFrom);
             setStats(payload);

@@ -1,8 +1,11 @@
 // Checks apps/web i18n dictionaries:
-//  1. every dictionary group has the same keys in ru, ky and en;
-//  2. no t('literal.key', ...) call in the app uses a key missing from the ru dictionaries.
+//  1. every dictionary group has the same keys in ru, ky and en, and each value has the same
+//     {placeholders} in all three;
+//  2. no t('literal.key', ...) call in the app uses a key missing from the ru dictionaries;
+//  3. Russian text that bypasses the translations grows in no file (see below);
+//  4. no two server messages (server*.ts groups, FE-10) share their Russian text.
 // A t() call with a key missing everywhere silently shows its (usually Russian)
-// fallback to ky/en users. Usage: node scripts/check-i18n.mjs [--report]
+// fallback to ky/en users. Usage: node scripts/check-i18n.mjs [--report] [--write-baseline]
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -16,6 +19,8 @@ const report = process.argv.includes('--report');
 
 const LOCALES = ['Ru', 'Ky', 'En'];
 const groups = new Map(); // base name -> { Ru: Set, Ky: Set, En: Set }
+const values = new Map(); // base name -> { Ru: Map(key -> text), ... } for plain string values
+const PLACEHOLDER = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
 
 function propertyKey(name) {
     if (ts.isStringLiteral(name) || ts.isNumericLiteral(name) || ts.isIdentifier(name)) return name.text;
@@ -33,15 +38,20 @@ for (const file of fs.readdirSync(dictDir).filter(f => f.endsWith('.ts') && f !=
             while (ts.isAsExpression(init) || ts.isSatisfiesExpression?.(init) || ts.isParenthesizedExpression(init)) init = init.expression;
             if (!m || !ts.isObjectLiteralExpression(init)) continue;
             const keys = new Set();
+            const texts = new Map();
             for (const p of init.properties) {
                 if (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p)) {
                     const k = propertyKey(p.name); if (k) keys.add(k);
+                    if (k && ts.isPropertyAssignment(p) && (ts.isStringLiteral(p.initializer) || ts.isNoSubstitutionTemplateLiteral(p.initializer))) {
+                        texts.set(k, p.initializer.text);
+                    }
                 } else if (ts.isSpreadAssignment(p)) {
                     keys.add(`...${p.expression.getText(sf)}`);
                 }
             }
-            if (!groups.has(m[1])) groups.set(m[1], {});
+            if (!groups.has(m[1])) { groups.set(m[1], {}); values.set(m[1], {}); }
             groups.get(m[1])[m[2]] = keys;
+            values.get(m[1])[m[2]] = texts;
         }
     }
 }
@@ -57,6 +67,34 @@ for (const [base, byLocale] of [...groups].sort()) {
         const missing = [...union].filter(k => !byLocale[locale].has(k));
         missingParityKeys += missing.length;
         if (missing.length) failures.push(`${base}${locale}: missing ${missing.length} key(s): ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? ', …' : ''}`);
+    }
+}
+
+// A translation that loses or renames a {placeholder} shows the raw marker, or drops the value.
+const placeholderNames = (text) => [...text.matchAll(PLACEHOLDER)].map(m => m[1]).sort().join(', ');
+const placeholderMismatches = [];
+for (const [base, byLocale] of [...values].sort()) {
+    for (const [key, ruText] of byLocale.Ru ?? []) {
+        for (const locale of ['Ky', 'En']) {
+            const text = byLocale[locale]?.get(key);
+            if (text !== undefined && placeholderNames(text) !== placeholderNames(ruText)) {
+                placeholderMismatches.push(`${base}${locale} ${key}: {${placeholderNames(text)}} instead of {${placeholderNames(ruText)}}`);
+            }
+        }
+    }
+}
+
+// Server messages (FE-10): src/lib/serverMessages.ts translates an API message found here. The same
+// Russian text under two keys would make one translation dead.
+const MARK = '\u0000';
+const serverMessages = new Map(); // Russian text with each {placeholder} as MARK -> key
+const duplicateServerMessages = [];
+for (const [base, byLocale] of [...values].sort()) {
+    if (!/^server[A-Z]/.test(base)) continue;
+    for (const [key, ruText] of byLocale.Ru ?? []) {
+        const normalized = ruText.replace(PLACEHOLDER, MARK);
+        if (serverMessages.has(normalized)) duplicateServerMessages.push(`${key} repeats ${serverMessages.get(normalized)}: ${ruText}`);
+        else serverMessages.set(normalized, key);
     }
 }
 
@@ -78,7 +116,7 @@ function walk(dir) {
 }
 walk(path.join(web, 'src'));
 
-console.log(`i18n: ${groups.size} dictionary groups, ${allRu.size} ru keys; keys missing in some locale: ${missingParityKeys}; t() keys missing from dictionaries: ${unknownKeys.size}.`);
+console.log(`i18n: ${groups.size} dictionary groups, ${allRu.size} ru keys; keys missing in some locale: ${missingParityKeys}; t() keys missing from dictionaries: ${unknownKeys.size}; placeholder mismatches: ${placeholderMismatches.length}; server messages: ${serverMessages.size}.`);
 if (report) {
     for (const f of failures) console.log(`  parity  ${f}`);
     for (const [k, f] of [...unknownKeys].sort()) console.log(`  missing ${k}  (${f})`);
@@ -98,12 +136,26 @@ if (unknownKeys.size > MAX_UNKNOWN_KEYS) {
     failed = true;
     console.error(`  ${unknownKeys.size} t() keys are missing from dictionaries (limit ${MAX_UNKNOWN_KEYS}); run with --report`);
 }
+if (placeholderMismatches.length) {
+    failed = true;
+    console.error(`  ${placeholderMismatches.length} translation(s) have other {placeholders} than the ru text:`);
+    for (const f of placeholderMismatches.slice(0, 20)) console.error(`    ${f}`);
+}
+if (duplicateServerMessages.length) {
+    failed = true;
+    console.error(`  ${duplicateServerMessages.length} server message(s) repeat the Russian text of another key; keep one:`);
+    for (const f of duplicateServerMessages.slice(0, 20)) console.error(`    ${f}`);
+}
 
-// 3. Russian text in the UI that bypasses t() (FE-10): JSX text and string literals of .tsx files
-// outside t() (a Cyrillic fallback of t('key', 'Текст') is a translation) and outside console and
-// log calls. Each file may not have more than its baseline (scripts/i18n-untranslated-baseline.json),
-// and a lower count must be written down with --write-baseline, so the gain is kept. The admin panel
-// and the legal pages are the deliberate rest of the baseline.
+// 3. Russian text that bypasses the translations (FE-10): JSX text and string literals of .tsx and
+// .ts files outside t() (a Cyrillic fallback of t('key', 'Текст') is a translation) and outside
+// console and log calls. In server code (API routes and src/lib modules without 'use client') a
+// literal that is a server message counts as translated: the API answers with it in the language of
+// the request; a template literal matches a message with {placeholders} where it has ${...}. Each
+// file may not have more than its baseline (scripts/i18n-untranslated-baseline.json), and a lower
+// count must be written down with --write-baseline, so the gain is kept. The deliberate rest of the
+// baseline: the admin panel, the legal pages, the texts of outgoing notifications and bot replies
+// (the recipient's language is not stored), internal errors and text matching.
 const BASELINE_FILE = path.join(root, 'scripts', 'i18n-untranslated-baseline.json');
 const CYRILLIC = /[А-Яа-яЁё]/;
 const NOT_UI_CALLEE = /(^|\.)(t|tr|translate)$|^console\.|^(logDebug|logWarn|logError)$/;
@@ -114,19 +166,32 @@ function outsideTranslation(node) {
     }
     return true;
 }
+function literalText(node) {
+    if (ts.isTemplateExpression(node)) return node.head.text + node.templateSpans.map(span => MARK + span.literal.text).join('');
+    return node.text;
+}
+function isServerFile(rel, source) {
+    if (rel.startsWith('src/app/api/') || rel.endsWith('/route.ts')) return true;
+    return rel.startsWith('src/lib/') && !/^\s*(\/\/[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*['"]use client['"]/.test(source);
+}
 const untranslated = new Map();
 function scanUi(dir) {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
         const p = path.join(dir, e.name);
         if (e.isDirectory()) { if (!['__tests__', 'node_modules', 'generated'].includes(e.name) && p !== dictDir) scanUi(p); continue; }
-        if (!e.name.endsWith('.tsx') || /\.test\.tsx$/.test(e.name)) continue;
-        const sf = ts.createSourceFile(p, fs.readFileSync(p, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+        if (!/\.tsx?$/.test(e.name) || e.name.endsWith('.d.ts') || /\.test\.tsx?$/.test(e.name)) continue;
+        const rel = path.relative(web, p).split(path.sep).join('/');
+        const source = fs.readFileSync(p, 'utf8');
+        const tsx = e.name.endsWith('.tsx');
+        const server = !tsx && isServerFile(rel, source);
+        const sf = ts.createSourceFile(p, source, ts.ScriptTarget.Latest, true, tsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
         const found = [];
         const visit = (node) => {
             let text = null;
             if (ts.isJsxText(node)) text = node.getText();
             else if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateExpression(node))
-                && !ts.isImportDeclaration(node.parent) && !ts.isExportDeclaration(node.parent) && outsideTranslation(node)) {
+                && !ts.isImportDeclaration(node.parent) && !ts.isExportDeclaration(node.parent) && outsideTranslation(node)
+                && !(server && serverMessages.has(literalText(node)))) {
                 text = node.getText();
             }
             if (text && CYRILLIC.test(text)) {
@@ -135,7 +200,7 @@ function scanUi(dir) {
             ts.forEachChild(node, visit);
         };
         visit(sf);
-        if (found.length) untranslated.set(path.relative(web, p).split(path.sep).join('/'), found);
+        if (found.length) untranslated.set(rel, found);
     }
 }
 scanUi(path.join(web, 'src'));
@@ -148,7 +213,7 @@ if (process.argv.includes('--write-baseline')) {
     const baseline = fs.existsSync(BASELINE_FILE) ? JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf8')) : {};
     const grown = Object.entries(counts).filter(([file, n]) => n > (baseline[file] ?? 0));
     const shrunk = Object.entries(baseline).filter(([file, n]) => (counts[file] ?? 0) < n);
-    console.log(`i18n: untranslated UI text: ${total} in ${Object.keys(counts).length} files (baseline ${Object.values(baseline).reduce((s, n) => s + n, 0)}).`);
+    console.log(`i18n: untranslated text: ${total} in ${Object.keys(counts).length} files (baseline ${Object.values(baseline).reduce((s, n) => s + n, 0)}).`);
     if (report) for (const [file, found] of untranslated) for (const line of found) console.log(`  text    ${file}:${line}`);
     if (grown.length) {
         failed = true;

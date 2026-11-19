@@ -80,12 +80,13 @@ export function useDashboardAnalyticsPageData() {
                     ),
                 ]);
 
+                // Diagnostics only: the page shows t('analytics.loadError') for any failure.
                 if (!overviewResponse.ok) {
                     throw new Error(`Overview HTTP ${overviewResponse.status}`);
                 }
                 const overviewJson = (await overviewResponse.json()) as OverviewResponse;
                 if (!overviewJson.ok || !overviewJson.data) {
-                    throw new Error(overviewJson.error || 'Не удалось загрузить данные обзора');
+                    throw new Error(overviewJson.error || 'Overview response without data');
                 }
 
                 if (!loadResponse.ok) {
@@ -93,7 +94,7 @@ export function useDashboardAnalyticsPageData() {
                 }
                 const loadJson = (await loadResponse.json()) as LoadResponse;
                 if (!loadJson.ok || !loadJson.data) {
-                    throw new Error(loadJson.error || 'Не удалось загрузить данные по загрузке');
+                    throw new Error(loadJson.error || 'Load response without data');
                 }
 
                 if (!ignore) {

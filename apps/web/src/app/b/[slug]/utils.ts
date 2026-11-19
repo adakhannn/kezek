@@ -14,18 +14,18 @@ type ErrorWithDetails = {
     code?: string;
 };
 
-export function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): string {
+export function fmtErr(e: unknown, t: (key: string, fallback?: string) => string): string {
     if (e && typeof e === 'object') {
         const errorObj = e as ErrorWithDetails;
         const rawMessage = errorObj.message || '';
 
         if (errorObj.code === 'booking_slot_unavailable') {
-            return t?.('booking.error.slotUnavailable', 'Это время уже занято. Выберите другой свободный слот.') || 'Это время уже занято. Выберите другой свободный слот.';
+            return t('booking.error.slotUnavailable', 'Это время уже занято. Выберите другой свободный слот.');
         }
 
         // Пользовательский текст для частых бизнес-ошибок
         if (rawMessage.includes('is not assigned to branch')) {
-            return t?.('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.') || 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
+            return t('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.');
         }
 
         if (errorObj.message) {

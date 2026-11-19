@@ -1,2 +1,3 @@
 import { workLocationsHttp } from '@/lib/scheduling/locations';
-export async function GET(request: Request) { return workLocationsHttp(request, true); }
+import { withLocalizedMessages } from '@/lib/serverMessages';
+export const GET = withLocalizedMessages(async function GET(request: Request) { return workLocationsHttp(request, true); });

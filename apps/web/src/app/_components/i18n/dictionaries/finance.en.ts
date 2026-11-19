@@ -108,4 +108,6 @@ export const financeEn = {
     'finance.refresh': 'Refresh',
     'finance.retry': 'Try again',
     'finance.staffStats.discardHoursReload': 'Discard input and reload the shift',
+    'finance.incompleteReport': 'Incomplete financial report',
+    'finance.loadError': 'Could not load statistics',
 } as const;

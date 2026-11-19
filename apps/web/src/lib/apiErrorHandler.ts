@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { BizAccessError, StaffSelectionRequiredError } from '@/lib/authDiagnostics';
 import { logError, logWarn } from '@/lib/log';
+import { localizeApiResponse } from '@/lib/serverMessages';
 
 /**
  * Стандартный формат ответа об ошибке для API routes
@@ -283,9 +284,10 @@ export async function withErrorHandler<T>(
             report(() => logError(scope, `HTTP ${response.status} response`, { status: response.status }, serverErrorMeta(response.status)));
             reportedResponses.add(response);
         }
-        return response;
+        // The message in the language of the request (FE-10); after the report, which knows this object.
+        return await localizeApiResponse(response);
     } catch (error) {
-        return handleApiError(error, scope);
+        return localizeApiResponse(handleApiError(error, scope));
     }
 }
 

@@ -3,9 +3,10 @@ import {NextResponse} from 'next/server';
 import { bookingCancellationError } from '@/lib/bookingCancellationError';
 import {logError} from '@/lib/log';
 import { runServerCancelBooking } from '@/lib/serverCancelBookingService';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-export async function POST(
+export const POST = withLocalizedMessages(async function POST(
     req: Request,
     {params}: { params: Promise<{ id: string }> }
 ) {
@@ -46,4 +47,4 @@ export async function POST(
 
     // вернём редирект обратно на карточку брони
     return NextResponse.redirect(new URL(`/booking/${id}`, req.url));
-}
+});

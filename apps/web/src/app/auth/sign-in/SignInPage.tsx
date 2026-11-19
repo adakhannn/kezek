@@ -29,7 +29,7 @@ export default function SignInPage() {
     const {t} = useLanguage();
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(() =>
-        getOAuthErrorMessage(sp.get('error')),
+        getOAuthErrorMessage(sp.get('error'), t),
     );
     const whatsAppSignInEnabled = isWhatsAppWebSignInEnabled();
 

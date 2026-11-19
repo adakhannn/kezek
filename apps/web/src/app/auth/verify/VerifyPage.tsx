@@ -128,7 +128,7 @@ export default function VerifyPage() {
             }
             setResendCooldown(60); // 60 секунд до следующей отправки
         } catch (err) {
-            setError(toSafeAuthMessage(err));
+            setError(toSafeAuthMessage(err, t));
         } finally {
             setResending(false);
         }
@@ -178,7 +178,7 @@ export default function VerifyPage() {
             // Решаем редирект по ролям/владению бизнесом
             await decideAndGo(redirect);
         } catch (err) {
-            setError(toSafeAuthMessage(err));
+            setError(toSafeAuthMessage(err, t));
         } finally {
             setVerifying(false);
         }

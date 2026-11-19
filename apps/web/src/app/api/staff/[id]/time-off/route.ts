@@ -1,15 +1,16 @@
 import { staffTimeOffHttp } from '@/lib/scheduling/timeOffServer';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 
 type Context = { params: Promise<{ id: string }> };
 
-export async function GET(request: Request, context: Context) {
+export const GET = withLocalizedMessages(async function GET(request: Request, context: Context) {
     return staffTimeOffHttp(request, (await context.params).id);
-}
+});
 
-export async function POST(request: Request, context: Context) {
+export const POST = withLocalizedMessages(async function POST(request: Request, context: Context) {
     return staffTimeOffHttp(request, (await context.params).id);
-}
+});
 
-export async function PATCH(request: Request, context: Context) {
+export const PATCH = withLocalizedMessages(async function PATCH(request: Request, context: Context) {
     return staffTimeOffHttp(request, (await context.params).id);
-}
+});

@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { toSafeAuthMessage } from '@/lib/authUserMessages';
 import { buildGoogleOAuthRedirectUrl } from '@/lib/googleOAuthRedirect';
 import { supabase } from '@/lib/supabaseClient';
@@ -17,6 +18,7 @@ export function useSignInSubmitActions({
     setSending,
     setError,
 }: UseSignInSubmitActionsOptions) {
+    const { t } = useLanguage();
     const handleTelegramError = useCallback((err: string) => {
         setError(err);
     }, [setError]);
@@ -41,10 +43,10 @@ export function useSignInSubmitActions({
             });
             if (error) throw error;
         } catch (err) {
-            setError(toSafeAuthMessage(err));
+            setError(toSafeAuthMessage(err, t));
             setSending(false);
         }
-    }, [redirectParam, setError, setSending]);
+    }, [redirectParam, setError, setSending, t]);
 
     const signInWithYandex = useCallback(async () => {
         setSending(true);
@@ -57,10 +59,10 @@ export function useSignInSubmitActions({
                 window.location.assign(startUrl.toString());
             }
         } catch (err) {
-            setError(toSafeAuthMessage(err));
+            setError(toSafeAuthMessage(err, t));
             setSending(false);
         }
-    }, [redirectParam, setError, setSending]);
+    }, [redirectParam, setError, setSending, t]);
 
     return {
         handleTelegramError,

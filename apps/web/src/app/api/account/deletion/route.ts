@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { cancelAccountDeletion, getAccountDeletionState, requestAccountDeletion } from '@/lib/accountDeletionService';
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 async function context() {
@@ -12,7 +13,7 @@ async function context() {
     return { user, admin: createSupabaseAdminClient() };
 }
 
-export async function GET() {
+export const GET = withLocalizedMessages(async function GET() {
     const { user, admin } = await context();
     if (!user) return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     try {
@@ -21,9 +22,9 @@ export async function GET() {
         logError('AccountDeletion', 'Failed to load account deletion state', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка проверки аккаунта', undefined, 500);
     }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withLocalizedMessages(async function POST(request: Request) {
     const { user, admin } = await context();
     if (!user) return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     let confirmation = '';
@@ -40,9 +41,9 @@ export async function POST(request: Request) {
         logError('AccountDeletion', 'Failed to request account deletion', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка запроса удаления', undefined, 500);
     }
-}
+});
 
-export async function DELETE() {
+export const DELETE = withLocalizedMessages(async function DELETE() {
     const { user, admin } = await context();
     if (!user) return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     try {
@@ -51,4 +52,4 @@ export async function DELETE() {
         logError('AccountDeletion', 'Failed to cancel account deletion', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка отмены удаления', undefined, 500);
     }
-}
+});

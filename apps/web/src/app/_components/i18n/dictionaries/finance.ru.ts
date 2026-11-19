@@ -108,4 +108,6 @@ export const financeRu = {
     'finance.refresh': 'Обновить',
     'finance.retry': 'Попробовать снова',
     'finance.staffStats.discardHoursReload': 'Отменить ввод и загрузить смену заново',
+    'finance.incompleteReport': 'Неполный финансовый отчёт',
+    'finance.loadError': 'Не удалось загрузить статистику',
 } as const;

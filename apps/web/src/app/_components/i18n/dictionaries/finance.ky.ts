@@ -108,4 +108,6 @@ export const financeKy = {
     'finance.refresh': 'Жаңылоо',
     'finance.retry': 'Кайра аракет кылуу',
     'finance.staffStats.discardHoursReload': 'Киргизилгенди жокко чыгарып, сменаны кайра жүктөө',
+    'finance.incompleteReport': 'Каржы отчету толук эмес',
+    'finance.loadError': 'Статистиканы жүктөө мүмкүн болгон жок',
 } as const;

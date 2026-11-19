@@ -162,4 +162,9 @@ export const bookingsRu = {
     'bookings.list.page': 'Страница',
     'bookings.list.prev': 'Назад',
     'bookings.workspace.emptyHint': 'Попробуйте другой период, поиск или фильтр по филиалу.',
+    'bookings.cancelError.changed': 'Запись изменилась. Обновите её перед повторной отменой.',
+    'bookings.cancelError.financialReversalRequired': 'Запись оплачена, учтена в смене или использует списанную льготу. Обратитесь в организацию для финансового возврата перед отменой.',
+    'bookings.cancelError.forbidden': 'Нет доступа к отмене этой записи',
+    'bookings.cancelError.notCancellable': 'Запись в этом статусе нельзя отменить',
+    'bookings.cancelError.notFound': 'Бронирование не найдено',
 } as const;

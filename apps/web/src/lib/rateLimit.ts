@@ -4,6 +4,7 @@ import { isIP } from 'node:net';
 import { NextResponse } from 'next/server';
 
 import { logError, logWarn } from './log';
+import { localizeApiResponse } from './serverMessages';
 
 export type RateLimitConfig = {
     maxRequests: number;
@@ -221,8 +222,9 @@ export function rateLimitDeniedResponse(result: RateLimitResult): NextResponse {
 export async function withRateLimit(req: Request, config: RateLimitConfig,
     handler: () => Promise<Response>, routeId: string): Promise<Response> {
     const result = await checkRateLimit(req, config, routeId);
-    if (!result.success) return rateLimitDeniedResponse(result);
-    const response = await handler();
+    // Messages in the language of the request (FE-10); a response withErrorHandler localized is kept.
+    if (!result.success) return localizeApiResponse(rateLimitDeniedResponse(result));
+    const response = await localizeApiResponse(await handler());
     const headers = new Headers(response.headers);
     // A narrower authenticated budget inside the handler takes precedence.
     if (!headers.has('X-RateLimit-Limit')) {
