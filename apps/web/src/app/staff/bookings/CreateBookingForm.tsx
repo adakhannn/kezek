@@ -149,7 +149,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
         return () => {
             ignore = true;
         };
-    }, [bizId, selectedServiceIds, selectedStaffId, date, branchId, slotsAttempt]);
+    }, [bizId, selectedServiceIds, selectedStaffId, date, branchId, slotsAttempt, servicesByBranch]);
 
     useEffect(() => {
         setSelectedServiceIds([]);

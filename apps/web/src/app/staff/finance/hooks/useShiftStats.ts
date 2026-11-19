@@ -105,6 +105,6 @@ export function useShiftStats({
             totalLateMinutes,
             shiftsCount: filtered.length,
         };
-    }, [shiftsSignature, statsPeriod, dateStr, monthStr, yearStr, selectedMonth, selectedYear]);
+    }, [shiftsSignature, statsPeriod, dateStr, selectedMonth, selectedYear]);
 }
 

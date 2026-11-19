@@ -1,7 +1,7 @@
 // apps/web/src/app/dashboard/branches/[id]/BranchPromotionsPanel.tsx
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
@@ -68,11 +68,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
         valid_to: null,
     });
 
-    useEffect(() => {
-        loadPromotions();
-    }, [branchId]);
-
-    async function loadPromotions() {
+    const loadPromotions = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch(`/api/dashboard/branches/${branchId}/promotions`);
@@ -90,7 +86,11 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
         } finally {
             setLoading(false);
         }
-    }
+    }, [branchId]);
+
+    useEffect(() => {
+        void loadPromotions();
+    }, [loadPromotions]);
 
     function startEdit(promotion: Promotion) {
         setFormData({

@@ -115,12 +115,11 @@ export function TelegramLinkWidget({
         script.setAttribute('data-request-access', 'write');
         script.async = true;
 
-        containerRef.current.appendChild(script);
+        const container = containerRef.current;
+        container.appendChild(script);
 
         return () => {
-            if (containerRef.current) {
-                containerRef.current.innerHTML = '';
-            }
+            container.innerHTML = '';
             delete w[callbackName];
         };
     }, [size, router, widgetReloadKey]); // Убрали onSuccess и onError из зависимостей

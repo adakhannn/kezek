@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as ReactWindow from 'react-window';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -69,7 +69,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
         [list],
     );
 
-    async function load() {
+    const load = useCallback(async () => {
         setLoading(true);
         setErr(null);
         try {
@@ -85,7 +85,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
         } finally {
             setLoading(false);
         }
-    }
+    }, [branchId]);
 
     async function doSearch() {
         setSearching(true);
@@ -149,7 +149,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
 
     useEffect(() => {
         void load();
-    }, []);
+    }, [load]);
 
     useEffect(() => {
         setPage(1);

@@ -186,12 +186,11 @@ function TelegramLoginWidgetComponent({
             onErrorRef.current?.(t('auth.telegramWidget.scriptError', 'Не удалось загрузить виджет Telegram. Проверьте подключение к интернету.'));
         };
 
-        containerRef.current.appendChild(script);
+        const container = containerRef.current;
+        container.appendChild(script);
 
         return () => {
-            if (containerRef.current) {
-                containerRef.current.innerHTML = '';
-            }
+            container.innerHTML = '';
             delete w[callbackName];
         };
     }, [size, cornerRadius, requestAccess, router, currentHostname, widgetReloadKey]); // Убрали onSuccess, onError, redirectTo из зависимостей

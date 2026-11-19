@@ -196,6 +196,8 @@ export function useFinanceData({
 }: UseFinanceDataOptions): UseFinanceDataReturn {
     const { t } = useLanguage();
     const toast = useToast();
+    // A stable callback: the toast object itself is new on every render.
+    const showError = toast.showError;
     const queryClient = useQueryClient();
 
     const dateStr = financeDateLabel(date);
@@ -280,13 +282,13 @@ export function useFinanceData({
                 lastErrorMessageRef.current !== message
             ) {
                 lastErrorMessageRef.current = message;
-                toast.showError(message);
+                showError(message);
             }
         } else if (!query.isError) {
             // Сбрасываем, когда ошибки больше нет (например, после успешного refetch)
             lastErrorMessageRef.current = null;
         }
-    }, [query.isError, query.error]);
+    }, [query.isError, query.error, showError]);
 
     return {
         data,

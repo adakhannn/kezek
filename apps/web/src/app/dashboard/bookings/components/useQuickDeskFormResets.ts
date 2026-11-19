@@ -36,16 +36,16 @@ export function useQuickDeskFormResets(params: UseQuickDeskFormResetsParams) {
         setServiceId('');
         setStaffId('');
         clearSlots();
-    }, [branchId, timezone]);
+    }, [branchId, timezone, setDate, setServiceId, setStaffId, clearSlots]);
 
     useEffect(() => {
         setStaffId('');
         setServiceId('');
         clearSlots();
-    }, [date]);
+    }, [date, setServiceId, setStaffId, clearSlots]);
 
     useEffect(() => {
         setServiceId('');
         clearSlots();
-    }, [staffId]);
+    }, [staffId, setServiceId, clearSlots]);
 }

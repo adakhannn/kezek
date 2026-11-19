@@ -138,7 +138,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             }
             setMapReady(false);
         };
-    }, []);
+    }, [yandexMapsApiKey]);
 
     useEffect(() => {
         if (!mapReady || !ymapsMapRef.current) return;
