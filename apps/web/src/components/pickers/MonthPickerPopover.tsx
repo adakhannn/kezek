@@ -1,9 +1,9 @@
 'use client';
 
 import { enUS, ru as ruLocale } from 'date-fns/locale';
+import { useEffect, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 

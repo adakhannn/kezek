@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { isAuthorizedCronRequest } from '@/lib/cronAuthorization';
 import { trackCronExecution } from '@/lib/cronExecutionTracking';
 import { getWhatsAppPhoneNumberId } from '@/lib/env';
@@ -15,7 +16,7 @@ export const maxDuration = 60;
 
 export async function GET(req: Request) {
     if (!isAuthorizedCronRequest(req, process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET)) {
-        return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+        return createErrorResponse('unauthorized', undefined, undefined, 401);
     }
     if (process.env.WHATSAPP_INBOX_WORKER_ENABLED !== 'true') return NextResponse.json({ ok: true, enabled: false });
     return trackCronExecution('whatsapp-inbox', async () => {

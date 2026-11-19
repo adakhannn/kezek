@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { logError, logWarn } from '@/lib/log';
 import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
@@ -14,7 +15,7 @@ export const GET = withLocalizedMessages(async function GET() {
         data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-        return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
+        return createErrorResponse('auth', undefined, undefined, 401);
     }
 
     // A refused or failed refresh (e.g. NOTIFICATION_EMAIL_NOT_PROVEN) must not hide the
@@ -27,10 +28,7 @@ export const GET = withLocalizedMessages(async function GET() {
     const { data, error } = await supabase.rpc('get_my_notification_emails');
     if (error) {
         logError('NotificationEmails', 'Failed to load notification emails', error);
-        return NextResponse.json(
-            { ok: false, error: 'notification_email_lookup_failed' },
-            { status: 500 },
-        );
+        return NextResponse.json({ ok: false, error: 'notification_email_lookup_failed' }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, data: data ?? [] });

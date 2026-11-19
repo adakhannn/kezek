@@ -213,7 +213,7 @@ async function loadClientDebugData(result: PromotionsDebugResult, serviceClient:
         .limit(100);
 
     if (usageData) {
-        result.promotionUsage = usageData.map((usage: any) => {
+        result.promotionUsage = usageData.map((usage) => {
             const promotion =
                 Array.isArray(usage.branch_promotions) && usage.branch_promotions.length > 0
                     ? usage.branch_promotions[0]
@@ -277,7 +277,7 @@ async function loadClientDebugData(result: PromotionsDebugResult, serviceClient:
         .limit(50);
 
     if (referralsData) {
-        result.referrals = referralsData.map((referral: any) => {
+        result.referrals = referralsData.map((referral) => {
             const referrer =
                 Array.isArray(referral.referrer) && referral.referrer.length > 0 ? referral.referrer[0] : null;
             const referred =
@@ -332,7 +332,7 @@ async function loadClientDebugData(result: PromotionsDebugResult, serviceClient:
         .limit(50);
 
     if (bookingsData) {
-        result.bookings = bookingsData.map((booking: any) => {
+        result.bookings = bookingsData.map((booking) => {
             const service =
                 Array.isArray(booking.services) && booking.services.length > 0 ? booking.services[0] : null;
             return {
@@ -376,7 +376,7 @@ async function loadBranchDebugData(result: PromotionsDebugResult, serviceClient:
         .order('created_at', { ascending: false });
 
     if (promotionsData) {
-        result.activePromotions = promotionsData.map((promotion: any) => ({
+        result.activePromotions = promotionsData.map((promotion) => ({
             id: promotion.id,
             title_ru: promotion.title_ru,
             promotion_type: promotion.promotion_type,

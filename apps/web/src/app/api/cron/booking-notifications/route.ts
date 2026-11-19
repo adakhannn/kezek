@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { isAuthorizedCronRequest } from '@/lib/cronAuthorization';
 import { trackCronExecution } from '@/lib/cronExecutionTracking';
 import { logError } from '@/lib/log';
@@ -14,7 +15,7 @@ export const maxDuration = 60;
 
 export async function GET(req: Request) {
     if (!isAuthorizedCronRequest(req, process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET)) {
-        return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+        return createErrorResponse('unauthorized', undefined, undefined, 401);
     }
     // Activation follows schema rollout and explicit deployment configuration.
     if (process.env.BOOKING_NOTIFICATION_WORKER_ENABLED !== 'true') {
