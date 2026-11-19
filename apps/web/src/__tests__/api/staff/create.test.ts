@@ -155,7 +155,10 @@ describe('/api/staff/create', () => {
         const data = await expectSuccessResponse(res, 200);
 
         expect(data.id).toBe('staff-id');
-        expect(data.user_linked).toBe(false);
+        // API-06: the response does not say whether an account with this contact exists.
+        expect(data).not.toHaveProperty('user_linked');
+        const insert = db.queries.find((query) => query.table === 'staff' && query.calls.some(([name]) => name === 'insert'));
+        expect(insert?.calls.find(([name]) => name === 'insert')?.[1]).toMatchObject({ user_id: null });
         expect(data.schedule_initialized).toBe(true);
         const bizId = '22222222-2222-4222-8222-222222222222';
         expectBusinessScoped(db, 'user_roles', bizId);

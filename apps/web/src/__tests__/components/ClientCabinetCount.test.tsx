@@ -10,6 +10,7 @@ import { cabinetEn } from '@/app/_components/i18n/dictionaries/cabinet.en';
 jest.mock('@/app/_components/i18n/LanguageProvider', () => ({ useLanguage: jest.fn() }));
 jest.mock('@/app/cabinet/components/BookingCard', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/app/cabinet/components/MyVisitPackagesBlock', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/app/cabinet/components/StaffInvitationsBlock', () => ({ __esModule: true, default: () => null }));
 
 test.each([
     ['ru', cabinetRu, 0, 'many'],

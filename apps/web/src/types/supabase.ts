@@ -3016,6 +3016,85 @@ export type Database = {
                     }
                 ];
             };
+            "staff_invitations": {
+                Row: {
+                    "biz_id": string;
+                    "created_at": string;
+                    "decided_at": string | null;
+                    "id": string;
+                    "invited_by": string | null;
+                    "invited_user_id": string;
+                    "staff_id": string;
+                    "status": string;
+                };
+                ComputedFields: never;
+                Insert: {
+                    "biz_id": string;
+                    "created_at"?: string;
+                    "decided_at"?: string | null;
+                    "id"?: string;
+                    "invited_by"?: string | null;
+                    "invited_user_id": string;
+                    "staff_id": string;
+                    "status"?: string;
+                };
+                Update: {
+                    "biz_id"?: string;
+                    "created_at"?: string;
+                    "decided_at"?: string | null;
+                    "id"?: string;
+                    "invited_by"?: string | null;
+                    "invited_user_id"?: string;
+                    "staff_id"?: string;
+                    "status"?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "staff_invitations_biz_id_fkey";
+                        columns: [
+                            "biz_id"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "businesses";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    },
+                    {
+                        foreignKeyName: "staff_invitations_invited_by_fkey";
+                        columns: [
+                            "invited_by"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "auth_users_view";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    },
+                    {
+                        foreignKeyName: "staff_invitations_invited_user_id_fkey";
+                        columns: [
+                            "invited_user_id"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "auth_users_view";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    },
+                    {
+                        foreignKeyName: "staff_invitations_staff_id_fkey";
+                        columns: [
+                            "staff_id"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "staff";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    }
+                ];
+            };
             "staff_schedule_rules": {
                 Row: {
                     "biz_id": string;
@@ -5001,6 +5080,13 @@ export type Database = {
                 };
                 Returns: boolean;
             };
+            "accept_staff_invitation": {
+                Args: {
+                    "p_invitation_id": string;
+                    "p_user_id": string;
+                };
+                Returns: Json;
+            };
             "addauth": {
                 Args: {
                     "": string;
@@ -5465,6 +5551,13 @@ export type Database = {
                     "p_status"?: string;
                 };
                 Returns: Json;
+            };
+            "decline_staff_invitation": {
+                Args: {
+                    "p_invitation_id": string;
+                    "p_user_id": string;
+                };
+                Returns: undefined;
             };
             "delete_branch_without_history": {
                 Args: {

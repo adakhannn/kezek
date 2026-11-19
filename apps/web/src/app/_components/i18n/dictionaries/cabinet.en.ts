@@ -232,4 +232,13 @@ export const cabinetEn = {
     'cabinet.profile.deletion.error.cancel': 'Could not cancel the deletion',
     'cabinet.profile.deletion.error.cancelFailed': 'Deletion cancellation error',
     'cabinet.profile.connections.unlinkTitle': 'Unlink {provider}?',
+    'cabinet.staffInvitations.title': 'Team invitations',
+    'cabinet.staffInvitations.accept': 'Accept',
+    'cabinet.staffInvitations.decline': 'Decline',
+    'cabinet.staffInvitations.branch': 'Branch: {branch}',
+    'cabinet.staffInvitations.unknownBusiness': 'Business',
+    'cabinet.staffInvitations.hint': 'After you accept, your account is linked to the staff profile of this business.',
+    'cabinet.staffInvitations.accepted': 'You are on the team. The staff cabinet is open to you.',
+    'cabinet.staffInvitations.openStaffCabinet': 'Open the staff cabinet',
+    'cabinet.staffInvitations.error': 'Could not process the invitation',
 } as const;

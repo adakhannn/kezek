@@ -788,6 +788,70 @@ AS $function$
 $function$
 ;
 
+-- signature: public.accept_staff_invitation(uuid,uuid)
+CREATE OR REPLACE FUNCTION public.accept_staff_invitation(p_invitation_id uuid, p_user_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+AS $function$
+declare
+    v_invitation public.staff_invitations%rowtype;
+    v_staff public.staff%rowtype;
+begin
+    select * into v_invitation
+      from public.staff_invitations
+     where id = p_invitation_id
+     for update;
+
+    if not found or p_user_id is null or v_invitation.invited_user_id <> p_user_id then
+        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_NOT_FOUND';
+    end if;
+
+    if v_invitation.status <> 'pending' then
+        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_NOT_PENDING';
+    end if;
+
+    select * into v_staff
+      from public.staff
+     where id = v_invitation.staff_id
+     for update;
+
+    -- The card was linked meanwhile or belongs to another business now: the invitation is void. It
+    -- is cancelled and the result says so; an exception would roll the cancellation back.
+    if not found or v_staff.biz_id <> v_invitation.biz_id or v_staff.user_id is not null then
+        update public.staff_invitations
+           set status = 'cancelled', decided_at = now()
+         where id = v_invitation.id;
+        return jsonb_build_object('status', 'stale', 'error', 'STAFF_INVITATION_STALE');
+    end if;
+
+    if exists (
+        select 1 from public.staff s
+         where s.biz_id = v_invitation.biz_id
+           and s.user_id = p_user_id
+    ) then
+        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_ALREADY_STAFF';
+    end if;
+
+    begin
+        update public.staff
+           set user_id = p_user_id
+         where id = v_staff.id;
+    exception when unique_violation then
+        -- staff_user_business_unique: a concurrent command gave the account a card in this business.
+        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_ALREADY_STAFF';
+    end;
+
+    update public.staff_invitations
+       set status = 'accepted', decided_at = now()
+     where id = v_invitation.id;
+
+    return jsonb_build_object('status', 'accepted', 'staff_id', v_staff.id, 'biz_id', v_invitation.biz_id);
+end;
+$function$
+;
+
 -- signature: public.adjust_closed_shift_hours_command(uuid,uuid,uuid,bigint,numeric,jsonb)
 CREATE OR REPLACE FUNCTION public.adjust_closed_shift_hours_command(p_shift_id uuid, p_biz_id uuid, p_actor_id uuid, p_expected_revision bigint, p_hours_worked numeric, p_calculation jsonb)
  RETURNS jsonb
@@ -3789,6 +3853,36 @@ begin
       into v_result;
 
     return v_result;
+end;
+$function$
+;
+
+-- signature: public.decline_staff_invitation(uuid,uuid)
+CREATE OR REPLACE FUNCTION public.decline_staff_invitation(p_invitation_id uuid, p_user_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+AS $function$
+declare
+    v_invitation public.staff_invitations%rowtype;
+begin
+    select * into v_invitation
+      from public.staff_invitations
+     where id = p_invitation_id
+     for update;
+
+    if not found or p_user_id is null or v_invitation.invited_user_id <> p_user_id then
+        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_NOT_FOUND';
+    end if;
+
+    if v_invitation.status <> 'pending' then
+        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_NOT_PENDING';
+    end if;
+
+    update public.staff_invitations
+       set status = 'declined', decided_at = now()
+     where id = v_invitation.id;
 end;
 $function$
 ;
@@ -8450,6 +8544,9 @@ begin
     end if;
 
     if tg_op = 'INSERT' then
+        if new.user_id is not null then
+            raise exception 'STAFF_USER_LINK_FORBIDDEN' using errcode = '42501';
+        end if;
         if not public.staff_write_allowed(new.biz_id, new.branch_id) then
             raise exception 'STAFF_WRITE_FORBIDDEN' using errcode = '42501';
         end if;
@@ -8466,6 +8563,10 @@ begin
        or new.rating_updated_at is distinct from old.rating_updated_at
        or new.last_rating_recalculated_at is distinct from old.last_rating_recalculated_at then
         raise exception 'STAFF_FIELD_READ_ONLY' using errcode = '42501';
+    end if;
+
+    if new.user_id is distinct from old.user_id and new.user_id is not null then
+        raise exception 'STAFF_USER_LINK_FORBIDDEN' using errcode = '42501';
     end if;
 
     if (new.user_id, new.branch_id, new.is_active, new.email, new.phone,

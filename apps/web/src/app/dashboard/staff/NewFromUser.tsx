@@ -32,6 +32,8 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
     const [isActive, setIsActive] = useState(true);
     const [err, setErr] = useState<SearchError | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
+    // API-06: the account is invited; the card is linked only after the person accepts.
+    const [invitation, setInvitation] = useState<'pending' | 'already_staff' | null>(null);
 
     async function doSearch(query: string) {
         const normalizedQuery = query.trim();
@@ -92,22 +94,23 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
             return;
         }
 
-        if (j.schedule_initialized !== undefined) {
+        const data = j.data ?? {};
+        if (data.schedule_initialized !== undefined) {
             logDebug('StaffCreation', 'Schedule initialization result', {
-                success: j.schedule_initialized,
-                daysCreated: j.schedule_days_created,
-                error: j.schedule_error,
+                success: data.schedule_initialized,
+                daysCreated: data.schedule_days_created,
+                error: data.schedule_error,
             });
-            if (!j.schedule_initialized) {
+            if (!data.schedule_initialized) {
                 logWarn('StaffCreation', 'Schedule was NOT initialized', {
-                    error: j.schedule_error,
+                    error: data.schedule_error,
                 });
             }
         } else {
             logWarn('StaffCreation', 'No schedule initialization info in response');
         }
 
-        r.push('/dashboard/staff');
+        setInvitation(data.status === 'already_staff' ? 'already_staff' : 'pending');
     }
 
     return (
@@ -115,11 +118,29 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
             <AlertBanner
                 variant="warning"
                 title={t('staff.new.manualOverride.title', 'Ручное добавление сотрудника')}
-                message={t('staff.new.manualOverride.message', 'Основной безопасный сценарий — человек сам отправляет заявку на доступ к бизнесу. Этот поиск используйте, когда точно знаете, какой аккаунт нужно связать с карточкой сотрудника.')}
+                message={t('staff.new.manualOverride.message', 'Основной безопасный сценарий — человек сам отправляет заявку на доступ к бизнесу. Здесь можно пригласить человека по его аккаунту: карточка свяжется с аккаунтом, только когда он примет приглашение в личном кабинете.')}
             />
             {err ? <AlertBanner variant="danger" message={err.kind === 'empty_query'
                 ? t('staff.new.table.empty.enterQuery', 'Введите запрос и нажмите «Найти», чтобы увидеть пользователей.')
                 : err.message} /> : null}
+
+            {invitation ? (
+                <AlertBanner
+                    variant="success"
+                    message={invitation === 'pending'
+                        ? t('staff.new.invitation.sent', 'Приглашение отправлено. Сотрудник появится в команде после подтверждения.')
+                        : t('staff.new.invitation.alreadyInTeam', 'Этот пользователь уже в команде бизнеса.')}
+                    action={
+                        <button
+                            type="button"
+                            onClick={() => r.push('/dashboard/staff')}
+                            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+                        >
+                            {t('staff.new.invitation.toList', 'К списку сотрудников')}
+                        </button>
+                    }
+                />
+            ) : null}
 
             <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">

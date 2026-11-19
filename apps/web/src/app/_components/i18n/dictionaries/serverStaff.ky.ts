@@ -164,4 +164,15 @@ export const serverStaffKy = {
     'server.staff.timeOffOverlap': 'Бул күндөргө жок болуу мурунтан эле дайындалган.',
     'server.staff.timeOffChangeFailedRefresh': 'Жок болууну өзгөртүү мүмкүн болгон жок. Баракчаны жаңылаңыз.',
     'server.staff.timeOffChangeFailed': 'Жок болууну өзгөртүү мүмкүн болгон жок. Өзгөртүүлөр колдонулган жок.',
+    // Staff invitations (API-06)
+    'server.staff.invitationSent': 'Чакыруу жөнөтүлдү. Кызматкер ырастагандан кийин командада пайда болот.',
+    'server.staff.userAlreadyInTeam': 'Бул колдонуучу бизнестин командасында мурунтан эле бар.',
+    'server.staff.invitationsCheckFailed': 'Чакырууларды текшерүү мүмкүн болгон жок',
+    'server.staff.invitationCreateFailed': 'Чакырууну түзүү мүмкүн болгон жок',
+    'server.staff.invitationsLoadFailed': 'Чакырууларды жүктөө мүмкүн болгон жок',
+    'server.staff.invitationNotFound': 'Чакыруу табылган жок',
+    'server.staff.invitationNotPending': 'Чакыруу буга чейин каралган',
+    'server.staff.invitationStale': 'Чакыруу жараксыз: кызматкердин карточкасы өзгөргөн',
+    'server.staff.invitationAlreadyStaff': 'Сиз бул бизнестин командасында мурунтан эле барсыз',
+    'server.staff.invitationDecisionFailed': 'Чакырууну иштетүү мүмкүн болгон жок',
 } as const;

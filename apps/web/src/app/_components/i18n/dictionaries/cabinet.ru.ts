@@ -232,4 +232,13 @@ export const cabinetRu = {
     'cabinet.profile.deletion.error.cancel': 'Не удалось отменить удаление',
     'cabinet.profile.deletion.error.cancelFailed': 'Ошибка отмены удаления',
     'cabinet.profile.connections.unlinkTitle': 'Отвязать {provider}?',
+    'cabinet.staffInvitations.title': 'Приглашения в команду',
+    'cabinet.staffInvitations.accept': 'Принять',
+    'cabinet.staffInvitations.decline': 'Отклонить',
+    'cabinet.staffInvitations.branch': 'Филиал: {branch}',
+    'cabinet.staffInvitations.unknownBusiness': 'Бизнес',
+    'cabinet.staffInvitations.hint': 'После принятия ваш аккаунт будет связан с карточкой сотрудника этого бизнеса.',
+    'cabinet.staffInvitations.accepted': 'Вы в команде. Кабинет сотрудника открыт.',
+    'cabinet.staffInvitations.openStaffCabinet': 'Открыть кабинет сотрудника',
+    'cabinet.staffInvitations.error': 'Не удалось обработать приглашение',
 } as const;

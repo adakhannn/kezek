@@ -164,4 +164,15 @@ export const serverStaffEn = {
     'server.staff.timeOffOverlap': 'An absence is already scheduled for these dates.',
     'server.staff.timeOffChangeFailedRefresh': 'Could not change the absence. Refresh the page.',
     'server.staff.timeOffChangeFailed': 'Could not change the absence. The changes were not applied.',
+    // Staff invitations (API-06)
+    'server.staff.invitationSent': 'Invitation sent. The staff member will join the team after confirming it.',
+    'server.staff.userAlreadyInTeam': 'This user is already on the business team.',
+    'server.staff.invitationsCheckFailed': 'Could not check invitations',
+    'server.staff.invitationCreateFailed': 'Could not create the invitation',
+    'server.staff.invitationsLoadFailed': 'Could not load invitations',
+    'server.staff.invitationNotFound': 'Invitation not found',
+    'server.staff.invitationNotPending': 'The invitation has already been answered',
+    'server.staff.invitationStale': 'The invitation is no longer valid: the staff card has changed',
+    'server.staff.invitationAlreadyStaff': 'You are already on the team of this business',
+    'server.staff.invitationDecisionFailed': 'Could not process the invitation',
 } as const;

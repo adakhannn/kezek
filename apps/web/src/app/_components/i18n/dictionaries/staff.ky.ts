@@ -1,6 +1,6 @@
 export const staffKy = {
     'staff.new.manualOverride.title': 'Кызматкерди кол менен кошуу',
-    'staff.new.manualOverride.message': 'Негизги коопсуз жол — адам бизнеске кирүү үчүн өзү арыз жөнөтөт. Бул издөөнү кызматкердин карточкасына кайсы аккаунтту байланыштыруу керектигин так билгенде гана колдонуңуз.',
+    'staff.new.manualOverride.message': 'Негизги коопсуз жол — адам бизнеске кирүү үчүн өзү арыз жөнөтөт. Бул жерден адамды анын аккаунту боюнча чакырсаңыз болот: карточка аккаунтка ал жеке кабинетинде чакырууну кабыл алганда гана байланышат.',
     'staff.sidebar.workspaceBadge': 'Кызматкердин кабинети',
     'staff.sidebar.navTitle': 'Кабинеттин бөлүмдөрү',
     'staff.finance.summary.title': 'Сменанын жыйынтыгы',
@@ -263,6 +263,9 @@ export const staffKy = {
     'staff.new.active.label': 'Активдүү (жазылыштар үчүн жеткиликтүү)',
     'staff.new.branch.label': 'Филиал',
     'staff.new.create.button': 'Кызматкерди кошуу',
+    'staff.new.invitation.sent': 'Чакыруу жөнөтүлдү. Кызматкер ырастагандан кийин командада пайда болот.',
+    'staff.new.invitation.alreadyInTeam': 'Бул колдонуучу бизнестин командасында мурунтан эле бар.',
+    'staff.new.invitation.toList': 'Кызматкерлердин тизмесине',
     'staff.new.errors.createFailed': 'Кызматкерди түзүү мүмкүн болгон жок',
     'staff.new.errors.selectBranch': 'Филиалды тандаңыз',
     'staff.new.errors.selectUser': 'Колдонуучуну тандаңыз',

@@ -232,4 +232,13 @@ export const cabinetKy = {
     'cabinet.profile.deletion.error.cancel': 'Өчүрүүнү жокко чыгаруу мүмкүн болгон жок',
     'cabinet.profile.deletion.error.cancelFailed': 'Өчүрүүнү жокко чыгарууда ката кетти',
     'cabinet.profile.connections.unlinkTitle': '{provider} ажыратылсынбы?',
+    'cabinet.staffInvitations.title': 'Командага чакыруулар',
+    'cabinet.staffInvitations.accept': 'Кабыл алуу',
+    'cabinet.staffInvitations.decline': 'Четке кагуу',
+    'cabinet.staffInvitations.branch': 'Филиал: {branch}',
+    'cabinet.staffInvitations.unknownBusiness': 'Бизнес',
+    'cabinet.staffInvitations.hint': 'Кабыл алгандан кийин аккаунтуңуз бул бизнестин кызматкер карточкасына байланышат.',
+    'cabinet.staffInvitations.accepted': 'Сиз командадасыз. Кызматкердин кабинети ачык.',
+    'cabinet.staffInvitations.openStaffCabinet': 'Кызматкердин кабинетин ачуу',
+    'cabinet.staffInvitations.error': 'Чакырууну иштетүү мүмкүн болгон жок',
 } as const;

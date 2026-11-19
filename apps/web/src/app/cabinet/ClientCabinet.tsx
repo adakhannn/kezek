@@ -6,6 +6,7 @@ import { useId, useState } from 'react';
 
 import BookingCard from './components/BookingCard';
 import MyVisitPackagesBlock from './components/MyVisitPackagesBlock';
+import StaffInvitationsBlock from './components/StaffInvitationsBlock';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -81,6 +82,7 @@ export default function ClientCabinet({
 
     return (
         <div className="space-y-6">
+            <StaffInvitationsBlock />
             <MyVisitPackagesBlock />
 
             <PageHeader

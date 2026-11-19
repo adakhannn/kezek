@@ -70,3 +70,20 @@ test('local empty-query validation follows a locale switch without repeating the
     expect(screen.getByRole('alert').textContent).toContain(staffEn['staff.new.table.empty.enterQuery']);
     expect(fetchMock).not.toHaveBeenCalled();
 });
+
+// API-06: the account is invited, not linked; the manager is told the card waits for consent.
+test.each(['ru','en','ky'] as const)('creating from an account shows the pending invitation in %s', async (locale) => {
+    mockLocale=locale;
+    fetchMock
+        .mockResolvedValueOnce({json:async()=>({ok:true,items:[{id:'known',full_name:'LIVE TEST Known',email:'known@example.test',phone:null}]})})
+        .mockResolvedValueOnce({json:async()=>({ok:true,message:'x',data:{id:'card',staff_id:'card',invitation_id:'inv',status:'pending',schedule_initialized:true}})});
+    const dictionary: Record<string,string> = dictionaries[locale];
+    render(<NewFromUser branches={[{id:'branch',name:'LIVE TEST Branch'}]} />);
+    fireEvent.change(screen.getByRole('textbox'),{target:{value:'known@example.test'}});
+    fireEvent.click(screen.getByRole('button',{name:dictionary['staff.new.search.button']}));
+    fireEvent.click(await screen.findByRole('radio'));
+    fireEvent.click(screen.getByRole('button',{name:dictionary['staff.new.create.button']}));
+    expect(await screen.findByText(dictionary['staff.new.invitation.sent'])).toBeTruthy();
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({user_id:'known',branch_id:'branch',is_active:true});
+    expect(screen.getByRole('button',{name:dictionary['staff.new.invitation.toList']})).toBeTruthy();
+});

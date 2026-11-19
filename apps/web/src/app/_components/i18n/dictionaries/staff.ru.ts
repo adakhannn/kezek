@@ -1,6 +1,6 @@
 export const staffRu = {
     'staff.new.manualOverride.title': 'Ручное добавление сотрудника',
-    'staff.new.manualOverride.message': 'Основной безопасный сценарий — человек сам отправляет заявку на доступ к бизнесу. Этот поиск используйте, когда точно знаете, какой аккаунт нужно связать с карточкой сотрудника.',
+    'staff.new.manualOverride.message': 'Основной безопасный сценарий — человек сам отправляет заявку на доступ к бизнесу. Здесь можно пригласить человека по его аккаунту: карточка свяжется с аккаунтом, только когда он примет приглашение в личном кабинете.',
     'staff.sidebar.workspaceBadge': 'Кабинет сотрудника',
     'staff.sidebar.navTitle': 'Разделы кабинета',
     'staff.finance.summary.title': 'Сводка по смене',
@@ -257,6 +257,9 @@ export const staffRu = {
     'staff.new.active.label': 'Активен (доступен для записи)',
     'staff.new.branch.label': 'Филиал',
     'staff.new.create.button': 'Добавить сотрудника',
+    'staff.new.invitation.sent': 'Приглашение отправлено. Сотрудник появится в команде после подтверждения.',
+    'staff.new.invitation.alreadyInTeam': 'Этот пользователь уже в команде бизнеса.',
+    'staff.new.invitation.toList': 'К списку сотрудников',
     'staff.new.errors.createFailed': 'Не удалось создать сотрудника',
     'staff.new.errors.selectBranch': 'Выберите филиал',
     'staff.new.errors.selectUser': 'Выберите пользователя',

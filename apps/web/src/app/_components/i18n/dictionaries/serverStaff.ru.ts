@@ -164,4 +164,15 @@ export const serverStaffRu = {
     'server.staff.timeOffOverlap': 'На эти даты уже назначено отсутствие.',
     'server.staff.timeOffChangeFailedRefresh': 'Не удалось изменить отсутствие. Обновите страницу.',
     'server.staff.timeOffChangeFailed': 'Не удалось изменить отсутствие. Изменения не применены.',
+    // Staff invitations (API-06)
+    'server.staff.invitationSent': 'Приглашение отправлено. Сотрудник появится в команде после подтверждения.',
+    'server.staff.userAlreadyInTeam': 'Этот пользователь уже в команде бизнеса.',
+    'server.staff.invitationsCheckFailed': 'Не удалось проверить приглашения',
+    'server.staff.invitationCreateFailed': 'Не удалось создать приглашение',
+    'server.staff.invitationsLoadFailed': 'Не удалось загрузить приглашения',
+    'server.staff.invitationNotFound': 'Приглашение не найдено',
+    'server.staff.invitationNotPending': 'Приглашение уже обработано',
+    'server.staff.invitationStale': 'Приглашение больше не действует: карточка сотрудника изменилась',
+    'server.staff.invitationAlreadyStaff': 'Вы уже в команде этого бизнеса',
+    'server.staff.invitationDecisionFailed': 'Не удалось обработать приглашение',
 } as const;

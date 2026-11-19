@@ -37,7 +37,7 @@ describe('staffCreateHttpService', () => {
   test('parses request and delegates to staff create service', async () => {
     (runStaffCreate as jest.Mock).mockResolvedValue({
       ok: true,
-      data: { id: 'staff-1', user_linked: false, schedule_initialized: true, schedule_days_created: 14, schedule_error: null },
+      data: { id: 'staff-1', schedule_initialized: true, schedule_days_created: 14, schedule_error: null },
     });
 
     const response = await runStaffCreateHttp(

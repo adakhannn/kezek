@@ -4,7 +4,7 @@
  */
 
 import { POST } from '@/app/api/staff/create-from-user/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
+import { createMockRequest, createMockSupabase, createTableMock, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries, type RecordedQuery } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
@@ -141,197 +141,69 @@ describe('/api/staff/create-from-user', () => {
         });
     });
 
-    describe('Успешное создание', () => {
-        test('должен успешно создать сотрудника из пользователя', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-                data: {
-                    id: branchId,
-                    biz_id: bizId,
-                },
+    // API-06: the card is created without the account; the person gets an invitation to accept.
+    describe('Приглашение вместо привязки', () => {
+        const has = (query: RecordedQuery, method: string) => query.calls.some(([name]) => name === method);
+
+        function tableClient(ownCard: unknown) {
+            const admin = createTableMock({
+                staff: (query) => (has(query, 'insert') ? { data: { id: 'staff-id' } } : { data: ownCard }),
+                staff_invitations: (query) => (has(query, 'insert') ? { data: { id: 'inv-id', staff_id: 'staff-id' } } : { data: null }),
+                staff_branch_assignments: { data: null },
+            });
+            admin.auth.admin.getUserById.mockResolvedValue({
+                data: { user: { id: userId, email: 'test@example.com', phone: '+996555123456', user_metadata: { full_name: 'Test User' } } },
                 error: null,
             });
+            (getServiceClient as jest.Mock).mockReturnValue(admin);
+            (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId, userId: 'manager-uuid' });
+            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({ data: { id: branchId, biz_id: bizId }, error: null });
+            return admin;
+        }
 
-            // Мокаем список пользователей
-            mockAdmin.auth.admin.getUserById.mockResolvedValue({
-                data: {
-                    user: {
-                            id: userId,
-                            email: 'test@example.com',
-                            phone: '+996555123456',
-                            user_metadata: { full_name: 'Test User' },
-                        },
-                },
-                error: null,
-            });
-
-            // Мокаем проверку существующего сотрудника
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null, // Сотрудник не существует
-                    error: null,
-                }),
-            });
-
-            // Мокаем создание сотрудника
-            mockAdmin.from.mockReturnValueOnce({
-                insert: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'staff-id',
-                    },
-                    error: null,
-                }),
-            });
-
-            // Мокаем создание назначения на филиал
-            mockAdmin.from.mockReturnValueOnce({
-                insert: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'role-staff-id',
-                    },
-                    error: null,
-                }),
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                insert: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
+        test('создаёт карточку без аккаунта и приглашение, роль не выдаёт', async () => {
+            const admin = tableClient(null);
             const req = createMockRequest('http://localhost/api/staff/create-from-user', {
                 method: 'POST',
-                body: {
-                    user_id: userId,
-                    branch_id: branchId,
-                    is_active: true,
-                },
+                body: { user_id: userId, branch_id: branchId, is_active: true },
             });
 
             const res = await POST(req);
             const data = await expectSuccessResponse(res, 200);
 
-            expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('id', 'staff-id');
-            expect(data).toHaveProperty('schedule_initialized', true);
-            expect(data).toHaveProperty('schedule_days_created', 14);
-            expectBusinessScoped(db, 'staff', bizId);
-            expectBusinessScoped(db, 'user_roles', bizId);
+            expect(data).toMatchObject({
+                ok: true,
+                message: 'Приглашение отправлено. Сотрудник появится в команде после подтверждения.',
+                id: 'staff-id',
+                staff_id: 'staff-id',
+                invitation_id: 'inv-id',
+                status: 'pending',
+                schedule_initialized: true,
+                schedule_days_created: 14,
+            });
+            const staffInsert = admin.queries.find((query) => query.table === 'staff' && has(query, 'insert'));
+            expect(staffInsert?.calls.find(([name]) => name === 'insert')?.[1]).toMatchObject({ user_id: null });
+            expect(staffInsert?.calls.find(([name]) => name === 'insert')?.[1]).not.toHaveProperty('email');
+            expect(admin.queries.map((query) => query.table)).not.toContain('user_roles');
+            expectBusinessScoped(admin, 'staff', bizId);
+            expectBusinessScoped(admin, 'staff_invitations', bizId);
         });
 
-        test('должен использовать существующего сотрудника если он уже есть', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
-                data: {
-                    id: branchId,
-                    biz_id: bizId,
-                },
-                error: null,
-            });
-
-            // Мокаем список пользователей
-            mockAdmin.auth.admin.getUserById.mockResolvedValue({
-                data: {
-                    user: {
-                            id: userId,
-                            email: 'test@example.com',
-                            phone: '+996555123456',
-                            user_metadata: { full_name: 'Test User' },
-                        },
-                },
-                error: null,
-            });
-
-            // Карточка, уже привязанная к этому аккаунту (ARCH-07: поиск по user_id, не по имени)
-            const existingLookup = {
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'existing-staff-id',
-                    },
-                    error: null,
-                }),
-            };
-            mockAdmin.from.mockReturnValueOnce(existingLookup);
-
-            // Мокаем создание назначения на филиал
-            mockAdmin.from.mockReturnValueOnce({
-                insert: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'role-staff-id',
-                    },
-                    error: null,
-                }),
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                insert: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
+        test('карточка, уже привязанная к этому аккаунту, остаётся; приглашения нет', async () => {
+            const admin = tableClient({ id: 'existing-staff-id' });
             const req = createMockRequest('http://localhost/api/staff/create-from-user', {
                 method: 'POST',
-                body: {
-                    user_id: userId,
-                    branch_id: branchId,
-                },
+                body: { user_id: userId, branch_id: branchId },
             });
 
             const res = await POST(req);
             const data = await expectSuccessResponse(res, 200);
 
-            expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('id', 'existing-staff-id');
-            expect(data).toHaveProperty('schedule_initialized', true);
-            expect(data).toHaveProperty('schedule_days_created', 14);
-            expect(existingLookup.eq).toHaveBeenCalledWith('user_id', userId);
-            expect(existingLookup.eq).not.toHaveBeenCalledWith('full_name', expect.anything());
+            expect(data).toMatchObject({ ok: true, id: 'existing-staff-id', invitation_id: null, status: 'already_staff' });
+            const lookup = admin.queries[0];
+            expect(lookup.calls).toEqual(expect.arrayContaining([['eq', 'user_id', userId]]));
+            expect(lookup.calls.some(([, column]) => column === 'full_name')).toBe(false);
+            expect(admin.queries.map((query) => query.table)).not.toContain('staff_invitations');
         });
     });
 });
-
-

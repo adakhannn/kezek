@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **180 route-файлов, 223 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **183 route-файлов, 226 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 526 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `6639387960420d7c2594a229bcbc0f50365f969238eb668dabc09a45d4e82942`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 533 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `3fa38575fcb8616e57f8f87119a794e79bc0c8f10a825ee1e1b6ff4e5a049321`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -167,6 +167,9 @@
 | `/api/services/[id]/delete` | POST | [route](../../apps/web/src/app/api/services/[id]/delete/route.ts) | [runServiceDeleteHttp](../../apps/web/src/lib/serviceDeleteHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/services/[id]/update` | POST | [route](../../apps/web/src/app/api/services/[id]/update/route.ts) | [runServiceUpdateHttp](../../apps/web/src/lib/serviceUpdateHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/services/create` | POST | [route](../../apps/web/src/app/api/services/create/route.ts) | [runServiceCreateHttp](../../apps/web/src/lib/serviceCreateHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
+| `/api/staff-invitations/[id]/accept` | POST | [route](../../apps/web/src/app/api/staff-invitations/[id]/accept/route.ts) | [runAcceptStaffInvitationHttp](../../apps/web/src/lib/staffInvitationsHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/staff-invitations/[id]/decline` | POST | [route](../../apps/web/src/app/api/staff-invitations/[id]/decline/route.ts) | [runDeclineStaffInvitationHttp](../../apps/web/src/lib/staffInvitationsHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/staff-invitations` | GET | [route](../../apps/web/src/app/api/staff-invitations/route.ts) | [runListStaffInvitationsHttp](../../apps/web/src/lib/staffInvitationsHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/[id]/delete` | POST | [route](../../apps/web/src/app/api/staff/[id]/delete/route.ts) | [runStaffDeleteHttp](../../apps/web/src/lib/staffDeleteHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/[id]/dismiss` | POST | [route](../../apps/web/src/app/api/staff/[id]/dismiss/route.ts) | [runStaffDismissHttp](../../apps/web/src/lib/staffDismissHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/[id]/restore` | POST | [route](../../apps/web/src/app/api/staff/[id]/restore/route.ts) | [runStaffRestoreHttp](../../apps/web/src/lib/staffRestoreHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |

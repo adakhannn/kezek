@@ -25,6 +25,7 @@ describe('staffCreateFromUserHttpService', () => {
     jest.clearAllMocks();
     (getBizContextForManagers as jest.Mock).mockResolvedValue({
       bizId: 'biz-1',
+      userId: 'manager-1',
     });
     (getServiceClient as jest.Mock).mockReturnValue({ auth: { admin: {} }, from: jest.fn() });
   });
@@ -32,8 +33,12 @@ describe('staffCreateFromUserHttpService', () => {
   test('delegates valid request to staff create from user service', async () => {
     (runStaffCreateFromUser as jest.Mock).mockResolvedValue({
       ok: true,
+      message: 'Приглашение отправлено. Сотрудник появится в команде после подтверждения.',
       data: {
         id: 'staff-1',
+        staff_id: 'staff-1',
+        invitation_id: 'inv-1',
+        status: 'pending',
         schedule_initialized: true,
         schedule_days_created: 14,
         schedule_error: null,
@@ -55,13 +60,16 @@ describe('staffCreateFromUserHttpService', () => {
     expect(runStaffCreateFromUser).toHaveBeenCalledWith({
       admin: { auth: { admin: {} }, from: expect.any(Function) },
       bizId: 'biz-1',
+      invitedBy: 'manager-1',
       body: {
         user_id: 'user-1',
         branch_id: 'branch-1',
       },
     });
     expect(response.status).toBe(200);
-    expect(body.data.id).toBe('staff-1');
+    expect(body.data).toMatchObject({ id: 'staff-1', invitation_id: 'inv-1', status: 'pending' });
+    // API-06: the manager is told the card waits for the person's consent.
+    expect(body.message).toBe('Приглашение отправлено. Сотрудник появится в команде после подтверждения.');
   });
 
   test('returns validation error for invalid json', async () => {

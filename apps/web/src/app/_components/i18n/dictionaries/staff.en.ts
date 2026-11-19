@@ -1,6 +1,6 @@
 export const staffEn = {
     'staff.new.manualOverride.title': 'Add a staff member manually',
-    'staff.new.manualOverride.message': 'The recommended safe process is for the person to apply for access to the business. Use this search only when you know exactly which account should be linked to the staff profile.',
+    'staff.new.manualOverride.message': 'The recommended safe process is for the person to apply for access to the business. Here you can invite a person by their account: the staff profile is linked to the account only after they accept the invitation in their cabinet.',
     'staff.sidebar.workspaceBadge': 'Staff workspace',
     'staff.sidebar.navTitle': 'Workspace sections',
     'staff.finance.summary.title': 'Shift summary',
@@ -263,6 +263,9 @@ export const staffEn = {
     'staff.new.active.label': 'Active (available for booking)',
     'staff.new.branch.label': 'Branch',
     'staff.new.create.button': 'Add staff',
+    'staff.new.invitation.sent': 'Invitation sent. The staff member will join the team after confirming it.',
+    'staff.new.invitation.alreadyInTeam': 'This user is already on the business team.',
+    'staff.new.invitation.toList': 'To the staff list',
     'staff.new.errors.createFailed': 'Failed to create staff',
     'staff.new.errors.selectBranch': 'Select branch',
     'staff.new.errors.selectUser': 'Select user',

@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { findAccountIdByConfirmedContact } from '@/lib/accountContactLookup';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { createPendingStaffInvitation, findPendingStaffInvitation } from '@/lib/staffInvitationService';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { todayDateString } from '@/lib/time';
 
@@ -31,7 +32,6 @@ type StaffCreateSuccess = {
     ok: true;
     data: {
         id: string;
-        user_linked: boolean;
         schedule_initialized: boolean;
         schedule_days_created: number;
         schedule_error: string | null;
@@ -66,12 +66,8 @@ export async function runStaffCreate({
         };
     }
 
-    const linkedUserId = await resolveLinkedUserId({
-        admin,
-        email: body.email,
-        phone: body.phone,
-    });
-
+    // The card is never linked to an account here (API-06): a client session cannot set user_id
+    // (staff_guard_client_write), and the account that confirmed this contact only gets an invitation.
     const { data, error } = await supabase
         .from('staff')
         .insert({
@@ -81,7 +77,7 @@ export async function runStaffCreate({
             email: body.email ?? null,
             phone: body.phone ?? null,
             is_active: !!body.is_active,
-            user_id: linkedUserId,
+            user_id: null,
         })
         .select('id')
         .single();
@@ -103,8 +99,15 @@ export async function runStaffCreate({
         staffId,
     });
 
-    if (linkedUserId) {
-        await addStaffRole(admin, linkedUserId, bizId);
+    if (staffId) {
+        await inviteAccountByContact({
+            admin,
+            bizId,
+            staffId,
+            invitedBy: userId,
+            email: body.email,
+            phone: body.phone,
+        });
     }
 
     const scheduleResult = explicitSchedulingEnabled() ? { success: false, daysCreated: 0, error: undefined } : await initializeSchedule({
@@ -127,7 +130,6 @@ export async function runStaffCreate({
         ok: true,
         data: {
             id: staffId,
-            user_linked: !!linkedUserId,
             schedule_initialized: scheduleResult.success,
             schedule_days_created: scheduleResult.daysCreated,
             schedule_error: scheduleResult.error || null,
@@ -159,26 +161,53 @@ async function checkManagerRoleAccess({
     });
 }
 
-async function resolveLinkedUserId({
+/**
+ * Invites the one account that confirmed this e-mail or phone (ARCH-03) to the new card (API-06).
+ * Silent by design: the response is the same whether an account exists or not, and a failed lookup or
+ * insert only leaves the card without an invitation. An account that already has a card or a pending
+ * invitation in this business is not invited again.
+ */
+async function inviteAccountByContact({
     admin,
+    bizId,
+    staffId,
+    invitedBy,
     email,
     phone,
 }: {
     admin: SupabaseClient;
+    bizId: string;
+    staffId: string;
+    invitedBy: string;
     email?: string | null;
     phone?: string | null;
-}) {
+}): Promise<void> {
     if (!email && !phone) {
-        return null;
+        return;
     }
 
-    // Exact lookup of the account that confirmed this e-mail or phone (ARCH-03). A failed lookup
-    // leaves the staff member unlinked; it does not block creating them.
     try {
-        return await findAccountIdByConfirmedContact(admin, { email, phone });
+        const accountId = await findAccountIdByConfirmedContact(admin, { email, phone });
+        if (!accountId) return;
+
+        const { data: ownCard, error: cardError } = await admin
+            .from('staff')
+            .select('id')
+            .eq('biz_id', bizId)
+            .eq('user_id', accountId)
+            .limit(1)
+            .maybeSingle();
+        if (cardError || ownCard) return;
+
+        const pending = await findPendingStaffInvitation(admin, bizId, accountId);
+        if (!pending.ok || pending.invitation) return;
+
+        const created = await createPendingStaffInvitation(admin, { bizId, staffId, userId: accountId, invitedBy });
+        if (!created.ok) {
+            logWarn('StaffCreateService', 'Failed to create a staff invitation');
+        }
     } catch (error) {
         logWarn('StaffCreate', 'Account lookup by contact failed', error);
-        return null;
     }
 }
 
@@ -208,38 +237,6 @@ async function createInitialBranchAssignment({
         }
     } catch (error) {
         logWarn('StaffCreateService', 'Unexpected error while creating staff_branch_assignments row', error);
-    }
-}
-
-async function addStaffRole(admin: SupabaseClient, userId: string, bizId: string): Promise<void> {
-    const { data: roleStaff } = await admin
-        .from('roles')
-        .select('id')
-        .eq('key', 'staff')
-        .maybeSingle();
-
-    if (!roleStaff?.id) {
-        logWarn('StaffCreateService', 'Staff role not found in roles table');
-        return;
-    }
-
-    const { data: existsRole } = await admin
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('role_id', roleStaff.id)
-        .eq('biz_id', bizId)
-        .maybeSingle();
-
-    if (!existsRole) {
-        const { error } = await admin.from('user_roles').insert({
-            user_id: userId,
-            biz_id: bizId,
-            role_id: roleStaff.id,
-        });
-        if (error) {
-            logWarn('StaffCreateService', 'Failed to add staff role', { message: error.message });
-        }
     }
 }
 

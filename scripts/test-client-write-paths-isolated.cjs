@@ -162,6 +162,8 @@ let created = false;
             delete from public.user_roles ur using public.roles r where r.id = ur.role_id and ur.user_id = '${manager}' and r.key = 'owner';`);
 
         await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261117200000_close_client_write_paths.sql'), 'utf8'));
+        // The live staff guard is the one 20261120090000 redefines (API-06, test-staff-invitations-isolated.cjs).
+        await sql(read('20261120090000_staff_invitations.sql'));
 
         // DB-01: only the service role writes suspensions; users still read their own.
         for (const role of ['anon', 'authenticated']) {
@@ -193,6 +195,9 @@ let created = false;
         assert.equal(await touched('authenticated', owner, `update public.staff set full_name = 'Aida K.' where id = '${staffA}'`), '1');
         await assert.rejects(touched('authenticated', manager, `update public.staff set biz_id = '${otherBiz}' where id = '${staffA}'`), /STAFF_FIELD_READ_ONLY/);
         await assert.rejects(touched('authenticated', manager, `update public.staff set rating_score = 5 where id = '${staffA}'`), /STAFF_FIELD_READ_ONLY/);
+        // API-06: managers no longer link a card to an account; only the invited person does.
+        await assert.rejects(touched('authenticated', manager, `update public.staff set user_id = '${stranger}' where id = '${staffA}'`), /STAFF_USER_LINK_FORBIDDEN/);
+        await assert.rejects(touched('authenticated', manager, `insert into public.staff(biz_id, branch_id, full_name, user_id) values ('${biz}', '${branchA}', 'Linked', '${stranger}')`), /STAFF_USER_LINK_FORBIDDEN/);
         assert.equal(await touched('authenticated', manager, `insert into public.staff(biz_id, branch_id, full_name, rating_score) values ('${biz}', '${branchA}', 'New', 5)`), '1');
         assert.equal(await sql(`select coalesce(rating_score::text, 'null') from public.staff where full_name = 'New'`), 'null');
         await assert.rejects(touched('authenticated', manager, `insert into public.staff(biz_id, branch_id, full_name) values ('${biz}', '${branchB}', 'Cross')`), /STAFF_WRITE_FORBIDDEN/);

@@ -467,6 +467,26 @@
       "strict": false,
       "volatility": "s"
     },
+    "public.accept_staff_invitation(uuid,uuid)": {
+      "arguments": "p_invitation_id uuid, p_user_id uuid",
+      "body": "e3dbec2f3f6462a5bbaeccfbbb3938e9",
+      "config": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
+      "strict": false,
+      "volatility": "v"
+    },
     "public.adjust_closed_shift_hours_command(uuid,uuid,uuid,bigint,numeric,jsonb)": {
       "arguments": "p_shift_id uuid, p_biz_id uuid, p_actor_id uuid, p_expected_revision bigint, p_hours_worked numeric, p_calculation jsonb",
       "body": "a600b6c8fda53d37f84dc5b0d8d56c2b",
@@ -1722,6 +1742,26 @@
       "result": "jsonb",
       "strict": false,
       "volatility": "s"
+    },
+    "public.decline_staff_invitation(uuid,uuid)": {
+      "arguments": "p_invitation_id uuid, p_user_id uuid",
+      "body": "656da36c1ec640ca01025fe668580301",
+      "config": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "void",
+      "strict": false,
+      "volatility": "v"
     },
     "public.delete_branch_without_history(uuid,uuid)": {
       "arguments": "p_biz_id uuid, p_branch_id uuid",
@@ -4056,7 +4096,7 @@
     },
     "public.staff_guard_client_write()": {
       "arguments": "",
-      "body": "9e5704996c875bd3db4be868954daa85",
+      "body": "99b60d318e1e785059feac69ff54c4d4",
       "config": [
         "search_path=pg_catalog, public"
       ],

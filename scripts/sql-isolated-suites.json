@@ -54,5 +54,6 @@
   "test-complex-booking-identity.mjs",
   "test-rating-functions-service-only-isolated.cjs",
   "test-service-group-update-isolated.cjs",
-  "test-one-super-admin-rule-isolated.cjs"
+  "test-one-super-admin-rule-isolated.cjs",
+  "test-staff-invitations-isolated.cjs"
 ]

@@ -13,7 +13,7 @@ type Body = {
 };
 
 export async function runStaffCreateFromUserHttp(req: Request): Promise<NextResponse> {
-  const { bizId } = await getBizContextForManagers();
+  const { bizId, userId } = await getBizContextForManagers();
 
   let body: Body;
   try {
@@ -26,6 +26,7 @@ export async function runStaffCreateFromUserHttp(req: Request): Promise<NextResp
   const result = await runStaffCreateFromUser({
     admin: getServiceClient(),
     bizId,
+    invitedBy: userId ?? null,
     body,
   });
 
@@ -33,5 +34,6 @@ export async function runStaffCreateFromUserHttp(req: Request): Promise<NextResp
     return createErrorResponse(result.error, result.message, undefined, result.status);
   }
 
-  return createSuccessResponse(result.data);
+  // The card is linked only when the person accepts the invitation (API-06).
+  return createSuccessResponse(result.data, { message: result.message });
 }

@@ -8,6 +8,7 @@ import ClientCabinet from '@/app/cabinet/ClientCabinet';
 jest.mock('next/navigation', () => ({ usePathname: () => '/admin/analytics' }));
 jest.mock('@/app/_components/i18n/LanguageProvider', () => ({ useLanguage: () => ({ locale: 'ru', t: (_key: string, fallback?: string) => fallback ?? _key }) }));
 jest.mock('@/app/cabinet/components/MyVisitPackagesBlock', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/app/cabinet/components/StaffInvitationsBlock', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/app/cabinet/components/BookingCard', () => ({ __esModule: true, default: () => null }));
 
 function Example() {
