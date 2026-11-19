@@ -1,25 +1,31 @@
--- Минимальный набор автоматизированных проверок для критичных сценариев
--- Запускать целиком в Supabase SQL editor.
--- При успехе вы увидите только NOTICE; при ошибке любой сценарий упадет с EXCEPTION.
+-- Сквозные SQL-сценарии на полной цепочке миграций: закрытие смены, акции при оплате и рейтинги.
+-- Запуск: `pnpm test:sql` с локальным SUPABASE_DB_URL. Runner выполняет файл в одной транзакции и
+-- откатывает её, так что тестовые строки и пересчитанные рейтинги не остаются. CI запускает его в
+-- db_bootstrap на базе, собранной из baseline, миграций и seed.
+-- При успехе выводятся только NOTICE; при ошибке любой сценарий падает с EXCEPTION.
+-- Команды вызываются так, как их вызывает backend: с JWT-ролью service_role.
 
 -----------------------------
--- 1. Закрытие смен (гарантия, отсутствие клиентов)
+-- 1. Закрытие смены командой сервера (гарантия, без клиентов)
 -----------------------------
 
 do $$
 declare
-    v_staff_id uuid;
     v_biz_id uuid;
     v_branch_id uuid;
+    v_staff_id uuid;
     v_shift_id uuid;
-    v_hourly numeric := 100; -- 100 сом/час
-    v_hours numeric := 8;    -- 8 часов смены
-    v_expected_guarantee numeric;
+    v_tz text;
+    v_day date;
+    v_revision bigint;
+    v_settings jsonb;
+    v_calculation jsonb;
+    v_result jsonb;
     v_shift record;
 begin
     raise notice '[TEST 1] Старт теста закрытия смены без клиентов и с гарантией';
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
 
-    -- 1.1. создаем тестовый бизнес / филиал / сотрудника
     insert into public.businesses (name, slug, is_approved)
     values ('TEST_BIZ_FOR_SHIFTS', 'test-biz-for-shifts', true)
     returning id into v_biz_id;
@@ -29,61 +35,45 @@ begin
     returning id into v_branch_id;
 
     insert into public.staff (biz_id, branch_id, full_name, is_active, hourly_rate, percent_master, percent_salon)
-    values (v_biz_id, v_branch_id, 'TEST STAFF SHIFTS', true, v_hourly, 60, 40)
+    values (v_biz_id, v_branch_id, 'TEST STAFF SHIFTS', true, 100, 60, 40)
     returning id into v_staff_id;
 
-    -- 1.2. создаем смену в прошлом без клиентов
+    -- Вчерашняя смена по часовому поясу бизнеса, 09:00–17:00, без клиентов.
+    v_tz := public.finance_business_timezone(v_biz_id);
+    v_day := (now() at time zone v_tz)::date - 1;
     insert into public.staff_shifts (staff_id, biz_id, branch_id, status, opened_at, shift_date, total_amount, consumables_amount)
-    values (
-        v_staff_id,
-        v_biz_id,
-        v_branch_id,
-        'open',
-        now() - make_interval(hours => (v_hours + 1)::integer),
-        (now() - interval '1 day')::date,
-        0,
-        0
-    )
-    returning id into v_shift_id;
+    values (v_staff_id, v_biz_id, v_branch_id, 'open', (v_day + time '09:00') at time zone v_tz, v_day, 0, 0)
+    returning id, ledger_revision into v_shift_id, v_revision;
 
-    -- В этом тесте мы не вызываем HTTP‑роут cron/close-shifts,
-    -- а моделируем закрытие смены напрямую в SQL по тем же формулам, что описаны в документации.
-
-    v_expected_guarantee := round(v_hourly * v_hours);
-
-    update public.staff_shifts
-    set
-        hours_worked      = v_hours,
-        hourly_rate       = v_hourly,
-        guaranteed_amount = v_expected_guarantee,
-        total_amount      = 0,
-        consumables_amount = 0,
-        master_share      = v_expected_guarantee, -- гарантия должна победить базовую долю (0)
-        salon_share       = 0,
-        topup_amount      = v_expected_guarantee, -- т.к. base_master_share = 0
-        status            = 'closed',
-        closed_at         = now()
-    where id = v_shift_id;
+    -- Расчёт делает core-domain на сервере: 8 часов по 100 сом без выручки дают гарантию 800,
+    -- и вся она — доплата. Команда проверяет смену, настройки и день и сохраняет результат.
+    select jsonb_build_object('percent_master', percent_master, 'percent_salon', percent_salon, 'hourly_rate', hourly_rate)
+    into v_settings
+    from public.staff
+    where id = v_staff_id;
+    v_calculation := jsonb_build_object(
+        'totalAmount', 0, 'totalConsumables', 0, 'normalizedPercentMaster', 60, 'normalizedPercentSalon', 40,
+        'finalMasterShare', 800, 'finalSalonShare', 0, 'hoursWorked', 8, 'hourlyRate', 100,
+        'guaranteedAmount', 800, 'topupAmount', 800, 'closedAt', (v_day + time '17:00') at time zone v_tz);
+    v_result := public.close_staff_shift_command(v_shift_id, null, v_revision, v_settings, v_calculation);
+    if v_result ->> 'ok' is distinct from 'true' then
+        raise exception '[TEST 1] Команда закрытия вернула %', v_result;
+    end if;
 
     select * into v_shift from public.staff_shifts where id = v_shift_id;
-
-    if v_shift.guaranteed_amount <> v_expected_guarantee then
-        raise exception '[TEST 1] Ожидали guaranteed_amount = %, получили %', v_expected_guarantee, v_shift.guaranteed_amount;
+    if v_shift.status <> 'closed' or v_shift.guaranteed_amount <> 800 or v_shift.topup_amount <> 800
+        or v_shift.master_share <> 800 or v_shift.salon_share <> 0 or v_shift.hours_worked <> 8 then
+        raise exception '[TEST 1] Смена сохранена неверно: status %, гарантия %, доплата %, мастер %, салон %, часы %',
+            v_shift.status, v_shift.guaranteed_amount, v_shift.topup_amount, v_shift.master_share, v_shift.salon_share, v_shift.hours_worked;
     end if;
 
-    if v_shift.master_share <> v_expected_guarantee then
-        raise exception '[TEST 1] Ожидали master_share = гарантии %, получили %', v_expected_guarantee, v_shift.master_share;
+    -- Повторная команда не закрывает смену второй раз.
+    v_result := public.close_staff_shift_command(v_shift_id, null, v_revision, v_settings, v_calculation);
+    if v_result ->> 'action' is distinct from 'already_closed' then
+        raise exception '[TEST 1] Повторное закрытие должно вернуть already_closed, получили %', v_result;
     end if;
 
-    if v_shift.topup_amount <> v_expected_guarantee then
-        raise exception '[TEST 1] Ожидали topup_amount = %, получили %', v_expected_guarantee, v_shift.topup_amount;
-    end if;
-
-    if v_shift.salon_share <> 0 then
-        raise exception '[TEST 1] Ожидали salon_share = 0 при отсутствии выручки, получили %', v_shift.salon_share;
-    end if;
-
-    raise notice '[TEST 1] OK — гарантированная смена без клиентов считается корректно';
+    raise notice '[TEST 1] OK — гарантированная смена без клиентов закрывается командой и сохраняется корректно';
 end;
 $$;
 
@@ -96,15 +86,17 @@ do $$
 declare
     v_biz_id uuid;
     v_branch_id uuid;
-    v_client_id uuid;
+    v_staff_id uuid;
+    v_client_id uuid := gen_random_uuid();
     v_service_id uuid;
     v_booking_id uuid;
-    v_promo_id uuid;
     v_result jsonb;
+    v_booking record;
 begin
     raise notice '[TEST 2] Старт теста применения промо при статусе paid';
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
 
-    -- 2.1. создаем бизнес / филиал / клиента / услугу
+    -- 2.1. бизнес, филиал, сотрудник с назначением в филиал, клиент-аккаунт и услуга за 1000
     insert into public.businesses (name, slug, is_approved)
     values ('TEST_BIZ_FOR_PROMO', 'test-biz-for-promo', true)
     returning id into v_biz_id;
@@ -113,46 +105,44 @@ begin
     values (v_biz_id, 'TEST_BRANCH_FOR_PROMO', true)
     returning id into v_branch_id;
 
-    insert into public.clients (phone)
-    values ('+996700000001')
-    returning id into v_client_id;
+    insert into public.staff (biz_id, branch_id, full_name, is_active)
+    values (v_biz_id, v_branch_id, 'TEST STAFF PROMO', true)
+    returning id into v_staff_id;
 
-    insert into public.services (biz_id, branch_id, name_ru, duration_min, price, active)
-    values (v_biz_id, v_branch_id, 'TEST SERVICE', 30, 1000, true)
+    insert into public.staff_branch_assignments (biz_id, staff_id, branch_id, valid_from)
+    values (v_biz_id, v_staff_id, v_branch_id, current_date - 30);
+
+    insert into auth.users (id, email)
+    values (v_client_id, 'test-promo-client@example.test');
+
+    insert into public.services (biz_id, branch_id, name_ru, duration_min, price_from, price_to, active)
+    values (v_biz_id, v_branch_id, 'TEST SERVICE', 30, 1000, 1000, true)
     returning id into v_service_id;
 
-    -- 2.2. создаем промо "первая услуга со скидкой 50%" в этом филиале
-    insert into public.branch_promotions (branch_id, promotion_type, title_ru, params, is_active)
-    values (
-        v_branch_id,
-        'first_visit_discount',
-        'Тест: первая услуга 50%',
-        jsonb_build_object('discount_percent', 50),
-        true
-    )
-    returning id into v_promo_id;
+    -- 2.2. промо "первая услуга со скидкой 50%" в этом филиале
+    insert into public.branch_promotions (branch_id, biz_id, promotion_type, title_ru, params, is_active)
+    values (v_branch_id, v_biz_id, 'first_visit_discount', 'Тест: первая услуга 50%', jsonb_build_object('discount_percent', 50), true);
 
-    -- 2.3. создаем бронь и сразу переводим в paid через функцию
-    insert into public.bookings (biz_id, branch_id, client_id, service_id, start_at, end_at, status)
-    values (
-        v_biz_id,
-        v_branch_id,
-        v_client_id,
-        v_service_id,
-        now(),
-        now() + interval '30 minutes',
-        'confirmed'
-    )
+    -- 2.3. подтверждённая бронь, которую сервер переводит в paid после визита, как на практике:
+    -- она уже закончилась, но в счёт своих же визитов не входит (ENG-123)
+    insert into public.bookings (biz_id, branch_id, staff_id, client_id, service_id, start_at, end_at, status)
+    values (v_biz_id, v_branch_id, v_staff_id, v_client_id, v_service_id,
+        now() - interval '1 hour', now() - interval '30 minutes', 'confirmed')
     returning id into v_booking_id;
 
     v_result := public.update_booking_status_with_promotion(v_booking_id, 'paid');
 
-    if coalesce((v_result ->> 'status')::text, '') <> 'paid' then
-        raise exception '[TEST 2] После update_booking_status_with_promotion статус должен быть paid, получили %', v_result;
+    select status, promotion_applied into v_booking from public.bookings where id = v_booking_id;
+    if v_booking.status <> 'paid' then
+        raise exception '[TEST 2] После update_booking_status_with_promotion статус должен быть paid, получили %', v_booking.status;
     end if;
 
-    if (v_result ->> 'final_amount')::numeric <> 500 then
-        raise exception '[TEST 2] Ожидали final_amount = 500 (скидка 50%% от 1000), получили %', v_result ->> 'final_amount';
+    if v_result ->> 'applied' is distinct from 'true' or (v_result ->> 'final_amount')::numeric <> 500 then
+        raise exception '[TEST 2] Ожидали final_amount = 500 (скидка 50%% от 1000), получили %', v_result;
+    end if;
+
+    if (v_booking.promotion_applied ->> 'final_amount')::numeric is distinct from 500 then
+        raise exception '[TEST 2] Бронь должна хранить применённое промо с final_amount = 500, получили %', v_booking.promotion_applied;
     end if;
 
     raise notice '[TEST 2] OK — промо first_visit_discount применяется при переходе в paid и корректно считает сумму';
@@ -187,7 +177,7 @@ begin
     values (v_biz_id, v_branch_id, 'TEST STAFF RATINGS', true, null)
     returning id into v_staff_id;
 
-    -- 3.2. запускаем инициализацию всех рейтингов (функция создается миграцией 20260123000002_initialize_ratings.sql)
+    -- 3.2. запускаем инициализацию всех рейтингов
     perform public.initialize_all_ratings(30);
 
     select exists (
@@ -215,20 +205,19 @@ declare
     v_biz_id uuid;
     v_branch_id uuid;
     v_staff_id uuid;
-    v_client_id uuid;
+    v_client_id uuid := gen_random_uuid();
     v_service_id uuid;
-    v_promo_id uuid;
     v_booking_id uuid;
-    v_shift_id uuid;
-    v_date_1 date := current_date - interval '3 days';
-    v_date_2 date := current_date - interval '2 days';
-    v_date_3 date := current_date - interval '1 day';
+    v_date_1 date := current_date - 3;
+    v_date_2 date := current_date - 2;
+    v_date_3 date := current_date - 1;
     v_initial_rating numeric;
     v_rating_after_work numeric;
     v_metrics_count integer;
     v_result numeric;
 begin
     raise notice '[TEST 4] Старт комплексного теста: смены + промо + рейтинги за несколько дней';
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
 
     -- 4.1. Создаем тестовую инфраструктуру
     insert into public.businesses (name, slug, is_approved)
@@ -243,40 +232,36 @@ begin
     values (v_biz_id, v_branch_id, 'TEST STAFF COMPLEX', true, 100, 60, 40)
     returning id into v_staff_id;
 
-    insert into public.clients (phone)
-    values ('+996700000002')
-    returning id into v_client_id;
+    insert into public.staff_branch_assignments (biz_id, staff_id, branch_id, valid_from)
+    values (v_biz_id, v_staff_id, v_branch_id, current_date - 30);
 
-    insert into public.services (biz_id, branch_id, name_ru, duration_min, price, active)
-    values (v_biz_id, v_branch_id, 'TEST SERVICE COMPLEX', 30, 1000, true)
+    insert into auth.users (id, email)
+    values (v_client_id, 'test-complex-client@example.test');
+
+    insert into public.services (biz_id, branch_id, name_ru, duration_min, price_from, price_to, active)
+    values (v_biz_id, v_branch_id, 'TEST SERVICE COMPLEX', 30, 1000, 1000, true)
     returning id into v_service_id;
 
     -- 4.2. Создаем промо "седьмая услуга бесплатно"
-    insert into public.branch_promotions (branch_id, promotion_type, title_ru, params, is_active)
-    values (
-        v_branch_id,
-        'free_after_n_visits',
-        'Тест: седьмая услуга бесплатно',
-        jsonb_build_object('visit_count', 7),
-        true
-    )
-    returning id into v_promo_id;
+    insert into public.branch_promotions (branch_id, biz_id, promotion_type, title_ru, params, is_active)
+    values (v_branch_id, v_biz_id, 'free_after_n_visits', 'Тест: седьмая услуга бесплатно', jsonb_build_object('visit_count', 7), true);
 
-    -- 4.3. Симулируем 6 посещений за 3 дня (чтобы на 7-м сработало промо)
-    for i in 1..6 loop
-        insert into public.bookings (biz_id, branch_id, client_id, service_id, start_at, end_at, status)
+    -- 4.3. Симулируем 5 оплаченных посещений за 3 дня, в 10:00 и 11:00; шестое и седьмое оплачиваются ниже
+    for i in 1..5 loop
+        insert into public.bookings (biz_id, branch_id, staff_id, client_id, service_id, start_at, end_at, status)
         values (
             v_biz_id,
             v_branch_id,
+            v_staff_id,
             v_client_id,
             v_service_id,
-            (v_date_1 + make_interval(days => (i - 1) % 3))::timestamp + make_interval(hours => 10),
-            (v_date_1 + make_interval(days => (i - 1) % 3))::timestamp + make_interval(hours => 10, minutes => 30),
+            (v_date_1 + (i - 1) % 3)::timestamp + make_interval(hours => 10 + (i - 1) / 3),
+            (v_date_1 + (i - 1) % 3)::timestamp + make_interval(hours => 10 + (i - 1) / 3, mins => 30),
             'paid'
         );
     end loop;
 
-    -- 4.4. Создаем смены за эти дни с клиентами
+    -- 4.4. Создаем закрытые смены за эти дни с клиентами
     for i in 1..3 loop
         insert into public.staff_shifts (
             staff_id, biz_id, branch_id, status, opened_at, shift_date,
@@ -288,21 +273,21 @@ begin
             v_biz_id,
             v_branch_id,
             'closed',
-            (v_date_1 + make_interval(days => i - 1))::timestamp + make_interval(hours => 9),
-            v_date_1 + make_interval(days => i - 1),
+            (v_date_1 + (i - 1))::timestamp + make_interval(hours => 9),
+            v_date_1 + (i - 1),
             2000 * i, -- выручка растет
             100 * i,   -- расходники растут
             8,         -- 8 часов
             100,       -- ставка
             1200 * i,  -- доля мастера (60% от выручки)
             800 * i + 100 * i, -- доля салона (40% + расходники)
-            (v_date_1 + make_interval(days => i - 1))::timestamp + make_interval(hours => 17)
+            (v_date_1 + (i - 1))::timestamp + make_interval(hours => 17)
         );
     end loop;
 
     -- 4.5. Инициализируем рейтинги
     perform public.initialize_all_ratings(30);
-    
+
     select rating_score into v_initial_rating
     from public.staff
     where id = v_staff_id;
@@ -323,7 +308,6 @@ begin
     from public.staff
     where id = v_staff_id;
 
-    -- Проверяем, что рейтинг изменился после работы
     if v_rating_after_work is null or v_rating_after_work <= 0 then
         raise exception '[TEST 4] После работы у сотрудника должен быть рейтинг > 0, получили %', v_rating_after_work;
     end if;
@@ -338,15 +322,29 @@ begin
         raise exception '[TEST 4] Ожидали минимум 3 дневные метрики, получили %', v_metrics_count;
     end if;
 
-    -- 4.9. Создаем 7-е посещение (должно сработать промо "седьмая услуга бесплатно")
-    insert into public.bookings (biz_id, branch_id, client_id, service_id, start_at, end_at, status)
+    -- 4.9. Шестое посещение уже закончилось, когда его отмечают оплаченным: промо не срабатывает.
+    -- Оплачиваемая бронь не входит в счёт своих же визитов (ENG-123), иначе бесплатным был бы шестой.
+    insert into public.bookings (biz_id, branch_id, staff_id, client_id, service_id, start_at, end_at, status)
+    values (v_biz_id, v_branch_id, v_staff_id, v_client_id, v_service_id,
+        now() - interval '3 hours', now() - interval '150 minutes', 'confirmed')
+    returning id into v_booking_id;
+
+    perform public.update_booking_status_with_promotion(v_booking_id, 'paid');
+
+    if exists (select 1 from public.bookings where id = v_booking_id and (status <> 'paid' or promotion_applied is not null)) then
+        raise exception '[TEST 4] Шестое посещение должно быть оплачено без промо';
+    end if;
+
+    -- 4.10. Создаем 7-е посещение (должно сработать промо "седьмая услуга бесплатно")
+    insert into public.bookings (biz_id, branch_id, staff_id, client_id, service_id, start_at, end_at, status)
     values (
         v_biz_id,
         v_branch_id,
+        v_staff_id,
         v_client_id,
         v_service_id,
-        current_date::timestamp + make_interval(hours => 10),
-        current_date::timestamp + make_interval(hours => 10, minutes => 30),
+        now() - interval '1 hour',
+        now() - interval '30 minutes',
         'confirmed'
     )
     returning id into v_booking_id;
@@ -415,5 +413,3 @@ begin
     raise notice '[TEST 5] OK — рейтинг сохраняется при отсутствии активности';
 end;
 $$;
-
-

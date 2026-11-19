@@ -380,6 +380,11 @@ jobs:
       - name: Function catalog matches the migrations
         run: pnpm check:function-catalog
 
+      - name: SQL scenarios on the full chain (one rolled-back transaction)
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: pnpm test:sql
+
       - name: Stop local Supabase
         if: always()
         run: pnpm exec supabase stop --no-backup

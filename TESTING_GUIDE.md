@@ -73,9 +73,9 @@
 
 ## Открытые ограничения проверок
 
-1. **SQL isolation и legacy scenarios.** Ошибки native process теперь передаются без fallback, `psql` получает `-X` и `ON_ERROR_STOP=1`; PowerShell проверяет `$LASTEXITCODE`. Но legacy `tests_critical_scenarios.sql` всё ещё оставляет успешные записи и содержит глобальные расчёты. Автоматические CI gates используют отдельные synthetic fixtures. Подробности — в [supabase/TESTING.md](supabase/TESTING.md).
+1. **SQL isolation и legacy scenarios.** Ошибки native process теперь передаются без fallback, `psql` получает `-X` и `ON_ERROR_STOP=1`; PowerShell проверяет `$LASTEXITCODE`. Сценарии `tests_critical_scenarios.sql` выполняются в одной откатываемой транзакции и с 19 ноября 2026 идут в CI (`db_bootstrap`) на базе из полной цепочки миграций и seed. Расчёты рейтингов в них глобальные, поэтому цель — только локальная или явно разрешённая база. Подробности — в [supabase/TESTING.md](supabase/TESTING.md).
 2. **E2E optional/skip.** Full-seeded job допускает ошибку, а `skipIfMissingE2EEnv` пропускает suites при отсутствии env. Например, workflow не передаёт необходимые для некоторых specs `E2E_TEST_MULTI_ROLE_EMAIL` и `E2E_TEST_CLIENT_SEARCH`. Реальное количество skipped определяется только сохранённым runtime report. См. [E2E reference](apps/web/e2e/README.md).
-3. **Независимость ожиданий.** Первый SQL-сценарий сам записывает ожидаемые суммы смены и читает их обратно; он не вызывает реальное закрытие смены. Такой PASS не доказывает расчёт production-пути.
+3. **Независимость ожиданий.** Первый SQL-сценарий закрывает смену настоящей командой, но суммы передаёт готовыми, как core-domain на сервере. Формулы гарантии и долей доказывают тесты core-domain, а не этот сценарий.
 4. **Воспроизводимость среды.** Подготовленная схема, роли и fixtures обязательны для SQL/E2E. Наличие migrations/seed не подтверждает успешный bootstrap чистой БД; актуальное ограничение зафиксировано в [инженерном состоянии](docs/PROJECT_STATUS.md).
 5. **Ёмкость и восстановление.** Здесь нет подтверждённого нагрузочного лимита или результата restore drill. Их протоколы и условия должны быть связаны с [эксплуатационной документацией](docs/OPERATIONS.md), а не выводиться из числа unit-tests.
 
