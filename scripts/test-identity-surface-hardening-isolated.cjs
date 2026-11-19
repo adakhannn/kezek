@@ -79,7 +79,7 @@ let created = false;
             create table frontend_metrics(id integer);
             alter table frontend_metrics enable row level security;
             create policy "Allow read access to frontend metrics" on frontend_metrics for select using (true);
-            create table bookings(client_id uuid, branch_id uuid, status text, end_at timestamptz);
+            create table bookings(client_id uuid, branch_id uuid, status text, end_at timestamptz, id uuid primary key default gen_random_uuid());
             create table branch_promotions(id uuid primary key, branch_id uuid, promotion_type text, params jsonb default '{}',
                 is_active boolean default true, valid_from date, valid_to date);
             create table client_referrals(referrer_id uuid, branch_id uuid, referrer_bonus_used boolean default false);
@@ -147,6 +147,25 @@ let created = false;
         await assert.rejects(asRole('authenticated', user, `select get_client_visit_count('${client}','${branch}')`), /permission denied/);
         // can_use_promotion (definer) still counts the paid visit through get_client_visit_count.
         assert.equal(await asRole('service_role', user, `select can_use_promotion('${client}','${branch}','${promo}')`), 't');
+
+        // 3b. 20261119120000 (ENG-123): the helpers take the booking being priced and leave it out.
+        // The old signatures are gone, the new ones keep the same access.
+        await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261119120000_promotion_visits_exclude_priced_booking.sql'), 'utf8'));
+        for (const sig of ['get_client_visit_count(uuid,uuid)', 'can_use_promotion(uuid,uuid,uuid)']) {
+            assert.equal(await sql(`select to_regprocedure('public.${sig}') is null`), 't', `${sig} is dropped`);
+        }
+        for (const sig of ['get_client_visit_count(uuid,uuid,uuid)', 'can_use_promotion(uuid,uuid,uuid,uuid)']) {
+            for (const role of ['anon', 'authenticated']) {
+                assert.equal(await sql(`select has_function_privilege('${role}','public.${sig}','execute')`), 'f', `${role}: ${sig}`);
+            }
+            assert.equal(await sql(`select has_function_privilege('service_role','public.${sig}','execute')`), 't');
+        }
+        const paidVisit = await sql(`select id from bookings where client_id='${client}'`);
+        // Another booking being priced: the paid visit counts, so it is the second visit and free.
+        assert.equal(await asRole('service_role', user, `select can_use_promotion('${client}','${branch}','${promo}',gen_random_uuid())`), 't');
+        // That paid visit being priced itself: it is the first visit, not the second.
+        assert.equal(await asRole('service_role', user, `select get_client_visit_count('${client}','${branch}','${paidVisit}')`), '0');
+        assert.equal(await asRole('service_role', user, `select can_use_promotion('${client}','${branch}','${promo}','${paidVisit}')`), 'f');
 
         // 4. Frontend metrics are no longer world-readable.
         for (const role of ['anon', 'authenticated']) {

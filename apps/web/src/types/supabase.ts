@@ -5219,6 +5219,7 @@ export type Database = {
             };
             "can_use_promotion": {
                 Args: {
+                    "p_booking_id": string;
                     "p_branch_id": string;
                     "p_client_id": string;
                     "p_promotion_id": string;
@@ -5842,6 +5843,7 @@ export type Database = {
                 Args: {
                     "p_branch_id": string;
                     "p_client_id": string;
+                    "p_exclude_booking_id": string;
                 };
                 Returns: number;
             };

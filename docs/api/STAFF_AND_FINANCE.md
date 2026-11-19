@@ -486,8 +486,8 @@ Legacy-ветка возвращает 403 forbidden при недоступно
 | --- | --- |
 | `promotion_type`, `title_ru` | Обязательны по truthiness; строгой проверки строк/длины нет |
 | `params` | Объект параметров, при falsy используется `{}` |
-| `params.visit_count` | Для `free_after_n_visits` требуется number >= 1; ключ **visit_count**, не `n_visits`; целочисленность не проверяется |
-| `params.discount_percent` | Для `birthday_discount`/`first_visit_discount` требуется number от 1 до 100 |
+| `params.visit_count` | Для `free_after_n_visits` требуется number >= 1; ключ **visit_count**, не `n_visits`; целочисленность не проверяется. Бесплатен каждый N-й оплаченный визит клиента в филиале: оплачиваемая бронь в счёт своих визитов не входит ([ENG-123](../../supabase/migrations/20261119120000_promotion_visits_exclude_priced_booking.sql)) |
+| `params.discount_percent` | Для `birthday_discount`/`first_visit_discount` требуется number от 1 до 100. Скидка за первый визит применяется, когда у клиента нет других оплаченных визитов в филиале |
 | `title_ky`, `title_en`, `description_ru`, `description_ky`, `description_en` | Необязательные локализованные строки; falsy превращается в null |
 | `is_active` | По умолчанию true, если поле отсутствует |
 | `valid_from`, `valid_to` | Необязательные строки/null; `toNormalizedDateString` берёт начало `YYYY-MM-DD` из даты/ISO, иначе null. Полный календарь и порядок границ этим helper не проверяются |

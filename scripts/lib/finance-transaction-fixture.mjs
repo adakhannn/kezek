@@ -88,9 +88,8 @@ export async function setupFinanceFixture(sql) {
  await sql(await archiveTables('20260212000000_create_shift_aggregates.sql','-- Функция для обновления агрегатов при закрытии смены'));
  await sql(await archiveTables('20260123000000_create_branch_promotions.sql','-- Функция для получения количества посещений клиента в филиале'));
  await sql(await archiveTables('20260305000000_create_visit_packages.sql',null));
- // 20261116120000 closed the promotion helpers together with schema this fixture does not have.
- await installLiveFunction(sql,'public.get_client_visit_count(uuid,uuid)');
- await installLiveFunction(sql,'public.can_use_promotion(uuid,uuid,uuid)');
+ // The promotion helpers and the live pricing function come from 20261119120000 (ENG-123), run whole
+ // after the finance migrations below.
  // Functions the finance migrations rename, revoke or keep calling, as production had them.
  await sql(['get_business_finance_stats','get_staff_finance_stats','save_shift_items_atomic','apply_visit_package_to_booking',
   'apply_promotion_to_booking','open_staff_shift_safe','close_staff_shift_safe','initialize_shift_aggregates'].map(name=>baselineFunction(baseline,name)).join('\n'));
@@ -105,6 +104,7 @@ export async function setupFinanceFixture(sql) {
  // Later grant and config migrations, for the functions this fixture builds.
  await applyMigrationWhereObjectsExist(sql,'20261119050000_privilege_parity_with_prod.sql');
  await applyMigrationWhereObjectsExist(sql,'20261119060000_definer_function_hardening.sql');
+ await sql(await migration('20261119120000_promotion_visits_exclude_priced_booking.sql'));
  await sql(`grant usage on schema public,auth to anon,authenticated,service_role;
  grant execute on function auth.uid(),auth.role() to anon,authenticated,service_role;
  grant all on all tables in schema public,auth to service_role;

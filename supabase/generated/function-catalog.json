@@ -529,7 +529,7 @@
     },
     "public.apply_promotion_to_booking(uuid)": {
       "arguments": "p_booking_id uuid",
-      "body": "9cbb790a8385623e6e2b41015bf3ed3c",
+      "body": "700cdb200329ec3a766d184d2450d580",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -996,9 +996,9 @@
       "strict": false,
       "volatility": "s"
     },
-    "public.can_use_promotion(uuid,uuid,uuid)": {
-      "arguments": "p_client_id uuid, p_branch_id uuid, p_promotion_id uuid",
-      "body": "222df883185a09571b5dfa190b027a48",
+    "public.can_use_promotion(uuid,uuid,uuid,uuid)": {
+      "arguments": "p_client_id uuid, p_branch_id uuid, p_promotion_id uuid, p_booking_id uuid",
+      "body": "0a7efce40a50f8123625b0242c999346",
       "config": [
         "search_path=public, pg_temp"
       ],
@@ -2083,9 +2083,9 @@
       "strict": false,
       "volatility": "s"
     },
-    "public.get_client_visit_count(uuid,uuid)": {
-      "arguments": "p_client_id uuid, p_branch_id uuid",
-      "body": "04308e411ab06b08b7733fc19cd5504a",
+    "public.get_client_visit_count(uuid,uuid,uuid)": {
+      "arguments": "p_client_id uuid, p_branch_id uuid, p_exclude_booking_id uuid",
+      "body": "0a6b21415705ad48909357051710afc6",
       "config": [
         "search_path=public, pg_temp"
       ],

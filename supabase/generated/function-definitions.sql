@@ -1028,7 +1028,7 @@ begin
     where p.branch_id=v_branch_id and p.biz_id=v_biz_id and p.is_active=true
         and (p.valid_from is null or p.valid_from<=current_date)
         and (p.valid_to is null or p.valid_to>=current_date)
-        and public.can_use_promotion(v_client_id,v_branch_id,p.id);
+        and public.can_use_promotion(v_client_id,v_branch_id,p.id,p_booking_id);
     
     -- Если нет доступных акций, возвращаем без изменений
     if v_promotions is null or array_length(v_promotions, 1) = 0 then
@@ -1094,7 +1094,7 @@ begin
     
     -- Для free_after_n_visits добавляем счетчик посещений
     if v_promotion_type = 'free_after_n_visits' then
-        v_visit_count := public.get_client_visit_count(v_client_id, v_branch_id);
+        v_visit_count := public.get_client_visit_count(v_client_id, v_branch_id, p_booking_id);
         v_usage_data := v_usage_data || jsonb_build_object('visit_count', v_visit_count + 1);
     end if;
     
@@ -2243,8 +2243,8 @@ AS $function$
 $function$
 ;
 
--- signature: public.can_use_promotion(uuid,uuid,uuid)
-CREATE OR REPLACE FUNCTION public.can_use_promotion(p_client_id uuid, p_branch_id uuid, p_promotion_id uuid)
+-- signature: public.can_use_promotion(uuid,uuid,uuid,uuid)
+CREATE OR REPLACE FUNCTION public.can_use_promotion(p_client_id uuid, p_branch_id uuid, p_promotion_id uuid, p_booking_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -2275,7 +2275,7 @@ begin
         when 'free_after_n_visits' then
             -- Для free_after_n_visits: проверяем, что текущее количество посещений кратно N-1
             -- Например, для 7-й услуги бесплатно: visit_count должно быть 6, 13, 20, и т.д.
-            v_visit_count := public.get_client_visit_count(p_client_id, p_branch_id);
+            v_visit_count := public.get_client_visit_count(p_client_id, p_branch_id, p_booking_id);
             declare
                 v_n integer := (v_promotion.params->>'visit_count')::integer;
             begin
@@ -2299,7 +2299,7 @@ begin
             
         when 'first_visit_discount' then
             -- Для скидки за первый визит: проверяем, что это первый визит в этот филиал
-            v_visit_count := public.get_client_visit_count(p_client_id, p_branch_id);
+            v_visit_count := public.get_client_visit_count(p_client_id, p_branch_id, p_booking_id);
             return v_visit_count = 0;
             
         when 'birthday_discount' then
@@ -4560,8 +4560,8 @@ end;
 $function$
 ;
 
--- signature: public.get_client_visit_count(uuid,uuid)
-CREATE OR REPLACE FUNCTION public.get_client_visit_count(p_client_id uuid, p_branch_id uuid)
+-- signature: public.get_client_visit_count(uuid,uuid,uuid)
+CREATE OR REPLACE FUNCTION public.get_client_visit_count(p_client_id uuid, p_branch_id uuid, p_exclude_booking_id uuid)
  RETURNS integer
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -4570,14 +4570,15 @@ AS $function$
 declare
     v_count integer;
 begin
-    -- Считаем только завершенные (paid) бронирования в этом филиале
+    -- Считаем только завершенные (paid) бронирования в этом филиале, кроме оцениваемой брони
     select count(*)::integer
     into v_count
     from public.bookings
     where client_id = p_client_id
       and branch_id = p_branch_id
       and status = 'paid'
-      and end_at < now();
+      and end_at < now()
+      and id is distinct from p_exclude_booking_id;
     
     return coalesce(v_count, 0);
 end;
