@@ -4,7 +4,7 @@
  */
 
 import { POST } from '@/app/api/users/search/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse } from '../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -21,6 +21,7 @@ type Row = Record<string, unknown>;
 
 describe('/api/users/search', () => {
     const mockSupabase = createMockSupabase();
+    const db = recordQueries(mockSupabase);
     const bizId = 'biz-uuid';
     let admin: {
         auth: { admin: { listUsers: jest.Mock } };
@@ -67,7 +68,8 @@ describe('/api/users/search', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        (getBizContextForManagers as jest.Mock).mockResolvedValue({ supabase: mockSupabase, bizId });
+        db.queries.length = 0;
+        (getBizContextForManagers as jest.Mock).mockResolvedValue({ supabase: db.client, bizId });
     });
 
     describe('Успешный поиск', () => {
@@ -103,6 +105,7 @@ describe('/api/users/search', () => {
             const items = (data as { items: Array<{ email: string | null }> }).items;
             expect(items.map((item) => item.email)).toEqual(['john@example.com']);
             expect(admin.bookings.eq).toHaveBeenCalledWith('biz_id', bizId);
+            expectBusinessScoped(db, 'staff', bizId);
             expect(admin.rpc).not.toHaveBeenCalled();
             expect(admin.auth.admin.listUsers).not.toHaveBeenCalled();
         });

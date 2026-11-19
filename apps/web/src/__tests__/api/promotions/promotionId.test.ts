@@ -4,7 +4,7 @@
  */
 
 import { PATCH, DELETE } from '@/app/api/dashboard/branches/[branchId]/promotions/[promotionId]/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -25,20 +25,22 @@ jest.mock('@/lib/routeParams', () => ({
 
 describe('/api/dashboard/branches/[branchId]/promotions/[promotionId]', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const branchId = 'branch-uuid';
     const promotionId = 'promotion-uuid';
     const bizId = 'biz-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            supabase: mockAdmin,
+            supabase: db.client,
             userId: 'manager-user-id',
             bizId,
         });
 
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(db.client);
 
         // Мокаем getRouteParamUuid для обоих параметров
         (getRouteParamUuid as jest.Mock).mockImplementation(async (context: unknown, param: string) => {
@@ -207,6 +209,7 @@ describe('/api/dashboard/branches/[branchId]/promotions/[promotionId]', () => {
 
             expect(data).toHaveProperty('ok', true);
             expect(deleteQuery.eq.mock.calls).toEqual([['id', promotionId], ['branch_id', branchId], ['biz_id', bizId]]);
+            expectBusinessScoped(db, 'branch_promotions', bizId);
         });
 
         test('должен вернуть 404 если акция не найдена', async () => {

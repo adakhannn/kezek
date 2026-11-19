@@ -8,6 +8,8 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
+    expectBusinessScoped,
+    recordQueries,
 } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -36,6 +38,7 @@ jest.mock('@/lib/rateLimit', () => ({
 
 describe('/api/branches/[id]/schedule', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const branchId = 'branch-uuid';
     const bizId = 'biz-uuid';
 
@@ -78,9 +81,10 @@ describe('/api/branches/[id]/schedule', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId });
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (getServiceClient as jest.Mock).mockReturnValue(db.client);
         (getRouteParamUuid as jest.Mock).mockResolvedValue(branchId);
         (withRateLimit as jest.Mock).mockImplementation((req, _config, handler) => handler());
     });
@@ -171,6 +175,8 @@ describe('/api/branches/[id]/schedule', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
+            expectBusinessScoped(db, 'branches', bizId);
+            expectBusinessScoped(db, 'branch_working_hours', bizId);
         });
     });
 
@@ -229,6 +235,8 @@ describe('/api/branches/[id]/schedule', () => {
 
             expect(data).toHaveProperty('ok', true);
             expect(data).toHaveProperty('schedule');
+            expectBusinessScoped(db, 'branches', bizId);
+            expectBusinessScoped(db, 'branch_working_hours', bizId);
         });
     });
 });

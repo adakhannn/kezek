@@ -6,7 +6,7 @@
 
 import { POST } from '@/app/api/dashboard/clients/[clientId]/visit-packages/route';
 import { GET } from '@/app/api/dashboard/visit-packages/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -38,18 +38,20 @@ function businessTimeZone(tz: string | null = 'Asia/Bishkek') {
 
 describe('POST /api/dashboard/clients/[clientId]/visit-packages', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const bizId = 'biz-uuid';
     const clientId = validClientId;
     const planId = validPlanId;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: {},
             userId: 'user-uuid',
             bizId,
         });
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(db.client);
         (getRouteParamUuid as jest.Mock).mockResolvedValue(clientId);
     });
 
@@ -94,6 +96,8 @@ describe('POST /api/dashboard/clients/[clientId]/visit-packages', () => {
         expect(data.data.package).toHaveProperty('client_id', clientId);
         expect(data.data.package).toHaveProperty('plan_id', planId);
         expect(data.data.package).toHaveProperty('remaining_visits', 5);
+        expectBusinessScoped(db, 'visit_package_plans', bizId);
+        expectBusinessScoped(db, 'businesses', bizId, 'id');
     });
 
     test('должен вернуть 404 если план не найден или не принадлежит бизнесу', async () => {
@@ -153,16 +157,18 @@ describe('POST /api/dashboard/clients/[clientId]/visit-packages', () => {
 
 describe('GET /api/dashboard/visit-packages', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const bizId = 'biz-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: {},
             userId: 'user-uuid',
             bizId,
         });
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(db.client);
     });
 
     test('должен вернуть список проданных пакетов', async () => {
@@ -212,6 +218,8 @@ describe('GET /api/dashboard/visit-packages', () => {
         expect(Array.isArray(data.data.packages)).toBe(true);
         expect(data.data.packages[0]).toHaveProperty('remaining_visits', 3);
         expect(data.data.packages[0]).toHaveProperty('client_name', 'Иван Иванов');
+        expectBusinessScoped(db, 'visit_package_plans', bizId);
+        expectBusinessScoped(db, 'businesses', bizId, 'id');
     });
 
     test('должен вернуть пустой список если у бизнеса нет планов', async () => {

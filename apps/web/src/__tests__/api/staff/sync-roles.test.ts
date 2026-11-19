@@ -4,6 +4,8 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
+    expectBusinessScoped,
+    recordQueries,
 } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -19,7 +21,9 @@ jest.mock('@/lib/supabaseService', () => ({
 
 describe('/api/staff/sync-roles', () => {
     const mockSupabase = createMockSupabase();
+    const db = recordQueries(mockSupabase);
     const mockAdmin = createMockSupabase();
+    const adminDb = recordQueries(mockAdmin);
     const bizId = 'biz-uuid';
     const userId = 'user-id';
 
@@ -78,13 +82,15 @@ describe('/api/staff/sync-roles', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        adminDb.queries.length = 0;
+        db.queries.length = 0;
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            supabase: mockSupabase,
+            supabase: db.client,
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (getServiceClient as jest.Mock).mockReturnValue(adminDb.client);
     });
 
     test('returns 401 when user is not authenticated', async () => {
@@ -151,6 +157,9 @@ describe('/api/staff/sync-roles', () => {
         expect(data).toHaveProperty('ok', true);
         expect(data).toHaveProperty('synced', 1);
         expect(data).toHaveProperty('total', 2);
+        expectBusinessScoped(db, 'user_roles', bizId);
+        expectBusinessScoped(adminDb, 'staff', bizId);
+        expectBusinessScoped(adminDb, 'user_roles', bizId);
     });
 
     test('returns success when there are no active staff with user_id', async () => {

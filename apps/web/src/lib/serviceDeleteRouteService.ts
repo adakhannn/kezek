@@ -60,6 +60,7 @@ export async function runServiceDeleteRoute({
     const { data: futureBookings, count: futureBookingsCount } = await admin
         .from('bookings')
         .select('id,status,start_at,client_name', { count: 'exact' })
+        .eq('biz_id', bizId)
         .eq('service_id', serviceId)
         .gte('start_at', now)
         .neq('status', 'cancelled')
@@ -86,6 +87,7 @@ export async function runServiceDeleteRoute({
     const { count: planCount, error: planError } = await admin
         .from('visit_package_plans')
         .select('id', { count: 'exact', head: true })
+        .eq('biz_id', bizId)
         .eq('service_id', serviceId);
     if (planError) {
         return { ok: false, status: 400, error: 'validation', message: 'Не удалось проверить пакеты услуги' };

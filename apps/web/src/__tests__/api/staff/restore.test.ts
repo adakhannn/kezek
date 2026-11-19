@@ -4,6 +4,8 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
+    expectBusinessScoped,
+    recordQueries,
 } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -34,7 +36,9 @@ jest.mock('@/lib/supabaseHelpers', () => ({
 
 describe('/api/staff/[id]/restore', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const mockAdminClient = createMockSupabase();
+    const adminDb = recordQueries(mockAdminClient);
     const staffId = 'staff-uuid';
     const bizId = 'biz-uuid';
     const userId = 'user-id';
@@ -56,10 +60,12 @@ describe('/api/staff/[id]/restore', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        adminDb.queries.length = 0;
+        db.queries.length = 0;
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId });
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdminClient);
+        (getServiceClient as jest.Mock).mockReturnValue(db.client);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(adminDb.client);
         (getRouteParamRequired as jest.Mock).mockResolvedValue(staffId);
     });
 
@@ -119,6 +125,8 @@ describe('/api/staff/[id]/restore', () => {
         const data = await expectSuccessResponse(res, 200);
 
         expect(data).toHaveProperty('ok', true);
+        expectBusinessScoped(db, 'staff', bizId);
+        expectBusinessScoped(adminDb, 'user_roles', bizId);
     });
 
     test('restores staff without linked user', async () => {

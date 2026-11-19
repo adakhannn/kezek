@@ -4,7 +4,7 @@
  */
 
 import { POST } from '@/app/api/staff/create-from-user/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
@@ -32,18 +32,20 @@ jest.mock('@/lib/staffSchedule', () => ({
 
 describe('/api/staff/create-from-user', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const bizId = 'biz-uuid';
     const branchId = 'branch-uuid';
     const userId = 'user-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (getServiceClient as jest.Mock).mockReturnValue(db.client);
     });
 
     describe('Валидация', () => {
@@ -236,6 +238,8 @@ describe('/api/staff/create-from-user', () => {
             expect(data).toHaveProperty('id', 'staff-id');
             expect(data).toHaveProperty('schedule_initialized', true);
             expect(data).toHaveProperty('schedule_days_created', 14);
+            expectBusinessScoped(db, 'staff', bizId);
+            expectBusinessScoped(db, 'user_roles', bizId);
         });
 
         test('должен использовать существующего сотрудника если он уже есть', async () => {

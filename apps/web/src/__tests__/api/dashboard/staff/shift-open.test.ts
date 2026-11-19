@@ -5,6 +5,8 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
+    expectBusinessScoped,
+    recordQueries,
 } from '../../testHelpers';
 
 import { withManagerAndStaffContext } from '@/lib/withManagerAndStaffContext';
@@ -22,19 +24,23 @@ jest.mock('@/lib/rateLimit', () => ({
 
 describe('/api/dashboard/staff/[id]/shift/open', () => {
     const mockSupabase = createMockSupabase();
+    const db = recordQueries(mockSupabase);
     const mockAdmin = createMockSupabase();
+    const adminDb = recordQueries(mockAdmin);
     const staffId = 'staff-uuid';
     const bizId = 'biz-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        adminDb.queries.length = 0;
+        db.queries.length = 0;
         mockSupabase.rpc.mockResolvedValue({ data: { ok: true, shift: { id: 'shift-id', status: 'open', ledger_revision: 0 } }, error: null });
 
         (withManagerAndStaffContext as jest.Mock).mockImplementation(
             async (_req, _context, _config, handler) =>
                 handler({
-                    supabase: mockSupabase,
-                    admin: mockAdmin,
+                    supabase: db.client,
+                    admin: adminDb.client,
                     bizId,
                     staffId,
                     staff: {
@@ -107,6 +113,9 @@ describe('/api/dashboard/staff/[id]/shift/open', () => {
 
         expect(data).toHaveProperty('ok', true);
         expect(data.data).toHaveProperty('shift');
+        expectBusinessScoped(adminDb, 'staff_shifts', bizId);
+        expectBusinessScoped(db, 'staff_schedule_rules', bizId);
+        expectBusinessScoped(db, 'working_hours', bizId);
     });
 
     test('returns an existing open shift idempotently', async () => {

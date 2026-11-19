@@ -4,6 +4,8 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
+    expectBusinessScoped,
+    recordQueries,
 } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -29,6 +31,7 @@ jest.mock('@/lib/dbHelpers', () => ({
 
 describe('/api/services/[id]/delete', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const serviceId = 'service-uuid';
     const bizId = 'biz-uuid';
 
@@ -47,10 +50,13 @@ describe('/api/services/[id]/delete', () => {
     }
 
     function createPlanCountQuery(count: number) {
-        return {
+        // .eq('biz_id') then .eq('service_id'); the second one resolves.
+        const query = {
             select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockResolvedValue({ count, error: null }),
+            eq: jest.fn(),
         };
+        query.eq.mockReturnValueOnce(query).mockResolvedValueOnce({ count, error: null });
+        return query;
     }
 
     // delete()/update() followed by .eq('id') and .eq('biz_id'); the second one resolves.
@@ -72,9 +78,10 @@ describe('/api/services/[id]/delete', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId });
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (getServiceClient as jest.Mock).mockReturnValue(db.client);
         (getRouteParamRequired as jest.Mock).mockResolvedValue(serviceId);
     });
 
@@ -146,6 +153,9 @@ describe('/api/services/[id]/delete', () => {
         expect(data).not.toHaveProperty('archived');
         expect(serviceDelete.delete).toHaveBeenCalled();
         expect(mockAdmin.from.mock.calls.map(([table]) => table)).toEqual(['bookings', 'visit_package_plans', 'services']);
+        expectBusinessScoped(db, 'services', bizId);
+        expectBusinessScoped(db, 'bookings', bizId);
+        expectBusinessScoped(db, 'visit_package_plans', bizId);
     });
 
     test('switches off a service with past bookings instead of deleting it', async () => {
@@ -160,6 +170,7 @@ describe('/api/services/[id]/delete', () => {
 
         expect(data).toHaveProperty('archived', true);
         expect(archive.update).toHaveBeenCalledWith({ active: false });
+        expectBusinessScoped(db, 'services', bizId);
     });
 
     test('an unexpected delete error does not leak database text', async () => {

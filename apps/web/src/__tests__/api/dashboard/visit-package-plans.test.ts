@@ -6,7 +6,7 @@
 
 import { GET, POST } from '@/app/api/dashboard/visit-package-plans/route';
 import { PATCH } from '@/app/api/dashboard/visit-package-plans/[id]/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -26,17 +26,19 @@ jest.mock('@/lib/routeParams', () => ({
 
 describe('/api/dashboard/visit-package-plans', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const bizId = 'biz-uuid';
     const planId = 'plan-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: {},
             userId: 'user-uuid',
             bizId,
         });
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(db.client);
     });
 
     describe('GET /api/dashboard/visit-package-plans', () => {
@@ -73,6 +75,7 @@ describe('/api/dashboard/visit-package-plans', () => {
             expect(Array.isArray(data.data.plans)).toBe(true);
             expect(data.data.plans[0]).toHaveProperty('name_ru', 'Пакет 5 визитов');
             expect(data.data.plans[0]).toHaveProperty('visit_count', 5);
+            expectBusinessScoped(db, 'visit_package_plans', bizId);
         });
 
         test('должен вернуть 401 при отсутствии авторизации', async () => {
@@ -129,6 +132,7 @@ describe('/api/dashboard/visit-package-plans', () => {
             expect(data.data.plan).toHaveProperty('id', planId);
             expect(data.data.plan).toHaveProperty('name_ru', 'Пакет 10 визитов');
             expect(data.data.plan).toHaveProperty('visit_count', 10);
+            expectBusinessScoped(db, 'visit_package_plans', bizId);
         });
 
         test('должен вернуть 400 при невалидном body (отсутствует name_ru)', async () => {

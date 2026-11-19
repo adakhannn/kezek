@@ -1,6 +1,6 @@
 // CI-04: the Supabase test mocks record queries, and expectBusinessScoped fails a query that is not
 // limited to the business.
-import { createMockSupabase, createTableMock, expectBusinessScoped } from './testHelpers';
+import { createMockSupabase, createTableMock, expectBusinessScoped, recordQueries } from './testHelpers';
 
 describe('Supabase test mocks (CI-04)', () => {
     test('createTableMock answers per table and records every builder call', async () => {
@@ -50,5 +50,23 @@ describe('Supabase test mocks (CI-04)', () => {
 
         expect(client.queries).toEqual([{ table: 'branches', calls: [['select', 'id'], ['eq', 'biz_id', 'biz-1'], ['eq', 'name', 'Center']] }]);
         expect(() => expectBusinessScoped(client, 'branches', 'biz-1')).not.toThrow();
+    });
+
+    test('recordQueries logs the calls on chains a test gives from() and keeps the mock working', async () => {
+        const mock = createMockSupabase();
+        mock.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'b1' }, error: null }),
+        });
+        const log = recordQueries(mock);
+
+        const branch = await log.client.from('branches').select('id').eq('id', 'b1').eq('biz_id', 'biz-1').maybeSingle();
+
+        expect(branch).toEqual({ data: { id: 'b1' }, error: null });
+        expect(mock.from).toHaveBeenCalledWith('branches');
+        expect(log.queries).toEqual([{ table: 'branches', calls: [['select', 'id'], ['eq', 'id', 'b1'], ['eq', 'biz_id', 'biz-1'], ['maybeSingle']] }]);
+        expect(() => expectBusinessScoped(log, 'branches', 'biz-1')).not.toThrow();
+        expect(() => expectBusinessScoped(log, 'branches', 'biz-2')).toThrow(/branches: /);
     });
 });

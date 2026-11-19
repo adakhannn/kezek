@@ -4,7 +4,7 @@
  */
 
 import { POST } from '@/app/api/branches/[id]/update/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
@@ -44,6 +44,7 @@ jest.mock('@/lib/validation', () => ({
 
 describe('/api/branches/[id]/update', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const branchId = 'branch-uuid';
     const bizId = 'biz-uuid';
 
@@ -64,6 +65,7 @@ describe('/api/branches/[id]/update', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
         (checkResourceBelongsToBiz as jest.Mock).mockReset();
         mockAdmin.from.mockReset();
 
@@ -71,7 +73,7 @@ describe('/api/branches/[id]/update', () => {
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (getServiceClient as jest.Mock).mockReturnValue(db.client);
 
         (getRouteParamRequired as jest.Mock).mockResolvedValue(branchId);
         (withRateLimit as jest.Mock).mockImplementation((req, _config, handler) => handler());
@@ -205,6 +207,7 @@ describe('/api/branches/[id]/update', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
+            expectBusinessScoped(db, 'branches', bizId);
         });
 
         test('должен успешно обновить филиал с координатами', async () => {

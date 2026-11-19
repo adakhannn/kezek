@@ -228,6 +228,43 @@ export function createTableMock(results: Record<string, QueryResult | ((query: R
 }
 
 /**
+ * Records the queries built on a client whose from() a test answers with its own chains (CI-04):
+ * `client` is the same mock seen through a proxy, so the test's from.mockReturnValueOnce(...) chains
+ * and its call assertions keep working, and every builder call on the chains from() returned is
+ * logged in `queries` for expectBusinessScoped. Give the code under test `client`, not the original.
+ */
+export function recordQueries<T extends { from: (...args: never[]) => unknown }>(mock: T): { client: T; queries: RecordedQuery[] } {
+    const queries: RecordedQuery[] = [];
+    const wrap = (target: object, query: RecordedQuery): object => {
+        const proxy: object = new Proxy(target, {
+            get(object, property, receiver) {
+                const value = Reflect.get(object, property, receiver);
+                if (typeof value !== 'function' || typeof property !== 'string' || property === 'then') return value;
+                return (...args: unknown[]) => {
+                    query.calls.push([property, ...args]);
+                    const result = value.apply(object, args);
+                    if (result === object) return proxy;
+                    return result && typeof result === 'object' && !(result instanceof Promise) ? wrap(result, query) : result;
+                };
+            },
+        });
+        return proxy;
+    };
+    const client = new Proxy(mock, {
+        get(object, property, receiver) {
+            if (property !== 'from') return Reflect.get(object, property, receiver);
+            return (table: string) => {
+                const query: RecordedQuery = { table, calls: [] };
+                queries.push(query);
+                const chain = (object.from as unknown as (name: string) => unknown)(table);
+                return chain && typeof chain === 'object' ? wrap(chain, query) : chain;
+            };
+        },
+    });
+    return { client, queries };
+}
+
+/**
  * Every recorded query on `table` is limited to the business (CI-04): reads, updates and deletes filter
  * `column` (biz_id by default) by `bizId` with eq() or match(), and inserted or upserted rows carry
  * it. The mocks answer any query, so without this a query that lost its business filter, and would

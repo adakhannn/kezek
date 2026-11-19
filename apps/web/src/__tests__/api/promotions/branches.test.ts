@@ -4,7 +4,7 @@
  */
 
 import { GET, POST } from '@/app/api/dashboard/branches/[branchId]/promotions/route';
-import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import { createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse, expectBusinessScoped, recordQueries } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -27,19 +27,21 @@ jest.mock('@/lib/routeParams', () => ({
 
 describe('/api/dashboard/branches/[branchId]/promotions', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const branchId = 'branch-uuid';
     const bizId = 'biz-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            supabase: mockAdmin,
+            supabase: db.client,
             userId: 'manager-user-id',
             bizId,
         });
 
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(db.client);
 
         (getRouteParamUuid as jest.Mock).mockResolvedValue(branchId);
     });
@@ -122,6 +124,8 @@ describe('/api/dashboard/branches/[branchId]/promotions', () => {
             expect(data).toHaveProperty('ok', true);
             expect(data).toHaveProperty('promotions');
             expect(Array.isArray(data.promotions)).toBe(true);
+            expectBusinessScoped(db, 'branches', bizId);
+            expectBusinessScoped(db, 'branch_promotions', bizId);
         });
 
         test('должен вернуть 404 если филиал не найден', async () => {
@@ -229,6 +233,8 @@ describe('/api/dashboard/branches/[branchId]/promotions', () => {
             expect(data).toHaveProperty('ok', true);
             expect(data).toHaveProperty('promotion');
             expect(data.promotion).toHaveProperty('promotion_type', 'free_after_n_visits');
+            expectBusinessScoped(db, 'branches', bizId);
+            expectBusinessScoped(db, 'branch_promotions', bizId);
         });
 
         test('должен вернуть 400 при отсутствии обязательных полей', async () => {

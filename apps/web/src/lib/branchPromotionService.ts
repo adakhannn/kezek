@@ -95,6 +95,7 @@ export async function updateBranchPromotion({
         .from('branch_promotions')
         .update(updateData)
         .eq('id', promotionId)
+        .eq('biz_id', bizId)
         .select('*')
         .single();
 

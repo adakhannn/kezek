@@ -1,8 +1,10 @@
 import { POST } from '@/app/api/staff/avatar/upload/route';
 import {
     createMockSupabase,
+    expectBusinessScoped,
     expectErrorResponse,
     expectSuccessResponse,
+    recordQueries,
 } from '../../testHelpers';
 
 import { getStaffContext } from '@/lib/authBiz';
@@ -22,18 +24,20 @@ describe('/api/staff/avatar/upload', () => {
             from: jest.Mock;
         };
     };
+    const db = recordQueries(mockAdmin);
     const staffId = '11111111-2222-3333-4444-555555555555';
     const bizId = 'biz-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
 
         (getStaffContext as jest.Mock).mockResolvedValue({
             staffId,
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (getServiceClient as jest.Mock).mockReturnValue(db.client);
     });
 
     test('returns 400 when file is missing', async () => {
@@ -138,6 +142,7 @@ describe('/api/staff/avatar/upload', () => {
             'url',
             'https://example.com/avatars/staff-avatars/uploaded-avatar.jpg',
         );
+        expectBusinessScoped(db, 'staff', bizId);
     });
 
     test('removes old avatar before uploading a new one', async () => {

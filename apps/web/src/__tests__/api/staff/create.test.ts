@@ -4,6 +4,8 @@ import {
     createMockSupabase,
     expectErrorResponse,
     expectSuccessResponse,
+    expectBusinessScoped,
+    recordQueries,
 } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -24,16 +26,20 @@ jest.mock('@/lib/staffSchedule', () => ({
 
 describe('/api/staff/create', () => {
     const mockSupabase = createMockSupabase();
+    const db = recordQueries(mockSupabase);
     const mockServiceClient = createMockSupabase();
+    const svc = recordQueries(mockServiceClient);
 
     beforeEach(() => {
         jest.clearAllMocks();
+        svc.queries.length = 0;
+        db.queries.length = 0;
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            supabase: mockSupabase,
+            supabase: db.client,
             userId: '11111111-1111-4111-8111-111111111111',
             bizId: '22222222-2222-4222-8222-222222222222',
         });
-        (getServiceClient as jest.Mock).mockReturnValue(mockServiceClient);
+        (getServiceClient as jest.Mock).mockReturnValue(svc.client);
         (initializeStaffSchedule as jest.Mock).mockResolvedValue({
             success: true,
             daysCreated: 14,
@@ -151,6 +157,10 @@ describe('/api/staff/create', () => {
         expect(data.id).toBe('staff-id');
         expect(data.user_linked).toBe(false);
         expect(data.schedule_initialized).toBe(true);
+        const bizId = '22222222-2222-4222-8222-222222222222';
+        expectBusinessScoped(db, 'user_roles', bizId);
+        expectBusinessScoped(db, 'staff', bizId);
+        expectBusinessScoped(svc, 'staff_branch_assignments', bizId);
     });
 
     test('returns 400 when staff insert fails', async () => {

@@ -3,6 +3,8 @@ import {
     createMockRequest,
     createMockSupabase,
     expectSuccessResponse,
+    expectBusinessScoped,
+    recordQueries,
 } from '../../testHelpers';
 
 import { getStaffContext } from '@/lib/authBiz';
@@ -18,6 +20,7 @@ jest.mock('@/lib/supabaseService', () => ({
 
 describe('/api/staff/avatar/remove', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const staffId = 'staff-uuid';
     const bizId = 'biz-uuid';
 
@@ -53,9 +56,10 @@ describe('/api/staff/avatar/remove', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
 
         (getStaffContext as jest.Mock).mockResolvedValue({ staffId, bizId });
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (getServiceClient as jest.Mock).mockReturnValue(db.client);
     });
 
     test('removes avatar successfully', async () => {
@@ -81,6 +85,7 @@ describe('/api/staff/avatar/remove', () => {
 
         expect(data).toHaveProperty('ok', true);
         expect(mockStorage.remove).toHaveBeenCalled();
+        expectBusinessScoped(db, 'staff', bizId);
     });
 
     test('returns success when avatar is already absent', async () => {

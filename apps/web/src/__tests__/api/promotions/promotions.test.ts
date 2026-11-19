@@ -2,8 +2,10 @@ import { GET, POST } from '@/app/api/dashboard/branches/[branchId]/promotions/ro
 import {
     createMockRequest,
     createMockSupabase,
+    expectBusinessScoped,
     expectErrorResponse,
     expectSuccessResponse,
+    recordQueries,
 } from '../testHelpers';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -24,17 +26,19 @@ jest.mock('@/lib/routeParams', () => ({
 
 describe('/api/dashboard/branches/[branchId]/promotions', () => {
     const mockAdmin = createMockSupabase();
+    const db = recordQueries(mockAdmin);
     const branchId = 'branch-uuid';
     const bizId = 'biz-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
+        db.queries.length = 0;
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            supabase: mockAdmin,
+            supabase: db.client,
             userId: 'manager-user-id',
             bizId,
         });
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(db.client);
         (getRouteParamUuid as jest.Mock).mockResolvedValue(branchId);
     });
 
@@ -70,6 +74,8 @@ describe('/api/dashboard/branches/[branchId]/promotions', () => {
 
         expect(data.data.promotions).toHaveLength(1);
         expect(data.data.promotions[0]).toHaveProperty('usage_count', 1);
+        expectBusinessScoped(db, 'branches', bizId);
+        expectBusinessScoped(db, 'branch_promotions', bizId);
     });
 
     test('POST creates branch promotion', async () => {
@@ -103,6 +109,8 @@ describe('/api/dashboard/branches/[branchId]/promotions', () => {
         const data = await expectSuccessResponse(res, 200);
 
         expect(data.data.promotion).toHaveProperty('id', 'promo-1');
+        expectBusinessScoped(db, 'branches', bizId);
+        expectBusinessScoped(db, 'branch_promotions', bizId);
     });
 
     test('POST returns validation error for invalid free_after_n_visits payload', async () => {
