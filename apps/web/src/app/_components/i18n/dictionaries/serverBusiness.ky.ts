@@ -83,4 +83,10 @@ export const serverBusinessKy = {
     'server.business.validityDaysPositive': 'Күн менен эсептелген мөөнөт 0дөн чоң болушу керек',
     'server.business.discountNotNegative': 'Арзандатуу мааниси терс болушу мүмкүн эмес',
     'server.business.percentDiscountMax': '"percent" түрүндө маани 100дөн ашпашы керек',
+    'server.business.contactNotString': 'Байланыш сап же null болушу керек',
+    'server.business.contactPhoneFormat': 'Телефонду эл аралык форматта көрсөтүңүз',
+    'server.business.contactWhatsAppFormat': 'WhatsApp номерин эл аралык форматта көрсөтүңүз',
+    'server.business.contactEmailInvalid': 'Туура ачык email көрсөтүңүз',
+    'server.business.websiteInvalid': 'Сайт туура HTTPS-шилтеме болушу керек',
+    'server.business.directoryLinkWrongService': 'Шилтеме өз кызматынын сайтына алып барышы керек: {services}',
 } as const;

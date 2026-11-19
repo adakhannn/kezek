@@ -68,6 +68,8 @@ export async function cancelBooking(bookingId: string): Promise<void> {
 }
 
 export type CreateInternalBookingParams = {
+    /** The UI translator for client-side errors (FE-10). */
+    t?: (key: string, fallback: string) => string;
     bizId: string;
     branchId: string;
     serviceId: string;
@@ -82,7 +84,7 @@ export type CreateInternalBookingParams = {
 export async function createInternalBooking(params: CreateInternalBookingParams): Promise<string> {
     return postInternalBooking({ mode: 'simple', biz_id: params.bizId, branch_id: params.branchId,
         staff_id: params.staffId, service_id: params.serviceId, start_at: params.startAtISO,
-        duration_min: params.minutes, client_id: params.clientId, client_name: params.clientName, client_phone: params.clientPhone });
+        duration_min: params.minutes, client_id: params.clientId, client_name: params.clientName, client_phone: params.clientPhone }, params.t);
 }
 
 export type CreateInternalComplexBookingService = {
@@ -92,6 +94,8 @@ export type CreateInternalComplexBookingService = {
 };
 
 export type CreateInternalComplexBookingParams = {
+    /** The UI translator for client-side errors (FE-10). */
+    t?: (key: string, fallback: string) => string;
     bizId: string;
     branchId: string;
     staffId: string;
@@ -108,7 +112,7 @@ export async function createInternalComplexBooking(params: CreateInternalComplex
         staff_id: params.staffId, start_at: params.startAtISO, client_id: params.clientId,
         client_name: params.clientName, client_phone: params.clientPhone, client_email: params.clientEmail ?? null,
         services: params.services.map((service, index) => ({ service_id: service.serviceId,
-            duration_min: service.durationMin, order_index: service.orderIndex ?? index })) });
+            duration_min: service.durationMin, order_index: service.orderIndex ?? index })) }, params.t);
 }
 
 export type GetFreeSlotsParams = {

@@ -167,4 +167,6 @@ export const bookingsRu = {
     'bookings.cancelError.forbidden': 'Нет доступа к отмене этой записи',
     'bookings.cancelError.notCancellable': 'Запись в этом статусе нельзя отменить',
     'bookings.cancelError.notFound': 'Бронирование не найдено',
+    'bookings.internal.signInRequired': 'Войдите в аккаунт для создания записи',
+    'bookings.internal.unconfirmed': 'Результат записи не подтверждён. Повторите ту же запись.',
 } as const;

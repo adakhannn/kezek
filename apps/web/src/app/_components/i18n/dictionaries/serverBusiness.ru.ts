@@ -83,4 +83,10 @@ export const serverBusinessRu = {
     'server.business.validityDaysPositive': 'Срок действия в днях должен быть больше 0',
     'server.business.discountNotNegative': 'Значение скидки не может быть отрицательным',
     'server.business.percentDiscountMax': 'При типе "percent" значение не должно превышать 100',
+    'server.business.contactNotString': 'Контакт должен быть строкой или null',
+    'server.business.contactPhoneFormat': 'Укажите телефон в международном формате',
+    'server.business.contactWhatsAppFormat': 'Укажите WhatsApp в международном формате',
+    'server.business.contactEmailInvalid': 'Укажите корректный публичный email',
+    'server.business.websiteInvalid': 'Сайт должен быть корректной HTTPS-ссылкой',
+    'server.business.directoryLinkWrongService': 'Ссылка должна вести на сайт своего сервиса: {services}',
 } as const;

@@ -9,55 +9,37 @@ export interface PermissionContext {
     isReadOnly?: boolean; // Явный флаг только для чтения
 }
 
+/** Why an action is unavailable, as a staff dictionary key (FE-10). */
+export type PermissionReasonKey =
+    | 'staff.finance.permissions.closed'
+    | 'staff.finance.permissions.ownerNotOpen'
+    | 'staff.finance.permissions.staffNotOpen';
+
 export interface PermissionResult {
     canEdit: boolean;
     canAdd: boolean;
     canDelete: boolean;
     canOpenShift: boolean;
     canCloseShift: boolean;
-    reason?: string; // Причина, почему действие недоступно
-    reasonKey?: string;
+    reasonKey?: PermissionReasonKey;
 }
+
+type Translate = (key: string, fallback: string) => string;
 
 /**
  * Проверяет права доступа для различных действий
  */
 export function checkPermissions(context: PermissionContext): PermissionResult {
     const { staffId, isOpen, isClosed, isReadOnly } = context;
-    
-    // Если явно установлен флаг только для чтения
-    if (isReadOnly) {
-        return {
-            canEdit: false,
-            canAdd: false,
-            canDelete: false,
-            canOpenShift: false,
-            canCloseShift: false,
-            reasonKey: 'staff.finance.permissions.closed',
-            reason: staffId 
-                ? 'Смена закрыта. Закрытые смены нельзя редактировать.'
-                : 'Смена закрыта. Закрытые смены нельзя редактировать.'
-        };
+    const none = { canEdit: false, canAdd: false, canDelete: false, canOpenShift: false, canCloseShift: false };
+
+    // Явный флаг только для чтения, и владелец не меняет закрытые смены
+    if (isReadOnly || (staffId && isClosed)) {
+        return { ...none, reasonKey: 'staff.finance.permissions.closed' };
     }
-    
-    // Для владельца (staffId передан)
+
+    // Для владельца: открыть можно не открытую смену, клиенты — только при ОТКРЫТОЙ смене.
     if (staffId) {
-        // Владелец НЕ может редактировать или добавлять клиентов в закрытые смены
-        if (isClosed) {
-            return {
-                canEdit: false,
-                canAdd: false,
-                canDelete: false,
-                canOpenShift: false,
-                canCloseShift: false,
-                reasonKey: 'staff.finance.permissions.closed',
-                reason: 'Смена закрыта. Закрытые смены нельзя редактировать.'
-            };
-        }
-        
-        // Для владельца:
-        // - открывать смену можно, если она ещё не открыта;
-        // - добавлять/редактировать/удалять клиентов можно только при ОТКРЫТОЙ смене.
         return {
             canEdit: isOpen,
             canAdd: isOpen,
@@ -65,86 +47,55 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
             canOpenShift: !isOpen,
             canCloseShift: isOpen,
             reasonKey: isOpen ? undefined : 'staff.finance.permissions.ownerNotOpen',
-            reason: isOpen
-                ? undefined
-                : 'Смена не открыта. Сначала откройте смену, чтобы добавлять клиентов.'
         };
     }
-    
-    // Для сотрудника (staffId не передан)
-    // Сотрудник может редактировать только открытые смены
+
+    // Сотрудник редактирует только открытые смены
     if (!isOpen) {
-        return {
-            canEdit: false,
-            canAdd: false,
-            canDelete: false,
-            canOpenShift: !isClosed, // Может открыть, если смена не закрыта
-            canCloseShift: false,
-            reasonKey: 'staff.finance.permissions.staffNotOpen',
-            reason: 'Смена не открыта. Сначала откройте смену на вкладке «Текущая смена».'
-        };
+        return { ...none, canOpenShift: !isClosed, reasonKey: 'staff.finance.permissions.staffNotOpen' };
     }
-    
-    // Смена открыта - сотрудник может редактировать
-    return {
-        canEdit: true,
-        canAdd: true,
-        canDelete: true,
-        canOpenShift: false, // Смена уже открыта
-        canCloseShift: true,
-        reason: undefined
-    };
+
+    return { canEdit: true, canAdd: true, canDelete: true, canOpenShift: false, canCloseShift: true };
+}
+
+function reasonText(key: PermissionReasonKey, t: Translate): string {
+    switch (key) {
+        case 'staff.finance.permissions.closed':
+            return t(key, 'Смена закрыта. Закрытые смены нельзя редактировать.');
+        case 'staff.finance.permissions.ownerNotOpen':
+            return t(key, 'Смена не открыта. Сначала откройте смену, чтобы добавлять клиентов.');
+        case 'staff.finance.permissions.staffNotOpen':
+            return t(key, 'Смена не открыта. Сначала откройте смену на вкладке «Текущая смена».');
+    }
 }
 
 /**
- * Получает понятное сообщение о том, почему действие недоступно
+ * Понятное сообщение о том, почему действие недоступно, на языке интерфейса
  */
 export function getPermissionMessage(
     action: 'edit' | 'add' | 'delete' | 'open' | 'close',
     context: PermissionContext,
-    translate?: (key: string, fallback?: string) => string,
+    t: Translate,
 ): string | undefined {
     const permissions = checkPermissions(context);
-    const reason = permissions.reasonKey && translate
-        ? translate(permissions.reasonKey, permissions.reason)
-        : permissions.reason;
-    
+    const reason = permissions.reasonKey ? reasonText(permissions.reasonKey, t) : undefined;
+
     switch (action) {
         case 'edit':
-            if (!permissions.canEdit) {
-                return reason || 'Редактирование недоступно';
-            }
-            break;
+            return permissions.canEdit ? undefined : reason || t('staff.finance.permissions.editUnavailable', 'Редактирование недоступно');
         case 'add':
-            if (!permissions.canAdd) {
-                return reason || 'Добавление клиентов недоступно';
-            }
-            break;
+            return permissions.canAdd ? undefined : reason || t('staff.finance.permissions.addUnavailable', 'Добавление клиентов недоступно');
         case 'delete':
-            if (!permissions.canDelete) {
-                return reason || 'Удаление клиентов недоступно';
-            }
-            break;
+            return permissions.canDelete ? undefined : reason || t('staff.finance.permissions.deleteUnavailable', 'Удаление клиентов недоступно');
         case 'open':
-            if (!permissions.canOpenShift) {
-                return context.isClosed 
-                    ? 'Смена уже закрыта. Закрытые смены нельзя открыть снова.'
-                    : context.isOpen
-                    ? 'Смена уже открыта.'
-                    : 'Открытие смены недоступно';
-            }
-            break;
+            if (permissions.canOpenShift) return undefined;
+            if (context.isClosed) return t('staff.finance.permissions.openClosed', 'Смена уже закрыта. Закрытые смены нельзя открыть снова.');
+            if (context.isOpen) return t('staff.finance.permissions.alreadyOpen', 'Смена уже открыта.');
+            return t('staff.finance.permissions.openUnavailable', 'Открытие смены недоступно');
         case 'close':
-            if (!permissions.canCloseShift) {
-                return context.isClosed
-                    ? 'Смена уже закрыта.'
-                    : !context.isOpen
-                    ? 'Смена не открыта. Сначала откройте смену.'
-                    : 'Закрытие смены недоступно';
-            }
-            break;
+            if (permissions.canCloseShift) return undefined;
+            if (context.isClosed) return t('staff.finance.permissions.alreadyClosed', 'Смена уже закрыта.');
+            if (!context.isOpen) return t('staff.finance.permissions.closeNotOpen', 'Смена не открыта. Сначала откройте смену.');
+            return t('staff.finance.permissions.closeUnavailable', 'Закрытие смены недоступно');
     }
-    
-    return undefined;
 }
-

@@ -45,7 +45,8 @@ export function ShiftSummary({
             },
             items,
             shiftDate,
-            undefined // staff_name не доступен в типе Shift, передается отдельно если нужно
+            undefined, // staff_name не доступен в типе Shift, передается отдельно если нужно
+            t,
         );
     };
 

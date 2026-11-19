@@ -94,11 +94,16 @@ interface UseFinanceDataReturn {
 /**
  * Функция загрузки данных с сервера
  */
+type Translate = (key: string, fallback: string) => string;
+/** Without the UI translator the Russian fallback stays (FE-10). */
+const keepRussian: Translate = (_key, fallback) => fallback;
+
 export async function fetchFinanceData(
     staffId: string | undefined,
     date: Date | string | null,
     signal?: AbortSignal,
     headers: Record<string, string> = {},
+    t: Translate = keepRussian,
 ): Promise<FinanceDataResponse> {
     const dateStr = financeDateLabel(date);
     const params = new URLSearchParams();
@@ -148,7 +153,7 @@ export async function fetchFinanceData(
     } catch (e) {
         // Преобразуем AbortError в более понятное сообщение о таймауте
         if (e instanceof Error && e.name === 'AbortError') {
-            throw new Error('Превышено время ожидания ответа сервера по финансам. Попробуйте обновить страницу или повторить попытку позже.');
+            throw new Error(t('staff.finance.load.timeout', 'Превышено время ожидания ответа сервера по финансам. Попробуйте обновить страницу или повторить попытку позже.'));
         }
         throw e;
     } finally {
@@ -156,7 +161,7 @@ export async function fetchFinanceData(
     }
 
     if (!res.ok) {
-        let errorMessage = 'Не удалось загрузить данные смены';
+        let errorMessage = t('staff.finance.load.failed', 'Не удалось загрузить данные смены');
         try {
             const errorJson = await res.json();
             errorMessage = errorJson?.error || errorJson?.message || errorMessage;
@@ -168,13 +173,13 @@ export async function fetchFinanceData(
 
     const json = await res.json();
     if (!json.ok) {
-        throw new Error(json.error || 'Не удалось загрузить данные смены');
+        throw new Error(json.error || t('staff.finance.load.failed', 'Не удалось загрузить данные смены'));
     }
 
     // API возвращает { ok: true, data: { today, bookings, ... } }; храним в кэше только payload
     const payload = (json as { data?: FinanceDataResponse }).data;
     if (!payload) {
-        throw new Error('Неверный формат ответа: отсутствует data');
+        throw new Error(t('staff.finance.load.badResponse', 'Неверный формат ответа: отсутствует data'));
     }
     return payload as FinanceDataResponse;
 }
@@ -189,7 +194,7 @@ export function useFinanceData({
     enabled = true,
     initialData: initialDataProp,
 }: UseFinanceDataOptions): UseFinanceDataReturn {
-    const { t: _t } = useLanguage();
+    const { t } = useLanguage();
     const toast = useToast();
     const queryClient = useQueryClient();
 
@@ -217,7 +222,7 @@ export function useFinanceData({
 
     const query = useQuery({
         queryKey,
-        queryFn: ({ signal }) => fetchFinanceData(staffId, date, signal, staffSelectionHeaders(staffId ? null : selectedStaffId)),
+        queryFn: ({ signal }) => fetchFinanceData(staffId, date, signal, staffSelectionHeaders(staffId ? null : selectedStaffId), t as Translate),
         enabled,
         initialData: isToday && initialDataProp ? initialDataProp : undefined,
         staleTime,

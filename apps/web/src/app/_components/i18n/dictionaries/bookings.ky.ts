@@ -167,4 +167,6 @@ export const bookingsKy = {
     'bookings.cancelError.forbidden': 'Бул жазылууну жокко чыгарууга укугуңуз жок',
     'bookings.cancelError.notCancellable': 'Бул статустагы жазылууну жокко чыгарууга болбойт',
     'bookings.cancelError.notFound': 'Брондоо табылган жок',
+    'bookings.internal.signInRequired': 'Жазылуу түзүү үчүн аккаунтка кириңиз',
+    'bookings.internal.unconfirmed': 'Жазылуунун жыйынтыгы ырасталган жок. Ошол эле жазылууну кайталаңыз.',
 } as const;

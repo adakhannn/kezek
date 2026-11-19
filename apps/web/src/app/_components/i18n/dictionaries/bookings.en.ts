@@ -167,4 +167,6 @@ export const bookingsEn = {
     'bookings.cancelError.forbidden': 'You are not allowed to cancel this booking',
     'bookings.cancelError.notCancellable': 'A booking with this status cannot be cancelled',
     'bookings.cancelError.notFound': 'Booking not found',
+    'bookings.internal.signInRequired': 'Sign in to create a booking',
+    'bookings.internal.unconfirmed': 'The booking result was not confirmed. Repeat the same booking.',
 } as const;

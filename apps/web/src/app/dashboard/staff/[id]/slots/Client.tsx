@@ -142,6 +142,7 @@ export default function Client({
         setCreating(true);
         try {
             const bookingId = await createInternalBooking({
+                t,
                 bizId,
                 branchId,
                 serviceId: selectedService.id,

@@ -152,7 +152,7 @@ describe('bookingDashboardService', () => {
             client_id: 'client-1',
             client_name: 'Client',
             client_phone: '+996700000001',
-        });
+        }, undefined);
     });
 
     it('logs and rethrows createInternalBooking HTTP errors', async () => {
@@ -207,7 +207,7 @@ describe('bookingDashboardService', () => {
             client_name: 'Guest',
             client_phone: '+996700000002',
             client_email: null,
-        });
+        }, undefined);
     });
 
     it('logs and rethrows createInternalComplexBooking HTTP errors', async () => {

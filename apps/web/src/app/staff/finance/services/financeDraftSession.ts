@@ -45,9 +45,12 @@ export class FinanceDraftSession {
         blocked: null, operation: null, error: null };
     private listeners = new Set<() => void>();
     private tail: Promise<unknown> = Promise.resolve();
+    /** The UI translator (FE-10); the Russian fallback until the hook sets it. */
+    private t: (key: string, fallback: string) => string = (_key, fallback) => fallback;
     constructor(private readonly transport: FinanceTransport,
         private prepare: (items: ShiftItem[]) => ShiftItem[] = items => items) {}
     setPrepare(prepare: (items: ShiftItem[]) => ShiftItem[]) { this.prepare = prepare; }
+    setTranslator(t: (key: string, fallback: string) => string) { this.t = t; }
     getSnapshot = () => this.state;
     subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
     private update(patch: Partial<DraftState>) {
@@ -60,7 +63,7 @@ export class FinanceDraftSession {
     }
     private accept(snapshot: FinanceLedgerSnapshot) {
         if (snapshot.shift && !Number.isSafeInteger(snapshot.shift.ledger_revision)) {
-            this.update({ blocked: 'uncertain', error: 'Не удалось получить версию смены. Обновите данные перед записью.' });
+            this.update({ blocked: 'uncertain', error: this.t('staff.finance.draft.versionMissing', 'Не удалось получить версию смены. Обновите данные перед записью.') });
             return;
         }
         this.update({ ...snapshot, calendarDate: snapshot.calendarDate ?? snapshot.shift?.shift_date, savedItems: snapshot.items, initialized: true, blocked: null, error: null });
@@ -75,7 +78,7 @@ export class FinanceDraftSession {
         if (sameShift && incomingRevision !== null && current.expectedRevision !== null && incomingRevision < current.expectedRevision) return;
         const changed = !sameShift || incomingRevision !== current.expectedRevision || (snapshot.calendarDate ?? snapshot.shift?.shift_date) !== this.state.calendarDate;
         if (this.dirty) {
-            if (changed) this.update({ blocked: 'conflict', error: 'Смена изменена в другом окне. Ваш черновик сохранён на экране.' });
+            if (changed) this.update({ blocked: 'conflict', error: this.t('staff.finance.draft.changedElsewhere', 'Смена изменена в другом окне. Ваш черновик сохранён на экране.') });
             return;
         }
         this.accept(snapshot);
@@ -85,13 +88,13 @@ export class FinanceDraftSession {
     };
     private assertWritable() {
         if (!this.state.initialized || this.state.blocked || (!this.state.shift && !this.state.calendarDate)) throw new FinanceWriteError(
-            this.state.error ?? 'Сначала загрузите актуальную смену.', 409);
-        if (this.state.shift?.status === 'closed') throw new FinanceWriteError('Смена уже закрыта.', 409);
+            this.state.error ?? this.t('staff.finance.draft.loadFirst', 'Сначала загрузите актуальную смену.'), 409);
+        if (this.state.shift?.status === 'closed') throw new FinanceWriteError(this.t('staff.finance.draft.alreadyClosed', 'Смена уже закрыта.'), 409);
     }
     private fail(error: unknown) {
         const status = error instanceof FinanceWriteError ? error.status : 0;
         this.update({ blocked: status === 409 ? 'conflict' : status === 0 || status >= 500 ? 'uncertain' : this.state.blocked,
-            error: error instanceof Error ? error.message : 'Не удалось подтвердить сохранение. Черновик оставлен на экране.' });
+            error: error instanceof Error ? error.message : this.t('staff.finance.draft.saveUnconfirmedDraftKept', 'Не удалось подтвердить сохранение. Черновик оставлен на экране.') });
     }
     private enqueue<T>(action: () => Promise<T>): Promise<T> {
         const operation = this.tail.then(action).catch(error => { this.fail(error); throw error; });
@@ -107,13 +110,13 @@ export class FinanceDraftSession {
         try {
             const receipt = await this.transport.save(submitted, this.version());
             if (!receipt || !Number.isSafeInteger(receipt.revision) || !receipt.shiftId || !Array.isArray(receipt.items)) {
-                throw new FinanceWriteError('Сохранение не подтверждено. Загрузите смену перед следующей записью.');
+                throw new FinanceWriteError(this.t('staff.finance.draft.saveUnconfirmed', 'Сохранение не подтверждено. Загрузите смену перед следующей записью.'));
             }
             // An owner can create an absent shift with Save; load its full header before Close.
             if (!this.state.shift) {
                 const loaded = await this.transport.load(this.state.calendarDate);
                 if (loaded.shift?.id !== receipt.shiftId || loaded.shift.ledger_revision !== receipt.revision) {
-                    throw new FinanceWriteError('Смена изменилась после сохранения. Проверьте актуальные данные.', 409);
+                    throw new FinanceWriteError(this.t('staff.finance.draft.changedAfterSave', 'Смена изменилась после сохранения. Проверьте актуальные данные.'), 409);
                 }
                 this.update({ shift: loaded.shift });
             }
@@ -129,18 +132,18 @@ export class FinanceDraftSession {
         if (this.state.shift?.status === 'closed' && !this.dirty && !this.state.blocked) return;
         await this.saveCurrent();
         this.assertWritable();
-        if (this.dirty) throw new FinanceWriteError('Черновик изменён во время сохранения. Проверьте новые правки перед закрытием смены.', 400);
-        if (!this.state.shift) throw new FinanceWriteError('Смена ещё не открыта.', 400);
+        if (this.dirty) throw new FinanceWriteError(this.t('staff.finance.draft.draftChangedDuringSave', 'Черновик изменён во время сохранения. Проверьте новые правки перед закрытием смены.'), 400);
+        if (!this.state.shift) throw new FinanceWriteError(this.t('staff.finance.draft.notOpenYet', 'Смена ещё не открыта.'), 400);
         this.update({ operation: 'close', error: null });
         try {
             const shift = await this.transport.close(this.state.savedItems, this.version());
-            if (!shift || !Number.isSafeInteger(shift.ledger_revision)) throw new FinanceWriteError('Не удалось подтвердить закрытие смены.');
+            if (!shift || !Number.isSafeInteger(shift.ledger_revision)) throw new FinanceWriteError(this.t('staff.finance.draft.closeUnconfirmed', 'Не удалось подтвердить закрытие смены.'));
             this.update({ shift });
         } catch (error) { this.fail(error); throw error; }
         finally { this.update({ operation: null }); }
     });
     open = () => this.enqueue(async () => {
-        if (!this.state.initialized || !this.state.calendarDate || this.state.blocked || this.dirty) throw new FinanceWriteError('Сначала сохраните или сверьте черновик.', 409);
+        if (!this.state.initialized || !this.state.calendarDate || this.state.blocked || this.dirty) throw new FinanceWriteError(this.t('staff.finance.draft.saveDraftFirst', 'Сначала сохраните или сверьте черновик.'), 409);
         this.update({ operation: 'open', error: null });
         try { await this.transport.open(this.state.calendarDate); this.accept(await this.transport.load(this.state.calendarDate)); }
         catch (error) { this.fail(error); throw error; }

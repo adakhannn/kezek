@@ -83,4 +83,10 @@ export const serverBusinessEn = {
     'server.business.validityDaysPositive': 'Validity in days must be greater than 0',
     'server.business.discountNotNegative': 'Discount value cannot be negative',
     'server.business.percentDiscountMax': 'With the "percent" type, the value must not exceed 100',
+    'server.business.contactNotString': 'A contact must be a string or null',
+    'server.business.contactPhoneFormat': 'Enter the phone number in international format',
+    'server.business.contactWhatsAppFormat': 'Enter the WhatsApp number in international format',
+    'server.business.contactEmailInvalid': 'Enter a valid public email',
+    'server.business.websiteInvalid': 'The website must be a valid HTTPS link',
+    'server.business.directoryLinkWrongService': 'Each link must lead to its own service: {services}',
 } as const;

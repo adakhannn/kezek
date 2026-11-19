@@ -230,6 +230,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
             if (selectedServices.length === 1) {
                 const svc = selectedServices[0];
                 bookingId = await createInternalBooking({
+                    t,
                     bizId,
                     branchId,
                     serviceId: svc.id,
@@ -242,6 +243,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 });
             } else {
                 bookingId = await createInternalComplexBooking({
+                    t,
                     bizId,
                     branchId,
                     staffId: selectedStaffId,
