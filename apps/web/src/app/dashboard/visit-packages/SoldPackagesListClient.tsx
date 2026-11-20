@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
 export type SoldPackage = {
     id: string;
@@ -80,11 +81,11 @@ export default function SoldPackagesListClient() {
     const formatDate = (dateStr: string) => {
         try {
             const d = new Date(dateStr);
-            return d.toLocaleDateString(locale === 'en' ? 'en-GB' : 'ru-RU', {
+            return formatLocalizedDate(d, locale, {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
-            });
+            }, 'en-GB');
         } catch {
             return dateStr;
         }

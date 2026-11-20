@@ -7,6 +7,7 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
 type Blocker = { code: string; message: string; count: number };
 type State = {
@@ -80,10 +81,10 @@ export function AccountDeletionPanel() {
     const pending = state?.request?.status === 'pending';
     const confirmationPhrase = t('cabinet.profile.deletion.confirmationPhrase', 'УДАЛИТЬ');
     const scheduledFor = state?.request
-        ? new Intl.DateTimeFormat(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU', {
+        ? formatLocalizedDate(new Date(state.request.scheduled_for), locale, {
             dateStyle: 'medium',
             timeStyle: 'short',
-        }).format(new Date(state.request.scheduled_for))
+        })
         : null;
     const blockerMessage = (blocker: Blocker) => t(
         `cabinet.profile.deletion.blocker.${blocker.code}` as never,

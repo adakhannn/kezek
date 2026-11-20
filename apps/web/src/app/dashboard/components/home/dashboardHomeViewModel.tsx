@@ -6,11 +6,7 @@ import type {
     DashboardRatingFactor,
 } from './types';
 
-const localeMap: Record<string, string> = {
-    ky: 'ky-KG',
-    ru: 'ru-RU',
-    en: 'en-US',
-};
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
 type Translate = (key: string, fallback: string) => string;
 
@@ -20,14 +16,13 @@ export function getDashboardHomeViewModel(
     t: Translate,
 ) {
     const today = new Date(props.formattedDate);
-    const formatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+
+    const displayBizName = props.bizName || t('dashboard.header.defaultBizName', 'Ваш бизнес в Kezek');
+    const formattedDateLocalized = formatLocalizedDate(today, locale, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
     });
-
-    const displayBizName = props.bizName || t('dashboard.header.defaultBizName', 'Ваш бизнес в Kezek');
-    const formattedDateLocalized = formatter.format(today);
 
     const onboardingItems = [
         props.branchesCount === 0

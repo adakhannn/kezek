@@ -17,6 +17,7 @@ import { buttonStyles } from '@/components/ui/buttonStyles';
 import { useToast } from '@/hooks/useToast';
 import { formatBookingDateTime } from '@/lib/bookingCalendarDate';
 import { getTimezone } from '@/lib/env';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 import {logError} from '@/lib/log';
 import { repeatBookingHref } from '@/lib/repeatBookingHref';
 import { transliterate } from '@/lib/transliterate';
@@ -143,22 +144,11 @@ export default function BookingCard({
         }
     }
 
-    const localeMap: Record<string, string> = {
-        ky: 'ky-KG',
-        ru: 'ru-RU',
-        en: 'en-US',
-    };
-    
-    const timeFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: TZ,
-    });
-    
     const startDate = new Date(start_at);
     const endDate = new Date(end_at);
     const formattedStart = formatBookingDateTime(startDate, TZ, locale);
-    const when = `${formattedStart} - ${timeFormatter.format(endDate)}`;
+    const formatClock = (value: Date) => formatLocalizedDate(value, locale, { hour: '2-digit', minute: '2-digit', timeZone: TZ });
+    const when = `${formattedStart} - ${formatClock(endDate)}`;
 
     const totalDurationMin =
         servicesList && servicesList.length > 0
@@ -281,7 +271,7 @@ export default function BookingCard({
                         </p>
                         <p className="type-body mt-2 font-medium text-[var(--text-primary)]">{formattedStart}</p>
                         <p className="type-caption mt-1 text-[var(--text-secondary)]">
-                            {timeFormatter.format(startDate)} - {timeFormatter.format(endDate)} • {TZ}
+                            {formatClock(startDate)} - {formatClock(endDate)} • {TZ}
                         </p>
                     </div>
                     <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">

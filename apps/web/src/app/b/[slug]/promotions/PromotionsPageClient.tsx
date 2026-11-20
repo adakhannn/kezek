@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
 import { formatStaffName } from '@/lib/i18nHelpers';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
 type Branch = { id: string; name: string; address?: string | null; rating_score: number | null };
@@ -226,8 +227,8 @@ export default function PromotionsPageClient({ data }: { data: Data }) {
                                                             <div className="pt-2 border-t border-white/20">
                                                                 <p className="text-xs text-white/80">
                                                                     {String(t('promotions.validPeriod', 'Действует: {from} — {to}')
-                                                                        .replace('{from}', promo.valid_from ? new Date(promo.valid_from).toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU') : t('promotions.validPeriod.from', 'с начала'))
-                                                                        .replace('{to}', promo.valid_to ? new Date(promo.valid_to).toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU') : t('promotions.validPeriod.to', 'без ограничений')))}
+                                                                        .replace('{from}', promo.valid_from ? formatLocalizedDate(new Date(promo.valid_from), locale) : t('promotions.validPeriod.from', 'с начала'))
+                                                                        .replace('{to}', promo.valid_to ? formatLocalizedDate(new Date(promo.valid_to), locale) : t('promotions.validPeriod.to', 'без ограничений')))}
                                                                 </p>
                                                             </div>
                                                         )}

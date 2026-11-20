@@ -5,21 +5,17 @@
 import { enUS, ru, type Locale as DateFnsLocale } from 'date-fns/locale';
 import { formatInTimeZone } from 'date-fns-tz';
 
+import { formatLocalizedDate } from './kyDateFormat';
 import { TZ } from './time';
 
 type Locale = 'ru' | 'ky' | 'en';
 
-// Для киргизской локали используем русскую как fallback (date-fns не имеет встроенной ky локали)
+// date-fns не имеет ky-локали. Шаблоны ниже только числовые (dd.MM.yyyy HH:mm),
+// поэтому локаль date-fns на них не влияет; названия месяцев для ky даёт kyDateFormat.
 const localeMap: Record<Locale, DateFnsLocale> = {
     ru: ru,
-    ky: ru, // Fallback to Russian for Kyrgyz
+    ky: ru, // numeric patterns only: identical output
     en: enUS,
-};
-
-const browserLocaleMap: Record<Locale, string> = {
-    ru: 'ru-RU',
-    ky: 'ky-KG',
-    en: 'en-US',
 };
 
 /**
@@ -41,7 +37,7 @@ export function formatDate(dateStr: string, locale: Locale = 'ru'): string {
 export function formatDateBrowser(dateStr: string, locale: Locale = 'ru'): string {
     try {
         const date = dateStr.includes('T') ? new Date(dateStr) : new Date(dateStr + 'T12:00:00');
-        return date.toLocaleDateString(browserLocaleMap[locale], {
+        return formatLocalizedDate(date, locale, {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -58,7 +54,7 @@ export function formatMonthYear(dateStr: string, locale: Locale = 'ru'): string 
     try {
         const [year, month] = dateStr.split('-');
         const date = new Date(`${year}-${month}-01`);
-        return date.toLocaleDateString(browserLocaleMap[locale], {
+        return formatLocalizedDate(date, locale, {
             month: 'long',
             year: 'numeric',
         });

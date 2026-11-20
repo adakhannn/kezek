@@ -5,6 +5,7 @@ import type { Shift } from '../types';
 import { financeDateLabel } from '../utils/calendar';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
 
 interface ShiftHeaderProps {
@@ -33,7 +34,7 @@ export function ShiftHeader({ timezone, shiftDate, shift, status }: ShiftHeaderP
                     </div>
                     {status === 'open' && shift && (
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {t('staff.finance.shift.opened', 'Открыта')}: {shift.opened_at ? new Date(shift.opened_at).toLocaleTimeString(locale, { timeZone: timezone, hour: '2-digit', minute: '2-digit' }) : '—'}
+                            {t('staff.finance.shift.opened', 'Открыта')}: {shift.opened_at ? formatLocalizedDate(new Date(shift.opened_at), locale, { timeZone: timezone, hour: '2-digit', minute: '2-digit' }) : '—'}
                         </div>
                     )}
                     {status === 'none' && (

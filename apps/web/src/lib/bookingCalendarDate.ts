@@ -2,19 +2,17 @@ import { format, type Locale } from 'date-fns';
 import { enGB, ru } from 'date-fns/locale';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
+import { formatKyDate, KY_WEEKDAYS } from './kyDateFormat';
+
 export type BookingDayLocale = Locale | 'ru' | 'ky' | 'en';
 
-// date-fns has no Kyrgyz locale. Keep this UI label deterministic across
-// server/browser ICU installations, using the weekday in the business timezone.
-const KY_WEEKDAYS = ['дүйшөмбү', 'шейшемби', 'шаршемби', 'бейшемби', 'жума', 'ишемби', 'жекшемби'];
-const KY_MONTHS = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+// date-fns has no Kyrgyz locale. Kyrgyz labels come from kyDateFormat, which is
+// deterministic across server/browser ICU installations and uses the business timezone.
 
 /** Keep Kyrgyz visit dates stable even in browsers without the Kyrgyz ICU locale. */
 export function formatBookingDateTime(date: Date, timezone: string, locale: 'ru' | 'ky' | 'en'): string {
     if (locale === 'ky') {
-        const [calendar, time] = formatInTimeZone(date, timezone, 'yyyy-MM-dd HH:mm').split(' ');
-        const [year, month, day] = calendar.split('-');
-        return `${year}-ж., ${Number(day)}-${KY_MONTHS[Number(month) - 1]} ${time}`;
+        return formatKyDate(date, { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: timezone });
     }
     return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'ru-RU', {
         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: timezone,

@@ -51,4 +51,16 @@ describe('dashboard home localization', () => {
         ]);
         expect(ru.primaryFocus.ctaLabel).toBe('Завершить настройку');
     });
+
+    test('Kyrgyz date is Kyrgyz without relying on browser ICU data', () => {
+        // Midday UTC keeps the calendar day the same in every test-runner time zone.
+        const friday = { ...props, formattedDate: '2026-11-20T12:00:00.000Z' };
+
+        expect(getDashboardHomeViewModel(friday, 'ky', translator(dashboardKy)).formattedDateLocalized)
+            .toBe('20-ноябрь, жума');
+        expect(getDashboardHomeViewModel(friday, 'ru', translator(dashboardRu)).formattedDateLocalized)
+            .toBe('пятница, 20 ноября');
+        expect(getDashboardHomeViewModel(friday, 'en', translator(dashboardEn)).formattedDateLocalized)
+            .toBe('Friday, November 20');
+    });
 });

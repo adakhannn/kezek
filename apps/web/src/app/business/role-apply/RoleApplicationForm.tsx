@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { type BusinessRoleKey } from '@/lib/businessRoleApplicationService';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
 type BusinessOption = {
     id: string;
@@ -285,7 +286,7 @@ export function RoleApplicationForm({
                             return (
                                 <div key={application.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[var(--surface-card)] p-3 text-sm">
                                     <span>
-                                        {relation?.name || application.biz_id} · {new Date(application.created_at).toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU')}
+                                        {relation?.name || application.biz_id} · {formatLocalizedDate(new Date(application.created_at), locale)}
                                     </span>
                                     <Button
                                         type="button"

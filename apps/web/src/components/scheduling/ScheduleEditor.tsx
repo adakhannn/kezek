@@ -9,6 +9,7 @@ import { TimeRangesEditor as Ranges } from './TimeRangesEditor';
 
 import { useLanguage, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
 import { formatBookingWeekday } from '@/lib/bookingCalendarDate';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 import { emptyWeek, validatePublishSchedule, type ScheduleDay, type WeekPlan } from '@/lib/scheduling/model';
 
 const field = 'rounded-lg border border-slate-500/40 bg-transparent p-2 min-w-0';
@@ -145,7 +146,7 @@ export default function ScheduleEditor({ staffId, branches, homeBranchId }: {
                 <p>{t('scheduleForm.conflictHint', "При конфликте с существующими записями изменение не будет применено.")}</p>
             </div>}
             {notice && <p role="status">{typeof notice === 'string' ? notice : t(notice.key)}</p>}
-            {conflicts.length > 0 && <ul className="list-disc pl-5">{conflicts.map(c => <li key={c.id}>{t('scheduleForm.booking', 'Запись')} {new Date(c.start_at).toLocaleString(locale, { timeZone: snapshot?.timezone })} — {c.id.slice(0, 8)}</li>)}</ul>}
+            {conflicts.length > 0 && <ul className="list-disc pl-5">{conflicts.map(c => <li key={c.id}>{t('scheduleForm.booking', 'Запись')} {formatLocalizedDate(new Date(c.start_at), locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: snapshot?.timezone })} — {c.id.slice(0, 8)}</li>)}</ul>}
             <button disabled={saving || loading || !!error || !snapshot} className="rounded-xl bg-indigo-600 px-5 py-3 text-white disabled:opacity-50" type="submit">
                 {saving ? t('scheduleForm.save', "Сохраняем…") : reviewing ? t('scheduleForm.confirm', "Подтвердить и опубликовать") : t('scheduleForm.review', "Проверить изменения")}
             </button>

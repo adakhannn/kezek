@@ -12,6 +12,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
 export default function AllStaffFinanceStats() {
     const { t, locale } = useLanguage();
@@ -32,8 +33,9 @@ export default function AllStaffFinanceStats() {
 
     const formatPeriodLabel = () => {
         if (period === 'day') {
-            return new Date(`${date}T12:00:00`).toLocaleDateString(
-                locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU',
+            return formatLocalizedDate(
+                new Date(`${date}T12:00:00`),
+                locale,
                 {
                     day: '2-digit',
                     month: 'long',
@@ -44,8 +46,9 @@ export default function AllStaffFinanceStats() {
 
         if (period === 'month') {
             const [year, month] = date.split('-');
-            return new Date(`${year}-${month}-01`).toLocaleDateString(
-                locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU',
+            return formatLocalizedDate(
+                new Date(`${year}-${month}-01`),
+                locale,
                 {
                     month: 'long',
                     year: 'numeric',

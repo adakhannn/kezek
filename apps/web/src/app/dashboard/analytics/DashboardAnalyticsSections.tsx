@@ -17,12 +17,9 @@ function formatNumber(value: number, locale: string) {
     return value.toLocaleString(locale);
 }
 
-function formatCurrencyKGS(value: number, locale: string) {
-    return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: 'KGS',
-        maximumFractionDigits: 0,
-    }).format(value);
+function formatCurrencyKGS(value: number, locale: string, t: (key: 'finance.money', fallback: string) => string) {
+    const amount = Math.round(value).toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
+    return t('finance.money', '{amount} сом').replace('{amount}', amount);
 }
 
 function getHeatmapRowClass(intensity: number) {
@@ -235,7 +232,7 @@ export function DashboardAnalyticsKpiSection({
                     {t('analytics.revenue')}
                 </p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {formatCurrencyKGS(summary.revenue.total, locale)}
+                    {formatCurrencyKGS(summary.revenue.total, locale, t)}
                 </p>
             </div>
         </section>
@@ -290,7 +287,7 @@ export function DashboardAnalyticsTrendsSection({
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-300">{t('analytics.promoRevenue')}</span>
                         <span className="font-medium text-gray-900 dark:text-gray-100">
-                            {formatCurrencyKGS(summary.revenue.promoRevenue, locale)}
+                            {formatCurrencyKGS(summary.revenue.promoRevenue, locale, t)}
                         </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -304,7 +301,7 @@ export function DashboardAnalyticsTrendsSection({
                         {trendChartData.revenue.map((point) => (
                             <div key={point.x} className="flex items-center justify-between text-xs">
                                 <span className="text-gray-500 dark:text-gray-400">{point.x}</span>
-                                <span className="text-gray-900 dark:text-gray-100">{formatCurrencyKGS(point.y, locale)}</span>
+                                <span className="text-gray-900 dark:text-gray-100">{formatCurrencyKGS(point.y, locale, t)}</span>
                             </div>
                         ))}
                     </div>

@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { bookingCountForm } from '@/lib/bookingCountForm';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
+
+const DATE_TIME = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' } as const;
 
 type ApplicationRow = {
     id: string;
@@ -204,10 +207,10 @@ export function RoleApplicationsClient() {
                 const isPending = application.status === 'pending';
                 const isEditing = editingId === application.id;
                 const createdText = t('dashboard.roleApplications.createdAt', 'Создана: {date}')
-                    .replace('{date}', new Date(application.created_at).toLocaleString('ru-RU'));
+                    .replace('{date}', formatLocalizedDate(new Date(application.created_at), locale, DATE_TIME));
                 const reviewedText = application.reviewed_at
                     ? t('dashboard.roleApplications.reviewedAt', 'Рассмотрена: {date}')
-                        .replace('{date}', new Date(application.reviewed_at).toLocaleString('ru-RU'))
+                        .replace('{date}', formatLocalizedDate(new Date(application.reviewed_at), locale, DATE_TIME))
                     : null;
 
                 return (
