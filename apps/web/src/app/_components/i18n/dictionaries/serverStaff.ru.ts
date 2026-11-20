@@ -175,4 +175,6 @@ export const serverStaffRu = {
     'server.staff.invitationStale': 'Приглашение больше не действует: карточка сотрудника изменилась',
     'server.staff.invitationAlreadyStaff': 'Вы уже в команде этого бизнеса',
     'server.staff.invitationDecisionFailed': 'Не удалось обработать приглашение',
+    'server.staff.invitationPendingNotFound': 'У этого сотрудника нет ожидающего приглашения',
+    'server.staff.invitationCancelFailed': 'Не удалось отменить приглашение',
 } as const;

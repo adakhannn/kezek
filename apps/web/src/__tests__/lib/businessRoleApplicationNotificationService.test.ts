@@ -1,4 +1,4 @@
-import { notifyStaffApplicationSubmitted } from '@/lib/businessRoleApplicationNotificationService';
+import { notifyStaffApplicationSubmitted, notifyStaffInvitationCreated } from '@/lib/businessRoleApplicationNotificationService';
 import { sendTelegram } from '@/lib/senders/telegram';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 import { sendEmail } from '@/lib/senders/email';
@@ -55,5 +55,51 @@ describe('staff application delivery', () => {
         await expect(notifyStaffApplicationSubmitted(admin, application)).resolves.toBeUndefined();
         expect(sendTelegram).toHaveBeenCalledTimes(2);
         expect(sendWhatsApp).not.toHaveBeenCalled();
+    });
+});
+
+describe('staff invitation delivery (API-06)', () => {
+    const original = process.env;
+    beforeEach(() => {
+        jest.clearAllMocks();
+        process.env = { ...original, NODE_ENV: 'development', NEXT_PUBLIC_SITE_ORIGIN: 'https://kezek.kg', LOCAL_AUTH_PUBLIC_ORIGIN: 'https://test.trycloudflare.com' };
+    });
+    afterEach(() => { process.env = original; });
+    const admin = {
+        from(table: string) {
+            return {
+                select() { return this; },
+                eq() { return this; },
+                async maybeSingle() {
+                    return { data: { notify_email: true, notify_telegram: true, telegram_verified: true, telegram_id: 7, notify_whatsapp: true, whatsapp_verified: true, whatsapp_phone: '+996555000000' } };
+                },
+                then(resolve: (value: unknown) => unknown) {
+                    return Promise.resolve(resolve({ data: table === 'user_notification_emails' ? [{ email: 'Invitee@Example.com' }] : [] }));
+                },
+            };
+        },
+        rpc: jest.fn().mockResolvedValue({ data: [], error: null }),
+        auth: { admin: { getUserById: jest.fn().mockResolvedValue({ data: { user: {} }, error: null }) } },
+    };
+
+    test('e-mail and Telegram get the invitation with the cabinet link; no WhatsApp template exists', async () => {
+        await notifyStaffInvitationCreated(admin, { invitedUserId: 'invitee', businessName: 'Salon <One>', branchName: 'Center' });
+
+        expect(sendEmail).toHaveBeenCalledTimes(1);
+        const [email] = (sendEmail as jest.Mock).mock.calls[0];
+        expect(email.to).toBe('invitee@example.com');
+        expect(email.text).toBe('«Salon <One>» (филиал «Center») приглашает вас в команду. Откройте личный кабинет Kezek, чтобы принять или отклонить приглашение: https://test.trycloudflare.com/cabinet');
+        expect(email.html).toContain('Salon &lt;One&gt;');
+        expect(email.html).toContain('href="https://test.trycloudflare.com/cabinet"');
+        expect(sendTelegram).toHaveBeenCalledWith({ chatId: 7, text: expect.stringContaining('Salon &lt;One&gt;') });
+        expect(sendWhatsApp).not.toHaveBeenCalled();
+    });
+
+    test('without a branch the text names the business only', async () => {
+        await notifyStaffInvitationCreated(admin, { invitedUserId: 'invitee', businessName: 'Salon' });
+
+        const [email] = (sendEmail as jest.Mock).mock.calls[0];
+        expect(email.text.startsWith('«Salon» приглашает вас в команду.')).toBe(true);
+        expect(email.text).not.toContain('филиал');
     });
 });

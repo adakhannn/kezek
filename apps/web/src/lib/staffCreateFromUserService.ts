@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { notifyNewStaffInvitation } from '@/lib/staffInvitationNotification';
 import { createPendingStaffInvitation, findPendingStaffInvitation } from '@/lib/staffInvitationService';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { todayDateString } from '@/lib/time';
@@ -175,6 +176,10 @@ export async function runStaffCreateFromUser({
         }
         staffId = invitation.invitation.staff_id;
         invitationId = invitation.invitation.id;
+        if (staffId === newStaffId) {
+            // Only a new invitation is announced; a concurrent request's one was announced by it.
+            await notifyNewStaffInvitation(admin, { bizId, branchId: body.branch_id, invitedUserId: body.user_id });
+        }
     }
 
     await ensureStaffBranchAssignment({

@@ -175,4 +175,6 @@ export const serverStaffEn = {
     'server.staff.invitationStale': 'The invitation is no longer valid: the staff card has changed',
     'server.staff.invitationAlreadyStaff': 'You are already on the team of this business',
     'server.staff.invitationDecisionFailed': 'Could not process the invitation',
+    'server.staff.invitationPendingNotFound': 'This staff member has no pending invitation',
+    'server.staff.invitationCancelFailed': 'Could not cancel the invitation',
 } as const;

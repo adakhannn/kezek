@@ -175,4 +175,6 @@ export const serverStaffKy = {
     'server.staff.invitationStale': 'Чакыруу жараксыз: кызматкердин карточкасы өзгөргөн',
     'server.staff.invitationAlreadyStaff': 'Сиз бул бизнестин командасында мурунтан эле барсыз',
     'server.staff.invitationDecisionFailed': 'Чакырууну иштетүү мүмкүн болгон жок',
+    'server.staff.invitationPendingNotFound': 'Бул кызматкердин күтүүдөгү чакыруусу жок',
+    'server.staff.invitationCancelFailed': 'Чакырууну жокко чыгаруу мүмкүн болгон жок',
 } as const;

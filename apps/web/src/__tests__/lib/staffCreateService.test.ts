@@ -2,8 +2,16 @@ jest.mock('@/lib/staffSchedule', () => ({
     initializeStaffSchedule: jest.fn(),
 }));
 
+jest.mock('@/lib/businessRoleApplicationNotificationService', () => ({
+    notifyStaffInvitationCreated: jest.fn(),
+}));
+
+jest.mock('@/lib/log', () => ({ logDebug: jest.fn(), logError: jest.fn(), logWarn: jest.fn() }));
+
 import { createTableMock, expectBusinessScoped, type RecordedQuery } from '../api/testHelpers';
 
+import { notifyStaffInvitationCreated } from '@/lib/businessRoleApplicationNotificationService';
+import { logWarn } from '@/lib/log';
 import { runStaffCreate } from '@/lib/staffCreateService';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 
@@ -21,11 +29,13 @@ describe('staffCreateService (API-06: no linking, silent invitation)', () => {
         });
     }
 
-    function adminClient({ accounts = [] as unknown[], ownCard = null as unknown, pending = null as unknown } = {}) {
+    function adminClient({ accounts = [] as unknown[], ownCard = null as unknown, pending = null as unknown, invitationInsert = { data: { id: 'inv-id', staff_id: 'staff-id' } } as unknown } = {}) {
         const admin = createTableMock({
             staff: { data: ownCard },
-            staff_invitations: (query) => (has(query, 'insert') ? { data: { id: 'inv-id', staff_id: 'staff-id' } } : { data: pending }),
+            staff_invitations: (query) => (has(query, 'insert') ? invitationInsert as { data?: unknown; error?: unknown } : { data: pending }),
             staff_branch_assignments: { data: null },
+            businesses: { data: { name: 'Test Biz' } },
+            branches: { data: { name: 'Main' } },
         });
         admin.rpc.mockResolvedValue({ data: accounts, error: null });
         return admin;
@@ -42,6 +52,7 @@ describe('staffCreateService (API-06: no linking, silent invitation)', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (initializeStaffSchedule as jest.Mock).mockResolvedValue({ success: true, daysCreated: 14 });
+        (notifyStaffInvitationCreated as jest.Mock).mockResolvedValue(undefined);
     });
 
     test('returns forbidden when caller has no manager role in business', async () => {
@@ -98,6 +109,46 @@ describe('staffCreateService (API-06: no linking, silent invitation)', () => {
 
         expect(result).toEqual(expected);
         expect(admin.queries.map((query) => query.table)).not.toContain('staff_invitations');
+    });
+
+    test('a new invitation is announced to the matched account', async () => {
+        const admin = adminClient({ accounts: [{ id: 'account-id' }] });
+        await run(sessionClient([{ roles: { key: 'owner' } }]), admin);
+
+        expect(notifyStaffInvitationCreated).toHaveBeenCalledWith(admin, { invitedUserId: 'account-id', businessName: 'Test Biz', branchName: 'Main' });
+        expectBusinessScoped(admin, 'branches', bizId);
+    });
+
+    test('no announcement without a new invitation: own card, pending one, or a concurrent one', async () => {
+        const owner = () => sessionClient([{ roles: { key: 'owner' } }]);
+        await run(owner(), adminClient({ accounts: [{ id: 'account-id' }], ownCard: { id: 'own-card' } }));
+        await run(owner(), adminClient({ accounts: [{ id: 'account-id' }], pending: { id: 'inv-old', staff_id: 'other-card' } }));
+        await run(owner(), adminClient({ accounts: [] }));
+        // 23505: another card got the invitation first; createPendingStaffInvitation returns that one.
+        let lookups = 0;
+        const concurrent = createTableMock({
+            staff: { data: null },
+            staff_invitations: (query) => {
+                if (has(query, 'insert')) return { error: { code: '23505', message: 'duplicate' } };
+                lookups += 1;
+                return lookups === 1 ? { data: null } : { data: { id: 'inv-first', staff_id: 'other-card' } };
+            },
+        });
+        concurrent.rpc.mockResolvedValue({ data: [{ id: 'account-id' }], error: null });
+        await run(owner(), concurrent as never);
+
+        expect(notifyStaffInvitationCreated).not.toHaveBeenCalled();
+    });
+
+    test('a failed announcement does not fail the card or the invitation', async () => {
+        (notifyStaffInvitationCreated as jest.Mock).mockRejectedValue(new Error('smtp down'));
+        const admin = adminClient({ accounts: [{ id: 'account-id' }] });
+
+        const result = await run(sessionClient([{ roles: { key: 'owner' } }]), admin);
+
+        expect(result).toEqual(expected);
+        expect(admin.queries.some((query) => query.table === 'staff_invitations' && has(query, 'insert'))).toBe(true);
+        expect(logWarn).toHaveBeenCalledWith('StaffInvitationNotification', 'Staff invitation notification failed', expect.any(Error));
     });
 
     test('no contact, no lookup', async () => {

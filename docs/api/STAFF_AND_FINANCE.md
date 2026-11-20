@@ -10,7 +10,7 @@
 
 - [Общие правила чтения контракта](#общие-правила-чтения-контракта)
 - [Смены и рабочее место сотрудника](#смены-и-рабочее-место-сотрудника): open, finance, close, items, today
-- [Управление сотрудниками](#управление-сотрудниками): create, update, delete, restore, dismiss, transfer, create-from-user, приглашения в команду, старый update, avatar
+- [Управление сотрудниками](#управление-сотрудниками): create, update, delete, restore, dismiss, transfer, create-from-user, приглашения в команду (в том числе уведомление и отмена бизнесом), старый update, avatar
 - [Финансовый дашборд](#финансовый-дашборд): общая статистика, данные сотрудника, детальная статистика
 - [Акции филиала](#акции-филиала): create, list, update, delete
 - [Управление сменами из дашборда](#управление-сменами-из-дашборда): open, update-hours
@@ -369,6 +369,28 @@ Save передаёт все позиции одним RPC `save_staff_shift_com
 <!-- api-contract: POST /api/staff-invitations/[id]/decline -->
 
 Отмечает приглашение `declined`; карточка остаётся непривязанной карточкой бизнеса. Успех — только ok. Ошибки: 404 `not_found` (не UUID, нет или чужое), 409 `conflict` (уже обработано), 500 internal.
+
+#### Уведомление о новом приглашении
+
+Сверено по исходникам 20 ноября 2026, unit-тесты с моками отправителей. Новое приглашение (не переиспользованное ожидающее и не созданное параллельным запросом) из `create-from-user` и `create` сообщается приглашённому: [notifyStaffInvitationCreated](../../apps/web/src/lib/businessRoleApplicationNotificationService.ts) отправляет русский текст ««Бизнес» (филиал «…») приглашает вас в команду…» со ссылкой `{origin}/cabinet` по email и Telegram согласно настройкам профиля. WhatsApp не используется: подходящего утверждённого шаблона нет. Названия бизнеса и филиала (филиал — с фильтром `biz_id`) читает [staffInvitationNotification](../../apps/web/src/lib/staffInvitationNotification.ts); любой сбой поиска или доставки только логируется (`logWarn`) и не меняет ответ создания.
+
+#### POST `/api/staff/[id]/invitation/cancel`
+
+<!-- api-contract: POST /api/staff/[id]/invitation/cancel -->
+
+Сторона бизнеса (API-06, сверено по исходникам 20 ноября 2026, API-тесты с моками).
+
+| Часть | Контракт |
+| --- | --- |
+| Доступ | Manager direct (`getBizContextForManagers`); ID пути через `getRouteParamUuid` |
+| Вход | Body/query не читаются |
+| Limiter | `normal` |
+| Успех | `data.invitation_id` — id отменённого приглашения |
+| Ошибки | 404 `not_found` — «У этого сотрудника нет ожидающего приглашения» (нет ожидающего приглашения у этой карточки в текущем бизнесе); 500 internal — «Не удалось отменить приглашение» при сбое обновления; не UUID и ошибки доступа — по общей обёртке |
+
+Service client ставит `status: cancelled` и `decided_at` ожидающему приглашению с фильтрами `biz_id` текущего бизнеса, `staff_id` из пути и `status = pending`, поэтому чужое или уже обработанное приглашение не меняется. Карточка остаётся без аккаунта; её можно удалить или использовать дальше. В списке [/dashboard/staff](../../apps/web/src/app/dashboard/staff/page.tsx) карточки с ожидающим приглашением (тот же service client, фильтр `biz_id`) помечены «Ожидает подтверждения» и имеют кнопку «Отменить приглашение» ([CancelInvitationButton](../../apps/web/src/app/dashboard/staff/CancelInvitationButton.tsx)).
+
+Источники: [route](../../apps/web/src/app/api/staff/[id]/invitation/cancel/route.ts), [HTTP](../../apps/web/src/lib/staffInvitationCancelHttpService.ts), [service](../../apps/web/src/lib/staffInvitationService.ts).
 
 ### POST `/api/staff/avatar/upload`
 

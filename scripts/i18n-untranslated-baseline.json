@@ -86,7 +86,7 @@
   "src/lib/bookingCalendarDate.ts": 20,
   "src/lib/businessApplicationService.ts": 8,
   "src/lib/businessDeleteService.ts": 2,
-  "src/lib/businessRoleApplicationNotificationService.ts": 27,
+  "src/lib/businessRoleApplicationNotificationService.ts": 32,
   "src/lib/businessRoleApplicationService.ts": 7,
   "src/lib/dashboardStaffShiftCloseService.ts": 2,
   "src/lib/directoryLinks.ts": 3,

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState, useCallback } from 'react';
 
 import ActionButtons from './ActionButtons';
+import CancelInvitationButton from './CancelInvitationButton';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
@@ -17,10 +18,13 @@ type StaffRow = {
 
 type Props = {
     initialRows: StaffRow[];
+    /** Cards whose invited person has not answered yet (API-06). */
+    pendingInvitationStaffIds?: string[];
 };
 
-export default function StaffListClient({ initialRows }: Props) {
+export default function StaffListClient({ initialRows, pendingInvitationStaffIds }: Props) {
     const { t } = useLanguage();
+    const pendingInvitations = useMemo(() => new Set(pendingInvitationStaffIds ?? []), [pendingInvitationStaffIds]);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
     
@@ -242,6 +246,11 @@ export default function StaffListClient({ initialRows }: Props) {
                                             <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
                                                 {staff.branches?.name ?? t('staff.card.branchNotSet', 'Филиал не указан')}
                                             </p>
+                                            {pendingInvitations.has(staff.id) && (
+                                                <span className="mt-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                                                    {t('staff.card.invitationPending', 'Ожидает подтверждения')}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -270,6 +279,11 @@ export default function StaffListClient({ initialRows }: Props) {
                                 </Link>
                                 <ActionButtons id={String(staff.id)} isActive={!!staff.is_active} />
                             </div>
+                            {pendingInvitations.has(staff.id) && (
+                                <div className="mt-2">
+                                    <CancelInvitationButton staffId={String(staff.id)} />
+                                </div>
+                            )}
                         </div>
                         ))}
                     </div>

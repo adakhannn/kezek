@@ -174,3 +174,42 @@ export async function declineStaffInvitation(
     if (error) return decisionError(error.message);
     return { ok: true };
 }
+
+/** The staff cards of this business with a pending invitation, for the dashboard staff list. */
+export async function listPendingInvitationStaffIds(
+    admin: SupabaseClient,
+    bizId: string,
+): Promise<{ ok: true; staffIds: string[] } | { ok: false }> {
+    const { data, error } = await admin
+        .from('staff_invitations')
+        .select('staff_id')
+        .eq('biz_id', bizId)
+        .eq('status', 'pending');
+    if (error) return { ok: false };
+    return { ok: true, staffIds: [...new Set(((data ?? []) as Array<{ staff_id: string }>).map((row) => row.staff_id))] };
+}
+
+export const STAFF_INVITATION_PENDING_NOT_FOUND_MESSAGE = 'У этого сотрудника нет ожидающего приглашения';
+export const STAFF_INVITATION_CANCEL_FAILED_MESSAGE = 'Не удалось отменить приглашение';
+
+/**
+ * Cancels the pending invitation of a staff card, by the business. The card stays, unlinked; the
+ * owner can delete it or reuse it. 404 when the card of this business has no pending invitation.
+ */
+export async function cancelPendingStaffInvitation(
+    admin: SupabaseClient,
+    bizId: string,
+    staffId: string,
+): Promise<{ ok: true; data: { invitation_id: string } } | { ok: false; status: 404 | 500; error: 'not_found' | 'internal'; message: string }> {
+    const { data, error } = await admin
+        .from('staff_invitations')
+        .update({ status: 'cancelled', decided_at: new Date().toISOString() })
+        .eq('biz_id', bizId)
+        .eq('staff_id', staffId)
+        .eq('status', 'pending')
+        .select('id');
+    if (error) return { ok: false, status: 500, error: 'internal', message: STAFF_INVITATION_CANCEL_FAILED_MESSAGE };
+    const rows = (data ?? []) as Array<{ id: string }>;
+    if (rows.length === 0) return { ok: false, status: 404, error: 'not_found', message: STAFF_INVITATION_PENDING_NOT_FOUND_MESSAGE };
+    return { ok: true, data: { invitation_id: rows[0].id } };
+}

@@ -2,7 +2,10 @@ import StaffPageClient from './StaffPageClient';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logWarn } from '@/lib/log';
 import { loadStaffApplicationSummary } from '@/lib/staffApplicationSummary';
+import { listPendingInvitationStaffIds } from '@/lib/staffInvitationService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 
 export const runtime = 'nodejs';
@@ -46,6 +49,17 @@ export default async function Page({
         );
     }
 
+    // Cards waiting for the invited person (API-06). The table is service role only; the manager's
+    // business context was resolved above, and the query is limited to that business.
+    let pendingInvitationStaffIds: string[] = [];
+    try {
+        const pending = await listPendingInvitationStaffIds(createSupabaseAdminClient(), bizId);
+        if (pending.ok) pendingInvitationStaffIds = pending.staffIds;
+        else logWarn('StaffPage', 'Pending invitations unavailable');
+    } catch {
+        logWarn('StaffPage', 'Pending invitations unavailable');
+    }
+
     const bizName = business?.name ?? null;
     const bizCity = business?.city ?? null;
 
@@ -53,6 +67,7 @@ export default async function Page({
         <StaffPageClient
             staffApplications={staffApplications}
             initialRows={rows ?? []}
+            pendingInvitationStaffIds={pendingInvitationStaffIds}
             showDismissed={showDismissed}
             bizName={bizName}
             bizCity={bizCity}

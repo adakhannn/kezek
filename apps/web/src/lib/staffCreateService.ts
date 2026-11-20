@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { findAccountIdByConfirmedContact } from '@/lib/accountContactLookup';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { notifyNewStaffInvitation } from '@/lib/staffInvitationNotification';
 import { createPendingStaffInvitation, findPendingStaffInvitation } from '@/lib/staffInvitationService';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { todayDateString } from '@/lib/time';
@@ -104,6 +105,7 @@ export async function runStaffCreate({
             admin,
             bizId,
             staffId,
+            branchId: body.branch_id,
             invitedBy: userId,
             email: body.email,
             phone: body.phone,
@@ -165,12 +167,13 @@ async function checkManagerRoleAccess({
  * Invites the one account that confirmed this e-mail or phone (ARCH-03) to the new card (API-06).
  * Silent by design: the response is the same whether an account exists or not, and a failed lookup or
  * insert only leaves the card without an invitation. An account that already has a card or a pending
- * invitation in this business is not invited again.
+ * invitation in this business is not invited again. A new invitation is announced to the account.
  */
 async function inviteAccountByContact({
     admin,
     bizId,
     staffId,
+    branchId,
     invitedBy,
     email,
     phone,
@@ -178,6 +181,7 @@ async function inviteAccountByContact({
     admin: SupabaseClient;
     bizId: string;
     staffId: string;
+    branchId: string;
     invitedBy: string;
     email?: string | null;
     phone?: string | null;
@@ -205,6 +209,11 @@ async function inviteAccountByContact({
         const created = await createPendingStaffInvitation(admin, { bizId, staffId, userId: accountId, invitedBy });
         if (!created.ok) {
             logWarn('StaffCreateService', 'Failed to create a staff invitation');
+            return;
+        }
+        // A concurrent request that invited this person first keeps its own (already announced) one.
+        if (created.invitation.staff_id === staffId) {
+            await notifyNewStaffInvitation(admin, { bizId, branchId, invitedUserId: accountId });
         }
     } catch (error) {
         logWarn('StaffCreate', 'Account lookup by contact failed', error);

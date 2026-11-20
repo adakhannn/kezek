@@ -6,9 +6,17 @@ jest.mock('@/lib/staffSchedule', () => ({
     initializeStaffSchedule: jest.fn(),
 }));
 
+jest.mock('@/lib/businessRoleApplicationNotificationService', () => ({
+    notifyStaffInvitationCreated: jest.fn(),
+}));
+
+jest.mock('@/lib/log', () => ({ logDebug: jest.fn(), logError: jest.fn(), logWarn: jest.fn() }));
+
 import { createTableMock, expectBusinessScoped, type RecordedQuery } from '../api/testHelpers';
 
+import { notifyStaffInvitationCreated } from '@/lib/businessRoleApplicationNotificationService';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
+import { logWarn } from '@/lib/log';
 import { runStaffCreateFromUser } from '@/lib/staffCreateFromUserService';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 
@@ -40,6 +48,8 @@ describe('staffCreateFromUserService (API-06: invitation instead of linking)', (
                 return answers.pending ?? { data: null };
             },
             staff_branch_assignments: { data: null },
+            businesses: { data: { name: 'Test Biz' } },
+            branches: { data: { name: 'Main' } },
         });
         admin.auth.admin.getUserById.mockResolvedValue({
             data: { user: { id: userId, email: 'test@example.com', phone: '+996555123456', user_metadata: { full_name: 'Test User' } } },
@@ -57,6 +67,7 @@ describe('staffCreateFromUserService (API-06: invitation instead of linking)', (
         jest.clearAllMocks();
         (checkResourceBelongsToBiz as jest.Mock).mockResolvedValue({ data: { id: branchId, biz_id: bizId }, error: null });
         (initializeStaffSchedule as jest.Mock).mockResolvedValue({ success: true, daysCreated: 14 });
+        (notifyStaffInvitationCreated as jest.Mock).mockResolvedValue(undefined);
     });
 
     test('returns validation error when required fields are missing', async () => {
@@ -172,6 +183,37 @@ describe('staffCreateFromUserService (API-06: invitation instead of linking)', (
         expect(result).toMatchObject({ ok: true, data: { staff_id: 'staff-first', invitation_id: 'inv-first', status: 'pending' } });
         const removal = admin.queries.find((query) => query.table === 'staff' && has(query, 'delete'));
         expect(removal?.calls).toEqual(expect.arrayContaining([['eq', 'id', 'staff-new']]));
+        // The first request announced its own invitation.
+        expect(notifyStaffInvitationCreated).not.toHaveBeenCalled();
+    });
+
+    test('a new invitation is announced to the invited person, with the business and branch names', async () => {
+        const admin = client();
+        await run(admin);
+
+        expect(notifyStaffInvitationCreated).toHaveBeenCalledTimes(1);
+        expect(notifyStaffInvitationCreated).toHaveBeenCalledWith(admin, { invitedUserId: userId, businessName: 'Test Biz', branchName: 'Main' });
+        const business = admin.queries.find((query) => query.table === 'businesses');
+        expect(business?.calls).toEqual(expect.arrayContaining([['eq', 'id', bizId]]));
+        expectBusinessScoped(admin, 'branches', bizId);
+    });
+
+    test('a reused pending invitation is not announced again', async () => {
+        await run(client({ pending: { data: { id: 'inv-old', staff_id: 'staff-old' } } }));
+        expect(notifyStaffInvitationCreated).not.toHaveBeenCalled();
+    });
+
+    test('an account with its own card gets no announcement', async () => {
+        await run(client({ ownCard: { data: { id: 'own-card' } } }));
+        expect(notifyStaffInvitationCreated).not.toHaveBeenCalled();
+    });
+
+    test('a failed announcement does not fail the invitation', async () => {
+        (notifyStaffInvitationCreated as jest.Mock).mockRejectedValue(new Error('smtp down'));
+        const result = await run(client());
+
+        expect(result).toMatchObject({ ok: true, data: { invitation_id: 'inv-new', status: 'pending' } });
+        expect(logWarn).toHaveBeenCalledWith('StaffInvitationNotification', 'Staff invitation notification failed', expect.any(Error));
     });
 
     test('returns not_found when auth admin user is missing', async () => {

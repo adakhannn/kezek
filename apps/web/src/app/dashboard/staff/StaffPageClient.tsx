@@ -17,12 +17,14 @@ type Row = {
 
 export default function StaffPageClient({
     initialRows,
+    pendingInvitationStaffIds,
     showDismissed,
     bizName,
     bizCity,
     staffApplications,
 }: {
     initialRows: Row[];
+    pendingInvitationStaffIds?: string[];
     showDismissed?: boolean;
     bizName?: string | null;
     bizCity?: string | null;
@@ -84,7 +86,7 @@ export default function StaffPageClient({
                     <span className="shrink-0 font-semibold text-indigo-500">{t('dashboard.applications.open', 'Открыть заявки')} →</span>
                 </Link>
             )}
-            <StaffListClient initialRows={initialRows} />
+            <StaffListClient initialRows={initialRows} pendingInvitationStaffIds={pendingInvitationStaffIds} />
         </main>
     );
 }

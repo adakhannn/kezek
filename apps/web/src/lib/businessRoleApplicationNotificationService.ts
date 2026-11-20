@@ -323,3 +323,21 @@ export async function notifyOwnerApplicationApproved(admin: AdminClient, params:
         businessName,
     }));
 }
+
+/**
+ * Tells the invited person about a new staff invitation (API-06); they accept or decline it in the
+ * client cabinet. E-mail and Telegram only: no approved WhatsApp template exists for invitations.
+ */
+export async function notifyStaffInvitationCreated(admin: AdminClient, params: { invitedUserId: string; businessName: string; branchName?: string | null }) {
+    const businessName = params.businessName || 'Kezek';
+    const branchName = params.branchName?.trim() || null;
+    const origin = getApplicationNotificationOrigin();
+    const invitee = await getRecipient(admin, params.invitedUserId, {});
+    const branchText = branchName ? ` (филиал «${branchName}»)` : '';
+    const branchHtml = branchName ? ` (филиал <b>${escapeHtml(branchName)}</b>)` : '';
+    await notifyRecipient(invitee, {
+        subject: `Kezek: приглашение в команду «${businessName}»`,
+        text: `«${businessName}»${branchText} приглашает вас в команду. Откройте личный кабинет Kezek, чтобы принять или отклонить приглашение: ${origin}/cabinet`,
+        html: `<p><b>${escapeHtml(businessName)}</b>${branchHtml} приглашает вас в команду.</p><p>Откройте личный кабинет Kezek, чтобы принять или отклонить приглашение.</p><p><a href="${origin}/cabinet">Открыть личный кабинет</a></p>`,
+    });
+}
