@@ -7,6 +7,7 @@ import { loadDictionary, loadedDictionary, rememberDictionary, russianDictionary
 
 import { getLocaleFromCookie, setLocaleInCookie } from '@/lib/cookies';
 import { logWarn } from '@/lib/log';
+import { savePreferredLocale } from '@/lib/preferredLocaleSync';
 
 type Locale = 'ky' | 'ru' | 'en';
 
@@ -85,6 +86,8 @@ function createLocaleStore(fallback: Locale) {
     };
     const setLocale = (next: Locale) => {
         persistLocale(next);
+        // The signed-in user's notifications follow the site language (FE-10).
+        savePreferredLocale(next);
         transientLocale = readClientLocale(fallback) === next ? null : next;
         window.dispatchEvent(new CustomEvent(LOCALE_CHANGED, { detail: next }));
     };

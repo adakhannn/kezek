@@ -1,3 +1,4 @@
+import { notificationLocale } from './notificationText';
 import type { EmailRecipient, ParticipantData } from './types';
 import { normalizeEmails } from './utils';
 
@@ -20,6 +21,7 @@ export function buildEmailRecipients(
                     name: clientData.name,
                     role: 'client',
                     withIcs: true,
+                    locale: notificationLocale(clientData.locale),
                 });
             }
         }
@@ -34,6 +36,7 @@ export function buildEmailRecipients(
                     email,
                     name: staffData.name,
                     role: 'staff',
+                    locale: notificationLocale(staffData.locale),
                 });
             }
         }
@@ -48,6 +51,7 @@ export function buildEmailRecipients(
                     email,
                     name: ownerData.name,
                     role: 'owner',
+                    locale: notificationLocale(ownerData.locale),
                 });
             }
         }
@@ -63,7 +67,8 @@ export function buildEmailRecipients(
             if (ownerEmailSet.has(emNormalized)) {
                 continue;
             }
-            recipients.push({ email: em, name: null, role: 'admin' });
+            // A business notification address has no profile, so no stored language: Russian.
+            recipients.push({ email: em, name: null, role: 'admin', locale: 'ru' });
         }
 
         // Дедуп по email (оставляем первый встретившийся вариант)

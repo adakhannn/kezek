@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+import { getLocaleFromCookie } from '@/lib/cookies';
+import { syncPreferredLocaleForUser } from '@/lib/preferredLocaleSync';
 import { supabase } from '@/lib/supabaseClient';
 
 /**
@@ -37,12 +39,15 @@ export function AuthStatusUpdater() {
             if (event === 'INITIAL_SESSION' || !initialized) {
                 initialized = true;
                 lastUserId = currentUserId;
+                // Booking notifications follow the site language of the signed-in user (FE-10).
+                syncPreferredLocaleForUser(currentUserId, getLocaleFromCookie());
                 return;
             }
 
             if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
                 if (lastUserId !== currentUserId) {
                     lastUserId = currentUserId;
+                    syncPreferredLocaleForUser(currentUserId, getLocaleFromCookie());
                     queueRefresh();
                 }
                 return;

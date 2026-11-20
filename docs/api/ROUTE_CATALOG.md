@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **184 route-файлов, 227 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **185 route-файлов, 228 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 538 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `9aa217a6d608ee119f8e7326ffd219a2b66b28ba66c953e9ea7815d085022753`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 544 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `741925e60e9a84e1b94f59a481e7e9f2f26b6b38f8ce8b05ee871a8980b1ec6d`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -157,6 +157,7 @@
 | `/api/mobile/businesses` | GET | [route](../../apps/web/src/app/api/mobile/businesses/route.ts) | [runMobileBusinessesHttp](../../apps/web/src/lib/mobileBusinessesHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/notify/ping` | POST | [route](../../apps/web/src/app/api/notify/ping/route.ts) | [runNotifyPingHttp](../../apps/web/src/lib/notifyPingHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
 | `/api/notify` | POST | [route](../../apps/web/src/app/api/notify/route.ts) | [runNotifyHttp](../../apps/web/src/lib/notifyHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
+| `/api/profile/locale` | POST | [route](../../apps/web/src/app/api/profile/locale/route.ts) | [runProfileLocaleHttp](../../apps/web/src/lib/profileLocaleHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/profile/notification-emails` | GET | [route](../../apps/web/src/app/api/profile/notification-emails/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/profile/update` | POST | [route](../../apps/web/src/app/api/profile/update/route.ts) | [runProfileUpdateHttp](../../apps/web/src/lib/profileUpdateHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/public/work-locations` | GET | [route](../../apps/web/src/app/api/public/work-locations/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |

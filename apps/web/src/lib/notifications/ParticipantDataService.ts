@@ -2,6 +2,7 @@
 
 import { type SupabaseClient } from '@supabase/supabase-js';
 
+import { notificationLocale } from './notificationText';
 import type { ParticipantData, BookingRow, StaffRow, BizRow } from './types';
 
 import { logDebug, logError } from '@/lib/log';
@@ -73,7 +74,7 @@ export class ParticipantDataService {
             try {
                 const { data: profile, error: lookupError } = await this.supabase
                     .from('profiles')
-                    .select('phone, whatsapp_phone, full_name, notify_email, notify_whatsapp, whatsapp_verified, telegram_id, notify_telegram, telegram_verified')
+                    .select('phone, whatsapp_phone, full_name, notify_email, notify_whatsapp, whatsapp_verified, telegram_id, notify_telegram, telegram_verified, preferred_locale')
                     .eq('id', booking.client_id)
                     .maybeSingle<{
                         phone: string | null;
@@ -85,10 +86,12 @@ export class ParticipantDataService {
                         telegram_id: number | null;
                         notify_telegram: boolean | null;
                         telegram_verified: boolean | null;
+                        preferred_locale: string | null;
                     }>();
                 this.assertLookup(lookupError);
                 
                 if (profile) {
+                    data.locale = notificationLocale(profile.preferred_locale);
                     if (!data.phone && profile.phone) {
                         data.phone = profile.phone;
                         logDebug('ParticipantDataService', 'Got client phone from profiles', { phone: data.phone });
@@ -222,7 +225,7 @@ export class ParticipantDataService {
         try {
             const { data: profile, error: lookupError } = await this.admin
                 .from('profiles')
-                .select('full_name, notify_email, telegram_id, notify_telegram, telegram_verified')
+                .select('full_name, notify_email, telegram_id, notify_telegram, telegram_verified, preferred_locale')
                 .eq('id', biz.owner_id)
                 .maybeSingle<{
                     full_name: string | null;
@@ -230,10 +233,12 @@ export class ParticipantDataService {
                     telegram_id: number | null;
                     notify_telegram: boolean | null;
                     telegram_verified: boolean | null;
+                    preferred_locale: string | null;
                 }>();
                 this.assertLookup(lookupError);
 
             if (profile) {
+                data.locale = notificationLocale(profile.preferred_locale);
                 if (!data.name && profile.full_name) {
                     data.name = profile.full_name;
                 }
@@ -279,7 +284,7 @@ export class ParticipantDataService {
                 logDebug('ParticipantDataService', 'Getting staff telegram data', { user_id: staff.user_id });
                 const { data: profile, error: lookupError } = await this.admin
                     .from('profiles')
-                    .select('notify_email, whatsapp_phone, whatsapp_verified, notify_whatsapp, telegram_id, notify_telegram, telegram_verified')
+                    .select('notify_email, whatsapp_phone, whatsapp_verified, notify_whatsapp, telegram_id, notify_telegram, telegram_verified, preferred_locale')
                     .eq('id', staff.user_id)
                     .maybeSingle<{ 
                         notify_email: boolean | null;
@@ -289,10 +294,12 @@ export class ParticipantDataService {
                         telegram_id: number | null;
                         notify_telegram: boolean | null;
                         telegram_verified: boolean | null;
+                        preferred_locale: string | null;
                     }>();
                 this.assertLookup(lookupError);
                 
                 if (profile) {
+                    data.locale = notificationLocale(profile.preferred_locale);
                     data.notifyEmail = profile.notify_email ?? true;
                     data.whatsappPhone = profile.whatsapp_phone ?? data.whatsappPhone;
                     data.whatsappVerified = profile.whatsapp_verified ?? false;

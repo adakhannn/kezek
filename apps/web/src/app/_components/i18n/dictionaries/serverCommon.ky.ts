@@ -18,4 +18,5 @@ export const serverCommonKy = {
     'server.common.noManagerAccess': 'Башкаруу кабинетине кирүү мүмкүн эмес',
     'server.common.staffIdMissing': 'Кызматкердин ID көрсөтүлгөн жок',
     'server.common.staffNotFoundOrForbidden': 'Кызматкер табылган жок же кирүү мүмкүн эмес',
+    'server.common.localeInvalid': 'Белгисиз тил: ru, ky же en гана болот',
 } as const;

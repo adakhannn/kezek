@@ -18,4 +18,5 @@ export const serverCommonEn = {
     'server.common.noManagerAccess': 'No access to the management account',
     'server.common.staffIdMissing': 'Staff ID is missing',
     'server.common.staffNotFoundOrForbidden': 'Staff member not found or access denied',
+    'server.common.localeInvalid': 'Unknown language: use ru, ky or en',
 } as const;

@@ -1,5 +1,6 @@
 // apps/web/src/lib/notifications/utils.ts
 
+import { notificationText, type NotificationLocale } from './notificationText';
 import type { RoleKey } from './types';
 
 import { escapeHtml } from '@/lib/htmlEscape';
@@ -29,37 +30,21 @@ export function normalizeEmails(list: (string | null | undefined)[]): string[] {
 /**
  * Формирует приветствие
  */
-export function greet(name?: string | null): string {
-    return name?.trim() ? `Здравствуйте, ${name}!` : `Здравствуйте!`;
+export function greet(name?: string | null, locale: NotificationLocale = 'ru'): string {
+    return name?.trim()
+        ? notificationText(locale, 'server.notifications.greeting', { name })
+        : notificationText(locale, 'server.notifications.greetingNoName');
 }
 
 /**
- * Переводит роль на русский
+ * Название роли получателя
  */
-export function roleRu(role: RoleKey): string {
+export function roleLabel(role: RoleKey, locale: NotificationLocale = 'ru'): string {
     switch (role) {
-        case 'client': return 'Клиент';
-        case 'staff':  return 'Мастер';
-        case 'owner':  return 'Владелец';
-        default:       return 'Администратор';
-    }
-}
-
-/**
- * Переводит статус бронирования на русский
- */
-export function statusRu(status: string): string {
-    switch (status) {
-        case 'hold':
-            return 'Ожидает подтверждения';
-        case 'confirmed':
-            return 'Подтверждена';
-        case 'paid':
-            return 'Выполнена';
-        case 'cancelled':
-            return 'Отменена';
-        default:
-            return status;
+        case 'client': return notificationText(locale, 'server.notifications.roleClient');
+        case 'staff':  return notificationText(locale, 'server.notifications.master');
+        case 'owner':  return notificationText(locale, 'server.notifications.roleOwner');
+        default:       return notificationText(locale, 'server.notifications.roleAdmin');
     }
 }
 
@@ -69,10 +54,11 @@ export function statusRu(status: string): string {
 export function buildHtmlPersonal(
     baseHtml: string,
     name: string | null | undefined,
-    role: RoleKey
+    role: RoleKey,
+    locale: NotificationLocale = 'ru',
 ): string {
     const header =
-        `<p style="margin:0 0 12px 0">${escapeHtml(greet(name))} <i>(${escapeHtml(roleRu(role))})</i></p>`;
+        `<p style="margin:0 0 12px 0">${escapeHtml(greet(name, locale))} <i>(${escapeHtml(roleLabel(role, locale))})</i></p>`;
 
     // Вставляем приветствие внутрь первого <div ...>, после закрывающего символа '>'
     const idx = baseHtml.indexOf('>');

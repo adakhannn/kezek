@@ -1,5 +1,7 @@
 // apps/web/src/lib/notifications/types.ts
 
+import type { NotificationLocale } from './notificationText';
+
 export type NotifyType = 'hold' | 'confirm' | 'cancel';
 
 export type RoleKey = 'client' | 'staff' | 'owner' | 'admin';
@@ -11,6 +13,8 @@ export interface NotifyRequest {
 
 export interface ServiceRow {
     name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
     duration_min: number;
     price_from: number | null;
     price_to: number | null;
@@ -67,6 +71,8 @@ export interface ParticipantData {
     notifyTelegram: boolean;
     whatsappVerified: boolean;
     telegramVerified: boolean;
+    /** profiles.preferred_locale of the participant; absent or null means Russian (FE-10). */
+    locale?: NotificationLocale | null;
 }
 
 export interface EmailRecipient {
@@ -74,6 +80,8 @@ export interface EmailRecipient {
     name: string | null;
     role: RoleKey;
     withIcs?: boolean;
+    /** Language of this recipient's message; absent means Russian. */
+    locale?: NotificationLocale;
 }
 
 export interface NotificationResult {

@@ -25,6 +25,7 @@
 | `POST /api/reviews/create` | Cookie-сессия, собственная бронь | `normal` |
 | `POST /api/reviews/update` | Cookie-сессия, собственный отзыв | `normal` |
 | `POST /api/profile/update` | Cookie-сессия | `normal` |
+| `POST /api/profile/locale` | Cookie-сессия | `normal` |
 | `POST /api/user/update-phone` | Cookie-сессия | `auth` |
 
 ### Сессии и контекст бизнеса
@@ -423,6 +424,23 @@ Browser сохраняет только request ID под хешем actor/actio
 Успех: `{"ok":true}`; объекта пользователя в ответе нет. Сначала upsert в `profiles`, затем при необходимости RPC email preferences, затем `auth.updateUser` для metadata `full_name`. При наличии числового/преобразуемого `telegram_id` в прежних user metadata он также копируется в profile и выставляется `telegram_verified: true`; при этом `notify_telegram` ранее вычислен по состоянию profile до upsert.
 
 Ошибки: `401 / auth`; profile upsert или email-preferences RPC — `400 / validation`; `429`; ошибки JSON/неподходящих типов и исключения — через общий handler. Возвращаемая ошибка `auth.updateUser` не проверяется, поэтому успешный ответ не доказывает синхронизацию metadata. Ошибка email RPC возможна после сохранения profile; общей транзакции нет. Здесь меняется `profiles.phone`, а не Auth phone, и не выполняется OTP-подтверждение.
+
+<!-- api-contract: POST /api/profile/locale -->
+### POST `/api/profile/locale`
+
+Источники: [route](../../apps/web/src/app/api/profile/locale/route.ts) → [HTTP](../../apps/web/src/lib/profileLocaleHttpService.ts); [миграция](../../supabase/migrations/20261120120000_profile_preferred_locale.sql). Проверено чтением исходника и unit-тестом маршрута.
+
+Доступ: cookie-сессия (`auth.getUser()`); limiter `normal`. Сохраняет язык сайта текущего пользователя в `profiles.preferred_locale` — язык его уведомлений о бронированиях (FE-10). Тело — только язык:
+
+```json
+{"locale": "ky"}
+```
+
+`locale` — `ru`, `ky` или `en`. Профиль определяет только сессия; другие поля тела не читаются. Service-role клиент обновляет одну колонку строки `profiles.id = user.id`; при отсутствии строки профиля ничего не создаётся и ответ остаётся успешным.
+
+Успех: `{"ok":true,"data":{"locale":"ky"}}`. Ошибки: `401 / auth` без сессии; `400 / validation` при неверном JSON или другом языке; `500 / internal` при ошибке update; `429`.
+
+Вызывающие: [LanguageProvider](../../apps/web/src/app/_components/i18n/LanguageProvider.tsx) при выборе языка и [AuthStatusUpdater](../../apps/web/src/app/_components/AuthStatusWrapper.tsx) при загрузке и после входа, через [preferredLocaleSync](../../apps/web/src/lib/preferredLocaleSync.ts): fire-and-forget, 401 игнорируется, повтор для того же пользователя и языка отсекает маркер `localStorage`. Мобильное приложение этот маршрут не вызывает.
 
 <!-- api-contract: POST /api/user/update-phone -->
 ### POST `/api/user/update-phone`

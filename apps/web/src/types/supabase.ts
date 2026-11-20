@@ -2137,6 +2137,7 @@ export type Database = {
                     "notify_telegram": boolean | null;
                     "notify_whatsapp": boolean | null;
                     "phone": string | null;
+                    "preferred_locale": string | null;
                     "telegram_id": number | null;
                     "telegram_photo_url": string | null;
                     "telegram_username": string | null;
@@ -2155,6 +2156,7 @@ export type Database = {
                     "notify_telegram"?: boolean | null;
                     "notify_whatsapp"?: boolean | null;
                     "phone"?: string | null;
+                    "preferred_locale"?: string | null;
                     "telegram_id"?: number | null;
                     "telegram_photo_url"?: string | null;
                     "telegram_username"?: string | null;
@@ -2172,6 +2174,7 @@ export type Database = {
                     "notify_telegram"?: boolean | null;
                     "notify_whatsapp"?: boolean | null;
                     "phone"?: string | null;
+                    "preferred_locale"?: string | null;
                     "telegram_id"?: number | null;
                     "telegram_photo_url"?: string | null;
                     "telegram_username"?: string | null;

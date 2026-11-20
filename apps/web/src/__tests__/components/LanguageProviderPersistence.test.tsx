@@ -126,6 +126,8 @@ it('preserves a real profile draft when the provider changes locale', async () =
     (supabase.auth.getUser as jest.Mock).mockResolvedValue({ data: { user: { id: 'unit-user', identities: [] } }, error: null });
     (supabase.from as jest.Mock).mockReturnValue({ select: () => ({ eq: () => ({ maybeSingle: profileRead }) }) });
     global.fetch = jest.fn(async (url: unknown) => {
+        // The language choice is saved as the notification language (FE-10).
+        if (url === '/api/profile/locale') return { ok: true, json: async () => ({ ok: true }) };
         if (url !== '/api/profile/notification-emails') throw new Error('Unexpected request');
         return { ok: true, json: async () => ({ ok: true, data: [] }) };
     }) as jest.Mock;
@@ -136,5 +138,7 @@ it('preserves a real profile draft when the provider changes locale', async () =
     expect(current()).toBe('en');
     expect(screen.getByDisplayValue('UNIT DRAFT')).toBeTruthy();
     expect(profileRead).toHaveBeenCalledTimes(1);
-    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const urls = (global.fetch as jest.Mock).mock.calls.map(([url]) => url);
+    expect(urls.filter(url => url === '/api/profile/notification-emails')).toHaveLength(1);
+    expect(urls.filter(url => url === '/api/profile/locale')).toHaveLength(1);
 });

@@ -18,4 +18,5 @@ export const serverCommonRu = {
     'server.common.noManagerAccess': 'Нет доступа к кабинету управления',
     'server.common.staffIdMissing': 'Отсутствует ID сотрудника',
     'server.common.staffNotFoundOrForbidden': 'Сотрудник не найден или доступ запрещен',
+    'server.common.localeInvalid': 'Неизвестный язык: допустимы ru, ky и en',
 } as const;

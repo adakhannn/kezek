@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 212,
+  "x-explicit-operation-count": 213,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -4159,6 +4159,25 @@
         "x-next-route": "/api/notify/ping",
         "x-source-file": "apps/web/src/app/api/notify/ping/route.ts",
         "x-manual-contract": "docs/api/AUTH_AND_INTEGRATIONS.md"
+      }
+    },
+    "/api/profile/locale": {
+      "post": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BOOKING_AND_CATALOG.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/profile/locale",
+        "x-source-file": "apps/web/src/app/api/profile/locale/route.ts",
+        "x-manual-contract": "docs/api/BOOKING_AND_CATALOG.md"
       }
     },
     "/api/profile/notification-emails": {

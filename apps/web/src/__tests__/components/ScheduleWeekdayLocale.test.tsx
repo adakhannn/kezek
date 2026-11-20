@@ -36,7 +36,8 @@ describe('schedule weekday locale', () => {
         }
         fireEvent.click(screen.getByRole('button', { name: 'ru', exact: true }));
         await screen.findByRole('heading', { name: 'понедельник — Выходной' });
-        expect((global.fetch as jest.Mock).mock.calls.every(([, options]) => !options.method)).toBe(true);
+        // The only write is the language choice saved for notifications (FE-10).
+        expect((global.fetch as jest.Mock).mock.calls.filter(([url]) => url !== '/api/profile/locale').every(([, options]) => !options.method)).toBe(true);
     });
 
     it('updates the loaded-draft status on a locale switch without discarding times or publishing', async () => {
@@ -58,6 +59,7 @@ describe('schedule weekday locale', () => {
         await screen.findByText('Учурдагы план долбоорго жүктөлдү. Өзгөртүүлөр жарыялана элек.');
         expect((screen.getByLabelText('Жумуш убактысы: Башталышы 1') as HTMLInputElement).value).toBe('09:00');
         expect((screen.getByLabelText('Жумуш убактысы: Аякташы 1') as HTMLInputElement).value).toBe('18:00');
-        expect((global.fetch as jest.Mock).mock.calls.every(([, options]) => !options.method)).toBe(true);
+        // The only write is the language choice saved for notifications (FE-10).
+        expect((global.fetch as jest.Mock).mock.calls.filter(([url]) => url !== '/api/profile/locale').every(([, options]) => !options.method)).toBe(true);
     });
 });

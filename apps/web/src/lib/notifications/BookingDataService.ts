@@ -26,7 +26,7 @@ export class BookingDataService {
             .from('bookings')
             .select(`
                 id, notification_revision, status, start_at, end_at, created_at, client_id, client_phone, client_name, client_email,
-                services:services!bookings_service_id_fkey ( name_ru, duration_min, price_from, price_to ),
+                services:services!bookings_service_id_fkey ( name_ru, name_ky, name_en, duration_min, price_from, price_to ),
                 staff:staff!bookings_staff_id_fkey ( full_name, email, phone, user_id ),
                 biz:businesses!bookings_biz_id_fkey ( name, tz, email_notify_to, slug, address, phones, owner_id ),
                 branches:branches!bookings_branch_id_fkey ( name, address )
