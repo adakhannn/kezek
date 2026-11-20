@@ -139,7 +139,8 @@ export async function runStaffCreateFromUser({
             .insert({
                 biz_id: bizId,
                 branch_id: body.branch_id,
-                full_name: fullName,
+                // The profile name is the one the owner saw in the search.
+                full_name: (await readProfileName(admin, user.id)) ?? fullName,
                 is_active: body.is_active ?? true,
                 user_id: null,
             })
@@ -313,4 +314,16 @@ async function initializeSchedule({
     }
 
     return scheduleResult;
+}
+
+/** The profile name, which the user search shows the owner; null when it is empty or unreadable. */
+async function readProfileName(admin: unknown, userId: string): Promise<string | null> {
+    try {
+        const client = admin as { from(table: 'profiles'): { select(columns: string): { eq(column: string, value: string): { maybeSingle(): PromiseLike<{ data: { full_name?: string | null } | null }> } } } };
+        const { data } = await client.from('profiles').select('full_name').eq('id', userId).maybeSingle();
+        const name = data?.full_name?.trim();
+        return name ? name : null;
+    } catch {
+        return null;
+    }
 }

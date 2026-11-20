@@ -56,7 +56,7 @@ export const staffKy = {
     'staff.cabinet.id': 'ID:',
     'staff.cabinet.services': 'Менин кызматтарым',
     'staff.cabinet.services.duration': 'мин',
-    'staff.cabinet.services.empty': 'Назначенные кызматтар жок',
+    'staff.cabinet.services.empty': 'Сизге кызматтар бекитилген эмес',
     'staff.cabinet.services.priceCurrency': 'сом',
     'staff.cabinet.services.priceFrom': 'от',
     'staff.cabinet.services.priceRange': '-',
