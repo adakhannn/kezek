@@ -31,7 +31,7 @@ export const dashboardKy = {
     'dashboard.kpi.openCalendar': 'Календарьды ачуу',
     'dashboard.nav.bookings': 'Брондоолор',
     'dashboard.nav.branches': 'Филиалдар',
-    'dashboard.nav.finance': 'Финансы',
+    'dashboard.nav.finance': 'Каржы',
     'dashboard.nav.analytics': 'Аналитика',
     'dashboard.nav.home': 'Башкы',
     'dashboard.nav.services': 'Кызматтар',
