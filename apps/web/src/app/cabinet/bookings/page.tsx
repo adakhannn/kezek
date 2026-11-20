@@ -1,15 +1,23 @@
 // apps/web/src/app/cabinet/bookings/page.tsx
+
 import { formatInTimeZone } from 'date-fns-tz';
+import type { Metadata } from 'next';
 import type { ComponentProps } from 'react';
 
 import ClientCabinet from '../ClientCabinet';
 
 import BookingsPageClient from './BookingsPageClient';
 
+import { getT } from '@/app/_components/i18n/server';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { TZ } from '@/lib/time';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getT();
+    return { title: t('cabinet.meta.title', 'Kezek — личный кабинет') };
+}
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
