@@ -67,7 +67,7 @@ function MobileHeaderMenuContent({ account }: MobileHeaderMenuProps) {
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-[120] w-[min(22rem,calc(100vw-1.5rem))] rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-lg)] md:fixed md:left-1/2 md:right-auto md:top-36 md:w-[min(44rem,calc(100vw-2rem))] md:-translate-x-1/2 md:p-5 lg:hidden">
+                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-[120] w-[min(22rem,calc(100vw-1.5rem))] rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-card)] max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain p-4 shadow-[var(--shadow-lg)] md:fixed md:left-1/2 md:right-auto md:top-36 md:w-[min(44rem,calc(100vw-2rem))] md:-translate-x-1/2 md:max-h-[calc(100dvh-10rem)] md:p-5 lg:hidden">
                         <div className="space-y-4 md:grid md:grid-cols-3 md:items-start md:gap-4 md:space-y-0">
                             <section className="space-y-2 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-emphasis)]/45 p-3">
                                 <p className="type-caption px-1 text-[var(--text-muted)]">
