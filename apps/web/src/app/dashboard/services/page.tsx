@@ -1,4 +1,3 @@
-import { getT, getServerLocale } from '@/app/_components/i18n/server';
 import ServicesListClient from '@/app/dashboard/services/ServicesListClient';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -56,13 +55,8 @@ export default async function ServicesListPage({
     }
 
     if (error) {
-        const locale = await getServerLocale();
-        const t = getT(locale);
-        return (
-            <main className="p-6 text-red-600">
-                {t('dashboard.services.error', 'Ошибка')}: {error.message}
-            </main>
-        );
+        logError('DashboardServicesPage', 'Failed to load services', { error });
+        return <LoadFailedNotice page />;
     }
 
     // Группируем услуги по названию (убираем дубли)

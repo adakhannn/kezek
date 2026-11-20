@@ -242,4 +242,5 @@ export const dashboardEn = {
     'dashboard.visitPackages.actions': 'Actions',
     'dashboard.confirmDialog.confirm': 'Confirm',
     'dashboard.filterPanel.searchPlaceholder': 'Search...',
+    'dashboard.meta.title': 'Kezek — business account',
 } as const;

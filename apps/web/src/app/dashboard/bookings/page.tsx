@@ -145,11 +145,6 @@ export default async function Page() {
                         'Произошла ошибка при загрузке броней. Пожалуйста, попробуйте обновить страницу.'
                     )}
                 </p>
-                {e instanceof Error && (
-                    <p className="text-xs text-gray-500 mt-2">
-                        {t('dashboard.bookings.error.details', 'Детали')}: {e.message}
-                    </p>
-                )}
             </main>
         );
     }

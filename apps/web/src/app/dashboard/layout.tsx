@@ -1,14 +1,21 @@
 // apps/web/src/app/dashboard/layout.tsx
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { DashboardLayoutClient } from './components/DashboardLayoutClient';
 import { MobileSidebar } from './components/MobileSidebar';
 
+import { getT } from '@/app/_components/i18n/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { getBizContextForManagers, BizAccessError } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getT();
+    return { title: t('dashboard.meta.title', 'Kezek — кабинет бизнеса') };
+}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     let bizId: string;

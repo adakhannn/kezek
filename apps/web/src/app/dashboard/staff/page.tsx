@@ -1,8 +1,8 @@
 import StaffPageClient from './StaffPageClient';
 
-import { AlertBanner } from '@/components/ui/AlertBanner';
+import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logWarn } from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { loadStaffApplicationSummary } from '@/lib/staffApplicationSummary';
 import { listPendingInvitationStaffIds } from '@/lib/staffInvitationService';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -42,11 +42,8 @@ export default async function Page({
         .returns<Row[]>();
 
     if (error) {
-        return (
-            <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
-                <AlertBanner variant="danger" message={error.message} />
-            </main>
-        );
+        logError('DashboardStaffPage', 'Failed to load staff', { bizId, error });
+        return <LoadFailedNotice page />;
     }
 
     // Cards waiting for the invited person (API-06). The table is service role only; the manager's

@@ -601,4 +601,5 @@ export const staffKy = {
     'staff.finance.permissions.openUnavailable': 'Сменаны ачуу мүмкүн эмес',
     'staff.finance.write.noResponse': 'Сервердин жообу алынган жок. Кийинки жазуудан мурун сменаны текшериңиз.',
     'staff.finance.write.unconfirmed': 'Каржылык операцияны ырастоо мүмкүн болгон жок.',
+    'staff.meta.title': 'Kezek — кызматкердин кабинети',
 } as const;

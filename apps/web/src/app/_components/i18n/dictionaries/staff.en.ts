@@ -601,4 +601,5 @@ export const staffEn = {
     'staff.finance.permissions.openUnavailable': 'Opening the shift is unavailable',
     'staff.finance.write.noResponse': 'No response from the server. Check the shift before the next entry.',
     'staff.finance.write.unconfirmed': 'Could not confirm the financial operation.',
+    'staff.meta.title': 'Kezek — staff account',
 } as const;

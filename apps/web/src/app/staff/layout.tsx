@@ -1,9 +1,12 @@
+import type { Metadata } from 'next';
+
 // apps/web/src/app/staff/layout.tsx
 
 import { StaffBusinessChooser } from './StaffBusinessChooser';
 import StaffLayoutClient from './StaffLayoutClient';
 
 import { ErrorDisplay, type ErrorDisplayProps } from '@/app/_components/ErrorDisplay';
+import { getT } from '@/app/_components/i18n/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { getStaffContext, BizAccessError, StaffSelectionRequiredError } from '@/lib/authBiz';
 import type { StaffOptionLabel } from '@/lib/staffSelection';
@@ -11,6 +14,11 @@ import { loadStaffOptionLabels } from '@/lib/staffSelectionLabels';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getT();
+    return { title: t('staff.meta.title', 'Kezek — кабинет сотрудника') };
+}
 
 type LayoutState =
     | { staffId: string; staffOptions: StaffOptionLabel[] }

@@ -1,3 +1,4 @@
+import { isUuid } from '@shared-client/validation';
 import { notFound } from 'next/navigation';
 
 import StaffDetailPageClient from './StaffDetailPageClient';
@@ -19,6 +20,7 @@ export default async function Page({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
+    if (!isUuid(id)) return notFound();
     const { supabase, bizId } = await getBizContextForManagers();
 
     // Грузим сотрудника, список филиалов и конфиг рейтинга
@@ -53,13 +55,15 @@ export default async function Page({
         return notFound();
     }
     if (eStaff) {
-        return <main className="p-6 text-red-600">{eStaff.message}</main>;
+        logError('StaffDetailPage', 'Failed to load the staff card', { staffId: id, bizId, error: eStaff });
+        return <LoadFailedNotice page />;
     }
     if (!staff || String(staff.biz_id) !== String(bizId)) {
         return notFound();
     }
     if (eBr) {
-        return <main className="p-6 text-red-600">{eBr.message}</main>;
+        logError('StaffDetailPage', 'Failed to load branches', { bizId, error: eBr });
+        return <LoadFailedNotice page />;
     }
 
     // Service client для обхода RLS при загрузке отзывов (опционально).

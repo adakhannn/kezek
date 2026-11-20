@@ -601,4 +601,5 @@ export const staffRu = {
     'staff.finance.permissions.openUnavailable': 'Открытие смены недоступно',
     'staff.finance.write.noResponse': 'Ответ сервера не получен. Проверьте смену перед следующей записью.',
     'staff.finance.write.unconfirmed': 'Не удалось подтвердить финансовую операцию.',
+    'staff.meta.title': 'Kezek — кабинет сотрудника',
 } as const;

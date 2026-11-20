@@ -242,4 +242,5 @@ export const dashboardRu = {
     'dashboard.visitPackages.actions': 'Действия',
     'dashboard.confirmDialog.confirm': 'Подтвердить',
     'dashboard.filterPanel.searchPlaceholder': 'Поиск...',
+    'dashboard.meta.title': 'Kezek — кабинет бизнеса',
 } as const;
