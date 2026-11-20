@@ -2,7 +2,7 @@ import { isShiftDurationWithinDay } from '@core-domain/finance/guarantee';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { logError } from '@/lib/log';
-import { sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
+import { readNotificationLocales, sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
 import { measurePerformance } from '@/lib/performanceServer';
 import { readShiftCloseSnapshot, shiftCloseTime } from '@/lib/staffShift/closeSnapshot';
 import { closeStaffShiftUseCase } from '@/lib/staffShift/closeUseCase';
@@ -322,10 +322,14 @@ async function queueShiftCloseNotification({
         return;
     }
 
+    // Each letter goes out in its recipient's profiles.preferred_locale (FE-10).
+    const locales = await readNotificationLocales(admin, [staff.user_id, ownerData?.owner_id]);
     sendShiftCloseNotification({
-        staffName: staff.full_name || 'Сотрудник',
+        staffName: staff.full_name || null,
         staffEmail,
+        staffLocale: staff.user_id ? locales.get(staff.user_id) : null,
         ownerEmail,
+        ownerLocale: ownerData?.owner_id ? locales.get(ownerData.owner_id) : null,
         shiftDate: ymd,
         totalAmount: financials.totalAmount,
         masterShare: financials.finalMasterShare,

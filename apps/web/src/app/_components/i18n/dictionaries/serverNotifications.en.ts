@@ -1,7 +1,9 @@
-// Booking notification texts (FE-10): email, Telegram and WhatsApp messages in the recipient's
-// language (profiles.preferred_locale; NULL is ru). The ru values are the exact Russian texts the
+// Notification texts (FE-10): booking, shift-close and role-application/invitation email, Telegram
+// and free-text WhatsApp messages in the recipient's language (profiles.preferred_locale; NULL is
+// ru). The ru values are the exact Russian texts the
 // messages had before, and {placeholders} take the inserted values. Not part of the client bundle:
-// only src/lib/notifications/notificationText.ts imports these.
+// only src/lib/notifications/notificationText.ts imports these. HTML values hold markup, and their
+// {placeholders} take HTML-escaped values.
 export const serverNotificationsEn = {
     'server.notifications.titleHold': 'Slot on hold',
     'server.notifications.titleConfirm': 'Booking confirmed',
@@ -38,4 +40,50 @@ export const serverNotificationsEn = {
     'server.notifications.roleClient': 'Client',
     'server.notifications.roleOwner': 'Owner',
     'server.notifications.roleAdmin': 'Administrator',
+    'server.notifications.shiftSubject': 'Kezek: Shift closed for {date}',
+    'server.notifications.shiftTitle': 'Shift closed',
+    'server.notifications.shiftClosedBy': '{staff} closed the shift for {date}',
+    'server.notifications.shiftDate': 'Shift date',
+    'server.notifications.shiftClients': 'Number of clients',
+    'server.notifications.shiftTurnover': 'Total turnover',
+    'server.notifications.shiftToStaff': 'To the employee',
+    'server.notifications.shiftToBusiness': 'To the business',
+    'server.notifications.shiftHours': 'Hours worked',
+    'server.notifications.shiftGuaranteed': 'Guaranteed pay',
+    'server.notifications.shiftTopup': 'Top-up',
+    'server.notifications.shiftSummary': 'Summary',
+    'server.notifications.shiftDetails': 'Details are available in your Kezek account.',
+    'server.notifications.shiftStaffFallback': 'Employee',
+    'server.notifications.staffApplicantSubject': 'Kezek: your application to “{business}” has been sent',
+    'server.notifications.staffApplicantText': 'Your employee application to “{business}” has been sent. The owner will review it and let you know the decision. Status: {origin}/business/staff-apply',
+    'server.notifications.staffApplicantHtml': '<p>Your employee application to <b>{business}</b> has been sent.</p><p>The owner will review it and let you know the decision.</p><p><a href="{origin}/business/staff-apply">Open the application status</a></p>',
+    'server.notifications.staffOwnerSubject': 'Kezek: new employee application to “{business}”',
+    'server.notifications.staffOwnerText': '{applicant} has applied to join “{business}” as an employee. Open the dashboard to review it: {origin}/dashboard/role-applications',
+    'server.notifications.staffOwnerHtml': '<p><b>{applicant}</b> has applied to join <b>{business}</b> as an employee.</p><p><a href="{origin}/dashboard/role-applications">Review the application</a></p>',
+    'server.notifications.staffApprovedSubject': 'Kezek: your employee application to “{business}” has been approved',
+    'server.notifications.staffApprovedText': 'Your employee application to “{business}” has been approved. Your work dashboard is already active: {origin}/dashboard',
+    'server.notifications.staffApprovedHtml': '<p>Your employee application to <b>{business}</b> has been approved.</p><p>Your work dashboard is already active.</p><p><a href="{origin}/dashboard">Open the work dashboard</a></p>',
+    'server.notifications.businessApplicantSubject': 'Kezek: your application to add “{business}” has been sent',
+    'server.notifications.businessApplicantText': 'Your application to add the business “{business}” has been sent. We will let you know the decision after review. Status: {origin}/business/apply',
+    'server.notifications.businessApplicantHtml': '<p>Your application to add the business <b>{business}</b> has been sent.</p><p>We will let you know the decision after review.</p><p><a href="{origin}/business/apply">Open the application status</a></p>',
+    'server.notifications.businessAdminSubject': 'Kezek: new application to add “{business}”',
+    'server.notifications.businessAdminText': '{applicant} has applied to add the business “{business}”. Review: {origin}/admin/business-applications',
+    'server.notifications.businessAdminHtml': '<p><b>{applicant}</b> has applied to add the business <b>{business}</b>.</p><p><a href="{origin}/admin/business-applications">Review the application</a></p>',
+    'server.notifications.ownerApplicantSubject': 'Kezek: your owner application for “{business}” has been sent',
+    'server.notifications.ownerApplicantText': 'Your application for the owner role of “{business}” has been sent. We will let you know the decision after review. Status: {origin}/business/owner-apply',
+    'server.notifications.ownerApplicantHtml': '<p>Your application for the owner role of <b>{business}</b> has been sent.</p><p>We will let you know the decision after review.</p><p><a href="{origin}/business/owner-apply">Open the application status</a></p>',
+    'server.notifications.ownerAdminSubject': 'Kezek: new owner application for “{business}”',
+    'server.notifications.ownerAdminText': '{applicant} has applied for the owner role of “{business}”. Review: {origin}/admin/role-applications',
+    'server.notifications.ownerAdminHtml': '<p><b>{applicant}</b> has applied for the owner role of <b>{business}</b>.</p><p><a href="{origin}/admin/role-applications">Review the application</a></p>',
+    'server.notifications.businessApprovedSubject': 'Kezek: “{business}” has been added',
+    'server.notifications.businessApprovedText': 'The application to add “{business}” has been approved. We created the business and gave you owner access. Open the dashboard: {origin}/dashboard',
+    'server.notifications.businessApprovedHtml': '<p>The application to add <b>{business}</b> has been approved.</p><p>We created the business and gave you owner access.</p><p><a href="{origin}/dashboard">Open the business dashboard</a></p>',
+    'server.notifications.ownerApprovedSubject': 'Kezek: owner access to “{business}” is active',
+    'server.notifications.ownerApprovedText': 'Your application for the owner role of “{business}” has been approved. Access to the business dashboard is already active: {origin}/dashboard',
+    'server.notifications.ownerApprovedHtml': '<p>Your application for the owner role of <b>{business}</b> has been approved.</p><p>Access to the business dashboard is already active.</p><p><a href="{origin}/dashboard">Open the business dashboard</a></p>',
+    'server.notifications.invitationSubject': 'Kezek: invitation to the “{business}” team',
+    'server.notifications.invitationText': '“{business}”{branch} invites you to join the team. Open your Kezek account to accept or decline the invitation: {origin}/cabinet',
+    'server.notifications.invitationHtml': '<p><b>{business}</b>{branch} invites you to join the team.</p><p>Open your Kezek account to accept or decline the invitation.</p><p><a href="{origin}/cabinet">Open your account</a></p>',
+    'server.notifications.invitationBranch': ' (branch “{branch}”)',
+    'server.notifications.invitationBranchHtml': ' (branch <b>{branch}</b>)',
 } as const;

@@ -372,7 +372,7 @@ Save передаёт все позиции одним RPC `save_staff_shift_com
 
 #### Уведомление о новом приглашении
 
-Сверено по исходникам 20 ноября 2026, unit-тесты с моками отправителей. Новое приглашение (не переиспользованное ожидающее и не созданное параллельным запросом) из `create-from-user` и `create` сообщается приглашённому: [notifyStaffInvitationCreated](../../apps/web/src/lib/businessRoleApplicationNotificationService.ts) отправляет русский текст ««Бизнес» (филиал «…») приглашает вас в команду…» со ссылкой `{origin}/cabinet` по email и Telegram согласно настройкам профиля. WhatsApp не используется: подходящего утверждённого шаблона нет. Названия бизнеса и филиала (филиал — с фильтром `biz_id`) читает [staffInvitationNotification](../../apps/web/src/lib/staffInvitationNotification.ts); любой сбой поиска или доставки только логируется (`logWarn`) и не меняет ответ создания.
+Сверено по исходникам 21 ноября 2026, unit-тесты с моками отправителей. Новое приглашение (не переиспользованное ожидающее и не созданное параллельным запросом) из `create-from-user` и `create` сообщается приглашённому: [notifyStaffInvitationCreated](../../apps/web/src/lib/businessRoleApplicationNotificationService.ts) отправляет текст на `profiles.preferred_locale` приглашённого (`NULL` — русский ««Бизнес» (филиал «…») приглашает вас в команду…», FE-10) со ссылкой `{origin}/cabinet` по email и Telegram согласно настройкам профиля. WhatsApp не используется: подходящего утверждённого шаблона нет. Названия бизнеса и филиала (филиал — с фильтром `biz_id`) читает [staffInvitationNotification](../../apps/web/src/lib/staffInvitationNotification.ts); любой сбой поиска или доставки только логируется (`logWarn`) и не меняет ответ создания.
 
 #### POST `/api/staff/[id]/invitation/cancel`
 

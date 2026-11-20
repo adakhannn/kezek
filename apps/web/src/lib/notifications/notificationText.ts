@@ -1,5 +1,6 @@
 /**
- * Booking notification texts in the recipient's language (FE-10).
+ * Notification texts in the recipient's language (FE-10): booking, shift-close and
+ * role-application/invitation messages.
  *
  * The recipient's language is profiles.preferred_locale, saved by POST /api/profile/locale when a
  * signed-in user picks a language on the site. NULL, an unknown value and recipients without a
@@ -10,9 +11,13 @@ import { formatInTimeZone } from 'date-fns-tz';
 
 import type { NotifyType } from './types';
 
+import { financeEn } from '@/app/_components/i18n/dictionaries/finance.en';
+import { financeKy } from '@/app/_components/i18n/dictionaries/finance.ky';
+import { financeRu } from '@/app/_components/i18n/dictionaries/finance.ru';
 import { serverNotificationsEn } from '@/app/_components/i18n/dictionaries/serverNotifications.en';
 import { serverNotificationsKy } from '@/app/_components/i18n/dictionaries/serverNotifications.ky';
 import { serverNotificationsRu } from '@/app/_components/i18n/dictionaries/serverNotifications.ru';
+import { formatKyDate } from '@/lib/kyDateFormat';
 
 export type NotificationLocale = 'ru' | 'ky' | 'en';
 
@@ -78,6 +83,27 @@ const DATE_TIME_FORMAT: Record<NotificationLocale, string> = {
 /** Date and time of `iso` in the business timezone. */
 export function formatNotificationDateTime(iso: string, timezone: string, locale: NotificationLocale): string {
     return formatInTimeZone(new Date(iso), timezone, DATE_TIME_FORMAT[locale]);
+}
+
+/**
+ * A calendar date (shift date) in `timezone`: dd.MM.yyyy in Russian, the same numeric date in Kyrgyz
+ * through kyDateFormat (never Intl 'ky-KG', which many runtimes lack), "20 Nov 2026" in English.
+ */
+export function formatNotificationDate(value: string, timezone: string, locale: NotificationLocale): string {
+    const date = new Date(value);
+    if (locale === 'ky') return formatKyDate(date, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: timezone });
+    return formatInTimeZone(date, timezone, locale === 'en' ? 'd MMM yyyy' : 'dd.MM.yyyy');
+}
+
+const MONEY: Record<NotificationLocale, string> = {
+    ru: financeRu['finance.money'],
+    ky: financeKy['finance.money'],
+    en: financeEn['finance.money'],
+};
+
+/** An amount with two decimals in the finance.money style of `locale` ("1500.00 сом", "1500.00 som"). */
+export function formatNotificationMoney(amount: number, locale: NotificationLocale): string {
+    return MONEY[locale].replace('{amount}', amount.toFixed(2));
 }
 
 /** Time of `iso` in the business timezone. */

@@ -4,7 +4,8 @@ import { runDashboardStaffShiftClose } from '@/lib/dashboardStaffShiftCloseServi
 
 jest.mock('@/lib/performanceServer', () => ({ measurePerformance: (_name: string, fn: () => unknown) => fn() }));
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logDebug: jest.fn() }));
-jest.mock('@/lib/notifications/shiftNotifications', () => ({ sendShiftCloseNotification: jest.fn() }));
+jest.mock('@/lib/notifications/shiftNotifications', () => ({ sendShiftCloseNotification: jest.fn(), readNotificationLocales: jest.fn() }));
+const { readNotificationLocales, sendShiftCloseNotification } = jest.requireMock('@/lib/notifications/shiftNotifications');
 
 const itemId = '9c8a0a7f-6fab-4708-b204-0fb9fbdeb25d';
 const row = {id:itemId,service_amount:301,consumables_amount:49,booking_id:null};
@@ -93,4 +94,20 @@ test('allows the matching legacy snapshot without IDs but still never rewrites r
     expect(await close(admin,[{...submitted,id:undefined}])).toMatchObject({ok:true});
     expect(itemQuery.delete).not.toHaveBeenCalled();
     expect(itemQuery.insert).not.toHaveBeenCalled();
+});
+
+test('the shift-close letter gets the employee and owner preferred_locale (FE-10)',async () => {
+    const {admin} = setup();
+    const base = admin.from.getMockImplementation()!;
+    admin.from.mockImplementation((table: string) => table==='staff'
+        ? query({data:{id:'staff-test',biz_id:'biz-test',percent_master:60,percent_salon:40,user_id:'staff-user',full_name:null}})
+        : table==='businesses' ? query({data:{owner_id:'owner-user'}}) : base(table));
+    admin.auth.admin.getUserById.mockImplementation(async (id: string) => ({data:{user:{email:`${id}@example.invalid`}}}));
+    readNotificationLocales.mockResolvedValue(new Map([['staff-user','ky'],['owner-user','en']]));
+    sendShiftCloseNotification.mockResolvedValue(undefined);
+    expect(await close(admin,[submitted])).toMatchObject({ok:true});
+    expect(readNotificationLocales).toHaveBeenCalledWith(admin,['staff-user','owner-user']);
+    expect(sendShiftCloseNotification).toHaveBeenCalledWith(expect.objectContaining({
+        staffName:null,staffEmail:'staff-user@example.invalid',staffLocale:'ky',ownerEmail:'owner-user@example.invalid',ownerLocale:'en',
+    }));
 });

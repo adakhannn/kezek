@@ -1,17 +1,35 @@
 /**
  * Уведомления о закрытии смены
+ *
+ * E-mail only. Each recipient (the employee and the business owner) gets the letter in their own
+ * profiles.preferred_locale (FE-10); NULL, an unknown value or a missing profile means Russian.
  */
 
-import { formatInTimeZone } from 'date-fns-tz';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import {
+    formatNotificationDate,
+    formatNotificationMoney,
+    notificationLocale,
+    notificationText,
+    type NotificationLocale,
+    type NotificationTextKey,
+} from './notificationText';
 
 import { getResendApiKey, getEmailFrom } from '@/lib/env';
+import { escapeHtml } from '@/lib/htmlEscape';
 import { logDebug, logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
-type ShiftCloseNotificationData = {
-    staffName: string;
+export type ShiftCloseNotificationData = {
+    /** The employee's name; null or empty shows the word "employee" in the recipient's language. */
+    staffName: string | null;
     staffEmail: string;
+    /** profiles.preferred_locale of the employee. */
+    staffLocale?: string | null;
     ownerEmail?: string | null;
+    /** profiles.preferred_locale of the business owner. */
+    ownerLocale?: string | null;
     shiftDate: string;
     totalAmount: number;
     masterShare: number;
@@ -22,22 +40,29 @@ type ShiftCloseNotificationData = {
     topupAmount: number | null;
 };
 
-/**
- * Отправляет email уведомление о закрытии смены
- */
-export async function sendShiftCloseNotification(data: ShiftCloseNotificationData): Promise<void> {
-    try {
-        const apiKey = getResendApiKey();
-        const from = getEmailFrom();
-        if (!from) {
-            logError('ShiftNotifications', 'EMAIL_FROM not configured, skipping shift close email');
-            return;
-        }
+type ShiftCloseEmail = { subject: string; html: string; text: string };
 
-        const shiftDateFormatted = formatInTimeZone(new Date(data.shiftDate), TZ, 'dd.MM.yyyy');
-        
-        // Формируем HTML письмо
-        const html = `
+/** The shift-close letter in `locale`; the Russian letter is the text it had before FE-10. */
+export function buildShiftCloseEmail(data: ShiftCloseNotificationData, locale: NotificationLocale): ShiftCloseEmail {
+    const t = (key: string, values?: Record<string, string | number>) =>
+        notificationText(locale, `server.notifications.${key}` as NotificationTextKey, values);
+    const money = (amount: number) => formatNotificationMoney(amount, locale);
+    const date = formatNotificationDate(data.shiftDate, TZ, locale);
+    const staffName = data.staffName?.trim() || t('shiftStaffFallback');
+    const title = t('shiftTitle');
+    const details = t('shiftDetails');
+    const label = {
+        date: t('shiftDate'),
+        clients: t('shiftClients'),
+        turnover: t('shiftTurnover'),
+        toStaff: t('shiftToStaff'),
+        toBusiness: t('shiftToBusiness'),
+        hours: t('shiftHours'),
+        guaranteed: t('shiftGuaranteed'),
+        topup: t('shiftTopup'),
+    };
+
+    const html = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -58,52 +83,52 @@ export async function sendShiftCloseNotification(data: ShiftCloseNotificationDat
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Смена закрыта</h1>
-                        <p>${data.staffName} закрыл(а) смену за ${shiftDateFormatted}</p>
+                        <h1>${title}</h1>
+                        <p>${t('shiftClosedBy', { staff: escapeHtml(staffName), date })}</p>
                     </div>
                     <div class="content">
                         <div class="summary">
                             <div class="summary-row">
-                                <span class="label">Дата смены:</span>
-                                <span class="value">${shiftDateFormatted}</span>
+                                <span class="label">${label.date}:</span>
+                                <span class="value">${date}</span>
                             </div>
                             <div class="summary-row">
-                                <span class="label">Количество клиентов:</span>
+                                <span class="label">${label.clients}:</span>
                                 <span class="value">${data.itemsCount}</span>
                             </div>
                             <div class="summary-row">
-                                <span class="label">Общий оборот:</span>
-                                <span class="value highlight">${data.totalAmount.toFixed(2)} сом</span>
+                                <span class="label">${label.turnover}:</span>
+                                <span class="value highlight">${money(data.totalAmount)}</span>
                             </div>
                             <div class="summary-row">
-                                <span class="label">Сотруднику:</span>
-                                <span class="value highlight">${data.masterShare.toFixed(2)} сом</span>
+                                <span class="label">${label.toStaff}:</span>
+                                <span class="value highlight">${money(data.masterShare)}</span>
                             </div>
                             <div class="summary-row">
-                                <span class="label">Бизнесу:</span>
-                                <span class="value highlight">${data.salonShare.toFixed(2)} сом</span>
+                                <span class="label">${label.toBusiness}:</span>
+                                <span class="value highlight">${money(data.salonShare)}</span>
                             </div>
                             ${data.hoursWorked ? `
                             <div class="summary-row">
-                                <span class="label">Отработано часов:</span>
+                                <span class="label">${label.hours}:</span>
                                 <span class="value">${data.hoursWorked.toFixed(2)}</span>
                             </div>
                             ` : ''}
                             ${data.guaranteedAmount ? `
                             <div class="summary-row">
-                                <span class="label">Гарантированная оплата:</span>
-                                <span class="value">${data.guaranteedAmount.toFixed(2)} сом</span>
+                                <span class="label">${label.guaranteed}:</span>
+                                <span class="value">${money(data.guaranteedAmount)}</span>
                             </div>
                             ` : ''}
                             ${data.topupAmount && data.topupAmount > 0 ? `
                             <div class="summary-row">
-                                <span class="label">Доплата:</span>
-                                <span class="value">${data.topupAmount.toFixed(2)} сом</span>
+                                <span class="label">${label.topup}:</span>
+                                <span class="value">${money(data.topupAmount)}</span>
                             </div>
                             ` : ''}
                         </div>
                         <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
-                            Подробности доступны в личном кабинете Kezek.
+                            ${details}
                         </p>
                     </div>
                 </div>
@@ -111,38 +136,76 @@ export async function sendShiftCloseNotification(data: ShiftCloseNotificationDat
             </html>
         `;
 
-        const text = `
-Смена закрыта
+    const text = `
+${title}
 
-${data.staffName} закрыл(а) смену за ${shiftDateFormatted}
+${t('shiftClosedBy', { staff: staffName, date })}
 
-Итоги:
-- Количество клиентов: ${data.itemsCount}
-- Общий оборот: ${data.totalAmount.toFixed(2)} сом
-- Сотруднику: ${data.masterShare.toFixed(2)} сом
-- Бизнесу: ${data.salonShare.toFixed(2)} сом
-${data.hoursWorked ? `- Отработано часов: ${data.hoursWorked.toFixed(2)}\n` : ''}
-${data.guaranteedAmount ? `- Гарантированная оплата: ${data.guaranteedAmount.toFixed(2)} сом\n` : ''}
-${data.topupAmount && data.topupAmount > 0 ? `- Доплата: ${data.topupAmount.toFixed(2)} сом\n` : ''}
+${t('shiftSummary')}:
+- ${label.clients}: ${data.itemsCount}
+- ${label.turnover}: ${money(data.totalAmount)}
+- ${label.toStaff}: ${money(data.masterShare)}
+- ${label.toBusiness}: ${money(data.salonShare)}
+${data.hoursWorked ? `- ${label.hours}: ${data.hoursWorked.toFixed(2)}\n` : ''}
+${data.guaranteedAmount ? `- ${label.guaranteed}: ${money(data.guaranteedAmount)}\n` : ''}
+${data.topupAmount && data.topupAmount > 0 ? `- ${label.topup}: ${money(data.topupAmount)}\n` : ''}
 
-Подробности доступны в личном кабинете Kezek.
+${details}
         `;
 
-        // Отправляем уведомление сотруднику
+    return { subject: t('shiftSubject', { date }), html, text };
+}
+
+/**
+ * profiles.preferred_locale of each of `userIds`. A failed read is logged and leaves the users out,
+ * so they get Russian: the shift is already closed and the letter must not be lost over a language.
+ */
+export async function readNotificationLocales(
+    admin: Pick<SupabaseClient, 'from'>,
+    userIds: Array<string | null | undefined>,
+): Promise<Map<string, NotificationLocale>> {
+    const locales = new Map<string, NotificationLocale>();
+    const ids = [...new Set(userIds.filter((id): id is string => Boolean(id)))];
+    if (!ids.length) return locales;
+    try {
+        const { data, error } = await admin.from('profiles').select('id,preferred_locale').in('id', ids);
+        if (error) throw error;
+        for (const row of (data ?? []) as Array<{ id: string; preferred_locale: string | null }>) {
+            locales.set(row.id, notificationLocale(row.preferred_locale));
+        }
+    } catch (error) {
+        logError('ShiftNotifications', 'Could not read the recipients\' notification language', error);
+    }
+    return locales;
+}
+
+/**
+ * Отправляет email уведомление о закрытии смены
+ */
+export async function sendShiftCloseNotification(data: ShiftCloseNotificationData): Promise<void> {
+    try {
+        const apiKey = getResendApiKey();
+        const from = getEmailFrom();
+        if (!from) {
+            logError('ShiftNotifications', 'EMAIL_FROM not configured, skipping shift close email');
+            return;
+        }
+
         // role identifies the recipient in logs, which never carry the address itself.
-        const recipients: Array<{ email: string; name: string; role: 'staff' | 'owner' }> = [
-            { email: data.staffEmail, name: data.staffName, role: 'staff' },
+        const recipients: Array<{ email: string; locale: NotificationLocale; role: 'staff' | 'owner' }> = [
+            { email: data.staffEmail, locale: notificationLocale(data.staffLocale), role: 'staff' },
         ];
 
         // Добавляем владельца, если email указан
         if (data.ownerEmail) {
-            recipients.push({ email: data.ownerEmail, name: 'Владелец бизнеса', role: 'owner' });
+            recipients.push({ email: data.ownerEmail, locale: notificationLocale(data.ownerLocale), role: 'owner' });
         }
 
-        // Отправляем письма
+        // Отправляем письма, каждое на языке получателя
         let sentCount = 0;
         for (const recipient of recipients) {
             try {
+                const { subject, html, text } = buildShiftCloseEmail(data, recipient.locale);
                 const response = await fetch('https://api.resend.com/emails', {
                     method: 'POST',
                     headers: {
@@ -152,7 +215,7 @@ ${data.topupAmount && data.topupAmount > 0 ? `- Доплата: ${data.topupAmou
                     body: JSON.stringify({
                         from,
                         to: [recipient.email],
-                        subject: `Kezek: Смена закрыта за ${shiftDateFormatted}`,
+                        subject,
                         html,
                         text,
                     }),
@@ -167,7 +230,7 @@ ${data.topupAmount && data.topupAmount > 0 ? `- Доплата: ${data.topupAmou
                     });
                 } else {
                     sentCount++;
-                    logDebug('ShiftNotifications', 'Shift close email sent', { recipient: recipient.role });
+                    logDebug('ShiftNotifications', 'Shift close email sent', { recipient: recipient.role, locale: recipient.locale });
                 }
             } catch (error) {
                 logError('ShiftNotifications', 'Error sending shift close email', { recipient: recipient.role, error });
@@ -178,11 +241,10 @@ ${data.topupAmount && data.topupAmount > 0 ? `- Доплата: ${data.topupAmou
             sentCount,
             totalRecipients: recipients.length,
             staffName: data.staffName,
-            shiftDate: shiftDateFormatted,
+            shiftDate: data.shiftDate,
         });
     } catch (error) {
         // Не блокируем закрытие смены, если уведомление не отправилось
         logError('ShiftNotifications', 'Failed to send shift close notification', error);
     }
 }
-

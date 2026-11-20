@@ -1,7 +1,9 @@
-// Booking notification texts (FE-10): email, Telegram and WhatsApp messages in the recipient's
-// language (profiles.preferred_locale; NULL is ru). The ru values are the exact Russian texts the
+// Notification texts (FE-10): booking, shift-close and role-application/invitation email, Telegram
+// and free-text WhatsApp messages in the recipient's language (profiles.preferred_locale; NULL is
+// ru). The ru values are the exact Russian texts the
 // messages had before, and {placeholders} take the inserted values. Not part of the client bundle:
-// only src/lib/notifications/notificationText.ts imports these.
+// only src/lib/notifications/notificationText.ts imports these. HTML values hold markup, and their
+// {placeholders} take HTML-escaped values.
 export const serverNotificationsKy = {
     'server.notifications.titleHold': 'Убакыт убактылуу ээленди',
     'server.notifications.titleConfirm': 'Жазылуу ырасталды',
@@ -38,4 +40,50 @@ export const serverNotificationsKy = {
     'server.notifications.roleClient': 'Кардар',
     'server.notifications.roleOwner': 'Ээси',
     'server.notifications.roleAdmin': 'Администратор',
+    'server.notifications.shiftSubject': 'Kezek: {date} күнкү смена жабылды',
+    'server.notifications.shiftTitle': 'Смена жабылды',
+    'server.notifications.shiftClosedBy': '{staff} {date} күнкү сменаны жапты',
+    'server.notifications.shiftDate': 'Сменанын күнү',
+    'server.notifications.shiftClients': 'Кардарлардын саны',
+    'server.notifications.shiftTurnover': 'Жалпы жүгүртүү',
+    'server.notifications.shiftToStaff': 'Кызматкерге',
+    'server.notifications.shiftToBusiness': 'Бизнеске',
+    'server.notifications.shiftHours': 'Иштелген сааттар',
+    'server.notifications.shiftGuaranteed': 'Кепилденген төлөм',
+    'server.notifications.shiftTopup': 'Кошумча төлөм',
+    'server.notifications.shiftSummary': 'Жыйынтыктар',
+    'server.notifications.shiftDetails': 'Толук маалымат Kezek жеке кабинетиңизде жеткиликтүү.',
+    'server.notifications.shiftStaffFallback': 'Кызматкер',
+    'server.notifications.staffApplicantSubject': 'Kezek: «{business}» бизнесине арызыңыз жөнөтүлдү',
+    'server.notifications.staffApplicantText': '«{business}» бизнесине кызматкер катары арызыңыз жөнөтүлдү. Ээси аны карап чыгып, чечимин билдирет. Абалы: {origin}/business/staff-apply',
+    'server.notifications.staffApplicantHtml': '<p><b>{business}</b> бизнесине кызматкер катары арызыңыз жөнөтүлдү.</p><p>Ээси аны карап чыгып, чечимин билдирет.</p><p><a href="{origin}/business/staff-apply">Арыздын абалын ачуу</a></p>',
+    'server.notifications.staffOwnerSubject': 'Kezek: «{business}» бизнесине кызматкердин жаңы арызы',
+    'server.notifications.staffOwnerText': '{applicant} «{business}» бизнесине кызматкер катары арыз жөнөттү. Аны кароо үчүн кабинетти ачыңыз: {origin}/dashboard/role-applications',
+    'server.notifications.staffOwnerHtml': '<p><b>{applicant}</b> <b>{business}</b> бизнесине кызматкер катары арыз жөнөттү.</p><p><a href="{origin}/dashboard/role-applications">Арызды кароо</a></p>',
+    'server.notifications.staffApprovedSubject': 'Kezek: «{business}» бизнесине кызматкер катары арызыңыз жактырылды',
+    'server.notifications.staffApprovedText': '«{business}» бизнесине кызматкер катары арызыңыз жактырылды. Иш кабинетиңиз иштетилди: {origin}/dashboard',
+    'server.notifications.staffApprovedHtml': '<p><b>{business}</b> бизнесине кызматкер катары арызыңыз жактырылды.</p><p>Иш кабинетиңиз иштетилди.</p><p><a href="{origin}/dashboard">Иш кабинетин ачуу</a></p>',
+    'server.notifications.businessApplicantSubject': 'Kezek: «{business}» бизнесин кошуу арызыңыз жөнөтүлдү',
+    'server.notifications.businessApplicantText': '«{business}» бизнесин кошуу арызыңыз жөнөтүлдү. Текшерүүдөн кийин чечимди билдиребиз. Абалы: {origin}/business/apply',
+    'server.notifications.businessApplicantHtml': '<p><b>{business}</b> бизнесин кошуу арызыңыз жөнөтүлдү.</p><p>Текшерүүдөн кийин чечимди билдиребиз.</p><p><a href="{origin}/business/apply">Арыздын абалын ачуу</a></p>',
+    'server.notifications.businessAdminSubject': 'Kezek: «{business}» бизнесин кошуунун жаңы арызы',
+    'server.notifications.businessAdminText': '{applicant} «{business}» бизнесин кошуу арызын жөнөттү. Кароо: {origin}/admin/business-applications',
+    'server.notifications.businessAdminHtml': '<p><b>{applicant}</b> <b>{business}</b> бизнесин кошуу арызын жөнөттү.</p><p><a href="{origin}/admin/business-applications">Арызды кароо</a></p>',
+    'server.notifications.ownerApplicantSubject': 'Kezek: «{business}» бизнесинин ээси болуу арызыңыз жөнөтүлдү',
+    'server.notifications.ownerApplicantText': '«{business}» бизнесинин ээси болуу арызыңыз жөнөтүлдү. Текшерүүдөн кийин чечимди билдиребиз. Абалы: {origin}/business/owner-apply',
+    'server.notifications.ownerApplicantHtml': '<p><b>{business}</b> бизнесинин ээси болуу арызыңыз жөнөтүлдү.</p><p>Текшерүүдөн кийин чечимди билдиребиз.</p><p><a href="{origin}/business/owner-apply">Арыздын абалын ачуу</a></p>',
+    'server.notifications.ownerAdminSubject': 'Kezek: «{business}» бизнесинин ээсинин жаңы арызы',
+    'server.notifications.ownerAdminText': '{applicant} «{business}» бизнесинин ээси болуу арызын жөнөттү. Кароо: {origin}/admin/role-applications',
+    'server.notifications.ownerAdminHtml': '<p><b>{applicant}</b> <b>{business}</b> бизнесинин ээси болуу арызын жөнөттү.</p><p><a href="{origin}/admin/role-applications">Арызды кароо</a></p>',
+    'server.notifications.businessApprovedSubject': 'Kezek: «{business}» бизнеси кошулду',
+    'server.notifications.businessApprovedText': '«{business}» бизнесин кошуу арызы жактырылды. Биз бизнести түзүп, сизге ээсинин жеткилигин бердик. Кабинетти ачуу: {origin}/dashboard',
+    'server.notifications.businessApprovedHtml': '<p><b>{business}</b> бизнесин кошуу арызы жактырылды.</p><p>Биз бизнести түзүп, сизге ээсинин жеткилигин бердик.</p><p><a href="{origin}/dashboard">Бизнес кабинетин ачуу</a></p>',
+    'server.notifications.ownerApprovedSubject': 'Kezek: «{business}» бизнесинин ээсинин жеткилиги иштетилди',
+    'server.notifications.ownerApprovedText': '«{business}» бизнесинин ээси болуу арызыңыз жактырылды. Бизнес кабинетине жеткилик иштетилди: {origin}/dashboard',
+    'server.notifications.ownerApprovedHtml': '<p><b>{business}</b> бизнесинин ээси болуу арызыңыз жактырылды.</p><p>Бизнес кабинетине жеткилик иштетилди.</p><p><a href="{origin}/dashboard">Бизнес кабинетин ачуу</a></p>',
+    'server.notifications.invitationSubject': 'Kezek: «{business}» командасына чакыруу',
+    'server.notifications.invitationText': '«{business}»{branch} сизди командага чакырат. Чакырууну кабыл алуу же четке кагуу үчүн Kezek жеке кабинетиңизди ачыңыз: {origin}/cabinet',
+    'server.notifications.invitationHtml': '<p><b>{business}</b>{branch} сизди командага чакырат.</p><p>Чакырууну кабыл алуу же четке кагуу үчүн Kezek жеке кабинетиңизди ачыңыз.</p><p><a href="{origin}/cabinet">Жеке кабинетти ачуу</a></p>',
+    'server.notifications.invitationBranch': ' («{branch}» филиалы)',
+    'server.notifications.invitationBranchHtml': ' (<b>{branch}</b> филиалы)',
 } as const;

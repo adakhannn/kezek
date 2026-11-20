@@ -4,6 +4,7 @@ import { buildApplicationTemplateComponents, getApplicationNotificationOrigin, g
 import { getWhatsAppTemplateLanguage, getWhatsAppTemplateName } from '@/lib/env';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { logError } from '@/lib/log';
+import { notificationLocale, notificationText, type NotificationLocale, type NotificationTextKey } from '@/lib/notifications/notificationText';
 import { sendEmail } from '@/lib/senders/email';
 import { sendTelegram } from '@/lib/senders/telegram';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
@@ -17,6 +18,8 @@ type Recipient = {
     canReceiveEmail: boolean;
     canReceiveTelegram: boolean;
     canReceiveWhatsApp: boolean;
+    /** profiles.preferred_locale; NULL or a missing profile means Russian (FE-10). */
+    locale: NotificationLocale;
 };
 
 type AdminClient = {
@@ -63,6 +66,30 @@ type Notification = {
     };
 };
 
+/** A notification rendered in each recipient's language. */
+type LocalizedNotification = (locale: NotificationLocale) => Notification;
+
+type MessageKind = 'staffApplicant' | 'staffOwner' | 'staffApproved' | 'businessApplicant' | 'businessAdmin' | 'businessApproved'
+    | 'ownerApplicant' | 'ownerAdmin' | 'ownerApproved' | 'invitation';
+
+type MessageValues = { business: string; origin: string; applicant?: string; branch?: string | null };
+
+/**
+ * Subject, text and HTML of `kind` in `locale` (dictionary serverNotifications). The subject and text
+ * take the values as they are; the HTML takes them escaped. The ru texts are the pre-FE-10 ones.
+ */
+function message(kind: MessageKind, locale: NotificationLocale, values: MessageValues): Pick<Notification, 'subject' | 'text' | 'html'> {
+    const t = (key: string, params: Record<string, string>) =>
+        notificationText(locale, `server.notifications.${key}` as NotificationTextKey, params);
+    const plain: Record<string, string> = { business: values.business, origin: values.origin, applicant: values.applicant ?? '' };
+    const html: Record<string, string> = { business: escapeHtml(values.business), origin: values.origin, applicant: escapeHtml(values.applicant ?? '') };
+    if (kind === 'invitation') {
+        plain.branch = values.branch ? t('invitationBranch', { branch: values.branch }) : '';
+        html.branch = values.branch ? t('invitationBranchHtml', { branch: escapeHtml(values.branch) }) : '';
+    }
+    return { subject: t(`${kind}Subject`, plain), text: t(`${kind}Text`, plain), html: t(`${kind}Html`, html) };
+}
+
 function uniqueEmails(values: Array<string | null | undefined>) {
     return [...new Set(values
         .map((value) => value?.trim().toLowerCase() ?? '')
@@ -73,7 +100,7 @@ async function getRecipient(admin: AdminClient, userId: string, fallback: { name
     const [{ data: profile }, { data: notificationEmails }] = await Promise.all([
         admin
             .from('profiles')
-            .select('full_name,notify_email,notify_telegram,telegram_id,telegram_verified,notify_whatsapp,whatsapp_phone,whatsapp_verified')
+            .select('full_name,notify_email,notify_telegram,telegram_id,telegram_verified,notify_whatsapp,whatsapp_phone,whatsapp_verified,preferred_locale')
             .eq('id', userId)
             .maybeSingle(),
         admin
@@ -100,6 +127,7 @@ async function getRecipient(admin: AdminClient, userId: string, fallback: { name
         canReceiveEmail: profile?.notify_email ?? true,
         canReceiveTelegram: Boolean(profile?.notify_telegram && profile?.telegram_verified && profile?.telegram_id),
         canReceiveWhatsApp: Boolean(profile?.notify_whatsapp && profile?.whatsapp_verified && profile?.whatsapp_phone),
+        locale: notificationLocale(profile?.preferred_locale),
     };
 }
 
@@ -114,7 +142,8 @@ async function getSuperAdminRecipients(admin: AdminClient) {
     return Promise.all(userIds.map((userId) => getRecipient(admin, userId, {})));
 }
 
-async function notifyRecipient(recipient: Recipient, notification: Notification) {
+async function notifyRecipient(recipient: Recipient, localized: LocalizedNotification) {
+    const notification = localized(recipient.locale);
     const deliveries: Array<Promise<unknown>> = [];
     if (recipient.canReceiveEmail) {
         for (const email of recipient.emails) deliveries.push(sendEmail({ ...notification, to: email }));
@@ -123,6 +152,7 @@ async function notifyRecipient(recipient: Recipient, notification: Notification)
         // sendTelegram uses parse_mode HTML; this text is plain and holds applicant and business names.
         deliveries.push(sendTelegram({ chatId: recipient.telegramId, text: escapeHtml(notification.text) }));
     }
+    // WhatsApp goes out as an approved Meta template in its configured language, not as this text.
     const templateName = notification.whatsApp && getWhatsAppTemplateName(notification.whatsApp.templateKey);
     if (recipient.canReceiveWhatsApp && recipient.whatsappPhone && notification.whatsApp && templateName) {
         const whatsApp = notification.whatsApp;
@@ -158,17 +188,23 @@ async function notifyRecipient(recipient: Recipient, notification: Notification)
     }
 }
 
-async function notifyRecipients(recipients: Recipient[], notification: Notification) {
-    await Promise.all(recipients.map((recipient) => notifyRecipient(recipient, notification)));
+async function notifyRecipients(recipients: Recipient[], localized: LocalizedNotification) {
+    await Promise.all(recipients.map((recipient) => notifyRecipient(recipient, localized)));
 }
 
-function applicantNotification(params: { subject: string; text: string; html: string; templateKey: WhatsAppTemplateKey; businessName: string }) {
-    return {
-        subject: params.subject,
-        text: params.text,
-        html: params.html,
+function applicantNotification(params: { kind: MessageKind; origin: string; templateKey: WhatsAppTemplateKey; businessName: string }): LocalizedNotification {
+    return (locale) => ({
+        ...message(params.kind, locale, { business: params.businessName, origin: params.origin }),
         whatsApp: { templateKey: params.templateKey, parameters: [params.businessName] },
-    } satisfies Notification;
+    });
+}
+
+/** A message to a reviewer (owner or super admin) about the applicant's application. */
+function reviewerNotification(params: { kind: MessageKind; origin: string; templateKey: WhatsAppTemplateKey; businessName: string; applicantName: string }): LocalizedNotification {
+    return (locale) => ({
+        ...message(params.kind, locale, { business: params.businessName, origin: params.origin, applicant: params.applicantName }),
+        whatsApp: { templateKey: params.templateKey, parameters: [params.businessName, params.applicantName] },
+    });
 }
 
 /** Sends non-blocking delivery attempts after a staff application is persisted. */
@@ -187,21 +223,21 @@ export async function notifyStaffApplicationSubmitted(admin: AdminClient, applic
     const businessName = business.name || 'Kezek';
     const applicant = await getRecipient(admin, application.applicant.id, application.applicant);
     await notifyRecipient(applicant, applicantNotification({
-        subject: `Kezek: заявка в «${businessName}» отправлена`,
-        text: `Ваша заявка сотрудника в «${businessName}» отправлена. Владелец рассмотрит её и сообщит решение. Статус: ${origin}/business/staff-apply`,
-        html: `<p>Ваша заявка сотрудника в <b>${escapeHtml(businessName)}</b> отправлена.</p><p>Владелец рассмотрит её и сообщит решение.</p><p><a href="${origin}/business/staff-apply">Открыть статус заявки</a></p>`,
+        kind: 'staffApplicant',
+        origin,
         templateKey: 'staff_applicant',
         businessName,
     }));
 
     if (!business.owner_id || business.owner_id === application.applicant.id) return;
     const owner = await getRecipient(admin, business.owner_id, {});
-    await notifyRecipient(owner, {
-        subject: `Kezek: новая заявка сотрудника в «${businessName}»`,
-        text: `${application.applicant.name} отправил(а) заявку сотрудника в «${businessName}». Откройте кабинет, чтобы рассмотреть её: ${origin}/dashboard/role-applications`,
-        html: `<p><b>${escapeHtml(application.applicant.name)}</b> отправил(а) заявку сотрудника в <b>${escapeHtml(businessName)}</b>.</p><p><a href="${origin}/dashboard/role-applications">Рассмотреть заявку</a></p>`,
-        whatsApp: { templateKey: 'staff_owner', parameters: [businessName, application.applicant.name] },
-    });
+    await notifyRecipient(owner, reviewerNotification({
+        kind: 'staffOwner',
+        origin,
+        templateKey: 'staff_owner',
+        businessName,
+        applicantName: application.applicant.name,
+    }));
 }
 
 /** Notifies the employee only after their work card and branch assignment exist. */
@@ -219,9 +255,8 @@ export async function notifyStaffApplicationApproved(admin: AdminClient, params:
     const origin = getApplicationNotificationOrigin();
     const applicant = await getRecipient(admin, params.applicantUserId, {});
     await notifyRecipient(applicant, applicantNotification({
-        subject: `Kezek: заявка сотрудника в «${businessName}» одобрена`,
-        text: `Ваша заявка сотрудника в «${businessName}» одобрена. Рабочий кабинет уже активирован: ${origin}/dashboard`,
-        html: `<p>Ваша заявка сотрудника в <b>${escapeHtml(businessName)}</b> одобрена.</p><p>Рабочий кабинет уже активирован.</p><p><a href="${origin}/dashboard">Открыть рабочий кабинет</a></p>`,
+        kind: 'staffApproved',
+        origin,
         templateKey: 'staff_approved',
         businessName,
     }));
@@ -232,18 +267,18 @@ export async function notifyBusinessApplicationSubmitted(admin: AdminClient, app
     const origin = getApplicationNotificationOrigin();
     const applicant = await getRecipient(admin, application.applicant.id, application.applicant);
     await notifyRecipient(applicant, applicantNotification({
-        subject: `Kezek: заявка на подключение «${application.businessName}» отправлена`,
-        text: `Ваша заявка на подключение бизнеса «${application.businessName}» отправлена. Мы сообщим решение после проверки. Статус: ${origin}/business/apply`,
-        html: `<p>Ваша заявка на подключение бизнеса <b>${escapeHtml(application.businessName)}</b> отправлена.</p><p>Мы сообщим решение после проверки.</p><p><a href="${origin}/business/apply">Открыть статус заявки</a></p>`,
+        kind: 'businessApplicant',
+        origin,
         templateKey: 'business_applicant',
         businessName: application.businessName,
     }));
-    await notifyRecipients(await getSuperAdminRecipients(admin), {
-        subject: `Kezek: новая заявка на подключение «${application.businessName}»`,
-        text: `${application.applicant.name} отправил(а) заявку на подключение бизнеса «${application.businessName}». Рассмотреть: ${origin}/admin/business-applications`,
-        html: `<p><b>${escapeHtml(application.applicant.name)}</b> отправил(а) заявку на подключение бизнеса <b>${escapeHtml(application.businessName)}</b>.</p><p><a href="${origin}/admin/business-applications">Рассмотреть заявку</a></p>`,
-        whatsApp: { templateKey: 'business_admin', parameters: [application.businessName, application.applicant.name] },
-    });
+    await notifyRecipients(await getSuperAdminRecipients(admin), reviewerNotification({
+        kind: 'businessAdmin',
+        origin,
+        templateKey: 'business_admin',
+        businessName: application.businessName,
+        applicantName: application.applicant.name,
+    }));
 }
 
 /** Owner claims are reviewed by global super admins, not by the current owner. */
@@ -261,18 +296,18 @@ export async function notifyOwnerApplicationSubmitted(admin: AdminClient, applic
     const businessName = business.name || 'Kezek';
     const applicant = await getRecipient(admin, application.applicant.id, application.applicant);
     await notifyRecipient(applicant, applicantNotification({
-        subject: `Kezek: заявка владельца для «${businessName}» отправлена`,
-        text: `Ваша заявка на роль владельца для «${businessName}» отправлена. После проверки сообщим решение. Статус: ${origin}/business/owner-apply`,
-        html: `<p>Ваша заявка на роль владельца для <b>${escapeHtml(businessName)}</b> отправлена.</p><p>После проверки сообщим решение.</p><p><a href="${origin}/business/owner-apply">Открыть статус заявки</a></p>`,
+        kind: 'ownerApplicant',
+        origin,
         templateKey: 'owner_applicant',
         businessName,
     }));
-    await notifyRecipients(await getSuperAdminRecipients(admin), {
-        subject: `Kezek: новая заявка владельца для «${businessName}»`,
-        text: `${application.applicant.name} отправил(а) заявку на роль владельца для «${businessName}». Рассмотреть: ${origin}/admin/role-applications`,
-        html: `<p><b>${escapeHtml(application.applicant.name)}</b> отправил(а) заявку на роль владельца для <b>${escapeHtml(businessName)}</b>.</p><p><a href="${origin}/admin/role-applications">Рассмотреть заявку</a></p>`,
-        whatsApp: { templateKey: 'owner_admin', parameters: [businessName, application.applicant.name] },
-    });
+    await notifyRecipients(await getSuperAdminRecipients(admin), reviewerNotification({
+        kind: 'ownerAdmin',
+        origin,
+        templateKey: 'owner_admin',
+        businessName,
+        applicantName: application.applicant.name,
+    }));
 }
 
 /** Notifies the applicant only after the business and owner role were created successfully. */
@@ -293,9 +328,8 @@ export async function notifyBusinessApplicationApproved(admin: AdminClient, para
         email: application.email,
     });
     await notifyRecipient(applicant, applicantNotification({
-        subject: `Kezek: бизнес «${businessName}» подключён`,
-        text: `Заявка на подключение «${businessName}» одобрена. Мы создали бизнес и выдали вам доступ владельца. Открыть кабинет: ${origin}/dashboard`,
-        html: `<p>Заявка на подключение <b>${escapeHtml(businessName)}</b> одобрена.</p><p>Мы создали бизнес и выдали вам доступ владельца.</p><p><a href="${origin}/dashboard">Открыть кабинет бизнеса</a></p>`,
+        kind: 'businessApproved',
+        origin,
         templateKey: 'business_approved',
         businessName,
     }));
@@ -316,9 +350,8 @@ export async function notifyOwnerApplicationApproved(admin: AdminClient, params:
     const origin = getApplicationNotificationOrigin();
     const applicant = await getRecipient(admin, params.applicantUserId, {});
     await notifyRecipient(applicant, applicantNotification({
-        subject: `Kezek: доступ владельца для «${businessName}» активирован`,
-        text: `Ваша заявка на роль владельца для «${businessName}» одобрена. Доступ к кабинету бизнеса уже активирован: ${origin}/dashboard`,
-        html: `<p>Ваша заявка на роль владельца для <b>${escapeHtml(businessName)}</b> одобрена.</p><p>Доступ к кабинету бизнеса уже активирован.</p><p><a href="${origin}/dashboard">Открыть кабинет бизнеса</a></p>`,
+        kind: 'ownerApproved',
+        origin,
         templateKey: 'owner_approved',
         businessName,
     }));
@@ -333,11 +366,5 @@ export async function notifyStaffInvitationCreated(admin: AdminClient, params: {
     const branchName = params.branchName?.trim() || null;
     const origin = getApplicationNotificationOrigin();
     const invitee = await getRecipient(admin, params.invitedUserId, {});
-    const branchText = branchName ? ` (филиал «${branchName}»)` : '';
-    const branchHtml = branchName ? ` (филиал <b>${escapeHtml(branchName)}</b>)` : '';
-    await notifyRecipient(invitee, {
-        subject: `Kezek: приглашение в команду «${businessName}»`,
-        text: `«${businessName}»${branchText} приглашает вас в команду. Откройте личный кабинет Kezek, чтобы принять или отклонить приглашение: ${origin}/cabinet`,
-        html: `<p><b>${escapeHtml(businessName)}</b>${branchHtml} приглашает вас в команду.</p><p>Откройте личный кабинет Kezek, чтобы принять или отклонить приглашение.</p><p><a href="${origin}/cabinet">Открыть личный кабинет</a></p>`,
-    });
+    await notifyRecipient(invitee, (locale) => message('invitation', locale, { business: businessName, origin, branch: branchName }));
 }

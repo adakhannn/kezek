@@ -4,7 +4,8 @@ import { runStaffShiftClose } from '@/lib/staffShiftCloseService';
 
 jest.mock('@/lib/performanceServer', () => ({ measurePerformance: (_name: string, fn: () => unknown) => fn() }));
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logDebug: jest.fn() }));
-jest.mock('@/lib/notifications/shiftNotifications', () => ({ sendShiftCloseNotification: jest.fn() }));
+jest.mock('@/lib/notifications/shiftNotifications', () => ({ sendShiftCloseNotification: jest.fn(), readNotificationLocales: jest.fn() }));
+const { readNotificationLocales, sendShiftCloseNotification } = jest.requireMock('@/lib/notifications/shiftNotifications');
 jest.mock('@/lib/supabaseService', () => ({ getServiceClient: jest.fn() }));
 jest.mock('@/lib/staffPrivateFields', () => ({ readStaffPrivateFields: jest.fn() }));
 jest.mock('@/lib/time', () => ({
@@ -100,4 +101,22 @@ test('a newer close-read snapshot rejects instead of rebasing the client revisio
     readShiftCloseSnapshot.mockResolvedValue({ ...original, shift: { ...shift, ledger_revision: 8 } });
     expect(await close(supabase, [submitted])).toMatchObject({ ok: false, statusCode: 409 });
     expect(supabase.rpc).not.toHaveBeenCalled();
+});
+
+test('the shift-close letter gets the employee and owner preferred_locale; an unread one stays unset (FE-10)', async () => {
+    const { supabase } = setup();
+    readStaffPrivateFields.mockResolvedValue({ data: { percent_master: 60, percent_salon: 40, hourly_rate: null, full_name: 'Aida', user_id: 'staff-user' }, error: null });
+    const admin = {
+        rpc: supabase.rpc,
+        from: (table: string) => query(table === 'businesses' ? { data: { owner_id: 'owner-user' } } : { data: [], error: null }),
+        auth: { admin: { getUserById: jest.fn(async (id: string) => ({ data: { user: { email: `${id}@example.invalid` } } })) } },
+    };
+    getServiceClient.mockReturnValue(admin);
+    readNotificationLocales.mockResolvedValue(new Map([['staff-user', 'en']]));
+    sendShiftCloseNotification.mockResolvedValue(undefined);
+    expect(await close(supabase, [submitted])).toMatchObject({ ok: true });
+    expect(readNotificationLocales).toHaveBeenCalledWith(admin, ['staff-user', 'owner-user']);
+    expect(sendShiftCloseNotification).toHaveBeenCalledWith(expect.objectContaining({
+        staffName: 'Aida', staffEmail: 'staff-user@example.invalid', staffLocale: 'en', ownerEmail: 'owner-user@example.invalid', ownerLocale: undefined,
+    }));
 });

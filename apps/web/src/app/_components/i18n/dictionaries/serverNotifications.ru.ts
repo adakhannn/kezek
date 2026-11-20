@@ -1,7 +1,9 @@
-// Booking notification texts (FE-10): email, Telegram and WhatsApp messages in the recipient's
-// language (profiles.preferred_locale; NULL is ru). The ru values are the exact Russian texts the
+// Notification texts (FE-10): booking, shift-close and role-application/invitation email, Telegram
+// and free-text WhatsApp messages in the recipient's language (profiles.preferred_locale; NULL is
+// ru). The ru values are the exact Russian texts the
 // messages had before, and {placeholders} take the inserted values. Not part of the client bundle:
-// only src/lib/notifications/notificationText.ts imports these.
+// only src/lib/notifications/notificationText.ts imports these. HTML values hold markup, and their
+// {placeholders} take HTML-escaped values.
 export const serverNotificationsRu = {
     'server.notifications.titleHold': 'Удержание слота',
     'server.notifications.titleConfirm': 'Бронь подтверждена',
@@ -38,4 +40,50 @@ export const serverNotificationsRu = {
     'server.notifications.roleClient': 'Клиент',
     'server.notifications.roleOwner': 'Владелец',
     'server.notifications.roleAdmin': 'Администратор',
+    'server.notifications.shiftSubject': 'Kezek: Смена закрыта за {date}',
+    'server.notifications.shiftTitle': 'Смена закрыта',
+    'server.notifications.shiftClosedBy': '{staff} закрыл(а) смену за {date}',
+    'server.notifications.shiftDate': 'Дата смены',
+    'server.notifications.shiftClients': 'Количество клиентов',
+    'server.notifications.shiftTurnover': 'Общий оборот',
+    'server.notifications.shiftToStaff': 'Сотруднику',
+    'server.notifications.shiftToBusiness': 'Бизнесу',
+    'server.notifications.shiftHours': 'Отработано часов',
+    'server.notifications.shiftGuaranteed': 'Гарантированная оплата',
+    'server.notifications.shiftTopup': 'Доплата',
+    'server.notifications.shiftSummary': 'Итоги',
+    'server.notifications.shiftDetails': 'Подробности доступны в личном кабинете Kezek.',
+    'server.notifications.shiftStaffFallback': 'Сотрудник',
+    'server.notifications.staffApplicantSubject': 'Kezek: заявка в «{business}» отправлена',
+    'server.notifications.staffApplicantText': 'Ваша заявка сотрудника в «{business}» отправлена. Владелец рассмотрит её и сообщит решение. Статус: {origin}/business/staff-apply',
+    'server.notifications.staffApplicantHtml': '<p>Ваша заявка сотрудника в <b>{business}</b> отправлена.</p><p>Владелец рассмотрит её и сообщит решение.</p><p><a href="{origin}/business/staff-apply">Открыть статус заявки</a></p>',
+    'server.notifications.staffOwnerSubject': 'Kezek: новая заявка сотрудника в «{business}»',
+    'server.notifications.staffOwnerText': '{applicant} отправил(а) заявку сотрудника в «{business}». Откройте кабинет, чтобы рассмотреть её: {origin}/dashboard/role-applications',
+    'server.notifications.staffOwnerHtml': '<p><b>{applicant}</b> отправил(а) заявку сотрудника в <b>{business}</b>.</p><p><a href="{origin}/dashboard/role-applications">Рассмотреть заявку</a></p>',
+    'server.notifications.staffApprovedSubject': 'Kezek: заявка сотрудника в «{business}» одобрена',
+    'server.notifications.staffApprovedText': 'Ваша заявка сотрудника в «{business}» одобрена. Рабочий кабинет уже активирован: {origin}/dashboard',
+    'server.notifications.staffApprovedHtml': '<p>Ваша заявка сотрудника в <b>{business}</b> одобрена.</p><p>Рабочий кабинет уже активирован.</p><p><a href="{origin}/dashboard">Открыть рабочий кабинет</a></p>',
+    'server.notifications.businessApplicantSubject': 'Kezek: заявка на подключение «{business}» отправлена',
+    'server.notifications.businessApplicantText': 'Ваша заявка на подключение бизнеса «{business}» отправлена. Мы сообщим решение после проверки. Статус: {origin}/business/apply',
+    'server.notifications.businessApplicantHtml': '<p>Ваша заявка на подключение бизнеса <b>{business}</b> отправлена.</p><p>Мы сообщим решение после проверки.</p><p><a href="{origin}/business/apply">Открыть статус заявки</a></p>',
+    'server.notifications.businessAdminSubject': 'Kezek: новая заявка на подключение «{business}»',
+    'server.notifications.businessAdminText': '{applicant} отправил(а) заявку на подключение бизнеса «{business}». Рассмотреть: {origin}/admin/business-applications',
+    'server.notifications.businessAdminHtml': '<p><b>{applicant}</b> отправил(а) заявку на подключение бизнеса <b>{business}</b>.</p><p><a href="{origin}/admin/business-applications">Рассмотреть заявку</a></p>',
+    'server.notifications.ownerApplicantSubject': 'Kezek: заявка владельца для «{business}» отправлена',
+    'server.notifications.ownerApplicantText': 'Ваша заявка на роль владельца для «{business}» отправлена. После проверки сообщим решение. Статус: {origin}/business/owner-apply',
+    'server.notifications.ownerApplicantHtml': '<p>Ваша заявка на роль владельца для <b>{business}</b> отправлена.</p><p>После проверки сообщим решение.</p><p><a href="{origin}/business/owner-apply">Открыть статус заявки</a></p>',
+    'server.notifications.ownerAdminSubject': 'Kezek: новая заявка владельца для «{business}»',
+    'server.notifications.ownerAdminText': '{applicant} отправил(а) заявку на роль владельца для «{business}». Рассмотреть: {origin}/admin/role-applications',
+    'server.notifications.ownerAdminHtml': '<p><b>{applicant}</b> отправил(а) заявку на роль владельца для <b>{business}</b>.</p><p><a href="{origin}/admin/role-applications">Рассмотреть заявку</a></p>',
+    'server.notifications.businessApprovedSubject': 'Kezek: бизнес «{business}» подключён',
+    'server.notifications.businessApprovedText': 'Заявка на подключение «{business}» одобрена. Мы создали бизнес и выдали вам доступ владельца. Открыть кабинет: {origin}/dashboard',
+    'server.notifications.businessApprovedHtml': '<p>Заявка на подключение <b>{business}</b> одобрена.</p><p>Мы создали бизнес и выдали вам доступ владельца.</p><p><a href="{origin}/dashboard">Открыть кабинет бизнеса</a></p>',
+    'server.notifications.ownerApprovedSubject': 'Kezek: доступ владельца для «{business}» активирован',
+    'server.notifications.ownerApprovedText': 'Ваша заявка на роль владельца для «{business}» одобрена. Доступ к кабинету бизнеса уже активирован: {origin}/dashboard',
+    'server.notifications.ownerApprovedHtml': '<p>Ваша заявка на роль владельца для <b>{business}</b> одобрена.</p><p>Доступ к кабинету бизнеса уже активирован.</p><p><a href="{origin}/dashboard">Открыть кабинет бизнеса</a></p>',
+    'server.notifications.invitationSubject': 'Kezek: приглашение в команду «{business}»',
+    'server.notifications.invitationText': '«{business}»{branch} приглашает вас в команду. Откройте личный кабинет Kezek, чтобы принять или отклонить приглашение: {origin}/cabinet',
+    'server.notifications.invitationHtml': '<p><b>{business}</b>{branch} приглашает вас в команду.</p><p>Откройте личный кабинет Kezek, чтобы принять или отклонить приглашение.</p><p><a href="{origin}/cabinet">Открыть личный кабинет</a></p>',
+    'server.notifications.invitationBranch': ' (филиал «{branch}»)',
+    'server.notifications.invitationBranchHtml': ' (филиал <b>{branch}</b>)',
 } as const;
