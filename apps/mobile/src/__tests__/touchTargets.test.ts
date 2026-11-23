@@ -30,10 +30,10 @@ describe('critical touch target contracts', () => {
 
     test('compact icon actions expose accessible labels', () => {
         expect(readSource('components/BookingCancelButton.tsx')).toContain(
-            'accessibilityLabel="Закрыть бронирование"',
+            "accessibilityLabel={t('cabinet.flowCancel.label')}",
         );
         expect(readSource('screens/home/SearchSection.tsx')).toContain(
-            'accessibilityLabel="Очистить поиск"',
+            "accessibilityLabel={t('booking.home.clearSearch')}",
         );
     });
 });

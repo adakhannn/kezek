@@ -5,22 +5,23 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../constants/colors';
 import { MIN_TOUCH_TARGET } from '../constants/accessibility';
 import { useBooking } from '../contexts/BookingContext';
+import { useLanguage, type MobileI18nKey } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
 import MotionPressable from './ui/MotionPressable';
 
 type StepInfo = {
     number: number;
-    title: string;
+    titleKey: MobileI18nKey;
     screenName: string;
 };
 
 const STEPS: StepInfo[] = [
-    { number: 1, title: 'Филиал', screenName: 'BookingStep1Branch' },
-    { number: 2, title: 'Услуга', screenName: 'BookingStep2Service' },
-    { number: 3, title: 'Мастер', screenName: 'BookingStep3Staff' },
-    { number: 4, title: 'Дата', screenName: 'BookingStep4Date' },
-    { number: 5, title: 'Время', screenName: 'BookingStep5Time' },
-    { number: 6, title: 'Подтверждение', screenName: 'BookingStep6Confirm' },
+    { number: 1, titleKey: 'booking.progress.branch', screenName: 'BookingStep1Branch' },
+    { number: 2, titleKey: 'booking.progress.service', screenName: 'BookingStep2Service' },
+    { number: 3, titleKey: 'booking.progress.staff', screenName: 'BookingStep3Staff' },
+    { number: 4, titleKey: 'booking.progress.date', screenName: 'BookingStep4Date' },
+    { number: 5, titleKey: 'booking.progress.time', screenName: 'BookingStep5Time' },
+    { number: 6, titleKey: 'booking.progress.confirm', screenName: 'BookingStep6Confirm' },
 ];
 
 type BookingProgressIndicatorProps = {
@@ -30,6 +31,7 @@ type BookingProgressIndicatorProps = {
 export default function BookingProgressIndicator({ currentStep }: BookingProgressIndicatorProps) {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { bookingData } = useBooking();
+    const { t } = useLanguage();
     const totalSteps = STEPS.length;
     const progress = (currentStep / totalSteps) * 100;
 
@@ -61,9 +63,11 @@ export default function BookingProgressIndicator({ currentStep }: BookingProgres
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.stepText}>
-                    Шаг {currentStep} из {totalSteps}
+                    {t('booking.progress.stepOf', { current: currentStep, total: totalSteps })}
                 </Text>
-                <Text style={styles.stepTitle}>{STEPS[currentStep - 1]?.title}</Text>
+                <Text style={styles.stepTitle}>
+                    {STEPS[currentStep - 1] ? t(STEPS[currentStep - 1].titleKey) : null}
+                </Text>
             </View>
 
             <View style={styles.progressBarContainer}>
@@ -85,8 +89,8 @@ export default function BookingProgressIndicator({ currentStep }: BookingProgres
                                 onPress={() => handleStepPress(step)}
                                 disabled={!isClickable}
                                 style={styles.stepPressable}
-                                accessibilityLabel={`${step.number}. ${step.title}`}
-                                accessibilityHint={isClickable ? 'Возвращает к этому шагу бронирования' : undefined}
+                                accessibilityLabel={`${step.number}. ${t(step.titleKey)}`}
+                                accessibilityHint={isClickable ? t('booking.progress.stepHint') : undefined}
                             >
                                 <View
                                     style={[

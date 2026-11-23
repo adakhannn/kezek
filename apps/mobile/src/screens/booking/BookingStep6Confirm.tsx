@@ -11,6 +11,7 @@ import OfflineBanner from '../../components/ui/OfflineBanner';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
+import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { useBookingStep6Confirm } from './useBookingStep6Confirm';
 
@@ -30,6 +31,7 @@ export default function BookingStep6Confirm() {
         isOffline,
         isPending,
     } = useBookingStep6Confirm(navigation);
+    const { t } = useLanguage();
 
     return (
         <LinearGradient
@@ -49,13 +51,13 @@ export default function BookingStep6Confirm() {
 
                 <View style={styles.section}>
                     {isOffline && (
-                        <OfflineBanner message="Создание записи недоступно без сети. Дождитесь восстановления соединения." />
+                        <OfflineBanner message={t('booking.step6.offline')} />
                     )}
                     <Card style={styles.summaryCard}>
                         <View style={styles.summaryRow}>
                             <Ionicons name="business-outline" size={24} color="#6366f1" />
                             <View style={styles.summaryContent}>
-                                <Text style={styles.summaryLabel}>Бизнес</Text>
+                                <Text style={styles.summaryLabel}>{t('booking.step6.business')}</Text>
                                 <Text style={styles.summaryValue}>{bookingData.business?.name}</Text>
                             </View>
                         </View>
@@ -63,10 +65,12 @@ export default function BookingStep6Confirm() {
                         <View style={styles.summaryRow}>
                             <Ionicons name="cut-outline" size={24} color="#6366f1" />
                             <View style={styles.summaryContent}>
-                                <Text style={styles.summaryLabel}>Услуга</Text>
+                                <Text style={styles.summaryLabel}>{t('booking.step6.service')}</Text>
                                 <Text style={styles.summaryValue}>{selectedService?.name_ru}</Text>
                                 {selectedService?.duration_min && (
-                                    <Text style={styles.summaryHint}>{selectedService.duration_min} минут</Text>
+                                    <Text style={styles.summaryHint}>
+                                        {t('booking.duration.minutesLong', { minutes: selectedService.duration_min })}
+                                    </Text>
                                 )}
                                 {priceLabel && <Text style={styles.summaryPrice}>{priceLabel}</Text>}
                             </View>
@@ -75,7 +79,7 @@ export default function BookingStep6Confirm() {
                         <View style={styles.summaryRow}>
                             <Ionicons name="person-outline" size={24} color="#6366f1" />
                             <View style={styles.summaryContent}>
-                                <Text style={styles.summaryLabel}>Мастер</Text>
+                                <Text style={styles.summaryLabel}>{t('booking.step6.staff')}</Text>
                                 <Text style={styles.summaryValue}>{selectedStaff?.full_name}</Text>
                             </View>
                         </View>
@@ -83,12 +87,8 @@ export default function BookingStep6Confirm() {
                         <View style={styles.summaryRow}>
                             <Ionicons name="calendar-outline" size={24} color="#6366f1" />
                             <View style={styles.summaryContent}>
-                                <Text style={styles.summaryLabel}>Дата и время</Text>
-                                {dateLabel && (
-                                    <Text style={styles.summaryValue}>
-                                        {dateLabel.day} {dateLabel.month}
-                                    </Text>
-                                )}
+                                <Text style={styles.summaryLabel}>{t('booking.step6.dateTime')}</Text>
+                                {dateLabel && <Text style={styles.summaryValue}>{dateLabel.dayMonth}</Text>}
                                 {bookingData.selectedSlot && (
                                     <Text style={styles.summaryHint}>
                                         {formatTimeSlot(bookingData.selectedSlot.start_at, TZ)}
@@ -100,13 +100,13 @@ export default function BookingStep6Confirm() {
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            title="Назад"
+                            title={t('booking.nav.back')}
                             onPress={() => navigation.goBack()}
                             variant="outline"
                             style={styles.backButton}
                         />
                         <Button
-                            title="Записаться"
+                            title={t('booking.book')}
                             onPress={handleCreateBooking}
                             loading={isPending}
                             disabled={isPending || !bookingData.selectedSlot || isOffline}

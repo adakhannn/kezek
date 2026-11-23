@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../constants/colors';
+import { useLanguage } from '../i18n';
 import { getErrorMessage } from '../lib/errors';
 import Button from './ui/Button';
 
@@ -11,24 +12,25 @@ type ErrorDisplayProps = {
 };
 
 export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
+    const { t } = useLanguage();
     const isEnvError = error.message.includes('environment variables') || 
                       error.message.includes('EXPO_PUBLIC');
-    const visibleMessage = isEnvError ? error.message : getErrorMessage(error);
+    const visibleMessage = isEnvError ? error.message : getErrorMessage(error, undefined, t);
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Ionicons name="alert-circle" size={64} color={colors.status.danger} />
-            <Text style={styles.title}>Что-то пошло не так</Text>
+            <Text style={styles.title}>{t('cabinet.errorDisplay.title')}</Text>
             <Text style={styles.message}>{visibleMessage}</Text>
             
             {isEnvError && (
                 <View style={styles.envHelp}>
-                    <Text style={styles.envTitle}>Проверьте настройки:</Text>
+                    <Text style={styles.envTitle}>{t('cabinet.errorDisplay.envTitle')}</Text>
                     <Text style={styles.envText}>
-                        1. Создайте файл .env.local в папке apps/mobile/
+                        {t('cabinet.errorDisplay.envStep1')}
                     </Text>
                     <Text style={styles.envText}>
-                        2. Добавьте переменные:
+                        {t('cabinet.errorDisplay.envStep2')}
                     </Text>
                     <Text style={styles.envCode}>
                         EXPO_PUBLIC_SUPABASE_URL=...{'\n'}
@@ -36,14 +38,14 @@ export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
                         EXPO_PUBLIC_API_URL=https://kezek.vercel.app
                     </Text>
                     <Text style={styles.envText}>
-                        3. Перезапустите Expo (остановите и запустите снова)
+                        {t('cabinet.errorDisplay.envStep3')}
                     </Text>
                 </View>
             )}
             
             {onRetry && (
                 <Button
-                    title="Попробовать снова"
+                    title={t('cabinet.errorDisplay.retry')}
                     onPress={onRetry}
                     style={styles.button}
                 />

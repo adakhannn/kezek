@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useLanguage } from '../i18n';
 import { getErrorMessage } from '../lib/errors';
 import { RootStackParamList } from '../navigation/types';
 import { StaffBusinessPicker } from './staff/StaffBusinessPicker';
@@ -17,6 +18,7 @@ type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, '
 
 export default function StaffScreen() {
     const navigation = useNavigation<StaffScreenNavigationProp>();
+    const { t } = useLanguage();
     const {
         staffInfo,
         staffRecords,
@@ -40,14 +42,14 @@ export default function StaffScreen() {
             await selectStaff(staffId);
             setChoosingBusiness(false);
         } catch (error) {
-            setSelectionError(getErrorMessage(error, 'Не удалось выбрать бизнес. Попробуйте снова.'));
+            setSelectionError(getErrorMessage(error, t('staff.workspace.selectError'), t));
         } finally {
             setSelectingId(null);
         }
     };
 
     if (isLoading) {
-        return <LoadingSpinner message="Загрузка..." />;
+        return <LoadingSpinner message={t('common.loading')} />;
     }
 
     if (loadError) {
@@ -55,9 +57,9 @@ export default function StaffScreen() {
             <ScrollView style={styles.container}>
                 <EmptyState
                     icon="alert-circle"
-                    title="Не удалось загрузить рабочую зону"
-                    message="Проверьте соединение и попробуйте снова."
-                    action={<Button title="Повторить" onPress={() => void onRefresh()} variant="outline" fullWidth />}
+                    title={t('staff.workspace.loadError')}
+                    message={t('staff.checkConnection')}
+                    action={<Button title={t('staff.retry')} onPress={() => void onRefresh()} variant="outline" fullWidth />}
                 />
             </ScrollView>
         );
@@ -90,8 +92,8 @@ export default function StaffScreen() {
             <ScrollView style={styles.container}>
                 <EmptyState
                     icon="briefcase"
-                    title="Вы не являетесь сотрудником"
-                    message="Здесь будут отображаться ваши записи после назначения сотрудником"
+                    title={t('staff.notStaff')}
+                    message={t('staff.workspace.notStaffMessage')}
                 />
             </ScrollView>
         );

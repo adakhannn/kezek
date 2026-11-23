@@ -1,16 +1,16 @@
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors } from '../../constants/colors';
+import { useLanguage, type MobileI18nKey } from '../../i18n';
 import Button from './Button';
 import FeedbackBanner from './FeedbackBanner';
 
-export const OFFLINE_BANNER_DEFAULT = {
-    title: 'Нет подключения к интернету',
-    messageGeneric:
-        'Список обновится автоматически, когда сеть появится. Попробуйте потянуть вниз для обновления.',
-    messageWithRetry:
-        'Мы не можем загрузить данные. Проверьте сеть и нажмите «Обновить», когда соединение восстановится.',
-} as const;
+/** Dictionary keys of the default texts; translated with `t()` at render. */
+export const OFFLINE_BANNER_DEFAULT_KEYS = {
+    title: 'cabinet.ui.offline.title',
+    messageGeneric: 'cabinet.ui.offline.messageGeneric',
+    messageWithRetry: 'cabinet.ui.offline.messageWithRetry',
+} as const satisfies Record<string, MobileI18nKey>;
 
 type OfflineBannerProps = {
     title?: string;
@@ -21,31 +21,32 @@ type OfflineBannerProps = {
 };
 
 export default function OfflineBanner({
-    title = OFFLINE_BANNER_DEFAULT.title,
+    title,
     message,
     onRetry,
     style,
     compact = false,
 }: OfflineBannerProps) {
+    const { t } = useLanguage();
     const displayMessage =
         message ??
-        (onRetry != null ? OFFLINE_BANNER_DEFAULT.messageWithRetry : OFFLINE_BANNER_DEFAULT.messageGeneric);
+        t(onRetry != null ? OFFLINE_BANNER_DEFAULT_KEYS.messageWithRetry : OFFLINE_BANNER_DEFAULT_KEYS.messageGeneric);
 
     return (
         <FeedbackBanner
             variant="warning"
-            title={title}
+            title={title ?? t(OFFLINE_BANNER_DEFAULT_KEYS.title)}
             message={displayMessage}
             compact={compact}
             style={[styles.banner, style]}
             action={
                 onRetry ? (
                     <Button
-                        title="Обновить"
+                        title={t('cabinet.ui.offline.refresh')}
                         onPress={onRetry}
                         variant="outline"
                         size="sm"
-                        accessibilityHint="Повторяет загрузку данных"
+                        accessibilityHint={t('cabinet.ui.offline.refreshHint')}
                     />
                 ) : undefined
             }

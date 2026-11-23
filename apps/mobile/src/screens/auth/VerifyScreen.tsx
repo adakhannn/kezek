@@ -34,7 +34,7 @@ export default function VerifyScreen() {
     const [codeError, setCodeError] = useState<string | null>(null);
 
     const handleVerify = async () => {
-        const error = getValidationError('code', code);
+        const error = getValidationError('code', code, t);
         if (error) {
             setCodeError(error);
             showToast(error, 'error');
@@ -64,7 +64,7 @@ export default function VerifyScreen() {
             showToast(t('auth.signedIn'), 'success');
         } catch (error: unknown) {
             showToast(
-                getErrorMessage(error, t('auth.verify.error.verify')),
+                getErrorMessage(error, t('auth.verify.error.verify'), t),
                 'error',
             );
         } finally {
@@ -95,7 +95,7 @@ export default function VerifyScreen() {
             showToast(t('auth.verify.resent'), 'success');
         } catch (error: unknown) {
             showToast(
-                getErrorMessage(error, t('auth.verify.error.resend')),
+                getErrorMessage(error, t('auth.verify.error.resend'), t),
                 'error',
             );
         } finally {

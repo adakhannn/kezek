@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import MotionPressable from '../../components/ui/MotionPressable';
 import { colors } from '../../constants/colors';
+import { useLanguage } from '../../i18n';
 import { styles } from './staffScreenStyles';
 import type { StaffInfo } from './types';
 
@@ -29,6 +30,7 @@ export function StaffBusinessPicker({
     onSelect,
     onCancel,
 }: Props) {
+    const { t } = useLanguage();
     return (
         <ScrollView
             style={styles.container}
@@ -37,9 +39,9 @@ export function StaffBusinessPicker({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>Выберите бизнес</Text>
+                <Text style={styles.title}>{t('staff.picker.title')}</Text>
                 <Text style={styles.subtitle}>
-                    Вы работаете в нескольких бизнесах. Записи, смена и статистика показываются для выбранного.
+                    {t('staff.picker.subtitle')}
                 </Text>
             </View>
 
@@ -48,7 +50,7 @@ export function StaffBusinessPicker({
 
                 <View style={styles.pickerList}>
                     {records.map((record) => {
-                        const businessName = record.business?.name || 'Бизнес';
+                        const businessName = record.business?.name || t('staff.workspace.business');
                         const branchName = record.branch?.name;
                         const isCurrent = record.id === currentId;
                         const isSelecting = record.id === selectingId;
@@ -59,7 +61,7 @@ export function StaffBusinessPicker({
                                 onPress={() => onSelect(record.id)}
                                 disabled={!!selectingId}
                                 accessibilityLabel={branchName ? `${businessName}, ${branchName}` : businessName}
-                                accessibilityHint="Открывает рабочую зону этого бизнеса"
+                                accessibilityHint={t('staff.picker.optionHint')}
                                 accessibilityState={{ selected: isCurrent, busy: isSelecting }}
                                 style={[styles.pickerOption, isCurrent && styles.pickerOptionCurrent]}
                             >
@@ -70,7 +72,7 @@ export function StaffBusinessPicker({
                                 {isSelecting ? (
                                     <ActivityIndicator color={colors.accent.primary} />
                                 ) : isCurrent ? (
-                                    <Text style={styles.pickerCurrentMark}>Текущий</Text>
+                                    <Text style={styles.pickerCurrentMark}>{t('staff.picker.current')}</Text>
                                 ) : null}
                             </MotionPressable>
                         );
@@ -79,7 +81,7 @@ export function StaffBusinessPicker({
 
                 {onCancel ? (
                     <Button
-                        title="Отмена"
+                        title={t('staff.cancel')}
                         onPress={onCancel}
                         variant="outline"
                         disabled={!!selectingId}

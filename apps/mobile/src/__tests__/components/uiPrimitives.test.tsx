@@ -8,7 +8,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import Input from '../../components/ui/Input';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import OfflineBanner, { OFFLINE_BANNER_DEFAULT } from '../../components/ui/OfflineBanner';
+import OfflineBanner from '../../components/ui/OfflineBanner';
 import Toast from '../../components/ui/Toast';
 
 describe('UI primitive behavior contracts', () => {
@@ -90,8 +90,10 @@ describe('UI primitive behavior contracts', () => {
         const onRetry = jest.fn();
         render(<OfflineBanner onRetry={onRetry} />);
 
-        expect(screen.getByText(OFFLINE_BANNER_DEFAULT.title)).toBeTruthy();
-        expect(screen.getByText(OFFLINE_BANNER_DEFAULT.messageWithRetry)).toBeTruthy();
+        expect(screen.getByText('Нет подключения к интернету')).toBeTruthy();
+        expect(
+            screen.getByText('Мы не можем загрузить данные. Проверьте сеть и нажмите «Обновить», когда соединение восстановится.'),
+        ).toBeTruthy();
         fireEvent.press(screen.getByRole('button', { name: 'Обновить' }));
         expect(onRetry).toHaveBeenCalledTimes(1);
     });

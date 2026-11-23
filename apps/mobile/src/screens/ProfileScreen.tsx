@@ -1,10 +1,12 @@
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useLanguage } from '../i18n';
 import { ProfileScreenSections } from './profile/ProfileScreenSections';
 import { useProfileScreenData } from './profile/useProfileScreenData';
 
 export default function ProfileScreen() {
+  const { t } = useLanguage();
   const {
     user,
     isLoading,
@@ -25,16 +27,16 @@ export default function ProfileScreen() {
   } = useProfileScreenData();
 
   if (isLoading) {
-    return <LoadingSpinner message="Загружаем данные..." />;
+    return <LoadingSpinner message={t('cabinet.profile.loading')} />;
   }
 
   if (loadError) {
     return (
       <EmptyState
         icon="alert-circle"
-        title="Не удалось загрузить профиль"
-        message="Проверьте соединение и попробуйте снова."
-        action={<Button title="Повторить" onPress={() => void retryLoad()} variant="outline" fullWidth />}
+        title={t('cabinet.profile.loadError.title')}
+        message={t('cabinet.profile.loadError.message')}
+        action={<Button title={t('cabinet.ui.retry')} onPress={() => void retryLoad()} variant="outline" fullWidth />}
       />
     );
   }

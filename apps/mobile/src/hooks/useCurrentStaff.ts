@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { pickStaffCard } from '@core-domain/staff';
 
+import { useLanguage, type Translate } from '../i18n';
 import { logWarn } from '../lib/log';
 import { getStaffSelection, setStaffSelection } from '../lib/staffSelectionStorage';
 import { supabase } from '../lib/supabase';
@@ -14,15 +15,11 @@ const STAFF_CARD_COLUMNS = 'id, full_name, biz_id, created_at, branch:branches(i
 /** Queries whose data belongs to one staff card: switching the card refreshes them. */
 const STAFF_DEPENDENT_QUERY_KEYS = [['staff-bookings'], ['staff-finance'], ['staff-shifts-stats']];
 
-const STAFF_SELECTION_UNAVAILABLE = 'Этот бизнес больше недоступен. Обновите экран.';
-const STAFF_SELECTION_QUEUE_UNREADABLE =
-    'Не удалось проверить неотправленные изменения смены, поэтому бизнес не переключён. Попробуйте ещё раз.';
-
-function queueBlocksSelectionMessage(card: StaffInfo | undefined): string {
+function queueBlocksSelectionMessage(card: StaffInfo | undefined, t: Translate): string {
     const businessName = card?.business?.name;
     return businessName
-        ? `В бизнесе «${businessName}» есть неотправленные изменения смены. Сначала откройте его и дождитесь отправки.`
-        : 'В другом бизнесе есть неотправленные изменения смены. Сначала откройте его и дождитесь отправки.';
+        ? t('staff.selection.queueBlocksNamed', { business: businessName })
+        : t('staff.selection.queueBlocks');
 }
 
 export type CurrentStaff = {
@@ -50,6 +47,7 @@ export function useCurrentStaff(): CurrentStaff {
     const { user, isLoading: userLoading } = useAuth();
     const userId = user?.id;
     const queryClient = useQueryClient();
+    const { t } = useLanguage();
 
     const recordsQuery = useQuery({
         queryKey: ['staff-records', userId],
@@ -108,16 +106,16 @@ export function useCurrentStaff(): CurrentStaff {
     }, [onlyCardId, preferredStaffId, queryClient, userId]);
 
     const select = useCallback(async (staffId: string) => {
-        if (!userId) throw new Error('Войдите в аккаунт снова.');
+        if (!userId) throw new Error(t('staff.selection.signInAgain'));
         const cards = records ?? [];
-        if (!cards.some((card) => card.id === staffId)) throw new Error(STAFF_SELECTION_UNAVAILABLE);
+        if (!cards.some((card) => card.id === staffId)) throw new Error(t('staff.selection.unavailable'));
 
         let queue: ShiftOfflineOperation[];
         try {
             queue = await getOfflineQueue();
         } catch (error) {
             logWarn('useCurrentStaff', 'Offline shift queue is unreadable; the staff card was not switched', error);
-            throw new Error(STAFF_SELECTION_QUEUE_UNREADABLE);
+            throw new Error(t('staff.selection.queueUnreadable'));
         }
         // A queued shift command is replayed only as the card that created it, so leaving another
         // active card with unsent commands would strand them. Commands that no card of this account
@@ -127,7 +125,7 @@ export function useCurrentStaff(): CurrentStaff {
             && operation.owner.staffId !== staffId
             && cards.some((card) => card.id === operation.owner?.staffId));
         if (blocking) {
-            throw new Error(queueBlocksSelectionMessage(cards.find((card) => card.id === blocking.owner?.staffId)));
+            throw new Error(queueBlocksSelectionMessage(cards.find((card) => card.id === blocking.owner?.staffId), t));
         }
 
         await setStaffSelection(userId, staffId);
@@ -136,7 +134,7 @@ export function useCurrentStaff(): CurrentStaff {
         for (const queryKey of STAFF_DEPENDENT_QUERY_KEYS) {
             void queryClient.invalidateQueries({ queryKey });
         }
-    }, [queryClient, records, userId]);
+    }, [queryClient, records, t, userId]);
 
     // The remembered choice is kept in the cache whenever it changes; only the cards are reloaded.
     const { refetch: refetchRecords } = recordsQuery;

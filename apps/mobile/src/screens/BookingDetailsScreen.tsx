@@ -5,6 +5,7 @@ import EmptyState from '../components/ui/EmptyState';
 import { useConfirm } from '../contexts/ConfirmContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useToast } from '../contexts/ToastContext';
+import { useLanguage } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
 import { BookingDetailsSections } from './bookingDetails/BookingDetailsSections';
 import { useBookingDetailsData } from './bookingDetails/useBookingDetailsData';
@@ -21,6 +22,7 @@ export default function BookingDetailsScreen() {
     const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
     const { showToast } = useToast();
     const { confirm } = useConfirm();
+    const { t } = useLanguage();
     const bookingId = route.params?.id;
     const {
         booking,
@@ -53,7 +55,7 @@ export default function BookingDetailsScreen() {
     const handleRepeat = () => {
         const slug = booking?.business?.slug;
         if (!slug) {
-            showToast('Не удалось открыть запись, бизнес не найден', 'error');
+            showToast(t('cabinet.details.repeatError'), 'error');
             return;
         }
 
@@ -62,10 +64,10 @@ export default function BookingDetailsScreen() {
 
     const handleCancel = async () => {
         const shouldCancel = await confirm({
-            title: 'Отменить бронирование?',
-            message: 'Вы уверены, что хотите отменить эту запись?',
-            confirmLabel: 'Да, отменить',
-            cancelLabel: 'Нет',
+            title: t('cabinet.details.cancelTitle'),
+            message: t('cabinet.details.cancelMessage'),
+            confirmLabel: t('cabinet.details.cancelConfirm'),
+            cancelLabel: t('cabinet.details.cancelKeep'),
             variant: 'danger',
         });
 
@@ -77,11 +79,11 @@ export default function BookingDetailsScreen() {
     };
 
     if (isLoading) {
-        return <LoadingSpinner message="Загрузка бронирования..." />;
+        return <LoadingSpinner message={t('cabinet.details.loading')} />;
     }
 
     if (!booking) {
-        return <EmptyState title="Бронирование не найдено" />;
+        return <EmptyState title={t('cabinet.details.notFound')} />;
     }
 
     return (

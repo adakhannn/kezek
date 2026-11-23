@@ -2,6 +2,10 @@
  * Утилиты для валидации форм
  */
 
+import { createTranslate, type Translate } from '../i18n/translate';
+
+const translateRu: Translate = createTranslate('ru');
+
 export function validateEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -41,24 +45,25 @@ export function normalizePhone(phone: string): string {
     return cleaned;
 }
 
-export function getValidationError(field: string, value: string): string | null {
+/** The validation message of a field in the screen's language (`t` from `useLanguage()`); Russian without `t`. */
+export function getValidationError(field: string, value: string, t: Translate = translateRu): string | null {
     switch (field) {
         case 'email':
-            if (!value.trim()) return 'Email обязателен';
-            if (!validateEmail(value)) return 'Неверный формат email';
+            if (!value.trim()) return t('cabinet.validation.emailRequired');
+            if (!validateEmail(value)) return t('cabinet.validation.emailInvalid');
             return null;
         case 'phone':
-            if (!value.trim()) return 'Телефон обязателен';
-            if (!validatePhone(value)) return 'Неверный формат телефона';
+            if (!value.trim()) return t('cabinet.validation.phoneRequired');
+            if (!validatePhone(value)) return t('cabinet.validation.phoneInvalid');
             return null;
         case 'name':
-            if (!value.trim()) return 'Имя обязательно';
-            if (!validateName(value)) return 'Имя должно содержать от 2 до 100 символов';
+            if (!value.trim()) return t('cabinet.validation.nameRequired');
+            if (!validateName(value)) return t('cabinet.validation.nameLength');
             return null;
         case 'code':
-            if (!value.trim()) return 'Код обязателен';
-            if (value.length !== 6) return 'Код должен содержать 6 цифр';
-            if (!/^\d+$/.test(value)) return 'Код должен содержать только цифры';
+            if (!value.trim()) return t('cabinet.validation.codeRequired');
+            if (value.length !== 6) return t('cabinet.validation.codeLength');
+            if (!/^\d+$/.test(value)) return t('cabinet.validation.codeDigits');
             return null;
         default:
             return null;

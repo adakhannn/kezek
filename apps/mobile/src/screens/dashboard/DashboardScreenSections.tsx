@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import MotionPressable from '../../components/ui/MotionPressable';
+import { useLanguage } from '../../i18n';
 import { styles } from './dashboardScreenStyles';
 import type { Business } from './types';
 
@@ -20,6 +21,7 @@ export function DashboardScreenSections({
     onRefresh,
     onBusinessPress,
 }: Props) {
+    const { t } = useLanguage();
     return (
         <ScrollView
             style={styles.container}
@@ -29,9 +31,9 @@ export function DashboardScreenSections({
             }
         >
             <View style={styles.header}>
-                <Text style={styles.title}>Кабинет бизнеса</Text>
+                <Text style={styles.title}>{t('staff.dashboard.title')}</Text>
                 <Text style={styles.subtitle}>
-                    Управление {businesses.length === 1 ? 'бизнесом' : 'бизнесами'}
+                    {t(businesses.length === 1 ? 'staff.dashboard.subtitleOne' : 'staff.dashboard.subtitleMany')}
                 </Text>
             </View>
 
@@ -54,7 +56,7 @@ export function DashboardScreenSections({
                                 ) : null}
                                 <View style={styles.businessActions}>
                                     <Button
-                                        title="Открыть веб-кабинет"
+                                        title={t('staff.dashboard.openWeb')}
                                         onPress={() => onBusinessPress(business.id)}
                                         variant="outline"
                                         fullWidth
@@ -67,8 +69,8 @@ export function DashboardScreenSections({
             ) : (
                 <EmptyState
                     icon="business"
-                    title="Нет бизнесов"
-                    message="Зарегистрируйте бизнес, чтобы начать управление"
+                    title={t('staff.dashboard.emptyTitle')}
+                    message={t('staff.dashboard.emptyMessage')}
                 />
             )}
         </ScrollView>

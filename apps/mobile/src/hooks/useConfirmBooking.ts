@@ -4,6 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLanguage, type Translate } from '../i18n';
 import { apiRequest } from '../lib/api';
 import { acknowledgeBookingRequest, getBookingRequestKey } from '../lib/bookingRequest';
 
@@ -29,7 +30,7 @@ type QuickHoldApiResponse = {
     };
 };
 
-async function createBooking(params: ConfirmBookingParams): Promise<ConfirmBookingResponse> {
+async function createBooking(params: ConfirmBookingParams, t: Translate): Promise<ConfirmBookingResponse> {
     const requestId = await getBookingRequestKey(params);
     const response = await apiRequest<QuickHoldApiResponse>('/api/quick-hold', {
         method: 'POST',
@@ -37,18 +38,18 @@ async function createBooking(params: ConfirmBookingParams): Promise<ConfirmBooki
         body: JSON.stringify(params),
     });
 
-    const confirmed = normalizeConfirmBookingResponse(response);
+    const confirmed = normalizeConfirmBookingResponse(response, t);
     // A storage failure keeps the safe replay identity; it must not report a
     // failed booking after the server's confirmed response has been received.
     try { await acknowledgeBookingRequest(params, requestId); } catch { /* Keep the receipt identity. */ }
     return confirmed;
 }
 
-function normalizeConfirmBookingResponse(response: QuickHoldApiResponse): ConfirmBookingResponse {
+function normalizeConfirmBookingResponse(response: QuickHoldApiResponse, t: Translate): ConfirmBookingResponse {
     const bookingId = response.data?.booking_id ?? response.booking_id;
 
     if (!bookingId || (response.data?.confirmed ?? response.confirmed) !== true) {
-        throw new Error('Не удалось получить номер созданной записи');
+        throw new Error(t('booking.error.noBookingNumber'));
     }
 
     return {
@@ -65,9 +66,10 @@ export type UseConfirmBookingOptions = {
 export function useConfirmBooking(options: UseConfirmBookingOptions = {}) {
     const { onSuccess, onError } = options;
     const queryClient = useQueryClient();
+    const { t } = useLanguage();
 
     const mutation = useMutation({
-        mutationFn: createBooking,
+        mutationFn: (params: ConfirmBookingParams) => createBooking(params, t),
         onSuccess: (data) => {
             // The cabinet lists (staleTime 5 min) and the slot grid must show the new booking at
             // once, as cancellation already does (MOB-04).

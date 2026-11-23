@@ -1,5 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
+import type { MobileI18nKey } from '../i18n/dictionaries/ru';
+import { createTranslate, type Translate } from '../i18n/translate';
 import { clearShiftOfflineData, getOfflineQueue } from '../screens/shiftQuick/offlineStorage';
 import { TRANSIENT_AUTH_STORAGE_KEYS } from './authStorageKeys';
 import { logWarn } from './log';
@@ -19,6 +21,8 @@ type AuthWithLocalSessionRemoval = {
 
 const REMOTE_SIGN_OUT_TIMEOUT_MS = 4000;
 
+const translateRu: Translate = createTranslate('ru');
+
 export type SignOutResult = {
     usedLocalFallback: boolean;
 };
@@ -37,36 +41,44 @@ export async function countPendingShiftOperations(): Promise<number | null> {
     }
 }
 
-function shiftChangesWord(count: number): string {
+/** The plural form key of "change" for a count (Russian one / few / many; ky and en map them). */
+function shiftChangesKey(count: number): MobileI18nKey {
     const lastTwo = count % 100;
     const last = count % 10;
-    if (lastTwo >= 11 && lastTwo <= 14) return 'изменений';
-    if (last === 1) return 'изменение';
-    if (last >= 2 && last <= 4) return 'изменения';
-    return 'изменений';
+    if (lastTwo >= 11 && lastTwo <= 14) return 'cabinet.signOut.changes.many';
+    if (last === 1) return 'cabinet.signOut.changes.one';
+    if (last >= 2 && last <= 4) return 'cabinet.signOut.changes.few';
+    return 'cabinet.signOut.changes.many';
 }
 
-export function signOutConfirmationText(pendingShiftOperations: number | null): {
+/** The sign-out confirmation in the screen's language (`t` from `useLanguage()`); Russian without `t`. */
+export function signOutConfirmationText(pendingShiftOperations: number | null, t: Translate = translateRu): {
     title: string;
     message: string;
     confirmLabel: string;
 } {
     if (pendingShiftOperations === null) {
         return {
-            title: 'Есть несохранённые данные смены',
-            message: 'Не удалось проверить, все ли изменения смены отправлены. После выхода данные смены на этом устройстве будут удалены.',
-            confirmLabel: 'Выйти и удалить',
+            title: t('cabinet.signOut.unknown.title'),
+            message: t('cabinet.signOut.unknown.message'),
+            confirmLabel: t('cabinet.signOut.confirmDelete'),
         };
     }
     if (pendingShiftOperations > 0) {
         return {
-            title: 'Есть неотправленные изменения смены',
-            message: `${pendingShiftOperations} ${shiftChangesWord(pendingShiftOperations)} смены ещё не отправлены на сервер. ` +
-                'После выхода они будут удалены с этого устройства. Подключитесь к интернету и дождитесь отправки или выйдите всё равно.',
-            confirmLabel: 'Выйти и удалить',
+            title: t('cabinet.signOut.pending.title'),
+            message: t('cabinet.signOut.pending.message', {
+                count: pendingShiftOperations,
+                changes: t(shiftChangesKey(pendingShiftOperations)),
+            }),
+            confirmLabel: t('cabinet.signOut.confirmDelete'),
         };
     }
-    return { title: 'Выход', message: 'Вы уверены, что хотите выйти?', confirmLabel: 'Выйти' };
+    return {
+        title: t('cabinet.signOut.title'),
+        message: t('cabinet.signOut.message'),
+        confirmLabel: t('cabinet.signOut.confirm'),
+    };
 }
 
 async function removeLocalSession(auth: AuthWithLocalSessionRemoval): Promise<void> {

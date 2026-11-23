@@ -12,6 +12,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
+import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { useBookingStep3Staff } from './useBookingStep3Staff';
@@ -21,6 +22,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function BookingStep3Staff() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setStaff, setStaffId } = useBooking();
+    const { t } = useLanguage();
     const { staffData, isLoading } = useBookingStep3Staff({
         bookingData,
         setStaff,
@@ -48,7 +50,7 @@ export default function BookingStep3Staff() {
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <LoadingSpinner message="Загрузка мастеров..." />
+                <LoadingSpinner message={t('booking.step3.loading')} />
             </View>
         );
     }
@@ -68,8 +70,8 @@ export default function BookingStep3Staff() {
                     </View>
                     <EmptyState
                         icon="person-outline"
-                        title="Нет доступных мастеров"
-                        message="Для выбранной услуги пока нет активных сотрудников."
+                        title={t('booking.step3.emptyTitle')}
+                        message={t('booking.step3.emptyMessage')}
                         compact
                         style={styles.emptyContainer}
                     />
@@ -128,13 +130,13 @@ export default function BookingStep3Staff() {
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            title="Назад"
+                            title={t('booking.nav.back')}
                             onPress={() => navigation.goBack()}
                             variant="outline"
                             style={styles.backButton}
                         />
                         <Button
-                            title="Дальше"
+                            title={t('booking.nav.next')}
                             onPress={handleNext}
                             disabled={!bookingData.staffId}
                             variant="primary"

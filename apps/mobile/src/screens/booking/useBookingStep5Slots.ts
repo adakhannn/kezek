@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { addMinutes } from 'date-fns';
 
+import { useLanguage, type MobileI18nKey } from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import type { Slot } from '@shared-client/types';
@@ -23,7 +24,7 @@ type SlotsErrorKind =
 
 type SlotsResult =
     | { ok: true; slots: TimeSlot[] }
-    | { ok: false; error: { kind: SlotsErrorKind; message: string } };
+    | { ok: false; error: { kind: SlotsErrorKind; messageKey: MobileI18nKey } };
 
 type BookingDataShape = {
     business?: { id?: string | null } | null;
@@ -38,32 +39,29 @@ function mapSlotsError(error: unknown): Extract<SlotsResult, { ok: false }> {
     const raw = err.message || '';
 
     let kind: SlotsErrorKind = 'UNKNOWN';
-    let userMessage =
-        'Не удалось загрузить свободные слоты. Попробуйте выбрать другой день или мастера.';
+    let messageKey: MobileI18nKey = 'booking.slots.error.unknown';
 
+    // The database answers in Russian or English; these words match its text, not the UI.
     if (raw.includes('not assigned') || raw.includes('не прикреплён')) {
         kind = 'MASTER_NOT_ASSIGNED';
-        userMessage =
-            'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
+        messageKey = 'booking.slots.error.masterNotAssigned';
     } else if (raw.includes('schedule') || raw.includes('расписание')) {
         kind = 'NO_SCHEDULE';
-        userMessage =
-            'У выбранного мастера нет расписания на выбранный день. Выберите другой день.';
+        messageKey = 'booking.slots.error.noSchedule';
     } else if (raw.includes('conflict') || raw.includes('конфликт')) {
         kind = 'SCHEDULE_CONFLICT';
-        userMessage =
-            'Есть конфликт в расписании мастера на выбранный день. Выберите другой день или мастера.';
+        messageKey = 'booking.slots.error.scheduleConflict';
     } else if (err.code === 'PGRST301' || err.code === 'PGRST116') {
         kind = 'TECHNICAL';
-        userMessage =
-            'Произошла техническая ошибка. Пожалуйста, обновите экран или попробуйте позже.';
+        messageKey = 'booking.slots.error.technical';
     }
 
-    return { ok: false, error: { kind, message: userMessage } };
+    return { ok: false, error: { kind, messageKey } };
 }
 
 export function useBookingStep5Slots(bookingData: BookingDataShape) {
     const { isOffline } = useNetworkStatus();
+    const { t } = useLanguage();
     const [hasNetworkError, setHasNetworkError] = useState(false);
 
     const {
@@ -149,7 +147,7 @@ export function useBookingStep5Slots(bookingData: BookingDataShape) {
 
     return {
         slots: slotsResult && slotsResult.ok ? slotsResult.slots : [],
-        domainErrorMessage: slotsResult && !slotsResult.ok ? slotsResult.error.message : null,
+        domainErrorMessage: slotsResult && !slotsResult.ok ? t(slotsResult.error.messageKey) : null,
         isLoading,
         refetch,
         showOfflineBanner: isOffline || hasNetworkError,

@@ -15,6 +15,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import MotionPressable from '../../components/ui/MotionPressable';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { useBookingStep5Slots } from './useBookingStep5Slots';
@@ -32,6 +33,7 @@ type TimeSlot = Slot & {
 export default function BookingStep5Time() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedSlot } = useBooking();
+    const { t } = useLanguage();
     const { slots, domainErrorMessage, isLoading, refetch, showOfflineBanner } =
         useBookingStep5Slots(bookingData);
 
@@ -71,7 +73,7 @@ export default function BookingStep5Time() {
                     {showOfflineBanner ? <OfflineBanner onRetry={() => refetch()} /> : null}
 
                     {isLoading ? (
-                        <LoadingSpinner message="Загрузка доступного времени..." size="small" />
+                        <LoadingSpinner message={t('booking.step5.loading')} size="small" />
                     ) : slots && slots.length > 0 ? (
                         <View style={styles.slotsGrid}>
                             {slots.map((slot, index: number) => (
@@ -100,15 +102,15 @@ export default function BookingStep5Time() {
                         <EmptyState
                             icon="alert-circle-outline"
                             title={domainErrorMessage}
-                            message="Попробуйте выбрать другую дату или обновить список."
+                            message={t('booking.step5.errorHint')}
                             compact
                             style={styles.noSlotsContainer}
                         />
                     ) : !showOfflineBanner ? (
                         <EmptyState
                             icon="time-outline"
-                            title="Нет доступного времени"
-                            message="Попробуйте выбрать другую дату."
+                            title={t('booking.step5.emptyTitle')}
+                            message={t('booking.step5.emptyMessage')}
                             compact
                             style={styles.noSlotsContainer}
                         />
@@ -117,13 +119,13 @@ export default function BookingStep5Time() {
                     {slots && slots.length > 0 ? (
                         <View style={styles.buttonContainer}>
                             <Button
-                                title="Назад"
+                                title={t('booking.nav.back')}
                                 onPress={() => navigation.goBack()}
                                 variant="outline"
                                 style={styles.backButton}
                             />
                             <Button
-                                title="Дальше"
+                                title={t('booking.nav.next')}
                                 onPress={handleNext}
                                 disabled={!bookingData.selectedSlot}
                                 variant="primary"

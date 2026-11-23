@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { InteractionManager } from 'react-native';
 
 import { useBooking } from '../../contexts/BookingContext';
+import { useLanguage } from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { trackMobileEvent } from '../../lib/analytics';
 
@@ -31,6 +32,7 @@ export function useBookingScreenData({ slug }: Options) {
         setPromotions,
         reset,
     } = useBooking();
+    const { t } = useLanguage();
     const [canLoadPromotions, setCanLoadPromotions] = useState(false);
     const activeBusinessSlug = bookingData.business?.slug;
 
@@ -67,7 +69,7 @@ export function useBookingScreenData({ slug }: Options) {
                 .single();
 
             if (error) throw error;
-            if (!biz) throw new Error('Бизнес не найден');
+            if (!biz) throw new Error(t('booking.error.businessNotFound'));
 
             const branches = await supabase
                 .from('branches')

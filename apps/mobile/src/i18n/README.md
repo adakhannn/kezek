@@ -24,7 +24,7 @@
 
 Слова для тех же понятий берутся из словарей сайта (`apps/web/src/app/_components/i18n/dictionaries/*.ky.ts`, `*.en.ts`), чтобы приложение и сайт говорили одинаково. Кыргызский — вежливое «Сиз» (`киргизиңиз`, `тандаңыз`). Русский текст при переводе экрана не меняется: на него опираются тесты.
 
-Не переводятся и остаются в базе: сравнение с текстом ответа API (`message.includes('истек')` в `WhatsAppScreen.tsx`) и названия языков в `dictionaries/languageNames.ts` (каждое на своём языке). Сообщения из `lib/errors.ts` (`getErrorMessage`) и `utils/validation.ts` пока русские.
+Не переводятся и остаются в базе: сравнение с текстом ответа API (`message.includes('истек')` в `WhatsAppScreen.tsx`) и названия языков в `dictionaries/languageNames.ts` (каждое на своём языке). Общие помощники `lib/errors.ts` (`getErrorMessage`), `utils/validation.ts`, `utils/format.ts` и `lib/signOut.ts` принимают `t` или `locale` последним аргументом; без него остаётся русский текст. Кыргызские даты — `i18n/kyDate.ts` (без Intl), названия месяцев и дней — `dictionaries/kyCalendar.ts`.
 
 ## Устройство
 

@@ -1,8 +1,7 @@
-const DEFAULT_ERROR_MESSAGE = 'Что-то пошло не так. Попробуйте снова.';
-const NETWORK_ERROR_MESSAGE =
-    'Нет подключения к интернету. Проверьте соединение и попробуйте снова.';
-const TIMEOUT_ERROR_MESSAGE =
-    'Сервер не ответил вовремя. Проверьте соединение и попробуйте снова.';
+import { createTranslate, type Translate } from '../i18n/translate';
+
+/** Russian, for callers outside a screen (tests, logging) that pass no `t`. */
+const translateRu: Translate = createTranslate('ru');
 
 type ErrorLike = {
     message?: unknown;
@@ -66,9 +65,14 @@ export function isAuthError(error: unknown): boolean {
     );
 }
 
+/**
+ * A message for the user. `t` is the screen's translator (`useLanguage().t`); without it the
+ * text is Russian. The fallback is already translated by the caller.
+ */
 export function getErrorMessage(
     error: unknown,
-    fallbackMessage = DEFAULT_ERROR_MESSAGE,
+    fallbackMessage?: string,
+    t: Translate = translateRu,
 ): string {
     const errorLike = asErrorLike(error);
     const rawMessage = getRawErrorMessage(error).trim();
@@ -78,37 +82,37 @@ export function getErrorMessage(
         errorLike?.name === 'TimeoutError' ||
         /timed out|timeout|время ожидания/i.test(rawMessage)
     ) {
-        return TIMEOUT_ERROR_MESSAGE;
+        return t('cabinet.error.timeout');
     }
     if (isNetworkError(error)) {
-        return NETWORK_ERROR_MESSAGE;
+        return t('cabinet.error.network');
     }
     if (status === 401 || isAuthError(error)) {
-        return 'Сессия истекла. Войдите в аккаунт снова.';
+        return t('cabinet.error.sessionExpired');
     }
     if (status === 403) {
-        return 'У вас недостаточно прав для этого действия.';
+        return t('cabinet.error.forbidden');
     }
     if (status === 404 || /\bnot found\b/i.test(rawMessage)) {
-        return 'Запрошенные данные не найдены.';
+        return t('cabinet.error.notFound');
     }
     if (status === 409 || /\bconflict\b|already exists|duplicate/i.test(rawMessage)) {
-        return 'Данные уже изменились. Обновите экран и попробуйте снова.';
+        return t('cabinet.error.conflict');
     }
     if (status === 400 || status === 422) {
         return hasCyrillic(rawMessage) && !isTechnicalMessage(rawMessage)
             ? rawMessage
-            : 'Проверьте введенные данные и попробуйте снова.';
+            : t('cabinet.error.invalidInput');
     }
     if (status !== undefined && status >= 500) {
-        return 'Сервис временно недоступен. Попробуйте позже.';
+        return t('cabinet.error.unavailable');
     }
     if (/rate limit|too many requests/i.test(rawMessage) || status === 429) {
-        return 'Слишком много попыток. Подождите немного и попробуйте снова.';
+        return t('cabinet.error.rateLimited');
     }
     if (rawMessage && hasCyrillic(rawMessage) && !isTechnicalMessage(rawMessage)) {
         return rawMessage;
     }
 
-    return fallbackMessage;
+    return fallbackMessage ?? t('cabinet.error.default');
 }

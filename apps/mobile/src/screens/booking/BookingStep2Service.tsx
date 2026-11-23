@@ -3,7 +3,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { formatServicePrice } from '@shared-client/formatters';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import Button from '../../components/ui/Button';
 import EmptyState from '../../components/ui/EmptyState';
@@ -11,8 +10,10 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import MotionPressable from '../../components/ui/MotionPressable';
 import { colors } from '../../constants/colors';
 import { useBooking } from '../../contexts/BookingContext';
+import { useLanguage } from '../../i18n';
 import { trackMobileEvent } from '../../lib/analytics';
 import { RootStackParamList } from '../../navigation/types';
+import { formatBookingPrice } from './bookingFormat';
 import { useBookingStep2Services } from './useBookingStep2Services';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -20,6 +21,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function BookingStep2Service() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setServices, setServiceId } = useBooking();
+    const { t } = useLanguage();
     const { servicesData, isLoading } = useBookingStep2Services({
         bookingData,
         setServices,
@@ -47,7 +49,7 @@ export default function BookingStep2Service() {
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <LoadingSpinner message="Загрузка услуг..." />
+                <LoadingSpinner message={t('booking.step2.loading')} />
             </View>
         );
     }
@@ -61,8 +63,8 @@ export default function BookingStep2Service() {
                 </View>
                 <EmptyState
                     icon="cut-outline"
-                    title="Нет доступных услуг"
-                    message="Для выбранного филиала пока нет активных услуг."
+                    title={t('booking.step2.emptyTitle')}
+                    message={t('booking.step2.emptyMessage')}
                     compact
                     style={styles.emptyContainer}
                 />
@@ -90,7 +92,7 @@ export default function BookingStep2Service() {
                 <View style={styles.section}>
                     <View style={styles.optionsList}>
                         {servicesData.map((service) => {
-                            const price = formatServicePrice(service, 'сом');
+                            const price = formatBookingPrice(service, t, { compact: true });
                             const isSelected = bookingData.serviceId === service.id;
                             return (
                                 <MotionPressable
@@ -112,14 +114,12 @@ export default function BookingStep2Service() {
                                                     </Text>
                                                     {service.duration_min ? (
                                                         <Text style={styles.serviceDurationSelected}>
-                                                            {service.duration_min} мин
+                                                            {t('booking.duration.minutes', { minutes: service.duration_min })}
                                                         </Text>
                                                     ) : null}
                                                 </View>
                                                 {price ? (
-                                                    <Text style={styles.priceTextSelected}>
-                                                        {price.replace(' - ', '–').replace('от ', '')}
-                                                    </Text>
+                                                    <Text style={styles.priceTextSelected}>{price}</Text>
                                                 ) : null}
                                             </View>
                                         </LinearGradient>
@@ -130,14 +130,12 @@ export default function BookingStep2Service() {
                                                     <Text style={styles.serviceName}>{service.name_ru}</Text>
                                                     {service.duration_min ? (
                                                         <Text style={styles.serviceDuration}>
-                                                            {service.duration_min} мин
+                                                            {t('booking.duration.minutes', { minutes: service.duration_min })}
                                                         </Text>
                                                     ) : null}
                                                 </View>
                                                 {price ? (
-                                                    <Text style={styles.priceText}>
-                                                        {price.replace(' - ', '–').replace('от ', '')}
-                                                    </Text>
+                                                    <Text style={styles.priceText}>{price}</Text>
                                                 ) : null}
                                             </View>
                                         </View>
@@ -149,13 +147,13 @@ export default function BookingStep2Service() {
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            title="Назад"
+                            title={t('booking.nav.back')}
                             onPress={() => navigation.goBack()}
                             variant="outline"
                             style={styles.backButton}
                         />
                         <Button
-                            title="Дальше"
+                            title={t('booking.nav.next')}
                             onPress={handleNext}
                             disabled={!bookingData.serviceId}
                             variant="primary"

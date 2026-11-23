@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from 'react-native';
 import Card from '../../components/ui/Card';
 import MotionPressable from '../../components/ui/MotionPressable';
 import { colors } from '../../constants/colors';
+import { useLanguage, type Locale, type MobileI18nKey, type Translate } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
 
 import { styles } from './homeScreenStyles';
@@ -21,20 +22,20 @@ type RecentPlacesSectionProps = {
     onOpenPlace: (slug: string, previewName?: string) => void;
 };
 
-function getBookingStatusLabel(status: string) {
+function getBookingStatusKey(status: string): MobileI18nKey {
     if (status === 'confirmed') {
-        return 'Подтверждено';
+        return 'booking.home.status.confirmed';
     }
 
     if (status === 'hold') {
-        return 'Ожидает';
+        return 'booking.home.status.hold';
     }
 
     if (status === 'paid') {
-        return 'Оплачено';
+        return 'booking.home.status.paid';
     }
 
-    return 'Запись';
+    return 'booking.home.booking';
 }
 
 export function UpcomingBookingsSection({
@@ -42,6 +43,8 @@ export function UpcomingBookingsSection({
     onOpenAll,
     onOpenBooking,
 }: UpcomingBookingsSectionProps) {
+    const { locale, t } = useLanguage();
+
     if (bookings.length === 0) {
         return null;
     }
@@ -49,19 +52,19 @@ export function UpcomingBookingsSection({
     return (
         <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Ближайшие записи</Text>
+                <Text style={styles.sectionTitle}>{t('booking.home.upcomingTitle')}</Text>
                 <MotionPressable
                     onPress={onOpenAll}
                     style={styles.sectionLinkPressable}
-                    accessibilityLabel="Открыть все записи"
-                    accessibilityHint="Открывает кабинет со списком записей"
+                    accessibilityLabel={t('booking.home.openAllLabel')}
+                    accessibilityHint={t('booking.home.openAllHint')}
                 >
-                    <Text style={styles.sectionLink}>Открыть все</Text>
+                    <Text style={styles.sectionLink}>{t('booking.home.openAll')}</Text>
                 </MotionPressable>
             </View>
 
             {bookings.map((booking) => {
-                const bookingLabel = buildBookingAccessibilityLabel(booking);
+                const bookingLabel = buildBookingAccessibilityLabel(booking, locale, t);
 
                 return (
                     <Card key={booking.id} style={styles.bookingCard}>
@@ -70,12 +73,12 @@ export function UpcomingBookingsSection({
                             scale="firm"
                             onPress={() => onOpenBooking(booking.id)}
                             accessibilityLabel={bookingLabel}
-                            accessibilityHint="Открывает детали записи"
+                            accessibilityHint={t('booking.home.openBookingHint')}
                         >
                             <View style={styles.bookingRow}>
                                 <View style={styles.bookingMain}>
                                     <Text style={styles.bookingBusiness}>
-                                        {booking.business?.name || 'Запись'}
+                                        {booking.business?.name || t('booking.home.booking')}
                                     </Text>
                                     {booking.branch?.name ? (
                                         <Text style={styles.bookingBranch}>
@@ -91,11 +94,11 @@ export function UpcomingBookingsSection({
 
                                 <View style={styles.bookingMeta}>
                                     <Text style={styles.bookingDate}>
-                                        {formatDate(booking.start_at)} - {formatTime(booking.start_at)}
+                                        {formatDate(booking.start_at, locale)} - {formatTime(booking.start_at)}
                                     </Text>
                                     <View style={styles.bookingStatusPill}>
                                         <Text style={styles.bookingStatusText}>
-                                            {getBookingStatusLabel(booking.status)}
+                                            {t(getBookingStatusKey(booking.status))}
                                         </Text>
                                     </View>
                                 </View>
@@ -112,13 +115,15 @@ export function RecentPlacesSection({
     places,
     onOpenPlace,
 }: RecentPlacesSectionProps) {
+    const { t } = useLanguage();
+
     if (places.length === 0) {
         return null;
     }
 
     return (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Недавние места</Text>
+            <Text style={styles.sectionTitle}>{t('booking.home.recentTitle')}</Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -129,8 +134,8 @@ export function RecentPlacesSection({
                         key={place.slug}
                         style={styles.recentPlaceChip}
                         onPress={() => onOpenPlace(place.slug, place.name)}
-                        accessibilityLabel={`Недавнее место: ${place.name}`}
-                        accessibilityHint="Открывает запись в этот бизнес"
+                        accessibilityLabel={t('booking.home.recentPlaceLabel', { name: place.name })}
+                        accessibilityHint={t('booking.home.openBusinessHint')}
                     >
                         <Ionicons
                             name="time-outline"
@@ -148,19 +153,22 @@ export function RecentPlacesSection({
     );
 }
 
-function buildBookingAccessibilityLabel(booking: HomeBooking): string {
-    const parts = [booking.business?.name || 'Запись'];
+function buildBookingAccessibilityLabel(booking: HomeBooking, locale: Locale, t: Translate): string {
+    const parts = [booking.business?.name || t('booking.home.booking')];
 
     if (booking.branch?.name) {
-        parts.push(`Филиал: ${booking.branch.name}`);
+        parts.push(t('booking.home.a11y.branch', { name: booking.branch.name }));
     }
 
     if (booking.service?.name_ru) {
-        parts.push(`Услуга: ${booking.service.name_ru}`);
+        parts.push(t('booking.home.a11y.service', { name: booking.service.name_ru }));
     }
 
-    parts.push(`Время: ${formatDate(booking.start_at)} ${formatTime(booking.start_at)}`);
-    parts.push(`Статус: ${getBookingStatusLabel(booking.status)}`);
+    parts.push(t('booking.home.a11y.time', {
+        date: formatDate(booking.start_at, locale),
+        time: formatTime(booking.start_at),
+    }));
+    parts.push(t('booking.home.a11y.status', { status: t(getBookingStatusKey(booking.status)) }));
 
     return parts.join('. ');
 }

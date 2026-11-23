@@ -4,6 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { useLanguage, type Translate } from '../i18n';
 import { supabase } from '../lib/supabase';
 
 export type BusinessRow = {
@@ -24,7 +25,7 @@ export type BusinessWithBranches = {
     branches: BranchRow[];
 };
 
-async function fetchBusinessWithBranches(slug: string): Promise<BusinessWithBranches> {
+async function fetchBusinessWithBranches(slug: string, t: Translate): Promise<BusinessWithBranches> {
     const { data: biz, error: bizError } = await supabase
         .from('businesses')
         .select('id, name, slug, rating_score')
@@ -33,7 +34,7 @@ async function fetchBusinessWithBranches(slug: string): Promise<BusinessWithBran
         .single();
 
     if (bizError) throw bizError;
-    if (!biz) throw new Error('Бизнес не найден');
+    if (!biz) throw new Error(t('booking.error.businessNotFound'));
 
     const { data: branches, error: branchesError } = await supabase
         .from('branches')
@@ -52,9 +53,10 @@ async function fetchBusinessWithBranches(slug: string): Promise<BusinessWithBran
 }
 
 export function useBusinessWithBranches(slug: string | undefined) {
+    const { t } = useLanguage();
     return useQuery({
         queryKey: ['businessWithBranches', slug],
-        queryFn: () => fetchBusinessWithBranches(slug!),
+        queryFn: () => fetchBusinessWithBranches(slug!, t),
         enabled: !!slug,
     });
 }

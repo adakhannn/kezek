@@ -67,7 +67,7 @@ function mapWhatsAppAuthError(error: unknown, t: Translate): string {
     }
     if (message.includes('send')) return t('auth.whatsapp.sendCodeFailed');
 
-    return getErrorMessage(error, t('auth.whatsapp.signInFailed'));
+    return getErrorMessage(error, t('auth.whatsapp.signInFailed'), t);
 }
 
 function parseApiError(payload: unknown, fallback: string) {
@@ -187,7 +187,7 @@ export default function WhatsAppScreen() {
         setErrorText(null);
         setOtpError(null);
 
-        const phoneValidationError = getValidationError('phone', phone);
+        const phoneValidationError = getValidationError('phone', phone, t);
         if (phoneValidationError) {
             showToast(phoneValidationError, 'error');
             setPhoneError(phoneValidationError);

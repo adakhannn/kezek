@@ -7,6 +7,7 @@ import { colors } from '../constants/colors';
 import { MIN_TOUCH_TARGET } from '../constants/accessibility';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useBooking } from '../contexts/BookingContext';
+import { useLanguage } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
 import MotionPressable from './ui/MotionPressable';
 
@@ -14,13 +15,14 @@ export default function BookingCancelButton() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { reset } = useBooking();
     const { confirm } = useConfirm();
+    const { t } = useLanguage();
 
     const handleCancel = async () => {
         const shouldCancel = await confirm({
-            title: 'Отменить бронирование?',
-            message: 'Все выбранные данные будут потеряны.',
-            confirmLabel: 'Отменить',
-            cancelLabel: 'Продолжить',
+            title: t('cabinet.flowCancel.title'),
+            message: t('cabinet.flowCancel.message'),
+            confirmLabel: t('cabinet.flowCancel.confirm'),
+            cancelLabel: t('cabinet.flowCancel.keep'),
             variant: 'danger',
         });
 
@@ -39,8 +41,8 @@ export default function BookingCancelButton() {
         <MotionPressable
             style={styles.button}
             onPress={handleCancel}
-            accessibilityLabel="Закрыть бронирование"
-            accessibilityHint="Открывает подтверждение отмены бронирования"
+            accessibilityLabel={t('cabinet.flowCancel.label')}
+            accessibilityHint={t('cabinet.flowCancel.hint')}
         >
             <Ionicons name="close" size={24} color={colors.text.primary} />
         </MotionPressable>

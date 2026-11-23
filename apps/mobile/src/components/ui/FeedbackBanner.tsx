@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-na
 
 import { colors } from '../../constants/colors';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
+import { useLanguage } from '../../i18n';
 import MotionPressable from './MotionPressable';
 
 export type FeedbackBannerVariant = 'info' | 'success' | 'warning' | 'danger';
@@ -65,6 +66,7 @@ export default function FeedbackBanner({
     style,
 }: FeedbackBannerProps) {
     const config = variantConfig[variant];
+    const { t } = useLanguage();
 
     return (
         <View
@@ -92,8 +94,8 @@ export default function FeedbackBanner({
                     <MotionPressable
                         onPress={onClose}
                         style={styles.closeButton}
-                        accessibilityLabel="Закрыть уведомление"
-                        accessibilityHint="Скрывает это сообщение"
+                        accessibilityLabel={t('cabinet.ui.closeNotice')}
+                        accessibilityHint={t('cabinet.ui.closeNoticeHint')}
                     >
                         <Ionicons name="close" size={16} color={colors.text.secondary} />
                     </MotionPressable>

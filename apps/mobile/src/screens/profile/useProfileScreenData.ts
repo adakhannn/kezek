@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useLanguage } from '../../i18n';
 import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
 import { TimeoutError } from '../../lib/fetchWithTimeout';
@@ -31,6 +32,7 @@ export function useProfileScreenData() {
     const queryClient = useQueryClient();
     const { showToast } = useToast();
     const { confirm } = useConfirm();
+    const { t } = useLanguage();
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
     const [notifyEmail, setNotifyEmail] = useState(true);
@@ -131,11 +133,11 @@ export function useProfileScreenData() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile', userQuery.data?.id] });
-            showToast('Профиль обновлен', 'success');
+            showToast(t('cabinet.profile.saved'), 'success');
         },
         onError: (error: Error) => {
             showToast(
-                getErrorMessage(error, 'Не удалось обновить профиль. Попробуйте снова.'),
+                getErrorMessage(error, t('cabinet.profile.saveError'), t),
                 'error',
             );
         },
@@ -143,13 +145,13 @@ export function useProfileScreenData() {
 
     const saveProfile = () => {
         if (!fullName.trim()) {
-            showToast('Введите имя', 'error');
+            showToast(t('cabinet.profile.nameRequired'), 'error');
             return;
         }
 
         const trimmedPhone = phone.trim();
         if (trimmedPhone && !PHONE_PATTERN.test(trimmedPhone)) {
-            showToast('Введите корректный номер телефона', 'error');
+            showToast(t('cabinet.profile.phoneInvalid'), 'error');
             return;
         }
 
@@ -157,12 +159,12 @@ export function useProfileScreenData() {
     };
 
     const confirmSignOut = async () => {
-        const text = signOutConfirmationText(await countPendingShiftOperations());
+        const text = signOutConfirmationText(await countPendingShiftOperations(), t);
         const shouldSignOut = await confirm({
             title: text.title,
             message: text.message,
             confirmLabel: text.confirmLabel,
-            cancelLabel: 'Отмена',
+            cancelLabel: t('cabinet.ui.cancel'),
             variant: 'danger',
         });
 
@@ -174,10 +176,10 @@ export function useProfileScreenData() {
             setIsSigningOut(true);
             await signOutSafely();
 
-            showToast('Вы вышли из аккаунта', 'success');
+            showToast(t('cabinet.profile.signedOut'), 'success');
         } catch (error: unknown) {
             showToast(
-                getErrorMessage(error, 'Не удалось выйти из аккаунта. Попробуйте снова.'),
+                getErrorMessage(error, t('cabinet.profile.signOutError'), t),
                 'error',
             );
         } finally {

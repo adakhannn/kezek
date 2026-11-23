@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Input from '../../components/ui/Input';
 import MotionPressable from '../../components/ui/MotionPressable';
 import { colors } from '../../constants/colors';
+import { useLanguage } from '../../i18n';
 
 import { styles } from './homeScreenStyles';
 
@@ -19,6 +20,8 @@ export function SearchSection({
     onSearchChange,
     onClear,
 }: SearchSectionProps) {
+    const { t } = useLanguage();
+
     return (
         <View style={styles.searchContainer}>
             <Input
@@ -26,7 +29,7 @@ export function SearchSection({
                 containerStyle={{ marginBottom: 0 }}
                 inputContainerStyle={styles.searchInputContainer}
                 style={styles.searchInput}
-                placeholder="Поиск по названию или адресу..."
+                placeholder={t('booking.home.searchPlaceholder')}
                 value={search}
                 onChangeText={onSearchChange}
                 returnKeyType="search"
@@ -38,7 +41,7 @@ export function SearchSection({
                         <MotionPressable
                             onPress={onClear}
                             style={styles.clearButton}
-                            accessibilityLabel="Очистить поиск"
+                            accessibilityLabel={t('booking.home.clearSearch')}
                         >
                             <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
                         </MotionPressable>

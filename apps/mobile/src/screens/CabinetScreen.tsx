@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useLanguage } from '../i18n';
 import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../lib/signOut';
 import type { CabinetStackParamList, RootStackParamList } from '../navigation/types';
 import { CabinetScreenSections } from './cabinet/CabinetScreenSections';
@@ -18,6 +19,7 @@ export default function CabinetScreen() {
     const navigation = useNavigation<CabinetScreenNavigationProp>();
     const rootNavigation = navigation as unknown as RootNavigationProp;
     const [isSigningOut, setIsSigningOut] = useState(false);
+    const { t } = useLanguage();
 
     const {
         user,
@@ -36,9 +38,9 @@ export default function CabinetScreen() {
 
     const handleSignOut = async () => {
         const pending = await countPendingShiftOperations();
-        const text = signOutConfirmationText(pending);
-        Alert.alert(pending === 0 ? 'Выход из аккаунта' : text.title, text.message, [
-            { text: 'Отмена', style: 'cancel' },
+        const text = signOutConfirmationText(pending, t);
+        Alert.alert(pending === 0 ? t('cabinet.signOutTitle') : text.title, text.message, [
+            { text: t('cabinet.ui.cancel'), style: 'cancel' },
             {
                 text: text.confirmLabel,
                 style: 'destructive',
@@ -55,17 +57,17 @@ export default function CabinetScreen() {
     };
 
     if (isLoading && !bookings) {
-        return <LoadingSpinner message="Загрузка кабинета..." />;
+        return <LoadingSpinner message={t('cabinet.loading')} />;
     }
 
     if (!user) {
         return (
             <EmptyState
-                title="Пользователь не найден"
-                message="Сессия могла устареть. Выйдите и авторизуйтесь снова."
+                title={t('cabinet.noUser.title')}
+                message={t('cabinet.noUser.message')}
                 action={
                     <Button
-                        title={isSigningOut ? 'Выходим...' : 'Выйти и войти снова'}
+                        title={isSigningOut ? t('cabinet.ui.signingOut') : t('cabinet.noUser.signOut')}
                         onPress={handleSignOut}
                         variant="danger"
                         loading={isSigningOut}
@@ -78,7 +80,7 @@ export default function CabinetScreen() {
 
     return (
         <CabinetScreenSections
-            userLabel={user.email || user.phone || 'Пользователь'}
+            userLabel={user.email || user.phone || t('cabinet.userFallback')}
             activeTab={activeTab}
             isOfflineData={isOfflineData}
             hasBookingsError={hasBookingsError}

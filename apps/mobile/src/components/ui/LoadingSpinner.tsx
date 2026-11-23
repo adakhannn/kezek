@@ -1,5 +1,6 @@
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { colors } from '../../constants/colors';
+import { useLanguage } from '../../i18n';
 
 type LoadingSpinnerProps = {
     message?: string;
@@ -7,12 +8,13 @@ type LoadingSpinnerProps = {
 };
 
 export default function LoadingSpinner({ message, size = 'large' }: LoadingSpinnerProps) {
+    const { t } = useLanguage();
     return (
         <View
             style={styles.container}
             accessible
             accessibilityRole="progressbar"
-            accessibilityLabel={message || 'Загрузка'}
+            accessibilityLabel={message || t('cabinet.ui.loading')}
             accessibilityLiveRegion="polite"
             accessibilityState={{ busy: true }}
         >

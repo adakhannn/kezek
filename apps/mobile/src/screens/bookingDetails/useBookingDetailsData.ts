@@ -3,6 +3,7 @@ import { Linking } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useToast } from '../../contexts/ToastContext';
+import { useLanguage } from '../../i18n';
 import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
 import { logError } from '../../lib/log';
@@ -30,6 +31,7 @@ function unwrapBookingDetails(payload: BookingDetails | ApiEnvelope<BookingDetai
 export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
     const queryClient = useQueryClient();
     const { showToast } = useToast();
+    const { t } = useLanguage();
 
     const bookingQuery = useQuery({
         queryKey: ['booking', bookingId],
@@ -60,12 +62,12 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
-            showToast('Бронирование отменено', 'success');
+            showToast(t('cabinet.details.cancelled'), 'success');
             onCancelled?.();
         },
         onError: (error: Error) => {
             showToast(
-                getErrorMessage(error, 'Не удалось отменить запись. Попробуйте снова.'),
+                getErrorMessage(error, t('cabinet.details.cancelError'), t),
                 'error',
             );
         },
@@ -98,13 +100,13 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
         openCall: () => {
             if (!primaryPhone) return;
             const digits = primaryPhone.replace(/[^\d+]/g, '');
-            void openPhoneUrl(`tel:${digits}`, 'Не удалось открыть звонилку');
+            void openPhoneUrl(`tel:${digits}`, t('cabinet.details.callError'));
         },
         openWhatsApp: () => {
             if (!primaryPhone) return;
             const digits = primaryPhone.replace(/[^\d]/g, '');
             if (!digits) return;
-            void openPhoneUrl(`https://wa.me/${digits}`, 'Не удалось открыть WhatsApp');
+            void openPhoneUrl(`https://wa.me/${digits}`, t('cabinet.details.whatsappError'));
         },
     };
 }

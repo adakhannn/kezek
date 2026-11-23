@@ -10,6 +10,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { colors } from '../../constants/colors';
+import { useLanguage, type MobileI18nKey, type Translate } from '../../i18n';
 import { formatPhone } from '../../utils/format';
 
 import { styles } from './homeScreenStyles';
@@ -52,15 +53,17 @@ export function CategoriesSection({
   selectedCategory,
   onSelectCategory,
 }: CategoriesSectionProps) {
+  const { t } = useLanguage();
+
   if (categories.length === 0) {
     return null;
   }
 
   return (
     <View style={styles.categoriesContainer}>
-      <Text style={styles.categoriesLabel}>Популярные категории:</Text>
+      <Text style={styles.categoriesLabel}>{t('booking.home.categoriesTitle')}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
-        <CategoryChip label="Все" isActive={!selectedCategory} onPress={() => onSelectCategory(null)} />
+        <CategoryChip label={t('booking.home.categoryAll')} isActive={!selectedCategory} onPress={() => onSelectCategory(null)} />
         {categories.map((category) => (
           <CategoryChip
             key={category}
@@ -82,10 +85,11 @@ export function NearbySection({
   onOpenMap,
   onOpenBusiness,
 }: NearbySectionProps) {
+  const { t } = useLanguage();
   const isBusy = status === 'locating' || status === 'loading';
   const hasError = status === 'denied' || status === 'unavailable' || status === 'error';
   const hasBranches = status === 'ready' && branches.length > 0;
-  const errorCopy = getNearbyStatusCopy(status, error);
+  const errorCopy = t(getNearbyStatusKey(status, error));
 
   return (
     <View style={styles.nearbyFallbackContainer}>
@@ -100,7 +104,7 @@ export function NearbySection({
           />
         </View>
         <View style={styles.nearbyFallbackContent}>
-          <Text style={styles.nearbyFallbackTitle}>Ближайшие филиалы</Text>
+          <Text style={styles.nearbyFallbackTitle}>{t('booking.home.nearbyTitle')}</Text>
           <Text style={styles.nearbyFallbackText}>{errorCopy}</Text>
 
           {hasBranches ? (
@@ -116,32 +120,36 @@ export function NearbySection({
           ) : null}
 
           {status === 'ready' && branches.length === 0 ? (
-            <Text style={styles.nearbyFallbackHint}>
-              В радиусе 20 км ничего не нашли. Можно выбрать бизнес из общего списка ниже.
-            </Text>
+            <Text style={styles.nearbyFallbackHint}>{t('booking.home.nearbyEmpty')}</Text>
           ) : null}
 
           <Button
-            title={isBusy ? 'Ищем рядом...' : status === 'idle' ? 'Найти рядом' : 'Обновить геолокацию'}
+            title={t(
+              isBusy
+                ? 'booking.home.nearbySearching'
+                : status === 'idle'
+                  ? 'booking.home.nearbyFind'
+                  : 'booking.home.nearbyRefresh',
+            )}
             onPress={onRequestNearby}
             variant={hasBranches ? 'outline' : 'secondary'}
             size="sm"
             loading={isBusy}
             fullWidth
             style={styles.nearbyAction}
-            accessibilityLabel="Найти ближайшие филиалы"
-            accessibilityHint="Запрашивает разрешение на геолокацию и показывает ближайшие филиалы"
+            accessibilityLabel={t('booking.home.nearbyFindLabel')}
+            accessibilityHint={t('booking.home.nearbyFindHint')}
           />
           <Button
-            title="Открыть карту филиалов"
+            title={t('booking.home.openMap')}
             onPress={onOpenMap}
             variant="outline"
             size="sm"
             fullWidth
             style={styles.nearbyMapAction}
             leadingIcon={<Ionicons name="map-outline" size={16} color={colors.text.primary} />}
-            accessibilityLabel="Открыть карту филиалов"
-            accessibilityHint="Открывает интерактивную карту филиалов как на сайте"
+            accessibilityLabel={t('booking.home.openMap')}
+            accessibilityHint={t('booking.home.openMapHint')}
           />
         </View>
       </Card>
@@ -156,6 +164,7 @@ function NearbyBranchRow({
   branch: NearbyBranch;
   onOpenBusiness: (slug: string, previewName?: string) => void;
 }) {
+  const { t } = useLanguage();
   const canOpen = Boolean(branch.businessSlug);
   const openBranch = () => {
     if (branch.businessSlug) {
@@ -170,7 +179,7 @@ function NearbyBranchRow({
       style={[styles.nearbyBranchRow, !canOpen && styles.nearbyBranchRowDisabled]}
       accessibilityRole="button"
       accessibilityLabel={`${branch.businessName}, ${branch.branchName}`}
-      accessibilityHint={canOpen ? 'Открыть запись в этот бизнес' : 'Бизнес пока недоступен для записи'}
+      accessibilityHint={t(canOpen ? 'booking.home.nearbyOpenHint' : 'booking.home.nearbyUnavailableHint')}
     >
       <View style={styles.nearbyBranchMain}>
         <Text style={styles.nearbyBranchName}>{branch.businessName}</Text>
@@ -179,30 +188,32 @@ function NearbyBranchRow({
           {branch.address ? ` · ${branch.address}` : ''}
         </Text>
       </View>
-      <Text style={styles.nearbyBranchDistance}>{branch.distanceKm.toFixed(1)} км</Text>
+      <Text style={styles.nearbyBranchDistance}>
+        {t('booking.home.distanceKm', { distance: branch.distanceKm.toFixed(1) })}
+      </Text>
     </MotionPressable>
   );
 }
 
-function getNearbyStatusCopy(status: NearbyStatus, error: unknown): string {
+function getNearbyStatusKey(status: NearbyStatus, error: unknown): MobileI18nKey {
   switch (status) {
     case 'locating':
-      return 'Запрашиваем доступ и определяем ваше местоположение...';
+      return 'booking.home.nearby.locating';
     case 'loading':
-      return 'Ищем ближайшие филиалы по вашему местоположению...';
+      return 'booking.home.nearby.loading';
     case 'denied':
-      return 'Доступ к геолокации не разрешён. Можно попробовать ещё раз или выбрать бизнес из списка ниже.';
+      return 'booking.home.nearby.denied';
     case 'unavailable':
-      return 'Геолокация сейчас недоступна на устройстве. Проверьте Location в настройках или выберите бизнес из списка ниже.';
+      return 'booking.home.nearby.unavailable';
     case 'error':
       return error instanceof Error && error.message
-        ? 'Не удалось загрузить ближайшие филиалы. Проверьте интернет и попробуйте снова.'
-        : 'Не удалось загрузить ближайшие филиалы. Попробуйте снова.';
+        ? 'booking.home.nearby.errorNetwork'
+        : 'booking.home.nearby.error';
     case 'ready':
-      return 'Нашли филиалы рядом с вами. Выберите подходящий вариант или продолжайте смотреть общий список.';
+      return 'booking.home.nearby.ready';
     case 'idle':
     default:
-      return 'Разрешите геолокацию, и мы покажем ближайшие филиалы с учётом расстояния.';
+      return 'booking.home.nearby.idle';
   }
 }
 
@@ -215,14 +226,16 @@ function CategoryChip({
   isActive: boolean;
   onPress: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <MotionPressable
       style={[styles.categoryChip, isActive && styles.categoryChipActive]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Категория ${label}`}
+      accessibilityLabel={t('booking.home.categoryLabel', { label })}
       accessibilityState={{ selected: isActive }}
-      accessibilityHint="Фильтрует список бизнесов по категории"
+      accessibilityHint={t('booking.home.categoryHint')}
     >
       {isActive ? (
         <LinearGradient
@@ -251,17 +264,19 @@ export function BusinessListSection({
   onClearFilters,
   onOpenBusiness,
 }: BusinessListSectionProps) {
+  const { t } = useLanguage();
+
   if (isLoading && !isRefreshing) {
-    return <LoadingSpinner message="Загружаем данные..." />;
+    return <LoadingSpinner message={t('booking.home.loadingData')} />;
   }
 
   if (error && businesses.length === 0) {
     return (
       <EmptyState
         icon="alert-circle"
-        title="Не удалось загрузить список"
-        message="Проверьте интернет-соединение и попробуйте снова."
-        action={<Button title="Повторить" onPress={onRetry} variant="outline" fullWidth />}
+        title={t('booking.home.loadErrorTitle')}
+        message={t('booking.checkConnection')}
+        action={<Button title={t('booking.retry')} onPress={onRetry} variant="outline" fullWidth />}
       />
     );
   }
@@ -272,16 +287,12 @@ export function BusinessListSection({
     return (
       <EmptyState
         icon="search"
-        title={hasFilters ? 'Ничего не найдено' : 'Пока нет доступных бизнесов'}
-        message={
-          hasFilters
-            ? 'Измените параметры поиска или сбросьте фильтры.'
-            : 'Список появится здесь, как только будут доступные варианты.'
-        }
+        title={t(hasFilters ? 'booking.home.emptyFilteredTitle' : 'booking.home.emptyTitle')}
+        message={t(hasFilters ? 'booking.home.emptyFilteredMessage' : 'booking.home.emptyMessage')}
         action={
           hasFilters ? (
             <Button
-              title="Сбросить фильтры"
+              title={t('booking.home.resetFilters')}
               onPress={onClearFilters}
               variant="outline"
               fullWidth
@@ -309,8 +320,9 @@ export const BusinessCard = React.memo(function BusinessCard({
   business,
   onOpenBusiness,
 }: BusinessCardProps) {
+  const { t } = useLanguage();
   const openBusiness = () => onOpenBusiness(business.slug, business.name);
-  const businessAccessibilityLabel = buildBusinessAccessibilityLabel(business);
+  const businessAccessibilityLabel = buildBusinessAccessibilityLabel(business, t);
 
   return (
     <MotionPressable
@@ -318,7 +330,7 @@ export const BusinessCard = React.memo(function BusinessCard({
       scale="firm"
       accessibilityRole="button"
       accessibilityLabel={businessAccessibilityLabel}
-      accessibilityHint="Открывает запись в этот бизнес"
+      accessibilityHint={t('booking.home.openBusinessHint')}
     >
       <Card style={styles.businessCard} variant="muted">
         <View style={styles.businessHeader}>
@@ -366,11 +378,11 @@ export const BusinessCard = React.memo(function BusinessCard({
 
         <View style={styles.businessFooter}>
           <Button
-            title="Записаться"
+            title={t('booking.book')}
             onPress={openBusiness}
             trailingIcon={<Ionicons name="arrow-forward" size={16} color={colors.text.light} />}
             fullWidth
-            accessibilityLabel={`Записаться в ${business.name}`}
+            accessibilityLabel={t('booking.home.bookAt', { name: business.name })}
           />
         </View>
       </Card>
@@ -378,23 +390,23 @@ export const BusinessCard = React.memo(function BusinessCard({
   );
 });
 
-function buildBusinessAccessibilityLabel(business: HomeBusiness): string {
+function buildBusinessAccessibilityLabel(business: HomeBusiness, t: Translate): string {
   const parts = [business.name];
 
   if (business.categories?.length) {
-    parts.push(`Категории: ${business.categories.join(', ')}`);
+    parts.push(t('booking.home.a11y.categories', { list: business.categories.join(', ') }));
   }
 
   if (business.address) {
-    parts.push(`Адрес: ${business.address}`);
+    parts.push(t('booking.home.a11y.address', { address: business.address }));
   }
 
   if (business.phones?.length) {
-    parts.push(`Телефон: ${formatPhone(business.phones[0])}`);
+    parts.push(t('booking.home.a11y.phone', { phone: formatPhone(business.phones[0]) }));
   }
 
   if (typeof business.rating_score === 'number') {
-    parts.push(`Рейтинг: ${business.rating_score.toFixed(1)}`);
+    parts.push(t('booking.home.a11y.rating', { rating: business.rating_score.toFixed(1) }));
   }
 
   return parts.join('. ');

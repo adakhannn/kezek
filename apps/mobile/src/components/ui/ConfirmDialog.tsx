@@ -1,6 +1,7 @@
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '../../constants/colors';
+import { useLanguage } from '../../i18n';
 import Button from './Button';
 import MotionPressable from './MotionPressable';
 
@@ -19,20 +20,21 @@ export default function ConfirmDialog({
     visible,
     title,
     message,
-    confirmLabel = 'Подтвердить',
-    cancelLabel = 'Отмена',
+    confirmLabel,
+    cancelLabel,
     variant = 'default',
     onConfirm,
     onCancel,
 }: ConfirmDialogProps) {
+    const { t } = useLanguage();
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} accessibilityViewIsModal>
             <View style={styles.overlay}>
                 <MotionPressable
                     style={styles.backdrop}
                     onPress={onCancel}
-                    accessibilityLabel="Закрыть диалог"
-                    accessibilityHint="Закрывает диалог без подтверждения"
+                    accessibilityLabel={t('cabinet.ui.closeDialog')}
+                    accessibilityHint={t('cabinet.ui.closeDialogHint')}
                 >
                     <View />
                 </MotionPressable>
@@ -41,14 +43,14 @@ export default function ConfirmDialog({
                     <Text style={styles.message}>{message}</Text>
                     <View style={styles.actions}>
                         <Button
-                            title={cancelLabel}
+                            title={cancelLabel ?? t('cabinet.ui.cancel')}
                             onPress={onCancel}
                             variant="secondary"
                             style={styles.actionButton}
                             fullWidth
                         />
                         <Button
-                            title={confirmLabel}
+                            title={confirmLabel ?? t('cabinet.ui.confirm')}
                             onPress={onConfirm}
                             variant={variant === 'danger' ? 'danger' : 'primary'}
                             style={styles.actionButton}

@@ -1,0 +1,151 @@
+import type { bookingRu } from './booking.ru';
+
+export const bookingEn: Record<keyof typeof bookingRu, string> = {
+    // Shared by the booking steps
+    'booking.nav.next': 'Next',
+    'booking.nav.back': 'Back',
+    'booking.retry': 'Retry',
+    'booking.checkConnection': 'Check your internet connection and try again.',
+    'booking.book': 'Book now',
+    'booking.duration.minutes': '{minutes} min',
+    'booking.duration.minutesLong': '{minutes} minutes',
+    'booking.price.value': '{price} KGS',
+    'booking.price.from': 'from {price} KGS',
+    'booking.price.upTo': 'up to {price} KGS',
+    'booking.price.range': '{from} - {to} KGS',
+    'booking.price.rangeCompact': '{from}–{to} KGS',
+    'booking.error.businessNotFound': 'Business not found',
+    'booking.error.noBookingNumber': 'Could not get the number of the created booking',
+
+    // BookingProgressIndicator
+    'booking.progress.stepOf': 'Step {current} of {total}',
+    'booking.progress.stepHint': 'Returns to this booking step',
+    'booking.progress.branch': 'Branch',
+    'booking.progress.service': 'Service',
+    'booking.progress.staff': 'Master',
+    'booking.progress.date': 'Date',
+    'booking.progress.time': 'Time',
+    'booking.progress.confirm': 'Confirmation',
+
+    // BookingScreen
+    'booking.screen.title': 'Booking',
+    'booking.screen.preparing': 'Preparing branches to choose from',
+    'booking.screen.loadingBranches': 'Loading branches...',
+
+    // Step 1: branch
+    'booking.step1.notFoundMessage': 'Go back to the list and choose another business.',
+    'booking.step1.promotions': 'Promotions',
+    'booking.step1.promotionFallback': 'Promotion',
+    'booking.step1.emptyTitle': 'No branches available',
+    'booking.step1.emptyMessage': 'Once a business is chosen, its branches for booking appear here.',
+
+    // Step 2: service
+    'booking.step2.loading': 'Loading services...',
+    'booking.step2.emptyTitle': 'No services available',
+    'booking.step2.emptyMessage': 'The selected branch has no active services yet.',
+
+    // Step 3: staff
+    'booking.step3.loading': 'Loading masters...',
+    'booking.step3.emptyTitle': 'No masters available',
+    'booking.step3.emptyMessage': 'The selected service has no active staff yet.',
+
+    // Step 4: date
+    'booking.step4.today': 'Today',
+
+    // Step 5: time
+    'booking.step5.loading': 'Loading available times...',
+    'booking.step5.errorHint': 'Try another date or refresh the list.',
+    'booking.step5.emptyTitle': 'No available times',
+    'booking.step5.emptyMessage': 'Try another date.',
+    'booking.slots.error.unknown': 'Failed to load available slots. Try selecting another day or master.',
+    'booking.slots.error.masterNotAssigned': 'On the selected date, the master is not assigned to this branch. Try selecting another day or master.',
+    'booking.slots.error.noSchedule': 'The selected master has no schedule for the selected day. Choose another day.',
+    'booking.slots.error.scheduleConflict': 'There is a conflict in the master\'s schedule for the selected day. Choose another day or master.',
+    'booking.slots.error.technical': 'A technical error occurred. Please refresh the screen or try again later.',
+
+    // Step 6: confirmation
+    'booking.step6.offline': 'You cannot create a booking while offline. Wait until the connection is back.',
+    'booking.step6.business': 'Business',
+    'booking.step6.service': 'Service',
+    'booking.step6.staff': 'Master',
+    'booking.step6.dateTime': 'Date and time',
+    'booking.confirm.created': 'Booking created!',
+    'booking.confirm.offlineError': 'No internet connection. The booking was not created. Check the connection and try again.',
+    'booking.confirm.failed': 'Could not create the booking. Please try again.',
+    'booking.confirm.selectTime': 'Choose a time',
+    'booking.confirm.incomplete': 'The booking details are incomplete',
+    'booking.confirm.title': 'Confirmation',
+    'booking.confirm.message': 'Create the booking?',
+    'booking.confirm.create': 'Create',
+    'booking.confirm.cancel': 'Cancel',
+
+    // Home: header, search and list
+    'booking.home.heroTitle': 'Find your service',
+    'booking.home.heroSubtitle': 'Book salons and studios in Osh in a couple of taps - no calls or messages',
+    'booking.home.searchPlaceholder': 'Search by name or address...',
+    'booking.home.clearSearch': 'Clear search',
+    'booking.home.loadingMore': 'Loading more...',
+
+    // Home: upcoming bookings and recent places
+    'booking.home.booking': 'Booking',
+    'booking.home.status.confirmed': 'Confirmed',
+    'booking.home.status.hold': 'Pending',
+    'booking.home.status.paid': 'Paid',
+    'booking.home.upcomingTitle': 'Upcoming bookings',
+    'booking.home.openAll': 'Open all',
+    'booking.home.openAllLabel': 'Open all bookings',
+    'booking.home.openAllHint': 'Opens your account with the list of bookings',
+    'booking.home.openBookingHint': 'Opens the booking details',
+    'booking.home.recentTitle': 'Recent places',
+    'booking.home.recentPlaceLabel': 'Recent place: {name}',
+    'booking.home.openBusinessHint': 'Opens booking at this business',
+    'booking.home.a11y.branch': 'Branch: {name}',
+    'booking.home.a11y.service': 'Service: {name}',
+    'booking.home.a11y.time': 'Time: {date} {time}',
+    'booking.home.a11y.status': 'Status: {status}',
+
+    // Home: categories, nearby branches and businesses
+    'booking.home.categoriesTitle': 'Popular categories:',
+    'booking.home.categoryAll': 'All',
+    'booking.home.categoryLabel': 'Category {label}',
+    'booking.home.categoryHint': 'Filters the business list by category',
+    'booking.home.nearbyTitle': 'Nearest branches',
+    'booking.home.nearbyEmpty': 'Nothing found within 20 km. You can choose a business from the list below.',
+    'booking.home.nearbySearching': 'Searching nearby...',
+    'booking.home.nearbyFind': 'Find nearby',
+    'booking.home.nearbyRefresh': 'Update location',
+    'booking.home.nearbyFindLabel': 'Find the nearest branches',
+    'booking.home.nearbyFindHint': 'Asks for location permission and shows the nearest branches',
+    'booking.home.openMap': 'Open the branches map',
+    'booking.home.openMapHint': 'Opens the interactive branches map, as on the website',
+    'booking.home.nearbyOpenHint': 'Open booking at this business',
+    'booking.home.nearbyUnavailableHint': 'This business is not open for booking yet',
+    'booking.home.distanceKm': '{distance} km',
+    'booking.home.nearby.locating': 'Requesting access and getting your location...',
+    'booking.home.nearby.loading': 'Looking for branches near your location...',
+    'booking.home.nearby.denied': 'Location access was not allowed. You can try again or choose a business from the list below.',
+    'booking.home.nearby.unavailable': 'Location is unavailable on this device right now. Check Location in the settings or choose a business from the list below.',
+    'booking.home.nearby.errorNetwork': 'Could not load the nearest branches. Check the internet and try again.',
+    'booking.home.nearby.error': 'Could not load the nearest branches. Please try again.',
+    'booking.home.nearby.ready': 'We found branches near you. Choose one or keep browsing the full list.',
+    'booking.home.nearby.idle': 'Allow location access and we will show the nearest branches by distance.',
+    'booking.home.loadingData': 'Loading data...',
+    'booking.home.loadErrorTitle': 'Could not load the list',
+    'booking.home.emptyFilteredTitle': 'Nothing found',
+    'booking.home.emptyFilteredMessage': 'Change the search or reset the filters.',
+    'booking.home.emptyTitle': 'No businesses available yet',
+    'booking.home.emptyMessage': 'The list appears here as soon as options are available.',
+    'booking.home.resetFilters': 'Reset filters',
+    'booking.home.bookAt': 'Book at {name}',
+    'booking.home.a11y.categories': 'Categories: {list}',
+    'booking.home.a11y.address': 'Address: {address}',
+    'booking.home.a11y.phone': 'Phone: {phone}',
+    'booking.home.a11y.rating': 'Rating: {rating}',
+
+    // MapScreen
+    'booking.map.unavailableTitle': 'The map is unavailable',
+    'booking.map.noServer': 'Could not determine the server address. Check the app configuration.',
+    'booking.map.loading': 'Loading the map...',
+    'booking.map.loadError': 'Could not load the map',
+    'booking.map.retryLabel': 'Reload the map',
+};

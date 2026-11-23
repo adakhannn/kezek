@@ -64,15 +64,15 @@ export function ProfileScreenSections({
             automaticallyAdjustKeyboardInsets
         >
             <View style={styles.header}>
-                <Text style={styles.title}>Профиль</Text>
+                <Text style={styles.title}>{t('cabinet.profile.title')}</Text>
             </View>
 
             <Card style={styles.card}>
-                <Text style={styles.sectionTitle}>Личная информация</Text>
+                <Text style={styles.sectionTitle}>{t('cabinet.profile.personal')}</Text>
 
                 <Input
-                    label="Имя"
-                    placeholder="Введите ваше имя"
+                    label={t('cabinet.profile.name.label')}
+                    placeholder={t('cabinet.profile.name.placeholder')}
                     value={fullName}
                     onChangeText={onFullNameChange}
                     returnKeyType="next"
@@ -82,7 +82,7 @@ export function ProfileScreenSections({
 
                 <Input
                     ref={phoneInputRef}
-                    label="Телефон"
+                    label={t('cabinet.profile.phone.label')}
                     placeholder="+996 XXX XX XX XX"
                     value={phone}
                     onChangeText={onPhoneChange}
@@ -95,18 +95,18 @@ export function ProfileScreenSections({
                     <View style={styles.emailContainer}>
                         <Text style={styles.label}>Email</Text>
                         <Text style={styles.emailValue}>{email}</Text>
-                        <Text style={styles.emailHint}>Email нельзя изменить</Text>
+                        <Text style={styles.emailHint}>{t('cabinet.profile.email.hint')}</Text>
                     </View>
                 ) : null}
             </Card>
 
             <Card style={styles.card}>
-                <Text style={styles.sectionTitle}>Уведомления</Text>
+                <Text style={styles.sectionTitle}>{t('cabinet.profile.notifications.title')}</Text>
 
                 <View style={styles.switchRow}>
                     <View style={styles.switchLabelContainer}>
-                        <Text style={styles.switchLabel}>Email уведомления</Text>
-                        <Text style={styles.switchHint}>Получать уведомления на email</Text>
+                        <Text style={styles.switchLabel}>{t('cabinet.profile.notifications.email')}</Text>
+                        <Text style={styles.switchHint}>{t('cabinet.profile.notifications.emailHint')}</Text>
                     </View>
                     <Switch
                         value={notifyEmail}
@@ -118,8 +118,8 @@ export function ProfileScreenSections({
 
                 <View style={styles.switchRow}>
                     <View style={styles.switchLabelContainer}>
-                        <Text style={styles.switchLabel}>WhatsApp уведомления</Text>
-                        <Text style={styles.switchHint}>Получать уведомления в WhatsApp</Text>
+                        <Text style={styles.switchLabel}>{t('cabinet.profile.notifications.whatsapp')}</Text>
+                        <Text style={styles.switchHint}>{t('cabinet.profile.notifications.whatsappHint')}</Text>
                     </View>
                     <Switch
                         value={notifyWhatsApp}
@@ -138,13 +138,13 @@ export function ProfileScreenSections({
 
             <View style={styles.actions}>
                 <Button
-                    title="Сохранить"
+                    title={t('cabinet.profile.save')}
                     onPress={onSave}
                     loading={isSaving}
                     disabled={isSaving || isSigningOut}
                 />
                 <Button
-                    title={isSigningOut ? 'Выходим...' : 'Выйти'}
+                    title={isSigningOut ? t('cabinet.ui.signingOut') : t('cabinet.profile.signOut')}
                     onPress={onSignOut}
                     variant="outline"
                     style={styles.signOutButton}

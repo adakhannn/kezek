@@ -17,6 +17,7 @@ import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import Input from '../../components/ui/Input';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import { colors } from '../../constants/colors';
+import { useLanguage, type Translate } from '../../i18n';
 import { formatDate, formatPrice, formatTime } from '../../utils/format';
 import { styles } from './shiftQuickStyles';
 import type { FinanceData, ShiftItem, ShiftQuickMetrics } from './types';
@@ -70,15 +71,6 @@ type ShiftStatusMeta = {
     state: 'open' | 'closed' | 'idle';
 };
 
-const EDIT_CLIENT_LABEL = '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c';
-const EDIT_CLIENT_TITLE =
-    '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
-const ADD_CLIENT_TITLE =
-    '\u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
-const SAVE_CLIENT_LABEL = '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c';
-const SAVE_CHANGES_LABEL =
-    '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f';
-
 export function ShiftQuickSections({
     financeData,
     refreshing,
@@ -96,10 +88,12 @@ export function ShiftQuickSections({
     onCloseShift,
     onEditClient,
 }: ShiftQuickSectionsProps) {
+    const { t, locale } = useLanguage();
+    const money = (amount: number) => formatPrice(amount, locale);
     const shift = financeData.today.shift;
     const items = financeData.today.items || [];
     const isOpen = shift?.status === 'open';
-    const shiftMeta = getShiftStatusMeta(isOpen, !!shift);
+    const shiftMeta = getShiftStatusMeta(isOpen, !!shift, t);
     const isEditingClient = addClientForm.editingItemIndex != null;
     const scrollRef = useRef<ScrollView>(null);
     const serviceInputRef = useRef<TextInput>(null);
@@ -129,8 +123,8 @@ export function ShiftQuickSections({
             }}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>Моя смена</Text>
-                <Text style={styles.subtitle}>{formatDate(new Date().toISOString())}</Text>
+                <Text style={styles.title}>{t('staff.myShift')}</Text>
+                <Text style={styles.subtitle}>{formatDate(new Date(), locale)}</Text>
             </View>
 
             <View style={styles.contentWrap}>
@@ -138,8 +132,8 @@ export function ShiftQuickSections({
                     <View style={styles.bannerWrap}>
                         <FeedbackBanner
                             variant="warning"
-                            title="Выходной день"
-                            message="Сегодня отмечен выходной, поэтому открыть смену не получится."
+                            title={t('staff.shiftQuick.dayOffTitle')}
+                            message={t('staff.shiftQuick.dayOffMessage')}
                             compact
                         />
                     </View>
@@ -147,10 +141,10 @@ export function ShiftQuickSections({
 
                 <Card style={styles.statusCard} variant="elevated" padding="md">
                     <View style={styles.statusTopRow}>
-                        <Text style={styles.statusCardTitle}>Статус смены</Text>
+                        <Text style={styles.statusCardTitle}>{t('staff.shiftQuick.statusTitle')}</Text>
                         <View style={[styles.statusPill, isOpen ? styles.statusPillOpen : styles.statusPillClosed]}>
                             <Text style={[styles.statusPillText, isOpen ? styles.statusPillTextOpen : styles.statusPillTextClosed]}>
-                                {isOpen ? 'Открыта' : shift ? 'Закрыта' : 'Не начата'}
+                                {t(isOpen ? 'staff.status.open' : shift ? 'staff.status.closed' : 'staff.shiftQuick.notStarted')}
                             </Text>
                         </View>
                     </View>
@@ -176,14 +170,14 @@ export function ShiftQuickSections({
 
                     <View style={styles.timelineGrid}>
                         <View style={styles.timelineItem}>
-                            <Text style={styles.timelineLabel}>Открыта</Text>
+                            <Text style={styles.timelineLabel}>{t('staff.shiftQuick.openedAt')}</Text>
                             <Text style={styles.timelineValue}>{shift?.opened_at ? formatTime(shift.opened_at) : '—'}</Text>
                         </View>
                         <View style={styles.timelineItem}>
-                            <Text style={styles.timelineLabel}>Отработано</Text>
+                            <Text style={styles.timelineLabel}>{t('staff.shiftQuick.worked')}</Text>
                             <Text style={styles.timelineValue}>
                                 {isOpen && financeData.currentHoursWorked != null
-                                    ? `${financeData.currentHoursWorked.toFixed(1)} ч`
+                                    ? t('staff.hours', { hours: financeData.currentHoursWorked.toFixed(1) })
                                     : '—'}
                             </Text>
                         </View>
@@ -196,13 +190,13 @@ export function ShiftQuickSections({
                                 compact
                                 title={
                                     isProcessingQueue
-                                        ? 'Синхронизируем офлайн-операции'
-                                        : `${pendingQueueCount} операций в очереди`
+                                        ? t('staff.shiftQuick.syncingOperations')
+                                        : t('staff.shiftQuick.operationsQueued', { count: pendingQueueCount })
                                 }
                                 message={
                                     isProcessingQueue
-                                        ? 'Пожалуйста, подождите. Данные скоро обновятся автоматически.'
-                                        : 'Черновик сохранён. При отправке сервер проверит исходную версию смены.'
+                                        ? t('staff.shiftQuick.syncingWait')
+                                        : t('staff.shiftQuick.draftSaved')
                                 }
                             />
                         </View>
@@ -211,7 +205,7 @@ export function ShiftQuickSections({
                     <View style={styles.actionsRow}>
                         {!isOpen && !shift ? (
                             <Button
-                                title="Открыть смену"
+                                title={t('staff.shiftQuick.openShift')}
                                 onPress={onOpenShift}
                                 disabled={commandsBlocked || isOpening || financeData.isDayOff}
                                 loading={isOpening}
@@ -221,7 +215,7 @@ export function ShiftQuickSections({
                         ) : null}
                         {isOpen ? (
                             <Button
-                                title="Закрыть смену"
+                                title={t('staff.shiftQuick.closeShift')}
                                 onPress={onCloseShift}
                                 disabled={commandsBlocked || isClosing || addClientForm.showAddClient}
                                 loading={isClosing}
@@ -235,31 +229,31 @@ export function ShiftQuickSections({
 
                 {isOpen ? (
                     <View style={styles.metricsSection}>
-                        <Text style={styles.sectionTitle}>Показатели смены</Text>
+                        <Text style={styles.sectionTitle}>{t('staff.shiftQuick.metrics')}</Text>
                         <View style={styles.statsGrid}>
                             <MetricCard
-                                label="Оборот"
-                                value={formatPrice(metrics.totalAmount)}
+                                label={t('staff.turnover')}
+                                value={money(metrics.totalAmount)}
                                 icon="wallet-outline"
                             />
                             <MetricCard
-                                label="Мастер"
-                                value={formatPrice(metrics.finalMasterShare)}
+                                label={t('staff.shiftQuick.master')}
+                                value={money(metrics.finalMasterShare)}
                                 hint={
                                     metrics.currentGuaranteed > metrics.baseMasterShare
-                                        ? `Гарантия: ${formatPrice(metrics.currentGuaranteed)}`
+                                        ? t('staff.shiftQuick.guarantee', { amount: money(metrics.currentGuaranteed) })
                                         : undefined
                                 }
                                 icon="trending-up-outline"
                                 tone="success"
                             />
                             <MetricCard
-                                label="Салон"
-                                value={formatPrice(metrics.finalSalonShare)}
+                                label={t('staff.shiftQuick.salon')}
+                                value={money(metrics.finalSalonShare)}
                                 icon="business-outline"
                             />
                             <MetricCard
-                                label="Клиенты"
+                                label={t('staff.shiftQuick.clients')}
                                 value={String(items.length)}
                                 icon="people-outline"
                             />
@@ -271,14 +265,14 @@ export function ShiftQuickSections({
                     <Card style={styles.addClientCard} variant="elevated" padding="md">
                         <View style={styles.addClientHeader}>
                             <Text style={styles.addClientTitle}>
-                                {isEditingClient ? EDIT_CLIENT_TITLE : ADD_CLIENT_TITLE}
+                                {t(isEditingClient ? 'staff.shiftQuick.editTitle' : 'staff.shiftQuick.addTitle')}
                             </Text>
-                            <Text style={styles.addClientSubtitle}>Быстро зафиксируйте услугу и сумму без лишних шагов.</Text>
+                            <Text style={styles.addClientSubtitle}>{t('staff.shiftQuick.addSubtitle')}</Text>
                         </View>
 
                         {!addClientForm.showAddClient ? (
                             <Button
-                                title="Добавить клиента"
+                                title={t('staff.shiftQuick.addClient')}
                                 disabled={commandsBlocked}
                                 onPress={() => addClientActions.setShowAddClient(true)}
                                 variant="outline"
@@ -293,12 +287,12 @@ export function ShiftQuickSections({
                                     <FeedbackBanner
                                         variant="danger"
                                         compact
-                                        title="Проверьте форму"
+                                        title={t('staff.shiftQuick.checkForm')}
                                         message={addClientForm.error}
                                     />
                                 ) : null}
                                 <Input
-                                    placeholder="Имя клиента *"
+                                    placeholder={t('staff.shiftQuick.clientNamePlaceholder')}
                                     editable={!savingBlocked && !isAddingClient}
                                     value={addClientForm.newClientName}
                                     onChangeText={addClientActions.setNewClientName}
@@ -311,7 +305,7 @@ export function ShiftQuickSections({
                                 />
                                 <Input
                                     ref={serviceInputRef}
-                                    placeholder="Услуга"
+                                    placeholder={t('staff.service')}
                                     editable={!savingBlocked && !isAddingClient}
                                     value={addClientForm.newServiceName}
                                     onChangeText={addClientActions.setNewServiceName}
@@ -324,7 +318,7 @@ export function ShiftQuickSections({
                                     <Input
                                         ref={amountInputRef}
                                         containerStyle={styles.amountInputContainer}
-                                        placeholder="Сумма"
+                                        placeholder={t('staff.shiftQuick.amountPlaceholder')}
                                         editable={!savingBlocked && !isAddingClient}
                                         value={addClientForm.newServiceAmount}
                                         onChangeText={addClientActions.setNewServiceAmount}
@@ -337,7 +331,7 @@ export function ShiftQuickSections({
                                     <Input
                                         ref={consumablesInputRef}
                                         containerStyle={styles.amountInputContainer}
-                                        placeholder="Расходники"
+                                        placeholder={t('staff.consumables')}
                                         editable={!savingBlocked && !isAddingClient}
                                         value={addClientForm.newConsumablesAmount}
                                         onChangeText={addClientActions.setNewConsumablesAmount}
@@ -353,14 +347,14 @@ export function ShiftQuickSections({
                                 </View>
                                 <View style={styles.addClientActions}>
                                     <Button
-                                        title="Отмена"
+                                        title={t('staff.cancel')}
                                         onPress={addClientActions.resetForm}
                                         variant="secondary"
                                         fullWidth
                                         style={styles.addClientActionButton}
                                     />
                                     <Button
-                                        title={isEditingClient ? SAVE_CHANGES_LABEL : SAVE_CLIENT_LABEL}
+                                        title={t(isEditingClient ? 'staff.shiftQuick.saveChanges' : 'staff.shiftQuick.save')}
                                         onPress={addClientActions.submit}
                                         disabled={savingBlocked || isAddingClient || !addClientForm.newClientName.trim()}
                                         loading={isAddingClient}
@@ -375,7 +369,7 @@ export function ShiftQuickSections({
 
                 {items.length > 0 ? (
                     <View style={styles.clientsSection}>
-                        <Text style={styles.sectionTitle}>Клиенты ({items.length})</Text>
+                        <Text style={styles.sectionTitle}>{t('staff.shiftQuick.clientsCount', { count: items.length })}</Text>
                         {items.map((item, index) => (
                             <ClientCard
                                 key={item.id || `${item.clientName}-${index}`}
@@ -392,24 +386,29 @@ export function ShiftQuickSections({
                     <Card style={styles.emptyCard} variant="muted">
                         <EmptyState
                             compact
-                            title="Пока нет клиентов в смене"
-                            message='Нажмите "Добавить клиента", чтобы зафиксировать первую запись.'
+                            title={t('staff.shiftQuick.emptyTitle')}
+                            message={t('staff.shiftQuick.emptyMessage')}
                         />
                     </Card>
                 ) : null}
 
                 {reviewMessage ? (
                     <Card padding="md">
-                        <FeedbackBanner variant="warning" title="Нужна сверка смены" message={reviewMessage} />
+                        <FeedbackBanner variant="warning" title={t('staff.shiftQuick.reviewTitle')} message={reviewMessage} />
                         {reviewItems ? <View>
-                            <Text>Сохранённый черновик (не подтверждён сервером)</Text>
+                            <Text>{t('staff.shiftQuick.reviewDraft')}</Text>
                             {reviewItems.map((item, index) => <Text key={item.id ?? index}>
-                                {item.clientName} · {item.serviceName} · {formatPrice(item.serviceAmount)} · расходники {formatPrice(item.consumablesAmount)}
+                                {t('staff.shiftQuick.reviewLine', {
+                                    client: item.clientName,
+                                    service: item.serviceName,
+                                    amount: money(item.serviceAmount),
+                                    consumables: money(item.consumablesAmount),
+                                })}
                             </Text>)}
                         </View> : null}
-                        <Button title="Загрузить актуальную смену" onPress={() => void onRefresh()} disabled={isProcessingQueue} />
-                        {onRestoreDraft ? <Button title="Сверить черновик в редакторе" onPress={onRestoreDraft} disabled={isProcessingQueue} /> : null}
-                        {onDiscardDraft ? <Button title="Удалить проверенный черновик" variant="secondary" onPress={onDiscardDraft} disabled={isProcessingQueue} /> : null}
+                        <Button title={t('staff.shiftQuick.loadCurrent')} onPress={() => void onRefresh()} disabled={isProcessingQueue} />
+                        {onRestoreDraft ? <Button title={t('staff.shiftQuick.restoreDraft')} onPress={onRestoreDraft} disabled={isProcessingQueue} /> : null}
+                        {onDiscardDraft ? <Button title={t('staff.shiftQuick.discardDraft')} variant="secondary" onPress={onDiscardDraft} disabled={isProcessingQueue} /> : null}
                     </Card>
                 ) : pendingQueueCount > 0 || isProcessingQueue ? (
                     <View style={styles.offlineIndicator}>
@@ -417,13 +416,13 @@ export function ShiftQuickSections({
                             compact
                             title={
                                 isProcessingQueue
-                                    ? 'Синхронизация офлайн-очереди'
-                                    : `Офлайн-очередь: ${pendingQueueCount}`
+                                    ? t('staff.shiftQuick.syncingQueue')
+                                    : t('staff.shiftQuick.offlineQueue', { count: pendingQueueCount })
                             }
                             message={
                                 isProcessingQueue
-                                    ? 'Ожидайте завершения синхронизации, затем список обновится автоматически.'
-                                    : 'Повторная отправка сохранит исходную версию. При конфликте очередь остановится для проверки.'
+                                    ? t('staff.shiftQuick.syncingQueueMessage')
+                                    : t('staff.shiftQuick.queueMessage')
                             }
                             onRetry={() => void onRefresh()}
                             style={styles.offlineBanner}
@@ -476,19 +475,22 @@ function ClientCard({
     canEdit: boolean;
     onEditClient: (item: ShiftItem, itemIndex: number) => void;
 }) {
+    const { t, locale } = useLanguage();
     const canEditItem = canEdit && !item.bookingId;
 
     return (
         <Card style={styles.clientCard} variant="elevated" padding="md">
             <View style={styles.clientHeader}>
                 <View style={styles.clientMain}>
-                    <Text style={styles.clientName}>{item.clientName || 'Клиент'}</Text>
+                    <Text style={styles.clientName}>{item.clientName || t('staff.client')}</Text>
                     {item.serviceName ? <Text style={styles.clientService}>{item.serviceName}</Text> : null}
                 </View>
                 <View style={styles.clientAmountWrap}>
-                    <Text style={styles.clientAmount}>{item.serviceAmount > 0 ? formatPrice(item.serviceAmount) : '—'}</Text>
+                    <Text style={styles.clientAmount}>{item.serviceAmount > 0 ? formatPrice(item.serviceAmount, locale) : '—'}</Text>
                     {item.consumablesAmount > 0 ? (
-                        <Text style={styles.clientConsumables}>Расходники {formatPrice(item.consumablesAmount)}</Text>
+                        <Text style={styles.clientConsumables}>
+                            {t('staff.shiftQuick.itemConsumables', { amount: formatPrice(item.consumablesAmount, locale) })}
+                        </Text>
                     ) : null}
                 </View>
             </View>
@@ -499,46 +501,46 @@ function ClientCard({
                         size={12}
                         color={item.bookingId ? colors.status.success : colors.text.secondary}
                     />
-                    <Text style={styles.sourceChipText}>{item.bookingId ? 'Из брони' : 'Добавлен вручную'}</Text>
+                    <Text style={styles.sourceChipText}>{t(item.bookingId ? 'staff.shiftQuick.fromBooking' : 'staff.shiftQuick.addedManually')}</Text>
                 </View>
                 {item.createdAt ? <Text style={styles.clientTime}>{formatTime(item.createdAt)}</Text> : null}
             </View>
             {canEditItem ? (
                 <Button
-                    title={EDIT_CLIENT_LABEL}
+                    title={t('staff.shiftQuick.edit')}
                     onPress={() => onEditClient(item, itemIndex)}
                     variant="outline"
                     size="sm"
                     leadingIcon={<Ionicons name="create-outline" size={14} color={colors.accent.primary} />}
                     style={styles.clientEditButton}
                     textStyle={styles.clientEditButtonText}
-                    accessibilityLabel={EDIT_CLIENT_LABEL}
+                    accessibilityLabel={t('staff.shiftQuick.edit')}
                 />
             ) : null}
         </Card>
     );
 }
 
-function getShiftStatusMeta(isOpen: boolean, hasShift: boolean): ShiftStatusMeta {
+function getShiftStatusMeta(isOpen: boolean, hasShift: boolean, t: Translate): ShiftStatusMeta {
     if (isOpen) {
         return {
-            label: 'Смена активна',
-            description: 'Можно добавлять клиентов и оперативно контролировать показатели.',
+            label: t('staff.shiftQuick.activeLabel'),
+            description: t('staff.shiftQuick.activeDescription'),
             state: 'open',
         };
     }
 
     if (hasShift) {
         return {
-            label: 'Смена закрыта',
-            description: 'Рабочий день завершен. Данные доступны для просмотра.',
+            label: t('staff.shiftQuick.closedLabel'),
+            description: t('staff.shiftQuick.closedDescription'),
             state: 'closed',
         };
     }
 
     return {
-        label: 'Смена не открыта',
-        description: 'Откройте смену, чтобы начать работу с клиентами.',
+        label: t('staff.shiftQuick.idleLabel'),
+        description: t('staff.shiftQuick.idleDescription'),
         state: 'idle',
     };
 }

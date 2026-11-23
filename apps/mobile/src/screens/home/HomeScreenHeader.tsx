@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import Logo from '../../components/Logo';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import { typography } from '../../constants/typography';
+import { useLanguage } from '../../i18n';
 
 import { styles } from './homeScreenStyles';
 
@@ -12,6 +13,8 @@ type HeaderProps = {
 };
 
 export function HomeScreenHeader({ showOfflineBanner }: HeaderProps) {
+    const { t } = useLanguage();
+
     return (
         <>
             <View style={styles.header}>
@@ -20,11 +23,10 @@ export function HomeScreenHeader({ showOfflineBanner }: HeaderProps) {
 
             <View style={styles.heroSection}>
                 <Text testID="home-hero-title" style={styles.heroTitle}>
-                    Найдите свой сервис
+                    {t('booking.home.heroTitle')}
                 </Text>
                 <Text style={[styles.heroSubtitle, typography.body]}>
-                    Запись в салоны и студии города Ош за пару кликов - без звонков и
-                    переписок
+                    {t('booking.home.heroSubtitle')}
                 </Text>
             </View>
 

@@ -3,11 +3,17 @@
  * A new group is added here, in ky.ts and in en.ts.
  */
 import { authRu } from './auth.ru';
+import { staffRu } from './staff.ru';
+import { cabinetRu } from './cabinet.ru';
+import { bookingRu } from './booking.ru';
 import { commonRu } from './common.ru';
 import { navRu } from './nav.ru';
 
 export const ru = {
     ...authRu,
+    ...staffRu,
+    ...cabinetRu,
+    ...bookingRu,
     ...commonRu,
     ...navRu,
 } as const;

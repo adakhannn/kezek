@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useCurrentStaff } from '../../hooks/useCurrentStaff';
+import { useLanguage } from '../../i18n';
 import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
 import { STAFF_ID_HEADER } from '../../lib/staffSelectionStorage';
@@ -13,11 +14,12 @@ import type { FinanceData, ShiftItemEdit, ShiftLedgerSnapshot, ShiftQuickMetrics
 
 type StaffInfo = { id: string; full_name: string };
 type MutationResult = { queued: boolean };
-const REVIEW_MESSAGE = 'Смена изменилась или результат отправки неизвестен. Черновик сохранён. Загрузите актуальную смену и сверьте данные перед новой отправкой.';
 
 export function useShiftQuickScreenData() {
     const { user } = useAuth();
     const { showToast } = useToast();
+    const { t } = useLanguage();
+    const reviewMessage = t('staff.shiftQuick.reviewMessage');
     const queryClient = useQueryClient();
     const [refreshing, setRefreshing] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -34,16 +36,16 @@ export function useShiftQuickScreenData() {
     ownerRef.current = owner;
     const queryKey = useMemo(() => ['staff-finance', user?.id, staffInfo?.id], [user?.id, staffInfo?.id]);
     const assertOwner = useCallback(() => {
-        if (!owner || ownerRef.current !== owner) throw new Error('Учётная запись изменилась. Откройте смену заново.');
+        if (!owner || ownerRef.current !== owner) throw new Error(t('staff.shiftQuick.accountChanged'));
         return owner;
-    }, [owner]);
+    }, [owner, t]);
     const loadFinance = useCallback(async (allowCache: boolean): Promise<FinanceData> => {
         const currentOwner = assertOwner();
         try {
             const response = await apiRequest<{ ok: boolean; data: FinanceData }>('/api/staff/finance', {
                 headers: { [STAFF_ID_HEADER]: currentOwner.staffId },
             });
-            if (!response.ok || !response.data?.today) throw new Error('Не удалось загрузить смену.');
+            if (!response.ok || !response.data?.today) throw new Error(t('staff.shiftQuick.loadShiftError'));
             assertOwner();
             await saveShiftCache(response.data, currentOwner);
             return response.data;
@@ -55,7 +57,7 @@ export function useShiftQuickScreenData() {
             }
             throw error;
         }
-    }, [assertOwner]);
+    }, [assertOwner, t]);
     const financeQuery = useQuery({
         queryKey, queryFn: () => loadFinance(true), enabled: !!owner, retry: 1, staleTime: 5000,
     });
@@ -66,39 +68,39 @@ export function useShiftQuickScreenData() {
             setQueueError(null);
             return value;
         } catch (error) {
-            setQueueError('Не удалось прочитать офлайн-очередь. Отправка остановлена, сохранённые данные не удалены.');
+            setQueueError(t('staff.shiftQuick.queueUnreadable'));
             throw error;
         }
-    }, []);
+    }, [t]);
     const persistQueue = useCallback(async (value: ShiftOfflineOperation[]) => {
         await saveOfflineQueue(value);
         setQueue(value);
         setQueueError(null);
     }, []);
     const runLocked = useCallback(async <T,>(work: () => Promise<T>): Promise<T> => {
-        if (lock.current) throw new Error('Дождитесь завершения текущей операции.');
+        if (lock.current) throw new Error(t('staff.shiftQuick.waitCurrent'));
         lock.current = true;
         setBusy(true);
         try { return await work(); }
         finally { lock.current = false; setBusy(false); }
-    }, []);
+    }, [t]);
     const acceptSave = useCallback(async (response: unknown, payload: ShiftLedgerSnapshot) => {
-        const saved = readSavedLedger(response, payload);
+        const saved = readSavedLedger(response, payload, t);
         const currentOwner = assertOwner();
         await queryClient.cancelQueries({ queryKey });
         const current = queryClient.getQueryData<FinanceData>(queryKey);
         if (current?.today.shift?.id === saved.shiftId && current.today.shift.ledger_revision <= saved.revision) {
-            const next = applySavedLedger(current, saved);
+            const next = applySavedLedger(current, saved, t);
             queryClient.setQueryData(queryKey, next);
             await saveShiftCache(next, currentOwner);
         }
-    }, [assertOwner, queryClient, queryKey]);
+    }, [assertOwner, queryClient, queryKey, t]);
     const sendOperation = useCallback(async (operation: ShiftOfflineOperation) => {
         const currentOwner = assertOwner();
         const operationOwner = operation.owner;
         if (!operationOwner || !ownsOperation(operation, currentOwner) || !isShiftLedgerSnapshot(operation.data)
             || !['addItem', 'updateItem', 'close'].includes(operation.type)) {
-            throw new Error('Эта сохранённая операция требует ручной проверки.');
+            throw new Error(t('staff.shiftQuick.manualReview'));
         }
         await queryClient.cancelQueries({ queryKey });
         assertOwner();
@@ -114,7 +116,7 @@ export function useShiftQuickScreenData() {
             const shift = result?.data?.shift;
             if (!result?.ok || !shift || shift.id !== operation.data.expectedShiftId || shift.status !== 'closed'
                 || !Number.isSafeInteger(shift.ledger_revision) || shift.ledger_revision <= operation.data.expectedRevision) {
-                throw new UnconfirmedShiftCommandError(REVIEW_MESSAGE);
+                throw new UnconfirmedShiftCommandError(reviewMessage);
             }
             assertOwner();
             await queryClient.cancelQueries({ queryKey });
@@ -127,7 +129,7 @@ export function useShiftQuickScreenData() {
         } else {
             await acceptSave(response, operation.data);
         }
-    }, [acceptSave, assertOwner, queryClient, queryKey]);
+    }, [acceptSave, assertOwner, queryClient, queryKey, reviewMessage, t]);
     const processOfflineQueue = useCallback(async () => {
         if (!owner || !financeQuery.data || lock.current) return;
         try {
@@ -140,7 +142,7 @@ export function useShiftQuickScreenData() {
                     if (operation.state === 'review') break;
                     if (!ownsOperation(operation, owner) || !isShiftLedgerSnapshot(operation.data)
                         || !['addItem', 'updateItem', 'close'].includes(operation.type)) {
-                        await persistQueue([{ ...operation, state: 'review', reason: 'Сохранённая операция не содержит подтверждённой версии или принадлежит другой учётной записи.' }, ...pending.slice(1)]);
+                        await persistQueue([{ ...operation, state: 'review', reason: t('staff.shiftQuick.foreignOperation') }, ...pending.slice(1)]);
                         break;
                     }
                     try {
@@ -151,7 +153,7 @@ export function useShiftQuickScreenData() {
                         const status = errorStatus(error);
                         assertOwner();
                         if ((status !== undefined && status < 500) || error instanceof UnconfirmedShiftCommandError) {
-                            await persistQueue([{ ...operation, state: 'review', reason: REVIEW_MESSAGE }, ...pending.slice(1)]);
+                            await persistQueue([{ ...operation, state: 'review', reason: reviewMessage }, ...pending.slice(1)]);
                         }
                         break;
                     }
@@ -162,7 +164,7 @@ export function useShiftQuickScreenData() {
         } catch {
             // Storage failure is visible and blocks writes; leave persisted data intact.
         }
-    }, [owner, financeQuery.data, runLocked, readQueue, assertOwner, persistQueue, sendOperation]);
+    }, [owner, financeQuery.data, runLocked, readQueue, assertOwner, persistQueue, sendOperation, reviewMessage, t]);
     useEffect(() => {
         void processOfflineQueue();
         const interval = setInterval(() => void processOfflineQueue(), 30000);
@@ -176,7 +178,7 @@ export function useShiftQuickScreenData() {
         const replacing = edit?.replacesQueuedAt;
         if (pending.length && !(pending.length === 1 && pending[0].timestamp === replacing
             && pending[0].state === 'review' && ownsOperation(pending[0], currentOwner))) {
-            throw new Error('Сначала проверьте сохранённый черновик в офлайн-очереди.');
+            throw new Error(t('staff.shiftQuick.checkDraftFirst'));
         }
         const operation: ShiftOfflineOperation = { type, data: payload, owner: currentOwner,
             state: 'pending', timestamp: new Date().toISOString(),
@@ -189,8 +191,8 @@ export function useShiftQuickScreenData() {
             const status = errorStatus(error);
             if (status !== undefined && status >= 400 && status < 500 && status !== 409) throw error;
             const review = status === 409 || error instanceof UnconfirmedShiftCommandError;
-            await persistQueue([{ ...operation, state: review ? 'review' : 'pending', reason: review ? REVIEW_MESSAGE : undefined }]);
-            if (review) throw new Error(REVIEW_MESSAGE);
+            await persistQueue([{ ...operation, state: review ? 'review' : 'pending', reason: review ? reviewMessage : undefined }]);
+            if (review) throw new Error(reviewMessage);
             return { queued: true };
         }
         if (replacing) await persistQueue([]);
@@ -199,27 +201,27 @@ export function useShiftQuickScreenData() {
     const openShiftMutation = useMutation({
         mutationFn: () => runLocked(async () => {
             const currentOwner = assertOwner();
-            if ((await readQueue()).length) throw new Error('Сначала проверьте офлайн-очередь.');
+            if ((await readQueue()).length) throw new Error(t('staff.shiftQuick.checkQueueFirst'));
             await queryClient.cancelQueries({ queryKey });
             // Opening has no revision precondition; never automatically replay an unknown outcome.
             const response = await apiRequest<{ ok: boolean }>('/api/staff/shift/open', {
                 method: 'POST',
                 headers: { [STAFF_ID_HEADER]: currentOwner.staffId },
             });
-            if (!response.ok) throw new Error('Не удалось открыть смену. Обновите данные перед повтором.');
+            if (!response.ok) throw new Error(t('staff.shiftQuick.openError'));
             const data = await loadFinance(false);
             queryClient.setQueryData(queryKey, data);
         }),
-        onSuccess: () => showToast('Смена открыта.', 'success'),
-        onError: (error) => showToast(getErrorMessage(error, 'Не удалось открыть смену. Обновите данные перед повтором.'), 'error'),
+        onSuccess: () => showToast(t('staff.shiftQuick.opened'), 'success'),
+        onError: (error) => showToast(getErrorMessage(error, t('staff.shiftQuick.openError'), t), 'error'),
     });
     const closeShiftMutation = useMutation({
-        mutationFn: (base: ShiftLedgerSnapshot) => executeCommand('close', closeShiftLedger(base)),
-        onSuccess: (result) => showToast(result.queued ? 'Закрытие сохранено в очереди. Исходная версия будет проверена при отправке.' : 'Смена закрыта.', result.queued ? 'warning' : 'success'),
-        onError: (error) => showToast(getErrorMessage(error, 'Не удалось закрыть смену.'), 'error'),
+        mutationFn: (base: ShiftLedgerSnapshot) => executeCommand('close', closeShiftLedger(base, t)),
+        onSuccess: (result) => showToast(t(result.queued ? 'staff.shiftQuick.closeQueued' : 'staff.shiftQuick.closed'), result.queued ? 'warning' : 'success'),
+        onError: (error) => showToast(getErrorMessage(error, t('staff.shiftQuick.closeError'), t), 'error'),
     });
-    const addClientMutation = useMutation({ mutationFn: (edit: ShiftItemEdit) => executeCommand('addItem', editShiftLedger(edit), edit) });
-    const updateClientMutation = useMutation({ mutationFn: (edit: ShiftItemEdit) => executeCommand('updateItem', editShiftLedger(edit), edit) });
+    const addClientMutation = useMutation({ mutationFn: (edit: ShiftItemEdit) => executeCommand('addItem', editShiftLedger(edit, t), edit) });
+    const updateClientMutation = useMutation({ mutationFn: (edit: ShiftItemEdit) => executeCommand('updateItem', editShiftLedger(edit, t), edit) });
 
     // Explicit review bypasses the offline cache. Refresh alone never rebases a draft.
     const reloadForReview = () => runLocked(async () => {
@@ -231,7 +233,7 @@ export function useShiftQuickScreenData() {
     const discardReviewedQueue = () => runLocked(async () => {
         const pending = await readQueue();
         assertOwner();
-        if (pending[0]?.state !== 'review') throw new Error('Сначала дождитесь завершения отправки или проверки очереди.');
+        if (pending[0]?.state !== 'review') throw new Error(t('staff.shiftQuick.waitQueue'));
         await persistQueue(pending.slice(1));
     });
     const onRefresh = async () => {
@@ -239,7 +241,7 @@ export function useShiftQuickScreenData() {
         try {
             await processOfflineQueue();
             if (!lock.current) await reloadForReview();
-        } catch (error) { showToast(getErrorMessage(error, 'Не удалось обновить смену.'), 'error'); }
+        } catch (error) { showToast(getErrorMessage(error, t('staff.shiftQuick.refreshError'), t), 'error'); }
         finally { setRefreshing(false); }
     };
     const metrics = useMemo<ShiftQuickMetrics>(() => {

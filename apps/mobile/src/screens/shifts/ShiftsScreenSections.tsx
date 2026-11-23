@@ -4,6 +4,7 @@ import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import MotionPressable from '../../components/ui/MotionPressable';
+import { useLanguage } from '../../i18n';
 import { formatDate, formatPrice } from '../../utils/format';
 import { styles } from './shiftsScreenStyles';
 import type { Shift, ShiftStats } from './types';
@@ -25,6 +26,8 @@ export function ShiftsScreenSections({
     onPeriodChange,
     onRefresh,
 }: Props) {
+    const { t, locale } = useLanguage();
+    const money = (amount: number) => formatPrice(amount, locale);
     const hasBaseShareTotals =
         typeof stats.totalBaseMasterShare === 'number' &&
         typeof stats.totalBaseSalonShare === 'number';
@@ -43,7 +46,7 @@ export function ShiftsScreenSections({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>Смены и статистика</Text>
+                <Text style={styles.title}>{t('staff.shifts.title')}</Text>
                 <Text style={styles.subtitle}>{staffName}</Text>
             </View>
 
@@ -61,7 +64,7 @@ export function ShiftsScreenSections({
                                     period === periodValue && styles.periodButtonTextActive,
                                 ]}
                             >
-                                {periodValue === 'day' ? 'День' : periodValue === 'month' ? 'Месяц' : 'Год'}
+                                {t(`staff.shifts.period.${periodValue}`)}
                             </Text>
                         </MotionPressable>
                     ))}
@@ -70,30 +73,34 @@ export function ShiftsScreenSections({
 
             <View style={styles.statsGrid}>
                 <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>Оборот</Text>
-                    <Text style={styles.statValue}>{formatPrice(stats.totalAmount)}</Text>
+                    <Text style={styles.statLabel}>{t('staff.turnover')}</Text>
+                    <Text style={styles.statValue}>{money(stats.totalAmount)}</Text>
                 </Card>
 
                 <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>Доля сотрудника</Text>
+                    <Text style={styles.statLabel}>{t('staff.shifts.staffShare')}</Text>
                     <Text style={[styles.statValue, styles.statValueEmployee]}>
-                        {formatPrice(stats.totalMaster)}
+                        {money(stats.totalMaster)}
                     </Text>
                     {stats.totalAmount > 0 ? (
                         <Text style={styles.statPercent}>
-                            {((baseMasterShare / stats.totalAmount) * 100).toFixed(1)}% от выручки
+                            {t('staff.shifts.percentOfRevenue', {
+                                percent: ((baseMasterShare / stats.totalAmount) * 100).toFixed(1),
+                            })}
                         </Text>
                     ) : null}
                 </Card>
 
                 <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>Доля бизнеса</Text>
+                    <Text style={styles.statLabel}>{t('staff.shifts.businessShare')}</Text>
                     <Text style={[styles.statValue, styles.statValueBusiness]}>
-                        {formatPrice(stats.totalSalon)}
+                        {money(stats.totalSalon)}
                     </Text>
                     {stats.totalAmount > 0 ? (
                         <Text style={styles.statPercent}>
-                            {((baseSalonShare / stats.totalAmount) * 100).toFixed(1)}% от выручки
+                            {t('staff.shifts.percentOfRevenue', {
+                                percent: ((baseSalonShare / stats.totalAmount) * 100).toFixed(1),
+                            })}
                         </Text>
                     ) : null}
                 </Card>
@@ -101,26 +108,26 @@ export function ShiftsScreenSections({
 
             <View style={styles.additionalStats}>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>Смен</Text>
+                    <Text style={styles.additionalStatLabel}>{t('staff.shifts.shiftsCount')}</Text>
                     <Text style={styles.additionalStatValue}>{stats.shiftsCount}</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>Расходники</Text>
-                    <Text style={styles.additionalStatValue}>{formatPrice(stats.totalConsumables)}</Text>
+                    <Text style={styles.additionalStatLabel}>{t('staff.consumables')}</Text>
+                    <Text style={styles.additionalStatValue}>{money(stats.totalConsumables)}</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>Опоздания</Text>
-                    <Text style={styles.additionalStatValue}>{stats.totalLateMinutes} мин</Text>
+                    <Text style={styles.additionalStatLabel}>{t('staff.shifts.late')}</Text>
+                    <Text style={styles.additionalStatValue}>{t('staff.minutes', { minutes: stats.totalLateMinutes })}</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>Клиентов</Text>
+                    <Text style={styles.additionalStatLabel}>{t('staff.shifts.clients')}</Text>
                     <Text style={styles.additionalStatValue}>{stats.totalClients}</Text>
                 </Card>
             </View>
 
             {stats.shifts.length > 0 ? (
                 <View style={styles.shiftsSection}>
-                    <Text style={styles.sectionTitle}>Смены за период</Text>
+                    <Text style={styles.sectionTitle}>{t('staff.shifts.periodTitle')}</Text>
                     {stats.shifts.map((shift) => (
                         <ShiftCard key={shift.id} shift={shift} />
                     ))}
@@ -129,8 +136,8 @@ export function ShiftsScreenSections({
                 <View style={styles.emptySection}>
                     <EmptyState
                         icon="calendar"
-                        title="Нет смен"
-                        message="За выбранный период смен не найдено"
+                        title={t('staff.shifts.emptyTitle')}
+                        message={t('staff.shifts.emptyMessage')}
                     />
                 </View>
             )}
@@ -139,6 +146,9 @@ export function ShiftsScreenSections({
 }
 
 function ShiftCard({ shift }: { shift: Shift }) {
+    const { t, locale } = useLanguage();
+    const money = (amount: number) => formatPrice(amount, locale);
+    const hours = (value: number) => t('staff.hours', { hours: value.toFixed(1) });
     const [expanded, setExpanded] = useState(shift.status === 'open');
     const hasGuaranteed =
         shift.guaranteed_amount > 0 &&
@@ -150,7 +160,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
             <MotionPressable style={styles.shiftHeader} onPress={() => setExpanded(!expanded)}>
                 <View style={styles.shiftHeaderLeft}>
                     <View style={styles.shiftHeaderTop}>
-                        <Text style={styles.shiftDate}>{formatDate(shift.shift_date)}</Text>
+                        <Text style={styles.shiftDate}>{formatDate(shift.shift_date, locale)}</Text>
                         <View
                             style={[
                                 styles.shiftStatusBadge,
@@ -165,60 +175,61 @@ function ShiftCard({ shift }: { shift: Shift }) {
                                         : styles.shiftStatusTextClosed,
                                 ]}
                             >
-                                {shift.status === 'open' ? 'Открыта' : 'Закрыта'}
+                                {t(shift.status === 'open' ? 'staff.status.open' : 'staff.status.closed')}
                             </Text>
                         </View>
                         {shift.items.length > 0 ? (
-                            <Text style={styles.shiftClientsCount}>({shift.items.length} клиентов)</Text>
+                            <Text style={styles.shiftClientsCount}>{t('staff.shifts.clientsCount', { count: shift.items.length })}</Text>
                         ) : null}
                     </View>
                     {shift.opened_at ? (
                         <Text style={styles.shiftTime}>
-                            Открыта:{' '}
-                            {new Date(shift.opened_at).toLocaleTimeString('ru-RU', {
-                                hour: '2-digit',
-                                minute: '2-digit',
+                            {t('staff.shifts.openedAt', {
+                                time: new Date(shift.opened_at).toLocaleTimeString('ru-RU', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                }),
                             })}
                         </Text>
                     ) : null}
                 </View>
                 <View style={styles.shiftHeaderRight}>
-                    <Text style={styles.shiftTotalAmount}>{formatPrice(shift.total_amount)}</Text>
+                    <Text style={styles.shiftTotalAmount}>{money(shift.total_amount)}</Text>
                     <Text style={styles.shiftConsumables}>
-                        Расходники: {formatPrice(shift.consumables_amount)}
+                        {t('staff.shifts.consumablesAmount', { amount: money(shift.consumables_amount) })}
                     </Text>
                     {hasGuaranteed ? (
                         <View style={styles.shiftFinancials}>
                             <Text style={styles.shiftMasterShareGuaranteed}>
-                                Сотруднику: {formatPrice(shift.guaranteed_amount)}
+                                {t('staff.shifts.toEmployee', { amount: money(shift.guaranteed_amount) })}
                             </Text>
                             {shift.hours_worked !== null ? (
                                 <Text style={styles.shiftHours}>
-                                    За выход: {shift.hours_worked.toFixed(1)} ч
+                                    {t('staff.shifts.perShift', { value: hours(shift.hours_worked) })}
                                 </Text>
                             ) : null}
                             <Text style={styles.shiftBaseShareStriked}>
-                                Базовая: {formatPrice(shift.base_master_share)}
+                                {t('staff.shifts.baseShare', { amount: money(shift.base_master_share) })}
                             </Text>
                             <Text style={styles.shiftSalonShare}>
-                                Бизнесу: {formatPrice(shift.salon_share)}
+                                {t('staff.shifts.toBusiness', { amount: money(shift.salon_share) })}
                             </Text>
                         </View>
                     ) : (
                         <View style={styles.shiftFinancials}>
                             <Text style={styles.shiftMasterShare}>
-                                Сотруднику: {formatPrice(shift.master_share)}
+                                {t('staff.shifts.toEmployee', { amount: money(shift.master_share) })}
                             </Text>
                             {shift.guaranteed_amount > 0 && shift.hourly_rate ? (
                                 <Text style={styles.shiftGuaranteed}>
-                                    За выход: {formatPrice(shift.guaranteed_amount)}
+                                    {t('staff.shifts.perShift', { value: money(shift.guaranteed_amount) })}
                                     {shift.hours_worked !== null ? (
-                                        <Text> ({shift.hours_worked.toFixed(1)} ч)</Text>
+                                        <Text> ({hours(shift.hours_worked)})</Text>
                                     ) : null}
                                 </Text>
                             ) : null}
                             <Text style={styles.shiftSalonShare}>
-                                Бизнесу: {formatPrice(shift.salon_share)}
+                                {t('staff.shifts.toBusiness', { amount: money(shift.salon_share) })}
                             </Text>
                         </View>
                     )}
@@ -227,23 +238,23 @@ function ShiftCard({ shift }: { shift: Shift }) {
 
             {expanded && shift.items.length > 0 ? (
                 <View style={styles.shiftItems}>
-                    <Text style={styles.shiftItemsTitle}>Список клиентов</Text>
+                    <Text style={styles.shiftItemsTitle}>{t('staff.shifts.clientList')}</Text>
                     {shift.items.map((item) => (
                         <View key={item.id} style={styles.shiftItem}>
                             <View style={styles.shiftItemLeft}>
                                 {item.booking_id ? <View style={styles.bookingIndicator} /> : null}
                                 <View style={styles.shiftItemInfo}>
                                     <Text style={styles.shiftItemClient}>
-                                        {item.client_name || 'Клиент не указан'}
+                                        {item.client_name || t('staff.shifts.clientNotSpecified')}
                                     </Text>
                                     <Text style={styles.shiftItemService}>{item.service_name || '—'}</Text>
                                 </View>
                             </View>
                             <View style={styles.shiftItemRight}>
-                                <Text style={styles.shiftItemAmount}>{formatPrice(item.service_amount)}</Text>
+                                <Text style={styles.shiftItemAmount}>{money(item.service_amount)}</Text>
                                 {item.consumables_amount > 0 ? (
                                     <Text style={styles.shiftItemConsumables}>
-                                        Расходники: {formatPrice(item.consumables_amount)}
+                                        {t('staff.shifts.consumablesAmount', { amount: money(item.consumables_amount) })}
                                     </Text>
                                 ) : null}
                                 {item.created_at ? (
@@ -262,7 +273,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
 
             {expanded && shift.items.length === 0 ? (
                 <View style={styles.shiftItemsEmpty}>
-                    <Text style={styles.shiftItemsEmptyText}>Нет добавленных клиентов</Text>
+                    <Text style={styles.shiftItemsEmptyText}>{t('staff.shifts.noClients')}</Text>
                 </View>
             ) : null}
         </Card>

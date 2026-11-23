@@ -54,7 +54,7 @@ describe('perceived performance contracts', () => {
         const booking = read('src/screens/BookingScreen.tsx');
 
         expect(home).toContain("rootNavigation.navigate('Booking', { slug, previewName })");
-        expect(booking).toContain("previewName || 'Запись'");
+        expect(booking).toContain("previewName || t('booking.screen.title')");
         expect(booking).toContain('<BookingProgressIndicator currentStep={1} />');
     });
 });

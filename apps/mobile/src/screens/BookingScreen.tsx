@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import BookingProgressIndicator from '../components/BookingProgressIndicator';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { colors } from '../constants/colors';
+import { useLanguage } from '../i18n';
 import BookingStep1Branch from './booking/BookingStep1Branch';
 import { useBookingScreenData } from './bookingFlow/useBookingScreenData';
 
@@ -19,6 +20,7 @@ export default function BookingScreen() {
     const route = useRoute<BookingScreenRouteProp>();
     const { slug, previewName } = route.params || {};
     const { isLoading, initialData } = useBookingScreenData({ slug });
+    const { t } = useLanguage();
 
     if (isLoading) {
         return (
@@ -34,10 +36,10 @@ export default function BookingScreen() {
             >
                 <BookingProgressIndicator currentStep={1} />
                 <View style={styles.previewHeader}>
-                    <Text style={styles.previewTitle}>{previewName || 'Запись'}</Text>
-                    <Text style={styles.previewSubtitle}>Готовим филиалы для выбора</Text>
+                    <Text style={styles.previewTitle}>{previewName || t('booking.screen.title')}</Text>
+                    <Text style={styles.previewSubtitle}>{t('booking.screen.preparing')}</Text>
                 </View>
-                <LoadingSpinner message="Загружаем филиалы..." />
+                <LoadingSpinner message={t('booking.screen.loadingBranches')} />
             </LinearGradient>
         );
     }

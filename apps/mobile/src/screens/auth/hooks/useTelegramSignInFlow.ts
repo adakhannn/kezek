@@ -75,7 +75,7 @@ function mapTelegramError(error: unknown, t: Translate): string {
     if (isTimeoutError(error)) {
         return t('auth.error.timeout');
     }
-    return getErrorMessage(error, t('auth.telegram.error.failed'));
+    return getErrorMessage(error, t('auth.telegram.error.failed'), t);
 }
 
 export function useTelegramSignInFlow({
@@ -309,7 +309,7 @@ export function useTelegramSignInFlow({
         try {
             await openTelegramLink(telegramDeepLink, t);
         } catch (error: unknown) {
-            const message = getErrorMessage(error, t('auth.telegram.error.notInstalled'));
+            const message = getErrorMessage(error, t('auth.telegram.error.notInstalled'), t);
             showToast(message, 'error');
         }
     };

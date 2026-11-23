@@ -1,0 +1,151 @@
+import type { bookingRu } from './booking.ru';
+
+export const bookingKy: Record<keyof typeof bookingRu, string> = {
+    // Shared by the booking steps
+    'booking.nav.next': 'Улантуу',
+    'booking.nav.back': 'Артка',
+    'booking.retry': 'Кайталоо',
+    'booking.checkConnection': 'Интернет байланышын текшерип, кайра аракет кылыңыз.',
+    'booking.book': 'Жазылуу',
+    'booking.duration.minutes': '{minutes} мин',
+    'booking.duration.minutesLong': '{minutes} мүнөт',
+    'booking.price.value': '{price} сом',
+    'booking.price.from': '{price} сомдон',
+    'booking.price.upTo': '{price} сомго чейин',
+    'booking.price.range': '{from} - {to} сом',
+    'booking.price.rangeCompact': '{from}–{to} сом',
+    'booking.error.businessNotFound': 'Бизнес табылган жок',
+    'booking.error.noBookingNumber': 'Түзүлгөн жазылуунун номерин алуу мүмкүн болгон жок',
+
+    // BookingProgressIndicator
+    'booking.progress.stepOf': 'Кадам {current} / {total}',
+    'booking.progress.stepHint': 'Брондоонун ушул кадамына кайтарат',
+    'booking.progress.branch': 'Филиал',
+    'booking.progress.service': 'Кызмат',
+    'booking.progress.staff': 'Кызматкер',
+    'booking.progress.date': 'Күн',
+    'booking.progress.time': 'Убакыт',
+    'booking.progress.confirm': 'Ырастоо',
+
+    // BookingScreen
+    'booking.screen.title': 'Жазылуу',
+    'booking.screen.preparing': 'Тандоо үчүн филиалдарды даярдап жатабыз',
+    'booking.screen.loadingBranches': 'Филиалдарды жүктөп жатабыз...',
+
+    // Step 1: branch
+    'booking.step1.notFoundMessage': 'Тизмеге кайтып, башка бизнести тандап көрүңүз.',
+    'booking.step1.promotions': 'Акциялар',
+    'booking.step1.promotionFallback': 'Акция',
+    'booking.step1.emptyTitle': 'Жеткиликтүү филиалдар жок',
+    'booking.step1.emptyMessage': 'Бизнес тандалгандан кийин бул жерде жазылуу үчүн филиалдар пайда болот.',
+
+    // Step 2: service
+    'booking.step2.loading': 'Кызматтар жүктөлүүдө...',
+    'booking.step2.emptyTitle': 'Жеткиликтүү кызматтар жок',
+    'booking.step2.emptyMessage': 'Тандалган филиалда азырынча активдүү кызматтар жок.',
+
+    // Step 3: staff
+    'booking.step3.loading': 'Кызматкерлер жүктөлүүдө...',
+    'booking.step3.emptyTitle': 'Жеткиликтүү кызматкерлер жок',
+    'booking.step3.emptyMessage': 'Тандалган кызмат үчүн азырынча активдүү кызматкерлер жок.',
+
+    // Step 4: date
+    'booking.step4.today': 'Бүгүн',
+
+    // Step 5: time
+    'booking.step5.loading': 'Бош убакыт жүктөлүүдө...',
+    'booking.step5.errorHint': 'Башка күндү тандап же тизмени жаңылап көрүңүз.',
+    'booking.step5.emptyTitle': 'Бош убакыт жок',
+    'booking.step5.emptyMessage': 'Башка күндү тандап көрүңүз.',
+    'booking.slots.error.unknown': 'Бош слотторду жүктөөдө ката кетти. Башка күндү же кызматкерди тандаңыз.',
+    'booking.slots.error.masterNotAssigned': 'Тандалган күнгө кызматкер бул филиалга байланышкан эмес. Башка күндү же кызматкерди тандаңыз.',
+    'booking.slots.error.noSchedule': 'Тандалган күнгө кызматкердин графиги жок. Башка күндү тандаңыз.',
+    'booking.slots.error.scheduleConflict': 'Тандалган күнгө кызматкердин графиги менен конфликт бар. Башка күндү же кызматкерди тандаңыз.',
+    'booking.slots.error.technical': 'Техникалык ката кетти. Сураныч, экранды жаңылаңыз же кийинчерээк кайра аракет кылыңыз.',
+
+    // Step 6: confirmation
+    'booking.step6.offline': 'Интернет жок кезде жазылуу түзүүгө болбойт. Байланыш калыбына келишин күтө туруңуз.',
+    'booking.step6.business': 'Бизнес',
+    'booking.step6.service': 'Кызмат',
+    'booking.step6.staff': 'Кызматкер',
+    'booking.step6.dateTime': 'Дата жана убакыт',
+    'booking.confirm.created': 'Жазылуу түзүлдү!',
+    'booking.confirm.offlineError': 'Интернет байланышы жок. Жазылуу түзүлгөн жок. Байланышты текшерип, кайра аракет кылыңыз.',
+    'booking.confirm.failed': 'Жазылууну түзүү мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'booking.confirm.selectTime': 'Убакытты тандаңыз',
+    'booking.confirm.incomplete': 'Брондоо маалыматтары толук эмес',
+    'booking.confirm.title': 'Ырастоо',
+    'booking.confirm.message': 'Жазылуу түзүлсүнбү?',
+    'booking.confirm.create': 'Түзүү',
+    'booking.confirm.cancel': 'Жокко чыгаруу',
+
+    // Home: header, search and list
+    'booking.home.heroTitle': 'Өзүңүзгө ылайыктуу кызматты табыңыз',
+    'booking.home.heroSubtitle': 'Ош шаарындагы салондорго жана студияларга бир нече басуу менен жазылыңыз - чалуусуз жана кат алышуусуз',
+    'booking.home.searchPlaceholder': 'Аталышы же дареги боюнча издөө...',
+    'booking.home.clearSearch': 'Издөөнү тазалоо',
+    'booking.home.loadingMore': 'Дагы жүктөп жатабыз...',
+
+    // Home: upcoming bookings and recent places
+    'booking.home.booking': 'Жазылуу',
+    'booking.home.status.confirmed': 'Ырасталган',
+    'booking.home.status.hold': 'Күтүүдө',
+    'booking.home.status.paid': 'Төлөнгөн',
+    'booking.home.upcomingTitle': 'Жакынкы жазылуулар',
+    'booking.home.openAll': 'Баарын ачуу',
+    'booking.home.openAllLabel': 'Бардык жазылууларды ачуу',
+    'booking.home.openAllHint': 'Жазылуулар тизмеси бар кабинетти ачат',
+    'booking.home.openBookingHint': 'Жазылуунун деталдарын ачат',
+    'booking.home.recentTitle': 'Акыркы жерлер',
+    'booking.home.recentPlaceLabel': 'Акыркы жер: {name}',
+    'booking.home.openBusinessHint': 'Бул бизнеске жазылууну ачат',
+    'booking.home.a11y.branch': 'Филиал: {name}',
+    'booking.home.a11y.service': 'Кызмат: {name}',
+    'booking.home.a11y.time': 'Убакыт: {date} {time}',
+    'booking.home.a11y.status': 'Статус: {status}',
+
+    // Home: categories, nearby branches and businesses
+    'booking.home.categoriesTitle': 'Популярдуу категориялар:',
+    'booking.home.categoryAll': 'Баары',
+    'booking.home.categoryLabel': 'Категория {label}',
+    'booking.home.categoryHint': 'Бизнестер тизмесин категория боюнча чыпкалайт',
+    'booking.home.nearbyTitle': 'Жакынкы филиалдар',
+    'booking.home.nearbyEmpty': '20 км аралыкта эч нерсе табылган жок. Төмөнкү жалпы тизмеден бизнести тандасаңыз болот.',
+    'booking.home.nearbySearching': 'Жакындан издеп жатабыз...',
+    'booking.home.nearbyFind': 'Жакындан табуу',
+    'booking.home.nearbyRefresh': 'Жайгашкан жерди жаңылоо',
+    'booking.home.nearbyFindLabel': 'Жакынкы филиалдарды табуу',
+    'booking.home.nearbyFindHint': 'Жайгашкан жерге уруксат сурап, жакынкы филиалдарды көрсөтөт',
+    'booking.home.openMap': 'Филиалдар картасын ачуу',
+    'booking.home.openMapHint': 'Сайттагыдай интерактивдүү филиалдар картасын ачат',
+    'booking.home.nearbyOpenHint': 'Бул бизнеске жазылууну ачуу',
+    'booking.home.nearbyUnavailableHint': 'Бул бизнеске азырынча жазылууга болбойт',
+    'booking.home.distanceKm': '{distance} км',
+    'booking.home.nearby.locating': 'Уруксат сурап, жайгашкан жериңизди аныктап жатабыз...',
+    'booking.home.nearby.loading': 'Жайгашкан жериңиз боюнча жакынкы филиалдарды издеп жатабыз...',
+    'booking.home.nearby.denied': 'Жайгашкан жерге кирүүгө уруксат берилген жок. Кайра аракет кылсаңыз же төмөнкү тизмеден бизнести тандасаңыз болот.',
+    'booking.home.nearby.unavailable': 'Түзмөктө геолокация азыр жеткиликсиз. Жөндөөлөрдөн Location\'ду текшериңиз же төмөнкү тизмеден бизнести тандаңыз.',
+    'booking.home.nearby.errorNetwork': 'Жакынкы филиалдарды жүктөө мүмкүн болгон жок. Интернетти текшерип, кайра аракет кылыңыз.',
+    'booking.home.nearby.error': 'Жакынкы филиалдарды жүктөө мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'booking.home.nearby.ready': 'Сизге жакын филиалдар табылды. Ылайыктуусун тандаңыз же жалпы тизмени карай бериңиз.',
+    'booking.home.nearby.idle': 'Геолокацияга уруксат бериңиз, ошондо жакынкы филиалдарды аралыгы менен көрсөтөбүз.',
+    'booking.home.loadingData': 'Маалыматтарды жүктөп жатабыз...',
+    'booking.home.loadErrorTitle': 'Тизмени жүктөө мүмкүн болгон жок',
+    'booking.home.emptyFilteredTitle': 'Эч нерсе табылган жок',
+    'booking.home.emptyFilteredMessage': 'Издөө параметрлерин өзгөртүңүз же чыпкаларды тазалаңыз.',
+    'booking.home.emptyTitle': 'Азырынча жеткиликтүү бизнестер жок',
+    'booking.home.emptyMessage': 'Жеткиликтүү варианттар пайда болгондо тизме ушул жерде көрүнөт.',
+    'booking.home.resetFilters': 'Чыпкаларды тазалоо',
+    'booking.home.bookAt': '{name} бизнесине жазылуу',
+    'booking.home.a11y.categories': 'Категориялар: {list}',
+    'booking.home.a11y.address': 'Дарек: {address}',
+    'booking.home.a11y.phone': 'Телефон: {phone}',
+    'booking.home.a11y.rating': 'Рейтинг: {rating}',
+
+    // MapScreen
+    'booking.map.unavailableTitle': 'Карта жеткиликсиз',
+    'booking.map.noServer': 'Сервердин дарегин аныктоо мүмкүн болгон жок. Тиркеменин жөндөөлөрүн текшериңиз.',
+    'booking.map.loading': 'Картаны жүктөп жатабыз...',
+    'booking.map.loadError': 'Картаны жүктөө мүмкүн болгон жок',
+    'booking.map.retryLabel': 'Картаны кайра жүктөө',
+};

@@ -1,13 +1,31 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { ru } from 'date-fns/locale';
+import { enUS, ru } from 'date-fns/locale';
+
+import { formatKyDate } from '../i18n/kyDate';
+import type { Locale } from '../i18n/locale';
+import { createTranslate } from '../i18n/translate';
 
 const TZ = 'Asia/Bishkek';
+
+/*
+ * Every formatter takes the screen's language (`useLanguage().locale`); without it the text is
+ * Russian. Kyrgyz goes through formatKyDate (no Intl 'ky-KG', which devices often lack).
+ */
 
 /**
  * Форматирование даты и времени
  */
-export function formatDateTime(date: string | Date, includeTime = true): string {
+export function formatDateTime(date: string | Date, includeTime = true, locale: Locale = 'ru'): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (locale === 'ky') {
+        return includeTime
+            ? `${formatKyDate(dateObj, { day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ })}, ${formatTime(dateObj)}`
+            : formatKyDate(dateObj, { day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ });
+    }
+    if (locale === 'en') {
+        const pattern = includeTime ? 'MMMM d, yyyy, HH:mm' : 'MMMM d, yyyy';
+        return formatInTimeZone(dateObj, TZ, pattern, { locale: enUS });
+    }
     const pattern = includeTime ? 'dd MMMM yyyy, HH:mm' : 'dd MMMM yyyy';
     return formatInTimeZone(dateObj, TZ, pattern, { locale: ru });
 }
@@ -21,17 +39,17 @@ export function formatTime(date: string | Date): string {
 }
 
 /**
- * Форматирование даты
+ * Форматирование даты: «23 ноября 2026», ky «2026-ж., 23-ноябрь», en «November 23, 2026».
  */
-export function formatDate(date: string | Date): string {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return formatInTimeZone(dateObj, TZ, 'dd MMMM yyyy', { locale: ru });
+export function formatDate(date: string | Date, locale: Locale = 'ru'): string {
+    return formatDateTime(date, false, locale);
 }
 
 /**
  * Форматирование относительного времени (сегодня, вчера, и т.д.)
  */
-export function formatRelativeTime(date: string | Date): string {
+export function formatRelativeTime(date: string | Date, locale: Locale = 'ru'): string {
+    const t = createTranslate(locale);
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
     const diffMs = now.getTime() - dateObj.getTime();
@@ -39,12 +57,12 @@ export function formatRelativeTime(date: string | Date): string {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'только что';
-    if (diffMins < 60) return `${diffMins} мин. назад`;
-    if (diffHours < 24) return `${diffHours} ч. назад`;
-    if (diffDays === 1) return 'вчера';
-    if (diffDays < 7) return `${diffDays} дн. назад`;
-    return formatDate(dateObj);
+    if (diffMins < 1) return t('cabinet.format.justNow');
+    if (diffMins < 60) return t('cabinet.format.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('cabinet.format.hoursAgo', { count: diffHours });
+    if (diffDays === 1) return t('cabinet.format.yesterday');
+    if (diffDays < 7) return t('cabinet.format.daysAgo', { count: diffDays });
+    return formatDate(dateObj, locale);
 }
 
 /**
@@ -65,10 +83,10 @@ export function formatPhone(phone: string | null | undefined): string {
 }
 
 /**
- * Форматирование цены
+ * Форматирование цены: «1 500 сом», en «1,500 som».
  */
-export function formatPrice(price: number | null | undefined, currency = 'сом'): string {
+export function formatPrice(price: number | null | undefined, locale: Locale = 'ru'): string {
     if (price === null || price === undefined) return '';
-    return `${price.toLocaleString('ru-RU')} ${currency}`;
+    const currency = createTranslate(locale)('cabinet.format.currency');
+    return `${price.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} ${currency}`;
 }
-

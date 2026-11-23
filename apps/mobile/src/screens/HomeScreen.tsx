@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { colors } from '../constants/colors';
+import { useLanguage } from '../i18n';
 import { MainTabParamList, RootStackParamList } from '../navigation/types';
 
 import {
@@ -33,6 +34,7 @@ type RootNavigation = {
 
 export default function HomeScreen() {
     const navigation = useNavigation<HomeScreenNavigationProp>();
+    const { t } = useLanguage();
     const {
         user,
         search,
@@ -181,7 +183,7 @@ export default function HomeScreen() {
                 ListFooterComponent={
                     isLoadingMoreBusinesses ? (
                         <View style={styles.listFooter}>
-                            <LoadingSpinner message="Загружаем ещё..." />
+                            <LoadingSpinner message={t('booking.home.loadingMore')} />
                         </View>
                     ) : null
                 }

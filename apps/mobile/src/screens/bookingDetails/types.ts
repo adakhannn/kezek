@@ -1,29 +1,32 @@
 import type { ClientBookingDetailsDto } from '@shared-client/types';
 
+import type { MobileI18nKey } from '../../i18n';
+
 export type BookingDetails = ClientBookingDetailsDto;
 
 export type TimelineStep = {
     key: string;
-    label: string;
+    /** Translated with t() at render. */
+    labelKey: MobileI18nKey;
     done: boolean;
 };
 
 export function buildTimelineSteps(status: string): TimelineStep[] {
     return [
-        { key: 'created', label: 'Создано', done: true },
+        { key: 'created', labelKey: 'cabinet.details.timeline.created', done: true },
         {
             key: 'confirmed',
-            label: 'Подтверждено',
+            labelKey: 'cabinet.details.timeline.confirmed',
             done: status === 'confirmed' || status === 'paid',
         },
         {
             key: 'completed',
-            label: status === 'cancelled' ? 'Отменено' : 'Завершено',
+            labelKey: status === 'cancelled' ? 'cabinet.details.timeline.cancelled' : 'cabinet.details.timeline.completed',
             done: status === 'paid' || status === 'cancelled',
         },
         {
             key: 'promo',
-            label: 'Промо применено',
+            labelKey: 'cabinet.details.timeline.promo',
             done: false,
         },
     ];

@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/ui/Button';
 import { colors } from '../constants/colors';
+import { useLanguage } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
 import { getMobileApiUrl } from '../lib/apiUrl';
 
@@ -49,6 +50,7 @@ const injectedBookingLinkInterceptor = `
 
 export default function MapScreen() {
     const navigation = useNavigation<MapScreenNavigation>();
+    const { t } = useLanguage();
     const webViewRef = useRef<React.ElementRef<typeof WebView>>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
@@ -137,10 +139,8 @@ export default function MapScreen() {
     if (!mapUrl) {
         return (
             <View style={styles.stateContainer}>
-                <Text style={styles.stateTitle}>Карта недоступна</Text>
-                <Text style={styles.stateText}>
-                    Не удалось определить адрес сервера. Проверьте конфигурацию приложения.
-                </Text>
+                <Text style={styles.stateTitle}>{t('booking.map.unavailableTitle')}</Text>
+                <Text style={styles.stateText}>{t('booking.map.noServer')}</Text>
             </View>
         );
     }
@@ -177,22 +177,20 @@ export default function MapScreen() {
             {isLoading ? (
                 <View style={styles.loadingOverlay} pointerEvents="none">
                     <ActivityIndicator color={colors.accent.primary} />
-                    <Text style={styles.loadingText}>Загружаем карту...</Text>
+                    <Text style={styles.loadingText}>{t('booking.map.loading')}</Text>
                 </View>
             ) : null}
 
             {hasError ? (
                 <View style={styles.errorOverlay}>
-                    <Text style={styles.stateTitle}>Не удалось загрузить карту</Text>
-                    <Text style={styles.stateText}>
-                        Проверьте интернет-соединение и попробуйте снова.
-                    </Text>
+                    <Text style={styles.stateTitle}>{t('booking.map.loadError')}</Text>
+                    <Text style={styles.stateText}>{t('booking.checkConnection')}</Text>
                     <Button
-                        title="Повторить"
+                        title={t('booking.retry')}
                         onPress={reload}
                         variant="outline"
                         fullWidth
-                        accessibilityLabel="Повторить загрузку карты"
+                        accessibilityLabel={t('booking.map.retryLabel')}
                     />
                 </View>
             ) : null}

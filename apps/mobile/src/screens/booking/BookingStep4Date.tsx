@@ -8,6 +8,7 @@ import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import MotionPressable from '../../components/ui/MotionPressable';
+import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { useBookingStep4Dates } from './useBookingStep4Dates';
@@ -18,6 +19,7 @@ export default function BookingStep4Date() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedDate } = useBooking();
     const { dates, todayInTz, formatDateLabel } = useBookingStep4Dates();
+    const { t } = useLanguage();
 
     const handleSelectDate = (date: string) => {
         setSelectedDate(date);
@@ -73,7 +75,7 @@ export default function BookingStep4Date() {
                                                 bookingData.selectedDate === date && styles.todayLabelSelected,
                                             ]}
                                         >
-                                            Сегодня
+                                            {t('booking.step4.today')}
                                         </Text>
                                     ) : null}
                                     <Text
@@ -107,13 +109,13 @@ export default function BookingStep4Date() {
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            title="Назад"
+                            title={t('booking.nav.back')}
                             onPress={() => navigation.goBack()}
                             variant="outline"
                             style={styles.backButton}
                         />
                         <Button
-                            title="Дальше"
+                            title={t('booking.nav.next')}
                             onPress={handleNext}
                             disabled={!bookingData.selectedDate}
                             variant="primary"

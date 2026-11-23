@@ -13,6 +13,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
+import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { useBookingStep1Business } from './useBookingStep1Business';
@@ -34,6 +35,7 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
     const route = useRoute<BookingStep1RouteProp>();
     const { slug } = route.params || {};
     const { bookingData, hydrateInitialData, setBranchId } = useBooking();
+    const { t } = useLanguage();
     const preparedData = initialData?.business.slug === slug ? initialData : undefined;
     const { businessData: fallbackData, isLoading } = useBookingStep1Business({
         slug: preparedData ? undefined : slug,
@@ -62,7 +64,7 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <LoadingSpinner message="Загрузка..." />
+                <LoadingSpinner message={t('common.loading')} />
             </View>
         );
     }
@@ -72,8 +74,8 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
             <View style={styles.container}>
                 <EmptyState
                     icon="business-outline"
-                    title="Бизнес не найден"
-                    message="Попробуйте вернуться к списку и выбрать другой бизнес."
+                    title={t('booking.error.businessNotFound')}
+                    message={t('booking.step1.notFoundMessage')}
                 />
             </View>
         );
@@ -97,7 +99,7 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
 
                 {bookingData.promotions && bookingData.promotions.length > 0 && bookingData.branchId ? (
                     <View style={styles.promotionsSection}>
-                        <Text style={styles.promotionsTitle}>Акции</Text>
+                        <Text style={styles.promotionsTitle}>{t('booking.step1.promotions')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.promotionsScroll}>
                             {bookingData.promotions
                                 .filter((promo) => promo.branch_id === bookingData.branchId)
@@ -105,7 +107,7 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
                                     <View key={promo.id} style={styles.promotionCard}>
                                         <Ionicons name="gift-outline" size={20} color={colors.status.success} />
                                         <Text style={styles.promotionText} numberOfLines={2}>
-                                            {promo.title_ru || 'Акция'}
+                                            {promo.title_ru || t('booking.step1.promotionFallback')}
                                         </Text>
                                     </View>
                                 ))}
@@ -151,8 +153,8 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
                     ) : (
                         <EmptyState
                             icon="location-outline"
-                            title="Нет доступных филиалов"
-                            message="После выбора бизнеса здесь появятся филиалы для записи."
+                            title={t('booking.step1.emptyTitle')}
+                            message={t('booking.step1.emptyMessage')}
                             compact
                             style={styles.emptyContainer}
                         />
@@ -161,7 +163,7 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
                     {businessData.branches.length > 0 ? (
                         <View style={styles.buttonContainer}>
                             <Button
-                                title="Дальше"
+                                title={t('booking.nav.next')}
                                 onPress={handleNext}
                                 disabled={!bookingData.branchId}
                                 variant="primary"

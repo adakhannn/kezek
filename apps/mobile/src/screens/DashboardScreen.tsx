@@ -3,6 +3,7 @@ import { Alert, Linking, ScrollView } from 'react-native';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useLanguage } from '../i18n';
 import { apiRequest } from '../lib/api';
 import { DashboardScreenSections } from './dashboard/DashboardScreenSections';
 import { useDashboardScreenData } from './dashboard/useDashboardScreenData';
@@ -22,11 +23,12 @@ function isWebHandoffUrl(value: unknown): value is string {
 }
 
 export default function DashboardScreen() {
+    const { t } = useLanguage();
     const { businesses, isOwner, isLoading, loadError, refreshing, onRefresh } =
         useDashboardScreenData();
 
     if (isLoading) {
-        return <LoadingSpinner message="Загрузка..." />;
+        return <LoadingSpinner message={t('common.loading')} />;
     }
 
     if (loadError) {
@@ -34,11 +36,11 @@ export default function DashboardScreen() {
             <ScrollView style={styles.container}>
                 <EmptyState
                     icon="alert-circle"
-                    title="Не удалось загрузить кабинет бизнеса"
-                    message="Проверьте соединение и попробуйте снова."
+                    title={t('staff.dashboard.loadError')}
+                    message={t('staff.checkConnection')}
                     action={
                         <Button
-                            title="Повторить"
+                            title={t('staff.retry')}
                             onPress={() => void onRefresh()}
                             variant="outline"
                             fullWidth
@@ -54,8 +56,8 @@ export default function DashboardScreen() {
             <ScrollView style={styles.container}>
                 <EmptyState
                     icon="business"
-                    title="Вы не являетесь владельцем бизнеса"
-                    message="Здесь будут отображаться ваши бизнесы после регистрации"
+                    title={t('staff.dashboard.notOwnerTitle')}
+                    message={t('staff.dashboard.notOwnerMessage')}
                 />
             </ScrollView>
         );
@@ -77,8 +79,8 @@ export default function DashboardScreen() {
             await Linking.openURL(response.url);
         } catch {
             Alert.alert(
-                'Не удалось открыть веб-кабинет',
-                'Откройте веб-версию Kezek в браузере и перейдите в раздел бизнеса.',
+                t('staff.dashboard.webErrorTitle'),
+                t('staff.dashboard.webErrorMessage'),
             );
         }
     };

@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useLanguage } from '../i18n';
 import type { RootStackParamList } from '../navigation/types';
 import { ShiftsScreenSections } from './shifts/ShiftsScreenSections';
 import { useShiftsScreenData } from './shifts/useShiftsScreenData';
@@ -12,6 +13,7 @@ type ShiftsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 
 
 export default function ShiftsScreen() {
     const navigation = useNavigation<ShiftsScreenNavigationProp>();
+    const { t } = useLanguage();
     const {
         period,
         setPeriod,
@@ -26,18 +28,18 @@ export default function ShiftsScreen() {
     } = useShiftsScreenData();
 
     if (staffLoading || (statsLoading && !refreshing)) {
-        return <LoadingSpinner message="Загрузка..." />;
+        return <LoadingSpinner message={t('common.loading')} />;
     }
 
     if (needsSelection) {
         return (
             <EmptyState
                 icon="briefcase"
-                title="Выберите бизнес на вкладке «Работа»"
-                message="Вы работаете в нескольких бизнесах. Статистика смен показывается для выбранного."
+                title={t('staff.chooseBusinessOnTab', { tab: t('nav.staffTab') })}
+                message={t('staff.shifts.chooseBusinessMessage')}
                 action={
                     <Button
-                        title="Открыть вкладку «Работа»"
+                        title={t('staff.openTab', { tab: t('nav.staffTab') })}
                         onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
                         fullWidth
                     />
@@ -50,8 +52,8 @@ export default function ShiftsScreen() {
         return (
             <EmptyState
                 icon="briefcase"
-                title="Вы не являетесь сотрудником"
-                message="Здесь будут отображаться ваши смены после назначения сотрудником."
+                title={t('staff.notStaff')}
+                message={t('staff.shifts.notStaffMessage')}
             />
         );
     }
@@ -60,9 +62,9 @@ export default function ShiftsScreen() {
         return (
             <EmptyState
                 icon="alert-circle"
-                title="Не удалось загрузить историю смен"
-                message="Проверьте соединение и попробуйте снова."
-                action={<Button title="Повторить" onPress={() => void onRefresh()} fullWidth />}
+                title={t('staff.shifts.loadError')}
+                message={t('staff.checkConnection')}
+                action={<Button title={t('staff.retry')} onPress={() => void onRefresh()} fullWidth />}
             />
         );
     }
