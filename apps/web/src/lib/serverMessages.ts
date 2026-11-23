@@ -5,7 +5,8 @@
  * dictionaries, but outside the client bundle) map each exact Russian message, or a pattern of it with
  * {placeholders} where the service inserts a value, to Kyrgyz and English. localizeApiResponse rewrites
  * the `message` and `error` fields of a JSON API response, and the `message` of each validation issue
- * in `details.errors`, for the locale cookie of the request.
+ * in `details.errors`, for the language of the request: the `kezek_lang` cookie, else the
+ * `X-Kezek-Locale` header that the mobile app sends.
  * withErrorHandler and withRateLimit apply it, and withLocalizedMessages wraps the few route handlers
  * that use neither, so services need no changes. Russian, a missing cookie, an unknown message and
  * anything but a JSON object body leave the response as it is; so does any failure here.
@@ -130,19 +131,39 @@ async function readUpTo(response: Response, limit: number): Promise<string | nul
     }
 }
 
-/** The locale cookie of the current request; Russian outside a request or when it cannot be read. */
-async function requestLocale(): Promise<ServerLocale> {
+/** Header with the language of the mobile app, which has no `kezek_lang` cookie. */
+export const LOCALE_HEADER = 'x-kezek-locale';
+
+function isServerLocale(value: unknown): value is ServerLocale {
+    return value === 'ru' || value === 'ky' || value === 'en';
+}
+
+/**
+ * The language of the current request: the `kezek_lang` cookie (the website), then the
+ * `X-Kezek-Locale` header (the mobile app), then Russian. Russian outside a request or when
+ * neither can be read.
+ */
+export async function requestLocale(): Promise<ServerLocale> {
     try {
         const { getLocaleFromCookieServer } = await import('@/lib/cookies');
-        return (await getLocaleFromCookieServer()) ?? 'ru';
+        const cookie = await getLocaleFromCookieServer();
+        if (cookie) return cookie;
     } catch {
-        return 'ru';
+        // Fall through to the header.
     }
+    try {
+        const { headers } = await import('next/headers');
+        const value = (await headers()).get(LOCALE_HEADER)?.trim().toLowerCase();
+        if (isServerLocale(value)) return value;
+    } catch {
+        // Outside a request scope.
+    }
+    return 'ru';
 }
 
 /**
  * The response with its `message`, `error` and validation issue messages in the language of the
- * request (see the module comment). `locale` overrides the cookie.
+ * request (see the module comment). `locale` overrides the cookie and the header.
  */
 export async function localizeApiResponse<R extends Response>(response: R, locale?: ServerLocale): Promise<R> {
     try {

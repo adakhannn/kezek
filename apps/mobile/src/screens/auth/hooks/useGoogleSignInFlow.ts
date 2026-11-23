@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 
+import { useLanguage } from '../../../i18n';
 import { trackMobileEvent } from '../../../lib/analytics';
 import { GOOGLE_ACTIVE_FLOW_STORAGE_KEY } from '../../../lib/authStorageKeys';
 import { logDebug, logError, logWarn } from '../../../lib/log';
@@ -44,6 +45,7 @@ export function useGoogleSignInFlow({
     apiUrl: string;
     showToast: ShowToast;
 }) {
+    const { t } = useLanguage();
     const [googleLoading, setGoogleLoading] = useState(false);
     const [googleState, setGoogleState] = useState<AuthUiState>('idle');
     const googleAuthInProgressRef = useRef(false);
@@ -141,7 +143,7 @@ export function useGoogleSignInFlow({
         }
 
         googleSuccessShownRef.current = true;
-        showToast('Вход выполнен успешно', 'success');
+        showToast(t('auth.signedIn'), 'success');
     };
 
     const mapGoogleSignInError = (error: unknown) => {
@@ -153,7 +155,7 @@ export function useGoogleSignInFlow({
             normalized.includes('failed to fetch') ||
             normalized.includes('timed out')
         ) {
-            return 'Network error. Check your internet connection and try again.';
+            return t('auth.google.error.network');
         }
 
         if (
@@ -162,7 +164,7 @@ export function useGoogleSignInFlow({
             normalized.includes('redirect_uri_mismatch') ||
             normalized.includes('callback')
         ) {
-            return 'Неверная конфигурация входа Google. Обратитесь в поддержку.';
+            return t('auth.google.error.config');
         }
 
         if (
@@ -170,14 +172,14 @@ export function useGoogleSignInFlow({
             normalized.includes('provider') ||
             normalized.includes('server_error')
         ) {
-            return 'Вход через Google временно недоступен. Попробуйте позже.';
+            return t('auth.google.error.unavailable');
         }
 
         if (normalized.includes('oauth_state_mismatch')) {
-            return 'Не удалось подтвердить сессию Google. Повторите попытку.';
+            return t('auth.google.error.state');
         }
 
-        return raw || 'Не удалось выполнить вход через Google';
+        return raw || t('auth.google.status.error');
     };
 
     const trackGoogleLoginEvent = (
@@ -334,10 +336,7 @@ export function useGoogleSignInFlow({
                     logWarn('SignInScreen', 'Google auth callback received without session', {
                         flow: GOOGLE_AUTH_FLOW_NAME,
                     });
-                    showToast(
-                        'Колбэк авторизации получен, но сессия не установлена. Попробуйте снова.',
-                        'info',
-                    );
+                    showToast(t('auth.google.noSession'), 'info');
                 }
                 return;
             }
@@ -362,10 +361,7 @@ export function useGoogleSignInFlow({
                     logGoogleFlowStage('cancelled', {
                         reason: 'dismiss',
                     });
-                    showToast(
-                        'Окно входа закрыто. Если вход завершен в браузере, вернитесь в приложение и повторите.',
-                        'info',
-                    );
+                    showToast(t('auth.google.dismissed'), 'info');
                 }
                 return;
             }
@@ -378,7 +374,7 @@ export function useGoogleSignInFlow({
                     reason: 'cancel',
                 });
                 logGoogleFlowStage('cancelled', { reason: 'cancel' });
-                showToast('Вход отменен', 'info');
+                showToast(t('auth.google.cancelled'), 'info');
                 return;
             }
 
@@ -389,10 +385,7 @@ export function useGoogleSignInFlow({
                     reason: 'auth_browser_locked',
                 });
                 logGoogleFlowStage('failed', { reason: 'auth_browser_locked' });
-                showToast(
-                    'Браузер авторизации уже открыт. Закройте его и попробуйте снова.',
-                    'info',
-                );
+                showToast(t('auth.google.locked'), 'info');
                 return;
             }
 
@@ -405,7 +398,7 @@ export function useGoogleSignInFlow({
             trackGoogleLoginEvent('mobile_google_login_failed', {
                 reason: `unexpected_result_${result.type}`,
             });
-            showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
+            showToast(t('auth.google.unexpected'), 'error');
         } catch (error: unknown) {
             logError('SignInScreen', 'OAuth sign in error', { provider: 'google', error });
             const reason = getGoogleFailureReason(error);

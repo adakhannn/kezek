@@ -1,4 +1,5 @@
 import { createApiClient } from '@shared-client/api';
+import { withLocaleHeader } from '../i18n/locale';
 import { getMobileApiUrl } from './apiUrl';
 import { logDebug, logWarn } from './log';
 import { supabase } from './supabase';
@@ -68,7 +69,11 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
             : `${apiUrl}${normalizedEndpoint}`;
 
     try {
-        const response = await sharedApiRequest<T>(normalizedEndpoint, options);
+        // The API answers its messages in the app language (X-Kezek-Locale, FE-10).
+        const response = await sharedApiRequest<T>(normalizedEndpoint, {
+            ...options,
+            headers: withLocaleHeader(options.headers),
+        });
 
         logDebug('apiRequest', 'API success', {
             endpoint,

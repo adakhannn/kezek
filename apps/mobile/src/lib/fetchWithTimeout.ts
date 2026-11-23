@@ -1,3 +1,5 @@
+import { withLocaleHeader } from '../i18n/locale';
+
 const DEFAULT_FETCH_TIMEOUT_MS = 15000;
 
 export class TimeoutError extends Error {
@@ -35,6 +37,8 @@ export async function fetchWithTimeout(
     try {
         return await fetch(input, {
             ...requestInit,
+            // Every caller talks to the web API, which answers in the app language (FE-10).
+            headers: withLocaleHeader(requestInit.headers),
             signal: controller.signal,
         });
     } catch (error: unknown) {
@@ -49,5 +53,3 @@ export async function fetchWithTimeout(
         }
     }
 }
-
-export const AUTH_TIMEOUT_MESSAGE = 'Превышено время ожидания. Проверьте интернет и попробуйте снова.';

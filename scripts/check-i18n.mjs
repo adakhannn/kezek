@@ -1,9 +1,11 @@
-// Checks apps/web i18n dictionaries:
+// Checks the i18n dictionaries of apps/web and apps/mobile:
 //  1. every dictionary group has the same keys in ru, ky and en, and each value has the same
 //     {placeholders} in all three;
 //  2. no t('literal.key', ...) call in the app uses a key missing from the ru dictionaries;
 //  3. Russian text that bypasses the translations grows in no file (see below);
-//  4. no two server messages (server*.ts groups, FE-10) share their Russian text.
+//  4. no two server messages (server*.ts groups, FE-10) share their Russian text (web only).
+// The mobile dictionaries live in apps/mobile/src/i18n/dictionaries (see the README there); their
+// groups are reported with a "mobile:" prefix and their files in the baseline as apps/mobile/...
 // A t() call with a key missing everywhere silently shows its (usually Russian)
 // fallback to ky/en users. Usage: node scripts/check-i18n.mjs [--report] [--write-baseline]
 import fs from 'node:fs';
@@ -15,11 +17,11 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const web = path.join(root, 'apps/web');
 const ts = createRequire(path.join(web, 'package.json'))('typescript');
 const dictDir = path.join(web, 'src/app/_components/i18n/dictionaries');
+const mobile = path.join(root, 'apps/mobile');
+const mobileDictDir = path.join(mobile, 'src/i18n/dictionaries');
 const report = process.argv.includes('--report');
 
 const LOCALES = ['Ru', 'Ky', 'En'];
-const groups = new Map(); // base name -> { Ru: Set, Ky: Set, En: Set }
-const values = new Map(); // base name -> { Ru: Map(key -> text), ... } for plain string values
 const PLACEHOLDER = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
 
 function propertyKey(name) {
@@ -27,8 +29,13 @@ function propertyKey(name) {
     return null;
 }
 
-for (const file of fs.readdirSync(dictDir).filter(f => f.endsWith('.ts') && f !== 'index.ts')) {
-    const sf = ts.createSourceFile(file, fs.readFileSync(path.join(dictDir, file), 'utf8'), ts.ScriptTarget.Latest, true);
+// Dictionary groups of one directory: an object literal named <group>Ru, <group>Ky or <group>En.
+// Assembly files (ru.ts, index.ts, ...) declare no such object and add nothing.
+function collectGroups(dir) {
+const groups = new Map(); // base name -> { Ru: Set, Ky: Set, En: Set }
+const values = new Map(); // base name -> { Ru: Map(key -> text), ... } for plain string values
+for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.ts') && f !== 'index.ts')) {
+    const sf = ts.createSourceFile(file, fs.readFileSync(path.join(dir, file), 'utf8'), ts.ScriptTarget.Latest, true);
     for (const st of sf.statements) {
         if (!ts.isVariableStatement(st)) continue;
         for (const d of st.declarationList.declarations) {
@@ -55,34 +62,43 @@ for (const file of fs.readdirSync(dictDir).filter(f => f.endsWith('.ts') && f !=
         }
     }
 }
+return { groups, values };
+}
 
 const failures = [];
 let missingParityKeys = 0;
-const allRu = new Set();
-for (const [base, byLocale] of [...groups].sort()) {
-    for (const k of byLocale.Ru ?? []) allRu.add(k);
-    const union = new Set(LOCALES.flatMap(l => [...(byLocale[l] ?? [])]));
-    for (const locale of LOCALES) {
-        if (!byLocale[locale]) { failures.push(`${base}: no ${locale} dictionary`); continue; }
-        const missing = [...union].filter(k => !byLocale[locale].has(k));
-        missingParityKeys += missing.length;
-        if (missing.length) failures.push(`${base}${locale}: missing ${missing.length} key(s): ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? ', …' : ''}`);
-    }
-}
-
+const placeholderMismatches = [];
 // A translation that loses or renames a {placeholder} shows the raw marker, or drops the value.
 const placeholderNames = (text) => [...text.matchAll(PLACEHOLDER)].map(m => m[1]).sort().join(', ');
-const placeholderMismatches = [];
-for (const [base, byLocale] of [...values].sort()) {
-    for (const [key, ruText] of byLocale.Ru ?? []) {
-        for (const locale of ['Ky', 'En']) {
-            const text = byLocale[locale]?.get(key);
-            if (text !== undefined && placeholderNames(text) !== placeholderNames(ruText)) {
-                placeholderMismatches.push(`${base}${locale} ${key}: {${placeholderNames(text)}} instead of {${placeholderNames(ruText)}}`);
+// Key parity and placeholder parity of one app's groups; returns the app's ru keys.
+function checkGroups({ groups, values }, label) {
+    const ruKeys = new Set();
+    for (const [base, byLocale] of [...groups].sort()) {
+        for (const k of byLocale.Ru ?? []) ruKeys.add(k);
+        const union = new Set(LOCALES.flatMap(l => [...(byLocale[l] ?? [])]));
+        for (const locale of LOCALES) {
+            if (!byLocale[locale]) { failures.push(`${label}${base}: no ${locale} dictionary`); continue; }
+            const missing = [...union].filter(k => !byLocale[locale].has(k));
+            missingParityKeys += missing.length;
+            if (missing.length) failures.push(`${label}${base}${locale}: missing ${missing.length} key(s): ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? ', …' : ''}`);
+        }
+    }
+    for (const [base, byLocale] of [...values].sort()) {
+        for (const [key, ruText] of byLocale.Ru ?? []) {
+            for (const locale of ['Ky', 'En']) {
+                const text = byLocale[locale]?.get(key);
+                if (text !== undefined && placeholderNames(text) !== placeholderNames(ruText)) {
+                    placeholderMismatches.push(`${label}${base}${locale} ${key}: {${placeholderNames(text)}} instead of {${placeholderNames(ruText)}}`);
+                }
             }
         }
     }
+    return ruKeys;
 }
+const { groups, values } = collectGroups(dictDir);
+const allRu = checkGroups({ groups, values }, '');
+const mobileGroups = fs.existsSync(mobileDictDir) ? collectGroups(mobileDictDir) : { groups: new Map(), values: new Map() };
+const allMobileRu = checkGroups(mobileGroups, 'mobile:');
 
 // Server messages (FE-10): src/lib/serverMessages.ts translates an API message found here. The same
 // Russian text under two keys would make one translation dead.
@@ -98,25 +114,26 @@ for (const [base, byLocale] of [...values].sort()) {
     }
 }
 
-// Literal t('key', ...) calls whose key is in no ru dictionary.
+// Literal t('key', ...) calls whose key is in no ru dictionary of the same app.
 const unknownKeys = new Map();
-function walk(dir) {
+function walk(dir, app) {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
         const p = path.join(dir, e.name);
-        if (e.isDirectory()) { if (!['__tests__', 'node_modules', 'generated'].includes(e.name)) walk(p); continue; }
-        if (!/\.(ts|tsx)$/.test(e.name) || /\.test\.tsx?$/.test(e.name) || p.startsWith(dictDir)) continue;
+        if (e.isDirectory()) { if (!['__tests__', 'node_modules', 'generated'].includes(e.name)) walk(p, app); continue; }
+        if (!/\.(ts|tsx)$/.test(e.name) || /\.test\.tsx?$/.test(e.name) || p.startsWith(app.dict)) continue;
         const text = fs.readFileSync(p, 'utf8');
         for (const m of text.matchAll(/\bt\(\s*['"]([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+)['"]/g)) {
-            if (!allRu.has(m[1])) {
-                const rel = path.relative(web, p).split(path.sep).join('/');
-                if (!unknownKeys.has(m[1])) unknownKeys.set(m[1], rel);
+            if (!app.keys.has(m[1])) {
+                const rel = app.prefix + path.relative(app.root, p).split(path.sep).join('/');
+                if (!unknownKeys.has(app.prefix + m[1])) unknownKeys.set(app.prefix + m[1], rel);
             }
         }
     }
 }
-walk(path.join(web, 'src'));
+walk(path.join(web, 'src'), { root: web, dict: dictDir, keys: allRu, prefix: '' });
+if (fs.existsSync(mobileDictDir)) walk(path.join(mobile, 'src'), { root: mobile, dict: mobileDictDir, keys: allMobileRu, prefix: 'apps/mobile/' });
 
-console.log(`i18n: ${groups.size} dictionary groups, ${allRu.size} ru keys; keys missing in some locale: ${missingParityKeys}; t() keys missing from dictionaries: ${unknownKeys.size}; placeholder mismatches: ${placeholderMismatches.length}; server messages: ${serverMessages.size}.`);
+console.log(`i18n: ${groups.size} dictionary groups, ${allRu.size} ru keys; mobile: ${mobileGroups.groups.size} groups, ${allMobileRu.size} ru keys; keys missing in some locale: ${missingParityKeys}; t() keys missing from dictionaries: ${unknownKeys.size}; placeholder mismatches: ${placeholderMismatches.length}; server messages: ${serverMessages.size}.`);
 if (report) {
     for (const f of failures) console.log(`  parity  ${f}`);
     for (const [k, f] of [...unknownKeys].sort()) console.log(`  missing ${k}  (${f})`);
@@ -155,7 +172,8 @@ if (duplicateServerMessages.length) {
 // file may not have more than its baseline (scripts/i18n-untranslated-baseline.json), and a lower
 // count must be written down with --write-baseline, so the gain is kept. The deliberate rest of the
 // baseline: the admin panel, the legal pages, the texts of outgoing notifications and bot replies
-// (the recipient's language is not stored), internal errors and text matching.
+// (the recipient's language is not stored), internal errors and text matching. apps/mobile/src is
+// scanned the same way (it has no server code), with its files under apps/mobile/ in the baseline.
 const BASELINE_FILE = path.join(root, 'scripts', 'i18n-untranslated-baseline.json');
 const CYRILLIC = /[А-Яа-яЁё]/;
 const NOT_UI_CALLEE = /(^|\.)(t|tr|translate)$|^console\.|^(logDebug|logWarn|logError)$/;
@@ -175,15 +193,16 @@ function isServerFile(rel, source) {
     return rel.startsWith('src/lib/') && !/^\s*(\/\/[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*['"]use client['"]/.test(source);
 }
 const untranslated = new Map();
-function scanUi(dir) {
+function scanUi(dir, app = { root: web, dict: dictDir, prefix: '', server: true }) {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
         const p = path.join(dir, e.name);
-        if (e.isDirectory()) { if (!['__tests__', 'node_modules', 'generated'].includes(e.name) && p !== dictDir) scanUi(p); continue; }
+        if (e.isDirectory()) { if (!['__tests__', 'node_modules', 'generated'].includes(e.name) && p !== app.dict) scanUi(p, app); continue; }
         if (!/\.tsx?$/.test(e.name) || e.name.endsWith('.d.ts') || /\.test\.tsx?$/.test(e.name)) continue;
-        const rel = path.relative(web, p).split(path.sep).join('/');
+        const local = path.relative(app.root, p).split(path.sep).join('/');
+        const rel = app.prefix + local;
         const source = fs.readFileSync(p, 'utf8');
         const tsx = e.name.endsWith('.tsx');
-        const server = !tsx && isServerFile(rel, source);
+        const server = app.server && !tsx && isServerFile(local, source);
         const sf = ts.createSourceFile(p, source, ts.ScriptTarget.Latest, true, tsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
         const found = [];
         const visit = (node) => {
@@ -204,6 +223,7 @@ function scanUi(dir) {
     }
 }
 scanUi(path.join(web, 'src'));
+scanUi(path.join(mobile, 'src'), { root: mobile, dict: mobileDictDir, prefix: 'apps/mobile/', server: false });
 const counts = Object.fromEntries([...untranslated].sort(([a], [b]) => a.localeCompare(b)).map(([file, found]) => [file, found.length]));
 const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
 if (process.argv.includes('--write-baseline')) {

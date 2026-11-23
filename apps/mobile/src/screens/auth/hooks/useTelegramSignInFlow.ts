@@ -3,9 +3,10 @@ import { Linking, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
+import { useLanguage, type Translate } from '../../../i18n';
 import { TELEGRAM_ACTIVE_FLOW_STORAGE_KEY } from '../../../lib/authStorageKeys';
 import { createMobileAuthProof } from '../../../lib/authCrypto';
-import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../../lib/fetchWithTimeout';
+import { fetchWithTimeout, isTimeoutError } from '../../../lib/fetchWithTimeout';
 import { getErrorMessage } from '../../../lib/errors';
 import { logError, logWarn } from '../../../lib/log';
 import { exchangeViaMobileApi } from '../../../navigation/useRootNavigationSession';
@@ -51,7 +52,7 @@ function buildTelegramAppDeepLink(botDeepLink: string): string | null {
     }
 }
 
-async function openTelegramLink(botDeepLink: string) {
+async function openTelegramLink(botDeepLink: string, t: Translate) {
     const appDeepLink = buildTelegramAppDeepLink(botDeepLink);
 
     if (appDeepLink) {
@@ -64,17 +65,17 @@ async function openTelegramLink(botDeepLink: string) {
 
     const canOpenWebDeepLink = await Linking.canOpenURL(botDeepLink);
     if (!canOpenWebDeepLink) {
-        throw new Error('Не удалось открыть Telegram');
+        throw new Error(t('auth.telegram.error.open'));
     }
 
     await Linking.openURL(botDeepLink);
 }
 
-function mapTelegramError(error: unknown): string {
+function mapTelegramError(error: unknown, t: Translate): string {
     if (isTimeoutError(error)) {
-        return AUTH_TIMEOUT_MESSAGE;
+        return t('auth.error.timeout');
     }
-    return getErrorMessage(error, 'Не удалось завершить вход через Telegram. Попробуйте снова.');
+    return getErrorMessage(error, t('auth.telegram.error.failed'));
 }
 
 export function useTelegramSignInFlow({
@@ -86,6 +87,7 @@ export function useTelegramSignInFlow({
     showToast: ShowToast;
     ensureSessionRestored: (callbackUrl?: string, attempts?: number) => Promise<boolean>;
 }) {
+    const { t } = useLanguage();
     const [telegramLoading, setTelegramLoading] = useState(false);
     const [telegramState, setTelegramState] = useState<AuthUiState>('idle');
     const [telegramDeepLink, setTelegramDeepLink] = useState<string | null>(null);
@@ -175,11 +177,11 @@ export function useTelegramSignInFlow({
                     }
 
                     const verifier = telegramFlowRef.current?.codeVerifier;
-                    if (!verifier) throw new Error('Начните вход заново в этом приложении.');
+                    if (!verifier) throw new Error(t('auth.telegram.error.restart'));
                     await exchangeViaMobileApi(exchangeCode, apiUrl, verifier);
                     const restored = await ensureSessionRestored(undefined, 5);
                     if (!restored) {
-                        throw new Error('Сессия не установлена после exchange');
+                        throw new Error(t('auth.telegram.error.noSession'));
                     }
 
                     setTelegramState((prev) => transitionAuthUiState(prev, 'succeed'));
@@ -187,7 +189,7 @@ export function useTelegramSignInFlow({
                     setTelegramNonce(null);
                     setTelegramDeepLink(null);
                     await clearPersistedTelegramFlow();
-                    showToast('Подтверждено', 'success');
+                    showToast(t('auth.telegram.status.success'), 'success');
                     return;
                 }
 
@@ -199,7 +201,7 @@ export function useTelegramSignInFlow({
                     setTelegramNonce(null);
                     setTelegramDeepLink(null);
                     await clearPersistedTelegramFlow();
-                    showToast('Истекло', 'info');
+                    showToast(t('auth.telegram.expired'), 'info');
                     return;
                 }
 
@@ -213,7 +215,7 @@ export function useTelegramSignInFlow({
             setTelegramNonce(null);
             setTelegramDeepLink(null);
             await clearPersistedTelegramFlow();
-            showToast('Истекло', 'info');
+            showToast(t('auth.telegram.expired'), 'info');
         } catch (error: unknown) {
             logError('SignInScreen', 'Telegram status polling error', { error });
             telegramPollingNonceRef.current = null;
@@ -221,7 +223,7 @@ export function useTelegramSignInFlow({
             setTelegramDeepLink(null);
             await clearPersistedTelegramFlow();
             setTelegramState((prev) => transitionAuthUiState(prev, 'fail'));
-            const errorMessage = mapTelegramError(error);
+            const errorMessage = mapTelegramError(error, t);
             showToast(errorMessage, 'error');
         } finally {
             if (telegramPollingInFlightRef.current === nonce) {
@@ -232,7 +234,7 @@ export function useTelegramSignInFlow({
 
     const startTelegramMobileLogin = async () => {
         if (!TELEGRAM_DEEPLINK_AUTH_ENABLED) {
-            showToast('Вход через Telegram временно недоступен', 'info');
+            showToast(t('auth.telegram.unavailable'), 'info');
             return;
         }
 
@@ -274,7 +276,7 @@ export function useTelegramSignInFlow({
             const botDeepLink = payload?.data?.botDeepLink ?? payload?.botDeepLink;
 
             if (!nonce || !botDeepLink) {
-                throw new Error('Не удалось получить данные запуска Telegram');
+                throw new Error(t('auth.telegram.error.start'));
             }
 
             const startedAt = Date.now();
@@ -282,12 +284,12 @@ export function useTelegramSignInFlow({
             setTelegramDeepLink(botDeepLink);
             await persistTelegramFlow({ nonce, botDeepLink, startedAt, codeVerifier: proof.codeVerifier });
 
-            await openTelegramLink(botDeepLink);
-            showToast('Открываем Telegram для подтверждения входа', 'info');
+            await openTelegramLink(botDeepLink, t);
+            showToast(t('auth.telegram.opening'), 'info');
             void pollTelegramStatus(nonce, startedAt);
         } catch (error: unknown) {
             logError('SignInScreen', 'Telegram mobile start error', { error });
-            const errorMessage = mapTelegramError(error);
+            const errorMessage = mapTelegramError(error, t);
             showToast(errorMessage, 'error');
             setTelegramState((prev) => transitionAuthUiState(prev, 'fail'));
             setTelegramNonce(null);
@@ -300,17 +302,14 @@ export function useTelegramSignInFlow({
 
     const openTelegramAgain = async () => {
         if (!telegramDeepLink) {
-            showToast('Ссылка Telegram недоступна. Запустите вход заново.', 'info');
+            showToast(t('auth.telegram.linkMissing'), 'info');
             return;
         }
 
         try {
-            await openTelegramLink(telegramDeepLink);
+            await openTelegramLink(telegramDeepLink, t);
         } catch (error: unknown) {
-            const message = getErrorMessage(
-                error,
-                'Не удалось открыть Telegram. Проверьте, что приложение установлено.',
-            );
+            const message = getErrorMessage(error, t('auth.telegram.error.notInstalled'));
             showToast(message, 'error');
         }
     };
@@ -322,7 +321,7 @@ export function useTelegramSignInFlow({
         setTelegramNonce(null);
         setTelegramDeepLink(null);
         setTelegramState((prev) => transitionAuthUiState(prev, 'cancel'));
-        showToast('Вход через Telegram отменен', 'info');
+        showToast(t('auth.telegram.status.cancel'), 'info');
     };
 
     const recoverTelegramOnAppActive = async () => {

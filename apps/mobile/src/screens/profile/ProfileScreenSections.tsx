@@ -13,6 +13,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
+import { LanguageSwitcher, useLanguage } from '../../i18n';
 import { styles } from './profileScreenStyles';
 
 type Props = {
@@ -47,6 +48,7 @@ export function ProfileScreenSections({
     isSigningOut,
 }: Props) {
     const phoneInputRef = useRef<TextInput>(null);
+    const { t } = useLanguage();
 
     return (
         <KeyboardAvoidingView
@@ -126,6 +128,12 @@ export function ProfileScreenSections({
                         thumbColor={colors.text.light}
                     />
                 </View>
+            </Card>
+
+            <Card style={styles.card}>
+                <Text style={styles.sectionTitle}>{t('common.language.title')}</Text>
+                <Text style={[styles.switchHint, styles.languageHint]}>{t('common.language.hint')}</Text>
+                <LanguageSwitcher />
             </Card>
 
             <View style={styles.actions}>

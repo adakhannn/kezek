@@ -22,6 +22,7 @@ pnpm -C apps/mobile start
 - `src/navigation`: навигация, deep links и восстановление сессии.
 - `src/hooks`, `src/contexts`: состояние и композиция.
 - `src/lib`, `src/utils`: API/Supabase, хранилище, инфраструктура.
+- `src/i18n`: языки ru/ky/en, словари и переключатель; как добавить текст — [src/i18n/README.md](src/i18n/README.md).
 - `src/__tests__`: проверки приложения.
 
 Mobile использует и web API, и прямые Supabase-запросы. Открытый риск обмена сессией сохранён как ENG-01 в [реестре](../../docs/ENGINEERING_FINDINGS.md); прежние планы hardening не являются подтверждением его закрытия.

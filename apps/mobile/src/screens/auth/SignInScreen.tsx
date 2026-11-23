@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Button from '../../components/ui/Button';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
+import { LanguageSwitcher, useLanguage, type MobileI18nKey } from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import {
   getMobileApiUrl,
@@ -18,28 +19,29 @@ import { useTelegramSignInFlow } from './hooks/useTelegramSignInFlow';
 import { useWhatsAppSignInFlow } from './hooks/useWhatsAppSignInFlow';
 import { authSignInStyles as styles } from './styles/authSignInStyles';
 
-const TELEGRAM_STATUS_LABEL: Record<AuthUiState, string | null> = {
+const TELEGRAM_STATUS_LABEL: Record<AuthUiState, MobileI18nKey | null> = {
   idle: null,
-  loading: 'Запускаем вход через Telegram...',
-  pending: 'Ожидаем подтверждение',
-  success: 'Подтверждено',
-  error: 'Ошибка входа через Telegram',
-  cancel: 'Вход через Telegram отменен',
-  expired: 'Срок подтверждения истек',
+  loading: 'auth.telegram.status.loading',
+  pending: 'auth.telegram.status.pending',
+  success: 'auth.telegram.status.success',
+  error: 'auth.telegram.status.error',
+  cancel: 'auth.telegram.status.cancel',
+  expired: 'auth.telegram.status.expired',
 };
 
-const GOOGLE_STATUS_LABEL: Record<AuthUiState, string | null> = {
+const GOOGLE_STATUS_LABEL: Record<AuthUiState, MobileI18nKey | null> = {
   idle: null,
-  loading: 'Открываем вход через Google',
-  pending: 'Ожидаем подтверждение входа через Google',
-  success: 'Вход через Google подтвержден',
-  error: 'Не удалось выполнить вход через Google',
-  cancel: 'Вход через Google отменен',
-  expired: 'Срок входа через Google истек',
+  loading: 'auth.google.status.loading',
+  pending: 'auth.google.status.pending',
+  success: 'auth.google.status.success',
+  error: 'auth.google.status.error',
+  cancel: 'auth.google.status.cancel',
+  expired: 'auth.google.status.expired',
 };
 
 export default function SignInScreen() {
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const apiUrl = getMobileApiUrl();
 
   const ensureSessionRestored = async (callbackUrl?: string, attempts = 4) => {
@@ -92,8 +94,10 @@ export default function SignInScreen() {
   });
 
   const anyBusyAuth = isBusyAuthState(googleState) || isBusyAuthState(telegramState);
-  const googleStatusLabel = GOOGLE_STATUS_LABEL[googleState];
-  const telegramStatusLabel = TELEGRAM_STATUS_LABEL[telegramState];
+  const googleStatusKey = GOOGLE_STATUS_LABEL[googleState];
+  const telegramStatusKey = TELEGRAM_STATUS_LABEL[telegramState];
+  const googleStatusLabel = googleStatusKey ? t(googleStatusKey) : null;
+  const telegramStatusLabel = telegramStatusKey ? t(telegramStatusKey) : null;
   const hasTelegramStateCard = telegramState !== 'idle' && (Boolean(telegramStatusLabel) || Boolean(telegramNonce));
 
   return (
@@ -110,14 +114,13 @@ export default function SignInScreen() {
       >
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <View style={styles.card}>
+            {/* The language can be chosen before signing in (KG / RU / EN). */}
+            <LanguageSwitcher style={styles.languageSwitcher} />
             <View style={styles.header}>
               <AuthHeroBadge />
-              <Text style={styles.title}>Вход в Kezek</Text>
-              <Text style={styles.subtitle}>Быстрый вход без пароля</Text>
-              <Text style={styles.helper}>
-                Выберите удобный способ авторизации. Мы восстановим сессию автоматически после
-                подтверждения.
-              </Text>
+              <Text style={styles.title}>{t('auth.signIn.title')}</Text>
+              <Text style={styles.subtitle}>{t('auth.signIn.subtitle')}</Text>
+              <Text style={styles.helper}>{t('auth.signIn.helper')}</Text>
             </View>
 
             <View style={styles.methodsSection}>
@@ -133,30 +136,30 @@ export default function SignInScreen() {
 
               <View style={styles.methodsCaptionWrap}>
                 <View style={styles.methodsCaptionLine} />
-                <Text style={styles.methodsCaptionText}>Быстрые способы входа</Text>
+                <Text style={styles.methodsCaptionText}>{t('auth.signIn.methodsCaption')}</Text>
                 <View style={styles.methodsCaptionLine} />
               </View>
 
               <View style={styles.methodsButtons}>
                 <Button
-                  title="Продолжить с Google"
+                  title={t('auth.signIn.google')}
                   onPress={() => void handleGoogleSignIn()}
                   loading={googleLoading}
                   disabled={anyBusyAuth}
                   variant="authNeutral"
                   style={styles.googleButton}
-                  accessibilityHint="Открывает авторизацию Google."
+                  accessibilityHint={t('auth.signIn.googleHint')}
                   fullWidth
                 />
 
                 <Button
-                  title="Войти через Telegram"
+                  title={t('auth.signIn.telegram')}
                   onPress={() => void startTelegramMobileLogin()}
                   loading={telegramLoading}
                   disabled={anyBusyAuth || !telegramDeeplinkEnabled}
                   variant="authTelegram"
                   style={styles.telegramButton}
-                  accessibilityHint="Открывает Telegram для подтверждения входа."
+                  accessibilityHint={t('auth.signIn.telegramHint')}
                   fullWidth
                 />
 
@@ -182,19 +185,19 @@ export default function SignInScreen() {
                     {telegramNonce && (
                       <View style={styles.telegramFlowActions}>
                         <Button
-                          title="Открыть Telegram снова"
+                          title={t('auth.signIn.telegramAgain')}
                           onPress={() => void openTelegramAgain()}
                           variant="outline"
                           style={styles.telegramActionButton}
-                          accessibilityHint="Повторно открывает Telegram для подтверждения входа."
+                          accessibilityHint={t('auth.signIn.telegramAgainHint')}
                           fullWidth
                         />
                         <Button
-                          title="Отменить вход"
+                          title={t('auth.signIn.telegramCancel')}
                           onPress={cancelTelegramLogin}
                           variant="ghost"
                           style={styles.telegramActionButton}
-                          accessibilityHint="Прерывает текущую попытку входа через Telegram."
+                          accessibilityHint={t('auth.signIn.telegramCancelHint')}
                           fullWidth
                         />
                       </View>
@@ -204,12 +207,12 @@ export default function SignInScreen() {
 
                 {whatsAppMobileAuthEnabled && (
                   <Button
-                    title="Войти через WhatsApp"
+                    title={t('auth.signIn.whatsapp')}
                     onPress={openWhatsAppSignIn}
                     disabled={anyBusyAuth}
                     variant="authWhatsApp"
                     style={styles.whatsAppButton}
-                    accessibilityHint="Переход к экрану входа по коду из WhatsApp."
+                    accessibilityHint={t('auth.signIn.whatsappHint')}
                     fullWidth
                   />
                 )}

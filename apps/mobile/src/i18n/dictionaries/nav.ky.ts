@@ -1,0 +1,27 @@
+import type { navRu } from './nav.ru';
+
+export const navKy: Record<keyof typeof navRu, string> = {
+    'nav.signIn': 'Кирүү',
+    'nav.verify': 'Ырастоо',
+    'nav.home': 'Башкы',
+    'nav.homeTabA11y': 'Башкы бет өтмөгү',
+    'nav.cabinetTab': 'Кабинет',
+    'nav.cabinet': 'Жеке кабинет',
+    'nav.profile': 'Профиль',
+    'nav.business': 'Менин бизнесим',
+    'nav.businessTab': 'Бизнес',
+    'nav.staff': 'Иш аймагы',
+    'nav.staffTab': 'Иш',
+    'nav.bookingDetails': 'Жазылуунун чоо-жайы',
+    'nav.map': 'Филиалдар картасы',
+    'nav.booking': 'Жазылуу',
+    'nav.booking.branch': 'Филиалды тандоо',
+    'nav.booking.service': 'Кызматты тандоо',
+    'nav.booking.staff': 'Кызматкерди тандоо',
+    'nav.booking.date': 'Күндү тандоо',
+    'nav.booking.time': 'Убакытты тандоо',
+    'nav.booking.confirm': 'Ырастоо',
+    'nav.shifts': 'Сменалар жана статистика',
+    'nav.shiftQuick': 'Менин сменам',
+    'nav.checkingAccess': 'Кирүү укугун текшерип жатабыз...',
+};

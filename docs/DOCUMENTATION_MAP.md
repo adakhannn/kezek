@@ -8,7 +8,7 @@
 
 ## Руководства и справочники
 
-Документов: 102.
+Документов: 103.
 
 | Документ | Путь |
 | --- | --- |
@@ -50,6 +50,7 @@
 | [Smoke-сценарии mobile](../apps/mobile/SMOKE_TESTS.md) | `apps/mobile/SMOKE_TESTS.md` |
 | [Проверки мобильного приложения](../apps/mobile/TESTING.md) | `apps/mobile/TESTING.md` |
 | [Диагностика мобильного приложения](../apps/mobile/TROUBLESHOOTING.md) | `apps/mobile/TROUBLESHOOTING.md` |
+| [Переводы мобильного приложения](../apps/mobile/src/i18n/README.md) | `apps/mobile/src/i18n/README.md` |
 | [Отладка производительности web](../apps/web/PERFORMANCE_DEBUGGING.md) | `apps/web/PERFORMANCE_DEBUGGING.md` |
 | [Kezek Web](../apps/web/README.md) | `apps/web/README.md` |
 | [Playwright reference](../apps/web/e2e/README.md) | `apps/web/e2e/README.md` |

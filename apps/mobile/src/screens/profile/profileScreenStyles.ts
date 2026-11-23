@@ -69,6 +69,10 @@ export const styles = StyleSheet.create({
         ...typography.caption,
         color: colors.text.secondary,
     },
+    languageHint: {
+        marginTop: -colors.layout.space2,
+        marginBottom: colors.layout.space3,
+    },
     actions: {
         padding: colors.layout.space5,
         paddingBottom: colors.layout.space8,

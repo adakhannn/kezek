@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthStackParamList } from './types';
 import { colors } from '../constants/colors';
+import { useLanguage } from '../i18n';
 import SignInScreen from '../screens/auth/SignInScreen';
 import VerifyScreen from '../screens/auth/VerifyScreen';
 import WhatsAppScreen from '../screens/auth/WhatsAppScreen';
@@ -8,6 +9,8 @@ import WhatsAppScreen from '../screens/auth/WhatsAppScreen';
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
+    const { t } = useLanguage();
+
     return (
         <Stack.Navigator
             screenOptions={{
@@ -23,8 +26,8 @@ export default function AuthNavigator() {
                 },
             }}
         >
-            <Stack.Screen name="SignIn" component={SignInScreen} options={{ title: 'Вход' }} />
-            <Stack.Screen name="Verify" component={VerifyScreen} options={{ title: 'Подтверждение' }} />
+            <Stack.Screen name="SignIn" component={SignInScreen} options={{ title: t('nav.signIn') }} />
+            <Stack.Screen name="Verify" component={VerifyScreen} options={{ title: t('nav.verify') }} />
             <Stack.Screen name="WhatsApp" component={WhatsAppScreen} options={{ title: 'WhatsApp' }} />
         </Stack.Navigator>
     );

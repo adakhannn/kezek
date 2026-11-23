@@ -13,6 +13,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
+import { useLanguage } from '../../i18n';
 import { getErrorMessage } from '../../lib/errors';
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
@@ -25,6 +26,7 @@ export default function VerifyScreen() {
     const route = useRoute<VerifyScreenRouteProp>();
     const navigation = useNavigation<VerifyScreenNavigationProp>();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const { phone, email } = route.params || {};
 
     const [code, setCode] = useState('');
@@ -57,12 +59,12 @@ export default function VerifyScreen() {
                 });
                 if (error) throw error;
             } else {
-                throw new Error('Не указан email или телефон');
+                throw new Error(t('auth.verify.error.noContact'));
             }
-            showToast('Вход выполнен успешно', 'success');
+            showToast(t('auth.signedIn'), 'success');
         } catch (error: unknown) {
             showToast(
-                getErrorMessage(error, 'Не удалось подтвердить код. Проверьте его и попробуйте снова.'),
+                getErrorMessage(error, t('auth.verify.error.verify')),
                 'error',
             );
         } finally {
@@ -90,10 +92,10 @@ export default function VerifyScreen() {
                 });
                 if (error) throw error;
             }
-            showToast('Код отправлен повторно', 'success');
+            showToast(t('auth.verify.resent'), 'success');
         } catch (error: unknown) {
             showToast(
-                getErrorMessage(error, 'Не удалось отправить код. Попробуйте снова.'),
+                getErrorMessage(error, t('auth.verify.error.resend')),
                 'error',
             );
         } finally {
@@ -112,11 +114,11 @@ export default function VerifyScreen() {
             keyboardDismissMode="on-drag"
             automaticallyAdjustKeyboardInsets
         >
-            <Text style={styles.title}>Подтверждение</Text>
-            <Text style={styles.subtitle}>Введите код, отправленный на {email || phone}</Text>
+            <Text style={styles.title}>{t('auth.verify.title')}</Text>
+            <Text style={styles.subtitle}>{t('auth.verify.subtitle', { contact: email || phone || '' })}</Text>
 
             <Input
-                label="Код подтверждения"
+                label={t('auth.verify.codeLabel')}
                 placeholder="000000"
                 value={code}
                 onChangeText={(text) => {
@@ -128,8 +130,8 @@ export default function VerifyScreen() {
                 keyboardType="number-pad"
                 maxLength={6}
                 error={codeError ?? undefined}
-                helperText="Введите 6-значный код из сообщения."
-                accessibilityHint="Поле для ввода 6-значного кода подтверждения."
+                helperText={t('auth.code.helper')}
+                accessibilityHint={t('auth.verify.codeHint')}
                 containerStyle={styles.field}
                 style={styles.codeInput}
                 inputContainerStyle={styles.codeInputContainer}
@@ -143,31 +145,31 @@ export default function VerifyScreen() {
             />
 
             <Button
-                title="Подтвердить"
+                title={t('auth.verify.submit')}
                 onPress={handleVerify}
                 loading={loading}
                 disabled={loading || code.length !== 6}
-                accessibilityHint="Проверяет код и выполняет вход."
+                accessibilityHint={t('auth.code.submitHint')}
                 fullWidth
             />
 
             <Button
-                title="Отправить код снова"
+                title={t('auth.code.resend')}
                 onPress={handleResend}
                 variant="ghost"
                 style={styles.resendButton}
                 disabled={loading}
-                accessibilityHint="Повторно отправляет код подтверждения."
+                accessibilityHint={t('auth.verify.resendHint')}
                 fullWidth
             />
 
             <Button
-                title="Назад"
+                title={t('auth.verify.back')}
                 onPress={() => navigation.goBack()}
                 variant="secondary"
                 style={styles.backButton}
                 disabled={loading}
-                accessibilityHint="Возврат на предыдущий экран."
+                accessibilityHint={t('auth.verify.backHint')}
                 fullWidth
             />
         </ScrollView>

@@ -17,10 +17,11 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
+import { useLanguage, type Translate } from '../../i18n';
 import { getMobileApiUrl } from '../../lib/apiUrl';
 import { createMobileAuthProof } from '../../lib/authCrypto';
 import { WHATSAPP_ACTIVE_ATTEMPT_KEY } from '../../lib/authStorageKeys';
-import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../lib/fetchWithTimeout';
+import { fetchWithTimeout, isTimeoutError } from '../../lib/fetchWithTimeout';
 import { getErrorMessage } from '../../lib/errors';
 import {
     getStableIdempotencyKey,
@@ -44,42 +45,29 @@ type WhatsAppActiveAttempt = {
     cooldownUntil: number;
 };
 
-const WHATSAPP_COPY = {
-    title: 'Вход через WhatsApp',
-    phoneStepSubtitle: 'Введите номер телефона, на него придет код в WhatsApp.',
-    otpStepSubtitle: 'Введите код из сообщения WhatsApp.',
-    codeSent: 'Код отправлен в WhatsApp.',
-    codeHint: 'Код отправлен на',
-    invalidCode: 'Введите 6-значный код.',
-    wrongCode: 'Неверный код. Проверьте и попробуйте снова.',
-    expiredCode: 'Срок действия кода истек. Запросите новый код.',
-    tooManyAttempts: 'Слишком много попыток. Подождите и попробуйте позже.',
-    providerUnavailable: 'Сервис WhatsApp временно недоступен. Повторите позже.',
-    networkFailure: 'Нет соединения. Проверьте интернет и повторите.',
-    sendCodeFailed: 'Не удалось отправить код.',
-    signInFailed: 'Не удалось выполнить вход.',
-    signInSuccess: 'Вход выполнен успешно.',
-    unexpectedFormat: 'Неожиданный формат ответа от сервера.',
-};
-
-function mapWhatsAppAuthError(error: unknown): string {
+/**
+ * The user-facing text for a failed send or verify. The API answers in the app language
+ * (X-Kezek-Locale), so a message it sends that matches nothing here is shown as it is.
+ */
+function mapWhatsAppAuthError(error: unknown, t: Translate): string {
     if (!(error instanceof Error)) {
-        return WHATSAPP_COPY.signInFailed;
+        return t('auth.whatsapp.signInFailed');
     }
 
     const message = error.message.toLowerCase();
 
-    if (message.includes('expired') || message.includes('истек')) return WHATSAPP_COPY.expiredCode;
-    if (message.includes('invalid code') || message.includes('wrong code') || message.includes('неверн')) return WHATSAPP_COPY.wrongCode;
-    if (message.includes('too many') || message.includes('rate limit') || message.includes('429')) return WHATSAPP_COPY.tooManyAttempts;
-    if (message.includes('provider') || message.includes('unavailable') || message.includes('503')) return WHATSAPP_COPY.providerUnavailable;
-    if (message.includes('network') || message.includes('failed to fetch')) return WHATSAPP_COPY.networkFailure;
+    // Matching the Russian API text, not UI text.
+    if (message.includes('expired') || message.includes('истек')) return t('auth.whatsapp.expiredCode');
+    if (message.includes('invalid code') || message.includes('wrong code') || message.includes('неверн')) return t('auth.whatsapp.wrongCode');
+    if (message.includes('too many') || message.includes('rate limit') || message.includes('429')) return t('auth.whatsapp.tooManyAttempts');
+    if (message.includes('provider') || message.includes('unavailable') || message.includes('503')) return t('auth.whatsapp.providerUnavailable');
+    if (message.includes('network') || message.includes('failed to fetch')) return t('auth.whatsapp.networkFailure');
     if (isTimeoutError(error) || message.includes('timed out') || message.includes('timeout')) {
-        return AUTH_TIMEOUT_MESSAGE;
+        return t('auth.error.timeout');
     }
-    if (message.includes('send')) return WHATSAPP_COPY.sendCodeFailed;
+    if (message.includes('send')) return t('auth.whatsapp.sendCodeFailed');
 
-    return getErrorMessage(error, WHATSAPP_COPY.signInFailed);
+    return getErrorMessage(error, t('auth.whatsapp.signInFailed'));
 }
 
 function parseApiError(payload: unknown, fallback: string) {
@@ -98,6 +86,7 @@ function secondsUntil(timestampMs: number) {
 export default function WhatsAppScreen() {
     const navigation = useNavigation<WhatsAppScreenNavigationProp>();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const apiUrl = getMobileApiUrl();
 
     const [step, setStep] = useState<WhatsAppStep>('phone');
@@ -170,7 +159,7 @@ export default function WhatsAppScreen() {
 
             const expiresAtMs = Date.parse(activeAttempt.expiresAt);
             if (expiresAtMs <= Date.now()) {
-                setErrorText(WHATSAPP_COPY.expiredCode);
+                setErrorText(t('auth.whatsapp.expiredCode'));
                 void clearActiveAttempt();
                 setStep('phone');
                 setOtp('');
@@ -184,6 +173,8 @@ export default function WhatsAppScreen() {
         return () => {
             subscription.remove();
         };
+        // Mount-only: restoring the attempt and the AppState listener must not restart on a language change.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -229,7 +220,7 @@ export default function WhatsAppScreen() {
             const payload = await response.json();
 
             if (!response.ok || !payload?.ok) {
-                throw new Error(parseApiError(payload, WHATSAPP_COPY.sendCodeFailed));
+                throw new Error(parseApiError(payload, t('auth.whatsapp.sendCodeFailed')));
             }
 
             const data = payload.data as {
@@ -253,9 +244,9 @@ export default function WhatsAppScreen() {
             setStep('otp');
             setOtp('');
             setCountdown(RESEND_COOLDOWN_SEC);
-            showToast(WHATSAPP_COPY.codeSent, 'success');
+            showToast(t('auth.whatsapp.codeSent'), 'success');
         } catch (error: unknown) {
-            const mapped = mapWhatsAppAuthError(error);
+            const mapped = mapWhatsAppAuthError(error, t);
             showToast(mapped, 'error');
             setErrorText(mapped);
         } finally {
@@ -268,16 +259,16 @@ export default function WhatsAppScreen() {
         setPhoneError(null);
 
         if (otp.length !== 6) {
-            showToast(WHATSAPP_COPY.invalidCode, 'error');
-            setOtpError(WHATSAPP_COPY.invalidCode);
+            showToast(t('auth.whatsapp.invalidCode'), 'error');
+            setOtpError(t('auth.whatsapp.invalidCode'));
             return;
         }
 
         setOtpError(null);
         const activeAttempt = activeAttemptRef.current;
         if (!activeAttempt) {
-            setErrorText(WHATSAPP_COPY.expiredCode);
-            showToast(WHATSAPP_COPY.expiredCode, 'error');
+            setErrorText(t('auth.whatsapp.expiredCode'));
+            showToast(t('auth.whatsapp.expiredCode'), 'error');
             setStep('phone');
             return;
         }
@@ -306,12 +297,12 @@ export default function WhatsAppScreen() {
             const payload = await response.json();
 
             if (!response.ok || !payload?.ok) {
-                throw new Error(parseApiError(payload, WHATSAPP_COPY.wrongCode));
+                throw new Error(parseApiError(payload, t('auth.whatsapp.wrongCode')));
             }
 
             const data = payload.data as { exchangeCode?: string; status?: string };
             if (!data.exchangeCode || data.status !== 'approved') {
-                throw new Error(WHATSAPP_COPY.unexpectedFormat);
+                throw new Error(t('auth.whatsapp.unexpectedFormat'));
             }
 
             logDebug('WhatsAppScreen', 'Exchangeing approved WhatsApp login', {
@@ -321,9 +312,9 @@ export default function WhatsAppScreen() {
             await exchangeViaMobileApi(data.exchangeCode, apiUrl, activeAttempt.codeVerifier);
             await clearActiveAttempt();
             verifyIdempotencyRef.current = null;
-            showToast(WHATSAPP_COPY.signInSuccess, 'success');
+            showToast(t('auth.whatsapp.signInSuccess'), 'success');
         } catch (error: unknown) {
-            const mapped = mapWhatsAppAuthError(error);
+            const mapped = mapWhatsAppAuthError(error, t);
             showToast(mapped, 'error');
             setErrorText(mapped);
         } finally {
@@ -348,13 +339,13 @@ export default function WhatsAppScreen() {
             keyboardDismissMode="on-drag"
             automaticallyAdjustKeyboardInsets
         >
-            <Text style={styles.title}>{WHATSAPP_COPY.title}</Text>
-            <Text style={styles.subtitle}>{step === 'phone' ? WHATSAPP_COPY.phoneStepSubtitle : WHATSAPP_COPY.otpStepSubtitle}</Text>
+            <Text style={styles.title}>{t('auth.whatsapp.title')}</Text>
+            <Text style={styles.subtitle}>{step === 'phone' ? t('auth.whatsapp.phoneStepSubtitle') : t('auth.whatsapp.otpStepSubtitle')}</Text>
 
             {step === 'phone' ? (
                 <>
                     <Input
-                        label="Номер телефона"
+                        label={t('auth.whatsapp.phoneLabel')}
                         placeholder="+996 XXX XX XX XX"
                         value={phone}
                         onChangeText={(value) => {
@@ -365,8 +356,8 @@ export default function WhatsAppScreen() {
                         }}
                         keyboardType="phone-pad"
                         error={phoneError ?? undefined}
-                        helperText="Формат: +996XXXXXXXXX"
-                        accessibilityHint="Введите номер телефона в международном формате."
+                        helperText={t('auth.whatsapp.phoneHelper')}
+                        accessibilityHint={t('auth.whatsapp.phoneHint')}
                         containerStyle={styles.field}
                         returnKeyType="done"
                         onSubmitEditing={() => {
@@ -376,11 +367,11 @@ export default function WhatsAppScreen() {
                         }}
                     />
                     <Button
-                        title={sending ? 'Отправка...' : 'Отправить код'}
+                        title={sending ? t('auth.whatsapp.sending') : t('auth.whatsapp.sendCode')}
                         onPress={() => void handleSendOtp()}
                         loading={sending}
                         disabled={sending}
-                        accessibilityHint="Отправляет одноразовый код в WhatsApp."
+                        accessibilityHint={t('auth.whatsapp.sendCodeHint')}
                         fullWidth
                     />
                 </>
@@ -388,7 +379,7 @@ export default function WhatsAppScreen() {
                 <>
                     <View style={styles.otpContainer}>
                         <Input
-                            accessibilityLabel="Код из WhatsApp"
+                            accessibilityLabel={t('auth.whatsapp.codeLabel')}
                             placeholder="000000"
                             value={otp}
                             onChangeText={(text) => {
@@ -401,8 +392,8 @@ export default function WhatsAppScreen() {
                             maxLength={6}
                             autoFocus
                             error={otpError ?? undefined}
-                            helperText="Введите 6-значный код из сообщения."
-                            accessibilityHint="Поле для ввода кода из WhatsApp."
+                            helperText={t('auth.code.helper')}
+                            accessibilityHint={t('auth.whatsapp.codeHint')}
                             containerStyle={styles.field}
                             style={styles.otpInput}
                             inputContainerStyle={styles.otpInputContainer}
@@ -414,13 +405,13 @@ export default function WhatsAppScreen() {
                             }}
                         />
                         <Text accessibilityLiveRegion="polite" style={styles.otpHint}>
-                            {WHATSAPP_COPY.codeHint} {phone}
+                            {t('auth.whatsapp.codeSentTo', { phone })}
                         </Text>
                     </View>
 
                     <View style={styles.otpActions}>
                         <Button
-                            title="Изменить номер"
+                            title={t('auth.whatsapp.changePhone')}
                             onPress={() => {
                                 setStep('phone');
                                 setOtp('');
@@ -433,25 +424,25 @@ export default function WhatsAppScreen() {
                             size="sm"
                             style={styles.otpActionButton}
                             disabled={sending || verifying}
-                            accessibilityHint="Возврат к шагу ввода номера телефона."
+                            accessibilityHint={t('auth.whatsapp.changePhoneHint')}
                         />
                         <Button
-                            title={countdown > 0 ? `Отправить снова (${countdown}с)` : 'Отправить код снова'}
+                            title={countdown > 0 ? t('auth.whatsapp.resendIn', { seconds: countdown }) : t('auth.code.resend')}
                             onPress={handleResendOtp}
                             disabled={countdown > 0 || sending}
                             variant="ghost"
                             size="sm"
                             style={styles.otpActionButton}
-                            accessibilityHint="Повторно отправляет код после окончания таймера."
+                            accessibilityHint={t('auth.whatsapp.resendHint')}
                         />
                     </View>
 
                     <Button
-                        title={verifying ? 'Проверка...' : 'Войти'}
+                        title={verifying ? t('auth.whatsapp.verifying') : t('auth.whatsapp.submit')}
                         onPress={() => void handleVerifyOtp()}
                         loading={verifying}
                         disabled={verifying || sending || otp.length !== 6}
-                        accessibilityHint="Проверяет код и выполняет вход."
+                        accessibilityHint={t('auth.code.submitHint')}
                         fullWidth
                     />
                 </>
@@ -468,12 +459,12 @@ export default function WhatsAppScreen() {
             ) : null}
 
             <Button
-                title="Вернуться к другим способам входа"
+                title={t('auth.whatsapp.back')}
                 onPress={() => navigation.goBack()}
                 variant="ghost"
                 style={styles.backButton}
                 disabled={sending || verifying}
-                accessibilityHint="Возврат на экран выбора способа входа."
+                accessibilityHint={t('auth.whatsapp.backHint')}
                 fullWidth
             />
         </ScrollView>

@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { useUserRole } from '../hooks/useUserRole';
+import { useLanguage } from '../i18n';
 import DashboardScreen from '../screens/DashboardScreen';
 import HomeScreen from '../screens/HomeScreen';
 import StaffScreen from '../screens/StaffScreen';
@@ -16,6 +17,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainNavigator() {
     const { isOwner, isStaff } = useUserRole();
+    const { t } = useLanguage();
 
     return (
         <Tab.Navigator backBehavior="history" screenOptions={mainTabScreenOptions}>
@@ -23,10 +25,10 @@ export default function MainNavigator() {
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    title: 'Главная',
-                    headerTitle: createNavigationHeaderTitle('Главная'),
-                    tabBarLabel: 'Главная',
-                    tabBarAccessibilityLabel: 'Главная вкладка',
+                    title: t('nav.home'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.home')),
+                    tabBarLabel: t('nav.home'),
+                    tabBarAccessibilityLabel: t('nav.homeTabA11y'),
                     tabBarIcon: renderTabIcon('home'),
                 }}
             />
@@ -35,8 +37,8 @@ export default function MainNavigator() {
                 component={CabinetNavigator}
                 options={{
                     headerShown: false,
-                    tabBarLabel: 'Кабинет',
-                    tabBarAccessibilityLabel: 'Кабинет',
+                    tabBarLabel: t('nav.cabinetTab'),
+                    tabBarAccessibilityLabel: t('nav.cabinetTab'),
                     tabBarIcon: renderTabIcon('person'),
                 }}
             />
@@ -45,10 +47,10 @@ export default function MainNavigator() {
                     name="Dashboard"
                     component={DashboardScreen}
                     options={{
-                        title: 'Мой бизнес',
-                        headerTitle: createNavigationHeaderTitle('Мой бизнес'),
-                        tabBarLabel: 'Бизнес',
-                        tabBarAccessibilityLabel: 'Бизнес',
+                        title: t('nav.business'),
+                        headerTitle: createNavigationHeaderTitle(t('nav.business')),
+                        tabBarLabel: t('nav.businessTab'),
+                        tabBarAccessibilityLabel: t('nav.businessTab'),
                         tabBarIcon: renderTabIcon('business'),
                     }}
                 />
@@ -58,10 +60,10 @@ export default function MainNavigator() {
                     name="Staff"
                     component={StaffScreen}
                     options={{
-                        title: 'Рабочая зона',
-                        headerTitle: createNavigationHeaderTitle('Рабочая зона'),
-                        tabBarLabel: 'Работа',
-                        tabBarAccessibilityLabel: 'Работа',
+                        title: t('nav.staff'),
+                        headerTitle: createNavigationHeaderTitle(t('nav.staff')),
+                        tabBarLabel: t('nav.staffTab'),
+                        tabBarAccessibilityLabel: t('nav.staffTab'),
                         tabBarIcon: renderTabIcon('briefcase'),
                     }}
                 />

@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useUserRole } from '../hooks/useUserRole';
+import { useLanguage } from '../i18n';
 import type { RootStackParamList } from './types';
 
 type RootNavigation = NativeStackNavigationProp<RootStackParamList>;
@@ -12,6 +13,7 @@ export function withStaffRouteGuard(Screen: ComponentType) {
     function StaffRouteGuard() {
         const navigation = useNavigation<RootNavigation>();
         const { isStaff, isLoading } = useUserRole();
+        const { t } = useLanguage();
 
         useEffect(() => {
             if (!isLoading && !isStaff) {
@@ -20,7 +22,7 @@ export function withStaffRouteGuard(Screen: ComponentType) {
         }, [isLoading, isStaff, navigation]);
 
         if (isLoading || !isStaff) {
-            return <LoadingSpinner message="Проверяем доступ..." />;
+            return <LoadingSpinner message={t('nav.checkingAccess')} />;
         }
 
         return <Screen />;

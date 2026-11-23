@@ -2,6 +2,7 @@ import React from 'react';
 import type { createNativeStackNavigator, NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
 import BookingCancelButton from '../components/BookingCancelButton';
+import type { Translate } from '../i18n';
 import BookingDetailsScreen from '../screens/BookingDetailsScreen';
 import BookingScreen from '../screens/BookingScreen';
 import BookingStep1Branch from '../screens/booking/BookingStep1Branch';
@@ -50,7 +51,8 @@ export function AuthStackScreen(Stack: RootStack) {
     );
 }
 
-export function SignedInStackScreens(Stack: RootStack) {
+/** `t` comes from RootNavigator, so the titles follow the app language. */
+export function SignedInStackScreens(Stack: RootStack, t: Translate) {
     return (
         <>
             <Stack.Screen
@@ -63,8 +65,8 @@ export function SignedInStackScreens(Stack: RootStack) {
                 component={BookingDetailsScreen}
                 options={{
                     ...detailStackScreenOptions,
-                    title: 'Детали записи',
-                    headerTitle: createNavigationHeaderTitle('Детали записи', 'Booking'),
+                    title: t('nav.bookingDetails'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.bookingDetails'), 'Booking'),
                 }}
             />
             <Stack.Screen
@@ -72,15 +74,15 @@ export function SignedInStackScreens(Stack: RootStack) {
                 component={MapScreen}
                 options={{
                     ...detailStackScreenOptions,
-                    title: 'Карта филиалов',
-                    headerTitle: createNavigationHeaderTitle('Карта филиалов', 'Discovery'),
+                    title: t('nav.map'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.map'), 'Discovery'),
                 }}
             />
             <Stack.Screen
                 name="Booking"
                 component={BookingScreen}
                 options={{
-                    title: 'Запись',
+                    title: t('nav.booking'),
                     headerShown: false,
                     animation: 'none',
                 }}
@@ -88,40 +90,40 @@ export function SignedInStackScreens(Stack: RootStack) {
             <Stack.Screen
                 name="BookingStep1Branch"
                 component={BookingStep1Branch}
-                options={bookingStepOptions('Выбор филиала', '1 / 6')}
+                options={bookingStepOptions(t('nav.booking.branch'), '1 / 6')}
             />
             <Stack.Screen
                 name="BookingStep2Service"
                 component={BookingStep2Service}
-                options={bookingStepOptions('Выбор услуги', '2 / 6')}
+                options={bookingStepOptions(t('nav.booking.service'), '2 / 6')}
             />
             <Stack.Screen
                 name="BookingStep3Staff"
                 component={BookingStep3Staff}
-                options={bookingStepOptions('Выбор мастера', '3 / 6')}
+                options={bookingStepOptions(t('nav.booking.staff'), '3 / 6')}
             />
             <Stack.Screen
                 name="BookingStep4Date"
                 component={BookingStep4Date}
-                options={bookingStepOptions('Выбор даты', '4 / 6')}
+                options={bookingStepOptions(t('nav.booking.date'), '4 / 6')}
             />
             <Stack.Screen
                 name="BookingStep5Time"
                 component={BookingStep5Time}
-                options={bookingStepOptions('Выбор времени', '5 / 6')}
+                options={bookingStepOptions(t('nav.booking.time'), '5 / 6')}
             />
             <Stack.Screen
                 name="BookingStep6Confirm"
                 component={BookingStep6Confirm}
-                options={bookingStepOptions('Подтверждение', '6 / 6')}
+                options={bookingStepOptions(t('nav.booking.confirm'), '6 / 6')}
             />
             <Stack.Screen
                 name="Shifts"
                 component={GuardedShiftsScreen}
                 options={{
                     ...detailStackScreenOptions,
-                    title: 'Смены и статистика',
-                    headerTitle: createNavigationHeaderTitle('Смены и статистика', 'Workspace'),
+                    title: t('nav.shifts'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.shifts'), 'Workspace'),
                 }}
             />
             <Stack.Screen
@@ -129,8 +131,8 @@ export function SignedInStackScreens(Stack: RootStack) {
                 component={GuardedShiftQuickScreen}
                 options={{
                     ...detailStackScreenOptions,
-                    title: 'Моя смена',
-                    headerTitle: createNavigationHeaderTitle('Моя смена', 'Workspace'),
+                    title: t('nav.shiftQuick'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.shiftQuick'), 'Workspace'),
                 }}
             />
         </>

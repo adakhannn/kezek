@@ -5,6 +5,7 @@ import { ConfirmProvider } from './src/contexts/ConfirmContext';
 import { ToastProvider } from './src/contexts/ToastContext';
 import { colors } from './src/constants/colors';
 import { useAppStateQueryFocus } from './src/hooks/useAppStateQueryFocus';
+import { LanguageProvider } from './src/i18n';
 import { queryClient } from './src/lib/queryClient';
 import RootNavigator from './src/navigation/RootNavigator';
 import { logEnvVars } from './src/utils/debug';
@@ -19,14 +20,16 @@ export default function App() {
 
     return (
         <ErrorBoundary>
-            <QueryClientProvider client={queryClient}>
-                <ConfirmProvider>
-                    <ToastProvider>
-                        <RootNavigator />
-                        <StatusBar style="light" backgroundColor={colors.surface.page} />
-                    </ToastProvider>
-                </ConfirmProvider>
-            </QueryClientProvider>
+            <LanguageProvider>
+                <QueryClientProvider client={queryClient}>
+                    <ConfirmProvider>
+                        <ToastProvider>
+                            <RootNavigator />
+                            <StatusBar style="light" backgroundColor={colors.surface.page} />
+                        </ToastProvider>
+                    </ConfirmProvider>
+                </QueryClientProvider>
+            </LanguageProvider>
         </ErrorBoundary>
     );
 }

@@ -3,12 +3,14 @@ import { NextResponse } from 'next/server';
 import { createErrorResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { BizAccessError } from '@/lib/authDiagnostics';
 import { rateLimitDeniedResponse } from '@/lib/rateLimit';
-import { localizeApiResponse, serverDictionaries, translateServerMessage, withLocalizedMessages } from '@/lib/serverMessages';
+import { localizeApiResponse, requestLocale, serverDictionaries, translateServerMessage, withLocalizedMessages } from '@/lib/serverMessages';
 
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
 jest.mock('@/lib/cookies', () => ({ getLocaleFromCookieServer: jest.fn() }));
+jest.mock('next/headers', () => ({ headers: jest.fn() }));
 
 const { getLocaleFromCookieServer } = jest.requireMock('@/lib/cookies');
+const { headers } = jest.requireMock('next/headers');
 const { logError } = jest.requireMock('@/lib/log');
 
 // FE-10: services answer in Russian; the response follows the language cookie of the request.
@@ -16,6 +18,7 @@ describe('server messages', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         getLocaleFromCookieServer.mockResolvedValue(null);
+        headers.mockResolvedValue(new Headers());
     });
 
     test('an exact message and a {placeholder} pattern are translated, Russian and unknown text are not', () => {
@@ -147,5 +150,33 @@ describe('server messages', () => {
         expect(await localizeApiResponse(first)).toBe(first);
         await expect(first.json()).resolves.toEqual({ ok: false, message: 'Кызматкердин ID көрсөтүлгөн жок', id: 's1' });
         expect(getLocaleFromCookieServer).toHaveBeenCalledTimes(1);
+    });
+    test('the language is the cookie, then the X-Kezek-Locale header of the mobile app, then Russian', async () => {
+        headers.mockResolvedValue(new Headers({ 'x-kezek-locale': 'ky' }));
+        await expect(requestLocale()).resolves.toBe('ky');
+        const fromHeader = await localizeApiResponse(NextResponse.json({ ok: false, message: 'Доступ запрещен' }, { status: 403 }));
+        await expect(fromHeader.json()).resolves.toEqual({ ok: false, message: 'Кирүү мүмкүн эмес' });
+
+        getLocaleFromCookieServer.mockResolvedValue('en');
+        await expect(requestLocale()).resolves.toBe('en');
+
+        getLocaleFromCookieServer.mockResolvedValue(null);
+        headers.mockResolvedValue(new Headers({ 'x-kezek-locale': ' EN ' }));
+        await expect(requestLocale()).resolves.toBe('en');
+        for (const invalid of ['de', 'ru-RU', '']) {
+            headers.mockResolvedValue(new Headers({ 'x-kezek-locale': invalid }));
+            await expect(requestLocale()).resolves.toBe('ru');
+        }
+        headers.mockResolvedValue(new Headers());
+        await expect(requestLocale()).resolves.toBe('ru');
+    });
+
+    test('a cookie or header that cannot be read means Russian, never a failure', async () => {
+        getLocaleFromCookieServer.mockRejectedValue(new Error('no cookies'));
+        headers.mockResolvedValue(new Headers({ 'x-kezek-locale': 'ky' }));
+        await expect(requestLocale()).resolves.toBe('ky');
+
+        headers.mockRejectedValue(new Error('outside a request scope'));
+        await expect(requestLocale()).resolves.toBe('ru');
     });
 });

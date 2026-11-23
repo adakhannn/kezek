@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
-import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { resolveRequestAuthContext } from '@/lib/requestAuthContext';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 export type PreferredLocale = 'ru' | 'ky' | 'en';
 
@@ -12,18 +13,17 @@ export function isPreferredLocale(value: unknown): value is PreferredLocale {
 
 /**
  * POST /api/profile/locale (FE-10): saves the site language of the signed-in user as
- * profiles.preferred_locale, the language of their booking notifications. Only the cookie session
- * names the profile: the body carries the language and nothing else is read from it. The service
- * client writes that one column of that one row; a user without a profile row changes nothing.
+ * profiles.preferred_locale, the language of their booking notifications. Only the caller's session
+ * names the profile: the mobile `Authorization: Bearer` token, else the web cookie session
+ * (resolveRequestAuthContext). The body carries the language and nothing else is read from it. The
+ * service client writes that one column of that one row; a user without a profile row changes nothing.
  */
 export async function runProfileLocaleHttp(req: Request): Promise<NextResponse> {
-    const supabase = await createSupabaseServerClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-        return createErrorResponse('auth', undefined, undefined, 401);
+    const authContext = await resolveRequestAuthContext(req, 'ProfileLocale');
+    if (authContext instanceof Response) {
+        return authContext as NextResponse;
     }
+    const { user } = authContext;
 
     const body: unknown = await req.json().catch(() => null);
     const locale = body && typeof body === 'object' && !Array.isArray(body)

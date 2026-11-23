@@ -32,9 +32,10 @@ describe('mobile visual baseline artifacts', () => {
             path.resolve(__dirname, '../screens/auth/SignInScreen.tsx'),
             'utf8',
         );
-        const google = signInSource.indexOf('Продолжить с Google');
-        const telegram = signInSource.indexOf('Войти через Telegram');
-        const whatsApp = signInSource.indexOf('Войти через WhatsApp');
+        // The button titles are dictionary keys (src/i18n/dictionaries/auth.*.ts).
+        const google = signInSource.indexOf("t('auth.signIn.google')");
+        const telegram = signInSource.indexOf("t('auth.signIn.telegram')");
+        const whatsApp = signInSource.indexOf("t('auth.signIn.whatsapp')");
 
         expect(google).toBeGreaterThan(-1);
         expect(telegram).toBeGreaterThan(google);

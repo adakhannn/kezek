@@ -37,6 +37,10 @@ export const authSignInStyles = StyleSheet.create({
     padding: colors.layout.space5,
     ...colors.shadow.lg,
   },
+  languageSwitcher: {
+    alignSelf: 'flex-end',
+    marginBottom: colors.layout.space3,
+  },
   header: {
     alignItems: 'center',
     marginBottom: colors.layout.space5,

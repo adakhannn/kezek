@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { colors } from '../constants/colors';
 import { BookingProvider } from '../contexts/BookingContext';
+import { useLanguage } from '../i18n';
 import { linking } from './linking';
 import {
     AuthStackScreen,
@@ -19,11 +20,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
     const { loading, hasSession } = useRootNavigationSession();
+    const { t, ready: languageReady } = useLanguage();
 
-    if (loading) {
+    // Waits for the stored language too, so the first screen is not drawn in Russian first.
+    if (loading || !languageReady) {
         return (
             <View style={styles.loading}>
-                <LoadingSpinner message="Загрузка..." />
+                <LoadingSpinner message={t('common.loading')} />
             </View>
         );
     }
@@ -32,7 +35,7 @@ export default function RootNavigator() {
         <BookingProvider>
             <NavigationContainer linking={linking}>
                 <Stack.Navigator screenOptions={rootStackScreenOptions}>
-                    {hasSession ? SignedInStackScreens(Stack) : AuthStackScreen(Stack)}
+                    {hasSession ? SignedInStackScreens(Stack, t) : AuthStackScreen(Stack)}
                 </Stack.Navigator>
             </NavigationContainer>
         </BookingProvider>

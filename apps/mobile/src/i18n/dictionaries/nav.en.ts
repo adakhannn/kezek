@@ -1,0 +1,27 @@
+import type { navRu } from './nav.ru';
+
+export const navEn: Record<keyof typeof navRu, string> = {
+    'nav.signIn': 'Sign in',
+    'nav.verify': 'Confirmation',
+    'nav.home': 'Home',
+    'nav.homeTabA11y': 'Home tab',
+    'nav.cabinetTab': 'Cabinet',
+    'nav.cabinet': 'Personal cabinet',
+    'nav.profile': 'Profile',
+    'nav.business': 'My business',
+    'nav.businessTab': 'Business',
+    'nav.staff': 'Workspace',
+    'nav.staffTab': 'Work',
+    'nav.bookingDetails': 'Booking details',
+    'nav.map': 'Branches map',
+    'nav.booking': 'Booking',
+    'nav.booking.branch': 'Choose a branch',
+    'nav.booking.service': 'Choose a service',
+    'nav.booking.staff': 'Choose a master',
+    'nav.booking.date': 'Choose a date',
+    'nav.booking.time': 'Choose a time',
+    'nav.booking.confirm': 'Confirmation',
+    'nav.shifts': 'Shifts and statistics',
+    'nav.shiftQuick': 'My shift',
+    'nav.checkingAccess': 'Checking access...',
+};
