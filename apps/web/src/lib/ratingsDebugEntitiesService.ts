@@ -1,17 +1,11 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
-type AuthClientLike = SuperAdminRoleClient;
-
-type AdminClientLike = {
-    from: SupabaseClient['from'];
-};
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
 export async function ensureSuperAdminAccess({
     supabase,
     userId,
 }: {
-    supabase: AuthClientLike;
+    supabase: SuperAdminRoleClient;
     userId: string;
 }): Promise<
     | { ok: true }
@@ -45,7 +39,7 @@ export async function getRatingsDebugEntities({
     days,
     windowStartStr,
 }: {
-    admin: AdminClientLike;
+    admin: DbTableClient;
     days: number;
     windowStartStr: string;
 }): Promise<{ ok: true; data: unknown }> {

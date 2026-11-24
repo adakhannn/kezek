@@ -1,18 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import type { DbQueryClient } from '@/lib/supabaseTypes';
 
 const E164 = /^\+[1-9]\d{7,14}$/;
 
-type AdminLike = {
-    rpc(
-        fn: 'find_accounts_by_contact',
-        args: { p_phone_digits: string },
-    ): PromiseLike<{ data: Array<{ id: string }> | null; error: { message?: string } | null }>;
-    // PostgREST builder of the profile lookup.
-
-    from: SupabaseClient['from'];
-};
+type AdminLike = DbQueryClient;
 
 /**
  * The account that owns a WhatsApp number, by verified data only (API-03):

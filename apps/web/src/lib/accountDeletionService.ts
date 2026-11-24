@@ -1,5 +1,6 @@
 import { ACTIVE_BOOKING_STATUSES } from '@core-domain/booking';
-import type { SupabaseClient } from '@supabase/supabase-js';
+
+import type { DbClient, DbUpdate } from '@/lib/supabaseTypes';
 
 export type AccountDeletionBlocker = {
     code: 'super_admin' | 'owned_businesses' | 'business_roles' | 'active_staff' | 'active_bookings';
@@ -7,18 +8,7 @@ export type AccountDeletionBlocker = {
     count: number;
 };
 
-type AdminLike = {
-    // Supabase query builders differ for count, select, and mutation calls.
-
-    from: SupabaseClient['from'];
-    rpc(fn: 'super_admin_user_ids'): PromiseLike<{ data: string[] | null; error: { message?: string } | null }>;
-    auth: {
-        admin: {
-            getUserById(id: string): Promise<{ data: { user: { user_metadata?: Record<string, unknown> | null } | null }; error: { message?: string } | null }>;
-            updateUserById(id: string, payload: { user_metadata: Record<string, unknown> }): Promise<{ error: { message?: string } | null }>;
-        };
-    };
-};
+type AdminLike = Pick<DbClient, 'from' | 'rpc' | 'auth'>;
 
 export const ACCOUNT_DELETION_GRACE_DAYS = 7;
 const ACCOUNT_DELETION_CONFIRMATION_PHRASES = new Set(['УДАЛИТЬ', 'DELETE', 'ӨЧҮРҮҮ']);
@@ -127,8 +117,12 @@ export async function cancelAccountDeletion(admin: AdminLike, userId: string) {
     if (error) throw new Error(error.message || 'Не удалось отменить удаление');
     const preferences = request?.preference_snapshot;
     if (preferences && typeof preferences === 'object' && !Array.isArray(preferences)) {
-        const allowed = ['notify_email', 'notify_sms', 'notify_telegram', 'notify_whatsapp'];
-        const restored = Object.fromEntries(Object.entries(preferences).filter(([key, value]) => allowed.includes(key) && typeof value === 'boolean'));
+        const allowed = ['notify_email', 'notify_sms', 'notify_telegram', 'notify_whatsapp'] as const;
+        const restored: DbUpdate<'profiles'> = {};
+        for (const key of allowed) {
+            const value = preferences[key];
+            if (typeof value === 'boolean') restored[key] = value;
+        }
         if (Object.keys(restored).length) await admin.from('profiles').update(restored).eq('id', userId);
     }
     const { data: authData } = await admin.auth.admin.getUserById(userId);

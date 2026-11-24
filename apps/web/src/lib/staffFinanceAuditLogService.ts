@@ -1,4 +1,5 @@
 import { logError } from '@/lib/log';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
 type FieldChange = { field: string; old_value: number | null; new_value: number | null };
 
@@ -19,28 +20,13 @@ type AuditRow = {
     message: string | null;
 };
 
-export type StaffFinanceAuditAdminLike = {
-    from(table: 'finance_settings_audit_log' | 'profiles'): {
-        select: (query: string) => {
-            eq: (column: string, value: unknown) => any;
-            order: (column: string, options: { ascending: boolean }) => any;
-            limit: (value: number) => PromiseLike<{
-                data: unknown[] | null;
-                error: { message: string } | null;
-            }>;
-            in: (column: string, values: string[]) => PromiseLike<{
-                data: Array<{ id: string; full_name: string | null }> | null;
-                error: { message: string } | null;
-            }>;
-        };
-    };
-};
+export type StaffFinanceAuditAdminLike = DbTableClient;
 
 const MAX_ENTRIES = 100;
 
 export async function loadStaffFinanceAuditLog(params: {
     admin: StaffFinanceAuditAdminLike;
-    bizId: string | number;
+    bizId: string;
     staffId: string;
 }): Promise<
     | { ok: true; entries: AuditLogEntry[] }

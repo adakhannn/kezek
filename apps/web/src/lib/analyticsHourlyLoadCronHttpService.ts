@@ -40,7 +40,7 @@ export async function runAnalyticsHourlyLoadCronHttp(
     const results: Array<{ date: string; updated: number }> = [];
 
     for (const day of days) {
-        results.push(await recalcHourlyForDate({ supabase: supabase as never, dateStr: day }));
+        results.push(await recalcHourlyForDate({ supabase, dateStr: day }));
     }
 
     logDebug('AnalyticsHourlyCron', 'Completed hourly load aggregation', {

@@ -1,9 +1,4 @@
-export type StaffDeleteAdminClientLike = {
-    rpc(
-        fn: 'delete_staff_without_history',
-        args: { p_biz_id: string; p_staff_id: string },
-    ): PromiseLike<{ error: { message?: string; code?: string } | null }>;
-};
+import type { DbRpcClient } from '@/lib/supabaseTypes';
 
 type StaffDeleteResult =
     | {
@@ -29,7 +24,7 @@ export async function runStaffDeleteService({
     bizId,
     staffId,
 }: {
-    admin: StaffDeleteAdminClientLike;
+    admin: DbRpcClient;
     bizId: string;
     staffId: string;
 }): Promise<StaffDeleteResult> {

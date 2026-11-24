@@ -18,7 +18,7 @@ export async function runMeVisitPackagesHttp(req: Request): Promise<NextResponse
 
   const status = new URL(req.url).searchParams.get('status');
   const result = await listCurrentUserVisitPackages({
-    admin: admin as never,
+    admin,
     user,
     includeAll: status === 'all',
     today: todayDateString(),

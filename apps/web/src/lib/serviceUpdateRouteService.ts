@@ -1,4 +1,5 @@
 import { logError } from '@/lib/log';
+import { nullableArg, type DbRpcClient } from '@/lib/supabaseTypes';
 
 export type ServiceUpdateBody = {
     name_ru: string;
@@ -23,12 +24,6 @@ type BaseError = {
 
 type Success = { ok: true };
 
-type RpcError = { code?: string; message: string; details?: string | null };
-
-export type ServiceUpdateAdminClientLike = {
-    rpc(fn: 'update_service_group', args: Record<string, unknown>): PromiseLike<{ data: unknown; error: RpcError | null }>;
-};
-
 function normalizeOptionalName(value?: string | null) {
     return value?.trim() || null;
 }
@@ -49,7 +44,7 @@ export async function runServiceUpdateFlow({
     serviceId,
     body,
 }: {
-    admin: ServiceUpdateAdminClientLike;
+    admin: DbRpcClient;
     bizId: string;
     serviceId: string;
     body: ServiceUpdateBody;
@@ -85,8 +80,8 @@ export async function runServiceUpdateFlow({
         p_service_id: serviceId,
         p_branch_ids: branchIds,
         p_name_ru: body.name_ru.trim(),
-        p_name_ky: normalizeOptionalName(body.name_ky),
-        p_name_en: normalizeOptionalName(body.name_en),
+        p_name_ky: nullableArg(normalizeOptionalName(body.name_ky)),
+        p_name_en: nullableArg(normalizeOptionalName(body.name_en)),
         p_duration_min: body.duration_min,
         p_price_from: body.price_from,
         p_price_to: body.price_to,

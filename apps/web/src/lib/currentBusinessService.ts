@@ -1,6 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { BusinessAccessReadError, managerAccessToBusiness } from './businessManagerAccess';
+
+import type { DbAuthClient, DbTableClient } from '@/lib/supabaseTypes';
 
 const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
 
@@ -27,22 +27,12 @@ type Failure = {
     status: number;
 };
 
-export type CurrentBusinessServerClientLike = {
-    auth: {
-        getUser: () => Promise<{ data: { user: { id: string } | null } }>;
-    };
-};
-
-export type CurrentBusinessAdminClientLike = {
-    from: SupabaseClient['from'];
-};
-
 export async function getCurrentBusinessState({
     supabase,
     admin,
 }: {
-    supabase: CurrentBusinessServerClientLike;
-    admin: CurrentBusinessAdminClientLike;
+    supabase: DbAuthClient;
+    admin: DbTableClient;
 }): Promise<
     | {
           ok: true;
@@ -130,8 +120,8 @@ export async function setCurrentBusinessState({
     admin,
     bizId,
 }: {
-    supabase: CurrentBusinessServerClientLike;
-    admin: CurrentBusinessAdminClientLike;
+    supabase: DbAuthClient;
+    admin: DbTableClient;
     bizId: string | null;
 }): Promise<{ ok: true } | Failure> {
     const {

@@ -14,7 +14,7 @@ export async function runStaffFinanceAuditLogHttp(
         { scope: 'FinanceAuditLog', staffIdParamName: 'id', staffSelect: 'id, biz_id' },
         async ({ admin, bizId, staffId }) => {
             const result = await loadStaffFinanceAuditLog({
-                admin: admin as never,
+                admin,
                 bizId,
                 staffId,
             });

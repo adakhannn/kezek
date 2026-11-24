@@ -1,12 +1,10 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
 type UserLike = {
     id: string;
 };
 
-type PackagesAdminLike = {
-    from: SupabaseClient['from'];
-};
+type PackagesAdminLike = DbTableClient;
 
 type VisitPackageRow = {
     id: string;

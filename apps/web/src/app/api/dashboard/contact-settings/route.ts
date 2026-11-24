@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             const admin = getServiceClient();
             const [{ data: isSuper }, owner] = await Promise.all([
                 supabase.rpc('is_super_admin'),
-                isBusinessOwner({ admin: admin as never, userId, bizId }),
+                isBusinessOwner({ admin, userId, bizId }),
             ]);
 
             if (!isSuper && !owner) {

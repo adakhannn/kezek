@@ -1,7 +1,8 @@
 import { isFinanceDate } from '@/lib/finance/calendar';
 import type { StaffFinanceStatsShiftItem } from '@/lib/finance/types';
+import { nullableArg, type DbRpcClient } from '@/lib/supabaseTypes';
 
-export type ReportClient = { rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message: string } | null }> };
+export type ReportClient = DbRpcClient;
 export type ReportStaff = {
     id: string; full_name: string | null; is_active: boolean; branch_id: string | null;
     hourly_rate: number | null; percent_master: number | null; percent_salon: number | null;
@@ -31,7 +32,7 @@ export async function readFinanceReport(client: ReportClient, scope: {
 }): Promise<FinanceReport> {
     const { data, error } = await client.rpc('read_finance_report_snapshot', {
         p_biz_id: scope.bizId, p_date_from: scope.dateFrom, p_date_to: scope.dateTo,
-        p_staff_id: scope.staffId ?? null, p_branch_id: scope.branchId ?? null,
+        p_staff_id: nullableArg(scope.staffId), p_branch_id: nullableArg(scope.branchId),
     });
     if (error) throw new Error(error.message);
     const report = data as FinanceReport | null;

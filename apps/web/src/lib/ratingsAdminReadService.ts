@@ -24,5 +24,5 @@ export async function readRatingsStatusForCaller(errorsWindowDaysParam: string |
 export async function readRatingsJobsForCaller() {
   const caller = await getCallerAdmin();
   if (!caller.ok) return caller;
-  return getRatingsJobs({ admin: caller.admin as never });
+  return getRatingsJobs({ admin: caller.admin });
 }

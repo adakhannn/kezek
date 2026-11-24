@@ -9,7 +9,7 @@ export async function runMobileBusinessesHttp(req: Request): Promise<NextRespons
     const page = Number(url.searchParams.get('page') ?? '1');
     const limit = Number(url.searchParams.get('limit') ?? '20');
     const result = await listMobileBusinesses({
-        supabase: createSupabaseAnonClient() as never,
+        supabase: createSupabaseAnonClient(),
         search: url.searchParams.get('search') ?? undefined,
         category: url.searchParams.get('category') ?? undefined,
         page: Number.isFinite(page) ? page : 1,

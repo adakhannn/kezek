@@ -1,20 +1,19 @@
+import { asDbClient } from '@/__tests__/helpers/dbClientMock';
 import {
   clearSupabaseAuthCookies,
   invalidateUserRefreshTokens,
-  type SignOutAdminLike,
-  type SignOutUserClientLike,
 } from '@/lib/authSignOutService';
 
 describe('authSignOutService', () => {
   test('invalidates refresh tokens for authenticated user', async () => {
-    const userClient: jest.Mocked<SignOutUserClientLike> = {
+    const userClient = {
       auth: {
         getUser: jest.fn().mockResolvedValue({
           data: { user: { id: 'user-id' } },
         }),
       },
     };
-    const admin: jest.Mocked<SignOutAdminLike> = {
+    const admin = {
       auth: {
         admin: {
           invalidateRefreshTokens: jest.fn().mockResolvedValue(undefined),
@@ -22,27 +21,27 @@ describe('authSignOutService', () => {
       },
     };
 
-    const result = await invalidateUserRefreshTokens({ userClient, admin });
+    const result = await invalidateUserRefreshTokens({ userClient: asDbClient(userClient), admin: asDbClient(admin) });
 
     expect(result).toEqual({ userId: 'user-id' });
     expect(admin.auth.admin.invalidateRefreshTokens).toHaveBeenCalledWith('user-id');
   });
 
   test('skips invalidation for anonymous user', async () => {
-    const userClient: jest.Mocked<SignOutUserClientLike> = {
+    const userClient = {
       auth: {
         getUser: jest.fn().mockResolvedValue({
           data: { user: null },
         }),
       },
     };
-    const admin: jest.Mocked<SignOutAdminLike> = {
+    const admin = {
       auth: {
         admin: {},
       },
     };
 
-    const result = await invalidateUserRefreshTokens({ userClient, admin });
+    const result = await invalidateUserRefreshTokens({ userClient: asDbClient(userClient), admin: asDbClient(admin) });
 
     expect(result).toEqual({ userId: null });
   });

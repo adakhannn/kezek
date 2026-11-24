@@ -4,7 +4,6 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { runStaffDeleteService } from '@/lib/staffDeleteService';
-import type { StaffDeleteAdminClientLike } from '@/lib/staffDeleteService';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function runStaffDeleteHttp(context: unknown): Promise<NextResponse> {
@@ -14,7 +13,7 @@ export async function runStaffDeleteHttp(context: unknown): Promise<NextResponse
   // The database command deletes only a master without history, in one transaction; with
   // either schedule mode a master who has bookings, shifts or published schedules is refused.
   const result = await runStaffDeleteService({
-    admin: getServiceClient() as unknown as StaffDeleteAdminClientLike,
+    admin: getServiceClient(),
     bizId,
     staffId,
   });

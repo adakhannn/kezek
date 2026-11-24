@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { logError } from '@/lib/log';
+import type { DbClient } from '@/lib/supabaseTypes';
 import { issueSessionForVerifiedUser, type VerifiedIdentitySession } from '@/lib/verifiedIdentitySession';
 
 type TelegramNormalizedData = {
@@ -11,34 +12,15 @@ type TelegramNormalizedData = {
 };
 
 type ProfileRow = {
-    id: string | null;
+    id: string;
     telegram_id: number | null;
     full_name: string | null;
 };
 
-type DbError = { message?: string } | null;
-type QueryResult<T> = { data: T | null; error: DbError };
-type QueryChain<T> = PromiseLike<QueryResult<T>> & {
-    select: (columns: string) => QueryChain<T>;
-    eq: (column: string, value: unknown) => QueryChain<T>;
-    maybeSingle: () => Promise<QueryResult<T>>;
-    update: (payload: unknown) => QueryChain<T>;
-    insert: (payload: unknown) => Promise<{ error: DbError }>;
-};
-
-export type TelegramLoginAdminClientLike = {
-    from<T = unknown>(table: string): QueryChain<T>;
-    auth: {
-        admin: {
-            createUser: (payload: unknown) => Promise<{ data?: { user?: { id: string } }; error?: { message?: string } | null }>;
-            getUserById: (id: string) => Promise<{ data?: { user?: { email?: string | null } }; error?: { message?: string } | null }>;
-            updateUserById: (id: string, payload: unknown) => Promise<{ data?: unknown; error?: { message?: string } | null }>;
-        };
-    };
-};
+type TelegramLoginAdminClient = Pick<DbClient, 'from' | 'auth'>;
 
 type TelegramLoginInput = {
-    admin: TelegramLoginAdminClientLike;
+    admin: TelegramLoginAdminClient;
     normalized: TelegramNormalizedData;
     randomHex?: (size: number) => string;
     issueSession?: (userId: string) => Promise<VerifiedIdentitySession>;
@@ -67,13 +49,12 @@ function defaultRandomHex(size: number) {
     return crypto.randomBytes(size).toString('hex');
 }
 
-async function findExistingProfile(admin: TelegramLoginAdminClientLike, telegramId: number) {
-    const profileResponse = (admin
-        .from<ProfileRow>('profiles')
+async function findExistingProfile(admin: TelegramLoginAdminClient, telegramId: number) {
+    const { data, error } = await admin
+        .from('profiles')
         .select('id, telegram_id, full_name')
         .eq('telegram_id', telegramId)
-        .maybeSingle() as Promise<{ data: ProfileRow | null; error: { message?: string } | null }>);
-    const { data, error } = await profileResponse;
+        .maybeSingle();
 
     if (error) {
         logError('TelegramLogin', 'Profile select error', error);
@@ -83,14 +64,14 @@ async function findExistingProfile(admin: TelegramLoginAdminClientLike, telegram
 }
 
 async function updateExistingProfile(
-    admin: TelegramLoginAdminClientLike,
+    admin: TelegramLoginAdminClient,
     profile: ProfileRow,
     normalized: TelegramNormalizedData,
 ) {
     const providerNameMayFillBlankProfile =
         !profile.full_name?.trim() && !!normalized.full_name?.trim();
     const { error } = await admin
-        .from<ProfileRow>('profiles')
+        .from('profiles')
         .update({
             ...(providerNameMayFillBlankProfile ? { full_name: normalized.full_name } : {}),
             telegram_username: normalized.telegram_username,
@@ -105,7 +86,7 @@ async function updateExistingProfile(
 }
 
 async function createNewTelegramUser(
-    admin: TelegramLoginAdminClientLike,
+    admin: TelegramLoginAdminClient,
     normalized: TelegramNormalizedData,
     initialPassword: string
 ) {

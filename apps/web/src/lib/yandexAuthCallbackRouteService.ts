@@ -2,7 +2,6 @@ import { logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { runYandexOAuthCallback } from '@/lib/yandexAuthCallbackService';
 import type {
-    YandexAuthAdminClientLike,
     YandexUserInfo,
 } from '@/lib/yandexAuthCallbackService';
 import { getYandexCallbackUrl, getYandexOAuthCredentials, getYandexPublicOrigin } from '@/lib/yandexOAuthConfig';
@@ -108,7 +107,7 @@ export async function runYandexAuthCallbackRoute({
         logWarn('YandexAuth', 'OAuth callback request failed', error);
         return buildAuthFailureRedirect(origin, 'yandex_exchange_failed');
     }
-    const admin = getServiceClient() as unknown as YandexAuthAdminClientLike;
+    const admin = getServiceClient();
 
     const result = await runYandexOAuthCallback({
         admin,

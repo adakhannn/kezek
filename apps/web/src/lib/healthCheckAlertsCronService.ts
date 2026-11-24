@@ -1,6 +1,7 @@
 import type { BackgroundQueueHealth } from '@/lib/backgroundQueueHealth';
 import type { CronHealthStatus } from '@/lib/cronExecutionHealth';
 import { logError } from '@/lib/log';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
 type Alert = {
     type: 'error' | 'warning';
@@ -15,22 +16,7 @@ type QueryResult<T> = {
     error?: DbError;
 };
 
-type QueryChain<T> = PromiseLike<QueryResult<T>> & {
-    select: (columns: string, options?: { count?: 'exact'; head?: boolean }) => QueryChain<T>;
-    eq: (column: string, value: unknown) => QueryChain<T>;
-    gte: (column: string, value: unknown) => QueryChain<T>;
-    lt: (column: string, value: unknown) => QueryChain<T>;
-    order: (
-        column: string,
-        options?: { ascending?: boolean },
-    ) => QueryChain<T>;
-    limit: (count: number) => QueryChain<T>;
-    maybeSingle: () => Promise<QueryResult<T>>;
-};
-
-type AdminClientLike = {
-    from<T = unknown>(table: string): QueryChain<T>;
-};
+type AdminClient = DbTableClient;
 
 type EmailSenderLike = (alerts: Alert[]) => Promise<{ success: boolean; error?: string }>;
 
@@ -62,13 +48,13 @@ function checkedCount(response: QueryResult<unknown>, source: string): number {
 }
 
 async function getAnalyticsEventCount(
-    admin: AdminClientLike,
+    admin: AdminClient,
     eventType: string,
     fromIso: string,
     toIsoValue: string,
 ): Promise<number> {
     const response = await admin
-        .from<{ id: string }[]>('analytics_events')
+        .from('analytics_events')
         .select('id', { count: 'exact', head: true })
         .eq('event_type', eventType)
         .gte('created_at', fromIso)
@@ -94,7 +80,7 @@ async function collectHealthCheckAlerts({
     cronStatuses = [],
     queueStatuses = [],
 }: {
-    admin: AdminClientLike;
+    admin: AdminClient;
     formatDate: (date: Date, tz: string, format: string) => string;
     tz: string;
     now: Date;
@@ -134,7 +120,7 @@ async function collectHealthCheckAlerts({
     const twoDaysAgoYmd = formatDate(twoDaysAgo, tz, 'yyyy-MM-dd');
 
     const openShifts = await admin
-        .from<{ id: string }[]>('staff_shifts')
+        .from('staff_shifts')
         .select('id', { count: 'exact', head: true })
         .eq('status', 'open')
         .lt('shift_date', twoDaysAgoYmd);
@@ -150,19 +136,19 @@ async function collectHealthCheckAlerts({
 
     const [staffResult, branchResult, bizResult] = await Promise.all([
         admin
-            .from<{ metric_date: string }>('staff_day_metrics')
+            .from('staff_day_metrics')
             .select('metric_date')
             .order('metric_date', { ascending: false })
             .limit(1)
             .maybeSingle(),
         admin
-            .from<{ metric_date: string }>('branch_day_metrics')
+            .from('branch_day_metrics')
             .select('metric_date')
             .order('metric_date', { ascending: false })
             .limit(1)
             .maybeSingle(),
         admin
-            .from<{ metric_date: string }>('biz_day_metrics')
+            .from('biz_day_metrics')
             .select('metric_date')
             .order('metric_date', { ascending: false })
             .limit(1)
@@ -201,7 +187,7 @@ async function collectHealthCheckAlerts({
     }
 
     const promoResult = await admin
-        .from<{ created_at: string }>('client_promotion_usage')
+        .from('client_promotion_usage')
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
@@ -209,7 +195,7 @@ async function collectHealthCheckAlerts({
     const lastPromoUsage = checkedData(promoResult, 'client_promotion_usage');
 
     const activePromotions = await admin
-        .from<{ id: string }[]>('branch_promotions')
+        .from('branch_promotions')
         .select('id', { count: 'exact', head: true })
         .eq('is_active', true);
 

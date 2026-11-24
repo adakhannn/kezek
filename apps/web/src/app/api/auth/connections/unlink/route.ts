@@ -24,7 +24,7 @@ export const POST = withLocalizedMessages(async function POST(request: Request) 
     }
 
     const result = await unlinkSocialIdentity({
-        admin: createSupabaseAdminClient() as never,
+        admin: createSupabaseAdminClient(),
         userId: user.id,
         provider: provider as SocialProvider,
     });

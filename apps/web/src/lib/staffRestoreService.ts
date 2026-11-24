@@ -1,3 +1,5 @@
+import type { DbClient, DbTableClient } from '@/lib/supabaseTypes';
+
 type StaffRecord = {
     id: string;
     biz_id: string;
@@ -6,20 +8,12 @@ type StaffRecord = {
 };
 
 type CheckResourceLike = (
-    admin: any,
-    table: string,
+    admin: DbClient,
+    table: 'staff',
     resourceId: string,
     bizId: string,
     select: string,
 ) => Promise<{ data?: StaffRecord | null; error?: unknown }>;
-
-type ServiceClientLike = {
-    from(table: string): any;
-};
-
-type AdminClientLike = {
-    from(table: string): any;
-};
 
 export async function runStaffRestore({
     admin,
@@ -28,8 +22,8 @@ export async function runStaffRestore({
     staffId,
     checkResourceBelongsToBiz,
 }: {
-    admin: ServiceClientLike;
-    roleAdmin: AdminClientLike;
+    admin: DbClient;
+    roleAdmin: DbTableClient;
     bizId: string;
     staffId: string;
     checkResourceBelongsToBiz: CheckResourceLike;

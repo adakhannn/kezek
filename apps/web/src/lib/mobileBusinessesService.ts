@@ -1,5 +1,7 @@
 import type { PublicBusinessDto } from '@shared-client/types';
 
+import type { DbTableClient } from '@/lib/supabaseTypes';
+
 type BusinessRow = {
     id: string | number;
     name: string | null;
@@ -8,31 +10,6 @@ type BusinessRow = {
     phones: string[] | null;
     categories: string[] | null;
     rating_score: number | null;
-};
-
-type BusinessesQueryLike = {
-    or: (filter: string) => BusinessesQueryLike;
-    contains: (column: string, value: string[]) => BusinessesQueryLike;
-    order: (
-        column: string,
-        options: { ascending: boolean },
-    ) => {
-        range: (
-            from: number,
-            to: number,
-        ) => Promise<{
-            data: unknown[] | null;
-            error: { message: string } | null;
-        }>;
-    };
-};
-
-type BusinessesAnonLike = {
-    from(table: string): {
-        select: (columns: string) => {
-            eq: (column: string, value: boolean) => BusinessesQueryLike;
-        };
-    };
 };
 
 export type MobileBusinessesResult =
@@ -55,7 +32,7 @@ export async function listMobileBusinesses({
     page = 1,
     limit = 20,
 }: {
-    supabase: BusinessesAnonLike;
+    supabase: DbTableClient;
     search?: string;
     category?: string;
     page?: number;

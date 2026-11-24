@@ -20,7 +20,7 @@ export async function runListMobileBookingsHttp(req: Request): Promise<NextRespo
     }
 
     const result = await listMobileBookings({
-        client: authResult.client as never,
+        client: authResult.client,
         userId: authResult.user.id,
     });
 
@@ -47,7 +47,7 @@ export async function runGetMobileBookingDetailsHttp(
     }
 
     const result = await getMobileBookingDetails({
-        client: authResult.client as never,
+        client: authResult.client,
         userId: authResult.user.id,
         bookingId: await getRouteParamUuid(context, 'id'),
     });
@@ -75,7 +75,7 @@ export async function runCancelMobileBookingHttp(
     }
 
     const result = await cancelMobileBooking({
-        client: authResult.client as never,
+        client: authResult.client,
         userId: authResult.user.id,
         bookingId: await getRouteParamUuid(context, 'id'),
     });

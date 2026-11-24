@@ -33,7 +33,7 @@ export async function runTelegramLoginRoute(
     let admin: Parameters<typeof handleTelegramLogin>[0]['admin'];
 
     try {
-        admin = getServiceClient() as unknown as Parameters<typeof handleTelegramLogin>[0]['admin'];
+        admin = getServiceClient();
     } catch {
         return {
             ok: false,

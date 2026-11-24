@@ -1,21 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
+import type { DbClient } from '@/lib/supabaseTypes';
+import type { Database } from '@/types/supabase';
+
 type UserLike = {
     id: string;
 };
 
-type AuthClientLike = {
-    auth: {
-        getUser: () => Promise<{
-            data: { user: UserLike | null };
-            error?: { message?: string } | null;
-        }>;
-    };
-};
-
 type MobileAuthSuccess = {
     ok: true;
-    client: AuthClientLike;
+    client: DbClient;
     user: UserLike;
 };
 
@@ -37,16 +31,16 @@ export async function resolveMobileBookingAuth({
     authorizationHeader: string | null;
     supabaseUrl: string;
     anonKey: string;
-    createServerClient: () => Promise<AuthClientLike>;
+    createServerClient: () => Promise<DbClient>;
 }): Promise<MobileAuthResult> {
     const bearerToken = authorizationHeader?.startsWith('Bearer ')
         ? authorizationHeader.substring(7)
         : null;
 
-    let client: AuthClientLike;
+    let client: DbClient;
 
     if (bearerToken) {
-        client = createClient(supabaseUrl, anonKey, {
+        client = createClient<Database>(supabaseUrl, anonKey, {
             global: {
                 headers: {
                     Authorization: `Bearer ${bearerToken}`,
@@ -56,7 +50,7 @@ export async function resolveMobileBookingAuth({
                 persistSession: false,
                 autoRefreshToken: false,
             },
-        }) as unknown as AuthClientLike;
+        });
     } else {
         client = await createServerClient();
     }

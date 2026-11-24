@@ -14,16 +14,16 @@ export type CronExecutionStore = {
 
 export function createCronExecutionStore(): CronExecutionStore {
     const client = getServiceClient();
-    const rpc = async (name: string, args: Record<string, unknown>) => {
-        // Dynamic dispatch over two fixed tracking RPCs; argument shapes are checked by SQL.
-        const { error } = await client.rpc(name as never, args as never).abortSignal(AbortSignal.timeout(3000));
+    const checked = async (call: PromiseLike<{ error: unknown }>) => {
+        const { error } = await call;
         if (error) throw new Error('CRON_TRACKING_UNAVAILABLE');
     };
     return {
-        start: (id, job) => rpc('start_cron_execution', { p_id: id, p_job: job }),
-        finish: (id, outcome, status, code = '') => rpc('finish_cron_execution', {
+        start: async (id, job) => checked(client.rpc('start_cron_execution', { p_id: id, p_job: job })
+            .abortSignal(AbortSignal.timeout(3000))),
+        finish: async (id, outcome, status, code = '') => checked(client.rpc('finish_cron_execution', {
             p_id: id, p_outcome: outcome, p_http_status: status, p_error_code: code,
-        }),
+        }).abortSignal(AbortSignal.timeout(3000))),
     };
 }
 

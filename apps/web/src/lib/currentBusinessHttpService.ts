@@ -1,22 +1,20 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import {
     getCurrentBusinessState,
     setCurrentBusinessState,
-    type CurrentBusinessAdminClientLike,
-    type CurrentBusinessServerClientLike,
 } from '@/lib/currentBusinessService';
 import { logWarn } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import type { DbClient } from '@/lib/supabaseTypes';
 
 export async function getCurrentBusinessClients(): Promise<{
-    supabase: SupabaseClient;
-    admin: SupabaseClient;
+    supabase: DbClient;
+    admin: DbClient;
 }> {
     const supabase = await createSupabaseServerClient();
-    let admin: SupabaseClient = supabase;
+    let admin: DbClient = supabase;
     try {
         admin = createSupabaseAdminClient();
     } catch (error) {
@@ -36,8 +34,8 @@ export async function getCurrentBusinessClients(): Promise<{
 export async function runGetCurrentBusinessHttp(): Promise<NextResponse> {
     const { supabase, admin } = await getCurrentBusinessClients();
     const result = await getCurrentBusinessState({
-        supabase: supabase as unknown as CurrentBusinessServerClientLike,
-        admin: admin as unknown as CurrentBusinessAdminClientLike,
+        supabase,
+        admin,
     });
 
     if (!result.ok) {
@@ -53,8 +51,8 @@ export async function runSetCurrentBusinessHttp(req: Request): Promise<NextRespo
     const bizId = typeof body.bizId === 'string' ? body.bizId.trim() : null;
 
     const result = await setCurrentBusinessState({
-        supabase: supabase as unknown as CurrentBusinessServerClientLike,
-        admin: admin as unknown as CurrentBusinessAdminClientLike,
+        supabase,
+        admin,
         bizId,
     });
 

@@ -10,15 +10,14 @@ import { getServiceClient } from '@/lib/supabaseService';
 
 export async function runStaffRestoreHttp(context: unknown): Promise<NextResponse> {
   const result = await runStaffRestore({
-    admin: getServiceClient() as never,
-    roleAdmin: createSupabaseAdminClient() as never,
+    admin: getServiceClient(),
+    roleAdmin: createSupabaseAdminClient(),
     bizId: (await getBizContextForManagers()).bizId,
     staffId: await getRouteParamRequired(context, 'id'),
     checkResourceBelongsToBiz: (admin, table, resourceId, bizId, select) =>
-      checkResourceBelongsToBiz(admin, table, resourceId, bizId, select) as Promise<{
-        data?: { id: string; biz_id: string; user_id: string | null; is_active: boolean } | null;
-        error?: unknown;
-      }>,
+      checkResourceBelongsToBiz<{ id: string; biz_id: string; user_id: string | null; is_active: boolean }>(
+        admin, table, resourceId, bizId, select,
+      ),
   });
 
   if (!result.ok) {

@@ -41,7 +41,7 @@ export async function runRatingsDebugEntitiesHttp(req: Request): Promise<NextRes
 
     const tz = getTimezone();
     const result = await getRatingsDebugEntities({
-        admin: getServiceClient() as never,
+        admin: getServiceClient(),
         days,
         windowStartStr: addDaysToDateString(todayDateString(tz), -days, tz),
     });

@@ -1,11 +1,5 @@
 import { logError } from '@/lib/log';
-
-type AdminClientLike = {
-    rpc(fn: string, params: Record<string, unknown>): PromiseLike<{ error?: { message: string } | null }>;
-    from(table: string): {
-        insert: (payload: Record<string, unknown>) => PromiseLike<{ error?: { message: string } | null }>;
-    };
-};
+import type { DbQueryClient } from '@/lib/supabaseTypes';
 
 export type RatingsManualRecalculateInput = {
     entity_type?: 'staff' | 'branch' | 'biz';
@@ -23,7 +17,7 @@ function validDate(value: unknown): value is string {
 }
 
 export async function runRatingsManualRecalculate({ admin, userId, body }: {
-    admin: AdminClientLike;
+    admin: DbQueryClient;
     userId: string;
     body: RatingsManualRecalculateInput;
 }): Promise<
@@ -41,13 +35,18 @@ export async function runRatingsManualRecalculate({ admin, userId, body }: {
     const action = hasRange ? 'recalculate_metrics' as const : 'recalculate_rating' as const;
     let errorMessage: string | null = null;
     try {
-        if (hasRange) {
+        // validDate narrows the types; invalid ranges were rejected above.
+        if (hasRange && validDate(date_from) && validDate(date_to)) {
             const result = await admin.rpc('recalculate_ratings_for_date_range', {
                 p_start_date: date_from, p_end_date: date_to,
             });
             if (result.error) throw new Error(result.error.message);
         }
-        const result = await admin.rpc(`calculate_${entity_type}_rating`, { [`p_${entity_type}_id`]: entity_id });
+        const result = entity_type === 'staff'
+            ? await admin.rpc('calculate_staff_rating', { p_staff_id: entity_id })
+            : entity_type === 'branch'
+                ? await admin.rpc('calculate_branch_rating', { p_branch_id: entity_id })
+                : await admin.rpc('calculate_biz_rating', { p_biz_id: entity_id });
         if (result.error) throw new Error(result.error.message);
     } catch (error) {
         errorMessage = error instanceof Error ? error.message : String(error);

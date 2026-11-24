@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import { logDebug, logError } from '@/lib/log';
 import { buildSessionCallbackUrl } from '@/lib/sessionCallbackUrl';
+import type { DbClient } from '@/lib/supabaseTypes';
 import { issueSessionForVerifiedUser } from '@/lib/verifiedIdentitySession';
 
 export type YandexUserInfo = {
@@ -13,32 +14,10 @@ export type YandexUserInfo = {
     first_name?: string | null;
 };
 
-type AuthUserLike = {
-    id: string;
-    email?: string | null;
-    user_metadata?: Record<string, unknown> | null;
-};
-
-export type YandexAuthAdminClientLike = {
-    // Supabase query builders vary by operation in this service boundary.
-
-    from(table: string): any;
-    auth: {
-        admin: {
-            createUser: (payload: unknown) => Promise<{ data?: { user?: AuthUserLike }; error?: { message?: string } | null }>;
-            getUserById: (id: string) => Promise<{ data?: { user?: AuthUserLike }; error?: { message?: string } | null }>;
-            updateUserById: (id: string, payload: unknown) => Promise<{ data?: unknown; error?: { message?: string } | null }>;
-        };
-        signInWithPassword: (payload: { email: string; password: string }) => Promise<{
-            data: { session?: { access_token: string; refresh_token: string } | null };
-            error?: { message?: string } | null;
-        }>;
-    };
-    rpc(name: string, params: Record<string, unknown>): Promise<{ data?: unknown; error: { message?: string } | null }>;
-};
+export type YandexAuthAdminClient = Pick<DbClient, 'from' | 'auth' | 'rpc'>;
 
 type RunYandexOAuthCallbackInput = {
-    admin: YandexAuthAdminClientLike;
+    admin: YandexAuthAdminClient;
     yandexUser: YandexUserInfo;
     origin: string;
     redirectTo: string;
@@ -72,17 +51,12 @@ function redirectWithError(origin: string, message: string) {
     return `${origin}/auth/sign-in?error=${encodeURIComponent(message)}`;
 }
 
-async function findExistingProfile(admin: YandexAuthAdminClientLike, yandexUser: YandexUserInfo) {
-    const response = (admin
+async function findExistingProfile(admin: YandexAuthAdminClient, yandexUser: YandexUserInfo) {
+    const { data, error } = await admin
         .from('profiles')
         .select('id, yandex_id, full_name')
         .eq('yandex_id', String(yandexUser.id))
-        .maybeSingle() as Promise<{
-            data: { id: string | null; yandex_id: string | null; full_name: string | null } | null;
-            error: { message?: string } | null;
-        }>);
-
-    const { data, error } = await response;
+        .maybeSingle();
     if (error) {
         logError('YandexAuth', 'Profile select error', error);
     }
@@ -90,8 +64,8 @@ async function findExistingProfile(admin: YandexAuthAdminClientLike, yandexUser:
 }
 
 async function updateExistingProfile(
-    admin: YandexAuthAdminClientLike,
-    profile: { id: string | null; full_name: string | null },
+    admin: YandexAuthAdminClient,
+    profile: { id: string; full_name: string | null },
     yandexUser: YandexUserInfo,
 ) {
     const name = providerName(yandexUser);
@@ -108,13 +82,12 @@ async function updateExistingProfile(
     }
 }
 
-async function ensureProfile(admin: YandexAuthAdminClientLike, userId: string, yandexUser: YandexUserInfo) {
-    const existingProfileResponse = (admin
+async function ensureProfile(admin: YandexAuthAdminClient, userId: string, yandexUser: YandexUserInfo) {
+    const { data: existingProfile } = await admin
         .from('profiles')
         .select('id, full_name')
         .eq('id', userId)
-        .maybeSingle() as Promise<{ data: { id: string; full_name: string | null } | null }>);
-    const { data: existingProfile } = await existingProfileResponse;
+        .maybeSingle();
 
     if (!existingProfile) {
         const { error } = await admin.from('profiles').insert({
@@ -132,7 +105,7 @@ async function ensureProfile(admin: YandexAuthAdminClientLike, userId: string, y
 }
 
 async function syncYandexNotificationEmail(
-    admin: YandexAuthAdminClientLike,
+    admin: YandexAuthAdminClient,
     userId: string,
     yandexUser: YandexUserInfo,
 ) {
@@ -149,7 +122,7 @@ async function syncYandexNotificationEmail(
 }
 
 async function resolveUserViaEmailDuplicate(
-    admin: YandexAuthAdminClientLike,
+    admin: YandexAuthAdminClient,
     origin: string,
     email: string,
     yandexUser: YandexUserInfo
@@ -182,7 +155,7 @@ async function resolveUserViaEmailDuplicate(
 }
 
 async function createOrFindUser(
-    admin: YandexAuthAdminClientLike,
+    admin: YandexAuthAdminClient,
     origin: string,
     yandexUser: YandexUserInfo,
     randomHex: (size: number) => string

@@ -7,9 +7,10 @@ import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import type { AccountDeletionBlocker } from '@/lib/accountDeletionService';
 import { formatLocalizedDate } from '@/lib/kyDateFormat';
 
-type Blocker = { code: string; message: string; count: number };
+type Blocker = AccountDeletionBlocker;
 type State = {
     request: { status: string; requested_at: string; scheduled_for: string } | null;
     blockers: Blocker[];
@@ -87,7 +88,7 @@ export function AccountDeletionPanel() {
         })
         : null;
     const blockerMessage = (blocker: Blocker) => t(
-        `cabinet.profile.deletion.blocker.${blocker.code}` as never,
+        `cabinet.profile.deletion.blocker.${blocker.code}`,
         blocker.message,
     );
 

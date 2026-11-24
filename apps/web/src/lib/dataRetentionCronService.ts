@@ -1,8 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { logError } from '@/lib/log';
+import type { DbRpcClient } from '@/lib/supabaseTypes';
 
-type ServiceClientLike = Pick<SupabaseClient, 'rpc'>;
 type Summary = Record<string, number | string>;
 const STEPS = [
     { rpc: 'cleanup_old_api_metrics', params: { p_keep_days: 90 }, count: 'api_metrics_deleted', error: 'api_metrics_error' },
@@ -17,7 +15,7 @@ const STEPS = [
 ] as const;
 
 /** Independent cleanup commands keep their own committed results on partial failure. */
-export async function runDataRetention({ supabase }: { supabase: ServiceClientLike }): Promise<
+export async function runDataRetention({ supabase }: { supabase: DbRpcClient }): Promise<
     | { ok: true; data: Summary & { message: string } }
     | { ok: false; error: 'internal'; message: string; status: 500; details: Summary }
 > {

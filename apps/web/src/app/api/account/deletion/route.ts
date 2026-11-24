@@ -17,7 +17,7 @@ export const GET = withLocalizedMessages(async function GET() {
     const { user, admin } = await context();
     if (!user) return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     try {
-        return createSuccessResponse(await getAccountDeletionState(admin as never, user.id));
+        return createSuccessResponse(await getAccountDeletionState(admin, user.id));
     } catch (error) {
         logError('AccountDeletion', 'Failed to load account deletion state', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка проверки аккаунта', undefined, 500);
@@ -34,7 +34,7 @@ export const POST = withLocalizedMessages(async function POST(request: Request) 
         return createErrorResponse('validation', 'Неверный формат запроса', undefined, 400);
     }
     try {
-        const result = await requestAccountDeletion(admin as never, user.id, confirmation);
+        const result = await requestAccountDeletion(admin, user.id, confirmation);
         if (!result.ok) return createErrorResponse('validation', result.message, { code: result.code, blockers: result.blockers }, result.status);
         return createSuccessResponse(result);
     } catch (error) {
@@ -47,7 +47,7 @@ export const DELETE = withLocalizedMessages(async function DELETE() {
     const { user, admin } = await context();
     if (!user) return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     try {
-        return createSuccessResponse(await cancelAccountDeletion(admin as never, user.id));
+        return createSuccessResponse(await cancelAccountDeletion(admin, user.id));
     } catch (error) {
         logError('AccountDeletion', 'Failed to cancel account deletion', error);
         return createErrorResponse('internal', error instanceof Error ? error.message : 'Ошибка отмены удаления', undefined, 500);

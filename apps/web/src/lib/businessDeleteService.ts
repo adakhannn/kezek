@@ -1,11 +1,5 @@
 import { logError } from '@/lib/log';
-
-export type BusinessDeleteAdminClientLike = {
-    rpc(
-        fn: 'delete_business_without_history',
-        args: { p_biz_id: string },
-    ): PromiseLike<{ error: { message?: string; code?: string } | null }>;
-};
+import type { DbRpcClient } from '@/lib/supabaseTypes';
 
 type BusinessDeleteResult =
     | { ok: true }
@@ -23,7 +17,7 @@ export async function runBusinessDelete({
     admin,
     bizId,
 }: {
-    admin: BusinessDeleteAdminClientLike;
+    admin: DbRpcClient;
     bizId: string;
 }): Promise<BusinessDeleteResult> {
     const { error } = await admin.rpc('delete_business_without_history', { p_biz_id: bizId });

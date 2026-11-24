@@ -4,7 +4,7 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { runServiceUpdateFlow } from '@/lib/serviceUpdateRouteService';
-import type { ServiceUpdateAdminClientLike, ServiceUpdateBody } from '@/lib/serviceUpdateRouteService';
+import type { ServiceUpdateBody } from '@/lib/serviceUpdateRouteService';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function runServiceUpdateHttp(
@@ -16,7 +16,7 @@ export async function runServiceUpdateHttp(
     const body = (await req.json().catch(() => ({} as ServiceUpdateBody))) as ServiceUpdateBody;
 
     const result = await runServiceUpdateFlow({
-        admin: getServiceClient() as unknown as ServiceUpdateAdminClientLike,
+        admin: getServiceClient(),
         bizId,
         serviceId,
         body,

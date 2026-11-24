@@ -1,4 +1,5 @@
 import type { ReportClient } from '@/lib/finance/reportSnapshot';
+import { nullableArg } from '@/lib/supabaseTypes';
 
 export class ReportRangeError extends Error {}
 export function assertReportRange(start: string, end: string) {
@@ -22,8 +23,8 @@ export async function readAnalyticsSnapshot(client: ReportClient, scope: {
 }): Promise<AnalyticsSnapshot> {
     assertReportRange(scope.startDate, scope.endDate);
     const { data, error } = await client.rpc('read_analytics_report_snapshot', {
-        p_date_from: scope.startDate, p_date_to: scope.endDate, p_biz_id: scope.bizId ?? null,
-        p_branch_id: scope.branchId ?? null, p_kind: scope.kind,
+        p_date_from: scope.startDate, p_date_to: scope.endDate, p_biz_id: nullableArg(scope.bizId),
+        p_branch_id: nullableArg(scope.branchId), p_kind: scope.kind,
     });
     if (error) throw new Error(error.message);
     const result = data as AnalyticsSnapshot | null;
@@ -44,7 +45,7 @@ export type PromotionSnapshot = { summary: { promoBookings: number; promoRevenue
     byType: Array<{ promotionType: string; bookings: number; revenue: number; discountGiven: number }> };
 export async function readPromotionSnapshot(client: ReportClient, scope: { bizId: string; branchId?: string; startDate: string; endDate: string; timezone: string }): Promise<PromotionSnapshot> {
     assertReportRange(scope.startDate, scope.endDate);
-    const { data, error } = await client.rpc('read_promotion_analytics_snapshot', { p_biz_id: scope.bizId, p_branch_id: scope.branchId ?? null,
+    const { data, error } = await client.rpc('read_promotion_analytics_snapshot', { p_biz_id: scope.bizId, p_branch_id: nullableArg(scope.branchId),
         p_date_from: scope.startDate, p_date_to: scope.endDate, p_default_tz: scope.timezone });
     if (error) throw new Error(error.message);
     const result = data as PromotionSnapshot | null;

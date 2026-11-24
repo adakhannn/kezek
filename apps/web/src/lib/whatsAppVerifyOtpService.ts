@@ -1,32 +1,18 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { logError } from '@/lib/log';
 import {
     MAX_PROFILE_WHATSAPP_OTP_ATTEMPTS,
     type ProfileWhatsAppOtpStore,
 } from '@/lib/profileWhatsAppOtpStore';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import type { DbQueryClient } from '@/lib/supabaseTypes';
 
 type UserLike = {
     id: string;
     user_metadata?: Record<string, unknown> | null;
 };
 
-export type SupabaseServerClientLike = {
-    // Supabase query builders vary by operation in this small service boundary.
-
-    from: SupabaseClient['from'];
-    auth: {
-        getUser: () => Promise<{ data: { user: UserLike | null } }>;
-    };
-};
-
 /** Writes verified identity columns; must be a privileged (service-role) client. */
-export type ProfileIdentityWriter = {
-
-    from: SupabaseClient['from'];
-    rpc(name: string, args: Record<string, unknown>): PromiseLike<{ error: { message?: string } | null }>;
-};
+export type ProfileIdentityWriter = DbQueryClient;
 
 type VerifyExistingOtpInput = {
     user: UserLike;

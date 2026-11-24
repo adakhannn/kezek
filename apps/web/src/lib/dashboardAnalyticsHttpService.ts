@@ -34,7 +34,7 @@ export async function runDashboardAnalyticsOverviewHttp(req: Request): Promise<N
     const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 
     const result = await getDashboardAnalyticsOverview({
-      admin: admin as never,
+      admin,
       bizId,
       startDate: startStr,
       endDate: endStr,
@@ -62,7 +62,7 @@ export async function runDashboardAnalyticsLoadHttp(req: Request): Promise<NextR
     const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 
     const result = await getDashboardAnalyticsLoad({
-      admin: admin as never,
+      admin,
       bizId,
       branchId,
       startDate: startStr,

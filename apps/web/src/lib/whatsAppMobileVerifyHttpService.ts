@@ -79,7 +79,7 @@ export async function runWhatsAppMobileVerifyHttp(req: Request): Promise<NextRes
     }
 
     const result = await runWhatsAppMobileVerifyRoute({
-        admin: createSupabaseAdminClient() as unknown as Parameters<typeof runWhatsAppMobileVerifyRoute>[0]['admin'],
+        admin: createSupabaseAdminClient(),
         attemptId: body.attemptId,
         code: body.code,
         phone: body.phone,

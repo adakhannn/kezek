@@ -34,7 +34,7 @@ export const POST = withLocalizedMessages(async function POST(request: Request) 
         }
         try {
             const admin = createSupabaseAdminClient();
-            const result = await submitBusinessApplication({ admin: admin as never, userId: user.id, input });
+            const result = await submitBusinessApplication({ admin, userId: user.id, input });
             if (!result.ok) return Response.json({ ok: false, message: result.message, code: result.code }, { status: result.status });
             try {
                 const displayName = typeof input.contact_name === 'string' && input.contact_name.trim()

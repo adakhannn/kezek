@@ -5,7 +5,6 @@ import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { findWhatsAppOwnerByPhone } from '@/lib/whatsAppIdentityOwnershipService';
 import { runWhatsAppVerifyOtpRoute } from '@/lib/whatsAppVerifyOtpRouteService';
-import type { SupabaseServerClientLike } from '@/lib/whatsAppVerifyOtpService';
 
 export async function runWhatsAppVerifyOtpHttp(req: Request): Promise<NextResponse> {
   let code: string | undefined;
@@ -19,10 +18,10 @@ export async function runWhatsAppVerifyOtpHttp(req: Request): Promise<NextRespon
 
   const admin = createSupabaseAdminClient();
   const result = await runWhatsAppVerifyOtpRoute({
-    supabase: (await createSupabaseServerClient()) as unknown as SupabaseServerClientLike,
+    supabase: await createSupabaseServerClient(),
     admin,
     code,
-    findAuthOwnerByPhone: (phone) => findWhatsAppOwnerByPhone(admin as never, phone),
+    findAuthOwnerByPhone: (phone) => findWhatsAppOwnerByPhone(admin, phone),
   });
 
   if (!result.ok) {

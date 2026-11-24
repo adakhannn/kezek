@@ -1,26 +1,11 @@
 import { getSupabaseUrl } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { STAFF_SELECTION_COOKIE } from '@/lib/staffSelection';
-
-export type SignOutUserClientLike = {
-  auth: {
-    getUser: () => Promise<{
-      data: { user: { id: string } | null };
-    }>;
-  };
-};
-
-export type SignOutAdminLike = {
-  auth: {
-    admin: {
-      invalidateRefreshTokens?: (userId: string) => Promise<unknown>;
-    };
-  };
-};
+import type { DbAuthClient } from '@/lib/supabaseTypes';
 
 export async function invalidateUserRefreshTokens(params: {
-  userClient: SignOutUserClientLike;
-  admin: SignOutAdminLike;
+  userClient: DbAuthClient;
+  admin: DbAuthClient;
 }) {
   const {
     data: { user },

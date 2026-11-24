@@ -1,10 +1,10 @@
 import { hasUsableWhatsAppOtpHashSecret } from '@/lib/env';
 import { createProfileWhatsAppOtpStore, type ProfileWhatsAppOtpStore } from '@/lib/profileWhatsAppOtpStore';
+import type { DbAuthClient } from '@/lib/supabaseTypes';
 import { hashWhatsappOtp, secureEqualHex } from '@/lib/whatsAppOtpHash';
 import {
     verifyExistingWhatsAppOtp,
     type ProfileIdentityWriter,
-    type SupabaseServerClientLike,
 } from '@/lib/whatsAppVerifyOtpService';
 
 type Failure = {
@@ -31,7 +31,7 @@ export async function runWhatsAppVerifyOtpRoute({
     findAuthOwnerByPhone,
     otpStore,
 }: {
-    supabase: SupabaseServerClientLike;
+    supabase: DbAuthClient;
     /** Service-role client: identity columns are not writable with a user session. */
     admin: ProfileIdentityWriter & Parameters<typeof createProfileWhatsAppOtpStore>[0];
     code?: string;

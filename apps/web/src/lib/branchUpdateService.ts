@@ -3,20 +3,13 @@ import type { z } from 'zod';
 import { validatePublicContactPatch } from '@/lib/businessContacts';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { validateDirectoryLinks } from '@/lib/directoryLinks';
+import type { DbClient, DbUpdate } from '@/lib/supabaseTypes';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
 import { branchUpdateSchema } from '@/lib/validation/businessUpdateSchemas';
 
 export type BranchUpdateBody = z.infer<typeof branchUpdateSchema>;
 
-export type BranchUpdateAdminLike = {
-  from(table: string): {
-    update: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => Promise<{ error: { message: string } | null }>;
-      };
-    };
-  };
-};
+export type BranchUpdateAdminLike = DbClient;
 
 export type BranchUpdateResult =
   | { ok: true; data: Record<string, never> }
@@ -47,7 +40,7 @@ export async function updateBranch(params: {
   const body = parsed.data;
 
   const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
-    admin as never,
+    admin,
     'branches',
     branchId,
     bizId,
@@ -83,10 +76,11 @@ export async function updateBranch(params: {
     };
   }
 
-  const updateData: Record<string, unknown> = { ...contacts.value };
-  for (const field of ['name', 'address', 'is_active', 'inherit_business_contacts'] as const) {
-    if (Object.hasOwn(body, field)) updateData[field] = body[field];
-  }
+  const updateData: DbUpdate<'branches'> = { ...contacts.value };
+  if (Object.hasOwn(body, 'name')) updateData.name = body.name;
+  if (Object.hasOwn(body, 'address')) updateData.address = body.address;
+  if (Object.hasOwn(body, 'is_active')) updateData.is_active = body.is_active;
+  if (Object.hasOwn(body, 'inherit_business_contacts')) updateData.inherit_business_contacts = body.inherit_business_contacts;
   if (Object.hasOwn(body, 'directory_links')) {
     const links = validateDirectoryLinks(body.directory_links);
     if (!links.ok) {

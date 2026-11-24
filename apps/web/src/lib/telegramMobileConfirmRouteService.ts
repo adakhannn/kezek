@@ -179,9 +179,7 @@ export async function runTelegramMobileConfirmRoute({
         return { ok: false, status: 409, error: 'conflict', message: 'Начните вход заново в обновлённом приложении.' };
     }
 
-    const admin = getServiceClient() as unknown as Parameters<
-        typeof resolveTelegramIdentity
-    >[0]['admin'];
+    const admin = getServiceClient();
 
     const loginResult = await resolveTelegramIdentity({
         admin,

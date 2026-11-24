@@ -1,7 +1,7 @@
 import type { ClientBookingDetailsDto, ClientBookingListItemDto } from '@shared-client/types';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { bookingCancellationError } from '@/lib/bookingCancellationError';
+import type { DbQueryClient } from '@/lib/supabaseTypes';
 
 type BookingListService = {
     name_ru: string | null;
@@ -65,7 +65,7 @@ type BookingDetailsRow = {
     business: BookingDetailsBusiness | BookingDetailsBusiness[] | null;
 };
 
-type MobileBookingsClientLike = Pick<SupabaseClient, 'from' | 'rpc'>;
+type MobileBookingsClient = DbQueryClient;
 
 type ServiceFailure = {
     ok: false;
@@ -84,7 +84,7 @@ export async function listMobileBookings({
     client,
     userId,
 }: {
-    client: MobileBookingsClientLike;
+    client: MobileBookingsClient;
     userId: string;
 }): Promise<{ ok: true; data: ClientBookingListItemDto[] } | ServiceFailure> {
     const { data, error } = await client
@@ -162,7 +162,7 @@ export async function getMobileBookingDetails({
     userId,
     bookingId,
 }: {
-    client: MobileBookingsClientLike;
+    client: MobileBookingsClient;
     userId: string;
     bookingId: string;
 }): Promise<{ ok: true; data: ClientBookingDetailsDto } | ServiceFailure> {
@@ -257,7 +257,7 @@ export async function cancelMobileBooking({
     userId,
     bookingId,
 }: {
-    client: MobileBookingsClientLike;
+    client: MobileBookingsClient;
     userId: string;
     bookingId: string;
 }): Promise<{ ok: true; alreadyCancelled?: boolean } | ServiceFailure> {

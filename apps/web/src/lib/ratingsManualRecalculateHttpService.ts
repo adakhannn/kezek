@@ -15,7 +15,7 @@ export async function runRatingsManualRecalculateHttp(req: Request): Promise<Nex
     }
 
     const accessResult = await ensureSuperAdminAccess({
-        supabase: supabase as never,
+        supabase,
         userId: user.id,
     });
     if (!accessResult.ok) {
@@ -30,7 +30,7 @@ export async function runRatingsManualRecalculateHttp(req: Request): Promise<Nex
     };
 
     const result = await runRatingsManualRecalculate({
-        admin: getServiceClient() as never,
+        admin: getServiceClient(),
         userId: user.id,
         body,
     });

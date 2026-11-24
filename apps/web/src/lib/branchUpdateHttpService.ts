@@ -4,7 +4,6 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { getBizContextForManagers } from '@/lib/authBiz';
 import {
   updateBranch,
-  type BranchUpdateAdminLike,
 } from '@/lib/branchUpdateService';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -21,7 +20,7 @@ export async function runBranchUpdateHttp(
   if (!validation.success) return validation.response;
 
   const result = await updateBranch({
-    admin: getServiceClient() as unknown as BranchUpdateAdminLike,
+    admin: getServiceClient(),
     branchId,
     bizId,
     body: validation.data,

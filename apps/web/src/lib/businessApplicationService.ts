@@ -1,15 +1,10 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { mapApplicationPolicyError } from '@/lib/applicationPolicy';
 import { normalizeBusinessNameForMatch } from '@/lib/businessName';
 import { slugifyBusinessName } from '@/lib/businessSlug';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
-type AdminLike = {
-    // PostgREST builders differ for duplicate lookup and insert.
-
-    from: SupabaseClient['from'];
-};
+type AdminLike = DbTableClient;
 
 type BusinessRegistrationApplicationRow = {
     id: string;

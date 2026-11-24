@@ -2,42 +2,12 @@
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { issueMobileSessionGrant, MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import type { DbClient } from '@/lib/supabaseTypes';
 import { findWhatsAppOwnerByPhone } from '@/lib/whatsAppIdentityOwnershipService';
 import { trackWhatsAppMobileMetric } from '@/lib/whatsAppMobileMetricsService';
 import { hashWhatsappOtp, hashWhatsappPhone, secureEqualHex } from '@/lib/whatsAppOtpHash';
 
-type AuthUser = {
-    id: string;
-    phone?: string | null;
-    user_metadata?: Record<string, unknown> | null;
-};
-
-type AdminLike = {
-    rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message?: string } | null }>;
-    from(table: string): {
-        select: (columns: string) => {
-            eq: (column: string, value: string) => {
-                maybeSingle: () => unknown;
-            };
-        };
-        update: (payload: Record<string, unknown>) => {
-            eq: (column: string, value: string) => {
-                is: (column: string, value: null) => unknown;
-            };
-            is: (column: string, value: null) => {
-                eq: (column: string, value: string) => unknown;
-            };
-        };
-        upsert: (payload: Record<string, unknown>, options: { onConflict: string }) => unknown;
-    };
-    auth: {
-        admin: {
-            updateUserById: (id: string, payload: unknown) => Promise<unknown>;
-            createUser: (payload: unknown) => Promise<{ data?: { user?: AuthUser }; error?: { message?: string } | null }>;
-            getUserById: (id: string) => Promise<unknown>;
-        };
-    };
-};
+type AdminLike = Pick<DbClient, 'from' | 'rpc' | 'auth'>;
 
 type Failure = {
     ok: false;
@@ -104,7 +74,7 @@ function isLocked(attempt: OtpAttemptRow) {
 
 async function resolveOrCreateUser(admin: AdminLike, phoneE164: string): Promise<{ userId: string; linkage: 'existing' | 'created' } | Failure> {
     try {
-        const ownerId = await findWhatsAppOwnerByPhone(admin as never, phoneE164);
+        const ownerId = await findWhatsAppOwnerByPhone(admin, phoneE164);
         if (ownerId) {
             return { userId: ownerId, linkage: 'existing' };
         }

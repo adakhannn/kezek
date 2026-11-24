@@ -1,37 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
+import type { DbClient } from '@/lib/supabaseTypes';
 import { removeNotificationEmailSource } from '@/lib/userNotificationEmailService';
 
 export type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
 
-type AuthUser = {
-    id: string;
-    phone?: string | null;
-    phone_confirmed_at?: string | null;
-    identities?: Array<{ provider?: string | null }> | null;
-    user_metadata?: Record<string, unknown> | null;
-};
-
-type AdminLike = {
-    auth: {
-        admin: {
-            getUserById(id: string): Promise<{ data: { user: AuthUser | null }; error: { message?: string } | null }>;
-            updateUserById(id: string, payload: { user_metadata: Record<string, unknown> }): Promise<{ error: { message?: string } | null }>;
-        };
-    };
-    // Query builders differ for select and update operations in this narrow service boundary.
-
-    from: SupabaseClient['from'];
-    rpc(name: string, params: Record<string, unknown>): Promise<{ data: unknown; error: { message?: string } | null }>;
-};
-
-type ProfileConnections = {
-    yandex_id: string | null;
-    telegram_id: number | null;
-    telegram_verified: boolean | null;
-    whatsapp_phone: string | null;
-    whatsapp_verified: boolean | null;
-};
+type AdminLike = Pick<DbClient, 'from' | 'rpc' | 'auth'>;
 
 export type UnlinkResult =
     | { ok: true; data: { provider: SocialProvider; remainingMethods: number } }
@@ -92,7 +64,7 @@ export async function unlinkSocialIdentity(params: {
         .from('profiles')
         .select('yandex_id, telegram_id, telegram_verified, whatsapp_phone, whatsapp_verified')
         .eq('id', params.userId)
-        .maybeSingle() as { data: ProfileConnections | null; error: { message?: string } | null };
+        .maybeSingle();
 
     if (profileError) {
         return { ok: false, error: 'internal', message: 'Не удалось проверить профиль.', status: 500, details: { code: 'profile_lookup_failed' } };

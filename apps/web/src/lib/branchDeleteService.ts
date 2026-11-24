@@ -1,11 +1,5 @@
 import { logError } from '@/lib/log';
-
-export type BranchDeleteAdminClientLike = {
-    rpc(
-        fn: 'delete_branch_without_history',
-        args: { p_biz_id: string; p_branch_id: string },
-    ): PromiseLike<{ error: { message?: string; code?: string } | null }>;
-};
+import type { DbRpcClient } from '@/lib/supabaseTypes';
 
 type Result =
     | {
@@ -35,7 +29,7 @@ export async function runBranchDelete({
     branchId,
     bizId,
 }: {
-    admin: BranchDeleteAdminClientLike;
+    admin: DbRpcClient;
     branchId: string;
     bizId: string;
 }): Promise<Result> {

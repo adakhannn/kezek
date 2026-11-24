@@ -1,15 +1,13 @@
-import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { logError } from '@/lib/log';
 import { readPerformanceSnapshot, type PerformanceSnapshot } from '@/lib/performanceStore';
+import type { DbClient } from '@/lib/supabaseTypes';
 
-export type PerformanceStatsAuthClientLike = SuperAdminRoleClient & {
-    auth: { getUser: () => Promise<{ data: { user: { id: string } | null }; error?: unknown }> };
-};
 export type PerformanceStatsResult =
     | { ok: true; data: PerformanceSnapshot }
     | { ok: false; error: 'auth' | 'forbidden' | 'service_unavailable'; message: string; status: number };
 
-export async function getPerformanceStatsSnapshot(supabase: PerformanceStatsAuthClientLike): Promise<PerformanceStatsResult> {
+export async function getPerformanceStatsSnapshot(supabase: Pick<DbClient, 'auth' | 'rpc'>): Promise<PerformanceStatsResult> {
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) return { ok: false, error: 'auth', message: 'Не авторизован', status: 401 };

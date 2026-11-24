@@ -9,8 +9,8 @@ export async function runStaffSyncRolesHttp(): Promise<NextResponse> {
     const { supabase, bizId } = await getBizContextForManagers();
 
     const result = await runStaffSyncRoles({
-        supabase: supabase as never,
-        admin: getServiceClient() as never,
+        supabase,
+        admin: getServiceClient(),
         bizId,
     });
 

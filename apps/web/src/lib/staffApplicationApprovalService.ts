@@ -1,15 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
-
-type DbClient = {
-    // Generated Supabase types are not fully synchronized in this repository.
-
-    from: SupabaseClient['from'];
-
-    rpc(name: string, params: Record<string, unknown>): any;
-};
+import type { DbClient, DbTableClient } from '@/lib/supabaseTypes';
 
 type ApprovalFailure = {
     ok: false;
@@ -30,7 +21,7 @@ type ApprovalSuccess = {
 };
 
 export async function isBusinessOwner(params: {
-    admin: DbClient;
+    admin: DbTableClient;
     userId: string;
     bizId: string;
 }) {
@@ -111,9 +102,7 @@ export async function approveStaffApplication(params: {
     }
 
     const scheduleResult = explicitSchedulingEnabled() ? { success: false, daysCreated: 0, error: undefined } : await initializeStaffSchedule(
-        // The runtime admin client implements the same query interface expected by the helper.
-
-        params.admin as any,
+        params.admin,
         bizId,
         staffId,
         branchId,

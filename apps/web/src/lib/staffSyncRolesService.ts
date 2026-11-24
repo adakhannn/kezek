@@ -1,15 +1,8 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DbClient, DbTableClient } from '@/lib/supabaseTypes';
 
-type ManagerSupabaseLike = {
-    auth: {
-        getUser: () => Promise<{ data: { user: { id: string } | null } }>;
-    };
-    from: SupabaseClient['from'];
-};
+type ManagerSupabaseLike = Pick<DbClient, 'auth' | 'from'>;
 
-type AdminLike = {
-    from: SupabaseClient['from'];
-};
+type AdminLike = DbTableClient;
 
 export async function runStaffSyncRoles({
     supabase,

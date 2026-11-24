@@ -1,7 +1,5 @@
-import {
-  runPromotionsDebugRoute,
-  type PromotionsDebugAuthClientLike,
-} from '@/lib/promotionsDebugRouteService';
+import { asDbClient } from '@/__tests__/helpers/dbClientMock';
+import { runPromotionsDebugRoute } from '@/lib/promotionsDebugRouteService';
 import { loadPromotionsDebugData } from '@/lib/promotionsDebugService';
 
 jest.mock('@/lib/promotionsDebugService', () => ({
@@ -15,7 +13,7 @@ describe('promotionsDebugRouteService', () => {
         getUser: jest.fn(),
       },
       rpc: jest.fn(),
-    } as unknown as jest.Mocked<PromotionsDebugAuthClientLike>;
+    };
   }
 
   test('rejects anonymous user', async () => {
@@ -25,7 +23,7 @@ describe('promotionsDebugRouteService', () => {
     });
 
     const result = await runPromotionsDebugRoute({
-      authClient,
+      authClient: asDbClient(authClient),
       serviceClient: {} as never,
       requestUrl: 'http://localhost/api/admin/promotions/debug?clientId=123e4567-e89b-12d3-a456-426614174000',
     });
@@ -46,7 +44,7 @@ describe('promotionsDebugRouteService', () => {
     authClient.rpc.mockResolvedValueOnce({ data: false, error: null });
 
     const result = await runPromotionsDebugRoute({
-      authClient,
+      authClient: asDbClient(authClient),
       serviceClient: {} as never,
       requestUrl: 'http://localhost/api/admin/promotions/debug?clientId=123e4567-e89b-12d3-a456-426614174000',
     });
@@ -67,7 +65,7 @@ describe('promotionsDebugRouteService', () => {
     authClient.rpc.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
 
     const result = await runPromotionsDebugRoute({
-      authClient,
+      authClient: asDbClient(authClient),
       serviceClient: {} as never,
       requestUrl: 'http://localhost/api/admin/promotions/debug?bizId=123e4567-e89b-12d3-a456-426614174000',
     });
@@ -85,7 +83,7 @@ describe('promotionsDebugRouteService', () => {
     authClient.rpc.mockResolvedValueOnce({ data: true, error: null });
 
     const result = await runPromotionsDebugRoute({
-      authClient,
+      authClient: asDbClient(authClient),
       serviceClient: {} as never,
       requestUrl: 'http://localhost/api/admin/promotions/debug',
     });
@@ -110,7 +108,7 @@ describe('promotionsDebugRouteService', () => {
 
     const serviceClient = {} as never;
     const result = await runPromotionsDebugRoute({
-      authClient,
+      authClient: asDbClient(authClient),
       serviceClient,
       requestUrl: 'http://localhost/api/admin/promotions/debug?clientId=123e4567-e89b-12d3-a456-426614174000',
     });

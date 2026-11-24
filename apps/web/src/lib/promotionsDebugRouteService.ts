@@ -1,18 +1,7 @@
 import { loadPromotionsDebugData } from '@/lib/promotionsDebugService';
+import type { DbClient } from '@/lib/supabaseTypes';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export type PromotionsDebugAuthClientLike = {
-  auth: {
-    getUser: () => Promise<{
-      data: { user: { id: string } | null };
-    }>;
-  };
-  rpc(fn: 'is_super_admin'): PromiseLike<{
-    data: unknown;
-    error: unknown;
-  }>;
-};
 
 export type PromotionsDebugRouteResult =
   | { ok: true; data: Awaited<ReturnType<typeof loadPromotionsDebugData>> }
@@ -41,7 +30,7 @@ function validateUuidParam(value: string | null, name: 'clientId' | 'branchId' |
 }
 
 export async function runPromotionsDebugRoute(params: {
-  authClient: PromotionsDebugAuthClientLike;
+  authClient: Pick<DbClient, 'auth' | 'rpc'>;
   serviceClient: Parameters<typeof loadPromotionsDebugData>[0]['serviceClient'];
   requestUrl: string;
 }): Promise<PromotionsDebugRouteResult> {

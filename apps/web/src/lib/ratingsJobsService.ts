@@ -1,13 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-type AdminClientLike = {
-    from: SupabaseClient['from'];
-};
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
 export async function getRatingsJobs({
     admin,
 }: {
-    admin: AdminClientLike;
+    admin: DbTableClient;
 }): Promise<
     | { ok: true; data: { jobs: unknown[] } }
     | { ok: false; error: 'internal'; message: string; status: 500 }

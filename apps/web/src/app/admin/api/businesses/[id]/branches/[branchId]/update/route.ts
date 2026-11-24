@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 
 import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
 import { createErrorResponse, withErrorHandler } from '@/lib/apiErrorHandler';
-import { updateBranch, type BranchUpdateAdminLike } from '@/lib/branchUpdateService';
+import { updateBranch } from '@/lib/branchUpdateService';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
@@ -22,7 +22,7 @@ async function handler(req: Request, context: unknown) {
         const validation = await validateRequest(req, branchUpdateSchema);
         if (!validation.success) return validation.response;
         const result = await updateBranch({
-            admin: getServiceClient() as unknown as BranchUpdateAdminLike,
+            admin: getServiceClient(),
             bizId, branchId, body: validation.data,
         });
         if (!result.ok) return createErrorResponse(result.error, result.message, result.details, result.status);

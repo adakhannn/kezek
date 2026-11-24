@@ -26,7 +26,7 @@ export async function runHealthCheckAlertsCronHttp(req: Request): Promise<NextRe
   const admin = getServiceClient();
   const [cronStatuses, queueStatuses] = await Promise.all([readCronExecutionHealth(admin), readBackgroundQueueHealth(admin)]);
   const result = await runHealthCheckAlerts({
-    admin: admin as never,
+    admin,
     cronStatuses,
     queueStatuses,
     formatDate: formatInTimeZone,
