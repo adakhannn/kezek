@@ -179,8 +179,9 @@ if (duplicateServerMessages.length) {
 // the request; a template literal matches a message with {placeholders} where it has ${...}. Each
 // file may not have more than its baseline (scripts/i18n-untranslated-baseline.json), and a lower
 // count must be written down with --write-baseline, so the gain is kept. The deliberate rest of the
-// baseline: the admin panel, the legal pages, the texts of outgoing notifications and bot replies
-// (the recipient's language is not stored), internal errors and text matching. apps/mobile/src is
+// baseline: the texts of outgoing notifications and bot replies (the recipient's language is not
+// stored), internal errors and developer hints, Russian fallbacks of API labels that the admin
+// pages translate by key, and text matching (the admin panel and legal pages are translated, ENG-142). apps/mobile/src is
 // scanned the same way (it has no server code), with its files under apps/mobile/ in the baseline.
 const BASELINE_FILE = path.join(root, 'scripts', 'i18n-untranslated-baseline.json');
 const CYRILLIC = /[А-Яа-яЁё]/;

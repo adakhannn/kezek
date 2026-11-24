@@ -5,13 +5,14 @@ import { NextResponse } from 'next/server';
 
 import { logError, logWarn } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
     user_ids?: string[]; // Массив ID владельцев
 };
 
-export async function POST(req: Request, ctx: unknown) {
+export const POST = withLocalizedMessages(async function POST(req: Request, ctx: unknown) {
     try {
         const bizId = await getRouteParamRequired(ctx, 'id');
 
@@ -120,6 +121,6 @@ export async function POST(req: Request, ctx: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-}
+});
 
 export const PUT = POST;

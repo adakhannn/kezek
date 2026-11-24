@@ -4,12 +4,14 @@ import { getT } from '@/app/_components/i18n/server';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Tabs } from '@/components/ui/Tabs';
 
-const tabs = [
-    { href: '/admin/analytics/overview', key: 'overview', labelFallback: 'Обзор' },
-    { href: '/admin/analytics/funnel', key: 'funnel', labelFallback: 'Воронка' },
-    { href: '/admin/analytics/load', key: 'load', labelFallback: 'Загрузка' },
-    { href: '/admin/analytics/promotions', key: 'promotions', labelFallback: 'Промо' },
-] as const;
+type Translate = Awaited<ReturnType<typeof getT>>;
+
+const tabs = (t: Translate) => [
+    { href: '/admin/analytics/overview', key: 'overview', label: t('admin.analytics.tabs.overview', 'Обзор') },
+    { href: '/admin/analytics/funnel', key: 'funnel', label: t('admin.analytics.tabs.funnel', 'Воронка') },
+    { href: '/admin/analytics/load', key: 'load', label: t('admin.analytics.tabs.load', 'Загрузка') },
+    { href: '/admin/analytics/promotions', key: 'promotions', label: t('admin.analytics.tabs.promotions', 'Промо') },
+];
 
 export const dynamic = 'force-dynamic';
 
@@ -30,11 +32,7 @@ export default async function AnalyticsLayout({ children }: { children: React.Re
                 <Suspense fallback={null}>
                     <Tabs
                         value=""
-                        items={tabs.map((tab) => ({
-                            key: tab.key,
-                            href: tab.href,
-                            label: t(`admin.analytics.tabs.${tab.key}` as Parameters<typeof t>[0], tab.labelFallback),
-                        }))}
+                        items={tabs(t)}
                         className="w-full max-w-3xl"
                         stretch
                     />

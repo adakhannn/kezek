@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -28,14 +29,6 @@ const ROLE_COLORS: Record<RoleKey, { bg: string; text: string; border: string }>
     client: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-700 dark:text-gray-300', border: 'border-gray-300 dark:border-gray-700' },
 };
 
-const ROLE_LABELS: Record<RoleKey, string> = {
-    owner: 'Владелец',
-    admin: 'Администратор',
-    manager: 'Менеджер',
-    staff: 'Сотрудник',
-    client: 'Клиент',
-};
-
 export default function MembersClient({
     bizId,
     canManage,
@@ -43,6 +36,14 @@ export default function MembersClient({
     bizId: string;
     canManage: boolean;
 }) {
+    const { t } = useLanguage();
+    const ROLE_LABELS: Record<RoleKey, string> = {
+        owner: t('admin.members.role.owner', 'Владелец'),
+        admin: t('admin.members.role.admin', 'Администратор'),
+        manager: t('admin.members.role.manager', 'Менеджер'),
+        staff: t('admin.members.role.staff', 'Сотрудник'),
+        client: t('admin.members.role.client', 'Клиент'),
+    };
     const api = useMemo(() => {
         const root = `/admin/api/businesses/${encodeURIComponent(bizId)}/members`;
         return {
@@ -145,14 +146,14 @@ export default function MembersClient({
         return (
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 shadow-lg text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">Загрузка участников...</p>
+                <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">{t('admin.members.loading', 'Загрузка участников...')}</p>
             </div>
         );
     }
 
     if (err) {
         return (
-            <AlertBanner variant="danger" title="Ошибка" message={err} />
+            <AlertBanner variant="danger" title={t('admin.members.error', 'Ошибка')} message={err} />
         );
     }
 
@@ -164,8 +165,8 @@ export default function MembersClient({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                 )}
-                title="Участников пока нет"
-                description="Добавьте первого участника, чтобы начать работу с бизнесом"
+                title={t('admin.members.emptyTitle', 'Участников пока нет')}
+                description={t('admin.members.emptyDescription', 'Добавьте первого участника, чтобы начать работу с бизнесом')}
             />
         );
     }
@@ -188,7 +189,7 @@ export default function MembersClient({
                                 <div className="flex items-start justify-between gap-4 mb-3">
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                            {m.full_name || 'Без имени'}
+                                            {m.full_name || t('admin.members.noName', 'Без имени')}
                                         </h3>
                                         <div className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-2 break-all">
                                             {m.user_id}
@@ -220,7 +221,7 @@ export default function MembersClient({
                             <div className="lg:w-80 space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Роли
+                                        {t('admin.members.roles', 'Роли')}
                                     </label>
                                     <div className="flex flex-wrap gap-2">
                                         {m.roles.length > 0 ? (
@@ -239,8 +240,8 @@ export default function MembersClient({
                                                                 onClick={() => revoke(m.user_id, role)}
                                                                 disabled={isLoading}
                                                                 type="button"
-                                                                title="Убрать роль"
-                                                                aria-label="Убрать роль"
+                                                                title={t('admin.members.removeRole', 'Убрать роль')}
+                                                                aria-label={t('admin.members.removeRole', 'Убрать роль')}
                                                             >
                                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -251,7 +252,7 @@ export default function MembersClient({
                                                 );
                                             })
                                         ) : (
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">Нет ролей</span>
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">{t('admin.members.noRoles', 'Нет ролей')}</span>
                                         )}
                                     </div>
                                 </div>
@@ -261,7 +262,7 @@ export default function MembersClient({
                                         {availableRoles.length > 0 && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Добавить роль
+                                                    {t('admin.members.addRole', 'Добавить роль')}
                                                 </label>
                                                 <div className="flex flex-wrap gap-2">
                                                     {availableRoles.map((r) => {
@@ -299,10 +300,10 @@ export default function MembersClient({
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
-                                                        Обработка...
+                                                        {t('admin.members.processing', 'Обработка...')}
                                                     </>
                                                 ) : (
-                                                    'Убрать из участников'
+                                                    t('admin.members.demote', 'Убрать из участников')
                                                 )}
                                             </Button>
                                         </div>
@@ -317,10 +318,10 @@ export default function MembersClient({
                 open={confirmDemoteUserId !== null}
                 onClose={() => setConfirmDemoteUserId(null)}
                 onConfirm={() => confirmDemoteUserId && demote(confirmDemoteUserId)}
-                title="Понизить участника"
-                message="Убрать участника до «client»? Все другие роли будут сняты."
-                confirmLabel="Понизить"
-                cancelLabel="Отмена"
+                title={t('admin.members.demoteTitle', 'Понизить участника')}
+                message={t('admin.members.demoteMessage', 'Убрать участника до «client»? Все другие роли будут сняты.')}
+                confirmLabel={t('admin.members.demoteConfirm', 'Понизить')}
+                cancelLabel={t('admin.members.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={actionLoading === `${confirmDemoteUserId}-demote`}
             />

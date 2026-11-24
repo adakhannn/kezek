@@ -10,6 +10,7 @@ import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import {sendEmailPassword} from '@/lib/senders/email';
 import {sendSMS} from '@/lib/senders/sms';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
@@ -39,7 +40,7 @@ function generateTempPassword(): string {
     return pwd;
 }
 
-export async function POST(req: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(req: Request, context: unknown) {
     try {
         const bizId = await getRouteParamRequired(context, 'id');
         
@@ -177,4 +178,4 @@ export async function POST(req: Request, context: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
-}
+});

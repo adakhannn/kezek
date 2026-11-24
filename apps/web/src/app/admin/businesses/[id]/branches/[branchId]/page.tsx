@@ -1,6 +1,7 @@
 // apps/web/src/app/admin/businesses/[id]/branches/[branchId]/page.tsx
 import Link from 'next/link';
 
+import { getT } from '@/app/_components/i18n/server';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
@@ -14,12 +15,13 @@ type RouteParams = { id: string; branchId: string };
 
 export default async function BranchEditPage({ params }: { params: Promise<RouteParams> }) {
     const { id, branchId } = await params;
+    const t = await getT();
 
     const supa = await createSupabaseServerClient();
     const { data: { user } } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">Не авторизован</div>;
+    if (!user) return <div className="p-4">{t('admin.catalog.common.notAuthorized', 'Не авторизован')}</div>;
     const { data: isSuper } = await supa.rpc('is_super_admin');
-    if (!isSuper) return <div className="p-4">Нет доступа</div>;
+    if (!isSuper) return <div className="p-4">{t('admin.catalog.common.noAccess', 'Нет доступа')}</div>;
 
     const admin = createSupabaseAdminClient();
     const { data: branch, error } = await admin
@@ -33,7 +35,7 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
         logError('AdminBranchEditPage', 'Failed to load branch', { bizId: id, branchId, error });
         return <LoadFailedNotice page />;
     }
-    if (!branch) return <div className="p-4">Филиал не найден</div>;
+    if (!branch) return <div className="p-4">{t('admin.branchesPage.branchNotFound', 'Филиал не найден')}</div>;
 
     const { data: biz } = await admin.from('businesses').select('id,name').eq('id', id).maybeSingle();
 
@@ -64,7 +66,7 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                            Редактировать филиал
+                            {t('admin.branchesPage.editTitle', 'Редактировать филиал')}
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             {branch.name} • {biz?.name}
@@ -77,7 +79,7 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        К списку филиалов
+                        {t('admin.branchesPage.backToList', 'К списку филиалов')}
                     </Link>
                 </div>
             </div>

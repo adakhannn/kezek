@@ -4,9 +4,10 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-export async function POST(request: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(request: Request, context: unknown) {
     const businessId = await getRouteParamRequired(context, 'id');
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -30,4 +31,4 @@ export async function POST(request: Request, context: unknown) {
     const { error } = await admin.from('businesses').update({ branch_limit: Number(branchLimit) }).eq('id', businessId);
     if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
     return NextResponse.json({ ok: true, branch_limit: Number(branchLimit) });
-}
+});

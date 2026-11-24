@@ -5,7 +5,9 @@ import { RatingsDebugClient } from '@/app/admin/ratings-debug/RatingsDebugClient
 const router = { push: jest.fn(), replace: jest.fn() };
 const search = new URLSearchParams();
 jest.mock('next/navigation', () => ({ useRouter: () => router, useSearchParams: () => search }));
-jest.mock('@/app/_components/i18n/LanguageProvider', () => ({ useLanguage: () => ({ t: (_key: string, fallback: string) => fallback }) }));
+// The provider keeps one t per language; a new t on every render would refetch in a loop.
+const mockT = (_key: string, fallback: string) => fallback;
+jest.mock('@/app/_components/i18n/LanguageProvider', () => ({ useLanguage: () => ({ t: mockT }) }));
 const fetchMock = jest.fn();
 const data = {
   days: 7, window_since: '2026-10-14',

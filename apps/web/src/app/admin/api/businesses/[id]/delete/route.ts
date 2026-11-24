@@ -7,10 +7,11 @@ import {NextResponse} from 'next/server';
 import { runBusinessDelete } from '@/lib/businessDeleteService';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 /** Super-admin delete of a business without history (DB-14); a business with history is unapproved instead. */
-export async function POST(_req: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(_req: Request, context: unknown) {
     try {
         const bizId = await getRouteParamRequired(context, 'id');
 
@@ -33,4 +34,4 @@ export async function POST(_req: Request, context: unknown) {
         logError('BusinessDelete', 'Failed to delete business', e);
         return NextResponse.json({ ok: false, error: 'Не удалось удалить бизнес' }, { status: 500 });
     }
-}
+});

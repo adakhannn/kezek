@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
@@ -14,6 +15,7 @@ type SendMagicResp = ({ ok: true; link?: string } | ErrResp);
 type SuspendResp = { ok: true; blocked: boolean } | ErrResp;
 
 export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: string; isSuper: boolean; isBlocked: boolean }) {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
     const [err, setErr] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
             const resp = await fetch(`/admin/api/users/${userId}/send-magic-link`, { method: 'POST' });
             const j = (await resp.json()) as SendMagicResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${resp.status}`);
-            setMsg('Magic-link отправлен на email (если настроена почта)');
+            setMsg(t('admin.userSecurity.magicSent', 'Magic-link отправлен на email (если настроена почта)'));
             if ('link' in j && j.link) setMagic(j.link);
         } catch (e) {
             setErr(extractError(e));
@@ -55,9 +57,9 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
             });
             const j = (await resp.json()) as ToggleSuperResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${resp.status}`);
-            if (!j.data || typeof j.data.isSuperAdmin !== 'boolean') throw new Error('Не удалось подтвердить состояние роли');
+            if (!j.data || typeof j.data.isSuperAdmin !== 'boolean') throw new Error(t('admin.userSecurity.roleUnconfirmed', 'Не удалось подтвердить состояние роли'));
             setSuperVal(j.data.isSuperAdmin);
-            setMsg(j.data.isSuperAdmin ? 'Назначен супер-админом' : 'Супер-админ снят');
+            setMsg(j.data.isSuperAdmin ? t('admin.userSecurity.superGranted', 'Назначен супер-админом') : t('admin.userSecurity.superRevoked', 'Супер-админ снят'));
         } catch (e) {
             setErr(extractError(e));
         } finally {
@@ -75,9 +77,9 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
             });
             const j = (await resp.json()) as SuspendResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || ('message' in j && j.message) || `HTTP ${resp.status}`);
-            if (typeof j.blocked !== 'boolean' || j.blocked !== next) throw new Error('Не удалось подтвердить состояние блокировки');
+            if (typeof j.blocked !== 'boolean' || j.blocked !== next) throw new Error(t('admin.userSecurity.blockUnconfirmed', 'Не удалось подтвердить состояние блокировки'));
             setBlocked(j.blocked);
-            setMsg(j.blocked ? 'Пользователь заблокирован' : 'Пользователь разблокирован');
+            setMsg(j.blocked ? t('admin.userSecurity.userBlocked', 'Пользователь заблокирован') : t('admin.userSecurity.userUnblocked', 'Пользователь разблокирован'));
             router.refresh();
         } catch (e) {
             setErr(extractError(e));
@@ -97,7 +99,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
             const j = (await resp.json()) as DeleteUserResp;
 
             if (!resp.ok || !('ok' in j) || j.ok !== true) {
-                throw new Error(('error' in j && j.error) || ('message' in j && j.message) || 'Не удалось подтвердить удаление');
+                throw new Error(('error' in j && j.error) || ('message' in j && j.message) || t('admin.userSecurity.deleteUnconfirmed', 'Не удалось подтвердить удаление'));
             }
 
             window.location.replace('/admin/users');
@@ -116,7 +118,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    Безопасность
+                    {t('admin.userSecurity.title', 'Безопасность')}
                 </h3>
 
                 <div className="space-y-3">
@@ -132,27 +134,27 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Отправка...
+                                {t('admin.userSecurity.sending', 'Отправка...')}
                             </>
                         ) : (
                             <>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-                                Отправить Magic-link
+                                {t('admin.userSecurity.sendMagic', 'Отправить Magic-link')}
                             </>
                         )}
                     </button>
                     {magic && (
                         <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                            <p className="text-xs text-indigo-800 dark:text-indigo-300 font-medium mb-1">Ссылка для входа:</p>
+                            <p className="text-xs text-indigo-800 dark:text-indigo-300 font-medium mb-1">{t('admin.userSecurity.signInLink', 'Ссылка для входа:')}</p>
                             <p className="text-xs break-all text-indigo-600 dark:text-indigo-400">{magic}</p>
                         </div>
                     )}
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Супер-админ</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('admin.userSecurity.superAdmin', 'Супер-админ')}</label>
                     <div className="flex items-center gap-3">
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -164,28 +166,28 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                             />
                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
                             <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                                {superVal ? 'Да' : 'Нет'}
+                                {superVal ? t('admin.userSecurity.yes', 'Да') : t('admin.userSecurity.no', 'Нет')}
                             </span>
                         </label>
                     </div>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Статус блокировки</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('admin.userSecurity.blockStatus', 'Статус блокировки')}</label>
                     <div className="flex items-center gap-2 mb-3">
                         {blocked ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
                                 </svg>
-                                Заблокирован
+                                {t('admin.users.blocked', 'Заблокирован')}
                             </span>
                         ) : (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
-                                Активен
+                                {t('admin.userSecurity.active', 'Активен')}
                             </span>
                         )}
                     </div>
@@ -199,7 +201,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                             </svg>
-                            Заблокировать
+                            {t('admin.userSecurity.block', 'Заблокировать')}
                         </button>
                         <button
                             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -210,7 +212,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Разблокировать
+                            {t('admin.userSecurity.unblock', 'Разблокировать')}
                         </button>
                     </div>
                 </div>
@@ -225,9 +227,9 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                     <div className="flex-1">
-                        <h3 className="font-semibold text-red-900 dark:text-red-300 mb-1">Опасная зона</h3>
+                        <h3 className="font-semibold text-red-900 dark:text-red-300 mb-1">{t('admin.userSecurity.dangerZone', 'Опасная зона')}</h3>
                         <p className="text-sm text-red-800 dark:text-red-400">
-                            Удаление удалит аккаунт; история записей и финансов сохранится. Владение бизнесами нужно передать заранее.
+                            {t('admin.userSecurity.dangerText', 'Удаление удалит аккаунт; история записей и финансов сохранится. Владение бизнесами нужно передать заранее.')}
                         </p>
                     </div>
                 </div>
@@ -243,14 +245,14 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Удаление...
+                            {t('admin.userSecurity.deleting', 'Удаление...')}
                         </>
                     ) : (
                         <>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Удалить пользователя
+                            {t('admin.userSecurity.deleteUser', 'Удалить пользователя')}
                         </>
                     )}
                 </button>
@@ -258,10 +260,10 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                     open={confirmDeleteOpen}
                     onClose={() => setConfirmDeleteOpen(false)}
                     onConfirm={deleteUser}
-                    title="Удалить пользователя"
-                    message="Удалить пользователя? Это действие необратимо."
-                    confirmLabel="Удалить"
-                    cancelLabel="Отмена"
+                    title={t('admin.userSecurity.deleteUser', 'Удалить пользователя')}
+                    message={t('admin.userSecurity.confirmDelete', 'Удалить пользователя? Это действие необратимо.')}
+                    confirmLabel={t('admin.userSecurity.delete', 'Удалить')}
+                    cancelLabel={t('common.cancel', 'Отмена')}
                     confirmVariant="danger"
                     isLoading={loading}
                 />

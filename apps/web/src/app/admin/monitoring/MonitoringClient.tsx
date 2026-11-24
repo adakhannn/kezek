@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -117,6 +118,7 @@ type AuthFlowResponse = {
 type Tab = 'metrics' | 'logs' | 'stats';
 
 export default function MonitoringClient() {
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState<Tab>('stats');
     const [metrics, setMetrics] = useState<ApiMetric[]>([]);
     const [logs, setLogs] = useState<FinanceLog[]>([]);
@@ -255,8 +257,8 @@ export default function MonitoringClient() {
     return (
         <div className="container mx-auto px-4 py-8">
             <PageHeader
-                title="Мониторинг и аналитика"
-                description="Метрики API, операционные логи и сводка по производительности критических эндпоинтов."
+                title={t('admin.monitoring.title', 'Мониторинг и аналитика')}
+                description={t('admin.monitoring.description', 'Метрики API, операционные логи и сводка по производительности критических эндпоинтов.')}
                 className="mb-6"
             />
 
@@ -264,24 +266,24 @@ export default function MonitoringClient() {
                 value={activeTab}
                 onValueChange={(value) => setActiveTab(value as Tab)}
                 items={[
-                    { key: 'stats', label: 'Статистика' },
-                    { key: 'metrics', label: 'Метрики API' },
-                    { key: 'logs', label: 'Логи операций' },
+                    { key: 'stats', label: t('admin.monitoring.tabs.stats', 'Статистика') },
+                    { key: 'metrics', label: t('admin.monitoring.tabs.metrics', 'Метрики API') },
+                    { key: 'logs', label: t('admin.monitoring.tabs.logs', 'Логи операций') },
                 ]}
                 className="mb-6 w-full max-w-2xl"
                 stretch
             />
 
-            {error ? <AlertBanner variant="danger" title="Ошибка" message={error} className="mb-6" /> : null}
+            {error ? <AlertBanner variant="danger" title={t('admin.monitoring.error', 'Ошибка')} message={error} className="mb-6" /> : null}
 
             {activeTab === 'stats' ? (
                 <div className="space-y-6">
                     <SectionHeader
-                        title="Сводка по эндпоинту"
-                        description="Обновляемая картина по скорости, успешности и рискам за последний час."
+                        title={t('admin.monitoring.stats.title', 'Сводка по эндпоинту')}
+                        description={t('admin.monitoring.stats.description', 'Обновляемая картина по скорости, успешности и рискам за последний час.')}
                         action={
                             <Button onClick={loadStats} disabled={loading} size="sm">
-                                {loading ? 'Загрузка...' : 'Обновить'}
+                                {loading ? t('admin.monitoring.loading', 'Загрузка...') : t('admin.monitoring.refresh', 'Обновить')}
                             </Button>
                         }
                     />
@@ -291,21 +293,21 @@ export default function MonitoringClient() {
                     ) : stats ? (
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                <StatCard title="Всего запросов" value={stats.total_requests} />
-                                <StatCard title="Успешных" value={stats.success_count} valueClassName="text-green-600 dark:text-green-400" />
-                                <StatCard title="Ошибок" value={stats.client_error_count + stats.server_error_count} valueClassName="text-red-600 dark:text-red-400" />
-                                <StatCard title="Среднее время" value={formatDuration(stats.avg_duration_ms)} />
+                                <StatCard title={t('admin.monitoring.stats.total', 'Всего запросов')} value={stats.total_requests} />
+                                <StatCard title={t('admin.monitoring.stats.success', 'Успешных')} value={stats.success_count} valueClassName="text-green-600 dark:text-green-400" />
+                                <StatCard title={t('admin.monitoring.stats.errors', 'Ошибок')} value={stats.client_error_count + stats.server_error_count} valueClassName="text-red-600 dark:text-red-400" />
+                                <StatCard title={t('admin.monitoring.stats.avgDuration', 'Среднее время')} value={formatDuration(stats.avg_duration_ms)} />
                                 <StatCard title="P95" value={formatDuration(stats.p95_duration_ms)} />
                                 <StatCard title="P99" value={formatDuration(stats.p99_duration_ms)} />
-                                <StatCard title="Процент ошибок" value={`${stats.error_rate.toFixed(2)}%`} />
-                                <StatCard title="Эндпоинт" value={stats.endpoint} />
+                                <StatCard title={t('admin.monitoring.stats.errorRate', 'Процент ошибок')} value={`${stats.error_rate.toFixed(2)}%`} />
+                                <StatCard title={t('admin.monitoring.endpoint', 'Эндпоинт')} value={stats.endpoint} />
                             </div>
 
                             {authFlow ? (
                                 <Card variant="elevated" padding="lg">
                                     <SectionHeader
                                         title="Telegram Mobile Auth Flow"
-                                        description={`Окно мониторинга: последние ${authFlow.windowHours} ч`}
+                                        description={t('admin.monitoring.authFlow.window', 'Окно мониторинга: последние {hours} ч').replace('{hours}', String(authFlow.windowHours))}
                                         className="mb-4"
                                     />
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -329,7 +331,7 @@ export default function MonitoringClient() {
                             ) : null}
                         </div>
                     ) : (
-                        <EmptyState compact title="Нет данных" description="Для этого эндпоинта пока нет сводной статистики." />
+                        <EmptyState compact title={t('admin.monitoring.stats.emptyTitle', 'Нет данных')} description={t('admin.monitoring.stats.emptyDescription', 'Для этого эндпоинта пока нет сводной статистики.')} />
                     )}
                 </div>
             ) : null}
@@ -337,9 +339,9 @@ export default function MonitoringClient() {
             {activeTab === 'metrics' ? (
                 <div className="space-y-6">
                     <Card variant="elevated" padding="lg">
-                        <SectionHeader title="Фильтры метрик" description="Отсейте нужные эндпоинты, методы, ошибки и медленные запросы." className="mb-4" />
+                        <SectionHeader title={t('admin.monitoring.metrics.filtersTitle', 'Фильтры метрик')} description={t('admin.monitoring.metrics.filtersDescription', 'Отсейте нужные эндпоинты, методы, ошибки и медленные запросы.')} className="mb-4" />
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <FilterField label="Эндпоинт">
+                            <FilterField label={t('admin.monitoring.endpoint', 'Эндпоинт')}>
                                 <input
                                     type="text"
                                     value={metricsFilters.endpoint}
@@ -348,20 +350,20 @@ export default function MonitoringClient() {
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
                             </FilterField>
-                            <FilterField label="Метод">
+                            <FilterField label={t('admin.monitoring.method', 'Метод')}>
                                 <select
                                     value={metricsFilters.method}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, method: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
+                                    <option value="">{t('admin.monitoring.all', 'Все')}</option>
                                     <option value="GET">GET</option>
                                     <option value="POST">POST</option>
                                     <option value="PUT">PUT</option>
                                     <option value="DELETE">DELETE</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Статус код">
+                            <FilterField label={t('admin.monitoring.metrics.statusCode', 'Статус код')}>
                                 <input
                                     type="number"
                                     value={metricsFilters.statusCode}
@@ -370,13 +372,13 @@ export default function MonitoringClient() {
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
                             </FilterField>
-                            <FilterField label="Тип ошибки">
+                            <FilterField label={t('admin.monitoring.metrics.errorType', 'Тип ошибки')}>
                                 <select
                                     value={metricsFilters.errorType}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, errorType: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
+                                    <option value="">{t('admin.monitoring.all', 'Все')}</option>
                                     <option value="validation">Validation</option>
                                     <option value="database">Database</option>
                                     <option value="auth">Auth</option>
@@ -384,7 +386,7 @@ export default function MonitoringClient() {
                                     <option value="network">Network</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Мин. время (мс)">
+                            <FilterField label={t('admin.monitoring.metrics.minDuration', 'Мин. время (мс)')}>
                                 <input
                                     type="number"
                                     value={metricsFilters.minDuration}
@@ -396,7 +398,7 @@ export default function MonitoringClient() {
                         </div>
                         <div className="mt-4">
                             <Button onClick={loadMetrics} disabled={loading}>
-                                {loading ? 'Загрузка...' : 'Применить фильтры'}
+                                {loading ? t('admin.monitoring.loading', 'Загрузка...') : t('admin.monitoring.applyFilters', 'Применить фильтры')}
                             </Button>
                         </div>
                     </Card>
@@ -408,12 +410,12 @@ export default function MonitoringClient() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <TableHead>Время</TableHead>
-                                        <TableHead>Эндпоинт</TableHead>
-                                        <TableHead>Метод</TableHead>
-                                        <TableHead>Статус</TableHead>
-                                        <TableHead>Время</TableHead>
-                                        <TableHead>Ошибка</TableHead>
+                                        <TableHead>{t('admin.monitoring.time', 'Время')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.endpoint', 'Эндпоинт')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.method', 'Метод')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.metrics.status', 'Статус')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.metrics.duration', 'Время')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.error', 'Ошибка')}</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -442,7 +444,7 @@ export default function MonitoringClient() {
                             </table>
                         </Card>
                     ) : (
-                        <EmptyState compact title="Нет метрик" description="Фильтры не вернули данных. Попробуйте изменить условия выборки." />
+                        <EmptyState compact title={t('admin.monitoring.metrics.emptyTitle', 'Нет метрик')} description={t('admin.monitoring.metrics.emptyDescription', 'Фильтры не вернули данных. Попробуйте изменить условия выборки.')} />
                     )}
                 </div>
             ) : null}
@@ -450,31 +452,31 @@ export default function MonitoringClient() {
             {activeTab === 'logs' ? (
                 <div className="space-y-6">
                     <Card variant="elevated" padding="lg">
-                        <SectionHeader title="Фильтры логов" description="Оставьте нужный тип операции и уровень журнала." className="mb-4" />
+                        <SectionHeader title={t('admin.monitoring.logs.filtersTitle', 'Фильтры логов')} description={t('admin.monitoring.logs.filtersDescription', 'Оставьте нужный тип операции и уровень журнала.')} className="mb-4" />
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <FilterField label="Тип операции">
+                            <FilterField label={t('admin.monitoring.logs.operationType', 'Тип операции')}>
                                 <select
                                     value={logsFilters.operationType}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, operationType: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
-                                    <option value="shift_open">Открытие смены</option>
-                                    <option value="shift_close">Закрытие смены</option>
-                                    <option value="item_create">Создание клиента</option>
-                                    <option value="item_update">Обновление клиента</option>
-                                    <option value="item_delete">Удаление клиента</option>
-                                    <option value="items_save">Сохранение списка</option>
-                                    <option value="error">Ошибка</option>
+                                    <option value="">{t('admin.monitoring.all', 'Все')}</option>
+                                    <option value="shift_open">{t('admin.monitoring.logs.shiftOpen', 'Открытие смены')}</option>
+                                    <option value="shift_close">{t('admin.monitoring.logs.shiftClose', 'Закрытие смены')}</option>
+                                    <option value="item_create">{t('admin.monitoring.logs.itemCreate', 'Создание клиента')}</option>
+                                    <option value="item_update">{t('admin.monitoring.logs.itemUpdate', 'Обновление клиента')}</option>
+                                    <option value="item_delete">{t('admin.monitoring.logs.itemDelete', 'Удаление клиента')}</option>
+                                    <option value="items_save">{t('admin.monitoring.logs.itemsSave', 'Сохранение списка')}</option>
+                                    <option value="error">{t('admin.monitoring.error', 'Ошибка')}</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Уровень">
+                            <FilterField label={t('admin.monitoring.logs.level', 'Уровень')}>
                                 <select
                                     value={logsFilters.logLevel}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, logLevel: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
+                                    <option value="">{t('admin.monitoring.all', 'Все')}</option>
                                     <option value="debug">Debug</option>
                                     <option value="info">Info</option>
                                     <option value="warn">Warn</option>
@@ -484,7 +486,7 @@ export default function MonitoringClient() {
                         </div>
                         <div className="mt-4">
                             <Button onClick={loadLogs} disabled={loading}>
-                                {loading ? 'Загрузка...' : 'Применить фильтры'}
+                                {loading ? t('admin.monitoring.loading', 'Загрузка...') : t('admin.monitoring.applyFilters', 'Применить фильтры')}
                             </Button>
                         </div>
                     </Card>
@@ -496,12 +498,12 @@ export default function MonitoringClient() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <TableHead>Время</TableHead>
-                                        <TableHead>Тип</TableHead>
-                                        <TableHead>Уровень</TableHead>
-                                        <TableHead>Сотрудник</TableHead>
-                                        <TableHead>Сообщение</TableHead>
-                                        <TableHead>Ошибка</TableHead>
+                                        <TableHead>{t('admin.monitoring.time', 'Время')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.logs.type', 'Тип')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.logs.level', 'Уровень')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.logs.staff', 'Сотрудник')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.logs.message', 'Сообщение')}</TableHead>
+                                        <TableHead>{t('admin.monitoring.error', 'Ошибка')}</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -524,7 +526,7 @@ export default function MonitoringClient() {
                             </table>
                         </Card>
                     ) : (
-                        <EmptyState compact title="Нет логов" description="По текущей выборке операционный журнал пуст." />
+                        <EmptyState compact title={t('admin.monitoring.logs.emptyTitle', 'Нет логов')} description={t('admin.monitoring.logs.emptyDescription', 'По текущей выборке операционный журнал пуст.')} />
                     )}
                 </div>
             ) : null}

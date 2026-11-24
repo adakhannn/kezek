@@ -6,6 +6,7 @@ import {PostgrestError} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { name_ru: string; slug?: string | null; is_active?: boolean };
@@ -34,7 +35,7 @@ function slugify(input: string) {
         .replace(/--+/g, '-');
 }
 
-export async function POST(req: Request) {
+export const POST = withLocalizedMessages(async function POST(req: Request) {
     try {
 
  // без await
@@ -82,4 +83,4 @@ export async function POST(req: Request) {
         logError('CategoryCreate', 'Failed to create category', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
-}
+});

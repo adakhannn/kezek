@@ -4,6 +4,10 @@
 import type { Translations } from '../LanguageProvider';
 
 import { adminRu } from './admin.ru';
+import { adminAccessRu } from './adminAccess.ru';
+import { adminAnalyticsRu } from './adminAnalytics.ru';
+import { adminCatalogRu } from './adminCatalog.ru';
+import { adminOpsRu } from './adminOps.ru';
 import { analyticsRu } from './analytics';
 import { apiDocsRu } from './apiDocs.ru';
 import { applicationHistoryRu } from './applicationHistory';
@@ -48,6 +52,10 @@ export const ru: Translations = Object.assign(
     branchesRu,
     financeRu,
     adminRu,
+    adminAccessRu,
+    adminAnalyticsRu,
+    adminCatalogRu,
+    adminOpsRu,
     applicationHistoryRu,
     commonRu,
     datePickerRu,

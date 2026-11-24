@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 
 import {logError} from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type ScheduleItem = {
@@ -23,7 +24,7 @@ function extractIds(urlStr: string): { id: string; branchId: string } {
     return { id: parts[parts.indexOf('businesses') + 1] ?? '', branchId: iBranches >= 0 ? parts[iBranches + 1] ?? '' : '' };
 }
 
-export async function POST(req: Request) {
+export const POST = withLocalizedMessages(async function POST(req: Request) {
     try {
         const { id, branchId } = extractIds(req.url);
 
@@ -98,9 +99,9 @@ export async function POST(req: Request) {
         logError('BranchSchedule', 'Failed to save branch schedule', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-}
+});
 
-export async function GET(req: Request) {
+export const GET = withLocalizedMessages(async function GET(req: Request) {
     try {
         const { id, branchId } = extractIds(req.url);
 
@@ -147,5 +148,5 @@ export async function GET(req: Request) {
         logError('BranchSchedule', 'Failed to load branch schedule', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-}
+});
 

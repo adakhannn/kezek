@@ -7,9 +7,10 @@ import {NextResponse} from 'next/server';
 import { getSiteOrigin } from '@/lib/env';
 import {logError} from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-export async function POST(_req: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(_req: Request, context: unknown) {
     // Next.js 15+ passes params as a Promise; reading it synchronously yielded undefined.
     let userId: string;
     try {
@@ -62,4 +63,4 @@ export async function POST(_req: Request, context: unknown) {
         logError('SendMagicLink', 'Failed to send magic link', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
-}
+});

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { loadPersistedAnalyticsFilters, persistAnalyticsFilters } from '../filterPersistence';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -45,15 +46,18 @@ function formatNumber(n: number) {
   return n.toLocaleString('ru-RU');
 }
 
-const WEEKDAY_LABELS: Record<number, string> = {
-  0: 'Вс',
-  1: 'Пн',
-  2: 'Вт',
-  3: 'Ср',
-  4: 'Чт',
-  5: 'Пт',
-  6: 'Сб',
+// Weekday rows are keyed by the day number (0 = Sunday) and named in the page language.
+const WEEKDAY_KEYS: Record<number, string> = {
+  0: 'datePicker.weekdays.sunday',
+  1: 'datePicker.weekdays.monday',
+  2: 'datePicker.weekdays.tuesday',
+  3: 'datePicker.weekdays.wednesday',
+  4: 'datePicker.weekdays.thursday',
+  5: 'datePicker.weekdays.friday',
+  6: 'datePicker.weekdays.saturday',
 };
+
+const WEEKDAY_ORDER = ['1', '2', '3', '4', '5', '6', '0'];
 
 function getWeekday(dateStr: string): number {
   return new Date(dateStr + 'T00:00:00Z').getUTCDay();
@@ -70,6 +74,7 @@ function valueToBg(value: number, max: number): string {
 }
 
 export default function AdminAnalyticsLoadPage() {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('30');
@@ -137,7 +142,7 @@ export default function AdminAnalyticsLoadPage() {
         }
         const json: LoadResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'Не удалось загрузить данные по загрузке');
+          throw new Error(json.error || t('admin.analyticsLoad.loadFailed', 'Не удалось загрузить данные по загрузке'));
         }
         if (!ignore) {
           setData(json.data);
@@ -157,7 +162,7 @@ export default function AdminAnalyticsLoadPage() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate, branchId]);
+  }, [startDate, endDate, branchId, t]);
 
   const handlePresetChange = (preset: PeriodPreset) => {
     setPeriodPreset(preset);
@@ -206,7 +211,7 @@ export default function AdminAnalyticsLoadPage() {
       const prev = sums.get(key);
       const sum = (prev?.sum ?? 0) + p.bookingsCount;
       sums.set(key, {
-        labelY: WEEKDAY_LABELS[wd],
+        labelY: String(wd),
         hour: p.hour,
         sum,
         countDays: daySet.size,
@@ -224,9 +229,8 @@ export default function AdminAnalyticsLoadPage() {
       });
     });
     const sorted = cellsArr.sort((a, b) => {
-      const order = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-      const ai = order.indexOf(a.labelY);
-      const bi = order.indexOf(b.labelY);
+      const ai = WEEKDAY_ORDER.indexOf(a.labelY);
+      const bi = WEEKDAY_ORDER.indexOf(b.labelY);
       if (ai !== bi) return ai - bi;
       return a.hour - b.hour;
     });
@@ -234,6 +238,8 @@ export default function AdminAnalyticsLoadPage() {
     const labels = Array.from(new Set(sorted.map((c) => c.labelY)));
     return { cells: sorted, maxValue: max, axisYLabels: labels };
   }, [data, mode]);
+
+  const rowLabel = (labelY: string) => (mode === 'byWeekday' ? t(WEEKDAY_KEYS[Number(labelY)]) : labelY);
 
   useEffect(() => {
     if (!startDate || !endDate) return;
@@ -250,7 +256,7 @@ export default function AdminAnalyticsLoadPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем данные по загрузке...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.analyticsLoad.loading', 'Загружаем данные по загрузке...')}</span>
           </div>
         </div>
       </div>
@@ -263,7 +269,7 @@ export default function AdminAnalyticsLoadPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="Ошибка загрузки heatmap"
+            title={t('admin.analyticsLoad.errorTitle', 'Ошибка загрузки heatmap')}
             message={error}
             action={
               <Button
@@ -276,7 +282,7 @@ export default function AdminAnalyticsLoadPage() {
                   setStartDate((s) => s);
                 }}
               >
-                Попробовать снова
+                {t('admin.analyticsFilters.retry', 'Попробовать снова')}
               </Button>
             }
           />
@@ -295,13 +301,13 @@ export default function AdminAnalyticsLoadPage() {
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('admin.analyticsFilters.filters', 'Фильтры')}</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Период и филиал / режим агрегации задают срез для карты загрузки.
+              {t('admin.analyticsLoad.filtersHint', 'Период и филиал / режим агрегации задают срез для карты загрузки.')}
             </p>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            Период данных: {data.period.startDate} — {data.period.endDate}
+            {t('admin.analyticsFilters.dataPeriod', 'Период данных: {start} — {end}').replace('{start}', data.period.startDate).replace('{end}', data.period.endDate)}
           </div>
         </div>
 
@@ -309,7 +315,7 @@ export default function AdminAnalyticsLoadPage() {
           {/* Период */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Период
+              {t('admin.analyticsFilters.period', 'Период')}
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
@@ -323,10 +329,10 @@ export default function AdminAnalyticsLoadPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' && '7 дней'}
-                  {p === '30' && '30 дней'}
-                  {p === '90' && '90 дней'}
-                  {p === 'custom' && 'Кастомный'}
+                  {p === '7' && t('admin.analyticsFilters.days7', '7 дней')}
+                  {p === '30' && t('admin.analyticsFilters.days30', '30 дней')}
+                  {p === '90' && t('admin.analyticsFilters.days90', '90 дней')}
+                  {p === 'custom' && t('admin.analyticsFilters.custom', 'Кастомный')}
                 </button>
               ))}
             </div>
@@ -335,7 +341,7 @@ export default function AdminAnalyticsLoadPage() {
           {/* Дата начала */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата начала
+              {t('admin.analyticsFilters.startDate', 'Дата начала')}
             </label>
             <input
               type="date"
@@ -351,7 +357,7 @@ export default function AdminAnalyticsLoadPage() {
           {/* Дата окончания */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата окончания
+              {t('admin.analyticsFilters.endDate', 'Дата окончания')}
             </label>
             <input
               type="date"
@@ -367,14 +373,14 @@ export default function AdminAnalyticsLoadPage() {
           {/* Филиал */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Филиал
+              {t('admin.analyticsFilters.branch', 'Филиал')}
             </label>
             <select
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Все филиалы</option>
+              <option value="all">{t('admin.analyticsFilters.allBranches', 'Все филиалы')}</option>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -386,7 +392,7 @@ export default function AdminAnalyticsLoadPage() {
           {/* Режим heatmap */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Режим
+              {t('admin.analyticsLoad.mode', 'Режим')}
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               <button
@@ -398,7 +404,7 @@ export default function AdminAnalyticsLoadPage() {
                     : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                 }`}
               >
-                По датам
+                {t('admin.analyticsLoad.byDate', 'По датам')}
               </button>
               <button
                 type="button"
@@ -409,7 +415,7 @@ export default function AdminAnalyticsLoadPage() {
                     : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                 }`}
               >
-                По дням недели
+                {t('admin.analyticsLoad.byWeekday', 'По дням недели')}
               </button>
             </div>
           </div>
@@ -421,10 +427,10 @@ export default function AdminAnalyticsLoadPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Карта загрузки по часам
+              {t('admin.analyticsLoad.heatmapTitle', 'Карта загрузки по часам')}
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Цвет ячейки показывает относительную загрузку (количество успешных бронирований) в выбранном срезе.
+              {t('admin.analyticsLoad.heatmapHint', 'Цвет ячейки показывает относительную загрузку (количество успешных бронирований) в выбранном срезе.')}
             </p>
           </div>
         </div>
@@ -432,8 +438,8 @@ export default function AdminAnalyticsLoadPage() {
         {cells.length === 0 ? (
           <EmptyState
             compact
-            title="Нет данных по heatmap"
-            description="За выбранный период и фильтры нет достаточного набора броней для карты загрузки."
+            title={t('admin.analyticsLoad.emptyTitle', 'Нет данных по heatmap')}
+            description={t('admin.analyticsLoad.emptyDescription', 'За выбранный период и фильтры нет достаточного набора броней для карты загрузки.')}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -441,7 +447,7 @@ export default function AdminAnalyticsLoadPage() {
               <div className="grid" style={{ gridTemplateColumns: `80px repeat(24, minmax(24px, 1fr))` }}>
                 {/* Заголовок X */}
                 <div className="text-xs text-gray-500 dark:text-gray-400 flex items-end justify-end pr-2">
-                  Час
+                  {t('admin.analyticsLoad.hour', 'Час')}
                 </div>
                 {Array.from({ length: 24 }).map((_, h) => (
                   <div
@@ -459,7 +465,7 @@ export default function AdminAnalyticsLoadPage() {
                       key={`label-${labelY}`}
                       className="text-xs text-gray-700 dark:text-gray-200 py-1 pr-2 border-b border-gray-100 dark:border-gray-800 flex items-center justify-end"
                     >
-                      {labelY}
+                      {rowLabel(labelY)}
                     </div>
                     {Array.from({ length: 24 }).map((_, h) => {
                       const cell = cells.find((c) => c.labelY === labelY && c.hour === h);
@@ -471,8 +477,8 @@ export default function AdminAnalyticsLoadPage() {
                           className={`border-b border-gray-100 dark:border-gray-800 border-l border-gray-50 dark:border-gray-900 text-[10px] text-center cursor-default ${classes}`}
                           title={
                             val > 0
-                              ? `${labelY}, ${h}:00 — ${formatNumber(Math.round(val))} броней`
-                              : `${labelY}, ${h}:00 — нет броней`
+                              ? t('admin.analyticsLoad.cellBookings', '{label}, {hour}:00 — {count} броней').replace('{label}', rowLabel(labelY)).replace('{hour}', String(h)).replace('{count}', formatNumber(Math.round(val)))
+                              : t('admin.analyticsLoad.cellEmpty', '{label}, {hour}:00 — нет броней').replace('{label}', rowLabel(labelY)).replace('{hour}', String(h))
                           }
                         >
                           {val > 0 ? Math.round(val) : ''}
@@ -487,9 +493,9 @@ export default function AdminAnalyticsLoadPage() {
         )}
 
         <div className="flex items-center gap-3 text-[11px] text-gray-500 dark:text-gray-400 pt-2">
-          <span>Мин. загрузка</span>
+          <span>{t('admin.analyticsLoad.minLoad', 'Мин. загрузка')}</span>
           <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-emerald-100 via-emerald-300 to-emerald-600" />
-          <span>Макс. загрузка</span>
+          <span>{t('admin.analyticsLoad.maxLoad', 'Макс. загрузка')}</span>
         </div>
       </section>
     </div>

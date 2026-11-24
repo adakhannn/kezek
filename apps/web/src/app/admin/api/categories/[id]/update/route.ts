@@ -6,6 +6,7 @@ import {PostgrestError} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { uuidSchema } from '@/lib/validation/schemas';
 
@@ -51,7 +52,7 @@ function isSlugValid(s: string) {
     return /^[a-z0-9-]{2,}$/.test(s);
 }
 
-export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
+export const POST = withLocalizedMessages(async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
     try {
 
  // без await
@@ -145,4 +146,4 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         logError('CategoryUpdate', 'Failed to update category', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
-}
+});

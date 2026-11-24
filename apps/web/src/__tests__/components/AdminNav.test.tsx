@@ -10,13 +10,14 @@ jest.mock('next/navigation', () => ({
     usePathname: () => mockPathname,
 }));
 
-jest.mock('@/app/_components/i18n/LanguageProvider', () => ({
-    useLanguage: () => ({
-        t: (key: string, fallback?: string) => ({
-            'admin.nav.sections': 'Разделы',
-        }[key] ?? fallback ?? key),
-    }),
-}));
+jest.mock('@/app/_components/i18n/LanguageProvider', () => {
+    const { ru } = jest.requireActual('@/app/_components/i18n/dictionaries/ru');
+    return {
+        useLanguage: () => ({
+            t: (key: string, fallback?: string) => ru[key] ?? fallback ?? key,
+        }),
+    };
+});
 
 describe('AdminNav', () => {
     beforeEach(() => { mockPathname = '/admin'; });

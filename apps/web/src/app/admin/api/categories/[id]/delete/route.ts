@@ -6,12 +6,13 @@ import { NextResponse } from 'next/server';
 
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { force?: boolean };
 type CategoryRow = { id: string; slug: string };
 
-export async function POST(req: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(req: Request, context: unknown) {
     try {
         const categoryId = await getRouteParamRequired(context, 'id');
         
@@ -75,7 +76,7 @@ export async function POST(req: Request, context: unknown) {
         logError('CategoryDelete', 'Failed to delete category', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-}
+});
 
 // поддержим HTTP DELETE
 export const DELETE = POST;

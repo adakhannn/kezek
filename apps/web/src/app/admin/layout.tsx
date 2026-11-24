@@ -3,12 +3,14 @@ import { redirect } from 'next/navigation';
 
 import { AdminNav } from './_components/AdminNav';
 
+import { getT } from '@/app/_components/i18n/server';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
 
     const supabase = await createSupabaseServerClient();
+    const t = await getT();
 
     // 1) авторизация
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -38,30 +40,28 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
                                 <div className="space-y-3">
                                     <div className="inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
-                                        Доступ ограничен
+                                        {t('admin.shell.denied.badge', 'Доступ ограничен')}
                                     </div>
                                     <div className="space-y-2">
                                         <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-                                            Нужны права супер-админа
+                                            {t('admin.shell.denied.title', 'Нужны права супер-админа')}
                                         </h1>
                                         <p className="max-w-2xl text-base leading-7 text-slate-300">
-                                            Этот раздел доступен только супер-администраторам Kezek. Ваш аккаунт авторизован,
-                                            но у него нет нужной роли для просмотра админки.
+                                            {t('admin.shell.denied.description', 'Этот раздел доступен только супер-администраторам Kezek. Ваш аккаунт авторизован, но у него нет нужной роли для просмотра админки.')}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="grid gap-3 rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300 sm:grid-cols-[auto_1fr]">
-                                <span className="font-semibold text-slate-100">Текущий аккаунт</span>
-                                <span className="break-all">{user.email ?? 'Email не указан'}</span>
-                                <span className="font-semibold text-slate-100">Требуется роль</span>
+                                <span className="font-semibold text-slate-100">{t('admin.shell.denied.currentAccount', 'Текущий аккаунт')}</span>
+                                <span className="break-all">{user.email ?? t('admin.shell.denied.noEmail', 'Email не указан')}</span>
+                                <span className="font-semibold text-slate-100">{t('admin.shell.denied.requiredRole', 'Требуется роль')}</span>
                                 <span>global `super_admin`</span>
                             </div>
 
                             <div className="rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-6 text-sky-100">
-                                Если вы должны видеть админку, попросите действующего супер-админа выдать роль этому аккаунту.
-                                Если вошли не под тем пользователем — выйдите и авторизуйтесь заново.
+                                {t('admin.shell.denied.hint', 'Если вы должны видеть админку, попросите действующего супер-админа выдать роль этому аккаунту. Если вошли не под тем пользователем — выйдите и авторизуйтесь заново.')}
                             </div>
 
                             <div className="flex flex-col gap-3 sm:flex-row">
@@ -69,19 +69,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                                     href="/cabinet/profile"
                                     className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-violet-500 to-pink-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition hover:scale-[1.01] hover:shadow-pink-500/30"
                                 >
-                                    Перейти в личный кабинет
+                                    {t('admin.shell.denied.toCabinet', 'Перейти в личный кабинет')}
                                 </Link>
                                 <Link
                                     href="/auth/sign-in"
                                     className="inline-flex items-center justify-center rounded-2xl border border-slate-600 bg-slate-900 px-5 py-3 text-sm font-bold text-slate-100 transition hover:border-slate-400 hover:bg-slate-800"
                                 >
-                                    Войти под другим аккаунтом
+                                    {t('admin.shell.denied.otherAccount', 'Войти под другим аккаунтом')}
                                 </Link>
                                 <Link
                                     href="/"
                                     className="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-slate-300 transition hover:text-white"
                                 >
-                                    На главную
+                                    {t('admin.shell.denied.home', 'На главную')}
                                 </Link>
                             </div>
                         </div>
@@ -105,7 +105,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                                     </svg>
                                 </div>
                                 <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                                    Админка
+                                    {t('admin.shell.title', 'Админка')}
                                 </h1>
                             </Link>
                         </div>

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -31,6 +32,7 @@ export function OwnerForm({
     currentOwners: UserRow[];
 }) {
     const router = useRouter();
+    const { t } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
@@ -77,7 +79,7 @@ export function OwnerForm({
 
             const data = await resp.json();
             if (!data.ok) {
-                throw new Error(data.error || 'Ошибка поиска');
+                throw new Error(data.error || 'Search failed');
             }
 
             setSearchResults(data.items || []);
@@ -166,7 +168,7 @@ export function OwnerForm({
                 throw new Error(data?.error || `HTTP ${resp.status}`);
             }
 
-            setOk(owners.length > 0 ? `Владельцы обновлены (${owners.length})` : 'Все владельцы удалены');
+            setOk(owners.length > 0 ? t('admin.ownerForm.updated', 'Владельцы обновлены ({count})').replace('{count}', String(owners.length)) : t('admin.ownerForm.allRemoved', 'Все владельцы удалены'));
             router.refresh();
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
@@ -185,14 +187,14 @@ export function OwnerForm({
 
     return (
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Владельцы бизнеса</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('admin.ownerForm.title', 'Владельцы бизнеса')}</h3>
             
             <div className="space-y-4">
                 {/* Список текущих владельцев */}
                 {owners.length > 0 && (
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Текущие владельцы ({owners.length})
+                            {t('admin.ownerForm.current', 'Текущие владельцы ({count})').replace('{count}', String(owners.length))}
                         </label>
                         <div className="space-y-2">
                             {owners.map((owner) => (
@@ -210,7 +212,7 @@ export function OwnerForm({
                                         disabled={loading}
                                         className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                                     >
-                                        Удалить
+                                        {t('admin.ownerForm.remove', 'Удалить')}
                                     </Button>
                                 </div>
                             ))}
@@ -221,11 +223,11 @@ export function OwnerForm({
                 {/* Поиск и добавление нового владельца */}
                 <div className="space-y-2">
                     <Input
-                        label="Добавить владельца"
-                        placeholder="Введите email, телефон или имя (минимум 2 символа)"
+                        label={t('admin.ownerForm.addLabel', 'Добавить владельца')}
+                        placeholder={t('admin.ownerForm.addPlaceholder', 'Введите email, телефон или имя (минимум 2 символа)')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        helperText={searchQuery.length > 0 && searchQuery.length < 2 ? 'Введите минимум 2 символа для поиска' : 'Начните вводить для поиска пользователя'}
+                        helperText={searchQuery.length > 0 && searchQuery.length < 2 ? t('admin.ownerForm.minChars', 'Введите минимум 2 символа для поиска') : t('admin.ownerForm.startTyping', 'Начните вводить для поиска пользователя')}
                     />
 
                     {availableOptions.length > 0 && (
@@ -245,13 +247,13 @@ export function OwnerForm({
 
                     {searchLoading && (
                         <div className="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">
-                            Поиск...
+                            {t('admin.ownerForm.searching', 'Поиск...')}
                         </div>
                     )}
 
                     {!searchLoading && searchQuery.trim().length >= 2 && availableOptions.length === 0 && (
                         <div className="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">
-                            Ничего не найдено
+                            {t('admin.ownerForm.nothingFound', 'Ничего не найдено')}
                         </div>
                     )}
                 </div>
@@ -263,16 +265,16 @@ export function OwnerForm({
                         disabled={loading || !changed}
                         isLoading={loading}
                     >
-                        {loading ? 'Сохраняю…' : 'Сохранить'}
+                        {loading ? t('admin.ownerForm.saving', 'Сохраняю…') : t('admin.ownerForm.save', 'Сохранить')}
                     </Button>
-                    {!changed && <span className="text-xs text-gray-500 dark:text-gray-400">Нет изменений</span>}
+                    {!changed && <span className="text-xs text-gray-500 dark:text-gray-400">{t('admin.ownerForm.noChanges', 'Нет изменений')}</span>}
                 </div>
             </div>
 
             {err ? <AlertBanner variant="danger" message={err} compact /> : null}
             {ok ? <AlertBanner variant="success" message={ok} compact /> : null}
             <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                Используйте поиск для нахождения пользователя. Введите email, телефон или имя. Заблокированные пользователи не могут быть владельцами.
+                {t('admin.ownerForm.hint', 'Используйте поиск для нахождения пользователя. Введите email, телефон или имя. Заблокированные пользователи не могут быть владельцами.')}
             </div>
         </div>
     );

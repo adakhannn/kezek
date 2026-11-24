@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
 
+import { getT } from '@/app/_components/i18n/server';
 import {CategoryForm} from '@/components/admin/categories/CategoryForm';
 import {Button} from '@/components/ui/Button';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -11,13 +12,14 @@ type RouteParams = { id: string };
 export default async function CategoryEditPage({params}: { params: Promise<RouteParams> }
 ) {
     const {id} = await params;
+    const t = await getT();
 
     const supa = await createSupabaseServerClient();
     const {data: {user}} = await supa.auth.getUser();
-    if (!user) return <div className="p-4">Не авторизован</div>;
+    if (!user) return <div className="p-4">{t('admin.catalog.common.notAuthorized', 'Не авторизован')}</div>;
     const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-    if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
-    if (!isSuper) return <div className="p-4">Нет доступа</div>;
+    if (eSuper) return <div className="p-4">{t('admin.catalog.common.error', 'Ошибка: {message}').replace('{message}', eSuper.message)}</div>;
+    if (!isSuper) return <div className="p-4">{t('admin.catalog.common.noAccess', 'Нет доступа')}</div>;
 
     const admin = createSupabaseAdminClient();
     const {data: cat, error} = await admin
@@ -26,8 +28,8 @@ export default async function CategoryEditPage({params}: { params: Promise<Route
         .eq('id', id)
         .maybeSingle();
 
-    if (error) return <div className="p-4">Ошибка: {error.message}</div>;
-    if (!cat) return <div className="p-4">Категория не найдена</div>;
+    if (error) return <div className="p-4">{t('admin.catalog.common.error', 'Ошибка: {message}').replace('{message}', error.message)}</div>;
+    if (!cat) return <div className="p-4">{t('admin.categoryPages.notFound', 'Категория не найдена')}</div>;
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
@@ -37,10 +39,10 @@ export default async function CategoryEditPage({params}: { params: Promise<Route
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                                Редактировать категорию
+                                {t('admin.categoryPages.editTitle', 'Редактировать категорию')}
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Измените данные категории
+                                {t('admin.categoryPages.editDescription', 'Измените данные категории')}
                             </p>
                         </div>
                         <Link href="/admin/categories">
@@ -48,7 +50,7 @@ export default async function CategoryEditPage({params}: { params: Promise<Route
                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                 </svg>
-                                Назад к категориям
+                                {t('admin.categoryPages.backToList', 'Назад к категориям')}
                             </Button>
                         </Link>
                     </div>

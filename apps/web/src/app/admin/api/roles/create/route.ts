@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { logError } from '@/lib/log';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const runtime = 'nodejs';
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 type Body = { key: string; name: string; description?: string | null };
 
-export async function POST(req: Request) {
+export const POST = withLocalizedMessages(async function POST(req: Request) {
     try {
 
         const supa = await createSupabaseServerClient();
@@ -53,4 +54,4 @@ export async function POST(req: Request) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok:false, error: msg }, { status: 500 });
     }
-}
+});

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -33,6 +34,19 @@ type FunnelAnalyticsResponse = {
 };
 
 export default function FunnelAnalyticsClient() {
+    const { t } = useLanguage();
+    // The API sends Russian step names; known steps are named in the page language.
+    const stepName = (step: FunnelStep) => {
+        switch (step.step) {
+            case 'business_view': return t('admin.funnelAnalytics.step.business_view', step.stepName);
+            case 'branch_select': return t('admin.funnelAnalytics.step.branch_select', step.stepName);
+            case 'service_select': return t('admin.funnelAnalytics.step.service_select', step.stepName);
+            case 'staff_select': return t('admin.funnelAnalytics.step.staff_select', step.stepName);
+            case 'slot_select': return t('admin.funnelAnalytics.step.slot_select', step.stepName);
+            case 'booking_success': return t('admin.funnelAnalytics.step.booking_success', step.stepName);
+            default: return step.stepName;
+        }
+    };
     const [data, setData] = useState<FunnelAnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -88,24 +102,24 @@ export default function FunnelAnalyticsClient() {
     return (
         <div className="container mx-auto space-y-6 px-4 py-8">
             <PageHeader
-                title="Аналитика воронки"
-                description="Конверсия между шагами процесса бронирования"
+                title={t('admin.funnelAnalytics.title', 'Аналитика воронки')}
+                description={t('admin.funnelAnalytics.description', 'Конверсия между шагами процесса бронирования')}
                 actions={
                     <Button type="button" variant="secondary" onClick={loadAnalytics} isLoading={loading}>
-                        Обновить
+                        {t('admin.funnelAnalytics.refresh', 'Обновить')}
                     </Button>
                 }
             />
 
             <section className="rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-6">
                 <SectionHeader
-                    title="Фильтры"
-                    description="Отсейте период и источник, чтобы сравнивать конверсию между публичным потоком и QuickDesk."
+                    title={t('admin.analyticsFilters.filters', 'Фильтры')}
+                    description={t('admin.funnelAnalytics.filtersHint', 'Отсейте период и источник, чтобы сравнивать конверсию между публичным потоком и QuickDesk.')}
                     className="mb-4"
                 />
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
-                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Дата начала</label>
+                        <label className="type-label mb-1 block text-[var(--text-secondary)]">{t('admin.analyticsFilters.startDate', 'Дата начала')}</label>
                         <input
                             type="date"
                             value={filters.startDate}
@@ -114,7 +128,7 @@ export default function FunnelAnalyticsClient() {
                         />
                     </div>
                     <div>
-                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Дата окончания</label>
+                        <label className="type-label mb-1 block text-[var(--text-secondary)]">{t('admin.analyticsFilters.endDate', 'Дата окончания')}</label>
                         <input
                             type="date"
                             value={filters.endDate}
@@ -123,14 +137,14 @@ export default function FunnelAnalyticsClient() {
                         />
                     </div>
                     <div>
-                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Источник</label>
+                        <label className="type-label mb-1 block text-[var(--text-secondary)]">{t('admin.funnelAnalytics.source', 'Источник')}</label>
                         <select
                             value={filters.source}
                             onChange={(e) => setFilters({ ...filters, source: e.target.value as 'public' | 'quickdesk' | '' })}
                             className="min-h-[44px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)]"
                         >
-                            <option value="">Все</option>
-                            <option value="public">Публичный поток</option>
+                            <option value="">{t('admin.funnelAnalytics.sourceAll', 'Все')}</option>
+                            <option value="public">{t('admin.funnelAnalytics.sourcePublic', 'Публичный поток')}</option>
                             <option value="quickdesk">QuickDesk</option>
                         </select>
                     </div>
@@ -140,11 +154,11 @@ export default function FunnelAnalyticsClient() {
             {error ? (
                 <AlertBanner
                     variant="danger"
-                    title="Ошибка загрузки"
+                    title={t('admin.funnelAnalytics.errorTitle', 'Ошибка загрузки')}
                     message={error}
                     action={
                         <Button type="button" size="sm" variant="danger" onClick={loadAnalytics}>
-                            Попробовать снова
+                            {t('admin.analyticsFilters.retry', 'Попробовать снова')}
                         </Button>
                     }
                 />
@@ -153,17 +167,17 @@ export default function FunnelAnalyticsClient() {
             {loading && !data ? (
                 <div className="rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-6 py-12 text-center">
                     <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--accent-primary)]" />
-                    <p className="type-body mt-4 text-[var(--text-secondary)]">Загрузка аналитики воронки...</p>
+                    <p className="type-body mt-4 text-[var(--text-secondary)]">{t('admin.funnelAnalytics.loading', 'Загрузка аналитики воронки...')}</p>
                 </div>
             ) : null}
 
             {!loading && !error && data && data.funnel.length === 0 ? (
                 <EmptyState
-                    title="Нет данных воронки"
-                    description="За выбранный период и фильтры пока нет событий для анализа."
+                    title={t('admin.funnelAnalytics.emptyTitle', 'Нет данных воронки')}
+                    description={t('admin.funnelAnalytics.emptyDescription', 'За выбранный период и фильтры пока нет событий для анализа.')}
                     action={
                         <Button type="button" variant="secondary" onClick={loadAnalytics}>
-                            Обновить
+                            {t('admin.funnelAnalytics.refresh', 'Обновить')}
                         </Button>
                     }
                 />
@@ -172,20 +186,20 @@ export default function FunnelAnalyticsClient() {
             {data ? (
                 <>
                     <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                        <SummaryCard label="Всего просмотров" value={data.summary.totalViews} />
-                        <SummaryCard label="Успешных броней" value={data.summary.totalBookings} />
+                        <SummaryCard label={t('admin.funnelAnalytics.totalViews', 'Всего просмотров')} value={data.summary.totalViews} />
+                        <SummaryCard label={t('admin.funnelAnalytics.successfulBookings', 'Успешных броней')} value={data.summary.totalBookings} />
                         <SummaryCard
-                            label="Общая конверсия"
+                            label={t('admin.funnelAnalytics.overallConversion', 'Общая конверсия')}
                             value={`${data.summary.overallConversionRate.toFixed(2)}%`}
                             accentClassName={getConversionColor(data.summary.overallConversionRate)}
                         />
-                        <SummaryCard label="Всего событий" value={data.summary.totalEvents} />
+                        <SummaryCard label={t('admin.funnelAnalytics.totalEvents', 'Всего событий')} value={data.summary.totalEvents} />
                     </section>
 
                     <section className="rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-6">
                         <SectionHeader
-                            title="Воронка конверсии"
-                            description="Смотрите, где именно теряются сессии между шагами."
+                            title={t('admin.funnelAnalytics.chartTitle', 'Воронка конверсии')}
+                            description={t('admin.funnelAnalytics.chartHint', 'Смотрите, где именно теряются сессии между шагами.')}
                             className="mb-5"
                         />
                         <div className="space-y-4">
@@ -197,12 +211,12 @@ export default function FunnelAnalyticsClient() {
                                                 {index + 1}
                                             </span>
                                             <div>
-                                                <p className="type-body text-[var(--text-primary)]">{step.stepName}</p>
-                                                <p className="type-caption text-[var(--text-muted)]">{step.totalEvents} всего событий</p>
+                                                <p className="type-body text-[var(--text-primary)]">{stepName(step)}</p>
+                                                <p className="type-caption text-[var(--text-muted)]">{t('admin.funnelAnalytics.stepEvents', '{count} всего событий').replace('{count}', String(step.totalEvents))}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="type-label text-[var(--text-secondary)]">{step.uniqueSessions} сессий</p>
+                                            <p className="type-label text-[var(--text-secondary)]">{t('admin.funnelAnalytics.stepSessions', '{count} сессий').replace('{count}', String(step.uniqueSessions))}</p>
                                             {index > 0 ? (
                                                 <p className={`type-body ${getConversionColor(step.conversionRate)}`}>{step.conversionRate.toFixed(2)}%</p>
                                             ) : null}
@@ -218,7 +232,7 @@ export default function FunnelAnalyticsClient() {
                                     </div>
                                     {index > 0 ? (
                                         <p className="type-caption mt-2 text-[var(--text-muted)]">
-                                            Конверсия от предыдущего шага: {step.conversionRate.toFixed(2)}%
+                                            {t('admin.analyticsFunnel.tooltipFromPrev', 'Конверсия от предыдущего шага: {value}').replace('{value}', `${step.conversionRate.toFixed(2)}%`)}
                                         </p>
                                     ) : null}
                                 </div>

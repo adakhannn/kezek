@@ -6,6 +6,7 @@ import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
 
 import RolesClient from './RolesClient';
 
+import { getT } from '@/app/_components/i18n/server';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -14,13 +15,14 @@ export const dynamic = 'force-dynamic';
 export default async function RolesPage() {
 
     const supa = await createSupabaseServerClient();
+    const t = await getT();
 
     const { data: { user }, error: authError } = await supa.auth.getUser();
     if (authError || !user) {
         return (
             <main className="p-4 space-y-4">
-                <h1 className="text-2xl font-semibold">Роли</h1>
-                <div>Не авторизован</div>
+                <h1 className="text-2xl font-semibold">{t('admin.roles.title', 'Роли')}</h1>
+                <div>{t('admin.roles.notAuthorized', 'Не авторизован')}</div>
             </main>
         );
     }
@@ -30,8 +32,8 @@ export default async function RolesPage() {
     if (roleErr || !isSuperAdmin) {
         return (
             <main className="p-4 space-y-4">
-                <h1 className="text-2xl font-semibold">Роли</h1>
-                <div>Нет доступа</div>
+                <h1 className="text-2xl font-semibold">{t('admin.roles.title', 'Роли')}</h1>
+                <div>{t('admin.roles.noAccess', 'Нет доступа')}</div>
             </main>
         );
     }
@@ -49,10 +51,10 @@ export default async function RolesPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                                Роли
+                                {t('admin.roles.title', 'Роли')}
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Управление ролями системы
+                                {t('admin.roles.subtitle', 'Управление ролями системы')}
                             </p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3">
@@ -61,7 +63,7 @@ export default async function RolesPage() {
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                     </svg>
-                                    В админку
+                                    {t('admin.users.backToAdmin', 'В админку')}
                                 </button>
                             </Link>
                             <Link href="/admin/roles/new">
@@ -69,7 +71,7 @@ export default async function RolesPage() {
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                     </svg>
-                                    Новая роль
+                                    {t('admin.roles.newRole', 'Новая роль')}
                                 </button>
                             </Link>
                         </div>

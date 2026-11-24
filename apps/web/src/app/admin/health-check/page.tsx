@@ -52,7 +52,7 @@ export default async function HealthCheckPage() {
                                 : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'
                         }`}
                     >
-                        {data.ok ? `✅ ${t('admin.healthCheck.status.healthy', 'Система здорова')}` : `⚠️ ${t('admin.healthCheck.status.problems', 'Обнаружены проблемы')}`}
+                        {data.ok ? '✅ ' + t('admin.healthCheck.status.healthy', 'Система здорова') : '⚠️ ' + t('admin.healthCheck.status.problems', 'Обнаружены проблемы')}
                     </div>
                 </div>
             </section>
@@ -125,7 +125,7 @@ export default async function HealthCheckPage() {
                             <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
                                 {t('admin.healthCheck.checks.ratings.lastMetric', 'Последняя метрика')}:{' '}
                                 {data.checks.ratings.daysSinceLastMetric !== null
-                                    ? `${data.checks.ratings.daysSinceLastMetric} ${t('common.daysAgo', 'дн. назад')}`
+                                    ? `${data.checks.ratings.daysSinceLastMetric} ` + t('common.daysAgo', 'дн. назад')
                                     : t('common.noData', 'нет данных')}
                             </p>
                         </div>
@@ -168,7 +168,7 @@ export default async function HealthCheckPage() {
                             <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                                 {t('admin.healthCheck.checks.promotions.lastApplication', 'Последнее применение')}:{' '}
                                 {data.checks.promotions.daysSinceLastApplication !== null
-                                    ? `${data.checks.promotions.daysSinceLastApplication} ${t('common.daysAgo', 'дн. назад')}`
+                                    ? `${data.checks.promotions.daysSinceLastApplication} ` + t('common.daysAgo', 'дн. назад')
                                     : t('common.never', 'никогда')}
                             </p>
                         </div>

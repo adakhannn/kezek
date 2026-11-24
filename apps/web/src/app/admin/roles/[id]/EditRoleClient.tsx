@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { AdminFormSection } from '../../_components/AdminFormSection';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -20,6 +21,7 @@ type Role = {
 type MutRes = { ok: true } | { ok: false; error: string };
 
 export default function EditRoleClient({ role }: { role: Role }) {
+    const { t } = useLanguage();
     const [name, setName] = useState(role.name);
     const [description, setDescription] = useState(role.description ?? '');
     const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export default function EditRoleClient({ role }: { role: Role }) {
     async function onSubmit(event: React.FormEvent) {
         event.preventDefault();
         if (!name.trim()) {
-            setError('Название роли обязательно.');
+            setError(t('admin.roles.form.nameRequired', 'Название роли обязательно.'));
             return;
         }
 
@@ -60,36 +62,36 @@ export default function EditRoleClient({ role }: { role: Role }) {
     return (
         <Card className="p-6">
             <form onSubmit={onSubmit} className="space-y-6">
-                <AdminFormSection title="Параметры роли" description="Секция соответствует общему CRUD-паттерну форм.">
+                <AdminFormSection title={t('admin.roles.form.paramsTitle', 'Параметры роли')} description={t('admin.roles.form.paramsDescription', 'Секция соответствует общему CRUD-паттерну форм.')}>
                     <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-3">
-                        <p className="type-caption text-[var(--text-secondary)]">Системный ключ</p>
+                        <p className="type-caption text-[var(--text-secondary)]">{t('admin.roles.form.systemKey', 'Системный ключ')}</p>
                         <p className="mt-1 font-mono text-sm text-[var(--text-primary)]">{role.key}</p>
                     </div>
                     <Input
-                        label="Название *"
+                        label={t('admin.roles.form.name', 'Название *')}
                         value={name}
                         onChange={(event) => setName(event.target.value)}
                         required
                     />
                     <div>
                         <label className="type-caption mb-1.5 block font-medium text-[var(--text-secondary)]">
-                            Описание
+                            {t('admin.roles.form.description', 'Описание')}
                         </label>
                         <textarea
                             className="min-h-[96px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-2.5 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--focus-ring)] focus:outline-none"
                             value={description}
                             onChange={(event) => setDescription(event.target.value)}
-                            placeholder="Кратко опишите назначение роли"
+                            placeholder={t('admin.roles.form.descriptionPlaceholder', 'Кратко опишите назначение роли')}
                         />
                     </div>
                 </AdminFormSection>
 
-                {success ? <AlertBanner variant="success" message="Изменения сохранены." compact /> : null}
+                {success ? <AlertBanner variant="success" message={t('admin.roles.form.saved', 'Изменения сохранены.')} compact /> : null}
                 {error && !success ? <AlertBanner variant="danger" message={error} compact /> : null}
 
                 <div className="flex items-center gap-3">
                     <Button type="submit" disabled={saving} isLoading={saving}>
-                        {saving ? 'Сохраняем…' : 'Сохранить изменения'}
+                        {saving ? t('admin.roles.form.saving', 'Сохраняем…') : t('admin.roles.form.save', 'Сохранить изменения')}
                     </Button>
                 </div>
             </form>

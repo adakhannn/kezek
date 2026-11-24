@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { logError } from '@/lib/log';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isE164, isEmail } from '@/lib/validation';
 
@@ -19,7 +20,7 @@ function normStr(v?: string | null): string | null {
     return s.length ? s : null;
 }
 
-export async function POST(req: Request) {
+export const POST = withLocalizedMessages(async function POST(req: Request) {
     try {
 
         // Проверка: только глобальный super_admin
@@ -128,4 +129,4 @@ export async function POST(req: Request) {
         logError('AdminUsersCreate', 'user create error', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-}
+});

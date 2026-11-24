@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -15,6 +16,7 @@ type DeleteResp = ApiOk | ApiErr;
 
 export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: string }) {
     const router = useRouter();
+    const { t } = useLanguage();
     const toast = useToast();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: st
                 throw new Error(apiError || `HTTP ${response.status}`);
             }
 
-            toast.showSuccess('Бизнес удален.');
+            toast.showSuccess(t('admin.deleteBusiness.deleted', 'Бизнес удален.'));
             setConfirmOpen(false);
             router.push('/admin/businesses');
             router.refresh();
@@ -72,17 +74,17 @@ export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: st
                 disabled={loading}
                 isLoading={loading}
             >
-                {loading ? 'Удаляем…' : 'Удалить бизнес'}
+                {loading ? t('admin.catalog.delete.deleting', 'Удаляем…') : t('admin.deleteBusiness.button', 'Удалить бизнес')}
             </Button>
             {error ? <AlertBanner variant="danger" message={error} compact /> : null}
             <ConfirmDialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onDelete}
-                title="Удалить бизнес"
-                message={`Удалить бизнес «${bizName}»? Удалить можно только бизнес без истории: без записей, смен, финансовых операций и проданных пакетов. Если история есть, снимите одобрение — бизнес скроется из каталога, данные сохранятся.`}
-                confirmLabel="Удалить"
-                cancelLabel="Отмена"
+                title={t('admin.deleteBusiness.button', 'Удалить бизнес')}
+                message={t('admin.deleteBusiness.message', 'Удалить бизнес «{name}»? Удалить можно только бизнес без истории: без записей, смен, финансовых операций и проданных пакетов. Если история есть, снимите одобрение — бизнес скроется из каталога, данные сохранятся.').replace('{name}', bizName)}
+                confirmLabel={t('admin.catalog.delete.delete', 'Удалить')}
+                cancelLabel={t('admin.catalog.delete.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={loading}
             />

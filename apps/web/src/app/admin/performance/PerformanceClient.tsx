@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -25,6 +26,7 @@ type PerformanceStatsResponse = {
 };
 
 export default function PerformanceClient() {
+    const { t } = useLanguage();
     const [stats, setStats] = useState<PerformanceStat[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -103,11 +105,11 @@ export default function PerformanceClient() {
         return (
             <AlertBanner
                 variant="danger"
-                title="Ошибка"
+                title={t('common.error', 'Ошибка')}
                 message={error}
                 action={
                     <Button onClick={loadStats} variant="danger" size="sm">
-                        Повторить
+                        {t('admin.performance.retry', 'Повторить')}
                     </Button>
                 }
             />
@@ -115,17 +117,17 @@ export default function PerformanceClient() {
     }
 
     if (stats.length === 0) {
-        return <EmptyState compact title="Нет данных" description="Хранилище доступно, но за последние пять завершённых минут нет измерений. Это не подтверждение исправности сервиса." />;
+        return <EmptyState compact title={t('admin.performance.emptyTitle', 'Нет данных')} description={t('admin.performance.emptyDescription', 'Хранилище доступно, но за последние пять завершённых минут нет измерений. Это не подтверждение исправности сервиса.')} />;
     }
 
     return (
         <div className="space-y-4">
             <SectionHeader
-                title="Производительность"
-                description={lastUpdate ? `Последнее обновление: ${lastUpdate.toLocaleTimeString()}` : undefined}
+                title={t('admin.performance.sectionTitle', 'Производительность')}
+                description={lastUpdate ? t('admin.performance.lastUpdate', 'Последнее обновление: {time}').replace('{time}', lastUpdate.toLocaleTimeString()) : undefined}
                 action={
                     <Button onClick={loadStats} disabled={loading} size="sm">
-                        {loading ? 'Обновление...' : 'Обновить'}
+                        {loading ? t('admin.performance.refreshing', 'Обновление...') : t('common.refresh', 'Обновить')}
                     </Button>
                 }
             />
@@ -136,23 +138,23 @@ export default function PerformanceClient() {
                         <div className="mb-4 flex items-start justify-between gap-3">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{stat.operation}</h3>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{stat.source === 'server' ? 'Серверное измерение RPC' : 'Браузерное измерение (недоверенный источник)'} · Пять завершённых минут, задержка до минуты; P95/P99 приблизительные</p>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{stat.source === 'server' ? t('admin.performance.sourceServer', 'Серверное измерение RPC') : t('admin.performance.sourceBrowser', 'Браузерное измерение (недоверенный источник)')} · {t('admin.performance.windowNote', 'Пять завершённых минут, задержка до минуты; P95/P99 приблизительные')}</p>
                             </div>
                             <StatusChip status={getStatus(stat.operation, stat.p95Duration)} label={`P95 ≈ ${formatValue(stat.p95Duration, stat.unit)}`} />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-                            <MetricBlock label="Запросов" value={stat.count} />
-                            <MetricBlock label="Среднее" value={formatValue(stat.avgDuration, stat.unit)} status={getStatus(stat.operation, stat.avgDuration)} />
+                            <MetricBlock label={t('admin.performance.requests', 'Запросов')} value={stat.count} />
+                            <MetricBlock label={t('admin.performance.avg', 'Среднее')} value={formatValue(stat.avgDuration, stat.unit)} status={getStatus(stat.operation, stat.avgDuration)} />
                             <MetricBlock label="P95 ≈" value={formatValue(stat.p95Duration, stat.unit)} status={getStatus(stat.operation, stat.p95Duration)} />
                             <MetricBlock label="P99 ≈" value={formatValue(stat.p99Duration, stat.unit)} status={getStatus(stat.operation, stat.p99Duration)} />
                         </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
-                            <MetricBlock label="Мин" value={formatValue(stat.minDuration, stat.unit)} />
-                            <MetricBlock label="Макс" value={formatValue(stat.maxDuration, stat.unit)} />
-                            <MetricBlock label="Без классификации" value={stat.unknownCount} status={stat.unknownCount ? 'warning' : 'neutral'} />
-                            <MetricBlock label="Ошибок" value={`${(stat.errorRate * 100).toFixed(1)}%`} status={stat.errorRate > 0.1 ? 'error' : 'neutral'} />
+                            <MetricBlock label={t('admin.performance.min', 'Мин')} value={formatValue(stat.minDuration, stat.unit)} />
+                            <MetricBlock label={t('admin.performance.max', 'Макс')} value={formatValue(stat.maxDuration, stat.unit)} />
+                            <MetricBlock label={t('admin.performance.unclassified', 'Без классификации')} value={stat.unknownCount} status={stat.unknownCount ? 'warning' : 'neutral'} />
+                            <MetricBlock label={t('admin.performance.errors', 'Ошибок')} value={`${(stat.errorRate * 100).toFixed(1)}%`} status={stat.errorRate > 0.1 ? 'error' : 'neutral'} />
                         </div>
                     </Card>
                 ))}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -69,6 +70,7 @@ type SystemHealthResponse = {
 };
 
 export default function SystemHealthClient() {
+    const { t } = useLanguage();
     const [data, setData] = useState<SystemHealthData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -139,11 +141,11 @@ export default function SystemHealthClient() {
             <div className="container mx-auto px-4 py-8">
                 <AlertBanner
                     variant="danger"
-                    title="Ошибка загрузки"
+                    title={t('admin.systemHealth.loadError', 'Ошибка загрузки')}
                     message={error}
                     action={
                         <Button onClick={loadHealth} variant="danger" size="sm">
-                            Попробовать снова
+                            {t('admin.systemHealth.retry', 'Попробовать снова')}
                         </Button>
                     }
                 />
@@ -158,12 +160,12 @@ export default function SystemHealthClient() {
     return (
         <div className="container mx-auto space-y-6 px-4 py-8">
             <PageHeader
-                title="Здоровье системы"
-                description="Агрегированная панель мониторинга состояния системы."
+                title={t('admin.systemHealth.title', 'Здоровье системы')}
+                description={t('admin.systemHealth.description', 'Агрегированная панель мониторинга состояния системы.')}
                 meta={
                     lastUpdate ? (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                            Обновлено: {formatDateTime(lastUpdate.toISOString(), 'ru', true)}
+                            {t('admin.systemHealth.updatedAt', 'Обновлено:')} {formatDateTime(lastUpdate.toISOString(), 'ru', true)}
                         </span>
                     ) : null
                 }
@@ -172,45 +174,45 @@ export default function SystemHealthClient() {
                         <svg className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        <span>{loading ? 'Обновление...' : 'Обновить'}</span>
+                        <span>{loading ? t('admin.systemHealth.refreshing', 'Обновление...') : t('admin.systemHealth.refresh', 'Обновить')}</span>
                     </Button>
                 }
             />
 
             <AlertBanner
                 variant={data.ok ? 'success' : 'danger'}
-                title="Общий статус системы"
+                title={t('admin.systemHealth.overall.title', 'Общий статус системы')}
                 message={
                     data.ok
-                        ? 'Все компоненты работают нормально.'
-                        : 'Обнаружены проблемы в одном или нескольких компонентах.'
+                        ? t('admin.systemHealth.overall.ok', 'Все компоненты работают нормально.')
+                        : t('admin.systemHealth.overall.problems', 'Обнаружены проблемы в одном или нескольких компонентах.')
                 }
-                action={<StatusChip status={data.ok ? 'ok' : 'error'} label={data.ok ? 'OK' : 'Проблема'} />}
+                action={<StatusChip status={data.ok ? 'ok' : 'error'} label={data.ok ? 'OK' : t('admin.systemHealth.problem', 'Проблема')} />}
             />
 
             <div className="grid gap-6 md:grid-cols-2">
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="Cron-задачи"
-                        action={<StatusChip status={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'ok' : 'error'} label={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'OK' : 'Проблема'} />}
+                        title={t('admin.systemHealth.cron.title', 'Cron-задачи')}
+                        action={<StatusChip status={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'ok' : 'error'} label={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'OK' : t('admin.systemHealth.problem', 'Проблема')} />}
                         className="mb-4"
                     />
                     <div className="space-y-4">
                         <HealthPanel
-                            title="Закрытие смен"
+                            title={t('admin.systemHealth.cron.shifts', 'Закрытие смен')}
                             ok={data.cronJobs.shifts.ok}
                             lines={[
-                                `Незакрытых смен старше 2 дней: ${data.cronJobs.shifts.openShiftsOlderThan2Days}`,
-                                `Последняя проверка: ${data.cronJobs.shifts.lastCheckDate}`,
+                                t('admin.systemHealth.cron.openShifts', 'Незакрытых смен старше 2 дней: {count}').replace('{count}', String(data.cronJobs.shifts.openShiftsOlderThan2Days)),
+                                t('admin.systemHealth.cron.lastCheck', 'Последняя проверка: {date}').replace('{date}', String(data.cronJobs.shifts.lastCheckDate)),
                             ]}
                         />
                         <HealthPanel
-                            title="Пересчет рейтингов"
+                            title={t('admin.systemHealth.cron.ratings', 'Пересчет рейтингов')}
                             ok={data.cronJobs.ratings.ok}
                             lines={[
                                 data.cronJobs.ratings.daysSinceLastMetric !== null
-                                    ? `Последний пересчет: ${data.cronJobs.ratings.daysSinceLastMetric} дн. назад`
-                                    : 'Рейтинги никогда не пересчитывались',
+                                    ? t('admin.systemHealth.cron.lastRecalc', 'Последний пересчет: {days} дн. назад').replace('{days}', String(data.cronJobs.ratings.daysSinceLastMetric))
+                                    : t('admin.systemHealth.cron.neverRecalculated', 'Рейтинги никогда не пересчитывались'),
                                 `Staff: ${formatDate(data.cronJobs.ratings.staffLastMetricDate)}`,
                                 `Branch: ${formatDate(data.cronJobs.ratings.branchLastMetricDate)}`,
                                 `Biz: ${formatDate(data.cronJobs.ratings.bizLastMetricDate)}`,
@@ -221,39 +223,39 @@ export default function SystemHealthClient() {
 
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="API-метрики"
-                        action={<StatusChip status={data.apiMetrics.ok ? 'ok' : 'error'} label={data.apiMetrics.ok ? 'OK' : 'Проблема'} />}
+                        title={t('admin.systemHealth.api.title', 'API-метрики')}
+                        action={<StatusChip status={data.apiMetrics.ok ? 'ok' : 'error'} label={data.apiMetrics.ok ? 'OK' : t('admin.systemHealth.problem', 'Проблема')} />}
                         className="mb-4"
                     />
                     <div className="grid grid-cols-2 gap-4">
-                        <MetricBlock label="Всего запросов (1ч)" value={data.apiMetrics.totalRequests} />
-                        <MetricBlock label="Процент ошибок" value={`${data.apiMetrics.errorRate.toFixed(2)}%`} />
-                        <MetricBlock label="Среднее время" value={formatDuration(data.apiMetrics.avgDuration)} />
+                        <MetricBlock label={t('admin.systemHealth.api.totalRequests', 'Всего запросов (1ч)')} value={data.apiMetrics.totalRequests} />
+                        <MetricBlock label={t('admin.systemHealth.api.errorRate', 'Процент ошибок')} value={`${data.apiMetrics.errorRate.toFixed(2)}%`} />
+                        <MetricBlock label={t('admin.systemHealth.api.avgDuration', 'Среднее время')} value={formatDuration(data.apiMetrics.avgDuration)} />
                         <MetricBlock label="P95" value={formatDuration(data.apiMetrics.p95Duration)} />
                         <MetricBlock label="P99" value={formatDuration(data.apiMetrics.p99Duration)} />
-                        <MetricBlock label="Ошибок (1ч)" value={data.apiMetrics.recentErrors} highlight={data.apiMetrics.recentErrors > 0} />
+                        <MetricBlock label={t('admin.systemHealth.api.errors', 'Ошибок (1ч)')} value={data.apiMetrics.recentErrors} highlight={data.apiMetrics.recentErrors > 0} />
                     </div>
                 </Card>
 
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="Ошибки UI"
-                        action={<StatusChip status={data.uiErrors.ok ? 'ok' : 'error'} label={data.uiErrors.ok ? 'OK' : 'Проблема'} />}
+                        title={t('admin.systemHealth.ui.title', 'Ошибки UI')}
+                        action={<StatusChip status={data.uiErrors.ok ? 'ok' : 'error'} label={data.uiErrors.ok ? 'OK' : t('admin.systemHealth.problem', 'Проблема')} />}
                         className="mb-4"
                     />
                     <div className="space-y-3">
-                        <MetricBlock label="Ошибок за последние 24ч" value={data.uiErrors.recentErrors} highlight={data.uiErrors.recentErrors > 0} />
-                        <MetricBlock label="Последняя ошибка" value={formatDate(data.uiErrors.lastErrorDate)} />
+                        <MetricBlock label={t('admin.systemHealth.ui.errors24h', 'Ошибок за последние 24ч')} value={data.uiErrors.recentErrors} highlight={data.uiErrors.recentErrors > 0} />
+                        <MetricBlock label={t('admin.systemHealth.ui.lastError', 'Последняя ошибка')} value={formatDate(data.uiErrors.lastErrorDate)} />
                     </div>
                 </Card>
 
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="Интеграции"
+                        title={t('admin.systemHealth.integrations.title', 'Интеграции')}
                         action={
                             <StatusChip
                                 status={data.integrations.whatsapp.ok && data.integrations.telegram.ok ? 'ok' : 'error'}
-                                label={data.integrations.whatsapp.ok && data.integrations.telegram.ok ? 'OK' : 'Проблема'}
+                                label={data.integrations.whatsapp.ok && data.integrations.telegram.ok ? 'OK' : t('admin.systemHealth.problem', 'Проблема')}
                             />
                         }
                         className="mb-4"
@@ -265,11 +267,11 @@ export default function SystemHealthClient() {
                             lines={[
                                 data.integrations.whatsapp.configured
                                     ? data.integrations.whatsapp.providerReachable
-                                        ? 'Провайдер доступен, учётные данные приняты'
-                                        : data.integrations.whatsapp.providerMessage || 'Провайдер не отвечает'
-                                    : data.integrations.whatsapp.providerMessage || 'Провайдер не настроен',
-                                `Последний успех: ${formatDate(data.integrations.whatsapp.lastSuccessDate)}`,
-                                data.integrations.whatsapp.recentFailures > 0 ? `Ошибок за 24ч: ${data.integrations.whatsapp.recentFailures}` : 'Нет новых сбоев',
+                                        ? t('admin.systemHealth.integrations.reachable', 'Провайдер доступен, учётные данные приняты')
+                                        : data.integrations.whatsapp.providerMessage || t('admin.systemHealth.integrations.notResponding', 'Провайдер не отвечает')
+                                    : data.integrations.whatsapp.providerMessage || t('admin.systemHealth.integrations.notConfigured', 'Провайдер не настроен'),
+                                t('admin.systemHealth.integrations.lastSuccess', 'Последний успех: {date}').replace('{date}', formatDate(data.integrations.whatsapp.lastSuccessDate)),
+                                data.integrations.whatsapp.recentFailures > 0 ? t('admin.systemHealth.integrations.failures24h', 'Ошибок за 24ч: {count}').replace('{count}', String(data.integrations.whatsapp.recentFailures)) : t('admin.systemHealth.integrations.noFailures', 'Нет новых сбоев'),
                             ]}
                         />
                         <HealthPanel
@@ -278,11 +280,11 @@ export default function SystemHealthClient() {
                             lines={[
                                 data.integrations.telegram.configured
                                     ? data.integrations.telegram.providerReachable
-                                        ? 'Провайдер доступен, учётные данные приняты'
-                                        : data.integrations.telegram.providerMessage || 'Провайдер не отвечает'
-                                    : data.integrations.telegram.providerMessage || 'Провайдер не настроен',
-                                `Последний успех: ${formatDate(data.integrations.telegram.lastSuccessDate)}`,
-                                data.integrations.telegram.recentFailures > 0 ? `Ошибок за 24ч: ${data.integrations.telegram.recentFailures}` : 'Нет новых сбоев',
+                                        ? t('admin.systemHealth.integrations.reachable', 'Провайдер доступен, учётные данные приняты')
+                                        : data.integrations.telegram.providerMessage || t('admin.systemHealth.integrations.notResponding', 'Провайдер не отвечает')
+                                    : data.integrations.telegram.providerMessage || t('admin.systemHealth.integrations.notConfigured', 'Провайдер не настроен'),
+                                t('admin.systemHealth.integrations.lastSuccess', 'Последний успех: {date}').replace('{date}', formatDate(data.integrations.telegram.lastSuccessDate)),
+                                data.integrations.telegram.recentFailures > 0 ? t('admin.systemHealth.integrations.failures24h', 'Ошибок за 24ч: {count}').replace('{count}', String(data.integrations.telegram.recentFailures)) : t('admin.systemHealth.integrations.noFailures', 'Нет новых сбоев'),
                             ]}
                         />
                     </div>
@@ -291,15 +293,15 @@ export default function SystemHealthClient() {
 
             <Card variant="outlined" padding="md" className="text-xs text-gray-600 dark:text-gray-400">
                 <p>
-                    Данные обновляются автоматически каждые 30 секунд. Для детальной информации используйте разделы{' '}
+                    {t('admin.systemHealth.footer.prefix', 'Данные обновляются автоматически каждые 30 секунд. Для детальной информации используйте разделы')}{' '}
                     <a href="/admin/monitoring" className="text-blue-600 hover:underline dark:text-blue-400">
-                        Мониторинг
+                        {t('admin.systemHealth.footer.monitoring', 'Мониторинг')}
                     </a>{' '}
-                    и{' '}
+                    {t('admin.systemHealth.footer.and', 'и')}{' '}
                     <a href="/admin/health-check" className="text-blue-600 hover:underline dark:text-blue-400">
                         Health Check
                     </a>
-                    .
+                    {t('admin.systemHealth.footer.suffix', '.')}
                 </p>
             </Card>
         </div>
@@ -315,6 +317,7 @@ function HealthPanel({
     ok: boolean;
     lines: string[];
 }) {
+    const { t } = useLanguage();
     return (
         <div
             className={`rounded-lg border p-4 ${
@@ -325,7 +328,7 @@ function HealthPanel({
         >
             <div className="mb-2 flex items-center justify-between gap-3">
                 <span className="font-medium text-gray-900 dark:text-gray-100">{title}</span>
-                <StatusChip status={ok ? 'ok' : 'error'} label={ok ? 'OK' : 'Проблема'} />
+                <StatusChip status={ok ? 'ok' : 'error'} label={ok ? 'OK' : t('admin.systemHealth.problem', 'Проблема')} />
             </div>
             <div className="space-y-1.5">
                 {lines.map((line, index) => (

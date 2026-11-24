@@ -65,7 +65,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
             const data = await response.json();
 
             if (!data.ok) {
-                throw new Error(data.error || 'Ошибка при сохранении настроек');
+                throw new Error(data.error || t('admin.ratingConfig.saveError', 'Ошибка при сохранении настроек'));
             }
 
             setSuccess(true);
@@ -81,7 +81,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                 setTimeout(() => window.location.reload(), 1500);
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+            setError(err instanceof Error ? err.message : t('admin.ratingConfig.unknownError', 'Неизвестная ошибка'));
         } finally {
             setLoading(false);
         }
@@ -98,12 +98,12 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
             });
             const data = await res.json();
             if (!data.ok) {
-                throw new Error(data.error || data.message || 'Ошибка пересчёта');
+                throw new Error(data.error || data.message || t('admin.ratingConfig.recalcError', 'Ошибка пересчёта'));
             }
             setShowRecalcPrompt(false);
             setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
-            setRecalcError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+            setRecalcError(err instanceof Error ? err.message : t('admin.ratingConfig.unknownError', 'Неизвестная ошибка'));
         } finally {
             setRecalcLoading(false);
         }
@@ -118,16 +118,16 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                        Веса компонентов рейтинга сотрудника
+                        {t('admin.ratingConfig.weightsTitle', 'Веса компонентов рейтинга сотрудника')}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                        Сумма всех весов должна равняться 100%. Эти настройки применяются ко всем бизнесам в системе.
+                        {t('admin.ratingConfig.weightsHint', 'Сумма всех весов должна равняться 100%. Эти настройки применяются ко всем бизнесам в системе.')}
                     </p>
 
                     {/* Отзывы */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Отзывы клиентов ({reviewsWeight}%)
+                            {t('admin.ratingConfig.reviews', 'Отзывы клиентов ({value}%)').replace('{value}', String(reviewsWeight))}
                         </label>
                         <input
                             type="range"
@@ -144,14 +144,14 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                             <span>100%</span>
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Влияние средней оценки и количества отзывов на рейтинг
+                            {t('admin.ratingConfig.reviewsHint', 'Влияние средней оценки и количества отзывов на рейтинг')}
                         </p>
                     </div>
 
                     {/* Продуктивность */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Продуктивность ({productivityWeight}%)
+                            {t('admin.ratingConfig.productivity', 'Продуктивность ({value}%)').replace('{value}', String(productivityWeight))}
                         </label>
                         <input
                             type="range"
@@ -163,14 +163,14 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-600"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Влияние количества клиентов на рейтинг (сравнение со средним по филиалу)
+                            {t('admin.ratingConfig.productivityHint', 'Влияние количества клиентов на рейтинг (сравнение со средним по филиалу)')}
                         </p>
                     </div>
 
                     {/* Возвращаемость */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Возвращаемость клиентов ({loyaltyWeight}%)
+                            {t('admin.ratingConfig.loyalty', 'Возвращаемость клиентов ({value}%)').replace('{value}', String(loyaltyWeight))}
                         </label>
                         <input
                             type="range"
@@ -182,14 +182,14 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-600"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Влияние доли клиентов, вернувшихся 2+ раза
+                            {t('admin.ratingConfig.loyaltyHint', 'Влияние доли клиентов, вернувшихся 2+ раза')}
                         </p>
                     </div>
 
                     {/* Дисциплина */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Дисциплина ({disciplineWeight}%)
+                            {t('admin.ratingConfig.discipline', 'Дисциплина ({value}%)').replace('{value}', String(disciplineWeight))}
                         </label>
                         <input
                             type="range"
@@ -201,18 +201,18 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-600"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Влияние опозданий на рейтинг (штраф за каждые 30 минут опоздания)
+                            {t('admin.ratingConfig.disciplineHint', 'Влияние опозданий на рейтинг (штраф за каждые 30 минут опоздания)')}
                         </p>
                     </div>
 
                     {/* Итоговая сумма */}
                     <AlertBanner
                         variant={Math.abs(totalWeight - 100) < 0.01 ? 'success' : 'danger'}
-                        title={`Сумма весов: ${totalWeight.toFixed(2)}%`}
+                        title={t('admin.ratingConfig.weightsSum', 'Сумма весов: {value}%').replace('{value}', totalWeight.toFixed(2))}
                         message={
                             Math.abs(totalWeight - 100) < 0.01
-                                ? 'Веса собраны корректно.'
-                                : 'Сумма должна равняться 100%.'
+                                ? t('admin.ratingConfig.weightsOk', 'Веса собраны корректно.')
+                                : t('admin.ratingConfig.weightsMustBe100', 'Сумма должна равняться 100%.')
                         }
                         compact
                     />
@@ -221,11 +221,11 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                 {/* Период расчета */}
                 <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                        Период расчета рейтинга
+                        {t('admin.ratingConfig.windowTitle', 'Период расчета рейтинга')}
                     </h2>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Количество дней ({windowDays} дней)
+                            {t('admin.ratingConfig.windowDays', 'Количество дней ({days} дней)').replace('{days}', String(windowDays))}
                         </label>
                         <input
                             type="number"
@@ -236,7 +236,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Скользящее окно для расчета рейтинга (рекомендуется 30 дней)
+                            {t('admin.ratingConfig.windowHint', 'Скользящее окно для расчета рейтинга (рекомендуется 30 дней)')}
                         </p>
                     </div>
                 </div>
@@ -315,7 +315,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                         className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         disabled={loading}
                     >
-                        Сбросить
+                        {t('admin.ratingConfig.reset', 'Сбросить')}
                     </button>
                     <button
                         type="submit"
@@ -326,7 +326,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                                 : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                         }`}
                     >
-                        {loading ? 'Сохранение...' : 'Сохранить настройки'}
+                        {loading ? t('admin.ratingConfig.saving', 'Сохранение...') : t('admin.ratingConfig.saveSettings', 'Сохранить настройки')}
                     </button>
                 </div>
             </form>

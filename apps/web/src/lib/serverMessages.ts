@@ -13,6 +13,9 @@
  */
 import { NextResponse } from 'next/server';
 
+import { serverAdminEn } from '@/app/_components/i18n/dictionaries/serverAdmin.en';
+import { serverAdminKy } from '@/app/_components/i18n/dictionaries/serverAdmin.ky';
+import { serverAdminRu } from '@/app/_components/i18n/dictionaries/serverAdmin.ru';
 import { serverAuthEn } from '@/app/_components/i18n/dictionaries/serverAuth.en';
 import { serverAuthKy } from '@/app/_components/i18n/dictionaries/serverAuth.ky';
 import { serverAuthRu } from '@/app/_components/i18n/dictionaries/serverAuth.ru';
@@ -33,10 +36,10 @@ export type ServerLocale = 'ru' | 'ky' | 'en';
 
 type Dictionary = Readonly<Record<string, string>>;
 
-const RU: Dictionary = { ...serverCommonRu, ...serverAuthRu, ...serverBookingRu, ...serverStaffRu, ...serverBusinessRu };
+const RU: Dictionary = { ...serverCommonRu, ...serverAuthRu, ...serverBookingRu, ...serverStaffRu, ...serverBusinessRu, ...serverAdminRu };
 const TRANSLATIONS: Record<'ky' | 'en', Dictionary> = {
-    ky: { ...serverCommonKy, ...serverAuthKy, ...serverBookingKy, ...serverStaffKy, ...serverBusinessKy },
-    en: { ...serverCommonEn, ...serverAuthEn, ...serverBookingEn, ...serverStaffEn, ...serverBusinessEn },
+    ky: { ...serverCommonKy, ...serverAuthKy, ...serverBookingKy, ...serverStaffKy, ...serverBusinessKy, ...serverAdminKy },
+    en: { ...serverCommonEn, ...serverAuthEn, ...serverBookingEn, ...serverStaffEn, ...serverBusinessEn, ...serverAdminEn },
 };
 
 /** All server messages by locale, for the dictionary test. */

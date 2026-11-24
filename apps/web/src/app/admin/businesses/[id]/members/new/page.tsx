@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import NewMemberExisting from './NewMemberExisting';
 
+import { getT } from '@/app/_components/i18n/server';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
@@ -11,30 +12,31 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewMemberPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+    const t = await getT();
 
     if (!id || !isUuid(id)) {
-        return <main className="p-4 text-red-600">Некорректный business id</main>;
+        return <main className="p-4 text-red-600">{t('admin.catalog.common.invalidBizId', 'Некорректный business id')}</main>;
     }
 
     const supa = await createSupabaseServerClient();
 
     const { data: { user }, error: authError } = await supa.auth.getUser();
-    if (authError || !user) return <main className="p-4">Не авторизован</main>;
+    if (authError || !user) return <main className="p-4">{t('admin.catalog.common.notAuthorized', 'Не авторизован')}</main>;
 
     // доступ: super_admin (global) ИЛИ owner/admin конкретного бизнеса
     const { isSuperAdmin, error: superError } = await checkCurrentUserIsSuperAdmin(supa, user.id);
-    if (superError) return <main className="p-4">Не удалось проверить права доступа</main>;
+    if (superError) return <main className="p-4">{t('admin.catalog.common.accessCheckFailed', 'Не удалось проверить права доступа')}</main>;
 
     let allowed = isSuperAdmin;
     if (!allowed) {
         const { data: isOwner, error: ownerError } = await supa.rpc('has_role', { p_role_key: 'owner', p_biz_id: id });
         const { data: isAdmin, error: adminError } = await supa.rpc('has_role', { p_role_key: 'admin', p_biz_id: id });
         if (ownerError || adminError || typeof isOwner !== 'boolean' || typeof isAdmin !== 'boolean') {
-            return <main className="p-4">Не удалось проверить права доступа</main>;
+            return <main className="p-4">{t('admin.catalog.common.accessCheckFailed', 'Не удалось проверить права доступа')}</main>;
         }
         allowed = isOwner === true || isAdmin === true;
     }
-    if (!allowed) return <main className="p-4">Нет доступа</main>;
+    if (!allowed) return <main className="p-4">{t('admin.catalog.common.noAccess', 'Нет доступа')}</main>;
 
     const h = await headers();
     const proto = h.get('x-forwarded-proto') ?? 'http';
@@ -56,11 +58,11 @@ export default async function NewMemberPage({ params }: { params: Promise<{ id: 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                            Добавить участника
+                            {t('admin.membersPage.addMember', 'Добавить участника')}
                         </h1>
                         {biz && (
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Бизнес: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
+                                {t('admin.catalog.common.businessLabel', 'Бизнес:')}{' '}<span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
                             </p>
                         )}
                     </div>
@@ -71,7 +73,7 @@ export default async function NewMemberPage({ params }: { params: Promise<{ id: 
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        К участникам
+                        {t('admin.membersPage.backToMembers', 'К участникам')}
                     </Link>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -86,6 +87,7 @@ type DebugData = {
 };
 
 export function PromotionsDebugClient() {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<DebugData | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -95,7 +97,7 @@ export function PromotionsDebugClient() {
 
     const loadData = async () => {
         if (!clientId && !branchId && !bizId) {
-            setError('Укажите clientId, branchId или bizId');
+            setError(t('admin.promotionsDebug.idRequired', 'Укажите clientId, branchId или bizId'));
             return;
         }
 
@@ -125,7 +127,7 @@ export function PromotionsDebugClient() {
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Отладка промо-акций
+                {t('admin.promotionsDebug.title', 'Отладка промо-акций')}
             </h1>
 
             {/* Поиск */}
@@ -173,7 +175,7 @@ export function PromotionsDebugClient() {
                     disabled={loading}
                     className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                 >
-                    {loading ? 'Загрузка...' : 'Загрузить данные'}
+                    {loading ? t('common.loading', 'Загрузка...') : t('admin.promotionsDebug.load', 'Загрузить данные')}
                 </button>
             </div>
 
@@ -185,22 +187,22 @@ export function PromotionsDebugClient() {
                     {(data.client || data.branch || data.biz) && (
                         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                             <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Информация
+                                {t('admin.promotionsDebug.info', 'Информация')}
                             </h2>
                             {data.client && (
                                 <div className="mb-2">
-                                    <strong>Клиент:</strong> {data.client.name || data.client.email || data.client.phone || 'N/A'} (
+                                    <strong>{t('admin.promotionsDebug.client', 'Клиент:')}</strong> {data.client.name || data.client.email || data.client.phone || 'N/A'} (
                                     {data.client.id})
                                 </div>
                             )}
                             {data.branch && (
                                 <div className="mb-2">
-                                    <strong>Филиал:</strong> {data.branch.name} ({data.branch.id})
+                                    <strong>{t('admin.promotionsDebug.branch', 'Филиал:')}</strong> {data.branch.name} ({data.branch.id})
                                 </div>
                             )}
                             {data.biz && (
                                 <div>
-                                    <strong>Бизнес:</strong> {data.biz.name} ({data.biz.slug})
+                                    <strong>{t('admin.promotionsDebug.business', 'Бизнес:')}</strong> {data.biz.name} ({data.biz.slug})
                                 </div>
                             )}
                         </div>
@@ -210,14 +212,14 @@ export function PromotionsDebugClient() {
                     {data.anomalies.length > 0 && (
                         <div className="space-y-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 shadow-sm">
                             <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Обнаружены аномалии ({data.anomalies.length})
+                                {t('admin.promotionsDebug.anomalies', 'Обнаружены аномалии')} ({data.anomalies.length})
                             </h2>
                             <div className="space-y-2">
                                 {data.anomalies.map((anomaly, idx) => (
                                     <div key={idx} className="space-y-2">
                                         <AlertBanner
                                             variant={anomaly.severity === 'error' ? 'danger' : 'warning'}
-                                            title={`[${anomaly.severity === 'error' ? 'ОШИБКА' : 'ПРЕДУПРЕЖДЕНИЕ'}] ${anomaly.type}`}
+                                            title={'[' + (anomaly.severity === 'error' ? t('admin.promotionsDebug.severityError', 'ОШИБКА') : t('admin.promotionsDebug.severityWarning', 'ПРЕДУПРЕЖДЕНИЕ')) + '] ' + anomaly.type}
                                             message={anomaly.message}
                                         />
                                         {anomaly.data != null && (
@@ -235,26 +237,26 @@ export function PromotionsDebugClient() {
                     {data.promotionUsage.length > 0 && (
                         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                             <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                История использования акций ({data.promotionUsage.length})
+                                {t('admin.promotionsDebug.usageHistory', 'История использования акций')} ({data.promotionUsage.length})
                             </h2>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                                     <thead className="bg-gray-50 dark:bg-gray-800">
                                         <tr>
                                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                Дата
+                                                {t('admin.promotionsDebug.col.date', 'Дата')}
                                             </th>
                                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                Акция
+                                                {t('admin.promotionsDebug.col.promotion', 'Акция')}
                                             </th>
                                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                Тип
+                                                {t('admin.promotionsDebug.col.type', 'Тип')}
                                             </th>
                                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                Бронирование
+                                                {t('admin.promotionsDebug.col.booking', 'Бронирование')}
                                             </th>
                                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                Данные
+                                                {t('admin.promotionsDebug.col.data', 'Данные')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -307,7 +309,7 @@ export function PromotionsDebugClient() {
                     {data.referrals.length > 0 && (
                         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                             <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Реферальные связи ({data.referrals.length})
+                                {t('admin.promotionsDebug.referrals', 'Реферальные связи')} ({data.referrals.length})
                             </h2>
                             <div className="space-y-2">
                                 {data.referrals.map((ref) => (
@@ -316,21 +318,21 @@ export function PromotionsDebugClient() {
                                         className="rounded border border-gray-200 p-3 text-sm dark:border-gray-800"
                                     >
                                         <div>
-                                            <strong>Реферер:</strong> {ref.referrer?.email || ref.referrer?.phone || ref.referrer_id}
+                                            <strong>{t('admin.promotionsDebug.referrer', 'Реферер:')}</strong> {ref.referrer?.email || ref.referrer?.phone || ref.referrer_id}
                                         </div>
                                         <div>
-                                            <strong>Реферал:</strong> {ref.referred?.email || ref.referred?.phone || ref.referred_id}
+                                            <strong>{t('admin.promotionsDebug.referred', 'Реферал:')}</strong> {ref.referred?.email || ref.referred?.phone || ref.referred_id}
                                         </div>
                                         <div>
-                                            <strong>Бонус использован:</strong>{' '}
+                                            <strong>{t('admin.promotionsDebug.bonusUsed', 'Бонус использован:')}</strong>{' '}
                                             {ref.referrer_bonus_used ? (
-                                                <span className="text-green-600 dark:text-green-400">Да</span>
+                                                <span className="text-green-600 dark:text-green-400">{t('admin.promotionsDebug.yes', 'Да')}</span>
                                             ) : (
-                                                <span className="text-amber-600 dark:text-amber-400">Нет</span>
+                                                <span className="text-amber-600 dark:text-amber-400">{t('admin.promotionsDebug.no', 'Нет')}</span>
                                             )}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            Создано: {new Date(ref.created_at).toLocaleString('ru-RU')}
+                                            {t('admin.promotionsDebug.created', 'Создано:')} {new Date(ref.created_at).toLocaleString('ru-RU')}
                                         </div>
                                     </div>
                                 ))}
@@ -342,7 +344,7 @@ export function PromotionsDebugClient() {
                     {data.bookings.length > 0 && (
                         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                             <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Бронирования с применёнными акциями ({data.bookings.length})
+                                {t('admin.promotionsDebug.bookings', 'Бронирования с применёнными акциями')} ({data.bookings.length})
                             </h2>
                             <div className="space-y-2">
                                 {data.bookings.map((booking) => (
@@ -354,13 +356,13 @@ export function PromotionsDebugClient() {
                                             <strong>ID:</strong> {booking.id.substring(0, 8)}...
                                         </div>
                                         <div>
-                                            <strong>Услуга:</strong> {booking.service?.name_ru || 'N/A'}
+                                            <strong>{t('admin.promotionsDebug.service', 'Услуга:')}</strong> {booking.service?.name_ru || 'N/A'}
                                         </div>
                                         <div>
-                                            <strong>Дата:</strong> {new Date(booking.start_at).toLocaleString('ru-RU')}
+                                            <strong>{t('admin.promotionsDebug.date', 'Дата:')}</strong> {new Date(booking.start_at).toLocaleString('ru-RU')}
                                         </div>
                                         <div>
-                                            <strong>Статус:</strong>{' '}
+                                            <strong>{t('admin.promotionsDebug.status', 'Статус:')}</strong>{' '}
                                             <span
                                                 className={`rounded px-1 ${
                                                     booking.status === 'paid'
@@ -372,7 +374,7 @@ export function PromotionsDebugClient() {
                                             </span>
                                         </div>
                                         <div className="mt-2">
-                                            <strong>Применённая акция:</strong>
+                                            <strong>{t('admin.promotionsDebug.appliedPromotion', 'Применённая акция:')}</strong>
                                             <pre className="mt-1 overflow-auto rounded bg-gray-50 p-2 text-xs dark:bg-gray-800">
                                                 {JSON.stringify(booking.promotion_applied as Record<string, unknown>, null, 2)}
                                             </pre>
@@ -387,7 +389,7 @@ export function PromotionsDebugClient() {
                     {data.activePromotions.length > 0 && (
                         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                             <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Активные акции филиала ({data.activePromotions.length})
+                                {t('admin.promotionsDebug.activePromotions', 'Активные акции филиала')} ({data.activePromotions.length})
                             </h2>
                             <div className="space-y-2">
                                 {data.activePromotions.map((promo) => (
@@ -399,15 +401,15 @@ export function PromotionsDebugClient() {
                                             <strong>{promo.title_ru}</strong> ({promo.promotion_type})
                                         </div>
                                         <div className="mt-1">
-                                            <strong>Активна:</strong>{' '}
+                                            <strong>{t('admin.promotionsDebug.active', 'Активна:')}</strong>{' '}
                                             {promo.is_active ? (
-                                                <span className="text-green-600 dark:text-green-400">Да</span>
+                                                <span className="text-green-600 dark:text-green-400">{t('admin.promotionsDebug.yes', 'Да')}</span>
                                             ) : (
-                                                <span className="text-gray-400">Нет</span>
+                                                <span className="text-gray-400">{t('admin.promotionsDebug.no', 'Нет')}</span>
                                             )}
                                         </div>
                                         <div className="mt-1">
-                                            <strong>Параметры:</strong>
+                                            <strong>{t('admin.promotionsDebug.params', 'Параметры:')}</strong>
                                             <pre className="mt-1 overflow-auto rounded bg-gray-50 p-2 text-xs dark:bg-gray-800">
                                                 {JSON.stringify(promo.params, null, 2)}
                                             </pre>
@@ -424,8 +426,8 @@ export function PromotionsDebugClient() {
                         data.activePromotions.length === 0 && (
                             <EmptyState
                                 compact
-                                title="Данные не найдены"
-                                description="По указанным параметрам нет подходящих debug-данных."
+                                title={t('admin.promotionsDebug.emptyTitle', 'Данные не найдены')}
+                                description={t('admin.promotionsDebug.emptyDescription', 'По указанным параметрам нет подходящих debug-данных.')}
                             />
                         )}
                 </div>

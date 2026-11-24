@@ -2,14 +2,32 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { aroundSlot, getLegalT, type LegalKey } from '@/app/_components/i18n/legal';
+import { formatLocalizedDate } from '@/lib/kyDateFormat';
 import { getPublicSiteOrigin } from '@/lib/siteOrigin';
 
-export const metadata: Metadata = {
-    title: 'Пользовательское соглашение — Kezek',
-    description: 'Пользовательское соглашение сервиса Kezek',
-};
+export async function generateMetadata(): Promise<Metadata> {
+    const { t } = await getLegalT();
+    return {
+        title: t('legal.terms.metaTitle'),
+        description: t('legal.terms.metaDescription'),
+    };
+}
 
-export default function TermsPage() {
+const ACCOUNT_RULES: readonly LegalKey[] = ['legal.terms.s3.i1', 'legal.terms.s3.i2', 'legal.terms.s3.i3'];
+const BOOKING_RULES: readonly LegalKey[] = ['legal.terms.s4.i1', 'legal.terms.s4.i2', 'legal.terms.s4.i3'];
+const OBLIGATIONS: readonly LegalKey[] = ['legal.terms.s5.i1', 'legal.terms.s5.i2', 'legal.terms.s5.i3'];
+const LIABILITY_EXCLUSIONS: readonly LegalKey[] = ['legal.terms.s6.i1', 'legal.terms.s6.i2', 'legal.terms.s6.i3'];
+
+export default async function TermsPage() {
+    const { locale, t } = await getLegalT();
+    const updated = formatLocalizedDate(new Date(), locale, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+    const [beforePrivacyLink, afterPrivacyLink] = aroundSlot(t('legal.terms.s7.p'), 'link');
+    const [beforeTermsUrl, afterTermsUrl] = aroundSlot(t('legal.terms.s8.p'), 'url');
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
@@ -22,124 +40,104 @@ export default function TermsPage() {
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            Вернуться на главную
+                            {t('legal.common.backHome')}
                         </Link>
                         <h1 className="break-words text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                            Пользовательское соглашение
+                            {t('legal.terms.title')}
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Последнее обновление: {new Date().toLocaleDateString('ru-RU', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                            })}
+                            {t('legal.common.lastUpdated').replace('{date}', updated)}
                         </p>
                     </div>
 
                     <div className="min-w-0 space-y-8 [&_h2]:break-words">
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                1. Общие положения
+                                {t('legal.terms.s1.title')}
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                Настоящее Пользовательское соглашение (далее — «Соглашение») регулирует отношения между сервисом Kezek
-                                (далее — «Сервис») и пользователем, использующим Сервис для онлайн-бронирования услуг.
+                                {t('legal.terms.s1.p1')}
                             </p>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-3">
-                                Регистрируясь в Сервисе, оформляя бронирование или продолжая пользоваться Сервисом, пользователь
-                                подтверждает, что ознакомился с условиями Соглашения и принимает их в полном объеме.
+                                {t('legal.terms.s1.p2')}
                             </p>
                         </section>
 
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                2. Описание Сервиса
+                                {t('legal.terms.s2.title')}
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                Kezek предоставляет пользователям возможность записываться на услуги к мастерам и в заведения города
-                                Ош и других регионов. Сервис выступает как платформа для взаимодействия между клиентами и бизнесами,
-                                но не является исполнителем услуг.
+                                {t('legal.terms.s2.p')}
                             </p>
                         </section>
 
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                3. Регистрация и аккаунт
+                                {t('legal.terms.s3.title')}
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                                Для использования всех возможностей Сервиса пользователь может создать аккаунт с использованием email
-                                или других поддерживаемых способов авторизации.
+                                {t('legal.terms.s3.p')}
                             </p>
                             <ul className="space-y-3 text-gray-700 dark:text-gray-300">
-                                <li>Пользователь обязан предоставить достоверные данные при регистрации.</li>
-                                <li>Пользователь несёт ответственность за сохранность данных для входа в аккаунт.</li>
-                                <li>Все действия, совершённые через аккаунт пользователя, считаются действиями самого пользователя.</li>
+                                {ACCOUNT_RULES.map((key) => <li key={key}>{t(key)}</li>)}
                             </ul>
                         </section>
 
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                4. Бронирования и отмены
+                                {t('legal.terms.s4.title')}
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                                При оформлении бронирования через Сервис пользователь соглашается с правилами конкретного бизнеса
-                                (мастера, салона), включая условия отмены или переноса записи.
+                                {t('legal.terms.s4.p')}
                             </p>
                             <ul className="space-y-3 text-gray-700 dark:text-gray-300">
-                                <li>Информация о времени, услуге и мастере отображается в личном кабинете пользователя.</li>
-                                <li>Отмена или изменение бронирования возможны только в соответствии с правилами выбранного бизнеса.</li>
-                                <li>Сервис не несёт ответственности за качество оказанных услуг — ответственность несёт исполнитель.</li>
+                                {BOOKING_RULES.map((key) => <li key={key}>{t(key)}</li>)}
                             </ul>
                         </section>
 
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                5. Обязанности пользователя
+                                {t('legal.terms.s5.title')}
                             </h2>
                             <ul className="space-y-3 text-gray-700 dark:text-gray-300">
-                                <li>Использовать Сервис только в законных целях.</li>
-                                <li>Не предпринимать действий, направленных на нарушение работы Сервиса.</li>
-                                <li>Не создавать бронирования с заведомо ложными данными.</li>
+                                {OBLIGATIONS.map((key) => <li key={key}>{t(key)}</li>)}
                             </ul>
                         </section>
 
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                6. Ограничение ответственности
+                                {t('legal.terms.s6.title')}
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                Сервис Kezek не является стороной договоров между пользователями и бизнесами и не несёт
-                                ответственности за:
+                                {t('legal.terms.s6.p')}
                             </p>
                             <ul className="mt-3 space-y-2 text-gray-700 dark:text-gray-300">
-                                <li>качество и результат оказанных услуг;</li>
-                                <li>отмену или перенос записей со стороны бизнеса или пользователя;</li>
-                                <li>любой косвенный ущерб, связанный с использованием Сервиса.</li>
+                                {LIABILITY_EXCLUSIONS.map((key) => <li key={key}>{t(key)}</li>)}
                             </ul>
                         </section>
 
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                7. Обработка персональных данных
+                                {t('legal.terms.s7.title')}
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                Обработка персональных данных пользователей осуществляется в соответствии с{' '}
+                                {beforePrivacyLink}
                                 <Link href="/privacy" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-                                    Политикой конфиденциальности
+                                    {t('legal.terms.s7.link')}
                                 </Link>
-                                .
+                                {afterPrivacyLink}
                             </p>
                         </section>
 
                         <section className="border-l-4 border-indigo-500 pl-6">
                             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                8. Изменения условий Соглашения
+                                {t('legal.terms.s8.title')}
                             </h2>
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                Мы можем обновлять условия настоящего Соглашения. Актуальная версия всегда доступна по адресу{' '}
-                                <span className="font-mono text-sm text-indigo-600 dark:text-indigo-400">{getPublicSiteOrigin()}/terms</span>.
-                                Продолжение использования Сервиса после изменения условий означает согласие с новой версией
-                                Соглашения.
+                                {beforeTermsUrl}
+                                <span className="font-mono text-sm text-indigo-600 dark:text-indigo-400">{getPublicSiteOrigin()}/terms</span>
+                                {afterTermsUrl}
                             </p>
                         </section>
                     </div>
@@ -149,7 +147,7 @@ export default function TermsPage() {
                             href="/"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200"
                         >
-                            Вернуться на главную
+                            {t('legal.common.backHome')}
                         </Link>
                     </div>
                 </div>

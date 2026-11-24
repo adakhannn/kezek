@@ -4,12 +4,13 @@ import {NextResponse} from 'next/server';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { logError } from '@/lib/log';
 import { getRouteParam } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(_req: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(_req: Request, context: unknown) {
     try {
         // Аккуратно достаём id из контекста
         const id = await getRouteParam(context, 'id');
@@ -59,7 +60,7 @@ export async function POST(_req: Request, context: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
-}
+});
 
 // поддержим HTTP DELETE той же логикой
 export const DELETE = POST;

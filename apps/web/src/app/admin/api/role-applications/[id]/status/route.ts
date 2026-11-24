@@ -11,6 +11,7 @@ import {
 } from '@/lib/businessRoleApplicationService';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
@@ -20,7 +21,7 @@ type Body = {
     block_id?: unknown;
 };
 
-export async function POST(request: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(request: Request, context: unknown) {
     const applicationId = await getRouteParamRequired(context, 'id');
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -116,4 +117,4 @@ export async function POST(request: Request, context: unknown) {
     }
 
     return Response.json({ ok: true });
-}
+});

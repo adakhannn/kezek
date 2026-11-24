@@ -7,7 +7,7 @@ test.each([
     'В личном кабинете найдите раздел "Профиль" или "Настройки аккаунта".',
     'Найдите опцию "Удалить аккаунт"',
     'В настройках профиля найдите раздел "Опасная зона" или "Удаление аккаунта".',
-])('preserves the existing quoted instruction: %s', (text) => {
-    render(<DataDeletionPage />);
+])('preserves the existing quoted instruction: %s', async (text) => {
+    render(await DataDeletionPage());
     expect(screen.getByText(text, { exact: true })).toBeTruthy();
 });

@@ -78,10 +78,10 @@ export default async function RatingConfigPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                                Настройки рейтингов
+                                {t('admin.ratingConfig.title', 'Настройки рейтингов')}
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Управление глобальными настройками расчета рейтингов для всех бизнесов
+                                {t('admin.ratingConfig.subtitle', 'Управление глобальными настройками расчета рейтингов для всех бизнесов')}
                             </p>
                         </div>
                         <Link href="/admin">
@@ -89,7 +89,7 @@ export default async function RatingConfigPage() {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                 </svg>
-                                В админку
+                                {t('admin.users.backToAdmin', 'В админку')}
                             </button>
                         </Link>
                     </div>
@@ -104,16 +104,16 @@ export default async function RatingConfigPage() {
                             </svg>
                             <div className="flex-1">
                                 <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                    Активная конфигурация
+                                    {t('admin.ratingConfig.activeConfig', 'Активная конфигурация')}
                                 </p>
                                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                    Действует с {new Date(currentConfig.valid_from).toLocaleDateString('ru-RU', {
+                                    {t('admin.ratingConfig.validFrom', 'Действует с {date}').replace('{date}', new Date(currentConfig.valid_from).toLocaleDateString('ru-RU', {
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric',
                                         hour: '2-digit',
                                         minute: '2-digit',
-                                    })}
+                                    }))}
                                 </p>
                             </div>
                         </div>

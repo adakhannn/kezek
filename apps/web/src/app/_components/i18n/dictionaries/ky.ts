@@ -4,6 +4,10 @@
 import type { Translations } from '../LanguageProvider';
 
 import { adminKy } from './admin.ky';
+import { adminAccessKy } from './adminAccess.ky';
+import { adminAnalyticsKy } from './adminAnalytics.ky';
+import { adminCatalogKy } from './adminCatalog.ky';
+import { adminOpsKy } from './adminOps.ky';
 import { analyticsKy } from './analytics';
 import { apiDocsKy } from './apiDocs.ky';
 import { applicationHistoryKy } from './applicationHistory';
@@ -48,6 +52,10 @@ export const ky: Translations = Object.assign(
     branchesKy,
     financeKy,
     adminKy,
+    adminAccessKy,
+    adminAnalyticsKy,
+    adminCatalogKy,
+    adminOpsKy,
     applicationHistoryKy,
     commonKy,
     datePickerKy,

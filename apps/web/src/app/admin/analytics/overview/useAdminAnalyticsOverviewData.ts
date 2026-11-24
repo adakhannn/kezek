@@ -6,9 +6,11 @@ import { loadPersistedAnalyticsFilters, persistAnalyticsFilters } from '../filte
 
 import type { OverviewResponse, PeriodPreset, TrendChartData } from './types';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { addDaysToDateString, todayDateString } from '@/lib/time';
 
 export function useAdminAnalyticsOverviewData() {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('30');
@@ -48,7 +50,7 @@ export function useAdminAnalyticsOverviewData() {
 
                 const json = (await response.json()) as OverviewResponse;
                 if (!json.ok || !json.data) {
-                    throw new Error(json.error || 'Не удалось загрузить данные обзора');
+                    throw new Error(json.error || t('admin.analyticsOverview.loadFailed', 'Не удалось загрузить данные обзора'));
                 }
 
                 if (!ignore) {
@@ -69,7 +71,7 @@ export function useAdminAnalyticsOverviewData() {
         return () => {
             ignore = true;
         };
-    }, [endDate, reloadKey, startDate]);
+    }, [endDate, reloadKey, startDate, t]);
 
     useEffect(() => {
         if (!startDate || !endDate) return;

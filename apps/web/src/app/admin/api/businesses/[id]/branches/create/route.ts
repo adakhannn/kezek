@@ -8,6 +8,7 @@ import { branchCreateError, resolveInitialDirectoryLinks } from '@/lib/branchCre
 import { validatePublicContacts, type PublicContactFields } from '@/lib/businessContacts';
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { validateLatLon } from '@/lib/validation';
 
@@ -26,7 +27,7 @@ const norm = (s?: string | null) => {
     return v.length ? v : null;
 };
 
-export async function POST(req: Request, context: unknown) {
+export const POST = withLocalizedMessages(async function POST(req: Request, context: unknown) {
     try {
         const bizId = await getRouteParamRequired(context, 'id');
 
@@ -88,6 +89,6 @@ export async function POST(req: Request, context: unknown) {
         logError('BranchCreate', 'Failed to create branch', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-}
+});
 
 export function OPTIONS() { return new Response(null, { status: 204 }); }

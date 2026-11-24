@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -23,6 +24,7 @@ export function DeleteBranchButton({
     name: string;
 }) {
     const router = useRouter();
+    const { t } = useLanguage();
     const toast = useToast();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -57,7 +59,7 @@ export function DeleteBranchButton({
                 throw new Error(apiError || `HTTP ${response.status}`);
             }
 
-            toast.showSuccess('Филиал удален.');
+            toast.showSuccess(t('admin.deleteBranch.deleted', 'Филиал удален.'));
             setConfirmOpen(false);
             router.refresh();
         } catch (deleteError) {
@@ -79,17 +81,17 @@ export function DeleteBranchButton({
                 disabled={loading}
                 isLoading={loading}
             >
-                {loading ? 'Удаляем…' : 'Удалить'}
+                {loading ? t('admin.catalog.delete.deleting', 'Удаляем…') : t('admin.catalog.delete.delete', 'Удалить')}
             </Button>
             {error ? <AlertBanner variant="danger" message={error} compact /> : null}
             <ConfirmDialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onDelete}
-                title="Удалить филиал"
-                message={`Удалить филиал «${name}»? Удалить можно только филиал без истории: без записей, смен и использованных акций. Иначе сделайте филиал неактивным — данные сохранятся.`}
-                confirmLabel="Удалить"
-                cancelLabel="Отмена"
+                title={t('admin.deleteBranch.title', 'Удалить филиал')}
+                message={t('admin.deleteBranch.message', 'Удалить филиал «{name}»? Удалить можно только филиал без истории: без записей, смен и использованных акций. Иначе сделайте филиал неактивным — данные сохранятся.').replace('{name}', name)}
+                confirmLabel={t('admin.catalog.delete.delete', 'Удалить')}
+                cancelLabel={t('admin.catalog.delete.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={loading}
             />

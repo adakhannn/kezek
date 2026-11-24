@@ -3,6 +3,8 @@
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type AdminDataTableColumn = {
     key: string;
     label: ReactNode;
@@ -45,6 +47,7 @@ export function AdminDataTable({
     onToggleAll,
     className,
 }: AdminDataTableProps) {
+    const { t } = useLanguage();
     return (
         <div
             className={clsx(
@@ -87,7 +90,7 @@ export function AdminDataTable({
                                     colSpan={columns.length + (includeSelection ? 1 : 0)}
                                     className="px-4 py-8 text-center text-[var(--text-secondary)]"
                                 >
-                                    {emptyState ?? 'Нет данных'}
+                                    {emptyState ?? t('admin.table.empty', 'Нет данных')}
                                 </td>
                             </tr>
                         ) : (

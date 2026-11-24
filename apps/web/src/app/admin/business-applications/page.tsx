@@ -137,7 +137,7 @@ export default async function BusinessApplicationsPage() {
                             <div className="flex flex-wrap gap-2 text-sm">
                                 {([
                                     ['instagram', 'Instagram'],
-                                    ['two_gis', '2ГИС'],
+                                    ['two_gis', t('admin.catalog.directory.twoGis', '2ГИС')],
                                     ['google_maps', t('admin.businessApplications.googleMaps')],
                                     ['yandex_maps', t('admin.businessApplications.yandexMaps')],
                                 ] as const).map(([key, label]) => application.directory_links?.[key] ? (

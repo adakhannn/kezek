@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -53,6 +54,7 @@ function isValidSlug(value: string): boolean {
 
 export function CategoryForm({ mode, categoryId, initial }: Props) {
     const router = useRouter();
+    const { t } = useLanguage();
 
     const [nameRu, setNameRu] = useState<string>(initial?.name_ru ?? '');
     const [slug, setSlug] = useState<string>(initial?.slug ?? '');
@@ -108,9 +110,9 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                 : `/admin/api/categories/${categoryId}/update`;
 
         try {
-            if (!nameRu.trim()) throw new Error('Название (ru) обязательно');
+            if (!nameRu.trim()) throw new Error(t('admin.categoryForm.nameRequired', 'Название (ru) обязательно'));
             if (!isValidSlug(slug)) {
-                throw new Error('Slug должен быть латиницей/цифрами и дефисом (минимум 2 символа), либо пустым');
+                throw new Error(t('admin.categoryForm.slugInvalid', 'Slug должен быть латиницей/цифрами и дефисом (минимум 2 символа), либо пустым'));
             }
 
             const body =
@@ -163,17 +165,17 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
         <form onSubmit={submit} className="space-y-7">
             <div className="space-y-5">
                 <Input
-                    label="Название категории"
-                    placeholder="Например: Парикмахерская"
+                    label={t('admin.categoryForm.name', 'Название категории')}
+                    placeholder={t('admin.categoryForm.namePlaceholder', 'Например: Парикмахерская')}
                     value={nameRu}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameRu(e.target.value)}
                     required
                     autoComplete="off"
-                    helperText="Показывается владельцам бизнеса и клиентам."
+                    helperText={t('admin.categoryForm.nameHelper', 'Показывается владельцам бизнеса и клиентам.')}
                 />
 
                 <Input
-                    label="Адрес публичной страницы"
+                    label={t('admin.categoryForm.slug', 'Адрес публичной страницы')}
                     placeholder="formiruetsya-avtomaticheski"
                     value={slug}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,8 +193,8 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                     }}
                     helperText={
                         slugDirty
-                            ? 'Адрес будет нормализован: допустимы латиница, цифры и дефисы.'
-                            : 'Формируется автоматически из названия. При необходимости его можно изменить.'
+                            ? t('admin.categoryForm.slugNormalized', 'Адрес будет нормализован: допустимы латиница, цифры и дефисы.')
+                            : t('admin.categoryForm.slugAuto', 'Формируется автоматически из названия. При необходимости его можно изменить.')
                     }
                 />
                 {slug && (
@@ -203,7 +205,7 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                         <Link2 className="h-4 w-4 shrink-0 text-[var(--accent-primary)]" aria-hidden="true" />
                         <div className="min-w-0 flex-1">
                             <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                                Будущий адрес
+                                {t('admin.categoryForm.futureAddress', 'Будущий адрес')}
                             </p>
                             <code className="mt-0.5 block truncate text-sm text-[var(--text-primary)]">
                                 {getPublicSiteHost()}/b/{makeSlug(slug)}
@@ -221,16 +223,16 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                     checked={isActive}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsActive(e.target.checked)}
                     className="peer sr-only"
-                    aria-label="Доступна для выбора"
+                    aria-label={t('admin.categoryForm.available', 'Доступна для выбора')}
                 />
                 <label
                     htmlFor="is_active"
                     className="flex cursor-pointer items-center justify-between gap-4 rounded-lg peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus-ring)] peer-focus-visible:ring-offset-4 peer-focus-visible:ring-offset-[var(--surface-emphasis)]"
                 >
                     <span className="min-w-0">
-                        <span className="block font-medium text-[var(--text-primary)]">Доступна для выбора</span>
+                        <span className="block font-medium text-[var(--text-primary)]">{t('admin.categoryForm.available', 'Доступна для выбора')}</span>
                         <span className="mt-1 block text-sm leading-5 text-[var(--text-muted)]">
-                            Владельцы смогут назначать эту категорию своим бизнесам.
+                            {t('admin.categoryForm.availableHint', 'Владельцы смогут назначать эту категорию своим бизнесам.')}
                         </span>
                     </span>
                     <span
@@ -258,17 +260,17 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                         </svg>
                         <div className="flex-1">
                             <p className="mb-1 text-sm font-medium text-amber-800 dark:text-amber-300">
-                                Изменение slug
+                                {t('admin.categoryForm.slugChangeTitle', 'Изменение slug')}
                             </p>
                             <p className="text-xs text-amber-700 dark:text-amber-400">
-                                Изменение slug может быть распространено на связанные бизнесы (если эта опция включена в API).
+                                {t('admin.categoryForm.slugChangeHint', 'Изменение slug может быть распространено на связанные бизнесы (если эта опция включена в API).')}
                             </p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {error ? <AlertBanner variant="danger" title="Ошибка" message={error} /> : null}
+            {error ? <AlertBanner variant="danger" title={t('admin.categoryForm.error', 'Ошибка')} message={error} /> : null}
 
             <div className="flex flex-col-reverse gap-3 border-t border-[var(--border-subtle)] pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <Link
@@ -278,13 +280,13 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                         className: 'w-full text-[var(--text-secondary)] sm:w-auto',
                     })}
                 >
-                    Отмена
+                    {t('admin.categoryForm.cancel', 'Отмена')}
                 </Link>
                 <div className="flex w-full items-center gap-4 sm:w-auto">
                     {mode === 'edit' && !changed && (
                         <span className="hidden items-center gap-2 text-sm text-[var(--text-muted)] sm:flex">
                             <Check className="h-4 w-4" aria-hidden="true" />
-                            Изменений нет
+                            {t('admin.categoryForm.noChanges', 'Изменений нет')}
                         </span>
                     )}
                     <Button
@@ -294,7 +296,7 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                         className="w-full min-w-[160px] sm:w-auto"
                         leadingIcon={mode === 'create' ? <Plus className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                     >
-                        {mode === 'create' ? 'Создать категорию' : 'Сохранить изменения'}
+                        {mode === 'create' ? t('admin.categoryForm.create', 'Создать категорию') : t('admin.categoryForm.saveChanges', 'Сохранить изменения')}
                     </Button>
                 </div>
             </div>

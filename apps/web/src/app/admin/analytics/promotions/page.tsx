@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { loadPersistedAnalyticsFilters, persistAnalyticsFilters } from '../filterPersistence';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -51,6 +52,7 @@ function formatCurrencyKGS(n: number) {
 }
 
 export default function AdminAnalyticsPromotionsPage() {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('30');
@@ -121,7 +123,7 @@ export default function AdminAnalyticsPromotionsPage() {
         }
         const json: PromotionsResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'Не удалось загрузить аналитику промо');
+          throw new Error(json.error || t('admin.analyticsPromotions.loadFailed', 'Не удалось загрузить аналитику промо'));
         }
         if (!ignore) {
           setData(json.data);
@@ -142,7 +144,7 @@ export default function AdminAnalyticsPromotionsPage() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate, branchId]);
+  }, [startDate, endDate, branchId, t]);
 
   const handlePresetChange = (preset: PeriodPreset) => {
     setPeriodPreset(preset);
@@ -156,14 +158,14 @@ export default function AdminAnalyticsPromotionsPage() {
 
   const allTypes = useMemo(() => {
     if (!data?.byType) return [];
-    return data.byType.map((t) => t.promotionType).sort();
+    return data.byType.map((item) => item.promotionType).sort();
   }, [data]);
 
   const filteredAndSorted = useMemo(() => {
     if (!data?.byType) return [];
     let arr = data.byType;
     if (promoTypeFilter !== 'all') {
-      arr = arr.filter((t) => t.promotionType === promoTypeFilter);
+      arr = arr.filter((item) => item.promotionType === promoTypeFilter);
     }
     const sorted = [...arr].sort((a, b) => {
       let av: number | string;
@@ -220,7 +222,7 @@ export default function AdminAnalyticsPromotionsPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем аналитику промо...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.analyticsPromotions.loading', 'Загружаем аналитику промо...')}</span>
           </div>
         </div>
       </div>
@@ -233,7 +235,7 @@ export default function AdminAnalyticsPromotionsPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="Ошибка загрузки промо"
+            title={t('admin.analyticsPromotions.errorTitle', 'Ошибка загрузки промо')}
             message={error}
             action={
               <Button
@@ -246,7 +248,7 @@ export default function AdminAnalyticsPromotionsPage() {
                   setStartDate((s) => s);
                 }}
               >
-                Попробовать снова
+                {t('admin.analyticsFilters.retry', 'Попробовать снова')}
               </Button>
             }
           />
@@ -272,13 +274,13 @@ export default function AdminAnalyticsPromotionsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('admin.analyticsFilters.filters', 'Фильтры')}</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Период, филиал и тип промо задают срез для аналитики промо‑акций.
+              {t('admin.analyticsPromotions.filtersHint', 'Период, филиал и тип промо задают срез для аналитики промо‑акций.')}
             </p>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            Период данных: {period.startDate} — {period.endDate}
+            {t('admin.analyticsFilters.dataPeriod', 'Период данных: {start} — {end}').replace('{start}', period.startDate).replace('{end}', period.endDate)}
           </div>
         </div>
 
@@ -286,7 +288,7 @@ export default function AdminAnalyticsPromotionsPage() {
           {/* Период */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Период
+              {t('admin.analyticsFilters.period', 'Период')}
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
@@ -300,10 +302,10 @@ export default function AdminAnalyticsPromotionsPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' && '7 дней'}
-                  {p === '30' && '30 дней'}
-                  {p === '90' && '90 дней'}
-                  {p === 'custom' && 'Кастомный'}
+                  {p === '7' && t('admin.analyticsFilters.days7', '7 дней')}
+                  {p === '30' && t('admin.analyticsFilters.days30', '30 дней')}
+                  {p === '90' && t('admin.analyticsFilters.days90', '90 дней')}
+                  {p === 'custom' && t('admin.analyticsFilters.custom', 'Кастомный')}
                 </button>
               ))}
             </div>
@@ -312,7 +314,7 @@ export default function AdminAnalyticsPromotionsPage() {
           {/* Дата начала */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата начала
+              {t('admin.analyticsFilters.startDate', 'Дата начала')}
             </label>
             <input
               type="date"
@@ -328,7 +330,7 @@ export default function AdminAnalyticsPromotionsPage() {
           {/* Дата окончания */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата окончания
+              {t('admin.analyticsFilters.endDate', 'Дата окончания')}
             </label>
             <input
               type="date"
@@ -344,14 +346,14 @@ export default function AdminAnalyticsPromotionsPage() {
           {/* Филиал */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Филиал
+              {t('admin.analyticsFilters.branch', 'Филиал')}
             </label>
             <select
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Все филиалы</option>
+              <option value="all">{t('admin.analyticsFilters.allBranches', 'Все филиалы')}</option>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -363,17 +365,17 @@ export default function AdminAnalyticsPromotionsPage() {
           {/* Тип промо (клиентский фильтр по byType) */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Тип промо
+              {t('admin.analyticsPromotions.promoType', 'Тип промо')}
             </label>
             <select
               value={promoTypeFilter}
               onChange={(e) => setPromoTypeFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Все типы</option>
-              {allTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              <option value="all">{t('admin.analyticsPromotions.allTypes', 'Все типы')}</option>
+              {allTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
                 </option>
               ))}
             </select>
@@ -385,7 +387,7 @@ export default function AdminAnalyticsPromotionsPage() {
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Промо‑бронирования
+            {t('admin.analyticsPromotions.promoBookings', 'Промо‑бронирования')}
           </p>
           <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
             {formatNumber(summary.promoBookings)}
@@ -394,7 +396,7 @@ export default function AdminAnalyticsPromotionsPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Выручка с промо
+            {t('admin.analyticsPromotions.promoRevenue', 'Выручка с промо')}
           </p>
           <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
             {formatCurrencyKGS(summary.promoRevenue)}
@@ -403,7 +405,7 @@ export default function AdminAnalyticsPromotionsPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Выручка без промо (оценка)
+            {t('admin.analyticsPromotions.nonPromoRevenue', 'Выручка без промо (оценка)')}
           </p>
           <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
             {formatCurrencyKGS(nonPromoRevenue)}
@@ -412,13 +414,13 @@ export default function AdminAnalyticsPromotionsPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Доля промо‑выручки
+            {t('admin.analyticsPromotions.promoRevenueShare', 'Доля промо‑выручки')}
           </p>
           <p className="mt-2 text-3xl font-bold text-indigo-600 dark:text-indigo-400">
             {promoShare.toFixed(2)}%
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Из общей выручки {formatCurrencyKGS(summary.totalRevenue)}
+            {t('admin.analyticsPromotions.totalRevenueHint', 'Из общей выручки {amount}').replace('{amount}', formatCurrencyKGS(summary.totalRevenue))}
           </p>
         </div>
       </section>
@@ -428,10 +430,10 @@ export default function AdminAnalyticsPromotionsPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Вклад отдельных типов промо
+              {t('admin.analyticsPromotions.byTypeTitle', 'Вклад отдельных типов промо')}
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Сравните эффективность разных типов промо по выручке, количеству и сумме скидки.
+              {t('admin.analyticsPromotions.byTypeHint', 'Сравните эффективность разных типов промо по выручке, количеству и сумме скидки.')}
             </p>
           </div>
         </div>
@@ -439,8 +441,8 @@ export default function AdminAnalyticsPromotionsPage() {
         {filteredAndSorted.length === 0 ? (
           <EmptyState
             compact
-            title="Нет данных по промо"
-            description="За выбранный период и фильтры нет подходящих промо-акций для сравнения."
+            title={t('admin.analyticsPromotions.emptyTitle', 'Нет данных по промо')}
+            description={t('admin.analyticsPromotions.emptyDescription', 'За выбранный период и фильтры нет подходящих промо-акций для сравнения.')}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -451,28 +453,28 @@ export default function AdminAnalyticsPromotionsPage() {
                     className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('type')}
                   >
-                    Тип промо
+                    {t('admin.analyticsPromotions.promoType', 'Тип промо')}
                   </th>
                   <th
                     className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('bookings')}
                   >
-                    Бронирований
+                    {t('admin.analyticsPromotions.bookings', 'Бронирований')}
                   </th>
                   <th
                     className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('revenue')}
                   >
-                    Выручка с промо
+                    {t('admin.analyticsPromotions.promoRevenue', 'Выручка с промо')}
                   </th>
                   <th
                     className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('discount')}
                   >
-                    Сумма скидок
+                    {t('admin.analyticsPromotions.discounts', 'Сумма скидок')}
                   </th>
                   <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Доля в промо‑выручке
+                    {t('admin.analyticsPromotions.shareInPromoRevenue', 'Доля в промо‑выручке')}
                   </th>
                 </tr>
               </thead>

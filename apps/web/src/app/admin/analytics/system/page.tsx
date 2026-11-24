@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { addDaysToDateString, todayDateString } from '@/lib/time';
@@ -53,6 +54,7 @@ function formatCurrencyKGS(n: number) {
 }
 
 export default function AdminSystemAnalyticsOverviewPage() {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('30');
@@ -88,7 +90,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         }
         const json: SystemOverviewResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'Не удалось загрузить системную аналитику');
+          throw new Error(json.error || t('admin.analyticsSystem.loadFailed', 'Не удалось загрузить системную аналитику'));
         }
         if (!ignore) {
           setData(json.data);
@@ -108,7 +110,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate]);
+  }, [startDate, endDate, t]);
 
   const trend = useMemo(() => {
     if (!data) return null;
@@ -135,7 +137,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем системную аналитику...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.analyticsSystem.loading', 'Загружаем системную аналитику...')}</span>
           </div>
         </div>
       </div>
@@ -148,7 +150,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="Ошибка загрузки аналитики платформы"
+            title={t('admin.analyticsSystem.errorTitle', 'Ошибка загрузки аналитики платформы')}
             message={error}
             action={
               <Button
@@ -161,7 +163,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
                   setStartDate((s) => s);
                 }}
               >
-                Попробовать снова
+                {t('admin.analyticsFilters.retry', 'Попробовать снова')}
               </Button>
             }
           />
@@ -181,26 +183,26 @@ export default function AdminSystemAnalyticsOverviewPage() {
       <header className="space-y-1">
         <p className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-[11px] font-medium text-indigo-700 dark:text-indigo-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Уровень: платформа
+          {t('admin.analyticsSystem.level', 'Уровень: платформа')}
         </p>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">Системная аналитика</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{t('admin.analyticsSystem.title', 'Системная аналитика')}</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Сводка по всем бизнесам: активность, выручка и бронирования за выбранный период.
+          {t('admin.analyticsSystem.description', 'Сводка по всем бизнесам: активность, выручка и бронирования за выбранный период.')}
         </p>
       </header>
 
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('admin.analyticsFilters.filters', 'Фильтры')}</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Период задаёт окно для всех метрик и трендов на этом экране.
+              {t('admin.analyticsSystem.filtersHint', 'Период задаёт окно для всех метрик и трендов на этом экране.')}
             </p>
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Период</p>
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">{t('admin.analyticsFilters.period', 'Период')}</p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
                 <button
@@ -213,14 +215,14 @@ export default function AdminSystemAnalyticsOverviewPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' ? '7 дней' : p === '30' ? '30 дней' : p === '90' ? '90 дней' : 'Свой период'}
+                  {p === '7' ? t('admin.analyticsFilters.days7', '7 дней') : p === '30' ? t('admin.analyticsFilters.days30', '30 дней') : p === '90' ? t('admin.analyticsFilters.days90', '90 дней') : t('admin.analyticsSystem.customPeriod', 'Свой период')}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Начало</p>
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">{t('admin.analyticsSystem.start', 'Начало')}</p>
             <input
               type="date"
               value={startDate}
@@ -233,7 +235,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Окончание</p>
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">{t('admin.analyticsSystem.end', 'Окончание')}</p>
             <input
               type="date"
               value={endDate}
@@ -250,7 +252,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            Активные бизнесы
+            {t('admin.analyticsSystem.activeBusinesses', 'Активные бизнесы')}
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatNumber(summary.activeBusinesses)}
@@ -258,7 +260,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         </div>
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            Брони (успешные)
+            {t('admin.analyticsFilters.successfulBookings', 'Брони (успешные)')}
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatNumber(summary.bookings.confirmed)}
@@ -266,7 +268,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         </div>
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            Выручка за период
+            {t('admin.analyticsSystem.revenue', 'Выручка за период')}
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatCurrencyKGS(summary.revenue.total)}
@@ -274,7 +276,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         </div>
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            Средний чек
+            {t('admin.analyticsSystem.avgCheck', 'Средний чек')}
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatCurrencyKGS(summary.revenue.avgCheck)}
@@ -286,9 +288,9 @@ export default function AdminSystemAnalyticsOverviewPage() {
         <section className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Тренды по дням</h2>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('admin.analyticsSystem.trendsTitle', 'Тренды по дням')}</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Как менялись успешные бронирования и выручка по платформе за выбранный период.
+                {t('admin.analyticsSystem.trendsHint', 'Как менялись успешные бронирования и выручка по платформе за выбранный период.')}
               </p>
             </div>
           </div>
@@ -298,10 +300,10 @@ export default function AdminSystemAnalyticsOverviewPage() {
                 <span className="text-gray-600 dark:text-gray-300">{p.date}</span>
                 <div className="flex items-center gap-4">
                   <span className="text-gray-500 dark:text-gray-400">
-                    Брони: <span className="font-medium text-gray-900 dark:text-gray-100">{formatNumber(p.bookings)}</span>
+                    {t('admin.analyticsSystem.bookingsLabel', 'Брони:')} <span className="font-medium text-gray-900 dark:text-gray-100">{formatNumber(p.bookings)}</span>
                   </span>
                   <span className="text-gray-500 dark:text-gray-400">
-                    Выручка:{' '}
+                    {t('admin.analyticsSystem.revenueLabel', 'Выручка:')}{' '}
                     <span className="font-medium text-gray-900 dark:text-gray-100">
                       {formatCurrencyKGS(p.revenue)}
                     </span>

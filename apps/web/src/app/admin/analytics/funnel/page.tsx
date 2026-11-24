@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { loadPersistedAnalyticsFilters, persistAnalyticsFilters } from '../filterPersistence';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -35,6 +36,18 @@ function formatPercent(value: number | null | undefined) {
 }
 
 export default function AdminAnalyticsFunnelPage() {
+  const { t } = useLanguage();
+  // The API sends Russian step labels; known step ids are named in the page language.
+  const stepLabel = (step: FunnelStep) => {
+    switch (step.id) {
+      case 'home_view': return t('admin.analyticsFunnel.step.home_view', step.label);
+      case 'business_page_view': return t('admin.analyticsFunnel.step.business_page_view', step.label);
+      case 'booking_flow_start': return t('admin.analyticsFunnel.step.booking_flow_start', step.label);
+      case 'booking_created': return t('admin.analyticsFunnel.step.booking_created', step.label);
+      case 'booking_confirmed_or_paid': return t('admin.analyticsFunnel.step.booking_confirmed_or_paid', step.label);
+      default: return step.label;
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('30');
@@ -79,7 +92,7 @@ export default function AdminAnalyticsFunnelPage() {
         }
         const json: FunnelResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'Не удалось загрузить аналитику воронки');
+          throw new Error(json.error || t('admin.analyticsFunnel.loadFailed', 'Не удалось загрузить аналитику воронки'));
         }
         if (!ignore) {
           setData(json.data);
@@ -99,7 +112,7 @@ export default function AdminAnalyticsFunnelPage() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate, source]);
+  }, [startDate, endDate, source, t]);
 
   const maxSessions = useMemo(() => {
     if (!data?.steps?.length) return 0;
@@ -131,7 +144,7 @@ export default function AdminAnalyticsFunnelPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем аналитику воронки...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.analyticsFunnel.loading', 'Загружаем аналитику воронки...')}</span>
           </div>
         </div>
       </div>
@@ -144,7 +157,7 @@ export default function AdminAnalyticsFunnelPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="Ошибка загрузки воронки"
+            title={t('admin.analyticsFunnel.errorTitle', 'Ошибка загрузки воронки')}
             message={error}
             action={
               <Button
@@ -157,7 +170,7 @@ export default function AdminAnalyticsFunnelPage() {
                   setStartDate((s) => s);
                 }}
               >
-                Попробовать снова
+                {t('admin.analyticsFilters.retry', 'Попробовать снова')}
               </Button>
             }
           />
@@ -176,13 +189,13 @@ export default function AdminAnalyticsFunnelPage() {
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('admin.analyticsFilters.filters', 'Фильтры')}</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Период и канал задают срез для событий воронки.
+              {t('admin.analyticsFunnel.filtersHint', 'Период и канал задают срез для событий воронки.')}
             </p>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            Период данных: {data.period.startDate} — {data.period.endDate}
+            {t('admin.analyticsFilters.dataPeriod', 'Период данных: {start} — {end}').replace('{start}', data.period.startDate).replace('{end}', data.period.endDate)}
           </div>
         </div>
 
@@ -190,7 +203,7 @@ export default function AdminAnalyticsFunnelPage() {
           {/* Период */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Период
+              {t('admin.analyticsFilters.period', 'Период')}
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
@@ -204,10 +217,10 @@ export default function AdminAnalyticsFunnelPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' && '7 дней'}
-                  {p === '30' && '30 дней'}
-                  {p === '90' && '90 дней'}
-                  {p === 'custom' && 'Кастомный'}
+                  {p === '7' && t('admin.analyticsFilters.days7', '7 дней')}
+                  {p === '30' && t('admin.analyticsFilters.days30', '30 дней')}
+                  {p === '90' && t('admin.analyticsFilters.days90', '90 дней')}
+                  {p === 'custom' && t('admin.analyticsFilters.custom', 'Кастомный')}
                 </button>
               ))}
             </div>
@@ -216,7 +229,7 @@ export default function AdminAnalyticsFunnelPage() {
           {/* Даты */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата начала
+              {t('admin.analyticsFilters.startDate', 'Дата начала')}
             </label>
             <input
               type="date"
@@ -231,7 +244,7 @@ export default function AdminAnalyticsFunnelPage() {
 
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата окончания
+              {t('admin.analyticsFilters.endDate', 'Дата окончания')}
             </label>
             <input
               type="date"
@@ -247,14 +260,14 @@ export default function AdminAnalyticsFunnelPage() {
           {/* Канал */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Канал
+              {t('admin.analyticsFunnel.channel', 'Канал')}
             </label>
             <select
               value={source}
               onChange={(e) => setSource(e.target.value as SourceFilter)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Все (web + mobile)</option>
+              <option value="all">{t('admin.analyticsFunnel.channelAll', 'Все (web + mobile)')}</option>
               <option value="web">Web</option>
               <option value="mobile">Mobile</option>
             </select>
@@ -266,21 +279,21 @@ export default function AdminAnalyticsFunnelPage() {
       <section className="grid gap-4 md:grid-cols-3">
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Общая конверсия воронки
+            {t('admin.analyticsFunnel.overallTitle', 'Общая конверсия воронки')}
           </p>
           <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
             {formatPercent(data.overallConversion)}
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            От первого шага (просмотры главной) до успешной брони.
+            {t('admin.analyticsFunnel.overallHint', 'От первого шага (просмотры главной) до успешной брони.')}
           </p>
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm col-span-2">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Шаги воронки
+            {t('admin.analyticsFunnel.stepsTitle', 'Шаги воронки')}
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Для каждого шага показано количество сессий и конверсия относительно предыдущего шага.
+            {t('admin.analyticsFunnel.stepsHint', 'Для каждого шага показано количество сессий и конверсия относительно предыдущего шага.')}
           </p>
         </div>
       </section>
@@ -288,24 +301,24 @@ export default function AdminAnalyticsFunnelPage() {
       {/* Визуализация воронки */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Воронка шагов бронирования
+          {t('admin.analyticsFunnel.chartTitle', 'Воронка шагов бронирования')}
         </h3>
         {data.steps.length === 0 ? (
           <EmptyState
             compact
-            title="Нет данных по воронке"
-            description="За выбранный период и срез нет событий, которые можно показать в отчете."
+            title={t('admin.analyticsFunnel.emptyTitle', 'Нет данных по воронке')}
+            description={t('admin.analyticsFunnel.emptyDescription', 'За выбранный период и срез нет событий, которые можно показать в отчете.')}
           />
         ) : (
           <div className="space-y-4">
             {data.steps.map((step, index) => {
               const widthPercent = maxSessions > 0 ? Math.max((step.sessions / maxSessions) * 100, 5) : 0;
               const tooltip = [
-                `${step.label}`,
-                `Сессий на шаге: ${step.sessions}`,
+                stepLabel(step),
+                t('admin.analyticsFunnel.tooltipSessions', 'Сессий на шаге: {count}').replace('{count}', String(step.sessions)),
                 index === 0
-                  ? `Конверсия от начала воронки: ${formatPercent(data.overallConversion)}`
-                  : `Конверсия от предыдущего шага: ${formatPercent(step.conversionFromPrev)}`,
+                  ? t('admin.analyticsFunnel.tooltipFromStart', 'Конверсия от начала воронки: {value}').replace('{value}', formatPercent(data.overallConversion))
+                  : t('admin.analyticsFunnel.tooltipFromPrev', 'Конверсия от предыдущего шага: {value}').replace('{value}', formatPercent(step.conversionFromPrev)),
               ].join(' • ');
 
               return (
@@ -320,23 +333,23 @@ export default function AdminAnalyticsFunnelPage() {
                         {index + 1}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{step.label}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{stepLabel(step)}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Сессий: <span className="font-semibold">{step.sessions}</span>
+                          {t('admin.analyticsFunnel.sessions', 'Сессий:')} <span className="font-semibold">{step.sessions}</span>
                         </p>
                       </div>
                     </div>
                     <div className="text-right text-xs text-gray-500 dark:text-gray-400">
                       {index === 0 ? (
                         <>
-                          <p>Старт воронки</p>
+                          <p>{t('admin.analyticsFunnel.funnelStart', 'Старт воронки')}</p>
                           <p className="font-semibold text-emerald-600 dark:text-emerald-400">
                             {formatPercent(data.overallConversion)}
                           </p>
                         </>
                       ) : (
                         <>
-                          <p>Конверсия от прошл. шага</p>
+                          <p>{t('admin.analyticsFunnel.fromPrevShort', 'Конверсия от прошл. шага')}</p>
                           <p className="font-semibold text-indigo-600 dark:text-indigo-400">
                             {formatPercent(step.conversionFromPrev)}
                           </p>
@@ -351,7 +364,7 @@ export default function AdminAnalyticsFunnelPage() {
                     />
                   </div>
                   <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                    Наведите курсор, чтобы увидеть подробные значения.
+                    {t('admin.analyticsFunnel.hoverHint', 'Наведите курсор, чтобы увидеть подробные значения.')}
                   </div>
                 </div>
               );

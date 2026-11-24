@@ -91,7 +91,7 @@ export default async function CategoriesPage() {
                 <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
-                            Каталог бизнесов
+                            {t('admin.categoryPages.catalog', 'Каталог бизнесов')}
                         </p>
                         <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
                             {t('admin.categories.title', 'Категории бизнеса')}
@@ -111,7 +111,7 @@ export default async function CategoriesPage() {
                     </Link>
                 </header>
 
-                <section aria-label="Статистика категорий" className="grid gap-3 sm:grid-cols-3">
+                <section aria-label={t('admin.categoryPages.statsLabel', 'Статистика категорий')} className="grid gap-3 sm:grid-cols-3">
                     {stats.map((stat) => {
                         const Icon = stat.icon;
                         return (
@@ -142,7 +142,7 @@ export default async function CategoriesPage() {
                                     {t('admin.categories.list.title', 'Список категорий')}
                                 </h2>
                                 <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                                    {totalCategories} · {activeCategories} активных
+                                    {t('admin.categoryPages.counts', '{total} · {active} активных').replace('{total}', String(totalCategories)).replace('{active}', String(activeCategories))}
                                 </p>
                             </div>
                         </div>

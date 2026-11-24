@@ -1,6 +1,7 @@
 import { ArrowLeft, FolderPlus } from 'lucide-react';
 import Link from 'next/link';
 
+import { getT } from '@/app/_components/i18n/server';
 import { CategoryForm } from '@/components/admin/categories/CategoryForm';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -8,15 +9,16 @@ import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 export const dynamic = 'force-dynamic';
 
 export default async function CategoryNewPage({ searchParams }: { searchParams: Promise<{ name?: string }> }) {
+    const t = await getT();
 
     const supa = await createSupabaseServerClient();
 
     const { data: { user } } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">Не авторизован</div>;
+    if (!user) return <div className="p-4">{t('admin.catalog.common.notAuthorized', 'Не авторизован')}</div>;
 
     const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-    if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
-    if (!isSuper) return <div className="p-4">Нет доступа</div>;
+    if (eSuper) return <div className="p-4">{t('admin.catalog.common.error', 'Ошибка: {message}').replace('{message}', eSuper.message)}</div>;
+    if (!isSuper) return <div className="p-4">{t('admin.catalog.common.noAccess', 'Нет доступа')}</div>;
 
     const params = await searchParams;
     const proposedName = typeof params.name === 'string' ? params.name.trim().slice(0, 120) : '';
@@ -33,7 +35,7 @@ export default async function CategoryNewPage({ searchParams }: { searchParams: 
                     })}
                 >
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                    Категории
+                    {t('admin.categoryPages.back', 'Категории')}
                 </Link>
 
                 <header className="mb-6 flex items-start gap-4">
@@ -42,24 +44,24 @@ export default async function CategoryNewPage({ searchParams }: { searchParams: 
                     </div>
                     <div className="min-w-0 pt-0.5">
                         <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
-                            Каталог бизнесов
+                            {t('admin.categoryPages.catalog', 'Каталог бизнесов')}
                         </p>
                         <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
-                            Новая категория
+                            {t('admin.categoryPages.newTitle', 'Новая категория')}
                         </h1>
                         <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-                            Категория станет доступна при создании и редактировании бизнеса.
+                            {t('admin.categoryPages.newDescription', 'Категория станет доступна при создании и редактировании бизнеса.')}
                         </p>
                         {proposedName ? (
                             <div className="mt-3 inline-flex rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1 text-xs text-[var(--text-secondary)]">
-                                Название перенесено из заявки бизнеса
+                                {t('admin.categoryPages.nameFromApplication', 'Название перенесено из заявки бизнеса')}
                             </div>
                         ) : null}
                     </div>
                 </header>
 
                 <section
-                    aria-label="Создание категории"
+                    aria-label={t('admin.categoryPages.createSection', 'Создание категории')}
                     className="overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-[var(--shadow-lg)]"
                 >
                     <div className="border-b border-[var(--border-subtle)] px-5 py-4 sm:px-7">
@@ -68,9 +70,9 @@ export default async function CategoryNewPage({ searchParams }: { searchParams: 
                                 1
                             </span>
                             <div>
-                                <h2 className="text-base font-semibold text-[var(--text-primary)]">Параметры категории</h2>
+                                <h2 className="text-base font-semibold text-[var(--text-primary)]">{t('admin.categoryPages.params', 'Параметры категории')}</h2>
                                 <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                                    Укажите понятное клиентам название. URL сформируется автоматически.
+                                    {t('admin.categoryPages.paramsHint', 'Укажите понятное клиентам название. URL сформируется автоматически.')}
                                 </p>
                             </div>
                         </div>

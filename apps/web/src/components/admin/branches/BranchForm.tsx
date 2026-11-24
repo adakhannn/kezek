@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react';
 
 import BranchMapPickerYandex from './BranchMapPickerYandex';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -25,6 +26,7 @@ type ApiResp = ApiOk | ApiErr;
 
 export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }: Props) {
     const router = useRouter();
+    const { t } = useLanguage();
 
     const [name, setName] = useState<string>(initial?.name ?? '');
     const [address, setAddress] = useState<string>(initial?.address ?? '');
@@ -78,7 +80,7 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
         setLoading(true);
         try {
             const trimmedName = name.trim();
-            if (!trimmedName) throw new Error('Название филиала обязательно');
+            if (!trimmedName) throw new Error(t('admin.branchForm.nameRequired', 'Название филиала обязательно'));
 
             const url =
                 mode === 'create'
@@ -129,19 +131,19 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
     return (
         <form onSubmit={submit} className="space-y-6 max-w-2xl">
             <Input
-                label="Название филиала"
-                placeholder="Введите название филиала"
+                label={t('admin.branchForm.name', 'Название филиала')}
+                placeholder={t('admin.branchForm.namePlaceholder', 'Введите название филиала')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 name="branch_name"
-                error={err && !name.trim() ? 'Название филиала обязательно' : undefined}
+                error={err && !name.trim() ? t('admin.branchForm.nameRequired', 'Название филиала обязательно') : undefined}
             />
 
             {/* Карта Яндекса */}
             <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Расположение на карте
+                    {t('admin.branchForm.mapLocation', 'Расположение на карте')}
                 </label>
                 <Card className="p-4">
                     <BranchMapPickerYandex
@@ -155,35 +157,35 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                         }}
                     />
                     <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Координаты: {lat ? lat.toFixed(6) : '—'}, {lon ? lon.toFixed(6) : '—'}
+                        {t('admin.branchForm.coordinates', 'Координаты: {lat}, {lon}').replace('{lat}', lat ? lat.toFixed(6) : '—').replace('{lon}', lon ? lon.toFixed(6) : '—')}
                     </div>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Кликните на карте, чтобы установить метку. Адрес заполнится автоматически.
+                        {t('admin.branchForm.mapHint', 'Кликните на карте, чтобы установить метку. Адрес заполнится автоматически.')}
                     </p>
                 </Card>
             </div>
 
             <Input
-                label="Адрес"
-                placeholder="Адрес будет заполнен автоматически при выборе на карте"
+                label={t('admin.branchForm.address', 'Адрес')}
+                placeholder={t('admin.branchForm.addressPlaceholder', 'Адрес будет заполнен автоматически при выборе на карте')}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 name="branch_address"
                 autoComplete="street-address"
-                helperText="Адрес можно выбрать на карте или ввести вручную"
+                helperText={t('admin.branchForm.addressHelper', 'Адрес можно выбрать на карте или ввести вручную')}
             />
 
             <div className="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
                 <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Ссылки филиала</p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Эти ссылки будут видны клиентам на публичной странице бизнеса.</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t('admin.branchForm.linksTitle', 'Ссылки филиала')}</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('admin.branchForm.linksHint', 'Эти ссылки будут видны клиентам на публичной странице бизнеса.')}</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                     {([
                         ['instagram', 'Instagram', 'https://instagram.com/...'],
-                        ['two_gis', '2ГИС', 'https://2gis.ru/...'],
-                        ['google_maps', 'Google Карты', 'https://maps.google.com/...'],
-                        ['yandex_maps', 'Яндекс Карты', 'https://yandex.ru/maps/...'],
+                        ['two_gis', t('admin.catalog.directory.twoGis', '2ГИС'), 'https://2gis.ru/...'],
+                        ['google_maps', t('admin.branchForm.googleMaps', 'Google Карты'), 'https://maps.google.com/...'],
+                        ['yandex_maps', t('admin.branchForm.yandexMaps', 'Яндекс Карты'), 'https://yandex.ru/maps/...'],
                     ] as const).map(([key, label, placeholder]) => (
                         <Input key={key} label={label} type="url" placeholder={placeholder} value={links[key]} onChange={(e) => setLinks((current) => ({ ...current, [key]: e.target.value }))} />
                     ))}
@@ -192,9 +194,9 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
 
             <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
                 <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Публичные контакты филиала</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t('admin.branchForm.contactsTitle', 'Публичные контакты филиала')}</p>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Эти данные принадлежат бизнесу. Личные телефоны владельцев и сотрудников здесь не используются.
+                        {t('admin.branchForm.contactsHint', 'Эти данные принадлежат бизнесу. Личные телефоны владельцев и сотрудников здесь не используются.')}
                     </p>
                 </div>
                 <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
@@ -205,17 +207,17 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                         className="mt-0.5 h-4 w-4 rounded"
                     />
                     <span>
-                        Использовать контакты бизнеса для незаполненных полей
+                        {t('admin.branchForm.inheritContacts', 'Использовать контакты бизнеса для незаполненных полей')}
                         <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
-                            Контакт филиала всегда имеет приоритет.
+                            {t('admin.branchForm.inheritHint', 'Контакт филиала всегда имеет приоритет.')}
                         </span>
                     </span>
                 </label>
                 <div className="grid gap-3 sm:grid-cols-2">
-                    <Input label="Телефон" type="tel" placeholder="+996..." value={contacts.contact_phone} onChange={(e) => setContacts((value) => ({ ...value, contact_phone: e.target.value }))} />
+                    <Input label={t('admin.branchForm.phone', 'Телефон')} type="tel" placeholder="+996..." value={contacts.contact_phone} onChange={(e) => setContacts((value) => ({ ...value, contact_phone: e.target.value }))} />
                     <Input label="WhatsApp" type="tel" placeholder="+996..." value={contacts.contact_whatsapp} onChange={(e) => setContacts((value) => ({ ...value, contact_whatsapp: e.target.value }))} />
-                    <Input label="Публичный email" type="email" placeholder="hello@business.kg" value={contacts.contact_email} onChange={(e) => setContacts((value) => ({ ...value, contact_email: e.target.value }))} />
-                    <Input label="Сайт" type="url" placeholder="https://..." value={contacts.website_url} onChange={(e) => setContacts((value) => ({ ...value, website_url: e.target.value }))} />
+                    <Input label={t('admin.branchForm.email', 'Публичный email')} type="email" placeholder="hello@business.kg" value={contacts.contact_email} onChange={(e) => setContacts((value) => ({ ...value, contact_email: e.target.value }))} />
+                    <Input label={t('admin.branchForm.website', 'Сайт')} type="url" placeholder="https://..." value={contacts.website_url} onChange={(e) => setContacts((value) => ({ ...value, website_url: e.target.value }))} />
                 </div>
             </div>
 
@@ -228,10 +230,10 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                     className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
                 />
                 <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                    Филиал активен
+                    {t('admin.branchForm.active', 'Филиал активен')}
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
-                    {isActive ? 'Филиал будет отображаться в публичном каталоге' : 'Филиал скрыт от пользователей'}
+                    {isActive ? t('admin.branchForm.activeHint', 'Филиал будет отображаться в публичном каталоге') : t('admin.branchForm.hiddenHint', 'Филиал скрыт от пользователей')}
                 </p>
             </div>
 
@@ -244,10 +246,10 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                     isLoading={loading}
                     className="min-w-[160px]"
                 >
-                    {mode === 'create' ? 'Создать филиал' : 'Сохранить изменения'}
+                    {mode === 'create' ? t('admin.branchForm.create', 'Создать филиал') : t('admin.branchForm.saveChanges', 'Сохранить изменения')}
                 </Button>
                 {mode === 'edit' && !changed && (
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Нет изменений для сохранения</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{t('admin.branchForm.noChanges', 'Нет изменений для сохранения')}</span>
                 )}
             </div>
         </form>

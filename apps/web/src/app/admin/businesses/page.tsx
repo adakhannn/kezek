@@ -114,7 +114,7 @@ export default async function Page() {
         <div className="space-y-6">
             <PageHeader
                 title={t('admin.businesses.title', 'Бизнесы')}
-                description={`${t('admin.businesses.stats.total', 'Всего')}: ${totalCount} • ${t('admin.businesses.stats.approved', 'Одобрено')}: ${approvedCount}`}
+                description={t('admin.businessesList.summary', 'Всего: {total} • Одобрено: {approved}').replace('{total}', String(totalCount)).replace('{approved}', String(approvedCount))}
             />
             {!list || list.length === 0 ? (
                 <EmptyState

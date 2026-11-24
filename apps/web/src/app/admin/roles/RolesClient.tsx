@@ -7,6 +7,7 @@ import { AdminDataTable } from '../_components/AdminDataTable';
 import { AdminFilterBar } from '../_components/AdminFilterBar';
 import { AdminPagination } from '../_components/AdminPagination';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -28,6 +29,7 @@ type MutRes = { ok: true; id?: string } | { ok: false; error: string };
 const PAGE_SIZE = 20;
 
 export default function RolesClient({ baseURL }: { baseURL?: string }) {
+    const { t } = useLanguage();
     const prefix = baseURL ?? '';
     const api = useMemo(
         () => ({
@@ -93,7 +95,7 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
 
     async function onDelete(role: Role) {
         if (role.is_system) {
-            setError('Системную роль удалить нельзя.');
+            setError(t('admin.roles.systemCannotDelete', 'Системную роль удалить нельзя.'));
             return;
         }
 
@@ -143,11 +145,11 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
     }
 
     const columns = [
-        { key: 'name', label: 'Роль' },
-        { key: 'description', label: 'Описание' },
-        { key: 'kind', label: 'Тип' },
-        { key: 'createdAt', label: 'Создана' },
-        { key: 'actions', label: 'Действия', align: 'right' as const },
+        { key: 'name', label: t('admin.roles.role', 'Роль') },
+        { key: 'description', label: t('admin.roles.col.description', 'Описание') },
+        { key: 'kind', label: t('admin.roles.col.kind', 'Тип') },
+        { key: 'createdAt', label: t('admin.roles.col.createdAt', 'Создана') },
+        { key: 'actions', label: t('admin.roles.col.actions', 'Действия'), align: 'right' as const },
     ];
 
     const rows = pageItems.map((role) => ({
@@ -172,14 +174,14 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
                     key="kind"
                     className="inline-flex rounded-full bg-[color:color-mix(in_srgb,var(--accent-primary)_16%,transparent)] px-2.5 py-1 text-xs font-semibold text-[var(--accent-primary)]"
                 >
-                    Системная
+                    {t('admin.roles.system', 'Системная')}
                 </span>
             ) : (
                 <span
                     key="kind"
                     className="inline-flex rounded-full bg-[color:color-mix(in_srgb,var(--status-success)_16%,transparent)] px-2.5 py-1 text-xs font-semibold text-[var(--status-success)]"
                 >
-                    Пользовательская
+                    {t('admin.roles.custom', 'Пользовательская')}
                 </span>
             ),
             <span key="createdAt" className="text-sm text-[var(--text-secondary)]">
@@ -187,7 +189,7 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
             </span>,
             <div key="actions" className="flex justify-end gap-2">
                 <Link href={`/admin/roles/${role.id}`}>
-                    <Button size="sm">Редактировать</Button>
+                    <Button size="sm">{t('admin.roles.edit', 'Редактировать')}</Button>
                 </Link>
                 <Button
                     type="button"
@@ -197,7 +199,7 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
                     disabled={!!role.is_system || deletingId === role.id}
                     isLoading={deletingId === role.id}
                 >
-                    Удалить
+                    {t('admin.roles.delete', 'Удалить')}
                 </Button>
             </div>,
         ],
@@ -211,26 +213,26 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
-                <RoleStatCard label="Всего ролей" value={items.length} />
-                <RoleStatCard label="Системных" value={items.filter((role) => role.is_system).length} tone="accent" />
+                <RoleStatCard label={t('admin.roles.stats.total', 'Всего ролей')} value={items.length} />
+                <RoleStatCard label={t('admin.roles.stats.system', 'Системных')} value={items.filter((role) => role.is_system).length} tone="accent" />
                 <RoleStatCard
-                    label="Пользовательских"
+                    label={t('admin.roles.stats.custom', 'Пользовательских')}
                     value={items.filter((role) => !role.is_system).length}
                     tone="success"
                 />
             </div>
 
             <AdminFilterBar
-                title="Поиск ролей"
-                description="Единые правила таблицы, действий и пагинации."
+                title={t('admin.roles.filter.title', 'Поиск ролей')}
+                description={t('admin.roles.filter.description', 'Единые правила таблицы, действий и пагинации.')}
                 actions={
                     <Link href="/admin/roles/new">
-                        <Button size="sm">Создать роль</Button>
+                        <Button size="sm">{t('admin.roles.new.title', 'Создать роль')}</Button>
                     </Link>
                 }
             >
                 <Input
-                    placeholder="Поиск по ключу, названию или описанию"
+                    placeholder={t('admin.roles.filter.placeholder', 'Поиск по ключу, названию или описанию')}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                 />
@@ -238,10 +240,10 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
 
             {selectedIds.length > 0 ? (
                 <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="type-caption text-[var(--text-secondary)]">Выбрано: {selectedIds.length}</p>
+                    <p className="type-caption text-[var(--text-secondary)]">{t('admin.roles.selected', 'Выбрано: {count}').replace('{count}', String(selectedIds.length))}</p>
                     <div className="flex items-center gap-2">
                         <Button type="button" size="sm" variant="secondary" onClick={() => setSelectedIds([])}>
-                            Снять выбор
+                            {t('admin.roles.clearSelection', 'Снять выбор')}
                         </Button>
                         <Button
                             type="button"
@@ -250,7 +252,7 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
                             onClick={() => setConfirmBulkDelete(true)}
                             disabled={selectedForBulkDelete === 0 || deletingId !== null}
                         >
-                            Удалить выбранные
+                            {t('admin.roles.deleteSelected', 'Удалить выбранные')}
                         </Button>
                     </div>
                 </Card>
@@ -269,7 +271,7 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
                         return prev.filter((id) => !currentPageIds.includes(id));
                     })
                 }
-                emptyState={loading ? 'Загрузка ролей…' : 'Роли не найдены.'}
+                emptyState={loading ? t('admin.roles.loading', 'Загрузка ролей…') : t('admin.roles.empty', 'Роли не найдены.')}
             />
 
             <AdminPagination
@@ -286,10 +288,10 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
                 open={confirmRole !== null}
                 onClose={() => setConfirmRole(null)}
                 onConfirm={() => confirmRole && onDelete(confirmRole)}
-                title="Удалить роль"
-                message={confirmRole ? `Удалить роль «${confirmRole.name}»?` : ''}
-                confirmLabel="Удалить"
-                cancelLabel="Отмена"
+                title={t('admin.roles.confirmDelete.title', 'Удалить роль')}
+                message={confirmRole ? t('admin.roles.confirmDelete.message', 'Удалить роль «{name}»?').replace('{name}', confirmRole.name) : ''}
+                confirmLabel={t('admin.roles.delete', 'Удалить')}
+                cancelLabel={t('common.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={deletingId === confirmRole?.id}
             />
@@ -298,10 +300,10 @@ export default function RolesClient({ baseURL }: { baseURL?: string }) {
                 open={confirmBulkDelete}
                 onClose={() => setConfirmBulkDelete(false)}
                 onConfirm={onBulkDelete}
-                title="Удалить выбранные роли"
-                message={`Удалить ролей: ${selectedForBulkDelete}? Системные роли будут пропущены.`}
-                confirmLabel="Удалить выбранные"
-                cancelLabel="Отмена"
+                title={t('admin.roles.confirmBulk.title', 'Удалить выбранные роли')}
+                message={t('admin.roles.confirmBulk.message', 'Удалить ролей: {count}? Системные роли будут пропущены.').replace('{count}', String(selectedForBulkDelete))}
+                confirmLabel={t('admin.roles.deleteSelected', 'Удалить выбранные')}
+                cancelLabel={t('common.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={deletingId !== null}
             />

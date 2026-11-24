@@ -51,6 +51,7 @@ function Table({
     rows: Record<string, unknown>[];
     columns: { key: string; label: string }[];
 }) {
+    const { t } = useLanguage();
     if (rows.length === 0 && count === 0) return null;
     return (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
@@ -58,7 +59,7 @@ function Table({
                 {title}
                 {count > rows.length && (
                     <span className="ml-2 text-gray-500 dark:text-gray-400">
-                        (показано {rows.length} из {count})
+                        {t('admin.ratingsDebug.shownOf', '(показано {shown} из {count})').replace('{shown}', String(rows.length)).replace('{count}', String(count))}
                     </span>
                 )}
             </div>
@@ -111,18 +112,18 @@ export function RatingsDebugClient() {
                 return;
             }
             if (!json.ok || !json.data) {
-                setError(json.error ?? 'Не удалось загрузить данные');
+                setError(json.error ?? t('admin.ratingsDebug.loadFailed', 'Не удалось загрузить данные'));
                 setData(null);
                 return;
             }
             setData(json.data);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Ошибка запроса');
+            setError(e instanceof Error ? e.message : t('admin.ratingsDebug.requestFailed', 'Ошибка запроса'));
             setData(null);
         } finally {
             setLoading(false);
         }
-    }, [days, router]);
+    }, [days, router, t]);
 
     useEffect(() => {
         fetchData();
@@ -146,16 +147,16 @@ export function RatingsDebugClient() {
                 });
                 if (!res.ok) {
                     const json = (await res.json().catch(() => null)) as { error?: string } | null;
-                    throw new Error(json?.error || 'Ошибка пересчёта рейтинга');
+                    throw new Error(json?.error || t('admin.ratingsDebug.recalculateFailed', 'Ошибка пересчёта рейтинга'));
                 }
                 await fetchData();
             } catch (e) {
-                setError(e instanceof Error ? e.message : 'Ошибка пересчёта рейтинга');
+                setError(e instanceof Error ? e.message : t('admin.ratingsDebug.recalculateFailed', 'Ошибка пересчёта рейтинга'));
             } finally {
                 setRecalcLoadingId(null);
             }
         },
-        [fetchData],
+        [fetchData, t],
     );
 
     return (
@@ -217,7 +218,7 @@ export function RatingsDebugClient() {
                             {t('admin.ratingsDebug.withNullRating', 'С рейтингом NULL')}
                         </h2>
                         <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                            {t('admin.ratingsDebug.windowSince', 'Окно «без метрик»')}: с {data.window_since}
+                            {t('admin.ratingsDebug.windowSince', 'Окно «без метрик»')}: {t('admin.ratingsDebug.windowFrom', 'с {date}').replace('{date}', String(data.window_since ?? ''))}
                         </p>
                         <div className="space-y-4">
                             <Table
@@ -367,11 +368,11 @@ export function RatingsDebugClient() {
                                     created_at: formatDateTime(e.created_at, 'ru', true),
                                 }))}
                                 columns={[
-                                    { key: 'entity_type', label: 'Тип' },
+                                    { key: 'entity_type', label: t('admin.ratingsDebug.errorType', 'Тип') },
                                     { key: 'entity_id', label: 'entity_id' },
-                                    { key: 'metric_date', label: 'Дата' },
-                                    { key: 'error_message', label: 'Ошибка' },
-                                    { key: 'created_at', label: 'Создано' },
+                                    { key: 'metric_date', label: t('admin.ratingsDebug.errorDate', 'Дата') },
+                                    { key: 'error_message', label: t('admin.ratingsDebug.errorMessage', 'Ошибка') },
+                                    { key: 'created_at', label: t('admin.ratingsDebug.errorCreated', 'Создано') },
                                 ]}
                             />
                         )}

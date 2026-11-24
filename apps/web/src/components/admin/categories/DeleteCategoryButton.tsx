@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -21,6 +22,7 @@ type DeleteCategoryButtonProps = {
 
 export function DeleteCategoryButton({ id, name, usageCount }: DeleteCategoryButtonProps) {
     const router = useRouter();
+    const { t } = useLanguage();
     const toast = useToast();
     const [forceDeleteFromBusinesses, setForceDeleteFromBusinesses] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export function DeleteCategoryButton({ id, name, usageCount }: DeleteCategoryBut
                 throw new Error(apiError || `HTTP ${response.status}`);
             }
 
-            toast.showSuccess('Категория удалена.');
+            toast.showSuccess(t('admin.deleteCategory.deleted', 'Категория удалена.'));
             setConfirmOpen(false);
             setForceDeleteFromBusinesses(false);
             router.refresh();
@@ -89,19 +91,19 @@ export function DeleteCategoryButton({ id, name, usageCount }: DeleteCategoryBut
                 className="shrink-0 text-[var(--status-danger)]"
                 leadingIcon={<Trash2 className="h-4 w-4" />}
             >
-                {loading ? 'Удаляем…' : 'Удалить'}
+                {loading ? t('admin.catalog.delete.deleting', 'Удаляем…') : t('admin.catalog.delete.delete', 'Удалить')}
             </Button>
 
             <ConfirmDialog
                 open={confirmOpen}
                 onClose={closeDialog}
                 onConfirm={onDelete}
-                title="Удалить категорию"
-                description="Это действие нельзя отменить."
+                title={t('admin.deleteCategory.title', 'Удалить категорию')}
+                description={t('admin.deleteCategory.irreversible', 'Это действие нельзя отменить.')}
                 message={
                     <div className="space-y-4">
                         <p className="type-body text-[var(--text-secondary)]">
-                            Категория <strong className="text-[var(--text-primary)]">«{name}»</strong> будет удалена.
+                            {t('admin.deleteCategory.messageBefore', 'Категория')} <strong className="text-[var(--text-primary)]">«{name}»</strong> {t('admin.deleteCategory.messageAfter', 'будет удалена.')}
                         </p>
                         {error ? (
                             <p role="alert" className="rounded-lg bg-[var(--status-danger)]/10 p-3 text-sm text-[var(--status-danger)]">
@@ -117,15 +119,16 @@ export function DeleteCategoryButton({ id, name, usageCount }: DeleteCategoryBut
                                     className="mt-0.5 h-4 w-4 rounded border-[var(--border-default)] text-[var(--accent-primary)] focus:ring-[var(--focus-ring)]"
                                 />
                                 <span className="text-sm leading-5 text-[var(--text-secondary)]">
-                                    Также убрать категорию из {usageCount}{' '}
-                                    {usageCount === 1 ? 'бизнеса' : usageCount < 5 ? 'бизнесов' : 'бизнесов'}
+                                    {(usageCount === 1
+                                        ? t('admin.deleteCategory.removeFromOne', 'Также убрать категорию из {count} бизнеса')
+                                        : t('admin.deleteCategory.removeFromMany', 'Также убрать категорию из {count} бизнесов')).replace('{count}', String(usageCount))}
                                 </span>
                             </label>
                         ) : null}
                     </div>
                 }
-                confirmLabel="Удалить"
-                cancelLabel="Отмена"
+                confirmLabel={t('admin.catalog.delete.delete', 'Удалить')}
+                cancelLabel={t('admin.catalog.delete.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={loading}
             />

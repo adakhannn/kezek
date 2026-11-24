@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -20,13 +21,6 @@ type MutResp = { ok: true } | { ok: false; error: string };
 const ELEVATED = ['owner', 'admin', 'manager', 'staff'] as const;
 type ElevatedRole = typeof ELEVATED[number];
 
-const ROLE_LABELS: Record<ElevatedRole, string> = {
-    owner: 'Владелец',
-    admin: 'Администратор',
-    manager: 'Менеджер',
-    staff: 'Сотрудник',
-};
-
 const ROLE_COLORS: Record<ElevatedRole, string> = {
     owner: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700',
     admin: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700',
@@ -35,6 +29,13 @@ const ROLE_COLORS: Record<ElevatedRole, string> = {
 };
 
 export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string; bizId: string }) {
+    const { t } = useLanguage();
+    const ROLE_LABELS: Record<ElevatedRole, string> = {
+        owner: t('admin.members.role.owner', 'Владелец'),
+        admin: t('admin.members.role.admin', 'Администратор'),
+        manager: t('admin.members.role.manager', 'Менеджер'),
+        staff: t('admin.members.role.staff', 'Сотрудник'),
+    };
     const api = useMemo(() => {
         return {
             search: `${baseURL}/admin/api/users/search`,
@@ -93,7 +94,7 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
             });
             const j = (await res.json()) as MutResp;
             if (!res.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${res.status}`);
-            setSuccess(`Роль "${ROLE_LABELS[role]}" успешно выдана пользователю`);
+            setSuccess(t('admin.newMember.granted', 'Роль "{role}" успешно выдана пользователю').replace('{role}', ROLE_LABELS[role]));
             // Обновляем список
             await searchUsers(q);
         } catch (e: unknown) {
@@ -107,24 +108,24 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
         <div className="space-y-6">
             <AlertBanner
                 variant="warning"
-                title="Ручное добавление"
-                message="Основной безопасный сценарий — пользователь сам входит в Kezek и оставляет заявку на роль. Этот поиск используйте как админский override, когда точно знаете, какой аккаунт нужно добавить."
+                title={t('admin.newMember.manualTitle', 'Ручное добавление')}
+                message={t('admin.newMember.manualMessage', 'Основной безопасный сценарий — пользователь сам входит в Kezek и оставляет заявку на роль. Этот поиск используйте как админский override, когда точно знаете, какой аккаунт нужно добавить.')}
             />
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
                 <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1">
                             <Input
-                                label="Поиск пользователя"
-                                placeholder="Введите email, телефон или имя"
+                                label={t('admin.newMember.searchLabel', 'Поиск пользователя')}
+                                placeholder={t('admin.newMember.searchPlaceholder', 'Введите email, телефон или имя')}
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
-                                helperText="Начните вводить для поиска пользователя в системе"
+                                helperText={t('admin.newMember.searchHelper', 'Начните вводить для поиска пользователя в системе')}
                             />
                         </div>
                         <div className="sm:w-48">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Роль
+                                {t('admin.newMember.role', 'Роль')}
                             </label>
                             <select
                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm"
@@ -149,7 +150,7 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
             {loading && list.length === 0 ? (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 shadow-lg text-center">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">Поиск пользователей...</p>
+                    <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">{t('admin.newMember.searching', 'Поиск пользователей...')}</p>
                 </div>
             ) : list.length === 0 ? (
                 <EmptyState
@@ -158,8 +159,8 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     )}
-                    title="Ничего не найдено"
-                    description={q.trim() ? 'Попробуйте изменить запрос поиска' : 'Начните вводить для поиска пользователя'}
+                    title={t('admin.newMember.nothingFound', 'Ничего не найдено')}
+                    description={q.trim() ? t('admin.newMember.changeQuery', 'Попробуйте изменить запрос поиска') : t('admin.newMember.startTyping', 'Начните вводить для поиска пользователя')}
                 />
             ) : (
                 <div className="grid gap-4">
@@ -173,7 +174,7 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                            {u.full_name || 'Без имени'}
+                                            {u.full_name || t('admin.members.noName', 'Без имени')}
                                         </h3>
                                         <div className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-3 break-all">
                                             {u.id}
@@ -207,7 +208,7 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
                                             isLoading={isGranting}
                                             size="sm"
                                         >
-                                            {isGranting ? 'Выдаю...' : 'Выдать роль'}
+                                            {isGranting ? t('admin.newMember.granting', 'Выдаю...') : t('admin.newMember.grant', 'Выдать роль')}
                                         </Button>
                                     </div>
                                 </div>

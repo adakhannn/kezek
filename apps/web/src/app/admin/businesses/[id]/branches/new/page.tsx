@@ -1,6 +1,7 @@
 // apps/web/src/app/admin/businesses/[id]/branches/new/page.tsx
 import Link from 'next/link';
 
+import { getT } from '@/app/_components/i18n/server';
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 import { Card } from '@/components/ui/Card';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -9,12 +10,13 @@ export const dynamic = 'force-dynamic';
 type RouteParams = { id: string };
 export default async function BranchNewPage({ params }: { params: Promise<RouteParams> }) {
     const { id } = await params;
+    const t = await getT();
 
     const supa = await createSupabaseServerClient();
     const { data: { user } } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">Не авторизован</div>;
+    if (!user) return <div className="p-4">{t('admin.catalog.common.notAuthorized', 'Не авторизован')}</div>;
     const { data: isSuper } = await supa.rpc('is_super_admin');
-    if (!isSuper) return <div className="p-4">Нет доступа</div>;
+    if (!isSuper) return <div className="p-4">{t('admin.catalog.common.noAccess', 'Нет доступа')}</div>;
 
     const admin = createSupabaseAdminClient();
     const [{ data: biz }, { count: branchCount }] = await Promise.all([
@@ -22,9 +24,9 @@ export default async function BranchNewPage({ params }: { params: Promise<RouteP
         admin.from('branches').select('id', { count: 'exact', head: true }).eq('biz_id', id),
     ]);
 
-    if (!biz) return <div className="p-4">Бизнес не найден</div>;
+    if (!biz) return <div className="p-4">{t('admin.catalog.common.businessNotFound', 'Бизнес не найден')}</div>;
     if ((branchCount ?? 0) >= biz.branch_limit) {
-        return <div className="p-4 text-amber-700">Лимит филиалов достигнут: {branchCount ?? 0} из {biz.branch_limit}</div>;
+        return <div className="p-4 text-amber-700">{t('admin.branchesPage.limitReached', 'Лимит филиалов достигнут: {count} из {limit}').replace('{count}', String(branchCount ?? 0)).replace('{limit}', String(biz.branch_limit))}</div>;
     }
 
     return (
@@ -34,10 +36,10 @@ export default async function BranchNewPage({ params }: { params: Promise<RouteP
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                            Новый филиал
+                            {t('admin.branchesPage.newTitle', 'Новый филиал')}
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Бизнес: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
+                            {t('admin.catalog.common.businessLabel', 'Бизнес:')}{' '}<span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
                         </p>
                     </div>
                     <Link
@@ -47,7 +49,7 @@ export default async function BranchNewPage({ params }: { params: Promise<RouteP
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        К списку филиалов
+                        {t('admin.branchesPage.backToList', 'К списку филиалов')}
                     </Link>
                 </div>
             </div>

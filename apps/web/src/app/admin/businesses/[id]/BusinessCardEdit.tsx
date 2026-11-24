@@ -206,14 +206,14 @@ export function BusinessCardEdit({ bizId, initial, categoryOptions }: Props) {
                                 className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--focus-ring)]"
                             />
                         </div>
-                        <Input label="Публичный телефон" type="tel" placeholder="+996..." value={contacts.contact_phone} onChange={(event) => setContacts((value) => ({ ...value, contact_phone: event.target.value }))} />
-                        <Input label="WhatsApp бизнеса" type="tel" placeholder="+996..." value={contacts.contact_whatsapp} onChange={(event) => setContacts((value) => ({ ...value, contact_whatsapp: event.target.value }))} />
-                        <Input label="Публичный email" type="email" placeholder="hello@business.kg" value={contacts.contact_email} onChange={(event) => setContacts((value) => ({ ...value, contact_email: event.target.value }))} />
-                        <Input label="Сайт" type="url" placeholder="https://..." value={contacts.website_url} onChange={(event) => setContacts((value) => ({ ...value, website_url: event.target.value }))} />
+                        <Input label={t('admin.businessContacts.phone', 'Публичный телефон')} type="tel" placeholder="+996..." value={contacts.contact_phone} onChange={(event) => setContacts((value) => ({ ...value, contact_phone: event.target.value }))} />
+                        <Input label={t('admin.businessContacts.whatsapp', 'WhatsApp бизнеса')} type="tel" placeholder="+996..." value={contacts.contact_whatsapp} onChange={(event) => setContacts((value) => ({ ...value, contact_whatsapp: event.target.value }))} />
+                        <Input label={t('admin.businessContacts.email', 'Публичный email')} type="email" placeholder="hello@business.kg" value={contacts.contact_email} onChange={(event) => setContacts((value) => ({ ...value, contact_email: event.target.value }))} />
+                        <Input label={t('admin.businessContacts.website', 'Сайт')} type="url" placeholder="https://..." value={contacts.website_url} onChange={(event) => setContacts((value) => ({ ...value, website_url: event.target.value }))} />
                     </div>
 
                     <p className="type-caption text-[var(--text-muted)]">
-                        Публичные контакты принадлежат бизнесу и не связаны с профилем владельца или сотрудников.
+                        {t('admin.businessContacts.note', 'Публичные контакты принадлежат бизнесу и не связаны с профилем владельца или сотрудников.')}
                     </p>
 
                     <fieldset className="space-y-3">

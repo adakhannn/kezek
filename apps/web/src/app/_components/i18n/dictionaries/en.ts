@@ -4,6 +4,10 @@
 import type { Translations } from '../LanguageProvider';
 
 import { adminEn } from './admin.en';
+import { adminAccessEn } from './adminAccess.en';
+import { adminAnalyticsEn } from './adminAnalytics.en';
+import { adminCatalogEn } from './adminCatalog.en';
+import { adminOpsEn } from './adminOps.en';
 import { analyticsEn } from './analytics';
 import { apiDocsEn } from './apiDocs.en';
 import { applicationHistoryEn } from './applicationHistory';
@@ -48,6 +52,10 @@ export const en: Translations = Object.assign(
     branchesEn,
     financeEn,
     adminEn,
+    adminAccessEn,
+    adminAnalyticsEn,
+    adminCatalogEn,
+    adminOpsEn,
     applicationHistoryEn,
     commonEn,
     datePickerEn,

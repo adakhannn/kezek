@@ -115,11 +115,11 @@ export default function UsersClient({
     const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.includes(id));
 
     const columns = [
-        { key: 'user', label: 'Пользователь' },
-        { key: 'contacts', label: 'Контакты' },
-        { key: 'lastSeen', label: 'Последний вход' },
-        { key: 'status', label: 'Статус' },
-        { key: 'actions', label: 'Действия', align: 'right' as const },
+        { key: 'user', label: t('admin.users.user', 'Пользователь') },
+        { key: 'contacts', label: t('admin.usersList.col.contacts', 'Контакты') },
+        { key: 'lastSeen', label: t('admin.users.lastSignIn', 'Последний вход') },
+        { key: 'status', label: t('admin.usersList.col.status', 'Статус') },
+        { key: 'actions', label: t('admin.usersList.col.actions', 'Действия'), align: 'right' as const },
     ];
 
     const rows = users.map((user) => {
@@ -129,7 +129,7 @@ export default function UsersClient({
               ? 'bg-[color:color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]'
               : 'bg-[color:color-mix(in_srgb,var(--status-success)_16%,transparent)] text-[var(--status-success)]';
 
-        const statusLabel = user.is_blocked ? 'Заблокирован' : user.is_super ? 'Super Admin' : 'Активен';
+        const statusLabel = user.is_blocked ? t('admin.users.blocked', 'Заблокирован') : user.is_super ? 'Super Admin' : t('admin.usersList.active', 'Активен');
 
         return {
             key: user.id,
@@ -141,7 +141,7 @@ export default function UsersClient({
             },
             cells: [
                 <div key="user" className="min-w-[220px]">
-                    <div className="font-medium text-[var(--text-primary)]">{user.full_name || 'Без имени'}</div>
+                    <div className="font-medium text-[var(--text-primary)]">{user.full_name || t('admin.usersList.noName', 'Без имени')}</div>
                     <div className="type-caption mt-1 font-mono text-[var(--text-muted)]">{user.id}</div>
                 </div>,
                 <div key="contacts" className="min-w-[220px]">
@@ -159,7 +159,7 @@ export default function UsersClient({
                 </span>,
                 <div key="actions" className="flex justify-end">
                     <Link href={`/admin/users/${user.id}`}>
-                        <Button size="sm">Открыть</Button>
+                        <Button size="sm">{t('admin.usersList.open', 'Открыть')}</Button>
                     </Link>
                 </div>,
             ],
@@ -169,18 +169,18 @@ export default function UsersClient({
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard label="Всего пользователей" value={stats?.total ?? '—'} />
-                <StatCard label="Активных" value={stats?.active ?? '—'} tone="success" />
-                <StatCard label="Заблокированных" value={stats?.blocked ?? '—'} tone="danger" />
+                <StatCard label={t('admin.usersList.stats.total', 'Всего пользователей')} value={stats?.total ?? '—'} />
+                <StatCard label={t('admin.usersList.stats.active', 'Активных')} value={stats?.active ?? '—'} tone="success" />
+                <StatCard label={t('admin.usersList.stats.blocked', 'Заблокированных')} value={stats?.blocked ?? '—'} tone="danger" />
                 <StatCard label="Super Admin" value={stats?.super ?? '—'} tone="accent" />
             </div>
             {!stats && <p role="status" className="text-sm text-[var(--text-muted)]">{t('admin.users.statsUnavailable')}</p>}
 
-            <AdminFilterBar title="Фильтры пользователей" description="Единая плотность, фильтрация и поведение списка.">
+            <AdminFilterBar title={t('admin.usersList.filter.title', 'Фильтры пользователей')} description={t('admin.usersList.filter.description', 'Единая плотность, фильтрация и поведение списка.')}>
                 <div className="grid gap-3 md:grid-cols-[1fr_180px_160px]">
                     <Input
                         type="text"
-                        placeholder="Поиск: email, телефон, имя, id"
+                        placeholder={t('admin.usersList.filter.placeholder', 'Поиск: email, телефон, имя, id')}
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
                     />
@@ -189,31 +189,31 @@ export default function UsersClient({
                         onChange={(event) => setStatus(event.target.value)}
                         className="min-h-[44px] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                     >
-                        <option value="all">Все статусы</option>
-                        <option value="active">Только активные</option>
-                        <option value="blocked">Только заблокированные</option>
+                        <option value="all">{t('admin.usersList.filter.allStatuses', 'Все статусы')}</option>
+                        <option value="active">{t('admin.usersList.filter.onlyActive', 'Только активные')}</option>
+                        <option value="blocked">{t('admin.usersList.filter.onlyBlocked', 'Только заблокированные')}</option>
                     </select>
                     <select
                         value={String(perPage)}
                         onChange={(event) => setPerPage(Number(event.target.value))}
                         className="min-h-[44px] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                     >
-                        <option value="20">20 на страницу</option>
-                        <option value="50">50 на страницу</option>
-                        <option value="100">100 на страницу</option>
+                        <option value="20">{t('admin.usersList.perPage', '{count} на страницу').replace('{count}', '20')}</option>
+                        <option value="50">{t('admin.usersList.perPage', '{count} на страницу').replace('{count}', '50')}</option>
+                        <option value="100">{t('admin.usersList.perPage', '{count} на страницу').replace('{count}', '100')}</option>
                     </select>
                 </div>
             </AdminFilterBar>
 
             {selectedIds.length > 0 ? (
                 <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="type-caption text-[var(--text-secondary)]">Выбрано: {selectedIds.length}</p>
+                    <p className="type-caption text-[var(--text-secondary)]">{t('admin.usersList.selected', 'Выбрано: {count}').replace('{count}', String(selectedIds.length))}</p>
                     <div className="flex items-center gap-2">
                         <Button type="button" size="sm" variant="secondary" onClick={() => setSelectedIds([])}>
-                            Снять выбор
+                            {t('admin.usersList.clearSelection', 'Снять выбор')}
                         </Button>
                         <Link href={`/admin/users/${selectedIds[0]}`}>
-                            <Button size="sm">Открыть первого</Button>
+                            <Button size="sm">{t('admin.usersList.openFirst', 'Открыть первого')}</Button>
                         </Link>
                     </div>
                 </Card>
@@ -226,7 +226,7 @@ export default function UsersClient({
                 includeSelection
                 allSelected={allSelected}
                 onToggleAll={(checked) => setSelectedIds(checked ? selectableIds : [])}
-                emptyState="Пользователи не найдены. Попробуйте изменить фильтры."
+                emptyState={t('admin.usersList.empty', 'Пользователи не найдены. Попробуйте изменить фильтры.')}
             />
 
             <AdminPagination
