@@ -1,0 +1,68 @@
+# Действия владельца
+
+Статус: составлено 24 ноября 2026. Это то, что код не может сделать сам: платные настройки, секреты и сборки. Все значения вводит владелец; агенты их не видят и не вводят. Порядок — по важности.
+
+## 1. Бэкапы и PITR в проде (самое важное)
+
+Сейчас у проекта Supabase `beulnmftzbmtbdlgurht` нет ни ежедневных бэкапов, ни восстановления на момент времени (PITR). При ошибке или сбое данные клиентов, записей и финансов восстановить будет не из чего.
+
+1. Откройте [supabase.com/dashboard](https://supabase.com/dashboard) → проект → **Project Settings → Billing**.
+2. Ежедневные бэкапы есть только на платном плане (Pro и выше). Если проект на бесплатном плане — переведите его на Pro. Это платно: решение и оплата за вами.
+3. PITR — отдельное платное дополнение: **Project Settings → Add-ons → Point in Time Recovery**. Хватит минимального периода (7 дней).
+4. Проверьте, что бэкапы появились: **Database → Backups**. Там должен быть список дней (или окно PITR).
+5. Пока платного плана нет, делайте ручной снимок перед крупными изменениями. Он хранится вне репозитория, в `C:\projects\kezek-backups\`, как и прежний: там персональные данные.
+
+## 2. Переменные окружения в Vercel
+
+[vercel.com](https://vercel.com) → проект kezek → **Settings → Environment Variables**, окружение **Production**. После сохранения нужен **Redeploy** последнего деплоя: переменные подхватываются только при сборке и запуске.
+
+| Переменная | Зачем | Значение |
+| --- | --- | --- |
+| `WHATSAPP_OTP_HASH_SECRET` | Без неё вход через WhatsApp в мобильном приложении отвечает 503 | Случайная строка 32+ символа, например из `openssl rand -hex 32`. Не меняйте её потом без нужды: старые коды перестанут сходиться |
+| `NEXT_PUBLIC_SENTRY_DSN` | Ошибки сайта в проде будут видны в Sentry | DSN проекта Sentry для web (см. п. 3) |
+
+## 3. Sentry (видеть ошибки в проде)
+
+1. Зарегистрируйтесь на [sentry.io](https://sentry.io) (бесплатного плана достаточно для начала) и создайте организацию.
+2. Создайте два проекта: **Next.js** (сайт) и **React Native** (приложение). В настройках каждого включите «не хранить IP» (**Settings → Security & Privacy → Prevent Storing of IP Addresses**).
+3. DSN проекта Next.js → в Vercel как `NEXT_PUBLIC_SENTRY_DSN` (п. 2).
+4. Для мобильного приложения на [expo.dev](https://expo.dev) → проект → **Environment variables** (окружение production):
+   - `EXPO_PUBLIC_SENTRY_DSN` — DSN проекта React Native;
+   - `SENTRY_ORG` и `SENTRY_PROJECT` — slug организации и проекта React Native;
+   - `SENTRY_AUTH_TOKEN` — токен из Sentry (**Settings → Auth Tokens**), тип «Secret».
+5. Подробности и что именно отправляется — [MONITORING_AND_ALERTS](../MONITORING_AND_ALERTS.md).
+
+## 4. Новая сборка мобильного приложения (EAS)
+
+Пока её нет, пользователи приложения не получат перевод на кыргызский и английский и исправления последних недель.
+
+1. Желательно сначала сделать п. 2 и п. 3: значения EAS попадают в сборку только при её создании.
+2. В папке `apps/mobile` выполните вход, если ещё не вошли: `npx eas login`.
+3. Сборка: `npx eas build --platform all --profile production` (номер версии растёт сам, `autoIncrement`).
+4. Отправка в магазины: `npx eas submit --platform all --profile production`, затем в Google Play Console и App Store Connect выпустите версию.
+5. Перед выпуском откройте пробную сборку (профиль `preview`) на телефоне и пройдите вход, запись и кабинет на кыргызском — это первый запуск перевода на устройстве.
+
+## 5. Секреты для e2e-тестов в CI
+
+Без них задания `e2e_tests` и `e2e_visual_regressions` падают на каждом пуше и ничего не проверяют.
+
+1. Создайте отдельный тестовый бизнес (не настоящий) с одним менеджером и одним сотрудником. Тесты будут входить под ними и создавать записи, поэтому не используйте настоящих клиентов и бизнесы.
+2. GitHub → репозиторий → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Секрет | Значение |
+| --- | --- |
+| `E2E_TEST_BASE_URL` | Адрес сайта для тестов, например `https://kezek.vercel.app` или адрес preview-деплоя |
+| `E2E_TEST_BUSINESS_SLUG` | slug тестового бизнеса (часть адреса `/b/<slug>`) |
+| `E2E_TEST_MANAGER_EMAIL` | e-mail менеджера тестового бизнеса |
+| `E2E_TEST_STAFF_ID` | id карточки сотрудника тестового бизнеса |
+| `E2E_TEST_STAFF_EMAIL` | e-mail этого сотрудника |
+| `E2E_TEST_STAFF_PASSWORD` | его пароль (только тестовый аккаунт) |
+
+3. После первого прогона скажите агенту: эталонные скриншоты для `e2e_visual_regressions` нужно будет создать заново.
+
+## 6. Остальное
+
+- **Кыргызский текст.** Покажите носителю языка сайт, приложение (п. 4) и уведомления; правки — в словарях `apps/web/src/app/_components/i18n/dictionaries/*.ky.ts` и `apps/mobile/src/i18n/dictionaries/*.ky.ts`.
+- **Шаблоны WhatsApp на кыргызском и английском** для уведомлений о заявках: создаются и одобряются в Meta (WhatsApp Manager). Язык задаётся переменной `WHATSAPP_APPLICATION_TEMPLATE_LANGUAGE`; см. [WHATSAPP_SETUP](../WHATSAPP_SETUP.md).
+- **Открытие ссылок прямо в приложении (MOB-05):** нужны SHA-256 отпечаток ключа подписи Android из EAS (`npx eas credentials`) для `ANDROID_APP_LINK_SHA256_FINGERPRINTS` в Vercel и Team ID Apple для iOS.
+- **Домен:** прод работает на `kezek.vercel.app`, пока нет нового домена; порядок — [DOMAIN_LOSS_RUNBOOK](DOMAIN_LOSS_RUNBOOK.md).
