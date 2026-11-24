@@ -164,6 +164,8 @@ let created = false;
         await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261117200000_close_client_write_paths.sql'), 'utf8'));
         // The live staff guard is the one 20261120090000 redefines (API-06, test-staff-invitations-isolated.cjs).
         await sql(read('20261120090000_staff_invitations.sql'));
+        // ...and 20261124090000 keeps accept_staff_invitation as live (the invitation lifecycle fixes).
+        await sql(read('20261124090000_staff_invitation_lifecycle.sql'));
 
         // DB-01: only the service role writes suspensions; users still read their own.
         for (const role of ['anon', 'authenticated']) {

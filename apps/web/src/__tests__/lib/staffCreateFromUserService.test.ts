@@ -32,6 +32,8 @@ describe('staffCreateFromUserService (API-06: invitation instead of linking)', (
     type Answers = {
         ownCard?: { data?: unknown; error?: unknown };
         pending?: { data?: unknown; error?: unknown };
+        /** The card of a pending invitation (its branch); by default in the requested branch. */
+        pendingCard?: { data?: unknown; error?: unknown };
         staffInsert?: { data?: unknown; error?: unknown };
         invitationInsert?: { data?: unknown; error?: unknown };
     };
@@ -41,6 +43,9 @@ describe('staffCreateFromUserService (API-06: invitation instead of linking)', (
             staff: (query) => {
                 if (has(query, 'insert')) return answers.staffInsert ?? { data: { id: 'staff-new' } };
                 if (has(query, 'delete')) return {};
+                if (query.calls.some(([method, column]) => method === 'eq' && column === 'id')) {
+                    return answers.pendingCard ?? { data: { branch_id: branchId } };
+                }
                 return answers.ownCard ?? { data: null };
             },
             staff_invitations: (query) => {
@@ -119,6 +124,20 @@ describe('staffCreateFromUserService (API-06: invitation instead of linking)', (
         expect(lookup?.calls).toEqual(expect.arrayContaining([
             ['eq', 'biz_id', bizId], ['eq', 'invited_user_id', userId], ['eq', 'status', 'pending'],
         ]));
+    });
+
+    test('a pending invitation to another branch is refused; its card gets no second branch', async () => {
+        const admin = client({
+            pending: { data: { id: 'inv-old', staff_id: 'staff-old' } },
+            pendingCard: { data: { branch_id: 'other-branch' } },
+        });
+        const result = await run(admin);
+
+        expect(result).toMatchObject({ ok: false, status: 409, error: 'conflict' });
+        expect(tables(admin)).not.toContain('staff_branch_assignments');
+        expect(initializeStaffSchedule).not.toHaveBeenCalled();
+        const cardLookup = admin.queries.find((query) => query.table === 'staff' && query.calls.some(([m, c]) => m === 'eq' && c === 'id'));
+        expect(cardLookup?.calls).toEqual(expect.arrayContaining([['eq', 'id', 'staff-old'], ['eq', 'biz_id', bizId]]));
     });
 
     // ARCH-07: a namesake's card is never linked to this account or returned as its card.

@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
+import { createTranslate } from '../../i18n/translate';
 import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../../lib/signOut';
 import { queryClient } from '../../lib/queryClient';
 import { supabase } from '../../lib/supabase';
@@ -102,11 +103,25 @@ describe('sign-out confirmation (MOB-02)', () => {
         expect(signOutConfirmationText(0)).toEqual({ title: 'Выход', message: 'Вы уверены, что хотите выйти?', confirmLabel: 'Выйти' });
         const one = signOutConfirmationText(1);
         expect(one.confirmLabel).toBe('Выйти и удалить');
-        expect(one.message).toContain('1 изменение смены ещё не отправлены');
-        expect(signOutConfirmationText(3).message).toContain('3 изменения');
-        expect(signOutConfirmationText(5).message).toContain('5 изменений');
+        expect(one.message).toContain('1 изменение смены ещё не отправлено на сервер. После выхода оно будет удалено');
+        expect(signOutConfirmationText(3).message).toContain('3 изменения смены ещё не отправлены');
+        expect(signOutConfirmationText(5).message).toContain('5 изменений смены ещё не отправлены');
         expect(signOutConfirmationText(12).message).toContain('12 изменений');
-        expect(signOutConfirmationText(21).message).toContain('21 изменение');
+        expect(signOutConfirmationText(21).message).toContain('21 изменение смены ещё не отправлено');
+    });
+
+    test('the plural follows the language of t, not the Russian rules', () => {
+        const en = createTranslate('en');
+        // Russian rules would make 21 singular in English too.
+        expect(signOutConfirmationText(21, en).message).toContain('21 shift changes have not been sent');
+        expect(signOutConfirmationText(2, en).message).toContain('2 shift changes have not been sent');
+        expect(signOutConfirmationText(1, en).message).toContain(
+            '1 shift change has not been sent to the server yet. After signing out it will be deleted',
+        );
+
+        const ky = createTranslate('ky');
+        expect(signOutConfirmationText(1, ky).message).toContain('1 смена өзгөртүүсү серверге али жөнөтүлө элек.');
+        expect(signOutConfirmationText(21, ky).message).toContain('21 смена өзгөртүүсү серверге али жөнөтүлө элек.');
     });
 
     test('counts the offline shift queue; an unreadable queue is unknown, not empty', async () => {

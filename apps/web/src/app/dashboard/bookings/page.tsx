@@ -67,7 +67,7 @@ export default async function Page() {
                 redirect('/auth/sign-in?redirect=/dashboard/bookings');
             }
             if (e.code === 'NO_BIZ_ACCESS') {
-                const t = getT('ru');
+                const t = await getT();
                 return (
                     <main className="p-6">
                         <h1 className="text-xl font-semibold mb-2">
@@ -102,7 +102,7 @@ export default async function Page() {
                 redirect('/auth/sign-in?redirect=/dashboard/bookings');
             }
             if (e.message === 'NO_BIZ_ACCESS') {
-                const t = getT('ru');
+                const t = await getT();
                 return (
                     <main className="p-6">
                         <h1 className="text-xl font-semibold mb-2">
@@ -132,20 +132,8 @@ export default async function Page() {
                 );
             }
         }
-        // Другие ошибки
-        const t = getT('ru');
-        return (
-            <main className="p-6">
-                <h1 className="text-xl font-semibold mb-2 text-red-600">
-                    {t('dashboard.bookings.error.title', 'Ошибка')}
-                </h1>
-                <p className="text-sm text-gray-600">
-                    {t(
-                        'dashboard.bookings.error.description',
-                        'Произошла ошибка при загрузке броней. Пожалуйста, попробуйте обновить страницу.'
-                    )}
-                </p>
-            </main>
-        );
+        // Другие ошибки: the cause goes to the log; the page says so in the user's language.
+        logError('DashboardBookingsPage', 'Failed to load the bookings page', e);
+        return <LoadFailedNotice page />;
     }
 }

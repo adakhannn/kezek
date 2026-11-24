@@ -52,9 +52,9 @@ export default async function Page({
     try {
         const pending = await listPendingInvitationStaffIds(createSupabaseAdminClient(), bizId);
         if (pending.ok) pendingInvitationStaffIds = pending.staffIds;
-        else logWarn('StaffPage', 'Pending invitations unavailable');
-    } catch {
-        logWarn('StaffPage', 'Pending invitations unavailable');
+        else logWarn('StaffPage', 'Pending invitations unavailable', { bizId, error: pending.error });
+    } catch (error) {
+        logWarn('StaffPage', 'Pending invitations unavailable', { bizId, error });
     }
 
     const bizName = business?.name ?? null;

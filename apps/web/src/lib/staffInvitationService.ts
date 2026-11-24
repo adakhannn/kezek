@@ -148,17 +148,18 @@ export async function acceptStaffInvitation(
     admin: SupabaseClient,
     invitationId: string,
     userId: string,
-): Promise<{ ok: true; data: { staff_id: string; biz_id: string } } | InvitationDecisionError> {
+): Promise<{ ok: true; data: { staff_id: string; biz_id: string; is_active: boolean } } | InvitationDecisionError> {
     const { data, error } = await admin.rpc('accept_staff_invitation', {
         p_invitation_id: invitationId,
         p_user_id: userId,
     });
     if (error) return decisionError(error.message);
-    const result = (data ?? {}) as { status?: string; staff_id?: string; biz_id?: string; error?: string };
+    const result = (data ?? {}) as { status?: string; staff_id?: string; biz_id?: string; is_active?: boolean; error?: string };
     if (result.status !== 'accepted' || !result.staff_id || !result.biz_id) {
         return decisionError(result.error);
     }
-    return { ok: true, data: { staff_id: result.staff_id, biz_id: result.biz_id } };
+    // An inactive card is linked, but its staff role and cabinet wait until the business activates it.
+    return { ok: true, data: { staff_id: result.staff_id, biz_id: result.biz_id, is_active: result.is_active !== false } };
 }
 
 /** Declines the caller's invitation; the card stays an unlinked card of the business. */
@@ -179,13 +180,13 @@ export async function declineStaffInvitation(
 export async function listPendingInvitationStaffIds(
     admin: SupabaseClient,
     bizId: string,
-): Promise<{ ok: true; staffIds: string[] } | { ok: false }> {
+): Promise<{ ok: true; staffIds: string[] } | { ok: false; error: unknown }> {
     const { data, error } = await admin
         .from('staff_invitations')
         .select('staff_id')
         .eq('biz_id', bizId)
         .eq('status', 'pending');
-    if (error) return { ok: false };
+    if (error) return { ok: false, error };
     return { ok: true, staffIds: [...new Set(((data ?? []) as Array<{ staff_id: string }>).map((row) => row.staff_id))] };
 }
 

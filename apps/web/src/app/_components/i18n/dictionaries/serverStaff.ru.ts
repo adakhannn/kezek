@@ -177,4 +177,5 @@ export const serverStaffRu = {
     'server.staff.invitationDecisionFailed': 'Не удалось обработать приглашение',
     'server.staff.invitationPendingNotFound': 'У этого сотрудника нет ожидающего приглашения',
     'server.staff.invitationCancelFailed': 'Не удалось отменить приглашение',
+    'server.staff.invitationOtherBranch': 'Этого человека уже пригласили в другой филиал. Отмените приглашение, чтобы пригласить его заново.',
 } as const;

@@ -97,6 +97,14 @@ function checkGroups({ groups, values }, label) {
 }
 const { groups, values } = collectGroups(dictDir);
 const allRu = checkGroups({ groups, values }, '');
+// Server-only groups (server*.ts) are not in the client dictionaries: a client t('server.…') would
+// only ever show its fallback.
+for (const [base, byLocale] of groups) {
+    if (/^server[A-Z]/.test(base)) for (const key of byLocale.Ru ?? []) allRu.delete(key);
+}
+// The groups src/lib/serverMessages.ts loads: only their texts are translated in API answers.
+const serverMessagesSource = fs.readFileSync(path.join(web, 'src/lib/serverMessages.ts'), 'utf8');
+const runtimeServerGroups = new Set([...serverMessagesSource.matchAll(/dictionaries\/(server[A-Za-z]+)\.ru'/g)].map((m) => m[1]));
 const mobileGroups = fs.existsSync(mobileDictDir) ? collectGroups(mobileDictDir) : { groups: new Map(), values: new Map() };
 const allMobileRu = checkGroups(mobileGroups, 'mobile:');
 
@@ -106,7 +114,7 @@ const MARK = '\u0000';
 const serverMessages = new Map(); // Russian text with each {placeholder} as MARK -> key
 const duplicateServerMessages = [];
 for (const [base, byLocale] of [...values].sort()) {
-    if (!/^server[A-Z]/.test(base)) continue;
+    if (!runtimeServerGroups.has(base)) continue;
     for (const [key, ruText] of byLocale.Ru ?? []) {
         const normalized = ruText.replace(PLACEHOLDER, MARK);
         if (serverMessages.has(normalized)) duplicateServerMessages.push(`${key} repeats ${serverMessages.get(normalized)}: ${ruText}`);

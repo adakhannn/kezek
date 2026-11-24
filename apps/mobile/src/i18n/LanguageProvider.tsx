@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { supabase } from '../lib/supabase';
 import { DEFAULT_LOCALE, setRequestLocale, type Locale } from './locale';
-import { loadStoredLocale, saveStoredLocale } from './localeStorage';
+import { readStoredLocale, saveStoredLocale } from './localeStorage';
 import { saveProfileLocale } from './profileLocaleSync';
 import { createTranslate, type Translate } from './translate';
 
@@ -25,16 +25,24 @@ const russianContext: LanguageContextValue = {
 const LanguageContext = createContext<LanguageContextValue>(russianContext);
 
 /**
- * The app language (Russian by default), stored in expo-secure-store. Mounted once in App.tsx.
- * After a sign-in, a stored language other than Russian is saved in the profile once per user and
- * run, so the notifications follow the app from the first session.
+ * The app language (Russian by default), stored in expo-secure-store. Mounted once in App.tsx,
+ * outside ErrorBoundary, so the crash screen speaks it too.
+ *
+ * After each sign-in the language is saved in the profile, so the notifications follow the app,
+ * when this device has an explicit choice: a stored language or a setLocale call. The default
+ * Russian that nobody chose is not sent. A user and language pair is sent once per run; a
+ * language change starts over, so signing back in after it sends the language again.
  */
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
     const [ready, setReady] = useState(false);
     const localeRef = useRef<Locale>(DEFAULT_LOCALE);
-    // An explicit choice made before the stored value arrives wins over it.
+    // A setLocale call: made before the stored value arrives, it wins over that value.
     const chosenRef = useRef(false);
+    // The device has an explicit choice: a stored language or a setLocale call.
+    const explicitRef = useRef(false);
+    // `${userId}:${locale}` pairs saved in the profile after a sign-in during this run.
+    const syncedRef = useRef(new Set<string>());
     const loadedRef = useRef<Promise<void> | null>(null);
 
     const apply = useCallback((next: Locale) => {
@@ -46,7 +54,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     // Declared before the auth effect below, so loadedRef is set when that effect runs.
     useEffect(() => {
         let mounted = true;
-        loadedRef.current = loadStoredLocale().then((stored) => {
+        loadedRef.current = readStoredLocale().then((stored) => {
+            if (stored === null) return;
+            explicitRef.current = true;
             if (mounted && !chosenRef.current) apply(stored);
         });
         void loadedRef.current.finally(() => {
@@ -58,15 +68,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }, [apply]);
 
     useEffect(() => {
-        const syncedUsers = new Set<string>();
         const { data } = supabase.auth.onAuthStateChange((event, session) => {
             const userId = session?.user?.id;
-            if (event !== 'SIGNED_IN' || !userId || syncedUsers.has(userId)) return;
-            syncedUsers.add(userId);
+            if (event !== 'SIGNED_IN' || !userId) return;
             // Outside the auth callback: supabase-js must not be re-entered from inside it.
             setTimeout(() => {
                 void loadedRef.current?.then(() => {
-                    if (localeRef.current !== DEFAULT_LOCALE) void saveProfileLocale(localeRef.current);
+                    const pair = `${userId}:${localeRef.current}`;
+                    if (!explicitRef.current || syncedRef.current.has(pair)) return;
+                    syncedRef.current.add(pair);
+                    void saveProfileLocale(localeRef.current);
                 });
             }, 0);
         });
@@ -75,7 +86,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     const setLocale = useCallback((next: Locale) => {
         chosenRef.current = true;
-        if (next === localeRef.current) return;
+        // Already the device's explicit choice: nothing to store or send.
+        if (next === localeRef.current && explicitRef.current) return;
+        explicitRef.current = true;
+        // Signed in, the profile now gets `next`; signed out, it keeps what it had. Either way an
+        // earlier pair is stale, and the next sign-in must send the language again.
+        syncedRef.current.clear();
         apply(next);
         void saveStoredLocale(next);
         void saveProfileLocale(next);

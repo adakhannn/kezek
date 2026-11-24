@@ -170,7 +170,7 @@ describe('ShiftsScreen', () => {
         expect(await screen.findByText('440 сом')).toBeTruthy();
         expect(await screen.findByText('60.0% от выручки')).toBeTruthy();
         expect(await screen.findByText('40.0% от выручки')).toBeTruthy();
-        expect(await screen.findByText('(1 клиентов)')).toBeTruthy();
+        expect(await screen.findByText('(1 клиент)')).toBeTruthy();
 
         fireEvent.press(await screen.findByText('06 июня 2026'));
 

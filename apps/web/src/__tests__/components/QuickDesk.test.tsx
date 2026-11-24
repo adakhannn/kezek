@@ -47,6 +47,8 @@ it('exposes all scheduling inputs and only creates from a real available slot', 
     await waitFor(() => expect(createInternalBooking).toHaveBeenCalledWith({
         bizId: 'biz1', branchId: 'branch1', serviceId: 'service1', staffId: 'staff1',
         startAtISO: slot.start_at, minutes: 60, clientId: null, clientName: null, clientPhone: null,
+        // Client-side booking errors are shown in the dashboard language.
+        t: expect.any(Function),
     }));
     await waitFor(() => expect(screen.getByText('Создана запись #test-boo')).toBeTruthy());
     expect(createButton().disabled).toBe(true);

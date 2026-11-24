@@ -17,6 +17,8 @@ const { assertLiveFunctions, liveFunctionSql, SUPABASE_DEFAULT_PRIVILEGES } = re
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
 const migration = read('20261120090000_staff_invitations.sql');
+// The lifecycle fixes from the review: a stale or superseded invitation is cancelled, not left pending.
+const lifecycle = read('20261124090000_staff_invitation_lifecycle.sql');
 // The guard as 20261117200000 left it, to reproduce the hole before the migration.
 function previousGuard() {
     const text = read('20261117200000_close_client_write_paths.sql');
@@ -49,8 +51,11 @@ const touched = (role, id, statement) => asRole(role, id, `${statement};\n\\echo
 const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const BIZ = id(10); const OTHER_BIZ = id(11); const BRANCH = id(20); const OTHER_BRANCH = id(21);
 const MANAGER = id(1); const INVITEE = id(2); const SECOND = id(3); const THIRD = id(4); const LINKER = id(5); const APPLICANT = id(6);
+const NEWCOMER = id(7); const DISMISSED = id(8); const LATER = id(9);
 const CARD = id(30); const CARD_DECLINED = id(31); const CARD_STALE = id(32); const CARD_EXTRA = id(33); const CARD_LINKED = id(34);
 const INV = id(40); const INV_DECLINED = id(41); const INV_STALE = id(42); const INV_EXTRA = id(43);
+const CARD_APPLY = id(35); const CARD_DISMISS = id(36); const CARD_INACTIVE = id(37);
+const INV_APPLY = id(44); const INV_DISMISS = id(45); const INV_INACTIVE = id(46);
 
 const fixture = `
 create role anon; create role authenticated; create role service_role bypassrls;
@@ -101,7 +106,8 @@ create policy "Business owners can manage own staff" on public.staff to authenti
 revoke delete on table public.staff from authenticated;
 revoke insert, update, delete on table public.staff from anon;
 
-insert into auth.users values ('${MANAGER}'), ('${INVITEE}'), ('${SECOND}'), ('${THIRD}'), ('${LINKER}'), ('${APPLICANT}');
+insert into auth.users values ('${MANAGER}'), ('${INVITEE}'), ('${SECOND}'), ('${THIRD}'), ('${LINKER}'), ('${APPLICANT}'),
+    ('${NEWCOMER}'), ('${DISMISSED}'), ('${LATER}');
 insert into public.roles(key, scope) values ('owner', 'business'), ('admin', 'business'), ('manager', 'business'), ('staff', 'business'), ('super_admin', 'platform');
 insert into public.businesses values ('${BIZ}', 'Salon', null), ('${OTHER_BIZ}', 'Other', null);
 insert into public.branches(id, biz_id, name) values ('${BRANCH}', '${BIZ}', 'Center'), ('${OTHER_BRANCH}', '${OTHER_BIZ}', 'Far');
@@ -147,6 +153,7 @@ let created = false;
             where r.id = ur.role_id and r.key = 'staff';`);
 
         await sql(migration);
+        await sql(lifecycle);
 
         // Path C: a client session never sets user_id to an account, on insert or update.
         await assert.rejects(touched('authenticated', MANAGER, `update public.staff set user_id = '${LINKER}' where id = '${CARD_EXTRA}'`), /STAFF_USER_LINK_FORBIDDEN/);
@@ -189,7 +196,7 @@ let created = false;
 
         // Accepting links the card; the existing trigger grants the staff role.
         const accepted = JSON.parse(await accept(INV, INVITEE));
-        assert.deepEqual(accepted, { status: 'accepted', staff_id: CARD, biz_id: BIZ });
+        assert.deepEqual(accepted, { status: 'accepted', staff_id: CARD, biz_id: BIZ, is_active: true });
         assert.equal(await linkedTo(CARD), '02');
         assert.equal(await invitationState(INV), 'accepted|true');
         assert.equal(await staffRoles(), '02@10');
@@ -209,11 +216,12 @@ let created = false;
         assert.equal(await linkedTo(CARD_STALE), '06');
         assert.equal(await staffRoles(), '02@10,06@10', 'the account linked by the service role got its role; the invitee got none');
 
-        // An account that already has a card in the business is refused; nothing changes.
+        // An account that already has a card in the business is refused, and the invitation is
+        // cancelled: it no longer waits in the cabinet answering 409 on every try.
         await asRole('service_role', MANAGER, `insert into public.staff_invitations(id, biz_id, staff_id, invited_user_id)
             values ('${INV_EXTRA}', '${BIZ}', '${CARD_EXTRA}', '${INVITEE}')`);
-        await assert.rejects(accept(INV_EXTRA, INVITEE), /STAFF_INVITATION_ALREADY_STAFF/);
-        assert.equal(await invitationState(INV_EXTRA), 'pending|false');
+        assert.deepEqual(JSON.parse(await accept(INV_EXTRA, INVITEE)), { status: 'stale', error: 'STAFF_INVITATION_ALREADY_STAFF' });
+        assert.equal(await invitationState(INV_EXTRA), 'cancelled|true');
         assert.equal(await linkedTo(CARD_EXTRA), 'null');
 
         // The consent path that existed already, approve_staff_application, still links (as postgres).
@@ -224,17 +232,46 @@ let created = false;
         assert.equal(await sql(`select count(*) from public.staff where user_id = '${SECOND}' and biz_id = '${BIZ}'`), '1');
         assert.equal(await staffRoles(), '02@10,03@10,06@10');
 
+        // Linking a person by another path (here an approved application) cancels their pending invitation.
+        await sql(`insert into public.staff(id, biz_id, branch_id, full_name) values
+            ('${CARD_APPLY}', '${BIZ}', '${BRANCH}', 'Invited applicant'), ('${CARD_DISMISS}', '${BIZ}', '${BRANCH}', 'Let go'),
+            ('${CARD_INACTIVE}', '${BIZ}', '${BRANCH}', 'Not yet active')`);
+        await sql(`update public.staff set is_active = false where id = '${CARD_INACTIVE}'`);
+        await asRole('service_role', MANAGER, `insert into public.staff_invitations(id, biz_id, staff_id, invited_user_id) values
+            ('${INV_APPLY}', '${BIZ}', '${CARD_APPLY}', '${NEWCOMER}'), ('${INV_DISMISS}', '${BIZ}', '${CARD_DISMISS}', '${DISMISSED}'),
+            ('${INV_INACTIVE}', '${BIZ}', '${CARD_INACTIVE}', '${LATER}')`);
+        const application2 = randomUUID();
+        await sql(`insert into public.business_role_applications(id, applicant_user_id, biz_id, requested_role, applicant_name)
+            values ('${application2}', '${NEWCOMER}', '${BIZ}', 'staff', 'Newcomer')`);
+        await asRole('service_role', MANAGER, `select * from public.approve_staff_application('${application2}', '${MANAGER}', '${BRANCH}', true)`);
+        assert.equal(await invitationState(INV_APPLY), 'cancelled|true');
+        assert.equal(await linkedTo(CARD_APPLY), 'null');
+        await assert.rejects(accept(INV_APPLY, NEWCOMER), /STAFF_INVITATION_NOT_PENDING/);
+
+        // Dismissing a card (active to inactive), also from a manager's session, cancels its pending invitation.
+        assert.equal(await touched('authenticated', MANAGER, `update public.staff set is_active = false where id = '${CARD_DISMISS}'`), '1');
+        assert.equal(await invitationState(INV_DISMISS), 'cancelled|true');
+
+        // A card created inactive can be accepted; the result says it is inactive, so no cabinet is promised,
+        // and the role trigger grants nothing until the business activates the card.
+        assert.deepEqual(JSON.parse(await accept(INV_INACTIVE, LATER)), { status: 'accepted', staff_id: CARD_INACTIVE, biz_id: BIZ, is_active: false });
+        assert.equal(await linkedTo(CARD_INACTIVE), '09');
+        assert.equal(await staffRoles(), '02@10,03@10,06@10,07@10');
+
         // A deleted card takes its invitations with it.
         await sql(`delete from public.staff_invitations where id = '${INV_EXTRA}'; delete from public.staff where id = '${CARD_EXTRA}'`);
 
         // Re-running changes nothing.
         await sql(migration);
-        assert.equal(await sql(`select string_agg(status, ',' order by id) from public.staff_invitations`), 'accepted,declined,cancelled');
+        await sql(lifecycle);
+        assert.equal(await sql(`select string_agg(status, ',' order by id) from public.staff_invitations`),
+            'accepted,declined,cancelled,cancelled,cancelled,accepted');
+        assert.equal(await sql(`select count(*) from pg_trigger where tgname = 'staff_cancel_superseded_invitations'`), '1');
         await assert.rejects(touched('authenticated', MANAGER, `update public.staff set user_id = '${LINKER}' where id = '${CARD_DECLINED}'`), /STAFF_USER_LINK_FORBIDDEN/);
         assert.equal(await sql(`select count(*) from pg_trigger where tgname = 'staff_guard_client_write'`), '1');
 
         await assertLiveFunctions(sql, { suite: 'test-staff-invitations-isolated.cjs' });
-        console.log('Staff invitations (API-06): clients cannot link accounts; accept links with the role, decline and stale invitations do not; approval still links; re-run is a no-op.');
+        console.log('Staff invitations (API-06): clients cannot link accounts; accept links with the role, decline and stale invitations do not; approval still links and cancels a pending invitation; dismissal cancels one; an inactive card is accepted without a role; re-run is a no-op.');
     } finally {
         if (created) await docker(['rm', '-f', container]).catch(() => {});
     }

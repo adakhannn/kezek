@@ -177,4 +177,5 @@ export const serverStaffKy = {
     'server.staff.invitationDecisionFailed': 'Чакырууну иштетүү мүмкүн болгон жок',
     'server.staff.invitationPendingNotFound': 'Бул кызматкердин күтүүдөгү чакыруусу жок',
     'server.staff.invitationCancelFailed': 'Чакырууну жокко чыгаруу мүмкүн болгон жок',
+    'server.staff.invitationOtherBranch': 'Бул адам башка филиалга чакырылган. Кайра чакыруу үчүн мурунку чакырууну жокко чыгарыңыз.',
 } as const;

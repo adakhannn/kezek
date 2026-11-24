@@ -13,7 +13,7 @@ type Locale = (typeof LOCALES)[number];
  */
 export function localeFromQuery(req: NextRequest): Locale | null {
     const { pathname, searchParams } = req.nextUrl;
-    if (pathname.startsWith('/api') || pathname.startsWith('/_next')) return null;
+    if (pathname === '/api' || pathname.startsWith('/api/') || pathname.startsWith('/_next/')) return null;
     const value = searchParams.get('lang')?.trim().toLowerCase();
     return (LOCALES as readonly string[]).includes(value ?? '') ? (value as Locale) : null;
 }

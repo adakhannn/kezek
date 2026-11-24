@@ -2,13 +2,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 export type BusinessRoleKey = 'owner' | 'admin' | 'manager' | 'staff';
 export type BusinessRoleApplicationStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
-export const BUSINESS_ROLE_LABELS: Record<BusinessRoleKey, string> = {
-    owner: 'Владелец',
-    admin: 'Администратор',
-    manager: 'Менеджер',
-    staff: 'Сотрудник',
-};
-
 // A whole message per role, not a label inserted into one: the API answers in the language of the
 // request (FE-10).
 const ALREADY_HAS_ROLE_MESSAGES: Record<BusinessRoleKey, string> = {

@@ -3,6 +3,9 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 
+import { LanguageProvider } from '../../i18n';
+import { setRequestLocale } from '../../i18n/locale';
+import { LOCALE_STORAGE_KEY } from '../../i18n/localeStorage';
 import StaffScreen from '../../screens/StaffScreen';
 import { supabase } from '../../lib/supabase';
 import { staffCard, staffCardsQuery } from '../staffCards';
@@ -140,6 +143,7 @@ describe('StaffScreen', () => {
         (SecureStore.getItemAsync as jest.Mock).mockReset();
         (SecureStore.setItemAsync as jest.Mock).mockReset();
         (SecureStore.deleteItemAsync as jest.Mock).mockReset();
+        setRequestLocale('ru');
     });
 
     test('renders empty staff state after loading', async () => {
@@ -278,7 +282,8 @@ describe('StaffScreen', () => {
             expect(screen.queryByText(TEXT.dashboardTitle)).toBeNull();
         });
 
-        test('does not switch away from a business with unsent shift changes', async () => {
+        // Low Fade (staff-a) is the remembered business and has a shift change not sent yet.
+        const lowFadeWithUnsentChange = () => {
             twoBusinesses();
             secureStorage.set(SELECTION_KEY, 'staff-a');
             secureStorage.set('shift_offline_queue', JSON.stringify([{
@@ -288,6 +293,10 @@ describe('StaffScreen', () => {
                 timestamp: '2026-06-03T09:00:00.000Z',
                 data: { expectedShiftId: 'shift-a', expectedRevision: 2, items: [] },
             }]));
+        };
+
+        test('does not switch away from a business with unsent shift changes', async () => {
+            lowFadeWithUnsentChange();
 
             renderWithProviders(<StaffScreen />);
 
@@ -301,6 +310,28 @@ describe('StaffScreen', () => {
             ).toBeTruthy();
             expect(secureStorage.get(SELECTION_KEY)).toBe('staff-a');
             expect(screen.queryByText('Стрижка в Barber One')).toBeNull();
+        });
+
+        test('in English, the refusal names its reason instead of the generic error', async () => {
+            lowFadeWithUnsentChange();
+            secureStorage.set(LOCALE_STORAGE_KEY, 'en');
+
+            renderWithProviders(
+                <LanguageProvider>
+                    <StaffScreen />
+                </LanguageProvider>,
+            );
+
+            fireEvent.press(await screen.findByText('Change business'));
+            fireEvent.press(await screen.findByText('Barber One'));
+
+            expect(
+                await screen.findByText(
+                    'The business “Low Fade” has unsent shift changes. Open it first and wait until they are sent.',
+                ),
+            ).toBeTruthy();
+            expect(screen.queryByText('Could not select the business. Please try again.')).toBeNull();
+            expect(secureStorage.get(SELECTION_KEY)).toBe('staff-a');
         });
     });
 });

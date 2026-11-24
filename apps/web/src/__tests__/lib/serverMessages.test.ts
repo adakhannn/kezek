@@ -151,13 +151,17 @@ describe('server messages', () => {
         await expect(first.json()).resolves.toEqual({ ok: false, message: 'Кызматкердин ID көрсөтүлгөн жок', id: 's1' });
         expect(getLocaleFromCookieServer).toHaveBeenCalledTimes(1);
     });
-    test('the language is the cookie, then the X-Kezek-Locale header of the mobile app, then Russian', async () => {
+    test('the language is the X-Kezek-Locale header of the mobile app, then the cookie, then Russian', async () => {
         headers.mockResolvedValue(new Headers({ 'x-kezek-locale': 'ky' }));
         await expect(requestLocale()).resolves.toBe('ky');
         const fromHeader = await localizeApiResponse(NextResponse.json({ ok: false, message: 'Доступ запрещен' }, { status: 403 }));
         await expect(fromHeader.json()).resolves.toEqual({ ok: false, message: 'Кирүү мүмкүн эмес' });
 
+        // On Android the app's requests also carry the map's kezek_lang cookie: the app's header wins.
         getLocaleFromCookieServer.mockResolvedValue('en');
+        await expect(requestLocale()).resolves.toBe('ky');
+        // The website sends no header: its cookie decides.
+        headers.mockResolvedValue(new Headers());
         await expect(requestLocale()).resolves.toBe('en');
 
         getLocaleFromCookieServer.mockResolvedValue(null);
@@ -178,5 +182,8 @@ describe('server messages', () => {
 
         headers.mockRejectedValue(new Error('outside a request scope'));
         await expect(requestLocale()).resolves.toBe('ru');
+
+        getLocaleFromCookieServer.mockResolvedValue('en');
+        await expect(requestLocale()).resolves.toBe('en');
     });
 });

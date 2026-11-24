@@ -73,6 +73,21 @@ describe('StaffInvitationsBlock', () => {
         expect(screen.queryByText('Salon')).toBeNull();
     });
 
+    test('accepting an invitation to an inactive card does not promise the staff cabinet', async () => {
+        const dictionary = useLocale('en');
+        fetchMock
+            .mockResolvedValueOnce(json({ ok: true, data: { invitations: [invitation] } }))
+            .mockResolvedValueOnce(json({ ok: true, data: { staff_id: 'card-1', biz_id: 'biz-1', is_active: false } }))
+            .mockResolvedValueOnce(json({ ok: true, data: { invitations: [] } }));
+        render(<StaffInvitationsBlock />);
+
+        fireEvent.click(await screen.findByRole('button', { name: dictionary['cabinet.staffInvitations.accept'] }));
+
+        expect(await screen.findByRole('status')).toBeTruthy();
+        expect(screen.getByRole('status').textContent).toBe(dictionary['cabinet.staffInvitations.acceptedInactive']);
+        expect(screen.queryByRole('link')).toBeNull();
+    });
+
     test('declining removes the invitation and the block', async () => {
         const dictionary = useLocale('ru');
         fetchMock

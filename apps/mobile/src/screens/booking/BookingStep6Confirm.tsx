@@ -11,7 +11,7 @@ import OfflineBanner from '../../components/ui/OfflineBanner';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
-import { useLanguage } from '../../i18n';
+import { translatePlural, useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { useBookingStep6Confirm } from './useBookingStep6Confirm';
 
@@ -69,7 +69,7 @@ export default function BookingStep6Confirm() {
                                 <Text style={styles.summaryValue}>{selectedService?.name_ru}</Text>
                                 {selectedService?.duration_min && (
                                     <Text style={styles.summaryHint}>
-                                        {t('booking.duration.minutesLong', { minutes: selectedService.duration_min })}
+                                        {translatePlural(t, 'booking.duration.minutesLong', selectedService.duration_min)}
                                     </Text>
                                 )}
                                 {priceLabel && <Text style={styles.summaryPrice}>{priceLabel}</Text>}

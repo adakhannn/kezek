@@ -31,6 +31,35 @@ end;
 $function$
 ;
 
+-- signature: private.cancel_superseded_staff_invitations()
+CREATE OR REPLACE FUNCTION private.cancel_superseded_staff_invitations()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+AS $function$
+begin
+    if new.user_id is not null and (tg_op = 'INSERT' or old.user_id is distinct from new.user_id) then
+        update public.staff_invitations
+           set status = 'cancelled', decided_at = now()
+         where biz_id = new.biz_id
+           and invited_user_id = new.user_id
+           and status = 'pending'
+           and staff_id <> new.id;
+    end if;
+
+    if tg_op = 'UPDATE' and coalesce(old.is_active, false) and not coalesce(new.is_active, false) then
+        update public.staff_invitations
+           set status = 'cancelled', decided_at = now()
+         where staff_id = new.id
+           and status = 'pending';
+    end if;
+
+    return null;
+end;
+$function$
+;
+
 -- signature: private.ensure_staff_role()
 CREATE OR REPLACE FUNCTION private.ensure_staff_role()
  RETURNS trigger
@@ -803,11 +832,9 @@ begin
       from public.staff_invitations
      where id = p_invitation_id
      for update;
-
     if not found or p_user_id is null or v_invitation.invited_user_id <> p_user_id then
         raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_NOT_FOUND';
     end if;
-
     if v_invitation.status <> 'pending' then
         raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_NOT_PENDING';
     end if;
@@ -816,9 +843,6 @@ begin
       from public.staff
      where id = v_invitation.staff_id
      for update;
-
-    -- The card was linked meanwhile or belongs to another business now: the invitation is void. It
-    -- is cancelled and the result says so; an exception would roll the cancellation back.
     if not found or v_staff.biz_id <> v_invitation.biz_id or v_staff.user_id is not null then
         update public.staff_invitations
            set status = 'cancelled', decided_at = now()
@@ -826,12 +850,16 @@ begin
         return jsonb_build_object('status', 'stale', 'error', 'STAFF_INVITATION_STALE');
     end if;
 
+    -- Already in the team by another card: this invitation can never be accepted.
     if exists (
         select 1 from public.staff s
          where s.biz_id = v_invitation.biz_id
            and s.user_id = p_user_id
     ) then
-        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_ALREADY_STAFF';
+        update public.staff_invitations
+           set status = 'cancelled', decided_at = now()
+         where id = v_invitation.id;
+        return jsonb_build_object('status', 'stale', 'error', 'STAFF_INVITATION_ALREADY_STAFF');
     end if;
 
     begin
@@ -839,15 +867,23 @@ begin
            set user_id = p_user_id
          where id = v_staff.id;
     exception when unique_violation then
-        -- staff_user_business_unique: a concurrent command gave the account a card in this business.
-        raise exception using errcode = 'P0001', message = 'STAFF_INVITATION_ALREADY_STAFF';
+        -- A concurrent link of this person in the business won the race.
+        update public.staff_invitations
+           set status = 'cancelled', decided_at = now()
+         where id = v_invitation.id;
+        return jsonb_build_object('status', 'stale', 'error', 'STAFF_INVITATION_ALREADY_STAFF');
     end;
 
     update public.staff_invitations
        set status = 'accepted', decided_at = now()
      where id = v_invitation.id;
 
-    return jsonb_build_object('status', 'accepted', 'staff_id', v_staff.id, 'biz_id', v_invitation.biz_id);
+    return jsonb_build_object(
+        'status', 'accepted',
+        'staff_id', v_staff.id,
+        'biz_id', v_invitation.biz_id,
+        'is_active', coalesce(v_staff.is_active, false)
+    );
 end;
 $function$
 ;

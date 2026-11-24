@@ -47,6 +47,26 @@
       "strict": false,
       "volatility": "v"
     },
+    "private.cancel_superseded_staff_invitations()": {
+      "arguments": "",
+      "body": "837b62aa14d48dacc6e6a4ad85bbe8eb",
+      "config": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
     "private.ensure_staff_role()": {
       "arguments": "",
       "body": "cdf93a53bfe3a66fda9e88451326be4e",
@@ -469,7 +489,7 @@
     },
     "public.accept_staff_invitation(uuid,uuid)": {
       "arguments": "p_invitation_id uuid, p_user_id uuid",
-      "body": "e3dbec2f3f6462a5bbaeccfbbb3938e9",
+      "body": "fc469aa333e76804891adcb7742ec5d5",
       "config": [
         "search_path=pg_catalog, public, pg_temp"
       ],

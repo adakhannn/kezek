@@ -86,12 +86,27 @@ describe('/api/staff-invitations', () => {
     describe('accept', () => {
         test('links the card through the command, for the session user only', async () => {
             signIn(userId);
-            admin.rpc.mockResolvedValue({ data: { status: 'accepted', staff_id: 'card-1', biz_id: 'biz-1' }, error: null });
+            admin.rpc.mockResolvedValue({ data: { status: 'accepted', staff_id: 'card-1', biz_id: 'biz-1', is_active: true }, error: null });
 
             const data = await expectSuccessResponse(await ACCEPT(request(`/${invitationId}/accept`), context), 200);
 
             expect(admin.rpc).toHaveBeenCalledWith('accept_staff_invitation', { p_invitation_id: invitationId, p_user_id: userId });
-            expect(data).toMatchObject({ staff_id: 'card-1', biz_id: 'biz-1' });
+            expect(data).toMatchObject({ staff_id: 'card-1', biz_id: 'biz-1', is_active: true });
+        });
+
+        test('an inactive card is reported, so the cabinet does not promise access', async () => {
+            signIn(userId);
+            admin.rpc.mockResolvedValue({ data: { status: 'accepted', staff_id: 'card-1', biz_id: 'biz-1', is_active: false }, error: null });
+
+            const data = await expectSuccessResponse(await ACCEPT(request(`/${invitationId}/accept`), context), 200);
+            expect(data).toMatchObject({ is_active: false });
+        });
+
+        test('a person already in the team gets 409 and the command has cancelled the invitation', async () => {
+            signIn(userId);
+            admin.rpc.mockResolvedValue({ data: { status: 'stale', error: 'STAFF_INVITATION_ALREADY_STAFF' }, error: null });
+
+            await expectErrorResponse(await ACCEPT(request(`/${invitationId}/accept`), context), 409, 'conflict');
         });
 
         test('an invalid id is 404 without calling the command', async () => {

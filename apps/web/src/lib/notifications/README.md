@@ -45,7 +45,7 @@ Service role имеет чтение outbox, но изменения выпол�
 Эти уведомления отправляются напрямую, без outbox, и тоже идут на `profiles.preferred_locale` каждого получателя (тексты в том же словаре `serverNotifications`, `NULL` и неизвестное значение — русский):
 
 - [Письмо о закрытии смены](shiftNotifications.ts) — только email, сотруднику и владельцу, каждому на своём языке. Язык обоих читается одним запросом `profiles` ([`readNotificationLocales`](shiftNotifications.ts)); сбой чтения даёт русский, а не потерю письма. Дата смены для ky — через [`kyDateFormat`](../kyDateFormat.ts), для en — «20 Nov 2026»; суммы — в стиле `finance.money`.
-- [Заявки и приглашения](../businessRoleApplicationNotificationService.ts) — заявитель, владелец, каждый супер-админ и приглашённый получают email и Telegram на своём языке. WhatsApp здесь — одобренный шаблон Meta на языке `WHATSAPP_TEMPLATE_LANGUAGE`: он не переводится. У приглашения WhatsApp нет.
+- [Заявки и приглашения](../businessRoleApplicationNotificationService.ts) — заявитель, владелец, каждый супер-админ и приглашённый получают email и Telegram на своём языке. WhatsApp здесь — одобренный шаблон Meta на языке `WHATSAPP_APPLICATION_TEMPLATE_LANGUAGE`: он не переводится. У приглашения WhatsApp нет.
 
 На русском остаются письмо с временным паролем (аккаунт создан тем же запросом и языка не имеет), SMS и ответы ботов.
 

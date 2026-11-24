@@ -177,6 +177,7 @@ export function QuickDesk({
                     clientId,
                     clientName,
                     clientPhone,
+                    t,
                 },
             };
         },

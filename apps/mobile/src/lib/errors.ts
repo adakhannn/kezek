@@ -1,3 +1,4 @@
+import type { Locale } from '../i18n/locale';
 import { createTranslate, type Translate } from '../i18n/translate';
 
 /** Russian, for callers outside a screen (tests, logging) that pass no `t`. */
@@ -36,6 +37,18 @@ function hasCyrillic(value: string): boolean {
     return /[А-Яа-яЁё]/.test(value);
 }
 
+/**
+ * Written in the script of the UI language. ru and ky: it has Cyrillic, as before translations.
+ * en: most of its letters are Latin, so an English text naming a Cyrillic business is English and a
+ * Russian text naming a Latin one is not.
+ */
+function isInScriptOf(value: string, locale: Locale): boolean {
+    if (locale !== 'en') return hasCyrillic(value);
+    const latin = value.match(/[A-Za-z]/g)?.length ?? 0;
+    const cyrillic = value.match(/[А-Яа-яЁёҢңӨөҮү]/g)?.length ?? 0;
+    return latin > cyrillic;
+}
+
 function isTechnicalMessage(value: string): boolean {
     return [
         /\btypeerror\b/i,
@@ -67,7 +80,10 @@ export function isAuthError(error: unknown): boolean {
 
 /**
  * A message for the user. `t` is the screen's translator (`useLanguage().t`); without it the
- * text is Russian. The fallback is already translated by the caller.
+ * text is Russian. The error's own message is shown when it is readable: written in the script of
+ * `t.locale` (Cyrillic for ru and ky, Latin for en) and not technical. That keeps a server answer
+ * in the app's language and a client error thrown with t() text. The fallback is already
+ * translated by the caller.
  */
 export function getErrorMessage(
     error: unknown,
@@ -77,6 +93,7 @@ export function getErrorMessage(
     const errorLike = asErrorLike(error);
     const rawMessage = getRawErrorMessage(error).trim();
     const status = getStatus(error);
+    const readable = rawMessage !== '' && isInScriptOf(rawMessage, t.locale) && !isTechnicalMessage(rawMessage);
 
     if (
         errorLike?.name === 'TimeoutError' ||
@@ -100,9 +117,7 @@ export function getErrorMessage(
         return t('cabinet.error.conflict');
     }
     if (status === 400 || status === 422) {
-        return hasCyrillic(rawMessage) && !isTechnicalMessage(rawMessage)
-            ? rawMessage
-            : t('cabinet.error.invalidInput');
+        return readable ? rawMessage : t('cabinet.error.invalidInput');
     }
     if (status !== undefined && status >= 500) {
         return t('cabinet.error.unavailable');
@@ -110,7 +125,7 @@ export function getErrorMessage(
     if (/rate limit|too many requests/i.test(rawMessage) || status === 429) {
         return t('cabinet.error.rateLimited');
     }
-    if (rawMessage && hasCyrillic(rawMessage) && !isTechnicalMessage(rawMessage)) {
+    if (readable) {
         return rawMessage;
     }
 

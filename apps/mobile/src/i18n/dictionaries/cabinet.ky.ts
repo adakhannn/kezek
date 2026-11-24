@@ -65,10 +65,9 @@ export const cabinetKy: Record<keyof typeof cabinetRu, string> = {
     'cabinet.signOut.unknown.title': 'Смена боюнча сакталбаган маалыматтар бар',
     'cabinet.signOut.unknown.message': 'Сменанын бардык өзгөртүүлөрү жөнөтүлгөнүн текшерүү мүмкүн болгон жок. Чыккандан кийин бул түзмөктөгү смена маалыматтары өчүрүлөт.',
     'cabinet.signOut.pending.title': 'Жөнөтүлө элек смена өзгөртүүлөрү бар',
-    'cabinet.signOut.pending.message': '{count} {changes} серверге али жөнөтүлө элек. Чыккандан кийин алар бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
-    'cabinet.signOut.changes.one': 'смена өзгөртүүсү',
-    'cabinet.signOut.changes.few': 'смена өзгөртүүсү',
-    'cabinet.signOut.changes.many': 'смена өзгөртүүсү',
+    'cabinet.signOut.pending.message.one': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин алар бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
+    'cabinet.signOut.pending.message.few': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин алар бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
+    'cabinet.signOut.pending.message.many': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин алар бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
 
     // screens/CabinetScreen.tsx, screens/cabinet
     'cabinet.signOutTitle': 'Аккаунттан чыгуу',

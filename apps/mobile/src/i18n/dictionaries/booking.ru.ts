@@ -7,7 +7,10 @@ export const bookingRu = {
     'booking.checkConnection': 'Проверьте интернет-соединение и попробуйте снова.',
     'booking.book': 'Записаться',
     'booking.duration.minutes': '{minutes} мин',
-    'booking.duration.minutesLong': '{minutes} минут',
+    // translatePlural (i18n/plural.ts): .one for 1, 21…; .few for 2–4, 22–24…; .many for the rest.
+    'booking.duration.minutesLong.one': '{count} минута',
+    'booking.duration.minutesLong.few': '{count} минуты',
+    'booking.duration.minutesLong.many': '{count} минут',
     'booking.price.value': '{price} сом',
     'booking.price.from': 'от {price} сом',
     'booking.price.upTo': 'до {price} сом',

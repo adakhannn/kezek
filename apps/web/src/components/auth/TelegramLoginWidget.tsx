@@ -114,7 +114,8 @@ function TelegramLoginWidgetComponent({
 
                 if (!data?.ok) {
                     const apiMessage = data?.message || t('auth.telegramWidget.error', 'Ошибка авторизации через Telegram');
-                    throw new Error(apiMessage);
+                    // The status classifies the failure below in every language; the message is translated.
+                    throw Object.assign(new Error(apiMessage), { status: resp.status });
                 }
 
                 // Сервер выдаёт короткоживущую сессию проверенного Telegram-пользователя
@@ -155,8 +156,9 @@ function TelegramLoginWidgetComponent({
             } catch (e) {
                 const msg = e instanceof Error ? e.message : t('auth.telegramWidget.unknownError', 'Неизвестная ошибка');
                 // Ожидаемые сообщения не логируем в консоль как ошибку — пользователь видит их на экране
-                const isExpectedUnavailable = /временно недоступен|обратитесь к администратору/i.test(msg);
-                const isRateLimit = /лимит запросов|rate limit/i.test(msg);
+                const status = (e as { status?: unknown } | null)?.status;
+                const isExpectedUnavailable = status === 503 || /временно недоступен|обратитесь к администратору/i.test(msg);
+                const isRateLimit = status === 429 || /лимит запросов|rate limit/i.test(msg);
                 if (!isExpectedUnavailable && !isRateLimit) logError('TelegramLoginWidget', 'Error during login', e);
                 // «Bot domain invalid» на проде: домен не добавлен в @BotFather → /setdomain
                 const displayMessage = /bot domain invalid|domain invalid/i.test(msg)

@@ -242,4 +242,5 @@ export const cabinetKy = {
     'cabinet.staffInvitations.openStaffCabinet': 'Кызматкердин кабинетин ачуу',
     'cabinet.staffInvitations.error': 'Чакырууну иштетүү мүмкүн болгон жок',
     'cabinet.meta.title': 'Kezek — жеке кабинет',
+    'cabinet.staffInvitations.acceptedInactive': 'Сиз командадасыз. Бизнес карточкаңызды активдештиргенде кызматкердин кабинети ачылат.',
 } as const;

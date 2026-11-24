@@ -11,7 +11,7 @@ type Invitation = {
     branch_name: string | null;
 };
 
-type Notice = { kind: 'accepted' } | { kind: 'error'; message: string };
+type Notice = { kind: 'accepted'; active: boolean } | { kind: 'error'; message: string };
 
 /**
  * Invitations to join a business team (API-06). A manager's invitation links the staff card to this
@@ -52,7 +52,7 @@ export default function StaffInvitationsBlock() {
                         : t('cabinet.staffInvitations.error', 'Не удалось обработать приглашение'),
                 });
             } else if (action === 'accept') {
-                setNotice({ kind: 'accepted' });
+                setNotice({ kind: 'accepted', active: json?.data?.is_active !== false });
             }
         } catch {
             setNotice({ kind: 'error', message: t('cabinet.staffInvitations.error', 'Не удалось обработать приглашение') });
@@ -73,12 +73,17 @@ export default function StaffInvitationsBlock() {
                 {t('cabinet.staffInvitations.title', 'Приглашения в команду')}
             </h2>
 
-            {notice?.kind === 'accepted' ? (
+            {notice?.kind === 'accepted' && notice.active ? (
                 <p role="status" className="mt-3 text-sm text-green-700 dark:text-green-400">
                     {t('cabinet.staffInvitations.accepted', 'Вы в команде. Кабинет сотрудника открыт.')}{' '}
                     <Link href="/staff" className="font-medium underline">
                         {t('cabinet.staffInvitations.openStaffCabinet', 'Открыть кабинет сотрудника')}
                     </Link>
+                </p>
+            ) : null}
+            {notice?.kind === 'accepted' && !notice.active ? (
+                <p role="status" className="mt-3 text-sm text-green-700 dark:text-green-400">
+                    {t('cabinet.staffInvitations.acceptedInactive', 'Вы в команде. Кабинет сотрудника откроется, когда бизнес активирует вашу карточку.')}
                 </p>
             ) : null}
             {notice?.kind === 'error' ? (

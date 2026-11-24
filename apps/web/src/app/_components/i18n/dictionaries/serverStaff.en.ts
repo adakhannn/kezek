@@ -177,4 +177,5 @@ export const serverStaffEn = {
     'server.staff.invitationDecisionFailed': 'Could not process the invitation',
     'server.staff.invitationPendingNotFound': 'This staff member has no pending invitation',
     'server.staff.invitationCancelFailed': 'Could not cancel the invitation',
+    'server.staff.invitationOtherBranch': 'This person has already been invited to another branch. Cancel that invitation to invite them again.',
 } as const;

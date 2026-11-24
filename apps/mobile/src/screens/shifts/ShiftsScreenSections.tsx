@@ -4,7 +4,7 @@ import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import MotionPressable from '../../components/ui/MotionPressable';
-import { useLanguage } from '../../i18n';
+import { translatePlural, useLanguage } from '../../i18n';
 import { formatDate, formatPrice } from '../../utils/format';
 import { styles } from './shiftsScreenStyles';
 import type { Shift, ShiftStats } from './types';
@@ -179,7 +179,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
                             </Text>
                         </View>
                         {shift.items.length > 0 ? (
-                            <Text style={styles.shiftClientsCount}>{t('staff.shifts.clientsCount', { count: shift.items.length })}</Text>
+                            <Text style={styles.shiftClientsCount}>{translatePlural(t, 'staff.shifts.clientsCount', shift.items.length)}</Text>
                         ) : null}
                     </View>
                     {shift.opened_at ? (

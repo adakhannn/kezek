@@ -18,9 +18,10 @@ if (__DEV__) {
 export default function App() {
     useAppStateQueryFocus();
 
+    // LanguageProvider outside ErrorBoundary: the crash screen (ErrorDisplay) is in the chosen language.
     return (
-        <ErrorBoundary>
-            <LanguageProvider>
+        <LanguageProvider>
+            <ErrorBoundary>
                 <QueryClientProvider client={queryClient}>
                     <ConfirmProvider>
                         <ToastProvider>
@@ -29,7 +30,7 @@ export default function App() {
                         </ToastProvider>
                     </ConfirmProvider>
                 </QueryClientProvider>
-            </LanguageProvider>
-        </ErrorBoundary>
+            </ErrorBoundary>
+        </LanguageProvider>
     );
 }

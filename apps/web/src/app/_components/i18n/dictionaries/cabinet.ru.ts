@@ -242,4 +242,5 @@ export const cabinetRu = {
     'cabinet.staffInvitations.openStaffCabinet': 'Открыть кабинет сотрудника',
     'cabinet.staffInvitations.error': 'Не удалось обработать приглашение',
     'cabinet.meta.title': 'Kezek — личный кабинет',
+    'cabinet.staffInvitations.acceptedInactive': 'Вы в команде. Кабинет сотрудника откроется, когда бизнес активирует вашу карточку.',
 } as const;

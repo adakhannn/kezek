@@ -131,7 +131,7 @@ async function readUpTo(response: Response, limit: number): Promise<string | nul
     }
 }
 
-/** Header with the language of the mobile app, which has no `kezek_lang` cookie. */
+/** Header with the language of the mobile app. The website never sends it. */
 export const LOCALE_HEADER = 'x-kezek-locale';
 
 function isServerLocale(value: unknown): value is ServerLocale {
@@ -139,24 +139,25 @@ function isServerLocale(value: unknown): value is ServerLocale {
 }
 
 /**
- * The language of the current request: the `kezek_lang` cookie (the website), then the
- * `X-Kezek-Locale` header (the mobile app), then Russian. Russian outside a request or when
- * neither can be read.
+ * The language of the current request: the `X-Kezek-Locale` header (the mobile app), then the
+ * `kezek_lang` cookie (the website), then Russian. The header comes first: on Android the app's
+ * requests also carry the cookies of its WebView (the map sets kezek_lang), which must not
+ * override the language the app asks for. Russian outside a request or when neither can be read.
  */
 export async function requestLocale(): Promise<ServerLocale> {
-    try {
-        const { getLocaleFromCookieServer } = await import('@/lib/cookies');
-        const cookie = await getLocaleFromCookieServer();
-        if (cookie) return cookie;
-    } catch {
-        // Fall through to the header.
-    }
     try {
         const { headers } = await import('next/headers');
         const value = (await headers()).get(LOCALE_HEADER)?.trim().toLowerCase();
         if (isServerLocale(value)) return value;
     } catch {
-        // Outside a request scope.
+        // Outside a request scope: fall through to the cookie.
+    }
+    try {
+        const { getLocaleFromCookieServer } = await import('@/lib/cookies');
+        const cookie = await getLocaleFromCookieServer();
+        if (cookie) return cookie;
+    } catch {
+        // No cookie store.
     }
     return 'ru';
 }

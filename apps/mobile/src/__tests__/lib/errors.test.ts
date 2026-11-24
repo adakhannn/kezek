@@ -1,3 +1,4 @@
+import { createTranslate, translate } from '../../i18n/translate';
 import { getErrorMessage, isAuthError, isNetworkError } from '../../lib/errors';
 
 describe('user-facing error mapping', () => {
@@ -48,5 +49,40 @@ describe('user-facing error mapping', () => {
         expect(isNetworkError(new Error('Network request failed'))).toBe(true);
         expect(isAuthError(Object.assign(new Error('JWT expired'), { status: 401 }))).toBe(true);
         expect(isAuthError(new Error('OAuth provider unavailable'))).toBe(false);
+    });
+});
+
+describe('a readable message is in the script of the screen language', () => {
+    const en = createTranslate('en');
+    const ky = createTranslate('ky');
+
+    test('English: a client error thrown with t() text and an English 422 answer are shown', () => {
+        const queueBlocks = translate('en', 'staff.selection.queueBlocks');
+        expect(getErrorMessage(new Error(queueBlocks), 'Could not select the business.', en)).toBe(queueBlocks);
+
+        const serverAnswer = Object.assign(new Error('This phone number is already in use.'), { status: 422 });
+        expect(getErrorMessage(serverAnswer, undefined, en)).toBe('This phone number is already in use.');
+    });
+
+    test('English: a Cyrillic business name inside an English text keeps it English', () => {
+        const named = translate('en', 'staff.selection.queueBlocksNamed', { business: 'Барбершоп Эркин' });
+        expect(getErrorMessage(new Error(named), 'Could not select the business.', en)).toBe(named);
+    });
+
+    test('English: Russian, technical or empty text gives the English fallback', () => {
+        expect(getErrorMessage(new Error('В бизнесе «Low Fade» есть неотправленные изменения смены.'), 'Fallback', en))
+            .toBe('Fallback');
+        expect(getErrorMessage(Object.assign(new Error('Этот номер телефона уже используется.'), { status: 422 }), undefined, en))
+            .toBe(translate('en', 'cabinet.error.invalidInput'));
+        expect(getErrorMessage(new TypeError("Cannot read properties of undefined (reading 'id')"), undefined, en))
+            .toBe(translate('en', 'cabinet.error.default'));
+        expect(getErrorMessage(new Error('   '), 'Fallback', en)).toBe('Fallback');
+    });
+
+    test('Kyrgyz and Russian still need Cyrillic', () => {
+        const kyMessage = translate('ky', 'staff.selection.queueBlocks');
+        expect(getErrorMessage(new Error(kyMessage), 'Запасной текст', ky)).toBe(kyMessage);
+        expect(getErrorMessage(new Error('This phone number is already in use.'), 'Запасной текст', ky)).toBe('Запасной текст');
+        expect(getErrorMessage(new Error('This phone number is already in use.'), 'Запасной текст')).toBe('Запасной текст');
     });
 });

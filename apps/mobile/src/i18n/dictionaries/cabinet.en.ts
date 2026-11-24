@@ -65,10 +65,9 @@ export const cabinetEn: Record<keyof typeof cabinetRu, string> = {
     'cabinet.signOut.unknown.title': 'There is unsaved shift data',
     'cabinet.signOut.unknown.message': 'We could not check whether all shift changes were sent. After signing out, the shift data on this device will be deleted.',
     'cabinet.signOut.pending.title': 'There are unsent shift changes',
-    'cabinet.signOut.pending.message': '{count} {changes} not been sent to the server yet. After signing out they will be deleted from this device. Connect to the internet and wait for them to be sent, or sign out anyway.',
-    'cabinet.signOut.changes.one': 'shift change has',
-    'cabinet.signOut.changes.few': 'shift changes have',
-    'cabinet.signOut.changes.many': 'shift changes have',
+    'cabinet.signOut.pending.message.one': '{count} shift change has not been sent to the server yet. After signing out it will be deleted from this device. Connect to the internet and wait for it to be sent, or sign out anyway.',
+    'cabinet.signOut.pending.message.few': '{count} shift changes have not been sent to the server yet. After signing out they will be deleted from this device. Connect to the internet and wait for them to be sent, or sign out anyway.',
+    'cabinet.signOut.pending.message.many': '{count} shift changes have not been sent to the server yet. After signing out they will be deleted from this device. Connect to the internet and wait for them to be sent, or sign out anyway.',
 
     // screens/CabinetScreen.tsx, screens/cabinet
     'cabinet.signOutTitle': 'Sign out of account',

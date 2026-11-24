@@ -6,12 +6,12 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { Text } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-import { LanguageProvider, LanguageSwitcher, translate, useLanguage, type MobileI18nKey } from '../../i18n';
+import { createTranslate, LanguageProvider, LanguageSwitcher, translate, useLanguage, type MobileI18nKey } from '../../i18n';
 import { en } from '../../i18n/dictionaries/en';
 import { ky } from '../../i18n/dictionaries/ky';
 import { ru } from '../../i18n/dictionaries/ru';
 import { getRequestLocale, setRequestLocale } from '../../i18n/locale';
-import { LOCALE_STORAGE_KEY } from '../../i18n/localeStorage';
+import { loadStoredLocale, LOCALE_STORAGE_KEY, readStoredLocale } from '../../i18n/localeStorage';
 import { apiRequest } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 
@@ -27,6 +27,7 @@ function Probe() {
             <Text testID="locale">{locale}</Text>
             <Text testID="title">{t('auth.whatsapp.title')}</Text>
             <Text testID="param">{t('auth.whatsapp.resendIn', { seconds: 42 })}</Text>
+            <Text testID="t-locale">{t.locale}</Text>
         </>
     );
 }
@@ -50,6 +51,42 @@ function signedIn(signedInNow: boolean) {
         data: { session: signedInNow ? { access_token: 'token', user: { id: 'user-1' } } : null },
         error: null,
     });
+}
+
+/**
+ * Captures the onAuthStateChange callback. `auth('SIGNED_IN')` signs user-1 in, `auth('SIGNED_OUT')`
+ * out, and lets the sync run (fake timers).
+ */
+function captureAuth() {
+    let onAuth: (event: string, session: unknown) => void = () => {};
+    mockedAuth.onAuthStateChange.mockImplementation((callback) => {
+        onAuth = callback;
+        return { data: { subscription: { unsubscribe: jest.fn() } } };
+    });
+    return async (event: 'SIGNED_IN' | 'SIGNED_OUT') => {
+        const signingIn = event === 'SIGNED_IN';
+        signedIn(signingIn);
+        await act(async () => {
+            onAuth(event, signingIn ? { access_token: 'token', user: { id: 'user-1' } } : null);
+            await jest.runAllTimersAsync();
+        });
+    };
+}
+
+async function settle() {
+    await act(async () => {
+        await jest.runAllTimersAsync();
+    });
+}
+
+async function press(label: string) {
+    fireEvent.press(screen.getByText(label));
+    await settle();
+}
+
+/** The languages POST /api/profile/locale received, in order. */
+function profileLocales(): string[] {
+    return mockedApiRequest.mock.calls.map(([, init]) => JSON.parse(init.body).locale);
 }
 
 describe('mobile i18n', () => {
@@ -82,11 +119,48 @@ describe('mobile i18n', () => {
         expect(translate('en', unknown)).toBe('auth.notAKey');
     });
 
+    test('t() fills the placeholders in one pass: a {placeholder} inside a value stays as it is', () => {
+        // The client is listed before the service, so a second pass would replace its name.
+        expect(translate('en', 'staff.shiftQuick.reviewLine', {
+            client: '{service}',
+            service: 'Haircut',
+            amount: '800 KGS',
+            consumables: '{amount}',
+        })).toBe('{service} · Haircut · 800 KGS · consumables {amount}');
+        expect(translate('en', 'auth.whatsapp.codeSentTo', { phone: '$& $1' })).toBe('Code sent to $& $1');
+        expect(translate('en', 'auth.whatsapp.codeSentTo', { other: 'x' })).toBe('Code sent to {phone}');
+    });
+
+    test('t carries its language as t.locale, also from the provider', async () => {
+        expect((['ru', 'ky', 'en'] as const).map((locale) => createTranslate(locale).locale)).toEqual(['ru', 'ky', 'en']);
+        (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('ky');
+        renderProvider();
+        await waitFor(() => expect(textOf('t-locale')).toBe('ky'));
+    });
+
+    test('readStoredLocale tells "nothing chosen" from a stored Russian; loadStoredLocale still gives ru', async () => {
+        const getItem = SecureStore.getItemAsync as jest.Mock;
+        getItem.mockResolvedValueOnce(null);
+        await expect(readStoredLocale()).resolves.toBeNull();
+        getItem.mockResolvedValueOnce('ru');
+        await expect(readStoredLocale()).resolves.toBe('ru');
+        getItem.mockResolvedValueOnce('de');
+        await expect(readStoredLocale()).resolves.toBeNull();
+        getItem.mockRejectedValueOnce(new Error('locked'));
+        await expect(readStoredLocale()).resolves.toBeNull();
+
+        getItem.mockResolvedValueOnce(null);
+        await expect(loadStoredLocale()).resolves.toBe('ru');
+        getItem.mockResolvedValueOnce('ky');
+        await expect(loadStoredLocale()).resolves.toBe('ky');
+    });
+
     test('outside the provider the app is Russian', () => {
         render(<Probe />);
         expect(textOf('locale')).toBe('ru');
         expect(textOf('title')).toBe('Вход через WhatsApp');
         expect(textOf('param')).toBe('Отправить снова (42с)');
+        expect(textOf('t-locale')).toBe('ru');
     });
 
     test('the default is Russian when nothing is stored, and the request header says ru', async () => {
@@ -150,7 +224,7 @@ describe('mobile i18n', () => {
         expect(textOf('locale')).toBe('ky');
     });
 
-    test('after a sign-in, a stored language other than Russian is saved once per user', async () => {
+    test('after a sign-in, the stored language is saved once per user and language', async () => {
         jest.useFakeTimers();
         try {
             let onAuth: (event: string, session: unknown) => void = () => {};
@@ -183,7 +257,7 @@ describe('mobile i18n', () => {
         }
     });
 
-    test('after a sign-in with Russian nothing is sent', async () => {
+    test('after a sign-in, the default Russian that nobody chose is not sent', async () => {
         jest.useFakeTimers();
         try {
             let onAuth: (event: string, session: unknown) => void = () => {};
@@ -201,5 +275,70 @@ describe('mobile i18n', () => {
         } finally {
             jest.useRealTimers();
         }
+    });
+
+    describe('the profile language after a sign-in', () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        test('a stored Russian is an explicit choice and is sent', async () => {
+            const auth = captureAuth();
+            (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('ru');
+            renderProvider();
+            await settle();
+
+            await auth('SIGNED_IN');
+
+            expect(profileLocales()).toEqual(['ru']);
+        });
+
+        test('KG, sign out, EN on the sign-in screen, sign in again: the profile gets en', async () => {
+            const auth = captureAuth();
+            (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('ky');
+            renderProvider();
+            await settle();
+
+            await auth('SIGNED_IN');
+            await auth('SIGNED_OUT');
+            await press('EN');
+            expect(profileLocales()).toEqual(['ky']);
+
+            await auth('SIGNED_IN');
+            await auth('SIGNED_IN');
+
+            expect(profileLocales()).toEqual(['ky', 'en']);
+        });
+
+        test('a change while signed in, then back while signed out: the next sign-in sends it again', async () => {
+            const auth = captureAuth();
+            (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('ky');
+            renderProvider();
+            await settle();
+
+            await auth('SIGNED_IN');
+            await press('EN');
+            await auth('SIGNED_OUT');
+            await press('KG');
+            await auth('SIGNED_IN');
+
+            expect(profileLocales()).toEqual(['ky', 'en', 'ky']);
+        });
+
+        test('tapping the Russian already shown is a choice: it is stored and sent at the next sign-in', async () => {
+            const auth = captureAuth();
+            renderProvider();
+            await settle();
+
+            await press('RU');
+            expect(SecureStore.setItemAsync).toHaveBeenCalledWith(LOCALE_STORAGE_KEY, 'ru');
+            await auth('SIGNED_IN');
+
+            expect(profileLocales()).toEqual(['ru']);
+        });
     });
 });

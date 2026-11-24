@@ -17,7 +17,7 @@ import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import Input from '../../components/ui/Input';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import { colors } from '../../constants/colors';
-import { useLanguage, type Translate } from '../../i18n';
+import { translatePlural, useLanguage, type Translate } from '../../i18n';
 import { formatDate, formatPrice, formatTime } from '../../utils/format';
 import { styles } from './shiftQuickStyles';
 import type { FinanceData, ShiftItem, ShiftQuickMetrics } from './types';
@@ -191,7 +191,7 @@ export function ShiftQuickSections({
                                 title={
                                     isProcessingQueue
                                         ? t('staff.shiftQuick.syncingOperations')
-                                        : t('staff.shiftQuick.operationsQueued', { count: pendingQueueCount })
+                                        : translatePlural(t, 'staff.shiftQuick.operationsQueued', pendingQueueCount)
                                 }
                                 message={
                                     isProcessingQueue

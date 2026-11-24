@@ -242,4 +242,5 @@ export const cabinetEn = {
     'cabinet.staffInvitations.openStaffCabinet': 'Open the staff cabinet',
     'cabinet.staffInvitations.error': 'Could not process the invitation',
     'cabinet.meta.title': 'Kezek — my account',
+    'cabinet.staffInvitations.acceptedInactive': 'You\'re in the team. The staff account opens once the business activates your card.',
 } as const;

@@ -22,13 +22,14 @@ type StaffCreateFromUserInput = {
 
 type StaffCreateFromUserFailure = {
     ok: false;
-    status: 400 | 403 | 404 | 500;
-    error: 'validation' | 'forbidden' | 'not_found' | 'internal';
+    status: 400 | 403 | 404 | 409 | 500;
+    error: 'validation' | 'forbidden' | 'not_found' | 'conflict' | 'internal';
     message: string;
 };
 
 export const STAFF_INVITATION_SENT_MESSAGE = 'Приглашение отправлено. Сотрудник появится в команде после подтверждения.';
 export const STAFF_ALREADY_IN_TEAM_MESSAGE = 'Этот пользователь уже в команде бизнеса.';
+export const STAFF_INVITATION_OTHER_BRANCH_MESSAGE = 'Этого человека уже пригласили в другой филиал. Отмените приглашение, чтобы пригласить его заново.';
 
 type StaffCreateFromUserSuccess = {
     ok: true;
@@ -128,6 +129,20 @@ export async function runStaffCreateFromUser({
             return internalError('Не удалось проверить приглашения');
         }
         if (pending.invitation) {
+            // The pending card keeps its branch: a second open assignment in another branch would
+            // make the card belong to two branches at once.
+            const { data: pendingCard, error: pendingCardError } = await admin
+                .from('staff')
+                .select('branch_id')
+                .eq('id', pending.invitation.staff_id)
+                .eq('biz_id', bizId)
+                .maybeSingle();
+            if (pendingCardError) {
+                return internalError('Не удалось проверить приглашения');
+            }
+            if (pendingCard && (pendingCard as { branch_id: string | null }).branch_id !== body.branch_id) {
+                return { ok: false, status: 409, error: 'conflict', message: STAFF_INVITATION_OTHER_BRANCH_MESSAGE };
+            }
             staffId = pending.invitation.staff_id;
             invitationId = pending.invitation.id;
         }

@@ -11,6 +11,8 @@ describe('locale from the ?lang= query parameter', () => {
         expect(localeFromQuery(request('https://kezek.test/map?mobile=1&lang=ky'))).toBe('ky');
         expect(localeFromQuery(request('https://kezek.test/b/salon?lang=EN'))).toBe('en');
         expect(localeFromQuery(request('https://kezek.test/?lang=ru'))).toBe('ru');
+        // A page whose path merely starts with "api" is still a page.
+        expect(localeFromQuery(request('https://kezek.test/api-docs?lang=en'))).toBe('en');
         expect(localeFromQuery(request('https://kezek.test/map?lang=de'))).toBeNull();
         expect(localeFromQuery(request('https://kezek.test/map'))).toBeNull();
     });
