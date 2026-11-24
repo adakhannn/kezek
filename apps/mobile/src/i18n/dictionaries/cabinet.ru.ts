@@ -23,6 +23,7 @@ export const cabinetRu = {
 
     // components/ErrorDisplay.tsx
     'cabinet.errorDisplay.title': 'Что-то пошло не так',
+    'cabinet.errorDisplay.message': 'В приложении произошла ошибка. Попробуйте снова, а если не поможет, перезапустите приложение.',
     'cabinet.errorDisplay.envTitle': 'Проверьте настройки:',
     'cabinet.errorDisplay.envStep1': '1. Создайте файл .env.local в папке apps/mobile/',
     'cabinet.errorDisplay.envStep2': '2. Добавьте переменные:',
@@ -69,7 +70,7 @@ export const cabinetRu = {
     'cabinet.signOut.unknown.message': 'Не удалось проверить, все ли изменения смены отправлены. После выхода данные смены на этом устройстве будут удалены.',
     'cabinet.signOut.pending.title': 'Есть неотправленные изменения смены',
     // translatePlural (i18n/plural.ts): .one for 1, 21…; .few for 2–4, 22–24…; .many for the rest.
-    'cabinet.signOut.pending.message.one': '{count} изменение смены ещё не отправлено на сервер. После выхода оно будет удалено с этого устройства. Подключитесь к интернету и дождитесь отправки или выйдите всё равно.',
+    'cabinet.signOut.pending.message.one': '{count} изменение смены ещё не отправлено на сервер. После выхода неотправленные изменения будут удалены с этого устройства. Подключитесь к интернету и дождитесь отправки или выйдите всё равно.',
     'cabinet.signOut.pending.message.few': '{count} изменения смены ещё не отправлены на сервер. После выхода они будут удалены с этого устройства. Подключитесь к интернету и дождитесь отправки или выйдите всё равно.',
     'cabinet.signOut.pending.message.many': '{count} изменений смены ещё не отправлены на сервер. После выхода они будут удалены с этого устройства. Подключитесь к интернету и дождитесь отправки или выйдите всё равно.',
 

@@ -20,6 +20,7 @@ export const cabinetKy: Record<keyof typeof cabinetRu, string> = {
 
     // components/ErrorDisplay.tsx
     'cabinet.errorDisplay.title': 'Бир нерсе туура эмес болду',
+    'cabinet.errorDisplay.message': 'Колдонмодо ката кетти. Кайра аракет кылыңыз, жардам бербесе, колдонмону кайра ачыңыз.',
     'cabinet.errorDisplay.envTitle': 'Жөндөөлөрдү текшериңиз:',
     'cabinet.errorDisplay.envStep1': '1. apps/mobile/ папкасында .env.local файлын түзүңүз',
     'cabinet.errorDisplay.envStep2': '2. Өзгөрмөлөрдү кошуңуз:',
@@ -65,9 +66,9 @@ export const cabinetKy: Record<keyof typeof cabinetRu, string> = {
     'cabinet.signOut.unknown.title': 'Смена боюнча сакталбаган маалыматтар бар',
     'cabinet.signOut.unknown.message': 'Сменанын бардык өзгөртүүлөрү жөнөтүлгөнүн текшерүү мүмкүн болгон жок. Чыккандан кийин бул түзмөктөгү смена маалыматтары өчүрүлөт.',
     'cabinet.signOut.pending.title': 'Жөнөтүлө элек смена өзгөртүүлөрү бар',
-    'cabinet.signOut.pending.message.one': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин алар бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
-    'cabinet.signOut.pending.message.few': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин алар бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
-    'cabinet.signOut.pending.message.many': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин алар бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
+    'cabinet.signOut.pending.message.one': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин жөнөтүлбөгөн өзгөртүүлөр бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
+    'cabinet.signOut.pending.message.few': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин жөнөтүлбөгөн өзгөртүүлөр бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
+    'cabinet.signOut.pending.message.many': '{count} смена өзгөртүүсү серверге али жөнөтүлө элек. Чыккандан кийин жөнөтүлбөгөн өзгөртүүлөр бул түзмөктөн өчүрүлөт. Интернетке туташып, жөнөтүлүшүн күтүңүз же баары бир чыгыңыз.',
 
     // screens/CabinetScreen.tsx, screens/cabinet
     'cabinet.signOutTitle': 'Аккаунттан чыгуу',

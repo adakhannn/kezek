@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../constants/colors';
 import { useLanguage } from '../i18n';
-import { getErrorMessage } from '../lib/errors';
 import Button from './ui/Button';
 
 type ErrorDisplayProps = {
@@ -15,7 +14,9 @@ export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
     const { t } = useLanguage();
     const isEnvError = error.message.includes('environment variables') || 
                       error.message.includes('EXPO_PUBLIC');
-    const visibleMessage = isEnvError ? error.message : getErrorMessage(error, undefined, t);
+    // A render crash is a bug, not something the user can act on: its message (often English and
+    // technical, e.g. "Rendered more hooks than…") is reported to monitoring and never shown.
+    const visibleMessage = isEnvError ? error.message : t('cabinet.errorDisplay.message');
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>

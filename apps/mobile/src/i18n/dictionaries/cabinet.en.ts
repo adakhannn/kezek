@@ -20,6 +20,7 @@ export const cabinetEn: Record<keyof typeof cabinetRu, string> = {
 
     // components/ErrorDisplay.tsx
     'cabinet.errorDisplay.title': 'Something went wrong',
+    'cabinet.errorDisplay.message': 'The app ran into an error. Try again, and if that does not help, restart the app.',
     'cabinet.errorDisplay.envTitle': 'Check your settings:',
     'cabinet.errorDisplay.envStep1': '1. Create a .env.local file in the apps/mobile/ folder',
     'cabinet.errorDisplay.envStep2': '2. Add the variables:',

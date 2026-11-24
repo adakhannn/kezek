@@ -13,7 +13,7 @@ import { LOCALE_STORAGE_KEY } from '../../i18n/localeStorage';
 jest.mock('../../navigation/RootNavigator', () => ({
     __esModule: true,
     default: function CrashingNavigator(): never {
-        throw new TypeError("Cannot read properties of undefined (reading 'id')");
+        throw new Error('Rendered more hooks than during the previous render.');
     },
 }));
 
@@ -40,7 +40,9 @@ describe('the crash screen', () => {
         render(<App />);
 
         expect(await screen.findByText('Something went wrong')).toBeTruthy();
-        expect(screen.getByText('Something went wrong. Please try again.')).toBeTruthy();
+        expect(screen.getByText('The app ran into an error. Try again, and if that does not help, restart the app.')).toBeTruthy();
+        // The render error is English and readable, but technical: it is never shown.
+        expect(screen.queryByText(/Rendered more hooks/)).toBeNull();
         expect(screen.getByText('Try again')).toBeTruthy();
         expect(screen.queryByText('Что-то пошло не так')).toBeNull();
     });

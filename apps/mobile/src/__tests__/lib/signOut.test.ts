@@ -103,7 +103,7 @@ describe('sign-out confirmation (MOB-02)', () => {
         expect(signOutConfirmationText(0)).toEqual({ title: 'Выход', message: 'Вы уверены, что хотите выйти?', confirmLabel: 'Выйти' });
         const one = signOutConfirmationText(1);
         expect(one.confirmLabel).toBe('Выйти и удалить');
-        expect(one.message).toContain('1 изменение смены ещё не отправлено на сервер. После выхода оно будет удалено');
+        expect(one.message).toContain('1 изменение смены ещё не отправлено на сервер. После выхода неотправленные изменения будут удалены');
         expect(signOutConfirmationText(3).message).toContain('3 изменения смены ещё не отправлены');
         expect(signOutConfirmationText(5).message).toContain('5 изменений смены ещё не отправлены');
         expect(signOutConfirmationText(12).message).toContain('12 изменений');
