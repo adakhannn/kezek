@@ -1,7 +1,8 @@
 export const MOBILE_MAP_PATH = '/map';
 
-export function buildMobileMapUrl(apiUrl: string): string {
-    return `${apiUrl.replace(/\/+$/, '')}${MOBILE_MAP_PATH}?mobile=1`;
+/** The site's map in the app's language: the site keeps ?lang= as its language cookie. */
+export function buildMobileMapUrl(apiUrl: string, locale: 'ru' | 'ky' | 'en' = 'ru'): string {
+    return `${apiUrl.replace(/\/+$/, '')}${MOBILE_MAP_PATH}?mobile=1&lang=${locale}`;
 }
 
 export function getBookingSlugFromMapUrl(url: string): string | null {

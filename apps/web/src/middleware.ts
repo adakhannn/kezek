@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
+import { applyLocaleToRequest, localeFromQuery, rememberLocale } from '@/lib/localeQueryParam';
 import { isInvalidRefreshTokenError, isSupabaseAuthCookie } from '@/lib/supabaseAuthRecovery';
 
 function isAndroidUserAgent(userAgent: string | null) {
@@ -52,6 +53,14 @@ function clearInvalidSupabaseSession(req: NextRequest) {
 }
 
 export async function middleware(req: NextRequest) {
+    // ?lang=ky (the mobile app's map) renders this page in that language and keeps it for the next.
+    const queryLocale = localeFromQuery(req);
+    if (!queryLocale) return handleRequest(req);
+    applyLocaleToRequest(req, queryLocale);
+    return rememberLocale(await handleRequest(req), queryLocale);
+}
+
+async function handleRequest(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
     const userAgent = req.headers.get('user-agent');
 
@@ -84,7 +93,8 @@ export async function middleware(req: NextRequest) {
         pathname.startsWith('/auth/handoff') ||
         pathname.startsWith('/auth/verify')
     ) {
-        return NextResponse.next();
+        // The request is passed on, so a ?lang= set above reaches these pages too.
+        return NextResponse.next({ request: req });
     }
 
     let response = NextResponse.next({ request: req });

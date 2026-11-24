@@ -1,7 +1,10 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Linking } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
+import { LanguageProvider } from '../../i18n';
+import { LOCALE_STORAGE_KEY } from '../../i18n/localeStorage';
 import MapScreen from '../../screens/MapScreen';
 import {
     buildMobileMapUrl,
@@ -23,7 +26,9 @@ jest.mock('../../lib/apiUrl', () => ({
 
 describe('mapNavigation helpers', () => {
     test('builds mobile map URL from API origin', () => {
-        expect(buildMobileMapUrl('https://kezek.kg/')).toBe('https://kezek.kg/map?mobile=1');
+        expect(buildMobileMapUrl('https://kezek.kg/')).toBe('https://kezek.kg/map?mobile=1&lang=ru');
+        expect(buildMobileMapUrl('https://kezek.kg', 'ky')).toBe('https://kezek.kg/map?mobile=1&lang=ky');
+        expect(buildMobileMapUrl('https://kezek.kg', 'en')).toBe('https://kezek.kg/map?mobile=1&lang=en');
     });
 
     test('extracts booking slug from web map booking links', () => {
@@ -34,6 +39,7 @@ describe('mapNavigation helpers', () => {
 
     test('allows only same-origin map navigation as in-app map navigation', () => {
         expect(isSameOriginMapUrl('https://kezek.kg/map?mobile=1', 'https://kezek.kg/map?mobile=1')).toBe(true);
+        expect(isSameOriginMapUrl('https://kezek.kg/map?mobile=1&lang=ky', 'https://kezek.kg/map?mobile=1&lang=ru')).toBe(true);
         expect(isSameOriginMapUrl('https://example.com/map', 'https://kezek.kg/map?mobile=1')).toBe(false);
     });
 });
@@ -52,7 +58,8 @@ describe('MapScreen', () => {
         render(<MapScreen />);
 
         const webView = screen.getByTestId('mobile-map-webview');
-        expect(webView.props.source).toEqual({ uri: 'https://kezek.kg/map?mobile=1' });
+        // Without a language choice the app is Russian, and so is the map.
+        expect(webView.props.source).toEqual({ uri: 'https://kezek.kg/map?mobile=1&lang=ru' });
         expect(webView.props.geolocationEnabled).toBe(true);
     });
 
@@ -106,5 +113,25 @@ describe('MapScreen', () => {
 
         expect(screen.getByText('Не удалось загрузить карту')).toBeTruthy();
         expect(screen.getByText('Повторить')).toBeTruthy();
+    });
+});
+
+describe('MapScreen in the app language', () => {
+    afterEach(() => {
+        (SecureStore.getItemAsync as jest.Mock).mockReset();
+    });
+
+    test('a Kyrgyz app opens the map in Kyrgyz', async () => {
+        (SecureStore.getItemAsync as jest.Mock).mockImplementation(async (key: string) =>
+            key === LOCALE_STORAGE_KEY ? 'ky' : null,
+        );
+        render(
+            <LanguageProvider>
+                <MapScreen />
+            </LanguageProvider>,
+        );
+
+        const webView = await screen.findByTestId('mobile-map-webview', {}, { timeout: 5000 });
+        expect(webView.props.source).toEqual({ uri: 'https://kezek.kg/map?mobile=1&lang=ky' });
     });
 });

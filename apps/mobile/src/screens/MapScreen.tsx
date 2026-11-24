@@ -50,7 +50,7 @@ const injectedBookingLinkInterceptor = `
 
 export default function MapScreen() {
     const navigation = useNavigation<MapScreenNavigation>();
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
     const webViewRef = useRef<React.ElementRef<typeof WebView>>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
@@ -58,11 +58,11 @@ export default function MapScreen() {
 
     const mapUrl = useMemo(() => {
         try {
-            return buildMobileMapUrl(getMobileApiUrl());
+            return buildMobileMapUrl(getMobileApiUrl(), locale);
         } catch {
             return null;
         }
-    }, []);
+    }, [locale]);
 
     const handleNavigation = useCallback(
         (request: { url: string }) => {
