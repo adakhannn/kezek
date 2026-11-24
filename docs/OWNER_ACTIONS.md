@@ -25,12 +25,14 @@
 
 ## 3. Sentry (видеть ошибки в проде)
 
-1. Зарегистрируйтесь на [sentry.io](https://sentry.io) (бесплатного плана достаточно для начала) и создайте организацию.
-2. Создайте два проекта: **Next.js** (сайт) и **React Native** (приложение). В настройках каждого включите «не хранить IP» (**Settings → Security & Privacy → Prevent Storing of IP Addresses**).
-3. DSN проекта Next.js → в Vercel как `NEXT_PUBLIC_SENTRY_DSN` (п. 2).
+**Сделано 24 ноября 2026:** организация `kezek` (регион EU, `kezek.sentry.io`), проекты `kezek-web` (Next.js) и `kezek-mobile` (React Native); в обоих включены «не хранить IP» и очистка чувствительных данных. DSN каждого проекта — `sentry dsn list kezek/` или **Project Settings → Client Keys (DSN)**. Осталось ввести значения (шаги 3–4).
+
+1. ~~Зарегистрируйтесь и создайте организацию.~~
+2. ~~Создайте два проекта и включите «не хранить IP».~~
+3. DSN проекта `kezek-web` → в Vercel как `NEXT_PUBLIC_SENTRY_DSN` (п. 2).
 4. Для мобильного приложения на [expo.dev](https://expo.dev) → проект → **Environment variables** (окружение production):
-   - `EXPO_PUBLIC_SENTRY_DSN` — DSN проекта React Native;
-   - `SENTRY_ORG` и `SENTRY_PROJECT` — slug организации и проекта React Native;
+   - `EXPO_PUBLIC_SENTRY_DSN` — DSN проекта `kezek-mobile`;
+   - `SENTRY_ORG` = `kezek`, `SENTRY_PROJECT` = `kezek-mobile`;
    - `SENTRY_AUTH_TOKEN` — токен из Sentry (**Settings → Auth Tokens**), тип «Secret».
 5. Подробности и что именно отправляется — [MONITORING_AND_ALERTS](../MONITORING_AND_ALERTS.md).
 
