@@ -102,7 +102,7 @@
 | CI-02 | P2 | Линт почти ничего не проверяет (корневой конфиг без правил, у mobile нет lint) | `eslint.config.mjs` | FIXED |
 | CI-03 | P2 | Тесты `packages/core-domain` и 10 SQL-скриптов не запускаются | CI | FIXED |
 | CI-04 | P2 | Моки Supabase не проверяют фильтры `biz_id`; `setupApiTestMocks` мокает после импорта | `__tests__/api/testHelpers.ts` | FIXED |
-| CI-05 | P2 | E2E-спеки в основном ничего не проверяют; visual-тест без эталонов не может пройти (джобы `e2e_tests` и `e2e_visual_regressions` красные) | `e2e/` | TODO |
+| CI-05 | P2 | E2E-спеки в основном ничего не проверяют; visual-тест без эталонов не может пройти (джобы `e2e_tests` и `e2e_visual_regressions` красные) | `e2e/` | FIXED (ENG-140: e2e на локальном стеке Supabase в CI без секретов; CI зелёный с `b4d25fd3`) |
 | CI-06 | P2 | `pnpm test` пишет в ту БД, на которую указывает (`tests_critical_scenarios.sql`) | `package.json` | FIXED |
 | CI-07 | P2 | В репозитории лежит скрипт очистки прода `manual_reset_test_data_keep_superadmin.sql` | `scripts/` | FIXED |
 | CI-08 | P2 | `mobile_build` никогда не запускается; дубли джоб | `ci.yml` | FIXED |
