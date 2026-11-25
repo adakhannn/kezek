@@ -1,474 +1,88 @@
 /**
- * E2E тест: Применение промо при бронировании
- * Сценарий: создание бронирования с применением активной промоакции
+ * E2E тест: Акции филиала при бронировании
+ *
+ * Фикстура (scripts/e2e-seed.mjs) у филиала E2E_TEST_BRANCH_ID: активные «Скидка 20% на первый
+ * визит» (first_visit_discount, 20%) и «Каждая 5-я услуга бесплатно» (free_after_n_visits, 5) и
+ * выключенная «E2E Завершённая акция». Акция применяется при отметке посещения, поэтому в потоке
+ * записи она показывается как «будет применена», а цена записи — цена услуги.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
+
+import { signInWithEmailSeed } from './authHelpers';
+import { businessDate, completeGuestBooking, expectBookingReceipt, walkPublicBookingToSlots } from './flows';
 import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
 skipIfMissingE2EEnv('promotion-application.spec.ts', ['E2E_TEST_BUSINESS_SLUG', 'E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_BRANCH_ID']);
 
-// Фиксированные даты для E2E, чтобы не зависеть от локальной TZ машины.
-// Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
-function getTodayDateString(): string {
-    const fromEnv = process.env.E2E_TEST_TODAY;
-    if (fromEnv && /^\d{4}-\d{2}-\d{2}$/.test(fromEnv)) {
-        return fromEnv;
-    }
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function getTomorrowDateString(): string {
-    const today = getTodayDateString();
-    const [y, m, d] = today.split('-').map(Number);
-    const date = new Date(Date.UTC(y, m - 1, d));
-    date.setUTCDate(date.getUTCDate() + 1);
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
+const PROMO_ALERT = 'При оплате будет применена акция:';
 
 test.describe('Применение промо при бронировании', () => {
-    test.beforeEach(async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
-        await page.goto(`/b/${businessSlug}`);
-        await page.waitForLoadState('networkidle');
-    });
-
-    test('должен применить промо при создании бронирования', async ({ page }) => {
-        // Шаг 1: Выбираем филиал с активной промоакцией
-        await test.step('Выбор филиала с промо', async () => {
-            // Ищем филиал, у которого есть активные промо
-            // В реальных тестах нужно использовать филиал с заранее созданной промоакцией
-            const branchWithPromo = page.locator('[data-testid="branch-card"]').first();
-            await branchWithPromo.click();
+    test('должен показать акцию в потоке записи и создать бронирование', async ({ page }) => {
+        const slot = await walkPublicBookingToSlots(page, {
+            slug: readRequiredEnv('E2E_TEST_BUSINESS_SLUG'),
+            day: businessDate(1),
         });
 
-        // Шаг 2: Проверяем отображение промоакции
-        await test.step('Проверка отображения промоакции', async () => {
-            // Ищем блок с промоакциями
-            const promoSection = page.locator('[data-testid="promotions"], .promotion, text=/акция|промо|скидка/i').first();
-            await expect(promoSection).toBeVisible({ timeout: 5000 });
-        });
+        await expect(page.getByText(PROMO_ALERT)).toBeVisible();
+        await expect(page.getByText(/Скидка 20%/).first()).toBeVisible();
 
-        // Шаг 3: Выбираем услугу и мастера
-        await test.step('Выбор услуги и мастера', async () => {
-            const masterSelector = page.locator('[data-testid="master-select"], [data-testid="master-card"]').first();
-            await masterSelector.click();
-            await page.locator('[data-testid="master-option"], [data-testid="master-card"]').first().click();
-
-            const serviceSelector = page.locator('[data-testid="service-select"], [data-testid="service-card"]').first();
-            await serviceSelector.click();
-            await page.locator('[data-testid="service-option"], [data-testid="service-card"]').first().click();
-        });
-
-        // Шаг 4: Выбираем дату и время
-        await test.step('Выбор даты и времени', async () => {
-            const datePicker = page.locator('[data-testid="date-picker"]').first();
-            if (await datePicker.isVisible()) {
-                await datePicker.click();
-                const tomorrowStr = getTomorrowDateString();
-                await page.locator(`[data-date="${tomorrowStr}"]`).first().click();
-            }
-
-            await page.waitForSelector('[data-testid="time-slot"]', { timeout: 10000 });
-            await page.locator('[data-testid="time-slot"]').first().click();
-        });
-
-        // Шаг 5: Проверяем применение промо
-        await test.step('Проверка применения промо', async () => {
-            // Ищем информацию о примененной скидке
-            const discountInfo = page.locator('text=/скидка|промо|акция|применено/i').first();
-            
-            // Проверяем, что промо применилось (если это видно в UI)
-            // Или проверяем итоговую сумму (должна быть меньше)
-            const originalPrice = page.locator('[data-testid="original-price"], .price').first();
-            const finalPrice = page.locator('[data-testid="final-price"], .total').first();
-            
-            if (await originalPrice.isVisible() && await finalPrice.isVisible()) {
-                const originalText = await originalPrice.textContent();
-                const finalText = await finalPrice.textContent();
-                
-                if (originalText && finalText) {
-                    const original = parseFloat(originalText.replace(/[^\d.]/g, ''));
-                    const final = parseFloat(finalText.replace(/[^\d.]/g, ''));
-                    expect(final).toBeLessThan(original);
-                }
-            }
-        });
-
-        // Шаг 6: Заполняем данные и подтверждаем
-        await test.step('Подтверждение бронирования с промо', async () => {
-            const nameInput = page.locator('input[name="client_name"], input[placeholder*="имя"]').first();
-            if (await nameInput.isVisible()) {
-                await nameInput.fill('Тестовый Клиент');
-            }
-
-            const phoneInput = page.locator('input[name="client_phone"], input[type="tel"]').first();
-            if (await phoneInput.isVisible()) {
-                await phoneInput.fill('+996555123456');
-            }
-
-            const confirmButton = page.locator('button:has-text("Подтвердить"), button:has-text("Забронировать"), button[type="submit"]').first();
-            await confirmButton.click();
-
-            // Ждем успешного создания бронирования
-            await page.waitForURL(/booking|success|cabinet/, { timeout: 10000 });
-            
-            // Проверяем, что промо было применено в итоговом сообщении
-            const successMessage = page.locator('text=/бронирование|успешно|промо|скидка/i').first();
-            await expect(successMessage).toBeVisible({ timeout: 5000 });
-        });
+        await slot.click();
+        await completeGuestBooking(page, 'Клиент с промо', '+996555123457');
+        await expectBookingReceipt(page);
     });
 
     test('должен отобразить информацию о промоакции на странице бизнеса', async ({ page }) => {
-        // Проверяем, что промоакции отображаются на публичной странице
-        const promoSection = page.locator('[data-testid="promotions-section"], .promotions, text=/акции|промо/i').first();
-        await expect(promoSection).toBeVisible({ timeout: 5000 });
+        await page.goto(`/b/${readRequiredEnv('E2E_TEST_BUSINESS_SLUG')}`);
+        const section = page.getByTestId('promotions-section');
+        await expect(section).toContainText('Скидка 20%');
+        await expect(section).toContainText('Каждая 5-я услуга бесплатно');
+        await expect(section).toContainText('E2E Филиал Центр');
     });
 
     test('должен проверить итоговую сумму с примененной промоакцией', async ({ page }) => {
-        await test.step('Выбор филиала с промо', async () => {
-            const branchWithPromo = page.locator('[data-testid="branch-card"]').first();
-            await branchWithPromo.click();
-            await page.waitForTimeout(1000);
+        await walkPublicBookingToSlots(page, {
+            slug: readRequiredEnv('E2E_TEST_BUSINESS_SLUG'),
+            day: businessDate(1),
+            services: ['Стрижка', 'Укладка'],
         });
 
-        await test.step('Проверка отображения промоакции и исходной цены', async () => {
-            // Проверяем наличие промоакции
-            const promoSection = page.locator('[data-testid="promotions"], .promotion, text=/акция|промо|скидка/i').first();
-            await expect(promoSection).toBeVisible({ timeout: 5000 });
-            
-            // Запоминаем исходную цену услуги
-            const originalPriceElement = page.locator('[data-testid="service-price"], .price, text=/\\d+.*сом/i').first();
-            if (await originalPriceElement.isVisible({ timeout: 3000 })) {
-                const originalPriceText = await originalPriceElement.textContent();
-                expect(originalPriceText).toMatch(/\d+/);
-            }
-        });
-
-        await test.step('Выбор услуги, мастера, даты и времени', async () => {
-            const masterSelector = page.locator('[data-testid="master-select"], [data-testid="master-card"]').first();
-            if (await masterSelector.isVisible({ timeout: 5000 })) {
-                await masterSelector.click();
-                await page.locator('[data-testid="master-option"], [data-testid="master-card"]').first().click();
-                await page.waitForTimeout(500);
-            }
-
-            const serviceSelector = page.locator('[data-testid="service-select"], [data-testid="service-card"]').first();
-            if (await serviceSelector.isVisible({ timeout: 5000 })) {
-                await serviceSelector.click();
-                await page.locator('[data-testid="service-option"], [data-testid="service-card"]').first().click();
-                await page.waitForTimeout(1000);
-            }
-
-            const datePicker = page.locator('[data-testid="date-picker"], input[type="date"]').first();
-            if (await datePicker.isVisible({ timeout: 3000 })) {
-                await datePicker.fill(getTomorrowDateString());
-                await page.waitForTimeout(1000);
-            }
-
-            await page.waitForSelector('[data-testid="time-slot"], button:has-text(/\\d{2}:\\d{2}/)', { timeout: 10000 });
-            await page.locator('[data-testid="time-slot"], button:has-text(/\\d{2}:\\d{2}/)').first().click();
-            await page.waitForTimeout(500);
-        });
-
-        await test.step('Проверка итоговой суммы с промо', async () => {
-            // Ищем блок с итоговой суммой
-            const summarySection = page.locator('[data-testid="booking-summary"], .summary, text=/итого|total|сумма/i').first();
-            if (await summarySection.isVisible({ timeout: 5000 })) {
-                // Проверяем наличие информации о промо
-                const promoInfo = page.locator('text=/промо|акция|скидка|применено/i').first();
-                if (await promoInfo.isVisible({ timeout: 3000 })) {
-                    await expect(promoInfo).toBeVisible();
-                }
-                
-                // Проверяем итоговую сумму
-                const finalPriceElement = page.locator('[data-testid="final-price"], .total, text=/\\d+.*сом/i').first();
-                if (await finalPriceElement.isVisible({ timeout: 3000 })) {
-                    const finalPriceText = await finalPriceElement.textContent();
-                    expect(finalPriceText).toMatch(/\d+/);
-                    
-                    // Проверяем, что итоговая сумма меньше исходной (если есть скидка)
-                    const originalPriceElement = page.locator('[data-testid="original-price"], .price').first();
-                    if (await originalPriceElement.isVisible({ timeout: 2000 })) {
-                        const originalText = await originalPriceElement.textContent();
-                        const finalText = await finalPriceElement.textContent();
-                        
-                        if (originalText && finalText) {
-                            const original = parseFloat(originalText.replace(/[^\d.]/g, ''));
-                            const final = parseFloat(finalText.replace(/[^\d.]/g, ''));
-                            expect(final).toBeLessThanOrEqual(original);
-                        }
-                    }
-                }
-            }
-        });
-
-        await test.step('Создание бронирования и проверка сохранения промо', async () => {
-            const nameInput = page.locator('input[name="client_name"], input[placeholder*="имя" i]').first();
-            if (await nameInput.isVisible({ timeout: 3000 })) {
-                await nameInput.fill('Клиент с промо');
-            }
-
-            const phoneInput = page.locator('input[name="client_phone"], input[type="tel"]').first();
-            if (await phoneInput.isVisible({ timeout: 3000 })) {
-                await phoneInput.fill('+996555123457');
-            }
-
-            // Перехватываем ответ API для проверки сохранения промо
-            const bookingResponsePromise = page.waitForResponse(
-                response => response.url().includes('/api/bookings') || response.url().includes('create'),
-                { timeout: 10000 }
-            ).catch(() => null);
-
-            const confirmButton = page.locator('button:has-text("Подтвердить"), button:has-text("Забронировать"), button[type="submit"]').first();
-            await confirmButton.click();
-
-            // Ждем успешного создания
-            await page.waitForURL(/booking|success|cabinet/, { timeout: 10000 });
-
-            // Проверяем ответ API на наличие промо
-            const response = await bookingResponsePromise;
-            if (response) {
-                try {
-                    const data = await response.json();
-                    if (data && data.promotion_applied) {
-                        expect(data.promotion_applied).toBeTruthy();
-                    }
-                } catch {
-                    // Игнорируем ошибки парсинга
-                }
-            }
-
-            // Проверяем отображение промо на странице подтверждения
-            const promoAppliedInfo = page.locator('text=/промо|акция|скидка|применено/i').first();
-            if (await promoAppliedInfo.isVisible({ timeout: 5000 })) {
-                await expect(promoAppliedInfo).toBeVisible();
-            }
-        });
+        // The visit total is the services' price (500 + 700); the discount applies at payment.
+        await expect(page.getByTestId('final-price')).toHaveText('60 мин, 1200 сом');
+        await expect(page.getByText(PROMO_ALERT)).toBeVisible();
     });
 
     test('должен проверить статистику по промоакциям', async ({ page }) => {
-        // Авторизуемся как менеджер/владелец
-        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
-        await page.goto('/auth/sign-in');
-        await page.waitForLoadState('networkidle');
-        
-        // Заполняем форму входа (адаптируйте под реальную структуру)
-        const emailInput = page.locator('input[type="email"], input[name="email"]').first();
-        if (await emailInput.isVisible({ timeout: 3000 })) {
-            await emailInput.fill(managerEmail);
-            const submitButton = page.locator('button:has-text("Отправить"), button[type="submit"]').first();
-            if (await submitButton.isVisible({ timeout: 2000 })) {
-                await submitButton.click();
-                await page.waitForTimeout(2000);
-            }
-        }
+        await signInWithEmailSeed(page, readRequiredEnv('E2E_TEST_MANAGER_EMAIL'));
+        await page.goto(`/dashboard/branches/${readRequiredEnv('E2E_TEST_BRANCH_ID')}`);
 
-        await test.step('Переход на страницу управления промоакциями', async () => {
-            // Переходим на страницу филиала с промоакциями
-            // В реальных тестах нужно использовать конкретный ID филиала
-            const branchId = readRequiredEnv('E2E_TEST_BRANCH_ID');
-            await page.goto(`/dashboard/branches/${branchId}`);
-            await page.waitForLoadState('networkidle');
-        });
-
-        await test.step('Проверка отображения статистики промо', async () => {
-            // Ищем секцию с промоакциями
-            const promotionsSection = page.locator('[data-testid="promotions-panel"], .promotions, text=/промо|акции/i').first();
-            if (await promotionsSection.isVisible({ timeout: 5000 })) {
-                await expect(promotionsSection).toBeVisible();
-                
-                // Проверяем наличие статистики использования
-                const usageStats = page.locator('text=/использовано|usage|раз|count/i').first();
-                if (await usageStats.isVisible({ timeout: 5000 })) {
-                    await expect(usageStats).toBeVisible();
-                    
-                    // Проверяем, что статистика содержит число
-                    const statsText = await usageStats.textContent();
-                    expect(statsText).toMatch(/\d+/);
-                }
-            }
-        });
-
-        await test.step('Проверка детальной информации о промо', async () => {
-            // Ищем карточку промоакции
-            const promoCard = page.locator('[data-testid="promotion-card"], .promotion-card').first();
-            if (await promoCard.isVisible({ timeout: 5000 })) {
-                // Проверяем наличие типа промо
-                const promoType = page.locator('text=/скидка|бесплатно|discount|free/i').first();
-                if (await promoType.isVisible({ timeout: 3000 })) {
-                    await expect(promoType).toBeVisible();
-                }
-                
-                // Проверяем наличие параметров (процент скидки, количество визитов и т.д.)
-                const promoParams = page.locator('text=/\\d+%|\\d+.*раз|\\d+.*визит/i').first();
-                if (await promoParams.isVisible({ timeout: 3000 })) {
-                    await expect(promoParams).toBeVisible();
-                }
-            }
-        });
+        await expect(page.getByRole('heading', { name: 'Акции филиала' })).toBeVisible();
+        const firstVisit = page.locator('div', { hasText: 'Скидка 20% на первый визит' }).last();
+        await expect(firstVisit).toBeVisible();
+        await expect(page.getByText(/Использовано: \d+ раз/).first()).toBeVisible();
+        await expect(page.getByText('E2E Завершённая акция')).toBeVisible();
+        await expect(page.getByText('Неактивна').first()).toBeVisible();
     });
 
-    // Happy-path: Применение промо с несколькими типами скидок
-    test('должен применить промо с процентной скидкой', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
-        await page.goto(`/b/${businessSlug}`);
-        await page.waitForLoadState('networkidle');
-
-        await test.step('Поиск промо с процентной скидкой', async () => {
-            const promoSection = page.locator('[data-testid="promotions"], .promotion, text=/скидка|discount/i').first();
-            if (await promoSection.isVisible({ timeout: 5000 })) {
-                // Ищем промо с указанием процента (например, "10%", "20%")
-                const percentPromo = page.locator('text=/\\d+%/i').first();
-                if (await percentPromo.isVisible({ timeout: 3000 })) {
-                    await expect(percentPromo).toBeVisible();
-                    
-                    // Проверяем, что процент указан корректно
-                    const percentText = await percentPromo.textContent();
-                    expect(percentText).toMatch(/\d+%/);
-                }
-            }
-        });
+    test('должен показать промо с процентной скидкой', async ({ page }) => {
+        await page.goto(`/b/${readRequiredEnv('E2E_TEST_BUSINESS_SLUG')}/promotions`);
+        await expect(page.getByText('Скидка 20% на первый визит').first()).toBeVisible();
+        await expect(page.getByText(/20\s?%/).first()).toBeVisible();
     });
 
-    // Happy-path: Применение промо "бесплатно" (free service)
-    test('должен применить промо типа "бесплатно"', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
-        await page.goto(`/b/${businessSlug}`);
-        await page.waitForLoadState('networkidle');
-
-        await test.step('Поиск промо типа "бесплатно"', async () => {
-            const freePromo = page.locator('text=/бесплатно|free|gratis/i').first();
-            if (await freePromo.isVisible({ timeout: 5000 })) {
-                await expect(freePromo).toBeVisible();
-                
-                // Проверяем, что итоговая цена = 0
-                const finalPrice = page.locator('[data-testid="final-price"], .total').first();
-                if (await finalPrice.isVisible({ timeout: 3000 })) {
-                    const priceText = await finalPrice.textContent();
-                    if (priceText) {
-                        const priceValue = parseFloat(priceText.replace(/[^\d.]/g, ''));
-                        expect(priceValue).toBe(0);
-                    }
-                }
-            }
-        });
+    test('должен показать промо типа "бесплатно"', async ({ page }) => {
+        await page.goto(`/b/${readRequiredEnv('E2E_TEST_BUSINESS_SLUG')}/promotions`);
+        await expect(page.getByText('Каждая 5-я услуга бесплатно').first()).toBeVisible();
     });
 
-    // Edge-case: Промо с истекшим сроком действия
-    test('должен не показывать промо с истекшим сроком', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
-        await page.goto(`/b/${businessSlug}`);
-        await page.waitForLoadState('networkidle');
+    test('должен не показывать выключенную (завершённую) акцию', async ({ page }) => {
+        const slug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
+        await page.goto(`/b/${slug}`);
+        await expect(page.getByTestId('promotions-section')).toContainText('Скидка 20%');
+        await expect(page.getByText('E2E Завершённая акция')).toHaveCount(0);
 
-        await test.step('Проверка отсутствия истекших промо', async () => {
-            // Промо с истекшим сроком не должны отображаться
-            const expiredPromo = page.locator('text=/истек|expired|завершено/i').first();
-            if (await expiredPromo.isVisible({ timeout: 3000 })) {
-                // Если есть истекшие промо, они должны быть помечены как неактивные
-                const isDisabled = await expiredPromo.isDisabled().catch(() => false);
-                expect(isDisabled || !(await expiredPromo.isVisible())).toBe(true);
-            }
-        });
-    });
-
-    // Edge-case: Промо с ограниченным количеством использований
-    test('должен проверить ограничение количества использований промо', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
-        await page.goto(`/b/${businessSlug}`);
-        await page.waitForLoadState('networkidle');
-
-        await test.step('Проверка отображения лимита использований', async () => {
-            const promoCard = page.locator('[data-testid="promotion-card"], .promotion-card').first();
-            if (await promoCard.isVisible({ timeout: 5000 })) {
-                // Ищем информацию о лимите (например, "Осталось 5 использований")
-                const limitInfo = page.locator('text=/осталось|remaining|лимит|limit/i').first();
-                if (await limitInfo.isVisible({ timeout: 3000 })) {
-                    const limitText = await limitInfo.textContent();
-                    expect(limitText).toMatch(/\d+/);
-                }
-            }
-        });
-    });
-
-    // Edge-case: Применение нескольких промо одновременно (если поддерживается)
-    test('должен проверить возможность применения нескольких промо', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
-        await page.goto(`/b/${businessSlug}`);
-        await page.waitForLoadState('networkidle');
-
-        await test.step('Проверка множественных промо', async () => {
-            // Обычно можно применить только одно промо, проверяем это
-            const promoCheckboxes = page.locator('input[type="checkbox"][data-testid*="promo"], input[type="radio"][name*="promo"]');
-            const promoCount = await promoCheckboxes.count();
-            
-            if (promoCount > 1) {
-                // Если есть несколько промо, проверяем, что можно выбрать только одно
-                const firstPromo = promoCheckboxes.first();
-                const secondPromo = promoCheckboxes.nth(1);
-                
-                if (await firstPromo.isVisible({ timeout: 3000 })) {
-                    await firstPromo.click();
-                    await page.waitForTimeout(500);
-                    
-                    if (await secondPromo.isVisible({ timeout: 3000 })) {
-                        await secondPromo.click();
-                        await page.waitForTimeout(500);
-                        
-                        // Проверяем, что первое промо снялось (если radio buttons)
-                        const firstChecked = await firstPromo.isChecked().catch(() => false);
-                        const secondChecked = await secondPromo.isChecked().catch(() => false);
-                        
-                        // Должно быть выбрано только одно
-                        expect(firstChecked && secondChecked).toBe(false);
-                    }
-                }
-            }
-        });
-    });
-
-    // Edge-case: Промо с условием минимальной суммы заказа
-    test('должен проверить применение промо с минимальной суммой', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
-        await page.goto(`/b/${businessSlug}`);
-        await page.waitForLoadState('networkidle');
-
-        await test.step('Проверка условия минимальной суммы', async () => {
-            const promoWithMinAmount = page.locator('text=/от.*сом|minimum|минимум/i').first();
-            if (await promoWithMinAmount.isVisible({ timeout: 5000 })) {
-                // Проверяем, что условие отображается
-                const minAmountText = await promoWithMinAmount.textContent();
-                expect(minAmountText).toMatch(/\d+/);
-                
-                // Если выбрана услуга с меньшей суммой, промо не должно применяться
-                const servicePrice = page.locator('[data-testid="service-price"], .price').first();
-                if (await servicePrice.isVisible({ timeout: 3000 })) {
-                    const priceText = await servicePrice.textContent();
-                    if (priceText) {
-                        const priceValue = parseFloat(priceText.replace(/[^\d.]/g, ''));
-                        const minAmountMatch = minAmountText?.match(/(\d+)/);
-                        if (minAmountMatch) {
-                            const minAmount = parseFloat(minAmountMatch[1]);
-                            
-                            // Если цена меньше минимальной, промо не должно применяться
-                            if (priceValue < minAmount) {
-                                const promoApplied = page.locator('text=/промо применено|promo applied/i').first();
-                                await expect(promoApplied).not.toBeVisible({ timeout: 2000 }).catch(() => {
-                                    // Игнорируем, если промо не применено (это правильно)
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        await page.goto(`/b/${slug}/promotions`);
+        await expect(page.getByText('Каждая 5-я услуга бесплатно').first()).toBeVisible();
+        await expect(page.getByText('E2E Завершённая акция')).toHaveCount(0);
     });
 });
-

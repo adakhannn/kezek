@@ -11,7 +11,7 @@
  *  - переход на /admin/ratings-debug и проверка отсутствия критичных ошибок.
  */
 
-import { test, expect, type StorageState } from '@playwright/test';
+import { test, expect, type StorageState } from './fixtures';
 import { applyStorageStateCookies, createStorageStateForEmailSeed } from './authHelpers';
 import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 

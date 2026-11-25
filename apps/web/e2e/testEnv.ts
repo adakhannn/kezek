@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 
 export function getBaseUrl(): string {
-    return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+    return process.env.PLAYWRIGHT_TEST_BASE_URL || `http://localhost:${process.env.E2E_PORT || 3100}`;
 }
 
 export function missingE2EEnv(names: string[]): string[] {

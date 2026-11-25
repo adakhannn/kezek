@@ -1,10 +1,12 @@
 /**
  * E2E тест: Управление сменой
- * Сценарий: открытие смены → добавление клиентов → закрытие смены
+ * Сценарий: открытие смены → добавление клиентов → закрытие смены (кабинет сотрудника /staff/finance).
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
+
 import { signInWithPassword } from './authHelpers';
+import { addShiftClient, ensureShiftOpen } from './flows';
 import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
 skipIfMissingE2EEnv('shift-management.spec.ts', ['E2E_TEST_STAFF_EMAIL', 'E2E_TEST_STAFF_PASSWORD']);
@@ -17,71 +19,27 @@ test.describe('Управление сменой сотрудника', () => {
     });
 
     test('должен открыть смену, добавить клиентов и закрыть смену', async ({ page }) => {
-        // Шаг 1: Открытие смены
         await test.step('Открытие смены', async () => {
-            // Переходим на страницу смены или кабинет сотрудника
-            await page.goto('/staff');
-            await page.waitForLoadState('networkidle');
-
-            // Ищем кнопку "Открыть смену"
-            const openShiftButton = page.locator('button:has-text("Открыть смену"), button:has-text("Начать смену")').first();
-            await expect(openShiftButton).toBeVisible({ timeout: 5000 });
-            await openShiftButton.click();
-
-            // Ждем подтверждения открытия смены
-            await page.waitForSelector('text=/смена открыта|смена начата/i', { timeout: 5000 });
+            await page.goto('/staff/finance');
+            await ensureShiftOpen(page);
         });
 
-        // Шаг 2: Добавление клиентов
         await test.step('Добавление клиентов в смену', async () => {
-            // Ищем форму или кнопку для добавления клиента
-            const addClientButton = page.locator('button:has-text("Добавить клиента"), button:has-text("Новый клиент")').first();
-            if (await addClientButton.isVisible()) {
-                await addClientButton.click();
-            }
-
-            // Заполняем данные первого клиента
-            await page.fill('input[name="client_name"], input[placeholder*="имя"]', 'Клиент 1');
-            await page.fill('input[name="service_name"], input[placeholder*="услуга"]', 'Стрижка');
-            await page.fill('input[name="service_amount"], input[type="number"]', '1000');
-            
-            const saveButton = page.locator('button:has-text("Сохранить"), button:has-text("Добавить")').first();
-            await saveButton.click();
-
-            // Ждем появления клиента в списке
-            await page.waitForSelector('text=Клиент 1', { timeout: 5000 });
-
-            // Добавляем второго клиента
-            if (await addClientButton.isVisible()) {
-                await addClientButton.click();
-                await page.fill('input[name="client_name"], input[placeholder*="имя"]', 'Клиент 2');
-                await page.fill('input[name="service_name"], input[placeholder*="услуга"]', 'Окрашивание');
-                await page.fill('input[name="service_amount"], input[type="number"]', '2000');
-                await saveButton.click();
-                await page.waitForSelector('text=Клиент 2', { timeout: 5000 });
-            }
+            await addShiftClient(page, { name: 'Клиент 1', service: 'Стрижка', amount: 1000 });
+            await addShiftClient(page, { name: 'Клиент 2', service: 'Окрашивание', amount: 2000 });
         });
 
-        // Шаг 3: Закрытие смены
         await test.step('Закрытие смены', async () => {
-            // Ищем кнопку "Закрыть смену"
-            const closeShiftButton = page.locator('button:has-text("Закрыть смену"), button:has-text("Завершить смену")').first();
-            await expect(closeShiftButton).toBeVisible({ timeout: 5000 });
-            await closeShiftButton.click();
+            await page.getByRole('button', { name: /^Текущая смена/ }).first().click();
+            await page.getByRole('button', { name: 'Закрыть смену' }).click();
+            // The staff page shows the closed status; reopening is the manager's action.
+            await expect(page.getByText('Закрыта', { exact: true })).toBeVisible({ timeout: 20_000 });
+            await expect(page.getByRole('button', { name: 'Закрыть смену' })).toHaveCount(0);
 
-            // Если есть модальное окно подтверждения
-            const confirmButton = page.locator('button:has-text("Подтвердить"), button:has-text("Да")').first();
-            if (await confirmButton.isVisible({ timeout: 2000 })) {
-                await confirmButton.click();
-            }
-
-            // Ждем подтверждения закрытия смены
-            await page.waitForSelector('text=/смена закрыта|смена завершена/i', { timeout: 10000 });
-
-            // Проверяем, что отображается итоговая информация
-            const totalAmount = page.locator('text=/итого|сумма|всего/i').first();
-            await expect(totalAmount).toBeVisible({ timeout: 5000 });
+            // The closed shift keeps the clients' turnover in its summary.
+            await expect(page.getByText('Сводка по смене')).toBeVisible();
+            await expect(page.getByText('Итого сотруднику за смену')).toBeVisible();
+            await expect(page.getByText('Итого бизнесу за смену')).toBeVisible();
         });
     });
 });
-

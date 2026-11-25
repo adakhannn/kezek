@@ -41,6 +41,8 @@ coverage/
 **/test-results/
 **/playwright-report/
 **/playwright/.cache/
+# Local e2e fixture env written by scripts/e2e-seed.mjs
+apps/web/e2e/.e2e.env
 .vercel
 .env*.local
 **/telegram-test.env.local

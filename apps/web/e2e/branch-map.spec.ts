@@ -1,129 +1,64 @@
 /**
- * E2E: создание и редактирование филиала с картой.
+ * E2E: создание и редактирование филиала в админке.
  *
- * Сценарий (админка):
- * - зайти под суперадмином;
- * - открыть страницу создания филиала для бизнеса;
- * - заполнить название;
- * - кликнуть по карте (BranchMapPickerYandex), чтобы задать координаты и адрес;
- * - сохранить филиал;
- * - перейти на страницу редактирования созданного филиала и убедиться, что координаты/адрес отображаются.
+ * Сценарий (суперадмин):
+ * - открыть страницу создания филиала для бизнеса E2E_TEST_BUSINESS_ID;
+ * - заполнить название и адрес, сохранить;
+ * - найти филиал в списке, открыть редактирование и убедиться, что данные и блок координат на месте.
  *
- * Требует:
- * - корректно настроенных env (NEXT_PUBLIC_SUPABASE_URL и т.п.);
- * - тестового суперадмина E2E_TEST_SUPERADMIN_EMAIL;
- * - тестового бизнеса с id E2E_TEST_BUSINESS_ID (или slug/id, используемый в админке).
+ * Выбор точки на карте (BranchMapPickerYandex) требует ключа и сети Яндекс.Карт, поэтому в
+ * локальном стеке он не проверяется (test.fixme ниже); запросы к Яндексу блокируются.
  */
 
-import { test, expect } from '@playwright/test';
-import { getBaseUrl, readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+import { test, expect } from './fixtures';
 
-const BASE_URL = getBaseUrl();
+import { signInWithEmailSeed } from './authHelpers';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
 skipIfMissingE2EEnv('branch-map.spec.ts', ['E2E_TEST_SUPERADMIN_EMAIL', 'E2E_TEST_BUSINESS_ID']);
 
-async function signInSuperAdmin(page: any) {
-    const email = readRequiredEnv('E2E_TEST_SUPERADMIN_EMAIL');
-
-    await page.goto(`${BASE_URL}/auth/sign-in`);
-    await page.waitForLoadState('networkidle');
-
-    const emailInput = page.locator('input[type="email"], input[name="email"]').first();
-    await expect(emailInput).toBeVisible({ timeout: 5000 });
-    await emailInput.fill(email);
-
-    const submit = page
-        .locator('button:has-text("Отправить"), button:has-text("Продолжить"), button[type="submit"]')
-        .first();
-    if (await submit.isVisible({ timeout: 3000 })) {
-        await submit.click();
-    }
-
-    // Предполагаем, что для e2e окружения авторизация суперадмина уже настроена (OTP/линк).
-    await page.waitForTimeout(1000);
-}
-
 test.describe('Админка: филиал с картой', () => {
-    test('создание и редактирование филиала с координатами', async ({ page }) => {
-        await signInSuperAdmin(page);
+    test.beforeEach(async ({ page }) => {
+        await page.route(/yandex\.(ru|net)|yastatic\.net/, (route) => route.abort());
+        await signInWithEmailSeed(page, readRequiredEnv('E2E_TEST_SUPERADMIN_EMAIL'));
+    });
 
+    test('создание и редактирование филиала', async ({ page }) => {
         const bizId = readRequiredEnv('E2E_TEST_BUSINESS_ID');
+        const name = `E2E филиал ${Date.now()}`;
 
         await test.step('Открыть страницу создания филиала', async () => {
-            await page.goto(`${BASE_URL}/admin/businesses/${bizId}/branches/new`);
-            await page.waitForLoadState('networkidle');
-
-            const title = page.locator('h1').filter({ hasText: /Новый филиал/i }).first();
-            await expect(title).toBeVisible({ timeout: 10000 });
+            await page.goto(`/admin/businesses/${bizId}/branches/new`);
+            await expect(page.getByRole('heading', { name: 'Новый филиал' })).toBeVisible();
         });
 
-        await test.step('Заполнить название и выбрать точку на карте', async () => {
-            const nameInput = page.locator('input[name="branch_name"]').first();
-            await expect(nameInput).toBeVisible({ timeout: 5000 });
-            await nameInput.fill('E2E филиал с картой');
-
-            // Карта Яндекса в BranchForm не имеет data-testid, используем контейнер и координаты клика
-            const mapContainer = page.locator('div').filter({
-                hasText: /Координаты:/,
-            }).first();
-
-            if (await mapContainer.isVisible({ timeout: 5000 })) {
-                const box = await mapContainer.boundingBox();
-                if (box) {
-                    const x = box.x + box.width / 2;
-                    const y = box.y + box.height / 2;
-                    await page.mouse.click(x, y);
-                    await page.waitForTimeout(1000);
-                }
-            }
-
-            const coordsText = page.locator('text=Координаты:').first();
-            await expect(coordsText).toBeVisible({ timeout: 5000 });
-
-            const addressInput = page.locator('input[name="branch_address"]').first();
-            await expect(addressInput).toBeVisible({ timeout: 5000 });
+        await test.step('Заполнить название и адрес', async () => {
+            await page.locator('input[name="branch_name"]').fill(name);
+            await expect(page.getByText(/Координаты:/)).toBeVisible();
+            await page.locator('input[name="branch_address"]').fill('Бишкек, пр. Чуй, 100');
         });
-
-        let createdBranchesUrl: string | null = null;
 
         await test.step('Сохранить филиал и перейти к списку', async () => {
-            const submit = page
-                .locator('button')
-                .filter({ hasText: /Создать филиал|Сохранить изменения/i })
-                .first();
-            await expect(submit).toBeVisible({ timeout: 5000 });
-            await expect(submit).toBeEnabled({ timeout: 2000 });
+            const submit = page.getByRole('button', { name: 'Создать филиал' });
+            await expect(submit).toBeEnabled();
             await submit.click();
-
-            await page.waitForLoadState('networkidle');
-            await expect(page).toHaveURL(/\/admin\/businesses\/.+\/branches/);
-
-            createdBranchesUrl = page.url();
-
-            const listTitle = page.locator('h1, h2').filter({ hasText: /Филиалы/i }).first();
-            await expect(listTitle).toBeVisible({ timeout: 10000 });
+            await expect(page).toHaveURL(new RegExp(`/admin/businesses/${bizId}/branches$`), { timeout: 30_000 });
+            await expect(page.getByRole('heading', { name: /Филиалы/ }).first()).toBeVisible();
         });
 
         await test.step('Найти созданный филиал в списке и открыть редактирование', async () => {
-            if (!createdBranchesUrl) {
-                test.skip();
-            }
+            const edit = page.getByRole('link', { name: 'Редактировать' });
+            const card = page.locator('div', { hasText: name }).filter({ has: edit }).last();
+            await card.getByRole('link', { name: 'Редактировать' }).click();
+            await expect(page).toHaveURL(new RegExp(`/admin/businesses/${bizId}/branches/[0-9a-f-]{36}`), { timeout: 30_000 });
+            await expect(page.getByRole('heading', { name: 'Редактировать филиал' })).toBeVisible();
 
-            const row = page
-                .locator('a, tr, [data-testid="branch-row"]')
-                .filter({ hasText: /E2E филиал с картой/i })
-                .first();
-            await expect(row).toBeVisible({ timeout: 10000 });
-            await row.click();
-
-            await page.waitForLoadState('networkidle');
-            await expect(page).toHaveURL(/\/admin\/businesses\/.+\/branches\/.+/);
-
-            const editTitle = page.locator('h1').filter({ hasText: /Редактировать филиал/i }).first();
-            await expect(editTitle).toBeVisible({ timeout: 10000 });
-
-            const coordsText = page.locator('text=Координаты:').first();
-            await expect(coordsText).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('input[name="branch_name"]')).toHaveValue(name);
+            await expect(page.locator('input[name="branch_address"]')).toHaveValue('Бишкек, пр. Чуй, 100');
+            await expect(page.getByText(/Координаты:/)).toBeVisible();
         });
     });
-});
 
+    // Needs the Yandex Maps JS API (key and network), which the local stack does not have.
+    test.fixme('клик по карте задаёт координаты и адрес филиала', async () => {});
+});

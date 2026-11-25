@@ -6,6 +6,21 @@ const localTunnelHost = process.env.NODE_ENV === 'development' && process.env.LO
     : null;
 
 /**
+ * A local Supabase stack (`supabase start`, used by the e2e suite) is served over http on a loopback
+ * address that the https://*.supabase.co source below does not cover; the browser client calls it
+ * directly. Only loopback origins are added, so the policy of a hosted project is unchanged.
+ */
+const localSupabaseConnectSources = (() => {
+    try {
+        const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '');
+        if (!['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) return '';
+        return ` ${url.origin} ${url.origin.replace(/^http/, 'ws')}`;
+    } catch {
+        return '';
+    }
+})();
+
+/**
  * Security Headers для защиты от XSS, clickjacking, MIME sniffing и других атак
  */
 const securityHeaders = [
@@ -47,7 +62,7 @@ const securityHeaders = [
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "img-src 'self' data: https: blob:",
             "font-src 'self' data: https://fonts.gstatic.com",
-            "connect-src 'self' https://*.supabase.co https://graph.facebook.com https://api.telegram.org https://log.api-maps.yandex.ru wss://*.supabase.co https://*.ingest.sentry.io https://*.sentry.io",
+            "connect-src 'self' https://*.supabase.co https://graph.facebook.com https://api.telegram.org https://log.api-maps.yandex.ru wss://*.supabase.co https://*.ingest.sentry.io https://*.sentry.io" + localSupabaseConnectSources,
             "frame-src 'self' https://www.google.com https://yandex.ru https://oauth.telegram.org",
             "object-src 'none'",
             "base-uri 'self'",

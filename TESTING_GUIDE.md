@@ -1,6 +1,6 @@
 # Проверки Kezek
 
-Статус: `reference`. Сверено с исходниками: **2026-11-10**. Владелец: **Engineering**.
+Статус: `reference`. Сверено с исходниками: **2026-11-25**. Владелец: **Engineering**.
 
 Это основной справочник по проверкам. [Индекс документации](docs/README.md), [процесс изменений](CONTRIBUTING.md), [текущее инженерное состояние](docs/PROJECT_STATUS.md), [эксплуатация](docs/OPERATIONS.md).
 
@@ -61,9 +61,9 @@
 | `lint_typecheck` | Lint (scripts, packages, apps/web и apps/mobile), docs links, offline OpenAPI/SDK generation + typed consumer, shared client build/test typechecks + Jest, SQL runner unit checks, generated cron manifest parity, hotspot guardrails, typecheck web + mobile | Shared-client проверяется отдельными обязательными шагами |
 | `build` | Web production build | Это сборка, не production smoke; при отсутствии Supabase secrets используются build placeholders |
 | `web_full_tests` | Полный web Jest с coverage-храповиком: `test:coverage --ci --watchAll=false --maxWorkers=50%` | Включает components; внешние сервисы остаются mocked |
-| `e2e_smoke_tests` | `test:e2e:smoke` | Страницы sign-in, terms, privacy; lifecycle не проверяется |
-| `e2e_visual_regressions` | `test:e2e:visual` | На main/schedule есть preflight трёх env; остальные условия/skip-sites остаются в specs |
-| `e2e_tests` | `test:e2e:full-seeded` | Job имеет `continue-on-error: true`; не все обязательные env переданы |
+| `e2e_smoke_tests` | `test:e2e:smoke` | Публичные страницы (business apply, sign-in, terms, privacy) без БД, с placeholder Supabase; lifecycle не проверяется |
+| `e2e_visual_regressions` | `pnpm db:start:check` + `scripts/e2e-seed.mjs` + `test:e2e:visual` | Локальный Supabase и fixture в CI, без secrets; Linux-эталоны в `apps/web/e2e/visual-regressions.spec.ts-snapshots/`, даты и время замаскированы |
+| `e2e_tests` | `pnpm db:start:check` + `scripts/e2e-seed.mjs` + `test:e2e:full-seeded` | Локальный Supabase и fixture в CI, без secrets и без production; вход программный (пароль локального GoTrue), не через соцсети; реальные WhatsApp/Telegram/Яндекс.Карты не проверяются |
 | `db_bootstrap` | `supabase start` + `db reset` с нуля, `check:db-types`, `check:sql-functions`, `check:function-catalog` | Локальный стек в CI: baseline, миграции и seed; не проверяет удалённую БД |
 | `mobile_tests` | `test:runInBand` | Jest smoke, без доказательства реального устройства; mobile typecheck — в `lint_typecheck` |
 | `mobile_build` | Metro-бандлы Android и iOS (`expo export`) на каждом прогоне; на тегах `mobile-*` и `release-*` — сборки EAS | Бандл не подписывается и не запускается на устройстве; без `EXPO_TOKEN` шаги EAS пропускаются |
@@ -76,7 +76,7 @@
 ## Открытые ограничения проверок
 
 1. **SQL isolation и legacy scenarios.** Ошибки native process теперь передаются без fallback, `psql` получает `-X` и `ON_ERROR_STOP=1`; PowerShell проверяет `$LASTEXITCODE`. Сценарии `tests_critical_scenarios.sql` выполняются в одной откатываемой транзакции и с 19 ноября 2026 идут в CI (`db_bootstrap`) на базе из полной цепочки миграций и seed. Расчёты рейтингов в них глобальные, поэтому цель — только локальная или явно разрешённая база. Подробности — в [supabase/TESTING.md](supabase/TESTING.md).
-2. **E2E optional/skip.** Full-seeded job допускает ошибку, а `skipIfMissingE2EEnv` пропускает suites при отсутствии env. Например, workflow не передаёт необходимые для некоторых specs `E2E_TEST_MULTI_ROLE_EMAIL` и `E2E_TEST_CLIENT_SEARCH`. Реальное количество skipped определяется только сохранённым runtime report. См. [E2E reference](apps/web/e2e/README.md).
+2. **E2E на локальном стеке.** Seeded/auth/visual specs получают все `E2E_*` env от `scripts/e2e-seed.mjs` (локальный Supabase, тестовые аккаунты с локальными паролями). `skipIfMissingE2EEnv` пропускает suite только при запуске без fixture. Вход в specs программный (`signInWithPassword` локального GoTrue → cookies `@supabase/ssr`), поэтому OAuth-провайдеры (Google, Яндекс, Telegram, WhatsApp) e2e не покрывают; несколько сценариев помечены `test.fixme` с причиной. Запуск и список — в [E2E reference](apps/web/e2e/README.md).
 3. **Независимость ожиданий.** Первый SQL-сценарий закрывает смену настоящей командой, но суммы передаёт готовыми, как core-domain на сервере. Формулы гарантии и долей доказывают тесты core-domain, а не этот сценарий.
 4. **Воспроизводимость среды.** Подготовленная схема, роли и fixtures обязательны для SQL/E2E. Наличие migrations/seed не подтверждает успешный bootstrap чистой БД; актуальное ограничение зафиксировано в [инженерном состоянии](docs/PROJECT_STATUS.md).
 5. **Ёмкость и восстановление.** Здесь нет подтверждённого нагрузочного лимита или результата restore drill. Их протоколы и условия должны быть связаны с [эксплуатационной документацией](docs/OPERATIONS.md), а не выводиться из числа unit-tests.

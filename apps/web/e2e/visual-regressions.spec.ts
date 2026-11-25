@@ -1,16 +1,23 @@
 /**
  * Visual regression coverage for high-value UI surfaces.
  *
+ * Baselines (visual-regressions.spec.ts-snapshots/*-chromium-linux.png) are rendered on Linux in
+ * the official Playwright image against a freshly seeded local stack; see e2e/README.md. Dates and
+ * times are masked and the Next.js dev overlay is hidden, so the pictures do not depend on the day.
+ *
  * Run:
- *   pnpm -C apps/web test:e2e -- visual-regressions.spec.ts
+ *   pnpm -C apps/web test:e2e:visual
  */
 
-import { expect, test, type Page, type StorageState } from '@playwright/test';
+import path from 'node:path';
+
+import { expect, test, type Locator, type Page, type StorageState } from './fixtures';
 
 import { applyStorageStateCookies, createStorageStateForEmailSeed } from './authHelpers';
-import { getBaseUrl, readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+import { businessDate, openBookingsTab, walkPublicBookingToSlots } from './flows';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
-const BASE_URL = getBaseUrl();
+const STYLE_PATH = path.join(__dirname, 'visual-regressions.css');
 
 async function setDesktopViewport(page: Page): Promise<void> {
     await page.setViewportSize({ width: 1366, height: 900 });
@@ -20,101 +27,66 @@ async function setMobileViewport(page: Page): Promise<void> {
     await page.setViewportSize({ width: 390, height: 844 });
 }
 
-async function takeStablePageScreenshot(page: Page, name: string, maxDiffPixels = 350): Promise<void> {
+/** Everything whose text follows the calendar or the clock. */
+function dynamicContent(page: Page): Locator[] {
+    return [
+        page.getByTestId('date-picker'),
+        page.locator('input[type="date"], input[type="month"]'),
+        page.getByText(/\d{1,2}\.\d{2}\.\d{4}/),
+        page.getByText(/\d{4}-\d{2}-\d{2}/),
+        page.getByText(/понедельник|вторник|сред[аы]|четверг|пятниц[аы]|суббот[аы]|воскресенье/i),
+        page.getByText(/\d{1,2} (января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)/i),
+        page.getByText(/(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)[ья]? \d{4}/i),
+    ];
+}
+
+async function takeStablePageScreenshot(page: Page, name: string): Promise<void> {
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(900);
+    await page.evaluate(() => document.fonts.ready);
+    // No hover state and the sticky header at the top: the picture must not depend on the last action.
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => window.scrollTo(0, 0));
     await expect(page).toHaveScreenshot(name, {
         fullPage: true,
         animations: 'disabled',
-        maxDiffPixels,
+        caret: 'hide',
+        mask: dynamicContent(page),
+        stylePath: STYLE_PATH,
+        timeout: 20_000,
     });
 }
 
-async function selectBusinessIfPrompted(page: Page): Promise<void> {
-    if (!/\/select-business/.test(page.url())) return;
-
-    const firstBusinessButton = page.locator('main button').first();
-    if (await firstBusinessButton.isVisible({ timeout: 4000 }).catch(() => false)) {
-        await firstBusinessButton.click();
-        await page.waitForLoadState('networkidle');
-    }
-}
-
-async function pickCabinetRoleIfPrompted(page: Page): Promise<void> {
-    if (!/\/select-cabinet/.test(page.url())) return;
-
-    const myBookingsLink = page
-        .locator('a[href="/cabinet"], button:has-text("Мои записи"), button:has-text("My bookings")')
-        .first();
-    if (await myBookingsLink.isVisible({ timeout: 4000 }).catch(() => false)) {
-        await myBookingsLink.click();
-        await page.waitForLoadState('networkidle');
-    }
-}
-
-async function resolveWorkspacePrompts(page: Page): Promise<void> {
-    await selectBusinessIfPrompted(page);
-    await pickCabinetRoleIfPrompted(page);
-}
-
-skipIfMissingE2EEnv('visual-regressions.spec.ts (public)', ['E2E_TEST_BUSINESS_SLUG']);
+skipIfMissingE2EEnv('visual-regressions.spec.ts', [
+    'E2E_TEST_BUSINESS_SLUG',
+    'E2E_TEST_MANAGER_EMAIL',
+    'E2E_TEST_STAFF_ID',
+    'E2E_TEST_STAFF_EMAIL',
+]);
 
 test.describe('Visual regressions: public pages', () => {
     test('business page remains visually stable', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await setDesktopViewport(page);
-        await page.goto(`${BASE_URL}/b/${businessSlug}`, { waitUntil: 'networkidle' });
+        await page.goto(`/b/${readRequiredEnv('E2E_TEST_BUSINESS_SLUG')}`);
+        await expect(page.getByTestId('promotions-section')).toBeVisible();
         await takeStablePageScreenshot(page, 'public-business-page.png');
     });
 
     test('booking step page remains visually stable', async ({ page }) => {
-        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await setDesktopViewport(page);
-        await page.goto(`${BASE_URL}/b/${businessSlug}`, { waitUntil: 'networkidle' });
-
-        const branchSelector = page.locator('[data-testid="branch-select"]').first();
-        if (await branchSelector.isVisible({ timeout: 4000 }).catch(() => false)) {
-            await branchSelector.click();
-            await page.locator('[data-testid="branch-option"]').first().click();
-        }
-
-        const staffSelector = page.locator('[data-testid="master-select"]').first();
-        if (await staffSelector.isVisible({ timeout: 4000 }).catch(() => false)) {
-            await staffSelector.click();
-            await page.locator('[data-testid="master-option"]').first().click();
-        }
-
-        const serviceSelector = page.locator('[data-testid="service-select"]').first();
-        if (await serviceSelector.isVisible({ timeout: 4000 }).catch(() => false)) {
-            await serviceSelector.click();
-            await page.locator('[data-testid="service-option"]').first().click();
-        }
-
-        const datePicker = page.locator('[data-testid="date-picker"]').first();
-        if (await datePicker.isVisible({ timeout: 4000 }).catch(() => false)) {
-            await datePicker.click();
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const yyyy = tomorrow.getFullYear();
-            const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-            const dd = String(tomorrow.getDate()).padStart(2, '0');
-            await page.locator(`[data-date="${yyyy}-${mm}-${dd}"]`).first().click();
-        }
-
-        await page.waitForSelector('[data-testid="time-slot"]', { timeout: 10000 });
-        await page.locator('[data-testid="time-slot"]').first().scrollIntoViewIfNeeded();
+        const slot = await walkPublicBookingToSlots(page, {
+            slug: readRequiredEnv('E2E_TEST_BUSINESS_SLUG'),
+            day: businessDate(1),
+        });
+        await expect(slot).toBeVisible();
         await takeStablePageScreenshot(page, 'public-booking-step-time.png');
     });
 });
 
 test.describe('Visual regressions: workspace pages', () => {
-    skipIfMissingE2EEnv('visual-regressions.spec.ts (workspace)', ['E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_STAFF_ID']);
-
     let managerAuthState: StorageState | null = null;
 
     test.beforeAll(async ({ browser }) => {
-        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
-        managerAuthState = await createStorageStateForEmailSeed(browser, managerEmail);
+        managerAuthState = await createStorageStateForEmailSeed(browser, readRequiredEnv('E2E_TEST_MANAGER_EMAIL'));
     });
 
     test.beforeEach(async ({ page }) => {
@@ -123,93 +95,69 @@ test.describe('Visual regressions: workspace pages', () => {
     });
 
     test('cabinet bookings page stays stable', async ({ page }) => {
-        await page.goto(`${BASE_URL}/cabinet`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
+        await page.goto('/cabinet');
+        await expect(page.getByRole('heading').first()).toBeVisible();
         await takeStablePageScreenshot(page, 'workspace-cabinet-bookings.png');
     });
 
     test('dashboard home command center stays stable', async ({ page }) => {
-        await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
+        await page.goto('/dashboard');
+        await expect(page.getByText('E2E Салон').first()).toBeVisible();
         await takeStablePageScreenshot(page, 'workspace-dashboard-home.png');
     });
 
     test('dashboard bookings quickdesk stays stable', async ({ page }) => {
-        await page.goto(`${BASE_URL}/dashboard/bookings`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
-
-        const quickDeskTab = page
-            .locator('button:has-text("QuickDesk"), button:has-text("Стол"), [data-testid="desk-tab"]')
-            .first();
-        if (await quickDeskTab.isVisible({ timeout: 5000 }).catch(() => false)) {
-            await quickDeskTab.click();
-            await page.waitForTimeout(700);
-        }
-
-        await takeStablePageScreenshot(page, 'workspace-dashboard-bookings-quickdesk.png', 450);
+        await openBookingsTab(page, 'Сегодня (QuickDesk)');
+        await expect(page.getByRole('button', { name: 'Создать запись' })).toBeVisible();
+        await takeStablePageScreenshot(page, 'workspace-dashboard-bookings-quickdesk.png');
     });
 
     test('dashboard bookings list tab stays stable', async ({ page }) => {
-        await page.goto(`${BASE_URL}/dashboard/bookings`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
-
-        const listTab = page
-            .locator('button:has-text("Список"), button:has-text("List"), [data-testid="bookings-list-tab"]')
-            .first();
-        if (await listTab.isVisible({ timeout: 5000 }).catch(() => false)) {
-            await listTab.click();
-            await page.waitForTimeout(700);
-        }
-
-        await takeStablePageScreenshot(page, 'workspace-dashboard-bookings-list.png', 450);
+        await openBookingsTab(page, 'История и поиск');
+        // The list shows the fixture's future bookings; the search keeps it independent of other runs.
+        await page.getByLabel('Поиск', { exact: true }).fill('E2E Ожидает');
+        await expect(page.locator('tr', { hasText: 'E2E Ожидает' })).toHaveCount(1);
+        await takeStablePageScreenshot(page, 'workspace-dashboard-bookings-list.png');
     });
 
     test('staff detail page stays stable', async ({ page }) => {
-        const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
-        await page.goto(`${BASE_URL}/dashboard/staff/${staffId}`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
-        await takeStablePageScreenshot(page, 'workspace-staff-detail.png', 450);
+        await page.goto(`/dashboard/staff/${readRequiredEnv('E2E_TEST_STAFF_ID')}`);
+        await expect(page.getByText('E2E Мастер').first()).toBeVisible();
+        await takeStablePageScreenshot(page, 'workspace-staff-detail.png');
     });
 
     test('staff finance page stays stable', async ({ page }) => {
-        const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
-        await page.goto(`${BASE_URL}/dashboard/staff/${staffId}/finance`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
-        await takeStablePageScreenshot(page, 'workspace-staff-finance.png', 500);
+        await page.goto(`/dashboard/staff/${readRequiredEnv('E2E_TEST_STAFF_ID')}/finance`);
+        // The manager's copy opens on the clients of today's shift.
+        await expect(page.getByText('Клиенты за смену')).toBeVisible();
+        await takeStablePageScreenshot(page, 'workspace-staff-finance.png');
     });
 
     test('staff finance stats page stays stable', async ({ page }) => {
         const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
-        await page.goto(`${BASE_URL}/dashboard/staff/${staffId}/finance/stats`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
-        await takeStablePageScreenshot(page, 'workspace-staff-finance-stats.png', 500);
+        await page.goto(`/dashboard/staff/${staffId}/finance/stats`);
+        await page.getByRole('button', { name: 'День', exact: true }).click();
+        const loaded = page.waitForResponse((r) => r.url().includes(`/api/dashboard/staff/${staffId}/finance/stats`));
+        // Yesterday holds the fixture's closed shift, whatever the day of the month.
+        await page.getByLabel('Дата периода').fill(businessDate(-1));
+        await loaded;
+        await expect(page.getByText('Закрыта').first()).toBeVisible();
+        await takeStablePageScreenshot(page, 'workspace-staff-finance-stats.png');
     });
 
     test('mobile quickdesk stays stable', async ({ page }) => {
         await setMobileViewport(page);
-        await page.goto(`${BASE_URL}/dashboard/bookings`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
-
-        const quickDeskTab = page
-            .locator('button:has-text("QuickDesk"), button:has-text("Стол"), [data-testid="desk-tab"]')
-            .first();
-        if (await quickDeskTab.isVisible({ timeout: 5000 }).catch(() => false)) {
-            await quickDeskTab.click();
-            await page.waitForTimeout(700);
-        }
-
-        await takeStablePageScreenshot(page, 'workspace-mobile-quickdesk.png', 500);
+        await openBookingsTab(page, 'Сегодня (QuickDesk)');
+        await expect(page.getByRole('button', { name: 'Создать запись' })).toBeVisible();
+        await takeStablePageScreenshot(page, 'workspace-mobile-quickdesk.png');
     });
 });
 
 test.describe('Visual regressions: staff cabinet pages', () => {
-    skipIfMissingE2EEnv('visual-regressions.spec.ts (staff cabinet)', ['E2E_TEST_STAFF_EMAIL']);
-
     let staffAuthState: StorageState | null = null;
 
     test.beforeAll(async ({ browser }) => {
-        const staffEmail = readRequiredEnv('E2E_TEST_STAFF_EMAIL');
-        staffAuthState = await createStorageStateForEmailSeed(browser, staffEmail);
+        staffAuthState = await createStorageStateForEmailSeed(browser, readRequiredEnv('E2E_TEST_STAFF_EMAIL'));
     });
 
     test.beforeEach(async ({ page }) => {
@@ -218,8 +166,8 @@ test.describe('Visual regressions: staff cabinet pages', () => {
     });
 
     test('staff finance cabinet stays stable', async ({ page }) => {
-        await page.goto(`${BASE_URL}/staff/finance`, { waitUntil: 'networkidle' });
-        await resolveWorkspacePrompts(page);
-        await takeStablePageScreenshot(page, 'workspace-staff-cabinet-finance.png', 500);
+        await page.goto('/staff/finance');
+        await expect(page.getByText('Сводка по смене').or(page.getByText('Смена не открыта')).first()).toBeVisible();
+        await takeStablePageScreenshot(page, 'workspace-staff-cabinet-finance.png');
     });
 });

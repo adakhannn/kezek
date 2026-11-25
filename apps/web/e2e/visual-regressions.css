@@ -1,0 +1,11 @@
+/* Applied to visual-regression screenshots only (toHaveScreenshot stylePath). */
+/* The Next.js dev overlay and indicator are not part of the product UI. */
+nextjs-portal {
+    display: none !important;
+}
+*,
+*::before,
+*::after {
+    caret-color: transparent !important;
+    scroll-behavior: auto !important;
+}

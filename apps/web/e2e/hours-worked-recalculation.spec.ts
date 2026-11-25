@@ -1,26 +1,31 @@
 /**
  * E2E тест: Корректировка hours_worked и проверка перерасчёта гарантий/долей
- * 
- * Сценарии:
- * - Обновление hours_worked для закрытой смены
- * - Проверка автоматического перерасчёта guaranteed_amount
- * - Проверка перерасчёта master_share и salon_share при изменении hours_worked
- * - Проверка topup_amount (доплата, если guaranteed_amount > master_share)
+ *
+ * Сценарии (страница менеджера /dashboard/staff/[id]/finance/stats):
+ * - обновление hours_worked для закрытой смены и перерасчёт guaranteed_amount (часы × ставка);
+ * - доли master_share / salon_share не меняются, доплата не появляется, пока гарантия меньше доли;
+ * - валидация: отрицательное и больше суток значение не сохраняется;
+ * - открытая смена не предлагает исправить часы.
+ *
+ * Фикстура (scripts/e2e-seed.mjs): вчерашняя закрытая смена E2E_TEST_STAFF_ID — оборот 3500,
+ * сотруднику 2100, бизнесу 1400, 9 ч, ставка 100 сом/ч.
  */
 
-import { test, expect, type StorageState } from '@playwright/test';
+import { test, expect, type StorageState } from './fixtures';
+
 import { applyStorageStateCookies, createStorageStateForEmailSeed } from './authHelpers';
+import { businessDate, ensureShiftOpen, openStaffShiftOfDay } from './flows';
 import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
 skipIfMissingE2EEnv('hours-worked-recalculation.spec.ts', ['E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_STAFF_ID']);
 
+const HOURLY_RATE = 100;
+
 test.describe('Корректировка hours_worked и перерасчёт гарантий/долей', () => {
     let managerAuthState: StorageState | null = null;
-    let testShiftId: string | null = null;
 
     test.beforeAll(async ({ browser }) => {
-        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
-        managerAuthState = await createStorageStateForEmailSeed(browser, managerEmail);
+        managerAuthState = await createStorageStateForEmailSeed(browser, readRequiredEnv('E2E_TEST_MANAGER_EMAIL'));
     });
 
     test.beforeEach(async ({ page }) => {
@@ -28,234 +33,65 @@ test.describe('Корректировка hours_worked и перерасчёт �
     });
 
     test('должен обновить hours_worked и пересчитать guaranteed_amount', async ({ page }) => {
-            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
-        
-        await test.step('Переход на страницу финансов сотрудника', async () => {
-            await page.goto(`/dashboard/staff/${staffId}/finance`);
-            await page.waitForLoadState('networkidle');
-        });
+        const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
+        const card = await openStaffShiftOfDay(page, staffId, businessDate(-1));
+        await expect(card).toContainText('Закрыта');
+        await card.getByRole('button').first().click();
 
-        await test.step('Поиск закрытой смены', async () => {
-            // Ищем закрытую смену в списке (можно фильтровать по статусу "closed")
-            const closedShift = page.locator('[data-testid="closed-shift"], tr:has-text("closed"), .shift-card:has-text("closed")').first();
-            if (await closedShift.isVisible({ timeout: 5000 })) {
-                await closedShift.click();
-                await page.waitForTimeout(1000);
-            } else {
-                // Если нет закрытых смен, пропускаем тест
-                test.skip();
-            }
-        });
+        const hoursValue = card.getByText('ч', { exact: true }).locator('xpath=following-sibling::p[1]');
+        const current = Number(await hoursValue.textContent());
+        const next = current === 8.5 ? 7.5 : 8.5;
 
-        await test.step('Получение текущих значений', async () => {
-            // Запоминаем текущие значения для сравнения
-            const currentHours = page.locator('[data-testid="hours-worked"], text=/часов|hours/i').first();
-            const currentGuaranteed = page.locator('[data-testid="guaranteed-amount"], text=/гарантированная|guaranteed/i').first();
-            const currentMasterShare = page.locator('[data-testid="master-share"], text=/мастеру|master/i').first();
-            
-            // Сохраняем значения для проверки изменений
-            if (await currentHours.isVisible({ timeout: 3000 })) {
-                const hoursText = await currentHours.textContent();
-                expect(hoursText).toBeTruthy();
-            }
-        });
+        await card.getByRole('button', { name: 'Исправить часы' }).click();
+        await card.getByLabel('Введите фактическое количество отработанных часов').fill(String(next));
+        const update = page.waitForResponse((response) => response.url().includes('/update-hours'));
+        await card.getByRole('button', { name: 'Сохранить' }).click();
 
-        await test.step('Открытие формы редактирования hours_worked', async () => {
-            const editButton = page.locator('button:has-text("Изменить часы"), button:has-text("Редактировать"), [data-testid="edit-hours"]').first();
-            if (await editButton.isVisible({ timeout: 5000 })) {
-                await editButton.click();
-                await page.waitForTimeout(500);
-            } else {
-                // Если кнопки нет, ищем поле ввода напрямую
-                const hoursInput = page.locator('input[name="hours_worked"], input[type="number"][data-testid="hours-input"]').first();
-                if (await hoursInput.isVisible({ timeout: 3000 })) {
-                    await hoursInput.click();
-                } else {
-                    test.skip();
-                }
-            }
-        });
+        const response = await update;
+        expect(response.status()).toBe(200);
+        expect(await response.json()).toHaveProperty('ok', true);
 
-        await test.step('Обновление hours_worked', async () => {
-            const hoursInput = page.locator('input[name="hours_worked"], input[type="number"][data-testid="hours-input"]').first();
-            await expect(hoursInput).toBeVisible({ timeout: 5000 });
-            
-            // Заполняем новое значение (например, 8.5 часов вместо текущего)
-            await hoursInput.fill('8.5');
-            await page.waitForTimeout(500);
-            
-            // Сохраняем изменения
-            const saveButton = page.locator('button:has-text("Сохранить"), button:has-text("Применить"), button[type="submit"]').first();
-            if (await saveButton.isVisible({ timeout: 2000 })) {
-                // Перехватываем ответ API для проверки
-                const updateResponsePromise = page.waitForResponse(
-                    response => response.url().includes('/update-hours') || response.url().includes('staff-shifts'),
-                    { timeout: 10000 }
-                ).catch(() => null);
-                
-                await saveButton.click();
-                await page.waitForTimeout(2000);
-                
-                // Проверяем успешное обновление
-                const successMessage = page.locator('text=/сохранено|обновлено|updated/i').first();
-                await expect(successMessage).toBeVisible({ timeout: 5000 });
-                
-                // Проверяем ответ API
-                const response = await updateResponsePromise;
-                if (response) {
-                    expect(response.status()).toBe(200);
-                    const data = await response.json();
-                    expect(data).toHaveProperty('ok', true);
-                }
-            }
-        });
-
-        await test.step('Проверка перерасчёта guaranteed_amount', async () => {
-            // Ждем обновления данных на странице
-            await page.waitForTimeout(2000);
-            
-            // Проверяем, что guaranteed_amount пересчитался
-            // Если hourly_rate = 500, то 8.5 часов = 4250 сом
-            const guaranteedElement = page.locator('[data-testid="guaranteed-amount"], text=/гарантированная|guaranteed/i').first();
-            if (await guaranteedElement.isVisible({ timeout: 5000 })) {
-                const guaranteedText = await guaranteedElement.textContent();
-                expect(guaranteedText).toMatch(/\d+/);
-                
-                // Проверяем, что значение изменилось (если было другое)
-                const guaranteedValue = parseFloat(guaranteedText?.replace(/[^\d.]/g, '') || '0');
-                expect(guaranteedValue).toBeGreaterThan(0);
-            }
-        });
-
-        await test.step('Проверка перерасчёта долей (master_share и salon_share)', async () => {
-            // Проверяем, что доли пересчитались корректно
-            const masterShareElement = page.locator('[data-testid="master-share"], text=/мастеру|master/i').first();
-            const salonShareElement = page.locator('[data-testid="salon-share"], text=/салону|salon|бизнесу/i').first();
-            
-            if (await masterShareElement.isVisible({ timeout: 5000 })) {
-                const masterText = await masterShareElement.textContent();
-                expect(masterText).toMatch(/\d+/);
-            }
-            
-            if (await salonShareElement.isVisible({ timeout: 5000 })) {
-                const salonText = await salonShareElement.textContent();
-                expect(salonText).toMatch(/\d+/);
-            }
-        });
-
-        await test.step('Проверка topup_amount (если guaranteed_amount > master_share)', async () => {
-            // Если guaranteed_amount больше master_share, должна быть доплата
-            const topupElement = page.locator('[data-testid="topup-amount"], text=/доплата|topup/i').first();
-            if (await topupElement.isVisible({ timeout: 5000 })) {
-                const topupText = await topupElement.textContent();
-                if (topupText && topupText.match(/\d+/)) {
-                    const topupValue = parseFloat(topupText.replace(/[^\d.]/g, ''));
-                    expect(topupValue).toBeGreaterThanOrEqual(0);
-                }
-            }
-        });
+        const refreshed = await openStaffShiftOfDay(page, staffId, businessDate(-1));
+        await refreshed.getByRole('button').first().click();
+        await expect(refreshed.getByText('ч', { exact: true }).locator('xpath=following-sibling::p[1]')).toHaveText(next.toFixed(2));
+        // Guarantee = hours × hourly rate; it stays below the 60% share, so the shares do not change.
+        const guarantee = refreshed.getByText('Гарантия', { exact: true }).locator('xpath=following-sibling::p[1]');
+        await expect(guarantee).toContainText(String(next * HOURLY_RATE));
+        await expect(refreshed).toContainText(/Сотруднику: 2[\s ]?100 сом/);
+        await expect(refreshed).toContainText(/Бизнесу: 1[\s ]?400 сом/);
     });
 
-    test('должен проверить валидацию hours_worked (отрицательное значение)', async ({ page }) => {
+    for (const [title, value] of [
+        ['отрицательное значение', '-1'],
+        ['слишком большое значение', '50'],
+    ] as const) {
+        test(`должен проверить валидацию hours_worked (${title})`, async ({ page }) => {
             const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
-        
-        await page.goto(`/dashboard/staff/${staffId}/finance`);
-        await page.waitForLoadState('networkidle');
-        
-        const closedShift = page.locator('[data-testid="closed-shift"], tr:has-text("closed")').first();
-        if (!(await closedShift.isVisible({ timeout: 5000 }))) {
-            test.skip();
-        }
-        
-        await closedShift.click();
-        await page.waitForTimeout(1000);
-        
-        const editButton = page.locator('button:has-text("Изменить часы"), [data-testid="edit-hours"]').first();
-        if (await editButton.isVisible({ timeout: 5000 })) {
-            await editButton.click();
-            await page.waitForTimeout(500);
-        }
-        
-        const hoursInput = page.locator('input[name="hours_worked"], input[type="number"][data-testid="hours-input"]').first();
-        if (await hoursInput.isVisible({ timeout: 3000 })) {
-            await hoursInput.fill('-1');
-            await page.waitForTimeout(500);
-            
-            // Проверяем, что показывается ошибка валидации
-            const validationError = page.locator('text=/неверно|invalid|должно быть положительным|отрицательное/i').first();
-            if (await validationError.isVisible({ timeout: 3000 })) {
-                await expect(validationError).toBeVisible();
-            }
-        }
-    });
+            const card = await openStaffShiftOfDay(page, staffId, businessDate(-1));
+            await card.getByRole('button').first().click();
+            await card.getByRole('button', { name: 'Исправить часы' }).click();
+            await card.getByLabel('Введите фактическое количество отработанных часов').fill(value);
 
-    test('должен проверить валидацию hours_worked (слишком большое значение)', async ({ page }) => {
-            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
-        
-        await page.goto(`/dashboard/staff/${staffId}/finance`);
-        await page.waitForLoadState('networkidle');
-        
-        const closedShift = page.locator('[data-testid="closed-shift"], tr:has-text("closed")').first();
-        if (!(await closedShift.isVisible({ timeout: 5000 }))) {
-            test.skip();
-        }
-        
-        await closedShift.click();
-        await page.waitForTimeout(1000);
-        
-        const editButton = page.locator('button:has-text("Изменить часы"), [data-testid="edit-hours"]').first();
-        if (await editButton.isVisible({ timeout: 5000 })) {
-            await editButton.click();
-            await page.waitForTimeout(500);
-        }
-        
-        const hoursInput = page.locator('input[name="hours_worked"], input[type="number"][data-testid="hours-input"]').first();
-        if (await hoursInput.isVisible({ timeout: 3000 })) {
-            await hoursInput.fill('50'); // Больше 48 часов
-            await page.waitForTimeout(500);
-            
-            // Проверяем, что показывается ошибка валидации
-            const validationError = page.locator('text=/неверно|invalid|максимум|maximum|48/i').first();
-            if (await validationError.isVisible({ timeout: 3000 })) {
-                await expect(validationError).toBeVisible();
-            }
-        }
-    });
+            let updateCalled = false;
+            page.on('request', (request) => {
+                if (request.url().includes('/update-hours')) updateCalled = true;
+            });
+            await card.getByRole('button', { name: 'Сохранить' }).click();
+
+            await expect(card.getByText('Некорректное значение часов')).toBeVisible();
+            expect(updateCalled).toBe(false);
+        });
+    }
 
     test('должен проверить, что нельзя изменить hours_worked для открытой смены', async ({ page }) => {
-            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
-        
+        const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
         await page.goto(`/dashboard/staff/${staffId}/finance`);
-        await page.waitForLoadState('networkidle');
-        
-        // Ищем открытую смену
-        const openShift = page.locator('[data-testid="open-shift"], tr:has-text("open"), .shift-card:has-text("open")').first();
-        if (await openShift.isVisible({ timeout: 5000 })) {
-            await openShift.click();
-            await page.waitForTimeout(1000);
-            
-            // Проверяем, что кнопка редактирования hours_worked недоступна или отсутствует
-            const editButton = page.locator('button:has-text("Изменить часы"), [data-testid="edit-hours"]').first();
-            if (await editButton.isVisible({ timeout: 3000 })) {
-                // Если кнопка есть, она должна быть disabled или показывать сообщение
-                const isDisabled = await editButton.isDisabled();
-                if (!isDisabled) {
-                    // Если не disabled, при клике должно быть сообщение
-                    await editButton.click();
-                    await page.waitForTimeout(1000);
-                    
-                    const errorMessage = page.locator('text=/только для закрытых|only closed|открытую смену/i').first();
-                    if (await errorMessage.isVisible({ timeout: 3000 })) {
-                        await expect(errorMessage).toBeVisible();
-                    }
-                } else {
-                    expect(isDisabled).toBe(true);
-                }
-            }
-        } else {
-            // Если нет открытой смены, пропускаем тест
-            test.skip();
-        }
+        await ensureShiftOpen(page);
+
+        const card = await openStaffShiftOfDay(page, staffId, businessDate(0));
+        // An open shift card is expanded and shows no hours editor.
+        await expect(card).toContainText('Открыта');
+        await expect(card.getByText('Гарантия', { exact: true })).toBeVisible();
+        await expect(card.getByRole('button', { name: 'Исправить часы' })).toHaveCount(0);
     });
 });
-

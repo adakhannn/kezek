@@ -1,59 +1,96 @@
-import { expect, type Browser, type Page, type StorageState } from '@playwright/test';
+import type { Browser, Page, StorageState } from '@playwright/test';
+import { createServerClient } from '@supabase/ssr';
 
-const EMAIL_INPUT_SELECTOR = 'input[type="email"], input[name="email"]';
-const PASSWORD_INPUT_SELECTOR = 'input[type="password"], input[name="password"]';
-const EMAIL_SUBMIT_SELECTOR =
-    'button:has-text("Отправить"), button:has-text("Продолжить"), button[type="submit"]';
+import { getBaseUrl, readRequiredEnv } from './testEnv';
+
+/**
+ * Programmatic sign-in for e2e.
+ *
+ * The sign-in page offers only social providers (Google, Yandex, Telegram, WhatsApp), so the specs
+ * sign in with the e-mail/password of the accounts that `scripts/e2e-seed.mjs` creates in the LOCAL
+ * GoTrue. The session is obtained with the same `@supabase/ssr` server client the app uses, so the
+ * cookies (name, chunking, base64 encoding) are exactly the ones the middleware and server
+ * components read; they are added to the Playwright context for the base URL.
+ */
+
+type Cookie = StorageState['cookies'][number];
 
 type EmailSignInOptions = {
+    /** Kept for existing callers; programmatic sign-in does not wait. */
     waitAfterSubmitMs?: number;
+    /** Kept for existing callers; there is no e-mail field to expect. */
     expectEmailField?: boolean;
 };
 
 type PasswordSignInOptions = {
+    /** Kept for existing callers; the caller navigates after sign-in. */
     successUrlPattern?: RegExp;
 };
 
+/** `sb-<ref>-auth-token`, derived from the URL the app is configured with. */
+function authCookieName(appSupabaseUrl: string): string {
+    return `sb-${new URL(appSupabaseUrl).hostname.split('.')[0]}-auth-token`;
+}
+
+/**
+ * Signs in against GoTrue and returns the auth cookies for the base URL.
+ * E2E_SUPABASE_AUTH_URL lets a runner that cannot reach NEXT_PUBLIC_SUPABASE_URL (for example a
+ * Playwright Docker container) use another address of the same local stack.
+ */
+export async function createSessionCookies(email: string, password?: string): Promise<Cookie[]> {
+    const appSupabaseUrl = readRequiredEnv('NEXT_PUBLIC_SUPABASE_URL');
+    const anonKey = readRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    const authUrl = process.env.E2E_SUPABASE_AUTH_URL || appSupabaseUrl;
+    const secret = password ?? readRequiredEnv('E2E_TEST_PASSWORD');
+
+    const jar = new Map<string, string>();
+    const supabase = createServerClient(authUrl, anonKey, {
+        cookieOptions: { name: authCookieName(appSupabaseUrl) },
+        cookies: {
+            getAll: () => [...jar].map(([name, value]) => ({ name, value })),
+            setAll: (cookies) => {
+                for (const { name, value } of cookies) {
+                    if (value) jar.set(name, value);
+                    else jar.delete(name);
+                }
+            },
+        },
+    });
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password: secret });
+    if (error) throw new Error(`E2E sign-in failed for ${email}: ${error.message}`);
+    if (jar.size === 0) throw new Error(`E2E sign-in for ${email} produced no session cookies`);
+
+    const base = new URL(getBaseUrl());
+    const expires = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
+    return [...jar].map(([name, value]) => ({
+        name,
+        value,
+        domain: base.hostname,
+        path: '/',
+        expires,
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+    }));
+}
+
+/** Signs the page's context in as the seeded account with this e-mail. */
 export async function signInWithEmailSeed(
     page: Page,
     email: string,
-    options: EmailSignInOptions = {},
+    _options: EmailSignInOptions = {},
 ): Promise<void> {
-    const { waitAfterSubmitMs = 2000, expectEmailField = true } = options;
-
-    await page.goto('/auth/sign-in');
-    await page.waitForLoadState('networkidle');
-
-    const emailInput = page.locator(EMAIL_INPUT_SELECTOR).first();
-    if (expectEmailField) {
-        await expect(emailInput).toBeVisible({ timeout: 5000 });
-    }
-
-    if (await emailInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await emailInput.fill(email);
-
-        const submitButton = page.locator(EMAIL_SUBMIT_SELECTOR).first();
-        if (await submitButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-            await submitButton.click();
-            await page.waitForTimeout(waitAfterSubmitMs);
-        }
-    }
+    await page.context().addCookies(await createSessionCookies(email));
 }
 
+/** A storage state holding the session of the seeded account with this e-mail. */
 export async function createStorageStateForEmailSeed(
-    browser: Browser,
+    _browser: Browser,
     email: string,
-    options: EmailSignInOptions = {},
+    _options: EmailSignInOptions = {},
 ): Promise<StorageState> {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    try {
-        await signInWithEmailSeed(page, email, options);
-        return await context.storageState();
-    } finally {
-        await context.close();
-    }
+    return { cookies: await createSessionCookies(email), origins: [] };
 }
 
 export async function applyStorageStateCookies(
@@ -69,14 +106,7 @@ export async function signInWithPassword(
     page: Page,
     email: string,
     password: string,
-    options: PasswordSignInOptions = {},
+    _options: PasswordSignInOptions = {},
 ): Promise<void> {
-    const { successUrlPattern = /staff|dashboard/ } = options;
-
-    await page.goto('/auth/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill(EMAIL_INPUT_SELECTOR, email);
-    await page.fill(PASSWORD_INPUT_SELECTOR, password);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(successUrlPattern, { timeout: 10000 });
+    await page.context().addCookies(await createSessionCookies(email, password));
 }

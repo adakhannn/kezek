@@ -149,10 +149,10 @@ jobs:
         working-directory: apps/web
 
       - name: Run E2E smoke tests
+        # Public pages without a database: placeholder Supabase values, no service-role key.
         env:
-          PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.E2E_TEST_BASE_URL || 'http://localhost:3000' }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder' }}
+          NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder'
         run: pnpm test:e2e:smoke
         working-directory: apps/web
 
@@ -167,7 +167,9 @@ jobs:
   e2e_visual_regressions:
     # Pinned: `playwright install --with-deps` needs an OS release the pinned
     # Playwright knows; ubuntu-latest moved to 26.04 in October 2026.
+    # Baselines in apps/web/e2e/visual-regressions.spec.ts-snapshots are *-chromium-linux.png.
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -188,29 +190,24 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
         working-directory: apps/web
 
-      - name: Validate visual regression env on main/schedule
-        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
-        env:
-          E2E_TEST_BUSINESS_SLUG: ${{ secrets.E2E_TEST_BUSINESS_SLUG }}
-          E2E_TEST_MANAGER_EMAIL: ${{ secrets.E2E_TEST_MANAGER_EMAIL }}
-          E2E_TEST_STAFF_ID: ${{ secrets.E2E_TEST_STAFF_ID }}
+      # Self-contained: a local Supabase stack (prod baseline + migrations + seed, as db_bootstrap)
+      # and the e2e fixture. No secrets, no remote project; playwright.config.ts refuses non-local URLs.
+      - name: Start local Supabase (applies baseline, migrations and seed)
+        run: pnpm db:start:check
+
+      - name: Seed the e2e fixture and export its env (local test accounts and ids)
+        run: node scripts/e2e-seed.mjs >> "$GITHUB_ENV"
+
+      - name: Check the fixture env
         run: |
-          for v in E2E_TEST_BUSINESS_SLUG E2E_TEST_MANAGER_EMAIL E2E_TEST_STAFF_ID; do
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY E2E_TEST_PASSWORD                    E2E_TEST_BUSINESS_SLUG E2E_TEST_BUSINESS_ID E2E_TEST_BRANCH_ID E2E_TEST_STAFF_ID                    E2E_TEST_MANAGER_EMAIL E2E_TEST_STAFF_EMAIL E2E_TEST_CLIENT_EMAIL E2E_TEST_SUPER_ADMIN_EMAIL                    E2E_TEST_MULTI_ROLE_EMAIL WHATSAPP_APP_SECRET WHATSAPP_PHONE_NUMBER_ID; do
             if [ -z "${!v}" ]; then
-              echo "Missing required visual regression env: $v"
+              echo "Missing e2e fixture env: $v"
               exit 1
             fi
           done
 
       - name: Run visual regression suite
-        env:
-          PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.E2E_TEST_BASE_URL || 'http://localhost:3000' }}
-          E2E_TEST_BUSINESS_SLUG: ${{ secrets.E2E_TEST_BUSINESS_SLUG }}
-          E2E_TEST_MANAGER_EMAIL: ${{ secrets.E2E_TEST_MANAGER_EMAIL }}
-          E2E_TEST_STAFF_ID: ${{ secrets.E2E_TEST_STAFF_ID }}
-          E2E_TEST_STAFF_EMAIL: ${{ secrets.E2E_TEST_STAFF_EMAIL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder' }}
         run: pnpm test:e2e:visual
         working-directory: apps/web
 
@@ -219,14 +216,20 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-visual-regressions-report
-          path: apps/web/playwright-report/
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
           retention-days: 30
+
+      - name: Stop local Supabase
+        if: always()
+        run: pnpm exec supabase stop --no-backup
 
   e2e_tests:
     # Pinned: `playwright install --with-deps` needs an OS release the pinned
     # Playwright knows; ubuntu-latest moved to 26.04 in October 2026.
     runs-on: ubuntu-24.04
-    continue-on-error: true
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -247,14 +250,24 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
         working-directory: apps/web
 
+      # Self-contained: a local Supabase stack (prod baseline + migrations + seed, as db_bootstrap)
+      # and the e2e fixture. No secrets, no remote project; playwright.config.ts refuses non-local URLs.
+      - name: Start local Supabase (applies baseline, migrations and seed)
+        run: pnpm db:start:check
+
+      - name: Seed the e2e fixture and export its env (local test accounts and ids)
+        run: node scripts/e2e-seed.mjs >> "$GITHUB_ENV"
+
+      - name: Check the fixture env
+        run: |
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY E2E_TEST_PASSWORD                    E2E_TEST_BUSINESS_SLUG E2E_TEST_BUSINESS_ID E2E_TEST_BRANCH_ID E2E_TEST_STAFF_ID                    E2E_TEST_MANAGER_EMAIL E2E_TEST_STAFF_EMAIL E2E_TEST_CLIENT_EMAIL E2E_TEST_SUPER_ADMIN_EMAIL                    E2E_TEST_MULTI_ROLE_EMAIL WHATSAPP_APP_SECRET WHATSAPP_PHONE_NUMBER_ID; do
+            if [ -z "${!v}" ]; then
+              echo "Missing e2e fixture env: $v"
+              exit 1
+            fi
+          done
+
       - name: Run E2E tests
-        env:
-          PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.E2E_TEST_BASE_URL || 'http://localhost:3000' }}
-          E2E_TEST_BUSINESS_SLUG: ${{ secrets.E2E_TEST_BUSINESS_SLUG }}
-          E2E_TEST_MANAGER_EMAIL: ${{ secrets.E2E_TEST_MANAGER_EMAIL }}
-          E2E_TEST_STAFF_ID: ${{ secrets.E2E_TEST_STAFF_ID }}
-          E2E_TEST_STAFF_EMAIL: ${{ secrets.E2E_TEST_STAFF_EMAIL }}
-          E2E_TEST_STAFF_PASSWORD: ${{ secrets.E2E_TEST_STAFF_PASSWORD }}
         run: pnpm test:e2e:full-seeded
         working-directory: apps/web
 
@@ -263,8 +276,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: apps/web/playwright-report/
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
           retention-days: 30
+
+      - name: Stop local Supabase
+        if: always()
+        run: pnpm exec supabase stop --no-backup
 
   mobile_tests:
     runs-on: ubuntu-latest
