@@ -4,6 +4,16 @@ import type { NotificationLocale } from './notificationText';
 
 export type NotifyType = 'hold' | 'confirm' | 'cancel';
 
+/** Client reminders before the visit: enqueued by enqueue_booking_reminders(), never by POST /api/notify. */
+export type ReminderType = 'reminder_24h' | 'reminder_2h';
+
+/** Every booking outbox event type, and so every booking message the planner renders. */
+export type BookingEventType = NotifyType | ReminderType;
+
+export function isReminderType(type: BookingEventType): type is ReminderType {
+    return type === 'reminder_24h' || type === 'reminder_2h';
+}
+
 export type RoleKey = 'client' | 'staff' | 'owner' | 'admin';
 
 export interface NotifyRequest {

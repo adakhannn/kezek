@@ -163,6 +163,7 @@ export const bookingsEn = {
     'bookings.list.prev': 'Previous',
     'bookings.workspace.emptyHint': 'Try another period, search or branch filter.',
     'bookings.cancelError.changed': 'The booking has changed. Refresh it before cancelling again.',
+    'bookings.cancelError.alreadyStarted': 'The booking has already started. Only the business can cancel it now.',
     'bookings.cancelError.financialReversalRequired': 'The booking is paid, counted in a shift or uses a redeemed benefit. Contact the business for a refund before cancelling.',
     'bookings.cancelError.forbidden': 'You are not allowed to cancel this booking',
     'bookings.cancelError.notCancellable': 'A booking with this status cannot be cancelled',

@@ -26,3 +26,13 @@ test('lease loss and invalid delivery snapshots cannot report delivery success',
     await expect(store.deliveries(event)).rejects.toThrow('OUTBOX_LEASE_LOST');
     await expect(store.deliveries(event)).rejects.toThrow('OUTBOX_DATABASE_FAILED');
 });
+
+test('enqueues due reminders through the bounded service RPC and rejects a malformed count', async () => {
+    const rpc = jest.fn().mockResolvedValueOnce({ data: 4, error: null }).mockResolvedValueOnce({ data: null, error: null })
+        .mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
+    const store = createOutboxStore({ rpc } as never);
+    expect(await store.enqueueReminders()).toBe(4);
+    expect(rpc).toHaveBeenCalledWith('enqueue_booking_reminders', { p_limit: 200 });
+    await expect(store.enqueueReminders()).rejects.toThrow('OUTBOX_DATABASE_FAILED');
+    await expect(store.enqueueReminders()).rejects.toThrow('OUTBOX_DATABASE_FAILED');
+});

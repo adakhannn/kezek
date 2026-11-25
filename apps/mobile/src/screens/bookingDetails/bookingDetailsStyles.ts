@@ -129,6 +129,12 @@ export const styles = StyleSheet.create({
     cancelButton: {
         borderColor: '#ef4444',
     },
+    notice: {
+        fontSize: 14,
+        color: '#6b7280',
+        marginTop: 12,
+        textAlign: 'center',
+    },
     contactRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',

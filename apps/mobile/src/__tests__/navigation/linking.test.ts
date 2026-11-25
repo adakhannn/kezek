@@ -32,3 +32,33 @@ describe('linking config', () => {
         expect(config.BookingDetails.path.startsWith('booking/')).toBe(true);
     });
 });
+
+describe('a tapped booking push opens the booking', () => {
+    const Notifications = jest.requireMock('expo-notifications') as {
+        getLastNotificationResponseAsync: jest.Mock; addNotificationResponseReceivedListener: jest.Mock;
+    };
+    const { Linking } = jest.requireActual('react-native') as typeof import('react-native');
+    const BOOKING_ID = '7d9f1c2e-3b4a-4c5d-8e6f-0a1b2c3d4e5f';
+    const tap = { notification: { request: { content: { data: { bookingId: BOOKING_ID, type: 'reminder_2h' } } } } };
+
+    test('a link wins at a cold start; otherwise the notification that opened the app', async () => {
+        const initial = jest.spyOn(Linking, 'getInitialURL').mockResolvedValueOnce('kezek://b/salon');
+        await expect(linking.getInitialURL!()).resolves.toBe('kezek://b/salon');
+        initial.mockResolvedValueOnce(null);
+        Notifications.getLastNotificationResponseAsync.mockResolvedValueOnce(tap);
+        await expect(linking.getInitialURL!()).resolves.toBe(`kezek://booking/${BOOKING_ID}`);
+        initial.mockRestore();
+    });
+
+    test('a tap while the app runs reaches the navigation listener', () => {
+        let onTap: (response: unknown) => void = () => undefined;
+        const remove = jest.fn();
+        Notifications.addNotificationResponseReceivedListener.mockImplementationOnce((callback: typeof onTap) => { onTap = callback; return { remove }; });
+        const listener = jest.fn();
+        const unsubscribe = linking.subscribe!(listener) as () => void;
+        onTap(tap);
+        expect(listener).toHaveBeenCalledWith(`kezek://booking/${BOOKING_ID}`);
+        unsubscribe();
+        expect(remove).toHaveBeenCalled();
+    });
+});

@@ -59,13 +59,17 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     sql(`create role anon; create role authenticated; create role service_role bypassrls;
       ${SUPABASE_DEFAULT_PRIVILEGES}
       create table bookings(id uuid primary key,status text,start_at timestamptz default now(),end_at timestamptz default now()+interval '30 minutes',
-        staff_id uuid,branch_id uuid,biz_id uuid,service_id uuid);`);
+        staff_id uuid,branch_id uuid,biz_id uuid,service_id uuid,created_at timestamptz not null default now()-interval '7 days');`);
     sql(readFileSync(migration,'utf8'));
     sql(readFileSync(path.join(root,'supabase/migrations/20261110125000_booking_outbox_throughput.sql'),'utf8'));
     // pg_cron is not installed here; besides its drops, 20261119020000 only schedules two cleanup jobs.
     sql("create schema cron; create function cron.schedule(text,text,text) returns bigint language sql as 'select 1::bigint';");
     sql(readFileSync(path.join(root,'supabase/migrations/20261119020000_dead_functions_and_cleanup_jobs.sql'),'utf8'));
     sql(readFileSync(path.join(root,'supabase/migrations/20261125120000_booking_outbox_health_window.sql'),'utf8'));
+    sql(readFileSync(path.join(root,'supabase/migrations/20261125160000_booking_reminders.sql'),'utf8'));
+    // push_tokens references auth.users; the synthetic schema has only the key.
+    sql('create schema auth; create table auth.users(id uuid primary key);');
+    sql(readFileSync(path.join(root,'supabase/migrations/20261125170000_push_tokens.sql'),'utf8'));
     assert.equal(sql("select to_regprocedure('public.claim_booking_notifications(integer,integer)') is null;"),'t','the old claim is gone');
     const bookingId=addBooking();
     const firstEvent=call(`select enqueue_booking_notification('${bookingId}','confirm');`);
@@ -189,6 +193,66 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     console.log(JSON.stringify({benchmark:'synthetic_outbox_database_waves',events:100,waves:50,elapsedMs,
       providerCalls:0,boundary:'PostgreSQL'+POSTGRES_MAJOR+' one transaction, empty recipient plans, includes docker/psql overhead; not provider throughput or production capacity'}));
 
+    // Reminders 24 h / 2 h before the visit (20261125160000).
+    reset();
+    // A booking made long ago: its confirmation was enqueued then, not now.
+    const booked = (startOffset, { status = 'confirmed', created = '7 days' } = {}) => {
+      const id = randomUUID();
+      sql(`insert into bookings(id,status,start_at,created_at) values('${id}','${status}',now()+interval '${startOffset}',now()-interval '${created}');
+        update booking_notification_outbox set created_at=now()-interval '${created}' where booking_id='${id}';`);
+      return id;
+    };
+    const reminders = id => sql(`select coalesce(string_agg(event_type||'@'||booking_revision,',' order by event_type),'') from booking_notification_outbox where booking_id='${id}' and event_type like 'reminder%';`);
+    const enqueueReminders = (limit = 200) => call(`select enqueue_booking_reminders(${limit});`);
+    const in20h = booked('20 hours'), in90m = booked('90 minutes'), in30h = booked('30 hours'), in10m = booked('10 minutes');
+    const in3h = booked('3 hours'), in1h59 = booked('1 hour 59 minutes'), in16m = booked('16 minutes');
+    const cancelled = booked('20 hours', { status: 'cancelled' }), hold = booked('20 hours', { status: 'hold' });
+    const fresh = booked('20 hours', { created: '1 hour' }), freshSoon = booked('90 minutes', { created: '1 hour' });
+    const moved = booked('20 hours');
+    assert.equal(enqueueReminders(), '7');
+    assert.equal(reminders(in20h), 'reminder_24h@0');
+    assert.equal(reminders(in90m), 'reminder_2h@0', 'inside 2 h only the 2-hour reminder');
+    assert.equal(reminders(in3h), 'reminder_24h@0', 'window bound: 24-hour reminder down to 2 h before');
+    assert.equal(reminders(in1h59), 'reminder_2h@0');
+    assert.equal(reminders(in16m), 'reminder_2h@0', 'window bound: 2-hour reminder down to 15 minutes before');
+    assert.equal(reminders(moved), 'reminder_24h@0');
+    assert.equal(reminders(freshSoon), 'reminder_2h@0', 'booked 1 h before a visit 90 min away: created before the 2 h lead');
+    for (const id of [in30h, in10m, cancelled, hold]) assert.equal(reminders(id), '', 'outside the window or not confirmed');
+    assert.equal(reminders(fresh), '', 'booked inside the 24 h lead: the confirmation was just sent');
+    assert.equal(enqueueReminders(), '0', 'idempotent per (booking, revision, type)');
+    // Reschedule: a new revision with a fresh confirmation inside the lead time gets no 24 h reminder;
+    // the old reminder belongs to the old revision and is fenced as obsolete before any send.
+    sql(`update bookings set start_at=now()+interval '21 hours' where id='${moved}';`);
+    assert.equal(enqueueReminders(), '0');
+    assert.equal(reminders(moved), 'reminder_24h@0');
+    // Cancel after enqueue: the pending reminder cannot be sent.
+    sql(`update bookings set status='cancelled' where id='${in20h}';`);
+    sql(`update booking_notification_outbox set status='sent',completed_at=now() where event_type<>'reminder_24h' or booking_id not in ('${moved}','${in20h}');`);
+    const stale = JSON.parse(call("select claim_booking_notification_batch(2,90,'{}');"));
+    assert.deepEqual(stale.map(row => row.booking_id).sort(), [moved, in20h].sort());
+    for (const row of stale) {
+      failure(`set role service_role; select prepare_booking_notification_deliveries('${row.id}','${row.lease_token}','[]');`, /OUTBOX_EVENT_OBSOLETE/);
+    }
+    failure("set role service_role; select enqueue_booking_reminders(0);", /INVALID_REMINDER_LIMIT/);
+    failure("set role service_role; select enqueue_booking_reminders(null);", /INVALID_REMINDER_LIMIT/);
+    failure(`insert into booking_notification_outbox(booking_id,booking_revision,event_type) values('${in30h}',0,'reminder_1h');`, /event_type_check/);
+
+    // WhatsApp failed status webhooks mark the sent receipt (R25-07).
+    reset();addBooking();event=claim();
+    const whatsappDelivery=delivery('whatsapp','b');prepare(event,[whatsappDelivery]);
+    assert.equal(begin(event,whatsappDelivery.key),'send');
+    call(`select record_booking_notification_delivery(${eventArgs(event)},${quote(whatsappDelivery.key)},'wamid.synthetic');`);finish(event,'sent');
+    const failures=JSON.stringify([{provider_id:'wamid.synthetic',error_code:'whatsapp_131047'},{provider_id:'wamid.unknown',error_code:'whatsapp_131026'},{error_code:'x'}]);
+    assert.equal(call(`select record_booking_notification_provider_failures(${quote(failures)}::jsonb);`),'1');
+    assert.equal(sql(`select status||' '||last_error_code||' '||(sent_at is not null) from booking_notification_deliveries where event_id='${event.id}';`),'failed whatsapp_131047 true');
+    assert.equal(sql(`select status from booking_notification_outbox where id='${event.id}';`),'sent','event status is kept');
+    assert.equal(call(`select record_booking_notification_provider_failures(${quote(failures)}::jsonb);`),'0','a redelivered webhook changes nothing');
+    failure("set role service_role; select record_booking_notification_provider_failures('{}'::jsonb);",/INVALID_PROVIDER_FAILURES/);
+
+    for(const role of ['anon','authenticated']) {
+      failure(`set role ${role}; select enqueue_booking_reminders(10);`,/permission denied/);
+      failure(`set role ${role}; select record_booking_notification_provider_failures('[]'::jsonb);`,/permission denied/);
+    }
     for(const role of ['anon','authenticated']) {
       for(const statement of ['select * from booking_notification_outbox','select * from booking_notification_deliveries',"select _claim_booking_notifications(1,90,'{}')",`select enqueue_booking_notification('${bookingId}','confirm')`,`select begin_booking_notification_delivery(${eventArgs(event)},${quote(key('email'))})`]) {
         failure(`set role ${role}; ${statement};`,/permission denied/);
@@ -200,8 +264,36 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     failure("set role service_role; update booking_notification_deliveries set payload='{}';",/permission denied/);
     failure("set role service_role; update booking_notification_outbox set status='sent';",/permission denied/);
     failure("set role service_role; select _claim_booking_notifications(1,90,'{}');",/permission denied/);
+    // Push channel (20261125170000): accepted by the delivery check, other channels still rejected.
+    reset();
+    const pushBooking=addBooking();
+    call(`select enqueue_booking_notification('${pushBooking}','confirm');`);
+    const pushEvent=claim();
+    prepare(pushEvent,[delivery('push','b')]);
+    assert.equal(sql(`select channel from booking_notification_deliveries where event_id='${pushEvent.id}';`),'push');
+    assert.equal(begin(pushEvent,key('push').replace(/a/g,'b')),'send');
+    assert.equal(begin(pushEvent,key('push').replace(/a/g,'b')),'ambiguous','a push left sending is not resent');
+    failure("insert into booking_notification_deliveries(event_id,delivery_key,channel,payload) select id,'sms:x','sms','{}' from booking_notification_outbox limit 1;",/booking_notification_deliveries_channel_check/);
+    // push_tokens is closed to client sessions; only the service role reads and writes it.
+    const pushUser=randomUUID();
+    sql(`insert into auth.users(id) values('${pushUser}');`);
+    call(`insert into push_tokens(user_id,token,platform) values('${pushUser}','ExponentPushToken[synthetic-install-0001]','ios');`);
+    failure(`set role service_role; insert into push_tokens(user_id,token,platform) values('${pushUser}','ExponentPushToken[synthetic-install-0001]','android');`,/push_tokens_token_key/);
+    failure(`set role service_role; insert into push_tokens(user_id,token,platform) values('${pushUser}','ExponentPushToken[synthetic-install-0002]','web');`,/push_tokens_platform_check/);
+    assert.equal(call('select count(*) from push_tokens;'),'1');
+    assert.equal(sql("select relrowsecurity from pg_class where oid='public.push_tokens'::regclass;"),'t');
+    assert.equal(sql("select count(*) from pg_policies where tablename='push_tokens';"),'0');
+    for(const role of ['anon','authenticated']) {
+      for(const privilege of ['select','insert','update','delete']) {
+        assert.equal(sql(`select has_table_privilege('${role}','public.push_tokens','${privilege}');`),'f',`${role} has no ${privilege} on push_tokens`);
+      }
+      failure(`set role ${role}; select * from push_tokens;`,/permission denied/);
+      failure(`set role ${role}; insert into push_tokens(user_id,token,platform) values('${pushUser}','ExponentPushToken[synthetic-install-0003]','ios');`,/permission denied/);
+    }
+    sql(`delete from auth.users where id='${pushUser}';`);
+    assert.equal(call('select count(*) from push_tokens;'),'0','tokens go with the account');
     await assertLiveFunctions(sql, { suite: 'test-booking-notification-outbox-isolated.cjs' });
-    console.log('PASS isolated outbox PostgreSQL: concurrent claim isolation, immutable preparation, lease fencing, partial receipts, non-idempotent ambiguity, email retry window, revision fencing, finite retries, retained tombstone/PII pruning, ACL. No provider calls.');
+    console.log('PASS isolated outbox PostgreSQL: concurrent claim isolation, immutable preparation, lease fencing, partial receipts, non-idempotent ambiguity, email retry window, revision fencing, finite retries, retained tombstone/PII pruning, push channel, closed push_tokens, ACL. No provider calls.');
   } finally {
     // Only this run's UUID-named disposable container is removed.
     if(/^kezek-outbox-regression-[0-9a-f-]{36}$/.test(name))run(['rm','-f','-v',name],undefined,true);

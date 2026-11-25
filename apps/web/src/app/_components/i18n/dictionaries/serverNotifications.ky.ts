@@ -8,6 +8,7 @@ export const serverNotificationsKy = {
     'server.notifications.titleHold': 'Убакыт убактылуу ээленди',
     'server.notifications.titleConfirm': 'Жазылуу ырасталды',
     'server.notifications.titleCancel': 'Жазылуу жокко чыгарылды',
+    'server.notifications.titleReminder': 'Жазылуу тууралуу эскертүү',
     'server.notifications.detailsHeading': 'Жазылуунун маалыматтары',
     'server.notifications.bookingNumber': 'Жазылуунун номери',
     'server.notifications.service': 'Кызмат',

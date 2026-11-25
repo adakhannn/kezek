@@ -6,6 +6,7 @@ import {
 } from '../../navigation/useRootNavigationSession';
 import { supabase } from '../../lib/supabase';
 import { clearLocalStateOnSessionEnd } from '../../lib/accountLocalState';
+import { syncPushRegistration } from '../../lib/pushNotifications';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AppState, Linking } from 'react-native';
 
@@ -22,6 +23,10 @@ jest.mock('../../lib/supabase', () => ({
 
 jest.mock('../../lib/accountLocalState', () => ({
     clearLocalStateOnSessionEnd: jest.fn(),
+}));
+
+jest.mock('../../lib/pushNotifications', () => ({
+    syncPushRegistration: jest.fn(async () => undefined),
 }));
 
 describe('useRootNavigationSession helpers', () => {
@@ -221,6 +226,22 @@ describe('useRootNavigationSession helpers', () => {
 
             expect(clearLocalStateOnSessionEnd).toHaveBeenCalledWith('user-1');
             expect(result.current.session?.user.id).toBe('user-2');
+        });
+
+        test('push registration follows the signed-in account, after the previous one is cleared', async () => {
+            jest.mocked(syncPushRegistration).mockClear();
+            const { emit } = await renderSignedIn('user-1');
+            await waitFor(() => expect(syncPushRegistration).toHaveBeenCalledWith('user-1'));
+            emit('TOKEN_REFRESHED', sessionOf('user-1'));
+            let finishClear: () => void = () => undefined;
+            jest.mocked(clearLocalStateOnSessionEnd).mockReturnValueOnce(new Promise<void>(resolve => { finishClear = resolve; }));
+            emit('SIGNED_IN', sessionOf('user-2'));
+            await act(async () => { await Promise.resolve(); });
+            expect(syncPushRegistration).toHaveBeenCalledTimes(1);
+            await act(async () => { finishClear(); });
+            await waitFor(() => expect(syncPushRegistration).toHaveBeenLastCalledWith('user-2'));
+            emit('SIGNED_OUT', null);
+            expect(syncPushRegistration).toHaveBeenCalledTimes(2);
         });
 
         test('a session found missing on resume clears the account too', async () => {

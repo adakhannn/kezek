@@ -7,7 +7,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { applyMigrationFunctionsWhereExist, assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+const { applyMigrationFunctionsWhereExist, assertLiveFunctions, installLiveFunction, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -154,6 +154,9 @@ let created = false;
         await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261119120000_promotion_visits_exclude_priced_booking.sql'), 'utf8'));
         // The later business-day redefinition (ARCH-11): promotion validity is today of the business.
         await applyMigrationFunctionsWhereExist(sql, '20261125100000_business_time_zone_days.sql');
+        // R25-04: the price of a booking comes from all its services (20261125140000).
+        // The suite never runs it; install its live body (it calls private.booking_catalog_amount).
+        await installLiveFunction(sql, 'public.apply_promotion_to_booking(uuid)');
         for (const sig of ['get_client_visit_count(uuid,uuid)', 'can_use_promotion(uuid,uuid,uuid)']) {
             assert.equal(await sql(`select to_regprocedure('public.${sig}') is null`), 't', `${sig} is dropped`);
         }

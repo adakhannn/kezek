@@ -13,9 +13,14 @@ type Props = {
     timelineSteps: TimelineStep[];
     canCancel: boolean;
     isCancelling: boolean;
+    canReschedule: boolean;
+    /** Started: only the business can cancel or reschedule now (R25-10). */
+    startedNotice: boolean;
+    benefitRescheduleNotice: boolean;
     primaryPhone: string | null;
     onRepeat: () => void;
     onCancel: () => void;
+    onReschedule: () => void;
     onCall: () => void;
     onWhatsApp: () => void;
 };
@@ -25,9 +30,13 @@ export function BookingDetailsSections({
     timelineSteps,
     canCancel,
     isCancelling,
+    canReschedule,
+    startedNotice,
+    benefitRescheduleNotice,
     primaryPhone,
     onRepeat,
     onCancel,
+    onReschedule,
     onCall,
     onWhatsApp,
 }: Props) {
@@ -114,6 +123,16 @@ export function BookingDetailsSections({
             <View style={styles.actions}>
                 <Button title={t('cabinet.details.repeat')} onPress={onRepeat} style={styles.primaryAction} />
 
+                {canReschedule && (
+                    <Button
+                        title={t('cabinet.details.reschedule')}
+                        onPress={onReschedule}
+                        variant="outline"
+                        style={styles.cancelButton}
+                        disabled={isCancelling}
+                    />
+                )}
+
                 {canCancel && (
                     <Button
                         title={t('cabinet.details.cancel')}
@@ -123,6 +142,14 @@ export function BookingDetailsSections({
                         loading={isCancelling}
                     />
                 )}
+
+                {startedNotice && (
+                    <Text style={styles.notice} testID="booking-started-notice">
+                        {t('cabinet.details.startedNotice')}
+                    </Text>
+                )}
+
+                {benefitRescheduleNotice && <Text style={styles.notice}>{t('cabinet.details.benefitRescheduleNotice')}</Text>}
 
                 {primaryPhone && (
                     <View style={styles.contactRow}>

@@ -101,3 +101,33 @@ export function canChangeStatus(
 
     return true;
 }
+
+export type ClientBookingActionsInput = {
+    status: BookingStatus | string;
+    startAt: string | Date;
+    promotionApplied?: unknown;
+    subscriptionApplied?: unknown;
+};
+
+/**
+ * What the client may still do with their own booking (R25-10, owner decision of 25 Nov 2026):
+ * cancel and reschedule end at the start of the visit; from then on only the business changes it.
+ * Reschedule needs a confirmed booking without a promotion or package (the business moves those).
+ * The SQL commands (cancel_booking, reschedule_booking_request) enforce the same; this decides
+ * which actions the apps offer and when they explain why not.
+ */
+export function clientBookingActions(booking: ClientBookingActionsInput, now: Date = new Date()) {
+    const start = typeof booking.startAt === 'string' ? Date.parse(booking.startAt) : booking.startAt.getTime();
+    const started = !Number.isFinite(start) || start <= now.getTime();
+    const active = booking.status === 'hold' || booking.status === 'confirmed';
+    const benefit = booking.promotionApplied != null || booking.subscriptionApplied != null;
+    const futureConfirmed = booking.status === 'confirmed' && !started;
+    return {
+        /** Active but already started: the apps say that only the business can change it. */
+        started: active && started,
+        canCancel: active && !started,
+        canReschedule: futureConfirmed && !benefit,
+        /** A future confirmed booking with a benefit: rescheduled by the business. */
+        rescheduleNeedsBusiness: futureConfirmed && benefit,
+    };
+}

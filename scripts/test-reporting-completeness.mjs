@@ -92,6 +92,19 @@ try {
  (md5('spring-hour-three')::uuid,'${ids.otherBiz}','${ids.otherBranch}','${ids.otherStaff}','${ids.otherService}','2026-03-08 07:00Z','2026-03-08 08:00Z','paid'),
  (md5('spring-next-midnight')::uuid,'${ids.otherBiz}','${ids.otherBranch}','${ids.otherStaff}','${ids.otherService}','2026-03-09 04:00Z','2026-03-09 05:00Z','paid');
  update bookings set promotion_applied='{"promotion_type":"free","final_amount":0}' where id=md5('fall-first-hour')::uuid;`);
+ // R25-17: revenue is the charged amount of a performed visit, from every service of the booking
+ // (20261125140100). Local hour 0 of 2026-11-01, before the 1501 analytics bookings of the same staff.
+ await sql(`insert into services(id,biz_id,price_from,price_to) values(md5('coloring')::uuid,'${ids.biz}',3000,3000),(md5('odd-range')::uuid,'${ids.biz}',1000,1501);
+ insert into bookings(id,biz_id,branch_id,staff_id,service_id,start_at,end_at,status,subscription_applied) values
+ (md5('multi-paid')::uuid,'${ids.biz}','${ids.branch}',md5('analytics-staff-1')::uuid,'${ids.service}','2026-10-31 18:00Z','2026-10-31 18:30Z','paid',null),
+ (md5('multi-package')::uuid,'${ids.biz}','${ids.branch}',md5('analytics-staff-2')::uuid,'${ids.service}','2026-10-31 18:00Z','2026-10-31 18:30Z','paid','{"final_amount":0}'),
+ (md5('multi-confirmed')::uuid,'${ids.biz}','${ids.branch}',md5('analytics-staff-3')::uuid,'${ids.service}','2026-10-31 18:00Z','2026-10-31 18:30Z','confirmed',null),
+ (md5('odd-range-paid')::uuid,'${ids.biz}','${ids.branch}',md5('analytics-staff-4')::uuid,md5('odd-range')::uuid,'2026-10-31 18:00Z','2026-10-31 18:30Z','paid',null);
+ insert into booking_services(booking_id,service_id,order_index) select b,s,o from (values(md5('multi-paid')::uuid),(md5('multi-package')::uuid),(md5('multi-confirmed')::uuid)) x(b)
+  cross join (values('${ids.service}'::uuid,0),(md5('coloring')::uuid,1)) y(s,o);`);
+ // haircut 1000 + coloring 3000; the 100% package visit is 0; the 1000..1501 range is 1250.50, not 1250;
+ // the confirmed (not performed) booking is no revenue.
+ const extraRevenue=4000+0+1250.5,extraBookings=4;
  // A DST business reports the local day it actually has: 23 hours in spring, 25 in autumn.
  await sql(`insert into staff_shifts(id,staff_id,biz_id,branch_id,shift_date,opened_at) values
  (md5('report-spring')::uuid,'${ids.otherStaff}','${ids.otherBiz}','${ids.otherBranch}','2026-03-08','2026-03-08 14:00Z'),
@@ -105,11 +118,13 @@ try {
  await call(daily('2026-11-01'));await call(hourly('2026-11-01'));
  const dailyRows=JSON.parse(await sql(`select jsonb_agg(to_jsonb(s)) from business_daily_stats s where date='2026-11-01'`));
  const a=dailyRows.find(r=>r.biz_id===ids.biz),b=dailyRows.find(r=>r.biz_id===ids.otherBiz);
- const expectedRevenue=1000+Array.from({length:1501},(_,i)=>(i+1)%3===0?125.5:1000).reduce((x,y)=>x+y,0);
+ // The confirmed last-microsecond booking is not a performed visit: no revenue (R25-17).
+ const expectedRevenue=extraRevenue+Array.from({length:1501},(_,i)=>(i+1)%3===0?125.5:1000).reduce((x,y)=>x+y,0);
  assert.equal(a.total_revenue,expectedRevenue);assert.equal(a.home_views,1501);assert.equal(a.promo_bookings,500);assert.equal(a.promo_revenue,62750);
  assert.equal(b.total_revenue,2000);assert.equal(b.promo_bookings,1);assert.equal(b.promo_revenue,0);
  const hours=JSON.parse(await sql(`select jsonb_agg(to_jsonb(s)) from business_hourly_load s where date='2026-11-01'`));
- assert.equal(hours.find(r=>r.biz_id===ids.biz&&r.hour===0).bookings_count,1501);
+ // Load still counts confirmed bookings: they occupy staff time.
+ assert.equal(hours.find(r=>r.biz_id===ids.biz&&r.hour===0).bookings_count,1501+extraBookings);
  assert.equal(hours.find(r=>r.biz_id===ids.biz&&r.hour===23).bookings_count,1);
  assert.equal(hours.find(r=>r.biz_id===ids.otherBiz&&r.hour===1).bookings_count,2);
  assert.equal(hours.find(r=>r.biz_id===ids.otherBiz&&r.hour===23).bookings_count,1);
@@ -139,7 +154,7 @@ try {
  // More than 1000 branch buckets, but no truncated REST traversal and exact sum oracle.
  await sql(`insert into business_hourly_load(biz_id,branch_id,date,hour,bookings_count) select '${ids.biz}',md5('branch-'||i)::uuid,'2026-11-01',4,i%7 from generate_series(1,1201)i`);
  const completeHours=await call(analyticsRead('hourly',`'${ids.biz}'`));assert.equal(completeHours.rows.length,1203);
- assert.equal(completeHours.rows.reduce((sum,r)=>sum+r.bookings_count,0),1502+Array.from({length:1201},(_,i)=>(i+1)%7).reduce((a,b)=>a+b,0));
+ assert.equal(completeHours.rows.reduce((sum,r)=>sum+r.bookings_count,0),1502+extraBookings+Array.from({length:1201},(_,i)=>(i+1)%7).reduce((a,b)=>a+b,0));
  await call(hourly('2026-11-01'));
  // Global aggregation includes >1000 tenants while returning only one daily row.
  await sql(`insert into businesses(id,tz) select md5('report-biz-'||i)::uuid,'Asia/Bishkek' from generate_series(1,1201)i;

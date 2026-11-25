@@ -44,7 +44,7 @@ export {
 } from './validation';
 
 // Правила переходов статусов
-export type { CanMarkAttendanceContext, CanChangeStatusOptions } from './statusTransitions';
+export type { CanMarkAttendanceContext, CanChangeStatusOptions, ClientBookingActionsInput } from './statusTransitions';
 export {
     ACTIVE_BOOKING_STATUSES,
     isActiveStatus,
@@ -53,6 +53,7 @@ export {
     canConfirm,
     canMarkAttendance,
     canChangeStatus,
+    clientBookingActions,
 } from './statusTransitions';
 
 // Application use-cases

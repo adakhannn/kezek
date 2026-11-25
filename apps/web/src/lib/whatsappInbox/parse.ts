@@ -39,7 +39,8 @@ export function parseWhatsAppInboxBody(body: unknown, receiver: string): Incomin
             const value = object(object(change).value);
             const metadata = object(value.metadata);
             if (metadata.phone_number_id !== receiver) throw new InvalidWhatsAppPayload();
-            // Delivery status callbacks do not authorize commands or prove an uncertain send failed.
+            // Delivery status callbacks do not authorize commands or prove an uncertain send failed;
+            // failed statuses are read separately by parseWhatsAppDeliveryFailures.
             if (value.statuses !== undefined) list(value.statuses, 100);
             for (const raw of value.messages === undefined ? [] : list(value.messages, 100)) {
                 const message = object(raw);
@@ -59,4 +60,32 @@ export function parseWhatsAppInboxBody(body: unknown, receiver: string): Incomin
         }
     }
     return messages;
+}
+
+export type WhatsAppDeliveryFailure = { provider_id: string; error_code: string };
+
+/**
+ * Failed delivery statuses of messages the API had accepted (R25-07): 131047 (outside the 24-hour
+ * window), 131026 (undeliverable), template errors. Only reported, never acted on beyond marking the
+ * booking outbox receipt. Run after parseWhatsAppInboxBody validated the envelope and receiver; an
+ * odd status entry is skipped rather than rejecting the whole webhook.
+ */
+export function parseWhatsAppDeliveryFailures(body: unknown, receiver: string): WhatsAppDeliveryFailure[] {
+    const failures: WhatsAppDeliveryFailure[] = [];
+    for (const entry of list(object(body).entry, 100)) {
+        for (const change of list(object(entry).changes, 100)) {
+            const value = object(object(change).value);
+            if (object(value.metadata).phone_number_id !== receiver) throw new InvalidWhatsAppPayload();
+            for (const raw of value.statuses === undefined ? [] : list(value.statuses, 100)) {
+                if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+                const status = raw as Record<string, unknown>;
+                if (status.status !== 'failed' || typeof status.id !== 'string' || !status.id || status.id.length > 512) continue;
+                const first = Array.isArray(status.errors) ? status.errors[0] as Record<string, unknown> | undefined : undefined;
+                const code = first && typeof first === 'object' ? first.code : undefined;
+                failures.push({ provider_id: status.id, error_code: typeof code === 'number' && Number.isSafeInteger(code) ? `whatsapp_${code}` : 'whatsapp_failed' });
+                if (failures.length > 100) throw new InvalidWhatsAppPayload();
+            }
+        }
+    }
+    return failures;
 }

@@ -14,9 +14,11 @@ import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { LanguageSwitcher, useLanguage } from '../../i18n';
+import { PushNotificationsSwitch } from './PushNotificationsSwitch';
 import { styles } from './profileScreenStyles';
 
 type Props = {
+    userId?: string;
     email: string | undefined;
     fullName: string;
     phone: string;
@@ -36,6 +38,7 @@ type Props = {
 };
 
 export function ProfileScreenSections({
+    userId,
     email,
     fullName,
     phone,
@@ -134,6 +137,8 @@ export function ProfileScreenSections({
                         thumbColor={colors.text.light}
                     />
                 </View>
+
+                <PushNotificationsSwitch userId={userId} />
             </Card>
 
             <Card style={styles.card}>

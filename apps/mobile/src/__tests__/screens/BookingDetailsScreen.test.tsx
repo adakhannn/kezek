@@ -3,7 +3,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { QueryClientProvider } from '@tanstack/react-query';
 
 import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
+import * as SecureStore from 'expo-secure-store';
+
 import { apiRequest } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 import { createTestQueryClient } from '../testQueryClient';
 
 let mockRouteId = 'test-booking-id';
@@ -45,8 +48,8 @@ describe('BookingDetailsScreen', () => {
             ok: true,
             data: {
                 id: 'test-booking-id',
-                start_at: '2024-01-01T10:00:00Z',
-                end_at: '2024-01-01T11:00:00Z',
+                start_at: '2099-01-01T10:00:00Z',
+                end_at: '2099-01-01T11:00:00Z',
                 status: 'confirmed',
                 service: {
                     name_ru: 'Тестовая услуга',
@@ -93,8 +96,8 @@ describe('BookingDetailsScreen', () => {
             ok: true,
             data: {
                 id: 'test-booking-id',
-                start_at: '2024-01-01T10:00:00Z',
-                end_at: '2024-01-01T11:00:00Z',
+                start_at: '2099-01-01T10:00:00Z',
+                end_at: '2099-01-01T11:00:00Z',
                 status: 'confirmed',
                 service: { name_ru: 'Тестовая услуга', duration_min: 60, price_from: 1000, price_to: 1500 },
                 staff: { full_name: 'Тестовый мастер' },
@@ -151,5 +154,91 @@ describe('BookingDetailsScreen', () => {
 
         expect(await screen.findByText('Бронирование не найдено')).toBeTruthy();
         expect(screen.queryByText('Тестовая услуга')).toBeNull();
+    });
+    // R25-10: the client's own actions end at the start of the visit.
+    test('a started booking offers no cancel or reschedule and says why', async () => {
+        const startedAt = new Date(Date.now() - 10 * 60_000).toISOString();
+        const endsAt = new Date(Date.now() + 50 * 60_000).toISOString();
+        mockedApiRequest.mockResolvedValue({
+            ok: true,
+            data: {
+                id: 'test-booking-id', start_at: startedAt, end_at: endsAt, status: 'confirmed',
+                biz_id: 'biz-1', branch_id: 'branch-1', staff_id: 'staff-1', benefit_applied: false,
+                service: { name_ru: 'Тестовая услуга', duration_min: 60, price_from: null, price_to: null },
+                staff: { full_name: 'Тестовый мастер' },
+                business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] },
+                branch: { name: 'Главный филиал', address: null },
+            },
+        } as never);
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByTestId('booking-started-notice')).toBeTruthy();
+        expect(screen.queryByText('Отменить бронирование')).toBeNull();
+        expect(screen.queryByText('Перенести запись')).toBeNull();
+    });
+
+    test('a booking with a benefit is not rescheduled by the client', async () => {
+        mockedApiRequest.mockResolvedValue({
+            ok: true,
+            data: {
+                id: 'test-booking-id', start_at: '2099-01-01T10:00:00Z', end_at: '2099-01-01T11:00:00Z', status: 'confirmed',
+                biz_id: 'biz-1', branch_id: 'branch-1', staff_id: 'staff-1', benefit_applied: true,
+                service: null, staff: null, business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] }, branch: null,
+            },
+        } as never);
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Отменить бронирование')).toBeTruthy();
+        expect(screen.queryByText('Перенести запись')).toBeNull();
+        expect(screen.getByText('Запись с акцией или абонементом переносит организация: свяжитесь с ней.')).toBeTruthy();
+    });
+
+    test('reschedules to a free start of the same master with an idempotency key', async () => {
+        const store = new Map<string, string>();
+        jest.mocked(SecureStore.getItemAsync).mockImplementation(async (key) => store.get(key) ?? null);
+        jest.mocked(SecureStore.setItemAsync).mockImplementation(async (key, value) => { store.set(key, value); });
+        jest.mocked(SecureStore.deleteItemAsync).mockImplementation(async (key) => { store.delete(key); });
+        jest.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null } as never);
+        jest.mocked(supabase.rpc).mockResolvedValue({
+            data: [
+                { staff_id: 'staff-1', branch_id: 'branch-1', start_at: '2099-01-02T12:00:00+00:00', end_at: '2099-01-02T13:00:00+00:00' },
+                { staff_id: 'staff-2', branch_id: 'branch-1', start_at: '2099-01-02T13:00:00+00:00', end_at: '2099-01-02T14:00:00+00:00' },
+            ],
+            error: null,
+        } as never);
+        const details = {
+            id: 'test-booking-id', start_at: '2099-01-01T10:00:00Z', end_at: '2099-01-01T11:00:00Z', status: 'confirmed',
+            biz_id: 'biz-1', branch_id: 'branch-1', staff_id: 'staff-1', benefit_applied: false,
+            service: { name_ru: 'Тестовая услуга', duration_min: 60, price_from: null, price_to: null },
+            staff: { full_name: 'Тестовый мастер' },
+            business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] },
+            branch: { name: 'Главный филиал', address: null },
+        };
+        mockedApiRequest.mockImplementation(async (endpoint: string) => (endpoint.endsWith('/reschedule')
+            ? { ok: true, data: { booking_id: 'test-booking-id', rescheduled: true, start_at: '2099-01-02T12:00:00+00:00', end_at: '2099-01-02T13:00:00+00:00' } }
+            : { ok: true, data: details }) as never);
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        fireEvent.press(await screen.findByText('Перенести запись'));
+        expect(await screen.findByTestId('reschedule-sheet')).toBeTruthy();
+        expect(jest.mocked(supabase.rpc)).toHaveBeenCalledWith('get_free_slots_complex_day_v1', expect.objectContaining({
+            p_biz_id: 'biz-1', p_staff_id: 'staff-1', p_duration_min: 60,
+        }));
+        // 12:00Z is 18:00 in Asia/Bishkek; the other master's start is not offered.
+        fireEvent.press(await screen.findByText('18:00'));
+        expect(screen.queryByText('19:00')).toBeNull();
+        fireEvent.press(screen.getByText('Перенести'));
+
+        await waitFor(() => {
+            expect(mockedApiRequest).toHaveBeenCalledWith('/api/bookings/test-booking-id/reschedule', expect.objectContaining({
+                method: 'POST',
+                body: JSON.stringify({ start_at: '2099-01-02T12:00:00+00:00' }),
+                headers: expect.objectContaining({ 'Idempotency-Key': expect.stringMatching(/^[0-9a-f-]{36}$/) }),
+            }));
+        });
+        await waitFor(() => expect(screen.queryByTestId('reschedule-sheet')).toBeNull());
     });
 });

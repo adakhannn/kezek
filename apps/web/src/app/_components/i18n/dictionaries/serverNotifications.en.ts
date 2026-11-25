@@ -8,6 +8,7 @@ export const serverNotificationsEn = {
     'server.notifications.titleHold': 'Slot on hold',
     'server.notifications.titleConfirm': 'Booking confirmed',
     'server.notifications.titleCancel': 'Booking cancelled',
+    'server.notifications.titleReminder': 'Booking reminder',
     'server.notifications.detailsHeading': 'Booking details',
     'server.notifications.bookingNumber': 'Booking number',
     'server.notifications.service': 'Service',

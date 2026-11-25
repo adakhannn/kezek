@@ -200,5 +200,11 @@ export type ClientBookingDetailsDto = {
         /** IANA zone of the business (businesses.tz, validated; Asia/Bishkek when unset). Absent from older servers. */
         tz?: string;
     } | null;
+    /** The booking's business, branch and master: the reschedule slots are theirs. Absent from older servers. */
+    biz_id?: string;
+    branch_id?: string;
+    staff_id?: string;
+    /** A promotion or package is applied: the business, not the client, reschedules it. Absent from older servers. */
+    benefit_applied?: boolean;
 };
 

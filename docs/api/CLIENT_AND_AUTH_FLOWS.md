@@ -277,7 +277,7 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 
 | Аспект | Контракт |
 | --- | --- |
-| Input / output | `[id]` UUID; `S(ClientBookingDetailsDto)`, поля list + service duration_min/price_from/price_to, business phones и tz (как в списке). Связанные объекты nullable |
+| Input / output | `[id]` UUID; `S(ClientBookingDetailsDto)`, поля list + service duration_min/price_from/price_to, business phones и tz (как в списке), `biz_id`/`branch_id`/`staff_id` (слоты переноса) и `benefit_applied` (акция или абонемент: переносит бизнес). Связанные объекты nullable |
 | Auth / errors | Auth выше; 401 auth, 400 validation UUID, 404 not_found при отсутствующей/чужой брони, 500 internal query, 429 |
 | Limiter / effects | `normal/shared`; только чтение выбранной собственной брони |
 
@@ -289,8 +289,31 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 | Аспект | Контракт |
 | --- | --- |
 | Input / output | `[id]` UUID; тело не читается. Отмена возвращает `S({alreadyCancelled:boolean})`, true при ранее cancelled |
-| Auth / errors | Auth выше; 401 auth, 400 UUID, 404 отсутствующая/чужая бронь, 409 financial_reversal_required/not_cancellable/booking_changed, 403 forbidden при отказе RPC, 500 internal, 429 |
-| Limiter / effects | `normal/shared`; checked `cancel_booking` RPC после проверки client_id. Только hold/confirmed; paid/ledger/applied benefit требуют финансового возврата. DB trigger ставит уведомление в ту же транзакцию. Прямой UPDATE удалён |
+| Auth / errors | Auth выше; 401 auth, 400 UUID, 404 отсутствующая/чужая бронь, 409 financial_reversal_required/not_cancellable/booking_already_started/booking_changed, 403 forbidden при отказе RPC, 500 internal, 429 |
+| Limiter / effects | `normal/shared`; checked `cancel_booking` RPC после проверки client_id. Только hold/confirmed; paid/ledger/applied benefit требуют финансового возврата. Клиент отменяет только до начала записи (`start_at > now()`, R25-10, миграция 20261125150000): после начала — `409 / booking_already_started`. DB trigger ставит уведомление в ту же транзакцию. Прямой UPDATE удалён. Перенос — `POST /api/bookings/[id]/reschedule` с Bearer ([BOOKING_AND_CATALOG.md](BOOKING_AND_CATALOG.md)) |
+
+<!-- api-contract: POST /api/mobile/push-tokens -->
+### POST `/api/mobile/push-tokens`
+
+Источники: [route](../../apps/web/src/app/api/mobile/push-tokens/route.ts) → [HTTP](../../apps/web/src/lib/mobilePushTokensHttpService.ts) → [store](../../apps/web/src/lib/pushTokens.ts); таблица [push_tokens](../../supabase/migrations/20261125170000_push_tokens.sql). Проверено по исходному коду и unit-тестам с mock-хранилищем, 25 ноября 2026.
+
+| Аспект | Контракт |
+| --- | --- |
+| Auth / input | Auth как у mobile bookings выше (Bearer, иначе cookie). JSON `{token, platform, deviceName?}`: `token` — `ExponentPushToken[...]` или `ExpoPushToken[...]` (внутри 10–180 символов `[A-Za-z0-9_-]`), `platform` — `ios`/`android`, `deviceName` — до 100 символов или null |
+| Success | `S({registered:true})` |
+| Errors | 401 auth; 400 validation (невалидный JSON; `details.fields` — имена полей, без значений); 500 internal при ошибке записи; 429 |
+| Limiter / effects | `normal/shared`. Service role: upsert по `token` (токен другого аккаунта переходит к вызывающему), `updated_at` и сброс `last_error`; затем у пользователя остаются 10 последних по `updated_at`. Токен в ответы и логи не попадает |
+
+<!-- api-contract: DELETE /api/mobile/push-tokens -->
+### DELETE `/api/mobile/push-tokens`
+
+Источник route: [DELETE](../../apps/web/src/app/api/mobile/push-tokens/route.ts); остальные источники — как у POST.
+
+| Аспект | Контракт |
+| --- | --- |
+| Input / output | JSON `{token}` той же формы. `S({registered:false})`, в том числе если такого токена у пользователя не было |
+| Auth / errors | Auth выше; 401 auth, 400 validation, 500 internal, 429 |
+| Limiter / effects | `normal/shared`. Удаляет строку только с `user_id = user.id` и этим токеном; чужой токен не трогает. Приложение вызывает при выключении переключателя и перед выходом |
 
 <!-- api-contract: POST /booking/[id]/cancel -->
 ### POST `/booking/[id]/cancel`

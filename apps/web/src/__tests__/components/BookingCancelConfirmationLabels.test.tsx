@@ -25,7 +25,7 @@ describe.each(cases)('booking cancellation confirmation %s', (locale, dictionary
     afterEach(() => jest.restoreAllMocks());
 
     function openPreview() {
-        render(<BookingCard bookingId="fixture-confirmation" status="confirmed" start_at="2026-10-19T03:00:00Z" end_at="2026-10-19T04:00:00Z" service={null} staff={null} branch={null} business={null} canCancel />);
+        render(<BookingCard bookingId="fixture-confirmation" status="confirmed" start_at="2099-10-19T03:00:00Z" end_at="2099-10-19T04:00:00Z" service={null} staff={null} branch={null} business={null} canCancel />);
         const trigger = screen.getByRole('button', { name: dictionary['cabinet.bookings.card.actions.cancel'], exact: true });
         trigger.focus();
         fireEvent.click(trigger);

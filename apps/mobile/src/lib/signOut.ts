@@ -3,6 +3,7 @@ import { createTranslate, type Translate } from '../i18n/translate';
 import { getOfflineQueue } from '../screens/shiftQuick/offlineStorage';
 import { clearLocalStateOnSignOut } from './accountLocalState';
 import { logWarn } from './log';
+import { unregisterPushTokenOnSignOut } from './pushNotifications';
 import { supabase } from './supabase';
 
 type AuthWithLocalSessionRemoval = {
@@ -98,6 +99,10 @@ export async function signOutSafely(): Promise<SignOutResult> {
         } catch {
             // Logout must continue even if session inspection fails.
         }
+
+        // While the session still authorizes the call: this install stops receiving the account's
+        // booking pushes. Bounded and best effort; never blocks sign-out.
+        await unregisterPushTokenOnSignOut();
 
         const { error } = await Promise.race([
             auth.signOut(),

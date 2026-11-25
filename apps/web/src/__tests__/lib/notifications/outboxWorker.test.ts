@@ -26,6 +26,7 @@ function setup(deliveries = [delivery('email')]) {
         receipt: jest.fn().mockImplementation(async (_event, key) => { deliveries.find(value => value.delivery_key === key)!.status = 'sent'; }),
         fail: jest.fn().mockImplementation(async (_event, key, outcome) => { deliveries.find(value => value.delivery_key === key)!.status = outcome === 'retry' ? 'pending' : outcome; }),
         finish: jest.fn().mockResolvedValue(undefined), prune: jest.fn().mockResolvedValue(0),
+        enqueueReminders: jest.fn().mockResolvedValue(0),
     };
     const plan = jest.fn().mockResolvedValue([]);
     const send = jest.fn().mockResolvedValue('provider-receipt');
@@ -183,4 +184,84 @@ test('a booking that starts later is still notified', async () => {
     await runBookingNotificationWorker({ ...deps, now: () => Date.parse('2034-01-01T10:00:00Z') });
     expect(deps.send).toHaveBeenCalledTimes(1);
     expect(deps.store.finish).toHaveBeenLastCalledWith(event, 'sent', '', 0);
+});
+
+describe('reminders', () => {
+    const reminderEvent = (type: 'reminder_24h' | 'reminder_2h') => ({ ...event, event_type: type, prepared_at: null });
+    const start = Date.parse('2034-01-02T10:00:00Z');
+
+    test('every run enqueues due reminders before claiming and reports how many', async () => {
+        const deps = setup(); deps.store.enqueueReminders.mockResolvedValue(3);
+        const result = await runBookingNotificationWorker(deps);
+        expect(result.reminders).toBe(3);
+        expect(deps.store.enqueueReminders.mock.invocationCallOrder[0]).toBeLessThan(deps.store.claim.mock.invocationCallOrder[0]);
+    });
+
+    test('a failed reminder enqueue is logged and counted but confirmations are still processed', async () => {
+        const deps = setup(); const cause = new Error('rpc down');
+        deps.store.enqueueReminders.mockRejectedValue(cause);
+        const result = await runBookingNotificationWorker(deps);
+        expect(result.errors).toBe(1); expect(result.reminders).toBe(0);
+        expect(deps.send).toHaveBeenCalledTimes(1);
+        expect(logError).toHaveBeenCalledWith('BookingNotificationWorker', 'Booking reminders could not be enqueued', { error: cause });
+    });
+
+    test.each([
+        ['reminder_24h', start - 20 * 3_600_000],
+        ['reminder_2h', start - 90 * 60_000],
+    ] as const)('%s of a confirmed booking inside its window is planned and sent', async (type, nowMs) => {
+        const deps = setup();
+        deps.store.claim.mockImplementation(async (exclude: string[]) => exclude.includes(event.id) ? [] : [reminderEvent(type)]);
+        deps.store.booking.mockResolvedValue({ id: 'booking', status: 'confirmed', notification_revision: 4, start_at: new Date(start).toISOString() });
+        await runBookingNotificationWorker({ ...deps, now: () => nowMs });
+        expect(deps.plan).toHaveBeenCalledWith(expect.objectContaining({ id: 'booking' }), type);
+        expect(deps.store.finish).toHaveBeenLastCalledWith(expect.objectContaining({ event_type: type }), 'sent', '', 0);
+    });
+
+    test.each([
+        ['cancelled', 4, 'booking_revision_changed'],
+        ['confirmed', 5, 'booking_revision_changed'],
+    ])('a reminder for a %s booking at revision %s is closed without sending', async (status, revision, code) => {
+        const deps = setup();
+        deps.store.claim.mockImplementation(async (exclude: string[]) => exclude.includes(event.id) ? [] : [reminderEvent('reminder_2h')]);
+        deps.store.booking.mockResolvedValue({ id: 'booking', status, notification_revision: revision, start_at: new Date(start).toISOString() });
+        await runBookingNotificationWorker({ ...deps, now: () => start - 90 * 60_000 });
+        expect(deps.plan).not.toHaveBeenCalled(); expect(deps.send).not.toHaveBeenCalled();
+        expect(deps.store.finish).toHaveBeenLastCalledWith(expect.anything(), 'obsolete', code, 0);
+    });
+
+    test.each([
+        ['reminder_24h', start - 2 * 3_600_000],
+        ['reminder_2h', start - 15 * 60_000],
+    ] as const)('%s delayed past its window is closed as reminder_window_passed', async (type, nowMs) => {
+        const deps = setup();
+        deps.store.claim.mockImplementation(async (exclude: string[]) => exclude.includes(event.id) ? [] : [reminderEvent(type)]);
+        deps.store.booking.mockResolvedValue({ id: 'booking', status: 'confirmed', notification_revision: 4, start_at: new Date(start).toISOString() });
+        await runBookingNotificationWorker({ ...deps, now: () => nowMs });
+        expect(deps.plan).not.toHaveBeenCalled(); expect(deps.send).not.toHaveBeenCalled();
+        expect(deps.store.finish).toHaveBeenLastCalledWith(expect.anything(), 'obsolete', 'reminder_window_passed', 0);
+    });
+});
+
+describe('push to a removed app install', () => {
+    test('DeviceNotRegistered fails that delivery only; the event is sent when everyone else got it', async () => {
+        const deps = setup([delivery('email'), delivery('push')]);
+        deps.send.mockImplementation(async (_id: string, item: StoredDelivery) => {
+            if (item.channel === 'push') throw new ProviderDeliveryError('push_device_not_registered', 'failed');
+            return 'provider-receipt';
+        });
+        await runBookingNotificationWorker(deps);
+        expect(deps.store.fail).toHaveBeenCalledWith(event, 'push:recipient-hash', 'failed', 'push_device_not_registered');
+        expect(deps.store.finish).toHaveBeenLastCalledWith(event, 'sent', '', 0);
+    });
+
+    test('a later run does not turn the event failed because of that stored delivery, but other failures still do', async () => {
+        const gone = { ...delivery('push', 'failed'), last_error_code: 'push_device_not_registered' };
+        let deps = setup([gone, delivery('telegram')]);
+        await runBookingNotificationWorker(deps);
+        expect(deps.store.finish).toHaveBeenLastCalledWith(event, 'sent', '', 0);
+        deps = setup([{ ...delivery('push', 'failed'), last_error_code: 'push_InvalidCredentials' }]);
+        await runBookingNotificationWorker(deps);
+        expect(deps.store.finish).toHaveBeenLastCalledWith(event, 'failed', 'delivery_requires_review', 0);
+    });
 });

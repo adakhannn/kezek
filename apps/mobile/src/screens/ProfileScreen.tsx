@@ -46,6 +46,7 @@ export default function ProfileScreen() {
 
   return (
     <ProfileScreenSections
+      userId={user?.id}
       email={user?.email}
       fullName={fullName}
       phone={phone}

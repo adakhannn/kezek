@@ -35,6 +35,8 @@ try {
  // Checked cancellation with its ACL and the bookings write revokes, from the production migration;
  // booking creation helpers are exercised by the separate booking-request runner.
  await sql(await migrationPart('20261110123000_service_only_booking_commands.sql','create or replace function public.cancel_booking(','-- Deprecated internal wrappers'));
+ // R25-10: cancel_booking as 20261125150000 redefines it (client cut-off at the start).
+ await sql(await migration('20261125150000_client_cancel_cutoff.sql'));
  await race(cancel,save(await revision()),/SHIFT_BOOKING_CANCELLED/);
  assert.equal(await sql(`select status from bookings where id='${ids.booking}'`),'cancelled');
  assert.equal(await sql('select count(*) from staff_shift_items'),'0');

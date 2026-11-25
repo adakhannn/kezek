@@ -189,6 +189,17 @@ export function getWhatsAppPhoneNumberId(): string {
 }
 
 /**
+ * Expo access token for the push API. Optional: needed only when "enhanced push security" is on
+ * in the Expo project; then booking push notifications send it as a Bearer token.
+ */
+export function getExpoAccessToken(): string {
+    return getEnvVar('EXPO_ACCESS_TOKEN', {
+        required: false,
+        validator: isNonEmpty
+    });
+}
+
+/**
  * Получает имя template для OTP входа через WhatsApp
  */
 export function getWhatsAppAuthTemplateName(): string {
@@ -238,6 +249,26 @@ export function getWhatsAppTemplateName(key: 'staff_owner' | 'staff_applicant' |
 
 export function getWhatsAppTemplateLanguage(): string {
     return process.env.WHATSAPP_APPLICATION_TEMPLATE_LANGUAGE?.trim() || 'ru';
+}
+
+/** Approved Meta templates of booking notifications (R25-07). An empty name means no WhatsApp
+ * message of that kind is planned; e-mail and Telegram are unaffected. */
+export function getWhatsAppBookingTemplateName(kind: 'confirmed' | 'cancelled' | 'reminder'): string {
+    const names: Record<typeof kind, string | undefined> = {
+        confirmed: process.env.WHATSAPP_BOOKING_CONFIRMED_TEMPLATE_NAME,
+        cancelled: process.env.WHATSAPP_BOOKING_CANCELLED_TEMPLATE_NAME,
+        reminder: process.env.WHATSAPP_BOOKING_REMINDER_TEMPLATE_NAME,
+    };
+    return names[kind]?.trim() ?? '';
+}
+
+/** Meta language code of the booking templates: WHATSAPP_BOOKING_TEMPLATE_LANG_KY / _EN when that
+ * translation is approved, otherwise WHATSAPP_BOOKING_TEMPLATE_LANG (default 'ru'). An empty result
+ * for ky/en means the recipient gets the default translation. */
+export function getWhatsAppBookingTemplateLanguage(locale: 'default' | 'ky' | 'en'): string {
+    if (locale === 'ky') return process.env.WHATSAPP_BOOKING_TEMPLATE_LANG_KY?.trim() ?? '';
+    if (locale === 'en') return process.env.WHATSAPP_BOOKING_TEMPLATE_LANG_EN?.trim() ?? '';
+    return process.env.WHATSAPP_BOOKING_TEMPLATE_LANG?.trim() || 'ru';
 }
 
 /**

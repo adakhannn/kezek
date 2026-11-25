@@ -3,7 +3,7 @@ import type { BookingRequestIdentity } from '@/lib/bookingRequestHttp';
 import { bookingCommandError, BookingSlotConflictError } from '@/lib/bookingSlotConflict';
 import { logError } from '@/lib/log';
 
-type BookingRpcResult = { data: unknown; error: { message: string; code?: string } | null };
+export type BookingRpcResult ={ data: unknown; error: { message: string; code?: string } | null };
 export type BookingRequestSupabasePort = {
     rpc(name: string, args: Record<string, unknown>): {
         abortSignal: (signal: AbortSignal) => PromiseLike<BookingRpcResult>;
@@ -31,9 +31,16 @@ export async function createInternalBookingRequest(
     });
 }
 
-async function executeBookingCommand(supabase: BookingRequestSupabasePort, name: string, args: Record<string, unknown>) {
+/**
+ * Calls an idempotent booking command within the deadline. null: the outcome is unknown (timeout or
+ * transport failure); the transaction may have committed, so only the same request identity resolves it.
+ */
+export async function callBookingCommand(
+    supabase: BookingRequestSupabasePort,
+    name: string,
+    args: Record<string, unknown>,
+): Promise<BookingRpcResult | null> {
     // Never log the payload or guest proof, including PostgREST error details.
-    let result: BookingRpcResult;
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
         const controller = new AbortController();
@@ -41,19 +48,24 @@ async function executeBookingCommand(supabase: BookingRequestSupabasePort, name:
             timer = setTimeout(() => { controller.abort(); reject(new Error('BOOKING_COMMAND_TIMEOUT')); }, BOOKING_COMMAND_DEADLINE_MS);
         });
         const pending = supabase.rpc(name, args).abortSignal(controller.signal);
-        result = await Promise.race([pending, deadline]);
+        return await Promise.race([pending, deadline]);
     } catch (error) {
-        // The transaction may have committed before the transport failed. Only
-        // the same request identity can resolve that uncertainty safely.
         // The log names the command and the failure kind only: no payload, no error text.
         logError('BookingRequest', 'Booking command outcome is unknown', {
             command: name,
             timedOut: error instanceof Error && error.message === 'BOOKING_COMMAND_TIMEOUT',
             errorName: error instanceof Error ? error.name : typeof error,
         });
-        return createErrorResponse('service_unavailable', 'Booking result is unavailable. Retry the same request.', undefined, 503);
+        return null;
     } finally {
         if (timer !== undefined) clearTimeout(timer);
+    }
+}
+
+async function executeBookingCommand(supabase: BookingRequestSupabasePort, name: string, args: Record<string, unknown>) {
+    const result = await callBookingCommand(supabase, name, args);
+    if (!result) {
+        return createErrorResponse('service_unavailable', 'Booking result is unavailable. Retry the same request.', undefined, 503);
     }
     const { data, error } = result;
     if (error) {

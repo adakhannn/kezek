@@ -1,4 +1,7 @@
 import { LinkingOptions } from '@react-navigation/native';
+import { Linking } from 'react-native';
+
+import { initialNotificationUrl, subscribeToNotificationTaps } from '../lib/pushNotifications';
 import { RootStackParamList } from './types';
 
 /**
@@ -6,6 +9,18 @@ import { RootStackParamList } from './types';
  */
 export const linking: LinkingOptions<RootStackParamList> = {
     prefixes: ['kezek://', 'https://kezek.vercel.app'],
+    // A tapped booking push ({ bookingId }) opens kezek://booking/<id>, like a link.
+    async getInitialURL() {
+        return (await Linking.getInitialURL()) ?? (await initialNotificationUrl());
+    },
+    subscribe(listener) {
+        const links = Linking.addEventListener('url', ({ url }) => listener(url));
+        const unsubscribeTaps = subscribeToNotificationTaps(listener);
+        return () => {
+            links.remove();
+            unsubscribeTaps();
+        };
+    },
     config: {
         screens: {
             Auth: {

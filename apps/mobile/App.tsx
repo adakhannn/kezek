@@ -7,8 +7,12 @@ import { colors } from './src/constants/colors';
 import { useAppStateQueryFocus } from './src/hooks/useAppStateQueryFocus';
 import { LanguageProvider } from './src/i18n';
 import { queryClient } from './src/lib/queryClient';
+import { configureNotificationPresentation } from './src/lib/pushNotifications';
 import RootNavigator from './src/navigation/RootNavigator';
 import { logEnvVars } from './src/utils/debug';
+
+// Booking pushes that arrive while the app is open are shown too.
+configureNotificationPresentation();
 
 // Log environment wiring only in development builds.
 if (__DEV__) {

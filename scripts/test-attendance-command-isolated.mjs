@@ -59,6 +59,47 @@ try {
  const byAdmin=await call(command(adminBooking,ids.biz,platformAdmin));assert.equal(byAdmin.status,'paid');assert.equal(byAdmin.subscription_applied,true);
  assert.equal(await sql("select remaining_visits from client_visit_packages where id='"+ids.pack+"'"),'1');
  console.log('PASS platform-scoped global super_admin allowed, business-scoped global role rejected');
+ // R25-04 (20261125140000): a benefit prices every service of the booking (booking_services), and a
+ // range price counts at its exact midpoint. ids.service is the 1000 haircut of each business.
+ const coloring=randomUUID(),otherColoring=randomUUID(),oddRange=randomUUID(),promoClient=randomUUID(),oddClient=randomUUID();
+ await sql(`insert into services(id,biz_id,price_from,price_to) values('${coloring}','${ids.biz}',3000,3000),('${otherColoring}','${ids.otherBiz}',3000,3000),('${oddRange}','${ids.otherBiz}',1000,1501);
+ insert into auth.users values('${promoClient}'),('${oddClient}');`);
+ const book=async(key,{biz=ids.biz,branch=ids.branch,staff=ids.staff,client=ids.client,service=ids.service,extra=[],hour=14}={})=>{
+  const id=await sql(`select md5('${key}')::uuid`);
+  await sql(`insert into bookings(id,biz_id,branch_id,staff_id,service_id,client_id,start_at,end_at,status) values('${id}','${biz}','${branch}','${staff}','${service}','${client}','${day} ${hour}:00+06','${day} ${hour}:30+06','confirmed');`
+   +(extra.length?`insert into booking_services(booking_id,service_id,order_index) select '${id}',s,o-1 from unnest(array['${[service,...extra].join("','")}']::uuid[]) with ordinality u(s,o);`:''));
+  return id;
+ };
+ const benefit=async id=>JSON.parse(await sql(`select coalesce(subscription_applied,promotion_applied) from bookings where id='${id}'`));
+ // 50% package (ids.pack has one visit left): haircut 1000 + coloring 3000 -> 2000, not 500.
+ const packMulti=await book('package-multi',{extra:[coloring]});
+ const packReceipt=await call(command(packMulti));assert.equal(packReceipt.subscription_applied,true);assert.equal(packReceipt.promotion_info.final_amount,2000);
+ assert.equal((await benefit(packMulti)).final_amount,2000);assert.equal(await sql(`select remaining_visits from client_visit_packages where id='${ids.pack}'`),'0');
+ // 100% package of the other business: the whole booking is 0.
+ const freeMulti=await book('package-free-multi',{biz:ids.otherBiz,branch:ids.otherBranch,staff:ids.otherStaff,service:ids.otherService,extra:[otherColoring],hour:10});
+ assert.equal((await call(command(freeMulti,ids.otherBiz,ids.otherOwner))).subscription_applied,true);assert.equal((await benefit(freeMulti)).final_amount,0);
+ // 10% first-visit promotion: 1000 + 3000 -> original 4000, final 3600 (was 900 from the haircut alone).
+ await sql(`insert into branch_promotions(biz_id,branch_id,promotion_type,title_ru,params) values('${ids.otherBiz}','${ids.otherBranch}','first_visit_discount','Synthetic first visit','{"discount_percent":10}');`);
+ const promoMulti=await book('promotion-multi',{biz:ids.otherBiz,branch:ids.otherBranch,staff:ids.otherStaff,client:promoClient,service:ids.otherService,extra:[otherColoring],hour:11});
+ const promoReceipt=await call(command(promoMulti,ids.otherBiz,ids.otherOwner));assert.equal(promoReceipt.promotion_applied,true);
+ assert.deepEqual(promoReceipt.promotion_info,{title:'Synthetic first visit',discount_percent:10,discount_amount:400,final_amount:3600});
+ const promoApplied=await benefit(promoMulti);assert.equal(promoApplied.original_amount,4000);assert.equal(promoApplied.final_amount,3600);
+ // A single-service booking without booking_services rows and an odd range 1000..1501: base 1250.50
+ // (integer division made it 1250), final round(1250.50 * 0.9, 2) = 1125.45.
+ const oddBooking=await book('promotion-odd-range',{biz:ids.otherBiz,branch:ids.otherBranch,staff:ids.otherStaff,client:oddClient,service:oddRange,hour:12});
+ assert.equal((await call(command(oddBooking,ids.otherBiz,ids.otherOwner))).promotion_applied,true);
+ assert.equal(await sql(`select (promotion_applied->>'original_amount')||','||(promotion_applied->>'final_amount') from bookings where id='${oddBooking}'`),'1250.50,1125.45');
+ console.log('PASS package and promotion price every service of the booking; range midpoint is exact');
+ // The shift close still accepts the benefit amounts (20261110113000 compares staff_shift_items.service_amount
+ // with final_amount): the manager enters the full booking amount, save keeps it, and close succeeds.
+ const shiftItems=[[freeMulti,0],[promoMulti,3600],[oddBooking,1125.45]].map(([bookingId,serviceAmount])=>({clientId:randomUUID(),bookingId,clientName:'Synthetic',serviceName:'Multi',serviceAmount,consumablesAmount:0}));
+ const otherRevision=()=>`(select ledger_revision from staff_shifts where id='${ids.otherShift}')`;
+ await sql(`${asActor()} select save_staff_shift_command('${ids.otherStaff}','${ids.otherBiz}','${day}','${JSON.stringify(shiftItems)}'::jsonb,'${ids.otherOwner}',false,${otherRevision()},'${ids.otherShift}');`);
+ assert.deepEqual(JSON.parse(await sql(`select json_agg(i.service_amount order by i.service_amount) from staff_shift_items i where i.shift_id='${ids.otherShift}'`)),[0,1125.45,3600]);
+ await sql(`${asActor()} select close_staff_shift_command('${ids.otherShift}','${ids.otherOwner}',${otherRevision()},'{"percent_master":60,"percent_salon":40,"hourly_rate":null}'::jsonb,
+  '${JSON.stringify({totalAmount:4725.45,totalConsumables:0,normalizedPercentMaster:60,normalizedPercentSalon:40,finalMasterShare:2835.27,finalSalonShare:1890.18,hoursWorked:null,hourlyRate:null,guaranteedAmount:0,topupAmount:0,closedAt:`${day}T18:00:00+06:00`})}'::jsonb);`);
+ assert.deepEqual(JSON.parse(await sql(`select json_build_array(status,total_amount) from staff_shifts where id='${ids.otherShift}'`)),['closed',4725.45]);
+ console.log('PASS shift with multi-service benefit amounts saves and closes without SHIFT_PRICING_CHANGED');
  await assertLiveFunctions(sql, { suite: 'test-attendance-command-isolated.mjs' });
  console.log('PASS all isolated attendance command regressions');
 }finally{if(created)await docker(['rm','--force',container]);}

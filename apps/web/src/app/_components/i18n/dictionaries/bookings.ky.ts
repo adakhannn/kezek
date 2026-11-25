@@ -163,6 +163,7 @@ export const bookingsKy = {
     'bookings.list.loadErrorHint': 'Байланышты текшерип, кайра аракет кылыңыз.',
     'bookings.list.retry': 'Кайталоо',
     'bookings.cancelError.changed': 'Жазылуу өзгөрдү. Кайра жокко чыгаруудан мурун аны жаңылаңыз.',
+    'bookings.cancelError.alreadyStarted': 'Жазылуу башталып калды. Эми аны уюм гана жокко чыгара алат.',
     'bookings.cancelError.financialReversalRequired': 'Жазылуу төлөнгөн, сменада эсепке алынган же эсептен чыгарылган жеңилдикти колдонот. Жокко чыгаруудан мурун каржылык кайтаруу үчүн уюмга кайрылыңыз.',
     'bookings.cancelError.forbidden': 'Бул жазылууну жокко чыгарууга укугуңуз жок',
     'bookings.cancelError.notCancellable': 'Бул статустагы жазылууну жокко чыгарууга болбойт',

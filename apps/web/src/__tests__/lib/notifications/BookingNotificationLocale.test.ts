@@ -3,7 +3,11 @@ import { ParticipantDataService } from '@/lib/notifications/ParticipantDataServi
 import type { BookingRow, ParticipantData } from '@/lib/notifications/types';
 
 // FE-10: each recipient's message is in that recipient's preferred_locale.
-jest.mock('@/lib/env', () => ({ getEmailFrom: () => 'Kezek <synthetic@example.invalid>', getSiteOrigin: () => 'https://example.invalid', getTimezone: () => 'Asia/Bishkek' }));
+// No app installs: push tokens are covered in BookingNotificationPlanner.test.ts.
+jest.mock('@/lib/pushTokens', () => ({ listPushTokens: jest.fn().mockResolvedValue([]) }));
+jest.mock('@/lib/env', () => ({ getEmailFrom: () => 'Kezek <synthetic@example.invalid>', getSiteOrigin: () => 'https://example.invalid', getTimezone: () => 'Asia/Bishkek',
+    getWhatsAppBookingTemplateName: () => 'kezek_booking_confirmed',
+    getWhatsAppBookingTemplateLanguage: (locale: string) => ({ default: 'ru', ky: 'ky_KG', en: 'en' } as Record<string, string>)[locale] }));
 
 const participant = (values: Partial<ParticipantData> = {}): ParticipantData => ({
     email: null, notificationEmails: [], name: 'Synthetic', phone: null, whatsappPhone: null, telegramId: null,
@@ -49,9 +53,11 @@ test('client, staff and owner each get their own language on every channel; null
         [1, 'Жазылуу ырасталды'], [2, 'Booking confirmed'], [3, 'Бронь подтверждена'],
     ]);
 
-    const whatsapp = plan.filter(value => value.channel === 'whatsapp').map(value => value.payload);
-    expect(whatsapp.map(payload => [payload.to, (payload.text as { body: string }).body.split(':')[0]])).toEqual([
-        ['996555000111', 'Жазылуу ырасталды'], ['996555000222', 'Booking confirmed'], ['996555000333', 'Бронь подтверждена'],
+    // WhatsApp is a template (R25-07): the translation by language code, the parameters in that language.
+    const whatsapp = plan.filter(value => value.channel === 'whatsapp').map(value => value.payload.template as {
+        language: { code: string }; components: { parameters: { text: string }[] }[] });
+    expect(whatsapp.map(template => [template.language.code, template.components[0].parameters[1].text])).toEqual([
+        ['ky_KG', 'Чач кыркуу'], ['en', 'Haircut'], ['ru', 'Стрижка'],
     ]);
 });
 

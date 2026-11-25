@@ -20,6 +20,8 @@ export interface OutboxStore {
     fail(event: OutboxEvent, key: string, outcome: DeliveryOutcome, code: string): Promise<void>;
     finish(event: OutboxEvent, outcome: EventOutcome, code?: string, retryAfter?: number): Promise<void>;
     prune(): Promise<number>;
+    /** Enqueues due client reminders (24 h / 2 h before the visit); returns how many were added. */
+    enqueueReminders(): Promise<number>;
 }
 
 /** Every DB HTTP request has its own deadline, including auth-admin lookups in preparation. */
@@ -48,5 +50,10 @@ export function createOutboxStore(admin: SupabaseClient): OutboxStore {
         fail: async (event, key, outcome, code) => { await rpc('fail_booking_notification_delivery', { ...identity(event), p_delivery_key: key, p_outcome: outcome, p_error_code: code }); },
         finish: async (event, outcome, code = '', retryAfter = 0) => { await rpc('finish_booking_notification', { ...identity(event), p_outcome: outcome, p_error_code: code, p_retry_after_seconds: retryAfter }); },
         prune: async () => rpc('prune_booking_notifications', { p_limit: 100 }),
+        enqueueReminders: async () => {
+            const data = await rpc('enqueue_booking_reminders', { p_limit: 200 });
+            if (typeof data !== 'number' || !Number.isInteger(data) || data < 0) throw new OutboxStoreError('OUTBOX_DATABASE_FAILED');
+            return data;
+        },
     };
 }

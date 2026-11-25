@@ -4,6 +4,7 @@ export type BookingCancellationMessageKey =
     | 'bookings.cancelError.forbidden'
     | 'bookings.cancelError.financialReversalRequired'
     | 'bookings.cancelError.notCancellable'
+    | 'bookings.cancelError.alreadyStarted'
     | 'bookings.cancelError.changed';
 type Translate = (key: BookingCancellationMessageKey, fallback: string) => string;
 
@@ -17,7 +18,7 @@ const russian: Translate = (_key, fallback) => fallback;
  */
 export function bookingCancellationError(error: unknown, t: Translate = russian): {
     ok: false;
-    error: 'not_found' | 'forbidden' | 'financial_reversal_required' | 'not_cancellable' | 'booking_changed';
+    error: 'not_found' | 'forbidden' | 'financial_reversal_required' | 'not_cancellable' | 'booking_already_started' | 'booking_changed';
     message: string;
     status: 403 | 404 | 409;
 } | null {
@@ -33,6 +34,10 @@ export function bookingCancellationError(error: unknown, t: Translate = russian)
                 message: t('bookings.cancelError.financialReversalRequired', 'Запись оплачена, учтена в смене или использует списанную льготу. Обратитесь в организацию для финансового возврата перед отменой.') };
         case 'BOOKING_STATUS_NOT_CANCELLABLE':
             return { ok: false, error: 'not_cancellable', status: 409, message: t('bookings.cancelError.notCancellable', 'Запись в этом статусе нельзя отменить') };
+        // R25-10: the client cancels only before the start; from then on the business decides.
+        case 'BOOKING_ALREADY_STARTED':
+            return { ok: false, error: 'booking_already_started', status: 409,
+                message: t('bookings.cancelError.alreadyStarted', 'Запись уже началась. Отменить её теперь может только организация.') };
         case 'BOOKING_CHANGED':
             return { ok: false, error: 'booking_changed', status: 409, message: t('bookings.cancelError.changed', 'Запись изменилась. Обновите её перед повторной отменой.') };
         default:

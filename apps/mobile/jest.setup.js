@@ -44,6 +44,20 @@ jest.mock('expo-secure-store', () => ({
     deleteItemAsync: jest.fn(),
 }));
 
+// Push notifications: no permission dialog, token or Expo call in unit tests (lib/pushNotifications.ts).
+jest.mock('expo-notifications', () => ({
+    AndroidImportance: { HIGH: 4 },
+    setNotificationHandler: jest.fn(),
+    setNotificationChannelAsync: jest.fn(async () => null),
+    getPermissionsAsync: jest.fn(async () => ({ granted: false, canAskAgain: true, status: 'undetermined' })),
+    requestPermissionsAsync: jest.fn(async () => ({ granted: false, canAskAgain: false, status: 'denied' })),
+    getExpoPushTokenAsync: jest.fn(async () => ({ type: 'expo', data: 'ExponentPushToken[unit-test-install]' })),
+    getLastNotificationResponseAsync: jest.fn(async () => null),
+    addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+}));
+
+jest.mock('expo-device', () => ({ isDevice: true, deviceName: 'Unit test phone' }));
+
 jest.mock('expo-web-browser', () => ({
     openBrowserAsync: jest.fn(),
     openAuthSessionAsync: jest.fn(),

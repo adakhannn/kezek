@@ -1,6 +1,6 @@
 # Уведомления о бронировании
 
-Статус: текущая реализация, 2026-11-21. Аудитория — разработчик и владелец эксплуатации. Проверки здесь локальные; включение worker в развёрнутой среде — отдельный шаг. Основные входы: [API](../../../../../API_DOCUMENTATION.md), [эксплуатация](../../../../../docs/OPERATIONS.md), [открытые инженерные проблемы](../../../../../docs/ENGINEERING_FINDINGS.md).
+Статус: текущая реализация, 2026-11-25. Аудитория — разработчик и владелец эксплуатации. Проверки здесь локальные; включение worker в развёрнутой среде — отдельный шаг. Основные входы: [API](../../../../../API_DOCUMENTATION.md), [эксплуатация](../../../../../docs/OPERATIONS.md), [открытые инженерные проблемы](../../../../../docs/ENGINEERING_FINDINGS.md).
 
 ## Запись события и HTTP
 
@@ -12,7 +12,7 @@
 
 [Planner](BookingNotificationPlanner.ts) повторно использует общие [email recipients](emailRecipients.ts), [email payload](emailPayload.ts), [Telegram recipients](telegramRecipients.ts), [WhatsApp eligibility](whatsappRecipients.ts) и шаблоны сообщений. Он загружает предпочтения строго: ошибка чтения не превращается в пустой успешный список. Payload получателя, включая персонализацию и календарный файл, сохраняется один раз перед отправкой. Credentials в payload не записываются. Provider configuration проверяется при отправке: её отсутствие приводит к повтору/ошибке, а не к тихому пропуску.
 
-Язык сообщения — `profiles.preferred_locale` каждого получателя ([тексты](notificationText.ts), словарь `serverNotifications`, FE-10): клиент, мастер и владелец получают письмо, Telegram и WhatsApp каждый на своём языке, включая тему письма, приветствие, статус, формат даты и название услуги (`name_ky`/`name_en` с откатом на `name_ru`). `NULL`, гости и адреса `email_notify_to` получают русский. Общий адрес, чат или номер получает язык первого по порядку получателя. WhatsApp отправляется свободным текстом (`type: text`), а не шаблоном Meta, поэтому тоже переводится. Язык сохраняет [`POST /api/profile/locale`](../../../../../docs/api/BOOKING_AND_CATALOG.md#post-apiprofilelocale).
+Язык сообщения — `profiles.preferred_locale` каждого получателя ([тексты](notificationText.ts), словарь `serverNotifications`, FE-10): клиент, мастер и владелец получают письмо, Telegram и WhatsApp каждый на своём языке, включая тему письма, приветствие, статус, формат даты и название услуги (`name_ky`/`name_en` с откатом на `name_ru`). `NULL`, гости и адреса `email_notify_to` получают русский. Общий адрес, чат или номер получает язык первого по порядку получателя. Язык сохраняет [`POST /api/profile/locale`](../../../../../docs/api/BOOKING_AND_CATALOG.md#post-apiprofilelocale).
 
 Клиентские Telegram/WhatsApp требуют verified binding; служебные staff/owner сохраняют существующую политику привязки. Явные настройки каналов учитываются. Одинаковые email, chat ID и WhatsApp-номер получают одно сообщение в пределах события. Максимум — 200 получателей; превышение является ошибкой подготовки.
 
@@ -23,6 +23,47 @@
 [Миграция throughput](../../../../../supabase/migrations/20261110125000_booking_outbox_throughput.sql) возвращает claim и до 200 сохранённых получателей скалярным JSON. PostgREST row cap не обрезает массив получателей. Пустые credentials выявляются до provider fetch.
 
 Перед каждой отправкой SQL проверяет lease token и текущую ревизию брони. Изменившееся событие помечается `obsolete`. Событие о брони, время начала которой уже наступило к моменту отправки, тоже закрывается `obsolete` с кодом `booking_in_past` без отправки (R25-15): после простоя очереди клиент не получает «запись подтверждена» о прошедшем визите. Пустой `EMAIL_FROM` выключает email: планировщик не создаёт email-доставок. Сообщение, уже принятое внешним провайдером до изменения брони, отозвать этим механизмом нельзя.
+
+## WhatsApp: только шаблоны Meta (R25-07)
+
+Свободный текст Meta доставляет только внутри 24-часового окна после сообщения получателя; клиент после OTP и мастер с номером из карточки такого окна не имеют, и API принимал сообщение, которое потом не доставлялось. Поэтому [planner](BookingNotificationPlanner.ts) строит для WhatsApp только `type: template` ([whatsappTemplates.ts](whatsappTemplates.ts)): имя шаблона, код языка и пять параметров body в одном порядке — `{{1}}` бизнес, `{{2}}` услуга, `{{3}}` мастер, `{{4}}` дата и время в `businesses.tz`, `{{5}}` ссылка на запись ([buildWhatsAppTemplateParameters](messageBuilders.ts)). Переносы строк и табуляции в параметрах заменяются пробелом (Meta их отклоняет).
+
+| Событие | Переменная имени шаблона |
+| --- | --- |
+| `confirm` (в том числе повторное подтверждение после переноса — новая ревизия) | `WHATSAPP_BOOKING_CONFIRMED_TEMPLATE_NAME` |
+| `cancel` | `WHATSAPP_BOOKING_CANCELLED_TEMPLATE_NAME` |
+| `reminder_24h`, `reminder_2h` | `WHATSAPP_BOOKING_REMINDER_TEMPLATE_NAME` |
+| `hold` | шаблона нет: WhatsApp не отправляется |
+
+Пустое имя — WhatsApp этого события не планируется (один debug-лог на тип за процесс), остальные каналы работают. Язык: `WHATSAPP_BOOKING_TEMPLATE_LANG_KY` / `_EN` для получателей ky/en, если перевод одобрен; иначе `WHATSAPP_BOOKING_TEMPLATE_LANG` (по умолчанию `ru`), и параметры рендерятся на языке перевода по умолчанию. Тексты шаблонов для создания в Meta (ru/ky/en) — [OWNER_ACTIONS §6](../../../../../docs/OWNER_ACTIONS.md#шаблоны-whatsapp-для-уведомлений-о-записи-r25-07). Шаблоны заявок на роль настраиваются отдельно (ниже).
+
+Статус-вебхук `failed` (например 131047, 131026, ошибки шаблона) по provider message id помечает отправленную доставку outbox как `failed` с кодом `whatsapp_<code>` ([parseWhatsAppDeliveryFailures](../whatsappInbox/parse.ts), RPC `record_booking_notification_provider_failures`, [20261125160000](../../../../../supabase/migrations/20261125160000_booking_reminders.sql)). Статус события не меняется: номер мастера без WhatsApp не должен держать здоровье очереди красным. Неизвестные id (OTP, ответы inbox, очищенные receipts) ничего не меняют; ошибка записи — 503, Meta повторит вебхук.
+
+## Напоминания клиенту
+
+За 24 часа и за 2 часа до начала визита клиент получает напоминание (`reminder_24h`, `reminder_2h`) по тем же каналам, что и подтверждение: email (если задан `EMAIL_FROM` и `notify_email` не выключен), Telegram (привязан и подтверждён), WhatsApp (подтверждённый номер, `notify_whatsapp`, шаблон напоминания настроен). Мастер, владелец и адреса `email_notify_to` напоминаний не получают; календарный файл не прикладывается. Время в тексте — по `businesses.tz`.
+
+Worker в начале каждого запуска вызывает `enqueue_booking_reminders(200)` (только service_role, [20261125160000](../../../../../supabase/migrations/20261125160000_booking_reminders.sql)); отдельного расписания нет — напоминания идут с тем же cron `kezek_booking_notifications` (каждые 2 минуты) и только при включённом worker. Функция идемпотентно (уникальность `(booking, revision, type)`) добавляет событие для брони со статусом `confirmed`, начало которой не дальше срока напоминания (24 ч / 2 ч) и дальше минимального запаса (2 ч / 15 мин). Напоминание не создаётся, если бронь создана или её подтверждение текущей ревизии поставлено в очередь уже внутри срока: клиент только что получил подтверждение. Перенос меняет ревизию — старое напоминание закрывается `obsolete`, новое создаётся по правилам для новой ревизии. При отправке worker повторно проверяет ревизию, статус `confirmed`, что визит не начался и что запас не исчерпан (`reminder_window_passed`). Ошибка постановки напоминаний пишется в лог, увеличивает `errors` запуска, но не останавливает отправку остальных событий; ответ cron содержит `reminders` — сколько добавлено.
+
+## Push в мобильном приложении
+
+Канал `push` ([20261125170000](../../../../../supabase/migrations/20261125170000_push_tokens.sql)) — Expo Push API (`https://exp.host/--/api/v2/push/send`). Получатели:
+
+| Событие | Клиент | Мастер со связанным аккаунтом (`staff.user_id`) |
+| --- | --- | --- |
+| `confirm`, `cancel` | да | да |
+| `reminder_24h`, `reminder_2h` | да | нет |
+| `hold` | нет | нет |
+
+Владелец и адреса `email_notify_to` push не получают. Флага `notify_push` в профиле нет: согласие — зарегистрированный токен. Его создаёт и удаляет переключатель «Push-уведомления» в профиле приложения ([pushNotifications.ts](../../../../mobile/src/lib/pushNotifications.ts); разрешение ОС запрашивается только оттуда) через [`POST`/`DELETE /api/mobile/push-tokens`](../../../../../docs/api/CLIENT_AND_AUTH_FLOWS.md#post-apimobilepush-tokens). Кнопка выхода удаляет токен на сервере (ожидание не дольше 3 с), завершение сессии без кнопки — только локальную запись; вход другого аккаунта на том же устройстве переносит токен на него (токен уникален). У аккаунта не больше 10 устройств: регистрация одиннадцатого удаляет давнее.
+
+Planner ([BookingNotificationPlanner](BookingNotificationPlanner.ts)) читает токены строго ([pushTokens.ts](../pushTokens.ts): ошибка чтения — ошибка подготовки) и создаёт одну доставку на устройство: `{ to, title, body, data: { bookingId, type }, sound, priority, channelId: 'default' }`. Текст — [buildPushMessage](messageBuilders.ts): заголовок события и «бизнес · услуга · мастер · время» на языке получателя (`preferred_locale`), время по `businesses.tz`. Устройство, общее для клиента и мастера (запись к себе), получает одно сообщение. Нажатие открывает `kezek://booking/<bookingId>`.
+
+[Transport](outboxTransport.ts) отправляет список из одного сообщения; `EXPO_ACCESS_TOKEN` (необязателен, нужен только при enhanced push security в проекте Expo) идёт как Bearer. Ticket `ok` даёт provider id. Expo не дедуплицирует повтор, поэтому timeout, 5xx и ответ без ticket id — `ambiguous`; 429 и ticket `MessageRateExceeded` — повтор; прочие ошибки ticket — `failed` с кодом `push_<error>`. `DeviceNotRegistered` удаляет токен (после provider deadline, ошибка удаления только пишется в лог) и помечает доставку `failed` с кодом `push_device_not_registered`, но событие этим не становится `failed` ([RECIPIENT_GONE_CODES](outboxTypes.ts)): удалённое приложение — не сбой очереди. Push receipts (второй шаг Expo) не опрашиваются: `DeviceNotRegistered` из receipt удалит токен только при следующей отправке. Токен в логах маскируется ([maskPushToken](../pushTokens.ts)); в payload доставки он хранится, как адрес email или номер, и очищается retention через 30 дней.
+
+Настройка владельцем (миграция, ключ FCM V1 для Android, ключ APNs при сборке iOS, новая сборка EAS) — [OWNER_ACTIONS](../../../../../docs/OWNER_ACTIONS.md#push-уведомления-в-приложении).
+
+Новый канал добавляется блоком в planner над теми же участниками, веткой в [outboxTransport](outboxTransport.ts) и расширением check `channel` таблицы `booking_notification_deliveries` миграцией (как push в 20261125170000).
 
 ## Неопределённый результат провайдера
 
@@ -51,6 +92,6 @@ Service role имеет чтение outbox, но изменения выпол�
 
 ## Локальные проверки
 
-[Изолированный SQL runner](../../../../../scripts/test-booking-notification-outbox-isolated.cjs) проверяет конкурентный claim, lease fencing, частичные receipts, immutable preparation, неопределённые исходы, ограниченные повторы, ревизию, retention и ACL. [Booking runner](../../../../../scripts/test-booking-requests-isolated.cjs) проверяет общий rollback брони и outbox. Они используют отдельные disposable PostgreSQL-контейнеры без сети/портов/томов, синтетические записи и реальную SQL-миграцию.
+[Изолированный SQL runner](../../../../../scripts/test-booking-notification-outbox-isolated.cjs) проверяет конкурентный claim, lease fencing, частичные receipts, immutable preparation, неопределённые исходы, ограниченные повторы, ревизию, retention, постановку напоминаний (границы окна, идемпотентность, отмена и перенос), отметку WhatsApp-статуса `failed`, канал `push`, закрытость `push_tokens` для клиентских ролей и ACL. [Booking runner](../../../../../scripts/test-booking-requests-isolated.cjs) проверяет общий rollback брони и outbox. Они используют отдельные disposable PostgreSQL-контейнеры без сети/портов/томов, синтетические записи и реальную SQL-миграцию.
 
 Unit tests заменяют все provider-вызовы mocks. Эти проверки не подтверждают доставку в реальный почтовый ящик/чат, права реального provider account или работоспособность расписания в развёрнутой среде.

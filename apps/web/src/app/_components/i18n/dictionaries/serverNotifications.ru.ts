@@ -8,6 +8,7 @@ export const serverNotificationsRu = {
     'server.notifications.titleHold': 'Удержание слота',
     'server.notifications.titleConfirm': 'Бронь подтверждена',
     'server.notifications.titleCancel': 'Бронь отменена',
+    'server.notifications.titleReminder': 'Напоминание о записи',
     'server.notifications.detailsHeading': 'Детали бронирования',
     'server.notifications.bookingNumber': 'Номер брони',
     'server.notifications.service': 'Услуга',

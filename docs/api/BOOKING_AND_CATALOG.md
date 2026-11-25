@@ -170,11 +170,24 @@ Browser сохраняет только request ID под хешем actor/actio
 
 Успех: `{"ok":true}`; `booking_id`, `cancelled` и `already_cancelled` наружу не добавляются. Уже отменённая бронь возвращает тот же успех без повторной отмены.
 
-Ошибки: невалидный UUID — `400 / validation`; отсутствие пользователя — **`403 / forbidden`**; отсутствующая/невидимая при выборке бронь — `404 / not_found`; нет доступа — `403 / forbidden`. Отмена paid, записи с позицией смены или применённой льготой возвращает `409 / financial_reversal_required` с указанием обратиться в организацию для финансового возврата. Другой недопустимый статус — `409 / not_cancellable`, конкурентная смена принадлежности — `409 / booking_changed`. Прочие RPC-ошибки проходят общий mapper.
+Ошибки: невалидный UUID — `400 / validation`; отсутствие пользователя — **`403 / forbidden`**; отсутствующая/невидимая при выборке бронь — `404 / not_found`; нет доступа — `403 / forbidden`. Отмена paid, записи с позицией смены или применённой льготой возвращает `409 / financial_reversal_required` с указанием обратиться в организацию для финансового возврата. Другой недопустимый статус — `409 / not_cancellable`, конкурентная смена принадлежности — `409 / booking_changed`. Клиент брони отменяет её только до начала (`start_at > now()`, R25-10, [20261125150000](../../supabase/migrations/20261125150000_client_cancel_cutoff.sql)): после начала — `409 / booking_already_started`; владелец, менеджер, админ филиала, супер-админ и мастер брони отменяют и после начала (так же клиент, который сам управляет этим бизнесом). Прочие RPC-ошибки проходят общий mapper.
 
 Эффекты: проверяемый `cancel_booking` меняет только hold/confirmed; DB trigger записывает notification outbox в той же транзакции. Последующий dispatch повторяет enqueue с тем же ключом. Прямых UPDATE fallback нет. Shared SQL helper блокирует staff→booking и проверяет verified actor/точный филиал/назначенного сотрудника; browser DML таблицы отозван. Ошибка финансовой проверки не меняет статус, ledger, льготы и outbox. Доступность выбранной брони также зависит от видимости в cookie-клиенте до management fallback.
 
 ## Филиалы
+
+<!-- api-contract: POST /api/bookings/[id]/reschedule -->
+### POST `/api/bookings/[id]/reschedule`
+
+Источники: [route](../../apps/web/src/app/api/bookings/[id]/reschedule/route.ts) → [HTTP](../../apps/web/src/lib/bookingRescheduleHttpService.ts) → [service](../../apps/web/src/lib/bookingRescheduleService.ts) → `reschedule_booking_request` ([20261125150100](../../supabase/migrations/20261125150100_client_reschedule.sql)).
+
+Доступ: cookie-сессия (веб-кабинет) или `Authorization: Bearer` (мобильное приложение); actor — проверенный пользователь сессии. Переносит только клиент своей брони. Обязательный `Idempotency-Key` (UUID v4); тело `{"start_at": ISO 8601 со смещением}`. Лимитер `public` (10/мин).
+
+Успех: `{"ok":true,"data":{"booking_id","start_at","end_at","rescheduled":true}}`. Повтор того же ключа с тем же телом возвращает тот же ответ из квитанции (`booking_creation_requests`, пространство `reschedule:`+actor), без второго переноса; тот же ключ с другим временем, бронью или пользователем — `409 / booking_request_conflict`.
+
+Ошибки: нет сессии — `401 / auth`; нет/невалидный ключ или тело — `400 / validation`; бронь не найдена — `404 / not_found`; не клиент брони (в том числе менеджер) — `403 / forbidden`; запись уже началась — `409 / booking_already_started`; не confirmed — `409 / not_reschedulable`; paid, позиция смены, акция или абонемент — `409 / financial_reversal_required` (переносит организация); время занято — `409 / booking_slot_unavailable`; вне расписания, в прошлом, то же время, неактивные мастер/филиал/услуга, мастер больше не делает услугу — `400 / validation`; бизнес не принимает записи — `403 / business_not_bookable`; таймаут, lock timeout, неизвестный исход — `503 / service_unavailable` (повторить с тем же ключом). Сообщения на русском, `serverMessages` переводит их на ky/en.
+
+Эффекты: в одной транзакции блокируются staff, затем бронь; мастер, филиал, услуги и длительность (`end_at - start_at`) сохраняются, меняются `start_at`/`end_at`. Проверки как у клиентских hold: одобренный бизнес, активные филиал/мастер/услуги филиала, `_staff_performs_service`, начало в будущем, `schedule_contains_booking`, нет пересечения с confirmed/paid/живым hold мастера (своя бронь не мешает); затем trigger `check_explicit_schedule_booking` и constraint `no_overlap`. Trigger ревизии увеличивает `notification_revision`: ожидающие события старого времени устаревают, outbox получает `confirm` новой ревизии (команда вызывает `enqueue_booking_notification` и явно, идемпотентно). Слоты для выбора нового времени клиенты берут из `get_free_slots_complex_day_v1` по мастеру брони и забронированной длительности; интервалы, пересекающие текущее время брони, там показаны занятыми. Проверено jest-тестами сервиса/HTTP и изолированным SQL-набором `scripts/test-booking-requests-isolated.cjs`; на развёрнутом окружении не проверялось.
 
 <!-- api-contract: POST /api/branches/create -->
 ### POST `/api/branches/create`

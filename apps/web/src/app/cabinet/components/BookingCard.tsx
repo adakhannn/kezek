@@ -1,10 +1,11 @@
 ﻿// apps/web/src/app/cabinet/components/BookingCard.tsx
 'use client';
 
-import { canCancel as canCancelBooking, type BookingStatus } from '@core-domain/booking';
-import {useState, useEffect, useRef} from 'react';
+import { canCancel as canCancelBooking, clientBookingActions, type BookingStatus } from '@core-domain/booking';
+import {useState, useEffect, useMemo, useRef} from 'react';
 
 import MapDialog from './MapDialog';
+import RescheduleDialog from './RescheduleDialog';
 import ReviewDialog from './ReviewDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -64,6 +65,7 @@ export default function BookingCard({
     const [showMap, setShowMap] = useState(false);
     const [openReview, setOpenReview] = useState(false);
     const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+    const [rescheduleOpen, setRescheduleOpen] = useState(false);
     const [busy, setBusy] = useState(false);
     const [review, setReview] = useState(initialReview);
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
@@ -127,7 +129,7 @@ export default function BookingCard({
 
             if (!payload.ok) {
                 toast.showError(
-                    payload.error ||
+                    payload.message ||
                         t(
                             'cabinet.bookings.card.cancelError',
                             'Failed to cancel booking',
@@ -155,7 +157,23 @@ export default function BookingCard({
             ? servicesList.reduce((sum, s) => sum + (s.duration_min || 0), 0)
             : service?.duration_min ?? 0;
     const hasMultipleServices = servicesList && servicesList.length > 1;
-    const canCancel = cancelRequested && canCancelBooking(status);
+    // R25-10: the client's cancel and reschedule end at the start; then only the business changes it.
+    const ownActions = clientBookingActions({ status, startAt: start_at, promotionApplied, subscriptionApplied });
+    const canCancel = cancelRequested && canCancelBooking(status) && ownActions.canCancel;
+    const canReschedule = cancelRequested && ownActions.canReschedule &&
+        !!(effectiveBizId && effectiveBranchId && effectiveStaffId && business);
+    const showStartedNotice = cancelRequested && ownActions.started;
+    const showBenefitRescheduleNotice = cancelRequested && ownActions.rescheduleNeedsBusiness;
+    const rescheduleBooking = useMemo(() => ({
+        id: bookingId,
+        bizId: effectiveBizId ?? '',
+        branchId: effectiveBranchId ?? '',
+        staffId: effectiveStaffId ?? '',
+        startAt: start_at,
+        // The command keeps the booked duration (end_at - start_at); slots are sought for the same.
+        durationMin: Math.max(1, Math.round((Date.parse(end_at) - Date.parse(start_at)) / 60_000)),
+        timeZone: tz,
+    }), [bookingId, effectiveBizId, effectiveBranchId, effectiveStaffId, start_at, end_at, tz]);
     const canLeaveReview = status === 'paid' && !review;
     const canEditReview = status === 'paid' && !!review;
     const canRepeatBooking = !!(service && business);
@@ -538,6 +556,23 @@ export default function BookingCard({
                         </Button>
                     ) : null}
 
+                    {canReschedule ? (
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="md"
+                            disabled={busy}
+                            onClick={() => setRescheduleOpen(true)}
+                            leadingIcon={
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            }
+                        >
+                            {t('cabinet.bookings.card.actions.reschedule', 'Перенести')}
+                        </Button>
+                    ) : null}
+
                     {canCancel ? (
                         <Button
                             type="button"
@@ -555,7 +590,31 @@ export default function BookingCard({
                         </Button>
                     ) : null}
                 </div>
+                {showStartedNotice ? (
+                    <p className="type-caption text-[var(--text-muted)]" data-testid="booking-started-notice">
+                        {t('cabinet.bookings.card.startedNotice', 'Запись уже началась: отменить или перенести её теперь может только организация.')}
+                    </p>
+                ) : null}
+                {showBenefitRescheduleNotice ? (
+                    <p className="type-caption text-[var(--text-muted)]">
+                        {t('cabinet.bookings.card.benefitRescheduleNotice', 'Запись с акцией или абонементом переносит организация: свяжитесь с ней.')}
+                    </p>
+                ) : null}
             </div>
+
+            {rescheduleOpen && canReschedule ? (
+                <RescheduleDialog
+                    open={rescheduleOpen}
+                    onClose={() => setRescheduleOpen(false)}
+                    onRescheduled={() => {
+                        setRescheduleOpen(false);
+                        toast.showSuccess(t('cabinet.bookings.reschedule.success', 'Запись перенесена'));
+                        if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
+                        reloadTimeoutRef.current = setTimeout(() => window.location.reload(), 600);
+                    }}
+                    booking={rescheduleBooking}
+                />
+            ) : null}
 
             {showMap && (
                 <MapDialog

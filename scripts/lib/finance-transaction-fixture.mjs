@@ -66,10 +66,14 @@ export async function setupFinanceFixture(sql) {
  create table public.profiles(id uuid primary key);
  create table public.staff(id uuid primary key,biz_id uuid references businesses,branch_id uuid references branches,user_id uuid,
   full_name text,is_active boolean default true,percent_master numeric default 60,percent_salon numeric default 40,hourly_rate numeric);
- create table public.services(id uuid primary key,biz_id uuid,price_from numeric,price_to numeric);
+ -- Catalog prices are integers in production: a range midpoint must not truncate (R25-04).
+ create table public.services(id uuid primary key,biz_id uuid,price_from integer,price_to integer);
  create table public.bookings(id uuid primary key,biz_id uuid references businesses,branch_id uuid references branches,
   staff_id uuid references staff,service_id uuid references services,client_id uuid references auth.users,
   status public.booking_status default 'confirmed',start_at timestamptz,end_at timestamptz,expires_at timestamptz,promotion_applied jsonb,subscription_applied jsonb);
+ -- The services of a complex booking, the primary one included (the prod columns pricing reads).
+ create table public.booking_services(id uuid primary key default gen_random_uuid(),booking_id uuid not null references bookings,
+  service_id uuid not null references services,duration_min integer not null default 30,order_index integer not null default 0);
  create table public.staff_shifts(id uuid primary key default gen_random_uuid(),staff_id uuid references staff,biz_id uuid references businesses,
   branch_id uuid references branches,expected_start timestamptz,shift_date date,status text default 'open',opened_at timestamptz,closed_at timestamptz,
   total_amount numeric default 0,consumables_amount numeric default 0,percent_master numeric,percent_salon numeric,
@@ -108,6 +112,8 @@ export async function setupFinanceFixture(sql) {
  // ARCH-11: the business-day redefinitions of the functions this fixture builds.
  await applyMigrationFunctionsWhereExist(sql,'20261125100000_business_time_zone_days.sql');
  await sql(await migration('20261125110000_reopened_shift_close_cap.sql'));
+ // R25-04/R25-17: benefit pricing and revenue reports from every service of the booking.
+ for(const name of ['20261125140000_booking_price_all_services.sql','20261125140100_reporting_revenue_all_services.sql']) await sql(await migration(name));
  await sql(`grant usage on schema public,auth to anon,authenticated,service_role;
  grant execute on function auth.uid(),auth.role() to anon,authenticated,service_role;
  grant all on all tables in schema public,auth to service_role;

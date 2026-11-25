@@ -3,6 +3,7 @@ import { AppState, type AppStateStatus, Linking } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 
 import { clearLocalStateOnSessionEnd } from '../lib/accountLocalState';
+import { syncPushRegistration } from '../lib/pushNotifications';
 import { getMobileApiUrl } from '../lib/apiUrl';
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 import { supabase } from '../lib/supabase';
@@ -138,10 +139,16 @@ export function useRootNavigationSession() {
         sessionRef.current = nextSession;
         // The session ended or another account took its place, by any route — not only the
         // sign-out button (R25-05). Cleared before the next account's screens render.
+        let cleared: Promise<void> = Promise.resolve();
         if (previousUserId && previousUserId !== nextUserId) {
-            void clearLocalStateOnSessionEnd(previousUserId).catch((error: unknown) => {
+            cleared = clearLocalStateOnSessionEnd(previousUserId).catch((error: unknown) => {
                 logWarn('RootNavigatorSession', 'Failed to clear the previous account state', error);
             });
+        }
+        // A signed-in account on this install (start, sign-in, another account): its push token is
+        // registered without a permission prompt, after the previous account's record is gone.
+        if (nextUserId && nextUserId !== previousUserId) {
+            void cleared.then(() => syncPushRegistration(nextUserId));
         }
         setSession(nextSession);
     };

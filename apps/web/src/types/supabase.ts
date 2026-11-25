@@ -2198,6 +2198,52 @@ export type Database = {
                     }
                 ];
             };
+            "push_tokens": {
+                Row: {
+                    "created_at": string;
+                    "device_name": string | null;
+                    "id": string;
+                    "last_error": string | null;
+                    "platform": string;
+                    "token": string;
+                    "updated_at": string;
+                    "user_id": string;
+                };
+                ComputedFields: never;
+                Insert: {
+                    "created_at"?: string;
+                    "device_name"?: string | null;
+                    "id"?: string;
+                    "last_error"?: string | null;
+                    "platform": string;
+                    "token": string;
+                    "updated_at"?: string;
+                    "user_id": string;
+                };
+                Update: {
+                    "created_at"?: string;
+                    "device_name"?: string | null;
+                    "id"?: string;
+                    "last_error"?: string | null;
+                    "platform"?: string;
+                    "token"?: string;
+                    "updated_at"?: string;
+                    "user_id"?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "push_tokens_user_id_fkey";
+                        columns: [
+                            "user_id"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "auth_users_view";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    }
+                ];
+            };
             "rating_biz_config": {
                 Row: {
                     "biz_id": string;
@@ -5645,6 +5691,12 @@ export type Database = {
                 };
                 Returns: string;
             };
+            "enqueue_booking_reminders": {
+                Args: {
+                    "p_limit"?: number;
+                };
+                Returns: number;
+            };
             "equals": {
                 Args: {
                     "geom1": unknown;
@@ -6564,6 +6616,12 @@ export type Database = {
                 };
                 Returns: undefined;
             };
+            "record_booking_notification_provider_failures": {
+                Args: {
+                    "p_failures": Json;
+                };
+                Returns: number;
+            };
             "record_whatsapp_inbox_reply": {
                 Args: {
                     "p_id": string;
@@ -6638,6 +6696,15 @@ export type Database = {
                     "p_days": Json;
                 };
                 Returns: undefined;
+            };
+            "reschedule_booking_request": {
+                Args: {
+                    "p_actor_id": string;
+                    "p_booking_id": string;
+                    "p_new_start": string;
+                    "p_request_id": string;
+                };
+                Returns: Json;
             };
             "reset_staff_schedule_day": {
                 Args: {

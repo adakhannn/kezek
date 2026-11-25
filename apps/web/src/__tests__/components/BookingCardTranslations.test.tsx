@@ -28,7 +28,7 @@ test.each([
     ['en', cabinetEn, ['Date and time', 'Duration', 'Available action', 'Booking status', 'Created', 'Completed']],
 ] as const)('renders booking summary labels in %s', (locale, dictionary, labels) => {
     jest.mocked(useLanguage).mockReturnValue({locale, t:(key:string, fallback?:string) => (dictionary as Record<string,string>)[key] ?? fallback ?? key} as ReturnType<typeof useLanguage>);
-    render(<BookingCard bookingId="live-test" status="confirmed" start_at="2026-10-12T03:00:00Z" end_at="2026-10-12T04:00:00Z" service={{id:'service', name_ru:'Test', duration_min:60}} staff={null} branch={null} business={null} canCancel />);
+    render(<BookingCard bookingId="live-test" status="confirmed" start_at="2099-10-12T03:00:00Z" end_at="2099-10-12T04:00:00Z" service={{id:'service', name_ru:'Test', duration_min:60}} staff={null} branch={null} business={null} canCancel />);
     for (const label of labels) expect(screen.getByText(label)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', {name:dictionary['cabinet.bookings.card.actions.cancel'], exact:true}));
     expect(screen.getByRole('heading', {name:dictionary['cabinet.bookings.card.cancelConfirmTitle'], exact:true})).toBeTruthy();

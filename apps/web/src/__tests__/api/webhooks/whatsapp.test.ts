@@ -70,3 +70,23 @@ test('receiver configuration missing fails closed', async () => {
     delete process.env.WHATSAPP_PHONE_NUMBER_ID;
     expect((await POST(request(incoming()))).status).toBe(503); expect(rpc).not.toHaveBeenCalled();
 });
+
+test('a failed delivery status marks the booking outbox receipt by provider id (R25-07)', async () => {
+    const body = { object: 'whatsapp_business_account', entry: [{ changes: [{ value: { metadata: { phone_number_id: receiver }, statuses: [
+        { id: 'wamid.failed', status: 'failed', errors: [{ code: 131047, title: 'Re-engagement message' }] },
+        { id: 'wamid.unknown-code', status: 'failed' },
+        { id: 'wamid.ok', status: 'delivered' },
+    ] } }] }] };
+    expect((await POST(request(body))).status).toBe(200);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith('record_booking_notification_provider_failures', { p_failures: [
+        { provider_id: 'wamid.failed', error_code: 'whatsapp_131047' }, { provider_id: 'wamid.unknown-code', error_code: 'whatsapp_failed' },
+    ] });
+});
+test('a failed status that cannot be recorded answers 503 so Meta redelivers it', async () => {
+    abortSignal.mockResolvedValue({ data: null, error: { message: 'db down' } });
+    const body = { object: 'whatsapp_business_account', entry: [{ changes: [{ value: { metadata: { phone_number_id: receiver }, statuses: [
+        { id: 'wamid.failed', status: 'failed', errors: [{ code: 131026 }] },
+    ] } }] }] };
+    expect((await POST(request(body))).status).toBe(503);
+});

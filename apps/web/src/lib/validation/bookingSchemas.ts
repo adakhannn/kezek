@@ -74,3 +74,8 @@ export const markAttendanceSchema = z.object({
     attended: z.boolean(),
 });
 
+
+/** POST /api/bookings/[id]/reschedule: the new start of the client's own booking. */
+export const bookingRescheduleSchema = z.object({
+    start_at: isoDateTimeSchema,
+});

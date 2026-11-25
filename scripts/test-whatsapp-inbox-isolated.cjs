@@ -117,6 +117,8 @@ const expectFailure = (statement, pattern) => {
     installLiveFunction(sql, 'public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)');
     sql(source('20261118100000_booking_service_staff_checks.sql'));
     sql(source('20261125110100_booking_requires_approved_business.sql'));
+    // R25-10: the client cancellation cut-off; the inbox cancels as the trusted worker, without a JWT.
+    sql(source('20261125150000_client_cancel_cutoff.sql'));
     // pg_cron is not installed here; besides the drops, 20261119020000 only schedules two cleanup jobs.
     sql("create schema cron; create function cron.schedule(text,text,text) returns bigint language sql as 'select 1::bigint';");
     sql(source('20261119020000_dead_functions_and_cleanup_jobs.sql'));

@@ -9,7 +9,7 @@ import {
     notificationTitle,
     type NotificationLocale,
 } from './notificationText';
-import type { BookingRow, ServiceRow, StaffRow, BizRow, BranchRow, NotifyType } from './types';
+import type { BookingRow, ServiceRow, StaffRow, BizRow, BranchRow, BookingEventType } from './types';
 
 import { escapeHtml } from '@/lib/htmlEscape';
 
@@ -27,7 +27,7 @@ export interface BookingDetails {
 }
 
 /** The values every message shows, in the recipient's language (FE-10). */
-function commonParts(details: BookingDetails, notifyType: NotifyType, locale: NotificationLocale) {
+function commonParts(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale) {
     const { booking, service, staff, biz, origin, timezone } = details;
     return {
         title: notificationTitle(notifyType, locale),
@@ -42,7 +42,7 @@ function commonParts(details: BookingDetails, notifyType: NotifyType, locale: No
 }
 
 /** The values of the e-mail versions. */
-function emailParts(details: BookingDetails, notifyType: NotifyType, locale: NotificationLocale) {
+function emailParts(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale) {
     const { booking, service, staff, biz, branch, clientName, clientPhone, clientEmail, timezone } = details;
     const svcDuration = service?.duration_min ?? 0;
     const svcPriceFrom = service?.price_from;
@@ -79,7 +79,7 @@ function emailParts(details: BookingDetails, notifyType: NotifyType, locale: Not
 /**
  * Строит HTML версию письма
  */
-export function buildEmailHtml(details: BookingDetails, notifyType: NotifyType, locale: NotificationLocale = 'ru'): string {
+export function buildEmailHtml(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale = 'ru'): string {
     const { booking, timezone } = details;
     // Names, contacts, addresses and titles come from clients, guests and businesses: every value
     // is escaped, or a guest name could put links or images into the e-mail (API-07).
@@ -131,7 +131,7 @@ export function buildEmailHtml(details: BookingDetails, notifyType: NotifyType, 
 /**
  * Строит текстовую версию письма
  */
-export function buildEmailText(details: BookingDetails, notifyType: NotifyType, locale: NotificationLocale = 'ru'): string {
+export function buildEmailText(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale = 'ru'): string {
     const { booking, timezone } = details;
     const {
         title, when, whenEnd, created, svcName, svcDuration, durationText, priceText, master, masterPhone,
@@ -154,10 +154,25 @@ export function buildEmailText(details: BookingDetails, notifyType: NotifyType, 
         `${label('server.notifications.link')}: ${link}`;
 }
 
+// Meta rejects a template parameter with a line break, a tab or more than four consecutive spaces.
+const templateParameter = (value: string) => value.replace(/\s+/g, ' ').trim().slice(0, 200) || '-';
+
 /**
- * Строит текст для WhatsApp
+ * Body parameters of the booking WhatsApp templates (R25-07), in the order the approved templates
+ * use: {{1}} business, {{2}} service, {{3}} master, {{4}} date and time in the business timezone,
+ * {{5}} booking link. The same order for confirmed, cancelled and reminder templates
+ * (docs/OWNER_ACTIONS.md §6).
  */
-export function buildWhatsAppText(details: BookingDetails, notifyType: NotifyType, locale: NotificationLocale = 'ru'): string {
+export function buildWhatsAppTemplateParameters(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale = 'ru'): string[] {
+    const { when, svcName, master, bizName, link } = commonParts(details, notifyType, locale);
+    return [bizName, svcName, master, when, link].map(templateParameter);
+}
+
+/**
+ * Free-form WhatsApp text. Booking notifications no longer use it (Meta delivers free text only
+ * inside the 24-hour customer service window, R25-07); they are sent as templates.
+ */
+export function buildWhatsAppText(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale = 'ru'): string {
     const { title, when, svcName, master, bizName, link, statusText, label } = commonParts(details, notifyType, locale);
 
     return `${title}: ${bizName}\n\n` +
@@ -170,7 +185,7 @@ export function buildWhatsAppText(details: BookingDetails, notifyType: NotifyTyp
 /**
  * Строит текст для Telegram
  */
-export function buildTelegramText(details: BookingDetails, notifyType: NotifyType, locale: NotificationLocale = 'ru'): string {
+export function buildTelegramText(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale = 'ru'): string {
     const { timezone } = details;
     // Sent with parse_mode HTML: unescaped <, > or & in a business or service name would make
     // Telegram reject the message, and tags would format or link it (API-07).
@@ -183,4 +198,19 @@ export function buildTelegramText(details: BookingDetails, notifyType: NotifyTyp
         `<b>${e(label('server.notifications.time'))}:</b> ${e(when)} (${e(timezone)})\n` +
         `<b>${e(label('server.notifications.status'))}:</b> ${e(statusText)}\n\n` +
         `<a href="${e(link)}">${e(label('server.notifications.openBooking'))}</a>`;
+}
+
+/**
+ * Title and body of a booking push notification: plain text, short enough for a lock screen. The
+ * tap opens the booking from the data payload, so no link is shown. The body has the business,
+ * the service and the time in the business timezone; the master's name when known.
+ */
+export function buildPushMessage(details: BookingDetails, notifyType: BookingEventType, locale: NotificationLocale = 'ru'): { title: string; body: string } {
+    const { title, when, svcName, bizName } = commonParts(details, notifyType, locale);
+    const master = details.staff?.full_name?.trim();
+    const oneLine = (value: string) => value.replace(/\s+/g, ' ').trim();
+    return {
+        title: oneLine(title).slice(0, 100),
+        body: oneLine([bizName, svcName, master, when].filter(Boolean).join(' · ')).slice(0, 240),
+    };
 }

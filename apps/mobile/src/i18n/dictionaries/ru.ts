@@ -8,6 +8,7 @@ import { cabinetRu } from './cabinet.ru';
 import { bookingRu } from './booking.ru';
 import { commonRu } from './common.ru';
 import { navRu } from './nav.ru';
+import { pushRu } from './push.ru';
 
 export const ru = {
     ...authRu,
@@ -16,6 +17,7 @@ export const ru = {
     ...bookingRu,
     ...commonRu,
     ...navRu,
+    ...pushRu,
 } as const;
 
 /** Every mobile dictionary key; t() accepts only these. */

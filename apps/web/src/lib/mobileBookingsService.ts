@@ -59,6 +59,11 @@ type BookingDetailsBusiness = {
 
 type BookingDetailsRow = {
     id: string | number;
+    biz_id?: string | null;
+    branch_id?: string | null;
+    staff_id?: string | null;
+    promotion_applied?: unknown;
+    subscription_applied?: unknown;
     start_at: string;
     end_at: string;
     status: ClientBookingDetailsDto['status'];
@@ -72,7 +77,7 @@ type MobileBookingsClient = DbQueryClient;
 
 type ServiceFailure = {
     ok: false;
-    error: 'internal' | 'not_found' | 'forbidden' | 'financial_reversal_required' | 'not_cancellable' | 'booking_changed';
+    error: 'internal' | 'not_found' | 'forbidden' | 'financial_reversal_required' | 'not_cancellable' | 'booking_already_started' | 'booking_changed';
     message: string;
     details?: unknown;
     status: 403 | 404 | 409 | 500;
@@ -178,6 +183,11 @@ export async function getMobileBookingDetails({
                         start_at,
                         end_at,
                         status,
+                        biz_id,
+                        branch_id,
+                        staff_id,
+                        promotion_applied,
+                        subscription_applied,
                         service:services(name_ru, duration_min, price_from, price_to),
                         staff:staff(full_name),
                         branch:branches(name, address),
@@ -220,6 +230,10 @@ export async function getMobileBookingDetails({
             start_at: String(row.start_at),
             end_at: String(row.end_at),
             status: row.status,
+            ...(row.biz_id ? { biz_id: row.biz_id } : {}),
+            ...(row.branch_id ? { branch_id: row.branch_id } : {}),
+            ...(row.staff_id ? { staff_id: row.staff_id } : {}),
+            benefit_applied: row.promotion_applied != null || row.subscription_applied != null,
             service: service
                 ? {
                       name_ru: service.name_ru ?? '',

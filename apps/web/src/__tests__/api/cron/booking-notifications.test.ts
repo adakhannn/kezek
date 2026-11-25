@@ -7,8 +7,12 @@ jest.mock('@/lib/notifications/outboxStore', () => ({ createOutboxAdminClient: j
 jest.mock('@/lib/notifications/outboxWorker', () => ({ runBookingNotificationWorker: jest.fn() }));
 jest.mock('@/lib/notifications/BookingNotificationPlanner', () => ({ planBookingNotifications: jest.fn() }));
 jest.mock('@/lib/notifications/outboxTransport', () => ({ sendOutboxDelivery: jest.fn() }));
+jest.mock('@/lib/pushTokens', () => ({ removeInvalidPushToken: jest.fn() }));
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
 import { logError } from '@/lib/log';
+import { planBookingNotifications } from '@/lib/notifications/BookingNotificationPlanner';
+import { sendOutboxDelivery } from '@/lib/notifications/outboxTransport';
+import { removeInvalidPushToken } from '@/lib/pushTokens';
 
 beforeEach(() => { jest.clearAllMocks(); process.env.CRON_SECRET = 'synthetic-cron'; delete process.env.VERCEL_CRON_SECRET; delete process.env.BOOKING_NOTIFICATION_WORKER_ENABLED; });
 test.each(['', ' ', ' padded '])('invalid configured secret %j cannot claim work', async secret => {
@@ -51,4 +55,29 @@ test('a run with worker errors is reported as failed to cron tracking (R25-13)',
     expect(result.status).toBe(503);
     expect(await result.json()).toEqual({ ok: false, enabled: true, claimed: 2, outcomes: ['sent', 'retry'], errors: 1, pruned: 0 });
     expect(logError).toHaveBeenCalledWith('BookingNotificationsCron', 'Outbox worker finished with errors', { claimed: 2, errors: 1 });
+});
+
+test('the run receipt carries how many reminders were enqueued; the worker gets the real planner', async () => {
+    process.env.BOOKING_NOTIFICATION_WORKER_ENABLED = 'true';
+    jest.mocked(runBookingNotificationWorker).mockResolvedValue({ claimed: 1, outcomes: ['sent'], errors: 0, pruned: 0, reminders: 5 });
+    const result = await GET(new Request('http://localhost', { headers: { authorization: 'Bearer synthetic-cron' } }));
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({ ok: true, enabled: true, claimed: 1, outcomes: ['sent'], errors: 0, pruned: 0, reminders: 5 });
+    const deps = jest.mocked(runBookingNotificationWorker).mock.calls[0][0];
+    await deps.plan({ id: 'booking' } as never, 'reminder_24h');
+    expect(planBookingNotifications).toHaveBeenCalledWith(undefined, { id: 'booking' }, 'reminder_24h');
+});
+test('sends through the transport with a remover for tokens Expo no longer knows', async () => {
+    process.env.BOOKING_NOTIFICATION_WORKER_ENABLED = 'true';
+    const admin = { synthetic: 'admin' };
+    jest.mocked(createOutboxAdminClient).mockReturnValue(admin as never);
+    jest.mocked(runBookingNotificationWorker).mockResolvedValue({ claimed: 0, outcomes: [], errors: 0, pruned: 0, reminders: 0 });
+    await GET(new Request('http://localhost', { headers: { authorization: 'Bearer synthetic-cron' } }));
+    const { send } = jest.mocked(runBookingNotificationWorker).mock.calls[0][0];
+    const delivery = { delivery_key: 'push:x', channel: 'push' } as never;
+    await send('event', delivery);
+    const [eventId, sent, fetchImpl, options] = jest.mocked(sendOutboxDelivery).mock.calls[0];
+    expect([eventId, sent, fetchImpl]).toEqual(['event', delivery, fetch]);
+    await options!.removePushToken!('ExponentPushToken[synthetic]');
+    expect(removeInvalidPushToken).toHaveBeenCalledWith(admin, 'ExponentPushToken[synthetic]');
 });

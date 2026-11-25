@@ -74,6 +74,11 @@ describe('mobileBookingsService', () => {
                 start_at: '2026-03-27T10:00:00Z',
                 end_at: '2026-03-27T11:00:00Z',
                 status: 'confirmed',
+                biz_id: 'biz-1',
+                branch_id: 'branch-1',
+                staff_id: 'staff-1',
+                promotion_applied: null,
+                subscription_applied: { plan_id: 'p' },
                 service: { name_ru: 'Массаж', duration_min: 60, price_from: 1000, price_to: 1500 },
                 staff: { full_name: 'Master' },
                 branch: { name: 'Branch', address: 'Addr' },
@@ -98,6 +103,11 @@ describe('mobileBookingsService', () => {
                 start_at: '2026-03-27T10:00:00Z',
                 end_at: '2026-03-27T11:00:00Z',
                 status: 'confirmed',
+                // Reschedule needs the master's slots; a package booking is moved by the business.
+                biz_id: 'biz-1',
+                branch_id: 'branch-1',
+                staff_id: 'staff-1',
+                benefit_applied: true,
                 service: {
                     name_ru: 'Массаж',
                     duration_min: 60,

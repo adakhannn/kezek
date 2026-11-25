@@ -67,6 +67,13 @@
     "plugins": [
       "expo-secure-store",
       [
+        "expo-notifications",
+        {
+          "color": "#4f46e5",
+          "defaultChannel": "default"
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "Kezek использует геолокацию, чтобы показать ближайшие филиалы."

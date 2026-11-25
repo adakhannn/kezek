@@ -135,6 +135,8 @@ const expectFailure = (statement, pattern) => {
     installLiveFunction(sql, 'public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)');
     sql(source('20261118100000_booking_service_staff_checks.sql'));
     sql(source('20261125110100_booking_requires_approved_business.sql'));
+    sql(source('20261125150000_client_cancel_cutoff.sql'));
+    sql(source('20261125150100_client_reschedule.sql'));
 
     // Real first transaction overlaps concurrent retries; every caller gets the
     // identical committed receipt, not another attempt or an unavailable slot.
@@ -451,6 +453,113 @@ const expectFailure = (statement, pattern) => {
     sql('drop trigger reject_internal_item on booking_services');
     assert.equal(JSON.parse(sql(internalCommand(failedInternal,{...complexInput,start_at:'2039-01-03T10:00:00Z'}))).confirmed,true);
     }
+    {
+    // 20261125150000 (R25-10): the client cancels only before the start; the business afterwards.
+    const startedBooking=(client=user,status='confirmed')=>{
+      const bookingId=randomUUID();fixtureIndex++;
+      sql(`insert into bookings(id,biz_id,branch_id,staff_id,service_id,client_id,start_at,end_at,status)
+        values('${bookingId}','${biz}','${branch}','${staff}','${service}',${quote(client)},
+        now()-interval '${fixtureIndex} minutes',now()+interval '30 minutes','${status}');`);
+      return bookingId;
+    };
+    for(const status of ['confirmed','hold']) {
+      const target=startedBooking(user,status);
+      const before=sql(`select row_to_json(b) from bookings b where id='${target}';`);
+      expectFailure(cancel(target,user),/BOOKING_ALREADY_STARTED/);
+      assert.equal(sql(`select row_to_json(b) from bookings b where id='${target}';`),before,'a refused client cancellation changes nothing');
+      assert.equal(sql(`select count(*) from booking_notification_outbox where booking_id='${target}' and event_type='cancel';`),'0');
+    }
+    for(const actor of [owner,manager,worker,branchAdmin,platformAdmin]) {
+      const target=startedBooking();sql(cancel(target,actor));
+      assert.equal(sql(`select status from bookings where id='${target}';`),'cancelled',`business actor ${actor} cancels after the start`);
+    }
+    const serviceStarted=startedBooking();sql(cancel(serviceStarted,null,'service_role'));
+    assert.equal(sql(`select status from bookings where id='${serviceStarted}';`),'cancelled','trusted calls without a JWT keep cancelling');
+    sql(`insert into auth.users(id,email) values('${manager}','manager@example.invalid') on conflict do nothing;`);
+    const managerOwn=startedBooking(manager);sql(cancel(managerOwn,manager));
+    assert.equal(sql(`select status from bookings where id='${managerOwn}';`),'cancelled','a client who manages the business keeps its rights');
+    const already=startedBooking(user,'cancelled');sql(cancel(already,user));
+    const paidStarted=startedBooking(user,'paid');
+    expectFailure(cancel(paidStarted,user),/BOOKING_FINANCIAL_REVERSAL_REQUIRED/);
+    const future=hold();sql(cancel(future,user));
+    assert.equal(sql(`select status from bookings where id='${future}';`),'cancelled','the client still cancels before the start');
+
+    // 20261125150100: client reschedule, same staff/branch/services, idempotent receipt.
+    const reschedule=(requestId,bookingId,start,actor=user)=>`set role service_role;set request.jwt.claim.sub='${other}';`+
+      `select reschedule_booking_request('${requestId}','${bookingId}','${start}'::timestamptz,${actor?quote(actor):'null'});`;
+    const book=(start,actor=user,services)=>JSON.parse(sql(command(randomUUID(),{...payload(1),start_at:start,...(services?{services}:{})},false,actor))).booking_id;
+    const moved=book('2040-01-01T10:00:00Z');
+    const revision=()=>sql(`select notification_revision from bookings where id='${moved}';`);
+    const confirms=()=>sql(`select count(*) from booking_notification_outbox where booking_id='${moved}' and event_type='confirm';`);
+    const revisionBefore=revision();
+    assert.equal(confirms(),'1');
+    const moveRequest=randomUUID();
+    const first=JSON.parse(sql(reschedule(moveRequest,moved,'2040-01-01T12:00:00Z')));
+    assert.equal(first.rescheduled,true);
+    assert.equal(first.booking_id,moved);
+    assert.equal(sql(`select to_char(start_at at time zone 'UTC','HH24:MI')||'-'||to_char(end_at at time zone 'UTC','HH24:MI')||':'||status from bookings where id='${moved}';`),'12:00-12:30:confirmed');
+    assert.equal(Number(revision()),Number(revisionBefore)+1,'the move is a new notification revision');
+    assert.equal(confirms(),'2','the new revision has its own confirmation event');
+    assert.equal(sql(`select count(*) from booking_notification_outbox where booking_id='${moved}' and event_type='confirm' and booking_revision=${revision()};`),'1');
+    // Replay: the same answer, no second move or event.
+    const replays=await Promise.all(Array.from({length:4},()=>asyncSql(reschedule(moveRequest,moved,'2040-01-01T12:00:00Z'))));
+    replays.forEach(reply=>assert.deepEqual(JSON.parse(reply),first));
+    assert.equal(confirms(),'2');
+    expectFailure(reschedule(moveRequest,moved,'2040-01-01T13:00:00Z'),/BOOKING_REQUEST_CONFLICT/);
+    expectFailure(reschedule(moveRequest,moved,'2040-01-01T12:00:00Z',other),/BOOKING_REQUEST_CONFLICT/);
+    expectFailure(reschedule(randomUUID(),moved,'2040-01-01T12:00:00Z'),/RESCHEDULE_SAME_TIME/);
+    // Another user, the business's manager and an anonymous actor cannot move the client's booking.
+    for(const actor of [other,manager,owner]) expectFailure(reschedule(randomUUID(),moved,'2040-01-01T14:00:00Z',actor),/BOOKING_FORBIDDEN/);
+    expectFailure(reschedule(randomUUID(),moved,'2040-01-01T14:00:00Z',null),/BOOKING_AUTH_REQUIRED/);
+    expectFailure(reschedule(randomUUID(),randomUUID(),'2040-01-01T14:00:00Z'),/BOOKING_NOT_FOUND/);
+    // Overlap with another client's booking is refused and leaves no receipt; adjacency is free.
+    book('2040-01-01T15:00:00Z',other);
+    const overlapRequest=randomUUID();
+    expectFailure(reschedule(overlapRequest,moved,'2040-01-01T15:15:00Z'),/time slot is already booked/);
+    expectFailure(reschedule(randomUUID(),moved,'2040-01-01T14:45:00Z'),/time slot is already booked/);
+    assert.equal(sql(`select count(*) from booking_creation_requests where request_id='${overlapRequest}';`),'0');
+    assert.equal(sql(`select to_char(start_at at time zone 'UTC','HH24:MI') from bookings where id='${moved}';`),'12:00');
+    JSON.parse(sql(reschedule(randomUUID(),moved,'2040-01-01T15:30:00Z')));
+    // Overlapping its own current time is allowed (the booking does not conflict with itself).
+    JSON.parse(sql(reschedule(randomUUID(),moved,'2040-01-01T15:45:00Z')));
+    assert.equal(sql(`select to_char(start_at at time zone 'UTC','HH24:MI')||'-'||to_char(end_at at time zone 'UTC','HH24:MI') from bookings where id='${moved}';`),'15:45-16:15');
+    // Outside the schedule: the synthetic schedule closes at 20:00 UTC for this probe only.
+    sql(`create or replace function schedule_contains_booking(p_staff uuid,p_branch uuid,p_start timestamptz,p_end timestamptz) returns boolean
+      language plpgsql stable security definer set search_path=public as $$begin return extract(hour from p_end at time zone 'UTC') < 20 or p_end::time = '20:00'; end$$;`);
+    expectFailure(reschedule(randomUUID(),moved,'2040-01-01T19:45:00Z'),/SCHEDULE_OUTSIDE_WORKING_HOURS/);
+    sql(`create or replace function schedule_contains_booking(p_staff uuid,p_branch uuid,p_start timestamptz,p_end timestamptz) returns boolean
+      language plpgsql stable security definer set search_path=public as $$begin return true; end$$;`);
+    expectFailure(reschedule(randomUUID(),moved,new Date(Date.now()-3600000).toISOString()),/SLOT_IN_PAST/);
+    // A complex visit keeps its booked duration and composition.
+    const complexMoved=book('2040-01-02T10:00:00Z',user,[{service_id:service,duration_min:30},{service_id:service2,duration_min:20}]);
+    JSON.parse(sql(reschedule(randomUUID(),complexMoved,'2040-01-02T11:00:00Z')));
+    assert.equal(sql(`select (end_at-start_at)||'|'||(select string_agg(service_id::text||':'||duration_min,',' order by order_index) from booking_services s where s.booking_id=b.id) from bookings b where id='${complexMoved}';`),
+      `00:50:00|${service}:30,${service2}:20`);
+    // A master who no longer performs a service of the visit cannot take the new time.
+    sql(`insert into service_staff(service_id,staff_id) values('${service2}','${staff}');`);
+    expectFailure(reschedule(randomUUID(),complexMoved,'2040-01-02T12:00:00Z'),/STAFF_DOES_NOT_PERFORM_SERVICE/);
+    sql(`delete from service_staff where service_id='${service2}' and staff_id='${staff}';`);
+    // State refusals: started, not confirmed, money or benefit attached.
+    expectFailure(reschedule(randomUUID(),startedBooking(),'2040-01-03T10:00:00Z'),/BOOKING_ALREADY_STARTED/);
+    const held=hold();
+    expectFailure(reschedule(randomUUID(),held,'2040-01-03T10:00:00Z'),/BOOKING_STATUS_NOT_RESCHEDULABLE/);
+    for(const reason of ['paid','ledger','promotion']) {
+      const target=book(`2040-01-0${4+['paid','ledger','promotion'].indexOf(reason)}T10:00:00Z`);
+      if(reason==='paid') sql(`update bookings set status='paid' where id='${target}';`);
+      if(reason==='ledger') sql(`insert into staff_shift_items values('${target}');`);
+      if(reason==='promotion') sql(`update bookings set promotion_applied='{}' where id='${target}';`);
+      expectFailure(reschedule(randomUUID(),target,'2040-01-08T10:00:00Z'),/BOOKING_FINANCIAL_REVERSAL_REQUIRED/);
+    }
+    sql(`update businesses set is_approved=false where id='${biz}';`);
+    expectFailure(reschedule(randomUUID(),moved,'2040-01-01T17:00:00Z'),/BUSINESS_NOT_BOOKABLE/);
+    sql(`update businesses set is_approved=true where id='${biz}';`);
+    // Service-only: no client role may call the command.
+    for(const role of ['anon','authenticated']) {
+      assert.equal(sql(`select has_function_privilege('${role}','reschedule_booking_request(uuid,uuid,timestamptz,uuid)','execute');`),'f');
+      expectFailure(`set role ${role};set request.jwt.claim.sub='${user}';select reschedule_booking_request(gen_random_uuid(),'${moved}',now()+interval '1 day','${user}');`,/permission denied/);
+    }
+    assert.equal(sql("select has_function_privilege('service_role','reschedule_booking_request(uuid,uuid,timestamptz,uuid)','execute');"),'t');
+    }
     sql(source('20261110140000_booking_legacy_surface.sql'));
     for(const role of ['anon','authenticated']) {
       expectFailure(`set role ${role};select * from get_free_slots_service_day('${biz}','${service}','2039-01-01',2147483647,1,'Asia/Bishkek');`,/permission denied/);
@@ -469,7 +578,7 @@ const expectFailure = (statement, pattern) => {
         skip: ['body'],
       },
     } });
-    console.log('PASS isolated PostgreSQL: guest/auth/internal single/complex parallel replay; explicit actor distinct from client/no JWT mutation; namespace/legacy receipt replay; caller/proof/payload binding; competing keys; rollback/outbox; service_staff, past-start and catalogue-duration hold checks; direct RPC and table/column DML denied; private helper ACL; own-client/owner/manager/active staff/branch/platform/service lifecycle; financial cancellation guards; cross-tenant/other-branch/anonymous/role-spoof rejection. Live booking/outbox/authorization SQL, synthetic schedule and records, no external services.');
+    console.log('PASS isolated PostgreSQL: guest/auth/internal single/complex parallel replay; explicit actor distinct from client/no JWT mutation; namespace/legacy receipt replay; caller/proof/payload binding; competing keys; rollback/outbox; service_staff, past-start and catalogue-duration hold checks; direct RPC and table/column DML denied; private helper ACL; own-client/owner/manager/active staff/branch/platform/service lifecycle; financial cancellation guards; client cancel cut-off at the start (R25-10) with business override; client reschedule receipt replay, overlap, schedule, state and ACL checks; cross-tenant/other-branch/anonymous/role-spoof rejection. Live booking/outbox/authorization SQL, synthetic schedule and records, no external services.');
   } finally {
     // Only this run's UUID-named disposable container is removed.
     if (/^kezek-booking-regression-[0-9a-f-]{36}$/.test(name)) run(['rm', '-f', '-v', name], undefined, true);

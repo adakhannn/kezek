@@ -11,7 +11,7 @@
       "description": "Same origin. SDK consumers must configure their own approved base URL."
     }
   ],
-  "x-reviewed-source-sha256": "cb6630844cecec5a129863c955908bf28f223c5ad7bf1c85c1666005d985ea33",
+  "x-reviewed-source-sha256": "0f7b99e5418a3db7ee34cb488bcab502018999574fe15574b2cfc43a023cffcc",
   "x-reviewed-sources": [
     "apps/web/src/app/api/quick-book-guest/route.ts",
     "apps/web/src/app/api/quick-hold/route.ts",
@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 213,
+  "x-explicit-operation-count": 216,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -2859,6 +2859,35 @@
         "x-manual-contract": "docs/api/BOOKING_AND_CATALOG.md"
       }
     },
+    "/api/bookings/{id}/reschedule": {
+      "post": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BOOKING_AND_CATALOG.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Route segment only; semantic validation is not modeled."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/bookings/[id]/reschedule",
+        "x-source-file": "apps/web/src/app/api/bookings/[id]/reschedule/route.ts",
+        "x-manual-contract": "docs/api/BOOKING_AND_CATALOG.md"
+      }
+    },
     "/api/bookings/client-identities": {
       "post": {
         "tags": [
@@ -4120,6 +4149,42 @@
         },
         "x-next-route": "/api/mobile/businesses",
         "x-source-file": "apps/web/src/app/api/mobile/businesses/route.ts",
+        "x-manual-contract": "docs/api/CLIENT_AND_AUTH_FLOWS.md"
+      }
+    },
+    "/api/mobile/push-tokens": {
+      "delete": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/CLIENT_AND_AUTH_FLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/mobile/push-tokens",
+        "x-source-file": "apps/web/src/app/api/mobile/push-tokens/route.ts",
+        "x-manual-contract": "docs/api/CLIENT_AND_AUTH_FLOWS.md"
+      },
+      "post": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/CLIENT_AND_AUTH_FLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/mobile/push-tokens",
+        "x-source-file": "apps/web/src/app/api/mobile/push-tokens/route.ts",
         "x-manual-contract": "docs/api/CLIENT_AND_AUTH_FLOWS.md"
       }
     },

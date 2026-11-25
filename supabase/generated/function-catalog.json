@@ -27,6 +27,26 @@
     "public.rule_branch_is_not_home"
   ],
   "functions": {
+    "private.booking_catalog_amount(uuid)": {
+      "arguments": "p_booking_id uuid",
+      "body": "9b947cc174f2401e6a7efd4ad4e5a6d7",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "sql",
+      "owner": "postgres",
+      "result": "numeric",
+      "strict": false,
+      "volatility": "s"
+    },
     "private.call_cron_endpoint(text)": {
       "arguments": "p_path text",
       "body": "cbb41c2c0dcc1503ec5b18d926b401a8",
@@ -630,7 +650,7 @@
     },
     "public.apply_promotion_to_booking(uuid)": {
       "arguments": "p_booking_id uuid",
-      "body": "f11d86eb08aec2c0aa717a4b2ed31193",
+      "body": "42edafa806b6cb54b0f4e863292f34ae",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -690,7 +710,7 @@
     },
     "public.apply_visit_package_to_booking_impl_20261109(uuid)": {
       "arguments": "p_booking_id uuid",
-      "body": "95d7034794771cf5063eb2c9a6e5803a",
+      "body": "d3c1d8cbce882d0ce9bdb99e704c03ff",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -1119,7 +1139,7 @@
     },
     "public.cancel_booking(uuid)": {
       "arguments": "p_booking_id uuid",
-      "body": "516ddd2214bb1a39df047f2bd09de84b",
+      "body": "dca18de4476b29ae8efb85ffba405b01",
       "config": [
         "lock_timeout=5s",
         "search_path=public, pg_temp"
@@ -1940,6 +1960,26 @@
       "language": "plpgsql",
       "owner": "postgres",
       "result": "uuid",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.enqueue_booking_reminders(integer)": {
+      "arguments": "p_limit integer DEFAULT 200",
+      "body": "729ea7f17ac787e77cb0f71fe68c4616",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
       "strict": false,
       "volatility": "v"
     },
@@ -3276,7 +3316,7 @@
     },
     "public.read_promotion_analytics_snapshot(uuid,date,date,uuid,text)": {
       "arguments": "p_biz_id uuid, p_date_from date, p_date_to date, p_branch_id uuid DEFAULT NULL::uuid, p_default_tz text DEFAULT 'Asia/Bishkek'::text",
-      "body": "d5525cce1f0df3afe93bc23fcc3567df",
+      "body": "37305cee95cb4882f3a1de02f0b3f3df",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -3476,7 +3516,7 @@
     },
     "public.recalculate_business_daily_stats(date,text)": {
       "arguments": "p_date date, p_default_tz text DEFAULT 'Asia/Bishkek'::text",
-      "body": "0d916775f0df1bd30dc41394f40b59c2",
+      "body": "89a47349e40f2e96e15ced29208d5e00",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -3590,6 +3630,26 @@
       "language": "plpgsql",
       "owner": "postgres",
       "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.record_booking_notification_provider_failures(jsonb)": {
+      "arguments": "p_failures jsonb",
+      "body": "34d80cab44c3e77e64c18438dd59d9e0",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "integer",
       "strict": false,
       "volatility": "v"
     },
@@ -3794,6 +3854,27 @@
       "language": "plpgsql",
       "owner": "postgres",
       "result": "void",
+      "strict": false,
+      "volatility": "v"
+    },
+    "public.reschedule_booking_request(uuid,uuid,timestamp with time zone,uuid)": {
+      "arguments": "p_request_id uuid, p_booking_id uuid, p_new_start timestamp with time zone, p_actor_id uuid",
+      "body": "2774594e7a465f6dad8215b3705455b6",
+      "config": [
+        "lock_timeout=5s",
+        "search_path=public, pg_temp"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": true
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "jsonb",
       "strict": false,
       "volatility": "v"
     },

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -8,6 +9,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
 import { BookingDetailsSections } from './bookingDetails/BookingDetailsSections';
+import { RescheduleSheet } from './bookingDetails/RescheduleSheet';
 import { useBookingDetailsData } from './bookingDetails/useBookingDetailsData';
 
 type BookingDetailsRouteParams = {
@@ -24,6 +26,7 @@ export default function BookingDetailsScreen() {
     const { confirm } = useConfirm();
     const { t } = useLanguage();
     const bookingId = route.params?.id;
+    const [rescheduleOpen, setRescheduleOpen] = useState(false);
     const {
         booking,
         isLoading,
@@ -31,11 +34,18 @@ export default function BookingDetailsScreen() {
         isCancelling,
         primaryPhone,
         canCancel,
+        rescheduleBooking,
+        isRescheduling,
+        canReschedule,
+        rescheduleTarget,
+        startedNotice,
+        benefitRescheduleNotice,
         timelineSteps,
         openCall,
         openWhatsApp,
     } = useBookingDetailsData({
         bookingId,
+        onRescheduled: () => setRescheduleOpen(false),
         onCancelled: () => {
             navigation.reset({
                 index: 0,
@@ -87,17 +97,33 @@ export default function BookingDetailsScreen() {
     }
 
     return (
-        <BookingDetailsSections
-            booking={booking}
-            timelineSteps={timelineSteps}
-            canCancel={canCancel}
-            isCancelling={isCancelling}
-            primaryPhone={primaryPhone}
-            onRepeat={handleRepeat}
-            onCancel={handleCancel}
-            onCall={openCall}
-            onWhatsApp={openWhatsApp}
-        />
+        <>
+            <BookingDetailsSections
+                booking={booking}
+                timelineSteps={timelineSteps}
+                canCancel={canCancel}
+                isCancelling={isCancelling}
+                primaryPhone={primaryPhone}
+                onRepeat={handleRepeat}
+                onCancel={handleCancel}
+                canReschedule={canReschedule}
+                startedNotice={startedNotice}
+                benefitRescheduleNotice={benefitRescheduleNotice}
+                onReschedule={() => setRescheduleOpen(true)}
+                onCall={openCall}
+                onWhatsApp={openWhatsApp}
+            />
+            {rescheduleOpen && rescheduleTarget ? (
+                <RescheduleSheet
+                    visible={rescheduleOpen}
+                    target={rescheduleTarget}
+                    timeZone={booking.business?.tz}
+                    isSubmitting={isRescheduling}
+                    onClose={() => setRescheduleOpen(false)}
+                    onConfirm={rescheduleBooking}
+                />
+            ) : null}
+        </>
     );
 }
 

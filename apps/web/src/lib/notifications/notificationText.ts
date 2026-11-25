@@ -9,7 +9,7 @@
  */
 import { formatInTimeZone } from 'date-fns-tz';
 
-import type { NotifyType } from './types';
+import type { BookingEventType } from './types';
 
 import { financeEn } from '@/app/_components/i18n/dictionaries/finance.en';
 import { financeKy } from '@/app/_components/i18n/dictionaries/finance.ky';
@@ -48,14 +48,16 @@ export function notificationText(
         Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : whole);
 }
 
-const TITLE_KEYS: Record<NotifyType, NotificationTextKey> = {
+const TITLE_KEYS: Record<BookingEventType, NotificationTextKey> = {
     hold: 'server.notifications.titleHold',
     confirm: 'server.notifications.titleConfirm',
     cancel: 'server.notifications.titleCancel',
+    reminder_24h: 'server.notifications.titleReminder',
+    reminder_2h: 'server.notifications.titleReminder',
 };
 
 /** The message title of a notification type ("Бронь подтверждена"). */
-export function notificationTitle(type: NotifyType, locale: NotificationLocale): string {
+export function notificationTitle(type: BookingEventType, locale: NotificationLocale): string {
     return notificationText(locale, TITLE_KEYS[type]);
 }
 
