@@ -6,6 +6,7 @@ import Client from '@/app/dashboard/staff/[id]/slots/Client';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
+import { getBusinessTimezone } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -16,7 +17,7 @@ export default async function StaffSlotsPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const { supabase, bizId } = await getBizContextForManagers();
+    const { supabase, bizId, business } = await getBizContextForManagers();
     // A server component reads the locale cookie through getT(); the client hook useLanguage()
     // cannot run here (it made this page fail to render, FE-12).
     const t = await getT();
@@ -95,7 +96,7 @@ export default async function StaffSlotsPage({
             branch_id: String(s.branch_id),
         })) || [];
 
-    const today = formatInTimeZone(new Date(), 'Asia/Bishkek', 'yyyy-MM-dd');
+    const today = formatInTimeZone(new Date(), getBusinessTimezone(business?.tz), 'yyyy-MM-dd');
 
     return (
         <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">

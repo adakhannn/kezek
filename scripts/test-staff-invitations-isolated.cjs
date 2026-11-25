@@ -66,7 +66,7 @@ alter default privileges in schema public grant all on tables to anon, authentic
 ${SUPABASE_DEFAULT_PRIVILEGES}
 
 create table auth.users(id uuid primary key);
-create table public.businesses(id uuid primary key, name text, owner_id uuid);
+create table public.businesses(id uuid primary key, name text, owner_id uuid, tz text);
 create table public.branches(id uuid primary key, biz_id uuid references public.businesses(id), name text, is_active boolean default true);
 create table public.staff(id uuid primary key default gen_random_uuid(), biz_id uuid not null references public.businesses(id),
     branch_id uuid not null references public.branches(id), full_name text not null, skills text[], is_active boolean default true,

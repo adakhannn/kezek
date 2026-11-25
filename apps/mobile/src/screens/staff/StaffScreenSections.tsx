@@ -97,9 +97,9 @@ export function StaffScreenSections({
                                     <Text style={styles.bookingPhone}>{booking.client_phone}</Text>
                                 )}
                                 <View style={styles.bookingTime}>
-                                    <Text style={styles.bookingDate}>{formatDate(booking.start_at, locale)}</Text>
+                                    <Text style={styles.bookingDate}>{formatDate(booking.start_at, locale, staffInfo.business?.tz)}</Text>
                                     <Text style={styles.bookingTimeRange}>
-                                        {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
+                                        {formatTime(booking.start_at, staffInfo.business?.tz)} - {formatTime(booking.end_at, staffInfo.business?.tz)}
                                     </Text>
                                 </View>
                             </Card>

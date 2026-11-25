@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { formatBookingDateTime } from '@/lib/bookingCalendarDate';
-import { TZ } from '@/lib/time';
+import { getBusinessTimezone } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
 type BookingLayoutProps = {
@@ -14,9 +14,11 @@ type BookingLayoutProps = {
     startAt: Date;
     status: string;
     promotionApplied?: Record<string, unknown> | null;
+    /** businesses.tz of the booking; NULL or unknown means Asia/Bishkek (ARCH-11). */
+    timeZone?: string | null;
 };
 
-export default function BookingLayoutClient({ id, services, masterName, startAt, status, promotionApplied }: BookingLayoutProps) {
+export default function BookingLayoutClient({ id, services, masterName, startAt, status, promotionApplied, timeZone }: BookingLayoutProps) {
     const { t, locale } = useLanguage();
 
     function buildServicesSummary(): { primary: string; details?: string } {
@@ -102,7 +104,7 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
     // Format master name with transliteration for English locale
     const formattedMasterName = locale === 'en' ? transliterate(masterName) : masterName;
     
-    const formattedDate = formatBookingDateTime(startAt, TZ, locale);
+    const formattedDate = formatBookingDateTime(startAt, getBusinessTimezone(timeZone), locale);
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center px-4">

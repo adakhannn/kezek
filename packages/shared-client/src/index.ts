@@ -113,3 +113,12 @@ export {
 } from './formatters';
 export type { DateLocale, PriceRange } from './formatters';
 
+// Часовой пояс бизнеса (ARCH-11)
+export {
+    DEFAULT_BUSINESS_TIME_ZONE,
+    BUSINESS_TIME_ZONE_OPTIONS,
+    isValidTimeZone,
+    resolveBusinessTimeZone,
+    formatUtcOffset,
+} from './timezone';
+

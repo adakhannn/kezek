@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { QuickActions } from './QuickActions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusChip } from '@/components/ui/StatusChip';
-import { TZ } from '@/lib/time';
 
 type BranchRow = { id: string; name: string };
 
@@ -57,6 +57,7 @@ export function BookingsList({
     itemsPerPage = 30,
     onPageChange,
 }: BookingsListProps) {
+    const tz = useBusinessTimeZone();
     const { t, locale } = useLanguage();
 
     const getServiceName = (service: { name_ru: string; name_ky?: string | null } | undefined): string => {
@@ -165,10 +166,10 @@ export function BookingsList({
                                     <td className="px-4 py-4">
                                         <div className="min-w-[11rem]">
                                             <p className="type-label text-[var(--text-primary)]">
-                                                {formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy')}
+                                                {formatInTimeZone(new Date(booking.start_at), tz, 'dd.MM.yyyy')}
                                             </p>
                                             <p className="type-caption mt-1 text-[var(--text-muted)]">
-                                                {formatInTimeZone(new Date(booking.start_at), TZ, 'HH:mm')} - {formatInTimeZone(new Date(booking.end_at), TZ, 'HH:mm')}
+                                                {formatInTimeZone(new Date(booking.start_at), tz, 'HH:mm')} - {formatInTimeZone(new Date(booking.end_at), tz, 'HH:mm')}
                                             </p>
                                         </div>
                                     </td>
@@ -232,7 +233,7 @@ export function BookingsList({
                                     <p className="type-caption text-[var(--text-secondary)]">{t('bookings.list.master', 'Мастер')}</p>
                                     <p className="type-label mt-1 text-[var(--text-primary)]">{master?.full_name || '—'}</p>
                                     <p className="type-caption mt-1 text-[var(--text-muted)]">
-                                        {formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy')} • {formatInTimeZone(new Date(booking.start_at), TZ, 'HH:mm')}
+                                        {formatInTimeZone(new Date(booking.start_at), tz, 'dd.MM.yyyy')} • {formatInTimeZone(new Date(booking.start_at), tz, 'HH:mm')}
                                     </p>
                                 </div>
                             </div>

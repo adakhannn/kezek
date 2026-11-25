@@ -9,11 +9,11 @@ import { transliterate } from '@/lib/transliterate';
  * Форматирует время из ISO строки
  * Использует унифицированную функцию из @/lib/dateFormat
  */
-export function formatTime(iso: string | null, locale: string): string {
+export function formatTime(iso: string | null, locale: string, timeZone?: string): string {
     if (!iso) return '—';
     try {
         // Используем унифицированную функцию форматирования времени
-        return formatTimeLib(iso, locale as 'ru' | 'ky' | 'en');
+        return formatTimeLib(iso, locale as 'ru' | 'ky' | 'en', timeZone);
     } catch {
         return '—';
     }

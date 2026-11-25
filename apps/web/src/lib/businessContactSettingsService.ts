@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
     validatePublicContactPatch,
 } from '@/lib/businessContacts';
-import { publicContactPatchSchema } from '@/lib/validation/businessUpdateSchemas';
+import { businessSettingsPatchSchema } from '@/lib/validation/businessUpdateSchemas';
 
 export type BusinessContactSettingsAdminLike = {
     // Kept structurally small so this service can be unit-tested without
@@ -17,11 +17,12 @@ export async function updateBusinessContactSettings(params: {
     bizId: string;
     input: unknown;
 }) {
-    const parsed = publicContactPatchSchema.safeParse(params.input);
+    const parsed = businessSettingsPatchSchema.safeParse(params.input);
     if (!parsed.success) {
         return { ok: false as const, status: 400, error: 'validation', message: parsed.error.issues[0].message };
     }
-    const validation = validatePublicContactPatch(parsed.data);
+    const { tz, ...contacts } = parsed.data;
+    const validation = validatePublicContactPatch(contacts);
     if (!validation.ok) {
         return {
             ok: false as const,
@@ -34,9 +35,9 @@ export async function updateBusinessContactSettings(params: {
 
     const { data, error } = await params.admin
         .from('businesses')
-        .update(validation.value)
+        .update(tz === undefined ? validation.value : { ...validation.value, tz })
         .eq('id', params.bizId)
-        .select('contact_phone,contact_whatsapp,contact_email,website_url')
+        .select('contact_phone,contact_whatsapp,contact_email,website_url,tz')
         .maybeSingle();
 
     if (error) {

@@ -1,3 +1,4 @@
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { logError } from '@/lib/log';
@@ -32,7 +33,6 @@ type ClientVisitPackageRow = {
 };
 
 const SOLD_PACKAGE_COLUMNS = 'id, client_id, plan_id, remaining_visits, valid_until, purchased_at, created_at';
-const DEFAULT_TIME_ZONE = 'Asia/Bishkek';
 
 /**
  * Today in the business's own time zone (API-11): a package's term and expiry follow the
@@ -48,10 +48,10 @@ async function businessToday(admin: VisitPackagesAdminLike, bizId: string, now: 
   };
   try {
     const { data } = await lookup.select('tz').eq('id', bizId).maybeSingle();
-    return formatInTimeZone(now, data?.tz || DEFAULT_TIME_ZONE, 'yyyy-MM-dd');
+    return formatInTimeZone(now, resolveBusinessTimeZone(data?.tz), 'yyyy-MM-dd');
   } catch {
     // A failed lookup must not block a sale: the platform's home time zone is the default.
-    return formatInTimeZone(now, DEFAULT_TIME_ZONE, 'yyyy-MM-dd');
+    return formatInTimeZone(now, resolveBusinessTimeZone(null), 'yyyy-MM-dd');
   }
 }
 

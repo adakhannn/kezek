@@ -46,7 +46,7 @@ export default async function BookingsPage() {
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),
       branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
-      businesses:businesses!bookings_biz_id_fkey ( id, name, slug ),
+      businesses:businesses!bookings_biz_id_fkey ( id, name, slug, tz ),
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
@@ -64,7 +64,7 @@ export default async function BookingsPage() {
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),
       branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
-      businesses:businesses!bookings_biz_id_fkey ( id, name, slug ),
+      businesses:businesses!bookings_biz_id_fkey ( id, name, slug, tz ),
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)

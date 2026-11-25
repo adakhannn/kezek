@@ -86,13 +86,17 @@ export function formatNotificationDateTime(iso: string, timezone: string, locale
 }
 
 /**
- * A calendar date (shift date) in `timezone`: dd.MM.yyyy in Russian, the same numeric date in Kyrgyz
+ * A calendar date in `timezone`: dd.MM.yyyy in Russian, the same numeric date in Kyrgyz
  * through kyDateFormat (never Intl 'ky-KG', which many runtimes lack), "20 Nov 2026" in English.
  */
 export function formatNotificationDate(value: string, timezone: string, locale: NotificationLocale): string {
-    const date = new Date(value);
-    if (locale === 'ky') return formatKyDate(date, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: timezone });
-    return formatInTimeZone(date, timezone, locale === 'en' ? 'd MMM yyyy' : 'dd.MM.yyyy');
+    // A bare YYYY-MM-DD (a shift date) is already a day of the business calendar: shown as is, never
+    // shifted by a zone (midnight UTC is the previous day west of Greenwich, ARCH-11).
+    const calendarDay = /^\d{4}-\d{2}-\d{2}$/.test(value);
+    const date = calendarDay ? new Date(`${value}T12:00:00Z`) : new Date(value);
+    const zone = calendarDay ? 'UTC' : timezone;
+    if (locale === 'ky') return formatKyDate(date, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: zone });
+    return formatInTimeZone(date, zone, locale === 'en' ? 'd MMM yyyy' : 'dd.MM.yyyy');
 }
 
 const MONEY: Record<NotificationLocale, string> = {

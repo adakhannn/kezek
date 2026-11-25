@@ -11,6 +11,7 @@
     "./types": "./src/types.ts",
     "./i18n": "./src/i18n.ts",
     "./formatters": "./src/formatters.ts",
+    "./timezone": "./src/timezone.ts",
     "./generated-sdk": "./src/generated-sdk/index.ts"
   },
   "scripts": {

@@ -5244,6 +5244,7 @@ export type Database = {
                     "staff_name": string;
                     "start_at": string;
                     "status": Database["public"]['Enums']["booking_status"];
+                    "tz": string;
                 }[];
             };
             "branch_admins_effective": {

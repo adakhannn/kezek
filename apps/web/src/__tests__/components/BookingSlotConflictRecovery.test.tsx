@@ -20,7 +20,7 @@ test('invalidates the selected slot without retrying or reporting booking succes
     const success = jest.fn();
     const showError = jest.fn();
     const { result } = renderHook(() => useBookingCreation({
-        bizId: 'biz', branchId: 'branch', staffId: 'staff', isAuthed: true,
+        bizId: 'biz', businessTz: 'Asia/Bishkek', branchId: 'branch', staffId: 'staff', isAuthed: true,
         services: [{ id: 'service', branch_id: 'branch', name_ru: 'Test', duration_min: 60, price_from: 100, price_to: 300 }],
         t: (key, fallback) => (bookingRu as Record<string, string>)[key] ?? fallback ?? key,
         feedback: { showError }, onAuthChoiceRequest: jest.fn(), onSlotUnavailable: invalidated, onBookingCreated: success,

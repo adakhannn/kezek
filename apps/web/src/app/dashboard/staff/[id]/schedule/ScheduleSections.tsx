@@ -6,9 +6,9 @@ import { useState } from 'react';
 import type { Branch, TimeRange } from './scheduleTypes';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Tabs } from '@/components/ui/Tabs';
 import { branchDayIntervals, type BranchHoursRow } from '@/lib/scheduling/legacyDefaults';
-import { TZ } from '@/lib/time';
 
 function SingleTimeRange({
     value,
@@ -99,9 +99,10 @@ function DayRow({
     saving: boolean;
     onSave: (date: string, interval: TimeRange | null, branchId: string) => void;
 }) {
+    const tz = useBusinessTimeZone();
     const { t } = useLanguage();
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
+    const todayStr = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
     const isPastDate = dateStr < todayStr;
 
     const dayNames = [
@@ -159,7 +160,7 @@ function DayRow({
                         )}
                     </div>
                     <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {formatInTimeZone(date, TZ, 'dd.MM.yyyy')}
+                        {formatInTimeZone(date, tz, 'dd.MM.yyyy')}
                     </div>
                     {isUnsaved && (
                         <div className="text-[10px] sm:text-xs font-medium text-amber-700 dark:text-amber-300 mt-1">
@@ -342,6 +343,7 @@ export function ScheduleWeekSection({
     t: (key: string, fallback: string) => string;
     showApplyButton?: boolean;
 }) {
+    const tz = useBusinessTimeZone();
     return (
         <div className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="mb-4 sm:mb-6">
@@ -386,7 +388,7 @@ export function ScheduleWeekSection({
                 <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     {dates.slice(0, 4).map((date) => {
                         const dow = date.getDay();
-                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                        const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const ruleData = rulesByDate.get(dateStr);
                         return (
                             <DayRow
@@ -408,7 +410,7 @@ export function ScheduleWeekSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                     {dates.slice(4, 7).map((date) => {
                         const dow = date.getDay();
-                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                        const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const ruleData = rulesByDate.get(dateStr);
                         return (
                             <DayRow

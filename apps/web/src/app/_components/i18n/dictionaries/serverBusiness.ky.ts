@@ -89,4 +89,5 @@ export const serverBusinessKy = {
     'server.business.contactEmailInvalid': 'Туура ачык email көрсөтүңүз',
     'server.business.websiteInvalid': 'Сайт туура HTTPS-шилтеме болушу керек',
     'server.business.directoryLinkWrongService': 'Шилтеме өз кызматынын сайтына алып барышы керек: {services}',
+    'server.business.timeZoneInvalid': 'Белгисиз саат алкагы',
 } as const;

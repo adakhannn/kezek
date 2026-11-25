@@ -5,10 +5,10 @@ import { formatInTimeZone } from 'date-fns-tz';
 import type { Stats, PeriodKey } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import MonthPickerPopover from '@/components/pickers/MonthPickerPopover';
 import { Card } from '@/components/ui/Card';
-import { TZ } from '@/lib/time';
 
 
 interface StatsViewProps {
@@ -36,6 +36,7 @@ export function StatsView({
     selectedYear,
     onYearChange,
 }: StatsViewProps) {
+    const tz = useBusinessTimeZone();
     const { t } = useLanguage();
 
     return (
@@ -105,7 +106,7 @@ export function StatsView({
                             {t('staff.finance.stats.selectDate', 'Выберите дату')}:
                         </label>
                         <DatePickerPopover
-                            value={formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd')}
+                            value={formatInTimeZone(selectedDate, tz, 'yyyy-MM-dd')}
                             onChange={(dateStr) => {
                                 const [year, month, day] = dateStr.split('-').map(Number);
                                 onDateChange(new Date(year, month - 1, day));
@@ -121,7 +122,7 @@ export function StatsView({
                             {t('staff.finance.stats.selectMonth', 'Выберите месяц')}:
                         </label>
                         <MonthPickerPopover
-                            value={formatInTimeZone(selectedMonth, TZ, 'yyyy-MM-dd')}
+                            value={formatInTimeZone(selectedMonth, tz, 'yyyy-MM-dd')}
                             onChange={(dateStr) => {
                                 const [year, month] = dateStr.split('-').map(Number);
                                 onMonthChange(new Date(year, month - 1, 1));

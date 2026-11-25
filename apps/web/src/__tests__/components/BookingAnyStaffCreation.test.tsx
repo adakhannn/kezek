@@ -16,7 +16,7 @@ function setup(isAuthed = true, selection: { staffId?: string; branchId?: string
     const services = [{ id: 'service', branch_id: 'branch', name_ru: 'Test', duration_min: 60, price_from: 100, price_to: 300 }];
     if (selection.complex) services.push({ ...services[0], id: 'second', duration_min: 15 });
     const params = {
-        bizId: 'biz', branchId: selection.branchId ?? 'branch', staffId: selection.staffId ?? 'any', isAuthed,
+        bizId: 'biz', businessTz: 'Asia/Bishkek', branchId: selection.branchId ?? 'branch', staffId: selection.staffId ?? 'any', isAuthed,
         services: selection.noServices ? [] : services,
         t: (key: string, fallback?: string) => fallback ?? key,
         feedback: { showError }, onAuthChoiceRequest, onBookingCreated,

@@ -5,44 +5,46 @@ import { formatKyDate } from '../i18n/kyDate';
 import type { Locale } from '../i18n/locale';
 import { createTranslate } from '../i18n/translate';
 
-const TZ = 'Asia/Bishkek';
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
 /*
  * Every formatter takes the screen's language (`useLanguage().locale`); without it the text is
- * Russian. Kyrgyz goes through formatKyDate (no Intl 'ky-KG', which devices often lack).
+ * Russian. Kyrgyz goes through formatKyDate (no Intl 'ky-KG', which devices often lack). `timeZone` is the
+ * business's businesses.tz when the data carries it; NULL or unknown means Asia/Bishkek (ARCH-11).
  */
 
 /**
  * Форматирование даты и времени
  */
-export function formatDateTime(date: string | Date, includeTime = true, locale: Locale = 'ru'): string {
+export function formatDateTime(date: string | Date, includeTime = true, locale: Locale = 'ru', timeZone?: string | null): string {
+    const tz = resolveBusinessTimeZone(timeZone);
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (locale === 'ky') {
         return includeTime
-            ? `${formatKyDate(dateObj, { day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ })}, ${formatTime(dateObj)}`
-            : formatKyDate(dateObj, { day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ });
+            ? `${formatKyDate(dateObj, { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz })}, ${formatTime(dateObj, tz)}`
+            : formatKyDate(dateObj, { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz });
     }
     if (locale === 'en') {
         const pattern = includeTime ? 'MMMM d, yyyy, HH:mm' : 'MMMM d, yyyy';
-        return formatInTimeZone(dateObj, TZ, pattern, { locale: enUS });
+        return formatInTimeZone(dateObj, tz, pattern, { locale: enUS });
     }
     const pattern = includeTime ? 'dd MMMM yyyy, HH:mm' : 'dd MMMM yyyy';
-    return formatInTimeZone(dateObj, TZ, pattern, { locale: ru });
+    return formatInTimeZone(dateObj, tz, pattern, { locale: ru });
 }
 
 /**
  * Форматирование времени
  */
-export function formatTime(date: string | Date): string {
+export function formatTime(date: string | Date, timeZone?: string | null): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return formatInTimeZone(dateObj, TZ, 'HH:mm', { locale: ru });
+    return formatInTimeZone(dateObj, resolveBusinessTimeZone(timeZone), 'HH:mm', { locale: ru });
 }
 
 /**
  * Форматирование даты: «23 ноября 2026», ky «2026-ж., 23-ноябрь», en «November 23, 2026».
  */
-export function formatDate(date: string | Date, locale: Locale = 'ru'): string {
-    return formatDateTime(date, false, locale);
+export function formatDate(date: string | Date, locale: Locale = 'ru', timeZone?: string | null): string {
+    return formatDateTime(date, false, locale, timeZone);
 }
 
 /**

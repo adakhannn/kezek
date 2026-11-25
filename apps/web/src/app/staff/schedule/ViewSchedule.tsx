@@ -5,9 +5,9 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Card } from '@/components/ui/Card';
 import { supabase } from '@/lib/supabaseClient';
-import { TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
 type TimeRange = { start: string; end: string };
@@ -31,6 +31,7 @@ export default function ViewSchedule({
     branches: { id: string; name: string }[];
     homeBranchId: string;
 }) {
+    const tz = useBusinessTimeZone();
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
     const { t, locale } = useLanguage();
@@ -63,8 +64,8 @@ export default function ViewSchedule({
         let ignore = false;
         (async () => {
             setLoading(true);
-            const weekStart = formatInTimeZone(currentWeekDates[0], TZ, 'yyyy-MM-dd');
-            const weekEnd = formatInTimeZone(addDays(nextWeekDates[6], 1), TZ, 'yyyy-MM-dd');
+            const weekStart = formatInTimeZone(currentWeekDates[0], tz, 'yyyy-MM-dd');
+            const weekEnd = formatInTimeZone(addDays(nextWeekDates[6], 1), tz, 'yyyy-MM-dd');
 
             const { data, error } = await supabase
                 .from('staff_schedule_rules')
@@ -97,7 +98,7 @@ export default function ViewSchedule({
         return () => {
             ignore = true;
         };
-    }, [bizId, staffId, currentWeekDates, nextWeekDates]);
+    }, [bizId, staffId, currentWeekDates, nextWeekDates, tz]);
 
     // Создаем карту правил по датам
     const rulesByDate = useMemo(() => {
@@ -145,13 +146,13 @@ export default function ViewSchedule({
             <div>
                 <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('staff.schedule.currentWeek', 'Текущая неделя')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
-                    {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
+                    {formatInTimeZone(currentWeekDates[0], tz, 'dd.MM.yyyy')} —{' '}
+                    {formatInTimeZone(currentWeekDates[6], tz, 'dd.MM.yyyy')}
                 </p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {currentWeekDates.map((date) => {
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
-                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                        const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const rule = rulesByDate.get(dateStr);
                         const intervals = rule?.intervals;
                         const branchId = rule?.branch_id;
@@ -238,13 +239,13 @@ export default function ViewSchedule({
             <div>
                 <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('staff.schedule.nextWeek', 'Следующая неделя')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {formatInTimeZone(nextWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
-                    {formatInTimeZone(nextWeekDates[6], TZ, 'dd.MM.yyyy')}
+                    {formatInTimeZone(nextWeekDates[0], tz, 'dd.MM.yyyy')} —{' '}
+                    {formatInTimeZone(nextWeekDates[6], tz, 'dd.MM.yyyy')}
                 </p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {nextWeekDates.map((date) => {
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
-                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                        const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const rule = rulesByDate.get(dateStr);
                         const intervals = rule?.intervals;
                         const branchId = rule?.branch_id;

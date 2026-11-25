@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { TimeRange } from './scheduleTypes';
 
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { logError } from '@/lib/log';
 import {
     branchDayIntervals,
@@ -14,7 +15,6 @@ import {
     type BranchHoursRow,
 } from '@/lib/scheduling/legacyDefaults';
 import { supabase } from '@/lib/supabaseClient';
-import { TZ } from '@/lib/time';
 
 function getWeekDates(weekOffset: number): Date[] {
     const today = new Date();
@@ -23,7 +23,7 @@ function getWeekDates(weekOffset: number): Date[] {
     return Array.from({ length: 7 }, (_, index) => addDays(targetWeekStart, index));
 }
 
-const todayYmd = () => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+const todayYmd = (tz: string) => formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
 
 type ScheduleRule = {
     id: string;
@@ -65,6 +65,7 @@ export function useStaffScheduleRules({
     showError: (message: string) => void;
     showSuccess: (message: string) => void;
 }) {
+    const tz = useBusinessTimeZone();
     const [saving, setSaving] = useState(false);
     const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
     const [rules, setRules] = useState<ScheduleRule[]>([]);
@@ -73,8 +74,8 @@ export function useStaffScheduleRules({
     const currentWeekDates = useMemo(() => getWeekDates(0), []);
     const nextWeekDates = useMemo(() => getWeekDates(1), []);
     const windowDates = useMemo(
-        () => [...currentWeekDates, ...nextWeekDates].map((date) => formatInTimeZone(date, TZ, 'yyyy-MM-dd')),
-        [currentWeekDates, nextWeekDates],
+        () => [...currentWeekDates, ...nextWeekDates].map((date) => formatInTimeZone(date, tz, 'yyyy-MM-dd')),
+        [currentWeekDates, nextWeekDates, tz],
     );
 
     const load = useCallback(async (isActive: () => boolean = () => true) => {
@@ -140,7 +141,7 @@ export function useStaffScheduleRules({
             showError(t('staff.schedule.branchHoursMissing', 'Часы филиала не настроены: задайте их в настройках филиала'));
             return null;
         }
-        const today = todayYmd();
+        const today = todayYmd(tz);
         const plan: BranchSchedulePlan = { dates: [], overwrite: 0, keptTransfers: 0 };
         for (const date of windowDates) {
             if (date < today) continue;
@@ -168,7 +169,7 @@ export function useStaffScheduleRules({
                     kind: 'date' as const,
                     date_on: date,
                     branch_id: homeBranchId,
-                    tz: TZ,
+                    tz,
                     // A closed branch day becomes a day off, never invented hours.
                     intervals: branchDayIntervals(branchHours, date) ?? [],
                     breaks: [],
@@ -195,7 +196,7 @@ export function useStaffScheduleRules({
 
     async function saveDay(date: string, interval: TimeRange | null, branchId: string) {
         if (status !== 'ready') return;
-        if (date < todayYmd()) {
+        if (date < todayYmd(tz)) {
             showError(t('staff.schedule.pastDateLocked', 'Прошедшие дни не меняются'));
             return;
         }
@@ -211,7 +212,7 @@ export function useStaffScheduleRules({
                     .select('id', { count: 'exact', head: true })
                     .eq('staff_id', staffId)
                     .eq('branch_id', existing.branch_id)
-                    .gte('start_at', fromZonedTime(`${date}T00:00:00`, TZ).toISOString())
+                    .gte('start_at', fromZonedTime(`${date}T00:00:00`, tz).toISOString())
                     .lt('start_at', `${nextYmd(date)}T00:00:00.000Z`);
                 if (error) throw error;
                 if ((count ?? 0) > 0) {
@@ -233,7 +234,7 @@ export function useStaffScheduleRules({
                     .single()
                 : await supabase
                     .from('staff_schedule_rules')
-                    .insert({ ...values, biz_id: bizId, staff_id: staffId, kind: 'date', date_on: date, tz: TZ, priority: 0 })
+                    .insert({ ...values, biz_id: bizId, staff_id: staffId, kind: 'date', date_on: date, tz, priority: 0 })
                     .select('id')
                     .single();
             if (error) throw error;

@@ -1,5 +1,6 @@
 /**
- * Утилиты для форматирования дат с учетом локали
+ * Утилиты для форматирования дат с учетом локали.
+ * timeZone: часовой пояс бизнеса (getBusinessTimezone(business.tz), ARCH-11); по умолчанию — платформы.
  */
 
 import { enUS, ru, type Locale as DateFnsLocale } from 'date-fns/locale';
@@ -21,11 +22,11 @@ const localeMap: Record<Locale, DateFnsLocale> = {
 /**
  * Форматирует дату в формате DD.MM.YYYY с учетом локали
  */
-export function formatDate(dateStr: string, locale: Locale = 'ru'): string {
+export function formatDate(dateStr: string, locale: Locale = 'ru', timeZone: string = TZ): string {
     try {
         // Если дата в формате YYYY-MM-DD, добавляем время для корректного парсинга
         const date = dateStr.includes('T') ? new Date(dateStr) : new Date(dateStr + 'T12:00:00');
-        return formatInTimeZone(date, TZ, 'dd.MM.yyyy', { locale: localeMap[locale] });
+        return formatInTimeZone(date, timeZone, 'dd.MM.yyyy', { locale: localeMap[locale] });
     } catch {
         return dateStr;
     }
@@ -66,11 +67,11 @@ export function formatMonthYear(dateStr: string, locale: Locale = 'ru'): string 
 /**
  * Форматирует дату и время (например, "26.01.2024 14:30")
  */
-export function formatDateTime(dateStr: string | Date, locale: Locale = 'ru', includeTime = true): string {
+export function formatDateTime(dateStr: string | Date, locale: Locale = 'ru', includeTime = true, timeZone: string = TZ): string {
     try {
         const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
         const pattern = includeTime ? 'dd.MM.yyyy HH:mm' : 'dd.MM.yyyy';
-        return formatInTimeZone(date, TZ, pattern, { locale: localeMap[locale] });
+        return formatInTimeZone(date, timeZone, pattern, { locale: localeMap[locale] });
     } catch {
         return typeof dateStr === 'string' ? dateStr : dateStr.toISOString();
     }
@@ -79,10 +80,10 @@ export function formatDateTime(dateStr: string | Date, locale: Locale = 'ru', in
 /**
  * Форматирует только время (например, "14:30")
  */
-export function formatTime(dateStr: string | Date, locale: Locale = 'ru'): string {
+export function formatTime(dateStr: string | Date, locale: Locale = 'ru', timeZone: string = TZ): string {
     try {
         const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-        return formatInTimeZone(date, TZ, 'HH:mm', { locale: localeMap[locale] });
+        return formatInTimeZone(date, timeZone, 'HH:mm', { locale: localeMap[locale] });
     } catch {
         return typeof dateStr === 'string' ? dateStr : dateStr.toISOString();
     }

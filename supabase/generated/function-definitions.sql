@@ -1197,8 +1197,8 @@ begin
         when 'referral_free' then 3 when 'referral_discount_50' then 4 when 'free_after_n_visits' then 5 else 99 end,p.id)
     into v_promotions from public.branch_promotions p
     where p.branch_id=v_branch_id and p.biz_id=v_biz_id and p.is_active=true
-        and (p.valid_from is null or p.valid_from<=current_date)
-        and (p.valid_to is null or p.valid_to>=current_date)
+        and (p.valid_from is null or p.valid_from<=(now() at time zone coalesce((select nullif(btrim(z.tz),'') from public.businesses z where z.id=v_biz_id),'Asia/Bishkek'))::date)
+        and (p.valid_to is null or p.valid_to>=(now() at time zone coalesce((select nullif(btrim(z.tz),'') from public.businesses z where z.id=v_biz_id),'Asia/Bishkek'))::date)
         and public.can_use_promotion(v_client_id,v_branch_id,p.id,p_booking_id);
     
     -- Если нет доступных акций, возвращаем без изменений
@@ -1471,7 +1471,7 @@ declare
     v_application public.business_role_applications%rowtype;
     v_role_id uuid;
     v_staff_id uuid;
-    v_today date := current_date;
+    v_today date;
 begin
     select *
       into v_application
@@ -1482,6 +1482,7 @@ begin
     if not found then
         raise exception using errcode = 'P0002', message = 'application_not_found';
     end if;
+    v_today := (now() at time zone coalesce((select nullif(btrim(z.tz),'') from public.businesses z where z.id=v_application.biz_id),'Asia/Bishkek'))::date;
 
     if v_application.status <> 'pending' then
         raise exception using errcode = '23505', message = 'application_already_processed';
@@ -1774,7 +1775,7 @@ $function$
 
 -- signature: public.booking_receipt_public(uuid)
 CREATE OR REPLACE FUNCTION public.booking_receipt_public(p_id uuid)
- RETURNS TABLE(id uuid, status public.booking_status, start_at timestamp with time zone, end_at timestamp with time zone, staff_name text, services jsonb)
+ RETURNS TABLE(id uuid, status public.booking_status, start_at timestamp with time zone, end_at timestamp with time zone, staff_name text, services jsonb, tz text)
  LANGUAGE sql
  STABLE SECURITY DEFINER
  SET search_path TO ''
@@ -1789,10 +1790,12 @@ AS $function$
       else jsonb_build_array(jsonb_build_object(
         'name_ru',primary_service.name_ru,'name_ky',primary_service.name_ky,
         'name_en',primary_service.name_en,'duration_min',primary_service.duration_min))
-    end
+    end,
+    coalesce(nullif(btrim(biz.tz),''),'Asia/Bishkek')
   from public.bookings b
   join public.staff st on st.id=b.staff_id
   join public.services primary_service on primary_service.id=b.service_id
+  join public.businesses biz on biz.id=b.biz_id
   where b.id=p_id;
 $function$
 ;
@@ -2136,6 +2139,7 @@ declare
     v_total_shifts integer;
     v_biz_id uuid;
     v_branch_id uuid;
+    v_tz text;
     
     -- Компоненты рейтинга
     v_reviews_score numeric;
@@ -2168,6 +2172,7 @@ begin
     if v_biz_id is null then
         raise exception 'Staff not found or has no business';
     end if;
+    v_tz := coalesce((select nullif(btrim(z.tz),'') from public.businesses z where z.id=v_biz_id),'Asia/Bishkek');
     
     -- 1. Метрики отзывов (за день)
     select 
@@ -2178,7 +2183,7 @@ begin
     join public.bookings b on b.id = r.booking_id
     where b.staff_id = p_staff_id
       and b.status in ('confirmed', 'paid')
-      and date(b.start_at at time zone 'Asia/Bishkek') = p_metric_date;
+      and date(b.start_at at time zone v_tz) = p_metric_date;
     
     -- Нормализуем среднюю оценку в 0-100 (1-5 -> 0-100)
     v_reviews_score := (v_reviews_avg / 5.0) * 100.0;
@@ -2200,7 +2205,7 @@ begin
     left join public.staff_shift_items ssi on ssi.booking_id = b.id
     where b.staff_id = p_staff_id
       and b.status in ('confirmed', 'paid')
-      and date(b.start_at at time zone 'Asia/Bishkek') = p_metric_date;
+      and date(b.start_at at time zone v_tz) = p_metric_date;
     
     -- Нормализуем продуктивность: сравниваем со средним по филиалу за последние 30 дней
     select coalesce(avg(clients_count), 0) into v_avg_clients_per_day
@@ -2226,7 +2231,7 @@ begin
         from public.bookings b
         where b.staff_id = p_staff_id
           and b.status in ('confirmed', 'paid')
-          and date(b.start_at at time zone 'Asia/Bishkek') <= p_metric_date
+          and date(b.start_at at time zone v_tz) <= p_metric_date
         group by b.client_id
     )
     select 
@@ -2243,7 +2248,7 @@ begin
         from public.bookings
         where staff_id = p_staff_id
           and status in ('confirmed', 'paid')
-          and date(start_at at time zone 'Asia/Bishkek') = p_metric_date
+          and date(start_at at time zone v_tz) = p_metric_date
     );
     
     v_loyalty_score := v_returning_ratio; -- Уже в процентах 0-100
@@ -2434,8 +2439,8 @@ begin
     where id = p_promotion_id
       and branch_id = p_branch_id
       and is_active = true
-      and (valid_from is null or valid_from <= CURRENT_DATE)
-      and (valid_to is null or valid_to >= CURRENT_DATE);
+      and (valid_from is null or valid_from <= (now() at time zone coalesce((select nullif(btrim(z.tz),'') from public.businesses z where z.id=branch_promotions.biz_id),'Asia/Bishkek'))::date)
+      and (valid_to is null or valid_to >= (now() at time zone coalesce((select nullif(btrim(z.tz),'') from public.businesses z where z.id=branch_promotions.biz_id),'Asia/Bishkek'))::date);
     
     if v_promotion is null then
         return false; -- Акция не найдена или неактивна
@@ -2631,7 +2636,7 @@ begin
         return NEW;
     end if;
     -- Дата брони
-    v_date := (NEW.start_at)::date;
+    v_date := (NEW.start_at at time zone coalesce((select nullif(btrim(z.tz),'') from public.businesses z where z.id=NEW.biz_id),'Asia/Bishkek'))::date;
 
     -- Проверяем, что в истории назначений есть запись для этого мастера,
     -- филиала и бизнеса, перекрывающая дату брони.
@@ -4647,7 +4652,7 @@ DECLARE
     v_result jsonb;
     v_today date;
 BEGIN
-    v_today := current_date;
+    v_today := (statement_timestamp() at time zone public.finance_business_timezone(p_biz_id))::date;
     
     -- Сначала получаем статистику по каждому сотруднику
     WITH staff_data AS (
@@ -5250,7 +5255,7 @@ declare
     v_open_shift_id uuid;
     v_open_shift_data jsonb;
 begin
-    v_today := current_date;
+    v_today := (statement_timestamp() at time zone public.finance_business_timezone(p_biz_id))::date;
     
     -- Получаем закрытые смены за период
     select jsonb_build_object(
@@ -7401,12 +7406,12 @@ begin
             (p_date+1)::timestamp at time zone coalesce(nullif(btrim(b.tz),''),p_default_tz) as ends_at
         from public.businesses b
     ), rows as (
-        select b.id as biz_id,k.branch_id,p_date as date,extract(hour from k.start_at at time zone b.tz)::integer as hour,
+        select b.id as biz_id,k.branch_id,p_date as date,extract(hour from k.start_at at time zone coalesce(nullif(btrim(b.tz),''),p_default_tz))::integer as hour,
             count(*) as bookings_count,count(*) filter(where coalesce(k.promotion_applied->>'promotion_type','')<>'') as promo_bookings_count,
             nullif(count(distinct k.staff_id),0) as staff_count,nullif(count(distinct k.client_id),0) as unique_clients_count
         from bounds b join public.bookings k on k.biz_id=b.id and k.start_at>=b.starts_at and k.start_at<b.ends_at
             and k.status in ('confirmed','paid') and k.branch_id is not null
-        group by b.id,k.branch_id,extract(hour from k.start_at at time zone b.tz)
+        group by b.id,k.branch_id,extract(hour from k.start_at at time zone coalesce(nullif(btrim(b.tz),''),p_default_tz))
     ) select coalesce(jsonb_agg(to_jsonb(rows)),'[]'::jsonb) into v_rows from rows;
     insert into public.business_hourly_load(biz_id,branch_id,date,hour,bookings_count,promo_bookings_count,staff_count,unique_clients_count,updated_at)
     select biz_id,branch_id,date,hour,bookings_count,promo_bookings_count,staff_count,unique_clients_count,now()

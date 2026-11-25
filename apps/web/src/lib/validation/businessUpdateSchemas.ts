@@ -1,3 +1,4 @@
+import { isValidTimeZone } from '@shared-client/timezone';
 import { z } from 'zod';
 
 const contactShape = {
@@ -8,6 +9,13 @@ const contactShape = {
 };
 
 export const publicContactPatchSchema = z.object(contactShape).strict()
+    .refine((value) => Object.keys(value).length > 0, 'Укажите поля для изменения');
+
+/** businesses.tz: an IANA zone the runtime knows (PostgreSQL checks it again, DB-16; ARCH-11). */
+export const businessTimeZoneSchema = z.string().max(64).refine(isValidTimeZone, 'Неизвестный часовой пояс');
+
+/** The owner's business settings form: public contacts and the time zone (PATCH semantics). */
+export const businessSettingsPatchSchema = z.object({ ...contactShape, tz: businessTimeZoneSchema.optional() }).strict()
     .refine((value) => Object.keys(value).length > 0, 'Укажите поля для изменения');
 
 // Every update endpoint uses PATCH semantics, including legacy POST/PUT aliases.

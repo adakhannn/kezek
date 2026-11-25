@@ -42,6 +42,8 @@ type Business = {
     id: string;
     name: string;
     slug: string;
+    /** businesses.tz (ARCH-11). */
+    tz?: string | null;
     rating_score: number | null;
 };
 

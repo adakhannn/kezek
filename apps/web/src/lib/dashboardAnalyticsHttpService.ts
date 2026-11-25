@@ -3,9 +3,10 @@ import { z } from 'zod';
 
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { loadBusinessTimeZone } from '@/lib/businessTimeZone';
 import { getDashboardAnalyticsLoad } from '@/lib/dashboardAnalyticsLoadService';
 import { getDashboardAnalyticsOverview } from '@/lib/dashboardAnalyticsOverviewService';
-import { addDaysToDateString, getTimezone, todayDateString } from '@/lib/time';
+import { addDaysToDateString, todayDateString } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { withManagerContext } from '@/lib/withManagerContext';
 
@@ -29,7 +30,8 @@ export async function runDashboardAnalyticsOverviewHttp(req: Request): Promise<N
     }
 
     const { startDate, endDate } = queryValidation.data;
-    const tz = getTimezone();
+    // The default window ends on the business's own today (ARCH-11).
+    const tz = await loadBusinessTimeZone(bizId, admin as never);
     const endStr = endDate ?? todayDateString(tz);
     const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 
@@ -57,7 +59,8 @@ export async function runDashboardAnalyticsLoadHttp(req: Request): Promise<NextR
     }
 
     const { branchId, startDate, endDate } = queryValidation.data;
-    const tz = getTimezone();
+    // The default window ends on the business's own today (ARCH-11).
+    const tz = await loadBusinessTimeZone(bizId, admin as never);
     const endStr = endDate ?? todayDateString(tz);
     const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 

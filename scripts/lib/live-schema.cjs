@@ -269,6 +269,37 @@ function applyMigrationWhereObjectsExist(query, file) {
     return query(migrationWhereObjectsExistSql(file));
 }
 
+/**
+ * SQL that runs each `create or replace function` of a migration made only of such redefinitions
+ * (plus begin, set local and commit), and only for the functions the suite database already has
+ * (matched by schema and name). A suite that holds some of those functions from an earlier
+ * migration then gets the real later definitions, and keeps owner and grants (create or replace
+ * leaves them as they were); functions the suite does not build are not created.
+ */
+function migrationFunctionsWhereExistSql(file) {
+    const text = fs.readFileSync(path.join(ROOT, 'supabase', 'migrations', file), 'utf8').replace(/\r/g, '');
+    const blocks = [...text.matchAll(/CREATE OR REPLACE FUNCTION ([a-z_]+)\.([a-z0-9_]+)\([\s\S]*?\n\$function\$\n;/g)];
+    const rest = blocks.reduce((remaining, block) => remaining.replace(block[0], ''), text)
+        .replace(/--[^\n]*/g, '')
+        .split(';').map((statement) => statement.trim()).filter(Boolean);
+    const unexpected = rest.filter((statement) => !/^(begin|commit|set local [a-z_]+ = '[^']*')$/i.test(statement));
+    if (!blocks.length || unexpected.length) {
+        throw new Error(`${file}: only create or replace function blocks can be applied per function: ${(unexpected[0] ?? 'no function').slice(0, 60)}`);
+    }
+    return blocks.map(([definition, schema, name]) => {
+        if (definition.includes('$apply$')) throw new Error(`${file}: ${schema}.${name} contains $apply$`);
+        return `do $apply$ begin
+    if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = '${schema}' and p.proname = '${name}') then
+        execute $statement$${definition.slice(0, -1)}$statement$;
+    end if;
+end $apply$;`;
+    }).join('\n');
+}
+
+function applyMigrationFunctionsWhereExist(query, file) {
+    return query(migrationFunctionsWhereExistSql(file));
+}
+
 module.exports = {
     CATALOG_PATH,
     DEFINITIONS_PATH,
@@ -277,6 +308,7 @@ module.exports = {
     DEFINITIONS_SQL,
     SUPABASE_DEFAULT_PRIVILEGES,
     STUB_SKIPPABLE,
+    applyMigrationFunctionsWhereExist,
     applyMigrationWhereObjectsExist,
     assertLiveFunctions,
     checkAgainstRatchet,
@@ -287,6 +319,7 @@ module.exports = {
     liveFunctionSql,
     loadCatalog,
     loadRatchet,
+    migrationFunctionsWhereExistSql,
     migrationWhereObjectsExistSql,
     sortKeys,
 };

@@ -22,6 +22,7 @@ export default async function BookingPage({
       id,status,start_at,end_at,promotion_applied,
       services:services!bookings_service_id_fkey(name_ru, name_ky, name_en),
       staff:staff!bookings_staff_id_fkey(full_name),
+      biz:businesses!bookings_biz_id_fkey(tz),
       booking_services (
         duration_min,
         service:services (name_ru, name_ky, name_en)
@@ -75,6 +76,7 @@ export default async function BookingPage({
               ]
             : null;
     const master = Array.isArray(data.staff) ? data.staff[0] : data.staff;
+    const biz = Array.isArray(data.biz) ? data.biz[0] : data.biz;
 
     return (
             <BookingLayoutClient
@@ -84,6 +86,7 @@ export default async function BookingPage({
                 startAt={new Date(data.start_at)}
                 status={data.status}
                 promotionApplied={data.promotion_applied as Record<string, unknown> | null}
+                timeZone={biz?.tz ?? null}
             />
     );
 }
@@ -120,6 +123,7 @@ async function FallbackBooking({ id }: { id: string }) {
                 startAt={new Date(row.start_at)}
                 status={row.status}
                 promotionApplied={(bookingData?.promotion_applied as Record<string, unknown> | null | undefined) || null}
+                timeZone={row.tz ?? null}
             />
     );
 }

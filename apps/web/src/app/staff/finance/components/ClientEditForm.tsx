@@ -8,8 +8,8 @@ import { deduplicateServiceNameString, getServiceName } from '../utils';
 import { validateShiftItem } from '../utils/validation';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { AlertBanner } from '@/components/ui/AlertBanner';
-import { TZ } from '@/lib/time';
 
 interface ClientEditFormProps {
     item: ShiftItem;
@@ -38,6 +38,7 @@ function ClientEditFormInner({
     onSave,
     onCollapse,
 }: ClientEditFormProps) {
+    const tz = useBusinessTimeZone();
     const { t, locale } = useLanguage();
     
     // Валидация item с debounce для избежания лишних проверок
@@ -268,7 +269,7 @@ function ClientEditFormInner({
                                     servicesList.length > 0
                                         ? servicesList.map((s) => getServiceName(s, locale)).join(' + ')
                                         : '';
-                                const time = formatInTimeZone(new Date(b.start_at), TZ, 'HH:mm');
+                                const time = formatInTimeZone(new Date(b.start_at), tz, 'HH:mm');
                                 return (
                                     <option key={b.id} value={b.id}>
                                         {clientLabel} - {serviceLabel} ({time})

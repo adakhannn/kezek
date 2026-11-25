@@ -12,6 +12,8 @@ export type BusinessRow = {
     name: string;
     slug: string;
     rating_score: number | null;
+    /** businesses.tz: the zone of the slot times and booking days (ARCH-11). */
+    tz?: string | null;
 };
 
 export type BranchRow = {
@@ -28,7 +30,7 @@ export type BusinessWithBranches = {
 async function fetchBusinessWithBranches(slug: string, t: Translate): Promise<BusinessWithBranches> {
     const { data: biz, error: bizError } = await supabase
         .from('businesses')
-        .select('id, name, slug, rating_score')
+        .select('id, name, slug, rating_score, tz')
         .eq('slug', slug)
         .eq('is_approved', true)
         .single();

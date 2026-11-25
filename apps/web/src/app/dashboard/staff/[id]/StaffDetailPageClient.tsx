@@ -10,11 +10,11 @@ import StaffServicesEditor from './StaffServicesEditor';
 import TransferStaffDialog from './TransferStaffDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
-import { TZ } from '@/lib/time';
 
 type Branch = { id: string; name: string; is_active: boolean };
 type StaffData = {
@@ -92,6 +92,7 @@ export default function StaffDetailPageClient({
     ratingScore?: number | null;
     ratingWeights?: RatingWeights | null;
 }) {
+    const tz = useBusinessTimeZone();
     const { t } = useLanguage();
 
     const activeBranches = branches.filter((branch) => branch.is_active);
@@ -218,7 +219,7 @@ export default function StaffDetailPageClient({
                     <p className="type-label text-[var(--text-secondary)]">{t('staff.detail.overview.latestSignal', 'Последний сигнал')}</p>
                     <p className="type-body mt-2 text-[var(--text-primary)]">
                         {latestReviewDate
-                            ? formatInTimeZone(new Date(latestReviewDate), TZ, 'dd.MM.yyyy HH:mm')
+                            ? formatInTimeZone(new Date(latestReviewDate), tz, 'dd.MM.yyyy HH:mm')
                             : t('staff.detail.overview.noSignals', 'Новых событий пока нет')}
                     </p>
                     <p className="type-caption mt-1 text-[var(--text-muted)]">
@@ -309,7 +310,7 @@ export default function StaffDetailPageClient({
                 ) : (
                     <div className="mt-5 space-y-3">
                         {reviews.map((review) => {
-                            const bookingDate = formatInTimeZone(new Date(review.start_at), TZ, 'dd.MM.yyyy HH:mm');
+                            const bookingDate = formatInTimeZone(new Date(review.start_at), tz, 'dd.MM.yyyy HH:mm');
                             return (
                                 <div
                                     key={review.id}

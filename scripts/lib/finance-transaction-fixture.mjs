@@ -8,7 +8,7 @@
 import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require=createRequire(import.meta.url);
-const { SUPABASE_DEFAULT_PRIVILEGES, applyMigrationWhereObjectsExist, installLiveFunction }=require('./live-schema.cjs');
+const { SUPABASE_DEFAULT_PRIVILEGES, applyMigrationFunctionsWhereExist, applyMigrationWhereObjectsExist, installLiveFunction }=require('./live-schema.cjs');
 export const ids = {
  biz:'a0000000-0000-4000-8000-000000000001', otherBiz:'a0000000-0000-4000-8000-000000000002',
  staff:'b0000000-0000-4000-8000-000000000001', otherStaff:'b0000000-0000-4000-8000-000000000002',
@@ -105,6 +105,8 @@ export async function setupFinanceFixture(sql) {
  await applyMigrationWhereObjectsExist(sql,'20261119050000_privilege_parity_with_prod.sql');
  await applyMigrationWhereObjectsExist(sql,'20261119060000_definer_function_hardening.sql');
  await sql(await migration('20261119120000_promotion_visits_exclude_priced_booking.sql'));
+ // ARCH-11: the business-day redefinitions of the functions this fixture builds.
+ await applyMigrationFunctionsWhereExist(sql,'20261125100000_business_time_zone_days.sql');
  await sql(`grant usage on schema public,auth to anon,authenticated,service_role;
  grant execute on function auth.uid(),auth.role() to anon,authenticated,service_role;
  grant all on all tables in schema public,auth to service_role;

@@ -610,7 +610,7 @@
     },
     "public.apply_promotion_to_booking(uuid)": {
       "arguments": "p_booking_id uuid",
-      "body": "700cdb200329ec3a766d184d2450d580",
+      "body": "f11d86eb08aec2c0aa717a4b2ed31193",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -690,7 +690,7 @@
     },
     "public.approve_staff_application(uuid,uuid,uuid,boolean)": {
       "arguments": "p_application_id uuid, p_reviewer_user_id uuid, p_branch_id uuid, p_is_active boolean DEFAULT true",
-      "body": "2334e43780b71e8fc1477f4bb9dc2ffd",
+      "body": "f2f35c9df359b71f546c587cfa1ca5be",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -871,7 +871,7 @@
     },
     "public.booking_receipt_public(uuid)": {
       "arguments": "p_id uuid",
-      "body": "8c51b7b57928104946c8ac120f19a9df",
+      "body": "90650343e251c4ca17c6ffa249ae33f7",
       "config": [
         "search_path=\"\""
       ],
@@ -885,7 +885,7 @@
       "kind": "f",
       "language": "sql",
       "owner": "postgres",
-      "result": "TABLE(id uuid, status public.booking_status, start_at timestamp with time zone, end_at timestamp with time zone, staff_name text, services jsonb)",
+      "result": "TABLE(id uuid, status public.booking_status, start_at timestamp with time zone, end_at timestamp with time zone, staff_name text, services jsonb, tz text)",
       "strict": false,
       "volatility": "s"
     },
@@ -1003,7 +1003,7 @@
     },
     "public.calculate_staff_day_metrics(uuid,date)": {
       "arguments": "p_staff_id uuid, p_metric_date date",
-      "body": "afab5b5ba43d2af634e8ba1d1adb29d3",
+      "body": "d4f7bdba95dcb8e38dc18fbcdfc810e1",
       "config": [],
       "definer": false,
       "execute": {
@@ -1079,7 +1079,7 @@
     },
     "public.can_use_promotion(uuid,uuid,uuid,uuid)": {
       "arguments": "p_client_id uuid, p_branch_id uuid, p_promotion_id uuid, p_booking_id uuid",
-      "body": "0a7efce40a50f8123625b0242c999346",
+      "body": "e35afafa4e13d53cff6352af58382b19",
       "config": [
         "search_path=public, pg_temp"
       ],
@@ -1198,7 +1198,7 @@
     },
     "public.check_booking_branch_match()": {
       "arguments": "",
-      "body": "715d63751ef1db1ad37947ebca1dc013",
+      "body": "80a87b22fb4374cf0019c0b1be124129",
       "config": [
         "search_path=public"
       ],
@@ -2166,7 +2166,7 @@
     },
     "public.get_business_finance_stats_impl_20261109(uuid,date,date,uuid,boolean)": {
       "arguments": "p_biz_id uuid, p_date_from date, p_date_to date, p_branch_id uuid DEFAULT NULL::uuid, p_include_open boolean DEFAULT true",
-      "body": "07ca63c4e0867141bf1d82a790d30a4e",
+      "body": "d4e47342303424a73dfcb320d1817f50",
       "config": [
         "search_path=public"
       ],
@@ -2346,7 +2346,7 @@
     },
     "public.get_staff_finance_stats_impl_20261109(uuid,uuid,date,date,boolean)": {
       "arguments": "p_staff_id uuid, p_biz_id uuid, p_date_from date, p_date_to date, p_include_open boolean DEFAULT true",
-      "body": "29d31a7d8004b49b898fedd050ab4e4f",
+      "body": "ed39f859b7e161b8f58270ed15c87599",
       "config": [],
       "definer": false,
       "execute": {
@@ -3476,7 +3476,7 @@
     },
     "public.recalculate_business_hourly_load(date,text)": {
       "arguments": "p_date date, p_default_tz text DEFAULT 'Asia/Bishkek'::text",
-      "body": "b5d819cd7be95a247a3f2fb5c65b37da",
+      "body": "5835b1f2fb3f2c6dc3e1259130c0a972",
       "config": [
         "search_path=pg_catalog, public"
       ],

@@ -1,4 +1,4 @@
--- Сквозные SQL-сценарии на полной цепочке миграций: закрытие смены, акции при оплате и рейтинги.
+-- Сквозные SQL-сценарии на полной цепочке миграций: закрытие смены, акции при оплате, рейтинги и день бизнеса в его часовом поясе.
 -- Запуск: `pnpm test:sql` с локальным SUPABASE_DB_URL. Runner выполняет файл в одной транзакции и
 -- откатывает её, так что тестовые строки и пересчитанные рейтинги не остаются. CI запускает его в
 -- db_bootstrap на базе, собранной из baseline, миграций и seed.
@@ -411,5 +411,105 @@ begin
     end if;
 
     raise notice '[TEST 5] OK — рейтинг сохраняется при отсутствии активности';
+end;
+$$;
+
+-----------------------------
+-- 6. День бизнеса в его собственном часовом поясе (ARCH-11, 20261125100000)
+-----------------------------
+
+do $$
+declare
+    v_biz_id uuid;
+    v_branch_id uuid;
+    v_staff_id uuid;
+    v_client_a uuid := gen_random_uuid();
+    v_client_b uuid := gen_random_uuid();
+    v_service_id uuid;
+    v_booking_a uuid;
+    v_clients integer;
+    v_receipt_tz text;
+    v_far_tz text;
+    v_far_biz uuid;
+    v_far_branch uuid;
+    v_far_today date;
+    v_promo_today uuid;
+    v_promo_yesterday uuid;
+begin
+    raise notice '[TEST 6] Старт теста дня бизнеса в его часовом поясе';
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    perform set_config('TimeZone', 'UTC', true);
+
+    -- 6.1. Бизнес в Europe/Moscow (UTC+3, Бишкек UTC+6); мастер без явного расписания (старая модель)
+    -- назначен в филиал с 11 января 2026 года.
+    insert into public.businesses (name, slug, is_approved, tz)
+    values ('TEST_BIZ_MOSCOW', 'test-biz-moscow-tz', true, 'Europe/Moscow')
+    returning id into v_biz_id;
+    insert into public.branches (biz_id, name, is_active)
+    values (v_biz_id, 'TEST_BRANCH_MOSCOW', true)
+    returning id into v_branch_id;
+    insert into public.staff (biz_id, branch_id, full_name, is_active)
+    values (v_biz_id, v_branch_id, 'TEST STAFF MOSCOW', true)
+    returning id into v_staff_id;
+    insert into public.staff_branch_assignments (biz_id, staff_id, branch_id, valid_from)
+    values (v_biz_id, v_staff_id, v_branch_id, date '2026-01-11');
+    insert into auth.users (id, email) values
+        (v_client_a, 'test-tz-client-a@example.test'),
+        (v_client_b, 'test-tz-client-b@example.test');
+    insert into public.services (biz_id, branch_id, name_ru, duration_min, price_from, price_to, active)
+    values (v_biz_id, v_branch_id, 'TEST SERVICE TZ', 30, 1000, 1000, true)
+    returning id into v_service_id;
+
+    -- 6.2. 22:30 UTC 10 января — уже 11 января 01:30 в Москве: назначение с 11-го её допускает
+    -- (по дате UTC это было бы 10-е и бронь отклонялась бы).
+    insert into public.bookings (biz_id, branch_id, staff_id, client_id, service_id, start_at, end_at, status)
+    values (v_biz_id, v_branch_id, v_staff_id, v_client_a, v_service_id,
+        timestamptz '2026-01-10 22:30+00', timestamptz '2026-01-10 23:00+00', 'confirmed')
+    returning id into v_booking_a;
+    -- 20:30 UTC 11 января — 23:30 11-го в Москве, но уже 02:30 12-го в Бишкеке.
+    insert into public.bookings (biz_id, branch_id, staff_id, client_id, service_id, start_at, end_at, status)
+    values (v_biz_id, v_branch_id, v_staff_id, v_client_b, v_service_id,
+        timestamptz '2026-01-11 20:30+00', timestamptz '2026-01-11 21:00+00', 'confirmed');
+
+    -- 6.3. Дневная метрика мастера за 11 января по московскому дню: оба клиента.
+    perform public.calculate_staff_day_metrics(v_staff_id, date '2026-01-11');
+    select clients_count into v_clients from public.staff_day_metrics
+    where staff_id = v_staff_id and metric_date = date '2026-01-11';
+    if v_clients is distinct from 2 then
+        raise exception '[TEST 6] За 11 января по московскому дню ожидали 2 клиента, получили %', v_clients;
+    end if;
+
+    -- 6.4. Гостевой чек отдаёт часовой пояс бизнеса.
+    select r.tz into v_receipt_tz from public.booking_receipt_public(v_booking_a) r;
+    if v_receipt_tz is distinct from 'Europe/Moscow' then
+        raise exception '[TEST 6] booking_receipt_public должен вернуть Europe/Moscow, получили %', v_receipt_tz;
+    end if;
+
+    -- 6.5. Срок акции — «сегодня» бизнеса, а не дата UTC: зона, где сейчас другой календарный день.
+    v_far_tz := case when extract(hour from now() at time zone 'UTC') >= 11 then 'Pacific/Kiritimati' else 'Pacific/Pago_Pago' end;
+    v_far_today := (now() at time zone v_far_tz)::date;
+    if v_far_today = (now() at time zone 'UTC')::date then
+        raise exception '[TEST 6] Зона % должна жить в другом дне, чем UTC', v_far_tz;
+    end if;
+    insert into public.businesses (name, slug, is_approved, tz)
+    values ('TEST_BIZ_FAR_TZ', 'test-biz-far-tz', true, v_far_tz)
+    returning id into v_far_biz;
+    insert into public.branches (biz_id, name, is_active)
+    values (v_far_biz, 'TEST_BRANCH_FAR_TZ', true)
+    returning id into v_far_branch;
+    insert into public.branch_promotions (branch_id, biz_id, promotion_type, title_ru, params, is_active, valid_from, valid_to)
+    values (v_far_branch, v_far_biz, 'first_visit_discount', 'Тест: только сегодня', jsonb_build_object('discount_percent', 10), true, v_far_today, v_far_today)
+    returning id into v_promo_today;
+    insert into public.branch_promotions (branch_id, biz_id, promotion_type, title_ru, params, is_active, valid_from, valid_to)
+    values (v_far_branch, v_far_biz, 'first_visit_discount', 'Тест: закончилась вчера', jsonb_build_object('discount_percent', 10), true, v_far_today - 1, v_far_today - 1)
+    returning id into v_promo_yesterday;
+    if not public.can_use_promotion(v_client_a, v_far_branch, v_promo_today, null) then
+        raise exception '[TEST 6] Акция на сегодня бизнеса (% в %) должна действовать', v_far_today, v_far_tz;
+    end if;
+    if public.can_use_promotion(v_client_a, v_far_branch, v_promo_yesterday, null) then
+        raise exception '[TEST 6] Акция, закончившаяся вчера по дню бизнеса (% в %), не должна действовать', v_far_today, v_far_tz;
+    end if;
+
+    raise notice '[TEST 6] OK — метрики, назначения, акции и чек считают день в часовом поясе бизнеса';
 end;
 $$;

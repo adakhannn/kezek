@@ -7,13 +7,13 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { QuickDeskClientSection } from '@/app/dashboard/bookings/components/QuickDeskClientSection';
 import { useQuickDeskClient } from '@/app/dashboard/bookings/components/useQuickDeskClient';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { createInternalBooking, getFreeSlotsForServiceDay } from '@/lib/bookingDashboardService';
-import { TZ } from '@/lib/time';
 
 function toYmdLocal(d: Date): string {
     const y = d.getFullYear();
@@ -40,6 +40,7 @@ export default function Client({
     defaultDate: string;
     staffName: string;
 }) {
+    const tz = useBusinessTimeZone();
     const { t } = useLanguage();
     const toast = useToast();
     const client = useQuickDeskClient();
@@ -288,7 +289,7 @@ export default function Client({
                             </div>
                             <div className="flex flex-wrap gap-2.5">
                                 {uniq.map((s) => {
-                                    const label = `${formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}–${formatInTimeZone(new Date(s.end_at), TZ, 'HH:mm')}`;
+                                    const label = `${formatInTimeZone(new Date(s.start_at), tz, 'HH:mm')}–${formatInTimeZone(new Date(s.end_at), tz, 'HH:mm')}`;
                                     const selected = s.start_at === selectedStart;
                                     return (
                                         <button
@@ -327,8 +328,8 @@ export default function Client({
                                 <div>
                                     <dt className="text-gray-500 dark:text-gray-400">{t('booking.confirm.when', 'Когда')}</dt>
                                     <dd className="font-medium text-gray-900 dark:text-gray-100">
-                                        {formatInTimeZone(new Date(selectedSlot.start_at), TZ, 'dd.MM.yyyy')}{' '}
-                                        {formatInTimeZone(new Date(selectedSlot.start_at), TZ, 'HH:mm')}–{formatInTimeZone(new Date(selectedSlot.end_at), TZ, 'HH:mm')}
+                                        {formatInTimeZone(new Date(selectedSlot.start_at), tz, 'dd.MM.yyyy')}{' '}
+                                        {formatInTimeZone(new Date(selectedSlot.start_at), tz, 'HH:mm')}–{formatInTimeZone(new Date(selectedSlot.end_at), tz, 'HH:mm')}
                                     </dd>
                                 </div>
                                 <div>

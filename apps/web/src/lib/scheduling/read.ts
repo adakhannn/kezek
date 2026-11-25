@@ -1,3 +1,4 @@
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 import type { EffectiveDay, ScheduleSnapshot } from './model';
@@ -9,7 +10,7 @@ export async function readScheduledDay(staffId: string, bizId: string, date: Dat
     const admin = getServiceClient();
     const { data: business, error: businessError } = await admin.from('businesses').select('tz').eq('id', bizId).single();
     if (businessError) throw businessError;
-    const timezone = business?.tz || 'Asia/Bishkek';
+    const timezone = resolveBusinessTimeZone(business?.tz);
     const ymd = typeof date === 'string' ? date : formatInTimeZone(date, timezone, 'yyyy-MM-dd');
     const { data, error } = await admin.rpc('read_staff_schedule', { p_staff: staffId, p_biz: bizId, p_from: ymd, p_to: ymd });
     if (error) throw error;

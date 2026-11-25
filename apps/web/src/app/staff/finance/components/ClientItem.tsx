@@ -7,6 +7,7 @@ import { deduplicateServiceNameString, formatTime } from '../utils';
 import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface ClientItemProps {
@@ -23,6 +24,7 @@ interface ClientItemProps {
 
 function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete }: ClientItemProps) {
     const { t, locale } = useLanguage();
+    const tz = useBusinessTimeZone();
     const currency = t('staff.finance.shift.som', 'сом');
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const hasBooking = !!item.bookingId;
@@ -94,7 +96,7 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                 </div>
                 <div className="text-right">
                     <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                        {item.createdAt ? formatTime(item.createdAt, locale) : <span className="text-gray-400">—</span>}
+                        {item.createdAt ? formatTime(item.createdAt, locale, tz) : <span className="text-gray-400">—</span>}
                     </div>
                 </div>
             </div>
@@ -123,7 +125,7 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                         </div>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0">
-                        {item.createdAt ? formatTime(item.createdAt, locale) : <span className="text-gray-400">—</span>}
+                        {item.createdAt ? formatTime(item.createdAt, locale, tz) : <span className="text-gray-400">—</span>}
                     </div>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-2 truncate">

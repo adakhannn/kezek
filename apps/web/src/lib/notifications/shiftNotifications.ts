@@ -5,6 +5,7 @@
  * profiles.preferred_locale (FE-10); NULL, an unknown value or a missing profile means Russian.
  */
 
+import { DEFAULT_BUSINESS_TIME_ZONE } from '@shared-client/timezone';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import {
@@ -19,7 +20,6 @@ import {
 import { getResendApiKey, getEmailFrom } from '@/lib/env';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { logDebug, logError } from '@/lib/log';
-import { TZ } from '@/lib/time';
 
 export type ShiftCloseNotificationData = {
     /** The employee's name; null or empty shows the word "employee" in the recipient's language. */
@@ -30,6 +30,7 @@ export type ShiftCloseNotificationData = {
     ownerEmail?: string | null;
     /** profiles.preferred_locale of the business owner. */
     ownerLocale?: string | null;
+    /** YYYY-MM-DD: the day of the business calendar, shown as is in every zone (ARCH-11). */
     shiftDate: string;
     totalAmount: number;
     masterShare: number;
@@ -47,7 +48,7 @@ export function buildShiftCloseEmail(data: ShiftCloseNotificationData, locale: N
     const t = (key: string, values?: Record<string, string | number>) =>
         notificationText(locale, `server.notifications.${key}` as NotificationTextKey, values);
     const money = (amount: number) => formatNotificationMoney(amount, locale);
-    const date = formatNotificationDate(data.shiftDate, TZ, locale);
+    const date = formatNotificationDate(data.shiftDate, DEFAULT_BUSINESS_TIME_ZONE, locale);
     const staffName = data.staffName?.trim() || t('shiftStaffFallback');
     const title = t('shiftTitle');
     const details = t('shiftDetails');

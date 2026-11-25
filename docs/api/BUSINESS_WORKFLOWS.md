@@ -116,9 +116,9 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | Часть | Контракт |
 | --- | --- |
 | Доступ | Manager direct, затем `is_super_admin` либо проверка owner_id/owner-роли текущего бизнеса |
-| Вход | Поля JSON `contact_phone`, `contact_whatsapp`, `contact_email`, `website_url`; строки либо null. Непустой строгий PATCH: меняются только переданные поля |
-| Проверки | Телефоны нормализуются и проверяются E.164; email trim/lowercase, формат и длина <=254; website только HTTPS; пустые строки/null очищают переданное поле; пропущенные поля сохраняются |
-| Limiter/успех | normal; `data` содержит четыре сохранённых контактных поля |
+| Вход | Поля JSON `contact_phone`, `contact_whatsapp`, `contact_email`, `website_url` (строки либо null) и `tz` (часовой пояс бизнеса, строка IANA, ARCH-11). Непустой строгий PATCH: меняются только переданные поля |
+| Проверки | Телефоны нормализуются и проверяются E.164; email trim/lowercase, формат и длина <=254; website только HTTPS; пустые строки/null очищают переданное поле; `tz` — зона, которую знает Intl (иначе 400 «Неизвестный часовой пояс»; БД проверяет её ещё раз, DB-16); пропущенные поля сохраняются |
+| Limiter/успех | normal; `data` содержит четыре сохранённых контактных поля и `tz` |
 | Ошибки | 403 forbidden без owner/super; 400 validation с details.field; 400 update_failed при ошибке БД; 404 not_found при отсутствии результата; общие исключения |
 
 **Проверено локально 9–10 ноября:** malformed JSON, пустой объект, неизвестные ключи и неверные типы отклоняются до записи по [schema](../../apps/web/src/lib/validation/businessUpdateSchemas.ts). One-field patch сохраняет остальные контакты; проверки [HTTP boundary](../../apps/web/src/__tests__/api/patchContracts.test.ts) и [service](../../apps/web/src/__tests__/lib/businessContactSettingsService.test.ts). Источники: [route](../../apps/web/src/app/api/dashboard/contact-settings/route.ts), [service](../../apps/web/src/lib/businessContactSettingsService.ts), [нормализация](../../apps/web/src/lib/businessContacts.ts), [isBusinessOwner](../../apps/web/src/lib/staffApplicationApprovalService.ts).

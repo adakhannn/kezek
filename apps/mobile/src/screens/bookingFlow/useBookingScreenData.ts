@@ -63,7 +63,7 @@ export function useBookingScreenData({ slug }: Options) {
 
             const { data: biz, error } = await supabase
                 .from('businesses')
-                .select('id, name, slug, rating_score')
+                .select('id, name, slug, rating_score, tz')
                 .eq('slug', slug)
                 .eq('is_approved', true)
                 .single();

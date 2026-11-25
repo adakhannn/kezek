@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { formatTimeSlot } from '@shared-client/formatters';
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { colors } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import OfflineBanner from '../../components/ui/OfflineBanner';
@@ -17,7 +18,7 @@ import { useBookingStep6Confirm } from './useBookingStep6Confirm';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const TZ = 'Asia/Bishkek';
+/** Slot times are shown in the business's own zone (businesses.tz, ARCH-11). */
 
 export default function BookingStep6Confirm() {
     const navigation = useNavigation<NavigationProp>();
@@ -32,6 +33,7 @@ export default function BookingStep6Confirm() {
         isPending,
     } = useBookingStep6Confirm(navigation);
     const { t } = useLanguage();
+    const tz = resolveBusinessTimeZone(bookingData.business?.tz);
 
     return (
         <LinearGradient
@@ -91,7 +93,7 @@ export default function BookingStep6Confirm() {
                                 {dateLabel && <Text style={styles.summaryValue}>{dateLabel.dayMonth}</Text>}
                                 {bookingData.selectedSlot && (
                                     <Text style={styles.summaryHint}>
-                                        {formatTimeSlot(bookingData.selectedSlot.start_at, TZ)}
+                                        {formatTimeSlot(bookingData.selectedSlot.start_at, tz)}
                                     </Text>
                                 )}
                             </View>

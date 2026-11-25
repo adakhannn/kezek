@@ -7,7 +7,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+const { applyMigrationFunctionsWhereExist, assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -80,7 +80,8 @@ let created = false;
             alter table frontend_metrics enable row level security;
             create policy "Allow read access to frontend metrics" on frontend_metrics for select using (true);
             create table bookings(client_id uuid, branch_id uuid, status text, end_at timestamptz, id uuid primary key default gen_random_uuid());
-            create table branch_promotions(id uuid primary key, branch_id uuid, promotion_type text, params jsonb default '{}',
+            create table businesses(id uuid primary key, tz text);
+            create table branch_promotions(id uuid primary key, branch_id uuid, biz_id uuid, promotion_type text, params jsonb default '{}',
                 is_active boolean default true, valid_from date, valid_to date);
             create table client_referrals(referrer_id uuid, branch_id uuid, referrer_bonus_used boolean default false);
             -- The promotion helpers exactly as the production baseline defines them: SECURITY DEFINER, no search_path.
@@ -151,6 +152,8 @@ let created = false;
         // 3b. 20261119120000 (ENG-123): the helpers take the booking being priced and leave it out.
         // The old signatures are gone, the new ones keep the same access.
         await sql(fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261119120000_promotion_visits_exclude_priced_booking.sql'), 'utf8'));
+        // The later business-day redefinition (ARCH-11): promotion validity is today of the business.
+        await applyMigrationFunctionsWhereExist(sql, '20261125100000_business_time_zone_days.sql');
         for (const sig of ['get_client_visit_count(uuid,uuid)', 'can_use_promotion(uuid,uuid,uuid)']) {
             assert.equal(await sql(`select to_regprocedure('public.${sig}') is null`), 't', `${sig} is dropped`);
         }

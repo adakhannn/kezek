@@ -10,7 +10,7 @@ import { financeDateLabel } from './calendar';
 import { shiftSummaryAmounts } from './summaryAmounts';
 
 import { toCsv } from '@/lib/csv';
-import { TZ } from '@/lib/time';
+import { DEFAULT_BUSINESS_TIME_ZONE } from '@/lib/time';
 
 type Translate = (key: string, fallback: string) => string;
 /** Without the UI translator the Russian headers stay (FE-10). */
@@ -25,6 +25,8 @@ export function exportClientsToCSV(
     shiftDate: Date,
     staffName?: string,
     t: Translate = keepRussian,
+    /** The business time zone of the creation times (ARCH-11). */
+    timeZone: string = DEFAULT_BUSINESS_TIME_ZONE,
 ): void {
     // Заголовки CSV
     const headers = [
@@ -42,7 +44,7 @@ export function exportClientsToCSV(
     const rows = items.map((item) => {
         const total = (item.serviceAmount || 0) + (item.consumablesAmount || 0);
         const createdAt = item.createdAt
-            ? formatInTimeZone(new Date(item.createdAt), TZ, 'dd.MM.yyyy HH:mm')
+            ? formatInTimeZone(new Date(item.createdAt), timeZone, 'dd.MM.yyyy HH:mm')
             : '-';
 
         return [

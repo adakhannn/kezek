@@ -1,10 +1,10 @@
 import { startOfWeek, addDays, addWeeks } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
+import { loadBusinessTimeZone } from './businessTimeZone';
 import { logDebug, logError } from './log';
 import { branchDayIntervals, LEGACY_DEFAULT_INTERVAL, type BranchHoursRow } from './scheduling/legacyDefaults';
 import { getServiceClient } from './supabaseService';
-import { TZ } from './time';
 
 /**
  * Инициализирует расписание для сотрудника на текущую и следующую недели (старая модель).
@@ -25,6 +25,8 @@ export async function initializeStaffSchedule(
 ): Promise<{ success: boolean; daysCreated: number; error?: string }> {
     try {
         logDebug('StaffSchedule', 'Starting initialization', { staffId, bizId, branchId });
+        // Days and the rule tz are the business calendar (ARCH-11).
+        const tz = await loadBusinessTimeZone(bizId, admin);
         
         const today = new Date();
         const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Понедельник
@@ -34,10 +36,10 @@ export async function initializeStaffSchedule(
         for (let weekOffset = 0; weekOffset < 2; weekOffset++) {
             const targetWeekStart = addWeeks(weekStart, weekOffset);
             const weekDates = Array.from({ length: 7 }, (_, i) => addDays(targetWeekStart, i));
-            const dateStrings = weekDates.map((d) => formatInTimeZone(d, TZ, 'yyyy-MM-dd'));
+            const dateStrings = weekDates.map((d) => formatInTimeZone(d, tz, 'yyyy-MM-dd'));
             allDates.push(...dateStrings);
         }
-        const todayYmd = formatInTimeZone(today, TZ, 'yyyy-MM-dd');
+        const todayYmd = formatInTimeZone(today, tz, 'yyyy-MM-dd');
         const futureDates = allDates.filter((date) => date >= todayYmd);
 
         logDebug('StaffSchedule', 'Generated dates', { count: allDates.length, first: allDates[0], last: allDates[allDates.length - 1] });
@@ -46,7 +48,7 @@ export async function initializeStaffSchedule(
         const startDate = allDates[0];
         const lastDate = allDates[allDates.length - 1];
         const lastDateObj = new Date(lastDate + 'T12:00:00'); // Добавляем время для корректного парсинга
-        const endDate = formatInTimeZone(addDays(lastDateObj, 1), TZ, 'yyyy-MM-dd');
+        const endDate = formatInTimeZone(addDays(lastDateObj, 1), tz, 'yyyy-MM-dd');
 
         const { data: existingRules, error: selectError } = await admin
             .from('staff_schedule_rules')
@@ -100,7 +102,7 @@ export async function initializeStaffSchedule(
                 kind: 'date' as const,
                 date_on: date,
                 branch_id: branchId,
-                tz: TZ,
+                tz,
                 intervals,
                 breaks: [],
                 is_active: true,

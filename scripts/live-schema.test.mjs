@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { SUPABASE_DEFAULT_PRIVILEGES, checkAgainstRatchet, compareFunctions, lastJsonLine, liveFunctionSql, loadCatalog, migrationWhereObjectsExistSql } = require('./lib/live-schema.cjs');
+const { SUPABASE_DEFAULT_PRIVILEGES, checkAgainstRatchet, compareFunctions, lastJsonLine, liveFunctionSql, loadCatalog, migrationFunctionsWhereExistSql, migrationWhereObjectsExistSql } = require('./lib/live-schema.cjs');
 
 const fingerprint = (overrides = {}) => ({
     arguments: 'p_biz_id uuid, p_window_minutes integer DEFAULT 60',
@@ -104,4 +104,13 @@ test('a grant migration applies per object and skips objects the suite lacks', (
     assert.match(sql, /exception when undefined_function or undefined_table or undefined_object then null;/);
     // Only grant, revoke and alter function statements qualify: a migration that creates or changes data does not.
     assert.throws(() => migrationWhereObjectsExistSql('20261119040000_rls_policy_hygiene.sql'), /only grant, revoke and alter function/);
+});
+
+test('a migration of function redefinitions applies only to the functions the suite has', () => {
+    const sql = migrationFunctionsWhereExistSql('20261125100000_business_time_zone_days.sql');
+    assert.equal((sql.match(/do \$apply\$/g) || []).length, 8);
+    assert.ok(sql.includes("where n.nspname = 'public' and p.proname = 'calculate_staff_day_metrics') then"));
+    assert.ok(sql.includes('execute $statement$CREATE OR REPLACE FUNCTION public.can_use_promotion('));
+    // A migration that drops or creates anything else does not qualify.
+    assert.throws(() => migrationFunctionsWhereExistSql('20261125100100_booking_receipt_time_zone.sql'), /only create or replace function blocks/);
 });

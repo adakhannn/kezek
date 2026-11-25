@@ -1,11 +1,11 @@
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 
-jest.mock('@/lib/log', () => ({ logDebug: jest.fn(), logError: jest.fn() }));
+jest.mock('@/lib/log', () => ({ logDebug: jest.fn(), logError: jest.fn(), logWarn: jest.fn() }));
 
 type Result = { data: unknown; error: { message: string } | null };
 
-function adminWith(branch: Result) {
-    const inserted: Array<Array<{ date_on: string; intervals: unknown[] }>> = [];
+function adminWith(branch: Result, tz: string | null = 'Asia/Bishkek') {
+    const inserted: Array<Array<{ date_on: string; intervals: unknown[]; tz?: string }>> = [];
     const chain = (result: Result) => {
         const self: Record<string, unknown> = {};
         for (const method of ['select', 'eq', 'gte', 'lt']) self[method] = () => self;
@@ -14,10 +14,13 @@ function adminWith(branch: Result) {
     };
     const admin = {
         from: (table: string) => {
+            if (table === 'businesses') {
+                return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { tz }, error: null }) }) }) };
+            }
             if (table === 'branch_working_hours') return chain(branch);
             return {
                 ...chain({ data: [], error: null }),
-                insert: (rows: Array<{ date_on: string; intervals: unknown[] }>) => {
+                insert: (rows: Array<{ date_on: string; intervals: unknown[]; tz?: string }>) => {
                     inserted.push(rows);
                     return chain({ data: rows.map((_, index) => ({ id: String(index) })), error: null });
                 },
@@ -56,6 +59,19 @@ describe('initializeStaffSchedule (FE-02)', () => {
         await initializeStaffSchedule(admin, 'biz-1', 'staff-1', 'branch-1');
 
         expect(inserted[0].every((row) => JSON.stringify(row.intervals) === JSON.stringify([{ start: '09:00', end: '21:00' }]))).toBe(true);
+    });
+
+    test('days and the rule zone follow the business time zone (ARCH-11)', async () => {
+        // 18:30 UTC on 17 November: already the 18th in Bishkek (UTC+6), still the 17th in Moscow (UTC+3).
+        jest.setSystemTime(new Date('2026-11-17T18:30:00Z'));
+        const hours = { data: [0, 1, 2, 3, 4, 5, 6].map((day) => ({ day_of_week: day, intervals: [{ start: '10:00', end: '19:00' }] })), error: null };
+        const bishkek = adminWith(hours);
+        await initializeStaffSchedule(bishkek.admin, 'biz-1', 'staff-1', 'branch-1');
+        const moscow = adminWith(hours, 'Europe/Moscow');
+        await initializeStaffSchedule(moscow.admin, 'biz-1', 'staff-1', 'branch-1');
+
+        expect(bishkek.inserted[0][0]).toMatchObject({ date_on: '2026-11-18', tz: 'Asia/Bishkek' });
+        expect(moscow.inserted[0][0]).toMatchObject({ date_on: '2026-11-17', tz: 'Europe/Moscow' });
     });
 
     test('an unreadable branch schedule writes nothing', async () => {

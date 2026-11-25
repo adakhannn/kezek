@@ -49,7 +49,7 @@ describe('useCurrentStaff (ARCH-02)', () => {
         const query = from.mock.results[0].value;
         expect(from).toHaveBeenCalledWith('staff');
         expect(query.select).toHaveBeenCalledWith(
-            'id, full_name, biz_id, created_at, branch:branches(id, name), business:businesses(id, name)',
+            'id, full_name, biz_id, created_at, branch:branches(id, name), business:businesses(id, name, tz)',
         );
         expect(query.eq).toHaveBeenCalledWith('user_id', 'user-1');
         expect(query.eq).toHaveBeenCalledWith('is_active', true);

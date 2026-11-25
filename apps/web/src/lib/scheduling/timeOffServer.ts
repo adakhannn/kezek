@@ -1,3 +1,4 @@
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { explicitSchedulingEnabled } from './config';
@@ -22,7 +23,7 @@ export async function staffTimeOffHttp(request: Request, staffId: string) {
         const { data: business, error: businessError } = await service.from('businesses').select('tz')
             .eq('id', context.bizId).single();
         if (businessError) throw businessError;
-        const today = formatInTimeZone(new Date(), business?.tz || 'Asia/Bishkek', 'yyyy-MM-dd');
+        const today = formatInTimeZone(new Date(), resolveBusinessTimeZone(business?.tz), 'yyyy-MM-dd');
 
         if (request.method === 'GET') {
             const { data, error } = await service.from('staff_time_off')

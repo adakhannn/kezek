@@ -11,7 +11,7 @@ import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { isBusinessOwner } from '@/lib/staffApplicationApprovalService';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
-import { publicContactPatchSchema } from '@/lib/validation/businessUpdateSchemas';
+import { businessSettingsPatchSchema } from '@/lib/validation/businessUpdateSchemas';
 
 export async function POST(req: Request) {
     return withRateLimit(req, RateLimitConfigs.normal, () =>
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
                 );
             }
 
-            const validation = await validateRequest(req, publicContactPatchSchema);
+            const validation = await validateRequest(req, businessSettingsPatchSchema);
             if (!validation.success) return validation.response;
             const result = await updateBusinessContactSettings({
                 admin: admin as unknown as BusinessContactSettingsAdminLike,

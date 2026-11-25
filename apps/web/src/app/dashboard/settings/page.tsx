@@ -1,4 +1,5 @@
 import { BusinessContactSettingsForm } from './BusinessContactSettingsForm';
+import { BusinessTimeZoneSettingsForm } from './BusinessTimeZoneSettingsForm';
 
 import { getServerLocale, getT } from '@/app/_components/i18n/server';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
@@ -8,6 +9,7 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
 import { isBusinessOwner } from '@/lib/staffApplicationApprovalService';
 import { getServiceClient } from '@/lib/supabaseService';
+import { getBusinessTimezone } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -35,7 +37,7 @@ export default async function BusinessSettingsPage() {
 
     const { data, error } = await admin
         .from('businesses')
-        .select('contact_phone,contact_whatsapp,contact_email,website_url')
+        .select('contact_phone,contact_whatsapp,contact_email,website_url,tz')
         .eq('id', bizId)
         .maybeSingle();
 
@@ -59,6 +61,7 @@ export default async function BusinessSettingsPage() {
                     website_url: data?.website_url ?? '',
                 }}
             />
+            <BusinessTimeZoneSettingsForm initial={getBusinessTimezone(data?.tz)} />
         </main>
     );
 }

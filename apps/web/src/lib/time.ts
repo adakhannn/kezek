@@ -1,7 +1,9 @@
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { addMinutes, addDays, isBefore, max as maxDate, min as minDate } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 export { fromZonedTime };
+export { DEFAULT_BUSINESS_TIME_ZONE, isValidTimeZone, resolveBusinessTimeZone } from '@shared-client/timezone';
 
 /**
  * Получает таймзону из переменной окружения или возвращает значение по умолчанию
@@ -69,20 +71,18 @@ export function dateRangeInclusive(startStr: string, endStr: string, timezone?: 
 }
 
 /**
- * Получает таймзону бизнеса, если она указана, иначе использует дефолтную таймзону
+ * Часовой пояс бизнеса (`businesses.tz`, ARCH-11): известная Intl зона, иначе Asia/Bishkek.
+ * Всё, что видит бизнес и его клиенты (слоты, «сегодня», смены, тексты уведомлений), считается в нём.
  * @param businessTz - таймзона бизнеса из базы данных (может быть null или undefined)
- * @returns таймзона бизнеса или дефолтная таймзона
  */
 export function getBusinessTimezone(businessTz?: string | null): string {
-    if (businessTz && businessTz.trim()) {
-        return businessTz.trim();
-    }
-    return getTimezone();
+    return resolveBusinessTimeZone(businessTz);
 }
 
 /**
- * Экспорт таймзоны для обратной совместимости
- * @deprecated Используйте getTimezone() или getBusinessTimezone() для получения таймзоны
+ * Часовой пояс платформы (NEXT_PUBLIC_TZ): только для общеплатформенных отчётов суперадмина,
+ * не для данных одного бизнеса.
+ * @deprecated Для данных бизнеса используйте getBusinessTimezone(business.tz)
  */
 export const TZ = getTimezone();
 

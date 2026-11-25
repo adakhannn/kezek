@@ -7,7 +7,6 @@ import { fmtErr, isNetworkError, withNetworkRetry } from '../utils';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 import { logDebug, logError } from '@/lib/log';
 import { createGuestBookingRequest } from '@/lib/quickBookGuestClient';
-import { TZ } from '@/lib/time';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
 
 type BookingFeedbackApi = {
@@ -22,6 +21,8 @@ type GuestBookingForm = {
 
 type UseGuestBookingParams = {
     bizId: string;
+    /** The business time zone (businesses.tz) of the slot times. */
+    businessTz: string;
     services: Service[];
     staffId: string;
     branchId: string;
@@ -31,7 +32,7 @@ type UseGuestBookingParams = {
 };
 
 export function useGuestBooking(params: UseGuestBookingParams) {
-    const { bizId, services, staffId, branchId, t, onBookingCreated, feedback } = params;
+    const { bizId, businessTz, services, staffId, branchId, t, onBookingCreated, feedback } = params;
 
     const [modalOpen, setModalOpen] = useState(false);
     const [slotTime, setSlotTime] = useState<Date | null>(null);
@@ -165,14 +166,14 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         try {
             const startISO = formatInTimeZone(
                 slotTime,
-                TZ,
+                businessTz,
                 "yyyy-MM-dd'T'HH:mm:ssXXX",
             );
 
             logDebug('GuestBooking', 'Formatted start_at', {
                 startISO,
                 slotTime: slotTime.toISOString(),
-                timezone: TZ,
+                timezone: businessTz,
             });
 
             if (!bizId || !branchId || !actualStaffId) {

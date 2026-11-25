@@ -1,8 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { loadBusinessTimeZone } from '@/lib/businessTimeZone';
 import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError } from '@/lib/log';
-import { TZ, todayStringInTz, formatDateInTz } from '@/lib/time';
+import { todayStringInTz, formatDateInTz } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { staffFinanceByIdQuerySchema } from '@/lib/validation/schemas';
 
@@ -67,8 +68,9 @@ export async function runDeprecatedStaffFinance({
     }
 
     const targetDate = parseTargetDate(queryValidation.data.date);
-    const ymd = formatDateInTz(targetDate, TZ);
-    const today = todayStringInTz(TZ);
+    const tz = await loadBusinessTimeZone(bizId, admin);
+    const ymd = formatDateInTz(targetDate, tz);
+    const today = todayStringInTz(tz);
 
     const staffPercentMaster = Number(staff.percent_master ?? 60);
     const staffPercentSalon = Number(staff.percent_salon ?? 40);
@@ -104,7 +106,7 @@ export async function runDeprecatedStaffFinance({
     const bookings = await loadBookings({ supabase, staffId, ymd });
     const services = await loadAvailableServices({ supabase, staffId });
     const currentWork = calculateCurrentWork({ shift, hourlyRate, now: new Date() });
-    const statsWindowStart = buildStatsWindowStart(targetDate);
+    const statsWindowStart = buildStatsWindowStart(targetDate, tz);
     const recentShiftsResult = await loadRecentClosedShifts({
         admin,
         bizId,
@@ -339,10 +341,10 @@ function calculateCurrentWork({
     };
 }
 
-function buildStatsWindowStart(targetDate: Date) {
+function buildStatsWindowStart(targetDate: Date, tz: string) {
     const thirtyDaysAgo = new Date(targetDate);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return formatDateInTz(thirtyDaysAgo, TZ);
+    return formatDateInTz(thirtyDaysAgo, tz);
 }
 
 async function loadRecentClosedShifts({

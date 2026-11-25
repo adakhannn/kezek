@@ -8,7 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { POSTGRES_IMAGE } = require('./lib/isolated-postgres.cjs');
-const { assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
+const { applyMigrationFunctionsWhereExist, assertLiveFunctions, SUPABASE_DEFAULT_PRIVILEGES } = require('./lib/live-schema.cjs');
 
 const migrations = path.join(__dirname, '..', 'supabase', 'migrations');
 const read = (file) => fs.readFileSync(path.join(migrations, file), 'utf8').replace(/\r/g, '');
@@ -117,6 +117,9 @@ let created = false;
         assert.equal(await sql(`select count(*) from pg_proc p where p.pronamespace = 'public'::regnamespace
             and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))`), '0');
 
+        // The later business-day redefinition (ARCH-11) keeps the service-only grants.
+        await applyMigrationFunctionsWhereExist(sql, '20261125100000_business_time_zone_days.sql');
+        assert.equal(await sql(`select has_function_privilege('anon', 'public.calculate_staff_day_metrics(uuid,date)', 'EXECUTE')`), 'f');
         await assertLiveFunctions(sql, { suite: 'test-rating-functions-service-only-isolated.cjs' });
         console.log('rating functions are service-only: ok');
     } finally {

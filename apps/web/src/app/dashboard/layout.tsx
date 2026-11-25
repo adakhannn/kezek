@@ -6,6 +6,7 @@ import { DashboardLayoutClient } from './components/DashboardLayoutClient';
 import { MobileSidebar } from './components/MobileSidebar';
 
 import { getT } from '@/app/_components/i18n/server';
+import { BusinessTimeZoneProvider } from '@/components/BusinessTimeZoneContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { getBizContextForManagers, BizAccessError } from '@/lib/authBiz';
 
@@ -19,8 +20,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     let bizId: string;
+    let businessTz: string | null = null;
     try {
-        ({ bizId } = await getBizContextForManagers());
+        let business: { tz?: string | null } | null;
+        ({ bizId, business } = await getBizContextForManagers());
+        businessTz = business?.tz ?? null;
     } catch (e: unknown) {
         if (e instanceof BizAccessError) {
             if (e.code === 'NOT_AUTHENTICATED') {
@@ -67,7 +71,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 <section className="min-h-screen min-w-0 flex-1 pb-24 pt-4 md:pb-0 lg:pt-0">
                     {/* A business change must discard the previous business's data and drafts. */}
                     <ErrorBoundary key={bizId}>
-                        {children}
+                        <BusinessTimeZoneProvider timeZone={businessTz}>{children}</BusinessTimeZoneProvider>
                     </ErrorBoundary>
                 </section>
             </div>

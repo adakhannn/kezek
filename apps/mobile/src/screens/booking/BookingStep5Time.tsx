@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { formatTimeSlot } from '@shared-client/formatters';
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import type { Slot } from '@shared-client/types';
 
 import { useBooking } from '../../contexts/BookingContext';
@@ -22,7 +23,7 @@ import { useBookingStep5Slots } from './useBookingStep5Slots';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const TZ = 'Asia/Bishkek';
+/** Slot times are shown in the business's own zone (businesses.tz, ARCH-11). */
 
 type TimeSlot = Slot & {
     start_at: string;
@@ -33,6 +34,7 @@ type TimeSlot = Slot & {
 export default function BookingStep5Time() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedSlot } = useBooking();
+    const tz = resolveBusinessTimeZone(bookingData.business?.tz);
     const { t } = useLanguage();
     const { slots, domainErrorMessage, isLoading, refetch, showOfflineBanner } =
         useBookingStep5Slots(bookingData);
@@ -93,7 +95,7 @@ export default function BookingStep5Time() {
                                                 styles.slotTextSelected,
                                         ]}
                                     >
-                                        {formatTimeSlot(slot.start_at, TZ)}
+                                        {formatTimeSlot(slot.start_at, tz)}
                                     </Text>
                                 </MotionPressable>
                             ))}

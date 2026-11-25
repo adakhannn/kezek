@@ -89,4 +89,5 @@ export const serverBusinessEn = {
     'server.business.contactEmailInvalid': 'Enter a valid public email',
     'server.business.websiteInvalid': 'The website must be a valid HTTPS link',
     'server.business.directoryLinkWrongService': 'Each link must lead to its own service: {services}',
+    'server.business.timeZoneInvalid': 'Unknown time zone',
 } as const;

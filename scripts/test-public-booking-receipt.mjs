@@ -1,6 +1,6 @@
 // Disposable PostgreSQL 17 in Docker only (no network, no project data): the public booking receipt
 // as production has it. booking_receipt_public comes from the prod baseline (definition, owner and
-// grants, created under its default privileges; no later migration changes it) and reads the
+// grants, created under its default privileges), then 20261125100100 adds the business time zone; it reads the
 // baseline tables, each with row level security. The receipt UUID is the capability: anon gets the
 // ordered localized composition and durations or the single-service fallback and no client field,
 // an unknown UUID discloses nothing, and reading bookings directly returns no row.
@@ -74,6 +74,10 @@ try {
 ${SUPABASE_DEFAULT_PRIVILEGES}
 ${baselineStatement('CREATE TYPE "public"."booking_status" AS ENUM (', '\n);\n')}
 ${['services', 'staff', 'bookings', 'booking_services'].map(baselineTable).join('\n')}
+-- The receipt of 20261125100100 also reads the business time zone (ARCH-11).
+create table public.businesses(id uuid primary key, tz text);
+alter table public.businesses enable row level security;
+insert into public.businesses(id, tz) values ('${biz}', 'Europe/Moscow');
 -- As in production, client roles may SELECT bookings and RLS decides the rows: no policy admits anon
 -- (20261110123000_service_only_booking_commands revoked only the writes of the baseline grants).
 grant select on public.bookings to anon, authenticated;
@@ -101,6 +105,21 @@ ${baselineFunction('booking_receipt_public')}`);
     assert.equal(await sql('select count(*) from public.bookings'), '2');
     assert.equal(await asAnon('select count(*) from public.bookings'), '0', 'RLS hides every booking from anon');
     assert.equal(await sql("select has_function_privilege('anon', 'public.booking_receipt_public(uuid)', 'execute')"), 't');
+
+    // 20261125100100 (ARCH-11): the receipt also returns the business time zone, NULL as Asia/Bishkek;
+    // composition, privacy and access stay as they were.
+    await sql(readFileSync(new URL('../supabase/migrations/20261125100100_booking_receipt_time_zone.sql', import.meta.url), 'utf8'));
+    const zoned = await receipt(id(4));
+    assert.deepEqual(Object.keys(zoned), ['id', 'status', 'start_at', 'end_at', 'staff_name', 'services', 'tz']);
+    assert.equal(zoned.tz, 'Europe/Moscow');
+    assert.deepEqual(zoned.services, composed.services);
+    await sql(`update public.businesses set tz = null where id = '${biz}'`);
+    assert.equal((await receipt(id(4))).tz, 'Asia/Bishkek');
+    assert.equal(await asAnon(`select count(*) from public.booking_receipt_public('${id(99)}')`), '0');
+    for (const role of ['anon', 'authenticated', 'service_role']) {
+        assert.equal(await sql(`select has_function_privilege('${role}', 'public.booking_receipt_public(uuid)', 'execute')`), 't', role);
+    }
+    assert.equal(await sql("select bool_or(a.grantee = 0) from pg_proc p, aclexplode(p.proacl) a where p.oid = 'public.booking_receipt_public(uuid)'::regprocedure"), 'f');
 
     await assertLiveFunctions(sql, { suite: 'test-public-booking-receipt.mjs' });
     console.log('PASS: anon exact UUID receipt returns ordered localized composition/durations and single-service fallback; no private fields, unknown booking disclosure or direct booking read');

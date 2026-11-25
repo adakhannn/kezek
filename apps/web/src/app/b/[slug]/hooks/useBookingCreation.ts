@@ -7,7 +7,6 @@ import { fmtErr, withNetworkRetry } from '../utils';
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 import { logDebug, logError } from '@/lib/log';
 import { createQuickHoldBooking, QuickHoldClientError } from '@/lib/quickHoldClient';
-import { TZ } from '@/lib/time';
 
 type BookingFeedbackApi = {
     showError: (message: string, duration?: number) => string;
@@ -15,6 +14,8 @@ type BookingFeedbackApi = {
 
 type UseBookingCreationParams = {
     bizId: string;
+    /** The business time zone (businesses.tz) of the slot times. */
+    businessTz: string;
     branchId: string;
     /** Одна или несколько услуг (комплекс); при одной вызывается hold_slot, при нескольких - hold_complex_slot */
     services: Service[];
@@ -30,6 +31,7 @@ type UseBookingCreationParams = {
 export function useBookingCreation(params: UseBookingCreationParams) {
     const {
         bizId,
+        businessTz,
         branchId,
         services,
         staffId,
@@ -103,7 +105,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         try {
             const startISO = formatInTimeZone(
                 slotTime,
-                TZ,
+                businessTz,
                 "yyyy-MM-dd'T'HH:mm:ssXXX",
             );
             const requestBody =

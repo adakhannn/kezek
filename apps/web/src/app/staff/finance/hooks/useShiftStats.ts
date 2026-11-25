@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import type { Stats, PeriodKey } from '../types';
 
-import { TZ } from '@/lib/time';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 
 
 interface UseShiftStatsOptions {
@@ -37,10 +37,11 @@ export function useShiftStats({
     selectedMonth,
     selectedYear,
 }: UseShiftStatsOptions): Stats {
+    const tz = useBusinessTimeZone();
     // Нормализуем Date объекты в строки для стабильных зависимостей
     // Это предотвращает пересчет при каждом рендере, даже если Date объекты технически "новые"
-    const dateStr = useMemo(() => formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd'), [selectedDate]);
-    const monthStr = useMemo(() => formatInTimeZone(selectedMonth, TZ, 'yyyy-MM'), [selectedMonth]);
+    const dateStr = useMemo(() => formatInTimeZone(selectedDate, tz, 'yyyy-MM-dd'), [selectedDate, tz]);
+    const monthStr = useMemo(() => formatInTimeZone(selectedMonth, tz, 'yyyy-MM'), [selectedMonth, tz]);
 
     // Мемоизируем стабильную сигнатуру allShifts
     const shiftsSignature = useMemo(() => {
@@ -79,8 +80,8 @@ export function useShiftStats({
             const monthEnd = `${monthStr}-${String(new Date(Date.UTC(year, month, 0)).getUTCDate()).padStart(2, '0')}`;
             filtered = closedShifts.filter((s) => s.shift_date >= monthStart && s.shift_date <= monthEnd);
         } else if (statsPeriod === 'year') {
-            const yearStart = formatInTimeZone(startOfYear(new Date(selectedYear, 0, 1)), TZ, 'yyyy-MM-dd');
-            const yearEnd = formatInTimeZone(endOfYear(new Date(selectedYear, 11, 31)), TZ, 'yyyy-MM-dd');
+            const yearStart = formatInTimeZone(startOfYear(new Date(selectedYear, 0, 1)), tz, 'yyyy-MM-dd');
+            const yearEnd = formatInTimeZone(endOfYear(new Date(selectedYear, 11, 31)), tz, 'yyyy-MM-dd');
             filtered = closedShifts.filter((s) => s.shift_date >= yearStart && s.shift_date <= yearEnd);
         } else {
             filtered = closedShifts;
@@ -105,6 +106,6 @@ export function useShiftStats({
             totalLateMinutes,
             shiftsCount: filtered.length,
         };
-    }, [shiftsSignature, statsPeriod, dateStr, monthStr, selectedYear]);
+    }, [shiftsSignature, statsPeriod, dateStr, monthStr, selectedYear, tz]);
 }
 

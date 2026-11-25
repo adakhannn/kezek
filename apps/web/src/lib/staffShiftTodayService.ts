@@ -1,11 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { loadBusinessTimeZone } from '@/lib/businessTimeZone';
 import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { readScheduledDay } from '@/lib/scheduling/read';
 import { readStaffPrivateFields } from '@/lib/staffPrivateFields';
-import { TZ, formatDateInTz } from '@/lib/time';
+import { formatDateInTz } from '@/lib/time';
 
 type StaffShiftTodayContext = {
     supabase: SupabaseClient;
@@ -44,7 +45,8 @@ export async function runStaffShiftToday({
     const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
 
     const scheduled = explicitSchedulingEnabled() ? await readScheduledDay(staffId, bizId, now) : null;
-    const ymd = scheduled?.ymd ?? formatDateInTz(now, TZ);
+    // The legacy (no explicit schedule) day is the business calendar day too (ARCH-11).
+    const ymd = scheduled?.ymd ?? formatDateInTz(now, await loadBusinessTimeZone(bizId));
     const dow = new Date(`${ymd}T12:00:00`).getDay();
 
     const isDayOff = scheduled ? !scheduled.day.intervals.length : await resolveIsDayOff({ supabase, staffId, bizId, ymd, dow });

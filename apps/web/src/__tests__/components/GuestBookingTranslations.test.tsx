@@ -27,7 +27,7 @@ describe.each([['ru', ru], ['en', en], ['ky', ky]] as const)('guest booking in %
         ['LIVE TEST', '+996555123456', 'bad-email', 'emailInvalid'],
     ])('rejects invalid local contacts with translated %s/%s/%s', async (name, phone, email, key) => {
         const showError = jest.fn();
-        const { result } = renderHook(() => useGuestBooking({bizId: 'biz', branchId: 'branch', staffId: 'staff',
+        const { result } = renderHook(() => useGuestBooking({bizId: 'biz', businessTz: 'Asia/Bishkek', branchId: 'branch', staffId: 'staff',
             services: [{id: 'service', branch_id: 'branch', name_ru: 'Test', duration_min: 60, price_from: 100, price_to: 300}],
             t, feedback: {showError}}));
         act(() => {

@@ -198,6 +198,7 @@ export default function BookingForm({ data }: { data: Data }) {
     });
 
     const guestBooking = useGuestBooking({
+        businessTz,
         bizId: biz.id,
         services: servicesForBooking,
         staffId,
@@ -215,6 +216,7 @@ export default function BookingForm({ data }: { data: Data }) {
     const [pendingBooking, setPendingBooking] = useState<{ slotTime: Date; staffId: string } | null>(null);
 
     const { createBooking, loading: bookingLoading } = useBookingCreation({
+        businessTz,
         bizId: biz.id,
         branchId,
         services: servicesForBooking,

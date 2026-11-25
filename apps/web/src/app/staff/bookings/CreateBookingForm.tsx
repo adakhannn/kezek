@@ -6,6 +6,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { Card } from '@/components/ui/Card';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -13,7 +14,7 @@ import { useToast } from '@/hooks/useToast';
 import { getFreeSlotsForServiceDay, getFreeSlotsForComplexDay, createInternalBooking, createInternalComplexBooking } from '@/lib/bookingDashboardService';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 import { logError } from '@/lib/log';
-import { TZ, todayStringInTz } from '@/lib/time';
+import { todayStringInTz } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 import { validateName, validatePhone } from '@/lib/validation';
 
@@ -44,13 +45,14 @@ type Props = {
 };
 
 export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, branches }: Props) {
+    const tz = useBusinessTimeZone();
     const { t, locale } = useLanguage();
     const toast = useToast();
 
     const [branchId, setBranchId] = useState<string>(defaultBranchId || '');
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
     const selectedStaffId = staffId;
-    const [date, setDate] = useState<string>(() => todayStringInTz(TZ));
+    const [date, setDate] = useState<string>(() => todayStringInTz(tz));
     const [slots, setSlots] = useState<RpcSlot[]>([]);
     const [slotStartISO, setSlotStartISO] = useState<string>('');
     const [slotsLoading, setSlotsLoading] = useState(false);
@@ -343,7 +345,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                         type="date"
                         className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         value={date}
-                        min={todayStringInTz(TZ)}
+                        min={todayStringInTz(tz)}
                         onChange={(e) => setDate(e.target.value)}
                     />
                 </div>
@@ -413,7 +415,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                     </label>
                     <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                         {slots.map((s, i) => {
-                            const timeStr = formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm');
+                            const timeStr = formatInTimeZone(new Date(s.start_at), tz, 'HH:mm');
                             const isSelected = slotStartISO === s.start_at;
                             return (
                                 <button

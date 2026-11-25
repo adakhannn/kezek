@@ -14,7 +14,7 @@ afterEach(() => { jest.clearAllTimers(); jest.useRealTimers(); });
 
 function setup() {
     return renderHook(() => useGuestBooking({
-        bizId: 'biz', branchId: 'branch', staffId: 'any',
+        bizId: 'biz', businessTz: 'Asia/Bishkek', branchId: 'branch', staffId: 'any',
         services: [{ id: 'service', branch_id: 'branch', name_ru: 'Test', duration_min: 60, price_from: 100, price_to: 300 }],
         t: (key, fallback) => fallback ?? key, feedback: { showError }, onBookingCreated: created,
     }));

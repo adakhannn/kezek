@@ -7,6 +7,7 @@ import { exportClientsToCSV } from '../utils/export';
 import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Button } from '@/components/ui/Button';
 
 
@@ -45,6 +46,7 @@ export function ClientsListHeader({
     onSaveNow,
 }: ClientsListHeaderProps) {
     const { t } = useLanguage();
+    const tz = useBusinessTimeZone();
     
     // Проверяем права доступа
     const permissionContext: PermissionContext = {
@@ -58,7 +60,7 @@ export function ClientsListHeader({
     const addMessage = getPermissionMessage('add', permissionContext, t);
 
     const handleExport = () => {
-        exportClientsToCSV(items, shift, shiftDate, undefined, t);
+        exportClientsToCSV(items, shift, shiftDate, undefined, t, tz);
     };
 
     return (

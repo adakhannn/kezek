@@ -7,6 +7,7 @@ import { CreateBookingForm } from './CreateBookingForm';
 import { useStaffBookingListHistory } from './useStaffBookingListHistory';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDateTime } from '@/lib/dateFormat';
@@ -66,6 +67,7 @@ export default function StaffBookingsView({
     branches: Branch[];
 }) {
     const { t, locale } = useLanguage();
+    const tz = useBusinessTimeZone();
     const { tab: listTab, setTab: setListTab } = useStaffBookingListHistory(bizId, staffId);
     const [creating, setCreating] = useState(false);
     const tab = creating ? 'create' : listTab;
@@ -76,7 +78,7 @@ export default function StaffBookingsView({
     }
 
     // Используем унифицированные функции форматирования дат
-    const formatDateTimeLocal = (iso: string): string => formatDateTime(iso, locale as 'ru' | 'ky' | 'en', true);
+    const formatDateTimeLocal = (iso: string): string => formatDateTime(iso, locale as 'ru' | 'ky' | 'en', true, tz);
 
     function getServiceName(service: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null): string {
         if (!service) return t('staff.cabinet.bookings.card.serviceDefault', 'Услуга');

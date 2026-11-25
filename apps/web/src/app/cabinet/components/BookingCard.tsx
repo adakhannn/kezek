@@ -16,13 +16,11 @@ import { ToastContainer } from '@/components/ui/Toast';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { useToast } from '@/hooks/useToast';
 import { formatBookingDateTime } from '@/lib/bookingCalendarDate';
-import { getTimezone } from '@/lib/env';
 import { formatLocalizedDate } from '@/lib/kyDateFormat';
 import {logError} from '@/lib/log';
 import { repeatBookingHref } from '@/lib/repeatBookingHref';
+import { getBusinessTimezone } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
-
-const TZ = getTimezone();
 
 export default function BookingCard({
                                         bookingId,
@@ -52,7 +50,8 @@ export default function BookingCard({
     servicesList?: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number }[];
     staff: { id: string; full_name: string } | null;
     branch: { id: string; name: string; lat: number | null; lon: number | null; address: string | null } | null;
-    business: { id: string; name: string; slug: string } | null;
+    /** tz: businesses.tz; the visit times are shown in the business zone (ARCH-11). */
+    business: { id: string; name: string; slug: string; tz?: string | null } | null;
     serviceId?: string | null;
     staffId?: string | null;
     branchId?: string | null;
@@ -144,10 +143,11 @@ export default function BookingCard({
         }
     }
 
+    const tz = getBusinessTimezone(business?.tz);
     const startDate = new Date(start_at);
     const endDate = new Date(end_at);
-    const formattedStart = formatBookingDateTime(startDate, TZ, locale);
-    const formatClock = (value: Date) => formatLocalizedDate(value, locale, { hour: '2-digit', minute: '2-digit', timeZone: TZ });
+    const formattedStart = formatBookingDateTime(startDate, tz, locale);
+    const formatClock = (value: Date) => formatLocalizedDate(value, locale, { hour: '2-digit', minute: '2-digit', timeZone: tz });
     const when = `${formattedStart} - ${formatClock(endDate)}`;
 
     const totalDurationMin =
@@ -271,7 +271,7 @@ export default function BookingCard({
                         </p>
                         <p className="type-body mt-2 font-medium text-[var(--text-primary)]">{formattedStart}</p>
                         <p className="type-caption mt-1 text-[var(--text-secondary)]">
-                            {formatClock(startDate)} - {formatClock(endDate)} • {TZ}
+                            {formatClock(startDate)} - {formatClock(endDate)} • {tz}
                         </p>
                     </div>
                     <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">

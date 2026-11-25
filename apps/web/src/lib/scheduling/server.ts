@@ -1,3 +1,4 @@
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { explicitSchedulingEnabled } from './config';
@@ -46,7 +47,7 @@ export async function scheduleHttp(request: Request, staffId?: string) {
             }
             const { data: business, error } = await getServiceClient().from('businesses').select('tz').eq('id', context.bizId).single();
             if (error) throw error;
-            const today = formatInTimeZone(new Date(), business?.tz || 'Asia/Bishkek', 'yyyy-MM-dd');
+            const today = formatInTimeZone(new Date(), resolveBusinessTimeZone(business?.tz), 'yyyy-MM-dd');
             const from = params.get('from') || today;
             if (!validDate(from)) throw new Error('SCHEDULE_INVALID');
             const end = new Date(`${from}T12:00:00Z`); end.setUTCDate(end.getUTCDate() + 13);

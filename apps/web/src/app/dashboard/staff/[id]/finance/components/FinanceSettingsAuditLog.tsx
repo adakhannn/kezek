@@ -4,12 +4,12 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { logError } from '@/lib/log';
-import { TZ } from '@/lib/time';
 
 type FieldChange = { field: string; old_value: number | null; new_value: number | null };
 type AuditLogEntry = {
@@ -37,6 +37,7 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
 }
 
 function FinanceSettingsAuditLogForStaff({ staffId }: { staffId: string }) {
+    const tz = useBusinessTimeZone();
     const { t } = useLanguage();
     const [entries, setEntries] = useState<AuditLogEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -117,7 +118,7 @@ function FinanceSettingsAuditLogForStaff({ staffId }: { staffId: string }) {
                             {entries.map((entry) => (
                                 <tr key={entry.id}>
                                     <td className="px-3 py-3 whitespace-nowrap text-[var(--text-secondary)]">
-                                        {formatInTimeZone(new Date(entry.changed_at), TZ, 'dd.MM.yyyy HH:mm')}
+                                        {formatInTimeZone(new Date(entry.changed_at), tz, 'dd.MM.yyyy HH:mm')}
                                     </td>
                                     <td className="px-3 py-3 text-[var(--text-primary)]">
                                         {entry.changed_by_name || t('finance.auditLog.unknownUser', 'Unknown user')}

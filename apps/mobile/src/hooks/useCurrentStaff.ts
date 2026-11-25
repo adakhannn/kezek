@@ -10,7 +10,7 @@ import { getOfflineQueue, type ShiftOfflineOperation } from '../screens/shiftQui
 import type { StaffInfo } from '../screens/staff/types';
 import { useAuth } from './useAuth';
 
-const STAFF_CARD_COLUMNS = 'id, full_name, biz_id, created_at, branch:branches(id, name), business:businesses(id, name)';
+const STAFF_CARD_COLUMNS = 'id, full_name, biz_id, created_at, branch:branches(id, name), business:businesses(id, name, tz)';
 
 /** Queries whose data belongs to one staff card: switching the card refreshes them. */
 const STAFF_DEPENDENT_QUERY_KEYS = [['staff-bookings'], ['staff-finance'], ['staff-shifts-stats']];

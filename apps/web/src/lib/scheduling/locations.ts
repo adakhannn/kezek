@@ -1,3 +1,4 @@
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { explicitSchedulingEnabled } from './config';
@@ -19,7 +20,7 @@ export async function workLocationsHttp(request: Request, manager: boolean) {
             const { data, error } = await admin.from('businesses').select('id,tz').eq('id', bizId).eq('is_approved', true).maybeSingle();
             if (error) throw error;
             if (!data) return createErrorResponse('not_found', 'Бизнес недоступен.', undefined, 404);
-            if (from < formatInTimeZone(new Date(), data.tz || 'Asia/Bishkek', 'yyyy-MM-dd')) return createErrorResponse('validation', 'Прошедшие даты недоступны.', undefined, 400);
+            if (from < formatInTimeZone(new Date(), resolveBusinessTimeZone(data.tz), 'yyyy-MM-dd')) return createErrorResponse('validation', 'Прошедшие даты недоступны.', undefined, 400);
         }
         const complete = explicitSchedulingEnabled();
         const result = complete

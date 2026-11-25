@@ -89,4 +89,5 @@ export const serverBusinessRu = {
     'server.business.contactEmailInvalid': 'Укажите корректный публичный email',
     'server.business.websiteInvalid': 'Сайт должен быть корректной HTTPS-ссылкой',
     'server.business.directoryLinkWrongService': 'Ссылка должна вести на сайт своего сервиса: {services}',
+    'server.business.timeZoneInvalid': 'Неизвестный часовой пояс',
 } as const;

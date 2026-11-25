@@ -14,12 +14,12 @@ import type { Branch } from './scheduleTypes';
 import { useStaffScheduleRules, type BranchSchedulePlan } from './useStaffScheduleRules';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import type { BranchHoursRow } from '@/lib/scheduling/legacyDefaults';
-import { TZ } from '@/lib/time';
 
 type ClientProps = {
     bizId: string;
@@ -61,6 +61,7 @@ function LegacyScheduleEditor({
     branchHours,
     hasRegularSchedule = false,
 }: ClientProps) {
+    const tz = useBusinessTimeZone();
     const { t } = useLanguage();
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<'schedule' | 'transfers'>('schedule');
@@ -130,7 +131,7 @@ function LegacyScheduleEditor({
                 <>
                     <ScheduleWeekSection
                         title={t('staff.schedule.week.current', 'Текущая неделя')}
-                        rangeLabel={`${formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} — ${formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}`}
+                        rangeLabel={`${formatInTimeZone(currentWeekDates[0], tz, 'dd.MM.yyyy')} — ${formatInTimeZone(currentWeekDates[6], tz, 'dd.MM.yyyy')}`}
                         dates={currentWeekDates}
                         rulesByDate={rulesByDate}
                         branches={branches}
@@ -146,7 +147,7 @@ function LegacyScheduleEditor({
 
                     <ScheduleWeekSection
                         title={t('staff.schedule.week.next', 'Следующая неделя')}
-                        rangeLabel={`${formatInTimeZone(nextWeekDates[0], TZ, 'dd.MM.yyyy')} — ${formatInTimeZone(nextWeekDates[6], TZ, 'dd.MM.yyyy')}`}
+                        rangeLabel={`${formatInTimeZone(nextWeekDates[0], tz, 'dd.MM.yyyy')} — ${formatInTimeZone(nextWeekDates[6], tz, 'dd.MM.yyyy')}`}
                         dates={nextWeekDates}
                         rulesByDate={rulesByDate}
                         branches={branches}

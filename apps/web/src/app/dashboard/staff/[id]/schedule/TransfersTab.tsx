@@ -7,10 +7,10 @@ import { useEffect, useState } from 'react';
 import type { Branch } from './scheduleTypes';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { TZ } from '@/lib/time';
 
 function getWeekDates(weekOffset: number): Date[] {
     const today = new Date();
@@ -30,6 +30,7 @@ export function TransfersTab({
     branches: Branch[];
     homeBranchId: string;
 }) {
+    const tz = useBusinessTimeZone();
     const { t } = useLanguage();
     const [transfers, setTransfers] = useState<
         Array<{
@@ -48,8 +49,8 @@ export function TransfersTab({
         let ignore = false;
         (async () => {
             setLoading(true);
-            const weekStart = formatInTimeZone(getWeekDates(0)[0], TZ, 'yyyy-MM-dd');
-            const weekEnd = formatInTimeZone(addDays(getWeekDates(1)[6], 1), TZ, 'yyyy-MM-dd');
+            const weekStart = formatInTimeZone(getWeekDates(0)[0], tz, 'yyyy-MM-dd');
+            const weekEnd = formatInTimeZone(addDays(getWeekDates(1)[6], 1), tz, 'yyyy-MM-dd');
 
             const { data, error } = await supabase
                 .from('staff_schedule_rules')
@@ -91,7 +92,7 @@ export function TransfersTab({
         return () => {
             ignore = true;
         };
-    }, [bizId, staffId, homeBranchId, branches, t, attempt]);
+    }, [bizId, staffId, homeBranchId, branches, t, attempt, tz]);
 
     const homeBranch = branches.find((branch) => branch.id === homeBranchId);
     const homeBranchName = homeBranch?.name || t('staff.schedule.transfers.homeBranchDefault', 'Основной филиал');
@@ -163,9 +164,9 @@ export function TransfersTab({
                         {transfers.map((transfer) => {
                             const transferDate = new Date(`${transfer.date_on}T12:00:00`);
                             const isToday =
-                                formatInTimeZone(transferDate, TZ, 'yyyy-MM-dd') === formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+                                formatInTimeZone(transferDate, tz, 'yyyy-MM-dd') === formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
                             const isPast =
-                                formatInTimeZone(transferDate, TZ, 'yyyy-MM-dd') < formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+                                formatInTimeZone(transferDate, tz, 'yyyy-MM-dd') < formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
 
                             return (
                                 <div
@@ -181,7 +182,7 @@ export function TransfersTab({
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
-                                                {formatInTimeZone(transferDate, TZ, 'dd.MM.yyyy')}
+                                                {formatInTimeZone(transferDate, tz, 'dd.MM.yyyy')}
                                             </span>
                                             {isToday && (
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">

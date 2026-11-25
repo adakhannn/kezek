@@ -9,6 +9,8 @@ export type StaffInfo = {
         name: string;
     } | null;
     business: {
+        /** businesses.tz: booking times are shown in the business's zone (ARCH-11). */
+        tz?: string | null;
         id: string;
         name: string;
     } | null;

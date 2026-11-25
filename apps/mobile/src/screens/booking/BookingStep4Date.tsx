@@ -18,7 +18,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function BookingStep4Date() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedDate } = useBooking();
-    const { dates, todayInTz, formatDateLabel } = useBookingStep4Dates();
+    const { dates, todayInTz, formatDateLabel } = useBookingStep4Dates(bookingData.business?.tz);
     const { t } = useLanguage();
 
     const handleSelectDate = (date: string) => {
