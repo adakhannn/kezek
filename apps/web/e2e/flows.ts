@@ -164,13 +164,20 @@ export async function addShiftClient(
     page: Page,
     { name, service, amount }: { name: string; service: string; amount: number },
 ): Promise<void> {
-    await page.getByRole('button', { name: /^Клиенты/ }).first().click();
-    await page.getByRole('button', { name: 'Добавить клиента' }).first().click();
     const form = page
         .locator('div')
         .filter({ has: page.getByRole('heading', { name: 'Редактирование клиента' }) })
         .filter({ has: page.getByPlaceholder('Введите имя клиента') })
         .last();
+    // Under `next dev` a click can land before the tab or the button is interactive and open nothing:
+    // repeat the two clicks until the form is there.
+    await expect(async () => {
+        await page.getByRole('button', { name: /^Клиенты/ }).first().click();
+        if (!(await form.getByPlaceholder('Введите имя клиента').isVisible())) {
+            await page.getByRole('button', { name: 'Добавить клиента' }).first().click();
+        }
+        await expect(form.getByPlaceholder('Введите имя клиента')).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 60_000 });
     await form.getByPlaceholder('Введите имя клиента').fill(name);
     await form.getByRole('checkbox', { name: service, exact: true }).check();
     await form.locator('input[type="number"]').first().fill(String(amount));
