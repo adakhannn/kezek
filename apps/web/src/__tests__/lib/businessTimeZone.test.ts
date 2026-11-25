@@ -140,6 +140,16 @@ describe('business settings: time zone', () => {
         expect(query.select).toHaveBeenCalledWith('contact_phone,contact_whatsapp,contact_email,website_url,tz');
     });
 
+    test('a zone change refused for future bookings is a 409 with its own code (R25-12)', async () => {
+        const query = {
+            update: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: null, error: { message: 'BUSINESS_TZ_HAS_FUTURE_BOOKINGS' } }),
+        };
+        const admin = { from: jest.fn().mockReturnValue(query) };
+        expect(await updateBusinessContactSettings({ admin, bizId: 'biz-1', input: { tz: 'Asia/Almaty' } }))
+            .toMatchObject({ ok: false, status: 409, error: 'tz_has_future_bookings' });
+    });
+
     test('an unknown zone is rejected before any write', async () => {
         const admin = { from: jest.fn() };
         expect(await updateBusinessContactSettings({ admin, bizId: 'biz-1', input: { tz: 'Mars/Olympus' } }))

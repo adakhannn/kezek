@@ -37,7 +37,8 @@ export function BusinessTimeZoneSettingsForm({ initial }: { initial: string }) {
             if (!response.ok || !payload.ok) {
                 setMessage({
                     variant: 'danger',
-                    text: typeof payload.message === 'string' ? payload.message
+                    text: payload.error === 'tz_has_future_bookings' ? t('business.timeZoneSettings.futureBookings')
+                        : typeof payload.message === 'string' ? payload.message
                         : typeof payload.error?.message === 'string' ? payload.error.message
                         : t('business.timeZoneSettings.saveError'),
                 });

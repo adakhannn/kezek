@@ -5976,6 +5976,7 @@ export type Database = {
                     "p_duration_min": number;
                     "p_limit"?: number;
                     "p_service_id": string;
+                    "p_service_ids"?: (string)[];
                     "p_staff_id": string;
                 };
                 Returns: Json;

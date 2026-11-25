@@ -23,6 +23,8 @@ type CacheEntry = Page & { timestamp: number; refreshKey: number };
 type Request = {
     bizId: string; branchId: string; staffId: string; dayStr: string; serviceId: string;
     isComplex: boolean; duration: number; targetBranchId: string; isTemporaryTransfer: boolean;
+    /** Sorted, comma-joined selected service ids (a stable dependency). */
+    serviceIdsKey: string;
     cacheKey: string; refreshKey: number;
 };
 const EMPTY_SLOTS: ScheduleSlot[] = [];
@@ -40,7 +42,7 @@ function debounceRequest(signal: AbortSignal) {
 
 /** One async availability source for both cache hits and debounced network requests. */
 async function loadSlots(request: Request, cache: Map<string, CacheEntry>, signal: AbortSignal, cursor: Cursor | null = null): Promise<Page> {
-    const { cacheKey, refreshKey, bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer } = request;
+    const { cacheKey, refreshKey, bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, serviceIdsKey } = request;
     const cached = cache.get(cacheKey);
     if (!cursor && cached && cached.refreshKey === refreshKey && Date.now() - cached.timestamp < SLOTS_CACHE_TTL) {
         const minStart = Date.now() + 30 * 60_000;
@@ -71,6 +73,8 @@ async function loadSlots(request: Request, cache: Map<string, CacheEntry>, signa
                 p_biz_id: bizId, p_branch_id: targetBranchId || branchId, p_day: dayStr,
                 p_service_id: complex ? null : serviceId, p_duration_min: complex ? duration : null,
                 p_staff_id: null, p_cursor: cursor, p_limit: 100,
+                // R25-11: only masters who perform every selected service.
+                p_service_ids: complex ? serviceIdsKey.split(',').filter(Boolean) : null,
             })
             : complex
             ? await supabase.rpc('get_free_slots_complex_day_v1', {
@@ -126,6 +130,7 @@ export function useSlotsLoader({ serviceIds, staffId, dayStr, branchId, bizId, s
     const invalidServices = staffId !== 'any' && serviceStaff !== null && serviceIds.some(id => !servicesFiltered.some(service => service.id === id));
     const hasInputs = Boolean(bizId && branchId && dayStr && staffId && serviceIds.length);
     const enabled = hasInputs && !invalidServices;
+    const serviceIdsKey = [...serviceIds].sort().join(',');
     const cacheKey = JSON.stringify([bizId, branchId, staffId, dayStr, serviceId, [...serviceIds].sort(), duration, targetBranchId, isTemporaryTransfer, homeBranchId]);
     const requestKey = JSON.stringify([cacheKey, slotsRefreshKey, enabled]);
     const request = useMemo(() => ({ key: requestKey }), [requestKey]);
@@ -133,7 +138,7 @@ export function useSlotsLoader({ serviceIds, staffId, dayStr, branchId, bizId, s
     useEffect(() => {
         if (!enabled) return;
         const controller = new AbortController();
-        void loadSlots({ bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, cacheKey, refreshKey: slotsRefreshKey }, cacheRef.current, controller.signal)
+        void loadSlots({ bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, serviceIdsKey, cacheKey, refreshKey: slotsRefreshKey }, cacheRef.current, controller.signal)
             .then(page => {
                 if (!controller.signal.aborted) setSnapshot({ request, ...page, error: null });
             })
@@ -146,7 +151,7 @@ export function useSlotsLoader({ serviceIds, staffId, dayStr, branchId, bizId, s
                 setSnapshot({ request, slots: [], nextCursor: null, error });
             });
         return () => { controller.abort(); nextPageRef.current?.abort(); nextPageRef.current = null; };
-    }, [bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, cacheKey, slotsRefreshKey, request, enabled]);
+    }, [bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, serviceIdsKey, cacheKey, slotsRefreshKey, request, enabled]);
 
     const current = enabled && snapshot?.request === request ? snapshot : null;
     const loadMore = useCallback(() => {
@@ -155,7 +160,7 @@ export function useSlotsLoader({ serviceIds, staffId, dayStr, branchId, bizId, s
         const cursor = current.nextCursor;
         nextPageRef.current = controller;
         setSnapshot(previous => previous?.request === request ? { ...previous, loadingMore: true, moreError: null } : previous);
-        void loadSlots({ bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, cacheKey, refreshKey: slotsRefreshKey }, cacheRef.current, controller.signal, cursor)
+        void loadSlots({ bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, serviceIdsKey, cacheKey, refreshKey: slotsRefreshKey }, cacheRef.current, controller.signal, cursor)
             .then(page => {
                 if (controller.signal.aborted) return;
                 if (page.nextCursor && JSON.stringify(page.nextCursor) === JSON.stringify(cursor)) throw new Error('SLOTS_CURSOR_DID_NOT_ADVANCE');
@@ -170,7 +175,7 @@ export function useSlotsLoader({ serviceIds, staffId, dayStr, branchId, bizId, s
                 const error = { message: value instanceof Error ? value.message : 'SLOTS_PAGE_FAILED', code: 'UNEXPECTED' };
                 setSnapshot(previous => previous?.request === request ? { ...previous, loadingMore: false, moreError: error } : previous);
             }).finally(() => { if (nextPageRef.current === controller) nextPageRef.current = null; });
-    }, [current, request, bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, cacheKey, slotsRefreshKey]);
+    }, [current, request, bizId, branchId, staffId, dayStr, serviceId, isComplex, duration, targetBranchId, isTemporaryTransfer, serviceIdsKey, cacheKey, slotsRefreshKey]);
     return {
         requestKey,
         slots: current?.slots ?? EMPTY_SLOTS,

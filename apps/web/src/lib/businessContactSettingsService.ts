@@ -35,6 +35,15 @@ export async function updateBusinessContactSettings(params: {
         .maybeSingle();
 
     if (error) {
+        // R25-12: the database refuses a zone change while future bookings exist.
+        if (error.message?.includes('BUSINESS_TZ_HAS_FUTURE_BOOKINGS')) {
+            return {
+                ok: false as const,
+                status: 409,
+                error: 'tz_has_future_bookings',
+                message: 'The time zone cannot change while upcoming bookings exist; their times would shift against the schedule.',
+            };
+        }
         return {
             ok: false as const,
             status: 400,

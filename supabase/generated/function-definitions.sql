@@ -95,6 +95,27 @@ end;
 $function$
 ;
 
+-- signature: private.guard_business_tz_change()
+CREATE OR REPLACE FUNCTION private.guard_business_tz_change()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+begin
+    if coalesce(nullif(btrim(new.tz), ''), 'Asia/Bishkek') is distinct from coalesce(nullif(btrim(old.tz), ''), 'Asia/Bishkek')
+        and exists (
+            select 1 from public.bookings b
+            where b.biz_id = new.id and b.start_at > statement_timestamp()
+              and (b.status = 'confirmed' or (b.status = 'hold' and b.expires_at > statement_timestamp()))
+        ) then
+        raise exception using errcode = 'P0001', message = 'BUSINESS_TZ_HAS_FUTURE_BOOKINGS';
+    end if;
+    return new;
+end;
+$function$
+;
+
 -- signature: private.guard_last_super_admin()
 CREATE OR REPLACE FUNCTION private.guard_last_super_admin()
  RETURNS trigger
@@ -4925,8 +4946,8 @@ end;
 $function$
 ;
 
--- signature: public.get_free_slots_page_v1(uuid,uuid,date,uuid,integer,uuid,jsonb,integer)
-CREATE OR REPLACE FUNCTION public.get_free_slots_page_v1(p_biz_id uuid, p_branch_id uuid, p_day date, p_service_id uuid, p_duration_min integer, p_staff_id uuid, p_cursor jsonb, p_limit integer DEFAULT 100)
+-- signature: public.get_free_slots_page_v1(uuid,uuid,date,uuid,integer,uuid,jsonb,integer,uuid[])
+CREATE OR REPLACE FUNCTION public.get_free_slots_page_v1(p_biz_id uuid, p_branch_id uuid, p_day date, p_service_id uuid, p_duration_min integer, p_staff_id uuid, p_cursor jsonb, p_limit integer DEFAULT 100, p_service_ids uuid[] DEFAULT NULL::uuid[])
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -4945,7 +4966,8 @@ BEGIN
   IF p_biz_id IS NULL OR p_branch_id IS NULL OR p_day IS NULL
     OR p_limit IS NULL OR p_limit NOT BETWEEN 1 AND 100
     OR (p_service_id IS NULL AND (p_duration_min IS NULL OR p_duration_min NOT BETWEEN 1 AND 1440))
-    OR (p_service_id IS NOT NULL AND p_duration_min IS NOT NULL) THEN
+    OR (p_service_id IS NOT NULL AND p_duration_min IS NOT NULL)
+    OR (p_service_ids IS NOT NULL AND (p_service_id IS NOT NULL OR cardinality(p_service_ids) NOT BETWEEN 1 AND 20)) THEN
     RAISE EXCEPTION 'INVALID_SLOTS_PAGE_INPUT';
   END IF;
   IF NOT EXISTS(SELECT 1 FROM public.branches b WHERE b.id=p_branch_id AND b.biz_id=p_biz_id AND b.is_active) THEN
@@ -4954,7 +4976,8 @@ BEGIN
   IF p_service_id IS NOT NULL AND NOT EXISTS(
     SELECT 1 FROM public.services s WHERE s.id=p_service_id AND s.biz_id=p_biz_id AND s.branch_id=p_branch_id AND s.active
   ) THEN RAISE EXCEPTION 'SERVICE_NOT_FOUND_OR_INACTIVE'; END IF;
-  v_scope := md5(jsonb_build_array(p_biz_id,p_branch_id,p_day,p_service_id,p_duration_min,p_staff_id)::text);
+  v_scope := md5(jsonb_build_array(p_biz_id,p_branch_id,p_day,p_service_id,p_duration_min,p_staff_id)::text
+    || coalesce(array_to_string(p_service_ids,','),''));
   IF p_cursor IS NOT NULL THEN
     IF jsonb_typeof(p_cursor) IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'INVALID_SLOTS_CURSOR'; END IF;
     IF NOT (p_cursor ?& ARRAY['v','scope','staff_id','start_at'])
@@ -4976,6 +4999,10 @@ BEGIN
   FOR v_staff IN
     SELECT st.id FROM public.staff st
     WHERE st.biz_id=p_biz_id AND st.is_active AND (p_staff_id IS NULL OR st.id=p_staff_id)
+      -- R25-11: a multi-service "any master" page lists only masters who perform every service,
+      -- the same rule the hold applies (_staff_performs_service).
+      AND (p_service_ids IS NULL OR NOT EXISTS(
+        SELECT 1 FROM unnest(p_service_ids) sid WHERE NOT public._staff_performs_service(st.id,sid,p_branch_id)))
       AND (v_after_staff IS NULL OR st.id>v_after_staff OR (st.id=v_after_staff AND v_after_start IS NOT NULL))
     ORDER BY st.id LIMIT 9
   LOOP

@@ -87,6 +87,26 @@
       "strict": false,
       "volatility": "v"
     },
+    "private.guard_business_tz_change()": {
+      "arguments": "",
+      "body": "2b5d8b1aff38a5af6de2fe7239001591",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "definer": true,
+      "execute": {
+        "anon": false,
+        "authenticated": false,
+        "public": false,
+        "service_role": false
+      },
+      "kind": "f",
+      "language": "plpgsql",
+      "owner": "postgres",
+      "result": "trigger",
+      "strict": false,
+      "volatility": "v"
+    },
     "private.guard_last_super_admin()": {
       "arguments": "",
       "body": "c4d53e333ae06fc9d71173dae794b0ab",
@@ -2224,9 +2244,9 @@
       "strict": false,
       "volatility": "v"
     },
-    "public.get_free_slots_page_v1(uuid,uuid,date,uuid,integer,uuid,jsonb,integer)": {
-      "arguments": "p_biz_id uuid, p_branch_id uuid, p_day date, p_service_id uuid, p_duration_min integer, p_staff_id uuid, p_cursor jsonb, p_limit integer DEFAULT 100",
-      "body": "2694bc7feeb2cf8ee8efcd106d751774",
+    "public.get_free_slots_page_v1(uuid,uuid,date,uuid,integer,uuid,jsonb,integer,uuid[])": {
+      "arguments": "p_biz_id uuid, p_branch_id uuid, p_day date, p_service_id uuid, p_duration_min integer, p_staff_id uuid, p_cursor jsonb, p_limit integer DEFAULT 100, p_service_ids uuid[] DEFAULT NULL::uuid[]",
+      "body": "47e8cec915a4cbc08f3bb3e1bc3ca341",
       "config": [
         "search_path=public, pg_temp"
       ],

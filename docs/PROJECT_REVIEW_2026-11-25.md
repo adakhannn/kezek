@@ -15,6 +15,8 @@
 - R25-09 — бронь к неодобренному бизнесу отклоняется (`BUSINESS_NOT_BOOKABLE`, 403; [20261125110100_booking_requires_approved_business.sql](../supabase/migrations/20261125110100_booking_requires_approved_business.sql)).
 - R25-13, R25-14, R25-15 — ошибки обработчика уведомлений в логе и в статусе cron, письма не планируются без `EMAIL_FROM`, здоровье очередей за 24 часа ([20261125120000](../supabase/migrations/20261125120000_booking_outbox_health_window.sql), [20261125120100](../supabase/migrations/20261125120100_whatsapp_inbox_health_window.sql)), сообщения о начавшихся записях не отправляются.
 - R25-16 — Android App Link только для `/b/` и `/booking/`.
+- R25-11 — «любой мастер» с несколькими услугами показывает только мастеров, которые делают все выбранные услуги (`p_service_ids` в `get_free_slots_page_v1`, [20261125130100](../supabase/migrations/20261125130100_any_staff_multi_service_slots.sql)).
+- R25-12 — смена часового пояса отклоняется, пока есть будущие записи (триггер, [20261125130000](../supabase/migrations/20261125130000_business_tz_change_guard.sql)); в настройках понятное сообщение на трёх языках.
 
 ## 1. Высокий приоритет — баги в коде
 

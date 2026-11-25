@@ -106,6 +106,9 @@ const failure = (statement, regex) => {
     const checksStart = checks.indexOf('create or replace function public._staff_performs_service(');
     assert(checksStart >= 0);
     sql(checks.slice(checksStart, checks.indexOf('END$function$;', checksStart) + 'END$function$;'.length));
+    // 20261125130100 (R25-11): page_v1 gains an optional p_service_ids; the eight-argument calls below
+    // must keep working through its default.
+    sql(source('20261125130100_any_staff_multi_service_slots.sql'));
     assert.deepEqual(rows(call()),original,'five-argument compatibility');
     assert.deepEqual(rows(call(null)),original,'explicit any-staff compatibility');
     assert.deepEqual(rows(call(staff)),original.filter(row=>row.staff_id===staff),'scoped result equals original subset');
@@ -159,6 +162,12 @@ const failure = (statement, regex) => {
     assert.deepEqual(rows(call()),original.filter(row=>row.staff_id===staff),'any-staff diagnostics skip the master without the service');
     assert.deepEqual(ordered(collect({})),original.filter(row=>row.staff_id===staff),'paged any skips the master without the service');
     assert.deepEqual(page(null,{staffId:transfer}),{slots:[],next_cursor:null},'paged master without the service');
+    // R25-11: a multi-service any-staff page lists only masters who perform every listed service.
+    const multi = ids => JSON.parse(sql(`select get_free_slots_page_v1('${biz}','${branch}','2035-01-01',null,30,null,null,100,array[${ids.map(v=>"'"+v+"'").join(',')}]::uuid[]);`));
+    assert.deepEqual(ordered(multi([service]).slots),original.filter(row=>row.staff_id===staff),'multi-service any skips the master without the service');
+    assert.deepEqual(ordered(JSON.parse(sql(`select ${pageCall(null,{complex:true,limit:100})};`)).slots),original,'without p_service_ids complex any is unchanged');
+    failure(`select get_free_slots_page_v1('${biz}','${branch}','2035-01-01','${service}',null,null,null,100,array['${service}']::uuid[]);`,/INVALID_SLOTS_PAGE_INPUT/);
+    failure(`select get_free_slots_page_v1('${biz}','${branch}','2035-01-01',null,30,null,null,100,array[]::uuid[]);`,/INVALID_SLOTS_PAGE_INPUT/);
     sql('truncate service_staff;');
     sql(`insert into bookings(biz_id,staff_id,start_at,end_at,status) values('${biz}','${staff}','2035-01-01T02:00Z','2035-01-01T02:30Z','confirmed');`);
     assert.equal(count(staff),3,'confirmed blocks overlap but preserves adjacent start');
