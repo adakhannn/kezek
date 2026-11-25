@@ -84,9 +84,9 @@ export function BookingDetailsSections({
 
                 <View style={styles.section}>
                     <Text style={styles.label}>{t('cabinet.details.when')}</Text>
-                    <Text style={styles.value}>{formatDate(booking.start_at, locale)}</Text>
+                    <Text style={styles.value}>{formatDate(booking.start_at, locale, booking.business?.tz)}</Text>
                     <Text style={styles.time}>
-                        {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
+                        {formatTime(booking.start_at, booking.business?.tz)} - {formatTime(booking.end_at, booking.business?.tz)}
                     </Text>
                     {booking.service?.duration_min && (
                         <Text style={styles.duration}>

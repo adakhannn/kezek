@@ -104,8 +104,8 @@ export function CabinetScreenSections({
                         <Text style={styles.overviewDescription}>
                             {featuredBooking
                                 ? t('cabinet.overview.when', {
-                                      date: formatDate(featuredBooking.start_at, locale),
-                                      time: formatTime(featuredBooking.start_at),
+                                      date: formatDate(featuredBooking.start_at, locale, featuredBooking.business?.tz),
+                                      time: formatTime(featuredBooking.start_at, featuredBooking.business?.tz),
                                   })
                                 : t('cabinet.overview.emptyHint')}
                         </Text>
@@ -231,8 +231,8 @@ export function CabinetScreenSections({
                             scale="firm"
                             accessibilityLabel={t('cabinet.bookings.itemLabel', {
                                 service: booking.service?.name_ru || t('cabinet.ui.serviceFallback'),
-                                date: formatDate(booking.start_at, locale),
-                                time: formatTime(booking.start_at),
+                                date: formatDate(booking.start_at, locale, booking.business?.tz),
+                                time: formatTime(booking.start_at, booking.business?.tz),
                             })}
                             accessibilityHint={t('cabinet.bookings.itemHint')}
                         >
@@ -299,7 +299,8 @@ function BookingCard({ booking, isHistory }: { booking: Booking; isHistory: bool
                 <View style={styles.timelineCopy}>
                     <Text style={styles.timelineLabel}>{isHistory ? t('cabinet.card.visitDate') : t('cabinet.card.nextVisit')}</Text>
                     <Text style={styles.timelineValue}>
-                        {formatDate(booking.start_at, locale)} • {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
+                        {formatDate(booking.start_at, locale, booking.business?.tz)} • {formatTime(booking.start_at, booking.business?.tz)} -{' '}
+                        {formatTime(booking.end_at, booking.business?.tz)}
                     </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={colors.text.tertiary} />

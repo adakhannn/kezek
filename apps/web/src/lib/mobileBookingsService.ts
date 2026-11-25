@@ -1,3 +1,4 @@
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import type { ClientBookingDetailsDto, ClientBookingListItemDto } from '@shared-client/types';
 
 import { bookingCancellationError } from '@/lib/bookingCancellationError';
@@ -19,6 +20,7 @@ type BookingListBranch = {
 type BookingListBusiness = {
     name: string | null;
     slug: string | null;
+    tz?: string | null;
 };
 
 type BookingListRow = {
@@ -52,6 +54,7 @@ type BookingDetailsBusiness = {
     name: string | null;
     slug: string | null;
     phones: string[] | null;
+    tz?: string | null;
 };
 
 type BookingDetailsRow = {
@@ -98,7 +101,7 @@ export async function listMobileBookings({
                         service:services(name_ru),
                         staff:staff(full_name),
                         branch:branches(name,address),
-                        business:businesses(name,slug)
+                        business:businesses(name,slug,tz)
                     `,
         )
         .eq('client_id', userId)
@@ -150,6 +153,7 @@ export async function listMobileBookings({
                     ? {
                           name: business.name ?? null,
                           slug: business.slug ?? null,
+                          tz: resolveBusinessTimeZone(business.tz),
                       }
                     : null,
             };
@@ -177,7 +181,7 @@ export async function getMobileBookingDetails({
                         service:services(name_ru, duration_min, price_from, price_to),
                         staff:staff(full_name),
                         branch:branches(name, address),
-                        business:businesses(name, slug, phones)
+                        business:businesses(name, slug, phones, tz)
                     `,
         )
         .eq('id', bookingId)
@@ -246,6 +250,7 @@ export async function getMobileBookingDetails({
                       name: business.name ?? '',
                       slug: business.slug ?? undefined,
                       phones: Array.isArray(business.phones) ? business.phones : business.phones ?? [],
+                      tz: resolveBusinessTimeZone(business.tz),
                   }
                 : null,
         },

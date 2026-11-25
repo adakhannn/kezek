@@ -54,6 +54,7 @@ function mapBookingDto(booking: ClientBookingListItemDto): HomeBooking {
             ? {
                   name: booking.business.name ?? '',
                   slug: booking.business.slug ?? null,
+                  tz: booking.business.tz ?? null,
               }
             : null,
         branch: booking.branch

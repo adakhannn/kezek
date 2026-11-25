@@ -18,6 +18,8 @@ export type OfflineBooking = {
     service_name?: string | null;
     staff_name?: string | null;
     business_name?: string | null;
+    /** businesses.tz of the booking; absent in caches written before ARCH-11. */
+    business_tz?: string | null;
     created_at: string;
 };
 

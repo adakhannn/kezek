@@ -127,6 +127,30 @@ describe('CabinetScreen', () => {
         expect(await screen.findByText('Adakhan')).toBeTruthy();
     });
 
+    test('shows booking times in the business time zone (ARCH-11)', async () => {
+        mockedApiRequest.mockResolvedValueOnce({
+            ok: true,
+            data: [
+                {
+                    id: 'booking-almaty',
+                    start_at: '2026-12-02T14:00:00Z',
+                    end_at: '2026-12-02T14:30:00Z',
+                    status: 'confirmed',
+                    service: { name_ru: 'Almaty Cut' },
+                    staff: { full_name: 'Master' },
+                    branch: { name: 'Almaty Branch', address: 'Some street' },
+                    business: { name: 'Almaty Salon', slug: 'almaty-salon', tz: 'Asia/Almaty' },
+                },
+            ],
+        } as never);
+
+        renderWithProviders(<CabinetScreen />);
+
+        // 14:00Z is 19:00 in Almaty (UTC+5); the Bishkek default would show 20:00.
+        expect(await screen.findByText(/19:00 - 19:30/)).toBeTruthy();
+        expect(screen.queryByText(/20:00/)).toBeNull();
+    });
+
     test('renders bookings error state when network and cache are unavailable', async () => {
         mockedApiRequest.mockRejectedValueOnce(new Error('network unavailable'));
 

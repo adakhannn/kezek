@@ -49,12 +49,13 @@ describe('/api/mobile/bookings', () => {
         });
         (listMobileBookings as jest.Mock).mockResolvedValue({
             ok: true,
-            data: [{ id: 'booking-1' }],
+            data: [{ id: 'booking-1', business: { name: 'Biz', slug: 'biz', tz: 'Asia/Almaty' } }],
         });
 
         const res = await GET_LIST(createMockRequest('http://localhost/api/mobile/bookings', { method: 'GET' }));
         const body = await expectSuccessResponse(res, 200);
-        expect(body.data).toEqual([{ id: 'booking-1' }]);
+        // ARCH-11: each booking carries its business's time zone.
+        expect(body.data).toEqual([{ id: 'booking-1', business: { name: 'Biz', slug: 'biz', tz: 'Asia/Almaty' } }]);
     });
 });
 
@@ -72,7 +73,7 @@ describe('/api/mobile/bookings/[id]', () => {
         (getRouteParamUuid as jest.Mock).mockResolvedValue('booking-1');
         (getMobileBookingDetails as jest.Mock).mockResolvedValue({
             ok: true,
-            data: { id: 'booking-1' },
+            data: { id: 'booking-1', business: { name: 'Biz', phones: [], tz: 'Europe/Moscow' } },
         });
 
         const res = await GET_DETAILS(
@@ -80,7 +81,7 @@ describe('/api/mobile/bookings/[id]', () => {
             { params: { id: 'booking-1' } },
         );
         const body = await expectSuccessResponse(res, 200);
-        expect(body.data).toEqual({ id: 'booking-1' });
+        expect(body.data).toEqual({ id: 'booking-1', business: { name: 'Biz', phones: [], tz: 'Europe/Moscow' } });
     });
 
     test('cancels booking for mobile owner', async () => {

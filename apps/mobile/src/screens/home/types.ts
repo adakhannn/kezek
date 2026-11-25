@@ -16,6 +16,8 @@ export type HomeBooking = {
     business: {
         name: string;
         slug: string | null;
+        /** businesses.tz; missing from older servers (formatters fall back to Asia/Bishkek). */
+        tz?: string | null;
     } | null;
     branch: {
         name: string | null;

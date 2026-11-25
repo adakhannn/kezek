@@ -169,6 +169,8 @@ export type ClientBookingListItemDto = {
     business: {
         name: string | null;
         slug?: string | null;
+        /** IANA zone of the business (businesses.tz, validated; Asia/Bishkek when unset). Absent from older servers. */
+        tz?: string;
     } | null;
 };
 
@@ -195,6 +197,8 @@ export type ClientBookingDetailsDto = {
         name: string;
         slug?: string;
         phones: string[];
+        /** IANA zone of the business (businesses.tz, validated; Asia/Bishkek when unset). Absent from older servers. */
+        tz?: string;
     } | null;
 };
 

@@ -17,6 +17,8 @@ export type Booking = {
     } | null;
     business: {
         name: string;
+        /** businesses.tz; missing from older servers and old offline caches (Asia/Bishkek then). */
+        tz?: string | null;
     } | null;
 };
 
@@ -45,6 +47,7 @@ export function mapClientBookingListItemToBooking(b: ClientBookingListItemDto): 
         business: b.business
             ? {
                   name: b.business.name ?? '',
+                  tz: b.business.tz ?? null,
               }
             : null,
     };

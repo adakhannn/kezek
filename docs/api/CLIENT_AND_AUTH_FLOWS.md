@@ -266,7 +266,7 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 
 | Аспект | Контракт |
 | --- | --- |
-| Input / output | Тело/query не используются. `S(ClientBookingListItemDto[])`: id/start_at/end_at/status и nullable вложенные service(name_ru), staff(full_name), branch(name/address), business(name/slug) |
+| Input / output | Тело/query не используются. `S(ClientBookingListItemDto[])`: id/start_at/end_at/status и nullable вложенные service(name_ru), staff(full_name), branch(name/address), business(name/slug/tz). `tz` — зона бизнеса (`businesses.tz`, проверена `resolveBusinessTimeZone`; NULL/неизвестная → Asia/Bishkek), добавлена для ARCH-11; клиент без поля показывает Asia/Bishkek |
 | Auth / errors | Auth выше; 401 auth, 500 internal при query, 429 |
 | Limiter / effects | `normal/shared`; читает максимум **50** собственных броней, start_at descending. Параметров следующей страницы нет; это не полная история |
 
@@ -277,7 +277,7 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 
 | Аспект | Контракт |
 | --- | --- |
-| Input / output | `[id]` UUID; `S(ClientBookingDetailsDto)`, поля list + service duration_min/price_from/price_to, business phones. Связанные объекты nullable |
+| Input / output | `[id]` UUID; `S(ClientBookingDetailsDto)`, поля list + service duration_min/price_from/price_to, business phones и tz (как в списке). Связанные объекты nullable |
 | Auth / errors | Auth выше; 401 auth, 400 validation UUID, 404 not_found при отсутствующей/чужой брони, 500 internal query, 429 |
 | Limiter / effects | `normal/shared`; только чтение выбранной собственной брони |
 

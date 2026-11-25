@@ -67,6 +67,7 @@ export function useCabinetScreenData() {
                     service_name: b.service?.name_ru ?? null,
                     staff_name: b.staff?.full_name ?? null,
                     business_name: b.business?.name ?? null,
+                    business_tz: b.business?.tz ?? null,
                     created_at: nowIso,
                 }));
 
@@ -97,7 +98,7 @@ export function useCabinetScreenData() {
                                 service: item.service_name ? { name_ru: item.service_name } : null,
                                 staff: item.staff_name ? { full_name: item.staff_name } : null,
                                 branch: item.branch_name ? { name: item.branch_name, address: '' } : null,
-                                business: item.business_name ? { name: item.business_name } : null,
+                                business: item.business_name ? { name: item.business_name, tz: item.business_tz ?? null } : null,
                             }) as Booking,
                     );
                 }

@@ -94,7 +94,8 @@ export function UpcomingBookingsSection({
 
                                 <View style={styles.bookingMeta}>
                                     <Text style={styles.bookingDate}>
-                                        {formatDate(booking.start_at, locale)} - {formatTime(booking.start_at)}
+                                        {formatDate(booking.start_at, locale, booking.business?.tz)} -{' '}
+                                        {formatTime(booking.start_at, booking.business?.tz)}
                                     </Text>
                                     <View style={styles.bookingStatusPill}>
                                         <Text style={styles.bookingStatusText}>
@@ -165,8 +166,8 @@ function buildBookingAccessibilityLabel(booking: HomeBooking, locale: Locale, t:
     }
 
     parts.push(t('booking.home.a11y.time', {
-        date: formatDate(booking.start_at, locale),
-        time: formatTime(booking.start_at),
+        date: formatDate(booking.start_at, locale, booking.business?.tz),
+        time: formatTime(booking.start_at, booking.business?.tz),
     }));
     parts.push(t('booking.home.a11y.status', { status: t(getBookingStatusKey(booking.status)) }));
 

@@ -37,7 +37,7 @@ describe('mobileBookingsService', () => {
                     service: { name_ru: 'Массаж' },
                     staff: { full_name: 'Master' },
                     branch: { name: 'Branch', address: 'Addr' },
-                    business: { name: 'Biz', slug: 'biz' },
+                    business: { name: 'Biz', slug: 'biz', tz: 'Asia/Bishkek' },
                 },
             ],
         });
@@ -106,9 +106,54 @@ describe('mobileBookingsService', () => {
                 },
                 staff: { full_name: 'Master' },
                 branch: { name: 'Branch', address: 'Addr' },
-                business: { name: 'Biz', slug: 'biz', phones: ['+996555123456'] },
+                business: { name: 'Biz', slug: 'biz', phones: ['+996555123456'], tz: 'Asia/Bishkek' },
             },
         });
+    });
+
+    test.each([
+        ['Asia/Almaty', 'Asia/Almaty'],
+        ['Europe/Moscow', 'Europe/Moscow'],
+        [null, 'Asia/Bishkek'],
+        ['', 'Asia/Bishkek'],
+        ['Mars/Olympus', 'Asia/Bishkek'],
+    ])('list returns the business time zone (ARCH-11): %p -> %p', async (tz, expected) => {
+        const limit = jest.fn().mockResolvedValue({
+            data: [{ id: 'b', start_at: 's', end_at: 'e', status: 'confirmed', service: null, staff: null, branch: null, business: [{ name: 'Biz', slug: 'biz', tz }] }],
+            error: null,
+        });
+        const order = jest.fn().mockReturnValue({ limit });
+        const eq = jest.fn().mockReturnValue({ order });
+        const select = jest.fn().mockReturnValue({ eq });
+
+        const result = await listMobileBookings({ client: { from: jest.fn().mockReturnValue({ select }) } as never, userId: 'user-1' });
+
+        expect(select.mock.calls[0][0]).toContain('business:businesses(name,slug,tz)');
+        expect(result.ok && result.data[0].business).toEqual({ name: 'Biz', slug: 'biz', tz: expected });
+    });
+
+    test.each([
+        ['Asia/Almaty', 'Asia/Almaty'],
+        ['Europe/Moscow', 'Europe/Moscow'],
+        [undefined, 'Asia/Bishkek'],
+        ['not a zone', 'Asia/Bishkek'],
+    ])('details return the business time zone (ARCH-11): %p -> %p', async (tz, expected) => {
+        const maybeSingle = jest.fn().mockResolvedValue({
+            data: { id: 'b', start_at: 's', end_at: 'e', status: 'confirmed', service: null, staff: null, branch: null, business: { name: 'Biz', slug: 'biz', phones: null, tz } },
+            error: null,
+        });
+        const secondEq = jest.fn().mockReturnValue({ maybeSingle });
+        const firstEq = jest.fn().mockReturnValue({ eq: secondEq });
+        const select = jest.fn().mockReturnValue({ eq: firstEq });
+
+        const result = await getMobileBookingDetails({
+            client: { from: jest.fn().mockReturnValue({ select }) } as never,
+            userId: 'user-1',
+            bookingId: 'b',
+        });
+
+        expect(select.mock.calls[0][0]).toContain('business:businesses(name, slug, phones, tz)');
+        expect(result.ok && result.data.business?.tz).toBe(expected);
     });
 
     test.each([

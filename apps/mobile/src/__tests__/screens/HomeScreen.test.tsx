@@ -127,6 +127,33 @@ describe('HomeScreen', () => {
         expect(await screen.findByTestId('home-hero-title')).toBeTruthy();
     });
 
+    test('shows upcoming booking times in the business time zone (ARCH-11)', async () => {
+        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+            if (endpoint === '/mobile/bookings') {
+                return [
+                    {
+                        id: 'booking-almaty',
+                        start_at: '2099-01-15T14:00:00Z',
+                        end_at: '2099-01-15T15:00:00Z',
+                        status: 'confirmed',
+                        service: { name_ru: 'Almaty Cut' },
+                        staff: null,
+                        branch: { name: 'Almaty Branch', address: null },
+                        business: { name: 'Almaty Salon', slug: 'almaty-salon', tz: 'Asia/Almaty' },
+                    },
+                ];
+            }
+
+            return [];
+        });
+
+        renderWithProviders(<HomeScreen />);
+
+        // 14:00Z is 19:00 in Almaty (UTC+5); the Bishkek default would show 20:00.
+        expect(await screen.findByText(/ - 19:00$/)).toBeTruthy();
+        expect(screen.queryByText(/ - 20:00$/)).toBeNull();
+    });
+
     test('renders loaded business list', async () => {
         renderWithProviders(<HomeScreen />);
 
