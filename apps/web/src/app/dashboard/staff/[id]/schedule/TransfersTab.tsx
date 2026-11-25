@@ -1,6 +1,5 @@
 'use client';
 
-import { addDays, addWeeks, startOfWeek } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
 
@@ -10,14 +9,8 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { logError } from '@/lib/log';
+import { addDaysYmd, businessWeekYmds } from '@/lib/scheduling/businessWeek';
 import { supabase } from '@/lib/supabaseClient';
-
-function getWeekDates(weekOffset: number): Date[] {
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-    const targetWeekStart = addWeeks(weekStart, weekOffset);
-    return Array.from({ length: 7 }, (_, index) => addDays(targetWeekStart, index));
-}
 
 export function TransfersTab({
     bizId,
@@ -49,8 +42,8 @@ export function TransfersTab({
         let ignore = false;
         (async () => {
             setLoading(true);
-            const weekStart = formatInTimeZone(getWeekDates(0)[0], tz, 'yyyy-MM-dd');
-            const weekEnd = formatInTimeZone(addDays(getWeekDates(1)[6], 1), tz, 'yyyy-MM-dd');
+            const weekStart = businessWeekYmds(0, tz)[0];
+            const weekEnd = addDaysYmd(businessWeekYmds(1, tz)[6], 1);
 
             const { data, error } = await supabase
                 .from('staff_schedule_rules')
@@ -162,11 +155,10 @@ export function TransfersTab({
                     </div>
                     <div className="space-y-2">
                         {transfers.map((transfer) => {
-                            const transferDate = new Date(`${transfer.date_on}T12:00:00`);
-                            const isToday =
-                                formatInTimeZone(transferDate, tz, 'yyyy-MM-dd') === formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
-                            const isPast =
-                                formatInTimeZone(transferDate, tz, 'yyyy-MM-dd') < formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+                            // date_on is already a business date (ARCH-11).
+                            const todayYmd = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+                            const isToday = transfer.date_on === todayYmd;
+                            const isPast = transfer.date_on < todayYmd;
 
                             return (
                                 <div
@@ -182,7 +174,7 @@ export function TransfersTab({
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
-                                                {formatInTimeZone(transferDate, tz, 'dd.MM.yyyy')}
+                                                {transfer.date_on.split('-').reverse().join('.')}
                                             </span>
                                             {isToday && (
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">

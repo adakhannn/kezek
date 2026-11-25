@@ -1,8 +1,8 @@
-import { startOfWeek, addDays, addWeeks } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { loadBusinessTimeZone } from './businessTimeZone';
 import { logDebug, logError } from './log';
+import { addDaysYmd, businessWeekYmds } from './scheduling/businessWeek';
 import { branchDayIntervals, LEGACY_DEFAULT_INTERVAL, type BranchHoursRow } from './scheduling/legacyDefaults';
 import { getServiceClient } from './supabaseService';
 
@@ -29,16 +29,9 @@ export async function initializeStaffSchedule(
         const tz = await loadBusinessTimeZone(bizId, admin);
         
         const today = new Date();
-        const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Понедельник
-        
-        // Создаем даты для текущей (0) и следующей (1) недель
-        const allDates: string[] = [];
-        for (let weekOffset = 0; weekOffset < 2; weekOffset++) {
-            const targetWeekStart = addWeeks(weekStart, weekOffset);
-            const weekDates = Array.from({ length: 7 }, (_, i) => addDays(targetWeekStart, i));
-            const dateStrings = weekDates.map((d) => formatInTimeZone(d, tz, 'yyyy-MM-dd'));
-            allDates.push(...dateStrings);
-        }
+
+        // Даты текущей (0) и следующей (1) недель бизнеса: неделя считается в его поясе, а не в поясе сервера.
+        const allDates = [...businessWeekYmds(0, tz, today), ...businessWeekYmds(1, tz, today)];
         const todayYmd = formatInTimeZone(today, tz, 'yyyy-MM-dd');
         const futureDates = allDates.filter((date) => date >= todayYmd);
 
@@ -47,8 +40,7 @@ export async function initializeStaffSchedule(
         // Проверяем, какие даты уже есть в расписании
         const startDate = allDates[0];
         const lastDate = allDates[allDates.length - 1];
-        const lastDateObj = new Date(lastDate + 'T12:00:00'); // Добавляем время для корректного парсинга
-        const endDate = formatInTimeZone(addDays(lastDateObj, 1), tz, 'yyyy-MM-dd');
+        const endDate = addDaysYmd(lastDate, 1);
 
         const { data: existingRules, error: selectError } = await admin
             .from('staff_schedule_rules')

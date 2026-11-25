@@ -45,7 +45,7 @@ beforeEach(() => {
 describe('client cabinet visit packages', () => {
     const pkg = {
         id: 'pkg-1', plan_id: 'plan-1', plan_name_ru: 'Пять стрижек', plan_name_ky: null, plan_name_en: null,
-        remaining_visits: 3, plan_visit_count: 5, valid_until: '2999-01-01', purchased_at: '2026-01-01', created_at: '2026-01-01',
+        remaining_visits: 3, plan_visit_count: 5, valid_until: '2999-01-01', purchased_at: '2026-01-01', created_at: '2026-01-01', is_active: true,
     };
 
     test.each([

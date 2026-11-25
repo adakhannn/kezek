@@ -17,9 +17,9 @@ export function getTimezone(): string {
  * Текущая календарная дата в заданной таймзоне (YYYY-MM-DD).
  * Использовать вместо new Date().toISOString().slice(0, 10) для «сегодня» в бизнес-логике.
  */
-export function todayDateString(timezone?: string): string {
+export function todayDateString(timezone?: string, now: Date = new Date()): string {
     const tz = timezone || getTimezone();
-    return formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+    return formatInTimeZone(now, tz, 'yyyy-MM-dd');
 }
 
 /**

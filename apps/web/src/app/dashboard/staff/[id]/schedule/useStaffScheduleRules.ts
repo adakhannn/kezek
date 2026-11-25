@@ -1,6 +1,5 @@
 'use client';
 
-import { addDays, addWeeks, startOfWeek } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -8,6 +7,7 @@ import type { TimeRange } from './scheduleTypes';
 
 import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { logError } from '@/lib/log';
+import { businessWeekDates } from '@/lib/scheduling/businessWeek';
 import {
     branchDayIntervals,
     legacyScheduleWriteMessage,
@@ -15,13 +15,6 @@ import {
     type BranchHoursRow,
 } from '@/lib/scheduling/legacyDefaults';
 import { supabase } from '@/lib/supabaseClient';
-
-function getWeekDates(weekOffset: number): Date[] {
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-    const targetWeekStart = addWeeks(weekStart, weekOffset);
-    return Array.from({ length: 7 }, (_, index) => addDays(targetWeekStart, index));
-}
 
 const todayYmd = (tz: string) => formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
 
@@ -71,8 +64,8 @@ export function useStaffScheduleRules({
     const [rules, setRules] = useState<ScheduleRule[]>([]);
     const loadSequence = useRef(0);
 
-    const currentWeekDates = useMemo(() => getWeekDates(0), []);
-    const nextWeekDates = useMemo(() => getWeekDates(1), []);
+    const currentWeekDates = useMemo(() => businessWeekDates(0, tz), [tz]);
+    const nextWeekDates = useMemo(() => businessWeekDates(1, tz), [tz]);
     const windowDates = useMemo(
         () => [...currentWeekDates, ...nextWeekDates].map((date) => formatInTimeZone(date, tz, 'yyyy-MM-dd')),
         [currentWeekDates, nextWeekDates, tz],

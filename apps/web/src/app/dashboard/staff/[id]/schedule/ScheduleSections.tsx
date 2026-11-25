@@ -8,6 +8,7 @@ import type { Branch, TimeRange } from './scheduleTypes';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Tabs } from '@/components/ui/Tabs';
+import { businessDayOfWeek } from '@/lib/scheduling/businessWeek';
 import { branchDayIntervals, type BranchHoursRow } from '@/lib/scheduling/legacyDefaults';
 
 function SingleTimeRange({
@@ -387,7 +388,7 @@ export function ScheduleWeekSection({
             <div className="space-y-2 sm:space-y-3">
                 <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     {dates.slice(0, 4).map((date) => {
-                        const dow = date.getDay();
+                        const dow = businessDayOfWeek(date, tz);
                         const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const ruleData = rulesByDate.get(dateStr);
                         return (
@@ -409,7 +410,7 @@ export function ScheduleWeekSection({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                     {dates.slice(4, 7).map((date) => {
-                        const dow = date.getDay();
+                        const dow = businessDayOfWeek(date, tz);
                         const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const ruleData = rulesByDate.get(dateStr);
                         return (

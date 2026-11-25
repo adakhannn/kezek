@@ -1,24 +1,16 @@
 'use client';
 
-import { startOfWeek, addDays, addWeeks } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Card } from '@/components/ui/Card';
+import { addDaysYmd, businessDayOfWeek, businessWeekDates } from '@/lib/scheduling/businessWeek';
 import { supabase } from '@/lib/supabaseClient';
 import { transliterate } from '@/lib/transliterate';
 
 type TimeRange = { start: string; end: string };
-
-// Получаем даты текущей и следующей недели
-function getWeekDates(weekOffset: number): Date[] {
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Понедельник
-    const targetWeekStart = addWeeks(weekStart, weekOffset);
-    return Array.from({ length: 7 }, (_, i) => addDays(targetWeekStart, i));
-}
 
 export default function ViewSchedule({
     bizId,
@@ -56,8 +48,8 @@ export default function ViewSchedule({
     ];
 
     // Получаем даты текущей и следующей недели
-    const currentWeekDates = useMemo(() => getWeekDates(0), []);
-    const nextWeekDates = useMemo(() => getWeekDates(1), []);
+    const currentWeekDates = useMemo(() => businessWeekDates(0, tz), [tz]);
+    const nextWeekDates = useMemo(() => businessWeekDates(1, tz), [tz]);
 
     // Загружаем правила для текущей и следующей недели
     useEffect(() => {
@@ -65,7 +57,7 @@ export default function ViewSchedule({
         (async () => {
             setLoading(true);
             const weekStart = formatInTimeZone(currentWeekDates[0], tz, 'yyyy-MM-dd');
-            const weekEnd = formatInTimeZone(addDays(nextWeekDates[6], 1), tz, 'yyyy-MM-dd');
+            const weekEnd = addDaysYmd(formatInTimeZone(nextWeekDates[6], tz, 'yyyy-MM-dd'), 1);
 
             const { data, error } = await supabase
                 .from('staff_schedule_rules')
@@ -151,7 +143,7 @@ export default function ViewSchedule({
                 </p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {currentWeekDates.map((date) => {
-                        const dow = date.getDay(); // 0-6 (0=воскресенье)
+                        const dow = businessDayOfWeek(date, tz); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const rule = rulesByDate.get(dateStr);
                         const intervals = rule?.intervals;
@@ -244,7 +236,7 @@ export default function ViewSchedule({
                 </p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {nextWeekDates.map((date) => {
-                        const dow = date.getDay(); // 0-6 (0=воскресенье)
+                        const dow = businessDayOfWeek(date, tz); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, tz, 'yyyy-MM-dd');
                         const rule = rulesByDate.get(dateStr);
                         const intervals = rule?.intervals;

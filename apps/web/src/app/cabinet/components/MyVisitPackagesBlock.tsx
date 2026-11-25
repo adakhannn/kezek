@@ -16,12 +16,12 @@ type PackageItem = {
   valid_until: string;
   purchased_at: string;
   created_at: string;
+  /** Computed by the server in the package's business time zone (ARCH-11). */
+  is_active: boolean;
 };
 
-const TODAY = new Date().toISOString().slice(0, 10);
-
 function isActive(p: PackageItem): boolean {
-  return p.valid_until >= TODAY && p.remaining_visits > 0;
+  return p.is_active;
 }
 
 export default function MyVisitPackagesBlock() {
