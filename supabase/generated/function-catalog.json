@@ -811,7 +811,7 @@
     },
     "public.booking_notification_backlog_health()": {
       "arguments": "",
-      "body": "214d1facaed6d6919a2ac3ba3be7d875",
+      "body": "c73807c9c710ccbd1d18d2b70652c952",
       "config": [
         "search_path=public, pg_temp"
       ],
@@ -1296,7 +1296,7 @@
     },
     "public.claim_overdue_staff_shifts(uuid,integer,timestamp with time zone)": {
       "arguments": "p_claim_token uuid, p_limit integer DEFAULT 25, p_now timestamp with time zone DEFAULT now()",
-      "body": "457569652627d0839e37aaf859fe93b8",
+      "body": "30760a16969cfbcdfc74a3594920d358",
       "config": [
         "lock_timeout=2s",
         "search_path=pg_catalog, public",
@@ -1621,7 +1621,7 @@
     },
     "public.create_confirmed_booking(uuid,jsonb,text,uuid)": {
       "arguments": "p_request_id uuid, p_payload jsonb, p_guest_secret text, p_actor_id uuid",
-      "body": "594ae0a4808fd6db485a66dc770ab089",
+      "body": "58aa9445843166bca78d718075910982",
       "config": [
         "lock_timeout=5s",
         "search_path=public, pg_temp"
@@ -2896,7 +2896,7 @@
     },
     "public.open_staff_shift_safe(uuid,uuid,uuid,date,timestamp with time zone,timestamp with time zone,integer)": {
       "arguments": "p_staff_id uuid, p_biz_id uuid, p_branch_id uuid, p_shift_date date, p_opened_at timestamp with time zone, p_expected_start timestamp with time zone DEFAULT NULL::timestamp with time zone, p_late_minutes integer DEFAULT 0",
-      "body": "a8857fbc0aff0b13a7cd89c232a0c8ce",
+      "body": "7aec2ddb51d28b5d898fc95123cdee00",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -3376,7 +3376,7 @@
     },
     "public.read_staff_shift_close_snapshot(uuid,uuid,uuid)": {
       "arguments": "p_biz_id uuid, p_staff_id uuid, p_shift_id uuid",
-      "body": "7dbb9f394e2b1ce984e42f53008bad0a",
+      "body": "06ffb992f6c37c519453d5659735a3ef",
       "config": [
         "search_path=pg_catalog, public"
       ],
@@ -4473,7 +4473,7 @@
     },
     "public.whatsapp_inbox_backlog_health()": {
       "arguments": "",
-      "body": "93ae6c952964f31cffe6182802727459",
+      "body": "2b9e8c50263824d1bd8644a2571b6a30",
       "config": [
         "search_path=pg_catalog, public",
         "statement_timeout=4s"

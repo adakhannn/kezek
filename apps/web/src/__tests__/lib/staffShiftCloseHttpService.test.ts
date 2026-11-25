@@ -102,8 +102,6 @@ describe('staffShiftCloseHttpService', () => {
             staffId: 'staff-id',
             bizId: 'biz-id',
             items: [{ serviceAmount: 1400 }],
-            totalAmountRaw: 1500,
-            consumablesAmount: 100,
         });
     });
 

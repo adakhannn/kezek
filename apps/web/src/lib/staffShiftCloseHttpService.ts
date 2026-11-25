@@ -53,8 +53,6 @@ export async function runStaffShiftCloseHttp(req: Request): Promise<NextResponse
             expectedShiftId: validationResult.data.expectedShiftId,
             expectedRevision: validationResult.data.expectedRevision,
             items: validationResult.data.items ?? [],
-            totalAmountRaw: validationResult.data.totalAmount ?? 0,
-            consumablesAmount: validationResult.data.consumablesAmount ?? 0,
         });
 
         if (!result.ok) {

@@ -28,6 +28,9 @@ type Props = {
     onNotifyWhatsAppChange: (value: boolean) => void;
     onSave: () => void;
     onSignOut: () => void;
+    onOpenPrivacy: () => void;
+    onOpenTerms: () => void;
+    onDeleteAccount: () => void;
     isSaving: boolean;
     isSigningOut: boolean;
 };
@@ -38,6 +41,9 @@ export function ProfileScreenSections({
     phone,
     notifyEmail,
     notifyWhatsApp,
+    onOpenPrivacy,
+    onOpenTerms,
+    onDeleteAccount,
     onFullNameChange,
     onPhoneChange,
     onNotifyEmailChange,
@@ -134,6 +140,14 @@ export function ProfileScreenSections({
                 <Text style={styles.sectionTitle}>{t('common.language.title')}</Text>
                 <Text style={[styles.switchHint, styles.languageHint]}>{t('common.language.hint')}</Text>
                 <LanguageSwitcher />
+            </Card>
+
+            <Card style={styles.card}>
+                <Text style={styles.sectionTitle}>{t('cabinet.profile.account.title')}</Text>
+                <Button title={t('cabinet.profile.account.privacy')} onPress={onOpenPrivacy} variant="outline" fullWidth />
+                <Button title={t('cabinet.profile.account.terms')} onPress={onOpenTerms} variant="outline" fullWidth style={styles.accountButton} />
+                <Text style={[styles.switchHint, styles.accountHint]}>{t('cabinet.profile.account.deleteHint')}</Text>
+                <Button title={t('cabinet.profile.account.delete')} onPress={onDeleteAccount} variant="outline" fullWidth disabled={isSigningOut} />
             </Card>
 
             <View style={styles.actions}>

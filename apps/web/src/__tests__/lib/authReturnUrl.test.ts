@@ -23,4 +23,11 @@ describe('authReturnUrl', () => {
         expect(sanitizeAuthReturnPath('//evil.example/after-login')).toBe('/');
         expect(sanitizeAuthReturnPath('/\\evil.example\\after-login')).toBe('/');
     });
+
+    test('rejects paths that become protocol-relative after dot-segment removal (R25-08)', () => {
+        for (const value of ['/.//evil.com', '/%2e//evil.com', '/a/..//evil.com', '/./%2e//evil.com/x?y=1']) {
+            expect(sanitizeAuthReturnPath(value)).toBe('/');
+        }
+        expect(sanitizeAuthReturnPath('/a/../dashboard')).toBe('/dashboard');
+    });
 });

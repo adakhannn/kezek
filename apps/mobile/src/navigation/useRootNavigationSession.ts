@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus, Linking } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 
+import { clearLocalStateOnSessionEnd } from '../lib/accountLocalState';
 import { getMobileApiUrl } from '../lib/apiUrl';
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 import { supabase } from '../lib/supabase';
@@ -132,7 +133,16 @@ export function useRootNavigationSession() {
     const sessionRef = useRef<Session | null>(null);
 
     const updateSession = (nextSession: Session | null) => {
+        const previousUserId = sessionRef.current?.user?.id;
+        const nextUserId = nextSession?.user?.id;
         sessionRef.current = nextSession;
+        // The session ended or another account took its place, by any route — not only the
+        // sign-out button (R25-05). Cleared before the next account's screens render.
+        if (previousUserId && previousUserId !== nextUserId) {
+            void clearLocalStateOnSessionEnd(previousUserId).catch((error: unknown) => {
+                logWarn('RootNavigatorSession', 'Failed to clear the previous account state', error);
+            });
+        }
         setSession(nextSession);
     };
 

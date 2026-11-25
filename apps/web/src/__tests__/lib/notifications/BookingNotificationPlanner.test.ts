@@ -1,9 +1,10 @@
 import { planBookingNotifications, prepareBookingNotificationContext } from '@/lib/notifications/BookingNotificationPlanner';
 import { ParticipantDataService } from '@/lib/notifications/ParticipantDataService';
 import type { BookingRow, ParticipantData } from '@/lib/notifications/types';
+import { getEmailFrom } from '@/lib/env';
 
 jest.mock('@/lib/notifications/ParticipantDataService');
-jest.mock('@/lib/env', () => ({ getEmailFrom: () => 'Kezek <synthetic@example.invalid>', getSiteOrigin: () => 'https://example.invalid', getTimezone: () => 'Asia/Bishkek' }));
+jest.mock('@/lib/env', () => ({ getEmailFrom: jest.fn(() => 'Kezek <synthetic@example.invalid>'), getSiteOrigin: () => 'https://example.invalid', getTimezone: () => 'Asia/Bishkek' }));
 
 const participant = (values: Partial<ParticipantData> = {}): ParticipantData => ({
     email: null, notificationEmails: [], name: 'Synthetic', phone: null, whatsappPhone: null, telegramId: null,
@@ -51,6 +52,16 @@ test('client verification and explicit opt-outs are honored without skipping mes
     );
     const plan = await planBookingNotifications({} as never, { ...booking, biz: { ...booking.biz as object, email_notify_to: [] } as BookingRow['biz'] }, 'cancel');
     expect(plan).toEqual([]);
+});
+
+test.each(['', '   '])('EMAIL_FROM %j turns e-mail off: no e-mail deliveries are planned, other channels are (R25-13)', async from => {
+    jest.mocked(getEmailFrom).mockReturnValueOnce(from);
+    mockParticipants(
+        participant({ email: 'client@example.invalid', telegramId: 123, telegramVerified: true }),
+        participant({ email: 'staff@example.invalid' }), participant({ email: 'owner@example.invalid' }),
+    );
+    const plan = await planBookingNotifications({} as never, booking, 'confirm');
+    expect(plan.map(value => value.channel)).toEqual(['telegram']);
 });
 
 test('lookup errors cannot be mistaken for an empty completed plan', async () => {

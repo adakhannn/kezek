@@ -14,7 +14,14 @@ export function sanitizeAuthReturnPath(value: string | null | undefined): string
             return '/';
         }
 
-        return `${parsed.pathname}${parsed.search}${parsed.hash}` || '/';
+        // URL parsing removes dot segments: "/.//evil.com" becomes the pathname "//evil.com", which a
+        // browser navigation reads as another host (R25-08). Check the result, not only the input.
+        const path = parsed.pathname;
+        if (path.startsWith('//') || path.includes('\\')) {
+            return '/';
+        }
+
+        return `${path}${parsed.search}${parsed.hash}` || '/';
     } catch {
         return '/';
     }

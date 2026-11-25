@@ -4,6 +4,8 @@ import type { OutboxEvent, PreparedDelivery, StoredDelivery } from './outboxType
 import { ProviderDeliveryError } from './outboxTypes';
 import type { BookingRow, NotifyType } from './types';
 
+import { logError } from '@/lib/log';
+
 type WorkerDeps = {
     store: OutboxStore;
     plan: (booking: BookingRow, type: NotifyType) => Promise<PreparedDelivery[]>;
@@ -16,6 +18,7 @@ export async function runBookingNotificationWorker({ store, plan, send, now = Da
     const deadline = now() + 45_000;
     const seen = new Set<string>();
     const outcomes: string[] = [];
+    let errors = 0;
     const process = async (event: OutboxEvent) => {
         const finish = async (outcome: EventOutcome, code?: string, retryAfter = 0) => {
             await store.finish(event, outcome, code, retryAfter);
@@ -26,6 +29,9 @@ export async function runBookingNotificationWorker({ store, plan, send, now = Da
             if (!booking) return await finish('obsolete', 'booking_removed');
             if (booking.notification_revision === undefined) throw new Error('Notification schema missing');
             if (!matchesEvent(booking, event)) return await finish('obsolete', 'booking_revision_changed');
+            // After a backlog or the first activation, a "confirmed"/"cancelled" message about a
+            // visit that has already started is noise (R25-15): close the event without sending.
+            if (hasStarted(booking, now())) return await finish('obsolete', 'booking_in_past');
             if (!event.prepared_at) await store.prepare(event, await plan(booking, event.event_type));
             const deliveries = await store.deliveries(event);
             let failed = false;
@@ -47,6 +53,10 @@ export async function runBookingNotificationWorker({ store, plan, send, now = Da
                 try {
                     providerId = await send(event.id, delivery);
                 } catch (error) {
+                    if (!(error instanceof ProviderDeliveryError)) {
+                        logError('BookingNotificationWorker', 'Delivery send failed with an unexpected error',
+                            { eventId: event.id, channel: delivery.channel, error });
+                    }
                     const failure = error instanceof ProviderDeliveryError ? error : new ProviderDeliveryError('provider_outcome_unknown', delivery.channel === 'email' ? 'retry' : 'ambiguous');
                     await store.fail(event, delivery.delivery_key, failure.outcome, failure.code);
                     retry ||= failure.outcome === 'retry';
@@ -61,8 +71,16 @@ export async function runBookingNotificationWorker({ store, plan, send, now = Da
             return await finish(retry ? 'retry' : failed ? 'failed' : 'sent', retry ? 'provider_retry' : failed ? 'delivery_requires_review' : '', retryAfter);
         } catch (error) {
             if (error instanceof OutboxStoreError && error.code === 'OUTBOX_LEASE_LOST') return 'lease_lost';
+            // R25-13: the cause must reach logs/Sentry, not only the generic worker_incomplete code.
+            // The logger masks phones/e-mails in messages and details; no payload is passed here.
+            const obsolete = error instanceof OutboxStoreError && error.code === 'OUTBOX_EVENT_OBSOLETE';
+            if (!obsolete) {
+                errors++;
+                logError('BookingNotificationWorker', 'Outbox event processing failed',
+                    { eventId: event.id, eventType: event.event_type, attempt: event.attempts, error });
+            }
             try {
-                return await finish(error instanceof OutboxStoreError && error.code === 'OUTBOX_EVENT_OBSOLETE' ? 'obsolete' : 'retry', 'worker_incomplete');
+                return await finish(obsolete ? 'obsolete' : 'retry', 'worker_incomplete');
             } catch { return 'lease_lost'; }
         }
     };
@@ -78,7 +96,12 @@ export async function runBookingNotificationWorker({ store, plan, send, now = Da
         outcomes.push(...await Promise.all(events.map(process)));
     }
     const pruned = await store.prune();
-    return { claimed: seen.size, outcomes, pruned };
+    return { claimed: seen.size, outcomes, errors, pruned };
+}
+
+function hasStarted(booking: BookingRow, nowMs: number) {
+    const start = Date.parse(booking.start_at);
+    return Number.isFinite(start) && start <= nowMs;
 }
 
 function matchesEvent(booking: BookingRow, event: OutboxEvent) {

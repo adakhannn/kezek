@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { apiRequest } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 import { useConfirmBooking } from '../../hooks/useConfirmBooking';
 import { createTestQueryClient } from '../testQueryClient';
 import * as SecureStore from 'expo-secure-store';
@@ -36,6 +37,38 @@ describe('useConfirmBooking', () => {
         jest.mocked(SecureStore.getItemAsync).mockImplementation(async key => store.get(key) ?? null);
         jest.mocked(SecureStore.setItemAsync).mockImplementation(async (key, value) => { store.set(key, value); });
         jest.mocked(SecureStore.deleteItemAsync).mockImplementation(async key => { store.delete(key); });
+        signInAs('user-1');
+    });
+
+    function signInAs(userId: string | null) {
+        jest.mocked(supabase.auth.getSession).mockResolvedValue({
+            data: { session: userId ? ({ user: { id: userId } } as never) : null },
+            error: null,
+        } as never);
+    }
+
+    test('another account on the device retries the same slot under its own request identity', async () => {
+        mockApiRequest.mockRejectedValueOnce(new Error('Network response lost'));
+        mockApiRequest.mockResolvedValueOnce({ data: { booking_id: 'b-2', confirmed: true } });
+        const { result } = renderHook(() => useConfirmBooking(), { wrapper: createWrapper() });
+        await act(async () => {
+            await expect(result.current.createBookingAsync(params)).rejects.toThrow('Network response lost');
+        });
+        signInAs('user-2');
+        await act(async () => {
+            await result.current.createBookingAsync(params);
+        });
+        const keyOf = (call: number) => (mockApiRequest.mock.calls[call][1]?.headers as Record<string, string>)['Idempotency-Key'];
+        expect(keyOf(1)).not.toBe(keyOf(0));
+    });
+
+    test('without a signed-in user nothing is sent', async () => {
+        signInAs(null);
+        const { result } = renderHook(() => useConfirmBooking(), { wrapper: createWrapper() });
+        await act(async () => {
+            await expect(result.current.createBookingAsync(params)).rejects.toThrow();
+        });
+        expect(mockApiRequest).not.toHaveBeenCalled();
     });
 
     test('extracts booking id from standard quick-hold API envelope', async () => {

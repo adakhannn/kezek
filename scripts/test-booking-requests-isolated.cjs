@@ -83,7 +83,7 @@ const expectFailure = (statement, pattern) => {
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       create table auth.users(id uuid primary key, email text, phone text, raw_user_meta_data jsonb default '{}');
       create table profiles(id uuid primary key references auth.users, full_name text, phone text);
-      create table businesses(id uuid primary key,owner_id uuid);
+      create table businesses(id uuid primary key,owner_id uuid,is_approved boolean default true);
       create table branches(id uuid primary key, biz_id uuid references businesses, is_active boolean default true);
       create table staff(id uuid primary key, biz_id uuid references businesses, branch_id uuid references branches, is_active boolean default true,user_id uuid,full_name text);
       create table roles(id uuid primary key,key text,scope text);
@@ -134,6 +134,7 @@ const expectFailure = (statement, pattern) => {
     // 20261118100000 also redefines this slots function; 20261110121000 created it with grants for the client roles.
     installLiveFunction(sql, 'public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)');
     sql(source('20261118100000_booking_service_staff_checks.sql'));
+    sql(source('20261125110100_booking_requires_approved_business.sql'));
 
     // Real first transaction overlaps concurrent retries; every caller gets the
     // identical committed receipt, not another attempt or an unavailable slot.
@@ -297,6 +298,15 @@ const expectFailure = (statement, pattern) => {
       [{service_id:cut,duration_min:525600},{service_id:wash,duration_min:525600}]))));
     assert.equal(sql(`select (end_at-start_at)||'|'||(select string_agg(duration_min::text,',' order by order_index) from booking_services s where s.booking_id=b.id)
       from bookings b where id='${catalogue.booking_id}';`),'00:50:00|30,20','durations come from the catalogue, not the request');
+    // R25-09: an unapproved business refuses new bookings; a replay of an earlier receipt still answers.
+    const approvedRequest=randomUUID();
+    const approvedPayload=linked(performer,'2035-02-03T10:00:00Z',[{service_id:cut,duration_min:30}]);
+    const approvedFirst=JSON.parse(sql(command(approvedRequest,approvedPayload)));
+    const approvedBiz=`(select biz_id from bookings where id='${approvedFirst.booking_id}')`;
+    sql(`update businesses set is_approved=false where id=${approvedBiz};`);
+    assert.deepEqual(JSON.parse(sql(command(approvedRequest,approvedPayload))),approvedFirst);
+    expectFailure(command(randomUUID(),linked(performer,'2035-02-04T10:00:00Z',[{service_id:cut,duration_min:30}])),/BUSINESS_NOT_BOOKABLE/);
+    sql(`update businesses set is_approved=true where id=${approvedBiz};`);
 
     const owner=id(20),manager=id(21),foreignManager=id(22),worker=id(23),branchAdmin=id(24),platformAdmin=id(25),biz2=id(26),branch2=id(27);
     sql(`update businesses set owner_id='${owner}' where id='${biz}';

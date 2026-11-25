@@ -44,9 +44,12 @@ export async function prepareBookingNotificationContext(participants: Participan
 export async function planBookingNotifications(admin: SupabaseClient, booking: BookingRow, type: NotifyType): Promise<PreparedDelivery[]> {
     const { details, clientData, staffData, ownerData } = await prepareBookingNotificationContext(new ParticipantDataService(admin, admin, true), booking);
     const biz = details.biz;
-    const deliveries: PreparedDelivery[] = buildEmailRecipients(clientData, staffData, ownerData, biz).map(recipient => ({
+    // An empty EMAIL_FROM means e-mail notifications are off (env.ts): plan no e-mail deliveries
+    // rather than ones with from: '' that fail at the provider on every event (R25-13).
+    const from = getEmailFrom().trim();
+    const deliveries: PreparedDelivery[] = !from ? [] : buildEmailRecipients(clientData, staffData, ownerData, biz).map(recipient => ({
         key: keyFor('email', recipient.email), channel: 'email',
-        payload: buildBookingEmailPayload(recipient, details, type, { from: getEmailFrom(), replyTo: ownerData.email ?? undefined }),
+        payload: buildBookingEmailPayload(recipient, details, type, { from, replyTo: ownerData.email ?? undefined }),
     }));
     for (const { data } of uniqueTelegramRecipients(clientData, staffData, ownerData)) {
         deliveries.push({ key: keyFor('telegram', String(data.telegramId)), channel: 'telegram', payload: {

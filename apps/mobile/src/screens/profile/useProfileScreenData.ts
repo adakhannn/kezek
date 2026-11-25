@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Linking } from 'react-native';
 
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -9,6 +10,7 @@ import { getErrorMessage } from '../../lib/errors';
 import { TimeoutError } from '../../lib/fetchWithTimeout';
 import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../../lib/signOut';
 import { supabase } from '../../lib/supabase';
+import { ACCOUNT_DELETION_WEB_PATH, openWebAsCurrentUser, webPageUrl } from '../../lib/webLinks';
 import type { Profile } from './types';
 
 const PHONE_PATTERN = /^\+?[0-9\s()-]{7,20}$/;
@@ -158,6 +160,32 @@ export function useProfileScreenData() {
         updateProfileMutation.mutate();
     };
 
+    const openWebPage = async (path: '/privacy' | '/terms') => {
+        try {
+            await Linking.openURL(webPageUrl(path));
+        } catch {
+            showToast(t('cabinet.profile.account.openError'), 'error');
+        }
+    };
+
+    // App Store 5.1.1(v) / Google Play: deletion starts in the app. The web profile already runs
+    // the whole flow (blockers, confirmation, cancellation), so the app opens it signed in.
+    const deleteAccount = async () => {
+        const proceed = await confirm({
+            title: t('cabinet.profile.account.deleteConfirmTitle'),
+            message: t('cabinet.profile.account.deleteConfirmMessage'),
+            confirmLabel: t('cabinet.profile.account.deleteConfirm'),
+            cancelLabel: t('cabinet.ui.cancel'),
+            variant: 'danger',
+        });
+        if (!proceed) return;
+        try {
+            await openWebAsCurrentUser(ACCOUNT_DELETION_WEB_PATH);
+        } catch {
+            showToast(t('cabinet.profile.account.openError'), 'error');
+        }
+    };
+
     const confirmSignOut = async () => {
         const text = signOutConfirmationText(await countPendingShiftOperations(), t);
         const shouldSignOut = await confirm({
@@ -205,6 +233,9 @@ export function useProfileScreenData() {
         setNotifyWhatsApp,
         saveProfile,
         confirmSignOut,
+        openPrivacy: () => void openWebPage('/privacy'),
+        openTerms: () => void openWebPage('/terms'),
+        deleteAccount: () => void deleteAccount(),
         isSaving: updateProfileMutation.isPending,
         isSigningOut,
     };

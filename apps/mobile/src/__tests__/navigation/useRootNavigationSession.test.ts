@@ -5,7 +5,8 @@ import {
     useRootNavigationSession,
 } from '../../navigation/useRootNavigationSession';
 import { supabase } from '../../lib/supabase';
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { clearLocalStateOnSessionEnd } from '../../lib/accountLocalState';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AppState, Linking } from 'react-native';
 
 jest.mock('../../lib/supabase', () => ({
@@ -17,6 +18,10 @@ jest.mock('../../lib/supabase', () => ({
             onAuthStateChange: jest.fn(),
         },
     },
+}));
+
+jest.mock('../../lib/accountLocalState', () => ({
+    clearLocalStateOnSessionEnd: jest.fn(),
 }));
 
 describe('useRootNavigationSession helpers', () => {
@@ -175,5 +180,58 @@ describe('useRootNavigationSession helpers', () => {
         });
         expect(mockedSupabase.auth.getSession).toHaveBeenCalledTimes(2);
         expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    describe('the previous account is cleared however its session ends (R25-05)', () => {
+        type AuthListener = (event: string, session: unknown) => void;
+        const sessionOf = (id: string) => ({ access_token: 'a-' + id, user: { id } });
+
+        async function renderSignedIn(id: string) {
+            let listener: AuthListener = () => undefined;
+            mockedSupabase.auth.getSession.mockResolvedValue({ data: { session: sessionOf(id) }, error: null });
+            mockedSupabase.auth.onAuthStateChange.mockImplementation((callback: AuthListener) => {
+                listener = callback;
+                return { data: { subscription: { unsubscribe: jest.fn() } } };
+            });
+            const rendered = renderHook(() => useRootNavigationSession());
+            await waitFor(() => expect(rendered.result.current.hasSession).toBe(true));
+            return { ...rendered, emit: (event: string, session: unknown) => act(() => listener(event, session)) };
+        }
+
+        beforeEach(() => {
+            jest.mocked(clearLocalStateOnSessionEnd).mockResolvedValue(undefined);
+        });
+
+        test('SIGNED_OUT from a revoked or expired token clears the signed-out account', async () => {
+            const { result, emit } = await renderSignedIn('user-1');
+            emit('TOKEN_REFRESHED', sessionOf('user-1'));
+            expect(clearLocalStateOnSessionEnd).not.toHaveBeenCalled();
+
+            emit('SIGNED_OUT', null);
+
+            expect(clearLocalStateOnSessionEnd).toHaveBeenCalledTimes(1);
+            expect(clearLocalStateOnSessionEnd).toHaveBeenCalledWith('user-1');
+            expect(result.current.hasSession).toBe(false);
+        });
+
+        test('another account replacing the session clears the previous one', async () => {
+            const { result, emit } = await renderSignedIn('user-1');
+
+            emit('SIGNED_IN', sessionOf('user-2'));
+
+            expect(clearLocalStateOnSessionEnd).toHaveBeenCalledWith('user-1');
+            expect(result.current.session?.user.id).toBe('user-2');
+        });
+
+        test('a session found missing on resume clears the account too', async () => {
+            await renderSignedIn('user-1');
+            mockedSupabase.auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
+
+            await act(async () => {
+                appStateHandler?.('active');
+            });
+
+            await waitFor(() => expect(clearLocalStateOnSessionEnd).toHaveBeenCalledWith('user-1'));
+        });
     });
 });

@@ -3476,6 +3476,8 @@ export type Database = {
                     "opened_at": string | null;
                     "percent_master": number;
                     "percent_salon": number;
+                    "reopen_close_cap": string | null;
+                    "reopened_at": string | null;
                     "salon_share": number;
                     "shift_date": string;
                     "staff_id": string;
@@ -3502,6 +3504,8 @@ export type Database = {
                     "opened_at"?: string | null;
                     "percent_master"?: number;
                     "percent_salon"?: number;
+                    "reopen_close_cap"?: string | null;
+                    "reopened_at"?: string | null;
                     "salon_share"?: number;
                     "shift_date": string;
                     "staff_id": string;
@@ -3527,6 +3531,8 @@ export type Database = {
                     "opened_at"?: string | null;
                     "percent_master"?: number;
                     "percent_salon"?: number;
+                    "reopen_close_cap"?: string | null;
+                    "reopened_at"?: string | null;
                     "salon_share"?: number;
                     "shift_date"?: string;
                     "staff_id"?: string;

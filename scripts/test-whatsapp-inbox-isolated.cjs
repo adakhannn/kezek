@@ -68,7 +68,7 @@ const expectFailure = (statement, pattern) => {
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       create table auth.users(id uuid primary key, email text, phone text, raw_user_meta_data jsonb default '{}');
       create table profiles(id uuid primary key references auth.users, full_name text, phone text);
-      create table businesses(id uuid primary key,owner_id uuid);
+      create table businesses(id uuid primary key,owner_id uuid,is_approved boolean default true);
       create table branches(id uuid primary key, biz_id uuid references businesses, is_active boolean default true);
       create table staff(id uuid primary key, biz_id uuid references businesses, branch_id uuid references branches, is_active boolean default true,user_id uuid);
       create table roles(id uuid primary key,key text,scope text);
@@ -116,9 +116,11 @@ const expectFailure = (statement, pattern) => {
     sql(source('20261110133000_internal_booking_requests.sql'));
     installLiveFunction(sql, 'public.get_free_slots_service_day_v2(uuid,uuid,date,integer,integer,uuid)');
     sql(source('20261118100000_booking_service_staff_checks.sql'));
+    sql(source('20261125110100_booking_requires_approved_business.sql'));
     // pg_cron is not installed here; besides the drops, 20261119020000 only schedules two cleanup jobs.
     sql("create schema cron; create function cron.schedule(text,text,text) returns bigint language sql as 'select 1::bigint';");
     sql(source('20261119020000_dead_functions_and_cleanup_jobs.sql'));
+    sql(source('20261125120100_whatsapp_inbox_health_window.sql'));
     const receiver='123456789';
     const incoming=(overrides={})=>({ receiver,message_id:'wamid.'+randomUUID(),sender:'+996555000000',
       provider_timestamp:new Date().toISOString(),message_type:'text',text:'подтвердить',command:'confirm',booking_number:null,payload_hash:'a'.repeat(64),...overrides });
@@ -246,6 +248,8 @@ const expectFailure = (statement, pattern) => {
     counts=health();assert.deepEqual([counts.due,counts.failed,counts.ambiguous],[0,1,1],'uncertain processing is visible before recovery claim');
     sql(receive(incoming({provider_timestamp:new Date(Date.now()-25*3600000).toISOString()})));
     counts=health();assert.equal(counts.failed,2,'expired input needs attention');
+    sql("update whatsapp_inbox set completed_at=clock_timestamp()-interval '25 hours' where status='expired';");
+    counts=health();assert.deepEqual([counts.failed,counts.ambiguous],[1,1],'terminal rows older than 24 hours leave health; the stuck live reply stays (R25-14)');
     for(const role of ['anon','authenticated']) {
       for(const statement of ['select * from whatsapp_inbox',`select receive_whatsapp_inbox('${receiver}','[]')`,`select claim_whatsapp_inbox('${receiver}',1)`,
         `select process_whatsapp_inbox(${args(event)},'${receiver}')`,`select begin_whatsapp_inbox_reply(${args(event)})`,`select prune_whatsapp_inbox(100)`,'select whatsapp_inbox_backlog_health()'])

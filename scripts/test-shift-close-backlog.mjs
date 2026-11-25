@@ -114,12 +114,20 @@ try {
  await assert.rejects(call(openSql("'2001-01-01'")),/SHIFT_DATE_REQUIRES_EXISTING_SHIFT/);
  await assert.rejects(call(openSql("(now() at time zone 'Asia/Bishkek')::date+1")),/SHIFT_FUTURE_DATE/);
  const origin=await sql("select opened_at from staff_shifts where id='"+calendarShift+"'");
- await sql("update staff_shifts set status='closed',closed_at='2002-01-02 18:00Z' where id='"+calendarShift+"'");
+ await sql("update staff_shifts set status='closed',closed_at='2002-01-02 11:00Z' where id='"+calendarShift+"'");
  const closedRevision=Number(await sql("select ledger_revision from staff_shifts where id='"+calendarShift+"'"));
  await assert.rejects(sql(asActor(ids.staffUser,'authenticated')+openSql("'2002-01-02'")),/FINANCE_FORBIDDEN/);
  const reopened=JSON.parse(await sql(asActor(ids.owner,'authenticated')+openSql("'2002-01-02'")));
  assert.equal(reopened.action,'reopened');assert.ok(reopened.shift.ledger_revision>closedRevision);
  assert.equal(await sql("select opened_at from staff_shifts where id='"+calendarShift+"'"),origin);
+ // R25-03: the reopened past day closes no later than its original close (17:00 local), not at midnight,
+ // and the overdue cron leaves it to the manager for 12 hours.
+ const reopenedSnapshot=await call("select read_staff_shift_close_snapshot('"+ids.biz+"','"+ids.staff+"','"+calendarShift+"');");
+ assert.equal(Date.parse(reopenedSnapshot.closeBoundary),Date.parse('2002-01-02T11:00:00Z'));
+ const afterReopen=await call("select claim_overdue_staff_shifts('"+randomUUID()+"',100,now());");
+ assert.ok(afterReopen.rows.every(r=>r.shift.id!==calendarShift));
+ const later=await call("select claim_overdue_staff_shifts('"+randomUUID()+"',100,now()+interval '13 hours');");
+ assert.ok(later.rows.some(r=>r.shift.id===calendarShift));
  await assert.rejects(call(saveSql("'2002-01-02'",closedRevision,"'"+calendarShift+"'")),/SHIFT_STALE/);
  const repeat=await call(openSql("'2002-01-02'"));assert.equal(repeat.action,'already_open');assert.equal(repeat.shift.ledger_revision,reopened.shift.ledger_revision);
  const todayOpen=await call(openSql('null'));assert.equal(todayOpen.ok,true);assert.equal(todayOpen.shift.shift_date,(await call("select read_staff_finance_calendar('"+ids.biz+"','"+ids.staff+"');")).todayDate);

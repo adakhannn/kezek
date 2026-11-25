@@ -91,8 +91,18 @@ const initialState: BookingData = {
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
-export function BookingProvider({ children }: { children: ReactNode }) {
+/**
+ * `ownerId` is the signed-in user (RootNavigator). The provider sits above the signed-in/out
+ * switch, so a draft would otherwise survive into the next account on the device (R25-05).
+ */
+export function BookingProvider({ children, ownerId = null }: { children: ReactNode; ownerId?: string | null }) {
     const [bookingData, setBookingData] = useState<BookingData>(initialState);
+    const [draftOwnerId, setDraftOwnerId] = useState(ownerId);
+    if (draftOwnerId !== ownerId) {
+        // Reset during render, so the next account never renders the previous draft.
+        setDraftOwnerId(ownerId);
+        setBookingData(initialState);
+    }
 
     const hydrateInitialData = useCallback(
         ({ business, branches }: Pick<BookingData, 'business' | 'branches'>) => {

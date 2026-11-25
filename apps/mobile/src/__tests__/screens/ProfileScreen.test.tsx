@@ -6,6 +6,7 @@ import ProfileScreen from '../../screens/ProfileScreen';
 import { supabase } from '../../lib/supabase';
 import { createTestQueryClient } from '../testQueryClient';
 import { apiRequest } from '../../lib/api';
+import { Linking } from 'react-native';
 
 const mockShowToast = jest.fn();
 
@@ -209,6 +210,45 @@ describe('ProfileScreen', () => {
 
         expect(await screen.findByText('Не удалось загрузить профиль')).toBeTruthy();
         expect(await screen.findByText('Повторить')).toBeTruthy();
+    });
+
+    test('opens the privacy policy and terms on the website', async () => {
+        const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+        renderWithProviders(<ProfileScreen />);
+
+        fireEvent.press(await screen.findByText('Политика конфиденциальности'));
+        fireEvent.press(await screen.findByText('Условия использования'));
+
+        await waitFor(() => expect(openURL).toHaveBeenCalledTimes(2));
+        expect(openURL.mock.calls.map(([url]) => new URL(url).pathname)).toEqual(['/privacy', '/terms']);
+        openURL.mockRestore();
+    });
+
+    test('starts account deletion in the app: opens the web profile signed in (R25-06)', async () => {
+        const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+        mockedApiRequest.mockImplementation(async (endpoint: string) =>
+            endpoint === '/auth/web-handoff' ? { ok: true, url: 'https://kezek.vercel.app/auth/handoff?code=x' } : { ok: true });
+        renderWithProviders(<ProfileScreen />);
+
+        fireEvent.press(await screen.findByText('Удалить аккаунт'));
+
+        await waitFor(() => expect(openURL).toHaveBeenCalledWith('https://kezek.vercel.app/auth/handoff?code=x'));
+        const handoff = mockedApiRequest.mock.calls.find(([endpoint]) => endpoint === '/auth/web-handoff');
+        expect(JSON.parse(handoff?.[1].body as string)).toEqual({ next: '/cabinet/profile#account-deletion' });
+        openURL.mockRestore();
+    });
+
+    test('never opens a non-handoff URL for account deletion', async () => {
+        const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+        mockedApiRequest.mockImplementation(async (endpoint: string) =>
+            endpoint === '/auth/web-handoff' ? { ok: true, url: 'https://evil.example/phish' } : { ok: true });
+        renderWithProviders(<ProfileScreen />);
+
+        fireEvent.press(await screen.findByText('Удалить аккаунт'));
+
+        await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith(expect.any(String), 'error'));
+        expect(openURL).not.toHaveBeenCalled();
+        openURL.mockRestore();
     });
 
     test('shows load error state when profile user request times out', async () => {

@@ -27,7 +27,11 @@ export async function GET(req: Request) {
         const admin = createOutboxAdminClient();
         const result = await runBookingNotificationWorker({ store: createOutboxStore(admin),
             plan: (booking, type) => planBookingNotifications(admin, booking, type), send: sendOutboxDelivery });
-        return NextResponse.json({ ok: true, enabled: true, ...result });
+        // R25-13: an event that ended in worker_incomplete is a failed run for cron tracking,
+        // like the WhatsApp inbox worker; per-event causes are already logged by the worker.
+        const ok = result.errors === 0;
+        if (!ok) logError('BookingNotificationsCron', 'Outbox worker finished with errors', { claimed: result.claimed, errors: result.errors });
+        return NextResponse.json({ ok, enabled: true, ...result }, { status: ok ? 200 : 503 });
     } catch (error) {
         logError('BookingNotificationsCron', 'Outbox worker failed', error);
         return NextResponse.json({ ok: false, error: 'outbox_worker_failed' }, { status: 503 });

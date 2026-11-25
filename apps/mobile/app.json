@@ -34,7 +34,12 @@
             {
               "scheme": "https",
               "host": "kezek.vercel.app",
-              "pathPrefix": "/"
+              "pathPrefix": "/b/"
+            },
+            {
+              "scheme": "https",
+              "host": "kezek.vercel.app",
+              "pathPrefix": "/booking/"
             }
           ],
           "category": [

@@ -1727,14 +1727,21 @@ CREATE OR REPLACE FUNCTION public.booking_notification_backlog_health()
  STABLE SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
 AS $function$
-  with state as (select o.*, (o.attempts<8 and o.created_at>=now()-interval '30 days' and o.available_at<=now()
-    and (o.status='pending' or (o.status='processing' and o.lease_until<=now()))) as due
-    from public.booking_notification_outbox o)
-  select jsonb_build_object('pending',count(*) filter(where status='pending'),
-    'due',count(*) filter(where due),'processing',count(*) filter(where status='processing'),
-    'failed',count(*) filter(where status='failed'),
-    'ambiguous',count(*) filter(where exists(select 1 from public.booking_notification_deliveries d where d.event_id=state.id and d.status='ambiguous')),
-    'oldest_due_age_seconds',coalesce(greatest(0,extract(epoch from now()-min(created_at) filter(where due))),0)) from state;
+  with live as (
+    select o.status, o.created_at, (o.attempts<8 and o.created_at>=now()-interval '30 days' and o.available_at<=now()
+      and (o.status='pending' or (o.status='processing' and o.lease_until<=now()))) as due
+    from public.booking_notification_outbox o where o.status in ('pending','processing')
+  )
+  select jsonb_build_object(
+    'pending',(select count(*) from live where status='pending'),
+    'due',(select count(*) from live where due),
+    'processing',(select count(*) from live where status='processing'),
+    'failed',(select count(*) from public.booking_notification_outbox o
+      where o.status='failed' and o.completed_at>=now()-interval '24 hours'),
+    'ambiguous',(select count(distinct d.event_id) from public.booking_notification_deliveries d
+      join public.booking_notification_outbox o on o.id=d.event_id
+      where d.status='ambiguous' and (o.status in ('pending','processing') or o.completed_at>=now()-interval '24 hours')),
+    'oldest_due_age_seconds',(select coalesce(greatest(0,extract(epoch from now()-min(created_at) filter(where due))),0) from live));
 $function$
 ;
 
@@ -2767,11 +2774,13 @@ begin
     if p_claim_token is null or p_now is null or p_limit not between 1 and 100 then raise exception using errcode='22023',message='CLOSE_BATCH_INVALID'; end if;
     -- Old failures rotate behind never-attempted work; the lease prevents two
     -- schedulers claiming the same shift after the short row-lock transaction ends.
+    -- A shift a manager reopened is left to them for 12 hours (R25-03).
     select coalesce(array_agg(id),'{}'::uuid[]) into v_ids from (
         select sh.id from public.staff_shifts sh join public.businesses b on b.id=sh.biz_id
         join pg_catalog.pg_timezone_names tz on tz.name=coalesce(nullif(btrim(b.tz),''),'Asia/Bishkek')
         left join public.staff_shift_close_attempts a on a.shift_id=sh.id
         where sh.status='open' and sh.shift_date<(p_now at time zone tz.name)::date
+            and (sh.reopened_at is null or sh.reopened_at<=p_now-interval '12 hours')
             and (a.shift_id is null or a.lease_until<=p_now)
         order by coalesce(a.attempted_at,'-infinity'::timestamptz),sh.shift_date,sh.id
         limit p_limit for update of sh skip locked
@@ -2783,7 +2792,9 @@ begin
         into v_rows from public.staff_shifts sh where sh.id=any(v_ids);
     select exists(select 1 from public.staff_shifts sh join public.businesses b on b.id=sh.biz_id
         join pg_catalog.pg_timezone_names tz on tz.name=coalesce(nullif(btrim(b.tz),''),'Asia/Bishkek') where sh.status='open'
-        and sh.shift_date<(p_now at time zone tz.name)::date and not(sh.id=any(v_ids))) into v_more;
+        and sh.shift_date<(p_now at time zone tz.name)::date
+        and (sh.reopened_at is null or sh.reopened_at<=p_now-interval '12 hours')
+        and not(sh.id=any(v_ids))) into v_more;
     select coalesce(jsonb_agg(message),'[]'::jsonb) into v_configuration_errors from (
         select distinct b.id::text||': invalid_business_timezone' as message from public.businesses b join public.staff_shifts sh on sh.biz_id=b.id
         where sh.status='open' and not exists(select 1 from pg_catalog.pg_timezone_names where name=coalesce(nullif(btrim(b.tz),''),'Asia/Bishkek')) limit 25
@@ -3356,6 +3367,12 @@ begin
     raise exception using errcode = 'P0001', message = 'BOOKING_REQUEST_CONFLICT';
   end if;
   if v_receipt.response is not null then return v_receipt.response; end if;
+  -- R25-09: public and client pages show approved businesses only; the command must refuse the rest
+  -- too, so a direct API call or a page opened before the business was unpublished cannot book it.
+  -- After the idempotency lookup, so a replay of a booking made while approved still answers.
+  if not exists(select 1 from public.businesses where id = v_biz_id and coalesce(is_approved, false)) then
+    raise exception using errcode = '22023', message = 'BUSINESS_NOT_BOOKABLE';
+  end if;
 
   if v_branch_id is null then
     select id into v_branch_id from public.branches
@@ -6505,11 +6522,18 @@ begin
     if found then
         if v_existing.biz_id is distinct from p_biz_id then raise exception using errcode='42501',message='FINANCE_FORBIDDEN'; end if;
         if v_existing.status='open' then return jsonb_build_object('ok',true,'action','already_open','shift',to_jsonb(v_existing)); end if;
-        -- Reopen is a manager operation. It preserves the original attendance interval.
+        -- Reopen is a manager operation. A past day keeps its original attendance interval: the
+        -- next close is capped at the earlier close time (R25-03).
         if auth.role()<>'service_role' and not public.finance_can_manage_business(auth.uid(),p_biz_id) then
             raise exception using errcode='42501',message='FINANCE_FORBIDDEN';
         end if;
-        update public.staff_shifts set status='open',closed_at=null where id=v_existing.id returning * into v_existing;
+        update public.staff_shifts set status='open',
+            reopen_close_cap=case when p_shift_date<v_today
+                then coalesce(least(v_existing.closed_at,v_existing.reopen_close_cap),v_existing.closed_at,v_existing.reopen_close_cap)
+                else null end,
+            closed_at=null,
+            reopened_at=statement_timestamp()
+            where id=v_existing.id returning * into v_existing;
         perform public.update_shift_aggregates(p_staff_id,p_biz_id,p_shift_date,0,0,0,0,0,0);
         return jsonb_build_object('ok',true,'action','reopened','shift',to_jsonb(v_existing));
     end if;
@@ -7259,7 +7283,11 @@ begin
     if p_biz_id is null or p_staff_id is null or p_shift_id is null then raise exception using errcode='22023',message='FINANCE_SCOPE_REQUIRED'; end if;
     select jsonb_build_object('shift',to_jsonb(sh),'staff',jsonb_build_object('percent_master',st.percent_master,'percent_salon',st.percent_salon,'hourly_rate',st.hourly_rate),
         'timezone',public.finance_business_timezone(sh.biz_id),'dayStart',sh.shift_date::timestamp at time zone public.finance_business_timezone(sh.biz_id),
-        'dayHours',extract(epoch from (((sh.shift_date+1)::timestamp at time zone public.finance_business_timezone(sh.biz_id))-(sh.shift_date::timestamp at time zone public.finance_business_timezone(sh.biz_id))))/3600,'closeBoundary',(sh.shift_date+1)::timestamp at time zone public.finance_business_timezone(sh.biz_id),
+        'dayHours',extract(epoch from (((sh.shift_date+1)::timestamp at time zone public.finance_business_timezone(sh.biz_id))-(sh.shift_date::timestamp at time zone public.finance_business_timezone(sh.biz_id))))/3600,
+        -- The close is never later than the end of the shift day, nor than the original close of a
+        -- reopened past day (R25-03).
+        'closeBoundary',least((sh.shift_date+1)::timestamp at time zone public.finance_business_timezone(sh.biz_id),
+            coalesce(sh.reopen_close_cap,(sh.shift_date+1)::timestamp at time zone public.finance_business_timezone(sh.biz_id))),
         'items',coalesce((select jsonb_agg(to_jsonb(i) order by i.id) from public.staff_shift_items i where i.shift_id=sh.id),'[]'::jsonb)) into v_result
     from public.staff_shifts sh join public.staff st on st.id=sh.staff_id and st.biz_id=sh.biz_id
     where sh.id=p_shift_id and sh.staff_id=p_staff_id and sh.biz_id=p_biz_id;
@@ -9255,7 +9283,9 @@ begin
   perform public._require_whatsapp_inbox_service();
   with states as (
     select i.*, (i.command_receipt is null and exists(select 1 from public.whatsapp_messages m where m.whatsapp_message_id=i.message_id)) as legacy
-    from public.whatsapp_inbox i where i.status<>'sent'
+    from public.whatsapp_inbox i
+    where i.status in ('pending','processing')
+      or (i.status in ('failed','ambiguous','legacy_manual','expired') and i.completed_at>=observed_at-interval '24 hours')
   ), flags as (
     select *,
       status in ('pending','processing') and (status='pending' or lease_until<=observed_at)

@@ -128,9 +128,8 @@ export async function runStaffShiftClose(params: {
     actorId: string;
     expectedShiftId: string;
     expectedRevision: number;
+    /** Must match the saved ledger; totals are computed from the saved ledger only (R25-01). */
     items?: ShiftItemInput[];
-    totalAmountRaw?: number;
-    consumablesAmount?: number;
 }): Promise<ServiceResult> {
     const {
         supabase,
@@ -138,8 +137,6 @@ export async function runStaffShiftClose(params: {
         bizId,
         actorId,
         items = [],
-        totalAmountRaw = 0,
-        consumablesAmount = 0,
     } = params;
 
     // Условия оплаты закрыты для чужих сессий; функция пускает сотрудника, руководство и service role.
@@ -222,8 +219,6 @@ export async function runStaffShiftClose(params: {
         },
         shift: snapshot.shift,
         items: savedItems,
-        totalAmountRaw,
-        consumablesAmountRaw: consumablesAmount,
     });
 
     if (decision.kind === 'no_shift') {

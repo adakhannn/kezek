@@ -336,7 +336,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
         expect(admin.rpc).not.toHaveBeenCalled();
     });
 
-    test('closes dashboard shift with totalAmount payload', async () => {
+    test('ignores a totalAmount payload: an empty ledger closes with zero revenue (R25-01)', async () => {
         admin.from
             .mockReturnValueOnce(
                 createAdminQueryResult({
@@ -418,7 +418,7 @@ describe('/api/dashboard/staff/[id]/shift/close', () => {
                 p_actor_id: 'manager-user-id',
                 p_expected_revision: 7,
                 p_expected_settings: { percent_master: 60, percent_salon: 40, hourly_rate: 100 },
-                p_calculation: expect.objectContaining({ totalAmount: 1000, totalConsumables: 0 }),
+                p_calculation: expect.objectContaining({ totalAmount: 0, totalConsumables: 0 }),
             }),
         );
     });

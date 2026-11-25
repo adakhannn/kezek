@@ -22,6 +22,9 @@ export default function ProfileScreen() {
     setNotifyWhatsApp,
     saveProfile,
     confirmSignOut,
+    openPrivacy,
+    openTerms,
+    deleteAccount,
     isSaving,
     isSigningOut,
   } = useProfileScreenData();
@@ -54,6 +57,9 @@ export default function ProfileScreen() {
       onNotifyWhatsAppChange={setNotifyWhatsApp}
       onSave={saveProfile}
       onSignOut={confirmSignOut}
+      onOpenPrivacy={openPrivacy}
+      onOpenTerms={openTerms}
+      onDeleteAccount={deleteAccount}
       isSaving={isSaving}
       isSigningOut={isSigningOut}
     />

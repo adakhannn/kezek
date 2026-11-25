@@ -107,6 +107,7 @@ export async function setupFinanceFixture(sql) {
  await sql(await migration('20261119120000_promotion_visits_exclude_priced_booking.sql'));
  // ARCH-11: the business-day redefinitions of the functions this fixture builds.
  await applyMigrationFunctionsWhereExist(sql,'20261125100000_business_time_zone_days.sql');
+ await sql(await migration('20261125110000_reopened_shift_close_cap.sql'));
  await sql(`grant usage on schema public,auth to anon,authenticated,service_role;
  grant execute on function auth.uid(),auth.role() to anon,authenticated,service_role;
  grant all on all tables in schema public,auth to service_role;

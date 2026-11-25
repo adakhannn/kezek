@@ -28,9 +28,9 @@ test('deployment defaults to disabled and never constructs a service client', as
 });
 test('authorized enabled invocation returns bounded worker outcomes', async () => {
     process.env.BOOKING_NOTIFICATION_WORKER_ENABLED = 'true';
-    jest.mocked(runBookingNotificationWorker).mockResolvedValue({ claimed: 2, outcomes: ['sent', 'failed'], pruned: 1 });
+    jest.mocked(runBookingNotificationWorker).mockResolvedValue({ claimed: 2, outcomes: ['sent', 'failed'], errors: 0, pruned: 1 });
     const result = await GET(new Request('http://localhost', { headers: { authorization: 'Bearer synthetic-cron' } }));
-    expect(await result.json()).toEqual({ ok: true, enabled: true, claimed: 2, outcomes: ['sent', 'failed'], pruned: 1 });
+    expect(await result.json()).toEqual({ ok: true, enabled: true, claimed: 2, outcomes: ['sent', 'failed'], errors: 0, pruned: 1 });
     expect(runBookingNotificationWorker).toHaveBeenCalledTimes(1);
     expect(logError).not.toHaveBeenCalled();
 });
@@ -43,4 +43,12 @@ test('a worker failure keeps the 503 body and logs the thrown error (ARCH-04)', 
     expect(await result.json()).toEqual({ ok: false, error: 'outbox_worker_failed' });
     expect(logError).toHaveBeenCalledTimes(1);
     expect(logError).toHaveBeenCalledWith('BookingNotificationsCron', 'Outbox worker failed', failure);
+});
+test('a run with worker errors is reported as failed to cron tracking (R25-13)', async () => {
+    process.env.BOOKING_NOTIFICATION_WORKER_ENABLED = 'true';
+    jest.mocked(runBookingNotificationWorker).mockResolvedValue({ claimed: 2, outcomes: ['sent', 'retry'], errors: 1, pruned: 0 });
+    const result = await GET(new Request('http://localhost', { headers: { authorization: 'Bearer synthetic-cron' } }));
+    expect(result.status).toBe(503);
+    expect(await result.json()).toEqual({ ok: false, enabled: true, claimed: 2, outcomes: ['sent', 'retry'], errors: 1, pruned: 0 });
+    expect(logError).toHaveBeenCalledWith('BookingNotificationsCron', 'Outbox worker finished with errors', { claimed: 2, errors: 1 });
 });

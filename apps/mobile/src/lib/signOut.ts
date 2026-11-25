@@ -1,13 +1,8 @@
-import * as SecureStore from 'expo-secure-store';
-
 import { translatePlural } from '../i18n/plural';
 import { createTranslate, type Translate } from '../i18n/translate';
-import { clearShiftOfflineData, getOfflineQueue } from '../screens/shiftQuick/offlineStorage';
-import { TRANSIENT_AUTH_STORAGE_KEYS } from './authStorageKeys';
+import { getOfflineQueue } from '../screens/shiftQuick/offlineStorage';
+import { clearLocalStateOnSignOut } from './accountLocalState';
 import { logWarn } from './log';
-import { clearOfflineBookings } from './offlineBookingsStorage';
-import { queryClient } from './queryClient';
-import { clearStaffSelection } from './staffSelectionStorage';
 import { supabase } from './supabase';
 
 type AuthWithLocalSessionRemoval = {
@@ -88,16 +83,6 @@ async function removeLocalSession(auth: AuthWithLocalSessionRemoval): Promise<vo
     await auth._removeSession();
 }
 
-async function clearSensitiveLocalState(userId?: string): Promise<void> {
-    await Promise.all([
-        ...TRANSIENT_AUTH_STORAGE_KEYS.map((key) => SecureStore.deleteItemAsync(key)),
-        clearShiftOfflineData(),
-        userId ? clearOfflineBookings(userId) : Promise.resolve(),
-        userId ? clearStaffSelection(userId) : Promise.resolve(),
-    ]);
-    queryClient.clear();
-}
-
 export async function signOutSafely(): Promise<SignOutResult> {
     const auth = supabase.auth as unknown as AuthWithLocalSessionRemoval;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -136,6 +121,6 @@ export async function signOutSafely(): Promise<SignOutResult> {
         }
     }
 
-    await clearSensitiveLocalState(userId);
+    await clearLocalStateOnSignOut(userId);
     return { usedLocalFallback };
 }

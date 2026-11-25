@@ -107,3 +107,8 @@ export async function clearShiftOfflineData(): Promise<void> {
         SecureStore.deleteItemAsync(OFFLINE_CACHE_KEY),
     ]);
 }
+
+/** The cached finances only; the queue of unsent operations stays (R25-05). */
+export async function clearShiftCache(): Promise<void> {
+    await SecureStore.deleteItemAsync(OFFLINE_CACHE_KEY);
+}

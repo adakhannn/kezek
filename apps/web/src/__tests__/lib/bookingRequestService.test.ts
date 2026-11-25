@@ -37,6 +37,7 @@ test.each([
     ['exclusion violation', '23P01', 409, 'booking_slot_unavailable'],
     ['BOOKING_AUTH_REQUIRED', undefined, 401, 'auth'],
     ['BOOKING_FORBIDDEN', undefined, 403, 'forbidden'],
+    ['BUSINESS_NOT_BOOKABLE', '22023', 403, 'business_not_bookable'],
     ['client no longer exists', '23503', 400, 'validation'],
     ['SCHEDULE_OUTSIDE_WORKING_HOURS', undefined, 400, 'validation'],
     ['invalid uuid contains private value', '22P02', 400, 'validation'],

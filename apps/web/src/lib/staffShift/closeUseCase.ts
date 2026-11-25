@@ -29,10 +29,12 @@ export type CloseStaffShiftInput = {
     now: Date;
     staff: StaffFinanceSettings;
     shift: StaffShiftSnapshot | null;
+    /** The saved shift ledger. Totals come only from it: an empty ledger closes with 0 (R25-01). */
     items: CloseShiftItemInput[];
-    totalAmountRaw: number;
-    consumablesAmountRaw: number;
 };
+
+/** Money is stored as numeric(12,2); summing floats in JS must not leave 0.0000000002 behind (R25-02). */
+const toCents = (value: number) => Math.round(value * 100) / 100;
 
 export type CloseStaffShiftDomainResult =
     | {
@@ -56,13 +58,13 @@ export type CloseStaffShiftDomainResult =
  * Не знает про Supabase, HTTP, RPC — только про:
  * - наличие/статус смены,
  * - настройки сотрудника,
- * - позиции смены (items) и суммарные значения из тела запроса,
+ * - сохранённые позиции смены (items) — суммы считаются только из них,
  * - расчёт hoursWorked и ShiftFinancials.
  */
 export function closeStaffShiftUseCase(
     input: CloseStaffShiftInput,
 ): CloseStaffShiftDomainResult {
-    const { now, staff, shift, items, totalAmountRaw, consumablesAmountRaw } = input;
+    const { now, staff, shift, items } = input;
 
     if (!shift) {
         return { kind: 'no_shift' };
@@ -93,9 +95,8 @@ export function closeStaffShiftUseCase(
         return sum + (Number.isFinite(value) && value > 0 ? value : 0);
     }, 0);
 
-    const totalAmount = safeItems.length > 0 ? totalServiceAmount : Number(totalAmountRaw || 0);
-    const totalConsumables =
-        safeItems.length > 0 ? totalConsumablesFromItems : Number(consumablesAmountRaw || 0);
+    const totalAmount = toCents(totalServiceAmount);
+    const totalConsumables = toCents(totalConsumablesFromItems);
 
     let hoursWorked: number | null = null;
 

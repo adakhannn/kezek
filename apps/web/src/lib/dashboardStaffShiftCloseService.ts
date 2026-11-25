@@ -117,7 +117,8 @@ export async function runDashboardStaffShiftClose({
         };
     }
 
-    const { items = [], totalAmount: totalAmountRaw = 0, consumablesAmount = 0, expectedShiftId, expectedRevision } = validationResult.data;
+    // totalAmount/consumablesAmount in the body are ignored: totals come from the saved ledger (R25-01).
+    const { items = [], expectedShiftId, expectedRevision } = validationResult.data;
     const now = new Date();
 
     const { data: existing, error: loadError } = await admin
@@ -182,8 +183,6 @@ export async function runDashboardStaffShiftClose({
         },
         shift: snapshot.shift,
         items: savedItems,
-        totalAmountRaw,
-        consumablesAmountRaw: consumablesAmount,
     });
 
     if (decision.kind === 'no_shift') {

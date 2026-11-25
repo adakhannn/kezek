@@ -65,6 +65,7 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     // pg_cron is not installed here; besides its drops, 20261119020000 only schedules two cleanup jobs.
     sql("create schema cron; create function cron.schedule(text,text,text) returns bigint language sql as 'select 1::bigint';");
     sql(readFileSync(path.join(root,'supabase/migrations/20261119020000_dead_functions_and_cleanup_jobs.sql'),'utf8'));
+    sql(readFileSync(path.join(root,'supabase/migrations/20261125120000_booking_outbox_health_window.sql'),'utf8'));
     assert.equal(sql("select to_regprocedure('public.claim_booking_notifications(integer,integer)') is null;"),'t','the old claim is gone');
     const bookingId=addBooking();
     const firstEvent=call(`select enqueue_booking_notification('${bookingId}','confirm');`);
@@ -153,6 +154,10 @@ const delivery = (channel, suffix = 'a') => ({ key: channel+':'+suffix.repeat(64
     const health=JSON.parse(call('select booking_notification_backlog_health();'));
     assert.deepEqual({...health,oldest_due_age_seconds:0},{pending:2,due:2,processing:0,failed:1,ambiguous:1,oldest_due_age_seconds:0});
     assert(health.oldest_due_age_seconds>=0);
+    // R25-14: failures and uncertain deliveries older than 24 hours no longer keep the queue red.
+    sql("update booking_notification_outbox set completed_at=now()-interval '25 hours' where status='failed';");
+    const aged=JSON.parse(call('select booking_notification_backlog_health();'));
+    assert.deepEqual({...aged,oldest_due_age_seconds:0},{pending:2,due:2,processing:0,failed:0,ambiguous:0,oldest_due_age_seconds:0});
     const nextBatch=JSON.parse(call(`select claim_booking_notification_batch(2,90,array['${firstBatch.id}','${secondBatch.id}']::uuid[]);`));
     assert.equal(nextBatch.length,1);assert(!batch.some(row=>row.id===nextBatch[0].id),'same-run continuation excluded');
     failure("set role service_role; select claim_booking_notification_batch(3,90,'{}');",/INVALID_OUTBOX_CLAIM/);

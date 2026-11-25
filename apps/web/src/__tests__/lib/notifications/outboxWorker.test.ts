@@ -1,3 +1,5 @@
+jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
+import { logError } from '@/lib/log';
 import { runBookingNotificationWorker } from '@/lib/notifications/outboxWorker';
 import { OutboxStoreError } from '@/lib/notifications/outboxStore';
 import { ProviderDeliveryError, type OutboxEvent, type StoredDelivery } from '@/lib/notifications/outboxTypes';
@@ -8,6 +10,8 @@ const delivery = (channel: StoredDelivery['channel'], status: StoredDelivery['st
     delivery_key: `${channel}:recipient-hash`, channel, payload: { text: 'immutable' }, status,
     sent_at: status === 'sent' ? '2034-01-01' : null, first_attempt_at: null, last_error_code: null,
 });
+
+beforeEach(() => { jest.mocked(logError).mockClear(); });
 
 function setup(deliveries = [delivery('email')]) {
     const store = {
@@ -131,4 +135,52 @@ test('a retry or immediate continuation is excluded for the entire invocation', 
     const result = await runBookingNotificationWorker(deps);
     expect(result.outcomes).toEqual(['retry']); expect(deps.send).toHaveBeenCalledTimes(1);
     expect(deps.store.claim).toHaveBeenLastCalledWith([event.id], 2);
+});
+
+test('an unexpected processing error is logged with the event id and counted for the cron receipt (R25-13)', async () => {
+    const deps = setup(); deps.store.claim.mockImplementation(async (exclude: string[]) => exclude.includes(event.id) ? [] : [{ ...event, prepared_at: null }]);
+    const cause = new Error('Lookup unavailable');
+    deps.plan.mockRejectedValue(cause);
+    const result = await runBookingNotificationWorker(deps);
+    expect(result.errors).toBe(1);
+    expect(deps.store.finish).toHaveBeenLastCalledWith(expect.anything(), 'retry', 'worker_incomplete', 0);
+    expect(logError).toHaveBeenCalledWith('BookingNotificationWorker', 'Outbox event processing failed',
+        { eventId: event.id, eventType: 'confirm', attempt: 1, error: cause });
+});
+
+test('a clean run and a concurrent obsolete event report no errors', async () => {
+    const clean = setup();
+    expect((await runBookingNotificationWorker(clean)).errors).toBe(0);
+    const raced = setup(); raced.store.deliveries.mockRejectedValue(new OutboxStoreError('OUTBOX_EVENT_OBSOLETE'));
+    const result = await runBookingNotificationWorker(raced);
+    expect(result.errors).toBe(0);
+    expect(raced.store.finish).toHaveBeenLastCalledWith(event, 'obsolete', 'worker_incomplete', 0);
+    expect(logError).not.toHaveBeenCalled();
+});
+
+test('an unexpected send exception is logged before it becomes an unknown provider outcome', async () => {
+    const deps = setup([delivery('telegram')]); const cause = new TypeError('fetch failed');
+    deps.send.mockRejectedValueOnce(cause);
+    await runBookingNotificationWorker(deps);
+    expect(deps.store.fail).toHaveBeenCalledWith(event, 'telegram:recipient-hash', 'ambiguous', 'provider_outcome_unknown');
+    expect(logError).toHaveBeenCalledWith('BookingNotificationWorker', 'Delivery send failed with an unexpected error',
+        { eventId: event.id, channel: 'telegram', error: cause });
+});
+
+test.each(['hold', 'confirm', 'cancel'] as const)('%s about a booking that has already started is closed without sending (R25-15)', async type => {
+    const deps = setup();
+    const status = type === 'hold' ? 'hold' : type === 'confirm' ? 'confirmed' : 'cancelled';
+    deps.store.claim.mockImplementation(async (exclude: string[]) => exclude.includes(event.id) ? [] : [{ ...event, event_type: type, prepared_at: null }]);
+    deps.store.booking.mockResolvedValue({ id: 'booking', status, notification_revision: 4, start_at: '2034-01-01T10:00:00Z' });
+    await runBookingNotificationWorker({ ...deps, now: () => Date.parse('2034-01-01T10:00:00Z') });
+    expect(deps.plan).not.toHaveBeenCalled(); expect(deps.send).not.toHaveBeenCalled();
+    expect(deps.store.finish).toHaveBeenLastCalledWith(expect.objectContaining({ id: event.id }), 'obsolete', 'booking_in_past', 0);
+});
+
+test('a booking that starts later is still notified', async () => {
+    const deps = setup();
+    deps.store.booking.mockResolvedValue({ id: 'booking', status: 'confirmed', notification_revision: 4, start_at: '2034-01-01T10:00:01Z' });
+    await runBookingNotificationWorker({ ...deps, now: () => Date.parse('2034-01-01T10:00:00Z') });
+    expect(deps.send).toHaveBeenCalledTimes(1);
+    expect(deps.store.finish).toHaveBeenLastCalledWith(event, 'sent', '', 0);
 });

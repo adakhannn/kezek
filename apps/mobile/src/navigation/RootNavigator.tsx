@@ -19,7 +19,7 @@ import { useRootNavigationSession } from './useRootNavigationSession';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-    const { loading, hasSession } = useRootNavigationSession();
+    const { loading, hasSession, session } = useRootNavigationSession();
     const { t, ready: languageReady } = useLanguage();
 
     // Waits for the stored language too, so the first screen is not drawn in Russian first.
@@ -32,7 +32,7 @@ export default function RootNavigator() {
     }
 
     return (
-        <BookingProvider>
+        <BookingProvider ownerId={session?.user?.id ?? null}>
             <NavigationContainer linking={linking}>
                 <Stack.Navigator screenOptions={rootStackScreenOptions}>
                     {hasSession ? SignedInStackScreens(Stack, t) : AuthStackScreen(Stack)}

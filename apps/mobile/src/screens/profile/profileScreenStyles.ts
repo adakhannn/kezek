@@ -73,6 +73,13 @@ export const styles = StyleSheet.create({
         marginTop: -colors.layout.space2,
         marginBottom: colors.layout.space3,
     },
+    accountButton: {
+        marginTop: colors.layout.space3,
+    },
+    accountHint: {
+        marginTop: colors.layout.space4,
+        marginBottom: colors.layout.space2,
+    },
     actions: {
         padding: colors.layout.space5,
         paddingBottom: colors.layout.space8,

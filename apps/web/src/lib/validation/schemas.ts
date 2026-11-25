@@ -161,7 +161,8 @@ export const closeShiftSchema = z.object({
     consumablesAmount: z.number().nonnegative('Consumables amount cannot be negative').optional(),
 }).strict().refine(
     (data) => {
-        // Либо items, либо totalAmount должны быть указаны
+        // Либо items, либо totalAmount должны быть указаны. Сервер totalAmount не использует: суммы
+        // закрытия считаются только из сохранённых позиций смены (R25-01); поле оставлено для старых клиентов.
         return (data.items && data.items.length > 0) || (data.totalAmount !== undefined && data.totalAmount !== null);
     },
     { message: 'Either items array or totalAmount must be provided' }

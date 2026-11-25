@@ -66,6 +66,9 @@ async function executeBookingCommand(supabase: BookingRequestSupabasePort, name:
         if (error.message === 'BOOKING_AUTH_REQUIRED') {
             return createErrorResponse('auth', 'Not signed in', undefined, 401);
         }
+        if (error.message === 'BUSINESS_NOT_BOOKABLE') {
+            return createErrorResponse('business_not_bookable', 'This business does not accept bookings', undefined, 403);
+        }
         if (error.message === 'BOOKING_FORBIDDEN') {
             return createErrorResponse('forbidden', 'Нет доступа к созданию записи для этого сотрудника или филиала', undefined, 403);
         }

@@ -1004,7 +1004,10 @@ export default function ProfileForm() {
                 />
             ) : null}
 
-            <AccountDeletionPanel />
+            {/* The mobile app opens this section by anchor to start deletion (App Store 5.1.1(v)). */}
+            <div id="account-deletion" className="scroll-mt-24">
+                <AccountDeletionPanel />
+            </div>
 
             <Card variant="elevated" padding="md" className="sticky bottom-4 z-10 border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] backdrop-blur">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

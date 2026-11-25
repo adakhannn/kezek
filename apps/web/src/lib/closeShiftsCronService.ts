@@ -64,7 +64,7 @@ async function closeSingleShift(supabase: ReturnType<typeof deadlineFinanceClien
     const closedAt = shiftCloseTime(snapshot, now);
     const decision = closeStaffShiftUseCase({ now: closedAt,
         staff: { percentMaster: staff.percent_master, percentSalon: staff.percent_salon, hourlyRate: staff.hourly_rate },
-        shift, items: savedShiftLedgerItems(items), totalAmountRaw: 0, consumablesAmountRaw: 0,
+        shift, items: savedShiftLedgerItems(items),
     });
     if (decision.kind !== 'ok') throw new Error('shift_not_open');
     if (!isShiftDurationWithinDay(decision.hoursWorked, snapshot.dayHours)) throw new Error('needs_review: shift hours outside local financial day');
