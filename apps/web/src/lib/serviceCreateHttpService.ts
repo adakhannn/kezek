@@ -4,7 +4,6 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { getBizContextForManagers } from '@/lib/authBiz';
 import {
   createServiceRouteEntry,
-  type ServiceCreateAdminLike,
   type ServiceCreateBody,
 } from '@/lib/serviceCreateRouteService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -14,7 +13,7 @@ export async function runServiceCreateHttp(req: Request): Promise<NextResponse> 
   const body = (await req.json().catch(() => ({}))) as ServiceCreateBody;
 
   const result = await createServiceRouteEntry({
-    admin: getServiceClient() as unknown as ServiceCreateAdminLike,
+    admin: getServiceClient(),
     bizId,
     body,
   });

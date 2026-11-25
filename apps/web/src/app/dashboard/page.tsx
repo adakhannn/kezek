@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 import { DashboardHomeClient } from './components/DashboardHomeClient';
@@ -20,11 +19,10 @@ type SupabaseServerClient = Awaited<ReturnType<typeof getBizContextForManagers>>
 
 async function count(
     supabase: SupabaseServerClient,
-    table: string,
+    table: 'staff' | 'services' | 'branches',
     filters: { col: string; eq?: FilterValue; gte?: FilterValue; lte?: FilterValue }[] = []
 ): Promise<number | null> {
-    // Generic counter over caller-chosen tables/columns: use the untyped client view.
-    let q = (supabase as unknown as SupabaseClient).from(table).select('id', { count: 'exact', head: true });
+    let q = supabase.from(table).select('id', { count: 'exact', head: true });
     for (const f of filters) {
         if (f.eq !== undefined && f.eq !== null) q = q.eq(f.col, f.eq);
         if (f.gte !== undefined && f.gte !== null) q = q.gte(f.col, f.gte);

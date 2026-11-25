@@ -1,3 +1,5 @@
+import type { DbTableClient } from '@/lib/supabaseTypes';
+
 export type ScheduleItem = {
   day_of_week: number;
   intervals: Array<{ start: string; end: string }>;
@@ -8,13 +10,7 @@ export type BranchScheduleBody = {
   schedule: ScheduleItem[];
 };
 
-export type BranchScheduleAdminLike = {
-  from(table: string): {
-    select?: (...args: unknown[]) => unknown;
-    delete?: () => unknown;
-    insert?: (...args: unknown[]) => Promise<{ error: { message: string } | null }>;
-  };
-};
+export type BranchScheduleAdminLike = DbTableClient;
 
 export type BranchScheduleResult<T> =
   | { ok: true; data: T }
@@ -30,20 +26,8 @@ async function ensureBranchBelongsToBiz(
   branchId: string,
   bizId: string,
 ) {
-  const branchQuery = admin.from('branches') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => {
-          maybeSingle: () => Promise<{
-            data: { id: string; biz_id: string } | null;
-            error: { message: string } | null;
-          }>;
-        };
-      };
-    };
-  };
-
-  const { data: branch, error: branchError } = await branchQuery
+  const { data: branch, error: branchError } = await admin
+    .from('branches')
     .select('id, biz_id')
     .eq('id', branchId)
     .eq('biz_id', bizId)
@@ -79,20 +63,8 @@ export async function getBranchSchedule(params: {
     return ownership;
   }
 
-  const scheduleQuery = params.admin.from('branch_working_hours') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => {
-          order: (...args: unknown[]) => Promise<{
-            data: ScheduleItem[] | null;
-            error: { message: string } | null;
-          }>;
-        };
-      };
-    };
-  };
-
-  const { data: schedule, error: scheduleError } = await scheduleQuery
+  const { data: schedule, error: scheduleError } = await params.admin
+    .from('branch_working_hours')
     .select('day_of_week, intervals, breaks')
     .eq('biz_id', params.bizId)
     .eq('branch_id', params.branchId)
@@ -110,7 +82,8 @@ export async function getBranchSchedule(params: {
   return {
     ok: true,
     data: {
-      schedule: schedule || [],
+      // intervals/breaks are jsonb; saveBranchSchedule writes them in the ScheduleItem shape.
+      schedule: (schedule || []) as ScheduleItem[],
     },
   };
 }
@@ -135,15 +108,7 @@ export async function saveBranchSchedule(params: {
     };
   }
 
-  const deleteQuery = params.admin.from('branch_working_hours') as {
-    delete: () => {
-      eq: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => Promise<{ data: null; error: null }>;
-      };
-    };
-  };
-
-  await deleteQuery.delete().eq('biz_id', params.bizId).eq('branch_id', params.branchId);
+  await params.admin.from('branch_working_hours').delete().eq('biz_id', params.bizId).eq('branch_id', params.branchId);
 
   const inserts = params.body.schedule
     .filter((s) => s.intervals.length > 0)
@@ -156,11 +121,7 @@ export async function saveBranchSchedule(params: {
     }));
 
   if (inserts.length > 0) {
-    const insertQuery = params.admin.from('branch_working_hours') as {
-      insert: (...args: unknown[]) => Promise<{ error: { message: string } | null }>;
-    };
-
-    const { error: insertError } = await insertQuery.insert(inserts);
+    const { error: insertError } = await params.admin.from('branch_working_hours').insert(inserts);
     if (insertError) {
       return {
         ok: false,

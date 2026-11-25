@@ -2,6 +2,8 @@ import crypto from 'crypto';
 
 import { logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
+import type { DbTableClient } from '@/lib/supabaseTypes';
+import type { Json } from '@/types/supabase';
 
 export type WhatsAppMobileMetricType =
     | 'mobile_whatsapp_login_started'
@@ -10,13 +12,7 @@ export type WhatsAppMobileMetricType =
     | 'mobile_whatsapp_login_failed'
     | 'mobile_whatsapp_login_expired';
 
-export type WhatsAppMobileMetricsAdminLike = {
-    from(table: 'analytics_events'): {
-        insert: (payload: Record<string, unknown>) => PromiseLike<{
-            error: { message?: string } | null;
-        }>;
-    };
-};
+export type WhatsAppMobileMetricsAdminLike = DbTableClient;
 
 function sha256(input?: string | null) {
     if (!input) {
@@ -49,14 +45,12 @@ export async function trackWhatsAppMobileMetric(
     };
 
     try {
-        const admin =
-            options?.admin ??
-            (getServiceClient() as unknown as WhatsAppMobileMetricsAdminLike);
+        const admin = options?.admin ?? getServiceClient();
         const { error } = await admin.from('analytics_events').insert({
             event_type: eventType,
             source: 'mobile_auth_whatsapp',
             session_id: attemptHash,
-            metadata,
+            metadata: metadata as NonNullable<Json>,
         });
 
         if (error) {

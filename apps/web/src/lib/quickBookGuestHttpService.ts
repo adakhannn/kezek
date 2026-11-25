@@ -5,7 +5,6 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { readBookingRequestIdentity } from '@/lib/bookingRequestHttp';
 import {
     type QuickBookGuestInput,
-    type QuickBookGuestSupabasePort,
     runQuickBookGuest,
 } from '@/lib/quickBookGuestService';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -63,7 +62,7 @@ export async function runQuickBookGuestHttp(req: Request): Promise<NextResponse>
         return normalized;
     }
 
-    const admin = createSupabaseAdminClient() as unknown as QuickBookGuestSupabasePort;
+    const admin = createSupabaseAdminClient();
     const result = await runQuickBookGuest(
         {
             admin,

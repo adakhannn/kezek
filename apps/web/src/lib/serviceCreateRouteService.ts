@@ -1,3 +1,5 @@
+import type { DbTableClient } from '@/lib/supabaseTypes';
+
 export type ServiceCreateBody = {
   name_ru: string;
   name_ky?: string | null;
@@ -10,12 +12,7 @@ export type ServiceCreateBody = {
   branch_id?: string | null;
 };
 
-export type ServiceCreateAdminLike = {
-  from(table: string): {
-    select?: (...args: unknown[]) => unknown;
-    insert?: (...args: unknown[]) => unknown;
-  };
-};
+export type ServiceCreateAdminLike = DbTableClient;
 
 export type ServiceCreateResult =
   | { ok: true; data: { count: number; ids: string[] } }
@@ -98,18 +95,8 @@ export async function createServiceRouteEntry(params: {
     };
   }
 
-  const branchesQuery = admin.from('branches') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        in: (...args: unknown[]) => Promise<{
-          data: Array<{ id: string }> | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
-
-  const { data: brRows, error: brErr } = await branchesQuery
+  const { data: brRows, error: brErr } = await admin
+    .from('branches')
     .select('id')
     .eq('biz_id', bizId)
     .in('id', branchIds);
@@ -150,16 +137,8 @@ export async function createServiceRouteEntry(params: {
     active,
   }));
 
-  const servicesQuery = admin.from('services') as {
-    insert: (...args: unknown[]) => {
-      select: (...args: unknown[]) => Promise<{
-        data: Array<{ id: string; branch_id: string }> | null;
-        error: { message: string } | null;
-      }>;
-    };
-  };
-
-  const { data: inserted, error: insErr } = await servicesQuery
+  const { data: inserted, error: insErr } = await admin
+    .from('services')
     .insert(rows)
     .select('id, branch_id');
 

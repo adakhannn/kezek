@@ -1,21 +1,9 @@
 import { logError } from '@/lib/log';
+import type { DbClient } from '@/lib/supabaseTypes';
 import type { TelegramAuthData } from '@/lib/telegram/verify';
 import { normalizeTelegramData, verifyTelegramAuth } from '@/lib/telegram/verify';
 
-export type TelegramLinkSupabaseLike = {
-  from(table: string): {
-    select?: (...args: unknown[]) => unknown;
-    update?: (...args: unknown[]) => unknown;
-  };
-  auth: {
-    admin: {
-      updateUserById: (
-        userId: string,
-        payload: Record<string, unknown>,
-      ) => Promise<{ error: { message?: string } | null }>;
-    };
-  };
-};
+export type TelegramLinkSupabaseLike = Pick<DbClient, 'from' | 'auth'>;
 
 export type TelegramLinkUser = {
   id: string;
@@ -51,18 +39,8 @@ export async function linkTelegramAccount(params: {
 
   const normalized = normalizeTelegramData(body);
 
-  const existingProfileQuery = admin.from('profiles') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: () => Promise<{
-          data: { id: string | null; telegram_id: number | null } | null;
-          error: null;
-        }>;
-      };
-    };
-  };
-
-  const { data: existingProfile } = await existingProfileQuery
+  const { data: existingProfile } = await admin
+    .from('profiles')
     .select('id, telegram_id')
     .eq('telegram_id', normalized.telegram_id)
     .maybeSingle();
@@ -77,13 +55,8 @@ export async function linkTelegramAccount(params: {
     };
   }
 
-  const profileUpdateQuery = admin.from('profiles') as {
-    update: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => Promise<{ error: { message?: string } | null }>;
-    };
-  };
-
-  const { error: profileUpdateError } = await profileUpdateQuery
+  const { error: profileUpdateError } = await admin
+    .from('profiles')
     .update({
       telegram_id: normalized.telegram_id,
       telegram_username: normalized.telegram_username,

@@ -1,7 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { type PublicContactFields, validatePublicContacts } from '@/lib/businessContacts';
 import { sanitizeDirectoryLinks, validateDirectoryLinks } from '@/lib/directoryLinks';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
 
 export type BranchCreateBody = PublicContactFields & {
@@ -14,12 +13,7 @@ export type BranchCreateBody = PublicContactFields & {
   inherit_business_contacts?: boolean;
 };
 
-export type BranchCreateAdminLike = {
-  // Supabase's generated PostgREST types are intentionally not coupled to this
-  // small service: the service is shared by admin and owner API clients.
-
-  from: SupabaseClient['from'];
-};
+export type BranchCreateAdminLike = DbTableClient;
 
 export type BranchCreateResult =
   | { ok: true; data: { id: string | null | undefined } }

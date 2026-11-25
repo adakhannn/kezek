@@ -4,7 +4,6 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { getBizContextForManagers } from '@/lib/authBiz';
 import {
   createBranch,
-  type BranchCreateAdminLike,
   type BranchCreateBody,
 } from '@/lib/branchCreateService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -31,7 +30,7 @@ export async function runBranchCreateHttp(req: Request): Promise<NextResponse> {
 
   const body = (await req.json().catch(() => ({} as BranchCreateBody))) as BranchCreateBody;
   const result = await createBranch({
-    admin: getServiceClient() as unknown as BranchCreateAdminLike,
+    admin: getServiceClient(),
     bizId,
     body,
   });

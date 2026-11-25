@@ -1,10 +1,10 @@
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
-type BusinessTzReader = Pick<SupabaseClient, 'from'>;
+type BusinessTzReader = DbTableClient;
 
 /**
  * The time zone of business `bizId` (`businesses.tz`, ARCH-11), Asia/Bishkek when NULL, unknown or
@@ -12,7 +12,7 @@ type BusinessTzReader = Pick<SupabaseClient, 'from'>;
  */
 export async function loadBusinessTimeZone(bizId: string, client?: BusinessTzReader): Promise<string> {
     try {
-        const db = client ?? (getServiceClient() as unknown as BusinessTzReader);
+        const db = client ?? getServiceClient();
         const { data, error } = await db.from('businesses').select('tz').eq('id', bizId).maybeSingle<{ tz: string | null }>();
         if (error) logWarn('BusinessTimeZone', 'Failed to read business time zone, using the default', { bizId, error: error.message });
         return resolveBusinessTimeZone(data?.tz);

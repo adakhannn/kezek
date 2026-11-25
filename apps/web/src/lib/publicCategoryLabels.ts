@@ -1,15 +1,7 @@
 import { logWarn } from '@/lib/log';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
-export type PublicCategoryClient = {
-    from(table: string): {
-        select: (columns: string) => {
-            in: (column: string, values: string[]) => PromiseLike<{
-                data: {slug: string; name_ru: string | null}[] | null;
-                error: unknown;
-            }>;
-        };
-    };
-};
+export type PublicCategoryClient = DbTableClient;
 
 /** Category slugs are filter identities, not display names. Only public metadata is read. */
 export async function loadPublicCategoryLabels(client: PublicCategoryClient, slugs: string[]): Promise<Record<string, string>> {

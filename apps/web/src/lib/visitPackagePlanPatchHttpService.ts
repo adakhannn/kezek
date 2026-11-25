@@ -5,7 +5,6 @@ import { getRouteParamUuid } from '@/lib/routeParams';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { visitPackagePlanPatchSchema } from '@/lib/validation/schemas';
 import {
-  type VisitPackagePlansAdminLike,
   updateVisitPackagePlan,
 } from '@/lib/visitPackagePlansService';
 import { withManagerContext } from '@/lib/withManagerContext';
@@ -22,7 +21,7 @@ export async function runVisitPackagePlanPatchHttp(
 
   return withManagerContext(req, 'VisitPackagePlanPatch', async ({ admin, bizId }) => {
     const result = await updateVisitPackagePlan({
-      admin: admin as unknown as VisitPackagePlansAdminLike,
+      admin,
       planId,
       bizId,
       body: validationResult.data,

@@ -6,11 +6,8 @@
  * silently dropped matching branches once the catalogue grew.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { logWarn } from '@/lib/log';
-import type { PublicCategoryClient } from '@/lib/publicCategoryLabels';
-import type { Database } from '@/types/supabase';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
 // `businesses` alone is ambiguous from branches (business_hourly_load is a
 // second path), so the owning foreign key is named explicitly.
@@ -45,25 +42,7 @@ export type ApprovedBranchFilters = {
     bounds?: GeoBounds;
 };
 
-type QueryResult = PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>;
-type BranchQuery = {
-    eq(column: string, value: unknown): BranchQuery;
-    not(column: string, operator: string, value: unknown): BranchQuery;
-    gte(column: string, value: number): BranchQuery;
-    lte(column: string, value: number): BranchQuery;
-    contains(column: string, value: string[]): BranchQuery;
-    order(column: string): { range(from: number, to: number): QueryResult };
-};
-export type BranchDiscoveryClient = { from(table: string): { select(columns: string): unknown } };
-
-/**
- * The embedded select string is not representable in the typed query builder,
- * and checking the generated client against the narrow shape structurally hits
- * TS2589, so the conversion happens once, here.
- */
-export function asDiscoveryClient(supabase: SupabaseClient<Database>): BranchDiscoveryClient & PublicCategoryClient {
-    return supabase as unknown as BranchDiscoveryClient & PublicCategoryClient;
-}
+export type BranchDiscoveryClient = DbTableClient;
 
 export type ApprovedBranchesResult =
     | { ok: true; rows: ApprovedBranchRow[]; truncated: boolean }
@@ -106,7 +85,9 @@ export async function loadApprovedBranches(
     const rows: ApprovedBranchRow[] = [];
 
     while (rows.length < MAX_BRANCH_ROWS) {
-        let query = (supabase.from('branches').select(SELECT) as BranchQuery)
+        let query = supabase
+            .from('branches')
+            .select(SELECT)
             .eq('is_active', true)
             .eq('businesses.is_approved', true)
             .not('lat', 'is', null)

@@ -1,3 +1,5 @@
+import type { DbClient, DbInsert } from '@/lib/supabaseTypes';
+
 export type ProfileUpdateBody = {
   full_name?: string | null;
   phone?: string | null;
@@ -8,30 +10,7 @@ export type ProfileUpdateBody = {
   notification_emails?: string[];
 };
 
-export type ProfileUpdateSupabaseLike = {
-  auth: {
-    getUser: () => Promise<{
-      data: {
-        user: {
-          id: string;
-          user_metadata?: Record<string, unknown> | null;
-        } | null;
-      };
-    }>;
-    updateUser: (params: {
-      data: Record<string, unknown>;
-    }) => Promise<{
-      error: { message: string } | null;
-    }>;
-  };
-  from(table: string): {
-    select?: (...args: unknown[]) => unknown;
-    upsert?: (...args: unknown[]) => Promise<{
-      error: { message: string } | null;
-    }>;
-  };
-  rpc(name: string, params: Record<string, unknown>): Promise<{ error: { message: string } | null }>;
-};
+export type ProfileUpdateSupabaseLike = Pick<DbClient, 'auth' | 'from' | 'rpc'>;
 
 export type ProfileUpdateResult =
   | { ok: true; data: undefined }
@@ -68,16 +47,8 @@ export async function updateProfileSettings(params: {
   const requestedNotifyWhatsApp = params.body.notify_whatsapp ?? true;
   const requestedNotifyTelegram = params.body.notify_telegram ?? true;
 
-  const { data: currentProfile } = await (params.supabase.from('profiles') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: <T>() => Promise<{
-          data: T | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  })
+  const { data: currentProfile } = await params.supabase
+    .from('profiles')
     .select('whatsapp_phone, whatsapp_verified, telegram_id, telegram_verified')
     .eq('id', user.id)
     .maybeSingle<{
@@ -95,7 +66,7 @@ export async function updateProfileSettings(params: {
   // Identity columns (whatsapp_phone/whatsapp_verified, telegram_id/telegram_verified, ...)
   // are written only by provider verification flows with a privileged client.
   // user_metadata is editable by the user and must never be trusted as proof.
-  const upsertData: Record<string, unknown> = {
+  const upsertData: DbInsert<'profiles'> = {
     id: user.id,
     full_name,
     phone,
@@ -105,11 +76,7 @@ export async function updateProfileSettings(params: {
     notify_telegram,
   };
 
-  const { error: profileError } = await (params.supabase.from('profiles') as {
-    upsert: (...args: unknown[]) => Promise<{
-      error: { message: string } | null;
-    }>;
-  }).upsert(upsertData, { onConflict: 'id' });
+  const { error: profileError } = await params.supabase.from('profiles').upsert(upsertData, { onConflict: 'id' });
 
   if (profileError) {
     return {

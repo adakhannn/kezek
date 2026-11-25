@@ -31,7 +31,7 @@ export async function runDashboardAnalyticsOverviewHttp(req: Request): Promise<N
 
     const { startDate, endDate } = queryValidation.data;
     // The default window ends on the business's own today (ARCH-11).
-    const tz = await loadBusinessTimeZone(bizId, admin as never);
+    const tz = await loadBusinessTimeZone(bizId, admin);
     const endStr = endDate ?? todayDateString(tz);
     const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 
@@ -60,7 +60,7 @@ export async function runDashboardAnalyticsLoadHttp(req: Request): Promise<NextR
 
     const { branchId, startDate, endDate } = queryValidation.data;
     // The default window ends on the business's own today (ARCH-11).
-    const tz = await loadBusinessTimeZone(bizId, admin as never);
+    const tz = await loadBusinessTimeZone(bizId, admin);
     const endStr = endDate ?? todayDateString(tz);
     const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 

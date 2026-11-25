@@ -11,22 +11,12 @@ import { logDebug, logError, logWarn } from '@/lib/log';
 import { MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 import { trackWhatsAppMobileMetric } from '@/lib/whatsAppMobileMetricsService';
 import { mapWhatsAppProviderError } from '@/lib/whatsAppMobileProviderErrorMapping';
 import { hashWhatsappOtp, hashWhatsappPhone } from '@/lib/whatsAppOtpHash';
 
-type AdminLike = {
-    from(table: string): {
-        insert: (payload: Record<string, unknown>) => {
-            select: (columns: string) => {
-                single: () => unknown;
-            };
-        };
-        update: (payload: Record<string, unknown>) => {
-            eq: (column: string, value: string) => unknown;
-        };
-    };
-};
+type AdminLike = DbTableClient;
 
 type Failure = {
     ok: false;
@@ -143,7 +133,7 @@ async function insertOtpAttempt({
     expiresAtIso: string;
     codeChallenge: string;
 }) {
-    const result = (await admin
+    const { data, error } = await admin
         .from('whatsapp_otp_codes')
         .insert({
             phone,
@@ -159,14 +149,13 @@ async function insertOtpAttempt({
             locked_until: null,
         })
         .select('id, expires_at')
-        .single()) as { data: unknown; error: { message?: string } | null };
-    const { data, error } = result;
+        .single();
 
     if (error || !data) {
         throw new Error(error?.message || 'Не удалось создать OTP попытку');
     }
 
-    return data as { id: string; expires_at: string };
+    return data;
 }
 
 export async function runWhatsAppMobileStartRoute({

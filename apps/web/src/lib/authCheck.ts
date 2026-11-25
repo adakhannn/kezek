@@ -3,8 +3,6 @@
  * Централизованная проверка принадлежности ресурсов к бизнесу пользователя
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { logError } from './log';
 import { getServiceClient } from './supabaseService';
 
@@ -17,14 +15,13 @@ import { getServiceClient } from './supabaseService';
  * @returns true если ресурс принадлежит бизнесу, false иначе
  */
 export async function checkResourceBelongsToBusiness(
-    table: string,
+    table: 'branches' | 'staff' | 'services' | 'bookings' | 'branch_promotions',
     resourceId: string,
     bizId: string,
     bizIdColumn: string = 'biz_id'
 ): Promise<{ belongs: boolean; error?: string }> {
     try {
-        // Generic helper over a caller-chosen table/column: use the untyped client view.
-        const admin = getServiceClient() as unknown as SupabaseClient;
+        const admin = getServiceClient();
         const { data, error } = await admin
             .from(table)
             .select(bizIdColumn)

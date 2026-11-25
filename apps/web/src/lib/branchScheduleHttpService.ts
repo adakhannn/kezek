@@ -5,7 +5,6 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 import {
   getBranchSchedule,
   saveBranchSchedule,
-  type BranchScheduleAdminLike,
   type BranchScheduleBody,
 } from '@/lib/branchScheduleService';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -20,7 +19,7 @@ export async function runGetBranchScheduleHttp(
   const { bizId } = await getBizContextForManagers();
 
   const result = await getBranchSchedule({
-    admin: getServiceClient() as unknown as BranchScheduleAdminLike,
+    admin: getServiceClient(),
     branchId,
     bizId,
   });
@@ -53,7 +52,7 @@ export async function runSaveBranchScheduleHttp(
   }
 
   const result = await saveBranchSchedule({
-    admin: getServiceClient() as unknown as BranchScheduleAdminLike,
+    admin: getServiceClient(),
     branchId,
     bizId,
     body,

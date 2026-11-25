@@ -3,10 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import {
-    type BusinessContactSettingsAdminLike,
-    updateBusinessContactSettings,
-} from '@/lib/businessContactSettingsService';
+import { updateBusinessContactSettings } from '@/lib/businessContactSettingsService';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { isBusinessOwner } from '@/lib/staffApplicationApprovalService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -35,7 +32,7 @@ export async function POST(req: Request) {
             const validation = await validateRequest(req, businessSettingsPatchSchema);
             if (!validation.success) return validation.response;
             const result = await updateBusinessContactSettings({
-                admin: admin as unknown as BusinessContactSettingsAdminLike,
+                admin,
                 bizId,
                 input: validation.data,
             });

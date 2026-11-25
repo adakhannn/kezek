@@ -1,3 +1,5 @@
+import type { DbTableClient, DbUpdate } from '@/lib/supabaseTypes';
+
 export type VisitPackagePlanRow = {
   id: string;
   biz_id: string;
@@ -31,13 +33,7 @@ export type VisitPackagePlanPatchBody = Partial<VisitPackagePlanCreateBody> & {
   is_active?: boolean;
 };
 
-export type VisitPackagePlansAdminLike = {
-  from(table: string): {
-    select?: (...args: unknown[]) => unknown;
-    insert?: (...args: unknown[]) => unknown;
-    update?: (...args: unknown[]) => unknown;
-  };
-};
+export type VisitPackagePlansAdminLike = DbTableClient;
 
 export type VisitPackagePlansResult<T> =
   | { ok: true; data: T }
@@ -69,7 +65,7 @@ function mapVisitPackagePlan(row: VisitPackagePlanRow) {
 }
 
 function buildVisitPackagePlanUpdate(body: VisitPackagePlanPatchBody) {
-  const update: Record<string, unknown> = {};
+  const update: DbUpdate<'visit_package_plans'> = {};
 
   if (body.name_ru !== undefined) update.name_ru = body.name_ru;
   if (body.name_ky !== undefined) update.name_ky = body.name_ky;
@@ -90,18 +86,8 @@ async function ensureVisitPackagePlanBelongsToBiz(params: {
   planId: string;
   bizId: string;
 }) {
-  const lookupQuery = params.admin.from('visit_package_plans') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: () => Promise<{
-          data: { id: string; biz_id: string } | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
-
-  const { data, error } = await lookupQuery
+  const { data, error } = await params.admin
+    .from('visit_package_plans')
     .select('id, biz_id')
     .eq('id', params.planId)
     .maybeSingle();
@@ -132,18 +118,8 @@ export async function listVisitPackagePlans(params: {
   admin: VisitPackagePlansAdminLike;
   bizId: string;
 }): Promise<VisitPackagePlansResult<{ plans: ReturnType<typeof mapVisitPackagePlan>[] }>> {
-  const query = params.admin.from('visit_package_plans') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        order: (...args: unknown[]) => Promise<{
-          data: VisitPackagePlanRow[] | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
-
-  const { data, error } = await query
+  const { data, error } = await params.admin
+    .from('visit_package_plans')
     .select('*')
     .eq('biz_id', params.bizId)
     .order('created_at', { ascending: false });
@@ -184,27 +160,8 @@ export async function createVisitPackagePlan(params: {
     };
   }>
 > {
-  const query = params.admin.from('visit_package_plans') as {
-    insert: (...args: unknown[]) => {
-      select: (...args: unknown[]) => {
-        single: () => Promise<{
-          data: {
-            id: string;
-            name_ru: string;
-            visit_count: number;
-            validity_days: number;
-            discount_type: 'percent' | 'fixed_price';
-            discount_value: number | string;
-            is_active: boolean;
-            created_at: string;
-          } | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
-
-  const { data, error } = await query
+  const { data, error } = await params.admin
+    .from('visit_package_plans')
     .insert({
       biz_id: params.bizId,
       name_ru: params.body.name_ru,
@@ -282,27 +239,8 @@ export async function updateVisitPackagePlan(params: {
     };
   }
 
-  const query = params.admin.from('visit_package_plans') as {
-    update: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => {
-          select: (...args: unknown[]) => {
-            single: () => Promise<{
-              data: {
-                id: string;
-                name_ru: string;
-                is_active: boolean;
-                updated_at: string;
-              } | null;
-              error: { message: string } | null;
-            }>;
-          };
-        };
-      };
-    };
-  };
-
-  const { data, error } = await query
+  const { data, error } = await params.admin
+    .from('visit_package_plans')
     .update(update)
     .eq('id', params.planId)
     .eq('biz_id', params.bizId)

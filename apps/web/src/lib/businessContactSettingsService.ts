@@ -1,16 +1,10 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import {
     validatePublicContactPatch,
 } from '@/lib/businessContacts';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 import { businessSettingsPatchSchema } from '@/lib/validation/businessUpdateSchemas';
 
-export type BusinessContactSettingsAdminLike = {
-    // Kept structurally small so this service can be unit-tested without
-    // coupling to the generated Supabase client type.
-
-    from: SupabaseClient['from'];
-};
+export type BusinessContactSettingsAdminLike = DbTableClient;
 
 export async function updateBusinessContactSettings(params: {
     admin: BusinessContactSettingsAdminLike;

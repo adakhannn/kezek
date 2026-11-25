@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { logDebug, logError } from '@/lib/log';
+import type { DbQueryClient } from '@/lib/supabaseTypes';
 import { telemetryMetadata, telemetrySessionId } from '@/lib/telemetryIngest';
 
 /** Closed, bounded schema (API-09); the server sets created_at. */
@@ -36,15 +37,7 @@ export const funnelEventSchema = z.object({
 
 export type FunnelEventInput = z.infer<typeof funnelEventSchema>;
 
-export type FunnelEventsAdminLike = {
-    from(table: string): {
-        insert?: (payload: Record<string, unknown>) => PromiseLike<{
-            error: { message: string; code?: string } | null;
-        }>;
-        select?: (...args: unknown[]) => unknown;
-    };
-    rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message: string } | null }>;
-};
+export type FunnelEventsAdminLike = DbQueryClient;
 
 export type FunnelEventsResult =
     | { ok: true }
@@ -60,7 +53,7 @@ export async function saveFunnelEvent(
         ...(typeof event.services_count === 'number' ? { services_count: event.services_count } : {}),
     };
 
-    const { error } = await admin.from('funnel_events').insert!({
+    const { error } = await admin.from('funnel_events').insert({
         event_type: event.event_type,
         source: event.source,
         biz_id: event.biz_id,
@@ -98,12 +91,9 @@ export async function canRecordQuickdeskEvent(
     userId: string,
     bizId: string,
 ): Promise<'allowed' | 'forbidden' | 'unavailable'> {
-    const staffQuery = admin.from('staff').select!('id') as {
-        eq: (column: string, value: unknown) => { eq: (column: string, value: unknown) => { eq: (column: string, value: unknown) => { limit: (count: number) => PromiseLike<{ data: unknown[] | null; error: unknown }> } } };
-    };
     const [manager, staff] = await Promise.all([
         admin.rpc('finance_can_manage_business', { p_actor_id: userId, p_biz_id: bizId }),
-        staffQuery.eq('user_id', userId).eq('biz_id', bizId).eq('is_active', true).limit(1),
+        admin.from('staff').select('id').eq('user_id', userId).eq('biz_id', bizId).eq('is_active', true).limit(1),
     ]);
     if (manager.error || staff.error) return 'unavailable';
     return manager.data === true || (staff.data ?? []).length > 0 ? 'allowed' : 'forbidden';

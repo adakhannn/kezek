@@ -4,13 +4,12 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import {
   createOrUpdateReview,
   type ReviewCreateBody,
-  type ReviewCreateSupabaseLike,
 } from '@/lib/reviewCreateService';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function runReviewCreateHttp(req: Request): Promise<NextResponse> {
   const result = await createOrUpdateReview({
-    supabase: (await createSupabaseServerClient()) as unknown as ReviewCreateSupabaseLike,
+    supabase: await createSupabaseServerClient(),
     body: (await req.json()) as ReviewCreateBody,
   });
 

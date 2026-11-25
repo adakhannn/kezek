@@ -1,7 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { logDebug, logError } from '@/lib/log';
 import type { ServerOperation } from '@/lib/performanceCore';
+import { nullableArg, type DbQueryClient } from '@/lib/supabaseTypes';
 import { addDaysToDateString } from '@/lib/time';
 
 type AlertPayload = {
@@ -10,10 +9,7 @@ type AlertPayload = {
     details?: Record<string, unknown>;
 };
 
-export type RecalculateRatingsSupabaseLike = {
-    from: SupabaseClient['from'];
-    rpc(fn: string, params: Record<string, unknown>): Promise<{ data: unknown; error: { message?: string; code?: string } | null }>;
-};
+export type RecalculateRatingsSupabaseLike = DbQueryClient;
 
 type MeasurePerformance = <T>(
     operation: ServerOperation,
@@ -202,7 +198,7 @@ export async function runRecalculateRatingsCron({
         'recalculate_ratings',
         async () => {
             if (rangeStartStr === yesterdayStr) {
-                return supabase.rpc('recalculate_ratings_for_date', { p_date: null });
+                return supabase.rpc('recalculate_ratings_for_date', { p_date: nullableArg<string>(null) });
             }
 
             return supabase.rpc('recalculate_ratings_for_date_range', {

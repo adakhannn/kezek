@@ -1,5 +1,5 @@
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
-import { getGlobalOverview, type GlobalOverviewClient } from '@/lib/adminGlobalOverviewService';
+import { getGlobalOverview } from '@/lib/adminGlobalOverviewService';
 import { ReportRangeError } from '@/lib/analyticsReportSnapshot';
 import { logError } from '@/lib/log';
 import { getCached, setCached } from '@/lib/simpleCache';
@@ -17,7 +17,7 @@ export async function readGlobalOverviewForCaller(startDate: string, endDate: st
   const cached = getCached<Awaited<ReturnType<typeof getGlobalOverview>>>(key);
   if (cached) return { ok: true as const, data: cached };
   try {
-    const data = await getGlobalOverview(getServiceClient() as unknown as GlobalOverviewClient, startDate, endDate);
+    const data = await getGlobalOverview(getServiceClient(), startDate, endDate);
     setCached(key, data, 60_000);
     return { ok: true as const, data };
   } catch (error) {

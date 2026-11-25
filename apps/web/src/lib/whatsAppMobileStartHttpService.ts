@@ -91,7 +91,7 @@ export async function runWhatsAppMobileStartHttp(req: Request): Promise<NextResp
     }
 
     const result = await runWhatsAppMobileStartRoute({
-        admin: createSupabaseAdminClient() as unknown as Parameters<typeof runWhatsAppMobileStartRoute>[0]['admin'],
+        admin: createSupabaseAdminClient(),
         phone: body.phone,
         codeChallenge: body.codeChallenge,
     });

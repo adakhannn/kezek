@@ -2,6 +2,7 @@ import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { logError } from '@/lib/log';
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
 export type VisitPackagesListQuery = {
   clientId?: string;
@@ -11,15 +12,6 @@ export type VisitPackagesListQuery = {
 
 export type SellVisitPackageBody = {
   plan_id: string;
-};
-
-type VisitPackagePlanListRow = {
-  id: string;
-  name_ru: string;
-  name_ky: string | null;
-  name_en: string | null;
-  visit_count: number;
-  branch_ids: string[] | null;
 };
 
 type ClientVisitPackageRow = {
@@ -39,15 +31,8 @@ const SOLD_PACKAGE_COLUMNS = 'id, client_id, plan_id, remaining_visits, valid_un
  * business calendar, not UTC (in Bishkek the UTC date is yesterday until 06:00).
  */
 async function businessToday(admin: VisitPackagesAdminLike, bizId: string, now: Date): Promise<string> {
-  const lookup = admin.from('businesses') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: () => Promise<{ data: { tz: string | null } | null; error: { message: string } | null }>;
-      };
-    };
-  };
   try {
-    const { data } = await lookup.select('tz').eq('id', bizId).maybeSingle();
+    const { data } = await admin.from('businesses').select('tz').eq('id', bizId).maybeSingle();
     return formatInTimeZone(now, resolveBusinessTimeZone(data?.tz), 'yyyy-MM-dd');
   } catch {
     // A failed lookup must not block a sale: the platform's home time zone is the default.
@@ -74,20 +59,7 @@ function soldPackage(row: ClientVisitPackageRow) {
   };
 }
 
-type VisitPackagePlanSaleRow = {
-  id: string;
-  biz_id: string;
-  visit_count: number;
-  validity_days: number;
-  is_active: boolean;
-};
-
-export type VisitPackagesAdminLike = {
-  from(table: string): {
-    select?: (...args: unknown[]) => unknown;
-    insert?: (...args: unknown[]) => unknown;
-  };
-};
+export type VisitPackagesAdminLike = DbTableClient;
 
 export type VisitPackagesResult<T> =
   | { ok: true; data: T }
@@ -123,16 +95,8 @@ export async function listVisitPackages(params: {
   }>
 > {
   const today = params.today ?? (await businessToday(params.admin, params.bizId, new Date()));
-  const planQuery = params.admin.from('visit_package_plans') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => Promise<{
-        data: VisitPackagePlanListRow[] | null;
-        error: { message: string } | null;
-      }>;
-    };
-  };
-
-  const { data: planRows, error: planError } = await planQuery
+  const { data: planRows, error: planError } = await params.admin
+    .from('visit_package_plans')
     .select('id, name_ru, name_ky, name_en, visit_count, branch_ids')
     .eq('biz_id', params.bizId);
 
@@ -154,24 +118,14 @@ export async function listVisitPackages(params: {
     };
   }
 
-  let packagesQuery = (params.admin.from('client_visit_packages') as {
-    select: (...args: unknown[]) => {
-      in: (...args: unknown[]) => {
-        order: (...args: unknown[]) => unknown;
-      };
-    };
-  })
+  let packagesQuery = params.admin
+    .from('client_visit_packages')
     .select('id, client_id, plan_id, remaining_visits, valid_until, purchased_at, created_at')
     .in('plan_id', planIds)
-    .order('purchased_at', { ascending: false }) as {
-    eq: (...args: unknown[]) => typeof packagesQuery;
-    gte: (...args: unknown[]) => typeof packagesQuery;
-    gt: (...args: unknown[]) => Promise<{ data: ClientVisitPackageRow[] | null; error: { message: string } | null }>;
-    or: (...args: unknown[]) => Promise<{ data: ClientVisitPackageRow[] | null; error: { message: string } | null }>;
-  } & PromiseLike<{ data: ClientVisitPackageRow[] | null; error: { message: string } | null }>;
+    .order('purchased_at', { ascending: false });
 
   if (params.query.clientId) {
-    packagesQuery = packagesQuery.eq('client_id', params.query.clientId) as typeof packagesQuery;
+    packagesQuery = packagesQuery.eq('client_id', params.query.clientId);
   }
 
   let packagesResult:
@@ -182,10 +136,7 @@ export async function listVisitPackages(params: {
   } else if (params.query.status === 'expired') {
     packagesResult = await packagesQuery.or(`valid_until.lt.${today},remaining_visits.eq.0`);
   } else {
-    packagesResult = await (packagesQuery as unknown as Promise<{
-      data: ClientVisitPackageRow[] | null;
-      error: { message: string } | null;
-    }>);
+    packagesResult = await packagesQuery;
   }
 
   if (packagesResult.error) {
@@ -203,16 +154,10 @@ export async function listVisitPackages(params: {
 
   const profileResult =
     clientIds.length > 0
-      ? await ((params.admin.from('profiles') as {
-          select: (...args: unknown[]) => {
-            in: (...args: unknown[]) => Promise<{
-              data: Array<{ id: string; full_name: string | null }> | null;
-              error: { message: string } | null;
-            }>;
-          };
-        })
+      ? await params.admin
+          .from('profiles')
           .select('id, full_name')
-          .in('id', clientIds))
+          .in('id', clientIds)
       : {
           data: [] as Array<{ id: string; full_name: string | null }>,
           error: null,
@@ -294,20 +239,8 @@ export async function sellVisitPackage(params: {
     };
   }>
 > {
-  const planLookup = params.admin.from('visit_package_plans') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => {
-          maybeSingle: () => Promise<{
-            data: VisitPackagePlanSaleRow | null;
-            error: { message: string } | null;
-          }>;
-        };
-      };
-    };
-  };
-
-  const { data: plan, error: planError } = await planLookup
+  const { data: plan, error: planError } = await params.admin
+    .from('visit_package_plans')
     .select('id, biz_id, visit_count, validity_days, is_active')
     .eq('id', params.body.plan_id)
     .eq('biz_id', params.bizId)
@@ -335,18 +268,8 @@ export async function sellVisitPackage(params: {
   const today = await businessToday(params.admin, params.bizId, now);
   const validUntilDate = addDays(today, plan.validity_days);
 
-  const insertQuery = params.admin.from('client_visit_packages') as {
-    insert: (...args: unknown[]) => {
-      select: (...args: unknown[]) => {
-        single: () => Promise<{
-          data: ClientVisitPackageRow | null;
-          error: { message: string; code?: string } | null;
-        }>;
-      };
-    };
-  };
-
-  const { data: sold, error: insertError } = await insertQuery
+  const { data: sold, error: insertError } = await params.admin
+    .from('client_visit_packages')
     .insert({
       client_id: params.clientId,
       plan_id: plan.id,
@@ -360,14 +283,8 @@ export async function sellVisitPackage(params: {
 
   // The same sale request again (double click, retry after a lost answer): return what it sold.
   if (insertError?.code === '23505' && params.requestId) {
-    const existingQuery = params.admin.from('client_visit_packages') as {
-      select: (...args: unknown[]) => {
-        eq: (...args: unknown[]) => {
-          maybeSingle: () => Promise<{ data: ClientVisitPackageRow | null; error: { message: string } | null }>;
-        };
-      };
-    };
-    const { data: existing } = await existingQuery
+    const { data: existing } = await params.admin
+      .from('client_visit_packages')
       .select(SOLD_PACKAGE_COLUMNS)
       .eq('request_id', params.requestId)
       .maybeSingle();

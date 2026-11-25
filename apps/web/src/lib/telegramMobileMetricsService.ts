@@ -2,6 +2,8 @@ import crypto from 'crypto';
 
 import { logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
+import type { DbTableClient } from '@/lib/supabaseTypes';
+import type { Json } from '@/types/supabase';
 
 export type TelegramMobileMetricType =
     | 'telegram_mobile_login_started'
@@ -9,13 +11,7 @@ export type TelegramMobileMetricType =
     | 'telegram_mobile_login_expired'
     | 'telegram_mobile_login_failed';
 
-export type TelegramMobileMetricsAdminLike = {
-    from(table: 'analytics_events'): {
-        insert: (payload: Record<string, unknown>) => PromiseLike<{
-            error: { message?: string } | null;
-        }>;
-    };
-};
+export type TelegramMobileMetricsAdminLike = DbTableClient;
 
 function hashNonce(nonce?: string | null) {
     if (!nonce) {
@@ -49,14 +45,12 @@ export async function trackTelegramMobileMetric(
     };
 
     try {
-        const admin =
-            options?.admin ??
-            (getServiceClient() as unknown as TelegramMobileMetricsAdminLike);
+        const admin = options?.admin ?? getServiceClient();
         const { error } = await admin.from('analytics_events').insert({
             event_type: eventType,
             source: 'mobile_auth_telegram',
             session_id: nonceHash,
-            metadata,
+            metadata: metadata as NonNullable<Json>,
         });
 
         if (error) {

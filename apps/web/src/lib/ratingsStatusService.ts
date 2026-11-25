@@ -1,45 +1,26 @@
-export type RatingsStatusAdminQueryLike = {
-  from(table: string): {
-    select: (...args: unknown[]) => unknown;
-  };
-};
+import type { DbTableClient } from '@/lib/supabaseTypes';
 
-function createMetricMaxQuery(admin: RatingsStatusAdminQueryLike, table: string) {
-  const query = admin.from(table).select('metric_date') as {
-    order: (...args: unknown[]) => {
-      limit: (...args: unknown[]) => {
-        maybeSingle: () => Promise<{ data?: { metric_date?: string | null } | null }>;
-      };
-    };
-  };
+export type RatingsStatusAdminQueryLike = DbTableClient;
 
-  return query.order('metric_date', { ascending: false }).limit(1).maybeSingle();
+type MetricTable = 'staff_day_metrics' | 'branch_day_metrics' | 'biz_day_metrics';
+type RatedTable = 'staff' | 'branches' | 'businesses';
+
+function createMetricMaxQuery(admin: RatingsStatusAdminQueryLike, table: MetricTable) {
+  return admin.from(table).select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle();
 }
 
-function createLastRatingQuery(admin: RatingsStatusAdminQueryLike, table: string) {
-  const query = admin.from(table).select('last_rating_recalculated_at') as {
-    order: (...args: unknown[]) => {
-      not: (...args: unknown[]) => {
-        limit: (...args: unknown[]) => {
-          maybeSingle: () => Promise<{ data?: { last_rating_recalculated_at?: string | null } | null }>;
-        };
-      };
-    };
-  };
-
-  return query
+function createLastRatingQuery(admin: RatingsStatusAdminQueryLike, table: RatedTable) {
+  return admin
+    .from(table)
+    .select('last_rating_recalculated_at')
     .order('last_rating_recalculated_at', { ascending: false })
     .not('last_rating_recalculated_at', 'is', null)
     .limit(1)
     .maybeSingle();
 }
 
-function createNullRatingCountQuery(admin: RatingsStatusAdminQueryLike, table: string) {
-  const query = admin.from(table).select('id', { count: 'exact', head: true }) as {
-    is: (...args: unknown[]) => Promise<{ count?: number | null }>;
-  };
-
-  return query.is('rating_score', null);
+function createNullRatingCountQuery(admin: RatingsStatusAdminQueryLike, table: RatedTable) {
+  return admin.from(table).select('id', { count: 'exact', head: true }).is('rating_score', null);
 }
 
 export async function getRatingsStatus(
@@ -89,15 +70,10 @@ export async function getRatingsStatus(
   let recentErrorsByType: Record<string, number> = {};
 
   try {
-    const query = admin.from('rating_recalc_errors').select('entity_type, metric_date') as {
-      gte: (...args: unknown[]) => Promise<{
-        data?: Array<{ entity_type: string }> | null;
-      }>;
-    };
-
-    const { data: recentErrors } = await query.gte('metric_date', errorsSinceIso) as {
-      data?: Array<{ entity_type: string }> | null;
-    };
+    const { data: recentErrors } = await admin
+      .from('rating_recalc_errors')
+      .select('entity_type, metric_date')
+      .gte('metric_date', errorsSinceIso);
 
     if (recentErrors && recentErrors.length > 0) {
       recentErrorsTotal = recentErrors.length;

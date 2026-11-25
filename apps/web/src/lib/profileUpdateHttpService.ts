@@ -4,7 +4,6 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import {
   updateProfileSettings,
   type ProfileUpdateBody,
-  type ProfileUpdateSupabaseLike,
 } from '@/lib/profileUpdateService';
 import { resolveRequestAuthContext } from '@/lib/requestAuthContext';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -33,7 +32,7 @@ export async function runProfileUpdateHttp(req: Request): Promise<NextResponse> 
       : undefined;
 
   const result = await updateProfileSettings({
-    supabase: authContext.supabase as unknown as ProfileUpdateSupabaseLike,
+    supabase: authContext.supabase,
     body,
     updateFullNameMetadata,
   });

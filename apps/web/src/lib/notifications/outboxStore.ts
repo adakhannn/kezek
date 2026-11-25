@@ -24,7 +24,7 @@ export interface OutboxStore {
 
 /** Every DB HTTP request has its own deadline, including auth-admin lookups in preparation. */
 export function createOutboxAdminClient(): SupabaseClient {
-    return getServiceClient({ timeoutMs: 5000 }) as unknown as SupabaseClient;
+    return getServiceClient({ timeoutMs: 5000 });
 }
 
 export function createOutboxStore(admin: SupabaseClient): OutboxStore {

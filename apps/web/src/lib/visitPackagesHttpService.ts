@@ -8,7 +8,6 @@ import { sellVisitPackageSchema, visitPackagesListQuerySchema } from '@/lib/vali
 import {
   listVisitPackages,
   sellVisitPackage,
-  type VisitPackagesAdminLike,
 } from '@/lib/visitPackagesService';
 import { withManagerContext } from '@/lib/withManagerContext';
 
@@ -21,7 +20,7 @@ export async function runListVisitPackagesHttp(req: Request): Promise<NextRespon
 
   return withManagerContext(req, 'VisitPackagesList', async ({ admin, bizId }) => {
     const result = await listVisitPackages({
-      admin: admin as unknown as VisitPackagesAdminLike,
+      admin,
       bizId,
       query: queryResult.data,
     });
@@ -51,7 +50,7 @@ export async function runSellVisitPackageHttp(
 
   return withManagerContext(req, 'SellVisitPackage', async ({ admin, bizId }) => {
     const result = await sellVisitPackage({
-      admin: admin as unknown as VisitPackagesAdminLike,
+      admin,
       bizId,
       clientId,
       body: validationResult.data,

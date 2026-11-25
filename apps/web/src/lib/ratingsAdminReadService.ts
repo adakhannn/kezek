@@ -1,6 +1,6 @@
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { getRatingsJobs } from '@/lib/ratingsJobsService';
-import { getRatingsStatus, type RatingsStatusAdminQueryLike } from '@/lib/ratingsStatusService';
+import { getRatingsStatus } from '@/lib/ratingsStatusService';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -17,7 +17,7 @@ async function getCallerAdmin() {
 export async function readRatingsStatusForCaller(errorsWindowDaysParam: string | null = null) {
   const caller = await getCallerAdmin();
   if (!caller.ok) return caller;
-  const data = await getRatingsStatus(caller.admin as unknown as RatingsStatusAdminQueryLike, { errorsWindowDaysParam });
+  const data = await getRatingsStatus(caller.admin, { errorsWindowDaysParam });
   return { ok: true as const, data };
 }
 

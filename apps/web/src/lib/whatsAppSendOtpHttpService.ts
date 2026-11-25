@@ -4,7 +4,6 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandle
 import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { runWhatsAppSendOtpRoute } from '@/lib/whatsAppSendOtpRouteService';
-import type { WhatsAppSendOtpSupabaseLike } from '@/lib/whatsAppSendOtpService';
 
 export async function runWhatsAppSendOtpHttp(req: Request): Promise<NextResponse> {
   let phone: string | undefined;
@@ -16,7 +15,7 @@ export async function runWhatsAppSendOtpHttp(req: Request): Promise<NextResponse
   }
 
   const result = await runWhatsAppSendOtpRoute({
-    supabase: (await createSupabaseServerClient()) as unknown as WhatsAppSendOtpSupabaseLike,
+    supabase: await createSupabaseServerClient(),
     phone,
   });
 

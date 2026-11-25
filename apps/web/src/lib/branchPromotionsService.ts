@@ -1,5 +1,7 @@
 import { toNormalizedDateString } from '@/lib/dateUtils';
 import { logError } from '@/lib/log';
+import type { DbTableClient } from '@/lib/supabaseTypes';
+import type { Json } from '@/types/supabase';
 
 type PromotionType =
     | 'free_after_n_visits'
@@ -40,7 +42,7 @@ export async function listBranchPromotions({
     branchId,
     bizId,
 }: {
-    admin: any;
+    admin: DbTableClient;
     branchId: string;
     bizId: string;
 }): Promise<Failure | Success<{ promotions: Array<Record<string, unknown>> }>> {
@@ -84,13 +86,7 @@ export async function listBranchPromotions({
                     .select('*', { count: 'exact', head: true })
                     .eq('promotion_id', promotion.id);
 
-                const usageResult =
-                    typeof usageQuery.then === 'function'
-                        ? await usageQuery
-                        : await usageQuery.maybeSingle?.() ??
-                          await usageQuery.limit?.(1) ??
-                          usageQuery.mockResolvedValue ??
-                          usageQuery;
+                const usageResult = await usageQuery;
 
                 return {
                     ...promotion,
@@ -120,7 +116,7 @@ export async function createBranchPromotion({
     bizId,
     body,
 }: {
-    admin: any;
+    admin: DbTableClient;
     branchId: string;
     bizId: string;
     body: PromotionBody;
@@ -152,7 +148,7 @@ export async function createBranchPromotion({
             branch_id: branchId,
             biz_id: bizId,
             promotion_type: body.promotion_type,
-            params: body.params || {},
+            params: (body.params || {}) as NonNullable<Json>,
             title_ru: body.title_ru,
             title_ky: body.title_ky || null,
             title_en: body.title_en || null,

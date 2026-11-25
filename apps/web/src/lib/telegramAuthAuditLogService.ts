@@ -1,5 +1,7 @@
 import { logError, logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
+import type { DbTableClient } from '@/lib/supabaseTypes';
+import type { Json } from '@/types/supabase';
 
 export type TelegramAuthAuditEventType =
     | 'mobile_start_created'
@@ -21,13 +23,7 @@ export type TelegramAuthAuditEvent = {
     metadata?: Record<string, unknown> | null;
 };
 
-type TelegramAuthAuditAdminLike = {
-    from(table: 'telegram_auth_audit_log'): {
-        insert: (payload: Record<string, unknown>) => PromiseLike<{
-            error: { message?: string } | null;
-        }>;
-    };
-};
+type TelegramAuthAuditAdminLike = DbTableClient;
 
 function buildPayload(event: TelegramAuthAuditEvent) {
     return {
@@ -39,7 +35,7 @@ function buildPayload(event: TelegramAuthAuditEvent) {
         user_id: event.userId ?? null,
         linkage: event.linkage ?? null,
         reason: event.reason ?? null,
-        metadata: event.metadata ?? {},
+        metadata: (event.metadata ?? {}) as NonNullable<Json>,
     };
 }
 
@@ -64,7 +60,7 @@ export async function writeTelegramAuthAuditEvent(
     }
 
     try {
-        const admin = getServiceClient() as unknown as TelegramAuthAuditAdminLike;
+        const admin = getServiceClient();
         await writeTelegramAuthAuditEventWithAdmin(admin, event);
     } catch (error) {
         logError('TelegramAuthAudit', 'Unexpected error while writing auth audit event', error);

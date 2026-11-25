@@ -5,24 +5,9 @@ import {
   PROFILE_WHATSAPP_OTP_TTL_MS,
   type ProfileWhatsAppOtpStore,
 } from '@/lib/profileWhatsAppOtpStore';
+import type { DbClient } from '@/lib/supabaseTypes';
 
-export type WhatsAppSendOtpSupabaseLike = {
-  auth: {
-    getUser: () => Promise<{
-      data: { user: { id: string } | null };
-    }>;
-  };
-  from(table: string): {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: <T>() => Promise<{
-          data: T | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
-};
+export type WhatsAppSendOtpSupabaseLike = Pick<DbClient, 'auth' | 'from'>;
 
 export type WhatsAppSendOtpResult =
   | { ok: true; data: { message: string } }

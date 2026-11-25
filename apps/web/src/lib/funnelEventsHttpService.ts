@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { isSupabaseServiceRoleConfigured } from '@/lib/env';
-import { canRecordQuickdeskEvent, funnelEventSchema, saveFunnelEvent, type FunnelEventsAdminLike } from '@/lib/funnelEventsService';
+import { canRecordQuickdeskEvent, funnelEventSchema, saveFunnelEvent } from '@/lib/funnelEventsService';
 import { logWarn } from '@/lib/log';
 import { resolveOptionalRequestUser } from '@/lib/requestAuthContext';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -26,7 +26,7 @@ export async function runFunnelEventsHttp(req: Request): Promise<NextResponse> {
         return createSuccessResponse({ skipped: true });
     }
 
-    const admin = getServiceClient() as unknown as FunnelEventsAdminLike;
+    const admin = getServiceClient();
     if (event.source === 'quickdesk') {
         // Staff-desk events must come from a member of that business (API-09).
         const actor = await resolveOptionalRequestUser(req);

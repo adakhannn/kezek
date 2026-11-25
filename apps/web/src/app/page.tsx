@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { HomeViewTracker } from '@/lib/analyticsTrackEvent';
 import { logWarn } from '@/lib/log';
 import { publicBusinessSearchFilter } from '@/lib/publicBusinessSearchFilter';
-import { loadPublicCategoryLabels, publicCategoryLabel, type PublicCategoryClient } from '@/lib/publicCategoryLabels';
+import { loadPublicCategoryLabels, publicCategoryLabel } from '@/lib/publicCategoryLabels';
 import { generateAlternates } from '@/lib/seo';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -173,7 +173,7 @@ export default async function Home({
                     .filter(Boolean),
             ),
         ).sort();
-        categoryLabels = await loadPublicCategoryLabels(supabase as unknown as PublicCategoryClient, [...categoriesAvailable, cat]);
+        categoryLabels = await loadPublicCategoryLabels(supabase, [...categoriesAvailable, cat]);
 
     } catch (error) {
         serviceUnavailable = true;

@@ -1,17 +1,12 @@
 import { logDebug, logError } from '@/lib/log';
+import type { DbRpcClient } from '@/lib/supabaseTypes';
 
 const DAYS_BACK_MIN = 1;
 const DAYS_BACK_MAX = 365;
 const DATE_RANGE_CHUNK_DAYS_MAX = 31;
 const YMD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-type RpcResult = {
-  error: { message: string } | null;
-};
-
-export type InitializeRatingsAdminLike = {
-  rpc(fn: string, params: Record<string, unknown>): Promise<RpcResult>;
-};
+export type InitializeRatingsAdminLike = DbRpcClient;
 
 export type InitializeRatingsPayload = {
   days_back?: number;

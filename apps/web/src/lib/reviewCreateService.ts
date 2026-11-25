@@ -1,25 +1,12 @@
+import type { DbClient, DbInsert } from '@/lib/supabaseTypes';
+
 export type ReviewCreateBody = {
   booking_id?: string;
   rating?: number;
   comment?: string;
 };
 
-export type ReviewCreateSupabaseLike = {
-  auth: {
-    getUser: () => Promise<{
-      data: {
-        user: {
-          id: string;
-        } | null;
-      };
-    }>;
-  };
-  from(table: string): {
-    select?: (...args: unknown[]) => unknown;
-    update?: (...args: unknown[]) => unknown;
-    insert?: (...args: unknown[]) => unknown;
-  };
-};
+export type ReviewCreateSupabaseLike = Pick<DbClient, 'auth' | 'from'>;
 
 export type ReviewCreateResult =
   | { ok: true; data: { id: string | undefined; updated: boolean } }
@@ -29,8 +16,6 @@ export type ReviewCreateResult =
       message: string;
       status: number;
     };
-
-type DbError = { message: string; code?: string } | null;
 
 /** Same rule as public.can_review (DB-13): an own booking with status paid whose visit has started. */
 export const REVIEW_AFTER_VISIT_MESSAGE = 'Отзыв можно оставить только после визита';
@@ -80,16 +65,8 @@ export async function createOrUpdateReview(params: {
   const userId = user.id;
   const now = params.now ?? new Date();
 
-  const { data: booking, error: bookingError } = await (params.supabase.from('bookings') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: () => Promise<{
-          data: { id: string; client_id: string; status: string; start_at: string | null } | null;
-          error: DbError;
-        }>;
-      };
-    };
-  })
+  const { data: booking, error: bookingError } = await params.supabase
+    .from('bookings')
     .select('id, client_id, status, start_at')
     .eq('id', params.body.booking_id)
     .maybeSingle();
@@ -112,16 +89,8 @@ export async function createOrUpdateReview(params: {
     };
   }
 
-  const { data: existingReview } = await (params.supabase.from('reviews') as {
-    select: (...args: unknown[]) => {
-      eq: (...args: unknown[]) => {
-        maybeSingle: () => Promise<{
-          data: { id: string; client_id: string } | null;
-          error: DbError;
-        }>;
-      };
-    };
-  })
+  const { data: existingReview } = await params.supabase
+    .from('reviews')
     .select('id, client_id')
     .eq('booking_id', params.body.booking_id)
     .maybeSingle();
@@ -129,18 +98,8 @@ export async function createOrUpdateReview(params: {
   if (existingReview) {
     if (existingReview.client_id === userId) {
       // The author edits rating and comment at any time (public.can_edit_review).
-      const { error, data } = await ((params.supabase.from('reviews') as {
-        update: (...args: unknown[]) => {
-          eq: (...args: unknown[]) => {
-            select: (...args: unknown[]) => {
-              single: () => Promise<{
-                data: { id: string } | null;
-                error: DbError;
-              }>;
-            };
-          };
-        };
-      })
+      const { error, data } = await (params.supabase
+        .from('reviews')
         .update({
           rating: params.body.rating,
           comment: params.body.comment ?? null,
@@ -183,22 +142,15 @@ export async function createOrUpdateReview(params: {
     };
   }
 
-  // client_id and created_at are set by the database (reviews_set_client_id).
-  const { error, data } = await ((params.supabase.from('reviews') as {
-    insert: (...args: unknown[]) => {
-      select: (...args: unknown[]) => {
-        single: () => Promise<{
-          data: { id: string } | null;
-          error: DbError;
-        }>;
-      };
-    };
-  })
+  // client_id and created_at are set by the database (reviews_set_client_id); the generated
+  // Insert type still lists client_id as required, so the payload is typed without it here.
+  const { error, data } = await (params.supabase
+    .from('reviews')
     .insert({
       booking_id: params.body.booking_id,
       rating: params.body.rating,
       comment: params.body.comment ?? null,
-    })
+    } as DbInsert<'reviews'>)
     .select('id')
     .single());
 

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 import type { TelegramAuthData } from '@/lib/telegram/verify';
-import { linkTelegramAccount, type TelegramLinkSupabaseLike } from '@/lib/telegramLinkService';
+import { linkTelegramAccount } from '@/lib/telegramLinkService';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { telegramAuthDataSchema } from '@/lib/validation/schemas';
 
@@ -25,7 +25,7 @@ export async function runTelegramLinkHttp(req: Request): Promise<NextResponse> {
   }
 
   const result = await linkTelegramAccount({
-    admin: admin as unknown as TelegramLinkSupabaseLike,
+    admin,
     user: {
       id: user.id,
       user_metadata: (user.user_metadata ?? {}) as Record<string, unknown>,
