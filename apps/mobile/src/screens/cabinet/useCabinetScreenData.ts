@@ -82,6 +82,12 @@ export function useCabinetScreenData() {
                 logDebug('CabinetScreen', 'Bookings loaded', { count: rows.length || 0 });
                 return rows.map(mapClientBookingListItemToBooking);
             } catch (error) {
+                // Offline data is for a lost connection or a failing server, not for an answer such as
+                // 401/403/404: showing the cache as "offline" would hide the real problem.
+                const status = (error as { status?: unknown } | null)?.status;
+                if (typeof status === 'number' && status > 0 && status < 500) {
+                    throw error;
+                }
                 logDebug('CabinetScreen', 'Network error, trying to load offline bookings', error);
                 const cached = await loadOfflineBookings(userQuery.data.id);
                 if (cached && cached.items.length > 0) {

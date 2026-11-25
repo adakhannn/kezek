@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 
 import CabinetScreen from '../../screens/CabinetScreen';
 import { apiRequest } from '../../lib/api';
+import { loadOfflineBookings } from '../../lib/offlineBookingsStorage';
 import { supabase } from '../../lib/supabase';
 import { shouldStackCabinetHeader } from '../../screens/cabinet/CabinetScreenSections';
 import { createTestQueryClient } from '../testQueryClient';
@@ -158,6 +159,17 @@ describe('CabinetScreen', () => {
 
         expect(await screen.findAllByText('Не удалось загрузить записи')).toHaveLength(2);
         expect(await screen.findByText('Повторить')).toBeTruthy();
+    });
+
+    test('an HTTP 4xx answer is an error, not offline data', async () => {
+        const mockedLoadOffline = loadOfflineBookings as jest.Mock;
+        mockedLoadOffline.mockClear();
+        mockedApiRequest.mockRejectedValueOnce(Object.assign(new Error('Unauthorized'), { status: 401 }));
+
+        renderWithProviders(<CabinetScreen />);
+
+        expect(await screen.findAllByText('Не удалось загрузить записи')).toHaveLength(2);
+        expect(mockedLoadOffline).not.toHaveBeenCalled();
     });
 });
 

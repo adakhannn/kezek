@@ -104,37 +104,34 @@ export function useGoogleSignInFlow({
         }
         googleSessionResolveInFlightRef.current = true;
 
-        const finish = (value: boolean) => {
-            googleSessionResolveInFlightRef.current = false;
-            return value;
-        };
+        // Released on every exit, a throw included (state mismatch, failed exchange): otherwise every
+        // later attempt on this screen would return "no session" until it remounts.
+        try {
+            if (callbackUrl) {
+                if (googleLastProcessedCallbackRef.current === callbackUrl) {
+                    return await hasActiveSession();
+                }
 
-        if (callbackUrl) {
-            if (googleLastProcessedCallbackRef.current === callbackUrl) {
-                return finish(await hasActiveSession());
-            }
+                const callbackState = getUrlParam(callbackUrl, 'state');
+                const expectedState = googleExpectedStateRef.current;
+                if (expectedState && callbackState && callbackState !== expectedState) {
+                    googleLastProcessedCallbackRef.current = callbackUrl;
+                    throw new Error('oauth_state_mismatch');
+                }
 
-            const callbackState = getUrlParam(callbackUrl, 'state');
-            const expectedState = googleExpectedStateRef.current;
-            if (expectedState && callbackState && callbackState !== expectedState) {
+                await handleDeepLinkAuth(callbackUrl, apiUrl);
                 googleLastProcessedCallbackRef.current = callbackUrl;
-                throw new Error('oauth_state_mismatch');
             }
 
-            await handleDeepLinkAuth(callbackUrl, apiUrl);
-            googleLastProcessedCallbackRef.current = callbackUrl;
-        }
+            if (await hasActiveSession()) {
+                return true;
+            }
 
-        if (await hasActiveSession()) {
-            return finish(true);
+            await new Promise((resolve) => setTimeout(resolve, GOOGLE_SESSION_SYNC_DELAY_MS));
+            return await hasActiveSession();
+        } finally {
+            googleSessionResolveInFlightRef.current = false;
         }
-
-        await new Promise((resolve) => setTimeout(resolve, GOOGLE_SESSION_SYNC_DELAY_MS));
-        if (await hasActiveSession()) {
-            return finish(true);
-        }
-
-        return finish(false);
     };
 
     const showGoogleSuccessOnce = () => {

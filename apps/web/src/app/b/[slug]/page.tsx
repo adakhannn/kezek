@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { JSX } from 'react';
 
 import BusinessInfo from './BusinessInfo';
-import BusinessPageState from './BusinessPageState';
 
 import { getT, getServerLocale } from '@/app/_components/i18n/server';
 import { BusinessPageViewTracker } from '@/lib/analyticsTrackEvent';
@@ -116,7 +116,8 @@ export default async function Page({
     const data = await getData(slug);
 
     if (!data) {
-        return <BusinessPageState kind="not-found" />;
+        // A real 404 for search engines and link previews; ./not-found.tsx renders the same state.
+        notFound();
     }
 
     return (
