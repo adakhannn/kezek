@@ -8,7 +8,7 @@
 
 ## Руководства и справочники
 
-Документов: 104.
+Документов: 105.
 
 | Документ | Путь |
 | --- | --- |
@@ -87,6 +87,7 @@
 | [Эксплуатация Kezek](OPERATIONS.md) | `docs/OPERATIONS.md` |
 | [Действия владельца](OWNER_ACTIONS.md) | `docs/OWNER_ACTIONS.md` |
 | [Повторный глубокий анализ проекта — 17 ноября 2026](PROJECT_REVIEW_2026-11-17.md) | `docs/PROJECT_REVIEW_2026-11-17.md` |
+| [Ревью проекта 2026-11-25: серьёзные баги и что мешает считать проект готовым](PROJECT_REVIEW_2026-11-25.md) | `docs/PROJECT_REVIEW_2026-11-25.md` |
 | [Текущее состояние Kezek](PROJECT_STATUS.md) | `docs/PROJECT_STATUS.md` |
 | [Как считается рейтинг в Kezek](RATINGS_HOW_IT_WORKS.md) | `docs/RATINGS_HOW_IT_WORKS.md` |
 | [Документация Kezek](README.md) | `docs/README.md` |
