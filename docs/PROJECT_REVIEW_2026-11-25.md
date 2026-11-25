@@ -20,9 +20,9 @@
 - Мелочи: флаг Google-входа освобождается при любой ошибке; в кабинете клиента офлайн-данные показываются только без сети или при сбое сервера (5xx), не при 401/403/404; `/b/[несуществующий]` отдаёт настоящий 404 с той же страницей.
 
 **Решения владельца 2026-11-25, реализовано:**
-- R25-04, R25-17 — скидка акции и абонемента считается от каталожной цены всех услуг записи (, [20261125140000](../supabase/migrations/20261125140000_booking_price_all_services.sql)); выручка в аналитике — только оплаченные визиты, по сумме с учётом абонемента и акции ([20261125140100](../supabase/migrations/20261125140100_reporting_revenue_all_services.sql)).
-- R25-10 — клиент отменяет запись только до её начала (, [20261125150000](../supabase/migrations/20261125150000_client_cancel_cutoff.sql)); после начала меняет только бизнес.
-- R25-27 — клиент переносит запись сам (, [20261125150100](../supabase/migrations/20261125150100_client_reschedule.sql)); напоминания клиенту за 24 и 2 часа ([20261125160000](../supabase/migrations/20261125160000_booking_reminders.sql)); push в приложении ([20261125170000](../supabase/migrations/20261125170000_push_tokens.sql)). OWNER: ключ FCM в EAS для Android и новая сборка.
+- R25-04, R25-17 — скидка акции и абонемента считается от каталожной цены всех услуг записи (`private.booking_catalog_amount`, [20261125140000](../supabase/migrations/20261125140000_booking_price_all_services.sql)); выручка в аналитике — только оплаченные визиты, по сумме с учётом абонемента и акции ([20261125140100](../supabase/migrations/20261125140100_reporting_revenue_all_services.sql)).
+- R25-10 — клиент отменяет запись только до её начала (`BOOKING_ALREADY_STARTED`, [20261125150000](../supabase/migrations/20261125150000_client_cancel_cutoff.sql)); после начала меняет только бизнес.
+- R25-27 — клиент переносит запись сам (`POST /api/bookings/[id]/reschedule`, [20261125150100](../supabase/migrations/20261125150100_client_reschedule.sql)); напоминания клиенту за 24 и 2 часа ([20261125160000](../supabase/migrations/20261125160000_booking_reminders.sql)); push в приложении ([20261125170000](../supabase/migrations/20261125170000_push_tokens.sql)). OWNER: ключ FCM в EAS для Android и новая сборка.
 - R25-07 — WhatsApp-уведомления только шаблонами Meta; пока шаблоны не заданы в Vercel, WhatsApp не планируется. OWNER: создать три шаблона ([OWNER_ACTIONS.md](OWNER_ACTIONS.md)).
 
 ## 1. Высокий приоритет — баги в коде
