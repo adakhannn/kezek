@@ -51,7 +51,10 @@ export default defineConfig({
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 1 : undefined,
     timeout: 120_000,
-    reporter: [['list'], ['html', { open: 'never' }]],
+    // In CI the github reporter turns every failure into an annotation readable without the logs.
+    reporter: process.env.CI
+        ? [['list'], ['github'], ['html', { open: 'never' }]]
+        : [['list'], ['html', { open: 'never' }]],
     expect: {
         // `next dev` compiles a route on its first visit.
         timeout: 20_000,
