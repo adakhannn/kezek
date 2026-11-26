@@ -141,6 +141,7 @@ export default function ManageAnalyticsScreen() {
                             <Section title={t('ops.analytics.byDay')}>
                                 <Card variant="plain" padding="md">
                                     <BarList
+                                        emptyLabel={t('ops.finance.staffStats.noData')}
                                         data={data.byDay.map((point) => ({
                                             key: point.date,
                                             label: chartDay(point.date),
@@ -163,6 +164,7 @@ export default function ManageAnalyticsScreen() {
                                 </StatGrid>
                                 <Card variant="plain" padding="md">
                                     <BarList
+                                        emptyLabel={t('ops.finance.staffStats.noData')}
                                         data={data.byDay.map((point) => ({
                                             key: point.date,
                                             label: chartDay(point.date),
@@ -183,6 +185,7 @@ export default function ManageAnalyticsScreen() {
                     <Section title={t('ops.analytics.load')} testID="analytics-load">
                         <Card variant="plain" padding="md">
                             <BarList
+                                emptyLabel={t('ops.finance.staffStats.noData')}
                                 columns={{ label: t('ops.analytics.hour'), value: t('ops.analytics.bookings'), secondary: t('ops.analytics.promotions') }}
                                 data={hours.map((row) => ({
                                     key: String(row.hour),

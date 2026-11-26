@@ -123,7 +123,7 @@ export default function BookingsCalendarTab({ bizId, timezone, options }: { bizI
                                 title={member.full_name}
                                 trailing={bookings.length > 0
                                     ? <Badge label={String(bookings.length)} tone="accent" size="md" />
-                                    : <Badge label={t('ops.bookings.calendar.free')} tone="success" />}
+                                    : <Badge label={t('ops.bookings.calendar.free')} tone="neutral" />}
                             />
                             {bookings.map((booking) => {
                                 const start = formatInTimeZone(new Date(booking.start_at), timezone, 'HH:mm');

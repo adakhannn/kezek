@@ -156,6 +156,7 @@ export function BarList({
     labelWidth = 56,
     valueWidth = 72,
     secondaryWidth = 56,
+    emptyLabel,
     testID,
 }: {
     data: readonly BarDatum[];
@@ -166,16 +167,28 @@ export function BarList({
     labelWidth?: number;
     valueWidth?: number;
     secondaryWidth?: number;
+    /** Shown instead of the bars when every value is zero (a chart of empty tracks says nothing). */
+    emptyLabel?: string;
     testID?: string;
 }) {
     const max = Math.max(1, ...data.map((item) => item.value));
     const hasSecondary = data.some((item) => item.secondary != null) || !!columns?.secondary;
+    const isEmpty = data.every((item) => item.value === 0 && (!item.secondary || item.secondary === '—'));
+    if (emptyLabel && isEmpty) {
+        return (
+            <View style={[ui.chart, ui.chartEmpty]} testID={testID}>
+                <Ionicons name="bar-chart-outline" size={20} color={colors.text.tertiary} />
+                <Text style={ui.chartEmptyText}>{emptyLabel}</Text>
+            </View>
+        );
+    }
     return (
         <View style={ui.chart} testID={testID}>
             {columns ? (
                 <View style={ui.barRow} importantForAccessibility="no-hide-descendants">
                     <Text style={[ui.columnText, { width: labelWidth }]} numberOfLines={1}>{columns.label}</Text>
-                    <Text style={[ui.columnText, ui.flex]} numberOfLines={1}>{columns.value}</Text>
+                    <View style={ui.flex} />
+                    <Text style={[ui.columnText, ui.right, { width: valueWidth }]} numberOfLines={1}>{columns.value}</Text>
                     {hasSecondary ? <Text style={[ui.columnText, ui.right, { width: secondaryWidth }]} numberOfLines={1}>{columns.secondary ?? ''}</Text> : null}
                 </View>
             ) : null}
@@ -258,6 +271,8 @@ export const ui = StyleSheet.create({
     },
     stepperText: { ...typeScale.bodyStrong, flexShrink: 1, color: colors.text.primary, textAlign: 'center' },
     chart: { gap: space.xs },
+    chartEmpty: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: space.md },
+    chartEmptyText: { ...typeScale.callout, color: colors.text.secondary, flexShrink: 1 },
     barRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 28 },
     barLabel: { ...typeScale.caption, color: colors.text.secondary },
     barValue: { ...typeScale.callout, color: colors.text.primary, textAlign: 'right', fontVariant: ['tabular-nums'] },

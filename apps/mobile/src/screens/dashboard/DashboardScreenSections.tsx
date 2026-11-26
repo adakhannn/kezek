@@ -114,8 +114,13 @@ export function DashboardScreenSections(props: Props) {
 
             {menu.length > 0 ? (
                 <Section title={t('manager.manage.sectionTitle')}>
+                    {/* Rows of two equal cells: MotionPressable styles its inner view, so the cell
+                        width is set on a wrapper here, not on the pressable. */}
                     <View style={styles.grid} testID="manage-menu">
-                        {menu.map((item) => (
+                        {Array.from({ length: Math.ceil(menu.length / 2) }, (_, row) => menu.slice(row * 2, row * 2 + 2)).map((pair) => (
+                            <View key={pair[0].key} style={styles.gridRow}>
+                                {pair.map((item) => (
+                            <View key={item.key} style={styles.gridCell}>
                             <MotionPressable
                                 key={item.key}
                                 onPress={() => props.onOpenManage(item)}
@@ -129,6 +134,10 @@ export function DashboardScreenSections(props: Props) {
                                 </View>
                                 <Text style={styles.tileLabel} numberOfLines={2}>{t(item.label)}</Text>
                             </MotionPressable>
+                            </View>
+                                ))}
+                                {pair.length === 1 ? <View style={styles.gridCell} /> : null}
+                            </View>
                         ))}
                     </View>
                 </Section>
@@ -256,10 +265,11 @@ const styles = StyleSheet.create({
     businessName: { ...typeScale.title, color: colors.text.primary },
     businessAddress: { ...typeScale.caption, color: colors.text.secondary },
     webHint: { ...typeScale.caption, color: colors.text.secondary },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+    grid: { gap: space.sm },
+    gridRow: { flexDirection: 'row', gap: space.sm },
+    gridCell: { flex: 1 },
     tile: {
-        flexBasis: '47%',
-        flexGrow: 1,
+        flex: 1,
         minHeight: 56,
         flexDirection: 'row',
         alignItems: 'center',
