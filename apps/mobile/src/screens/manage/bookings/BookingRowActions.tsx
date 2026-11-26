@@ -1,11 +1,12 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { canCancel, canConfirm, canMarkAttendance } from '@core-domain/booking';
 
 import Button from '../../../components/ui/Button';
+import { colors } from '../../../constants/colors';
+import { space } from '../../../constants/theme';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useLanguage, type MobileI18nKey } from '../../../i18n';
 import type { ManagerBookingAction } from '../../dashboard/types';
-import { ui } from '../opsKit/ui';
 import type { BookingStatus } from './bookingsQuery';
 
 const CONFIRM_TEXT: Record<ManagerBookingAction, { title: MobileI18nKey; message: MobileI18nKey }> = {
@@ -61,20 +62,38 @@ export default function BookingRowActions({
         attended: 'ops.bookings.actions.attended',
         no_show: 'ops.bookings.actions.noShow',
     };
+    const positive = actions.filter((action) => action !== 'cancel');
+    const button = (action: ManagerBookingAction) => (
+        <Button
+            key={action}
+            title={t(label[action])}
+            onPress={() => void run(action)}
+            size="sm"
+            variant={action === 'cancel' ? 'ghost' : action === 'no_show' ? 'outline' : 'secondary'}
+            textStyle={action === 'cancel' ? styles.danger : undefined}
+            loading={pending}
+            disabled={pending}
+            accessibilityLabel={`${t(label[action])} #${bookingId.slice(0, 8)}`}
+        />
+    );
+    // Cancelling is destructive: it stands apart on the right, after a hairline.
     return (
-        <View style={ui.wrap}>
-            {actions.map((action) => (
-                <Button
-                    key={action}
-                    title={t(label[action])}
-                    onPress={() => void run(action)}
-                    size="sm"
-                    variant={action === 'cancel' ? 'ghost' : action === 'no_show' ? 'outline' : 'primary'}
-                    loading={pending}
-                    disabled={pending}
-                    accessibilityLabel={`${t(label[action])} #${bookingId.slice(0, 8)}`}
-                />
-            ))}
+        <View style={styles.bar}>
+            <View style={styles.positive}>{positive.map(button)}</View>
+            {actions.includes('cancel') ? button('cancel') : null}
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    bar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: space.sm,
+        paddingTop: space.sm,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+    },
+    positive: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+    danger: { color: colors.tone.danger.fg },
+});

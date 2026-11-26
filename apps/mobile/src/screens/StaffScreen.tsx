@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorState from '../components/ui/ErrorState';
+import Screen from '../components/ui/Screen';
+import { SkeletonBlock, SkeletonCard, SkeletonList } from '../components/ui/Skeleton';
 import { useLanguage } from '../i18n';
 import { getErrorMessage } from '../lib/errors';
 import { RootStackParamList } from '../navigation/types';
@@ -13,7 +13,6 @@ import { StaffBusinessPicker } from './staff/StaffBusinessPicker';
 import { StaffScreenSections } from './staff/StaffScreenSections';
 import { useStaffScreenData } from './staff/useStaffScreenData';
 import { useStaffServices } from './staff/useStaffServices';
-import { styles } from './staff/staffScreenStyles';
 
 type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -53,19 +52,21 @@ export default function StaffScreen() {
     };
 
     if (isLoading) {
-        return <LoadingSpinner message={t('common.loading')} />;
+        return (
+            <Screen tabBar testID="staff-screen-loading">
+                <SkeletonBlock width={88} height={88} radius={44} />
+                <SkeletonBlock height={52} />
+                <SkeletonList rows={3} avatar={false} />
+                <SkeletonCard lines={2} />
+            </Screen>
+        );
     }
 
     if (loadError) {
         return (
-            <ScrollView style={styles.container}>
-                <EmptyState
-                    icon="alert-circle"
-                    title={t('staff.workspace.loadError')}
-                    message={t('staff.checkConnection')}
-                    action={<Button title={t('staff.retry')} onPress={() => void onRefresh()} variant="outline" fullWidth />}
-                />
-            </ScrollView>
+            <Screen tabBar refreshing={refreshing} onRefresh={onRefresh}>
+                <ErrorState title={t('staff.workspace.loadError')} onRetry={() => void onRefresh()} />
+            </Screen>
         );
     }
 
@@ -93,13 +94,13 @@ export default function StaffScreen() {
 
     if (!staffInfo) {
         return (
-            <ScrollView style={styles.container}>
+            <Screen tabBar refreshing={refreshing} onRefresh={onRefresh}>
                 <EmptyState
-                    icon="briefcase"
+                    icon="briefcase-outline"
                     title={t('staff.notStaff')}
                     message={t('staff.workspace.notStaffMessage')}
                 />
-            </ScrollView>
+            </Screen>
         );
     }
 

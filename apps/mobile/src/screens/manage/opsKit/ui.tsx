@@ -1,62 +1,29 @@
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import Button from '../../../components/ui/Button';
-import EmptyState from '../../../components/ui/EmptyState';
+import ErrorState from '../../../components/ui/ErrorState';
+import Screen from '../../../components/ui/Screen';
+import { SkeletonCard, SkeletonList } from '../../../components/ui/Skeleton';
+import { useNativePicker } from '../../../components/ui/DateTimeFields';
 import { MIN_TOUCH_TARGET } from '../../../constants/accessibility';
 import { colors } from '../../../constants/colors';
-import { useNativePicker } from '../../../components/ui/DateTimeFields';
+import { radii, space, typeScale } from '../../../constants/theme';
 import { useLanguage } from '../../../i18n';
 import { clampYmd, isYmd, pickerDateToYmd, ymdToPickerDate } from '../../../utils/pickerValues';
 
-/* Small building blocks shared by the business management screens (overview, bookings, analytics, finance, packages, applications). */
+/*
+ * Small pieces shared by the business management screens (overview, bookings, analytics, finance,
+ * packages, applications). Chips, KPIs, sections and lists come from the UI kit (components/ui);
+ * this file only adds what the kit does not have: a labelled filter, the period stepper, the
+ * bar chart made of views and the screen-level loading / error states.
+ */
 
-export type ChipOption<T extends string> = { key: T; label: string };
-
-/** A wrap of selectable chips: a filter or a choice of one value. */
-export function ChipGroup<T extends string>({
-    options,
-    value,
-    onChange,
-    accessibilityLabel,
-    disabled,
-    testID,
-}: {
-    options: readonly ChipOption<T>[];
-    value: T | null;
-    onChange: (value: T) => void;
-    accessibilityLabel?: string;
-    disabled?: boolean;
-    testID?: string;
-}) {
-    return (
-        <View style={ui.chips} accessibilityLabel={accessibilityLabel} testID={testID}>
-            {options.map((option) => {
-                const selected = option.key === value;
-                return (
-                    <Pressable
-                        key={option.key}
-                        onPress={() => onChange(option.key)}
-                        disabled={disabled}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected, disabled: !!disabled }}
-                        style={[ui.chip, selected ? ui.chipSelected : null, disabled ? ui.disabled : null]}
-                        testID={testID ? `${testID}-${option.key}` : undefined}
-                    >
-                        <Text style={[ui.chipText, selected ? ui.chipTextSelected : null]}>{option.label}</Text>
-                    </Pressable>
-                );
-            })}
-        </View>
-    );
-}
-
-/** A labelled field block. */
+/** A quiet overline label over a control that is not a text field (a chip row, a stepper). */
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
     return (
         <View style={ui.field}>
-            <Text style={ui.fieldLabel}>{label}</Text>
+            <Text style={ui.overline} accessibilityRole="header">{label}</Text>
             {children}
             {hint ? <Text style={ui.hint}>{hint}</Text> : null}
         </View>
@@ -99,13 +66,14 @@ export function Stepper({
         onPick: (date) => pickDate.onPick(clampYmd(pickerDateToYmd(date), pickDate.minDate, pickDate.maxDate)),
     }) : undefined;
     return (
-        <View style={ui.stepper} testID={testID}>
+        <View style={[ui.stepper, disabled ? ui.disabled : null]} testID={testID}>
             <Pressable
                 onPress={onPrev}
                 disabled={disabled}
                 accessibilityRole="button"
                 accessibilityLabel={prevLabel}
-                style={ui.stepperButton}
+                hitSlop={4}
+                style={({ pressed }) => [ui.stepperButton, pressed ? ui.pressed : null]}
                 testID={testID ? `${testID}-prev` : undefined}
             >
                 <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
@@ -122,17 +90,20 @@ export function Stepper({
                     testID={testID ? `${testID}-open` : undefined}
                 >
                     <Ionicons name="calendar-outline" size={16} color={colors.tone.accent.fg} />
-                    <Text style={ui.stepperPickText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{label}</Text>
+                    <Text style={ui.stepperText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{label}</Text>
                 </Pressable>
             ) : (
-                <Text style={ui.stepperLabel} accessibilityLiveRegion="polite">{label}</Text>
+                <View style={ui.stepperPick}>
+                    <Text style={ui.stepperText} accessibilityLiveRegion="polite" numberOfLines={1}>{label}</Text>
+                </View>
             )}
             <Pressable
                 onPress={onNext}
                 disabled={disabled}
                 accessibilityRole="button"
                 accessibilityLabel={nextLabel}
-                style={ui.stepperButton}
+                hitSlop={4}
+                style={({ pressed }) => [ui.stepperButton, pressed ? ui.pressed : null]}
                 testID={testID ? `${testID}-next` : undefined}
             >
                 <Ionicons name="chevron-forward" size={20} color={colors.text.primary} />
@@ -143,81 +114,135 @@ export function Stepper({
     );
 }
 
-/** A number with its caption. */
-export function StatTile({ label, value, hint, style, testID }: { label: string; value: string; hint?: string; style?: StyleProp<ViewStyle>; testID?: string }) {
+/** The bar colours of the charts: one meaning, one colour, on every screen. */
+export const CHART_COLOR = {
+    bookings: colors.tone.accent.fg,
+    revenue: colors.tone.success.fg,
+    promo: colors.tone.warning.fg,
+} as const;
+
+/** A horizontal bar of `share` (0..1) of the width over a track with quarter gridlines. */
+export function ShareBar({ share, color = CHART_COLOR.bookings }: { share: number; color?: string }) {
+    const value = Math.max(0, Math.min(1, share));
+    const width = `${value * 100}%` as const;
     return (
-        <View style={[ui.tile, style]} accessible accessibilityLabel={[label, value, hint].filter(Boolean).join(', ')} testID={testID}>
-            <Text style={ui.tileLabel}>{label}</Text>
-            <Text style={ui.tileValue}>{value}</Text>
-            {hint ? <Text style={ui.tileHint}>{hint}</Text> : null}
+        <View style={ui.barTrack} importantForAccessibility="no-hide-descendants">
+            {[25, 50, 75].map((line) => <View key={line} style={[ui.gridline, { left: `${line}%` }]} />)}
+            {value > 0 ? <View style={[ui.barFill, { width, backgroundColor: color }]} /> : null}
         </View>
     );
 }
 
-/** A horizontal bar of `share` (0..1) of the width, for the website's charts as plain views. */
-export function ShareBar({ share, color = colors.accent.indigo }: { share: number; color?: string }) {
-    const width = `${Math.max(0, Math.min(1, share)) * 100}%` as const;
+export type BarDatum = {
+    key: string;
+    label: string;
+    value: number;
+    display: string;
+    /** A second number in its own column (promotions next to bookings). */
+    secondary?: string;
+    accessibilityLabel?: string;
+};
+
+/**
+ * A bar chart as rows: label, bar, value (and an optional second column). Bars share one scale
+ * (the largest value), the track carries quarter gridlines and the axis under it names 0 and the
+ * maximum. `columns` names the columns above the rows.
+ */
+export function BarList({
+    data,
+    color = CHART_COLOR.bookings,
+    axisMax,
+    columns,
+    labelWidth = 56,
+    valueWidth = 72,
+    secondaryWidth = 56,
+    testID,
+}: {
+    data: readonly BarDatum[];
+    color?: string;
+    /** The text of the maximum on the axis (formatted like the values). */
+    axisMax?: string;
+    columns?: { label: string; value: string; secondary?: string };
+    labelWidth?: number;
+    valueWidth?: number;
+    secondaryWidth?: number;
+    testID?: string;
+}) {
+    const max = Math.max(1, ...data.map((item) => item.value));
+    const hasSecondary = data.some((item) => item.secondary != null) || !!columns?.secondary;
     return (
-        <View style={ui.barTrack} importantForAccessibility="no-hide-descendants">
-            <View style={[ui.barFill, { width, backgroundColor: color }]} />
+        <View style={ui.chart} testID={testID}>
+            {columns ? (
+                <View style={ui.barRow} importantForAccessibility="no-hide-descendants">
+                    <Text style={[ui.columnText, { width: labelWidth }]} numberOfLines={1}>{columns.label}</Text>
+                    <Text style={[ui.columnText, ui.flex]} numberOfLines={1}>{columns.value}</Text>
+                    {hasSecondary ? <Text style={[ui.columnText, ui.right, { width: secondaryWidth }]} numberOfLines={1}>{columns.secondary ?? ''}</Text> : null}
+                </View>
+            ) : null}
+            {data.map((item) => (
+                <View key={item.key} style={ui.barRow} accessible accessibilityLabel={item.accessibilityLabel ?? `${item.label}: ${item.display}`}>
+                    <Text style={[ui.barLabel, { width: labelWidth }]} numberOfLines={1}>{item.label}</Text>
+                    <ShareBar share={item.value / max} color={color} />
+                    <Text style={[ui.barValue, { width: valueWidth }, item.value === 0 ? ui.barValueZero : null]} numberOfLines={1}>{item.display}</Text>
+                    {hasSecondary ? (
+                        <Text style={[ui.barValue, { width: secondaryWidth }, !item.secondary || item.secondary === '—' ? ui.barValueZero : null]} numberOfLines={1}>
+                            {item.secondary ?? '—'}
+                        </Text>
+                    ) : null}
+                </View>
+            ))}
+            {axisMax ? (
+                <View style={ui.axis} importantForAccessibility="no-hide-descendants">
+                    <View style={{ width: labelWidth }} />
+                    <View style={ui.axisScale}>
+                        <Text style={ui.axisText}>0</Text>
+                        <Text style={ui.axisText}>{axisMax}</Text>
+                    </View>
+                    <View style={{ width: valueWidth }} />
+                    {hasSecondary ? <View style={{ width: secondaryWidth }} /> : null}
+                </View>
+            ) : null}
         </View>
     );
 }
 
 /** A failed read with a retry (FE-08: never shown as empty data). */
-export function LoadError({ title, onRetry }: { title: string; onRetry: () => void }) {
+export function LoadError({ title, onRetry, screen = false, compact = false }: { title: string; onRetry: () => void; screen?: boolean; compact?: boolean }) {
     const { t } = useLanguage();
+    const state = <ErrorState title={title} message={t('staff.checkConnection')} onRetry={onRetry} compact={compact} />;
+    return screen ? <Screen>{state}</Screen> : state;
+}
+
+/** The whole screen while its first read is in flight: a summary card and a list. */
+export function ScreenSkeleton({ testID }: { testID?: string }) {
     return (
-        <EmptyState
-            icon="alert-circle"
-            title={title}
-            message={t('staff.checkConnection')}
-            action={<Button title={t('staff.retry')} onPress={onRetry} variant="outline" fullWidth />}
-        />
+        <Screen testID={testID}>
+            <SkeletonCard lines={2} />
+            <SkeletonList rows={4} avatar={false} />
+        </Screen>
     );
 }
 
-export function SectionTitle({ children }: { children: ReactNode }) {
-    return <Text style={ui.sectionTitle} accessibilityRole="header">{children}</Text>;
-}
-
 export const ui = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.background.primary },
-    content: { padding: colors.layout.space4, paddingBottom: 120, gap: colors.layout.space3 },
-    title: { fontSize: 24, fontWeight: '700', color: colors.text.primary },
-    subtitle: { fontSize: 14, color: colors.text.secondary, marginTop: 4 },
-    text: { fontSize: 15, color: colors.text.primary },
-    muted: { fontSize: 13, color: colors.text.secondary },
-    hint: { fontSize: 12, color: colors.text.tertiary, marginTop: 4 },
-    sectionTitle: { fontSize: 18, fontWeight: '600', color: colors.text.primary, marginTop: colors.layout.space2 },
-    row: { flexDirection: 'row', alignItems: 'center', gap: colors.layout.space2 },
-    rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: colors.layout.space2 },
-    wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2 },
-    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2 },
-    chip: {
-        minHeight: MIN_TOUCH_TARGET,
-        justifyContent: 'center',
-        paddingHorizontal: colors.layout.space3,
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.surface.card,
-    },
-    chipSelected: { borderColor: colors.accent.primary, backgroundColor: colors.surface.emphasis },
-    chipText: { fontSize: 14, color: colors.text.secondary },
-    chipTextSelected: { color: colors.text.primary, fontWeight: '600' },
+    text: { ...typeScale.body, color: colors.text.primary },
+    strong: { ...typeScale.bodyStrong, color: colors.text.primary },
+    muted: { ...typeScale.caption, color: colors.text.secondary },
+    hint: { ...typeScale.caption, color: colors.text.tertiary },
+    overline: { ...typeScale.overline, color: colors.text.tertiary },
+    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+    wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+    separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border.subtle },
     disabled: { opacity: colors.interactive.disabledOpacity },
-    field: { gap: colors.layout.space2 },
-    fieldLabel: { fontSize: 14, fontWeight: '600', color: colors.text.secondary },
-    stepper: { flexDirection: 'row', alignItems: 'center', gap: colors.layout.space2 },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    field: { gap: space.sm },
+    stepper: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
     stepperButton: {
         width: MIN_TOUCH_TARGET,
         height: MIN_TOUCH_TARGET,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.light,
+        borderRadius: radii.md,
         backgroundColor: colors.surface.card,
     },
     stepperPick: {
@@ -226,47 +251,31 @@ export const ui = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: colors.layout.space2,
-        paddingHorizontal: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
+        gap: space.sm,
+        paddingHorizontal: space.md,
+        borderRadius: radii.md,
         backgroundColor: colors.surface.card,
     },
-    stepperPickText: { flexShrink: 1, fontSize: 16, fontWeight: '600', color: colors.text.primary },
-    pressed: { opacity: colors.interactive.pressedOpacity },
-    stepperLabel: { flexShrink: 1, fontSize: 16, fontWeight: '600', color: colors.text.primary, textAlign: 'center', minWidth: 120 },
-    tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2 },
-    tile: {
-        flexGrow: 1,
-        flexBasis: '45%',
-        padding: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.elevated,
+    stepperText: { ...typeScale.bodyStrong, flexShrink: 1, color: colors.text.primary, textAlign: 'center' },
+    chart: { gap: space.xs },
+    barRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 28 },
+    barLabel: { ...typeScale.caption, color: colors.text.secondary },
+    barValue: { ...typeScale.callout, color: colors.text.primary, textAlign: 'right', fontVariant: ['tabular-nums'] },
+    barValueZero: { color: colors.text.tertiary },
+    barTrack: {
+        flex: 1,
+        height: 12,
+        borderRadius: radii.pill,
+        backgroundColor: colors.fill.track,
+        overflow: 'hidden',
+        justifyContent: 'center',
     },
-    tileLabel: { fontSize: 12, fontWeight: '600', color: colors.text.secondary },
-    tileValue: { fontSize: 20, fontWeight: '700', color: colors.text.primary, marginTop: 4 },
-    tileHint: { fontSize: 12, color: colors.text.tertiary, marginTop: 2 },
-    barTrack: { height: 8, borderRadius: 4, backgroundColor: colors.surface.elevated, overflow: 'hidden', flex: 1 },
-    barFill: { height: 8, borderRadius: 4 },
-    listRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: colors.layout.space2,
-        paddingVertical: colors.layout.space2,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border.subtle,
-    },
-    badge: {
-        alignSelf: 'flex-start',
-        borderRadius: colors.layout.radiusSm,
-        paddingHorizontal: colors.layout.space2,
-        paddingVertical: 2,
-        backgroundColor: colors.surface.elevated,
-    },
-    badgeText: { fontSize: 12, fontWeight: '600', color: colors.text.secondary },
-    successText: { color: colors.status.success },
-    warningText: { color: colors.status.warning },
-    dangerText: { color: colors.status.danger },
+    gridline: { position: 'absolute', top: 0, bottom: 0, width: StyleSheet.hairlineWidth, backgroundColor: colors.border.light },
+    barFill: { height: 12, borderRadius: radii.pill, minWidth: 4 },
+    axis: { flexDirection: 'row', gap: space.sm, marginTop: space.xxs },
+    axisScale: { flex: 1, flexDirection: 'row', justifyContent: 'space-between' },
+    axisText: { ...typeScale.caption, color: colors.text.tertiary },
+    columnText: { ...typeScale.overline, color: colors.text.tertiary },
+    flex: { flex: 1 },
+    right: { textAlign: 'right' },
 });

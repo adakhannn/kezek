@@ -1,18 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import ClientContactActions from '../../../components/ClientContactActions';
+import Badge, { StatusPill } from '../../../components/ui/Badge';
 import Button from '../../../components/ui/Button';
-import Card from '../../../components/ui/Card';
+import ChipGroup from '../../../components/ui/ChipGroup';
 import EmptyState from '../../../components/ui/EmptyState';
 import Input from '../../../components/ui/Input';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import MotionPressable from '../../../components/ui/MotionPressable';
+import ListRow from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import Section from '../../../components/ui/Section';
+import { SkeletonList } from '../../../components/ui/Skeleton';
 import { colors } from '../../../constants/colors';
+import { radii, space, type Tone } from '../../../constants/theme';
 import { useToast } from '../../../contexts/ToastContext';
 import { useNow } from '../../../hooks/useNow';
 import { useLanguage, type MobileI18nKey } from '../../../i18n';
@@ -22,8 +27,9 @@ import { getServiceName } from '../../../utils/i18n';
 import { runManagerBookingAction } from '../../dashboard/managerBookings';
 import type { ManagerBookingAction } from '../../dashboard/types';
 import { dayBoundsInTz, todayInTz } from '../opsKit/dates';
-import { ChipGroup, Field, LoadError, ui } from '../opsKit/ui';
+import { Field, LoadError, ui } from '../opsKit/ui';
 import BookingRowActions from './BookingRowActions';
+import { TimeBox } from './BookingsCalendarTab';
 import { fetchBookingsPage, fetchCurrentStaffId, type BranchOption } from './bookingsData';
 import {
     bookingStatusLabelKey,
@@ -46,20 +52,13 @@ const STATUS_LABEL: Record<BookingsStatusFilter, MobileI18nKey> = {
     no_show: 'ops.bookings.status.no_show',
 };
 
-/** The colours of the app's status badges (components/BookingStatusBadge). */
-const STATUS_COLOR: Record<BookingStatus, string> = {
-    hold: colors.status.hold,
-    confirmed: colors.status.info,
-    paid: colors.status.success,
-    cancelled: colors.status.danger,
-    no_show: colors.text.secondary,
-};
-const STATUS_SURFACE: Record<BookingStatus, string> = {
-    hold: colors.feedback.warningSurface,
-    confirmed: colors.feedback.infoSurface,
-    paid: colors.feedback.successSurface,
-    cancelled: colors.feedback.dangerSurface,
-    no_show: colors.surface.elevated,
+/** The tones of the app's status pills (the same as components/BookingStatusBadge). */
+const STATUS_TONE: Record<BookingStatus, Tone> = {
+    hold: 'warning',
+    confirmed: 'info',
+    paid: 'success',
+    cancelled: 'danger',
+    no_show: 'neutral',
 };
 
 const ACTION_DONE: Record<ManagerBookingAction, MobileI18nKey> = {
@@ -169,98 +168,97 @@ export default function BookingsListTab({ bizId, timezone, branches }: { bizId: 
     };
 
     return (
-        <ScrollView
-            style={ui.screen}
-            contentContainerStyle={ui.content}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-            testID="bookings-list-tab"
-        >
-            <View style={ui.rowBetween}>
-                <View style={ui.badge}><Text style={ui.badgeText}>{t(modeKey)}</Text></View>
-                <Text style={ui.muted} accessibilityLiveRegion="polite">
-                    {t('ops.bookings.results', { shown: rows.length, total })}
-                </Text>
-            </View>
-            <Input
-                label={t('ops.bookings.filters.search')}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder={t('ops.bookings.filters.searchPlaceholder')}
-                helperText={t('ops.bookings.filters.searchHint')}
-                autoCorrect={false}
-                autoCapitalize="none"
-                returnKeyType="search"
-                testID="bookings-search"
-            />
-            <Field label={t('ops.bookings.presets.title')}>
-                <ChipGroup
-                    options={presets}
-                    value={preset}
-                    onChange={(value) => choose(setPreset)(preset === value ? null : value)}
-                    testID="bookings-preset"
+        <Screen refreshing={refreshing} onRefresh={onRefresh} keyboard testID="bookings-list-tab">
+            <Section gap={space.md}>
+                <Input
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder={t('ops.bookings.filters.searchPlaceholder')}
+                    accessibilityLabel={t('ops.bookings.filters.search')}
+                    leadingIcon={<Ionicons name="search" size={18} color={colors.text.secondary} />}
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    returnKeyType="search"
+                    containerStyle={styles.search}
+                    testID="bookings-search"
                 />
-            </Field>
-            <Field label={t('ops.bookings.filters.status')} hint={preset ? t('ops.bookings.presets.replacesStatus') : undefined}>
-                <ChipGroup
-                    options={STATUS_FILTERS.map((key) => ({ key, label: t(STATUS_LABEL[key]) }))}
-                    value={statusFilter}
-                    onChange={choose(setStatusFilter)}
-                    disabled={!!preset}
-                    testID="bookings-status"
-                />
-            </Field>
-            {branches.length > 0 ? (
-                <Field label={t('ops.bookings.filters.branch')}>
+                <Field label={t('ops.bookings.presets.title')}>
                     <ChipGroup
-                        options={[{ key: 'all', label: t('ops.bookings.allBranches') }, ...branches.map((branch) => ({ key: branch.id, label: branch.name }))]}
-                        value={branchFilter}
-                        onChange={choose(setBranchFilter)}
-                        testID="bookings-branch"
+                        options={presets}
+                        value={preset}
+                        onChange={(value) => choose(setPreset)(preset === value ? null : value)}
+                        accessibilityLabel={t('ops.bookings.presets.title')}
+                        testID="bookings-preset"
                     />
                 </Field>
-            ) : null}
-            <Button title={t('ops.bookings.refresh')} onPress={() => void listQuery.refetch()} variant="outline" size="sm" loading={busy} />
+                <Field label={t('ops.bookings.filters.status')} hint={preset ? t('ops.bookings.presets.replacesStatus') : undefined}>
+                    <ChipGroup
+                        options={STATUS_FILTERS.map((key) => ({ key, label: t(STATUS_LABEL[key]) }))}
+                        value={statusFilter}
+                        onChange={choose(setStatusFilter)}
+                        disabled={!!preset}
+                        accessibilityLabel={t('ops.bookings.filters.status')}
+                        testID="bookings-status"
+                    />
+                </Field>
+                {branches.length > 0 ? (
+                    <Field label={t('ops.bookings.filters.branch')}>
+                        <ChipGroup
+                            options={[{ key: 'all', label: t('ops.bookings.allBranches') }, ...branches.map((branch) => ({ key: branch.id, label: branch.name }))]}
+                            value={branchFilter}
+                            onChange={choose(setBranchFilter)}
+                            accessibilityLabel={t('ops.bookings.filters.branch')}
+                            testID="bookings-branch"
+                        />
+                    </Field>
+                ) : null}
+            </Section>
 
-            {listQuery.isLoading ? (
-                <LoadingSpinner message={t('common.loading')} />
-            ) : listQuery.error && shownIsCurrent ? (
-                <LoadError title={t('ops.bookings.list.loadError')} onRetry={() => void listQuery.refetch()} />
-            ) : rows.length === 0 ? (
-                <EmptyState icon="calendar" title={t('ops.bookings.list.empty')} message={t('ops.bookings.list.emptyHint')} />
-            ) : (
-                <View style={{ gap: colors.layout.space3, opacity: busy && !shownIsCurrent ? 0.6 : 1 }} accessibilityState={{ busy }}>
-                    {rows.map((row) => {
-                        const branchName = branches.find((branch) => branch.id === row.branch_id)?.name ?? null;
-                        const serviceLabel = servicesSummary(row.booking_services, t) || (row.service ? getServiceName(row.service, t.locale) : '');
-                        const clientLabel = row.client_name || (row.client_id ? t('ops.bookings.client') : t('ops.bookings.walkIn'));
-                        return (
-                            <Card key={row.id} padding="md" testID={`bookings-row-${row.id}`}>
-                                <View style={ui.rowBetween}>
-                                    <MotionPressable
+            <Section
+                right={(
+                    <Button title={t('ops.bookings.refresh')} onPress={() => void listQuery.refetch()} variant="ghost" size="sm" loading={busy} />
+                )}
+                title={t(modeKey)}
+                caption={t('ops.bookings.results', { shown: rows.length, total })}
+            >
+                {listQuery.isLoading ? (
+                    <SkeletonList rows={4} testID="bookings-loading" />
+                ) : listQuery.error && shownIsCurrent ? (
+                    <LoadError title={t('ops.bookings.list.loadError')} onRetry={() => void listQuery.refetch()} />
+                ) : rows.length === 0 ? (
+                    <EmptyState compact icon="calendar-outline" title={t('ops.bookings.list.empty')} message={t('ops.bookings.list.emptyHint')} />
+                ) : (
+                    <View style={[styles.list, { opacity: busy && !shownIsCurrent ? 0.6 : 1 }]} accessibilityState={{ busy }}>
+                        {rows.map((row) => {
+                            const branchName = branches.find((branch) => branch.id === row.branch_id)?.name ?? null;
+                            const serviceLabel = servicesSummary(row.booking_services, t) || (row.service ? getServiceName(row.service, t.locale) : '');
+                            const clientLabel = row.client_name || (row.client_id ? t('ops.bookings.client') : t('ops.bookings.walkIn'));
+                            const start = formatInTimeZone(new Date(row.start_at), timezone, 'HH:mm');
+                            const end = formatInTimeZone(new Date(row.end_at), timezone, 'HH:mm');
+                            const day = formatInTimeZone(new Date(row.start_at), timezone, 'dd.MM.yyyy');
+                            return (
+                                <View key={row.id} style={styles.item} testID={`bookings-row-${row.id}`}>
+                                    <ListRow
+                                        leading={<TimeBox start={start} />}
+                                        title={serviceLabel || '—'}
+                                        subtitle={[`${day} · ${start}–${end}`, branchName].filter(Boolean).join(' · ')}
+                                        numberOfLines={2}
+                                        trailing={<StatusPill label={t(bookingStatusLabelKey(row.status, row.start_at, now))} tone={STATUS_TONE[row.status]} />}
                                         onPress={() => navigation.navigate('BookingDetails', { id: row.id })}
-                                        accessibilityRole="link"
-                                        accessibilityLabel={`${t('ops.bookings.calendar.openBooking')} #${row.id.slice(0, 8)}`}
-                                        style={{ minHeight: 44, justifyContent: 'center' }}
-                                    >
-                                        <Text style={[ui.muted, { color: colors.accent.indigo, fontFamily: 'monospace' }]}>#{row.id.slice(0, 8)}</Text>
-                                    </MotionPressable>
-                                    <View style={[ui.badge, { backgroundColor: STATUS_SURFACE[row.status] }]}>
-                                        <Text style={[ui.badgeText, { color: STATUS_COLOR[row.status] }]}>
-                                            {t(bookingStatusLabelKey(row.status, row.start_at, now))}
-                                        </Text>
+                                        accessibilityHint={`${t('ops.bookings.calendar.openBooking')} #${row.id.slice(0, 8)}`}
+                                    />
+                                    <View style={styles.people}>
+                                        <View style={styles.person}>
+                                            <Ionicons name="cut-outline" size={14} color={colors.text.tertiary} />
+                                            <Text style={ui.muted} numberOfLines={1}>{t('ops.bookings.list.master')}: {row.staff_name || '—'}</Text>
+                                        </View>
+                                        <View style={styles.person}>
+                                            <Ionicons name="person-outline" size={14} color={colors.text.tertiary} />
+                                            <Text style={ui.muted} numberOfLines={1}>{t('ops.bookings.client')}: {clientLabel}</Text>
+                                        </View>
+                                        <Badge label={`#${row.id.slice(0, 8)}`} style={styles.id} />
                                     </View>
-                                </View>
-                                <Text style={[ui.text, { fontWeight: '600' }]}>{serviceLabel || '—'}</Text>
-                                {branchName ? <Text style={ui.muted}>{branchName}</Text> : null}
-                                <Text style={[ui.text, { marginTop: 6 }]}>
-                                    {formatInTimeZone(new Date(row.start_at), timezone, 'dd.MM.yyyy')}{'  '}
-                                    {formatInTimeZone(new Date(row.start_at), timezone, 'HH:mm')} - {formatInTimeZone(new Date(row.end_at), timezone, 'HH:mm')}
-                                </Text>
-                                <Text style={ui.muted}>{t('ops.bookings.list.master')}: {row.staff_name || '—'}</Text>
-                                <Text style={ui.muted}>{t('ops.bookings.client')}: {clientLabel}</Text>
-                                <ClientContactActions phone={row.client_phone} />
-                                <View style={{ marginTop: colors.layout.space2 }}>
+                                    <ClientContactActions phone={row.client_phone} />
                                     <BookingRowActions
                                         bookingId={row.id}
                                         status={row.status}
@@ -270,19 +268,35 @@ export default function BookingsListTab({ bizId, timezone, branches }: { bizId: 
                                         onAction={(bookingId, kind) => action.mutate({ bookingId, kind })}
                                     />
                                 </View>
-                            </Card>
-                        );
-                    })}
-                </View>
-            )}
+                            );
+                        })}
+                    </View>
+                )}
 
-            {total > rows.length || page > 1 ? (
-                <View style={ui.rowBetween} testID="bookings-pagination">
-                    <Button title={t('ops.common.prev')} onPress={() => setPage((value) => Math.max(1, value - 1))} variant="outline" size="sm" disabled={page <= 1 || busy} />
-                    <Text style={ui.muted}>{t('ops.common.pageOf', { page, pages })}</Text>
-                    <Button title={t('ops.common.next')} onPress={() => setPage((value) => Math.min(pages, value + 1))} variant="outline" size="sm" disabled={page >= pages || busy} />
-                </View>
-            ) : null}
-        </ScrollView>
+                {total > rows.length || page > 1 ? (
+                    <View style={styles.pagination} testID="bookings-pagination">
+                        <Button title={t('ops.common.prev')} onPress={() => setPage((value) => Math.max(1, value - 1))} variant="outline" size="sm" disabled={page <= 1 || busy} />
+                        <Text style={ui.muted}>{t('ops.common.pageOf', { page, pages })}</Text>
+                        <Button title={t('ops.common.next')} onPress={() => setPage((value) => Math.min(pages, value + 1))} variant="outline" size="sm" disabled={page >= pages || busy} />
+                    </View>
+                ) : null}
+            </Section>
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    search: { marginBottom: 0 },
+    list: { gap: space.md },
+    item: {
+        backgroundColor: colors.surface.card,
+        borderRadius: radii.lg,
+        paddingHorizontal: space.lg,
+        paddingBottom: space.md,
+        gap: space.sm,
+    },
+    people: { gap: space.xs },
+    person: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    id: { marginTop: space.xxs },
+    pagination: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+});

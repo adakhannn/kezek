@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 
 import { apiRequest } from '../../../lib/api';
 import { supabase } from '../../../lib/supabase';
+import ManageAnalyticsScreen from '../../../screens/manage/analytics/ManageAnalyticsScreen';
 import ManageBookingsScreen from '../../../screens/manage/bookings/ManageBookingsScreen';
 import { resetCurrentBusiness } from '../../../screens/manage/currentBusiness';
 import ManageFinanceScreen from '../../../screens/manage/finance/ManageFinanceScreen';
@@ -69,6 +70,39 @@ describe('business management screens', () => {
         expect(screen.getByLabelText('Текущий балл 72.5 / 100')).toBeTruthy();
         fireEvent.press(screen.getByTestId('overview-metric-bookingsToday'));
         expect(mockNavigate).toHaveBeenCalledWith('ManageBookings', { bizId: 'biz-1', bizName: 'Low Fade', tz: 'Asia/Bishkek' });
+    });
+
+    test('analytics: KPIs as tiles and the days as a bar chart with an axis', async () => {
+        const point = { homeViews: 0, businessPageViews: 0, bookingFlowStarts: 0, bookingsCreated: 0, promoBookings: 0, promoRevenue: 0 };
+        mockApi((endpoint) => {
+            if (endpoint.startsWith('/api/dashboard/analytics/overview')) {
+                return { ok: true, data: {
+                    summary: {
+                        period: { startDate: '2026-10-28', endDate: '2026-11-26' },
+                        bookings: { created: 12, confirmedOrPaid: 9 },
+                        funnel: { homeViews: 0, businessPageViews: 0, bookingFlowStarts: 0, conversionHomeToBooking: 4.5 },
+                        revenue: { total: 15000, promoBookings: 0, promoRevenue: 0 },
+                    },
+                    byDay: [
+                        { ...point, date: '2026-11-25', bookingsConfirmedOrPaid: 4, totalRevenue: 6000 },
+                        { ...point, date: '2026-11-26', bookingsConfirmedOrPaid: 5, totalRevenue: 9000 },
+                    ],
+                } };
+            }
+            if (endpoint.startsWith('/api/dashboard/analytics/load')) {
+                return { ok: true, data: { period: { startDate: '2026-10-28', endDate: '2026-11-26' }, points: [{ date: '2026-11-26', hour: 10, bookingsCount: 3, promoBookingsCount: 1 }] } };
+            }
+            return { ok: true, data: [] };
+        });
+        renderScreen(ManageAnalyticsScreen);
+
+        expect(await screen.findByLabelText('Подтверждено, 9')).toBeTruthy();
+        expect(screen.getByLabelText('2026-11-26: 5')).toBeTruthy();
+        expect(screen.getByLabelText('10:00, Брони 3, Промо 1')).toBeTruthy();
+        // Bookings and revenue by day: one row per day in each chart.
+        expect(screen.getAllByText('26.11')).toHaveLength(2);
+        // No second title under the header.
+        expect(screen.queryByText('Аналитика бизнеса')).toBeNull();
     });
 
     test('a failed overview read is an error with retry, never zeros', async () => {

@@ -1,11 +1,13 @@
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 
+import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
-import MotionPressable from '../../components/ui/MotionPressable';
+import ListRow, { ListGroup } from '../../components/ui/ListRow';
+import Screen from '../../components/ui/Screen';
+import Section from '../../components/ui/Section';
 import { colors } from '../../constants/colors';
 import { useLanguage } from '../../i18n';
-import { styles } from './staffScreenStyles';
 import type { StaffInfo } from './types';
 
 type Props = {
@@ -32,64 +34,40 @@ export function StaffBusinessPicker({
 }: Props) {
     const { t } = useLanguage();
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            testID="staff-business-picker"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-        >
-            <View style={styles.header}>
-                <Text style={styles.title}>{t('staff.picker.title')}</Text>
-                <Text style={styles.subtitle}>
-                    {t('staff.picker.subtitle')}
-                </Text>
-            </View>
-
-            <View style={styles.section}>
-                {error ? <FeedbackBanner variant="danger" message={error} style={styles.pickerError} /> : null}
-
-                <View style={styles.pickerList}>
+        <Screen tabBar refreshing={refreshing} onRefresh={onRefresh} testID="staff-business-picker">
+            <Section title={t('staff.picker.title')} caption={t('staff.picker.subtitle')}>
+                {error ? <FeedbackBanner variant="danger" message={error} compact /> : null}
+                <ListGroup inset>
                     {records.map((record) => {
                         const businessName = record.business?.name || t('staff.workspace.business');
                         const branchName = record.branch?.name;
                         const isCurrent = record.id === currentId;
                         const isSelecting = record.id === selectingId;
-
                         return (
-                            <MotionPressable
+                            <ListRow
                                 key={record.id}
-                                onPress={() => onSelect(record.id)}
-                                disabled={!!selectingId}
-                                accessibilityLabel={branchName ? `${businessName}, ${branchName}` : businessName}
-                                accessibilityHint={t('staff.picker.optionHint')}
-                                accessibilityState={{ selected: isCurrent, busy: isSelecting }}
-                                style={[styles.pickerOption, isCurrent && styles.pickerOptionCurrent]}
-                            >
-                                <View style={styles.pickerOptionText}>
-                                    <Text style={styles.pickerBusiness}>{businessName}</Text>
-                                    {branchName ? <Text style={styles.pickerBranch}>{branchName}</Text> : null}
-                                </View>
-                                {isSelecting ? (
+                                icon="business-outline"
+                                iconTone={isCurrent ? 'accent' : 'neutral'}
+                                title={businessName}
+                                subtitle={branchName ?? undefined}
+                                trailing={isSelecting ? (
                                     <ActivityIndicator color={colors.accent.primary} />
                                 ) : isCurrent ? (
-                                    <Text style={styles.pickerCurrentMark}>{t('staff.picker.current')}</Text>
-                                ) : null}
-                            </MotionPressable>
+                                    <Badge label={t('staff.picker.current')} tone="accent" />
+                                ) : undefined}
+                                chevron={!isCurrent && !isSelecting}
+                                onPress={() => onSelect(record.id)}
+                                disabled={!!selectingId}
+                                accessibilityHint={t('staff.picker.optionHint')}
+                            />
                         );
                     })}
-                </View>
+                </ListGroup>
+            </Section>
 
-                {onCancel ? (
-                    <Button
-                        title={t('staff.cancel')}
-                        onPress={onCancel}
-                        variant="outline"
-                        disabled={!!selectingId}
-                        fullWidth
-                        style={styles.changeBusinessAction}
-                    />
-                ) : null}
-            </View>
-        </ScrollView>
+            {onCancel ? (
+                <Button title={t('staff.cancel')} onPress={onCancel} variant="outline" disabled={!!selectingId} fullWidth />
+            ) : null}
+        </Screen>
     );
 }

@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import ActionBar from '../components/ui/ActionBar';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import ChipGroup from '../components/ui/ChipGroup';
 import EmptyState from '../components/ui/EmptyState';
-import Input from '../components/ui/Input';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
-import MotionPressable from '../components/ui/MotionPressable';
-import { MIN_TOUCH_TARGET } from '../constants/accessibility';
+import ErrorState from '../components/ui/ErrorState';
+import FeedbackBanner from '../components/ui/FeedbackBanner';
+import FormField, { FieldGroup } from '../components/ui/FormField';
+import Screen from '../components/ui/Screen';
+import { CheckboxRow } from '../components/ui/SelectionRow';
+import { SkeletonBlock, SkeletonCard } from '../components/ui/Skeleton';
 import { colors } from '../constants/colors';
-import { typography } from '../constants/typography';
+import { space, typeScale } from '../constants/theme';
 import { useToast } from '../contexts/ToastContext';
 import { useCurrentStaff } from '../hooks/useCurrentStaff';
 import { useLanguage } from '../i18n';
@@ -118,16 +121,27 @@ export default function StaffCreateBookingScreen() {
         create.mutate();
     };
 
-    if (staffLoading || optionsQuery.isLoading) return <LoadingSpinner message={t('common.loading')} />;
-    if (!staffInfo) return <EmptyState icon="briefcase" title={t('staff.notStaff')} message={t('staff.workspace.notStaffMessage')} />;
+    if (staffLoading || optionsQuery.isLoading) {
+        return (
+            <Screen testID="staff-create-booking-loading">
+                <SkeletonBlock height={44} />
+                <SkeletonCard lines={3} />
+                <SkeletonCard lines={2} />
+            </Screen>
+        );
+    }
+    if (!staffInfo) {
+        return (
+            <Screen>
+                <EmptyState icon="briefcase-outline" title={t('staff.notStaff')} message={t('staff.workspace.notStaffMessage')} />
+            </Screen>
+        );
+    }
     if (optionsQuery.isError) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('parity.staffBooking.loadError')}
-                message={t('staff.checkConnection')}
-                action={<Button title={t('staff.retry')} onPress={() => void optionsQuery.refetch()} variant="outline" fullWidth />}
-            />
+            <Screen>
+                <ErrorState title={t('parity.staffBooking.loadError')} onRetry={() => void optionsQuery.refetch()} />
+            </Screen>
         );
     }
 
@@ -139,199 +153,136 @@ export default function StaffCreateBookingScreen() {
     const canCreate = !!branchId && selectedServices.length > 0 && !!slotStart && !!clientName.trim() && !!clientPhone.trim();
 
     return (
-        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ScrollView
-                style={styles.container}
-                contentContainerStyle={styles.content}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
-                automaticallyAdjustKeyboardInsets
-                testID="staff-create-booking-screen"
-            >
-                <Card style={styles.card}>
-                    <Text style={styles.label}>{t('parity.staffBooking.branch')}</Text>
-                    <View style={styles.chips} accessibilityRole="radiogroup">
-                        {branches.map((branch) => {
-                            const selected = branch.id === branchId;
-                            return (
-                                <Chip
-                                    key={branch.id}
-                                    label={formatStaffName(branch.name, locale)}
-                                    selected={selected}
-                                    role="radio"
-                                    onPress={() => {
-                                        setBranchId(branch.id);
-                                        setServiceIds([]);
-                                    }}
-                                />
-                            );
-                        })}
-                    </View>
+        <Screen
+            keyboard
+            testID="staff-create-booking-screen"
+            footer={(
+                <ActionBar
+                    primary={{
+                        title: create.isPending ? t('parity.staffBooking.creating') : t('parity.staffBooking.create'),
+                        onPress: submit,
+                        loading: create.isPending,
+                        disabled: !canCreate || create.isPending,
+                    }}
+                >
+                    {formError ? <FeedbackBanner variant="danger" message={formError} compact /> : null}
+                </ActionBar>
+            )}
+        >
+            <FieldGroup title={t('parity.staffBooking.branch')}>
+                <ChipGroup
+                    options={branches.map((branch) => ({ key: branch.id, label: formatStaffName(branch.name, locale) }))}
+                    value={branchId || null}
+                    onChange={(id) => {
+                        setBranchId(id);
+                        setServiceIds([]);
+                    }}
+                    accessibilityLabel={t('parity.staffBooking.branch')}
+                    style={styles.groupBody}
+                />
+            </FieldGroup>
 
-                    <Text style={styles.label}>{t('parity.staffBooking.service')}</Text>
+            <FieldGroup
+                title={t('parity.staffBooking.service')}
+                caption={branchId && branchServices.length > 0 ? t('parity.staffBooking.serviceHint') : undefined}
+            >
+                <View style={styles.groupBody}>
                     {!branchId ? (
                         <Text style={styles.hint}>{t('parity.staffBooking.selectBranchFirst')}</Text>
                     ) : branchServices.length === 0 ? (
-                        <Text style={styles.hint}>{t('parity.staffBooking.noServicesInBranch')}</Text>
+                        <EmptyState compact icon="cut-outline" title={t('parity.staffBooking.noServicesInBranch')} />
                     ) : (
-                        <>
-                            <Text style={styles.hint}>{t('parity.staffBooking.serviceHint')}</Text>
-                            {branchServices.map((service) => {
-                                const checked = serviceIds.includes(service.id);
-                                return (
-                                    <MotionPressable
-                                        key={service.id}
-                                        onPress={() => toggleService(service.id)}
-                                        style={[styles.option, checked ? styles.optionSelected : null]}
-                                        accessibilityRole="checkbox"
-                                        accessibilityState={{ checked }}
-                                        accessibilityLabel={getServiceName(service, locale)}
-                                        testID={`staff-booking-service-${service.id}`}
-                                    >
-                                        <Ionicons name={checked ? 'checkbox' : 'square-outline'} size={20} color={checked ? colors.accent.indigo : colors.text.tertiary} />
-                                        <Text style={styles.optionText}>
-                                            {getServiceName(service, locale)}{' '}
-                                            <Text style={styles.hint}>{t('parity.staffBooking.serviceDuration', { minutes: String(service.duration_min) })}</Text>
-                                        </Text>
-                                    </MotionPressable>
-                                );
-                            })}
-                        </>
-                    )}
-
-                    <Text style={styles.label}>{t('parity.staffBooking.date')}</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-                        {dates.map((date) => {
-                            const label = formatDateLabel(date);
-                            return (
-                                <Chip
-                                    key={date}
-                                    label={`${label.weekday} ${label.day} ${label.month}`}
-                                    selected={date === day}
-                                    role="radio"
-                                    onPress={() => setDay(date)}
+                        <Card variant="plain" padding="none" style={styles.list}>
+                            {branchServices.map((service) => (
+                                <CheckboxRow
+                                    key={service.id}
+                                    label={getServiceName(service, locale)}
+                                    hint={t('parity.staffServices.duration', { minutes: String(service.duration_min) })}
+                                    checked={serviceIds.includes(service.id)}
+                                    onChange={() => toggleService(service.id)}
+                                    testID={`staff-booking-service-${service.id}`}
                                 />
-                            );
-                        })}
-                    </ScrollView>
+                            ))}
+                        </Card>
+                    )}
+                </View>
+            </FieldGroup>
 
-                    {selectedServices.length > 0 ? (
-                        <>
-                            <Text style={styles.label}>{t('parity.staffBooking.time')}</Text>
-                            {slotsQuery.isLoading ? (
-                                <Text style={styles.hint}>{t('parity.staffBooking.loadingSlots')}</Text>
-                            ) : slotsQuery.isError ? (
-                                <View style={styles.inline}>
-                                    <Text style={styles.hint}>{t('parity.staffBooking.slotsLoadError')}</Text>
-                                    <Button title={t('staff.retry')} onPress={() => void slotsQuery.refetch()} variant="ghost" size="sm" />
-                                </View>
-                            ) : slots.length === 0 ? (
-                                <Text style={styles.hint}>{t('parity.staffBooking.noSlots')}</Text>
-                            ) : (
-                                <View style={styles.chips}>
-                                    {slots.map((slot) => (
-                                        <Chip
-                                            key={slot.start_at}
-                                            label={formatTime(slot.start_at, tz)}
-                                            selected={slot.start_at === slotStart}
-                                            role="radio"
-                                            onPress={() => setSlotStart(slot.start_at)}
-                                        />
-                                    ))}
-                                </View>
-                            )}
-                        </>
-                    ) : null}
-                </Card>
-
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>{t('parity.staffBooking.client')}</Text>
-                    <Text style={styles.hint}>{t('parity.staffBooking.clientDescription')}</Text>
-                    <Input
-                        label={t('parity.staffBooking.clientName')}
-                        placeholder={t('parity.staffBooking.clientNamePlaceholder')}
-                        value={clientName}
-                        onChangeText={setClientName}
-                        returnKeyType="next"
-                        blurOnSubmit={false}
-                        onSubmitEditing={() => phoneRef.current?.focus()}
-                        testID="staff-booking-client-name"
-                    />
-                    <Input
-                        ref={phoneRef}
-                        label={t('parity.staffBooking.clientPhone')}
-                        placeholder="+996555123456"
-                        helperText={t('parity.staffBooking.phoneFormat')}
-                        value={clientPhone}
-                        onChangeText={setClientPhone}
-                        keyboardType="phone-pad"
-                        returnKeyType="done"
-                        testID="staff-booking-client-phone"
-                    />
-                </Card>
-
-                {formError ? <Text style={styles.error} accessibilityRole="alert">{formError}</Text> : null}
-                <Button
-                    title={create.isPending ? t('parity.staffBooking.creating') : t('parity.staffBooking.create')}
-                    onPress={submit}
-                    loading={create.isPending}
-                    disabled={!canCreate || create.isPending}
-                    fullWidth
+            <FieldGroup title={t('parity.staffBooking.date')}>
+                <ChipGroup
+                    options={dates.map((date) => {
+                        const label = formatDateLabel(date);
+                        return { key: date, label: `${label.weekday} ${label.day} ${label.month}` };
+                    })}
+                    value={day}
+                    onChange={setDay}
+                    accessibilityLabel={t('parity.staffBooking.date')}
+                    style={styles.groupBody}
                 />
-            </ScrollView>
-        </KeyboardAvoidingView>
-    );
-}
+            </FieldGroup>
 
-function Chip({ label, selected, onPress, role }: { label: string; selected: boolean; onPress: () => void; role: 'radio' | 'button' }) {
-    return (
-        <MotionPressable
-            onPress={onPress}
-            style={[styles.chip, selected ? styles.chipSelected : null]}
-            accessibilityRole={role}
-            accessibilityState={{ selected }}
-            accessibilityLabel={label}
-        >
-            <Text style={[styles.chipText, selected ? styles.chipTextSelected : null]}>{label}</Text>
-        </MotionPressable>
+            {selectedServices.length > 0 ? (
+                <FieldGroup title={t('parity.staffBooking.time')}>
+                    <View style={styles.groupBody}>
+                        {slotsQuery.isLoading ? (
+                            <View style={styles.slotSkeleton} accessibilityLabel={t('parity.staffBooking.loadingSlots')}>
+                                {[0, 1, 2, 3].map((index) => <SkeletonBlock key={index} width={72} height={44} radius={22} />)}
+                            </View>
+                        ) : slotsQuery.isError ? (
+                            <View style={styles.inline}>
+                                <Text style={[styles.hint, styles.danger]}>{t('parity.staffBooking.slotsLoadError')}</Text>
+                                <Button title={t('staff.retry')} onPress={() => void slotsQuery.refetch()} variant="ghost" size="sm" />
+                            </View>
+                        ) : slots.length === 0 ? (
+                            <Text style={styles.hint}>{t('parity.staffBooking.noSlots')}</Text>
+                        ) : (
+                            <ChipGroup
+                                layout="wrap"
+                                options={slots.map((slot) => ({ key: slot.start_at, label: formatTime(slot.start_at, tz) }))}
+                                value={slotStart || null}
+                                onChange={setSlotStart}
+                                accessibilityLabel={t('parity.staffBooking.time')}
+                            />
+                        )}
+                    </View>
+                </FieldGroup>
+            ) : null}
+
+            <FieldGroup title={t('parity.staffBooking.client')} caption={t('parity.staffBooking.clientDescription')}>
+                <FormField
+                    label={t('parity.staffBooking.clientName')}
+                    required
+                    placeholder={t('parity.staffBooking.clientNamePlaceholder')}
+                    value={clientName}
+                    onChangeText={setClientName}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => phoneRef.current?.focus()}
+                    testID="staff-booking-client-name"
+                />
+                <FormField
+                    ref={phoneRef}
+                    label={t('parity.staffBooking.clientPhone')}
+                    required
+                    placeholder="+996555123456"
+                    hint={t('parity.staffBooking.phoneFormat')}
+                    value={clientPhone}
+                    onChangeText={setClientPhone}
+                    keyboardType="phone-pad"
+                    returnKeyType="done"
+                    testID="staff-booking-client-phone"
+                />
+            </FieldGroup>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.surface.page },
-    content: { padding: colors.layout.space5, paddingBottom: colors.layout.space8, gap: colors.layout.space4 },
-    card: { gap: colors.layout.space3 },
-    sectionTitle: { ...typography.sectionTitle, color: colors.text.primary },
-    label: { ...typography.label, color: colors.text.primary, marginTop: colors.layout.space2 },
-    hint: { ...typography.caption, color: colors.text.secondary },
-    error: { ...typography.body, color: colors.status.danger },
-    inline: { flexDirection: 'row', alignItems: 'center', gap: colors.layout.space2 },
-    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2 },
-    chip: {
-        minHeight: MIN_TOUCH_TARGET,
-        minWidth: MIN_TOUCH_TARGET,
-        paddingHorizontal: 14,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.surface.card,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    chipSelected: { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
-    chipText: { ...typography.label, color: colors.text.primary },
-    chipTextSelected: { color: colors.text.light },
-    option: {
-        minHeight: MIN_TOUCH_TARGET,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space3,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-    },
-    optionSelected: { borderColor: colors.accent.primary, backgroundColor: colors.surface.emphasis },
-    optionText: { ...typography.body, color: colors.text.primary, flex: 1 },
+    // FieldGroup pulls its body up by one field gap (FormField margin); non-field content gives it back.
+    groupBody: { marginBottom: space.lg },
+    list: { paddingHorizontal: space.lg },
+    hint: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary },
+    danger: { color: colors.tone.danger.fg },
+    inline: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm },
+    slotSkeleton: { flexDirection: 'row', gap: space.sm },
 });

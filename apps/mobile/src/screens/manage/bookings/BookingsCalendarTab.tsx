@@ -1,23 +1,28 @@
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
+import { Share, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import { formatInTimeZone } from 'date-fns-tz';
 
-import BookingStatusBadge from '../../../components/BookingStatusBadge';
-import Button from '../../../components/ui/Button';
-import Card from '../../../components/ui/Card';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import MotionPressable from '../../../components/ui/MotionPressable';
+import Avatar from '../../../components/ui/Avatar';
+import Badge from '../../../components/ui/Badge';
+import ChipGroup from '../../../components/ui/ChipGroup';
+import { DateNavigator } from '../../../components/ui/DateTimeFields';
+import EmptyState from '../../../components/ui/EmptyState';
+import ListRow, { ListGroup } from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import Section from '../../../components/ui/Section';
+import { SkeletonList } from '../../../components/ui/Skeleton';
 import { colors } from '../../../constants/colors';
+import { radii, space, typeScale } from '../../../constants/theme';
 import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
+import { BookingStatusPill } from '../../staff/bookingStatusPill';
 import { toCsv } from '../opsKit/csv';
-import { addDaysToDate, todayInTz } from '../opsKit/dates';
-import { dayLabel } from '../opsKit/format';
-import { ChipGroup, Field, LoadError, Stepper, ui } from '../opsKit/ui';
+import { todayInTz } from '../opsKit/dates';
+import { LoadError } from '../opsKit/ui';
 import { fetchCalendarDay, type BookingOptions, type CalendarBooking, type StaffOption } from './bookingsData';
 import { servicesSummary } from './bookingsQuery';
 
@@ -43,8 +48,17 @@ export function calendarCsv(items: CalendarBooking[], timezone: string): string 
     ]);
 }
 
+/** The start time in a fixed tinted column, so the rows of a master line up like a timetable. */
+export function TimeBox({ start }: { start: string }) {
+    return (
+        <View style={styles.time}>
+            <Text style={styles.timeStart}>{start}</Text>
+        </View>
+    );
+}
+
 export default function BookingsCalendarTab({ bizId, timezone, options }: { bizId: string; timezone: string; options: BookingOptions }) {
-    const { t, locale } = useLanguage();
+    const { t } = useLanguage();
     const { showToast } = useToast();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const [date, setDate] = useState(() => todayInTz(timezone));
@@ -76,83 +90,73 @@ export default function BookingsCalendarTab({ bizId, timezone, options }: { bizI
     };
 
     return (
-        <ScrollView
-            style={ui.screen}
-            contentContainerStyle={ui.content}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-            testID="bookings-calendar-tab"
-        >
-            <Text style={ui.sectionTitle}>{t('ops.bookings.calendar.title')}</Text>
-            <Text style={ui.muted}>{t('ops.bookings.tabs.calendarDesc')}</Text>
-            {options.branches.length > 1 ? (
-                <Field label={t('ops.bookings.calendar.branchFilter')}>
+        <Screen refreshing={refreshing} onRefresh={onRefresh} testID="bookings-calendar-tab">
+            <Section gap={space.md}>
+                <DateNavigator value={date} onChange={setDate} timeZone={timezone} testID="calendar-date" />
+                {options.branches.length > 1 ? (
                     <ChipGroup
                         options={[{ key: 'all', label: t('ops.bookings.allBranches') }, ...options.branches.map((branch) => ({ key: branch.id, label: branch.name }))]}
                         value={branchId}
                         onChange={setBranchId}
+                        accessibilityLabel={t('ops.bookings.calendar.branchFilter')}
                         testID="calendar-branch"
                     />
-                </Field>
-            ) : null}
-            <Field label={t('ops.bookings.calendar.date')}>
-                <Stepper
-                    label={dayLabel(date, locale)}
-                    onPrev={() => setDate((value) => addDaysToDate(value, -1))}
-                    onNext={() => setDate((value) => addDaysToDate(value, 1))}
-                    prevLabel={t('ops.common.prevDay')}
-                    nextLabel={t('ops.common.nextDay')}
-                    pickDate={{ value: date, onPick: setDate }}
-                    testID="calendar-date"
-                />
-                <View style={ui.wrap}>
-                    <Button title={t('ops.common.today')} onPress={() => setDate(todayInTz(timezone))} variant="outline" size="sm" />
-                    <Button
-                        title={t('ops.bookings.calendar.exportCsv')}
-                        onPress={() => void exportCsv()}
-                        variant="outline"
-                        size="sm"
-                        disabled={!query.data}
-                    />
-                </View>
-            </Field>
+                ) : null}
+            </Section>
 
-            {query.isLoading ? (
-                <LoadingSpinner message={t('common.loading')} />
-            ) : query.error ? (
-                <LoadError title={t('ops.bookings.calendar.loadError')} onRetry={() => void query.refetch()} />
-            ) : staff.length === 0 ? (
-                <Text style={ui.muted}>{t('ops.bookings.calendar.noStaff')}</Text>
-            ) : (
-                groups.map(({ member, bookings }) => (
-                    <Card key={member.id} padding="md" testID={`calendar-staff-${member.id}`}>
-                        <Text style={[ui.text, { fontWeight: '700' }]}>{member.full_name}</Text>
-                        {bookings.length === 0 ? (
-                            <Text style={[ui.muted, { marginTop: 4 }]}>{t('ops.bookings.calendar.free')}</Text>
-                        ) : (
-                            bookings.map((booking) => {
-                                const time = `${formatInTimeZone(new Date(booking.start_at), timezone, 'HH:mm')}–${formatInTimeZone(new Date(booking.end_at), timezone, 'HH:mm')}`;
+            <Section
+                title={t('ops.bookings.calendar.staffTitle')}
+                actionLabel={query.data && query.data.length > 0 ? t('ops.bookings.calendar.exportCsv') : undefined}
+                onAction={query.data && query.data.length > 0 ? () => void exportCsv() : undefined}
+            >
+                {query.isLoading ? (
+                    <SkeletonList rows={3} testID="calendar-loading" />
+                ) : query.error ? (
+                    <LoadError title={t('ops.bookings.calendar.loadError')} onRetry={() => void query.refetch()} />
+                ) : staff.length === 0 ? (
+                    <EmptyState compact icon="people-outline" title={t('ops.bookings.calendar.noStaff')} />
+                ) : (
+                    groups.map(({ member, bookings }) => (
+                        <ListGroup key={member.id} testID={`calendar-staff-${member.id}`}>
+                            <ListRow
+                                leading={<Avatar name={member.full_name} size={40} />}
+                                title={member.full_name}
+                                trailing={bookings.length > 0
+                                    ? <Badge label={String(bookings.length)} tone="accent" size="md" />
+                                    : <Badge label={t('ops.bookings.calendar.free')} tone="success" />}
+                            />
+                            {bookings.map((booking) => {
+                                const start = formatInTimeZone(new Date(booking.start_at), timezone, 'HH:mm');
+                                const end = formatInTimeZone(new Date(booking.end_at), timezone, 'HH:mm');
                                 const summary = servicesSummary(booking.booking_services, t);
                                 return (
-                                    <MotionPressable
+                                    <ListRow
                                         key={booking.id}
+                                        leading={<TimeBox start={start} />}
+                                        subtitle={`${start}–${end}`}
+                                        title={summary ?? `#${booking.id.slice(0, 8)}`}
+                                        numberOfLines={2}
+                                        trailing={<BookingStatusPill status={booking.status} />}
                                         onPress={() => navigation.navigate('BookingDetails', { id: booking.id })}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={`${t('ops.bookings.calendar.openBooking')} ${time}${summary ? `, ${summary}` : ''}`}
-                                        style={[ui.listRow, { alignItems: 'flex-start' }]}
-                                    >
-                                        <View style={{ flex: 1, gap: 2 }}>
-                                            <Text style={[ui.text, { fontWeight: '600' }]}>{time}</Text>
-                                            <Text style={ui.muted} numberOfLines={3}>{summary ?? `#${booking.id.slice(0, 8)}`}</Text>
-                                        </View>
-                                        <BookingStatusBadge status={booking.status} />
-                                    </MotionPressable>
+                                        accessibilityHint={t('ops.bookings.calendar.openBooking')}
+                                    />
                                 );
-                            })
-                        )}
-                    </Card>
-                ))
-            )}
-            <Text style={[ui.hint, { color: colors.text.tertiary }]}>{t('ops.bookings.summary.today')}</Text>
-        </ScrollView>
+                            })}
+                        </ListGroup>
+                    ))
+                )}
+            </Section>
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    time: {
+        width: 56,
+        paddingVertical: space.sm,
+        borderRadius: radii.md,
+        backgroundColor: colors.tone.accent.bg,
+        alignItems: 'center',
+    },
+    timeStart: { ...typeScale.bodyStrong, color: colors.tone.accent.fg, fontVariant: ['tabular-nums'] },
+});

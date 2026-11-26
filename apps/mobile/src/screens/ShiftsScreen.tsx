@@ -3,7 +3,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorState from '../components/ui/ErrorState';
+import Screen from '../components/ui/Screen';
+import { SkeletonBlock, SkeletonCard } from '../components/ui/Skeleton';
+import { StatGrid } from '../components/ui/StatTile';
 import { useLanguage } from '../i18n';
 import type { RootStackParamList } from '../navigation/types';
 import { ShiftsScreenSections } from './shifts/ShiftsScreenSections';
@@ -28,44 +31,55 @@ export default function ShiftsScreen() {
     } = useShiftsScreenData();
 
     if (staffLoading || (statsLoading && !refreshing)) {
-        return <LoadingSpinner message={t('common.loading')} />;
+        return (
+            <Screen testID="shifts-loading">
+                <SkeletonBlock height={44} />
+                <SkeletonBlock height={84} radius={16} />
+                <StatGrid>
+                    <SkeletonBlock height={84} radius={16} />
+                    <SkeletonBlock height={84} radius={16} />
+                </StatGrid>
+                <SkeletonCard lines={2} />
+            </Screen>
+        );
     }
 
     if (needsSelection) {
         return (
-            <EmptyState
-                icon="briefcase"
-                title={t('staff.chooseBusinessOnTab', { tab: t('nav.staffTab') })}
-                message={t('staff.shifts.chooseBusinessMessage')}
-                action={
-                    <Button
-                        title={t('staff.openTab', { tab: t('nav.staffTab') })}
-                        onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
-                        fullWidth
-                    />
-                }
-            />
+            <Screen>
+                <EmptyState
+                    icon="briefcase-outline"
+                    title={t('staff.chooseBusinessOnTab', { tab: t('nav.staffTab') })}
+                    message={t('staff.shifts.chooseBusinessMessage')}
+                    action={
+                        <Button
+                            title={t('staff.openTab', { tab: t('nav.staffTab') })}
+                            onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
+                            fullWidth
+                        />
+                    }
+                />
+            </Screen>
         );
     }
 
     if (!staffInfo) {
         return (
-            <EmptyState
-                icon="briefcase"
-                title={t('staff.notStaff')}
-                message={t('staff.shifts.notStaffMessage')}
-            />
+            <Screen>
+                <EmptyState
+                    icon="briefcase-outline"
+                    title={t('staff.notStaff')}
+                    message={t('staff.shifts.notStaffMessage')}
+                />
+            </Screen>
         );
     }
 
     if (statsError && !stats) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('staff.shifts.loadError')}
-                message={t('staff.checkConnection')}
-                action={<Button title={t('staff.retry')} onPress={() => void onRefresh()} fullWidth />}
-            />
+            <Screen refreshing={refreshing} onRefresh={onRefresh}>
+                <ErrorState title={t('staff.shifts.loadError')} onRetry={() => void onRefresh()} />
+            </Screen>
         );
     }
 

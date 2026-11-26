@@ -1,12 +1,18 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import Badge, { StatusPill } from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorState from '../components/ui/ErrorState';
+import { ListGroup } from '../components/ui/ListRow';
+import Screen from '../components/ui/Screen';
+import Section from '../components/ui/Section';
+import { SkeletonList } from '../components/ui/Skeleton';
 import { colors } from '../constants/colors';
+import { radii, space, typeScale } from '../constants/theme';
 import { useLanguage, type MobileI18nKey } from '../i18n';
 import type { RootStackParamList } from '../navigation/types';
 import { isoWeekdayOfYmd } from '../utils/businessWeek';
@@ -24,37 +30,44 @@ export default function StaffScheduleScreen() {
     const data = useStaffScheduleData();
 
     if (data.staffLoading || (data.isLoading && !data.days)) {
-        return <LoadingSpinner message={t('common.loading')} />;
+        return (
+            <Screen testID="staff-schedule-loading">
+                <SkeletonList rows={7} avatar={false} />
+            </Screen>
+        );
     }
 
     if (data.needsSelection) {
         return (
-            <EmptyState
-                icon="briefcase"
-                title={t('staff.chooseBusinessOnTab', { tab: t('nav.staffTab') })}
-                action={
-                    <Button
-                        title={t('staff.openTab', { tab: t('nav.staffTab') })}
-                        onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
-                        fullWidth
-                    />
-                }
-            />
+            <Screen>
+                <EmptyState
+                    icon="briefcase-outline"
+                    title={t('staff.chooseBusinessOnTab', { tab: t('nav.staffTab') })}
+                    action={
+                        <Button
+                            title={t('staff.openTab', { tab: t('nav.staffTab') })}
+                            onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
+                            fullWidth
+                        />
+                    }
+                />
+            </Screen>
         );
     }
 
     if (!data.staff) {
-        return <EmptyState icon="briefcase" title={t('staff.notStaff')} message={t('staff.workspace.notStaffMessage')} />;
+        return (
+            <Screen>
+                <EmptyState icon="briefcase-outline" title={t('staff.notStaff')} message={t('staff.workspace.notStaffMessage')} />
+            </Screen>
+        );
     }
 
     if (data.error && !data.days) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('staff.schedule.loadError')}
-                message={t('staff.checkConnection')}
-                action={<Button title={t('staff.retry')} onPress={() => void data.onRefresh()} variant="outline" fullWidth />}
-            />
+            <Screen refreshing={data.refreshing} onRefresh={data.onRefresh}>
+                <ErrorState title={t('staff.schedule.loadError')} onRetry={() => void data.onRefresh()} />
+            </Screen>
         );
     }
 
@@ -67,122 +80,84 @@ export default function StaffScheduleScreen() {
         const branch = branchName(day.kind === 'working' ? day.branchId : null);
         const isToday = ymd === data.today;
         return (
-            <Card key={ymd} style={[styles.day, isToday ? styles.today : null]} testID={`schedule-day-${ymd}`}>
-                <View style={styles.dayHeader}>
-                    <Text style={styles.dayName}>
-                        {t(`staff.schedule.dow.${isoWeekdayOfYmd(ymd)}` as MobileI18nKey)} · {dmy(ymd).slice(0, 5)}
+            <View key={ymd} style={[styles.day, isToday ? styles.today : null]} testID={`schedule-day-${ymd}`}>
+                <View style={styles.date}>
+                    <Text style={[styles.weekday, isToday ? styles.weekdayToday : null]}>
+                        {t(`staff.schedule.dow.${isoWeekdayOfYmd(ymd)}` as MobileI18nKey)}
                     </Text>
-                    {isToday ? <Text style={styles.todayMark}>{t('staff.schedule.today')}</Text> : null}
+                    <Text style={styles.dayNumber}>{dmy(ymd).slice(0, 5)}</Text>
                 </View>
-                {day.kind === 'working' ? (
-                    <>
-                        <Text style={styles.hours}>{rangeText(day.intervals)}</Text>
-                        {day.breaks.length ? <Text style={styles.meta}>{t('staff.schedule.breaks', { ranges: rangeText(day.breaks) })}</Text> : null}
-                        {branch ? (
-                            <Text style={temporary ? styles.temporary : styles.meta}>
-                                {t(temporary ? 'staff.schedule.temporaryBranch' : 'staff.schedule.mainBranch', { name: branch })}
-                            </Text>
-                        ) : null}
-                    </>
-                ) : (
-                    <Text style={day.kind === 'unconfigured' ? styles.muted : styles.off}>
-                        {t(day.kind === 'off' ? 'staff.schedule.dayOff' : day.kind === 'absence' ? 'staff.schedule.absence' : 'staff.schedule.notConfigured')}
-                    </Text>
-                )}
-            </Card>
+                <View style={styles.body}>
+                    {day.kind === 'working' ? (
+                        <>
+                            <Text style={styles.hours}>{rangeText(day.intervals)}</Text>
+                            {day.breaks.length ? <Text style={styles.meta}>{t('staff.schedule.breaks', { ranges: rangeText(day.breaks) })}</Text> : null}
+                            {branch ? (
+                                <Text style={temporary ? styles.temporary : styles.meta}>
+                                    {t(temporary ? 'staff.schedule.temporaryBranch' : 'staff.schedule.mainBranch', { name: branch })}
+                                </Text>
+                            ) : null}
+                        </>
+                    ) : day.kind === 'unconfigured' ? (
+                        <Text style={styles.muted}>{t('staff.schedule.notConfigured')}</Text>
+                    ) : (
+                        <StatusPill
+                            label={t(day.kind === 'off' ? 'staff.schedule.dayOff' : 'staff.schedule.absence')}
+                            tone={day.kind === 'off' ? 'neutral' : 'warning'}
+                        />
+                    )}
+                </View>
+                {isToday ? <Badge label={t('staff.schedule.today')} tone="accent" /> : null}
+            </View>
         );
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            testID="staff-schedule-screen"
-            refreshControl={<RefreshControl refreshing={data.refreshing} onRefresh={() => void data.onRefresh()} />}
-        >
+        <Screen refreshing={data.refreshing} onRefresh={data.onRefresh} testID="staff-schedule-screen">
             {data.weeks.map((week, index) => (
-                <View key={week[0]} style={styles.week}>
-                    <Text style={styles.weekTitle}>{t(index === 0 ? 'staff.schedule.currentWeek' : 'staff.schedule.nextWeek')}</Text>
-                    <Text style={styles.weekRange}>{t('staff.schedule.weekRange', { from: dmy(week[0]), to: dmy(week[6]) })}</Text>
-                    {week.map(renderDay)}
-                </View>
+                <Section
+                    key={week[0]}
+                    title={t(index === 0 ? 'staff.schedule.currentWeek' : 'staff.schedule.nextWeek')}
+                    caption={t('staff.schedule.weekRange', { from: dmy(week[0]), to: dmy(week[6]) })}
+                >
+                    <ListGroup>{week.map(renderDay)}</ListGroup>
+                </Section>
             ))}
-            <Text style={styles.footnote}>• {t('staff.schedule.managedByOwner')}</Text>
-            <Text style={styles.footnote}>• {t('staff.schedule.unconfiguredHint')}</Text>
-        </ScrollView>
+            <View style={styles.notes}>
+                {(['staff.schedule.managedByOwner', 'staff.schedule.unconfiguredHint'] as const).map((key) => (
+                    <View key={key} style={styles.note}>
+                        <Ionicons name="information-circle-outline" size={16} color={colors.text.tertiary} />
+                        <Text style={styles.noteText}>{t(key)}</Text>
+                    </View>
+                ))}
+            </View>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background.primary,
-    },
-    content: {
-        padding: colors.layout.space5,
-        paddingBottom: 160,
-    },
-    week: {
-        marginBottom: colors.layout.space6,
-        gap: colors.layout.space2,
-    },
-    weekTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: colors.text.primary,
-    },
-    weekRange: {
-        fontSize: 14,
-        color: colors.text.secondary,
-        marginBottom: colors.layout.space2,
-    },
     day: {
-        gap: 4,
+        minHeight: 56,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: space.md,
+        paddingVertical: space.md,
     },
     today: {
-        borderWidth: 1,
-        borderColor: colors.accent.primary,
+        marginHorizontal: -space.lg,
+        paddingHorizontal: space.lg,
+        backgroundColor: colors.tone.accent.bg,
     },
-    dayHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    dayName: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.text.primary,
-    },
-    todayMark: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: colors.accent.indigo,
-    },
-    hours: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: colors.text.primary,
-    },
-    meta: {
-        fontSize: 14,
-        color: colors.text.secondary,
-    },
-    temporary: {
-        fontSize: 14,
-        color: colors.accent.indigo,
-    },
-    off: {
-        fontSize: 15,
-        fontWeight: '500',
-        color: colors.status.danger,
-    },
-    muted: {
-        fontSize: 15,
-        color: colors.text.tertiary,
-    },
-    footnote: {
-        fontSize: 13,
-        color: colors.text.tertiary,
-        marginTop: colors.layout.space1,
-    },
+    date: { width: 52, gap: space.xxs },
+    weekday: { ...typeScale.bodyStrong, color: colors.text.primary },
+    weekdayToday: { color: colors.tone.accent.fg },
+    dayNumber: { ...typeScale.caption, color: colors.text.tertiary },
+    body: { flex: 1, minWidth: 0, gap: space.xxs, alignItems: 'flex-start' },
+    hours: { ...typeScale.bodyStrong, color: colors.text.primary },
+    meta: { ...typeScale.caption, color: colors.text.secondary },
+    temporary: { ...typeScale.caption, color: colors.tone.accent.fg },
+    muted: { ...typeScale.body, color: colors.text.tertiary },
+    notes: { gap: space.sm, padding: space.md, borderRadius: radii.lg, backgroundColor: colors.surface.card },
+    note: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+    noteText: { ...typeScale.caption, color: colors.text.secondary, flex: 1 },
 });

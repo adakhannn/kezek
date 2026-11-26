@@ -1,19 +1,26 @@
 import { useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
+import Avatar from '../../../components/ui/Avatar';
+import Badge, { StatusPill } from '../../../components/ui/Badge';
 import Card from '../../../components/ui/Card';
 import EmptyState from '../../../components/ui/EmptyState';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import { KeyValueRow } from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import Section from '../../../components/ui/Section';
+import StatTile, { StatGrid } from '../../../components/ui/StatTile';
 import { colors } from '../../../constants/colors';
+import { radii, space, typeScale } from '../../../constants/theme';
 import { translatePlural, useLanguage, type MobileI18nKey } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import { shortDateTime, useCurrentBusinessReady } from '../opsKit/format';
 import { formatMoney, formatShare } from '../opsKit/money';
-import { LoadError, SectionTitle, StatTile, ui } from '../opsKit/ui';
+import { LoadError, ScreenSkeleton, ui } from '../opsKit/ui';
 import { fetchStaffFinanceStats, guaranteeTopup, type FinancePeriod } from './financeData';
 import FinancePeriodPicker, { financePeriodLabel } from './FinancePeriodPicker';
+import { MiniStats } from './ManageFinanceScreen';
 
 const PERIOD_LABEL: Record<FinancePeriod, MobileI18nKey> = {
     day: 'ops.finance.period.day',
@@ -40,11 +47,12 @@ export default function ManageFinanceStaffScreen() {
         placeholderData: keepPreviousData,
     });
 
-    if (business.error) return <LoadError title={t('manager.manage.selectError')} onRetry={business.retry} />;
-    if (!business.ready || (query.isLoading && !query.data)) return <LoadingSpinner message={t('ops.finance.loading')} />;
+    if (business.error) return <LoadError screen title={t('manager.manage.selectError')} onRetry={business.retry} />;
+    if (!business.ready || (query.isLoading && !query.data)) return <ScreenSkeleton testID="manage-finance-staff-loading" />;
 
     const stats = query.data;
     const shownAnchor = anchor ?? stats?.dateFrom ?? '';
+    const name = stats?.staffName || params.staffName || '';
     const onRefresh = async () => {
         setRefreshing(true);
         try { await query.refetch(); } finally { setRefreshing(false); }
@@ -61,108 +69,128 @@ export default function ManageFinanceStaffScreen() {
             topup > 0 ? `${t('ops.finance.flags.guarantee')}: ${formatMoney(topup, t)}` : null,
         ].filter((flag): flag is string => !!flag);
         return (
-            <View style={{ gap: colors.layout.space3, opacity: query.isPlaceholderData ? 0.6 : 1 }}>
-                <View style={ui.tiles} testID="finance-staff-summary">
-                    <StatTile label={t('ops.finance.staffStats.turnover')} value={formatMoney(turnover, t)} hint={financePeriodLabel(period, shownAnchor, locale)} style={{ flexBasis: '100%' }} />
-                    <StatTile label={t('ops.finance.staffStats.toEmployee')} value={formatMoney(stats.totalMaster, t)} hint={`${formatShare(stats.totalMaster, turnover)} • ${t('ops.finance.share.split')}`} />
-                    <StatTile label={t('ops.finance.staffStats.toBusiness')} value={formatMoney(stats.totalSalon, t)} hint={`${formatShare(stats.totalSalon, turnover)} • ${t('ops.finance.share.split')}`} />
+            <View style={[styles.body, { opacity: query.isPlaceholderData ? 0.6 : 1 }]}>
+                <View style={styles.summary} testID="finance-staff-summary">
                     <StatTile
-                        label={t('ops.finance.guarantees.title')}
-                        value={formatMoney(topup > 0 ? topup : 0, t)}
-                        hint={topup > 0 ? `${t('ops.finance.guarantees.baseShare')}: ${formatMoney(stats.totalBaseMasterShare, t)}` : t('ops.finance.guarantees.notUsed')}
-                        style={{ flexBasis: '100%' }}
+                        icon="cash-outline"
+                        tone="success"
+                        label={t('ops.finance.staffStats.turnover')}
+                        value={formatMoney(turnover, t)}
+                        hint={financePeriodLabel(period, shownAnchor, locale)}
                     />
+                    <StatGrid>
+                        <StatTile label={t('ops.finance.staffStats.toEmployee')} value={formatMoney(stats.totalMaster, t)} hint={`${formatShare(stats.totalMaster, turnover)} • ${t('ops.finance.share.split')}`} />
+                        <StatTile label={t('ops.finance.staffStats.toBusiness')} value={formatMoney(stats.totalSalon, t)} hint={`${formatShare(stats.totalSalon, turnover)} • ${t('ops.finance.share.split')}`} />
+                        <StatTile
+                            icon="shield-checkmark-outline"
+                            tone={topup > 0 ? 'warning' : undefined}
+                            label={t('ops.finance.guarantees.title')}
+                            value={formatMoney(topup > 0 ? topup : 0, t)}
+                            hint={topup > 0 ? `${t('ops.finance.guarantees.baseShare')}: ${formatMoney(stats.totalBaseMasterShare, t)}` : t('ops.finance.guarantees.notUsed')}
+                        />
+                    </StatGrid>
                 </View>
 
-                <Card padding="md">
-                    <View style={ui.rowBetween}>
-                        <SectionTitle>{t('ops.finance.operational.readout')}</SectionTitle>
-                        <View style={ui.badge}>
-                            <Text style={[ui.badgeText, flags.length > 0 ? ui.warningText : ui.successText]}>
-                                {t(flags.length > 0 ? 'ops.finance.flags.reviewNeeded' : 'ops.finance.flags.stable')}
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={[ui.tiles, { marginTop: colors.layout.space2 }]}>
-                        <StatTile
-                            label={t('ops.finance.staffStats.shifts')}
-                            value={String(stats.shiftsCount)}
-                            hint={`${t('ops.finance.shifts.openCount', { count: stats.openShiftsCount })} • ${t('ops.finance.shifts.closedCount', { count: stats.closedShiftsCount })}`}
+                <Section
+                    title={t('ops.finance.operational.readout')}
+                    right={(
+                        <StatusPill
+                            label={t(flags.length > 0 ? 'ops.finance.flags.reviewNeeded' : 'ops.finance.flags.stable')}
+                            tone={flags.length > 0 ? 'warning' : 'success'}
                         />
-                        <StatTile label={t('ops.finance.staffStats.clients')} value={String(stats.totalClients)} />
-                        <StatTile label={t('ops.finance.staffStats.consumables')} value={formatMoney(stats.totalConsumables, t)} />
-                        <StatTile label={t('ops.finance.staffStats.late')} value={`${stats.totalLateMinutes} ${t('ops.finance.minutes')}`} />
-                        <StatTile label={t('ops.finance.period.label')} value={t(PERIOD_LABEL[period])} hint={financePeriodLabel(period, shownAnchor, locale)} />
-                    </View>
-                    {flags.length > 0 ? (
-                        <View style={[ui.wrap, { marginTop: colors.layout.space2 }]}>
-                            {flags.map((flag) => (
-                                <View key={flag} style={ui.badge}><Text style={[ui.badgeText, ui.warningText]}>{flag}</Text></View>
-                            ))}
-                        </View>
-                    ) : null}
-                </Card>
+                    )}
+                >
+                    <Card variant="plain" padding="md">
+                        <KeyValueRow
+                            label={t('ops.finance.staffStats.shifts')}
+                            value={`${stats.shiftsCount} · ${t('ops.finance.shifts.openCount', { count: stats.openShiftsCount })} • ${t('ops.finance.shifts.closedCount', { count: stats.closedShiftsCount })}`}
+                        />
+                        <KeyValueRow label={t('ops.finance.staffStats.clients')} value={String(stats.totalClients)} />
+                        <KeyValueRow label={t('ops.finance.staffStats.consumables')} value={formatMoney(stats.totalConsumables, t)} />
+                        <KeyValueRow
+                            label={t('ops.finance.staffStats.late')}
+                            value={`${stats.totalLateMinutes} ${t('ops.finance.minutes')}`}
+                            tone={stats.totalLateMinutes > 0 ? 'warning' : undefined}
+                        />
+                        <KeyValueRow label={t('ops.finance.period.label')} value={`${t(PERIOD_LABEL[period])} · ${financePeriodLabel(period, shownAnchor, locale)}`} />
+                        {flags.length > 0 ? (
+                            <View style={[ui.wrap, styles.flags]}>
+                                {flags.map((flag) => <Badge key={flag} label={flag} tone="warning" icon="alert-circle-outline" />)}
+                            </View>
+                        ) : null}
+                    </Card>
+                </Section>
 
-                {stats.shifts.length === 0 ? (
-                    <EmptyState compact icon="time" title={t('ops.finance.staffStats.noData')} />
-                ) : (
-                    <>
-                        <SectionTitle>
-                            {t('ops.finance.staffStats.shiftsPeriod')} · {translatePlural(t, 'ops.finance.staffStats.shiftCount', stats.shifts.length)}
-                        </SectionTitle>
-                        {stats.shifts.map((shift) => (
-                            <Card key={shift.id} padding="md" testID={`finance-shift-${shift.id}`}>
-                                <View style={ui.rowBetween}>
-                                    <Text style={[ui.text, { fontWeight: '700' }]}>{shift.shift_date}</Text>
-                                    <View style={ui.badge}>
-                                        <Text style={[ui.badgeText, shift.status === 'open' ? ui.successText : null]}>
-                                            {t(shift.status === 'open' ? 'ops.finance.staffStats.status.open' : 'ops.finance.staffStats.status.closed')}
-                                        </Text>
+                <Section
+                    title={t('ops.finance.staffStats.shiftsPeriod')}
+                    caption={stats.shifts.length > 0 ? translatePlural(t, 'ops.finance.staffStats.shiftCount', stats.shifts.length) : undefined}
+                >
+                    {stats.shifts.length === 0 ? (
+                        <EmptyState compact icon="time-outline" title={t('ops.finance.staffStats.noData')} />
+                    ) : (
+                        stats.shifts.map((shift) => (
+                            <View key={shift.id} style={styles.shift} testID={`finance-shift-${shift.id}`}>
+                                <View style={styles.shiftHead}>
+                                    <View style={styles.shiftTitle}>
+                                        <Text style={ui.strong}>{shift.shift_date}</Text>
+                                        {shift.opened_at ? (
+                                            <Text style={ui.muted}>
+                                                {shortDateTime(shift.opened_at, params.tz)}{shift.closed_at ? ` — ${shortDateTime(shift.closed_at, params.tz)}` : ''}
+                                            </Text>
+                                        ) : null}
+                                        {shift.late_minutes > 0 || shift.hours_worked != null ? (
+                                            <Text style={ui.muted}>
+                                                {[
+                                                    shift.hours_worked != null ? `${t('ops.finance.staffStats.hours')}: ${shift.hours_worked}` : null,
+                                                    shift.late_minutes > 0 ? `${t('ops.finance.staffStats.late')}: ${shift.late_minutes} ${t('ops.finance.minutes')}` : null,
+                                                ].filter(Boolean).join(' · ')}
+                                            </Text>
+                                        ) : null}
                                     </View>
+                                    <StatusPill
+                                        label={t(shift.status === 'open' ? 'ops.finance.staffStats.status.open' : 'ops.finance.staffStats.status.closed')}
+                                        tone={shift.status === 'open' ? 'success' : 'neutral'}
+                                    />
                                 </View>
-                                {shift.opened_at ? (
-                                    <Text style={ui.muted}>
-                                        {shortDateTime(shift.opened_at, params.tz)}{shift.closed_at ? ` — ${shortDateTime(shift.closed_at, params.tz)}` : ''}
-                                    </Text>
+                                <MiniStats
+                                    items={[
+                                        { label: t('ops.finance.servicesRevenue'), value: formatMoney(shift.total_amount, t) },
+                                        { label: t('ops.finance.staffStats.toEmployee'), value: formatMoney(shift.master_share, t) },
+                                        { label: t('ops.finance.staffStats.toBusiness'), value: formatMoney(shift.salon_share, t) },
+                                    ]}
+                                />
+                                {shift.consumables_amount > 0 ? (
+                                    <KeyValueRow label={t('ops.finance.staffStats.consumables')} value={formatMoney(shift.consumables_amount, t)} />
                                 ) : null}
-                                <View style={[ui.tiles, { marginTop: colors.layout.space2 }]}>
-                                    <StatTile label={t('ops.finance.servicesRevenue')} value={formatMoney(shift.total_amount, t)} />
-                                    <StatTile label={t('ops.finance.staffStats.consumables')} value={formatMoney(shift.consumables_amount, t)} />
-                                    <StatTile label={t('ops.finance.staffStats.toEmployee')} value={formatMoney(shift.master_share, t)} />
-                                    <StatTile label={t('ops.finance.staffStats.toBusiness')} value={formatMoney(shift.salon_share, t)} />
-                                    {shift.late_minutes > 0 ? <StatTile label={t('ops.finance.staffStats.late')} value={`${shift.late_minutes} ${t('ops.finance.minutes')}`} /> : null}
-                                    {shift.hours_worked != null ? <StatTile label={t('ops.finance.staffStats.hours')} value={String(shift.hours_worked)} /> : null}
-                                </View>
                                 {shift.items.map((item) => (
-                                    <View key={item.id} style={ui.listRow}>
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={ui.text}>{item.client_name || '—'}</Text>
-                                            <Text style={ui.muted}>{item.service_name || '—'}</Text>
+                                    <View key={item.id} style={styles.clientRow}>
+                                        <View style={styles.clientText}>
+                                            <Text style={ui.text} numberOfLines={1}>{item.client_name || '—'}</Text>
+                                            <Text style={ui.muted} numberOfLines={2}>{item.service_name || '—'}</Text>
                                             {item.note ? <Text style={ui.hint}>{item.note}</Text> : null}
                                         </View>
-                                        <View style={{ alignItems: 'flex-end' }}>
-                                            <Text style={ui.text}>{formatMoney(item.service_amount, t)}</Text>
+                                        <View style={styles.clientAmount}>
+                                            <Text style={ui.strong}>{formatMoney(item.service_amount, t)}</Text>
                                             {item.consumables_amount > 0 ? <Text style={ui.muted}>+ {formatMoney(item.consumables_amount, t)}</Text> : null}
                                         </View>
                                     </View>
                                 ))}
-                            </Card>
-                        ))}
-                    </>
-                )}
+                            </View>
+                        ))
+                    )}
+                </Section>
             </View>
         );
     };
 
     return (
-        <ScrollView
-            style={ui.screen}
-            contentContainerStyle={ui.content}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-            testID="manage-finance-staff-screen"
-        >
-            <Text style={ui.title}>{stats?.staffName || params.staffName || ''}</Text>
-            <Text style={ui.subtitle}>{t('ops.finance.staffStats.subtitle')}</Text>
+        <Screen refreshing={refreshing} onRefresh={onRefresh} testID="manage-finance-staff-screen">
+            {name ? (
+                <View style={styles.hero}>
+                    <Avatar name={name} size={56} />
+                    <Text style={styles.heroName} numberOfLines={2}>{name}</Text>
+                </View>
+            ) : null}
             <FinancePeriodPicker
                 period={period}
                 anchor={shownAnchor}
@@ -172,6 +200,32 @@ export default function ManageFinanceStaffScreen() {
                 onRefresh={() => void query.refetch()}
             />
             {body()}
-        </ScrollView>
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    hero: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+    heroName: { ...typeScale.title, color: colors.text.primary, flex: 1 },
+    body: { gap: space.xxl },
+    summary: { gap: space.sm },
+    flags: { marginTop: space.sm },
+    shift: {
+        backgroundColor: colors.surface.card,
+        borderRadius: radii.lg,
+        padding: space.lg,
+        gap: space.sm,
+    },
+    shiftHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.sm },
+    shiftTitle: { flex: 1, gap: space.xxs },
+    clientRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: space.md,
+        paddingTop: space.sm,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+    },
+    clientText: { flex: 1, gap: space.xxs },
+    clientAmount: { alignItems: 'flex-end', gap: space.xxs },
+});

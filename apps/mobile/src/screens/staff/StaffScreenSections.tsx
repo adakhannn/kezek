@@ -1,23 +1,25 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import BookingStatusBadge from '../../components/BookingStatusBadge';
 import ClientContactActions from '../../components/ClientContactActions';
 import SegmentedTabs from '../../components/SegmentedTabs';
 import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
-import MotionPressable from '../../components/ui/MotionPressable';
+import ErrorState from '../../components/ui/ErrorState';
+import ListRow, { ListGroup } from '../../components/ui/ListRow';
+import Screen from '../../components/ui/Screen';
+import Section from '../../components/ui/Section';
+import { SkeletonList } from '../../components/ui/Skeleton';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
+import { colors } from '../../constants/colors';
+import { radii, space, typeScale } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
 import { getServiceName } from '../../utils/i18n';
+import { BookingStatusPill } from './bookingStatusPill';
 import { StaffAvatarEditor } from './StaffAvatarEditor';
-import { styles } from './staffScreenStyles';
 import type { StaffBookingsTab, StaffInfo, UpcomingBooking } from './types';
 import { staffServicePriceKey, type StaffService } from './useStaffServices';
-
-const localStyles = StyleSheet.create({
-    service: { paddingVertical: 6, gap: 2 },
-});
 
 export type StaffBookingsList = {
     tab: StaffBookingsTab;
@@ -48,6 +50,10 @@ type Props = {
     services?: StaffService[];
 };
 
+/**
+ * The master's workspace tab: the master with their photo, where they work, the shift as the one
+ * primary action, the other tools as rows, their services and their bookings.
+ */
 export function StaffScreenSections({
     staffInfo,
     list,
@@ -62,97 +68,80 @@ export function StaffScreenSections({
 }: Props) {
     const { t, locale } = useLanguage();
     const tz = staffInfo.business?.tz;
+    const hasPlace = !!(staffInfo.business || staffInfo.branch || onChangeBusiness);
+
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            testID="staff-screen"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-        >
+        <Screen tabBar refreshing={refreshing} onRefresh={onRefresh} testID="staff-screen">
             {/* The header says "Рабочая зона": the screen opens with the master themselves, photo first. */}
-            <View style={styles.header}>
-                <StaffAvatarEditor staffId={staffInfo.id} name={staffInfo.full_name} avatarUrl={staffInfo.avatar_url} />
-            </View>
+            <StaffAvatarEditor staffId={staffInfo.id} name={staffInfo.full_name} avatarUrl={staffInfo.avatar_url} />
 
-            {staffInfo.branch && (
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>{t('staff.workspace.branch')}</Text>
-                    <Text style={styles.branchName}>{staffInfo.branch.name}</Text>
-                </Card>
-            )}
-
-            {(staffInfo.business || onChangeBusiness) && (
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>{t('staff.workspace.business')}</Text>
-                    {staffInfo.business ? (
-                        <Text style={styles.businessName}>{staffInfo.business.name}</Text>
-                    ) : null}
-                    {onChangeBusiness ? (
-                        <Button
-                            title={t('staff.workspace.changeBusiness')}
-                            onPress={onChangeBusiness}
-                            variant="outline"
-                            fullWidth
-                            accessibilityHint={t('staff.workspace.changeBusinessHint')}
-                            style={staffInfo.business ? styles.changeBusinessAction : undefined}
+            <View style={styles.actions}>
+                <Button
+                    title={t('staff.myShift')}
+                    onPress={onOpenShiftQuick}
+                    size="lg"
+                    fullWidth
+                    leadingIcon={<Ionicons name="time-outline" size={20} color={colors.text.light} />}
+                />
+                <ListGroup inset>
+                    {onCreateBooking ? (
+                        <ListRow
+                            icon="add-circle-outline"
+                            title={t('parity.staffBooking.title')}
+                            onPress={onCreateBooking}
+                            accessibilityHint={t('parity.staffBooking.clientDescription')}
                         />
                     ) : null}
-                </Card>
-            )}
-
-            {services ? (
-                <Card style={styles.card} testID="staff-services">
-                    <Text style={styles.sectionTitle}>{t('parity.staffServices.title', { count: services.length })}</Text>
-                    {services.length === 0 ? (
-                        <Text style={styles.subtitle}>{t('parity.staffServices.empty')}</Text>
-                    ) : (
-                        services.map((service) => {
-                            const price = staffServicePriceKey(service);
-                            return (
-                                <View key={service.id} style={localStyles.service}>
-                                    <Text style={styles.branchName}>{getServiceName(service, locale)}</Text>
-                                    <Text style={styles.subtitle}>
-                                        {[t('parity.staffServices.duration', { minutes: String(service.duration_min) }), price ? t(price.key, price.params) : null]
-                                            .filter(Boolean)
-                                            .join(' · ')}
-                                    </Text>
-                                </View>
-                            );
-                        })
-                    )}
-                </Card>
-            ) : null}
-
-            <View style={styles.section}>
-                <Button title={t('staff.myShift')} onPress={onOpenShiftQuick} fullWidth />
-                {onCreateBooking ? (
-                    <Button
-                        title={t('parity.staffBooking.title')}
-                        onPress={onCreateBooking}
-                        variant="outline"
-                        fullWidth
-                        style={styles.secondaryAction}
-                        accessibilityHint={t('parity.staffBooking.clientDescription')}
-                    />
-                ) : null}
-                <Button
-                    title={t('staff.workspace.schedule')}
-                    onPress={onOpenSchedule}
-                    variant="outline"
-                    fullWidth
-                    style={styles.secondaryAction}
-                />
-                <Button
-                    title={t('staff.workspace.stats')}
-                    onPress={onOpenShifts}
-                    variant="outline"
-                    fullWidth
-                    style={styles.secondaryAction}
-                />
+                    <ListRow icon="calendar-outline" iconTone="info" title={t('staff.workspace.schedule')} onPress={onOpenSchedule} />
+                    <ListRow icon="stats-chart-outline" iconTone="success" title={t('staff.workspace.stats')} onPress={onOpenShifts} />
+                </ListGroup>
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('staff.workspace.upcoming')}</Text>
+            {hasPlace ? (
+                <Section title={t('staff.workspace.placeTitle')}>
+                    <ListGroup inset>
+                        {staffInfo.business ? (
+                            <ListRow icon="business-outline" iconTone="neutral" title={t('staff.workspace.business')} value={staffInfo.business.name} />
+                        ) : null}
+                        {staffInfo.branch ? (
+                            <ListRow icon="location-outline" iconTone="neutral" title={t('staff.workspace.branch')} value={staffInfo.branch.name} />
+                        ) : null}
+                        {onChangeBusiness ? (
+                            <ListRow
+                                icon="swap-horizontal-outline"
+                                title={t('staff.workspace.changeBusiness')}
+                                onPress={onChangeBusiness}
+                                accessibilityHint={t('staff.workspace.changeBusinessHint')}
+                            />
+                        ) : null}
+                    </ListGroup>
+                </Section>
+            ) : null}
+
+            {services ? (
+                <Section title={t('parity.staffServices.title', { count: services.length })} testID="staff-services">
+                    {services.length === 0 ? (
+                        <EmptyState compact icon="cut-outline" title={t('parity.staffServices.empty')} />
+                    ) : (
+                        <ListGroup inset>
+                            {services.map((service) => {
+                                const price = staffServicePriceKey(service);
+                                return (
+                                    <ListRow
+                                        key={service.id}
+                                        icon="cut-outline"
+                                        title={getServiceName(service, locale)}
+                                        subtitle={t('parity.staffServices.duration', { minutes: String(service.duration_min) })}
+                                        value={price ? t(price.key, price.params) : undefined}
+                                    />
+                                );
+                            })}
+                        </ListGroup>
+                    )}
+                </Section>
+            ) : null}
+
+            <Section title={t('staff.workspace.upcoming')}>
                 <SegmentedTabs
                     tabs={[
                         { key: 'upcoming', label: t('staff.workspace.tabUpcoming') },
@@ -164,44 +153,19 @@ export function StaffScreenSections({
                 />
 
                 {list.error && list.bookings.length === 0 ? (
-                    <EmptyState
-                        icon="alert-circle"
-                        title={t('staff.workspace.bookingsLoadError')}
-                        message={t('staff.checkConnection')}
-                        action={<Button title={t('staff.retry')} onPress={list.onRetry} variant="outline" fullWidth />}
-                    />
+                    <ErrorState compact title={t('staff.workspace.bookingsLoadError')} onRetry={list.onRetry} />
                 ) : list.bookings.length > 0 ? (
-                    <View style={styles.bookingsList}>
-                        {list.bookings.map((booking) => (
-                            <Card key={booking.id} style={styles.bookingCard}>
-                                <MotionPressable
-                                    onPress={() => list.onOpenBooking(booking.id)}
-                                    accessibilityRole="button"
-                                    accessibilityHint={t('staff.workspace.openBookingHint')}
-                                    scale="firm"
-                                    testID={`staff-booking-${booking.id}`}
-                                >
-                                    <View style={styles.bookingHeader}>
-                                        <Text style={styles.bookingService}>
-                                            {getServiceName(booking.service, locale) || t('staff.service')}
-                                        </Text>
-                                        <BookingStatusBadge status={booking.status} />
-                                    </View>
-                                    {booking.client_name ? (
-                                        <Text style={styles.bookingClient}>
-                                            {t('staff.workspace.bookingClient', { name: booking.client_name })}
-                                        </Text>
-                                    ) : null}
-                                    <View style={styles.bookingTime}>
-                                        <Text style={styles.bookingDate}>{formatDate(booking.start_at, locale, tz)}</Text>
-                                        <Text style={styles.bookingTimeRange}>
-                                            {formatTime(booking.start_at, tz)} - {formatTime(booking.end_at, tz)}
-                                        </Text>
-                                    </View>
-                                </MotionPressable>
-                                <ClientContactActions phone={booking.client_phone} />
-                            </Card>
-                        ))}
+                    <>
+                        <ListGroup>
+                            {list.bookings.map((booking) => (
+                                <BookingItem
+                                    key={booking.id}
+                                    booking={booking}
+                                    tz={tz}
+                                    onOpen={() => list.onOpenBooking(booking.id)}
+                                />
+                            ))}
+                        </ListGroup>
                         {list.hasMore ? (
                             <Button
                                 title={t('staff.workspace.loadMore')}
@@ -211,15 +175,75 @@ export function StaffScreenSections({
                                 fullWidth
                             />
                         ) : null}
-                    </View>
-                ) : list.isLoading ? null : (
+                    </>
+                ) : list.isLoading ? (
+                    <SkeletonList rows={3} avatar={false} />
+                ) : (
                     <EmptyState
-                        icon="calendar"
+                        compact
+                        icon="calendar-outline"
                         title={t(list.tab === 'upcoming' ? 'staff.workspace.emptyTitle' : 'staff.workspace.pastEmptyTitle')}
                         message={t(list.tab === 'upcoming' ? 'staff.workspace.emptyMessage' : 'staff.workspace.pastEmptyMessage')}
+                        action={list.tab === 'upcoming' && onCreateBooking ? (
+                            <Button title={t('parity.staffBooking.title')} onPress={onCreateBooking} variant="outline" fullWidth />
+                        ) : undefined}
                     />
                 )}
-            </View>
-        </ScrollView>
+            </Section>
+        </Screen>
     );
 }
+
+/** One booking: start time on the left, service and client, the status, and the client's contacts. */
+function BookingItem({ booking, tz, onOpen }: { booking: UpcomingBooking; tz: string | null | undefined; onOpen: () => void }) {
+    const { t, locale } = useLanguage();
+    const service = getServiceName(booking.service, locale) || t('staff.service');
+    const start = formatTime(booking.start_at, tz);
+    return (
+        <View style={styles.booking}>
+            <Pressable
+                onPress={onOpen}
+                accessibilityRole="button"
+                accessibilityHint={t('staff.workspace.openBookingHint')}
+                style={({ pressed }) => [styles.bookingRow, pressed ? styles.pressed : null]}
+                testID={`staff-booking-${booking.id}`}
+            >
+                <View style={styles.timeBox}>
+                    <Text style={styles.timeText}>{start}</Text>
+                </View>
+                <View style={styles.bookingBody}>
+                    <Text style={styles.bookingService} numberOfLines={2}>{service}</Text>
+                    {booking.client_name ? (
+                        <Text style={styles.bookingMeta} numberOfLines={1}>
+                            {t('staff.workspace.bookingClient', { name: booking.client_name })}
+                        </Text>
+                    ) : null}
+                    <Text style={styles.bookingMeta}>
+                        {formatDate(booking.start_at, locale, tz)} · {start} – {formatTime(booking.end_at, tz)}
+                    </Text>
+                </View>
+                <BookingStatusPill status={booking.status} />
+            </Pressable>
+            <ClientContactActions phone={booking.client_phone} />
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    actions: { gap: space.md },
+    booking: { paddingVertical: space.md, gap: space.sm },
+    bookingRow: { minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    timeBox: {
+        minWidth: 56,
+        paddingVertical: space.sm,
+        paddingHorizontal: space.xs,
+        borderRadius: radii.md,
+        backgroundColor: colors.tone.accent.bg,
+        alignItems: 'center',
+    },
+    timeText: { ...typeScale.bodyStrong, color: colors.tone.accent.fg },
+    bookingBody: { flex: 1, minWidth: 0, gap: space.xxs },
+    bookingService: { ...typeScale.bodyStrong, color: colors.text.primary },
+    bookingMeta: { ...typeScale.caption, color: colors.text.secondary },
+});
