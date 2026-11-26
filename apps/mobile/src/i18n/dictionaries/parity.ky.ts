@@ -269,6 +269,7 @@ export const parityKy: Record<keyof typeof parityRu, string> = {
     'parity.workspaces.forBusinessHint': 'Бизнес баракчаңызды түзүп, кызматтарды жөндөп, команданы мессенжердеги кол менен жазуудан бошотуңуз.',
     'parity.workspaces.connectBusiness': 'Бизнести кошуу',
     'parity.workspaces.joinBusiness': 'Командага кошулуу',
+    'parity.home.businessTitle': 'Жазылууларды жана графикти бир жерден башкарыңыз',
     'parity.selectBusiness.current': 'Учурдагы',
     'parity.selectBusiness.error': 'Бизнести тандоо мүмкүн болгон жок. Кайра аракет кылыңыз.',
 

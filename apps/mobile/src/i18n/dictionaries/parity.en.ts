@@ -269,6 +269,7 @@ export const parityEn: Record<keyof typeof parityRu, string> = {
     'parity.workspaces.forBusinessHint': 'Create your business page, set up services, and free your team from manual booking in messengers.',
     'parity.workspaces.connectBusiness': 'Add your business',
     'parity.workspaces.joinBusiness': 'Join a team',
+    'parity.home.businessTitle': 'Manage bookings and schedules in one place',
     'parity.selectBusiness.current': 'Current',
     'parity.selectBusiness.error': 'Unable to select the business. Please try again.',
 

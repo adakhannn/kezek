@@ -272,6 +272,7 @@ export const parityRu = {
     'parity.workspaces.forBusinessHint': 'Создайте страницу бизнеса, настройте услуги и освободите команду от ручной записи в мессенджерах.',
     'parity.workspaces.connectBusiness': 'Подключить бизнес',
     'parity.workspaces.joinBusiness': 'Присоединиться к команде',
+    'parity.home.businessTitle': 'Принимайте записи и управляйте расписанием в одном месте',
     'parity.selectBusiness.current': 'Текущий',
     'parity.selectBusiness.error': 'Не удалось выбрать бизнес, попробуйте ещё раз',
 
