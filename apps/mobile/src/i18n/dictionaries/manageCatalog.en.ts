@@ -288,4 +288,11 @@ export const manageCatalogEn: Record<keyof typeof manageCatalogRu, string> = {
     'catalog.app.chooseTimeZone': 'Choose a time zone',
     'catalog.app.openSchedule': 'Open the branch schedule',
     'catalog.app.openPromotions': 'Open the branch promotions',
+    'catalog.app.group.main': 'Basics',
+    'catalog.app.group.more': 'More',
+    'catalog.app.group.promotionType': 'Promotion type',
+    'catalog.app.group.promotionTerms': 'Terms',
+    'catalog.app.group.period': 'Valid',
+    'catalog.app.optional': 'Optional: without dates the promotion always applies',
+    'catalog.app.locationHintShort': 'Tap while at the branch: the coordinates and address fill in automatically',
 };

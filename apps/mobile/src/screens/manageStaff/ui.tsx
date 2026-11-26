@@ -1,10 +1,14 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Switch, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import KitBadge from '../../components/ui/Badge';
 import { TimeField as NativeTimeField, useNativePicker } from '../../components/ui/DateTimeFields';
+import { RadioRow, SwitchRow } from '../../components/ui/SelectionRow';
+import KitStatTile from '../../components/ui/StatTile';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
+import { radii, space, typeScale } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
 import { addDaysYmd } from '../../utils/businessWeek';
 import { clampYmd, pickerDateToYmd, ymdToPickerDate } from '../../utils/pickerValues';
@@ -13,7 +17,7 @@ import { isTime } from './legacySchedule';
 /** dd.mm.yyyy of a business date (YYYY-MM-DD), as the website prints it. */
 export const dmy = (ymd: string) => ymd.split('-').reverse().join('.');
 
-/** A selectable pill: filters, branches, services, periods. */
+/** A selectable pill (slots, services, steps): the look of the kit's ChipGroup chip. */
 export function Chip({ label, selected, onPress, disabled, testID, tone }: {
     label: string;
     selected: boolean;
@@ -30,72 +34,61 @@ export function Chip({ label, selected, onPress, disabled, testID, tone }: {
             accessibilityState={{ selected, disabled: !!disabled }}
             accessibilityLabel={label}
             testID={testID}
-            style={[ui.chip, selected ? ui.chipSelected : null, tone === 'danger' ? ui.chipDanger : null, disabled ? ui.disabled : null]}
+            style={({ pressed }) => [
+                ui.chip,
+                selected ? ui.chipSelected : null,
+                tone === 'danger' ? ui.chipDanger : null,
+                pressed ? ui.pressed : null,
+                disabled ? ui.disabled : null,
+            ]}
         >
-            <Text style={[ui.chipText, selected ? ui.chipTextSelected : null]}>{label}</Text>
+            {selected ? <Ionicons name="checkmark" size={16} color={colors.text.light} /> : null}
+            <Text style={[ui.chipText, selected ? ui.chipTextSelected : null]} numberOfLines={1}>{label}</Text>
         </Pressable>
     );
 }
 
-/** A vertical list of single-choice options (a native replacement for the website's selects). */
-export function OptionList<T extends string>({ options, value, onChange, disabled, testID }: {
+/**
+ * A single choice from a short list (the website's selects): radio rows with hairlines, meant to
+ * sit inside one card. `card` draws that card when the list stands on the page by itself.
+ */
+export function OptionList<T extends string>({ options, value, onChange, disabled, card = false, testID }: {
     options: { value: T; label: string; hint?: string }[];
     value: T | '';
     onChange: (value: T) => void;
     disabled?: boolean;
+    card?: boolean;
     testID?: string;
 }) {
     return (
-        <View style={ui.optionList} accessibilityRole="radiogroup" testID={testID}>
-            {options.map((option) => {
-                const selected = option.value === value;
-                return (
-                    <Pressable
-                        key={option.value}
-                        onPress={() => onChange(option.value)}
+        <View style={card ? ui.optionCard : null} accessibilityRole="radiogroup" testID={testID}>
+            {options.map((option, index) => (
+                <Fragment key={option.value}>
+                    {index > 0 ? <View style={ui.hairline} /> : null}
+                    <RadioRow
+                        label={option.label}
+                        hint={option.hint}
+                        selected={option.value === value}
+                        onSelect={() => onChange(option.value)}
                         disabled={disabled}
-                        accessibilityRole="radio"
-                        accessibilityState={{ checked: selected, disabled: !!disabled }}
-                        accessibilityLabel={option.hint ? `${option.label}, ${option.hint}` : option.label}
-                        style={[ui.option, selected ? ui.optionSelected : null, disabled ? ui.disabled : null]}
                         testID={testID ? `${testID}-${option.value}` : undefined}
-                    >
-                        <Ionicons
-                            name={selected ? 'radio-button-on' : 'radio-button-off'}
-                            size={20}
-                            color={selected ? colors.accent.indigo : colors.text.secondary}
-                        />
-                        <View style={ui.optionBody}>
-                            <Text style={ui.optionLabel}>{option.label}</Text>
-                            {option.hint ? <Text style={ui.optionHint}>{option.hint}</Text> : null}
-                        </View>
-                    </Pressable>
-                );
-            })}
+                    />
+                </Fragment>
+            ))}
         </View>
     );
 }
 
-export function ToggleRow({ label, value, onChange, disabled, testID }: {
+/** An on/off setting: the kit's SwitchRow (the whole row toggles). */
+export function ToggleRow({ label, hint, value, onChange, disabled, testID }: {
     label: string;
+    hint?: string;
     value: boolean;
     onChange: (value: boolean) => void;
     disabled?: boolean;
     testID?: string;
 }) {
-    return (
-        <View style={[ui.toggleRow, disabled ? ui.disabled : null]}>
-            <Text style={ui.toggleLabel}>{label}</Text>
-            <Switch
-                value={value}
-                onValueChange={onChange}
-                disabled={disabled}
-                accessibilityLabel={label}
-                testID={testID}
-                trackColor={{ true: colors.accent.primary, false: colors.border.light }}
-            />
-        </View>
-    );
+    return <SwitchRow label={label} hint={hint} value={value} onChange={onChange} disabled={disabled} testID={testID} />;
 }
 
 /** A business date with day (or other) steps and a "today" shortcut; dates before `min` are refused. */
@@ -122,7 +115,7 @@ export function DateStepper({ value, onChange, min, today, disabled, label, step
                     disabled={disabled || !canGoBack}
                     accessibilityRole="button"
                     accessibilityLabel={t('manageStaff.date.previous')}
-                    style={[ui.stepperButton, disabled || !canGoBack ? ui.disabled : null]}
+                    style={({ pressed }) => [ui.stepperButton, pressed ? ui.pressed : null, disabled || !canGoBack ? ui.disabled : null]}
                 >
                     <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
                 </Pressable>
@@ -148,7 +141,7 @@ export function DateStepper({ value, onChange, min, today, disabled, label, step
                     disabled={disabled}
                     accessibilityRole="button"
                     accessibilityLabel={t('manageStaff.date.next')}
-                    style={[ui.stepperButton, disabled ? ui.disabled : null]}
+                    style={({ pressed }) => [ui.stepperButton, pressed ? ui.pressed : null, disabled ? ui.disabled : null]}
                 >
                     <Ionicons name="chevron-forward" size={20} color={colors.text.primary} />
                 </Pressable>
@@ -157,7 +150,7 @@ export function DateStepper({ value, onChange, min, today, disabled, label, step
                         onPress={() => onChange(today)}
                         disabled={disabled}
                         accessibilityRole="button"
-                        style={[ui.todayButton, disabled ? ui.disabled : null]}
+                        style={({ pressed }) => [ui.todayButton, pressed ? ui.pressed : null, disabled ? ui.disabled : null]}
                     >
                         <Text style={ui.todayText}>{t('manageStaff.date.today')}</Text>
                     </Pressable>
@@ -184,11 +177,13 @@ export function TimeField({ value, onChange, label, disabled, testID }: {
             disabled={disabled}
             minuteInterval={5}
             compact
+            style={ui.time}
             testID={testID}
         />
     );
 }
 
+/** A KPI tile: the kit's StatTile (use it inside the kit's StatGrid). */
 export function StatTile({ label, value, hint, tone, style }: {
     label: string;
     value: string;
@@ -196,17 +191,18 @@ export function StatTile({ label, value, hint, tone, style }: {
     tone?: 'success' | 'accent' | 'warning' | 'muted';
     style?: StyleProp<ViewStyle>;
 }) {
-    const color = tone === 'success' ? colors.status.success : tone === 'accent' ? colors.accent.indigo
-        : tone === 'warning' ? colors.status.warning : colors.text.primary;
     return (
-        <View style={[ui.tile, style]} accessible accessibilityLabel={`${label.replace(/:s*$/, "")}: ${value}${hint ? `, ${hint}` : ''}`}>
-            <Text style={ui.tileLabel}>{label}</Text>
-            <Text style={[ui.tileValue, { color }]}>{value}</Text>
-            {hint ? <Text style={ui.tileHint}>{hint}</Text> : null}
-        </View>
+        <KitStatTile
+            label={label.replace(/:\s*$/, '')}
+            value={value}
+            hint={hint}
+            tone={tone === 'muted' ? undefined : tone}
+            style={style}
+        />
     );
 }
 
+/** A section title inside a card (a heading row with an optional right element). */
 export function SectionTitle({ title, description, right }: { title: string; description?: string; right?: ReactNode }) {
     return (
         <View style={ui.sectionHeader}>
@@ -219,132 +215,76 @@ export function SectionTitle({ title, description, right }: { title: string; des
     );
 }
 
+/** A short label: the kit's Badge (`muted` is the kit's neutral tone). */
 export function Badge({ label, tone = 'muted' }: { label: string; tone?: 'success' | 'warning' | 'muted' | 'accent' | 'danger' }) {
-    const palette = {
-        success: { bg: colors.feedback.successSurface, fg: colors.status.success },
-        warning: { bg: colors.feedback.warningSurface, fg: colors.status.warning },
-        danger: { bg: colors.feedback.dangerSurface, fg: colors.status.danger },
-        accent: { bg: colors.surface.emphasis, fg: colors.accent.indigo },
-        muted: { bg: colors.surface.elevated, fg: colors.text.secondary },
-    }[tone];
-    return (
-        <View style={[ui.badge, { backgroundColor: palette.bg }]}>
-            <Text style={[ui.badgeText, { color: palette.fg }]}>{label}</Text>
-        </View>
-    );
+    return <KitBadge label={label} tone={tone === 'muted' ? 'neutral' : tone} />;
 }
 
 export const ui = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background.primary },
-    content: { padding: colors.layout.space4, paddingBottom: 120, gap: colors.layout.space4 },
-    title: { fontSize: 24, fontWeight: '700', color: colors.text.primary },
-    subtitle: { fontSize: 15, color: colors.text.secondary, marginTop: 2 },
-    text: { fontSize: 15, color: colors.text.primary },
-    muted: { fontSize: 13, color: colors.text.secondary, marginTop: 2 },
-    label: { fontSize: 14, fontWeight: '600', color: colors.text.secondary, marginBottom: colors.layout.space2 },
-    row: { flexDirection: 'row', alignItems: 'center', gap: colors.layout.space2 },
-    wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2 },
-    gap: { gap: colors.layout.space3 },
-    divider: { height: 1, backgroundColor: colors.border.subtle, marginVertical: colors.layout.space3 },
-    disabled: { opacity: 0.5 },
+    text: { ...typeScale.body, color: colors.text.primary },
+    strong: { ...typeScale.bodyStrong, color: colors.text.primary },
+    muted: { ...typeScale.caption, color: colors.text.secondary },
+    label: { ...typeScale.overline, color: colors.text.tertiary },
+    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+    gap: { gap: space.md },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border.subtle, marginVertical: space.xs },
+    hairline: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border.subtle },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    disabled: { opacity: colors.interactive.disabledOpacity },
+    /** A card of the page (one level): filled, no border. */
+    card: { backgroundColor: colors.surface.card, borderRadius: radii.lg, padding: space.lg, gap: space.md },
+    /** A block inside a card: a lighter fill, never a bordered box. */
+    inset: { backgroundColor: colors.fill.input, borderRadius: radii.md, padding: space.md, gap: space.xs },
     chip: {
-        minHeight: MIN_TOUCH_TARGET,
-        justifyContent: 'center',
-        paddingHorizontal: colors.layout.space4,
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.surface.card,
-    },
-    chipSelected: { borderColor: colors.accent.primary, backgroundColor: colors.surface.emphasis },
-    chipDanger: { borderColor: colors.status.danger },
-    chipText: { fontSize: 14, fontWeight: '600', color: colors.text.secondary },
-    chipTextSelected: { color: colors.text.primary },
-    optionList: { gap: colors.layout.space2 },
-    option: {
         minHeight: MIN_TOUCH_TARGET,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: colors.layout.space3,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space2,
-        borderRadius: colors.layout.radiusMd,
+        gap: space.xs,
+        paddingHorizontal: space.lg,
+        borderRadius: radii.pill,
         borderWidth: 1,
         borderColor: colors.border.subtle,
         backgroundColor: colors.surface.card,
     },
-    optionSelected: { borderColor: colors.accent.primary, backgroundColor: colors.surface.emphasis },
-    optionBody: { flex: 1 },
-    optionLabel: { fontSize: 15, color: colors.text.primary },
-    optionHint: { fontSize: 13, color: colors.text.secondary, marginTop: 2 },
-    toggleRow: {
-        minHeight: MIN_TOUCH_TARGET,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: colors.layout.space3,
-    },
-    toggleLabel: { flex: 1, fontSize: 15, color: colors.text.primary },
-    stepper: { gap: colors.layout.space1 },
-    stepperRow: { flexDirection: 'row', alignItems: 'center', gap: colors.layout.space2 },
+    chipSelected: { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
+    chipDanger: { borderColor: colors.tone.danger.border },
+    chipText: { fontSize: 14, fontWeight: '500', color: colors.text.secondary },
+    chipTextSelected: { color: colors.text.light, fontWeight: '600' },
+    optionCard: { backgroundColor: colors.surface.card, borderRadius: radii.lg, paddingHorizontal: space.lg, paddingVertical: space.xs },
+    stepper: { gap: space.sm },
+    stepperRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
     stepperButton: {
         width: MIN_TOUCH_TARGET,
         height: MIN_TOUCH_TARGET,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.surface.card,
+        borderRadius: radii.md,
+        backgroundColor: colors.fill.input,
     },
     stepperPick: {
         flexGrow: 1,
+        flexShrink: 1,
         minHeight: MIN_TOUCH_TARGET,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: colors.layout.space2,
-        paddingHorizontal: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        backgroundColor: colors.surface.card,
+        gap: space.sm,
+        paddingHorizontal: space.md,
+        borderRadius: radii.md,
+        backgroundColor: colors.fill.input,
     },
-    pressed: { opacity: colors.interactive.pressedOpacity },
-    stepperValue: { minWidth: 96, textAlign: 'center', fontSize: 16, fontWeight: '600', color: colors.text.primary },
+    stepperValue: { ...typeScale.bodyStrong, color: colors.text.primary, textAlign: 'center' },
     todayButton: {
         minHeight: MIN_TOUCH_TARGET,
         justifyContent: 'center',
-        paddingHorizontal: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        backgroundColor: colors.surface.emphasis,
+        paddingHorizontal: space.md,
+        borderRadius: radii.md,
+        backgroundColor: colors.tone.accent.bg,
     },
-    todayText: { fontSize: 14, fontWeight: '600', color: colors.accent.indigo },
-    timeInput: {
-        minHeight: MIN_TOUCH_TARGET,
-        minWidth: 84,
-        paddingHorizontal: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.surface.card,
-        color: colors.text.primary,
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    tile: {
-        flexGrow: 1,
-        flexBasis: '45%',
-        padding: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.card,
-    },
-    tileLabel: { fontSize: 13, color: colors.text.secondary },
-    tileValue: { fontSize: 20, fontWeight: '700', marginTop: 4 },
-    tileHint: { fontSize: 12, color: colors.text.muted, marginTop: 2 },
-    sectionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: colors.layout.space3, marginBottom: colors.layout.space3 },
-    sectionHeaderText: { flex: 1 },
-    sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary },
-    badge: { alignSelf: 'flex-start', paddingHorizontal: colors.layout.space2, paddingVertical: 3, borderRadius: 999 },
-    badgeText: { fontSize: 12, fontWeight: '600' },
+    todayText: { ...typeScale.callout, fontWeight: '600', color: colors.tone.accent.fg },
+    time: { flex: 1 },
+    sectionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+    sectionHeaderText: { flex: 1, gap: space.xxs },
+    sectionTitle: { ...typeScale.headline, color: colors.text.primary },
 });

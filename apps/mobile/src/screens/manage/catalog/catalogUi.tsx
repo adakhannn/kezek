@@ -1,16 +1,17 @@
-import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import Button from '../../../components/ui/Button';
-import EmptyState from '../../../components/ui/EmptyState';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import { MIN_TOUCH_TARGET } from '../../../constants/accessibility';
+import { StatusPill as KitStatusPill } from '../../../components/ui/Badge';
+import ErrorState from '../../../components/ui/ErrorState';
+import Screen from '../../../components/ui/Screen';
+import { CheckboxRow } from '../../../components/ui/SelectionRow';
+import { SkeletonCard, SkeletonList } from '../../../components/ui/Skeleton';
 import { colors } from '../../../constants/colors';
+import { radii, space, typeScale } from '../../../constants/theme';
 import { useLanguage } from '../../../i18n';
 import { getErrorMessage } from '../../../lib/errors';
 
-/** A checkbox line (the website's <input type="checkbox"> with its label). */
+/** A checkbox line (the website's <input type="checkbox"> with its label): the kit's CheckboxRow. */
 export function CheckRow({ label, hint, checked, onChange, disabled, testID }: {
     label: string;
     hint?: string;
@@ -19,144 +20,98 @@ export function CheckRow({ label, hint, checked, onChange, disabled, testID }: {
     disabled?: boolean;
     testID?: string;
 }) {
-    return (
-        <Pressable
-            onPress={() => onChange(!checked)}
-            disabled={disabled}
-            accessibilityRole="checkbox"
-            accessibilityLabel={label}
-            accessibilityHint={hint}
-            accessibilityState={{ checked, disabled: !!disabled }}
-            style={({ pressed }) => [ui.checkRow, pressed ? ui.pressed : null, disabled ? ui.disabled : null]}
-            testID={testID}
-        >
-            <Ionicons
-                name={checked ? 'checkbox' : 'square-outline'}
-                size={24}
-                color={checked ? colors.accent.indigo : colors.text.secondary}
-            />
-            <View style={ui.checkText}>
-                <Text style={ui.checkLabel}>{label}</Text>
-                {hint ? <Text style={ui.checkHint}>{hint}</Text> : null}
-            </View>
-        </Pressable>
-    );
+    return <CheckboxRow label={label} hint={hint} checked={checked} onChange={onChange} disabled={disabled} testID={testID} />;
 }
 
-/** A selectable chip (branch filter, promotion type). */
-export function Chip({ label, selected, onPress, testID }: {
-    label: string;
-    selected: boolean;
-    onPress: () => void;
+/** The state of a catalog record (active / hidden) as the kit's status pill. */
+export function StatusPill({ active, label }: { active: boolean; label: string }) {
+    return <KitStatusPill label={label} tone={active ? 'success' : 'neutral'} />;
+}
+
+/**
+ * One record of a catalog list: a ListRow (the record, tap to open) on a card, with its own
+ * actions under a hairline (the website offers them in the list). Same pattern as the staff list.
+ */
+export function ItemCard({ children, actions, dimmed, testID }: {
+    children: ReactNode;
+    actions?: ReactNode;
+    dimmed?: boolean;
     testID?: string;
 }) {
     return (
-        <Pressable
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            style={({ pressed }) => [ui.chip, selected ? ui.chipSelected : null, pressed ? ui.pressed : null]}
-            testID={testID}
-        >
-            <Text style={[ui.chipText, selected ? ui.chipTextSelected : null]}>{label}</Text>
-        </Pressable>
-    );
-}
-
-export function StatusPill({ active, label }: { active: boolean; label: string }) {
-    return (
-        <View style={[ui.pill, active ? ui.pillActive : null]}>
-            <Text style={[ui.pillText, active ? ui.pillTextActive : null]}>{label}</Text>
+        <View style={[ui.item, dimmed ? ui.itemDimmed : null]} testID={testID}>
+            {children}
+            {actions ? <View style={ui.itemActions}>{actions}</View> : null}
         </View>
     );
 }
 
-export function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
-    return (
-        <View style={ui.sectionHeader}>
-            <Text style={ui.sectionTitle} accessibilityRole="header">{title}</Text>
-            {subtitle ? <Text style={ui.sectionSubtitle}>{subtitle}</Text> : null}
-        </View>
-    );
-}
-
-/** Loading, then a failed read with a retry (FE-08: an error, never an empty form). */
-export function QueryState({ isLoading, error, onRetry, children }: {
+/** Loading (skeleton), then a failed read with a retry (FE-08: an error, never an empty form). */
+export function QueryState({ isLoading, error, onRetry, skeleton = 'list', children }: {
     isLoading: boolean;
     error: unknown;
     onRetry: () => void;
+    /** The shape of the page while it loads: a list of rows or a form. */
+    skeleton?: 'list' | 'form';
     children: () => ReactNode;
 }) {
     const { t } = useLanguage();
-    if (isLoading) return <LoadingSpinner message={t('common.loading')} />;
+    if (isLoading) {
+        return (
+            <Screen testID="catalog-loading">
+                {skeleton === 'list' ? <SkeletonList rows={4} avatar /> : (
+                    <>
+                        <SkeletonCard lines={2} />
+                        <SkeletonCard lines={4} />
+                    </>
+                )}
+            </Screen>
+        );
+    }
     if (error) {
         return (
-            <ScrollView style={ui.screen} contentContainerStyle={ui.content}>
-                <EmptyState
-                    icon="alert-circle"
+            <Screen>
+                <ErrorState
                     title={t('catalog.app.loadError')}
                     message={getErrorMessage(error, t('staff.checkConnection'), t)}
-                    action={<Button title={t('catalog.app.retry')} onPress={onRetry} variant="outline" fullWidth />}
+                    retryLabel={t('catalog.app.retry')}
+                    onRetry={onRetry}
                 />
-            </ScrollView>
+            </Screen>
         );
     }
     return <>{children()}</>;
 }
 
 export const ui = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.background.primary },
-    content: { padding: colors.layout.space5, paddingBottom: 120, gap: colors.layout.space4 },
-    header: { gap: 4 },
-    title: { fontSize: 26, fontWeight: '700', color: colors.text.primary },
-    subtitle: { fontSize: 15, color: colors.text.secondary },
-    caption: { fontSize: 13, color: colors.text.tertiary },
-    body: { fontSize: 15, color: colors.text.primary, lineHeight: 22 },
-    muted: { fontSize: 14, color: colors.text.secondary, lineHeight: 20 },
-    error: { fontSize: 13, color: colors.status.danger },
-    row: { flexDirection: 'row', alignItems: 'center', gap: colors.layout.space2 },
-    rowBetween: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: colors.layout.space3 },
-    wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2 },
-    actions: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2, marginTop: colors.layout.space3 },
-    action: { flexGrow: 1, minHeight: MIN_TOUCH_TARGET },
-    cardTitle: { fontSize: 17, fontWeight: '600', color: colors.text.primary, flexShrink: 1 },
-    meta: { fontSize: 14, color: colors.text.secondary, marginTop: 4 },
-    sectionHeader: { gap: 4, marginBottom: colors.layout.space3 },
-    sectionTitle: { fontSize: 18, fontWeight: '600', color: colors.text.primary },
-    sectionSubtitle: { fontSize: 14, color: colors.text.secondary, lineHeight: 20 },
-    checkRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space3,
-        minHeight: MIN_TOUCH_TARGET,
-        paddingVertical: colors.layout.space2,
-    },
-    checkText: { flex: 1, gap: 2 },
-    checkLabel: { fontSize: 15, color: colors.text.primary },
-    checkHint: { fontSize: 13, color: colors.text.secondary },
-    chip: {
-        minHeight: MIN_TOUCH_TARGET,
-        justifyContent: 'center',
-        paddingHorizontal: colors.layout.space4,
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.surface.card,
-    },
-    chipSelected: { borderColor: colors.accent.primary, backgroundColor: colors.surface.emphasis },
-    chipText: { fontSize: 14, color: colors.text.secondary },
-    chipTextSelected: { color: colors.text.primary, fontWeight: '600' },
-    pill: {
-        alignSelf: 'flex-start',
-        paddingHorizontal: 10,
-        paddingVertical: 3,
-        borderRadius: 999,
-        backgroundColor: colors.surface.elevated,
-    },
-    pillActive: { backgroundColor: colors.feedback.successSurface },
-    pillText: { fontSize: 12, fontWeight: '600', color: colors.text.secondary },
-    pillTextActive: { color: colors.status.success },
+    body: { ...typeScale.body, color: colors.text.primary },
+    muted: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary },
+    caption: { ...typeScale.caption, color: colors.text.tertiary },
+    error: { ...typeScale.caption, color: colors.tone.danger.fg },
+    row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border.subtle, marginVertical: space.xs },
     pressed: { opacity: colors.interactive.pressedOpacity },
     disabled: { opacity: colors.interactive.disabledOpacity },
-    divider: { height: 1, backgroundColor: colors.border.subtle, marginVertical: colors.layout.space3 },
+    group: { paddingVertical: space.xs },
+    list: { gap: space.sm },
+    item: {
+        backgroundColor: colors.surface.card,
+        borderRadius: radii.lg,
+        paddingHorizontal: space.lg,
+        paddingBottom: space.xs,
+    },
+    itemDimmed: { opacity: 0.75 },
+    itemActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: space.xs,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+        paddingTop: space.xs,
+    },
+    itemMeta: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingBottom: space.md, marginTop: -space.xs },
+    itemMetaText: { ...typeScale.caption, color: colors.text.secondary, flex: 1 },
+    dangerText: { color: colors.tone.danger.fg },
 });

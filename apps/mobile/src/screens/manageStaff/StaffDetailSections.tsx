@@ -1,14 +1,20 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Fragment, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
-import Input from '../../components/ui/Input';
-import MotionPressable from '../../components/ui/MotionPressable';
+import FormField, { FieldGroup, FieldRow } from '../../components/ui/FormField';
+import { KeyValueRow } from '../../components/ui/ListRow';
+import { CheckboxRow } from '../../components/ui/SelectionRow';
+import { SkeletonList } from '../../components/ui/Skeleton';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
+import { radii, space, typeScale } from '../../constants/theme';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage, type MobileI18nKey } from '../../i18n';
@@ -19,7 +25,7 @@ import { staffErrorMessage } from './errors';
 import { staffQueryKeys } from './queryKeys';
 import { validateStaffForm, withMasterPercent, withSalonPercent, type StaffFormState } from './staffForm';
 import type { StaffService } from './types';
-import { Badge, OptionList, SectionTitle, ToggleRow, ui } from './ui';
+import { OptionList, SectionTitle, ToggleRow, ui } from './ui';
 
 /** The website's StaffForm: contacts, activity and pay terms of the card. */
 export function StaffProfileForm({ bizId, initial, onSaved }: { bizId: string; initial: StaffFormState; onSaved: () => void }) {
@@ -51,65 +57,77 @@ export function StaffProfileForm({ bizId, initial, onSaved }: { bizId: string; i
     };
 
     return (
-        <View style={ui.gap}>
-            {error ? <FeedbackBanner variant="danger" message={error} /> : null}
-            <Input
-                label={`${t('manageStaff.staff.form.fullName.label')} *`}
-                value={form.full_name}
-                onChangeText={(value) => set('full_name', value)}
-                placeholder={t('manageStaff.staff.form.fullName.placeholder')}
-                testID="staff-form-name"
-            />
-            <ToggleRow label={t('manageStaff.staff.form.active.label')} value={form.is_active} onChange={(value) => set('is_active', value)} />
-            <Badge
-                label={t(form.is_active ? 'manageStaff.staff.form.active.working' : 'manageStaff.staff.form.active.inactive')}
-                tone={form.is_active ? 'success' : 'muted'}
-            />
-            <Input
-                label={t('manageStaff.staff.form.email.label')}
-                value={form.email}
-                onChangeText={(value) => set('email', value)}
-                placeholder={t('manageStaff.staff.form.email.placeholder')}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-            />
-            <Input
-                label={t('manageStaff.staff.form.phone.label')}
-                value={form.phone}
-                onChangeText={(value) => set('phone', value)}
-                placeholder={t('manageStaff.staff.form.phone.placeholder')}
-                keyboardType="phone-pad"
-            />
-            <View style={ui.divider} />
-            <SectionTitle title={t('manageStaff.staff.form.income.title')} description={t('manageStaff.staff.form.income.desc')} />
-            <View style={styles.twoColumns}>
-                <Input
-                    label={t('manageStaff.staff.form.income.master.label')}
-                    value={form.percent_master}
-                    onChangeText={(value) => setForm((current) => withMasterPercent(current, value))}
-                    keyboardType="numeric"
-                    containerStyle={styles.column}
-                    testID="staff-form-master"
+        <View style={styles.form}>
+            {error ? <FeedbackBanner variant="danger" message={error} compact /> : null}
+            <FieldGroup title={t('manageStaff.form.contacts')}>
+                <FormField
+                    label={t('manageStaff.staff.form.fullName.label')}
+                    required
+                    value={form.full_name}
+                    onChangeText={(value) => set('full_name', value)}
+                    placeholder={t('manageStaff.staff.form.fullName.placeholder')}
+                    testID="staff-form-name"
                 />
-                <Input
-                    label={t('manageStaff.staff.form.income.salon.label')}
-                    value={form.percent_salon}
-                    onChangeText={(value) => setForm((current) => withSalonPercent(current, value))}
-                    keyboardType="numeric"
-                    containerStyle={styles.column}
-                    testID="staff-form-salon"
+                <FormField
+                    label={t('manageStaff.staff.form.email.label')}
+                    value={form.email}
+                    onChangeText={(value) => set('email', value)}
+                    placeholder={t('manageStaff.staff.form.email.placeholder')}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                 />
-            </View>
-            <View style={ui.divider} />
-            <SectionTitle title={t('manageStaff.staff.form.hourly.title')} description={t('manageStaff.staff.form.hourly.desc')} />
-            <Input
-                label={t('manageStaff.staff.form.hourly.rate.label')}
-                value={form.hourly_rate}
-                onChangeText={(value) => set('hourly_rate', value)}
-                placeholder={t('manageStaff.staff.form.hourly.rate.placeholder')}
-                keyboardType="decimal-pad"
-            />
+                <FormField
+                    label={t('manageStaff.staff.form.phone.label')}
+                    value={form.phone}
+                    onChangeText={(value) => set('phone', value)}
+                    placeholder={t('manageStaff.staff.form.phone.placeholder')}
+                    keyboardType="phone-pad"
+                />
+            </FieldGroup>
+
+            <Card variant="plain" padding="md" style={styles.switchCard}>
+                <ToggleRow
+                    label={t('manageStaff.staff.form.active.label')}
+                    hint={t(form.is_active ? 'manageStaff.staff.form.active.working' : 'manageStaff.staff.form.active.inactive')}
+                    value={form.is_active}
+                    onChange={(value) => set('is_active', value)}
+                    testID="staff-form-active"
+                />
+            </Card>
+
+            <FieldGroup title={t('manageStaff.staff.form.income.title')} caption={t('manageStaff.staff.form.income.desc')}>
+                <FieldRow>
+                    <FormField
+                        label={t('manageStaff.form.masterShare')}
+                        value={form.percent_master}
+                        onChangeText={(value) => setForm((current) => withMasterPercent(current, value))}
+                        keyboardType="numeric"
+                        suffix="%"
+                        testID="staff-form-master"
+                    />
+                    <FormField
+                        label={t('manageStaff.form.salonShare')}
+                        value={form.percent_salon}
+                        onChangeText={(value) => setForm((current) => withSalonPercent(current, value))}
+                        keyboardType="numeric"
+                        suffix="%"
+                        testID="staff-form-salon"
+                    />
+                </FieldRow>
+            </FieldGroup>
+
+            <FieldGroup title={t('manageStaff.staff.form.hourly.title')} caption={t('manageStaff.staff.form.hourly.desc')}>
+                <FormField
+                    label={t('manageStaff.form.hourlyRate')}
+                    value={form.hourly_rate}
+                    onChangeText={(value) => set('hourly_rate', value)}
+                    placeholder={t('manageStaff.form.hourlyNone')}
+                    keyboardType="decimal-pad"
+                    suffix={t('manageStaff.form.perHour')}
+                />
+            </FieldGroup>
+
             <Button
                 title={t(saving ? 'manageStaff.staff.form.save.saving' : 'manageStaff.staff.form.save.button')}
                 onPress={() => void save()}
@@ -163,49 +181,47 @@ export function StaffServicesEditor({ bizId, staffId, branchId }: { bizId: strin
         }
     };
 
-    if (query.isLoading) return <Text style={ui.muted}>{t('manageStaff.staff.services.loading')}</Text>;
+    if (query.isLoading) return <SkeletonList rows={3} avatar={false} />;
     if (query.error) {
         return (
-            <FeedbackBanner
-                variant="danger"
-                title={t('manageStaff.staff.services.error')}
+            <ErrorState
+                compact
+                title={t('manageStaff.loadError')}
                 message={staffErrorMessage(query.error, t('manageStaff.loadError'), t)}
-                action={<Button title={t('staff.retry')} onPress={() => void query.refetch()} size="sm" variant="outline" />}
+                onRetry={() => void query.refetch()}
             />
         );
     }
     const services = query.data?.services ?? [];
     const allowed = query.data?.allowed ?? new Set<string>();
     if (services.length === 0) {
-        return <FeedbackBanner variant="warning" title={t('manageStaff.staff.services.empty.title')} message={t('manageStaff.staff.services.empty.desc')} />;
+        return (
+            <EmptyState
+                icon="cut-outline"
+                compact
+                title={t('manageStaff.staff.services.empty.title')}
+                message={t('manageStaff.staff.services.empty.desc')}
+            />
+        );
     }
     return (
         <View style={ui.gap}>
-            <Text style={ui.muted}>{t('manageStaff.staff.services.hint')}</Text>
-            {services.map((service) => {
-                const checked = allowed.has(service.id);
-                return (
-                    <MotionPressable
+            <Card variant="plain" padding="md" style={styles.list}>
+                {services.map((service) => (
+                    <CheckboxRow
                         key={service.id}
-                        onPress={() => void toggle(service.id)}
+                        label={serviceName(service, locale)}
+                        hint={`${service.duration_min} ${t('manageStaff.staff.cabinet.services.duration')}`}
+                        checked={allowed.has(service.id)}
+                        onChange={() => void toggle(service.id)}
                         disabled={!!pendingId}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked, disabled: !!pendingId }}
-                        accessibilityLabel={`${serviceName(service, locale)}, ${service.duration_min} ${t('manageStaff.staff.cabinet.services.duration')}`}
-                        style={[styles.service, checked ? styles.serviceChecked : null]}
                         testID={`staff-service-${service.id}`}
-                    >
-                        <Ionicons name={checked ? 'checkbox' : 'square-outline'} size={22} color={checked ? colors.accent.indigo : colors.text.secondary} />
-                        <Text style={styles.serviceName}>{serviceName(service, locale)}</Text>
-                        <Text style={ui.muted}>{service.duration_min} {t('manageStaff.staff.cabinet.services.duration')}</Text>
-                    </MotionPressable>
-                );
-            })}
-            {allowed.size > 0 ? (
-                <Text style={ui.muted}>
-                    {t('manageStaff.staff.services.selected')} {allowed.size} {t('manageStaff.staff.services.selectedOf')} {services.length}
-                </Text>
-            ) : null}
+                    />
+                ))}
+            </Card>
+            <Text style={ui.muted}>
+                {t('manageStaff.staff.services.selected')} {allowed.size} {t('manageStaff.staff.services.selectedOf')} {services.length}
+            </Text>
         </View>
     );
 }
@@ -257,13 +273,12 @@ export function StaffTransferPanel({ bizId, staffId, currentBranchId, branches, 
     }
 
     return (
-        <Card variant="outlined" style={ui.gap}>
+        <Card variant="plain" padding="md" style={ui.gap}>
             <SectionTitle title={t('manageStaff.staff.transfer.title')} description={t('manageStaff.staff.transfer.subtitle')} />
-            <Text style={ui.label}>{t('manageStaff.staff.transfer.current')}</Text>
-            <Text style={ui.text}>{current?.name ?? '—'}</Text>
+            <KeyValueRow label={t('manageStaff.staff.transfer.current').replace(/:\s*$/, '')} value={current?.name ?? '—'} />
             <Text style={ui.label}>{t('manageStaff.staff.transfer.target.label')}</Text>
             <OptionList options={others.map((branch) => ({ value: branch.id, label: branch.name }))} value={target} onChange={setTarget} disabled={loading} />
-            {explicitScheduling ? <FeedbackBanner variant="info" message={t('manageStaff.scheduling.transferHint')} /> : null}
+            {explicitScheduling ? <FeedbackBanner variant="info" message={t('manageStaff.scheduling.transferHint')} compact /> : null}
             <FeedbackBanner
                 variant="warning"
                 title={t('manageStaff.staff.transfer.warning.title')}
@@ -272,10 +287,13 @@ export function StaffTransferPanel({ bizId, staffId, currentBranchId, branches, 
                     t('manageStaff.staff.transfer.warning.bookings'),
                     t('manageStaff.staff.transfer.warning.history'),
                 ].join(' ')}
+                compact
             />
-            {error ? <FeedbackBanner variant="danger" message={error} /> : null}
-            <Button title={t('manageStaff.staff.transfer.submit')} onPress={() => void submit()} loading={loading} disabled={!target} fullWidth />
-            <Button title={t('manageStaff.staff.transfer.cancel')} onPress={() => setOpen(false)} variant="ghost" disabled={loading} fullWidth />
+            {error ? <FeedbackBanner variant="danger" message={error} compact /> : null}
+            <View style={styles.actions}>
+                <Button title={t('manageStaff.staff.transfer.cancel')} onPress={() => setOpen(false)} variant="ghost" disabled={loading} style={styles.secondary} />
+                <Button title={t('manageStaff.staff.transfer.submit')} onPress={() => void submit()} loading={loading} disabled={!target} style={styles.primary} />
+            </View>
         </Card>
     );
 }
@@ -319,57 +337,68 @@ export function StaffDangerZone({ bizId, staffId, allowPermanentDelete, onDone }
         }
     };
 
+    const rows: { action: 'dismiss' | 'delete'; icon: 'person-remove-outline' | 'trash-outline'; title: MobileI18nKey; busyTitle: MobileI18nKey; desc: MobileI18nKey }[] = [
+        { action: 'dismiss', icon: 'person-remove-outline', title: 'manageStaff.staff.danger.dismiss.button', busyTitle: 'manageStaff.staff.danger.dismiss.processing', desc: 'manageStaff.staff.danger.dismiss.desc' },
+        ...(allowPermanentDelete
+            ? [{ action: 'delete' as const, icon: 'trash-outline' as const, title: 'manageStaff.staff.danger.delete.button' as MobileI18nKey, busyTitle: 'manageStaff.staff.danger.delete.processing' as MobileI18nKey, desc: 'manageStaff.staff.danger.delete.desc' as MobileI18nKey }]
+            : []),
+    ];
+
     return (
-        <Card style={styles.danger}>
-            <View style={ui.row}>
-                <Ionicons name="warning" size={22} color={colors.status.danger} />
-                <Text style={styles.dangerTitle}>{t('manageStaff.staff.danger.title')}</Text>
+        <View style={ui.gap}>
+            {error ? <FeedbackBanner variant="danger" message={error} compact /> : null}
+            <View style={styles.dangerCard}>
+                {rows.map((row, index) => (
+                    <Fragment key={row.action}>
+                        {index > 0 ? <View style={ui.hairline} /> : null}
+                        <Pressable
+                            onPress={() => void run(row.action)}
+                            disabled={!!busy}
+                            accessibilityRole="button"
+                            accessibilityLabel={t(row.title)}
+                            accessibilityHint={t(row.desc)}
+                            accessibilityState={{ disabled: !!busy, busy: busy === row.action }}
+                            style={({ pressed }) => [styles.dangerRow, pressed ? ui.pressed : null, busy && busy !== row.action ? ui.disabled : null]}
+                        >
+                            <View style={styles.dangerIcon}>
+                                <Ionicons name={row.icon} size={18} color={colors.tone.danger.fg} />
+                            </View>
+                            <View style={styles.dangerBody}>
+                                <Text style={styles.dangerTitle}>{t(busy === row.action ? row.busyTitle : row.title)}</Text>
+                                <Text style={styles.dangerText}>{t(row.desc)}</Text>
+                            </View>
+                        </Pressable>
+                    </Fragment>
+                ))}
             </View>
-            {error ? <FeedbackBanner variant="danger" message={error} /> : null}
-            <Button
-                title={t(busy === 'dismiss' ? 'manageStaff.staff.danger.dismiss.processing' : 'manageStaff.staff.danger.dismiss.button')}
-                onPress={() => void run('dismiss')}
-                variant="danger"
-                loading={busy === 'dismiss'}
-                disabled={!!busy}
-                fullWidth
-            />
-            <Text style={styles.dangerText}>{t('manageStaff.staff.danger.dismiss.desc')}</Text>
-            {allowPermanentDelete ? (
-                <>
-                    <View style={ui.divider} />
-                    <Button
-                        title={t(busy === 'delete' ? 'manageStaff.staff.danger.delete.processing' : 'manageStaff.staff.danger.delete.button')}
-                        onPress={() => void run('delete')}
-                        variant="danger"
-                        loading={busy === 'delete'}
-                        disabled={!!busy}
-                        fullWidth
-                    />
-                    <Text style={styles.dangerText}>{t('manageStaff.staff.danger.delete.desc')}</Text>
-                </>
-            ) : null}
-        </Card>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    twoColumns: { flexDirection: 'row', gap: colors.layout.space3 },
-    column: { flex: 1 },
-    service: {
-        minHeight: 48,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space3,
-        paddingHorizontal: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
+    form: { gap: space.lg },
+    switchCard: { paddingVertical: space.xs },
+    list: { paddingVertical: space.xs },
+    actions: { flexDirection: 'row', gap: space.md },
+    secondary: { flex: 1 },
+    primary: { flex: 2 },
+    dangerCard: {
         backgroundColor: colors.surface.card,
+        borderRadius: radii.lg,
+        paddingHorizontal: space.lg,
+        borderWidth: 1,
+        borderColor: colors.tone.danger.border,
     },
-    serviceChecked: { borderColor: colors.accent.primary, backgroundColor: colors.surface.emphasis },
-    serviceName: { flex: 1, fontSize: 15, color: colors.text.primary },
-    danger: { gap: colors.layout.space3, borderColor: colors.status.danger, borderWidth: 1 },
-    dangerTitle: { fontSize: 18, fontWeight: '700', color: colors.status.danger },
-    dangerText: { fontSize: 13, color: colors.status.danger },
+    dangerRow: { minHeight: MIN_TOUCH_TARGET + 12, flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingVertical: space.md },
+    dangerIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: radii.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.tone.danger.bg,
+    },
+    dangerBody: { flex: 1, gap: space.xxs },
+    dangerTitle: { ...typeScale.bodyStrong, color: colors.tone.danger.fg },
+    dangerText: { ...typeScale.caption, color: colors.text.secondary },
 });

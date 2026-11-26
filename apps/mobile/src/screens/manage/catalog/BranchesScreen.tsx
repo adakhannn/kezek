@@ -1,19 +1,23 @@
-import { RefreshControl, ScrollView, Share, Text, View } from 'react-native';
+import { Share, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { transliterate } from '@shared-client/i18n';
 
 import Button from '../../../components/ui/Button';
-import Card from '../../../components/ui/Card';
 import EmptyState from '../../../components/ui/EmptyState';
 import FeedbackBanner from '../../../components/ui/FeedbackBanner';
+import ListRow from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import ScreenIntro from '../../../components/ui/ScreenIntro';
+import { colors } from '../../../constants/colors';
 import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
 import { getMobileApiUrl } from '../../../lib/apiUrl';
 import type { RootStackParamList } from '../../../navigation/types';
 import { branchBookingUrl } from './branchForm';
 import { catalogApi, catalogKeys } from './catalogApi';
-import { QueryState, StatusPill, ui } from './catalogUi';
+import { ItemCard, QueryState, StatusPill, ui } from './catalogUi';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageBranches'>;
 
@@ -44,29 +48,26 @@ export default function BranchesScreen({ navigation, route }: Props) {
         }
     };
 
+    const add = () => navigation.navigate('ManageBranchEdit', { bizId, bizName, tz });
+
     return (
         <QueryState isLoading={query.isLoading} error={query.error} onRetry={() => void query.refetch()}>
             {() => {
                 const data = query.data!;
                 const limitReached = !data.canCreateBranch && data.branches.length >= data.branchLimit;
                 return (
-                    <ScrollView
-                        style={ui.screen}
-                        contentContainerStyle={ui.content}
-                        refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} />}
+                    <Screen
+                        refreshing={query.isRefetching}
+                        onRefresh={() => void query.refetch()}
                         testID="manage-branches-screen"
                     >
-                        <View style={ui.header}>
-                            <Text style={ui.title} accessibilityRole="header">{t('catalog.branches.title')}</Text>
-                            <Text style={ui.subtitle}>{t('catalog.branches.subtitle')}</Text>
-                            <Text style={ui.caption}>
-                                {t('catalog.branches.usage', { used: data.branches.length, limit: data.branchLimit })}
-                            </Text>
-                        </View>
+                        {/* The header says "Филиалы": one muted line with the limit, then the primary action. */}
+                        <ScreenIntro>{t('catalog.branches.usage', { used: data.branches.length, limit: data.branchLimit })}</ScreenIntro>
                         {data.canCreateBranch ? (
                             <Button
                                 title={t('catalog.branches.addBranch')}
-                                onPress={() => navigation.navigate('ManageBranchEdit', { bizId, bizName, tz })}
+                                onPress={add}
+                                leadingIcon={<Ionicons name="add" size={18} color={colors.text.light} />}
                                 fullWidth
                             />
                         ) : null}
@@ -80,41 +81,49 @@ export default function BranchesScreen({ navigation, route }: Props) {
                         ) : null}
 
                         {data.branches.length === 0 ? (
-                            <EmptyState icon="business" title={t('catalog.branches.empty')} compact />
-                        ) : data.branches.map((branch) => (
-                            <Card key={branch.id} padding="md" testID={`branch-${branch.id}`}>
-                                <View style={ui.rowBetween}>
-                                    <Text style={ui.cardTitle}>{text(branch.name)}</Text>
-                                    <StatusPill
-                                        active={!!branch.is_active}
-                                        label={t(branch.is_active ? 'catalog.branches.status.active' : 'catalog.branches.status.hidden')}
-                                    />
-                                </View>
-                                <Text style={ui.meta}>
-                                    {t('catalog.branches.table.address')}: {branch.address ? text(branch.address) : '—'}
-                                </Text>
-                                <View style={ui.actions}>
-                                    <Button
-                                        title={t('catalog.common.editShort')}
-                                        onPress={() => navigation.navigate('ManageBranchEdit', { bizId, bizName, tz, branchId: branch.id })}
-                                        variant="outline"
-                                        size="sm"
-                                        style={ui.action}
-                                        accessibilityLabel={t('catalog.app.editItem', { name: branch.name })}
-                                    />
-                                    {data.businessSlug ? (
-                                        <Button
-                                            title={t('catalog.app.shareLink')}
-                                            onPress={() => void share(branch, data.businessSlug)}
-                                            variant="ghost"
-                                            size="sm"
-                                            style={ui.action}
+                            <EmptyState
+                                icon="storefront-outline"
+                                compact
+                                title={t('catalog.branches.empty')}
+                                action={data.canCreateBranch
+                                    ? <Button title={t('catalog.branches.addBranch')} onPress={add} variant="outline" fullWidth />
+                                    : undefined}
+                            />
+                        ) : (
+                            <View style={ui.list}>
+                                {data.branches.map((branch) => (
+                                    <ItemCard
+                                        key={branch.id}
+                                        dimmed={!branch.is_active}
+                                        testID={`branch-${branch.id}`}
+                                        actions={data.businessSlug ? (
+                                            <Button
+                                                title={t('catalog.app.shareLink')}
+                                                onPress={() => void share(branch, data.businessSlug)}
+                                                variant="ghost"
+                                                size="sm"
+                                                leadingIcon={<Ionicons name="share-outline" size={16} color={colors.text.primary} />}
+                                            />
+                                        ) : undefined}
+                                    >
+                                        <ListRow
+                                            icon="storefront-outline"
+                                            title={text(branch.name)}
+                                            subtitle={branch.address ? text(branch.address) : '—'}
+                                            trailing={(
+                                                <StatusPill
+                                                    active={!!branch.is_active}
+                                                    label={t(branch.is_active ? 'catalog.branches.status.active' : 'catalog.branches.status.hidden')}
+                                                />
+                                            )}
+                                            onPress={() => navigation.navigate('ManageBranchEdit', { bizId, bizName, tz, branchId: branch.id })}
+                                            accessibilityHint={t('catalog.app.editItem', { name: branch.name })}
                                         />
-                                    ) : null}
-                                </View>
-                            </Card>
-                        ))}
-                    </ScrollView>
+                                    </ItemCard>
+                                ))}
+                            </View>
+                        )}
+                    </Screen>
                 );
             }}
         </QueryState>

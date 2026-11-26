@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,14 +8,25 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
 import SegmentedTabs from '../../components/SegmentedTabs';
+import Avatar from '../../components/ui/Avatar';
+import { StatusPill } from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import ChipGroup from '../../components/ui/ChipGroup';
 import { DateNavigator } from '../../components/ui/DateTimeFields';
 import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
+import FormField, { FieldRow } from '../../components/ui/FormField';
 import Input from '../../components/ui/Input';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ListRow, { KeyValueRow, ListGroup } from '../../components/ui/ListRow';
+import Screen from '../../components/ui/Screen';
+import ScreenIntro from '../../components/ui/ScreenIntro';
+import Section from '../../components/ui/Section';
+import { SkeletonCard } from '../../components/ui/Skeleton';
+import { StatGrid } from '../../components/ui/StatTile';
 import { colors } from '../../constants/colors';
+import { radii, space } from '../../constants/theme';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
@@ -35,7 +47,7 @@ import {
 } from './financeView';
 import { staffQueryKeys } from './queryKeys';
 import type { ManagedFinancePayload, ManagedShiftItem } from './types';
-import { Badge, Chip, OptionList, SectionTitle, StatTile, dmy, ui } from './ui';
+import { Badge, OptionList, StatTile, ui } from './ui';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList, 'ManageStaffFinance'>;
 type Editor = { index: number | null; draft: ShiftItemDraft };
@@ -238,40 +250,36 @@ export default function ManageStaffFinanceScreen() {
         setEditor({ ...editor, draft: { ...editor.draft, serviceName: next.join(' + ') } });
     };
 
-    if (finance.isLoading) return <LoadingSpinner message={t('manageStaff.staff.finance.loading')} />;
+    if (finance.isLoading) {
+        return (
+            <Screen testID="manage-staff-finance-loading">
+                <SkeletonCard lines={2} />
+                <SkeletonCard lines={3} />
+            </Screen>
+        );
+    }
     if (!data) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('manageStaff.staff.finance.error.title')}
-                message={staffErrorMessage(finance.error, t('staff.checkConnection'), t)}
-                action={<Button title={t('manageStaff.staff.finance.error.retry')} onPress={() => void finance.refetch()} variant="outline" fullWidth />}
-            />
+            <Screen>
+                <ErrorState
+                    title={t('manageStaff.staff.finance.error.title')}
+                    message={staffErrorMessage(finance.error, t('staff.checkConnection'), t)}
+                    retryLabel={t('manageStaff.staff.finance.error.retry')}
+                    onRetry={() => void finance.refetch()}
+                />
+            </Screen>
         );
     }
 
     const locked = !!busy || finance.isFetching;
     const statusLabel = t(isOpen ? 'manageStaff.staff.finance.shift.status.open' : isClosed ? 'manageStaff.staff.finance.shift.status.closed' : 'manageStaff.staff.finance.shift.status.notCreated');
+    const selectedServices = editor ? editor.draft.serviceName.split('+').map((part) => part.trim()).filter(Boolean) : [];
+    const serviceChips = editor ? serviceOptions : [];
 
     return (
-        <ScrollView
-            style={ui.container}
-            contentContainerStyle={ui.content}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
-            testID="manage-staff-finance"
-        >
-            <View>
-                <Badge label={t('manageStaff.staff.finance.workspace')} tone="accent" />
-                <Text style={[ui.title, styles.title]} accessibilityRole="header">{t('manageStaff.staff.finance.shift.title')}: {params.staffName ?? ''}</Text>
-                <Text style={ui.muted}>{t('manageStaff.staff.finance.shift.subtitle')}</Text>
-            </View>
-            <Button
-                title={t('manageStaff.finance.staffStats.title')}
-                onPress={() => navigation.navigate('ManageStaffFinanceStats', { ...params })}
-                variant="outline"
-                fullWidth
-            />
+        <Screen keyboard refreshing={refreshing} onRefresh={refresh} testID="manage-staff-finance">
+            {/* The header says "Финансы": one muted line names the person. */}
+            {params.staffName ? <ScreenIntro>{params.staffName}</ScreenIntro> : null}
 
             {finance.error ? (
                 <FeedbackBanner
@@ -279,32 +287,21 @@ export default function ManageStaffFinanceScreen() {
                     title={t('manageStaff.staff.finance.error.title')}
                     message={staffErrorMessage(finance.error, t('manageStaff.loadError'), t)}
                     action={<Button title={t('manageStaff.staff.finance.error.retry')} onPress={() => void finance.refetch()} size="sm" variant="outline" />}
+                    compact
                 />
             ) : null}
 
-            <SegmentedTabs
-                tabs={[
-                    { key: 'shift', label: t('manageStaff.staff.finance.tabs.shift') },
-                    { key: 'clients', label: `${t('manageStaff.staff.finance.tabs.clients')} (${items.length})` },
-                ]}
-                value={tab}
-                onChange={setTab}
-            />
-
-            <Card style={ui.gap}>
+            <Card variant="plain" padding="md" style={styles.shiftCard}>
                 <View style={ui.row}>
                     <View style={styles.flex}>
                         <Text style={ui.label}>{t('manageStaff.staff.finance.shift.current')}</Text>
-                        <Text style={ui.text}>{calendarDate ? dmy(calendarDate) : '—'} {timezone ? `(${timezone})` : ''}</Text>
+                        <Text style={ui.muted}>
+                            {timezone ?? ''}
+                            {isOpen && shift ? ` · ${t('manageStaff.staff.finance.shift.opened')}: ${shift.opened_at ? formatInTimeZone(new Date(shift.opened_at), timezone || 'UTC', 'HH:mm') : '—'}` : ''}
+                        </Text>
                     </View>
-                    <Badge label={statusLabel} tone={isOpen ? 'success' : isClosed ? 'muted' : 'warning'} />
+                    <StatusPill label={statusLabel} tone={isOpen ? 'success' : isClosed ? 'neutral' : 'warning'} />
                 </View>
-                {isOpen && shift ? (
-                    <Text style={ui.muted}>
-                        {t('manageStaff.staff.finance.shift.opened')}: {shift.opened_at ? formatInTimeZone(new Date(shift.opened_at), timezone || 'UTC', 'HH:mm') : '—'}
-                    </Text>
-                ) : null}
-                {status === 'none' ? <Text style={styles.warning}>{t('manageStaff.staff.finance.shift.notCreated')}</Text> : null}
                 {calendarDate ? (
                     // The website steps the shift day by day; the date itself opens the calendar.
                     <DateNavigator
@@ -321,39 +318,42 @@ export default function ManageStaffFinanceScreen() {
                         disabled={locked}
                         testID="staff-finance-date"
                     />
-                ) : null}
+                ) : (
+                    <Text style={ui.text}>—</Text>
+                )}
             </Card>
+
+            <SegmentedTabs
+                tabs={[
+                    { key: 'shift', label: t('manageStaff.staff.finance.tabs.shift') },
+                    { key: 'clients', label: `${t('manageStaff.staff.finance.tabs.clients')} (${items.length})` },
+                ]}
+                value={tab}
+                onChange={setTab}
+            />
 
             {tab === 'shift' ? (
                 <>
-                    <View style={ui.gap}>
-                        {!shift ? (
-                            data.isDayOff ? (
-                                <FeedbackBanner variant="warning" message={t('manageStaff.staff.finance.shift.dayOff')} />
-                            ) : (
-                                <Button title={t('manageStaff.staff.finance.shift.open')} onPress={() => void openShift()} loading={busy === 'open'} disabled={locked} fullWidth />
-                            )
-                        ) : null}
-                        {isOpen ? (
-                            <>
-                                <Button title={t('manageStaff.staff.finance.shift.refresh')} onPress={() => void refresh()} disabled={locked} variant="outline" fullWidth />
-                                <Button title={t('manageStaff.staff.finance.shift.close')} onPress={() => void closeShift()} loading={busy === 'close'} disabled={locked} fullWidth />
-                            </>
-                        ) : null}
-                        {isClosed && shift ? (
-                            <Button title={t('manageStaff.staff.finance.shift.reopen')} onPress={() => void openShift()} loading={busy === 'open'} disabled={locked} variant="outline" fullWidth />
-                        ) : null}
-                    </View>
+                    {!shift ? (
+                        data.isDayOff ? (
+                            <FeedbackBanner variant="warning" message={t('manageStaff.staff.finance.shift.dayOff')} compact />
+                        ) : (
+                            <EmptyState
+                                icon="play-circle-outline"
+                                compact
+                                title={t('manageStaff.staff.finance.shift.notCreated')}
+                                action={<Button title={t('manageStaff.staff.finance.shift.open')} onPress={() => void openShift()} loading={busy === 'open'} disabled={locked} fullWidth />}
+                            />
+                        )
+                    ) : null}
 
                     {shift ? (
-                        <Card style={ui.gap}>
-                            <SectionTitle title={t('manageStaff.staff.finance.summary.title')} />
-                            <View style={ui.wrap}>
+                        <Section title={t('manageStaff.staff.finance.summary.title')}>
+                            <StatGrid>
                                 <StatTile
                                     label={t('manageStaff.finance.totalWithConsumables')}
                                     value={money(revenue.total)}
                                     hint={`${t('manageStaff.finance.servicesRevenue')}: ${money(revenue.services)} · ${t('manageStaff.finance.consumablesRevenue')}: ${money(revenue.consumables)}`}
-                                    style={styles.full}
                                 />
                                 <StatTile
                                     label={t('manageStaff.staff.finance.summary.toStaff')}
@@ -362,43 +362,61 @@ export default function ManageStaffFinanceScreen() {
                                     tone="success"
                                 />
                                 <StatTile label={t('manageStaff.staff.finance.summary.toBusiness')} value={money(calculations.salonShare)} tone="accent" />
-                            </View>
+                            </StatGrid>
                             {showDetails ? (
-                                <View style={ui.gap}>
+                                <Card variant="plain" padding="md" style={styles.details}>
                                     <Text style={ui.label}>{t('manageStaff.staff.finance.details.composition')}</Text>
-                                    <Row label={t('manageStaff.staff.finance.details.serviceAmount')} value={money(calculations.totalAmount)} />
-                                    <Row label={t('manageStaff.staff.finance.details.consumables')} value={money(calculations.totalConsumables)} />
-                                    <Row label={t('manageStaff.staff.finance.details.total')} value={money(calculations.totalAmount + calculations.totalConsumables)} strong />
+                                    <KeyValueRow label={t('manageStaff.staff.finance.details.serviceAmount')} value={money(calculations.totalAmount)} />
+                                    <KeyValueRow label={t('manageStaff.staff.finance.details.consumables')} value={money(calculations.totalConsumables)} />
+                                    <KeyValueRow label={t('manageStaff.staff.finance.details.total')} value={money(calculations.totalAmount + calculations.totalConsumables)} emphasis />
+                                    <View style={ui.divider} />
                                     <Text style={ui.label}>{t('manageStaff.staff.finance.details.distribution')}</Text>
-                                    <Row label={`${t('manageStaff.staff.finance.details.staffShare')} (${data.staffPercentMaster ?? 60}%)`} value={money(calculations.masterShare)} />
-                                    <Row
+                                    <KeyValueRow label={`${t('manageStaff.staff.finance.details.staffShare')} (${data.staffPercentMaster ?? 60}%)`} value={money(calculations.masterShare)} tone="success" />
+                                    <KeyValueRow
                                         label={`${t('manageStaff.staff.finance.details.businessShare')} ${t('manageStaff.staff.finance.details.businessSharePercent', { percent: String(data.staffPercentSalon ?? 40) })}`}
                                         value={money(calculations.salonShare)}
+                                        tone="accent"
                                     />
-                                </View>
+                                </Card>
                             ) : null}
                             <Button
                                 title={t(showDetails ? 'manageStaff.staff.finance.shift.hideDetails' : 'manageStaff.staff.finance.shift.showDetails')}
                                 onPress={() => setShowDetails((value) => !value)}
                                 variant="ghost"
                                 size="sm"
+                                trailingIcon={<Ionicons name={showDetails ? 'chevron-up' : 'chevron-down'} size={16} color={colors.text.primary} />}
                             />
-                        </Card>
+                        </Section>
+                    ) : null}
+
+                    {isOpen ? (
+                        <View style={styles.shiftActions}>
+                            <Button title={t('manageStaff.staff.finance.shift.refresh')} onPress={() => void refresh()} disabled={locked} variant="outline" style={styles.secondary} />
+                            <Button title={t('manageStaff.staff.finance.shift.close')} onPress={() => void closeShift()} loading={busy === 'close'} disabled={locked} style={styles.primary} />
+                        </View>
+                    ) : null}
+                    {isClosed && shift ? (
+                        <Button title={t('manageStaff.staff.finance.shift.reopen')} onPress={() => void openShift()} loading={busy === 'open'} disabled={locked} variant="outline" fullWidth />
                     ) : null}
                 </>
             ) : (
-                <Card style={ui.gap}>
-                    <SectionTitle title={t('manageStaff.staff.finance.tabs.clients')} />
+                <Section>
                     {!shift ? <Text style={ui.muted}>{t('manageStaff.staff.finance.shift.notCreated')}</Text> : null}
-                    {isClosed ? <Text style={ui.muted}>{t('manageStaff.closedReadOnly')}</Text> : null}
+                    {isClosed ? <FeedbackBanner variant="info" message={t('manageStaff.closedReadOnly')} compact /> : null}
                     {isOpen && !editor ? (
-                        <Button title={t('manageStaff.staff.finance.clients.add')} onPress={() => startEdit(null)} disabled={locked} fullWidth />
+                        <Button
+                            title={t('manageStaff.staff.finance.clients.add')}
+                            onPress={() => startEdit(null)}
+                            disabled={locked}
+                            leadingIcon={<Ionicons name="add" size={18} color={colors.text.light} />}
+                            fullWidth
+                        />
                     ) : null}
 
                     {editor ? (
-                        <View style={styles.editor}>
-                            <Text style={styles.editorTitle}>{t('manageStaff.staff.finance.clients.editing')}</Text>
-                            {editorError ? <FeedbackBanner variant="danger" message={editorError} /> : null}
+                        <View style={ui.card}>
+                            <Text style={ui.sectionTitle}>{t('manageStaff.staff.finance.clients.editing')}</Text>
+                            {editorError ? <FeedbackBanner variant="danger" message={editorError} compact /> : null}
                             {(data.bookings ?? []).length > 0 ? (
                                 <>
                                     <Text style={ui.label}>{t('manageStaff.staff.finance.clients.client')}</Text>
@@ -418,119 +436,135 @@ export default function ManageStaffFinanceScreen() {
                                 </>
                             ) : null}
                             {!editor.draft.bookingId ? (
-                                <Input
-                                    label={`${t('manageStaff.staff.finance.clients.client')} (${t('manageStaff.staff.finance.clients.clientHint')})`}
+                                <FormField
+                                    label={t('manageStaff.staff.finance.clients.client')}
                                     value={editor.draft.clientName}
                                     onChangeText={(value) => setEditor({ ...editor, draft: { ...editor.draft, clientName: value } })}
                                     placeholder={t('manageStaff.staff.finance.clients.clientPlaceholder')}
-                                    helperText={t('manageStaff.staff.finance.clients.walkInHint')}
+                                    hint={t('manageStaff.staff.finance.clients.walkInHint')}
                                     editable={!locked}
+                                    containerStyle={styles.field}
                                 />
                             ) : null}
                             <Text style={ui.label}>{t('manageStaff.staff.finance.clients.service')}</Text>
-                            {!editor.draft.bookingId && serviceOptions.length > 0 ? (
-                                <View style={ui.wrap}>
-                                    {serviceOptions.map((name) => (
-                                        <Chip
-                                            key={name}
-                                            label={name}
-                                            selected={editor.draft.serviceName.split('+').map((part) => part.trim()).includes(name)}
-                                            onPress={() => toggleService(name)}
-                                            disabled={locked}
-                                        />
-                                    ))}
-                                </View>
+                            {!editor.draft.bookingId && serviceChips.length > 0 ? (
+                                <ChipGroup
+                                    multiple
+                                    options={serviceChips.map((name) => ({ key: name, label: name }))}
+                                    value={selectedServices.filter((name) => serviceChips.includes(name))}
+                                    onChange={(next) => {
+                                        const current = selectedServices.filter((name) => serviceChips.includes(name));
+                                        const toggled = next.find((name) => !current.includes(name)) ?? current.find((name) => !next.includes(name));
+                                        if (toggled) toggleService(toggled);
+                                    }}
+                                    disabled={locked}
+                                    accessibilityLabel={t('manageStaff.staff.finance.clients.service')}
+                                />
                             ) : null}
                             <Input
                                 value={editor.draft.serviceName}
                                 onChangeText={(value) => setEditor({ ...editor, draft: { ...editor.draft, serviceName: value } })}
                                 accessibilityLabel={t('manageStaff.staff.finance.clients.service')}
                                 editable={!locked}
+                                containerStyle={styles.field}
                             />
-                            <Input
-                                label={`${t('manageStaff.staff.finance.clients.servicePrice')} (${t('manageStaff.staff.finance.shift.som')})`}
-                                value={editor.draft.serviceAmount}
-                                onChangeText={(value) => setEditor({ ...editor, draft: { ...editor.draft, serviceAmount: value } })}
-                                keyboardType="decimal-pad"
-                                helperText={t('manageStaff.staff.finance.clients.amountHint')}
-                                editable={!locked}
-                            />
-                            <Input
-                                label={`${t('manageStaff.staff.finance.clients.consumablesAmount')} (${t('manageStaff.staff.finance.shift.som')})`}
-                                value={editor.draft.consumablesAmount}
-                                onChangeText={(value) => setEditor({ ...editor, draft: { ...editor.draft, consumablesAmount: value } })}
-                                keyboardType="decimal-pad"
-                                helperText={t('manageStaff.staff.finance.clients.amountHint')}
-                                editable={!locked}
-                            />
-                            <Button
-                                title={t(busy === 'save' ? 'manageStaff.staff.finance.clients.saving' : 'manageStaff.staff.finance.clients.save')}
-                                onPress={() => void saveEditor()}
-                                loading={busy === 'save'}
-                                disabled={locked}
-                                fullWidth
-                            />
-                            <Button title={t('manageStaff.staff.finance.clients.cancel')} onPress={() => setEditor(null)} disabled={!!busy} variant="ghost" fullWidth />
+                            <FieldRow>
+                                <FormField
+                                    label={t('manageStaff.form.price')}
+                                    value={editor.draft.serviceAmount}
+                                    onChangeText={(value) => setEditor({ ...editor, draft: { ...editor.draft, serviceAmount: value } })}
+                                    keyboardType="decimal-pad"
+                                    suffix={t('manageStaff.staff.finance.shift.som')}
+                                    placeholder="0"
+                                    editable={!locked}
+                                    containerStyle={styles.field}
+                                />
+                                <FormField
+                                    label={t('manageStaff.form.consumables')}
+                                    value={editor.draft.consumablesAmount}
+                                    onChangeText={(value) => setEditor({ ...editor, draft: { ...editor.draft, consumablesAmount: value } })}
+                                    keyboardType="decimal-pad"
+                                    suffix={t('manageStaff.staff.finance.shift.som')}
+                                    placeholder="0"
+                                    editable={!locked}
+                                    containerStyle={styles.field}
+                                />
+                            </FieldRow>
+                            <Text style={ui.muted}>{t('manageStaff.staff.finance.clients.amountHint')}</Text>
+                            <View style={styles.shiftActions}>
+                                <Button title={t('manageStaff.staff.finance.clients.cancel')} onPress={() => setEditor(null)} disabled={!!busy} variant="ghost" style={styles.secondary} />
+                                <Button
+                                    title={t(busy === 'save' ? 'manageStaff.staff.finance.clients.saving' : 'manageStaff.staff.finance.clients.save')}
+                                    onPress={() => void saveEditor()}
+                                    loading={busy === 'save'}
+                                    disabled={locked}
+                                    style={styles.primary}
+                                />
+                            </View>
                         </View>
                     ) : null}
 
-                    {items.length === 0 && shift ? <Text style={ui.muted}>{t('manageStaff.staff.finance.clients.empty')}</Text> : null}
-                    {items.map((item, index) => (
-                        <View key={item.id ?? `new-${index}`} style={styles.item}>
-                            <View style={ui.row}>
-                                <Text style={[ui.text, styles.flex]} numberOfLines={1}>{item.clientName || autoClientLabel}</Text>
-                                {item.bookingId ? <Badge label={t('manageStaff.staff.finance.clients.fromBooking')} tone="accent" /> : null}
-                            </View>
-                            <Text style={ui.muted}>{item.serviceName || '—'}</Text>
-                            <Text style={ui.text}>
-                                {money(item.serviceAmount)}{item.consumablesAmount ? ` · ${t('manageStaff.staff.finance.details.consumables')}: ${money(item.consumablesAmount)}` : ''}
-                            </Text>
-                            {isOpen && !editor ? (
-                                <View style={ui.wrap}>
-                                    <Button title={t('manageStaff.staff.finance.clients.edit')} onPress={() => startEdit(index, item)} disabled={locked} variant="outline" size="sm" />
-                                    <Button title={t('manageStaff.staff.finance.clients.duplicate')} onPress={() => startEdit(index, item, true)} disabled={locked} variant="ghost" size="sm" />
-                                    <Button title={t('manageStaff.staff.finance.clients.delete')} onPress={() => void deleteItem(index)} disabled={locked} variant="danger" size="sm" />
+                    {items.length === 0 && shift ? (
+                        <EmptyState icon="people-outline" compact title={t('manageStaff.staff.finance.clients.empty')} />
+                    ) : null}
+                    {items.length > 0 ? (
+                        <View style={styles.items}>
+                            {items.map((item, index) => (
+                                <View key={item.id ?? `new-${index}`} style={styles.item}>
+                                    <ListRow
+                                        leading={<Avatar name={item.clientName || autoClientLabel} size={40} />}
+                                        title={item.clientName || autoClientLabel}
+                                        subtitle={[
+                                            item.serviceName || '—',
+                                            item.consumablesAmount ? `${t('manageStaff.staff.finance.details.consumables')}: ${money(item.consumablesAmount)}` : null,
+                                        ].filter(Boolean).join(' · ')}
+                                        value={money(item.serviceAmount)}
+                                        trailing={item.bookingId ? <Badge label={t('manageStaff.staff.finance.clients.fromBooking')} tone="accent" /> : undefined}
+                                    />
+                                    {isOpen && !editor ? (
+                                        <View style={styles.itemActions}>
+                                            <Button title={t('manageStaff.staff.finance.clients.edit')} onPress={() => startEdit(index, item)} disabled={locked} variant="ghost" size="sm" />
+                                            <Button title={t('manageStaff.staff.finance.clients.duplicate')} onPress={() => startEdit(index, item, true)} disabled={locked} variant="ghost" size="sm" />
+                                            <Button title={t('manageStaff.staff.finance.clients.delete')} onPress={() => void deleteItem(index)} disabled={locked} variant="ghost" size="sm" textStyle={styles.dangerText} />
+                                        </View>
+                                    ) : null}
                                 </View>
-                            ) : null}
+                            ))}
                         </View>
-                    ))}
-                </Card>
+                    ) : null}
+                </Section>
             )}
-        </ScrollView>
-    );
-}
 
-function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-    return (
-        <View style={styles.detailRow}>
-            <Text style={[ui.muted, styles.flex]}>{label}</Text>
-            <Text style={[ui.text, strong ? styles.strong : null]}>{value}</Text>
-        </View>
+            <ListGroup>
+                <ListRow
+                    icon="stats-chart-outline"
+                    iconTone="info"
+                    title={t('manageStaff.finance.staffStats.title')}
+                    onPress={() => navigation.navigate('ManageStaffFinanceStats', { ...params })}
+                />
+            </ListGroup>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    title: { marginTop: colors.layout.space2 },
-    flex: { flex: 1 },
-    full: { flexBasis: '100%' },
-    warning: { fontSize: 13, color: colors.status.warning },
-    editor: {
-        gap: colors.layout.space3,
-        padding: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.accent.primary,
-        backgroundColor: colors.surface.emphasis,
+    flex: { flex: 1, gap: space.xxs },
+    shiftCard: { gap: space.md },
+    details: { gap: space.xxs },
+    shiftActions: { flexDirection: 'row', gap: space.md },
+    secondary: { flex: 1 },
+    primary: { flex: 2 },
+    field: { marginBottom: 0 },
+    items: { gap: space.sm },
+    item: { backgroundColor: colors.surface.card, borderRadius: radii.lg, paddingHorizontal: space.lg, paddingBottom: space.xs },
+    itemActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        flexWrap: 'wrap',
+        gap: space.xs,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+        paddingTop: space.xs,
     },
-    editorTitle: { fontSize: 16, fontWeight: '700', color: colors.text.primary },
-    item: {
-        gap: colors.layout.space1,
-        padding: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.card,
-    },
-    detailRow: { flexDirection: 'row', alignItems: 'center', gap: colors.layout.space2 },
-    strong: { fontWeight: '700' },
+    dangerText: { color: colors.tone.danger.fg },
 });

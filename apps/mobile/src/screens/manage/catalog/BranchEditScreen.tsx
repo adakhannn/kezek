@@ -1,13 +1,22 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, ScrollView, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import ActionBar from '../../../components/ui/ActionBar';
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
 import FeedbackBanner from '../../../components/ui/FeedbackBanner';
-import Input from '../../../components/ui/Input';
+import FormField, { FieldGroup, FieldRow } from '../../../components/ui/FormField';
+import ListRow, { ListGroup } from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import ScreenIntro from '../../../components/ui/ScreenIntro';
+import Section from '../../../components/ui/Section';
+import { SwitchRow } from '../../../components/ui/SelectionRow';
+import { colors } from '../../../constants/colors';
+import { space } from '../../../constants/theme';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
@@ -26,7 +35,7 @@ import {
 import { BranchRatingCard } from './BranchRatingCard';
 import { catalogApi, catalogKeys, type BranchForEdit, type ContactFields } from './catalogApi';
 import { catalogErrorText, hasBookingsMessage } from './catalogErrors';
-import { CheckRow, QueryState, SectionTitle, ui } from './catalogUi';
+import { QueryState, ui } from './catalogUi';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageBranchEdit'>;
 
@@ -47,30 +56,30 @@ export default function BranchEditScreen({ navigation, route }: Props) {
 
     if (!branchId) {
         return (
-            <QueryState isLoading={overview.isLoading} error={overview.error} onRetry={() => void overview.refetch()}>
+            <QueryState isLoading={overview.isLoading} error={overview.error} onRetry={() => void overview.refetch()} skeleton="form">
                 {() => {
                     const data = overview.data!;
                     // The website's /dashboard/branches/new: owner or super admin, within the limit.
                     if (!data.canManageBranches) {
                         return (
-                            <ScrollView style={ui.screen} contentContainerStyle={ui.content}>
+                            <Screen>
                                 <FeedbackBanner
                                     variant="danger"
                                     title={t('catalog.branches.new.noAccess.title')}
                                     message={t('catalog.branches.new.noAccess.description')}
                                 />
-                            </ScrollView>
+                            </Screen>
                         );
                     }
                     if (data.branches.length >= data.branchLimit) {
                         return (
-                            <ScrollView style={ui.screen} contentContainerStyle={ui.content}>
+                            <Screen>
                                 <FeedbackBanner
                                     variant="warning"
                                     title={t('catalog.branches.new.limit.title')}
                                     message={t('catalog.branches.new.limit.description', { limit: data.branchLimit })}
                                 />
-                            </ScrollView>
+                            </Screen>
                         );
                     }
                     return (
@@ -87,7 +96,7 @@ export default function BranchEditScreen({ navigation, route }: Props) {
     }
 
     return (
-        <QueryState isLoading={detail.isLoading} error={detail.error} onRetry={() => void detail.refetch()}>
+        <QueryState isLoading={detail.isLoading} error={detail.error} onRetry={() => void detail.refetch()} skeleton="form">
             {() => (
                 <BranchEditor
                     key={detail.data!.branch.id}
@@ -213,177 +222,181 @@ function BranchEditor({ bizId, detail, initial, businessContacts, onDone, onOpen
         }
     };
 
+    const hasCoords = coords?.lat != null && coords.lon != null;
+
     return (
-        <KeyboardAvoidingView style={ui.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ScrollView contentContainerStyle={ui.content} keyboardShouldPersistTaps="handled" testID="manage-branch-edit-screen">
-                <View style={ui.header}>
-                    <Text style={ui.title} accessibilityRole="header">
-                        {t(branchId ? 'catalog.branches.edit.title' : 'catalog.branches.new.title')}
-                    </Text>
-                    {detail ? (
-                        <>
-                            <Text style={ui.subtitle}>{t('catalog.branches.edit.subtitle')}</Text>
-                            <Text style={ui.caption}>
-                                {t('catalog.branches.edit.bizContext')}: {detail.bizName || t('catalog.branches.edit.bizDefaultName')}
-                            </Text>
-                        </>
-                    ) : null}
-                </View>
-                {formError ? <FeedbackBanner variant="danger" message={formError} compact /> : null}
+        <Screen
+            keyboard
+            testID="manage-branch-edit-screen"
+            footer={(
+                <ActionBar
+                    primary={{
+                        title: saving ? t('catalog.branches.form.saving') : t('catalog.branches.form.save'),
+                        onPress: () => void save(),
+                        loading: saving,
+                        testID: 'branch-save',
+                    }}
+                />
+            )}
+        >
+            {/* The header names the screen ("Новый филиал" / the branch): no second title here. */}
+            {detail?.bizName ? <ScreenIntro>{detail.bizName}</ScreenIntro> : null}
+            {formError ? <FeedbackBanner variant="danger" message={formError} compact /> : null}
 
-                <Card padding="md">
-                    <Input
-                        label={t('catalog.branches.form.name')}
-                        value={form.name}
-                        onChangeText={(name) => { update({ name }); setNameError(null); }}
-                        error={nameError ?? undefined}
-                        testID="branch-name"
-                    />
-                </Card>
+            <FieldGroup title={t('catalog.app.group.main')}>
+                <FormField
+                    label={t('catalog.branches.form.name')}
+                    required
+                    value={form.name}
+                    onChangeText={(name) => { update({ name }); setNameError(null); }}
+                    error={nameError ?? undefined}
+                    testID="branch-name"
+                />
+            </FieldGroup>
 
-                <Card padding="md">
-                    <SectionTitle title={t('catalog.branches.form.addressLabel')} subtitle={t('catalog.app.locationHint')} />
-                    <Button
-                        title={locating ? t('catalog.app.locating') : t('catalog.app.useLocation')}
-                        onPress={() => void locate()}
-                        loading={locating}
-                        variant="outline"
-                        fullWidth
+            <FieldGroup title={t('catalog.branches.form.addressLabel')} caption={t('catalog.app.locationHintShort')}>
+                <Button
+                    title={locating ? t('catalog.app.locating') : t('catalog.app.useLocation')}
+                    onPress={() => void locate()}
+                    loading={locating}
+                    variant="outline"
+                    leadingIcon={<Ionicons name="locate-outline" size={18} color={colors.text.primary} />}
+                    fullWidth
+                    style={styles.locate}
+                />
+                <FieldRow>
+                    <FormField
+                        label={t('catalog.app.latitude')}
+                        value={form.lat}
+                        onChangeText={(lat) => { update({ lat }); setCoordsError(null); }}
+                        keyboardType="numbers-and-punctuation"
+                        placeholder="42.874600"
+                        testID="branch-lat"
                     />
-                    <View style={[ui.row, { marginTop: 12 }]}>
-                        <Input
-                            label={t('catalog.app.latitude')}
-                            value={form.lat}
-                            onChangeText={(lat) => { update({ lat }); setCoordsError(null); }}
-                            keyboardType="numbers-and-punctuation"
-                            containerStyle={{ flex: 1, width: undefined }}
-                            testID="branch-lat"
+                    <FormField
+                        label={t('catalog.app.longitude')}
+                        value={form.lon}
+                        onChangeText={(lon) => { update({ lon }); setCoordsError(null); }}
+                        keyboardType="numbers-and-punctuation"
+                        placeholder="74.569800"
+                        testID="branch-lon"
+                    />
+                </FieldRow>
+                {coordsError ? <Text style={[ui.error, styles.coordsError]} accessibilityRole="alert">{coordsError}</Text> : null}
+                {hasCoords ? (
+                    <View style={styles.coordsActions}>
+                        <Button
+                            title={t('catalog.app.openMap')}
+                            onPress={openMap}
+                            variant="ghost"
+                            size="sm"
+                            leadingIcon={<Ionicons name="map-outline" size={16} color={colors.text.primary} />}
                         />
-                        <Input
-                            label={t('catalog.app.longitude')}
-                            value={form.lon}
-                            onChangeText={(lon) => { update({ lon }); setCoordsError(null); }}
-                            keyboardType="numbers-and-punctuation"
-                            containerStyle={{ flex: 1, width: undefined }}
-                            testID="branch-lon"
-                        />
-                    </View>
-                    {coordsError ? <Text style={ui.error} accessibilityRole="alert">{coordsError}</Text> : null}
-                    <Text style={ui.caption}>
-                        {t('catalog.branches.form.coordinates')} {coords?.lat != null ? coords.lat.toFixed(6) : '—'}, {coords?.lon != null ? coords.lon.toFixed(6) : '—'}
-                    </Text>
-                    {coords?.lat != null ? (
-                        <View style={ui.actions}>
-                            <Button title={t('catalog.app.openMap')} onPress={openMap} variant="ghost" size="sm" style={ui.action} />
-                            <Button
-                                title={t('catalog.app.clearCoords')}
-                                onPress={() => update({ lat: '', lon: '' })}
-                                variant="ghost"
-                                size="sm"
-                                style={ui.action}
-                            />
-                        </View>
-                    ) : null}
-                    <View style={{ marginTop: 12 }}>
-                        <Input
-                            label={t('catalog.branches.form.address')}
-                            value={form.address}
-                            onChangeText={(address) => update({ address })}
-                            placeholder={t('catalog.branches.form.addressPlaceholder')}
-                            helperText={t('catalog.branches.form.addressManualHint')}
-                            multiline
-                            testID="branch-address"
+                        <Button
+                            title={t('catalog.app.clearCoords')}
+                            onPress={() => update({ lat: '', lon: '' })}
+                            variant="ghost"
+                            size="sm"
+                            textStyle={styles.mutedAction}
                         />
                     </View>
-                </Card>
+                ) : null}
+                <FormField
+                    label={t('catalog.branches.form.address')}
+                    value={form.address}
+                    onChangeText={(address) => update({ address })}
+                    multiline
+                    testID="branch-address"
+                />
+            </FieldGroup>
 
-                <Card padding="md">
-                    <SectionTitle
-                        title={t('catalog.branches.form.contacts.title')}
-                        subtitle={t('catalog.branches.form.contacts.description')}
-                    />
-                    <CheckRow
+            <FieldGroup title={t('catalog.branches.form.contacts.title')}>
+                <Card variant="plain" padding="md" style={[ui.group, styles.inherit]}>
+                    <SwitchRow
                         label={t('catalog.branches.form.contacts.inherit')}
                         hint={t('catalog.branches.form.contacts.inheritHint')}
-                        checked={form.inherit_business_contacts}
+                        value={form.inherit_business_contacts}
                         onChange={(inherit_business_contacts) => update({ inherit_business_contacts })}
                         testID="branch-inherit"
                     />
-                    {CONTACT_INPUTS.map(({ field, label, placeholder, keyboard }) => {
-                        const helper = contactHelperKey(form, field, businessContacts);
-                        return (
-                            <Input
-                                key={field}
-                                label={t(label)}
-                                value={contactDisplayValue(form, field, businessContacts)}
-                                onChangeText={(value) => update({ [field]: value } as Partial<BranchFormState>)}
-                                placeholder={placeholder}
-                                helperText={helper ? t(helper) : undefined}
-                                keyboardType={keyboard}
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                        );
-                    })}
                 </Card>
+                {CONTACT_INPUTS.map(({ field, label, placeholder, keyboard }) => {
+                    const helper = contactHelperKey(form, field, businessContacts);
+                    return (
+                        <FormField
+                            key={field}
+                            label={t(label)}
+                            value={contactDisplayValue(form, field, businessContacts)}
+                            onChangeText={(value) => update({ [field]: value } as Partial<BranchFormState>)}
+                            placeholder={placeholder}
+                            hint={helper ? t(helper) : undefined}
+                            keyboardType={keyboard}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                    );
+                })}
+            </FieldGroup>
 
-                <Card padding="md">
-                    <CheckRow
-                        label={t('catalog.branches.form.active')}
-                        checked={form.is_active}
-                        onChange={(is_active) => update({ is_active })}
-                        testID="branch-active"
-                    />
-                </Card>
-
-                <Button
-                    title={saving ? t('catalog.branches.form.saving') : t('catalog.branches.form.save')}
-                    onPress={() => void save()}
-                    loading={saving}
-                    fullWidth
+            <Card variant="plain" padding="md" style={ui.group}>
+                <SwitchRow
+                    label={t('catalog.branches.form.active')}
+                    value={form.is_active}
+                    onChange={(is_active) => update({ is_active })}
+                    testID="branch-active"
                 />
+            </Card>
 
-                {detail ? (
-                    <>
-                        <Card padding="md">
-                            <SectionTitle title={t('catalog.branches.schedule.title')} subtitle={t('catalog.scheduling.branchHint')} />
-                            <Button
+            {detail ? (
+                <>
+                    <Section title={t('catalog.app.group.more')}>
+                        <ListGroup inset>
+                            <ListRow
+                                icon="time-outline"
                                 title={t('catalog.branches.schedule.title')}
                                 onPress={() => onOpenSchedule?.()}
-                                variant="outline"
-                                fullWidth
-                                accessibilityLabel={t('catalog.app.openSchedule')}
+                                accessibilityHint={t('catalog.app.openSchedule')}
+                                testID="branch-open-schedule"
                             />
-                        </Card>
-                        {detail.ratingWeights ? (
-                            <BranchRatingCard score={detail.branch.rating_score} weights={detail.ratingWeights} />
-                        ) : null}
-                        <Card padding="md">
-                            <SectionTitle title={t('catalog.branches.promotions.title')} subtitle={t('catalog.branches.promotions.subtitle')} />
-                            <Button
+                            <ListRow
+                                icon="gift-outline"
+                                iconTone="warning"
                                 title={t('catalog.branches.promotions.title')}
                                 onPress={() => onOpenPromotions?.()}
-                                variant="outline"
-                                fullWidth
-                                accessibilityLabel={t('catalog.app.openPromotions')}
+                                accessibilityHint={t('catalog.app.openPromotions')}
+                                testID="branch-open-promotions"
                             />
-                        </Card>
-                        {/* Danger zone: super admin only, as on the website. */}
-                        {detail.isSuperAdmin ? (
-                            <Card padding="md" variant="outlined">
-                                <SectionTitle title={t('catalog.branches.danger.title')} subtitle={t('catalog.branches.danger.desc')} />
-                                <Button
+                        </ListGroup>
+                    </Section>
+                    {detail.ratingWeights ? (
+                        <BranchRatingCard score={detail.branch.rating_score} weights={detail.ratingWeights} />
+                    ) : null}
+                    {/* Danger zone: super admin only, as on the website; set apart at the very end. */}
+                    {detail.isSuperAdmin ? (
+                        <Section title={t('catalog.branches.danger.title')} caption={t('catalog.branches.danger.desc')}>
+                            <ListGroup>
+                                <ListRow
+                                    icon="trash-outline"
+                                    destructive
                                     title={deleting ? t('catalog.branches.delete.deleting') : t('catalog.branches.delete.button')}
                                     onPress={() => void remove()}
-                                    loading={deleting}
-                                    variant="danger"
-                                    fullWidth
+                                    disabled={deleting}
+                                    chevron={false}
+                                    testID="branch-delete"
                                 />
-                            </Card>
-                        ) : null}
-                    </>
-                ) : null}
-            </ScrollView>
-        </KeyboardAvoidingView>
+                            </ListGroup>
+                        </Section>
+                    ) : null}
+                </>
+            ) : null}
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    locate: { marginBottom: space.lg },
+    coordsError: { marginTop: -space.sm, marginBottom: space.md },
+    coordsActions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, marginTop: -space.sm, marginBottom: space.sm },
+    mutedAction: { color: colors.text.secondary },
+    inherit: { marginBottom: space.lg },
+});

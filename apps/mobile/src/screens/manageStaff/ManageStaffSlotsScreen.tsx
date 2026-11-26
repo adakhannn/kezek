@@ -1,18 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { formatInTimeZone } from 'date-fns-tz';
 import { filterSlotsByContext } from '@core-domain/schedule';
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
-import Button from '../../components/ui/Button';
+import SegmentedTabs from '../../components/SegmentedTabs';
+import ActionBar from '../../components/ui/ActionBar';
 import Card from '../../components/ui/Card';
+import ChipGroup from '../../components/ui/ChipGroup';
 import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
+import FormField from '../../components/ui/FormField';
 import Input from '../../components/ui/Input';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { KeyValueRow } from '../../components/ui/ListRow';
+import Screen from '../../components/ui/Screen';
+import ScreenIntro from '../../components/ui/ScreenIntro';
+import Section from '../../components/ui/Section';
+import { SkeletonBlock, SkeletonCard, SkeletonList } from '../../components/ui/Skeleton';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
+import { radii, space } from '../../constants/theme';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
 import { apiRequest } from '../../lib/api';
@@ -26,7 +37,7 @@ import { staffErrorMessage } from './errors';
 import { staffQueryKeys } from './queryKeys';
 import { canSubmitSlotClient, internalBookingInput, slotClientPayload, uniqueSlots, type SlotClientMode } from './slots';
 import type { FoundUser } from './types';
-import { Chip, DateStepper, OptionList, SectionTitle, dmy, ui } from './ui';
+import { DateStepper, OptionList, dmy, ui } from './ui';
 
 type Slot = { staff_id: string; branch_id: string; start_at: string; end_at: string };
 type SlotService = { id: string; name: string; duration_min: number; branch_id: string };
@@ -195,111 +206,142 @@ export default function ManageStaffSlotsScreen() {
         }
     };
 
-    if (setup.isLoading) return <LoadingSpinner message={t('common.loading')} />;
+    if (setup.isLoading) {
+        return (
+            <Screen>
+                <SkeletonCard lines={3} />
+                <SkeletonCard lines={2} />
+            </Screen>
+        );
+    }
     if (!setup.data) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('manageStaff.loadError')}
-                message={staffErrorMessage(setup.error, t('staff.checkConnection'), t)}
-                action={<Button title={t('staff.retry')} onPress={() => void setup.refetch()} variant="outline" fullWidth />}
-            />
+            <Screen>
+                <ErrorState
+                    title={t('manageStaff.loadError')}
+                    message={staffErrorMessage(setup.error, t('staff.checkConnection'), t)}
+                    onRetry={() => void setup.refetch()}
+                />
+            </Screen>
         );
     }
 
+    const confirming = !!selectedSlot && !!selectedService;
+
     return (
-        <ScrollView style={ui.container} contentContainerStyle={ui.content} keyboardShouldPersistTaps="handled" testID="manage-staff-slots">
-            <View>
-                <Text style={ui.title} accessibilityRole="header">{t('manageStaff.staff.detail.nav.slots')}</Text>
-                <Text style={ui.subtitle}>{params.staffName ?? ''}</Text>
-            </View>
+        <Screen
+            keyboard
+            gap={space.xxl}
+            testID="manage-staff-slots"
+            footer={confirming ? (
+                <ActionBar
+                    secondary={{ title: t('manageStaff.booking.confirm.cancel'), onPress: () => setSelectedStart(''), disabled: creating }}
+                    primary={{
+                        title: t(creating ? 'manageStaff.booking.confirm.saving' : 'manageStaff.booking.confirm.submit'),
+                        onPress: () => void confirmBooking(),
+                        disabled: !canConfirm,
+                        loading: creating,
+                        testID: 'slots-confirm',
+                    }}
+                />
+            ) : undefined}
+        >
+            {/* The header says "Свободные слоты": one muted line names the person. */}
+            {params.staffName ? <ScreenIntro>{params.staffName}</ScreenIntro> : null}
 
             {setup.data.services.length === 0 ? (
-                <FeedbackBanner variant="warning" title={t('manageStaff.staff.services.empty.title')} message={t('manageStaff.staff.services.empty.desc')} />
+                <FeedbackBanner variant="warning" title={t('manageStaff.staff.services.empty.title')} message={t('manageStaff.staff.services.empty.desc')} compact />
             ) : null}
 
-            <Card style={ui.gap}>
-                <SectionTitle title={t('manageStaff.staff.slots.filters.title')} />
-                <Text style={ui.label}>{t('manageStaff.bookings.desk.branch')}</Text>
-                <OptionList
-                    options={setup.data.branches.map((branch) => ({ value: branch.id, label: branch.name }))}
-                    value={branchId}
-                    onChange={setBranchId}
-                    disabled={creating}
-                    testID="slots-branch"
-                />
-                <Text style={ui.label}>{t('manageStaff.bookings.desk.service')}</Text>
-                {!branchId ? (
-                    <Text style={ui.muted}>{t('manageStaff.bookings.desk.selectBranchFirst')}</Text>
-                ) : servicesByBranch.length === 0 ? (
-                    <Text style={ui.muted}>{t('manageStaff.bookings.desk.noServices')}</Text>
-                ) : (
-                    <OptionList
-                        options={servicesByBranch.map((service) => ({ value: service.id, label: service.name, hint: durationLabel(service) }))}
-                        value={serviceId}
-                        onChange={setServiceId}
+            <Section>
+                {setup.data.branches.length > 0 ? (
+                    <ChipGroup
+                        options={setup.data.branches.map((branch) => ({ key: branch.id, label: branch.name }))}
+                        value={branchId || null}
+                        onChange={setBranchId}
                         disabled={creating}
-                        testID="slots-service"
+                        accessibilityLabel={t('manageStaff.bookings.desk.branch')}
+                        testID="slots-branch"
                     />
-                )}
-                <DateStepper label={t('manageStaff.bookings.desk.date')} value={date} onChange={setDate} min={today} today={today} disabled={creating} />
-            </Card>
+                ) : null}
+                <View style={ui.card}>
+                    <Text style={ui.label}>{t('manageStaff.bookings.desk.service')}</Text>
+                    {!branchId ? (
+                        <Text style={ui.muted}>{t('manageStaff.bookings.desk.selectBranchFirst')}</Text>
+                    ) : servicesByBranch.length === 0 ? (
+                        <Text style={ui.muted}>{t('manageStaff.bookings.desk.noServices')}</Text>
+                    ) : (
+                        <OptionList
+                            options={servicesByBranch.map((service) => ({ value: service.id, label: service.name, hint: durationLabel(service) }))}
+                            value={serviceId}
+                            onChange={setServiceId}
+                            disabled={creating}
+                            testID="slots-service"
+                        />
+                    )}
+                    <View style={ui.hairline} />
+                    <DateStepper label={t('manageStaff.bookings.desk.date')} value={date} onChange={setDate} min={today} today={today} disabled={creating} />
+                </View>
+            </Section>
 
-            <Card style={ui.gap}>
-                <SectionTitle title={t('manageStaff.booking.freeSlots')} />
-                {slots.isFetching ? <Text style={ui.muted}>{t('manageStaff.booking.loadingSlots')}</Text> : null}
-                {slots.error ? (
-                    <FeedbackBanner variant="danger" title={t('manageStaff.staff.error')} message={staffErrorMessage(slots.error, t('manageStaff.loadError'), t)} />
-                ) : null}
-                {!slots.isFetching && !slots.error && branchId && serviceId && slotList.length === 0 ? (
-                    <View>
-                        <Text style={ui.text}>{t('manageStaff.booking.noSlots')}</Text>
-                        <Text style={ui.muted}>{t('manageStaff.staff.slots.noSlotsHint')}</Text>
-                    </View>
-                ) : null}
-                {!slots.isFetching && !slots.error && slotList.length > 0 ? (
-                    <>
-                        <Text style={ui.muted}>{t('manageStaff.staff.slots.found')} {slotList.length}</Text>
-                        <View style={ui.wrap}>
-                            {slotList.map((slot) => (
-                                <Chip
-                                    key={slot.start_at}
-                                    label={`${time(slot.start_at)}–${time(slot.end_at)}`}
-                                    selected={slot.start_at === selectedStart}
-                                    onPress={() => setSelectedStart(slot.start_at)}
-                                    disabled={creating}
-                                />
-                            ))}
-                        </View>
-                    </>
-                ) : null}
-            </Card>
+            {branchId && serviceId ? (
+                <Section
+                    title={t('manageStaff.booking.freeSlots')}
+                    caption={!slots.isFetching && !slots.error && slotList.length > 0 ? `${t('manageStaff.staff.slots.found')} ${slotList.length}` : undefined}
+                >
+                    {slots.isFetching ? <SkeletonBlock height={MIN_TOUCH_TARGET} radius={radii.pill} /> : null}
+                    {slots.error ? (
+                        <ErrorState
+                            compact
+                            title={t('manageStaff.staff.error')}
+                            message={staffErrorMessage(slots.error, t('manageStaff.loadError'), t)}
+                            onRetry={() => void slots.refetch()}
+                        />
+                    ) : null}
+                    {!slots.isFetching && !slots.error && slotList.length === 0 ? (
+                        <EmptyState
+                            icon="time-outline"
+                            compact
+                            title={t('manageStaff.booking.noSlots')}
+                            message={t('manageStaff.staff.slots.noSlotsHint')}
+                        />
+                    ) : null}
+                    {!slots.isFetching && !slots.error && slotList.length > 0 ? (
+                        <ChipGroup
+                            layout="wrap"
+                            options={slotList.map((slot) => ({ key: slot.start_at, label: `${time(slot.start_at)}–${time(slot.end_at)}` }))}
+                            value={selectedStart || null}
+                            onChange={setSelectedStart}
+                            disabled={creating}
+                            accessibilityLabel={t('manageStaff.booking.freeSlots')}
+                            testID="slots-list"
+                        />
+                    ) : null}
+                </Section>
+            ) : null}
 
             {selectedSlot && selectedService ? (
-                <Card style={[ui.gap, styles.confirm]}>
-                    <SectionTitle title={t('manageStaff.booking.confirm.title')} description={t('manageStaff.booking.confirm.description')} />
-                    <Text style={ui.label}>{t('manageStaff.booking.confirm.when')}</Text>
-                    <Text style={ui.text}>{dmy(formatInTimeZone(new Date(selectedSlot.start_at), tz, 'yyyy-MM-dd'))} {time(selectedSlot.start_at)}–{time(selectedSlot.end_at)}</Text>
-                    <Text style={ui.label}>{t('manageStaff.booking.confirm.branch')}</Text>
-                    <Text style={ui.text}>{selectedBranch?.name ?? '—'}</Text>
-                    <Text style={ui.label}>{t('manageStaff.booking.confirm.staff')}</Text>
-                    <Text style={ui.text}>{params.staffName || '—'}</Text>
-                    <Text style={ui.label}>{t('manageStaff.bookings.desk.service')}</Text>
-                    <Text style={ui.text}>{selectedService.name} {durationLabel(selectedService)}</Text>
+                <Section title={t('manageStaff.booking.confirm.title')} caption={t('manageStaff.booking.confirm.description')}>
+                    <Card variant="plain" padding="md" style={styles.summary}>
+                        <KeyValueRow
+                            label={t('manageStaff.booking.confirm.when')}
+                            value={`${dmy(formatInTimeZone(new Date(selectedSlot.start_at), tz, 'yyyy-MM-dd'))} ${time(selectedSlot.start_at)}–${time(selectedSlot.end_at)}`}
+                            emphasis
+                        />
+                        <KeyValueRow label={t('manageStaff.booking.confirm.branch')} value={selectedBranch?.name ?? '—'} />
+                        <KeyValueRow label={t('manageStaff.booking.confirm.staff')} value={params.staffName || '—'} />
+                        <KeyValueRow label={t('manageStaff.bookings.desk.service')} value={`${selectedService.name} ${durationLabel(selectedService)}`} />
+                    </Card>
 
-                    <View style={ui.divider} />
                     <Text style={ui.label}>{t('manageStaff.bookings.desk.client')}</Text>
-                    <View style={ui.wrap}>
-                        {(['none', 'existing', 'new'] as const).map((value) => (
-                            <Chip
-                                key={value}
-                                label={t(value === 'none' ? 'manageStaff.bookings.desk.clientNone' : value === 'existing' ? 'manageStaff.bookings.desk.clientExisting' : 'manageStaff.bookings.desk.clientNew')}
-                                selected={mode === value}
-                                onPress={() => changeMode(value)}
-                                disabled={creating}
-                            />
-                        ))}
-                    </View>
+                    <SegmentedTabs
+                        tabs={(['none', 'existing', 'new'] as const).map((value) => ({
+                            key: value,
+                            label: t(value === 'none' ? 'manageStaff.bookings.desk.clientNone' : value === 'existing' ? 'manageStaff.bookings.desk.clientExisting' : 'manageStaff.bookings.desk.clientNew'),
+                        }))}
+                        value={mode}
+                        onChange={(value) => { if (!creating) changeMode(value); }}
+                    />
                     {mode === 'existing' ? (
                         <>
                             <Input
@@ -307,16 +349,19 @@ export default function ManageStaffSlotsScreen() {
                                 onChangeText={changeSearch}
                                 placeholder={t('manageStaff.bookings.desk.searchPlaceholder')}
                                 accessibilityLabel={t('manageStaff.bookings.desk.searchPlaceholder')}
+                                leadingIcon={<Ionicons name="search" size={18} color={colors.text.secondary} />}
                                 autoCapitalize="none"
                                 autoCorrect={false}
+                                containerStyle={styles.search}
                             />
-                            {searchLoading ? <Text style={ui.muted}>{t('manageStaff.bookings.desk.searching')}</Text> : null}
-                            {searchErr ? <FeedbackBanner variant="danger" message={searchErr} /> : null}
+                            {searchLoading ? <SkeletonList rows={2} /> : null}
+                            {searchErr ? <FeedbackBanner variant="danger" message={searchErr} compact /> : null}
                             {!searchLoading && searchQ.trim() && foundUsers.length === 0 && !searchErr ? (
                                 <Text style={ui.muted}>{t('manageStaff.bookings.desk.noResults')}</Text>
                             ) : null}
                             {foundUsers.length > 0 ? (
                                 <OptionList
+                                    card
                                     options={foundUsers.map((user) => ({ value: user.id, label: user.full_name, hint: user.phone || user.email || undefined }))}
                                     value={selectedClientId}
                                     onChange={setSelectedClientId}
@@ -325,25 +370,19 @@ export default function ManageStaffSlotsScreen() {
                         </>
                     ) : null}
                     {mode === 'new' ? (
-                        <>
-                            <Input label={t('manageStaff.bookings.desk.clientName')} value={newClientName} onChangeText={setNewClientName} placeholder={t('manageStaff.bookings.desk.clientNamePlaceholder')} />
-                            <Input label={t('manageStaff.bookings.desk.clientPhone')} value={newClientPhone} onChangeText={setNewClientPhone} placeholder="+996555123456" keyboardType="phone-pad" />
-                        </>
+                        <View>
+                            <FormField label={t('manageStaff.bookings.desk.clientName')} value={newClientName} onChangeText={setNewClientName} placeholder={t('manageStaff.bookings.desk.clientNamePlaceholder')} />
+                            <FormField label={t('manageStaff.bookings.desk.clientPhone')} value={newClientPhone} onChangeText={setNewClientPhone} placeholder="+996555123456" keyboardType="phone-pad" containerStyle={styles.lastField} />
+                        </View>
                     ) : null}
-                    <Button
-                        title={t(creating ? 'manageStaff.booking.confirm.saving' : 'manageStaff.booking.confirm.submit')}
-                        onPress={() => void confirmBooking()}
-                        disabled={!canConfirm}
-                        loading={creating}
-                        fullWidth
-                    />
-                    <Button title={t('manageStaff.booking.confirm.cancel')} onPress={() => setSelectedStart('')} disabled={creating} variant="ghost" fullWidth />
-                </Card>
+                </Section>
             ) : null}
-        </ScrollView>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    confirm: { borderColor: colors.accent.primary, borderWidth: 1 },
+    summary: { paddingVertical: space.sm },
+    search: { marginBottom: 0 },
+    lastField: { marginBottom: 0 },
 });

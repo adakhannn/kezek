@@ -49,10 +49,11 @@ describe('ServicesScreen (/dashboard/services)', () => {
         api.mockResolvedValue({ ok: true, data: overview });
         renderWith(<ServicesScreen {...props(params)} />);
         expect(await screen.findByText('Стрижка')).toBeTruthy();
-        expect(screen.getByText('Филиалы: Центр, Юг (2)')).toBeTruthy();
+        // One row per service: duration and price in the subtitle, branches on the meta line.
+        expect(screen.getByText('Центр, Юг (2)')).toBeTruthy();
         expect(screen.getByText('активна')).toBeTruthy();
         expect(screen.getByText('скрыта')).toBeTruthy();
-        expect(screen.getByText('Длительность: 45 мин')).toBeTruthy();
+        expect(screen.getByText('45 мин · 500–700 сом')).toBeTruthy();
         expect(api).toHaveBeenCalledWith('/dashboard/services', undefined);
 
         fireEvent.press(screen.getByTestId('services-filter-b2'));
@@ -119,7 +120,8 @@ describe('BranchesScreen (/dashboard/branches)', () => {
         expect(await screen.findByText('Использовано филиалов: 1 из 1')).toBeTruthy();
         expect(screen.getByText('Лимит филиалов достигнут')).toBeTruthy();
         expect(screen.queryByText('Добавить филиал')).toBeNull();
-        expect(screen.getByText('Адрес: Чуй 1')).toBeTruthy();
+        // The address is the row's subtitle.
+        expect(screen.getByText('Чуй 1')).toBeTruthy();
     });
 });
 

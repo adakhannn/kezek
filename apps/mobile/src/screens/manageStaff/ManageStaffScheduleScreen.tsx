@@ -1,12 +1,12 @@
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
-import Button from '../../components/ui/Button';
-import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Screen from '../../components/ui/Screen';
+import ScreenIntro from '../../components/ui/ScreenIntro';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 import { useLanguage } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 import { fetchScheduleContext } from './api';
@@ -14,7 +14,6 @@ import { staffErrorMessage } from './errors';
 import { ExplicitScheduleEditor } from './ExplicitScheduleEditor';
 import { LegacyScheduleEditor } from './LegacyScheduleEditor';
 import { staffQueryKeys } from './queryKeys';
-import { ui } from './ui';
 
 /**
  * /dashboard/staff/[id]/schedule. The server decides the editor, as on the website: explicit
@@ -30,22 +29,30 @@ export default function ManageStaffScheduleScreen() {
         queryFn: () => fetchScheduleContext(params.bizId, params.staffId),
     });
 
-    if (context.isLoading) return <LoadingSpinner message={t('common.loading')} />;
+    if (context.isLoading) {
+        return (
+            <Screen>
+                <SkeletonCard lines={2} />
+                <SkeletonCard lines={4} />
+            </Screen>
+        );
+    }
     if (!context.data) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('manageStaff.loadError')}
-                message={staffErrorMessage(context.error, t('staff.checkConnection'), t)}
-                action={<Button title={t('staff.retry')} onPress={() => void context.refetch()} variant="outline" fullWidth />}
-            />
+            <Screen>
+                <ErrorState
+                    title={t('manageStaff.loadError')}
+                    message={staffErrorMessage(context.error, t('staff.checkConnection'), t)}
+                    onRetry={() => void context.refetch()}
+                />
+            </Screen>
         );
     }
 
     const { staff, branches, explicitScheduling, legacy, business } = context.data;
     let editor;
     if (legacy?.failed) {
-        editor = <FeedbackBanner variant="danger" message={t('manageStaff.loadError')} action={<Button title={t('staff.retry')} onPress={() => void context.refetch()} size="sm" variant="outline" />} />;
+        editor = <ErrorState compact title={t('manageStaff.loadError')} onRetry={() => void context.refetch()} />;
     } else if (explicitScheduling || !legacy) {
         editor = <ExplicitScheduleEditor key={context.dataUpdatedAt} bizId={params.bizId} staffId={staff.id} branches={branches} homeBranchId={staff.branch_id} />;
     } else if (legacy.usesPublishedSchedule) {
@@ -71,23 +78,20 @@ export default function ManageStaffScheduleScreen() {
         );
     }
 
+    const intro = [staff.full_name, business.name || params.bizName || t('manageStaff.staff.schedule.biz.defaultName'), business.city]
+        .filter(Boolean)
+        .join(' · ');
+
     return (
-        <ScrollView
-            style={ui.container}
-            contentContainerStyle={ui.content}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={<RefreshControl refreshing={context.isRefetching} onRefresh={() => void context.refetch()} />}
+        <Screen
+            keyboard
+            refreshing={context.isRefetching}
+            onRefresh={() => void context.refetch()}
             testID="manage-staff-schedule"
         >
-            <View>
-                <Text style={ui.title} accessibilityRole="header">{t('manageStaff.staff.schedule.title')}</Text>
-                <Text style={ui.subtitle}>{staff.full_name}</Text>
-                <Text style={ui.muted}>
-                    {t('manageStaff.staff.schedule.biz.context')}: {business.name || params.bizName || t('manageStaff.staff.schedule.biz.defaultName')}
-                    {business.city ? ` · ${business.city}` : ''}
-                </Text>
-            </View>
+            {/* The header says "Расписание": one muted line with the person and the business. */}
+            <ScreenIntro>{intro}</ScreenIntro>
             {editor}
-        </ScrollView>
+        </Screen>
     );
 }

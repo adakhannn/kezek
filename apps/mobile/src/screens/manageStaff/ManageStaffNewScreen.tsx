@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+import ActionBar from '../../components/ui/ActionBar';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import Input from '../../components/ui/Input';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Screen from '../../components/ui/Screen';
+import ScreenIntro from '../../components/ui/ScreenIntro';
+import Section from '../../components/ui/Section';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 import { colors } from '../../constants/colors';
+import { space } from '../../constants/theme';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
 import { supabase } from '../../lib/supabase';
@@ -20,7 +26,7 @@ import { createStaffFromUser, searchUsers } from './api';
 import { staffErrorMessage } from './errors';
 import { staffQueryKeys } from './queryKeys';
 import type { FoundUser } from './types';
-import { OptionList, SectionTitle, ToggleRow, ui } from './ui';
+import { OptionList, ToggleRow, ui } from './ui';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList, 'ManageStaffNew'>;
 
@@ -98,101 +104,124 @@ export default function ManageStaffNewScreen() {
         }
     };
 
-    if (branches.isLoading) return <LoadingSpinner message={t('common.loading')} />;
+    if (branches.isLoading) {
+        return (
+            <Screen>
+                <SkeletonCard lines={2} />
+                <SkeletonCard lines={3} />
+            </Screen>
+        );
+    }
     if (branches.error) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('manageStaff.loadError')}
-                message={staffErrorMessage(branches.error, t('staff.checkConnection'), t)}
-                action={<Button title={t('staff.retry')} onPress={() => void branches.refetch()} variant="outline" fullWidth />}
-            />
+            <Screen>
+                <ErrorState
+                    title={t('manageStaff.loadError')}
+                    message={staffErrorMessage(branches.error, t('staff.checkConnection'), t)}
+                    onRetry={() => void branches.refetch()}
+                />
+            </Screen>
         );
     }
 
     return (
-        <ScrollView style={ui.container} contentContainerStyle={ui.content} keyboardShouldPersistTaps="handled" testID="manage-staff-new">
-            <Text style={ui.title} accessibilityRole="header">{t('manageStaff.staff.new.title')}</Text>
+        <Screen
+            keyboard
+            testID="manage-staff-new"
+            footer={(
+                <ActionBar
+                    primary={{
+                        title: t('manageStaff.staff.new.create.button'),
+                        onPress: () => void create(),
+                        loading: creating,
+                        testID: 'manage-staff-new-create',
+                    }}
+                />
+            )}
+        >
+            {/* The header says "Добавить сотрудника": one muted line names the business. */}
+            {params.bizName ? <ScreenIntro>{params.bizName}</ScreenIntro> : null}
             <FeedbackBanner
-                variant="warning"
+                variant="info"
                 title={t('manageStaff.staff.new.manualOverride.title')}
                 message={t('manageStaff.staff.new.manualOverride.message')}
+                compact
             />
-            {searchError ? <FeedbackBanner variant="danger" message={searchError} /> : null}
             {invitation ? (
                 <FeedbackBanner
                     variant="success"
                     message={t(invitation === 'pending' ? 'manageStaff.staff.new.invitation.sent' : 'manageStaff.staff.new.invitation.alreadyInTeam')}
-                    action={<Button title={t('manageStaff.staff.new.invitation.toList')} onPress={() => navigation.goBack()} size="sm" />}
+                    action={<Button title={t('manageStaff.staff.new.invitation.toList')} onPress={() => navigation.goBack()} size="sm" variant="outline" />}
                 />
             ) : null}
 
-            <Card>
-                <SectionTitle title={t('manageStaff.staff.new.search.label')} description={t('manageStaff.staff.new.search.hint')} />
-                <Input
-                    value={q}
-                    onChangeText={setQ}
-                    placeholder={t('manageStaff.staff.new.search.placeholder')}
-                    accessibilityLabel={t('manageStaff.staff.new.search.label')}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="search"
-                    onSubmitEditing={() => void doSearch()}
-                    testID="manage-staff-new-query"
-                />
-                <Button
-                    title={t(loading ? 'manageStaff.staff.new.search.searching' : 'manageStaff.staff.new.search.button')}
-                    onPress={() => void doSearch()}
-                    loading={loading}
-                    fullWidth
-                />
-                <View style={styles.results}>
-                    {results.length === 0 ? (
-                        <Text style={ui.muted}>
-                            {t(hasSearched ? 'manageStaff.staff.new.table.empty.noResults' : 'manageStaff.staff.new.table.empty.enterQuery')}
-                        </Text>
-                    ) : (
-                        <OptionList
-                            options={results.map((user) => ({
-                                value: user.id,
-                                label: user.full_name,
-                                hint: [user.email ?? '—', user.phone ?? '—'].join(' · '),
-                            }))}
-                            value={selectedUserId}
-                            onChange={setSelectedUserId}
-                            testID="manage-staff-new-results"
-                        />
-                    )}
+            <Section title={t('manageStaff.staff.new.search.label')} caption={t('manageStaff.staff.new.search.hint')}>
+                <View style={styles.searchRow}>
+                    <Input
+                        value={q}
+                        onChangeText={setQ}
+                        placeholder={t('manageStaff.staff.new.search.placeholder')}
+                        accessibilityLabel={t('manageStaff.staff.new.search.label')}
+                        leadingIcon={<Ionicons name="search" size={18} color={colors.text.secondary} />}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        returnKeyType="search"
+                        onSubmitEditing={() => void doSearch()}
+                        containerStyle={styles.searchInput}
+                        testID="manage-staff-new-query"
+                    />
+                    <Button
+                        title={t(loading ? 'manageStaff.staff.new.search.searching' : 'manageStaff.staff.new.search.button')}
+                        onPress={() => void doSearch()}
+                        loading={loading}
+                        variant="secondary"
+                        style={styles.searchButton}
+                    />
                 </View>
-            </Card>
+                {searchError ? <FeedbackBanner variant="danger" message={searchError} compact /> : null}
+                {results.length === 0 ? (
+                    <Text style={ui.muted}>
+                        {t(hasSearched ? 'manageStaff.staff.new.table.empty.noResults' : 'manageStaff.staff.new.table.empty.enterQuery')}
+                    </Text>
+                ) : (
+                    <OptionList
+                        card
+                        options={results.map((user) => ({
+                            value: user.id,
+                            label: user.full_name,
+                            hint: [user.email ?? '—', user.phone ?? '—'].join(' · '),
+                        }))}
+                        value={selectedUserId}
+                        onChange={setSelectedUserId}
+                        testID="manage-staff-new-results"
+                    />
+                )}
+            </Section>
 
-            <Card>
-                <Text style={ui.label}>{t('manageStaff.staff.new.branch.label')}</Text>
+            <Section title={t('manageStaff.staff.new.branch.label')}>
                 {(branches.data ?? []).length === 0 ? (
                     <Text style={ui.muted}>{t('manageStaff.noBranches')}</Text>
                 ) : (
                     <OptionList
+                        card
                         options={(branches.data ?? []).map((branch) => ({ value: branch.id, label: branch.name }))}
                         value={branchId}
                         onChange={setBranchId}
                         testID="manage-staff-new-branch"
                     />
                 )}
-                <View style={ui.divider} />
+            </Section>
+
+            <Card variant="plain" padding="md" style={styles.switchCard}>
                 <ToggleRow label={t('manageStaff.staff.new.active.label')} value={isActive} onChange={setIsActive} />
-                <Button
-                    title={t('manageStaff.staff.new.create.button')}
-                    onPress={() => void create()}
-                    loading={creating}
-                    fullWidth
-                    style={styles.create}
-                />
             </Card>
-        </ScrollView>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    results: { marginTop: colors.layout.space3 },
-    create: { marginTop: colors.layout.space3 },
+    searchRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+    searchInput: { flex: 1, width: undefined, marginBottom: 0 },
+    searchButton: { minWidth: 88 },
+    switchCard: { paddingVertical: space.xs },
 });

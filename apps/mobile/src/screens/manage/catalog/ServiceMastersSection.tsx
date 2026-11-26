@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import Avatar from '../../../components/ui/Avatar';
 import Card from '../../../components/ui/Card';
+import ErrorState from '../../../components/ui/ErrorState';
 import Section from '../../../components/ui/Section';
 import { CheckboxRow } from '../../../components/ui/SelectionRow';
 import { SkeletonList } from '../../../components/ui/Skeleton';
@@ -69,11 +70,17 @@ export function ServiceMastersSection({ bizId, serviceId, branchId }: { bizId: s
             {query.isLoading ? (
                 <SkeletonList rows={2} />
             ) : query.error ? (
-                <Text style={ui.error}>
-                    {t('catalog.services.masters.error')} {getErrorMessage(query.error, t('catalog.app.loadError'), t)}
-                </Text>
+                <ErrorState
+                    compact
+                    title={t('catalog.app.loadError')}
+                    message={getErrorMessage(query.error, t('catalog.app.loadError'), t)}
+                    retryLabel={t('catalog.app.retry')}
+                    onRetry={() => void query.refetch()}
+                />
             ) : (query.data?.staff.length ?? 0) === 0 ? (
-                <Text style={ui.muted}>{t('catalog.services.masters.empty')}</Text>
+                <Card variant="plain" padding="md">
+                    <Text style={ui.muted}>{t('catalog.services.masters.empty')}</Text>
+                </Card>
             ) : (
                 <Card variant="plain" padding="md" style={styles.group}>
                     {query.data!.staff.map((member) => {

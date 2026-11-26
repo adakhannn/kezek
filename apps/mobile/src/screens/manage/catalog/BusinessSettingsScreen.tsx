@@ -1,20 +1,26 @@
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import Button from '../../../components/ui/Button';
-import Card from '../../../components/ui/Card';
 import FeedbackBanner from '../../../components/ui/FeedbackBanner';
-import Input from '../../../components/ui/Input';
+import FormField, { FieldGroup } from '../../../components/ui/FormField';
+import ListRow, { ListGroup } from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import ScreenIntro from '../../../components/ui/ScreenIntro';
+import Section from '../../../components/ui/Section';
+import { RadioRow } from '../../../components/ui/SelectionRow';
+import { MIN_TOUCH_TARGET } from '../../../constants/accessibility';
 import { colors } from '../../../constants/colors';
+import { layout, radii, space, typeScale } from '../../../constants/theme';
 import { useLanguage } from '../../../i18n';
 import { getApiErrorStatus } from '../../../lib/errors';
 import type { RootStackParamList } from '../../../navigation/types';
 import { catalogApi, catalogKeys, type BusinessSettings, type ContactFields } from './catalogApi';
 import { apiErrorBody, catalogErrorText } from './catalogErrors';
-import { QueryState, SectionTitle, ui } from './catalogUi';
+import { QueryState } from './catalogUi';
 import { timeZoneLabel, timeZoneOptions } from './settings';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageSettings'>;
@@ -29,31 +35,25 @@ export default function BusinessSettingsScreen({ route }: Props) {
     // 403: the page's own "no access" notice, not a load error.
     if (getApiErrorStatus(query.error) === 403) {
         return (
-            <ScrollView style={ui.screen} contentContainerStyle={ui.content}>
+            <Screen>
                 <FeedbackBanner
                     variant="danger"
                     title={t('catalog.business.contactSettings.noAccessTitle')}
                     message={t('catalog.business.contactSettings.noAccessDescription')}
                 />
-            </ScrollView>
+            </Screen>
         );
     }
 
     return (
-        <QueryState isLoading={query.isLoading} error={query.error} onRetry={() => void query.refetch()}>
+        <QueryState isLoading={query.isLoading} error={query.error} onRetry={() => void query.refetch()} skeleton="form">
             {() => (
-                <KeyboardAvoidingView style={ui.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-                    <ScrollView contentContainerStyle={ui.content} keyboardShouldPersistTaps="handled" testID="manage-settings-screen">
-                        <View style={ui.header}>
-                            <Text style={ui.title} accessibilityRole="header">{t('catalog.business.contactSettings.title')}</Text>
-                            <Text style={ui.subtitle}>
-                                {t('catalog.business.contactSettings.publicContacts')} {bizName || t('catalog.business.contactSettings.selectedBusiness')}
-                            </Text>
-                        </View>
-                        <ContactsForm bizId={bizId} initial={query.data!} />
-                        <TimeZoneForm bizId={bizId} initial={query.data!.tz} />
-                    </ScrollView>
-                </KeyboardAvoidingView>
+                <Screen keyboard testID="manage-settings-screen">
+                    {/* The header says "Настройки": one muted line names the business. */}
+                    <ScreenIntro>{bizName || t('catalog.business.contactSettings.selectedBusiness')}</ScreenIntro>
+                    <ContactsForm bizId={bizId} initial={query.data!} />
+                    <TimeZoneForm bizId={bizId} initial={query.data!.tz} />
+                </Screen>
             )}
         </QueryState>
     );
@@ -103,27 +103,26 @@ function ContactsForm({ bizId, initial }: { bizId: string; initial: BusinessSett
     };
 
     return (
-        <>
-            {message ? <FeedbackBanner variant={message.variant} message={message.text} /> : null}
-            <Card padding="md">
-                <SectionTitle title={t('catalog.business.contactSettings.heading')} subtitle={t('catalog.business.contactSettings.description')} />
+        <View style={styles.block}>
+            <FieldGroup title={t('catalog.business.contactSettings.heading')} caption={t('catalog.business.contactSettings.description')}>
                 {FIELDS.map(({ field, label, hint, placeholder, keyboard }) => (
-                    <Input
+                    <FormField
                         key={field}
                         label={t(label)}
                         value={form[field]}
                         onChangeText={(value) => setForm((current) => ({ ...current, [field]: value }))}
                         placeholder={placeholder}
-                        helperText={hint ? t(hint) : undefined}
+                        hint={hint ? t(hint) : undefined}
                         keyboardType={keyboard}
                         autoCapitalize="none"
                         autoCorrect={false}
                         testID={`settings-${field}`}
                     />
                 ))}
-            </Card>
+            </FieldGroup>
+            {message ? <FeedbackBanner variant={message.variant} message={message.text} compact /> : null}
             <Button title={t('catalog.business.contactSettings.save')} onPress={() => void save()} loading={saving} fullWidth />
-        </>
+        </View>
     );
 }
 
@@ -162,77 +161,75 @@ function TimeZoneForm({ bizId, initial }: { bizId: string; initial: string }) {
     };
 
     return (
-        <>
-            {message ? <FeedbackBanner variant={message.variant} message={message.text} /> : null}
-            <Card padding="md">
-                <SectionTitle title={t('catalog.business.timeZoneSettings.heading')} subtitle={t('catalog.business.timeZoneSettings.description')} />
-                <Text style={ui.muted}>{t('catalog.business.timeZoneSettings.label')}</Text>
-                <Pressable
+        <Section title={t('catalog.business.timeZoneSettings.heading')} caption={t('catalog.business.timeZoneSettings.description')}>
+            <ListGroup>
+                <ListRow
+                    icon="globe-outline"
+                    title={timeZoneLabel(tz)}
+                    subtitle={t('catalog.business.timeZoneSettings.label')}
                     onPress={() => setPicking(true)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${t('catalog.business.timeZoneSettings.label')}: ${timeZoneLabel(tz)}`}
                     accessibilityHint={t('catalog.app.chooseTimeZone')}
-                    style={({ pressed }) => [{
-                        marginTop: 6,
-                        minHeight: 48,
-                        borderWidth: 1,
-                        borderColor: colors.border.light,
-                        borderRadius: colors.layout.radiusMd,
-                        backgroundColor: colors.surface.card,
-                        paddingHorizontal: 16,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }, pressed ? ui.pressed : null]}
                     testID="settings-tz"
-                >
-                    <Text style={ui.body}>{timeZoneLabel(tz)}</Text>
-                    <Ionicons name="chevron-down" size={18} color={colors.text.secondary} />
-                </Pressable>
-                <Text style={[ui.caption, { marginTop: 6 }]}>{t('catalog.business.timeZoneSettings.hint')}</Text>
-            </Card>
+                />
+            </ListGroup>
+            <Text style={styles.hint}>{t('catalog.business.timeZoneSettings.hint')}</Text>
+            {message ? <FeedbackBanner variant={message.variant} message={message.text} compact /> : null}
             <Button
                 title={t('catalog.business.timeZoneSettings.save')}
                 onPress={() => void save()}
                 loading={saving}
                 disabled={tz === saved}
+                variant="outline"
                 fullWidth
             />
             <Modal visible={picking} animationType="slide" transparent onRequestClose={() => setPicking(false)}>
-                <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }}>
-                    <View style={{ maxHeight: '75%', backgroundColor: colors.surface.page, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16 }}>
-                        <View style={ui.rowBetween}>
-                            <Text style={ui.sectionTitle} accessibilityRole="header">{t('catalog.app.chooseTimeZone')}</Text>
+                <View style={styles.overlay}>
+                    <View style={styles.sheet}>
+                        <View style={styles.sheetHeader}>
+                            <Text style={styles.sheetTitle} accessibilityRole="header">{t('catalog.app.chooseTimeZone')}</Text>
                             <Pressable
                                 onPress={() => setPicking(false)}
                                 accessibilityRole="button"
                                 accessibilityLabel={t('catalog.common.cancel')}
-                                style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+                                style={({ pressed }) => [styles.close, pressed ? styles.pressed : null]}
                             >
                                 <Ionicons name="close" size={22} color={colors.text.primary} />
                             </Pressable>
                         </View>
-                        <ScrollView>
-                            {options.map((zone) => {
-                                const selected = zone === tz;
-                                return (
-                                    <Pressable
-                                        key={zone}
-                                        onPress={() => { setTz(zone); setPicking(false); setMessage(null); }}
-                                        accessibilityRole="radio"
-                                        accessibilityState={{ selected, checked: selected }}
-                                        style={({ pressed }) => [{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 }, pressed ? ui.pressed : null]}
-                                        testID={`tz-${zone}`}
-                                    >
-                                        <Ionicons name={selected ? 'radio-button-on' : 'radio-button-off'} size={20} color={selected ? colors.accent.indigo : colors.text.secondary} />
-                                        <Text style={ui.body}>{timeZoneLabel(zone)}</Text>
-                                    </Pressable>
-                                );
-                            })}
+                        <ScrollView contentContainerStyle={styles.sheetList}>
+                            {options.map((zone) => (
+                                <RadioRow
+                                    key={zone}
+                                    label={timeZoneLabel(zone)}
+                                    selected={zone === tz}
+                                    onSelect={() => { setTz(zone); setPicking(false); setMessage(null); }}
+                                    testID={`tz-${zone}`}
+                                />
+                            ))}
                         </ScrollView>
                     </View>
                 </View>
             </Modal>
-        </>
+        </Section>
     );
 }
+
+const styles = StyleSheet.create({
+    block: { gap: space.md },
+    hint: { ...typeScale.caption, color: colors.text.secondary },
+    overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay },
+    sheet: {
+        maxHeight: '75%',
+        backgroundColor: colors.surface.page,
+        borderTopLeftRadius: radii.xxl,
+        borderTopRightRadius: radii.xxl,
+        paddingTop: space.sm,
+        paddingHorizontal: layout.gutter,
+        paddingBottom: space.xxl,
+    },
+    sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+    sheetTitle: { ...typeScale.headline, color: colors.text.primary },
+    sheetList: { paddingBottom: space.lg },
+    close: { minWidth: MIN_TOUCH_TARGET, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+});

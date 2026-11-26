@@ -46,7 +46,7 @@ export default function ServiceEditScreen({ navigation, route }: Props) {
     });
 
     return (
-        <QueryState isLoading={query.isLoading} error={query.error} onRetry={() => void query.refetch()}>
+        <QueryState isLoading={query.isLoading} error={query.error} onRetry={() => void query.refetch()} skeleton="form">
             {() => {
                 const data = query.data!;
                 const isEdit = 'service' in data;

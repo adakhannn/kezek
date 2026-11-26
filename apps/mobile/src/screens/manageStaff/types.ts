@@ -35,6 +35,8 @@ export type StaffCard = {
     percent_master: number | null;
     percent_salon: number | null;
     hourly_rate: number | null;
+    /** The photo, when the server sends it; Avatar falls back to initials. */
+    avatar_url?: string | null;
 };
 
 export type StaffReview = {

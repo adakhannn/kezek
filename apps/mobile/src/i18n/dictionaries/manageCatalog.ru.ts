@@ -291,4 +291,11 @@ export const manageCatalogRu = {
     'catalog.app.chooseTimeZone': 'Выберите часовой пояс',
     'catalog.app.openSchedule': 'Открыть расписание филиала',
     'catalog.app.openPromotions': 'Открыть акции филиала',
+    'catalog.app.group.main': 'Основное',
+    'catalog.app.group.more': 'Ещё',
+    'catalog.app.group.promotionType': 'Тип акции',
+    'catalog.app.group.promotionTerms': 'Условия',
+    'catalog.app.group.period': 'Срок действия',
+    'catalog.app.optional': 'Необязательно: без дат акция действует всегда',
+    'catalog.app.locationHintShort': 'Нажмите, находясь в филиале: координаты и адрес заполнятся сами',
 } as const;

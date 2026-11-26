@@ -288,4 +288,11 @@ export const manageCatalogKy: Record<keyof typeof manageCatalogRu, string> = {
     'catalog.app.chooseTimeZone': 'Убакыт алкагын тандаңыз',
     'catalog.app.openSchedule': 'Филиалдын графигин ачуу',
     'catalog.app.openPromotions': 'Филиалдын акцияларын ачуу',
+    'catalog.app.group.main': 'Негизги',
+    'catalog.app.group.more': 'Дагы',
+    'catalog.app.group.promotionType': 'Акциянын түрү',
+    'catalog.app.group.promotionTerms': 'Шарттары',
+    'catalog.app.group.period': 'Мөөнөтү',
+    'catalog.app.optional': 'Милдеттүү эмес: даталар жок болсо, акция дайыма иштейт',
+    'catalog.app.locationHintShort': 'Филиалда турганда басыңыз: координаттар жана дарек өзү толтурулат',
 };

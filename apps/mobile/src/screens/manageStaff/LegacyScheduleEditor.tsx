@@ -2,11 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { fromZonedTime } from 'date-fns-tz';
 
+import { Ionicons } from '@expo/vector-icons';
+
 import SegmentedTabs from '../../components/SegmentedTabs';
 import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
+import ListRow, { ListGroup } from '../../components/ui/ListRow';
+import Section from '../../components/ui/Section';
+import { SkeletonList } from '../../components/ui/Skeleton';
 import { colors } from '../../constants/colors';
+import { layout, radii, space, typeScale } from '../../constants/theme';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage, type MobileI18nKey } from '../../i18n';
@@ -27,7 +34,7 @@ import {
     withStart,
 } from './legacySchedule';
 import type { BranchHoursRow, LegacyRule, TimeRange } from './types';
-import { Badge, OptionList, SectionTitle, TimeField, ToggleRow, dmy, ui } from './ui';
+import { Badge, OptionList, TimeField, ToggleRow, dmy, ui } from './ui';
 
 type Props = {
     bizId: string;
@@ -167,14 +174,14 @@ export function LegacyScheduleEditor({ bizId, staffId, branches, homeBranchId, t
 
     const today = businessTodayYmd(tz);
     const renderWeek = (title: MobileI18nKey, dates: string[], showApply: boolean) => (
-        <Card style={ui.gap}>
-            <SectionTitle title={t(title)} description={`${dmy(dates[0])} — ${dmy(dates[6])}`} />
+        <Section title={t(title)} caption={`${dmy(dates[0])} — ${dmy(dates[6])}`}>
             {showApply ? (
                 <Button
                     title={t(saving ? 'manageStaff.staff.schedule.applying' : 'manageStaff.staff.schedule.applyBranch')}
                     onPress={() => void applyBranchSchedule()}
                     disabled={saving}
                     variant="outline"
+                    leadingIcon={<Ionicons name="copy-outline" size={18} color={colors.text.primary} />}
                     fullWidth
                 />
             ) : null}
@@ -195,11 +202,11 @@ export function LegacyScheduleEditor({ bizId, staffId, branches, homeBranchId, t
                     />
                 );
             })}
-        </Card>
+        </Section>
     );
 
     return (
-        <View style={ui.gap}>
+        <View style={styles.root}>
             <SegmentedTabs
                 tabs={[
                     { key: 'schedule', label: t('manageStaff.staff.schedule.tab.schedule') },
@@ -208,12 +215,13 @@ export function LegacyScheduleEditor({ bizId, staffId, branches, homeBranchId, t
                 value={tab}
                 onChange={setTab}
             />
-            {tab === 'schedule' && status === 'loading' ? <Text style={ui.muted}>{t('manageStaff.staff.schedule.loading')}</Text> : null}
+            {tab === 'schedule' && status === 'loading' ? <SkeletonList rows={4} avatar={false} /> : null}
             {tab === 'schedule' && status === 'error' ? (
-                <FeedbackBanner
-                    variant="danger"
-                    message={t('manageStaff.staff.schedule.loadError')}
-                    action={<Button title={t('manageStaff.staff.schedule.retry')} onPress={() => { setStatus('loading'); void load(); }} size="sm" variant="outline" />}
+                <ErrorState
+                    compact
+                    title={t('manageStaff.staff.schedule.loadError')}
+                    retryLabel={t('manageStaff.staff.schedule.retry')}
+                    onRetry={() => { setStatus('loading'); void load(); }}
                 />
             ) : null}
             {tab === 'schedule' && status === 'ready' ? (
@@ -231,6 +239,7 @@ export function LegacyScheduleEditor({ bizId, staffId, branches, homeBranchId, t
                             t('manageStaff.staff.schedule.instructions.past'),
                             t('manageStaff.staff.schedule.instructions.transfersTab'),
                         ].map((line) => `• ${line}`).join('\n')}
+                        compact
                     />
                 </>
             ) : null}
@@ -283,6 +292,7 @@ function DayRow({ date, today, rule, branches, homeBranchId, branchIntervals, ha
                     onPress={() => onSave(dayOff ? null : interval, branchId)}
                     disabled={locked}
                     size="sm"
+                    variant="secondary"
                     accessibilityLabel={`${t('manageStaff.staff.schedule.save')}: ${dayName} ${dmy(date)}`}
                 />
             </View>
@@ -293,7 +303,7 @@ function DayRow({ date, today, rule, branches, homeBranchId, branchIntervals, ha
                 disabled={locked}
             />
             {!dayOff ? (
-                <View>
+                <View style={styles.block}>
                     <Text style={ui.label}>{t('manageStaff.staff.schedule.workingHours')}</Text>
                     <View style={ui.row}>
                         <TimeField
@@ -302,7 +312,7 @@ function DayRow({ date, today, rule, branches, homeBranchId, branchIntervals, ha
                             label={`${t('manageStaff.staff.schedule.workingHours')} ${dayName}: ${t('manageStaff.scheduling.start')}`}
                             disabled={locked}
                         />
-                        <Text style={ui.text}>—</Text>
+                        <Text style={ui.muted}>–</Text>
                         <TimeField
                             value={interval.end}
                             onChange={(value) => setRange((current) => withEnd(current, value))}
@@ -387,35 +397,44 @@ function TransfersList({ bizId, staffId, branches, homeBranchId, tz }: {
     const homeName = branches.find((branch) => branch.id === homeBranchId)?.name || t('manageStaff.staff.schedule.transfers.homeBranchDefault');
 
     return (
-        <Card style={ui.gap}>
-            <SectionTitle title={t('manageStaff.staff.schedule.transfers.title')} description={t('manageStaff.staff.schedule.transfers.subtitle')} />
-            {state.status === 'loading' ? <Text style={ui.muted}>{t('manageStaff.staff.schedule.transfers.loading')}</Text> : null}
+        <Section title={t('manageStaff.staff.schedule.transfers.title')} caption={t('manageStaff.staff.schedule.transfers.subtitle')}>
+            {state.status === 'loading' ? <SkeletonList rows={2} avatar={false} /> : null}
             {state.status === 'error' ? (
-                <FeedbackBanner
-                    variant="danger"
-                    message={t('manageStaff.staff.schedule.transfers.loadError')}
-                    action={<Button title={t('manageStaff.staff.schedule.retry')} onPress={() => setAttempt((value) => value + 1)} size="sm" variant="outline" />}
+                <ErrorState
+                    compact
+                    title={t('manageStaff.staff.schedule.transfers.loadError')}
+                    retryLabel={t('manageStaff.staff.schedule.retry')}
+                    onRetry={() => setAttempt((value) => value + 1)}
                 />
             ) : null}
             {state.status === 'ready' && state.rows.length === 0 ? (
-                <View>
-                    <Text style={ui.text}>{t('manageStaff.staff.schedule.transfers.empty.title')}</Text>
-                    <Text style={ui.muted}>{t('manageStaff.staff.schedule.transfers.empty.desc')}</Text>
-                </View>
+                <EmptyState
+                    icon="swap-horizontal"
+                    compact
+                    title={t('manageStaff.staff.schedule.transfers.empty.title')}
+                    message={t('manageStaff.staff.schedule.transfers.empty.desc')}
+                />
             ) : null}
             {state.status === 'ready' && state.rows.length > 0 ? (
                 <>
                     <Text style={ui.muted}>{t('manageStaff.staff.schedule.transfers.homeBranch')} {homeName}</Text>
-                    {state.rows.map((row) => (
-                        <View key={row.id} style={[styles.transferRow, row.date_on === today ? styles.dayToday : null, row.date_on < today ? styles.dayPast : null]}>
-                            <View style={ui.row}>
-                                <Text style={styles.dayName}>{dmy(row.date_on)}</Text>
-                                {row.date_on === today ? <Badge label={t('manageStaff.staff.schedule.today')} tone="accent" /> : null}
-                                {row.date_on < today ? <Text style={ui.muted}>{t('manageStaff.staff.schedule.transfers.past')}</Text> : null}
-                            </View>
-                            <Text style={ui.muted}>{t('manageStaff.staff.schedule.transfers.transferred')}: {row.branch_name}</Text>
-                        </View>
-                    ))}
+                    <ListGroup inset>
+                        {state.rows.map((row) => (
+                            <ListRow
+                                key={row.id}
+                                icon="swap-horizontal"
+                                iconTone={row.date_on === today ? 'accent' : 'info'}
+                                title={dmy(row.date_on)}
+                                subtitle={`${t('manageStaff.staff.schedule.transfers.transferred')}: ${row.branch_name}`}
+                                trailing={row.date_on === today
+                                    ? <Badge label={t('manageStaff.staff.schedule.today')} tone="accent" />
+                                    : row.date_on < today
+                                        ? <Badge label={t('manageStaff.staff.schedule.transfers.past')} />
+                                        : undefined}
+                                style={row.date_on < today ? styles.dayPast : undefined}
+                            />
+                        ))}
+                    </ListGroup>
                 </>
             ) : null}
             <FeedbackBanner
@@ -427,32 +446,26 @@ function TransfersList({ bizId, staffId, branches, homeBranchId, tz }: {
                     t('manageStaff.staff.schedule.transfers.instructions.oneDay'),
                     t('manageStaff.staff.schedule.transfers.instructions.otherDays'),
                 ].map((line) => `• ${line}`).join('\n')}
+                compact
             />
-        </Card>
+        </Section>
     );
 }
 
 const styles = StyleSheet.create({
+    root: { gap: layout.sectionGap },
     day: {
-        padding: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
+        padding: space.lg,
+        borderRadius: radii.lg,
         backgroundColor: colors.surface.card,
-        gap: colors.layout.space2,
+        gap: space.md,
     },
-    dayToday: { borderColor: colors.accent.primary, backgroundColor: colors.surface.emphasis },
+    dayToday: { borderWidth: 1, borderColor: colors.tone.accent.border },
     dayPast: { opacity: 0.7 },
-    dayHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: colors.layout.space2 },
-    dayTitle: { flex: 1 },
-    dayName: { fontSize: 16, fontWeight: '700', color: colors.text.primary },
-    unsaved: { fontSize: 12, fontWeight: '600', color: colors.status.warning, marginTop: 2 },
-    transfer: { gap: colors.layout.space2, borderTopWidth: 1, borderTopColor: colors.border.subtle, paddingTop: colors.layout.space2 },
-    transferRow: {
-        padding: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.card,
-    },
+    dayHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+    dayTitle: { flex: 1, gap: space.xxs },
+    dayName: { ...typeScale.headline, color: colors.text.primary },
+    unsaved: { ...typeScale.caption, fontWeight: '600', color: colors.tone.warning.fg },
+    block: { gap: space.sm },
+    transfer: { gap: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border.subtle, paddingTop: space.md },
 });
