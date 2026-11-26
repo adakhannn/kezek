@@ -5,6 +5,7 @@ import { ApplicationStatusButton } from './ApplicationStatusButton';
 import { getServerLocale, getT, type I18nKey } from '@/app/_components/i18n/server';
 import { ApplicationReviewHistory } from '@/components/admin/ApplicationReviewHistory';
 import { Card } from '@/components/ui/Card';
+import { readAdminBusinessApplications } from '@/lib/adminPanelReadService';
 import { canModerateBusinessRegistrationApplication } from '@/lib/businessApplicationStatus';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
@@ -30,27 +31,13 @@ type BusinessRegistrationApplication = {
 export default async function BusinessApplicationsPage() {
     const locale = await getServerLocale();
     const t = getT(locale);
-    const admin = createSupabaseAdminClient();
-    const [{ data: applications, error }, { data: categories, error: categoriesError }] = await Promise.all([
-        admin
-            .from('business_registration_applications')
-            .select('id,contact_name,phone,email,business_name,category,comment,status,applicant_user_id,created_at,created_business_id,directory_links,prior_submission_count,risk_flags')
-            .order('created_at', { ascending: false })
-            .limit(200),
-        admin.from('categories').select('slug,name_ru').eq('is_active', true),
-    ]);
+    const result = await readAdminBusinessApplications(createSupabaseAdminClient());
 
-    if (error) return <div className="text-red-600">{t('admin.businessApplications.error.load')}: {error.message}</div>;
-    if (categoriesError) return <div className="text-red-600">{t('admin.businessApplications.error.categories')}: {categoriesError.message}</div>;
+    if (!result.ok && result.error === 'load') return <div className="text-red-600">{t('admin.businessApplications.error.load')}: {result.message}</div>;
+    if (!result.ok) return <div className="text-red-600">{t('admin.businessApplications.error.categories')}: {result.message}</div>;
 
-    const categoryNames = new Map<string, string>();
-    (categories ?? []).forEach((category) => {
-        const slug = typeof category.slug === 'string' ? category.slug.trim() : '';
-        const name = typeof category.name_ru === 'string' ? category.name_ru.trim() : '';
-        if (!slug || !name) return;
-        categoryNames.set(slug.toLowerCase(), name);
-        categoryNames.set(name.toLowerCase(), name);
-    });
+    const applications: BusinessRegistrationApplication[] = result.applications;
+    const categoryNames = new Map<string, string>(Object.entries(result.categoryNames));
 
     return (
         <div className="space-y-6">

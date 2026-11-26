@@ -34,4 +34,7 @@ export const serverAdminKy = {
     'server.admin.lastPlatformAdmin': 'Платформанын акыркы администраторунун ролун алып салууга болбойт',
     'server.admin.roleChangeUnconfirmed': 'Ролдун өзгөрүшүн ырастоо мүмкүн болгон жок',
     'server.admin.roleStateUnconfirmed': 'Ролдун абалы ырасталган жок',
+    'server.admin.panelLoadFailed': 'Админканын маалыматын жүктөө мүмкүн болгон жок',
+    'server.admin.invalidBusinessIdentifier': 'Бизнестин идентификатору туура эмес',
+    'server.admin.invalidUserIdentifier': 'Колдонуучунун идентификатору туура эмес',
 } as const;

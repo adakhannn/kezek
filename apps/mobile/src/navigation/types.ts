@@ -1,5 +1,6 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+import type { AdminParamList } from '../screens/admin/adminParams';
 import type { ManageRouteParams } from '../screens/manage/manageMenu';
 
 /** A staff card of the managed business (the website's /dashboard/staff/[id]/*). */
@@ -63,7 +64,7 @@ export type RootStackParamList = {
     /** A visit package type: new without planId, else edited. */
     ManageVisitPackagePlan: ManageRouteParams & { planId?: string };
     ManageRoleApplications: ManageRouteParams;
-};
+} & AdminParamList;
 
 export type MainTabParamList = {
     Home: undefined;

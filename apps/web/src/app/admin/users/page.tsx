@@ -9,7 +9,8 @@ import UsersClient from './UsersClient';
 
 import { getT } from '@/app/_components/i18n/server';
 import {Button} from '@/components/ui/Button';
-import { parseAdminUserStats, type AdminUserStats } from '@/lib/adminUserStats';
+import { readAdminUserStats } from '@/lib/adminPanelReadService';
+import type { AdminUserStats } from '@/lib/adminUserStats';
 import { logWarn } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -80,9 +81,7 @@ async function fetchList(search: string, page: number, perPage: number, status: 
 /** Counts over the whole directory in one service-only read (ARCH-03); the caller is a verified super admin. */
 async function fetchStats(actorId: string): Promise<AdminUserStats | null> {
     try {
-        const { data, error } = await createSupabaseAdminClient().rpc('admin_user_stats', { p_actor_id: actorId });
-        if (error) throw error;
-        return parseAdminUserStats(data);
+        return await readAdminUserStats(createSupabaseAdminClient(), actorId);
     } catch (error) {
         logWarn('AdminUsers', 'User statistics are unavailable', error);
         return null;

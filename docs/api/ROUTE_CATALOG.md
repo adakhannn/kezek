@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **200 route-файлов, 245 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **208 route-файлов, 253 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 583 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `29c2052b0d651bad265b55e804d6bbb659d03d56c6fb6a4f398d2f64787fe1ed`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 593 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `2aa365e7baa84a5466bb130ccc999b1c14d3318801b97d34837bbc5100bd2893`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -29,12 +29,16 @@
 | `/admin/api/analytics/promotions` | GET | [route](../../apps/web/src/app/admin/api/analytics/promotions/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/analytics/track` | POST | [route](../../apps/web/src/app/admin/api/analytics/track/route.ts) | [runAnalyticsTrackHttp](../../apps/web/src/lib/analyticsTrackHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/business-applications/[id]/status` | POST | [route](../../apps/web/src/app/admin/api/business-applications/[id]/status/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
+| `/admin/api/business-applications` | GET | [route](../../apps/web/src/app/admin/api/business-applications/route.ts) | [runAdminBusinessApplicationsHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branch-limit` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/branch-limit/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branches/[branchId]/delete` | POST, DELETE | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/delete/route.ts) | [runBranchDelete](../../apps/web/src/lib/branchDeleteService.ts) | [справочник](ADMIN_API.md) |
+| `/admin/api/businesses/[id]/branches/[branchId]/detail` | GET | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/detail/route.ts) | [runAdminBranchDetailHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branches/[branchId]/schedule` | GET, POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/schedule/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branches/[branchId]/update` | POST, PUT, PATCH, OPTIONS | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/update/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/branches/create` | POST, OPTIONS | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/create/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
+| `/admin/api/businesses/[id]/branches/list` | GET | [route](../../apps/web/src/app/admin/api/businesses/[id]/branches/list/route.ts) | [runAdminBranchListHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/delete` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/delete/route.ts) | [runBusinessDelete](../../apps/web/src/lib/businessDeleteService.ts) | [справочник](ADMIN_API.md) |
+| `/admin/api/businesses/[id]/detail` | GET | [route](../../apps/web/src/app/admin/api/businesses/[id]/detail/route.ts) | [runAdminBusinessDetailHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/members/add` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/members/add/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/members/demote` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/members/demote/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/members/grant` | POST | [route](../../apps/web/src/app/admin/api/businesses/[id]/members/grant/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
@@ -44,6 +48,7 @@
 | `/admin/api/businesses/[id]/owner/save` | POST, PUT | [route](../../apps/web/src/app/admin/api/businesses/[id]/owner/save/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/[id]/update` | PATCH | [route](../../apps/web/src/app/admin/api/businesses/[id]/update/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/businesses/create` | POST | [route](../../apps/web/src/app/admin/api/businesses/create/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
+| `/admin/api/businesses/list` | GET | [route](../../apps/web/src/app/admin/api/businesses/list/route.ts) | [runAdminBusinessListHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/categories/[id]/delete` | POST, DELETE | [route](../../apps/web/src/app/admin/api/categories/[id]/delete/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/categories/[id]/update` | POST | [route](../../apps/web/src/app/admin/api/categories/[id]/update/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/categories/create` | POST | [route](../../apps/web/src/app/admin/api/categories/create/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
@@ -54,6 +59,7 @@
 | `/admin/api/metrics/auth-flow` | GET | [route](../../apps/web/src/app/admin/api/metrics/auth-flow/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/metrics` | GET | [route](../../apps/web/src/app/admin/api/metrics/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/metrics/stats` | GET | [route](../../apps/web/src/app/admin/api/metrics/stats/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
+| `/admin/api/overview` | GET | [route](../../apps/web/src/app/admin/api/overview/route.ts) | [runAdminOverviewHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/rating-config` | GET, POST | [route](../../apps/web/src/app/admin/api/rating-config/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/role-applications/[id]/status` | POST | [route](../../apps/web/src/app/admin/api/role-applications/[id]/status/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/role-applications` | GET | [route](../../apps/web/src/app/admin/api/role-applications/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
@@ -64,6 +70,7 @@
 | `/admin/api/system-analytics/overview` | GET | [route](../../apps/web/src/app/admin/api/system-analytics/overview/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/system-health` | GET | [route](../../apps/web/src/app/admin/api/system-health/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/users/[id]/delete` | POST, DELETE | [route](../../apps/web/src/app/admin/api/users/[id]/delete/route.ts) | [runUserLifecycleHttp](../../apps/web/src/lib/userLifecycleHttpService.ts) | [справочник](ADMIN_API.md) |
+| `/admin/api/users/[id]/detail` | GET | [route](../../apps/web/src/app/admin/api/users/[id]/detail/route.ts) | [runAdminUserDetailHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/users/[id]/send-magic-link` | POST | [route](../../apps/web/src/app/admin/api/users/[id]/send-magic-link/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/users/[id]/suspend` | POST | [route](../../apps/web/src/app/admin/api/users/[id]/suspend/route.ts) | [runUserLifecycleHttp](../../apps/web/src/lib/userLifecycleHttpService.ts) | [справочник](ADMIN_API.md) |
 | `/admin/api/users/[id]/toggle-super` | POST | [route](../../apps/web/src/app/admin/api/users/[id]/toggle-super/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
@@ -71,6 +78,7 @@
 | `/admin/api/users/create` | POST | [route](../../apps/web/src/app/admin/api/users/create/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/users/list` | GET | [route](../../apps/web/src/app/admin/api/users/list/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
 | `/admin/api/users/search` | GET | [route](../../apps/web/src/app/admin/api/users/search/route.ts) | Внутри route; читать исходник | [справочник](ADMIN_API.md) |
+| `/admin/api/users/stats` | GET | [route](../../apps/web/src/app/admin/api/users/stats/route.ts) | [runAdminUserStatsHttp](../../apps/web/src/lib/adminPanelHttpService.ts) | [справочник](ADMIN_API.md) |
 
 ## /api
 

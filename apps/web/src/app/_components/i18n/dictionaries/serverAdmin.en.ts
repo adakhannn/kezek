@@ -34,4 +34,7 @@ export const serverAdminEn = {
     'server.admin.lastPlatformAdmin': 'The role of the last platform administrator cannot be removed',
     'server.admin.roleChangeUnconfirmed': 'Could not confirm the role change',
     'server.admin.roleStateUnconfirmed': 'The role state is not confirmed',
+    'server.admin.panelLoadFailed': 'Could not load the admin panel data',
+    'server.admin.invalidBusinessIdentifier': 'Invalid business identifier',
+    'server.admin.invalidUserIdentifier': 'Invalid user identifier',
 } as const;
