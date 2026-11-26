@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **199 route-файлов, 244 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **200 route-файлов, 245 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 581 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `ea28518211ea38a74db0fa07368f2668588064699ea41d675c4fb613b3d3b072`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 583 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `29c2052b0d651bad265b55e804d6bbb659d03d56c6fb6a4f398d2f64787fe1ed`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -174,6 +174,7 @@
 | `/api/profile/locale` | POST | [route](../../apps/web/src/app/api/profile/locale/route.ts) | [runProfileLocaleHttp](../../apps/web/src/lib/profileLocaleHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/profile/notification-emails` | GET | [route](../../apps/web/src/app/api/profile/notification-emails/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/profile/update` | POST | [route](../../apps/web/src/app/api/profile/update/route.ts) | [runProfileUpdateHttp](../../apps/web/src/lib/profileUpdateHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
+| `/api/public/maps-config` | GET | [route](../../apps/web/src/app/api/public/maps-config/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/public/work-locations` | GET | [route](../../apps/web/src/app/api/public/work-locations/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/quick-book-guest` | POST | [route](../../apps/web/src/app/api/quick-book-guest/route.ts) | [runQuickBookGuestHttp](../../apps/web/src/lib/quickBookGuestHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/quick-hold` | POST | [route](../../apps/web/src/app/api/quick-hold/route.ts) | [runQuickHoldHttp](../../apps/web/src/lib/quickHoldHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |

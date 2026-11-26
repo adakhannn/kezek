@@ -423,6 +423,18 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 | Errors | 400 validation период/прошлое; 404 not_found business; query/RPC exceptions через общий mapper |
 | Limiter / effects | Нет. Читает местоположения работы; флаг true не доказывает фактическую полноту данных/применение миграций. Legacy `availabilityComplete:false` явно сигнализирует неполноту |
 
+<!-- api-contract: GET /api/public/maps-config -->
+### GET `/api/public/maps-config`
+
+Источники: [route](../../apps/web/src/app/api/public/maps-config/route.ts), [env](../../apps/web/src/lib/env.ts) (`getYandexMapsApiKey`); потребитель — выбор точки филиала на карте в приложении ([BranchMapPicker](../../apps/mobile/src/screens/manage/catalog/mapPicker/BranchMapPicker.tsx)).
+
+| Аспект | Контракт |
+| --- | --- |
+| Auth / input | Без сессии и параметров |
+| Success | `{ok:true,data:{yandexMapsApiKey:string|null}}`: значение `NEXT_PUBLIC_YANDEX_MAPS_API_KEY` (уже публично в JS-бандле сайта, ограничено разрешёнными доменами ключа) или null, если не настроено. `Cache-Control: public, max-age=3600` |
+| Errors | Нет собственных |
+| Limiter / effects | Нет. Только чтение переменной окружения; приложение использует ключ, когда его нет в сборке |
+
 <!-- api-contract: GET /api/branches/map -->
 ### GET `/api/branches/map`
 

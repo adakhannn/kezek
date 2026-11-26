@@ -19,6 +19,8 @@ import { elevation, layout, radii, space, typeScale } from '../../../../constant
 import { useNetworkStatus } from '../../../../hooks/useNetworkStatus';
 import { useLanguage } from '../../../../i18n';
 import { getMobileApiUrl } from '../../../../lib/apiUrl';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '../../../../lib/api';
 import {
     buildMapPickerCommand,
     initialMapPickerState,
@@ -125,7 +127,17 @@ function MapPickerBody({ initialPoint, initialAddress, city, onClose, onConfirm 
     const insets = useContext(SafeAreaInsetsContext);
     const network = useNetworkStatus();
     const webViewRef = useRef<React.ElementRef<typeof WebView>>(null);
-    const apiKey = useMemo(yandexKey, []);
+    const buildKey = useMemo(yandexKey, []);
+    // Without a key in the app build, the website's public map key is used (GET /api/public/maps-config),
+    // so the picker needs no extra build setting.
+    const remoteKey = useQuery({
+        queryKey: ['maps-config'],
+        queryFn: () => apiRequest<{ ok?: boolean; data?: { yandexMapsApiKey?: string | null } }>('/public/maps-config'),
+        enabled: !buildKey,
+        staleTime: 60 * 60 * 1000,
+    });
+    const apiKey = buildKey ?? resolveYandexMapsApiKey(remoteKey.data?.data?.yandexMapsApiKey ?? undefined, undefined);
+    const keyLoading = !buildKey && remoteKey.isLoading;
     const baseUrl = useMemo(pageBaseUrl, []);
     const [state, dispatch] = useReducer(mapPickerReducer, { point: initialPoint, address: initialAddress }, initialMapPickerState);
     const [start, setStart] = useState<MapPickerStart | null>(() => (initialPoint ? resolveMapPickerStart({ point: initialPoint }) : null));
@@ -223,7 +235,9 @@ function MapPickerBody({ initialPoint, initialAddress, city, onClose, onConfirm 
     const bottom = (insets?.bottom ?? 0) + space.md;
 
     let blocker: React.ReactNode = null;
-    if (!apiKey) {
+    if (keyLoading) {
+        blocker = <ActivityIndicator color={colors.accent.indigo} testID="map-picker-key-loading" />;
+    } else if (!apiKey) {
         blocker = (
             <EmptyState
                 icon="map-outline"

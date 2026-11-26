@@ -150,11 +150,26 @@ describe('BranchEditScreen: "Выбрать на карте"', () => {
         expect(screen.getByTestId('branch-address').props.value).toBe('Старый адрес');
     });
 
-    test('a build without the Yandex key says so and offers the manual fields', async () => {
+    test('a build without the key uses the public map key of the website', async () => {
         process.env.EXPO_PUBLIC_YANDEX_MAPS_API_KEY = '';
+        const base = api.getMockImplementation();
+        api.mockImplementation(async (endpoint: string, ...rest) =>
+            endpoint === '/public/maps-config' ? ({ ok: true, data: { yandexMapsApiKey: 'web-key' } } as never) : base!(endpoint, ...rest));
         renderScreen();
         fireEvent.press(await screen.findByTestId('branch-pick-on-map'));
-        expect(screen.getByText('Карта не настроена')).toBeTruthy();
+        expect(await screen.findByTestId('branch-map-picker-webview')).toBeTruthy();
+        expect(api).toHaveBeenCalledWith('/public/maps-config');
+    });
+
+    test('a build without the Yandex key says so and offers the manual fields', async () => {
+        process.env.EXPO_PUBLIC_YANDEX_MAPS_API_KEY = '';
+        // Neither the build nor the website (GET /public/maps-config) has a key.
+        const base = api.getMockImplementation();
+        api.mockImplementation(async (endpoint: string, ...rest) =>
+            endpoint === '/public/maps-config' ? ({ ok: true, data: { yandexMapsApiKey: null } } as never) : base!(endpoint, ...rest));
+        renderScreen();
+        fireEvent.press(await screen.findByTestId('branch-pick-on-map'));
+        expect(await screen.findByText('Карта не настроена')).toBeTruthy();
         expect(screen.queryByTestId('branch-map-picker-webview')).toBeNull();
         fireEvent.press(screen.getByTestId('map-picker-back'));
         await waitFor(() => expect(screen.queryByTestId('branch-map-picker')).toBeNull());

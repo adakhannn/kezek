@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 229,
+  "x-explicit-operation-count": 230,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -4576,6 +4576,25 @@
         "x-next-route": "/api/profile/update",
         "x-source-file": "apps/web/src/app/api/profile/update/route.ts",
         "x-manual-contract": "docs/api/BOOKING_AND_CATALOG.md"
+      }
+    },
+    "/api/public/maps-config": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/CLIENT_AND_AUTH_FLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/public/maps-config",
+        "x-source-file": "apps/web/src/app/api/public/maps-config/route.ts",
+        "x-manual-contract": "docs/api/CLIENT_AND_AUTH_FLOWS.md"
       }
     },
     "/api/public/work-locations": {
