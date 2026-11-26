@@ -16,6 +16,11 @@ import MapScreen from '../screens/MapScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import ShiftQuickScreen from '../screens/ShiftQuickScreen';
 import StaffScheduleScreen from '../screens/StaffScheduleScreen';
+import StaffCreateBookingScreen from '../screens/StaffCreateBookingScreen';
+import BusinessApplyScreen from '../screens/apply/BusinessApplyScreen';
+import RoleApplicationScreen from '../screens/apply/RoleApplicationScreen';
+import RoleApplyScreen from '../screens/apply/RoleApplyScreen';
+import PromotionsScreen from '../screens/business/PromotionsScreen';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import {
@@ -36,6 +41,49 @@ const GuardedBookingDetailsScreen = withSessionGate(BookingDetailsScreen, 'booki
 const GuardedShiftsScreen = withSessionGate(withStaffRouteGuard(ShiftsScreen), 'workspace');
 const GuardedShiftQuickScreen = withSessionGate(withStaffRouteGuard(ShiftQuickScreen), 'workspace');
 const GuardedStaffScheduleScreen = withSessionGate(withStaffRouteGuard(StaffScheduleScreen), 'workspace');
+
+const GuardedStaffCreateBookingScreen = withSessionGate(withStaffRouteGuard(StaffCreateBookingScreen), 'workspace');
+
+/**
+ * Screens of the website brought into the app: promotions, the business and role applications and
+ * the master's own booking of a client. Signed out, the applications show their sign-in gate.
+ */
+function ParityStackScreens(Stack: RootStack, t: Translate) {
+    const detail = (title: string, eyebrow: string): NativeStackNavigationOptions => ({
+        ...detailStackScreenOptions,
+        title,
+        headerTitle: createNavigationHeaderTitle(title, eyebrow),
+    });
+    return (
+        <>
+            <Stack.Screen
+                name="Promotions"
+                component={PromotionsScreen}
+                options={detail(t('parity.nav.promotions'), t('nav.eyebrow.discovery'))}
+            />
+            <Stack.Screen
+                name="BusinessApply"
+                component={BusinessApplyScreen}
+                options={detail(t('parity.nav.businessApply'), t('parity.nav.eyebrowBusiness'))}
+            />
+            <Stack.Screen
+                name="RoleApply"
+                component={RoleApplyScreen}
+                options={detail(t('parity.nav.roleApply'), t('parity.nav.eyebrowBusiness'))}
+            />
+            <Stack.Screen
+                name="RoleApplication"
+                component={RoleApplicationScreen}
+                options={detail(t('parity.nav.roleApplication'), t('parity.nav.eyebrowBusiness'))}
+            />
+            <Stack.Screen
+                name="StaffCreateBooking"
+                component={GuardedStaffCreateBookingScreen}
+                options={detail(t('parity.staffBooking.title'), t('nav.eyebrow.workspace'))}
+            />
+        </>
+    );
+}
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
     detailStackScreenOptions;
@@ -165,6 +213,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                     headerTitle: createNavigationHeaderTitle(t('staff.schedule.title'), t('nav.eyebrow.workspace')),
                 }}
             />
+            {ParityStackScreens(Stack, t)}
         </>
     );
 }

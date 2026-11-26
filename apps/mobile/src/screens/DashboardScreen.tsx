@@ -129,7 +129,10 @@ export default function DashboardScreen() {
         <DashboardScreenSections
             businesses={data.businesses}
             business={data.business}
-            onSelectBusiness={data.selectBusiness}
+            onSelectBusiness={(bizId) => {
+                data.selectBusiness(bizId).catch((error: unknown) =>
+                    showToast(getErrorMessage(error, t('parity.selectBusiness.error'), t), 'error'));
+            }}
             scope={data.scope}
             onScopeChange={data.setScope}
             bookings={data.bookings}

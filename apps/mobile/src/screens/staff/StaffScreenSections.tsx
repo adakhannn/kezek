@@ -1,4 +1,4 @@
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import BookingStatusBadge from '../../components/BookingStatusBadge';
 import ClientContactActions from '../../components/ClientContactActions';
@@ -12,6 +12,11 @@ import { formatDate, formatTime } from '../../utils/format';
 import { getServiceName } from '../../utils/i18n';
 import { styles } from './staffScreenStyles';
 import type { StaffBookingsTab, StaffInfo, UpcomingBooking } from './types';
+import { staffServicePriceKey, type StaffService } from './useStaffServices';
+
+const localStyles = StyleSheet.create({
+    service: { paddingVertical: 6, gap: 2 },
+});
 
 export type StaffBookingsList = {
     tab: StaffBookingsTab;
@@ -36,6 +41,10 @@ type Props = {
     onOpenSchedule: () => void;
     /** Shown when the person works in several businesses. */
     onChangeBusiness?: () => void;
+    /** The website's "Создать запись": book a client who calls or comes in. */
+    onCreateBooking?: () => void;
+    /** "Мои услуги" of the website's staff cabinet; undefined while loading. */
+    services?: StaffService[];
 };
 
 export function StaffScreenSections({
@@ -47,6 +56,8 @@ export function StaffScreenSections({
     onOpenShifts,
     onOpenSchedule,
     onChangeBusiness,
+    onCreateBooking,
+    services,
 }: Props) {
     const { t, locale } = useLanguage();
     const tz = staffInfo.business?.tz;
@@ -88,8 +99,41 @@ export function StaffScreenSections({
                 </Card>
             )}
 
+            {services ? (
+                <Card style={styles.card} testID="staff-services">
+                    <Text style={styles.sectionTitle}>{t('parity.staffServices.title', { count: services.length })}</Text>
+                    {services.length === 0 ? (
+                        <Text style={styles.subtitle}>{t('parity.staffServices.empty')}</Text>
+                    ) : (
+                        services.map((service) => {
+                            const price = staffServicePriceKey(service);
+                            return (
+                                <View key={service.id} style={localStyles.service}>
+                                    <Text style={styles.branchName}>{getServiceName(service, locale)}</Text>
+                                    <Text style={styles.subtitle}>
+                                        {[t('parity.staffServices.duration', { minutes: String(service.duration_min) }), price ? t(price.key, price.params) : null]
+                                            .filter(Boolean)
+                                            .join(' · ')}
+                                    </Text>
+                                </View>
+                            );
+                        })
+                    )}
+                </Card>
+            ) : null}
+
             <View style={styles.section}>
                 <Button title={t('staff.myShift')} onPress={onOpenShiftQuick} fullWidth />
+                {onCreateBooking ? (
+                    <Button
+                        title={t('parity.staffBooking.title')}
+                        onPress={onCreateBooking}
+                        variant="outline"
+                        fullWidth
+                        style={styles.secondaryAction}
+                        accessibilityHint={t('parity.staffBooking.clientDescription')}
+                    />
+                ) : null}
                 <Button
                     title={t('staff.workspace.schedule')}
                     onPress={onOpenSchedule}

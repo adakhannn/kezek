@@ -3,8 +3,15 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 
 import { useAuth } from '../../hooks/useAuth';
 import { apiRequest } from '../../lib/api';
+import { ensureCurrentBusiness, resetCurrentBusiness } from '../manage/currentBusiness';
 import { fetchManagerBookingsPage, runManagerBookingAction, type ManagerBookingsPage } from './managerBookings';
 import type { Business, ManagerBookingAction, ManagerBookingsScope } from './types';
+
+/** The business the website's cabinet currently works with (user_current_business), or null. */
+export async function fetchServerCurrentBusinessId(): Promise<string | null> {
+    const response = await apiRequest<{ ok?: boolean; data?: { currentBizId?: string | null } }>('/me/current-business');
+    return response?.ok ? response.data?.currentBizId ?? null : null;
+}
 
 /**
  * The Business tab (O1, O3): the businesses the user owns or manages (owner, admin or manager, the
@@ -28,7 +35,17 @@ export function useDashboardScreenData() {
         enabled: !!user?.id,
     });
     const businesses = businessesQuery.data ?? [];
-    const business = businesses.find((item) => item.id === chosenBizId) ?? businesses[0] ?? null;
+    // The website's current business (/select-business) is the default choice here too, so the
+    // app opens on the business the web cabinet works with.
+    const currentQuery = useQuery({
+        queryKey: ['current-business', user?.id],
+        queryFn: fetchServerCurrentBusinessId,
+        enabled: !!user?.id && businesses.length > 1,
+    });
+    const business = businesses.find((item) => item.id === chosenBizId)
+        ?? businesses.find((item) => item.id === currentQuery.data)
+        ?? businesses[0]
+        ?? null;
     const bizId = business?.id ?? null;
 
     const bookingsKey = ['manager-bookings', user?.id, bizId, scope];
@@ -64,7 +81,17 @@ export function useDashboardScreenData() {
     return {
         businesses,
         business,
-        selectBusiness: setChosenBizId,
+        /**
+         * Choosing a business is also the website's /select-business choice: the server's current
+         * business follows, so the web cabinet and the management sections act on the same one.
+         * Rejects when the server refused; the app keeps showing the chosen business.
+         */
+        selectBusiness: async (bizId: string) => {
+            setChosenBizId(bizId);
+            resetCurrentBusiness();
+            await ensureCurrentBusiness(bizId);
+            queryClient.setQueryData(['current-business', user?.id], bizId);
+        },
         isOwner: businesses.length > 0,
         isLoading: businessesQuery.isLoading && !refreshing,
         loadError: businessesQuery.error,

@@ -12,6 +12,7 @@ import { RootStackParamList } from '../navigation/types';
 import { StaffBusinessPicker } from './staff/StaffBusinessPicker';
 import { StaffScreenSections } from './staff/StaffScreenSections';
 import { useStaffScreenData } from './staff/useStaffScreenData';
+import { useStaffServices } from './staff/useStaffServices';
 import { styles } from './staff/staffScreenStyles';
 
 type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -32,6 +33,7 @@ export default function StaffScreen() {
         refreshing,
         onRefresh,
     } = useStaffScreenData();
+    const staffServices = useStaffServices(staffInfo?.id);
     const [choosingBusiness, setChoosingBusiness] = useState(false);
     const [selectingId, setSelectingId] = useState<string | null>(null);
     const [selectionError, setSelectionError] = useState<string | null>(null);
@@ -122,6 +124,8 @@ export default function StaffScreen() {
             onOpenShiftQuick={() => navigation.navigate('ShiftQuick')}
             onOpenShifts={() => navigation.navigate('Shifts')}
             onOpenSchedule={() => navigation.navigate('StaffSchedule')}
+            onCreateBooking={() => navigation.navigate('StaffCreateBooking')}
+            services={staffServices.data}
             onChangeBusiness={
                 staffRecords.length > 1
                     ? () => {
