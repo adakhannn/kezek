@@ -15,6 +15,7 @@ import { manageCatalogRu } from './manageCatalog.ru';
 import { manageStaffRu } from './manageStaff.ru';
 import { parityRu } from './parity.ru';
 import { manageOpsRu } from './manageOps.ru';
+import { adminOpsRu } from './adminOps.ru';
 import { uiRu } from './ui.ru';
 
 export const ru = {
@@ -31,6 +32,7 @@ export const ru = {
     ...manageStaffRu,
     ...parityRu,
     ...manageOpsRu,
+    ...adminOpsRu,
     ...uiRu,
 } as const;
 

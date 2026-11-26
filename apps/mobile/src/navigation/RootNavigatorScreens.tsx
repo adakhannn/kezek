@@ -43,6 +43,17 @@ import ManageOverviewScreen from '../screens/manage/overview/ManageOverviewScree
 import ManageRoleApplicationsScreen from '../screens/manage/roleApplications/ManageRoleApplicationsScreen';
 import ManageVisitPackagePlanScreen from '../screens/manage/visitPackages/ManageVisitPackagePlanScreen';
 import ManageVisitPackagesScreen from '../screens/manage/visitPackages/ManageVisitPackagesScreen';
+import AdminAnalyticsScreen from '../screens/admin/ops/AdminAnalyticsScreen';
+import AdminFunnelAnalyticsScreen from '../screens/admin/ops/AdminFunnelAnalyticsScreen';
+import AdminHealthCheckScreen from '../screens/admin/ops/AdminHealthCheckScreen';
+import AdminMonitoringScreen from '../screens/admin/ops/AdminMonitoringScreen';
+import AdminPerformanceScreen from '../screens/admin/ops/AdminPerformanceScreen';
+import AdminPromotionsDebugScreen from '../screens/admin/ops/AdminPromotionsDebugScreen';
+import AdminRatingConfigScreen from '../screens/admin/ops/AdminRatingConfigScreen';
+import AdminRatingsDebugScreen from '../screens/admin/ops/AdminRatingsDebugScreen';
+import AdminRatingsStatusScreen from '../screens/admin/ops/AdminRatingsStatusScreen';
+import AdminSystemAnalyticsScreen from '../screens/admin/ops/AdminSystemAnalyticsScreen';
+import AdminSystemHealthScreen from '../screens/admin/ops/AdminSystemHealthScreen';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import {
@@ -133,6 +144,21 @@ const MANAGE_OPS_SCREENS = [
     { name: 'ManageVisitPackages', component: withSessionGate(ManageVisitPackagesScreen, 'workspace'), title: 'ops.menu.visitPackages' },
     { name: 'ManageVisitPackagePlan', component: withSessionGate(ManageVisitPackagePlanScreen, 'workspace'), title: 'ops.menu.visitPackagePlan' },
     { name: 'ManageRoleApplications', component: withSessionGate(ManageRoleApplicationsScreen, 'workspace'), title: 'ops.menu.roleApplications' },
+] as const;
+
+/** The super-admin screens (the website's /admin analytics, health, monitoring, ratings and promotions debug). */
+const ADMIN_OPS_SCREENS = [
+    { name: 'AdminAnalytics', component: withSessionGate(AdminAnalyticsScreen, 'workspace'), title: 'adminOps.nav.analytics' },
+    { name: 'AdminSystemAnalytics', component: withSessionGate(AdminSystemAnalyticsScreen, 'workspace'), title: 'adminOps.nav.systemAnalytics' },
+    { name: 'AdminFunnelAnalytics', component: withSessionGate(AdminFunnelAnalyticsScreen, 'workspace'), title: 'adminOps.nav.funnelAnalytics' },
+    { name: 'AdminSystemHealth', component: withSessionGate(AdminSystemHealthScreen, 'workspace'), title: 'adminOps.nav.systemHealth' },
+    { name: 'AdminHealthCheck', component: withSessionGate(AdminHealthCheckScreen, 'workspace'), title: 'adminOps.nav.healthCheck' },
+    { name: 'AdminMonitoring', component: withSessionGate(AdminMonitoringScreen, 'workspace'), title: 'adminOps.nav.monitoring' },
+    { name: 'AdminPerformance', component: withSessionGate(AdminPerformanceScreen, 'workspace'), title: 'adminOps.nav.performance' },
+    { name: 'AdminRatingConfig', component: withSessionGate(AdminRatingConfigScreen, 'workspace'), title: 'adminOps.nav.ratingConfig' },
+    { name: 'AdminRatingsStatus', component: withSessionGate(AdminRatingsStatusScreen, 'workspace'), title: 'adminOps.nav.ratingsStatus' },
+    { name: 'AdminRatingsDebug', component: withSessionGate(AdminRatingsDebugScreen, 'workspace'), title: 'adminOps.nav.ratingsDebug' },
+    { name: 'AdminPromotionsDebug', component: withSessionGate(AdminPromotionsDebugScreen, 'workspace'), title: 'adminOps.nav.promotionsDebug' },
 ] as const;
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
@@ -399,6 +425,18 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                         ...detailStackScreenOptions,
                         title: t(screen.title),
                         headerTitle: createNavigationHeaderTitle(t(screen.title), t('ops.menu.eyebrow')),
+                    }}
+                />
+            ))}
+            {ADMIN_OPS_SCREENS.map((screen) => (
+                <Stack.Screen
+                    key={screen.name}
+                    name={screen.name}
+                    component={screen.component}
+                    options={{
+                        ...detailStackScreenOptions,
+                        title: t(screen.title),
+                        headerTitle: createNavigationHeaderTitle(t(screen.title), t('adminOps.nav.eyebrow')),
                     }}
                 />
             ))}
