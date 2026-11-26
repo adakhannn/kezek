@@ -1,23 +1,22 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
-import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import Avatar from '../../components/ui/Avatar';
 import Button from '../../components/ui/Button';
-import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import EmptyState from '../../components/ui/EmptyState';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import MotionPressable from '../../components/ui/MotionPressable';
+import { ListGroup } from '../../components/ui/ListRow';
 import RatingBadge from '../../components/ui/RatingBadge';
+import Section from '../../components/ui/Section';
 import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import BookingLoadError from './BookingLoadError';
 import { ANY_STAFF } from './bookingSelection';
+import { BookingContextLine, BookingOptionRow, BookingStepScreen, BookingStepSkeleton } from './BookingStepLayout';
 import { useBookingStep3Staff } from './useBookingStep3Staff';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -31,6 +30,7 @@ export default function BookingStep3Staff() {
         setStaff,
         setStaffId,
     });
+    const goBack = () => navigation.goBack();
 
     const handleSelectStaff = (staffId: string) => {
         setStaffId(staffId);
@@ -50,230 +50,90 @@ export default function BookingStep3Staff() {
         }
     };
 
+    const context = <BookingContextLine name={bookingData.business?.name} />;
+
     if (isLoading) {
         return (
-            <View style={styles.container}>
-                <LoadingSpinner message={t('booking.step3.loading')} />
-            </View>
+            <BookingStepScreen step={3}>
+                {context}
+                <BookingStepSkeleton label={t('booking.step3.loading')} rows={4} avatar />
+            </BookingStepScreen>
         );
     }
 
     if (hasError) {
         return (
-            <View style={styles.container}>
-                <BookingProgressIndicator currentStep={3} />
-                <View style={styles.header}>
-                    <Text style={styles.title}>{bookingData.business?.name}</Text>
-                </View>
-                <View style={styles.section}>
-                    <BookingLoadError title={t('booking.error.loadStaff')} onRetry={retry} retrying={isRetrying} />
-                </View>
-            </View>
+            <BookingStepScreen step={3}>
+                {context}
+                <BookingLoadError title={t('booking.error.loadStaff')} onRetry={retry} retrying={isRetrying} />
+            </BookingStepScreen>
         );
     }
 
     if (!staffData || staffData.length === 0) {
         return (
-            <LinearGradient
-                colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientContainer}
-            >
-                <View style={styles.container}>
-                    <BookingProgressIndicator currentStep={3} />
-                    <View style={styles.header}>
-                        <Text style={styles.title}>{bookingData.business?.name}</Text>
-                    </View>
-                    <EmptyState
-                        icon="person-outline"
-                        title={t('booking.step3.emptyTitle')}
-                        message={t('booking.step3.emptyMessage')}
-                        compact
-                        style={styles.emptyContainer}
-                    />
-                </View>
-            </LinearGradient>
+            <BookingStepScreen step={3}>
+                {context}
+                <EmptyState
+                    icon="person-outline"
+                    title={t('booking.step3.emptyTitle')}
+                    message={t('booking.step3.emptyMessage')}
+                    compact
+                    action={<Button title={t('booking.nav.back')} onPress={goBack} variant="outline" fullWidth />}
+                />
+            </BookingStepScreen>
         );
     }
 
     return (
-        <LinearGradient
-            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer}
+        <BookingStepScreen
+            step={3}
+            back={goBack}
+            next={{ title: t('booking.nav.next'), onPress: handleNext, disabled: !bookingData.staffId }}
         >
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-                <BookingProgressIndicator currentStep={3} />
-                <View style={styles.header}>
-                    <Text style={styles.title}>{bookingData.business?.name}</Text>
-                </View>
-
-                <View style={styles.section}>
-                    <View style={styles.optionsList}>
-                        {/* "Any master" (C4): the times of every master; the chosen time names the master. */}
-                        <MotionPressable
-                            key={ANY_STAFF}
-                            style={styles.chipContainer}
-                            onPress={() => handleSelectStaff(ANY_STAFF)}
-                            accessibilityHint={t('booking.step3.anyMasterHint')}
-                            accessibilityState={{ selected: bookingData.staffId === ANY_STAFF }}
-                        >
-                            <View style={bookingData.staffId === ANY_STAFF ? styles.chipAnySelected : styles.chip}>
-                                <View style={styles.chipContent}>
-                                    <Text
-                                        style={
-                                            bookingData.staffId === ANY_STAFF ? styles.chipTextSelected : styles.chipText
-                                        }
-                                    >
-                                        {t('booking.step3.anyMaster')}
-                                    </Text>
-                                </View>
+            {context}
+            <Section title={t('booking.progress.staff')}>
+                <ListGroup inset>
+                    {/* "Any master" (C4): the times of every master; the chosen time names the master. */}
+                    <BookingOptionRow
+                        key={ANY_STAFF}
+                        title={t('booking.step3.anyMaster')}
+                        subtitle={t('booking.step3.anyMasterHint')}
+                        leading={(
+                            <View style={styles.anyIcon}>
+                                <Ionicons name="people-outline" size={20} color={colors.tone.accent.fg} />
                             </View>
-                        </MotionPressable>
-                        {staffData.map((staff) => {
-                            const isSelected = bookingData.staffId === staff.id;
-                            return (
-                                <MotionPressable
-                                    key={staff.id}
-                                    style={styles.chipContainer}
-                                    onPress={() => handleSelectStaff(staff.id)}
-                                >
-                                    {isSelected ? (
-                                        <LinearGradient
-                                            colors={['rgba(79, 70, 229, 0.1)', 'rgba(79, 70, 229, 0.15)']}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 0 }}
-                                            style={styles.chipSelected}
-                                        >
-                                            <View style={styles.chipContent}>
-                                                <Avatar name={staff.full_name} uri={staff.avatar_url} size={32} ring />
-                                                <Text style={styles.chipTextSelected}>{staff.full_name}</Text>
-                                                <RatingBadge rating={staff.rating_score ?? null} size="small" />
-                                            </View>
-                                        </LinearGradient>
-                                    ) : (
-                                        <View style={styles.chip}>
-                                            <View style={styles.chipContent}>
-                                                <Avatar name={staff.full_name} uri={staff.avatar_url} size={32} />
-                                                <Text style={styles.chipText}>{staff.full_name}</Text>
-                                                <RatingBadge rating={staff.rating_score ?? null} size="small" />
-                                            </View>
-                                        </View>
-                                    )}
-                                </MotionPressable>
-                            );
-                        })}
-                    </View>
-
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            title={t('booking.nav.back')}
-                            onPress={() => navigation.goBack()}
-                            variant="outline"
-                            style={styles.backButton}
-                        />
-                        <Button
-                            title={t('booking.nav.next')}
-                            onPress={handleNext}
-                            disabled={!bookingData.staffId}
-                            variant="primary"
-                            style={styles.nextButton}
-                        />
-                    </View>
-                </View>
-            </ScrollView>
-        </LinearGradient>
+                        )}
+                        selected={bookingData.staffId === ANY_STAFF}
+                        onPress={() => handleSelectStaff(ANY_STAFF)}
+                        accessibilityHint={t('booking.step3.anyMasterHint')}
+                    />
+                    {staffData.map((staff) => {
+                        const isSelected = bookingData.staffId === staff.id;
+                        return (
+                            <BookingOptionRow
+                                key={staff.id}
+                                title={staff.full_name}
+                                leading={<Avatar name={staff.full_name} uri={staff.avatar_url} size={40} ring={isSelected} />}
+                                footer={<RatingBadge rating={staff.rating_score ?? null} size="small" />}
+                                selected={isSelected}
+                                onPress={() => handleSelectStaff(staff.id)}
+                            />
+                        );
+                    })}
+                </ListGroup>
+            </Section>
+        </BookingStepScreen>
     );
 }
 
 const styles = StyleSheet.create({
-    gradientContainer: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-    },
-    content: {
-        paddingBottom: 40,
-    },
-    header: {
-        padding: 20,
-        paddingTop: 24,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 4,
-    },
-    section: {
-        padding: 20,
-    },
-    optionsList: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    chipContainer: {
-        marginBottom: 4,
-    },
-    chip: {
-        minHeight: MIN_TOUCH_TARGET,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+    anyIcon: {
+        width: 40,
+        height: 40,
         borderRadius: 20,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.background.secondary,
-    },
-    chipSelected: {
-        minHeight: MIN_TOUCH_TARGET,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: colors.primary.from,
-    },
-    chipAnySelected: {
-        minHeight: MIN_TOUCH_TARGET,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: colors.primary.from,
-        backgroundColor: 'rgba(79, 70, 229, 0.12)',
-    },
-    chipText: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: colors.text.primary,
-    },
-    chipTextSelected: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: colors.primary.from,
-    },
-    chipContent: {
-        flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-    },
-    emptyContainer: {
-        paddingHorizontal: 0,
-    },
-    buttonContainer: {
-        marginTop: 24,
-        paddingHorizontal: 0,
-        flexDirection: 'row',
-        gap: 12,
-    },
-    backButton: {
-        flex: 1,
-    },
-    nextButton: {
-        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: colors.tone.accent.bg,
     },
 });
-

@@ -24,15 +24,15 @@ export function ApplicationAuthGate() {
     ] as const;
 
     return (
-        <Card style={styles.cardGap} testID="application-auth-gate">
+        <Card variant="plain" padding="md" style={styles.cardGap} testID="application-auth-gate">
             <Text style={styles.sectionTitle}>{t('parity.apply.gate.title')}</Text>
             <Text style={styles.hint}>{t('parity.apply.gate.description')}</Text>
             {benefits.map(([title, description]) => (
                 <View key={title} style={styles.benefit}>
                     <View style={styles.benefitIcon}>
-                        <Ionicons name="checkmark" size={16} color={colors.status.success} />
+                        <Ionicons name="checkmark" size={16} color={colors.tone.success.fg} />
                     </View>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.flex}>
                         <Text style={styles.benefitTitle}>{t(title)}</Text>
                         <Text style={styles.muted}>{t(description)}</Text>
                     </View>

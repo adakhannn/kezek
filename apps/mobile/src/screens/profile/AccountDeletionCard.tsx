@@ -5,8 +5,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
-import Input from '../../components/ui/Input';
+import FormField from '../../components/ui/FormField';
+import Section from '../../components/ui/Section';
 import { colors } from '../../constants/colors';
+import { radii, space, typeScale } from '../../constants/theme';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage, type MobileI18nKey } from '../../i18n';
@@ -18,7 +20,6 @@ import {
     requestAccountDeletion,
     type AccountDeletionBlocker,
 } from './profileApi';
-import { styles as profileStyles } from './profileScreenStyles';
 
 const BLOCKER_KEYS: Record<string, MobileI18nKey> = {
     super_admin: 'parity.deletion.blocker.super_admin',
@@ -87,80 +88,84 @@ export function AccountDeletionCard({ userId }: { userId?: string }) {
     };
 
     return (
-        <Card style={[profileStyles.card, styles.card]} testID="profile-account-deletion">
-            <Text style={[profileStyles.sectionTitle, styles.title]}>{t('parity.deletion.title')}</Text>
-            <Text style={profileStyles.switchHint}>{t('parity.deletion.description')}</Text>
-
-            {stateQuery.isError ? (
-                <FeedbackBanner
-                    variant="danger"
-                    message={t('parity.deletion.error.check')}
-                    action={<Button title={t('cabinet.ui.retry')} onPress={() => void stateQuery.refetch()} variant="outline" size="sm" />}
-                    style={styles.block}
-                />
-            ) : null}
-
-            {pending ? (
-                <FeedbackBanner
-                    variant="warning"
-                    title={t('parity.deletion.pending.title')}
-                    message={t('parity.deletion.pending.message', { date: scheduledFor })}
-                    action={(
-                        <Button
-                            title={t('parity.deletion.cancel')}
-                            onPress={() => cancelMutation.mutate()}
-                            variant="outline"
-                            size="sm"
-                            loading={cancelMutation.isPending}
-                            disabled={busy}
-                        />
-                    )}
-                    style={styles.block}
-                />
-            ) : state ? (
-                <View style={styles.block}>
-                    {state.blockers.length ? (
-                        <View style={styles.blockers}>
-                            <Text style={styles.blockersTitle}>{t('parity.deletion.blocked.title')}</Text>
-                            {state.blockers.map((blocker) => (
-                                <Text key={blocker.code} style={styles.blocker}>• {blockerText(blocker, t)}</Text>
-                            ))}
-                        </View>
-                    ) : null}
-                    <Input
-                        label={t('parity.deletion.confirmation.label')}
-                        value={confirmation}
-                        onChangeText={setConfirmation}
-                        placeholder={t('parity.deletion.confirmation.placeholder', { phrase })}
-                        autoCapitalize="characters"
-                        autoCorrect={false}
-                        editable={state.eligible && !busy}
-                        testID="account-deletion-confirmation"
-                    />
-                    <Button
-                        title={t('parity.deletion.request')}
-                        onPress={() => void submit()}
+        <Section title={t('parity.deletion.title')} caption={t('parity.deletion.description')}>
+            <Card variant="plain" padding="md" style={styles.card} testID="profile-account-deletion">
+                {stateQuery.isError ? (
+                    <FeedbackBanner
                         variant="danger"
-                        fullWidth
-                        loading={requestMutation.isPending}
-                        disabled={!state.eligible || confirmation.trim() !== phrase || busy}
+                        message={t('parity.deletion.error.check')}
+                        action={<Button title={t('cabinet.ui.retry')} onPress={() => void stateQuery.refetch()} variant="outline" size="sm" />}
+                        style={styles.banner}
                     />
-                </View>
-            ) : null}
-        </Card>
+                ) : null}
+
+                {pending ? (
+                    <FeedbackBanner
+                        variant="warning"
+                        title={t('parity.deletion.pending.title')}
+                        message={t('parity.deletion.pending.message', { date: scheduledFor })}
+                        action={(
+                            <Button
+                                title={t('parity.deletion.cancel')}
+                                onPress={() => cancelMutation.mutate()}
+                                variant="outline"
+                                size="sm"
+                                loading={cancelMutation.isPending}
+                                disabled={busy}
+                            />
+                        )}
+                        style={styles.banner}
+                    />
+                ) : state ? (
+                    <View style={styles.block}>
+                        {state.blockers.length ? (
+                            <View style={styles.blockers}>
+                                <Text style={styles.blockersTitle}>{t('parity.deletion.blocked.title')}</Text>
+                                {state.blockers.map((blocker) => (
+                                    <Text key={blocker.code} style={styles.blocker}>• {blockerText(blocker, t)}</Text>
+                                ))}
+                            </View>
+                        ) : null}
+                        <FormField
+                            label={t('parity.deletion.confirmation.label')}
+                            value={confirmation}
+                            onChangeText={setConfirmation}
+                            placeholder={t('parity.deletion.confirmation.placeholder', { phrase })}
+                            autoCapitalize="characters"
+                            autoCorrect={false}
+                            editable={state.eligible && !busy}
+                            testID="account-deletion-confirmation"
+                            containerStyle={styles.field}
+                        />
+                        <Button
+                            title={t('parity.deletion.request')}
+                            onPress={() => void submit()}
+                            variant="danger"
+                            fullWidth
+                            loading={requestMutation.isPending}
+                            disabled={!state.eligible || confirmation.trim() !== phrase || busy}
+                        />
+                    </View>
+                ) : stateQuery.isLoading ? (
+                    <Text style={styles.muted}>{t('common.loading')}</Text>
+                ) : null}
+            </Card>
+        </Section>
     );
 }
 
 const styles = StyleSheet.create({
-    card: { borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.45)' },
-    title: { color: colors.status.danger, marginBottom: colors.layout.space2 },
-    block: { marginTop: colors.layout.space3, gap: colors.layout.space3 },
+    card: { gap: space.md, borderWidth: 1, borderColor: colors.tone.danger.border },
+    banner: { marginBottom: 0 },
+    block: { gap: space.md },
+    field: { marginBottom: 0 },
     blockers: {
-        borderRadius: colors.layout.radiusMd,
-        backgroundColor: colors.feedback.warningSurface,
-        padding: 12,
-        gap: 4,
+        borderRadius: radii.md,
+        backgroundColor: colors.tone.warning.bg,
+        padding: space.md,
+        gap: space.xs,
     },
-    blockersTitle: { fontSize: 14, fontWeight: '600', color: colors.status.warning },
-    blocker: { fontSize: 13, color: colors.text.secondary },
+    blockersTitle: { ...typeScale.callout, color: colors.tone.warning.fg },
+    blocker: { ...typeScale.caption, color: colors.text.secondary },
+    muted: { ...typeScale.caption, color: colors.text.secondary },
 });

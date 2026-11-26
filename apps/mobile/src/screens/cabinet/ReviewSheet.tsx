@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import MotionPressable from '../../components/ui/MotionPressable';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
+import { elevation, layout, radii, space, typeScale } from '../../constants/theme';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage, type MobileI18nKey } from '../../i18n';
 import { getApiErrorStatus } from '../../lib/errors';
@@ -72,6 +73,7 @@ export function ReviewSheet({ visible, bookingId, existingReview, onClose }: Pro
         <Modal visible={visible} animationType="slide" transparent onRequestClose={() => { if (!busy) onClose(); }}>
             <KeyboardAvoidingView style={styles.backdrop} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
                 <View style={styles.sheet} testID="review-sheet">
+                    <View style={styles.grabber} />
                     <Text style={styles.title}>{t(editing ? 'cabinet.review.edit' : 'cabinet.review.create')}</Text>
                     <Text style={styles.hint}>{t('cabinet.review.description')}</Text>
 
@@ -92,7 +94,7 @@ export function ReviewSheet({ visible, bookingId, existingReview, onClose }: Pro
                                     <Ionicons
                                         name={active ? 'star' : 'star-outline'}
                                         size={30}
-                                        color={active ? colors.status.warning : colors.text.tertiary}
+                                        color={active ? colors.tone.warning.fg : colors.text.tertiary}
                                     />
                                 </MotionPressable>
                             );
@@ -132,31 +134,43 @@ export function ReviewSheet({ visible, bookingId, existingReview, onClose }: Pro
 }
 
 const styles = StyleSheet.create({
-    backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(17, 24, 39, 0.45)' },
+    backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay },
     sheet: {
-        backgroundColor: colors.background.secondary,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        gap: 8,
+        backgroundColor: colors.surface.card,
+        borderTopLeftRadius: radii.xxl,
+        borderTopRightRadius: radii.xxl,
+        paddingHorizontal: layout.gutter,
+        paddingTop: space.sm,
+        paddingBottom: space.xxl,
+        gap: space.sm,
+        ...elevation.floating,
     },
-    title: { fontSize: 20, fontWeight: '600', color: colors.text.primary },
-    hint: { fontSize: 14, color: colors.text.secondary, marginBottom: 4 },
-    label: { fontSize: 14, fontWeight: '600', color: colors.text.secondary, marginTop: 8 },
-    starsRow: { flexDirection: 'row', gap: 4 },
+    grabber: {
+        alignSelf: 'center',
+        width: 36,
+        height: 4,
+        borderRadius: radii.pill,
+        backgroundColor: colors.border.strong,
+        marginBottom: space.sm,
+    },
+    title: { ...typeScale.title, color: colors.text.primary },
+    hint: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary, marginBottom: space.xs },
+    label: { ...typeScale.overline, color: colors.text.tertiary, marginTop: space.md },
+    starsRow: { flexDirection: 'row', gap: space.xs },
     star: { minWidth: MIN_TOUCH_TARGET, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' },
     comment: {
         minHeight: 96,
         borderWidth: 1,
-        borderColor: colors.border.light,
-        borderRadius: 10,
-        padding: 12,
-        fontSize: 15,
+        borderColor: colors.border.subtle,
+        borderRadius: radii.md,
+        backgroundColor: colors.fill.input,
+        padding: space.md,
+        ...typeScale.body,
         color: colors.text.primary,
         textAlignVertical: 'top',
     },
-    caption: { fontSize: 12, color: colors.text.tertiary },
-    error: { fontSize: 14, color: colors.status.danger },
-    actions: { flexDirection: 'row', gap: 12, marginTop: 12 },
+    caption: { ...typeScale.caption, color: colors.text.tertiary },
+    error: { ...typeScale.callout, fontWeight: '400', color: colors.tone.danger.fg },
+    actions: { flexDirection: 'row', gap: space.md, marginTop: space.md },
     action: { flex: 1 },
 });

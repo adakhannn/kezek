@@ -1,5 +1,5 @@
 import React from 'react';
-import { Keyboard, View } from 'react-native';
+import { Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import Input from '../../components/ui/Input';
@@ -23,31 +23,29 @@ export function SearchSection({
     const { t } = useLanguage();
 
     return (
-        <View style={styles.searchContainer}>
-            <Input
-                testID="home-search-input"
-                containerStyle={{ marginBottom: 0 }}
-                inputContainerStyle={styles.searchInputContainer}
-                style={styles.searchInput}
-                placeholder={t('booking.home.searchPlaceholder')}
-                value={search}
-                onChangeText={onSearchChange}
-                returnKeyType="search"
-                blurOnSubmit
-                onSubmitEditing={Keyboard.dismiss}
-                leadingIcon={<Ionicons name="search" size={20} color={colors.text.secondary} />}
-                trailingIcon={
-                    search ? (
-                        <MotionPressable
-                            onPress={onClear}
-                            style={styles.clearButton}
-                            accessibilityLabel={t('booking.home.clearSearch')}
-                        >
-                            <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
-                        </MotionPressable>
-                    ) : null
-                }
-            />
-        </View>
+        <Input
+            testID="home-search-input"
+            containerStyle={{ marginBottom: 0 }}
+            placeholder={t('booking.home.searchPlaceholder')}
+            value={search}
+            onChangeText={onSearchChange}
+            returnKeyType="search"
+            blurOnSubmit
+            onSubmitEditing={Keyboard.dismiss}
+            accessibilityLabel={t('booking.home.searchPlaceholder')}
+            leadingIcon={<Ionicons name="search" size={18} color={colors.text.secondary} />}
+            trailingIcon={
+                search ? (
+                    <MotionPressable
+                        onPress={onClear}
+                        style={styles.clearButton}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('booking.home.clearSearch')}
+                    >
+                        <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
+                    </MotionPressable>
+                ) : null
+            }
+        />
     );
 }

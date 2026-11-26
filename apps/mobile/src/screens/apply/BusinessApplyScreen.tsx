@@ -7,10 +7,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import Input from '../../components/ui/Input';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Screen from '../../components/ui/Screen';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 import MotionPressable from '../../components/ui/MotionPressable';
 import { colors } from '../../constants/colors';
 import { useLanguage, type MobileI18nKey } from '../../i18n';
@@ -106,8 +107,7 @@ export default function BusinessApplyScreen() {
     };
 
     const header = (
-        <View style={{ gap: colors.layout.space2 }}>
-            <Text style={styles.title} accessibilityRole="header">{t('parity.apply.page.title')}</Text>
+        <View style={styles.intro}>
             <Text style={styles.description}>
                 {hasSession ? t('parity.apply.page.authenticatedDescription') : t('parity.apply.page.guestDescription')}
             </Text>
@@ -123,16 +123,24 @@ export default function BusinessApplyScreen() {
         );
     }
 
-    if (defaultsQuery.isLoading) return <LoadingSpinner message={t('common.loading')} />;
+    if (defaultsQuery.isLoading) {
+        return (
+            <Screen>
+                <SkeletonCard lines={1} />
+                <SkeletonCard lines={5} />
+            </Screen>
+        );
+    }
 
     if (defaultsQuery.isError) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('parity.apply.loadError')}
-                message={t('staff.checkConnection')}
-                action={<Button title={t('cabinet.ui.retry')} onPress={() => void defaultsQuery.refetch()} variant="outline" fullWidth />}
-            />
+            <Screen>
+                <ErrorState
+                    title={t('parity.apply.loadError')}
+                    retryLabel={t('cabinet.ui.retry')}
+                    onRetry={() => void defaultsQuery.refetch()}
+                />
+            </Screen>
         );
     }
 
@@ -149,7 +157,7 @@ export default function BusinessApplyScreen() {
             >
                 {header}
 
-                <Card style={styles.cardGap}>
+                <Card variant="plain" padding="md" style={styles.cardGap}>
                     <Text style={styles.hint}>{t('parity.apply.existing.prefix')}</Text>
                     <Button
                         title={t('parity.apply.existing.link')}
@@ -170,7 +178,7 @@ export default function BusinessApplyScreen() {
                 {errorKey ? <FeedbackBanner variant="danger" message={t(errorKey)} onClose={() => setErrorKey(null)} /> : null}
 
                 {!sent ? (
-                    <Card style={styles.cardGap}>
+                    <Card variant="plain" padding="md" style={styles.cardGap}>
                         <Input label={t('parity.apply.field.contactName')} autoComplete="name" {...field('contact_name')} />
                         <Input
                             label={t('parity.apply.field.phone')}
@@ -185,7 +193,7 @@ export default function BusinessApplyScreen() {
 
                         <View>
                             <Text style={styles.label}>{t('parity.apply.field.category')}</Text>
-                            <Text style={[styles.hint, { marginBottom: colors.layout.space2 }]}>{t('parity.apply.category.helper')}</Text>
+                            <Text style={[styles.hint, styles.hintGap]}>{t('parity.apply.category.helper')}</Text>
                             <View style={styles.optionsList} accessibilityRole="radiogroup">
                                 {[...categories.map((category) => ({ value: category.slug, label: category.name })),
                                     { value: PROPOSE_CATEGORY_VALUE, label: t('parity.apply.category.propose') }].map((option) => {
@@ -245,7 +253,7 @@ export default function BusinessApplyScreen() {
                 ) : null}
 
                 {!sent ? (
-                    <Card style={styles.cardGap}>
+                    <Card variant="plain" padding="md" style={styles.cardGap}>
                         <Text style={styles.label}>{t('parity.apply.links.title')}</Text>
                         <Text style={styles.hint}>{t('parity.apply.links.description')}</Text>
                         {LINK_FIELDS.map(({ field: name, label, placeholder }) => (

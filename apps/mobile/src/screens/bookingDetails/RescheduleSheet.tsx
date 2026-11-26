@@ -9,6 +9,7 @@ import Button from '../../components/ui/Button';
 import MotionPressable from '../../components/ui/MotionPressable';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
+import { elevation, layout, radii, space, typeScale } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
 import { loadRescheduleSlots, rescheduleDays, type RescheduleTarget } from '../../lib/bookingReschedule';
 import { formatBookingDateLabel } from '../booking/bookingFormat';
@@ -42,6 +43,7 @@ export function RescheduleSheet({ visible, target, timeZone, isSubmitting, onClo
         <Modal visible={visible} animationType="slide" transparent onRequestClose={() => { if (!isSubmitting) onClose(); }}>
             <View style={styles.backdrop}>
                 <View style={styles.sheet} testID="reschedule-sheet">
+                    <View style={styles.grabber} />
                     <Text style={styles.title}>{t('cabinet.details.rescheduleTitle')}</Text>
                     <Text style={styles.hint}>{t('cabinet.details.rescheduleHint')}</Text>
 
@@ -122,50 +124,63 @@ export function RescheduleSheet({ visible, target, timeZone, isSubmitting, onClo
 }
 
 const styles = StyleSheet.create({
-    backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(17, 24, 39, 0.45)' },
+    backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay },
     sheet: {
         maxHeight: '85%',
-        backgroundColor: colors.background.secondary,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        gap: 8,
+        backgroundColor: colors.surface.card,
+        borderTopLeftRadius: radii.xxl,
+        borderTopRightRadius: radii.xxl,
+        paddingHorizontal: layout.gutter,
+        paddingTop: space.sm,
+        paddingBottom: space.xxl,
+        gap: space.sm,
+        ...elevation.floating,
     },
-    title: { fontSize: 20, fontWeight: '600', color: colors.text.primary },
-    hint: { fontSize: 14, color: colors.text.secondary, marginBottom: 8 },
-    label: { fontSize: 14, fontWeight: '600', color: colors.text.secondary, marginTop: 8 },
-    daysRow: { gap: 8, paddingVertical: 4 },
+    grabber: {
+        alignSelf: 'center',
+        width: 36,
+        height: 4,
+        borderRadius: radii.pill,
+        backgroundColor: colors.border.strong,
+        marginBottom: space.sm,
+    },
+    title: { ...typeScale.title, color: colors.text.primary },
+    hint: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary, marginBottom: space.xs },
+    label: { ...typeScale.overline, color: colors.text.tertiary, marginTop: space.md },
+    daysRow: { gap: space.sm, paddingVertical: space.xs },
     dayChip: {
         minHeight: MIN_TOUCH_TARGET,
-        minWidth: 56,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        borderRadius: 10,
+        minWidth: 60,
+        paddingHorizontal: space.sm,
+        paddingVertical: space.sm,
+        borderRadius: radii.md,
+        backgroundColor: colors.surface.elevated,
         borderWidth: 1,
-        borderColor: colors.border.light,
+        borderColor: colors.surface.elevated,
         alignItems: 'center',
     },
-    dayWeekday: { fontSize: 12, color: colors.text.secondary },
-    dayNumber: { fontSize: 16, fontWeight: '600', color: colors.text.primary },
-    dayMonth: { fontSize: 11, color: colors.text.secondary },
+    dayWeekday: { ...typeScale.caption, color: colors.text.secondary },
+    dayNumber: { ...typeScale.headline, color: colors.text.primary },
+    dayMonth: { fontSize: 11, lineHeight: 14, color: colors.text.secondary },
     slotsScroll: { maxHeight: 260 },
-    slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingVertical: 4 },
+    slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, paddingVertical: space.xs },
     slotChip: {
         minHeight: MIN_TOUCH_TARGET,
-        minWidth: 80,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 10,
+        minWidth: 76,
+        paddingHorizontal: space.lg,
+        paddingVertical: space.md,
+        borderRadius: radii.md,
+        backgroundColor: colors.surface.elevated,
         borderWidth: 1,
-        borderColor: colors.border.light,
+        borderColor: colors.surface.elevated,
         alignItems: 'center',
     },
-    slotText: { fontSize: 15, fontWeight: '600', color: colors.text.primary },
-    chipSelected: { borderColor: colors.primary.from },
-    chipTextSelected: { color: colors.primary.from },
-    muted: { fontSize: 14, color: colors.text.secondary },
-    errorRow: { gap: 8 },
-    error: { fontSize: 14, color: colors.status.danger },
-    actions: { flexDirection: 'row', gap: 12, marginTop: 16 },
+    slotText: { ...typeScale.bodyStrong, color: colors.text.primary },
+    chipSelected: { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
+    chipTextSelected: { color: colors.text.light },
+    muted: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary },
+    errorRow: { gap: space.sm },
+    error: { ...typeScale.callout, fontWeight: '400', color: colors.tone.danger.fg },
+    actions: { flexDirection: 'row', gap: space.md, marginTop: space.lg },
     action: { flex: 1 },
 });

@@ -1,23 +1,20 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, type RouteProp as NavigationRouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
-import { colors } from '../../constants/colors';
-import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
-import Button from '../../components/ui/Button';
-import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import MotionPressable from '../../components/ui/MotionPressable';
+import { ListGroup } from '../../components/ui/ListRow';
 import RatingBadge from '../../components/ui/RatingBadge';
+import Section from '../../components/ui/Section';
+import { space } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { getPromotionTitle } from '../../utils/i18n';
 import BookingLoadError from './BookingLoadError';
+import { BookingContextLine, BookingOptionRow, BookingStepScreen, BookingStepSkeleton } from './BookingStepLayout';
 import { useBookingStep1Business } from './useBookingStep1Business';
 import type { BookingInitialData } from '../bookingFlow/useBookingScreenData';
 
@@ -71,235 +68,89 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
 
     if (isLoading) {
         return (
-            <View style={styles.container}>
-                <LoadingSpinner message={t('common.loading')} />
-            </View>
+            <BookingStepScreen step={1}>
+                <BookingStepSkeleton label={t('common.loading')} rows={3} />
+            </BookingStepScreen>
         );
     }
 
     if (!businessData && hasError) {
         return (
-            <View style={[styles.container, styles.section]}>
+            <BookingStepScreen step={1}>
                 <BookingLoadError title={t('booking.error.loadBusiness')} onRetry={retry} retrying={isRetrying} />
-            </View>
+            </BookingStepScreen>
         );
     }
 
     if (!businessData) {
         return (
-            <View style={styles.container}>
+            <BookingStepScreen step={1}>
                 <EmptyState
                     icon="business-outline"
                     title={t('booking.error.businessNotFound')}
                     message={t('booking.step1.notFoundMessage')}
                 />
-            </View>
+            </BookingStepScreen>
         );
     }
 
+    const branchPromotions = (bookingData.promotions ?? []).filter((promo) => promo.branch_id === bookingData.branchId);
+    const hasBranches = businessData.branches.length > 0;
+
     return (
-        <LinearGradient
-            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer}
+        <BookingStepScreen
+            step={1}
+            next={hasBranches ? {
+                title: t('booking.nav.next'),
+                onPress: handleNext,
+                disabled: !bookingData.branchId,
+            } : undefined}
         >
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-                <BookingProgressIndicator currentStep={1} />
-                <View style={styles.header}>
-                    <View style={styles.headerRow}>
-                        <Text style={styles.title}>{businessData.business.name}</Text>
-                        <RatingBadge rating={businessData.business.rating_score ?? null} />
-                    </View>
-                </View>
+            <BookingContextLine name={businessData.business.name} />
 
-                {bookingData.promotions && bookingData.promotions.length > 0 && bookingData.branchId ? (
-                    <View style={styles.promotionsSection}>
-                        <Text style={styles.promotionsTitle}>{t('booking.step1.promotions')}</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.promotionsScroll}>
-                            {bookingData.promotions
-                                .filter((promo) => promo.branch_id === bookingData.branchId)
-                                .map((promo) => (
-                                    <View key={promo.id} style={styles.promotionCard}>
-                                        <Ionicons name="gift-outline" size={20} color={colors.status.success} />
-                                        <Text style={styles.promotionText} numberOfLines={2}>
-                                            {getPromotionTitle(promo, t.locale) || t('booking.step1.promotionFallback')}
-                                        </Text>
-                                    </View>
-                                ))}
-                        </ScrollView>
-                    </View>
-                ) : null}
-
-                <View style={styles.section}>
-                    {businessData.branches.length > 0 ? (
-                        <View style={styles.optionsList}>
-                            {businessData.branches.map((branch) => {
-                                const isSelected = bookingData.branchId === branch.id;
-                                return (
-                                    <MotionPressable
-                                        key={branch.id}
-                                        style={styles.chipContainer}
-                                        onPress={() => handleSelectBranch(branch.id)}
-                                    >
-                                        {isSelected ? (
-                                            <LinearGradient
-                                                colors={['rgba(79, 70, 229, 0.1)', 'rgba(79, 70, 229, 0.15)']}
-                                                start={{ x: 0, y: 0 }}
-                                                end={{ x: 1, y: 0 }}
-                                                style={styles.chipSelected}
-                                            >
-                                                <View style={styles.chipContent}>
-                                                    <Text style={styles.chipTextSelected}>{branch.name}</Text>
-                                                    <RatingBadge rating={branch.rating_score ?? null} size="small" />
-                                                </View>
-                                            </LinearGradient>
-                                        ) : (
-                                            <View style={styles.chip}>
-                                                <View style={styles.chipContent}>
-                                                    <Text style={styles.chipText}>{branch.name}</Text>
-                                                    <RatingBadge rating={branch.rating_score ?? null} size="small" />
-                                                </View>
-                                            </View>
-                                        )}
-                                    </MotionPressable>
-                                );
-                            })}
-                        </View>
-                    ) : (
-                        <EmptyState
-                            icon="location-outline"
-                            title={t('booking.step1.emptyTitle')}
-                            message={t('booking.step1.emptyMessage')}
-                            compact
-                            style={styles.emptyContainer}
-                        />
-                    )}
-
-                    {businessData.branches.length > 0 ? (
-                        <View style={styles.buttonContainer}>
-                            <Button
-                                title={t('booking.nav.next')}
-                                onPress={handleNext}
-                                disabled={!bookingData.branchId}
-                                variant="primary"
+            {hasBranches ? (
+                <Section title={t('booking.progress.branch')}>
+                    <ListGroup>
+                        {businessData.branches.map((branch) => (
+                            <BookingOptionRow
+                                key={branch.id}
+                                title={branch.name}
+                                selected={bookingData.branchId === branch.id}
+                                onPress={() => handleSelectBranch(branch.id)}
+                                footer={<RatingBadge rating={branch.rating_score ?? null} size="small" />}
+                                testID={`booking-branch-${branch.id}`}
                             />
-                        </View>
-                    ) : null}
-                </View>
-            </ScrollView>
-        </LinearGradient>
+                        ))}
+                    </ListGroup>
+                </Section>
+            ) : (
+                <EmptyState
+                    icon="location-outline"
+                    title={t('booking.step1.emptyTitle')}
+                    message={t('booking.step1.emptyMessage')}
+                    compact
+                />
+            )}
+
+            {branchPromotions.length > 0 ? (
+                <Section title={t('booking.step1.promotions')}>
+                    <View style={styles.badges}>
+                        {branchPromotions.map((promo) => (
+                            <Badge
+                                key={promo.id}
+                                size="md"
+                                tone="success"
+                                icon="gift-outline"
+                                label={getPromotionTitle(promo, t.locale) || t('booking.step1.promotionFallback')}
+                            />
+                        ))}
+                    </View>
+                </Section>
+            ) : null}
+        </BookingStepScreen>
     );
 }
 
 const styles = StyleSheet.create({
-    gradientContainer: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-    },
-    content: {
-        paddingBottom: 40,
-    },
-    header: {
-        padding: 20,
-        paddingTop: 24,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        flexWrap: 'wrap',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 4,
-        flex: 1,
-    },
-    section: {
-        padding: 20,
-    },
-    optionsList: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    chipContainer: {
-        marginBottom: 4,
-    },
-    chip: {
-        minHeight: MIN_TOUCH_TARGET,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.background.secondary,
-    },
-    chipSelected: {
-        minHeight: MIN_TOUCH_TARGET,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: colors.primary.from,
-    },
-    chipText: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: colors.text.primary,
-    },
-    chipTextSelected: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: colors.primary.from,
-    },
-    chipContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    emptyContainer: {
-        paddingHorizontal: 0,
-    },
-    buttonContainer: {
-        marginTop: 24,
-        paddingHorizontal: 0,
-    },
-    promotionsSection: {
-        paddingHorizontal: 20,
-        paddingBottom: 16,
-    },
-    promotionsTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 12,
-    },
-    promotionsScroll: {
-        flexDirection: 'row',
-    },
-    promotionCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        backgroundColor: colors.feedback.successSurface,
-        borderWidth: 1,
-        borderColor: 'rgba(16, 185, 129, 0.3)',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        marginRight: 8,
-        minWidth: 120,
-    },
-    promotionText: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: colors.status.success,
-        flex: 1,
-    },
+    badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
 });
-

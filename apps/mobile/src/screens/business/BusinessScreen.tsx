@@ -1,17 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useEffect, type ReactNode } from 'react';
-import { Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { Linking, Pressable, Text, View } from 'react-native';
 import { formatRatingDisplayValue } from '@shared-client/rating';
 
+import ActionBar from '../../components/ui/ActionBar';
 import Avatar from '../../components/ui/Avatar';
+import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ErrorState from '../../components/ui/ErrorState';
+import { ListGroup } from '../../components/ui/ListRow';
 import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
+import Screen from '../../components/ui/Screen';
+import ScreenIntro from '../../components/ui/ScreenIntro';
+import Section from '../../components/ui/Section';
+import { SkeletonCard, SkeletonList } from '../../components/ui/Skeleton';
+import StatTile, { StatGrid } from '../../components/ui/StatTile';
 import { colors } from '../../constants/colors';
 import { translatePlural, useLanguage, type MobileI18nKey } from '../../i18n';
 import { trackMobileEvent } from '../../lib/analytics';
@@ -71,39 +79,47 @@ export default function BusinessScreen() {
 
     if (query.isLoading) {
         return (
-            <View style={styles.centered}>
-                {previewName ? <Text style={styles.previewName}>{previewName}</Text> : null}
-                <LoadingSpinner message={t('discovery.business.loading')} />
-            </View>
+            <Screen testID="business-page-loading">
+                {previewName ? <ScreenIntro>{previewName}</ScreenIntro> : null}
+                <View style={styles.loading} accessibilityLabel={t('discovery.business.loading')}>
+                    <SkeletonCard lines={3} />
+                    <SkeletonCard lines={1} />
+                    <SkeletonList rows={3} avatar={false} />
+                </View>
+            </Screen>
         );
     }
 
     if (query.isError) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('discovery.business.errorTitle')}
-                message={t('discovery.business.errorMessage')}
-                action={<Button title={t('discovery.business.retry')} onPress={() => void query.refetch()} variant="outline" fullWidth />}
-            />
+            <Screen>
+                <ErrorState
+                    title={t('discovery.business.errorTitle')}
+                    message={t('discovery.business.errorMessage')}
+                    retryLabel={t('discovery.business.retry')}
+                    onRetry={() => void query.refetch()}
+                />
+            </Screen>
         );
     }
 
     if (!query.data) {
         return (
-            <EmptyState
-                icon="search"
-                title={t('discovery.business.notFoundTitle')}
-                message={t('discovery.business.notFoundMessage')}
-                action={
-                    <Button
-                        title={t('discovery.business.backHome')}
-                        onPress={() => navigation.navigate('Main', { screen: 'Home' })}
-                        variant="outline"
-                        fullWidth
-                    />
-                }
-            />
+            <Screen>
+                <EmptyState
+                    icon="search"
+                    title={t('discovery.business.notFoundTitle')}
+                    message={t('discovery.business.notFoundMessage')}
+                    action={
+                        <Button
+                            title={t('discovery.business.backHome')}
+                            onPress={() => navigation.navigate('Main', { screen: 'Home' })}
+                            variant="outline"
+                            fullWidth
+                        />
+                    }
+                />
+            </Screen>
         );
     }
 
@@ -150,105 +166,124 @@ export function BusinessPageContent({
     const businessPhone = businessContacts.phone ?? business.phones?.[0] ?? null;
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
+        <Screen
             testID="business-page"
-            refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            footer={hasBranches ? (
+                <ActionBar
+                    primary={{
+                        title: t('discovery.business.book'),
+                        onPress: onBook,
+                        accessibilityHint: t('discovery.business.bookHint'),
+                    }}
+                />
+            ) : undefined}
         >
-            <Card style={styles.hero}>
+            <Card variant="accent" padding="md" style={styles.hero}>
+                <View style={styles.heroTop}>
+                    <Avatar name={business.name} size={56} />
+                    <View style={styles.heroText}>
+                        <Text style={styles.title} accessibilityRole="header" numberOfLines={3}>
+                            {business.name}
+                        </Text>
+                        <View
+                            accessible={typeof business.rating_score === 'number'}
+                            accessibilityLabel={
+                                typeof business.rating_score === 'number'
+                                    ? t('booking.home.a11y.rating', { rating: formatRatingDisplayValue(business.rating_score) })
+                                    : undefined
+                            }
+                            style={styles.ratingWrap}
+                        >
+                            <RatingBadge rating={business.rating_score ?? null} size="small" />
+                        </View>
+                    </View>
+                </View>
                 <View style={styles.badges}>
-                    <Badge label={t('discovery.business.verified')} tone="accent" />
+                    <Badge icon="shield-checkmark-outline" label={t('discovery.business.verified')} tone="accent" />
                     {promotions.length > 0 ? (
-                        <Badge label={translatePlural(t, 'discovery.home.promotions', promotions.length)} tone="success" />
+                        <Badge icon="pricetag-outline" label={translatePlural(t, 'discovery.home.promotions', promotions.length)} tone="success" />
                     ) : null}
                     <Badge
+                        icon={hasBranches ? 'calendar-outline' : 'pause-circle-outline'}
                         label={hasBranches ? t('discovery.business.bookable') : t('discovery.business.noBranchesBadge')}
                         tone={hasBranches ? 'info' : 'neutral'}
                     />
                 </View>
-                <Text style={styles.title} accessibilityRole="header">
-                    {business.name}
-                </Text>
-                <View style={styles.metaRow}>
-                    <View
-                        accessible={typeof business.rating_score === 'number'}
-                        accessibilityLabel={
-                            typeof business.rating_score === 'number'
-                                ? t('booking.home.a11y.rating', { rating: formatRatingDisplayValue(business.rating_score) })
-                                : undefined
-                        }
-                    >
-                        <RatingBadge rating={business.rating_score ?? null} />
+                {business.address ? (
+                    <View style={styles.metaRow}>
+                        <Ionicons name="location-outline" size={16} color={colors.text.secondary} accessible={false} importantForAccessibility="no" />
+                        <Text style={styles.metaText}>{business.address}</Text>
                     </View>
-                    {business.address ? <Text style={styles.metaText}>{business.address}</Text> : null}
-                </View>
+                ) : null}
                 <ContactActions contacts={{ ...businessContacts, phone: businessPhone }} />
-                {hasBranches ? (
-                    <Button
-                        title={t('discovery.business.book')}
-                        onPress={onBook}
-                        fullWidth
-                        style={styles.bookButton}
-                        trailingIcon={<Ionicons name="arrow-forward" size={16} color={colors.text.light} />}
-                        accessibilityHint={t('discovery.business.bookHint')}
-                    />
-                ) : (
+                {hasBranches ? null : (
                     <Text style={styles.notice} accessibilityRole="text">
                         {t('discovery.business.noBranches')}
                     </Text>
                 )}
             </Card>
 
-            <Section title={t('discovery.business.about')}>
-                <View style={styles.metrics}>
-                    <Metric value={branches.length} label={t('discovery.business.metrics.branches')} />
-                    <Metric value={services.length} label={t('discovery.business.metrics.services')} />
-                    <Metric value={staff.length} label={t('discovery.business.metrics.staff')} />
-                    <Metric value={promotions.length} label={t('discovery.business.metrics.promotions')} />
-                </View>
-            </Section>
+            <StatGrid columns={2}>
+                <StatTile icon="storefront-outline" value={String(branches.length)} label={t('discovery.business.branches')} />
+                <StatTile icon="cut-outline" value={String(services.length)} label={t('discovery.business.services')} />
+                <StatTile icon="people-outline" value={String(staff.length)} label={t('discovery.business.staff')} />
+                <StatTile
+                    icon="pricetag-outline"
+                    value={String(promotions.length)}
+                    label={t('discovery.business.promotions')}
+                    tone={promotions.length > 0 ? 'success' : undefined}
+                />
+            </StatGrid>
 
             {promotions.length > 0 ? (
-                <Section title={t('discovery.business.promotions')} subtitle={t('discovery.business.promotionsDescription')} testID="business-promotions">
-                    {promotions.map((promotion) => {
-                        const description = promotionDescription(promotion, locale);
-                        const validTo = formatPromotionDate(promotion.valid_to);
-                        const branch = branchName(promotion.branch_id);
-                        return (
-                            <View key={promotion.id} style={styles.promotion}>
-                                <View style={styles.promotionIcon}>
-                                    <Text style={styles.promotionIconText}>%</Text>
-                                </View>
-                                <View style={styles.flex}>
-                                    <Text style={styles.itemTitle}>{promotionTitle(promotion, t)}</Text>
-                                    {description ? <Text style={styles.itemText}>{description}</Text> : null}
-                                    {branch || validTo ? (
-                                        <Text style={styles.itemMeta}>
-                                            {[branch, validTo ? t('discovery.business.promotionValidTo', { date: validTo }) : null]
-                                                .filter(Boolean)
-                                                .join(' · ')}
-                                        </Text>
-                                    ) : null}
-                                </View>
-                            </View>
-                        );
-                    })}
-                    {onOpenPromotions ? (
-                        <Button
-                            title={t('parity.promotions.openAll')}
+                <Section
+                    title={t('discovery.business.promotions')}
+                    caption={t('discovery.business.promotionsDescription')}
+                    testID="business-promotions"
+                    right={onOpenPromotions ? (
+                        <SectionLink
+                            label={t('parity.promotions.openAll')}
+                            hint={t('parity.promotions.openAllHint')}
                             onPress={onOpenPromotions}
-                            variant="outline"
-                            size="sm"
-                            fullWidth
-                            accessibilityHint={t('parity.promotions.openAllHint')}
                         />
-                    ) : null}
+                    ) : undefined}
+                >
+                    <ListGroup inset>
+                        {promotions.map((promotion) => {
+                            const description = promotionDescription(promotion, locale);
+                            const validTo = formatPromotionDate(promotion.valid_to);
+                            const branch = branchName(promotion.branch_id);
+                            return (
+                                <View key={promotion.id} style={styles.row}>
+                                    <View style={styles.promotionIcon}>
+                                        <Ionicons name="pricetag-outline" size={18} color={colors.tone.success.fg} />
+                                    </View>
+                                    <View style={styles.flex}>
+                                        <Text style={styles.itemTitle}>{promotionTitle(promotion, t)}</Text>
+                                        {description ? <Text style={styles.itemText}>{description}</Text> : null}
+                                        {branch || validTo ? (
+                                            <Text style={styles.itemMeta}>
+                                                {[branch, validTo ? t('discovery.business.promotionValidTo', { date: validTo }) : null]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </Text>
+                                        ) : null}
+                                    </View>
+                                </View>
+                            );
+                        })}
+                    </ListGroup>
                 </Section>
             ) : null}
 
             {hasBranches ? (
-                <Section title={t('discovery.business.branches')} count={branches.length} testID="business-branches">
+                <Section
+                    title={t('discovery.business.branches')}
+                    right={<Badge label={String(branches.length)} />}
+                    testID="business-branches"
+                >
                     {branches.map((branch) => (
                         <BranchCard key={branch.id} data={data} branch={branch} onOpenMap={onOpenMap} />
                     ))}
@@ -256,62 +291,79 @@ export function BusinessPageContent({
             ) : null}
 
             {services.length > 0 ? (
-                <Section title={t('discovery.business.services')} count={services.length} testID="business-services">
-                    {services.slice(0, SERVICES_PREVIEW).map((service) => {
-                        const branch = branchName(service.branch_id);
-                        return (
-                            <View key={service.id} style={styles.row}>
-                                <View style={styles.flex}>
-                                    <Text style={styles.itemTitle}>{getServiceName(service, locale)}</Text>
-                                    {branch ? <Text style={styles.itemMeta}>{branch}</Text> : null}
+                <Section
+                    title={t('discovery.business.services')}
+                    right={<Badge label={String(services.length)} />}
+                    testID="business-services"
+                >
+                    <ListGroup>
+                        {services.slice(0, SERVICES_PREVIEW).map((service) => {
+                            const branch = branchName(service.branch_id);
+                            return (
+                                <View key={service.id} style={styles.row}>
+                                    <View style={styles.flex}>
+                                        <Text style={styles.itemTitle}>{getServiceName(service, locale)}</Text>
+                                        {branch ? <Text style={styles.itemMeta}>{branch}</Text> : null}
+                                    </View>
+                                    <View style={styles.rowEnd}>
+                                        <Text style={styles.price}>{formatServicePrice(service, t)}</Text>
+                                        <Text style={styles.itemMeta}>
+                                            {t('discovery.business.duration', { minutes: service.duration_min })}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={styles.rowEnd}>
-                                    <Text style={styles.price}>{formatServicePrice(service, t)}</Text>
-                                    <Text style={styles.itemMeta}>
-                                        {t('discovery.business.duration', { minutes: service.duration_min })}
-                                    </Text>
-                                </View>
-                            </View>
-                        );
-                    })}
-                    {services.length > SERVICES_PREVIEW ? (
-                        <Text style={styles.more}>{t('discovery.business.more', { count: services.length - SERVICES_PREVIEW })}</Text>
-                    ) : null}
+                            );
+                        })}
+                        {services.length > SERVICES_PREVIEW ? (
+                            <Text style={styles.more}>{t('discovery.business.more', { count: services.length - SERVICES_PREVIEW })}</Text>
+                        ) : null}
+                    </ListGroup>
                 </Section>
             ) : null}
 
             {staff.length > 0 ? (
-                <Section title={t('discovery.business.staff')} count={staff.length} testID="business-staff">
-                    {staff.slice(0, STAFF_PREVIEW).map((person) => {
-                        const name = formatStaffName(person.full_name, locale);
-                        const branch = branchName(person.branch_id);
-                        return (
-                            <View key={person.id} style={styles.row}>
-                                <Avatar name={name} uri={person.avatar_url} size={44} />
-                                <View style={styles.flex}>
-                                    <Text style={styles.itemTitle}>{name}</Text>
-                                    {branch ? <Text style={styles.itemMeta}>{branch}</Text> : null}
+                <Section
+                    title={t('discovery.business.staff')}
+                    right={<Badge label={String(staff.length)} />}
+                    testID="business-staff"
+                >
+                    <ListGroup inset>
+                        {staff.slice(0, STAFF_PREVIEW).map((person) => {
+                            const name = formatStaffName(person.full_name, locale);
+                            const branch = branchName(person.branch_id);
+                            return (
+                                <View key={person.id} style={styles.row}>
+                                    <Avatar name={name} uri={person.avatar_url} size={40} />
+                                    <View style={styles.stack}>
+                                        <Text style={styles.itemTitle} numberOfLines={2}>{name}</Text>
+                                        {branch ? <Text style={styles.itemMeta} numberOfLines={1}>{branch}</Text> : null}
+                                        <RatingBadge rating={person.rating_score ?? null} size="small" />
+                                    </View>
                                 </View>
-                                <RatingBadge rating={person.rating_score ?? null} size="small" />
-                            </View>
-                        );
-                    })}
-                    {staff.length > STAFF_PREVIEW ? (
-                        <Text style={styles.more}>{t('discovery.business.more', { count: staff.length - STAFF_PREVIEW })}</Text>
-                    ) : null}
+                            );
+                        })}
+                        {staff.length > STAFF_PREVIEW ? (
+                            <Text style={styles.more}>{t('discovery.business.more', { count: staff.length - STAFF_PREVIEW })}</Text>
+                        ) : null}
+                    </ListGroup>
                 </Section>
             ) : null}
+        </Screen>
+    );
+}
 
-            {hasBranches ? (
-                <Button
-                    title={t('discovery.business.book')}
-                    onPress={onBook}
-                    fullWidth
-                    size="lg"
-                    accessibilityHint={t('discovery.business.bookHint')}
-                />
-            ) : null}
-        </ScrollView>
+function SectionLink({ label, hint, onPress }: { label: string; hint?: string; onPress: () => void }) {
+    return (
+        <Pressable
+            onPress={onPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityHint={hint}
+            style={({ pressed }) => [styles.sectionLink, pressed ? styles.pressed : null]}
+        >
+            <Text style={styles.sectionLinkText}>{label}</Text>
+        </Pressable>
     );
 }
 
@@ -321,13 +373,16 @@ function BranchCard({ data, branch, onOpenMap }: { data: BusinessPageData; branc
     const linkKeys = DIRECTORY_LINK_KEYS.filter((key) => links[key]);
 
     return (
-        <View style={styles.branch}>
-            <View style={styles.row}>
-                <View style={styles.flex}>
-                    <Text style={styles.itemTitle}>{formatStaffName(branch.name, locale)}</Text>
-                    {branch.address ? <Text style={styles.itemText}>{branch.address}</Text> : null}
-                </View>
+        <Card variant="plain" padding="md" style={styles.branch}>
+            <View style={styles.stack}>
+                <Text style={styles.itemTitle}>{formatStaffName(branch.name, locale)}</Text>
                 <RatingBadge rating={branch.rating_score ?? null} size="small" />
+                {branch.address ? (
+                    <View style={styles.metaRow}>
+                        <Ionicons name="location-outline" size={16} color={colors.text.secondary} accessible={false} importantForAccessibility="no" />
+                        <Text style={styles.metaText}>{branch.address}</Text>
+                    </View>
+                ) : null}
             </View>
             <ContactActions contacts={resolvePublicContacts(data.business, branch)} />
             <View style={styles.chips}>
@@ -341,7 +396,7 @@ function BranchCard({ data, branch, onOpenMap }: { data: BusinessPageData; branc
                     />
                 ))}
             </View>
-        </View>
+        </Card>
     );
 }
 
@@ -368,52 +423,8 @@ function ContactActions({ contacts }: { contacts: PublicContacts }) {
 function LinkChip({ label, icon, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void }) {
     return (
         <MotionPressable onPress={onPress} style={styles.chip} accessibilityRole="link" accessibilityLabel={label}>
-            <Ionicons name={icon} size={14} color={colors.accent.indigo} accessible={false} importantForAccessibility="no" />
-            <Text style={styles.chipText}>{label}</Text>
+            <Ionicons name={icon} size={16} color={colors.tone.accent.fg} accessible={false} importantForAccessibility="no" />
+            <Text style={styles.chipText} numberOfLines={1}>{label}</Text>
         </MotionPressable>
-    );
-}
-
-function Section({
-    title,
-    subtitle,
-    count,
-    testID,
-    children,
-}: {
-    title: string;
-    subtitle?: string;
-    count?: number;
-    testID?: string;
-    children: ReactNode;
-}) {
-    return (
-        <Card style={styles.section} testID={testID}>
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle} accessibilityRole="header">
-                    {title}
-                </Text>
-                {typeof count === 'number' ? <Text style={styles.count}>{count}</Text> : null}
-            </View>
-            {subtitle ? <Text style={styles.itemText}>{subtitle}</Text> : null}
-            <View style={styles.sectionBody}>{children}</View>
-        </Card>
-    );
-}
-
-function Metric({ value, label }: { value: number; label: string }) {
-    return (
-        <View style={styles.metric} accessible accessibilityLabel={`${value} ${label}`}>
-            <Text style={styles.metricValue}>{value}</Text>
-            <Text style={styles.itemMeta}>{label}</Text>
-        </View>
-    );
-}
-
-function Badge({ label, tone }: { label: string; tone: 'accent' | 'success' | 'info' | 'neutral' }) {
-    return (
-        <View style={[styles.badge, styles[`badge_${tone}`]]}>
-            <Text style={styles.badgeText}>{label}</Text>
-        </View>
     );
 }

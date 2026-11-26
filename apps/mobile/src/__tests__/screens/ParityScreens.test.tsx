@@ -77,7 +77,8 @@ describe('PromotionsScreen', () => {
         } satisfies BusinessPageData);
         render(<QueryClientProvider client={createTestQueryClient()}><PromotionsScreen /></QueryClientProvider>);
 
-        expect(await screen.findByText('Акции и специальные предложения')).toBeTruthy();
+        // The header says "Акции"; the page opens with the business.
+        expect(await screen.findByText('Salon Aru')).toBeTruthy();
         expect(screen.getByText('Первый визит')).toBeTruthy();
         expect(screen.getByText('Скидка 10%')).toBeTruthy();
         expect(screen.getByText('Действует: с начала — 31.12.2026')).toBeTruthy();

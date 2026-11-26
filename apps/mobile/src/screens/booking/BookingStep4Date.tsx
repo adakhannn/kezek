@@ -1,20 +1,20 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
-import Button from '../../components/ui/Button';
-import BookingProgressIndicator from '../../components/BookingProgressIndicator';
-import MotionPressable from '../../components/ui/MotionPressable';
+import { layout, radii, space, typeScale } from '../../constants/theme';
+import Section from '../../components/ui/Section';
 import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import { BookingContextLine, BookingStepScreen } from './BookingStepLayout';
 import { useBookingStep4Dates } from './useBookingStep4Dates';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+/** The booking window as one line of day tiles that scrolls sideways (as the web step). */
 export default function BookingStep4Date() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedDate } = useBooking();
@@ -40,184 +40,82 @@ export default function BookingStep4Date() {
     };
 
     return (
-        <LinearGradient
-            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer}
+        <BookingStepScreen
+            step={4}
+            back={() => navigation.goBack()}
+            next={{ title: t('booking.nav.next'), onPress: handleNext, disabled: !bookingData.selectedDate }}
         >
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-                <BookingProgressIndicator currentStep={4} />
-                <View style={styles.header}>
-                    <Text style={styles.title}>{bookingData.business?.name}</Text>
-                </View>
+            <BookingContextLine name={bookingData.business?.name} />
+            <Section title={t('booking.progress.date')}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.bleed}
+                    contentContainerStyle={styles.strip}
+                >
+                    {dates.map((date) => {
+                        const dateLabel = formatDateLabel(date);
+                        const isToday = date === todayInTz;
+                        const selected = bookingData.selectedDate === date;
 
-                <View style={styles.section}>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                        {dates.map((date) => {
-                            const dateLabel = formatDateLabel(date);
-                            const isToday = date === todayInTz;
-
-                            return (
-                                <MotionPressable
-                                    key={date}
-                                    style={[
-                                        styles.dateCard,
-                                        bookingData.selectedDate === date && styles.dateCardSelected,
-                                        isToday && styles.dateCardToday,
-                                    ]}
-                                    onPress={() => handleSelectDate(date)}
-                                >
-                                    {isToday ? (
-                                        <Text
-                                            style={[
-                                                styles.todayLabel,
-                                                bookingData.selectedDate === date && styles.todayLabelSelected,
-                                            ]}
-                                        >
-                                            {t('booking.step4.today')}
-                                        </Text>
-                                    ) : null}
-                                    <Text
-                                        style={[
-                                            styles.dateDay,
-                                            bookingData.selectedDate === date && styles.dateDaySelected,
-                                        ]}
-                                    >
-                                        {dateLabel.day}
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.dateMonth,
-                                            bookingData.selectedDate === date && styles.dateMonthSelected,
-                                        ]}
-                                    >
-                                        {dateLabel.month}
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.dateWeekday,
-                                            bookingData.selectedDate === date && styles.dateWeekdaySelected,
-                                        ]}
-                                    >
-                                        {dateLabel.weekday}
-                                    </Text>
-                                </MotionPressable>
-                            );
-                        })}
-                    </ScrollView>
-
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            title={t('booking.nav.back')}
-                            onPress={() => navigation.goBack()}
-                            variant="outline"
-                            style={styles.backButton}
-                        />
-                        <Button
-                            title={t('booking.nav.next')}
-                            onPress={handleNext}
-                            disabled={!bookingData.selectedDate}
-                            variant="primary"
-                            style={styles.nextButton}
-                        />
-                    </View>
-                </View>
-            </ScrollView>
-        </LinearGradient>
+                        return (
+                            <Pressable
+                                key={date}
+                                style={({ pressed }) => [
+                                    styles.day,
+                                    isToday ? styles.dayToday : null,
+                                    selected ? styles.daySelected : null,
+                                    pressed ? styles.pressed : null,
+                                ]}
+                                onPress={() => handleSelectDate(date)}
+                                accessibilityRole="radio"
+                                accessibilityState={{ selected, checked: selected }}
+                                accessibilityLabel={[
+                                    isToday ? t('booking.step4.today') : null,
+                                    dateLabel.weekday,
+                                    dateLabel.day,
+                                    dateLabel.month,
+                                ].filter(Boolean).join(', ')}
+                            >
+                                <Text style={[styles.weekday, selected ? styles.textSelected : null]}>
+                                    {isToday ? t('booking.step4.today') : dateLabel.weekday}
+                                </Text>
+                                <Text style={[styles.dayNumber, selected ? styles.textSelected : null]}>
+                                    {dateLabel.day}
+                                </Text>
+                                <Text style={[styles.month, selected ? styles.textSelected : null]}>
+                                    {dateLabel.month}
+                                </Text>
+                            </Pressable>
+                        );
+                    })}
+                </ScrollView>
+            </Section>
+        </BookingStepScreen>
     );
 }
 
 const styles = StyleSheet.create({
-    gradientContainer: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-    },
-    content: {
-        paddingBottom: 40,
-    },
-    header: {
-        padding: 20,
-        paddingTop: 24,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 4,
-    },
-    section: {
-        padding: 20,
-    },
-    horizontalScroll: {
-        marginHorizontal: -4,
-    },
-    dateCard: {
-        padding: 16,
-        borderRadius: 12,
-        backgroundColor: colors.background.secondary,
+    bleed: { marginHorizontal: -layout.gutter, flexGrow: 0 },
+    strip: { paddingHorizontal: layout.gutter, gap: space.sm },
+    day: {
+        width: 72,
+        minHeight: 88,
+        paddingVertical: space.md,
+        paddingHorizontal: space.xs,
+        borderRadius: radii.lg,
+        backgroundColor: colors.surface.card,
         borderWidth: 1,
-        borderColor: colors.border.light,
-        marginRight: 12,
-        marginBottom: 12,
-        minWidth: 90,
+        borderColor: colors.surface.card,
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: space.xxs,
     },
-    dateCardSelected: {
-        borderColor: colors.primary.from,
-        backgroundColor: colors.background.secondary,
-    },
-    dateCardToday: {
-        borderColor: colors.status.success,
-    },
-    todayLabel: {
-        fontSize: 10,
-        fontWeight: '600',
-        color: colors.status.success,
-        marginBottom: 4,
-        textTransform: 'uppercase',
-    },
-    todayLabelSelected: {
-        color: colors.text.primary,
-    },
-    dateDay: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: colors.text.primary,
-    },
-    dateDaySelected: {
-        color: colors.text.primary,
-    },
-    dateMonth: {
-        fontSize: 13,
-        color: colors.text.secondary,
-        marginTop: 4,
-    },
-    dateMonthSelected: {
-        color: colors.text.secondary,
-    },
-    dateWeekday: {
-        fontSize: 11,
-        color: colors.text.tertiary,
-        marginTop: 6,
-        textTransform: 'uppercase',
-    },
-    dateWeekdaySelected: {
-        color: colors.text.tertiary,
-    },
-    buttonContainer: {
-        marginTop: 24,
-        paddingHorizontal: 0,
-        flexDirection: 'row',
-        gap: 12,
-    },
-    backButton: {
-        flex: 1,
-    },
-    nextButton: {
-        flex: 1,
-    },
+    dayToday: { borderColor: colors.tone.accent.border },
+    daySelected: { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    weekday: { ...typeScale.caption, color: colors.text.secondary, textAlign: 'center' },
+    dayNumber: { ...typeScale.metric, color: colors.text.primary },
+    month: { ...typeScale.caption, color: colors.text.secondary },
+    textSelected: { color: colors.text.light },
 });
-

@@ -4,7 +4,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Screen from '../components/ui/Screen';
+import { SkeletonBlock, SkeletonCard, SkeletonList } from '../components/ui/Skeleton';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useLanguage } from '../i18n';
 import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../lib/signOut';
@@ -66,24 +67,33 @@ export default function CabinetScreen() {
     };
 
     if (isLoading && !bookings) {
-        return <LoadingSpinner message={t('cabinet.loading')} />;
+        return (
+            <Screen tabBar testID="cabinet-loading">
+                <SkeletonBlock width="60%" height={20} />
+                <SkeletonCard lines={2} />
+                <SkeletonList rows={3} avatar={false} />
+            </Screen>
+        );
     }
 
     if (!user) {
         return (
-            <EmptyState
-                title={t('cabinet.noUser.title')}
-                message={t('cabinet.noUser.message')}
-                action={
-                    <Button
-                        title={isSigningOut ? t('cabinet.ui.signingOut') : t('cabinet.noUser.signOut')}
-                        onPress={() => void handleSignOut()}
-                        variant="danger"
-                        loading={isSigningOut}
-                        fullWidth
-                    />
-                }
-            />
+            <Screen tabBar>
+                <EmptyState
+                    icon="person-circle-outline"
+                    title={t('cabinet.noUser.title')}
+                    message={t('cabinet.noUser.message')}
+                    action={
+                        <Button
+                            title={isSigningOut ? t('cabinet.ui.signingOut') : t('cabinet.noUser.signOut')}
+                            onPress={() => void handleSignOut()}
+                            variant="danger"
+                            loading={isSigningOut}
+                            fullWidth
+                        />
+                    }
+                />
+            </Screen>
         );
     }
 

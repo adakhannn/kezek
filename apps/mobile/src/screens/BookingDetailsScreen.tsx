@@ -5,7 +5,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import { useConfirm } from '../contexts/ConfirmContext';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Screen from '../components/ui/Screen';
+import { SkeletonCard, SkeletonList } from '../components/ui/Skeleton';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
@@ -101,7 +102,12 @@ export default function BookingDetailsScreen() {
     };
 
     if (isLoading) {
-        return <LoadingSpinner message={t('cabinet.details.loading')} />;
+        return (
+            <Screen testID="booking-details-loading">
+                <SkeletonCard lines={3} />
+                <SkeletonList rows={4} avatar={false} />
+            </Screen>
+        );
     }
 
     if (!booking) {
@@ -109,20 +115,33 @@ export default function BookingDetailsScreen() {
         // offers a retry instead of telling the client the booking is gone.
         if (failure === 'not_found') {
             return (
-                <EmptyState
-                    icon="search-outline"
-                    title={t('cabinet.details.notFound')}
-                    message={t('cabinet.details.notFoundMessage')}
-                />
+                <Screen>
+                    <EmptyState
+                        icon="search-outline"
+                        title={t('cabinet.details.notFound')}
+                        message={t('cabinet.details.notFoundMessage')}
+                        action={(
+                            <Button
+                                title={t('cabinet.bookings.title')}
+                                onPress={() => navigation.navigate('Main', { screen: 'Cabinet', params: { screen: 'CabinetMain' } })}
+                                variant="outline"
+                                fullWidth
+                            />
+                        )}
+                    />
+                </Screen>
             );
         }
         return (
-            <EmptyState
-                icon="cloud-offline-outline"
-                title={t('cabinet.details.loadError.title')}
-                message={t('cabinet.details.loadError.message')}
-                action={<Button title={t('cabinet.ui.retry')} onPress={retry} variant="outline" loading={isRetrying} fullWidth />}
-            />
+            <Screen>
+                <EmptyState
+                    icon="cloud-offline-outline"
+                    tone="danger"
+                    title={t('cabinet.details.loadError.title')}
+                    message={t('cabinet.details.loadError.message')}
+                    action={<Button title={t('cabinet.ui.retry')} onPress={retry} variant="outline" loading={isRetrying} fullWidth />}
+                />
+            </Screen>
         );
     }
 

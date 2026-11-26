@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
+import { layout, space, typeScale } from '../../constants/theme';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
 import { getErrorMessage } from '../../lib/errors';
@@ -114,7 +115,6 @@ export default function VerifyScreen() {
             keyboardDismissMode="on-drag"
             automaticallyAdjustKeyboardInsets
         >
-            <Text style={styles.title}>{t('auth.verify.title')}</Text>
             <Text style={styles.subtitle}>{t('auth.verify.subtitle', { contact: email || phone || '' })}</Text>
 
             <Input
@@ -184,23 +184,17 @@ const styles = StyleSheet.create({
     },
     content: {
         flexGrow: 1,
-        padding: colors.layout.space5,
-        paddingBottom: colors.layout.space8,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 8,
-        color: colors.text.primary,
+        paddingHorizontal: layout.gutter,
+        paddingTop: space.xxl,
+        paddingBottom: space.xxxl,
     },
     subtitle: {
-        fontSize: 16,
-        lineHeight: 22,
+        ...typeScale.body,
         color: colors.text.secondary,
-        marginBottom: colors.layout.space5,
+        marginBottom: space.xxl,
     },
     field: {
-        marginBottom: colors.layout.space5,
+        marginBottom: space.xl,
     },
     codeInputContainer: {
         justifyContent: 'center',
@@ -211,9 +205,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     resendButton: {
-        marginTop: colors.layout.space3,
+        marginTop: space.md,
     },
     backButton: {
-        marginTop: colors.layout.space2,
+        marginTop: space.sm,
     },
 });

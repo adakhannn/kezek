@@ -95,11 +95,12 @@ describe('home discovery', () => {
     test('category chips are the full named list and stay after one is picked (B3)', async () => {
         renderHome();
 
-        expect(await screen.findByLabelText('Категория Маникюр')).toBeTruthy();
-        expect(screen.getByLabelText('Категория СПА')).toBeTruthy();
-        expect(screen.queryByLabelText('Категория hair')).toBeNull();
+        expect(await screen.findByTestId('home-categories-nails')).toBeTruthy();
+        expect(screen.getByTestId('home-categories-spa')).toBeTruthy();
+        expect(screen.getByLabelText('Маникюр')).toBeTruthy();
+        expect(screen.queryByLabelText('hair')).toBeNull();
 
-        fireEvent.press(screen.getByLabelText('Категория Парикмахерская'));
+        fireEvent.press(screen.getByTestId('home-categories-hair'));
 
         await waitFor(() => {
             expect(mockedApiRequest).toHaveBeenCalledWith('/mobile/businesses?category=hair&page=1&limit=20');
@@ -107,9 +108,9 @@ describe('home discovery', () => {
         await waitFor(() => expect(screen.queryByText('Nail Studio')).toBeNull());
 
         // The other categories are still there to switch to.
-        expect(screen.getByLabelText('Категория Маникюр')).toBeTruthy();
-        expect(screen.getByLabelText('Категория СПА')).toBeTruthy();
-        expect(screen.getByLabelText('Категория Парикмахерская').props.accessibilityState).toEqual(
+        expect(screen.getByTestId('home-categories-nails')).toBeTruthy();
+        expect(screen.getByTestId('home-categories-spa')).toBeTruthy();
+        expect(screen.getByTestId('home-categories-hair').props.accessibilityState).toEqual(
             expect.objectContaining({ selected: true }),
         );
     });

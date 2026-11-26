@@ -16,6 +16,7 @@ import * as SecureStore from 'expo-secure-store';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
+import { layout, space, typeScale } from '../../constants/theme';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage, type Translate } from '../../i18n';
 import { getMobileApiUrl } from '../../lib/apiUrl';
@@ -479,20 +480,19 @@ const styles = StyleSheet.create({
     },
     content: {
         flexGrow: 1,
-        padding: colors.layout.space5,
-        paddingBottom: colors.layout.space8,
+        paddingHorizontal: layout.gutter,
+        paddingTop: space.xxl,
+        paddingBottom: space.xxxl,
     },
     title: {
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 8,
+        ...typeScale.title,
+        marginBottom: space.sm,
         color: colors.text.primary,
     },
     subtitle: {
-        fontSize: 16,
-        lineHeight: 22,
+        ...typeScale.body,
         color: colors.text.secondary,
-        marginBottom: colors.layout.space6,
+        marginBottom: space.xxl,
     },
     field: {
         marginBottom: colors.layout.space5,

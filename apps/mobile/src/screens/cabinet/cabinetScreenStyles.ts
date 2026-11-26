@@ -1,329 +1,93 @@
 import { StyleSheet } from 'react-native';
 
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
-import { typography } from '../../constants/typography';
+import { layout, radii, space, typeScale } from '../../constants/theme';
 
+/*
+ * The client cabinet (docs/mobile/UI_GUIDE.md): page background, 16dp gutter, sections 24 apart,
+ * one card level. The header says "Личный кабинет"; the screen opens with the person.
+ */
 export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background.primary,
-    },
-    content: {
-        // Keep footer actions fully above bottom tab bar on smaller screens.
-        paddingBottom: 140,
-    },
-    header: {
-        paddingHorizontal: colors.layout.space6,
-        paddingTop: colors.layout.space6,
-        paddingBottom: colors.layout.space4,
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: colors.layout.space4,
-    },
-    headerCompact: {
-        flexDirection: 'column',
-        alignItems: 'stretch',
-    },
-    headerTextWrap: {
-        flex: 1,
-    },
-    eyebrow: {
-        ...typography.label,
-        color: colors.accent.secondary,
-        marginBottom: colors.layout.space2,
-    },
-    title: {
-        ...typography.pageTitle,
-        color: colors.text.primary,
-        marginBottom: colors.layout.space2,
-    },
-    subtitle: {
-        ...typography.body,
-        color: colors.text.secondary,
-    },
-    overviewCard: {
-        marginHorizontal: colors.layout.space6,
-        marginBottom: colors.layout.space4,
-        backgroundColor: colors.surface.emphasis,
-        borderColor: colors.border.subtle,
-    },
-    overviewTopRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: colors.layout.space4,
-        marginBottom: colors.layout.space4,
-    },
-    overviewTopRowCompact: {
-        flexDirection: 'column',
-    },
-    overviewCopy: {
-        flex: 1,
-    },
-    overviewLabel: {
-        ...typography.label,
-        color: colors.text.secondary,
-        marginBottom: colors.layout.space2,
-    },
-    overviewTitle: {
-        ...typography.sectionTitle,
-        color: colors.text.primary,
-        marginBottom: colors.layout.space2,
-    },
-    overviewDescription: {
-        ...typography.caption,
-        color: colors.text.secondary,
-    },
-    overviewMetaPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space2,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space2,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.card,
-    },
-    overviewMetaPillCompact: {
-        alignSelf: 'flex-start',
-    },
-    overviewMetaText: {
-        ...typography.label,
-        color: colors.text.secondary,
-    },
-    statsRow: {
-        flexDirection: 'row',
-        gap: colors.layout.space3,
-    },
-    statsRowCompact: {
-        flexWrap: 'wrap',
-    },
-    statCard: {
-        flex: 1,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        backgroundColor: colors.surface.card,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-    },
-    statCardCompact: {
-        flexBasis: '45%',
-        minWidth: 0,
-    },
-    statCardWide: {
-        flexBasis: '100%',
-    },
-    statValue: {
-        ...typography.sectionTitle,
-        color: colors.text.primary,
-        marginBottom: 2,
-    },
-    statLabel: {
-        ...typography.caption,
-        color: colors.text.secondary,
-    },
-    offlineBanner: {
-        marginHorizontal: colors.layout.space6,
-        marginBottom: colors.layout.space4,
-    },
-    syncCard: {
-        marginHorizontal: colors.layout.space6,
-        marginBottom: colors.layout.space4,
-        borderColor: colors.border.subtle,
-    },
-    syncRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space3,
-    },
-    syncIconWrap: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    container: { flex: 1, backgroundColor: colors.surface.page },
+    content: { paddingHorizontal: layout.gutter, paddingTop: space.lg, gap: layout.sectionGap },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    banner: { marginBottom: 0 },
+
+    hero: { flexDirection: 'row', alignItems: 'center', gap: space.lg, minHeight: MIN_TOUCH_TARGET },
+    heroText: { flex: 1, minWidth: 0, gap: space.xxs },
+    heroName: { ...typeScale.headline, color: colors.text.primary },
+    heroLink: { ...typeScale.callout, color: colors.tone.accent.fg },
+
+    nextCard: { gap: space.sm },
+    nextTop: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+    nextIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: radii.md,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.feedback.infoSurface,
+        backgroundColor: colors.accent.primary,
     },
-    syncCopy: {
-        flex: 1,
-    },
-    syncTitle: {
-        ...typography.label,
-        color: colors.text.primary,
-        marginBottom: 2,
-    },
-    syncText: {
-        ...typography.caption,
-        color: colors.text.secondary,
-    },
-    sectionHeader: {
-        paddingHorizontal: colors.layout.space6,
-        marginBottom: colors.layout.space3,
-    },
-    sectionTitle: {
-        ...typography.sectionTitle,
-        color: colors.text.primary,
-        marginBottom: colors.layout.space2,
-    },
-    sectionDescription: {
-        ...typography.caption,
-        color: colors.text.secondary,
-    },
-    tabsContainer: {
+    nextText: { flex: 1, minWidth: 0, gap: space.xxs },
+    nextLabel: { ...typeScale.overline, color: colors.tone.accent.fg },
+    nextTitle: { ...typeScale.headline, color: colors.text.primary },
+    nextWhen: { ...typeScale.bodyStrong, color: colors.text.primary },
+    nextMeta: { ...typeScale.caption, color: colors.text.secondary },
+
+    tabs: {
         flexDirection: 'row',
-        gap: colors.layout.space3,
-        paddingHorizontal: colors.layout.space6,
-        marginBottom: colors.layout.space4,
-    },
-    tabButton: {
-        flex: 1,
-        borderRadius: colors.layout.radiusLg,
-        paddingHorizontal: colors.layout.space4,
-        paddingVertical: colors.layout.space3,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
+        padding: space.xs,
+        gap: space.xs,
+        borderRadius: radii.md,
         backgroundColor: colors.surface.card,
-        gap: 2,
     },
-    tabButtonActive: {
-        backgroundColor: colors.surface.emphasis,
-        borderColor: colors.accent.primary,
+    tab: {
+        flex: 1,
+        minHeight: MIN_TOUCH_TARGET,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: space.sm,
+        paddingHorizontal: space.sm,
+        borderRadius: radii.sm,
     },
-    tabLabel: {
-        ...typography.label,
-        color: colors.text.secondary,
-    },
-    tabLabelActive: {
-        color: colors.text.primary,
-    },
+    tabSelected: { backgroundColor: colors.accent.primary },
+    tabLabel: { ...typeScale.callout, color: colors.text.secondary, flexShrink: 1 },
+    tabLabelSelected: { color: colors.text.light, fontWeight: '600' },
     tabCount: {
-        ...typography.caption,
-        color: colors.text.tertiary,
-    },
-    tabCountActive: {
-        color: colors.accent.primary,
-    },
-    bookingsList: {
-        gap: colors.layout.space4,
-        paddingHorizontal: colors.layout.space6,
-    },
-    bookingPressable: {
-        borderRadius: colors.layout.radiusLg,
-    },
-    bookingCard: {
-        marginBottom: 0,
-        gap: colors.layout.space4,
-    },
-    bookingHeader: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: colors.layout.space3,
-    },
-    bookingTitleWrap: {
-        flex: 1,
-        gap: colors.layout.space1,
-    },
-    bookingService: {
-        ...typography.sectionTitle,
-        color: colors.text.primary,
-    },
-    bookingBusiness: {
-        ...typography.caption,
-        color: colors.text.secondary,
-    },
-    statusBadge: {
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space2,
-        borderRadius: 999,
-    },
-    statusText: {
-        ...typography.label,
-        color: colors.text.inverse,
-    },
-    timelineCard: {
-        flexDirection: 'row',
+        minWidth: 22,
+        paddingHorizontal: space.xs,
+        borderRadius: radii.pill,
         alignItems: 'center',
-        gap: colors.layout.space3,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space3,
-        borderRadius: colors.layout.radiusMd,
-        backgroundColor: colors.surface.emphasis,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
+        backgroundColor: colors.fill.track,
     },
-    timelineIconWrap: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.feedback.infoSurface,
-    },
-    timelineCopy: {
-        flex: 1,
-    },
-    timelineLabel: {
-        ...typography.label,
-        color: colors.text.secondary,
-        marginBottom: 2,
-    },
-    timelineValue: {
-        ...typography.body,
-        color: colors.text.primary,
-    },
-    metaGrid: {
-        gap: colors.layout.space3,
-    },
-    metaItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space2,
-    },
-    metaText: {
-        ...typography.caption,
-        color: colors.text.secondary,
-        flex: 1,
-    },
+    tabCountSelected: { backgroundColor: 'rgba(255, 255, 255, 0.22)' },
+    tabCountText: { fontSize: 12, lineHeight: 18, fontWeight: '600', color: colors.text.secondary },
+
+    bookingsList: { gap: layout.itemGap },
+    bookingCard: { gap: space.md },
+    bookingHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.md },
+    bookingTitleWrap: { flex: 1, minWidth: 0, gap: space.xxs },
+    bookingService: { ...typeScale.bodyStrong, color: colors.text.primary },
+    bookingBusiness: { ...typeScale.caption, color: colors.text.secondary },
+    whenRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    whenText: { ...typeScale.callout, color: colors.text.primary, flexShrink: 1 },
+    metaGroup: { gap: space.xs },
+    metaItem: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    metaText: { ...typeScale.caption, color: colors.text.secondary, flexShrink: 1 },
+    benefitText: { color: colors.tone.success.fg },
     bookingFooter: {
-        paddingTop: colors.layout.space3,
-        borderTopWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: space.md,
+        paddingTop: space.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
         borderTopColor: colors.border.subtle,
     },
-    footerHint: {
-        ...typography.caption,
-        color: colors.text.tertiary,
-    },
-    empty: {
-        marginHorizontal: colors.layout.space6,
-        paddingVertical: colors.layout.space8,
-    },
-    footer: {
-        paddingHorizontal: colors.layout.space6,
-        paddingTop: colors.layout.space5,
-        paddingBottom: colors.layout.space6,
-        gap: colors.layout.space3,
-    },
-    signOutQuickButton: {
-        borderColor: colors.status.danger,
-    },
-    benefitRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        marginBottom: colors.layout.space2,
-    },
-    reviewButton: {
-        marginTop: colors.layout.space2,
-        alignSelf: 'flex-start',
-    },
-    loadMore: {
-        marginHorizontal: colors.layout.space6,
-        marginBottom: colors.layout.space4,
-        alignItems: 'center',
-        gap: colors.layout.space2,
-    },
+    footerHint: { ...typeScale.caption, color: colors.text.secondary, flexShrink: 1 },
+    loadMore: { alignItems: 'center', gap: space.sm },
+
+    centered: { flex: 1, backgroundColor: colors.surface.page, padding: layout.gutter, gap: layout.itemGap },
 });

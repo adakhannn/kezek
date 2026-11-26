@@ -1,11 +1,15 @@
 import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 
 import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
+import { ListGroup } from '../../components/ui/ListRow';
+import Section from '../../components/ui/Section';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import { colors } from '../../constants/colors';
+import { radii, space, typeScale } from '../../constants/theme';
 import { useLanguage, type Locale } from '../../i18n';
 import { apiRequest } from '../../lib/api';
 import { formatDate } from '../../utils/format';
@@ -54,7 +58,7 @@ export function VisitPackagesBlock({ userId }: { userId: string }) {
             <OfflineBanner
                 title={t('cabinet.packages.loadError')}
                 onRetry={() => void query.refetch()}
-                style={styles.block}
+                style={styles.banner}
                 compact
             />
         );
@@ -68,26 +72,33 @@ export function VisitPackagesBlock({ userId }: { userId: string }) {
 
     const renderItem = (item: VisitPackageItem) => (
         <View key={item.id} style={[styles.item, !item.is_active && styles.itemInactive]} testID={`visit-package-${item.id}`}>
-            <View style={styles.itemHeader}>
-                <Text style={styles.itemTitle}>{planName(item, locale)}</Text>
-                {!item.is_active ? <Text style={styles.badge}>{t('cabinet.packages.inactive')}</Text> : null}
+            <View style={[styles.icon, !item.is_active && styles.iconInactive]}>
+                <Ionicons name="ticket-outline" size={18} color={item.is_active ? colors.tone.success.fg : colors.text.secondary} />
             </View>
-            <Text style={styles.itemText}>
-                {item.plan_visit_count
-                    ? t('cabinet.packages.remaining', { remaining: item.remaining_visits, total: item.plan_visit_count })
-                    : t('cabinet.packages.remainingNoTotal', { remaining: item.remaining_visits })}
-            </Text>
-            <Text style={styles.itemHint}>
-                {t('cabinet.packages.validUntil', { date: formatDate(`${item.valid_until}T12:00:00`, locale) })}
-            </Text>
+            <View style={styles.itemBody}>
+                <View style={styles.itemHeader}>
+                    <Text style={styles.itemTitle}>{planName(item, locale)}</Text>
+                    {!item.is_active ? <Badge label={t('cabinet.packages.inactive')} /> : null}
+                </View>
+                <Text style={styles.itemText}>
+                    {item.plan_visit_count
+                        ? t('cabinet.packages.remaining', { remaining: item.remaining_visits, total: item.plan_visit_count })
+                        : t('cabinet.packages.remainingNoTotal', { remaining: item.remaining_visits })}
+                </Text>
+                <Text style={styles.itemHint}>
+                    {t('cabinet.packages.validUntil', { date: formatDate(`${item.valid_until}T12:00:00`, locale) })}
+                </Text>
+            </View>
         </View>
     );
 
     return (
-        <Card style={styles.block} testID="visit-packages-block">
-            <Text style={styles.title}>{t('cabinet.packages.title')}</Text>
-            <Text style={styles.subtitle}>{t('cabinet.packages.subtitle')}</Text>
-            {active.length > 0 ? active.map(renderItem) : <Text style={styles.itemHint}>{t('cabinet.packages.noActive')}</Text>}
+        <Section title={t('cabinet.packages.title')} caption={t('cabinet.packages.subtitle')} testID="visit-packages-block">
+            {active.length > 0 ? (
+                <ListGroup>{active.map(renderItem)}</ListGroup>
+            ) : (
+                <Text style={styles.itemHint}>{t('cabinet.packages.noActive')}</Text>
+            )}
             {expired.length > 0 ? (
                 <>
                     <Button
@@ -96,29 +107,29 @@ export function VisitPackagesBlock({ userId }: { userId: string }) {
                         variant="ghost"
                         size="sm"
                     />
-                    {expiredOpen ? expired.map(renderItem) : null}
+                    {expiredOpen ? <ListGroup>{expired.map(renderItem)}</ListGroup> : null}
                 </>
             ) : null}
-        </Card>
+        </Section>
     );
 }
 
 const styles = StyleSheet.create({
-    block: { marginHorizontal: colors.layout.space6, marginBottom: colors.layout.space4 },
-    title: { fontSize: 18, fontWeight: '700', color: colors.text.primary },
-    subtitle: { fontSize: 13, color: colors.text.secondary, marginBottom: 8 },
-    item: {
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        borderRadius: 12,
-        padding: 12,
-        marginTop: 8,
-        gap: 2,
+    banner: { marginBottom: 0 },
+    item: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingVertical: space.md },
+    itemInactive: { opacity: 0.7 },
+    icon: {
+        width: 36,
+        height: 36,
+        borderRadius: radii.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.tone.success.bg,
     },
-    itemInactive: { opacity: 0.6 },
-    itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-    itemTitle: { fontSize: 15, fontWeight: '600', color: colors.text.primary, flexShrink: 1 },
-    badge: { fontSize: 12, color: colors.text.secondary },
-    itemText: { fontSize: 14, color: colors.text.primary },
-    itemHint: { fontSize: 13, color: colors.text.secondary },
+    iconInactive: { backgroundColor: colors.tone.neutral.bg },
+    itemBody: { flex: 1, minWidth: 0, gap: space.xxs },
+    itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
+    itemTitle: { ...typeScale.bodyStrong, color: colors.text.primary, flexShrink: 1 },
+    itemText: { ...typeScale.callout, color: colors.text.primary },
+    itemHint: { ...typeScale.caption, color: colors.text.secondary },
 });

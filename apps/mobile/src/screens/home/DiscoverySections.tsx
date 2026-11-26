@@ -1,15 +1,21 @@
 import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
+import Avatar from '../../components/ui/Avatar';
+import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import ChipGroup from '../../components/ui/ChipGroup';
 import EmptyState from '../../components/ui/EmptyState';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ErrorState from '../../components/ui/ErrorState';
+import ListRow from '../../components/ui/ListRow';
 import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
+import Section from '../../components/ui/Section';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 import { colors } from '../../constants/colors';
+import { layout } from '../../constants/theme';
 import { translatePlural, useLanguage, type MobileI18nKey, type Translate } from '../../i18n';
 import { formatRatingDisplayValue } from '@shared-client/rating';
 import { formatPhone } from '../../utils/format';
@@ -58,6 +64,10 @@ type NearbySectionProps = {
   onOpenBusiness: (slug: string, previewName?: string) => void;
 };
 
+/** "All" has no slug; the chip key must not collide with a real category. */
+const ALL_CATEGORIES = '__all__';
+
+/** The category filter: one line of chips that scrolls sideways (never ragged rows). */
 export function CategoriesSection({
   categories,
   categoryLabels = NO_LABELS,
@@ -70,24 +80,25 @@ export function CategoriesSection({
     return null;
   }
 
+  const options = [
+    { key: ALL_CATEGORIES, label: t('booking.home.categoryAll') },
+    ...categories.map((category) => ({ key: category, label: categoryLabel(categoryLabels, category) })),
+  ];
+
   return (
-    <View style={styles.categoriesContainer}>
-      <Text style={styles.categoriesLabel}>{t('booking.home.categoriesTitle')}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
-        <CategoryChip label={t('booking.home.categoryAll')} isActive={!selectedCategory} onPress={() => onSelectCategory(null)} />
-        {categories.map((category) => (
-          <CategoryChip
-            key={category}
-            label={categoryLabel(categoryLabels, category)}
-            isActive={selectedCategory === category}
-            onPress={() => onSelectCategory(category)}
-          />
-        ))}
-      </ScrollView>
-    </View>
+    <Section title={t('booking.home.categoriesTitle')}>
+      <ChipGroup
+        options={options}
+        value={selectedCategory ?? ALL_CATEGORIES}
+        onChange={(key) => onSelectCategory(key === ALL_CATEGORIES ? null : key)}
+        accessibilityLabel={t('booking.home.categoryHint')}
+        testID="home-categories"
+      />
+    </Section>
   );
 }
 
+/** Branches near the person: a status line, the found rows, "find" and the map. */
 export function NearbySection({
   branches,
   status,
@@ -100,71 +111,63 @@ export function NearbySection({
   const isBusy = status === 'locating' || status === 'loading';
   const hasError = status === 'denied' || status === 'unavailable' || status === 'error';
   const hasBranches = status === 'ready' && branches.length > 0;
-  const errorCopy = t(getNearbyStatusKey(status, error));
+  const statusCopy = t(getNearbyStatusKey(status, error));
 
   return (
-    <View style={styles.nearbyFallbackContainer}>
-      <Card style={styles.nearbyFallbackCard}>
-        <View style={[styles.nearbyFallbackIcon, hasError && styles.nearbyFallbackIconWarning]}>
-          <Ionicons
-            name="navigate-outline"
-            size={18}
-            color={colors.primary.from}
-            accessible={false}
-            importantForAccessibility="no"
-          />
+    <Section title={t('booking.home.nearbyTitle')}>
+      <Card variant="plain" padding="md" style={styles.nearbyCard}>
+        <View style={styles.nearbyStatus}>
+          <View style={[styles.nearbyIcon, hasError && styles.nearbyIconWarning]}>
+            <Ionicons
+              name={hasError ? 'alert-circle-outline' : 'navigate-outline'}
+              size={18}
+              color={hasError ? colors.tone.warning.fg : colors.tone.accent.fg}
+              accessible={false}
+              importantForAccessibility="no"
+            />
+          </View>
+          <Text style={styles.nearbyText}>
+            {status === 'ready' && branches.length === 0 ? t('booking.home.nearbyEmpty') : statusCopy}
+          </Text>
         </View>
-        <View style={styles.nearbyFallbackContent}>
-          <Text style={styles.nearbyFallbackTitle}>{t('booking.home.nearbyTitle')}</Text>
-          <Text style={styles.nearbyFallbackText}>{errorCopy}</Text>
 
-          {hasBranches ? (
-            <View style={styles.nearbyBranchList}>
-              {branches.map((branch) => (
-                <NearbyBranchRow
-                  key={branch.id}
-                  branch={branch}
-                  onOpenBusiness={onOpenBusiness}
-                />
-              ))}
-            </View>
-          ) : null}
+        {hasBranches ? (
+          <View style={styles.nearbyRows}>
+            {branches.map((branch) => (
+              <NearbyBranchRow
+                key={branch.id}
+                branch={branch}
+                onOpenBusiness={onOpenBusiness}
+              />
+            ))}
+          </View>
+        ) : null}
 
-          {status === 'ready' && branches.length === 0 ? (
-            <Text style={styles.nearbyFallbackHint}>{t('booking.home.nearbyEmpty')}</Text>
-          ) : null}
-
-          <Button
-            title={t(
-              isBusy
-                ? 'booking.home.nearbySearching'
-                : status === 'idle'
-                  ? 'booking.home.nearbyFind'
-                  : 'booking.home.nearbyRefresh',
-            )}
-            onPress={onRequestNearby}
-            variant={hasBranches ? 'outline' : 'secondary'}
-            size="sm"
-            loading={isBusy}
-            fullWidth
-            style={styles.nearbyAction}
-            accessibilityLabel={t('booking.home.nearbyFindLabel')}
-            accessibilityHint={t('booking.home.nearbyFindHint')}
-          />
-          <Button
-            title={t('booking.home.openMap')}
-            onPress={onOpenMap}
-            variant="outline"
-            size="sm"
-            fullWidth
-            style={styles.nearbyMapAction}
-            leadingIcon={<Ionicons name="map-outline" size={16} color={colors.text.primary} />}
-            accessibilityLabel={t('booking.home.openMap')}
-            accessibilityHint={t('booking.home.openMapHint')}
-          />
-        </View>
+        <Button
+          title={t(
+            isBusy
+              ? 'booking.home.nearbySearching'
+              : status === 'idle'
+                ? 'booking.home.nearbyFind'
+                : 'booking.home.nearbyRefresh',
+          )}
+          onPress={onRequestNearby}
+          variant="secondary"
+          loading={isBusy}
+          fullWidth
+          leadingIcon={isBusy ? undefined : <Ionicons name="locate-outline" size={18} color={colors.text.primary} />}
+          accessibilityLabel={t('booking.home.nearbyFindLabel')}
+          accessibilityHint={t('booking.home.nearbyFindHint')}
+        />
+        <ListRow
+          icon="map-outline"
+          title={t('booking.home.openMap')}
+          onPress={onOpenMap}
+          accessibilityHint={t('booking.home.openMapHint')}
+          style={styles.nearbyMapRow}
+        />
       </Card>
-    </View>
+    </Section>
   );
 }
 
@@ -187,19 +190,19 @@ function NearbyBranchRow({
     <MotionPressable
       onPress={openBranch}
       disabled={!canOpen}
-      style={[styles.nearbyBranchRow, !canOpen && styles.nearbyBranchRowDisabled]}
+      style={[styles.nearbyRow, !canOpen && styles.nearbyRowDisabled]}
       accessibilityRole="button"
       accessibilityLabel={`${branch.businessName}, ${branch.branchName}`}
       accessibilityHint={t(canOpen ? 'booking.home.nearbyOpenHint' : 'booking.home.nearbyUnavailableHint')}
     >
-      <View style={styles.nearbyBranchMain}>
-        <Text style={styles.nearbyBranchName}>{branch.businessName}</Text>
-        <Text style={styles.nearbyBranchMeta} numberOfLines={2}>
+      <View style={styles.nearbyRowMain}>
+        <Text style={styles.nearbyRowName} numberOfLines={1}>{branch.businessName}</Text>
+        <Text style={styles.nearbyRowMeta} numberOfLines={2}>
           {branch.branchName}
           {branch.address ? ` · ${branch.address}` : ''}
         </Text>
       </View>
-      <Text style={styles.nearbyBranchDistance}>
+      <Text style={styles.nearbyDistance}>
         {t('booking.home.distanceKm', { distance: branch.distanceKm.toFixed(1) })}
       </Text>
     </MotionPressable>
@@ -228,42 +231,7 @@ function getNearbyStatusKey(status: NearbyStatus, error: unknown): MobileI18nKey
   }
 }
 
-function CategoryChip({
-  label,
-  isActive,
-  onPress,
-}: {
-  label: string;
-  isActive: boolean;
-  onPress: () => void;
-}) {
-  const { t } = useLanguage();
-
-  return (
-    <MotionPressable
-      style={[styles.categoryChip, isActive && styles.categoryChipActive]}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={t('booking.home.categoryLabel', { label })}
-      accessibilityState={{ selected: isActive }}
-      accessibilityHint={t('booking.home.categoryHint')}
-    >
-      {isActive ? (
-        <LinearGradient
-          colors={[colors.primary.from, colors.primary.to]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.categoryChipGradient}
-        >
-          <Text style={styles.categoryChipTextActive}>{label}</Text>
-        </LinearGradient>
-      ) : (
-        <Text style={styles.categoryChipText}>{label}</Text>
-      )}
-    </MotionPressable>
-  );
-}
-
+/** The list states: skeleton cards, a failure with retry, or an empty result with an action. */
 export function BusinessListSection({
   businesses,
   isLoading,
@@ -280,16 +248,22 @@ export function BusinessListSection({
   const { t } = useLanguage();
 
   if (isLoading && !isRefreshing) {
-    return <LoadingSpinner message={t('booking.home.loadingData')} />;
+    return (
+      <View style={{ gap: layout.itemGap }} accessibilityLabel={t('booking.home.loadingData')}>
+        <SkeletonCard lines={2} />
+        <SkeletonCard lines={2} />
+        <SkeletonCard lines={2} />
+      </View>
+    );
   }
 
   if (error && businesses.length === 0) {
     return (
-      <EmptyState
-        icon="alert-circle"
+      <ErrorState
         title={t('booking.home.loadErrorTitle')}
         message={t('booking.checkConnection')}
-        action={<Button title={t('booking.retry')} onPress={onRetry} variant="outline" fullWidth />}
+        retryLabel={t('booking.retry')}
+        onRetry={onRetry}
       />
     );
   }
@@ -317,7 +291,7 @@ export function BusinessListSection({
   }
 
   return (
-    <View style={styles.businessList}>
+    <View style={{ gap: layout.itemGap }}>
       {businesses.map((business) => (
         <BusinessCard
           key={business.id}
@@ -331,6 +305,10 @@ export function BusinessListSection({
   );
 }
 
+/**
+ * One business in a list: initials tile, name, rating and promotions, address and phone, the
+ * category tags and the booking button. The whole card opens the business page.
+ */
 export const BusinessCard = React.memo(function BusinessCard({
   business,
   onOpenBusiness,
@@ -350,67 +328,71 @@ export const BusinessCard = React.memo(function BusinessCard({
       accessibilityLabel={businessAccessibilityLabel}
       accessibilityHint={t('discovery.home.openBusinessHint')}
     >
-      <Card style={styles.businessCard} variant="muted">
-        <View style={styles.businessHeader}>
-          <View style={styles.businessNameRow}>
-            <Text style={styles.businessName}>{business.name}</Text>
-            <RatingBadge rating={business.rating_score ?? null} size="small" />
-          </View>
-          {business.promotions_count ? (
-            <View style={styles.businessPromotionsBadge}>
-              <Text style={styles.businessPromotionsText}>
-                {translatePlural(t, 'discovery.home.promotions', business.promotions_count)}
-              </Text>
+      <Card variant="plain" padding="md" style={styles.businessCard}>
+        <View style={styles.businessTop}>
+          <Avatar name={business.name} size={48} />
+          <View style={styles.businessMain}>
+            <Text style={styles.businessName} numberOfLines={2}>{business.name}</Text>
+            <View style={styles.businessRating}>
+              <RatingBadge rating={business.rating_score ?? null} size="small" />
+              {business.promotions_count ? (
+                <Badge
+                  icon="pricetag-outline"
+                  tone="accent"
+                  label={translatePlural(t, 'discovery.home.promotions', business.promotions_count)}
+                />
+              ) : null}
             </View>
-          ) : null}
+          </View>
         </View>
 
-        {business.address ? (
-          <View style={styles.businessInfo}>
-            <Ionicons
-              name="location-outline"
-              size={16}
-              color={colors.text.secondary}
-              accessible={false}
-              importantForAccessibility="no"
-            />
-            <Text style={styles.businessAddress}>{business.address}</Text>
-          </View>
-        ) : null}
-
-        {business.phones?.length ? (
-          <View style={styles.businessInfo}>
-            <Ionicons
-              name="call-outline"
-              size={16}
-              color={colors.text.secondary}
-              accessible={false}
-              importantForAccessibility="no"
-            />
-            <Text style={styles.businessPhone}>{formatPhone(business.phones[0])}</Text>
+        {business.address || business.phones?.length ? (
+          <View style={styles.businessMetaGroup}>
+            {business.address ? (
+              <View style={styles.businessMetaRow}>
+                <Ionicons
+                  name="location-outline"
+                  size={14}
+                  color={colors.text.secondary}
+                  accessible={false}
+                  importantForAccessibility="no"
+                />
+                <Text style={styles.businessMeta} numberOfLines={2}>{business.address}</Text>
+              </View>
+            ) : null}
+            {business.phones?.length ? (
+              <View style={styles.businessMetaRow}>
+                <Ionicons
+                  name="call-outline"
+                  size={14}
+                  color={colors.text.secondary}
+                  accessible={false}
+                  importantForAccessibility="no"
+                />
+                <Text style={styles.businessMeta}>{formatPhone(business.phones[0])}</Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
         {business.categories?.length ? (
-          <View style={styles.businessCategories}>
+          <View style={styles.businessTags}>
             {business.categories.map((category) => (
-              <View key={category} style={styles.businessCategoryTag}>
-                <Text style={styles.businessCategoryText}>{categoryLabel(categoryLabels, category)}</Text>
-              </View>
+              <Badge key={category} label={categoryLabel(categoryLabels, category)} />
             ))}
           </View>
         ) : null}
 
-        <View style={styles.businessFooter}>
-          <Button
-            title={t('booking.book')}
-            onPress={bookBusiness}
-            trailingIcon={<Ionicons name="arrow-forward" size={16} color={colors.text.light} />}
-            fullWidth
-            accessibilityLabel={t('booking.home.bookAt', { name: business.name })}
-            accessibilityHint={t('discovery.home.bookHint')}
-          />
-        </View>
+        <Button
+          title={t('booking.book')}
+          onPress={bookBusiness}
+          variant="secondary"
+          size="sm"
+          trailingIcon={<Ionicons name="arrow-forward" size={16} color={colors.tone.accent.fg} />}
+          fullWidth
+          accessibilityLabel={t('booking.home.bookAt', { name: business.name })}
+          accessibilityHint={t('discovery.home.bookHint')}
+        />
       </Card>
     </MotionPressable>
   );

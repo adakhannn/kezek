@@ -55,6 +55,7 @@ describe('perceived performance contracts', () => {
 
         expect(home).toContain("rootNavigation.navigate('Booking', { slug, previewName })");
         expect(booking).toContain("previewName || t('booking.screen.title')");
-        expect(booking).toContain('<BookingProgressIndicator currentStep={1} />');
+        // The step frame draws the progress bar of step 1 around the skeleton.
+        expect(booking).toContain('<BookingStepScreen step={1}>');
     });
 });

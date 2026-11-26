@@ -1,7 +1,6 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { formatTimeSlot } from '@shared-client/formatters';
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
@@ -10,17 +9,18 @@ import type { Slot } from '@shared-client/types';
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
+import { radii, space, typeScale } from '../../constants/theme';
 import Button from '../../components/ui/Button';
 import EmptyState from '../../components/ui/EmptyState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import MotionPressable from '../../components/ui/MotionPressable';
 import OfflineBanner from '../../components/ui/OfflineBanner';
-import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import Section from '../../components/ui/Section';
+import { SkeletonBlock } from '../../components/ui/Skeleton';
 import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { ANY_STAFF } from './bookingSelection';
+import { BookingContextLine, BookingStepScreen, bookingStepStyles } from './BookingStepLayout';
 import { useBookingSessionUser } from './useBookingSessionUser';
 import { useBookingStep5Slots } from './useBookingStep5Slots';
 import { useClientDayBookings } from './useClientDayBookings';
@@ -69,9 +69,9 @@ export default function BookingStep5Time() {
     // No time this day (or the master works elsewhere, or the check failed): offer the way out on
     // the screen itself, as the web step does (another date, retry), not only the header arrow.
     const emptyActions = (
-        <View style={styles.emptyActions}>
-            <Button title={t('booking.step5.chooseOtherDate')} onPress={() => navigation.goBack()} variant="primary" />
-            <Button title={t('booking.retry')} onPress={() => void refetch()} variant="outline" />
+        <View style={bookingStepStyles.emptyActions}>
+            <Button title={t('booking.step5.chooseOtherDate')} onPress={() => navigation.goBack()} variant="primary" fullWidth />
+            <Button title={t('booking.retry')} onPress={() => void refetch()} variant="outline" fullWidth />
         </View>
     );
 
@@ -94,241 +94,166 @@ export default function BookingStep5Time() {
         }
     };
 
+    const hasSlots = Boolean(slots && slots.length > 0);
+
     return (
-        <LinearGradient
-            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer}
+        <BookingStepScreen
+            step={5}
+            back={() => navigation.goBack()}
+            next={hasSlots ? {
+                title: t('booking.nav.next'),
+                onPress: handleNext,
+                disabled: !bookingData.selectedSlot,
+            } : undefined}
         >
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-                <BookingProgressIndicator currentStep={5} />
-                <View style={styles.header}>
-                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+            <BookingContextLine name={bookingData.business?.name} />
+
+            {showOfflineBanner ? <OfflineBanner onRetry={() => refetch()} style={bookingStepStyles.banner} /> : null}
+
+            {/* C8: a reminder only; another booking on the same day is still allowed (web SlotPicker). */}
+            {userId && dayBookingsCount > 0 ? (
+                <FeedbackBanner
+                    variant="warning"
+                    title={t('booking.existingBookings.title')}
+                    message={
+                        dayBookingsCount === 1
+                            ? t('booking.existingBookings.single')
+                            : t('booking.existingBookings.several', { count: dayBookingsCount })
+                    }
+                    style={bookingStepStyles.banner}
+                />
+            ) : null}
+            {userId && dayBookings.isError ? (
+                <FeedbackBanner
+                    variant="warning"
+                    compact
+                    title={t('booking.existingBookings.checkFailedTitle')}
+                    message={t('booking.existingBookings.checkFailed')}
+                    action={
+                        <Button
+                            title={t('booking.retry')}
+                            onPress={() => {
+                                void dayBookings.refetch();
+                            }}
+                            loading={dayBookings.isFetching}
+                            variant="outline"
+                            size="sm"
+                        />
+                    }
+                    style={bookingStepStyles.banner}
+                />
+            ) : null}
+
+            {isLoading ? (
+                <View accessibilityLabel={t('booking.step5.loading')} style={styles.grid}>
+                    {Array.from({ length: 8 }, (_, index) => (
+                        <SkeletonBlock key={index} width="22%" height={MIN_TOUCH_TARGET} radius={radii.md} style={styles.skeletonSlot} />
+                    ))}
                 </View>
-
-                <View style={styles.section}>
-                    {showOfflineBanner ? <OfflineBanner onRetry={() => refetch()} /> : null}
-
-                    {/* C8: a reminder only; another booking on the same day is still allowed (web SlotPicker). */}
-                    {userId && dayBookingsCount > 0 ? (
-                        <FeedbackBanner
-                            variant="warning"
-                            title={t('booking.existingBookings.title')}
-                            message={
-                                dayBookingsCount === 1
-                                    ? t('booking.existingBookings.single')
-                                    : t('booking.existingBookings.several', { count: dayBookingsCount })
-                            }
-                            style={styles.banner}
-                        />
-                    ) : null}
-                    {userId && dayBookings.isError ? (
-                        <FeedbackBanner
-                            variant="warning"
-                            compact
-                            title={t('booking.existingBookings.checkFailedTitle')}
-                            message={t('booking.existingBookings.checkFailed')}
-                            action={
-                                <Button
-                                    title={t('booking.retry')}
-                                    onPress={() => {
-                                        void dayBookings.refetch();
-                                    }}
-                                    loading={dayBookings.isFetching}
-                                    variant="outline"
-                                    size="sm"
-                                />
-                            }
-                            style={styles.banner}
-                        />
-                    ) : null}
-
-                    {isLoading ? (
-                        <LoadingSpinner message={t('booking.step5.loading')} size="small" />
-                    ) : slots && slots.length > 0 ? (
-                        <View style={styles.slotsGrid}>
-                            {slots.map((slot) => {
-                                const master = isAny ? staffName(slot.staff_id) : null;
-                                const time = formatTimeSlot(slot.start_at, tz);
-                                return (
-                                    <MotionPressable
-                                        key={`${slot.staff_id}:${slot.start_at}`}
-                                        style={[styles.slotButton, isSelected(slot) && styles.slotButtonSelected]}
-                                        onPress={() => handleSelectSlot(slot)}
-                                        accessibilityLabel={master ? `${time}, ${master}` : time}
-                                        accessibilityState={{ selected: isSelected(slot) }}
-                                    >
-                                        <Text style={[styles.slotText, isSelected(slot) && styles.slotTextSelected]}>
-                                            {time}
+            ) : hasSlots ? (
+                <Section title={t('booking.progress.time')}>
+                    <View style={styles.grid}>
+                        {slots!.map((slot) => {
+                            const master = isAny ? staffName(slot.staff_id) : null;
+                            const time = formatTimeSlot(slot.start_at, tz);
+                            const selected = isSelected(slot);
+                            return (
+                                <Pressable
+                                    key={`${slot.staff_id}:${slot.start_at}`}
+                                    style={({ pressed }) => [
+                                        styles.slot,
+                                        master ? styles.slotWide : null,
+                                        selected ? styles.slotSelected : null,
+                                        pressed ? styles.pressed : null,
+                                    ]}
+                                    onPress={() => handleSelectSlot(slot)}
+                                    accessibilityRole="radio"
+                                    accessibilityLabel={master ? `${time}, ${master}` : time}
+                                    accessibilityState={{ selected, checked: selected }}
+                                >
+                                    <Text style={[styles.slotText, selected ? styles.slotTextSelected : null]}>
+                                        {time}
+                                    </Text>
+                                    {master ? (
+                                        <Text style={[styles.slotMaster, selected ? styles.slotTextSelected : null]} numberOfLines={1}>
+                                            {master}
                                         </Text>
-                                        {master ? (
-                                            <Text style={styles.slotMaster} numberOfLines={1}>
-                                                {master}
-                                            </Text>
-                                        ) : null}
-                                    </MotionPressable>
-                                );
-                            })}
-                        </View>
-                    ) : !showOfflineBanner && worksElsewhere ? (
-                        <EmptyState
-                            icon="swap-horizontal-outline"
-                            title={t('booking.step5.otherBranchTitle')}
-                            message={t('booking.step5.otherBranchMessage')}
-                            compact
-                            action={emptyActions}
-                            style={styles.noSlotsContainer}
-                        />
-                    ) : !showOfflineBanner && domainErrorMessage ? (
-                        <EmptyState
-                            icon="alert-circle-outline"
-                            title={domainErrorMessage}
-                            message={t('booking.step5.errorHint')}
-                            compact
-                            action={emptyActions}
-                            style={styles.noSlotsContainer}
-                        />
-                    ) : !showOfflineBanner && !hasMore ? (
-                        <EmptyState
-                            icon="time-outline"
-                            title={t('booking.step5.emptyTitle')}
-                            message={t('booking.step5.emptyMessage')}
-                            compact
-                            action={emptyActions}
-                            style={styles.noSlotsContainer}
-                        />
-                    ) : null}
+                                    ) : null}
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+                </Section>
+            ) : !showOfflineBanner && worksElsewhere ? (
+                <EmptyState
+                    icon="swap-horizontal-outline"
+                    title={t('booking.step5.otherBranchTitle')}
+                    message={t('booking.step5.otherBranchMessage')}
+                    compact
+                    action={emptyActions}
+                />
+            ) : !showOfflineBanner && domainErrorMessage ? (
+                <EmptyState
+                    icon="alert-circle-outline"
+                    title={domainErrorMessage}
+                    message={t('booking.step5.errorHint')}
+                    compact
+                    action={emptyActions}
+                />
+            ) : !showOfflineBanner && !hasMore ? (
+                <EmptyState
+                    icon="time-outline"
+                    title={t('booking.step5.emptyTitle')}
+                    message={t('booking.step5.emptyMessage')}
+                    compact
+                    action={emptyActions}
+                />
+            ) : null}
 
-                    {!isLoading && hasMore ? (
-                        <View style={styles.loadMore}>
-                            <Text style={styles.loadMoreHint}>{t('booking.step5.partial')}</Text>
-                            {loadMoreFailed ? (
-                                <Text style={styles.loadMoreError} accessibilityLiveRegion="polite">
-                                    {t('booking.step5.loadMoreFailed')}
-                                </Text>
-                            ) : null}
-                            <Button
-                                title={t('booking.step5.loadMore')}
-                                onPress={loadMore}
-                                loading={loadingMore}
-                                variant="outline"
-                            />
-                        </View>
+            {!isLoading && hasMore ? (
+                <View style={styles.loadMore}>
+                    <Text style={styles.loadMoreHint}>{t('booking.step5.partial')}</Text>
+                    {loadMoreFailed ? (
+                        <Text style={styles.loadMoreError} accessibilityLiveRegion="polite">
+                            {t('booking.step5.loadMoreFailed')}
+                        </Text>
                     ) : null}
-
-                    {slots && slots.length > 0 ? (
-                        <View style={styles.buttonContainer}>
-                            <Button
-                                title={t('booking.nav.back')}
-                                onPress={() => navigation.goBack()}
-                                variant="outline"
-                                style={styles.backButton}
-                            />
-                            <Button
-                                title={t('booking.nav.next')}
-                                onPress={handleNext}
-                                disabled={!bookingData.selectedSlot}
-                                variant="primary"
-                                style={styles.nextButton}
-                            />
-                        </View>
-                    ) : null}
+                    <Button
+                        title={t('booking.step5.loadMore')}
+                        onPress={loadMore}
+                        loading={loadingMore}
+                        variant="outline"
+                        fullWidth
+                    />
                 </View>
-            </ScrollView>
-        </LinearGradient>
+            ) : null}
+        </BookingStepScreen>
     );
 }
 
 const styles = StyleSheet.create({
-    gradientContainer: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-    },
-    content: {
-        paddingBottom: 40,
-    },
-    header: {
-        padding: 20,
-        paddingTop: 24,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 4,
-    },
-    section: {
-        padding: 20,
-    },
-    slotsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-    },
-    slotButton: {
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+    skeletonSlot: { flexGrow: 1 },
+    slot: {
+        flexBasis: '22%',
+        flexGrow: 1,
         minHeight: MIN_TOUCH_TARGET,
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: 10,
-        backgroundColor: colors.background.secondary,
+        paddingHorizontal: space.sm,
+        paddingVertical: space.sm,
+        borderRadius: radii.md,
+        backgroundColor: colors.surface.card,
         borderWidth: 1,
-        borderColor: colors.border.light,
-        minWidth: 80,
+        borderColor: colors.surface.card,
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    slotButtonSelected: {
-        borderColor: colors.primary.from,
-    },
-    slotText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: colors.text.primary,
-    },
-    slotTextSelected: {
-        color: colors.primary.from,
-    },
-    slotMaster: {
-        marginTop: 2,
-        fontSize: 11,
-        color: colors.text.secondary,
-        maxWidth: 120,
-    },
-    banner: {
-        marginBottom: 16,
-    },
-    loadMore: {
-        marginTop: 16,
-        gap: 8,
-    },
-    loadMoreHint: {
-        fontSize: 13,
-        color: colors.text.secondary,
-    },
-    loadMoreError: {
-        fontSize: 13,
-        color: colors.status.danger,
-    },
-    emptyActions: {
-        gap: 10,
-        alignSelf: 'stretch',
-    },
-    noSlotsContainer: {
-        paddingHorizontal: 0,
-    },
-    buttonContainer: {
-        marginTop: 24,
-        paddingHorizontal: 0,
-        flexDirection: 'row',
-        gap: 12,
-    },
-    backButton: {
-        flex: 1,
-    },
-    nextButton: {
-        flex: 1,
-    },
+    slotWide: { flexBasis: '30%' },
+    slotSelected: { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    slotText: { ...typeScale.bodyStrong, color: colors.text.primary, fontVariant: ['tabular-nums'] },
+    slotTextSelected: { color: colors.text.light },
+    slotMaster: { ...typeScale.caption, color: colors.text.secondary, maxWidth: '100%' },
+    loadMore: { gap: space.sm },
+    loadMoreHint: { ...typeScale.caption, color: colors.text.secondary, textAlign: 'center' },
+    loadMoreError: { ...typeScale.caption, color: colors.tone.danger.fg, textAlign: 'center' },
 });
-

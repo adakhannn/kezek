@@ -74,9 +74,9 @@ describe('CabinetScreen in Kyrgyz', () => {
             </QueryClientProvider>,
         );
 
-        expect(await screen.findByText('Кардардын кабинети', {}, { timeout: 5000 })).toBeTruthy();
-        expect(screen.getByText('Сиздин жазылууларыңыз жана профилиңиз')).toBeTruthy();
-        expect(screen.getByText('Менин жазылыштарым')).toBeTruthy();
+        // The header carries the title; the screen opens with the person and the next visit.
+        expect(await screen.findByText('Менин жазылыштарым', {}, { timeout: 5000 })).toBeTruthy();
+        expect(screen.getByText('Кийинки визит')).toBeTruthy();
         expect(screen.getByRole('tab', { name: 'Алдыдагы жазылуулар' })).toBeTruthy();
         expect(screen.getByRole('tab', { name: 'Жазылуулардын таржымалы' })).toBeTruthy();
         expect(screen.getByText('Мастер такталууда')).toBeTruthy();
