@@ -18,7 +18,7 @@ type BookingDataShape = {
     staffId?: string | null;
 };
 
-type StaffItem = {
+export type StaffItem = {
     id: string;
     full_name: string;
     branch_id: string;
@@ -41,17 +41,11 @@ export function filterStaffForService<T extends { id: string }>(
     return filterStaffForServices(staff, links, serviceId ? [serviceId] : []);
 }
 
-export function useBookingStep3Staff({
-    bookingData,
-    setStaff,
-    setStaffId,
-}: UseBookingStep3StaffParams) {
-    const bizId = bookingData.business?.id;
-    const branchId = bookingData.branchId;
-    const serviceIds = bookingData.serviceIds ?? (bookingData.serviceId ? [bookingData.serviceId] : []);
-    const serviceIdsKey = [...serviceIds].sort().join(',');
+export type StaffCatalogue = { staff: StaffItem[]; links: ServiceStaffLink[] };
 
-    const catalogueQuery = useQuery<{ staff: StaffItem[]; links: ServiceStaffLink[] }>({
+/** Every active master of the business and the service links, shared by the service and master steps. */
+export function useStaffCatalogue(bizId: string | null | undefined, enabled = true) {
+    return useQuery<StaffCatalogue>({
         queryKey: ['staff', bizId],
         queryFn: async () => {
             // Every active master of the business: one working at this branch today may have
@@ -83,8 +77,21 @@ export function useBookingStep3Staff({
                 links: (linksResult.data || []) as ServiceStaffLink[],
             };
         },
-        enabled: !!bizId && !!branchId,
+        enabled: !!bizId && enabled,
     });
+}
+
+export function useBookingStep3Staff({
+    bookingData,
+    setStaff,
+    setStaffId,
+}: UseBookingStep3StaffParams) {
+    const bizId = bookingData.business?.id;
+    const branchId = bookingData.branchId;
+    const serviceIds = bookingData.serviceIds ?? (bookingData.serviceId ? [bookingData.serviceId] : []);
+    const serviceIdsKey = [...serviceIds].sort().join(',');
+
+    const catalogueQuery = useStaffCatalogue(bizId, !!branchId);
     const locationsQuery = useBookingWorkLocations(branchId ? bizId : null, bookingData.business?.tz);
 
     const catalogue = catalogueQuery.data;

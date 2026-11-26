@@ -8,6 +8,7 @@ import {
     summarizeServices,
     temporaryTransfersOf,
     validateGuestContacts,
+    servicesWithStaff,
 } from '../../screens/booking/bookingSelection';
 import { businessDayBounds } from '../../screens/booking/useClientDayBookings';
 
@@ -107,4 +108,24 @@ test('a business day is bounded in the business zone (C8)', () => {
     const { start, end } = businessDayBounds('2035-01-01', 'Asia/Bishkek');
     expect(start.toISOString()).toBe('2034-12-31T18:00:00.000Z');
     expect(end.toISOString()).toBe('2035-01-01T18:00:00.000Z');
+});
+
+describe('servicesWithStaff (services the web booking lists)', () => {
+    const services = [{ id: 's1' }, { id: 's2' }, { id: 's3' }];
+    const links = [
+        { service_id: 's1', staff_id: 'a' },
+        { service_id: 's2', staff_id: 'b' },
+    ];
+
+    test('keeps only services a master at the branch performs', () => {
+        expect(servicesWithStaff(services, links, [{ id: 'a' }])).toEqual([{ id: 's1' }]);
+    });
+
+    test('a service with no linked master is hidden once the business links services', () => {
+        expect(servicesWithStaff(services, links, [{ id: 'a' }, { id: 'b' }]).map((s) => s.id)).toEqual(['s1', 's2']);
+    });
+
+    test('a business without links keeps every service', () => {
+        expect(servicesWithStaff(services, [], [])).toEqual(services);
+    });
 });

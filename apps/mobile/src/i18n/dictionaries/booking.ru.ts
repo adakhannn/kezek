@@ -59,6 +59,7 @@ export const bookingRu = {
     'booking.step5.errorHint': 'Попробуйте выбрать другую дату или обновить список.',
     'booking.step5.emptyTitle': 'Нет доступного времени',
     'booking.step5.emptyMessage': 'Попробуйте выбрать другую дату.',
+    'booking.step5.chooseOtherDate': 'Выбрать другую дату',
     'booking.slots.error.unknown': 'Не удалось загрузить свободные слоты. Попробуйте выбрать другой день или мастера.',
     'booking.slots.error.masterNotAssigned': 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.',
     'booking.slots.error.noSchedule': 'У выбранного мастера нет расписания на выбранный день. Выберите другой день.',

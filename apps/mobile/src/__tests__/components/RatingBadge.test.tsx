@@ -27,8 +27,9 @@ describe('RatingBadge (B2)', () => {
         expect(screen.queryByText('50.0', hidden)).toBeNull();
     });
 
-    test('no rating yet is a dash', () => {
+    test('no rating yet says so, as the web', () => {
         render(<RatingBadge rating={null} />);
-        expect(screen.getByText('-', hidden)).toBeTruthy();
+        expect(screen.getByText('Недостаточно данных для рейтинга', hidden)).toBeTruthy();
+        expect(screen.queryByText('-', hidden)).toBeNull();
     });
 });

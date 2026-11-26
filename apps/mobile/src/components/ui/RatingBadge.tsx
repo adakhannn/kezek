@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { formatRatingDisplayValue } from '@shared-client/rating';
 
+import { useLanguage } from '../../i18n';
+
 type RatingBadgeProps = {
     /** Rating 0-100 or null when it has not been initialized yet; shown on the 0-5 scale, as on the web. */
     rating: number | null;
@@ -9,6 +11,7 @@ type RatingBadgeProps = {
 };
 
 export default function RatingBadge({ rating, size = 'medium' }: RatingBadgeProps) {
+    const { t } = useLanguage();
     const fontSize = size === 'small' ? 12 : 14;
     const iconSize = size === 'small' ? 12 : 14;
     const padding = size === 'small' ? 4 : 6;
@@ -22,7 +25,8 @@ export default function RatingBadge({ rating, size = 'medium' }: RatingBadgeProp
                 accessible={false}
                 importantForAccessibility="no-hide-descendants"
             >
-                <Text style={[styles.ratingNoRating, { fontSize }]}>-</Text>
+                {/* As the web: a business, branch or master without enough reviews says so, not a bare dash. */}
+                <Text style={[styles.ratingNoRating, { fontSize }]}>{t('common.rating.noRating')}</Text>
             </View>
         );
     }

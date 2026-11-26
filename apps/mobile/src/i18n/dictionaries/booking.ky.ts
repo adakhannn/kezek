@@ -59,6 +59,7 @@ export const bookingKy: Record<keyof typeof bookingRu, string> = {
     'booking.step5.errorHint': 'Башка күндү тандап же тизмени жаңылап көрүңүз.',
     'booking.step5.emptyTitle': 'Бош убакыт жок',
     'booking.step5.emptyMessage': 'Башка күндү тандап көрүңүз.',
+    'booking.step5.chooseOtherDate': 'Башка күндү тандоо',
     'booking.slots.error.unknown': 'Бош слотторду жүктөөдө ката кетти. Башка күндү же кызматкерди тандаңыз.',
     'booking.slots.error.masterNotAssigned': 'Тандалган күнгө кызматкер бул филиалга байланышкан эмес. Башка күндү же кызматкерди тандаңыз.',
     'booking.slots.error.noSchedule': 'Тандалган күнгө кызматкердин графиги жок. Башка күндү тандаңыз.',

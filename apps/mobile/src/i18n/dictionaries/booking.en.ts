@@ -59,6 +59,7 @@ export const bookingEn: Record<keyof typeof bookingRu, string> = {
     'booking.step5.errorHint': 'Try another date or refresh the list.',
     'booking.step5.emptyTitle': 'No available times',
     'booking.step5.emptyMessage': 'Try another date.',
+    'booking.step5.chooseOtherDate': 'Choose another date',
     'booking.slots.error.unknown': 'Failed to load available slots. Try selecting another day or master.',
     'booking.slots.error.masterNotAssigned': 'On the selected date, the master is not assigned to this branch. Try selecting another day or master.',
     'booking.slots.error.noSchedule': 'The selected master has no schedule for the selected day. Choose another day.',

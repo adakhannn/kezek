@@ -66,6 +66,15 @@ export default function BookingStep5Time() {
     const isSelected = (slot: TimeSlot) =>
         bookingData.selectedSlot?.start_at === slot.start_at && bookingData.selectedSlot?.staff_id === slot.staff_id;
 
+    // No time this day (or the master works elsewhere, or the check failed): offer the way out on
+    // the screen itself, as the web step does (another date, retry), not only the header arrow.
+    const emptyActions = (
+        <View style={styles.emptyActions}>
+            <Button title={t('booking.step5.chooseOtherDate')} onPress={() => navigation.goBack()} variant="primary" />
+            <Button title={t('booking.retry')} onPress={() => void refetch()} variant="outline" />
+        </View>
+    );
+
     const handleSelectSlot = (slot: TimeSlot) => {
         setSelectedSlot(slot);
         if (bookingData.business?.id) {
@@ -168,6 +177,7 @@ export default function BookingStep5Time() {
                             title={t('booking.step5.otherBranchTitle')}
                             message={t('booking.step5.otherBranchMessage')}
                             compact
+                            action={emptyActions}
                             style={styles.noSlotsContainer}
                         />
                     ) : !showOfflineBanner && domainErrorMessage ? (
@@ -176,6 +186,7 @@ export default function BookingStep5Time() {
                             title={domainErrorMessage}
                             message={t('booking.step5.errorHint')}
                             compact
+                            action={emptyActions}
                             style={styles.noSlotsContainer}
                         />
                     ) : !showOfflineBanner && !hasMore ? (
@@ -184,6 +195,7 @@ export default function BookingStep5Time() {
                             title={t('booking.step5.emptyTitle')}
                             message={t('booking.step5.emptyMessage')}
                             compact
+                            action={emptyActions}
                             style={styles.noSlotsContainer}
                         />
                     ) : null}
@@ -298,6 +310,10 @@ const styles = StyleSheet.create({
     loadMoreError: {
         fontSize: 13,
         color: colors.status.danger,
+    },
+    emptyActions: {
+        gap: 10,
+        alignSelf: 'stretch',
     },
     noSlotsContainer: {
         paddingHorizontal: 0,

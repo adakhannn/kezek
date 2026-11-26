@@ -62,6 +62,23 @@ export function filterStaffForServices<T extends { id: string }>(
 }
 
 /**
+ * Services someone at the branch can perform, as the web booking lists them: a service linked to
+ * masters is kept only when one of those masters works at the branch (staffAtBranch, see
+ * staffForBranch). A business without any links keeps every service.
+ */
+export function servicesWithStaff<T extends { id: string }>(
+    services: T[],
+    links: ServiceStaffLink[],
+    staffAtBranch: { id: string }[],
+): T[] {
+    if (links.length === 0) return services;
+    const present = new Set(staffAtBranch.map((person) => person.id));
+    return services.filter((service) =>
+        links.some((link) => link.service_id === service.id && present.has(link.staff_id)),
+    );
+}
+
+/**
  * Masters of the branch for the booking days: the home masters plus those who work at this branch
  * on one of the days (C5). A master working elsewhere only on some days stays: the day is chosen
  * later, and the slots of that day show where the master works.

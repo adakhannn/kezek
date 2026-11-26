@@ -1,11 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import type { Service } from '../../contexts/BookingContext';
 import { supabase } from '../../lib/supabase';
+import { servicesWithStaff, staffForBranch } from './bookingSelection';
+import { useStaffCatalogue } from './useBookingStep3Staff';
+import { useBookingWorkLocations } from './useBookingWorkLocations';
 
 type BookingDataShape = {
-    business?: { id?: string | null } | null;
+    business?: { id?: string | null; tz?: string | null } | null;
     branchId?: string | null;
     serviceIds?: string[];
 };
@@ -21,7 +24,7 @@ export function useBookingStep2Services({
     setServices,
     setServiceId,
 }: UseBookingStep2ServicesParams) {
-    const { data: servicesData, isLoading, error, isFetching, refetch } = useQuery<Service[]>({
+    const { data: allServices, isLoading, error, isFetching, refetch } = useQuery<Service[]>({
         queryKey: ['services', bookingData.business?.id, bookingData.branchId],
         queryFn: async () => {
             if (!bookingData.business?.id || !bookingData.branchId) {
@@ -45,6 +48,21 @@ export function useBookingStep2Services({
         enabled: !!bookingData.business?.id && !!bookingData.branchId,
     });
 
+    // Only services a master of this branch performs, as the web booking lists them. If masters
+    // fail to load, every service stays: the master step shows that error with a retry.
+    const bizId = bookingData.business?.id;
+    const branchId = bookingData.branchId;
+    const catalogue = useStaffCatalogue(bizId, !!branchId);
+    const locations = useBookingWorkLocations(branchId ? bizId : null, bookingData.business?.tz);
+    const staffFailed = !!catalogue.error || !!locations.error;
+    const servicesData = useMemo(() => {
+        if (!allServices || !branchId) return undefined;
+        if (catalogue.data && locations.data) {
+            return servicesWithStaff(allServices, catalogue.data.links, staffForBranch(catalogue.data.staff, branchId, locations.data));
+        }
+        return staffFailed ? allServices : undefined;
+    }, [allServices, branchId, catalogue.data, locations.data, staffFailed]);
+
     const hasSelection = (bookingData.serviceIds?.length ?? 0) > 0;
     useEffect(() => {
         if (!servicesData) {
@@ -57,10 +75,10 @@ export function useBookingStep2Services({
         }
     }, [servicesData, setServices, setServiceId, hasSelection]);
 
-    const hasError = !servicesData && !!error;
+    const hasError = !allServices && !!error;
     return {
         servicesData,
-        isLoading: isLoading && !hasError,
+        isLoading: (isLoading || (!!allServices && !servicesData)) && !hasError,
         /** Loading failed (B4): not the same as a branch without services. */
         hasError,
         isRetrying: hasError && isFetching,

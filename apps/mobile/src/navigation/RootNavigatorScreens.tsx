@@ -104,11 +104,9 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
             <Stack.Screen
                 name="Booking"
                 component={BookingScreen}
-                options={{
-                    title: t('nav.booking'),
-                    headerShown: false,
-                    animation: 'none',
-                }}
+                // The first step is drawn here (BookingStep1Branch inside BookingScreen): it gets the
+                // same header as the other steps, with back and cancel.
+                options={bookingStepOptions(t('nav.booking.branch'), '1 / 6')}
             />
             <Stack.Screen
                 name="BookingStep1Branch"
