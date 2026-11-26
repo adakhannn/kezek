@@ -7,45 +7,26 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
-import { isSupabaseServiceRoleConfigured } from '@/lib/env';
+import {
+    adminSystemChecks,
+    bishkekDayRange,
+    isAdminDataConfigured,
+    readAdminHomeSummary,
+    todayStatusCounts,
+    type AdminHomeBusiness,
+    type AdminHomeCountKey,
+    type AdminTodayBooking,
+} from '@/lib/adminPanelReadService';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
-type BizRow = { id: string; name: string; slug: string; created_at: string };
 type Translate = Awaited<ReturnType<typeof getT>>;
 
 type DashboardWarning = {
     title: string;
     description: string;
 };
-
-type BookingRel = {
-    id: string;
-    start_at: string;
-    end_at: string;
-    status: string;
-    client_name: string | null;
-    client_phone: string | null;
-    services: { name_ru: string } | { name_ru: string }[] | null;
-    staff: { full_name: string } | { full_name: string }[] | null;
-    businesses: { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
-    branches: { name: string } | { name: string }[] | null;
-};
-
-function bishkekDayRange() {
-    const tzOffset = '+06:00';
-    const fmt = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Bishkek',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    });
-    const ymd = fmt.format(new Date());
-    const start = new Date(`${ymd}T00:00:00${tzOffset}`);
-    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-    return { startISO: start.toISOString(), endISO: end.toISOString(), label: ymd };
-}
 
 function fmtTimeBishkek(iso: string) {
     return new Intl.DateTimeFormat('ru-RU', {
@@ -55,25 +36,17 @@ function fmtTimeBishkek(iso: string) {
     }).format(new Date(iso));
 }
 
-function normRel<T>(rel: T | T[] | null | undefined): T | null {
-    if (rel == null) return null;
-    return Array.isArray(rel) ? (rel[0] ?? null) : rel;
-}
-
 export default async function AdminHomePage() {
     const t = await getT();
-    const { startISO, endISO, label } = bishkekDayRange();
+    let label = bishkekDayRange().label;
     const warnings: DashboardWarning[] = [];
-    const dataConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && isSupabaseServiceRoleConfigured();
+    const dataConfigured = isAdminDataConfigured();
 
-    let bizCount = 0;
-    let branchCount = 0;
-    let staffCount = 0;
-    let serviceCount = 0;
-    let bookingCount = 0;
-    let catCount = 0;
-    let latestBiz: BizRow[] = [];
-    let todayBookingsRaw: BookingRel[] = [];
+    let counts: Record<AdminHomeCountKey, number> = {
+        businesses: 0, branches: 0, staff: 0, services: 0, bookings: 0, categories: 0,
+    };
+    let latestBiz: AdminHomeBusiness[] = [];
+    let todayBookings: AdminTodayBooking[] = [];
 
     if (!dataConfigured) {
         warnings.push({
@@ -84,75 +57,42 @@ export default async function AdminHomePage() {
             ),
         });
     } else {
+        const countLabels: Record<AdminHomeCountKey, string> = {
+            businesses: t('admin.home.stats.businesses', 'Бизнесы'),
+            branches: t('admin.home.stats.branches', 'Филиалы'),
+            staff: t('admin.home.stats.staff', 'Сотрудники'),
+            services: t('admin.home.stats.services', 'Услуги'),
+            bookings: t('admin.home.stats.bookings', 'Брони (всего)'),
+            categories: t('admin.home.stats.categories', 'Категории'),
+        };
         try {
-            const admin = createSupabaseAdminClient();
-            const countQueries = [
-                { key: 'bizCount', label: t('admin.home.stats.businesses', 'Бизнесы'), query: admin.from('businesses').select('*', { count: 'exact', head: true }) },
-                { key: 'branchCount', label: t('admin.home.stats.branches', 'Филиалы'), query: admin.from('branches').select('*', { count: 'exact', head: true }) },
-                { key: 'staffCount', label: t('admin.home.stats.staff', 'Сотрудники'), query: admin.from('staff').select('*', { count: 'exact', head: true }) },
-                { key: 'serviceCount', label: t('admin.home.stats.services', 'Услуги'), query: admin.from('services').select('*', { count: 'exact', head: true }) },
-                { key: 'bookingCount', label: t('admin.home.stats.bookings', 'Брони (всего)'), query: admin.from('bookings').select('*', { count: 'exact', head: true }) },
-                { key: 'catCount', label: t('admin.home.stats.categories', 'Категории'), query: admin.from('categories').select('*', { count: 'exact', head: true }) },
-            ] as const;
-
-            const countResults = await Promise.all(countQueries.map(({ query }) => query));
-            countResults.forEach((result, index) => {
-                const item = countQueries[index];
-                if (result.error) {
+            const summary = await readAdminHomeSummary(createSupabaseAdminClient());
+            label = summary.day.label;
+            counts = summary.counts;
+            latestBiz = summary.latestBusinesses;
+            todayBookings = summary.todayBookings;
+            for (const failure of summary.failures) {
+                if (failure.source === 'count') {
                     warnings.push({
                         title: t('admin.home.warnings.counts.title', 'Не удалось загрузить часть статистики'),
-                        description: `${item.label}: ${result.error.message}`,
+                        description: `${countLabels[failure.count]}: ${failure.message}`,
                     });
-                    return;
+                } else if (failure.source === 'latestBusinesses') {
+                    warnings.push({
+                        title: t('admin.home.warnings.latestBusinesses.title', 'Не удалось загрузить последние бизнесы'),
+                        description: failure.message,
+                    });
+                } else if (failure.source === 'todayBookings') {
+                    warnings.push({
+                        title: t('admin.home.warnings.todayBookings.title', 'Не удалось загрузить брони за сегодня'),
+                        description: failure.message,
+                    });
+                } else {
+                    warnings.push({
+                        title: t('admin.home.warnings.unexpected.title', 'Админка открылась в ограниченном режиме'),
+                        description: failure.message ?? t('admin.home.warnings.unexpected.description', 'Не удалось загрузить часть данных. Попробуйте обновить страницу.'),
+                    });
                 }
-
-                const value = result.count ?? 0;
-                if (item.key === 'bizCount') bizCount = value;
-                if (item.key === 'branchCount') branchCount = value;
-                if (item.key === 'staffCount') staffCount = value;
-                if (item.key === 'serviceCount') serviceCount = value;
-                if (item.key === 'bookingCount') bookingCount = value;
-                if (item.key === 'catCount') catCount = value;
-            });
-
-            const latestBizResponse = await admin
-                .from('businesses')
-                .select('id,name,slug,created_at')
-                .order('created_at', { ascending: false })
-                .limit(5)
-                .returns<BizRow[]>();
-
-            if (latestBizResponse.error) {
-                warnings.push({
-                    title: t('admin.home.warnings.latestBusinesses.title', 'Не удалось загрузить последние бизнесы'),
-                    description: latestBizResponse.error.message,
-                });
-            } else {
-                latestBiz = latestBizResponse.data ?? [];
-            }
-
-            const todayBookingsResponse = await admin
-                .from('bookings')
-                .select(
-                    'id,start_at,end_at,status,client_name,client_phone,' +
-                        'services(name_ru),' +
-                        'staff(full_name),' +
-                        'businesses(id,name,slug),' +
-                        'branches(name)',
-                )
-                .gte('start_at', startISO)
-                .lt('start_at', endISO)
-                .order('start_at', { ascending: true })
-                .limit(20)
-                .returns<BookingRel[]>();
-
-            if (todayBookingsResponse.error) {
-                warnings.push({
-                    title: t('admin.home.warnings.todayBookings.title', 'Не удалось загрузить брони за сегодня'),
-                    description: todayBookingsResponse.error.message,
-                });
-            } else {
-                todayBookingsRaw = todayBookingsResponse.data ?? [];
             }
         } catch (error) {
             warnings.push({
@@ -165,40 +105,19 @@ export default async function AdminHomePage() {
         }
     }
 
-    const todayBookings = (todayBookingsRaw ?? []).map((r) => {
-        const svc = normRel(r.services);
-        const stf = normRel(r.staff);
-        const biz = normRel(r.businesses);
-        const br = normRel(r.branches);
-        return {
-            id: r.id,
-            start_at: r.start_at,
-            end_at: r.end_at,
-            status: r.status,
-            client: r.client_name || r.client_phone || '—',
-            service: svc?.name_ru ?? '—',
-            staff: stf?.full_name ?? '—',
-            biz: biz?.name ?? '—',
-            bizId: biz?.id ?? null,
-            branch: br?.name ?? '—',
-        };
-    });
+    const bizCount = counts.businesses;
+    const branchCount = counts.branches;
+    const staffCount = counts.staff;
+    const serviceCount = counts.services;
+    const bookingCount = counts.bookings;
+    const catCount = counts.categories;
+    const { hold: holdCount, confirmed: confirmedCount, cancelled: cancelledCount } = todayStatusCounts(todayBookings);
 
-    const statusCounts = todayBookings.reduce<Record<string, number>>((acc, b) => {
-        acc[b.status] = (acc[b.status] ?? 0) + 1;
-        return acc;
-    }, {});
-    const holdCount = statusCounts.hold ?? 0;
-    const confirmedCount = statusCounts.confirmed ?? 0;
-    const cancelledCount = (statusCounts.cancelled ?? 0) + (statusCounts.canceled ?? 0);
-
+    const systemChecks = adminSystemChecks();
     const checks = [
-        { ok: isSupabaseServiceRoleConfigured(), label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY задан') },
-        { ok: !!process.env.NEXT_PUBLIC_SITE_ORIGIN, label: t('admin.home.systemChecks.siteOrigin', 'NEXT_PUBLIC_SITE_ORIGIN задан') },
-        {
-            ok: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            label: t('admin.home.systemChecks.supabaseKeys', 'Публичные ключи Supabase заданы'),
-        },
+        { ok: systemChecks.serviceRoleKey, label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY задан') },
+        { ok: systemChecks.siteOrigin, label: t('admin.home.systemChecks.siteOrigin', 'NEXT_PUBLIC_SITE_ORIGIN задан') },
+        { ok: systemChecks.supabaseKeys, label: t('admin.home.systemChecks.supabaseKeys', 'Публичные ключи Supabase заданы') },
     ];
 
     return (

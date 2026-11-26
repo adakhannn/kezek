@@ -41,14 +41,30 @@ export default function BranchScheduleScreen({ route }: Props) {
     });
     return (
         <QueryState isLoading={query.isLoading} error={query.error} onRetry={() => void query.refetch()} skeleton="form">
-            {() => <ScheduleEditor bizId={bizId} branchId={branchId} initial={scheduleWeek(query.data!.schedule)} />}
+            {() => <ManagedScheduleEditor bizId={bizId} branchId={branchId} initial={scheduleWeek(query.data!.schedule)} />}
         </QueryState>
     );
 }
 
-function ScheduleEditor({ bizId, branchId, initial }: { bizId: string; branchId: string; initial: BranchScheduleRow[] }) {
-    const { t } = useLanguage();
+function ManagedScheduleEditor({ bizId, branchId, initial }: { bizId: string; branchId: string; initial: BranchScheduleRow[] }) {
     const queryClient = useQueryClient();
+    return (
+        <ScheduleEditor
+            initial={initial}
+            save={async (week) => {
+                await catalogApi.saveSchedule(bizId, branchId, week);
+                await queryClient.invalidateQueries({ queryKey: catalogKeys.branch(bizId, branchId) });
+            }}
+        />
+    );
+}
+
+/**
+ * The week editor itself; `save` sends the checked week (the cabinet's route here, the super-admin
+ * route on the admin branch screen) and throws on a refusal.
+ */
+export function ScheduleEditor({ initial, save: send }: { initial: BranchScheduleRow[]; save: (week: BranchScheduleRow[]) => Promise<void> }) {
+    const { t } = useLanguage();
     const [days, setDays] = useState(initial);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -71,8 +87,7 @@ function ScheduleEditor({ bizId, branchId, initial }: { bizId: string; branchId:
         }
         setSaving(true);
         try {
-            await catalogApi.saveSchedule(bizId, branchId, week);
-            await queryClient.invalidateQueries({ queryKey: catalogKeys.branch(bizId, branchId) });
+            await send(week);
             setSuccess(true);
         } catch (cause) {
             setError(catalogErrorText(cause, t('catalog.branches.schedule.error.server'), t));

@@ -43,6 +43,7 @@ import ManageOverviewScreen from '../screens/manage/overview/ManageOverviewScree
 import ManageRoleApplicationsScreen from '../screens/manage/roleApplications/ManageRoleApplicationsScreen';
 import ManageVisitPackagePlanScreen from '../screens/manage/visitPackages/ManageVisitPackagePlanScreen';
 import ManageVisitPackagesScreen from '../screens/manage/visitPackages/ManageVisitPackagesScreen';
+import { ADMIN_SCREENS, adminScreenTitle } from '../screens/admin/adminScreens';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import {
@@ -390,6 +391,17 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 }}
             />
             {ParityStackScreens(Stack, t)}
+            {ADMIN_SCREENS.map((screen) => (
+                <Stack.Screen
+                    key={screen.name}
+                    name={screen.name}
+                    component={screen.component}
+                    options={({ route }) => {
+                        const title = t(adminScreenTitle(screen, route.params as Record<string, unknown> | undefined));
+                        return { ...detailStackScreenOptions, title, headerTitle: createNavigationHeaderTitle(title, t('admin.app.nav.eyebrow')) };
+                    }}
+                />
+            ))}
             {MANAGE_OPS_SCREENS.map((screen) => (
                 <Stack.Screen
                     key={screen.name}

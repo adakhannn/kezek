@@ -23,11 +23,19 @@ export function CabinetWorkspacesBlock() {
             {hasOther || isSuperAdmin ? (
                 <Section
                     title={t('parity.workspaces.alsoHasAccess')}
-                    caption={isSuperAdmin ? t('parity.workspaces.adminOnWeb') : undefined}
                     testID="cabinet-workspaces"
                 >
-                    {hasOther ? (
+                    {hasOther || isSuperAdmin ? (
                         <ListGroup inset>
+                            {isSuperAdmin ? (
+                                <ListRow
+                                    icon="shield-checkmark-outline"
+                                    title={t('admin.app.entry')}
+                                    subtitle={t('admin.app.entryHint')}
+                                    onPress={() => navigation.navigate('AdminHome')}
+                                    testID="cabinet-admin-panel"
+                                />
+                            ) : null}
                             {isBusinessManager ? (
                                 <ListRow
                                     icon="briefcase-outline"

@@ -6,6 +6,7 @@ import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
 import { Card } from '@/components/ui/Card';
+import { readAdminBranchDetail } from '@/lib/adminPanelReadService';
 import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -23,41 +24,17 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
     const { data: isSuper } = await supa.rpc('is_super_admin');
     if (!isSuper) return <div className="p-4">{t('admin.catalog.common.noAccess', 'Нет доступа')}</div>;
 
-    const admin = createSupabaseAdminClient();
-    const { data: branch, error } = await admin
-        .from('branches')
-        .select('id,biz_id,name,address,is_active,lat,lon,directory_links,contact_phone,contact_whatsapp,contact_email,website_url,inherit_business_contacts')
-        .eq('biz_id', id)
-        .eq('id', branchId)
-        .maybeSingle();
-
-    if (error) {
-        logError('AdminBranchEditPage', 'Failed to load branch', { bizId: id, branchId, error });
+    // The branch and its hours; FE-08: an unread schedule must not look like "closed every day" -
+    // saving it would erase the real hours.
+    const result = await readAdminBranchDetail(createSupabaseAdminClient(), id, branchId);
+    if (!result.ok && result.error === 'load') {
+        logError('AdminBranchEditPage', 'Failed to load branch or its working hours', { bizId: id, branchId, error: result.message });
         return <LoadFailedNotice page />;
     }
-    if (!branch) return <div className="p-4">{t('admin.branchesPage.branchNotFound', 'Филиал не найден')}</div>;
+    if (!result.ok) return <div className="p-4">{t('admin.branchesPage.branchNotFound', 'Филиал не найден')}</div>;
 
-    const { data: biz } = await admin.from('businesses').select('id,name').eq('id', id).maybeSingle();
-
-    // Загружаем расписание филиала
-    const { data: scheduleData, error: scheduleError } = await admin
-        .from('branch_working_hours')
-        .select('day_of_week, intervals, breaks')
-        .eq('biz_id', id)
-        .eq('branch_id', branchId)
-        .order('day_of_week');
-
-    // FE-08: an unread schedule must not look like "closed every day" - saving it would erase the real hours.
-    if (scheduleError) {
-        logError('AdminBranchEditPage', 'Failed to load branch working hours', { bizId: id, branchId, error: scheduleError });
-        return <LoadFailedNotice page />;
-    }
-
-    const initialSchedule = (scheduleData || []).map((s) => ({
-        day_of_week: s.day_of_week,
-        intervals: (s.intervals || []) as Array<{ start: string; end: string }>,
-        breaks: (s.breaks || []) as Array<{ start: string; end: string }>,
-    }));
+    const { branch, schedule: initialSchedule } = result;
+    const biz = result.bizName === null ? null : { name: result.bizName };
 
     return (
         <div className="space-y-6">

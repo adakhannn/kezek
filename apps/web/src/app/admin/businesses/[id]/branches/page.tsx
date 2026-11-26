@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getT } from '@/app/_components/i18n/server';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { DeleteBranchButton } from '@/components/admin/branches/DeleteBranchButton';
+import { readAdminBusinessBranches } from '@/lib/adminPanelReadService';
 import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -21,23 +22,15 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
     if (eSuper) return <div className="p-4">{t('admin.catalog.common.error', 'Ошибка: {message}').replace('{message}', eSuper.message)}</div>;
     if (!isSuper) return <div className="p-4">{t('admin.catalog.common.noAccess', 'Нет доступа')}</div>;
 
-    const admin = createSupabaseAdminClient();
-
-    const [{ data: biz, error: bizError }, { data: branches, error: branchesError }] = await Promise.all([
-        admin.from('businesses').select('id,name,branch_limit').eq('id', id).maybeSingle(),
-        admin
-            .from('branches')
-            .select('id,name,address,is_active,created_at')
-            .eq('biz_id', id)
-            .order('created_at', { ascending: true }),
-    ]);
+    const result = await readAdminBusinessBranches(createSupabaseAdminClient(), id);
 
     // FE-08: a failed read is an error, not "not found" or "no branches yet".
-    if (bizError || branchesError) {
-        logError('AdminBranchesPage', 'Failed to load business branches', { bizId: id, bizError, branchesError });
+    if (!result.ok && result.error === 'load') {
+        logError('AdminBranchesPage', 'Failed to load business branches', { bizId: id, error: result.message });
         return <LoadFailedNotice page />;
     }
-    if (!biz) return <div className="p-4">{t('admin.catalog.common.businessNotFound', 'Бизнес не найден')}</div>;
+    if (!result.ok) return <div className="p-4">{t('admin.catalog.common.businessNotFound', 'Бизнес не найден')}</div>;
+    const { business: biz, branches } = result;
 
     return (
         <div className="space-y-6">

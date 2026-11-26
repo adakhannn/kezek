@@ -264,7 +264,6 @@ export const parityEn: Record<keyof typeof parityRu, string> = {
     'parity.workspaces.alsoHasAccess': 'You also have access to:',
     'parity.workspaces.dashboard': 'Business cabinet',
     'parity.workspaces.staff': 'Staff cabinet',
-    'parity.workspaces.adminOnWeb': 'The Kezek admin panel opens on the website.',
     'parity.workspaces.forBusiness': 'For businesses and teams',
     'parity.workspaces.forBusinessHint': 'Create your business page, set up services, and free your team from manual booking in messengers.',
     'parity.workspaces.connectBusiness': 'Add your business',

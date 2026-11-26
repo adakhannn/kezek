@@ -9,8 +9,8 @@ import { UserPageRedirect } from '@/components/admin/users/UserPageRedirect';
 import { UserSecurityActions } from '@/components/admin/users/UserSecurityActions';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { readAdminUserDetail } from '@/lib/adminPanelReadService';
 import { logError } from '@/lib/log';
-import { readPlatformAdminStates } from '@/lib/platformAdminState';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
@@ -31,61 +31,30 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
     if (superErr) return <div className="p-4">{t('admin.error.load', 'Load error')}: {superErr.message}</div>;
     if (!superRow) return <div className="p-4">{t('admin.noAccess.title', 'No access')}</div>;
 
-    const admin = createSupabaseAdminClient();
-
-    const { data: got, error: eGet } = await admin.auth.admin.getUserById(id);
-    if (eGet) return <div className="p-4">Load error: {eGet.message}</div>;
-    const u = got?.user;
-    if (!u) {
+    const detail = await readAdminUserDetail(createSupabaseAdminClient(), user.id, id);
+    if (!detail.ok && detail.error === 'account') return <div className="p-4">Load error: {detail.message}</div>;
+    if (!detail.ok && detail.error === 'not_found') {
         redirect('/admin/users');
     }
-
-    const userMeta = (u.user_metadata ?? {}) as Partial<{ full_name: string }>;
-
-    let isSuperUser: boolean;
-    try {
-        isSuperUser = (await readPlatformAdminStates(admin, user.id, [id])).get(id) === true;
-    } catch {
+    if (!detail.ok && detail.error === 'admin_state') {
         return <div className="p-4">{t('admin.error.load', 'Load error')}</div>;
     }
-
-    const { data: ownerBusinesses, error: ownerBusinessesError } = await admin
-        .from('businesses')
-        .select('id,name,slug')
-        .eq('owner_id', id)
-        .order('name')
-        .returns<Biz[]>();
-
-    const { data: viewRoles, error: viewRolesError } = await admin
-        .from('user_roles_with_user')
-        .select('user_id,role_key,biz_id')
-        .eq('user_id', id);
-
     // FE-08: an admin acting on this account must not see "no roles, not blocked" after a failed read.
-    if (ownerBusinessesError || viewRolesError) {
-        logError('AdminUserPage', 'Failed to load user roles or businesses', { userId: id, ownerBusinessesError, viewRolesError });
+    if (!detail.ok) {
+        logError('AdminUserPage', 'Failed to load user roles, businesses or suspension', { userId: id, error: detail.message });
         return <LoadFailedNotice page />;
     }
 
-    const bizIds = Array.from(
-        new Set((viewRoles ?? []).map(r => r.biz_id).filter(Boolean) as string[])
-    );
-    const bizMap = new Map<string, { name: string; slug: string | null }>();
-    if (bizIds.length) {
-        const { data: relBiz, error: relBizError } = await admin
-            .from('businesses')
-            .select('id,name,slug')
-            .in('id', bizIds)
-            .returns<Biz[]>();
-        // Names are a label only: role badges fall back to the business id.
-        if (relBizError) logError('AdminUserPage', 'Failed to load role business names', { userId: id, error: relBizError });
-        (relBiz ?? []).forEach(b => bizMap.set(b.id, { name: b.name, slug: b.slug ?? null }));
-    }
+    const u = detail.user;
+    const userMeta = { full_name: detail.user.full_name ?? undefined };
+    const isSuperUser = detail.isSuper;
+    const ownerBusinesses: Biz[] = detail.ownerBusinesses;
+    // Names are a label only: role badges fall back to the business id.
+    if (detail.roleBusinessError) logError('AdminUserPage', 'Failed to load role business names', { userId: id, error: detail.roleBusinessError });
 
-    const roleBadges = (viewRoles ?? [])
-        .filter(r => r.role_key !== 'super_admin' && r.role_key !== 'owner')
+    const roleBadges = detail.roles
         .map((r, idx) => {
-            const b = r.biz_id ? bizMap.get(r.biz_id) : null;
+            const b = r.biz_name === null ? null : { name: r.biz_name, slug: r.biz_slug };
             return (
                 <span
                     key={`${r.role_key}:${r.biz_id ?? 'global'}:${idx}`}
@@ -98,16 +67,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
             );
         });
 
-    const { data: suspensionData, error: suspensionError } = await admin
-        .from('user_suspensions')
-        .select('reason, created_at')
-        .eq('user_id', id)
-        .maybeSingle();
-    // FE-08: an unread suspension must not show the account as "not blocked".
-    if (suspensionError) {
-        logError('AdminUserPage', 'Failed to load user suspension', { userId: id, error: suspensionError });
-        return <LoadFailedNotice page />;
-    }
+    const suspensionData = detail.suspension;
     const isBlocked = !!suspensionData;
 
     return (

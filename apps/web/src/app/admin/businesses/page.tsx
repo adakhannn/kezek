@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { readAdminBusinessList } from '@/lib/adminPanelReadService';
 import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -42,70 +43,25 @@ export default async function Page() {
         return <main className="p-6">403</main>;
     }
 
-    const { data: list, error: listErr } = await supabase
-        .from('businesses')
-        .select('id,slug,name,owner_id,created_at,is_approved,categories,address')
-        .order('created_at', { ascending: false });
+    const result = await readAdminBusinessList(supabase, createSupabaseAdminClient());
 
-    if (listErr) {
+    if (!result.ok && result.error === 'list') {
         return (
             <main className="p-6">
-                <div className="text-red-600">{t('admin.businesses.error.load', 'Ошибка загрузки бизнесов')}: {listErr.message}</div>
+                <div className="text-red-600">{t('admin.businesses.error.load', 'Ошибка загрузки бизнесов')}: {result.message}</div>
             </main>
         );
     }
-
-    const ownerIds = Array.from(new Set((list ?? []).map((b) => b.owner_id).filter(Boolean))) as string[];
-
-    type OwnerInfo = { id: string; name?: string | null; email?: string | null };
-
-    let ownersMap = new Map<string, string>();
-    if (ownerIds.length) {
-        const admin = createSupabaseAdminClient();
-
-        const results = await Promise.all(
-            ownerIds.map(async (oid) => {
-                try {
-                    const { data, error } = await admin.auth.admin.getUserById(oid);
-                    if (error || !data?.user) return { id: oid } as OwnerInfo;
-                    const meta = (data.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
-                    const display =
-                        meta.full_name?.trim() ||
-                        data.user.email?.trim() ||
-                        (data.user as { phone?: string | null }).phone?.trim() ||
-                        oid;
-                    return { id: oid, name: display, email: data.user.email ?? null } as OwnerInfo;
-                } catch {
-                    return { id: oid } as OwnerInfo;
-                }
-            }),
-        );
-
-        ownersMap = new Map(results.map((r) => [r.id, (r.name ?? r.email ?? r.id)!]));
-    }
-
-    const admin = createSupabaseAdminClient();
-    const businessIds = (list ?? []).map((b) => b.id);
-
-    const [branchesData, staffData] = await Promise.all([
-        admin.from('branches').select('biz_id').in('biz_id', businessIds),
-        admin.from('staff').select('biz_id').in('biz_id', businessIds),
-    ]);
     // FE-08: failed counts are unknown, not 0.
-    if (branchesData.error || staffData.error) {
-        logError('AdminBusinessesPage', 'Failed to count branches or staff', { branchesError: branchesData.error, staffError: staffData.error });
+    if (!result.ok) {
+        logError('AdminBusinessesPage', 'Failed to count branches or staff', { error: result.message });
         return <LoadFailedNotice page />;
     }
 
-    const branchesCount = new Map<string, number>();
-    (branchesData.data || []).forEach((b) => {
-        branchesCount.set(b.biz_id, (branchesCount.get(b.biz_id) || 0) + 1);
-    });
-
-    const staffCount = new Map<string, number>();
-    (staffData.data || []).forEach((s) => {
-        staffCount.set(s.biz_id, (staffCount.get(s.biz_id) || 0) + 1);
-    });
+    const list: Biz[] = result.items;
+    const ownersMap = new Map(result.items.map((b) => [b.owner_id ?? '', b.owner_name ?? '—']));
+    const branchesCount = new Map(result.items.map((b) => [b.id, b.branches_count]));
+    const staffCount = new Map(result.items.map((b) => [b.id, b.staff_count]));
 
     const approvedCount = (list ?? []).filter((b) => b.is_approved === true).length;
     const totalCount = (list ?? []).length;

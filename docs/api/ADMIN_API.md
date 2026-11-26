@@ -2,7 +2,7 @@
 
 Статус: справочник исходников, общая статическая сверка **2026-11-01**, ENG-31 обновлён и проверен изолированно **2026-11-11**; runtime с remote-сервисами **NOT_RUN**. Владелец: maintainers API. Аудитория: разработчики и эксплуатация. Цель — выбрать правильный метод, разобрать реальный ответ и видеть границы контроля до интеграции. Для исполнения нужен отдельно разрешенный доступ к среде и конкретной операции; destructive/admin actions в рамках этой сверки не выполнялись.
 
-Покрытие: **59 путей / 74 явно экспортированных метода**. Это все `/admin/api/*` и остаток `/api/admin/*`; пять ранее описанных admin endpoints находятся в [AUTH_AND_INTEGRATIONS.md](AUTH_AND_INTEGRATIONS.md). Общий каталог — [API_DOCUMENTATION.md](../../API_DOCUMENTATION.md); правила изменений — [CONTRIBUTING.md](../../CONTRIBUTING.md), открытые проблемы — [ENGINEERING_FINDINGS.md](../ENGINEERING_FINDINGS.md).
+Покрытие: **67 путей / 82 явно экспортированных метода**. Это все `/admin/api/*` и остаток `/api/admin/*`; пять ранее описанных admin endpoints находятся в [AUTH_AND_INTEGRATIONS.md](AUTH_AND_INTEGRATIONS.md). Общий каталог — [API_DOCUMENTATION.md](../../API_DOCUMENTATION.md); правила изменений — [CONTRIBUTING.md](../../CONTRIBUTING.md), открытые проблемы — [ENGINEERING_FINDINGS.md](../ENGINEERING_FINDINGS.md).
 
 
 Обновление 9–10 ноября 2026: прежние unbound VIEW-проверки переведены на общий caller-bound helper; 15 отрицательных [route cases](../../apps/web/src/__tests__/api/admin/caller-bound-role-gates.test.ts) отвергают обычного caller даже при наличии чужого global super_admin. Metrics, metrics/stats, metrics/auth-flow и finance-logs используют [adminHttpAccess](../../apps/web/src/lib/adminHttpAccess.ts) до service client: 401 без identity, 403 без global роли, 503 при ошибке проверки. [Изолированные access tests](../../apps/web/src/__tests__/api/admin/privileged-diagnostics-access.test.ts) прошли; реальный deployment/RLS этим не подтвержден.
@@ -212,6 +212,30 @@ Public contacts — `contact_phone`, `contact_whatsapp`, `contact_email`, `websi
 | GET [`/admin/api/analytics/promotions`](../../apps/web/src/app/admin/api/analytics/promotions/route.ts) | `MANAGER`; optional bizId/branchId UUID, dates form, groupBy type/day | `D({summary,byDay?,byType?,period})`; summary promoBookings,promoRevenue,totalRevenue; type rows promotionType,bookings,revenue,discountGiven; 400/403/500 | Один SQL snapshot live confirmed/paid bookings для summary/day/type, общий branch predicate и business-local [midnight,next midnight) с DST. Нет обращения к несуществующему daily.branch_id. Source error — non-success; календарь/start≤end/max366 дат, cache60s. Revenue — оценка цены/промо, не cash ledger |
 | GET [`/admin/api/system-analytics/overview`](../../apps/web/src/app/admin/api/system-analytics/overview/route.ts) | `RPC`; optional startDate/endDate form, defaults today/end−30 | `D({summary,byDay})`; summary period,activeBusinesses,bookings.created/confirmed,revenue.total/avgCheck; day date,activeBusinesses,bookingsConfirmed,totalRevenue. 400 schema,401/403,500 server | Global SQL rollup daily_stats по датам и count distinct businesses, без REST cap. Max366 дат, cache60s. Wire shape отличается от analytics/overview |
 | GET [`/admin/api/funnel-analytics`](../../apps/web/src/app/admin/api/funnel-analytics/route.ts) | `CURRENT`; optional UUID bizId, dates form, source public/quickdesk. Без dates выбирает весь доступный набор | `D({funnel,summary})`; rows step,stepName,uniqueSessions,totalEvents,conversionRate; summary totalViews,totalBookings,overallConversionRate,totalEvents. 400 schema,401/403,503 role-query error,500 DB | Читает другую таблицу funnel_events,6 шагов business_view→booking_success; без pagination/range cap. Null session_id считается элементом Set, stages не cohort-joined; exact totalEvents может превышать число возвращенных rows. Нельзя смешивать с analytics/conversion-funnel |
+
+## Чтения страниц админки (мобильное приложение)
+
+<!-- api-contract: GET /admin/api/overview -->
+<!-- api-contract: GET /admin/api/businesses/list -->
+<!-- api-contract: GET /admin/api/businesses/[id]/detail -->
+<!-- api-contract: GET /admin/api/businesses/[id]/branches/list -->
+<!-- api-contract: GET /admin/api/businesses/[id]/branches/[branchId]/detail -->
+<!-- api-contract: GET /admin/api/business-applications -->
+<!-- api-contract: GET /admin/api/users/[id]/detail -->
+<!-- api-contract: GET /admin/api/users/stats -->
+
+Страницы `/admin/*` читают эти данные в server components; эти GET отдают то же JSON-ом, тем же кодом ([read service](../../apps/web/src/lib/adminPanelReadService.ts), им пользуются и страницы), через [HTTP](../../apps/web/src/lib/adminPanelHttpService.ts). Auth во всех — `CURRENT` через [adminHttpAccess](../../apps/web/src/lib/adminHttpAccess.ts) (cookie или Bearer мобильного приложения): 401 без identity, 403 без global роли, 503 при ошибке проверки. Path ID — UUID, иначе 400 `validation`. Неудачное чтение — 503 `service_unavailable` (FE-08: ошибка, не пустые данные), отсутствующая строка — 404 `not_found`. Только чтение, без side effects.
+
+| METHOD / path и source | Страница | Успех |
+| --- | --- | --- |
+| GET [`/admin/api/overview`](../../apps/web/src/app/admin/api/overview/route.ts) | `/admin` | `R(configured,checks,day,counts,latestBusinesses,todayBookings,failures)`; без service role — только `configured:false,checks`. `counts` по businesses/branches/staff/services/bookings/categories; неудачная часть — в `failures`, её счётчик 0 |
+| GET [`/admin/api/businesses/list`](../../apps/web/src/app/admin/api/businesses/list/route.ts) | `/admin/businesses` | `R(items)`: строки businesses (новые первыми, чтение session client) + `owner_name`, `branches_count`, `staff_count` |
+| GET [`/admin/api/businesses/[id]/detail`](../../apps/web/src/app/admin/api/businesses/[id]/detail/route.ts) | `/admin/businesses/[id]` | `R(business,counts,owner,categoryOptions)`; counts branches/staff/services/bookings, owner id/email/phone/full_name или null, активные категории slug/name |
+| GET [`/admin/api/businesses/[id]/branches/list`](../../apps/web/src/app/admin/api/businesses/[id]/branches/list/route.ts) | `/admin/businesses/[id]/branches` | `R(business,branches)`; business id/name/branch_limit, branches id/name/address/is_active/created_at |
+| GET [`/admin/api/businesses/[id]/branches/[branchId]/detail`](../../apps/web/src/app/admin/api/businesses/[id]/branches/[branchId]/detail/route.ts) | `/admin/businesses/[id]/branches/[branchId]` | `R(branch,bizName,schedule)`; branch с coords, directory_links, контактами; schedule — branch_working_hours по дням |
+| GET [`/admin/api/business-applications`](../../apps/web/src/app/admin/api/business-applications/route.ts) | `/admin/business-applications` | `R(applications,categoryNames)`; 200 новых заявок, имена активных категорий по slug и по имени в нижнем регистре |
+| GET [`/admin/api/users/[id]/detail`](../../apps/web/src/app/admin/api/users/[id]/detail/route.ts) | `/admin/users/[id]` | `R(user,isSuper,ownerBusinesses,roles,roleBusinessError,suspension)`; роли без super_admin/owner, с именем бизнеса |
+| GET [`/admin/api/users/stats`](../../apps/web/src/app/admin/api/users/stats/route.ts) | `/admin/users` | `R(stats)`: total, active, blocked, super из `admin_user_stats` |
 
 ## Открытые границы справочника
 

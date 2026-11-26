@@ -267,7 +267,6 @@ export const parityRu = {
     'parity.workspaces.alsoHasAccess': 'У вас также есть доступ к:',
     'parity.workspaces.dashboard': 'Кабинет бизнеса',
     'parity.workspaces.staff': 'Кабинет сотрудника',
-    'parity.workspaces.adminOnWeb': 'Админ-панель Kezek открывается на сайте.',
     'parity.workspaces.forBusiness': 'Для бизнеса и команды',
     'parity.workspaces.forBusinessHint': 'Создайте страницу бизнеса, настройте услуги и освободите команду от ручной записи в мессенджерах.',
     'parity.workspaces.connectBusiness': 'Подключить бизнес',

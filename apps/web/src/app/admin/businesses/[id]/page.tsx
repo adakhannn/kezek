@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { buttonStyles } from '@/components/ui/buttonStyles';
+import { readAdminBusinessDetail } from '@/lib/adminPanelReadService';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
@@ -60,51 +61,24 @@ export default async function BusinessDetailPage({ params }: { params: Promise<R
     if (roleError) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {roleError.message}</div>;
     if (!isSuperAdmin) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа')}</div>;
 
-    const admin = createSupabaseAdminClient();
-    const { data: business, error: businessError } = await admin
-        .from('businesses')
-        .select('id,name,slug,categories,owner_id,is_approved,created_at,address,phones,contact_phone,contact_whatsapp,contact_email,website_url,branch_limit')
-        .eq('id', id)
-        .maybeSingle<BizRow>();
+    const detail = await readAdminBusinessDetail(createSupabaseAdminClient(), id);
 
-    if (businessError) {
-        return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {businessError.message}</div>;
+    if (!detail.ok && detail.error === 'load') {
+        return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {detail.message}</div>;
     }
-    if (!business) {
+    if (!detail.ok) {
         return <div className="p-4">{t('admin.businesses.notFound', 'Бизнес не найден')}</div>;
     }
 
-    const [branchesResult, staffResult, servicesResult, bookingsResult, categoriesResult] = await Promise.all([
-        admin.from('branches').select('id', { count: 'exact', head: true }).eq('biz_id', id),
-        admin.from('staff').select('id', { count: 'exact', head: true }).eq('biz_id', id),
-        admin.from('services').select('id', { count: 'exact', head: true }).eq('biz_id', id),
-        admin.from('bookings').select('id', { count: 'exact', head: true }).eq('biz_id', id),
-        admin.from('categories').select('slug,name_ru,is_active').order('name_ru', { ascending: true }),
-    ]);
-
-    let owner: OwnerMini | null = null;
-    if (business.owner_id) {
-        const { data, error } = await admin.auth.admin.getUserById(business.owner_id);
-        if (!error && data?.user) {
-            const metadata = (data.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
-            owner = {
-                id: data.user.id,
-                email: data.user.email ?? null,
-                phone: (data.user as { phone?: string | null }).phone ?? null,
-                full_name: metadata.full_name?.trim() || null,
-            };
-        }
-    }
-
-    const branchesCount = branchesResult.count ?? 0;
-    const staffCount = staffResult.count ?? 0;
-    const servicesCount = servicesResult.count ?? 0;
-    const bookingsCount = bookingsResult.count ?? 0;
+    const business: BizRow = detail.business;
+    const owner: OwnerMini | null = detail.owner;
+    const branchesCount = detail.counts.branches;
+    const staffCount = detail.counts.staff;
+    const servicesCount = detail.counts.services;
+    const bookingsCount = detail.counts.bookings;
     const categories = Array.isArray(business.categories) ? business.categories : [];
     const isApproved = business.is_approved === true;
-    const categoryOptions = (categoriesResult.data ?? [])
-        .filter((category) => category.is_active !== false)
-        .map((category) => ({ slug: category.slug, name: category.name_ru }));
+    const categoryOptions = detail.categoryOptions;
 
     const setupItems = [
         {

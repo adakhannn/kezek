@@ -34,4 +34,7 @@ export const serverAdminRu = {
     'server.admin.lastPlatformAdmin': 'Нельзя снять роль последнего администратора платформы',
     'server.admin.roleChangeUnconfirmed': 'Не удалось подтвердить изменение роли',
     'server.admin.roleStateUnconfirmed': 'Состояние роли не подтверждено',
+    'server.admin.panelLoadFailed': 'Не удалось загрузить данные админки',
+    'server.admin.invalidBusinessIdentifier': 'Неверный идентификатор бизнеса',
+    'server.admin.invalidUserIdentifier': 'Неверный идентификатор пользователя',
 } as const;
