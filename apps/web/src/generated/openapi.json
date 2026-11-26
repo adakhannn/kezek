@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 225,
+  "x-explicit-operation-count": 228,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -3811,6 +3811,25 @@
         "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
       }
     },
+    "/api/dashboard/staff": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/STAFF_AND_FINANCE.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/staff",
+        "x-source-file": "apps/web/src/app/api/dashboard/staff/route.ts",
+        "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
+      }
+    },
     "/api/dashboard/staff-shifts/{id}/update-hours": {
       "post": {
         "tags": [
@@ -3837,6 +3856,35 @@
         },
         "x-next-route": "/api/dashboard/staff-shifts/[id]/update-hours",
         "x-source-file": "apps/web/src/app/api/dashboard/staff-shifts/[id]/update-hours/route.ts",
+        "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
+      }
+    },
+    "/api/dashboard/staff/{id}": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/STAFF_AND_FINANCE.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Route segment only; semantic validation is not modeled."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/staff/[id]",
+        "x-source-file": "apps/web/src/app/api/dashboard/staff/[id]/route.ts",
         "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
       }
     },
@@ -3924,6 +3972,35 @@
         },
         "x-next-route": "/api/dashboard/staff/[id]/finance/stats",
         "x-source-file": "apps/web/src/app/api/dashboard/staff/[id]/finance/stats/route.ts",
+        "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
+      }
+    },
+    "/api/dashboard/staff/{id}/schedule-context": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/STAFF_AND_FINANCE.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Route segment only; semantic validation is not modeled."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/staff/[id]/schedule-context",
+        "x-source-file": "apps/web/src/app/api/dashboard/staff/[id]/schedule-context/route.ts",
         "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
       }
     },

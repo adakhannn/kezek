@@ -12,6 +12,7 @@ import { pushRu } from './push.ru';
 import { discoveryRu } from './discovery.ru';
 import { managerRu } from './manager.ru';
 import { manageCatalogRu } from './manageCatalog.ru';
+import { manageStaffRu } from './manageStaff.ru';
 
 export const ru = {
     ...authRu,
@@ -24,6 +25,7 @@ export const ru = {
     ...discoveryRu,
     ...managerRu,
     ...manageCatalogRu,
+    ...manageStaffRu,
 } as const;
 
 /** Every mobile dictionary key; t() accepts only these. */

@@ -23,6 +23,13 @@ import MapScreen from '../screens/MapScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import ShiftQuickScreen from '../screens/ShiftQuickScreen';
 import StaffScheduleScreen from '../screens/StaffScheduleScreen';
+import ManageStaffDetailScreen from '../screens/manageStaff/ManageStaffDetailScreen';
+import ManageStaffFinanceScreen from '../screens/manageStaff/ManageStaffFinanceScreen';
+import ManageStaffFinanceStatsScreen from '../screens/manageStaff/ManageStaffFinanceStatsScreen';
+import ManageStaffListScreen from '../screens/manageStaff/ManageStaffListScreen';
+import ManageStaffNewScreen from '../screens/manageStaff/ManageStaffNewScreen';
+import ManageStaffScheduleScreen from '../screens/manageStaff/ManageStaffScheduleScreen';
+import ManageStaffSlotsScreen from '../screens/manageStaff/ManageStaffSlotsScreen';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import {
@@ -51,6 +58,14 @@ const GuardedBranchEditScreen = withSessionGate(BranchEditScreen, 'workspace');
 const GuardedBranchScheduleScreen = withSessionGate(BranchScheduleScreen, 'workspace');
 const GuardedBranchPromotionsScreen = withSessionGate(BranchPromotionsScreen, 'workspace');
 const GuardedBusinessSettingsScreen = withSessionGate(BusinessSettingsScreen, 'workspace');
+// The business management screens (the website's /dashboard/staff/*): a session is required; the web API checks the manager role.
+const GuardedManageStaffListScreen = withSessionGate(ManageStaffListScreen, 'workspace');
+const GuardedManageStaffNewScreen = withSessionGate(ManageStaffNewScreen, 'workspace');
+const GuardedManageStaffDetailScreen = withSessionGate(ManageStaffDetailScreen, 'workspace');
+const GuardedManageStaffScheduleScreen = withSessionGate(ManageStaffScheduleScreen, 'workspace');
+const GuardedManageStaffSlotsScreen = withSessionGate(ManageStaffSlotsScreen, 'workspace');
+const GuardedManageStaffFinanceScreen = withSessionGate(ManageStaffFinanceScreen, 'workspace');
+const GuardedManageStaffFinanceStatsScreen = withSessionGate(ManageStaffFinanceStatsScreen, 'workspace');
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
     detailStackScreenOptions;
@@ -241,6 +256,69 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                     ...detailStackScreenOptions,
                     title: t('catalog.dashboard.nav.settings'),
                     headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.settings'), t('nav.eyebrow.workspace')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageStaff"
+                component={GuardedManageStaffListScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('manageStaff.nav.list'),
+                    headerTitle: createNavigationHeaderTitle(t('manageStaff.nav.list'), t('manageStaff.nav.eyebrow')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageStaffNew"
+                component={GuardedManageStaffNewScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('manageStaff.nav.new'),
+                    headerTitle: createNavigationHeaderTitle(t('manageStaff.nav.new'), t('manageStaff.nav.eyebrow')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageStaffDetail"
+                component={GuardedManageStaffDetailScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('manageStaff.nav.detail'),
+                    headerTitle: createNavigationHeaderTitle(t('manageStaff.nav.detail'), t('manageStaff.nav.eyebrow')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageStaffSchedule"
+                component={GuardedManageStaffScheduleScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('manageStaff.nav.schedule'),
+                    headerTitle: createNavigationHeaderTitle(t('manageStaff.nav.schedule'), t('manageStaff.nav.eyebrow')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageStaffSlots"
+                component={GuardedManageStaffSlotsScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('manageStaff.nav.slots'),
+                    headerTitle: createNavigationHeaderTitle(t('manageStaff.nav.slots'), t('manageStaff.nav.eyebrow')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageStaffFinance"
+                component={GuardedManageStaffFinanceScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('manageStaff.nav.finance'),
+                    headerTitle: createNavigationHeaderTitle(t('manageStaff.nav.finance'), t('manageStaff.nav.eyebrow')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageStaffFinanceStats"
+                component={GuardedManageStaffFinanceStatsScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('manageStaff.nav.financeStats'),
+                    headerTitle: createNavigationHeaderTitle(t('manageStaff.nav.financeStats'), t('manageStaff.nav.eyebrow')),
                 }}
             />
         </>

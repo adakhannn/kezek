@@ -2,6 +2,9 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { ManageRouteParams } from '../screens/manage/manageMenu';
 
+/** A staff card of the managed business (the website's /dashboard/staff/[id]/*). */
+export type ManageStaffRouteParams = ManageRouteParams & { staffId: string; staffName?: string };
+
 export type RootStackParamList = {
     /** Signed out only: the sign-in flow, opened over the screen that asked for it (C1). */
     Auth: NavigatorScreenParams<AuthStackParamList> | undefined;
@@ -31,6 +34,14 @@ export type RootStackParamList = {
     ManageBranchSchedule: ManageRouteParams & { branchId: string; branchName?: string };
     ManageBranchPromotions: ManageRouteParams & { branchId: string; branchName?: string; bizSlug?: string | null };
     ManageSettings: ManageRouteParams;
+    /** The manager's staff section (/dashboard/staff): list, invitation, card and its pages. */
+    ManageStaff: ManageRouteParams;
+    ManageStaffNew: ManageRouteParams;
+    ManageStaffDetail: ManageStaffRouteParams;
+    ManageStaffSchedule: ManageStaffRouteParams;
+    ManageStaffSlots: ManageStaffRouteParams;
+    ManageStaffFinance: ManageStaffRouteParams;
+    ManageStaffFinanceStats: ManageStaffRouteParams;
 };
 
 export type MainTabParamList = {

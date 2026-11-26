@@ -1,6 +1,6 @@
 # API сотрудников, смен и финансов
 
-Статус: справочник реализации по исходникам. Статическая сверка: **1 ноября 2026**. Ответственная роль за актуальность: разработчик API сотрудников и финансов. Здесь разобраны 28 сочетаний метода и пути из прежних разделов «Сотрудники» и «Дашборд» общей API-документации. Контракты Save/Close/Open обновлены 10 ноября 2026 по локальному исправлению; остальные даты сверки указаны в разделах.
+Статус: справочник реализации по исходникам. Статическая сверка: **1 ноября 2026**. Ответственная роль за актуальность: разработчик API сотрудников и финансов. Здесь разобраны 28 сочетаний метода и пути из прежних разделов «Сотрудники» и «Дашборд» общей API-документации и три JSON-чтения раздела сотрудников для приложения (26 ноября 2026). Контракты Save/Close/Open обновлены 10 ноября 2026 по локальному исправлению; остальные даты сверки указаны в разделах.
 
 Сверены route, HTTP-обработчики, сервисы, используемые схемы и отдельные определения SQL. Для пакета смен 10 ноября выполнены локальные unit/API-тесты и [транзакционные проверки](../../scripts/test-finance-transactions.mjs) в одноразовом PostgreSQL 16 на синтетических данных без сети. Live HTTP/удалённая БД не использовались; deployment миграций, фактические RLS/ACL окружения, полнота реальных данных и предел нагрузки не подтверждены. Открытые риски — [ENGINEERING_FINDINGS](../ENGINEERING_FINDINGS.md); актуальное состояние — [PROJECT_STATUS](../PROJECT_STATUS.md). WEB-кампания остаётся закрытой, автоматизация PAUSED; правила дальнейшей проверки — [handoff](../WEB_AGENT_HANDOFF.md).
 
@@ -10,7 +10,7 @@
 
 - [Общие правила чтения контракта](#общие-правила-чтения-контракта)
 - [Смены и рабочее место сотрудника](#смены-и-рабочее-место-сотрудника): open, finance, close, items, today
-- [Управление сотрудниками](#управление-сотрудниками): create, update, delete, restore, dismiss, transfer, create-from-user, приглашения в команду (в том числе уведомление и отмена бизнесом), старый update, avatar
+- [Управление сотрудниками](#управление-сотрудниками): create, update, delete, restore, dismiss, transfer, create-from-user, приглашения в команду (в том числе уведомление и отмена бизнесом), старый update, JSON-чтения раздела для приложения, avatar
 - [Финансовый дашборд](#финансовый-дашборд): общая статистика, данные сотрудника, детальная статистика
 - [Акции филиала](#акции-филиала): create, list, update, delete
 - [Управление сменами из дашборда](#управление-сменами-из-дашборда): open, update-hours
@@ -391,6 +391,28 @@ Save передаёт все позиции одним RPC `save_staff_shift_com
 Service client ставит `status: cancelled` и `decided_at` ожидающему приглашению с фильтрами `biz_id` текущего бизнеса, `staff_id` из пути и `status = pending`, поэтому чужое или уже обработанное приглашение не меняется. Карточка остаётся без аккаунта; её можно удалить или использовать дальше. В списке [/dashboard/staff](../../apps/web/src/app/dashboard/staff/page.tsx) карточки с ожидающим приглашением (тот же service client, фильтр `biz_id`) помечены «Ожидает подтверждения» и имеют кнопку «Отменить приглашение» ([CancelInvitationButton](../../apps/web/src/app/dashboard/staff/CancelInvitationButton.tsx)).
 
 Источники: [route](../../apps/web/src/app/api/staff/[id]/invitation/cancel/route.ts), [HTTP](../../apps/web/src/lib/staffInvitationCancelHttpService.ts), [service](../../apps/web/src/lib/staffInvitationService.ts).
+
+### Чтения раздела сотрудников для приложения
+
+Сверено по исходникам и API-тестам с моками 26 ноября 2026 ([staff-read.test.ts](../../apps/web/src/__tests__/api/dashboard/staff-read.test.ts)). Три GET отдают в JSON то, что серверные страницы `/dashboard/staff`, `/dashboard/staff/[id]` и `/dashboard/staff/[id]/schedule` читают сами: страницы и маршруты вызывают одни функции [dashboardStaffReadService](../../apps/web/src/lib/dashboardStaffReadService.ts), поэтому сайт и мобильный раздел «Сотрудники» (`apps/mobile/src/screens/manageStaff`) показывают одни данные. Доступ — Manager direct (`getBizContextForManagers`: cookie сайта или Bearer приложения), текущий бизнес; limiter нет. Ошибки доступа — по общей обёртке (401 `auth`, 403 `forbidden`); не-UUID `id` — по общей обёртке. Источники: [routes](../../apps/web/src/app/api/dashboard/staff/route.ts), [HTTP](../../apps/web/src/lib/dashboardStaffReadHttpService.ts).
+
+#### GET `/api/dashboard/staff`
+
+<!-- api-contract: GET /api/dashboard/staff -->
+
+`data`: `rows` (`id`, `full_name`, `is_active`, `branch_id`, `branches.name`; сессия менеджера, RLS, по имени), `pendingInvitationStaffIds` (service client, фильтр `biz_id`, статус `pending`; сбой этого чтения только логируется и даёт пустой список), `staffApplications` (`null` — не владелец; `{ pending: null }` — счётчик недоступен) и `business` (`name`, `city`). Ошибка чтения staff — 500 `internal` «Не удалось загрузить данные сотрудника», а не пустая команда (FE-08).
+
+#### GET `/api/dashboard/staff/[id]`
+
+<!-- api-contract: GET /api/dashboard/staff/[id] -->
+
+`data`: `explicitScheduling` (значение `SCHEDULE_V2_ENABLED`), `staff` (через `staff_private_fields`: контакты и условия оплаты), все `branches` бизнеса с `is_active`, `reviews` (до 100 последних броней сотрудника с отзывами, service client с фильтром `biz_id`), `ratingScore`, `ratingWeights` (активный `rating_global_config` или `null`). 404 `not_found` «Сотрудник не найден или доступ запрещён» — сотрудник другого бизнеса, отказ функции (42501) или нет строки; 500 `internal` — сбой чтения карточки, филиалов или отзывов.
+
+#### GET `/api/dashboard/staff/[id]/schedule-context`
+
+<!-- api-contract: GET /api/dashboard/staff/[id]/schedule-context -->
+
+`data`: `staff` (`id`, `full_name`, `branch_id`), активные `branches` по имени, `explicitScheduling`, `legacy` — результат [readLegacyScheduleContext](../../apps/web/src/lib/scheduling/legacyContext.ts) (`usesPublishedSchedule`, `branchHours` или `null`, `hasRegularSchedule`, `failed`) при выключенном флаге, иначе `null`; `business` (`name`, `city`). По ним клиент выбирает редактор так же, как страница: `legacy.failed` — ошибка, флаг или `legacy: null` — опубликованные графики и отсутствия, `usesPublishedSchedule` — пояснение вместо редактора, иначе date-правила. 404 `not_found` — сотрудник другого бизнеса или нет строки; 500 `internal` — сбой чтения сотрудника или филиалов.
 
 ### POST `/api/staff/avatar/upload`
 

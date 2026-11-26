@@ -28,6 +28,8 @@ export type ManageMenuItem = {
  */
 export const MANAGE_MENU: ManageMenuItem[] = [
     { key: 'services', icon: 'list', label: 'catalog.dashboard.nav.services', route: 'ManageServices' },
+    // /dashboard/staff: every managing role (getBizContextForManagers).
+    { key: 'staff', icon: 'people', label: 'manageStaff.menu.staff', route: 'ManageStaff' },
     { key: 'branches', icon: 'business', label: 'catalog.dashboard.nav.branches', route: 'ManageBranches' },
     // /dashboard/settings: the owner (or a super admin) only.
     { key: 'settings', icon: 'settings', label: 'catalog.dashboard.nav.settings', route: 'ManageSettings', roles: ['owner'] },
