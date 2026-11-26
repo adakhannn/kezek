@@ -177,7 +177,8 @@ export function ShiftQuickSections({
                     </View>
                     <View style={styles.statusText} accessibilityRole="text" accessibilityLiveRegion="polite">
                         <Text style={styles.statusLabel}>{shiftMeta.label}</Text>
-                        <Text style={styles.statusDescription}>{shiftMeta.description}</Text>
+                        {/* On a day off the banner above explains it; "open the shift" would contradict it. */}
+                        {financeData.isDayOff && !isOpen && !shift ? null : <Text style={styles.statusDescription}>{shiftMeta.description}</Text>}
                     </View>
                     <StatusPill
                         label={t(isOpen ? 'staff.status.open' : shift ? 'staff.status.closed' : 'staff.shiftQuick.notStarted')}
@@ -212,7 +213,7 @@ export function ShiftQuickSections({
                     />
                 ) : null}
 
-                {!isOpen && !shift ? (
+                {!isOpen && !shift && !financeData.isDayOff ? (
                     <Button
                         title={t('staff.shiftQuick.openShift')}
                         onPress={onOpenShift}

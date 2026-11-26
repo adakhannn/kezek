@@ -31,7 +31,6 @@ describe('plural forms', () => {
             Object.keys(ru).filter((key) => /\.(one|few|many)$/.test(key)).map((key) => key.replace(/\.(one|few|many)$/, '')),
         )].sort();
         expect(bases).toEqual([
-            'admin.app.usage',
             'booking.duration.minutesLong',
             'cabinet.signOut.pending.message',
             'discovery.home.promotions',

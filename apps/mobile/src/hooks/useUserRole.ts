@@ -12,7 +12,7 @@ type UserRole = {
      */
     isBusinessManager: boolean;
     isStaff: boolean;
-    /** A global super admin: the cabinet shows the admin panel entry (screens/admin); the tabs follow their own roles. */
+    /** Informational: the platform admin works on the website, the app shows the tabs of their own roles. */
     isSuperAdmin: boolean;
 };
 
@@ -53,7 +53,7 @@ export function useUserRole() {
         queryFn: async (): Promise<UserRole> => {
             if (!user?.id) return NO_ROLE;
 
-            // A super admin is treated like any user here (O3): the admin panel is a separate entry, and the
+            // A super admin is treated like any user here (O3): admin tools are web-only, and the
             // tabs follow the businesses and staff cards of the account itself.
             const { data: isSuper, error: superError } = await supabase.rpc('is_super_admin');
             if (superError) {

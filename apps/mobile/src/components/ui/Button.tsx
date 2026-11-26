@@ -60,6 +60,7 @@ export default function Button({
         styles.text,
         textSizeStyle,
         variant === 'primary' && styles.primaryText,
+        variant === 'primary' && disabled && !loading && styles.primaryTextDisabled,
         variant === 'secondary' && styles.secondaryText,
         variant === 'outline' && styles.outlineText,
         variant === 'ghost' && styles.ghostText,
@@ -121,12 +122,13 @@ export default function Button({
                     styles.primaryContainer,
                     primarySizeStyle,
                     fullWidth && styles.fullWidth,
-                    isDisabled && styles.disabled,
+                    isDisabled && !(disabled && !loading) && styles.disabled,
                     style,
                 ]}
             >
+                {/* A disabled primary action is plainly grey: a dimmed gradient still read as tappable. */}
                 <LinearGradient
-                    colors={[colors.brand.primaryFrom, colors.brand.primaryTo]}
+                    colors={disabled && !loading ? [colors.surface.elevated, colors.surface.elevated] : [colors.brand.primaryFrom, colors.brand.primaryTo]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={[styles.gradient, sizeStyle]}
@@ -266,6 +268,9 @@ const styles = StyleSheet.create({
     },
     textLg: {
         fontSize: 17,
+    },
+    primaryTextDisabled: {
+        color: colors.text.tertiary,
     },
     primaryText: {
         color: colors.text.light,

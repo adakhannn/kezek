@@ -264,6 +264,7 @@ export const parityKy: Record<keyof typeof parityRu, string> = {
     'parity.workspaces.alsoHasAccess': 'Сизде дагы кирүү мүмкүнчүлүгү бар:',
     'parity.workspaces.dashboard': 'Бизнес кабинети',
     'parity.workspaces.staff': 'Кызматкер кабинети',
+    'parity.workspaces.adminOnWeb': 'Kezek админ-панели сайтта ачылат.',
     'parity.workspaces.forBusiness': 'Бизнес жана команда үчүн',
     'parity.workspaces.forBusinessHint': 'Бизнес баракчаңызды түзүп, кызматтарды жөндөп, команданы мессенжердеги кол менен жазуудан бошотуңуз.',
     'parity.workspaces.connectBusiness': 'Бизнести кошуу',
