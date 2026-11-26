@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { enUS } from 'date-fns/locale';
+import { enUS, ru as ruLocale } from 'date-fns/locale';
 
 import { formatDateLabel as formatDateLabelShared, type PriceRange } from '@shared-client/formatters';
 import type { Locale, Translate } from '../../i18n';
@@ -9,7 +9,7 @@ export type BookingDateLabel = {
     day: number;
     month: string;
     weekday: string;
-    /** Day and month together: "23 ноябрь", "23-ноябрь", "November 23". */
+    /** Day and month together: "23 ноября", "23-ноябрь", "November 23". */
     dayMonth: string;
 };
 
@@ -38,7 +38,8 @@ export function formatBookingDateLabel(dateString: string, locale: Locale): Book
         day,
         month,
         weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1),
-        dayMonth: `${day} ${month}`,
+        // "30 ноября": with a day number the month is in the genitive (a lone chip label keeps "ноябрь").
+        dayMonth: format(date, 'd MMMM', { locale: ruLocale }),
     };
 }
 
