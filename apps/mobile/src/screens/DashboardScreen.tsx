@@ -13,6 +13,8 @@ import { getErrorMessage } from '../lib/errors';
 import { openWebAsCurrentUser } from '../lib/webLinks';
 import type { RootStackParamList } from '../navigation/types';
 import { DashboardScreenSections } from './dashboard/DashboardScreenSections';
+import { ensureCurrentBusiness } from './manage/currentBusiness';
+import type { ManageMenuItem, ManageRouteParams } from './manage/manageMenu';
 import type { ManagerBooking, ManagerBookingAction } from './dashboard/types';
 import { useDashboardScreenData } from './dashboard/useDashboardScreenData';
 import { styles } from './dashboard/dashboardScreenStyles';
@@ -79,6 +81,21 @@ export default function DashboardScreen() {
         }
     };
 
+    // A management section works on the web cabinet's current business: the one chosen here is
+    // made current first, so the screen and the website act on the same business.
+    const openManage = async (item: ManageMenuItem) => {
+        const business = data.business;
+        if (!business) return;
+        try {
+            await ensureCurrentBusiness(business.id);
+            const params: ManageRouteParams = { bizId: business.id, bizName: business.name, tz: business.tz ?? null };
+            // Every ManageRoute takes exactly ManageRouteParams (see manageMenu.ts).
+            (navigation.navigate as (route: ManageMenuItem["route"], routeParams: ManageRouteParams) => void)(item.route, params);
+        } catch (error) {
+            showToast(getErrorMessage(error, t('manager.manage.selectError'), t), 'error');
+        }
+    };
+
     // Cancelling and marking attendance cannot be undone in the app: both ask first.
     const handleAction = async (booking: ManagerBooking, action: ManagerBookingAction) => {
         if (action === 'cancel') {
@@ -131,6 +148,7 @@ export default function DashboardScreen() {
             refreshing={data.refreshing}
             onRefresh={data.onRefresh}
             onOpenWeb={() => void openWebDashboard()}
+            onOpenManage={(item) => void openManage(item)}
         />
     );
 }

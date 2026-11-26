@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import BookingStatusBadge from '../../components/BookingStatusBadge';
@@ -11,6 +12,7 @@ import { useLanguage, type MobileI18nKey } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
 import { getServiceName } from '../../utils/i18n';
 import { styles } from './dashboardScreenStyles';
+import { manageMenuFor, type ManageMenuItem } from '../manage/manageMenu';
 import { availableManagerActions } from './managerBookings';
 import type { Business, ManagerBooking, ManagerBookingAction, ManagerBookingsScope } from './types';
 
@@ -48,6 +50,8 @@ type Props = {
     refreshing: boolean;
     onRefresh: () => Promise<void>;
     onOpenWeb: () => void;
+    /** A management section of the chosen business (the website's /dashboard pages). */
+    onOpenManage: (item: ManageMenuItem) => void;
 };
 
 export function DashboardScreenSections(props: Props) {
@@ -94,7 +98,25 @@ export function DashboardScreenSections(props: Props) {
                         <Text style={styles.businessName}>{business.name}</Text>
                         {business.role ? <Text style={styles.businessRole}>{t(`manager.role.${business.role}` as MobileI18nKey)}</Text> : null}
                         {business.address ? <Text style={styles.businessAddress}>{business.address}</Text> : null}
-                        <Text style={styles.webHint}>{t('manager.feed.webHint')}</Text>
+                        {manageMenuFor(business.role).length > 0 ? (
+                            <View style={styles.manageGrid} testID="manage-menu">
+                                {manageMenuFor(business.role).map((item) => (
+                                    <MotionPressable
+                                        key={item.key}
+                                        onPress={() => props.onOpenManage(item)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={t(item.label)}
+                                        style={styles.manageItem}
+                                        testID={`manage-${item.key}`}
+                                    >
+                                        <Ionicons name={item.icon} size={22} color={styles.manageIcon.color} />
+                                        <Text style={styles.manageLabel} numberOfLines={2}>{t(item.label)}</Text>
+                                    </MotionPressable>
+                                ))}
+                            </View>
+                        ) : (
+                            <Text style={styles.webHint}>{t('manager.feed.webHint')}</Text>
+                        )}
                         <View style={styles.businessActions}>
                             <Button title={t('staff.dashboard.openWeb')} onPress={props.onOpenWeb} variant="outline" fullWidth />
                         </View>

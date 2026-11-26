@@ -88,8 +88,8 @@ it('does not settle the route while its server identity lookup remains pending',
     getUser.mockReturnValue(pending.promise);
     let settled = false;
     const result = ProfilePage().then((page) => { settled = true; return page; });
-    await Promise.resolve();
-    await Promise.resolve();
+    // Let the page reach the identity lookup (cookie and request-header reads take a few ticks).
+    for (let tick = 0; tick < 10; tick += 1) await Promise.resolve();
     expect(getUser).toHaveBeenCalledTimes(1);
     expect(settled).toBe(false);
     expect(redirect).not.toHaveBeenCalled();

@@ -15,6 +15,7 @@ export const managerEn: Record<keyof typeof managerRu, string> = {
     'manager.feed.staff': 'Master: {name}',
     'manager.feed.branch': 'Branch: {name}',
     'manager.feed.webHint': 'Settings, staff and finance are in the web cabinet',
+    'manager.manage.selectError': 'Could not open this business section. Check your connection and try again.',
     'manager.role.owner': 'Owner',
     'manager.role.admin': 'Administrator',
     'manager.role.manager': 'Manager',

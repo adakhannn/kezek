@@ -2,7 +2,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { render, screen } from '@testing-library/react';
-import { headers } from 'next/headers';
 
 import CategoriesPage from '@/app/admin/categories/page';
 import BusinessesPage from '@/app/admin/businesses/page';
@@ -21,11 +20,17 @@ jest.mock('@/lib/env', () => ({
     isSupabaseServiceRoleConfigured: () => true,
 }));
 
+/** Header names read by the page; the auth client reads only `authorization` (the mobile Bearer token). */
+const mockHeaderReads: string[] = [];
+
 jest.mock('@supabase/ssr', () => ({ createServerClient: jest.fn() }));
 jest.mock('@supabase/supabase-js', () => ({ createClient: jest.fn() }));
 jest.mock('next/headers', () => ({
     cookies: jest.fn(async () => ({ get: () => undefined })),
-    headers: jest.fn(async () => new Headers({ host: 'synthetic.invalid' })),
+    headers: jest.fn(async () => {
+        const real = new Headers({ host: 'synthetic.invalid' });
+        return { get: (name: string) => { mockHeaderReads.push(name.toLowerCase()); return real.get(name); } };
+    }),
 }));
 jest.mock('next/navigation', () => ({ redirect: (path: string) => { throw new Error(`REDIRECT:${path}`); } }));
 jest.mock('@/app/_components/i18n/server', () => ({
@@ -73,6 +78,7 @@ function query(table: string) {
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockHeaderReads.length = 0;
     superRole = result(true);
     ownerRole = result(false);
     adminRole = result(false);
@@ -109,7 +115,8 @@ function expectNoProtectedReads() {
     expect(sessionFrom).not.toHaveBeenCalled();
     expect(privilegedFrom).not.toHaveBeenCalled();
     expect(createClient).not.toHaveBeenCalled();
-    expect(headers).not.toHaveBeenCalled();
+    // Only the caller's own credentials (a mobile Bearer token) may be read before access is decided.
+    expect(mockHeaderReads.filter((name) => name !== 'authorization')).toEqual([]);
     expect(rpc.mock.calls.every(([name]) => name === 'is_super_admin' || name === 'has_role')).toBe(true);
 }
 

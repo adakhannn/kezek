@@ -15,6 +15,7 @@ export const managerKy: Record<keyof typeof managerRu, string> = {
     'manager.feed.staff': 'Чебер: {name}',
     'manager.feed.branch': 'Филиал: {name}',
     'manager.feed.webHint': 'Жөндөөлөр, кызматкерлер жана каржы — веб-кабинетте',
+    'manager.manage.selectError': 'Бул бизнестин бөлүмүн ачуу мүмкүн болбоду. Байланышты текшерип, кайра аракет кылыңыз.',
     'manager.role.owner': 'Ээси',
     'manager.role.admin': 'Администратор',
     'manager.role.manager': 'Менеджер',
