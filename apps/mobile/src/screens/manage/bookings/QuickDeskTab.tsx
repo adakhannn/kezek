@@ -1,22 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { filterSlotsByContext, resolveScheduleContext } from '@core-domain/schedule';
 
-import Button from '../../../components/ui/Button';
-import Card from '../../../components/ui/Card';
+import ActionBar from '../../../components/ui/ActionBar';
+import Avatar from '../../../components/ui/Avatar';
+import ChipGroup from '../../../components/ui/ChipGroup';
+import { DateNavigator } from '../../../components/ui/DateTimeFields';
+import FormField from '../../../components/ui/FormField';
 import Input from '../../../components/ui/Input';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import ListRow, { ListGroup } from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import Section from '../../../components/ui/Section';
+import { SkeletonBlock } from '../../../components/ui/Skeleton';
 import { colors } from '../../../constants/colors';
+import { space } from '../../../constants/theme';
 import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
 import { getErrorMessage } from '../../../lib/errors';
 import { getServiceName } from '../../../utils/i18n';
-import { addDaysToDate, todayInTz } from '../opsKit/dates';
-import { dayLabel } from '../opsKit/format';
-import { ChipGroup, Field, LoadError, Stepper, ui } from '../opsKit/ui';
+import { todayInTz } from '../opsKit/dates';
+import { Field, LoadError, ui } from '../opsKit/ui';
 import SellPackageModal from '../visitPackages/SellPackageModal';
 import {
     fetchFreeSlots,
@@ -60,7 +67,6 @@ export default function QuickDeskTab({
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const today = todayInTz(timezone);
-    const tomorrow = addDaysToDate(today, 1);
     const [branchId, setBranchIdState] = useState(options.branches.length === 1 ? options.branches[0].id : '');
     const [date, setDateState] = useState(today);
     const [staffId, setStaffIdState] = useState('');
@@ -191,98 +197,102 @@ export default function QuickDeskTab({
         }
     };
 
+    const chipsLoading = <SkeletonBlock height={44} radius={22} width="70%" />;
+
     return (
-        <ScrollView style={ui.screen} contentContainerStyle={ui.content} keyboardShouldPersistTaps="handled" testID="quickdesk-tab">
-            <Card padding="md">
-                <Text style={ui.muted}>{t('ops.desk.mode')}</Text>
-                <Text style={ui.sectionTitle}>{t('ops.desk.title')}</Text>
-                <Text style={ui.muted}>{t('ops.desk.description')}</Text>
-            </Card>
-
-            <Field label={t('ops.desk.branch')}>
-                {options.branches.length === 0 ? <Text style={ui.muted}>{t('ops.desk.noBranches')}</Text> : (
-                    <ChipGroup
-                        options={options.branches.map((branch) => ({ key: branch.id, label: branch.name }))}
-                        value={branchId || null}
-                        onChange={setBranchId}
-                        disabled={creating}
-                        testID="desk-branch"
-                    />
-                )}
-            </Field>
-
-            {branchId ? (
-                <Field label={t('ops.desk.date')}>
-                    <ChipGroup
-                        options={[{ key: today, label: t('ops.desk.today') }, { key: tomorrow, label: t('ops.desk.tomorrow') }]}
-                        value={date === today || date === tomorrow ? date : null}
-                        onChange={setDate}
-                        disabled={creating}
-                        testID="desk-day"
-                    />
-                    <Stepper
-                        label={dayLabel(date, locale)}
-                        onPrev={() => { if (date > today) setDate(addDaysToDate(date, -1)); }}
-                        onNext={() => setDate(addDaysToDate(date, 1))}
-                        prevLabel={t('ops.common.prevDay')}
-                        nextLabel={t('ops.common.nextDay')}
-                        disabled={creating}
-                        pickDate={{ value: date, onPick: setDate, minDate: today }}
-                        testID="desk-date"
-                    />
-                </Field>
-            ) : null}
-
-            {branchId ? (
-                <Field label={t('ops.desk.master')}>
-                    {locations.isLoading ? <LoadingSpinner size="small" /> : locations.error ? (
-                        <LoadError title={t('ops.desk.errors.staffLoad')} onRetry={() => void locations.refetch()} />
-                    ) : staffHere.length === 0 ? <Text style={ui.muted}>{t('ops.desk.noStaff')}</Text> : (
+        <Screen
+            keyboard
+            testID="quickdesk-tab"
+            footer={(
+                <ActionBar
+                    secondary={{ title: t('ops.desk.goToCalendar'), onPress: () => onTabChange('calendar'), disabled: creating }}
+                    primary={{
+                        title: creating ? t('ops.desk.creating') : t('ops.desk.create'),
+                        onPress: () => void create(),
+                        disabled: !canCreate || creating,
+                        loading: creating,
+                        testID: 'desk-create',
+                    }}
+                />
+            )}
+        >
+            {/* The visit: branch → day → master → service → time, each step opens after the previous one. */}
+            <Section title={t('ops.desk.visit')} gap={space.lg}>
+                <Field label={t('ops.desk.branch')}>
+                    {options.branches.length === 0 ? <Text style={ui.muted}>{t('ops.desk.noBranches')}</Text> : (
                         <ChipGroup
-                            options={staffHere.map((member) => ({ key: member.id, label: member.full_name }))}
-                            value={staffId || null}
-                            onChange={setStaffId}
+                            options={options.branches.map((branch) => ({ key: branch.id, label: branch.name }))}
+                            value={branchId || null}
+                            onChange={setBranchId}
                             disabled={creating}
-                            testID="desk-staff"
+                            accessibilityLabel={t('ops.desk.branch')}
+                            testID="desk-branch"
                         />
                     )}
                 </Field>
-            ) : null}
 
-            {staffId ? (
-                <Field label={t('ops.desk.service')}>
-                    {serviceStaff.isLoading ? <LoadingSpinner size="small" /> : serviceStaff.error ? (
-                        <LoadError title={t('ops.desk.errors.servicesLoad')} onRetry={() => void serviceStaff.refetch()} />
-                    ) : services.length === 0 ? <Text style={ui.muted}>{t('ops.desk.noServices')}</Text> : (
-                        <ChipGroup
-                            options={services.map((item) => ({ key: item.id, label: `${getServiceName(item, locale)} · ${item.duration_min} ${t('ops.bookings.min')}` }))}
-                            value={serviceId || null}
-                            onChange={(value) => { setServiceId(value); setSlot(''); }}
-                            disabled={creating}
-                            testID="desk-service"
-                        />
-                    )}
-                </Field>
-            ) : null}
+                {branchId ? (
+                    <Field label={t('ops.desk.date')}>
+                        <DateNavigator value={date} onChange={setDate} minDate={today} timeZone={timezone} disabled={creating} testID="desk-date" />
+                    </Field>
+                ) : null}
 
-            {service ? (
-                <Field label={t('ops.desk.time')}>
-                    {slots.isLoading ? <LoadingSpinner size="small" message={t('ops.desk.slotsLoading')} /> : slots.error ? (
-                        <LoadError title={t('ops.desk.errors.slotsLoad')} onRetry={() => void slots.refetch()} />
-                    ) : (slots.data ?? []).length === 0 ? <Text style={ui.muted}>{t('ops.desk.errors.noSlots')}</Text> : (
-                        <ChipGroup
-                            options={(slots.data ?? []).map((item) => ({ key: item.start_at, label: formatInTimeZone(new Date(item.start_at), timezone, 'HH:mm') }))}
-                            value={slot || null}
-                            onChange={setSlot}
-                            disabled={creating}
-                            testID="desk-slot"
-                        />
-                    )}
-                </Field>
-            ) : null}
+                {branchId ? (
+                    <Field label={t('ops.desk.master')}>
+                        {locations.isLoading ? chipsLoading : locations.error ? (
+                            <LoadError compact title={t('ops.desk.errors.staffLoad')} onRetry={() => void locations.refetch()} />
+                        ) : staffHere.length === 0 ? <Text style={ui.muted}>{t('ops.desk.noStaff')}</Text> : (
+                            <ChipGroup
+                                options={staffHere.map((member) => ({ key: member.id, label: member.full_name }))}
+                                value={staffId || null}
+                                onChange={setStaffId}
+                                disabled={creating}
+                                accessibilityLabel={t('ops.desk.master')}
+                                testID="desk-staff"
+                            />
+                        )}
+                    </Field>
+                ) : null}
 
-            <Card padding="md">
-                <Text style={ui.fieldLabel}>{t('ops.desk.client')}</Text>
+                {staffId ? (
+                    <Field label={t('ops.desk.service')}>
+                        {serviceStaff.isLoading ? chipsLoading : serviceStaff.error ? (
+                            <LoadError compact title={t('ops.desk.errors.servicesLoad')} onRetry={() => void serviceStaff.refetch()} />
+                        ) : services.length === 0 ? <Text style={ui.muted}>{t('ops.desk.noServices')}</Text> : (
+                            <ChipGroup
+                                options={services.map((item) => ({ key: item.id, label: `${getServiceName(item, locale)} · ${item.duration_min} ${t('ops.bookings.min')}` }))}
+                                value={serviceId || null}
+                                onChange={(value) => { setServiceId(value); setSlot(''); }}
+                                disabled={creating}
+                                accessibilityLabel={t('ops.desk.service')}
+                                testID="desk-service"
+                            />
+                        )}
+                    </Field>
+                ) : null}
+
+                {service ? (
+                    <Field label={t('ops.desk.time')}>
+                        {slots.isLoading ? chipsLoading : slots.error ? (
+                            <LoadError compact title={t('ops.desk.errors.slotsLoad')} onRetry={() => void slots.refetch()} />
+                        ) : (slots.data ?? []).length === 0 ? <Text style={ui.muted}>{t('ops.desk.errors.noSlots')}</Text> : (
+                            <ChipGroup
+                                options={(slots.data ?? []).map((item) => ({ key: item.start_at, label: formatInTimeZone(new Date(item.start_at), timezone, 'HH:mm') }))}
+                                value={slot || null}
+                                onChange={setSlot}
+                                disabled={creating}
+                                accessibilityLabel={t('ops.desk.time')}
+                                testID="desk-slot"
+                            />
+                        )}
+                    </Field>
+                ) : null}
+            </Section>
+
+            <Section
+                title={t('ops.desk.client')}
+                caption={t(clientMode === 'none' ? 'ops.desk.clientNone.hint' : clientMode === 'existing' ? 'ops.desk.clientExisting.searchHint' : 'ops.desk.clientNew.formHint')}
+            >
                 <ChipGroup
                     options={[
                         { key: 'none', label: t('ops.desk.clientNone') },
@@ -292,73 +302,80 @@ export default function QuickDeskTab({
                     value={clientMode}
                     onChange={setClientMode}
                     disabled={creating}
+                    accessibilityLabel={t('ops.desk.client')}
                     testID="desk-client-mode"
                 />
-                <Text style={[ui.hint, { marginBottom: colors.layout.space2 }]}>
-                    {t(clientMode === 'none' ? 'ops.desk.clientNone.hint' : clientMode === 'existing' ? 'ops.desk.clientExisting.searchHint' : 'ops.desk.clientNew.formHint')}
-                </Text>
                 {clientMode === 'existing' ? (
-                    <View style={{ gap: colors.layout.space2 }}>
+                    <>
                         <Input
                             value={searchQ}
                             onChangeText={(value) => { setSearchQ(value); setSelectedClientId(''); }}
                             placeholder={t('ops.desk.searchPlaceholder')}
                             accessibilityLabel={t('ops.desk.searchPlaceholder')}
+                            leadingIcon={<Ionicons name="search" size={18} color={colors.text.secondary} />}
                             autoCapitalize="none"
                             autoCorrect={false}
+                            containerStyle={styles.flush}
                             testID="desk-client-search"
                         />
                         {searchLoading ? <Text style={ui.muted}>{t('ops.desk.searching')}</Text> : null}
-                        {search.error && !searchLoading ? <Text style={[ui.muted, ui.dangerText]}>{t('ops.desk.errors.searchFailed')}</Text> : null}
+                        {search.error && !searchLoading ? <Text style={[ui.muted, styles.danger]}>{t('ops.desk.errors.searchFailed')}</Text> : null}
                         {!searchLoading && !search.error && debouncedQ && foundUsers.length === 0 ? <Text style={ui.muted}>{t('ops.desk.notFound')}</Text> : null}
-                        <ChipGroup
-                            options={foundUsers.map((user) => ({
-                                key: user.id,
-                                label: [user.full_name, user.phone, user.email].filter(Boolean).join(' · '),
-                            }))}
-                            value={selectedClientId || null}
-                            onChange={setSelectedClientId}
-                            disabled={creating}
-                            testID="desk-client-found"
-                        />
-                        {selectedClient ? (
-                            <View style={ui.rowBetween}>
-                                <Text style={[ui.muted, ui.successText]}>{t('ops.desk.clientMode.found')}</Text>
-                                <Button title={t('ops.packages.sell.button')} onPress={() => setSellOpen(true)} variant="ghost" size="sm" />
-                            </View>
+                        {foundUsers.length > 0 ? (
+                            <ListGroup testID="desk-client-found">
+                                {foundUsers.map((user) => {
+                                    const selected = user.id === selectedClientId;
+                                    return (
+                                        <ListRow
+                                            key={user.id}
+                                            leading={<Avatar name={user.full_name} size={40} ring={selected} />}
+                                            title={user.full_name}
+                                            subtitle={[user.phone, user.email].filter(Boolean).join(' · ') || undefined}
+                                            trailing={selected ? <Ionicons name="checkmark-circle" size={22} color={colors.tone.success.fg} /> : undefined}
+                                            chevron={false}
+                                            onPress={() => setSelectedClientId(user.id)}
+                                            disabled={creating}
+                                            testID={`desk-client-found-${user.id}`}
+                                        />
+                                    );
+                                })}
+                            </ListGroup>
                         ) : null}
-                    </View>
+                        {selectedClient ? (
+                            <ListGroup>
+                                <ListRow
+                                    icon="pricetags-outline"
+                                    iconTone="success"
+                                    title={t('ops.packages.sell.button')}
+                                    subtitle={t('ops.desk.clientMode.found')}
+                                    onPress={() => setSellOpen(true)}
+                                />
+                            </ListGroup>
+                        ) : null}
+                    </>
                 ) : null}
                 {clientMode === 'new' ? (
-                    <View style={{ gap: colors.layout.space2 }}>
-                        <Input value={newClientName} onChangeText={setNewClientName} placeholder={t('ops.desk.clientName')} accessibilityLabel={t('ops.desk.clientName')} testID="desk-client-name" />
-                        <Input
+                    <View>
+                        <FormField
+                            label={t('ops.desk.clientName')}
+                            required
+                            value={newClientName}
+                            onChangeText={setNewClientName}
+                            autoCapitalize="words"
+                            testID="desk-client-name"
+                        />
+                        <FormField
+                            label={t('ops.desk.clientPhone')}
+                            required
                             value={newClientPhone}
                             onChangeText={setNewClientPhone}
-                            placeholder={t('ops.desk.clientPhone')}
-                            accessibilityLabel={t('ops.desk.clientPhone')}
+                            placeholder="+996"
                             keyboardType="phone-pad"
                             testID="desk-client-phone"
                         />
                     </View>
                 ) : null}
-            </Card>
-
-            <Card padding="md">
-                <Text style={ui.fieldLabel}>{t('ops.desk.primaryAction')}</Text>
-                <Text style={[ui.muted, { marginBottom: colors.layout.space2 }]}>{t('ops.desk.primaryActionDesc')}</Text>
-                <Button
-                    title={creating ? t('ops.desk.creating') : t('ops.desk.create')}
-                    onPress={() => void create()}
-                    disabled={!canCreate || creating}
-                    loading={creating}
-                    fullWidth
-                />
-                <View style={[ui.wrap, { marginTop: colors.layout.space2 }]}>
-                    <Button title={t('ops.desk.goToCalendar')} onPress={() => onTabChange('calendar')} variant="outline" size="sm" />
-                    <Button title={t('ops.desk.goToList')} onPress={() => onTabChange('list')} variant="outline" size="sm" />
-                </View>
-            </Card>
+            </Section>
 
             {selectedClient ? (
                 <SellPackageModal
@@ -369,6 +386,11 @@ export default function QuickDeskTab({
                     onClose={() => setSellOpen(false)}
                 />
             ) : null}
-        </ScrollView>
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    flush: { marginBottom: 0 },
+    danger: { color: colors.tone.danger.fg },
+});

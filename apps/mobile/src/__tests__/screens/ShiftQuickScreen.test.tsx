@@ -120,7 +120,8 @@ describe('ShiftQuickScreen', () => {
     test('renders idle shift workspace and open action', async () => {
         renderWithProviders(<ShiftQuickScreen />);
 
-        expect(await screen.findByText(TEXT.title)).toBeTruthy();
+        // The header says "Моя смена"; the screen does not repeat it.
+        expect(screen.queryByText(TEXT.title)).toBeNull();
         expect(await screen.findByText(TEXT.idleStatus)).toBeTruthy();
         expect(await screen.findByText(TEXT.openShift)).toBeTruthy();
         expect(mockedApiRequest).toHaveBeenCalledWith('/api/staff/finance', { headers: staffHeader });

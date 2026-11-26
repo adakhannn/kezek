@@ -1,20 +1,24 @@
 import { useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import Card from '../../../components/ui/Card';
+import ChipGroup from '../../../components/ui/ChipGroup';
 import EmptyState from '../../../components/ui/EmptyState';
 import { DateRangeField } from '../../../components/ui/DateTimeFields';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import { colors } from '../../../constants/colors';
+import Screen from '../../../components/ui/Screen';
+import Section from '../../../components/ui/Section';
+import { SkeletonCard } from '../../../components/ui/Skeleton';
+import StatTile, { StatGrid } from '../../../components/ui/StatTile';
+import { space } from '../../../constants/theme';
 import { useLanguage } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import { fetchDashboardBranches } from '../visitPackages/visitPackagesData';
 import { todayInTz } from '../opsKit/dates';
 import { useCurrentBusinessReady } from '../opsKit/format';
 import { formatMoneyRounded, formatNumber } from '../opsKit/money';
-import { ChipGroup, Field, LoadError, SectionTitle, ShareBar, StatTile, ui } from '../opsKit/ui';
+import { BarList, CHART_COLOR, Field, LoadError, ScreenSkeleton } from '../opsKit/ui';
 import {
     fetchAnalytics,
     loadByHour,
@@ -25,6 +29,11 @@ import {
     rangeError,
     type PeriodPreset,
 } from './analyticsData';
+
+/** "26.11" for a `YYYY-MM-DD` day of a chart. */
+function chartDay(date: string): string {
+    return `${date.slice(8, 10)}.${date.slice(5, 7)}`;
+}
 
 /** The website's /dashboard/analytics: bookings, conversion and revenue of a period, by day, promotions and load by hour. */
 export default function ManageAnalyticsScreen() {
@@ -58,33 +67,24 @@ export default function ManageAnalyticsScreen() {
         setStartDate(presetStart(end, presetDays(value)));
     };
 
-    if (business.error) return <LoadError title={t('manager.manage.selectError')} onRetry={business.retry} />;
-    if (!business.ready) return <LoadingSpinner message={t('common.loading')} />;
+    if (business.error) return <LoadError screen title={t('manager.manage.selectError')} onRetry={business.retry} />;
+    if (!business.ready) return <ScreenSkeleton />;
 
     const data = query.data;
     const hours = data ? loadByHour(data.load.points) : [];
     const share = data ? promoShare(data.summary) : 0;
-    const maxDayBookings = data ? Math.max(1, ...data.byDay.map((point) => point.bookingsConfirmedOrPaid)) : 1;
-    const maxDayRevenue = data ? Math.max(1, ...data.byDay.map((point) => point.totalRevenue)) : 1;
+    const maxDayBookings = data ? Math.max(0, ...data.byDay.map((point) => point.bookingsConfirmedOrPaid)) : 0;
+    const maxDayRevenue = data ? Math.max(0, ...data.byDay.map((point) => point.totalRevenue)) : 0;
+    const maxHour = Math.max(0, ...hours.map((row) => row.total));
     const onRefresh = async () => {
         setRefreshing(true);
         try { await Promise.all([query.refetch(), branches.refetch()]); } finally { setRefreshing(false); }
     };
 
     return (
-        <ScrollView
-            style={ui.screen}
-            contentContainerStyle={ui.content}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-            testID="manage-analytics-screen"
-        >
-            <Text style={ui.title}>{t('ops.analytics.title')}</Text>
-            <Text style={ui.subtitle}>{t('ops.analytics.description')}</Text>
-
-            <Card padding="md">
-                <Text style={ui.fieldLabel}>{t('ops.analytics.period')}</Text>
-                <Text style={[ui.hint, { marginBottom: colors.layout.space2 }]}>{t('ops.analytics.periodHint')}</Text>
+        <Screen refreshing={refreshing} onRefresh={onRefresh} testID="manage-analytics-screen">
+            {/* Filters first: the period (chips + the range picker) and the branch. */}
+            <Section gap={space.md}>
                 <ChipGroup
                     options={PERIOD_PRESETS.map((key) => ({
                         key,
@@ -92,107 +92,114 @@ export default function ManageAnalyticsScreen() {
                     }))}
                     value={preset}
                     onChange={choosePreset}
-                    accessibilityLabel={t('ops.analytics.quick')}
+                    accessibilityLabel={t('ops.analytics.period')}
                     testID="analytics-preset"
                 />
-                <View style={{ marginTop: colors.layout.space3, marginBottom: colors.layout.space2 }}>
-                    <DateRangeField
-                        from={startDate}
-                        to={endDate}
-                        onChange={(range) => { setPreset('custom'); setStartDate(range.from); setEndDate(range.to); }}
-                        timeZone={params.tz}
-                        fromLabel={t('ops.analytics.start')}
-                        toLabel={t('ops.analytics.end')}
-                        testID="analytics-range"
-                    />
-                </View>
+                <DateRangeField
+                    from={startDate}
+                    to={endDate}
+                    onChange={(range) => { setPreset('custom'); setStartDate(range.from); setEndDate(range.to); }}
+                    timeZone={params.tz}
+                    fromLabel={t('ops.analytics.start')}
+                    toLabel={t('ops.analytics.end')}
+                    error={invalid ? t(invalid) : undefined}
+                    testID="analytics-range"
+                />
                 {(branches.data ?? []).length > 0 ? (
                     <Field label={t('ops.analytics.branch')} hint={t('ops.analytics.branchHint')}>
                         <ChipGroup
                             options={[{ key: 'all', label: t('ops.analytics.allBranches') }, ...(branches.data ?? []).map((branch) => ({ key: branch.id, label: branch.name }))]}
                             value={branchId}
                             onChange={setBranchId}
+                            accessibilityLabel={t('ops.analytics.branch')}
                             testID="analytics-branch"
                         />
                     </Field>
                 ) : null}
-            </Card>
+            </Section>
 
-            {invalid ? (
-                <EmptyState icon="alert-circle" title={t('ops.analytics.error')} message={t(invalid)} />
-            ) : query.isLoading ? (
-                <LoadingSpinner message={t('ops.analytics.loading')} />
+            {invalid ? null : query.isLoading ? (
+                <View style={{ gap: space.md }} testID="analytics-loading">
+                    <SkeletonCard lines={2} />
+                    <SkeletonCard lines={5} />
+                </View>
             ) : query.error && !data ? (
                 <LoadError title={t('ops.analytics.loadError')} onRetry={() => void query.refetch()} />
             ) : data ? (
-                <View style={{ gap: colors.layout.space3, opacity: query.isPlaceholderData ? 0.6 : 1 }}>
+                <View style={{ gap: space.xxl, opacity: query.isPlaceholderData ? 0.6 : 1 }}>
                     {data.byDay.length === 0 ? (
                         <EmptyState icon="stats-chart" title={t('ops.analytics.emptyTitle')} message={t('ops.analytics.emptyHint')} />
                     ) : (
                         <>
-                            <View style={ui.tiles}>
-                                <StatTile label={t('ops.analytics.created')} value={formatNumber(data.summary.bookings.created, t.locale)} />
-                                <StatTile label={t('ops.analytics.confirmed')} value={formatNumber(data.summary.bookings.confirmedOrPaid, t.locale)} />
-                                <StatTile label={t('ops.analytics.conversion')} value={`${data.summary.funnel.conversionHomeToBooking.toFixed(2)}%`} />
-                                <StatTile label={t('ops.analytics.revenue')} value={formatMoneyRounded(data.summary.revenue.total, t)} />
-                            </View>
+                            <StatGrid>
+                                <StatTile icon="add-circle-outline" label={t('ops.analytics.kpi.created')} value={formatNumber(data.summary.bookings.created, t.locale)} />
+                                <StatTile icon="checkmark-circle-outline" label={t('ops.analytics.kpi.confirmed')} value={formatNumber(data.summary.bookings.confirmedOrPaid, t.locale)} tone="accent" />
+                                <StatTile icon="funnel-outline" label={t('ops.analytics.kpi.conversion')} value={`${data.summary.funnel.conversionHomeToBooking.toFixed(2)}%`} hint={t('ops.analytics.conversion')} />
+                                <StatTile icon="cash-outline" label={t('ops.analytics.kpi.revenue')} value={formatMoneyRounded(data.summary.revenue.total, t)} tone="success" />
+                            </StatGrid>
 
-                            <Card padding="md">
-                                <SectionTitle>{t('ops.analytics.trend')}</SectionTitle>
-                                <Text style={ui.hint}>{t('ops.analytics.trendHint')}</Text>
-                                {data.byDay.map((point) => (
-                                    <View key={point.date} style={ui.listRow} accessible accessibilityLabel={`${point.date}: ${point.bookingsConfirmedOrPaid}`}>
-                                        <Text style={[ui.muted, { width: 92 }]}>{point.date}</Text>
-                                        <ShareBar share={point.bookingsConfirmedOrPaid / maxDayBookings} />
-                                        <Text style={[ui.text, { width: 48, textAlign: 'right' }]}>{formatNumber(point.bookingsConfirmedOrPaid, t.locale)}</Text>
-                                    </View>
-                                ))}
-                            </Card>
+                            <Section title={t('ops.analytics.byDay')}>
+                                <Card variant="plain" padding="md">
+                                    <BarList
+                                        data={data.byDay.map((point) => ({
+                                            key: point.date,
+                                            label: chartDay(point.date),
+                                            value: point.bookingsConfirmedOrPaid,
+                                            display: formatNumber(point.bookingsConfirmedOrPaid, t.locale),
+                                            accessibilityLabel: `${point.date}: ${point.bookingsConfirmedOrPaid}`,
+                                        }))}
+                                        color={CHART_COLOR.bookings}
+                                        axisMax={formatNumber(maxDayBookings, t.locale)}
+                                        valueWidth={48}
+                                        testID="analytics-trend"
+                                    />
+                                </Card>
+                            </Section>
 
-                            <Card padding="md">
-                                <SectionTitle>{t('ops.analytics.promo')}</SectionTitle>
-                                <Text style={ui.hint}>{t('ops.analytics.promoHint')}</Text>
-                                <View style={[ui.tiles, { marginTop: colors.layout.space2 }]}>
+                            <Section title={t('ops.analytics.revenueByDay')}>
+                                <StatGrid>
                                     <StatTile label={t('ops.analytics.promoRevenue')} value={formatMoneyRounded(data.summary.revenue.promoRevenue, t)} />
                                     <StatTile label={t('ops.analytics.promoShare')} value={`${share.toFixed(2)}%`} />
-                                </View>
-                                {data.byDay.map((point) => (
-                                    <View key={point.date} style={ui.listRow} accessible accessibilityLabel={`${point.date}: ${formatMoneyRounded(point.totalRevenue, t)}`}>
-                                        <Text style={[ui.muted, { width: 92 }]}>{point.date}</Text>
-                                        <ShareBar share={point.totalRevenue / maxDayRevenue} color={colors.status.success} />
-                                        <Text style={[ui.text, { minWidth: 72, textAlign: 'right' }]}>{formatMoneyRounded(point.totalRevenue, t)}</Text>
-                                    </View>
-                                ))}
-                            </Card>
+                                </StatGrid>
+                                <Card variant="plain" padding="md">
+                                    <BarList
+                                        data={data.byDay.map((point) => ({
+                                            key: point.date,
+                                            label: chartDay(point.date),
+                                            value: point.totalRevenue,
+                                            display: formatMoneyRounded(point.totalRevenue, t),
+                                            accessibilityLabel: `${point.date}: ${formatMoneyRounded(point.totalRevenue, t)}`,
+                                        }))}
+                                        color={CHART_COLOR.revenue}
+                                        axisMax={formatMoneyRounded(maxDayRevenue, t)}
+                                        valueWidth={96}
+                                        testID="analytics-revenue"
+                                    />
+                                </Card>
+                            </Section>
                         </>
                     )}
 
-                    <Card padding="md" testID="analytics-load">
-                        <SectionTitle>{t('ops.analytics.load')}</SectionTitle>
-                        <Text style={ui.hint}>{t('ops.analytics.loadHint')}</Text>
-                        <View style={[ui.listRow, { borderBottomWidth: 0 }]}>
-                            <Text style={[ui.fieldLabel, { width: 56 }]}>{t('ops.analytics.hour')}</Text>
-                            <Text style={[ui.fieldLabel, { flex: 1 }]}>{t('ops.analytics.bookings')}</Text>
-                            <Text style={[ui.fieldLabel, { width: 84, textAlign: 'right' }]}>{t('ops.analytics.promotions')}</Text>
-                        </View>
-                        {hours.map((row) => (
-                            <View
-                                key={row.hour}
-                                style={ui.listRow}
-                                accessible
-                                accessibilityLabel={`${row.hour}:00, ${t('ops.analytics.bookings')} ${row.total}, ${t('ops.analytics.promotions')} ${row.promo}`}
-                            >
-                                <Text style={[ui.muted, { width: 56 }]}>{row.hour}:00</Text>
-                                <View style={[ui.row, { flex: 1 }]}>
-                                    <ShareBar share={row.intensity} color={colors.status.success} />
-                                    <Text style={[ui.text, { width: 40, textAlign: 'right' }]}>{row.total ? formatNumber(row.total, t.locale) : '—'}</Text>
-                                </View>
-                                <Text style={[ui.text, { width: 84, textAlign: 'right' }]}>{row.promo ? formatNumber(row.promo, t.locale) : '—'}</Text>
-                            </View>
-                        ))}
-                    </Card>
+                    <Section title={t('ops.analytics.load')} testID="analytics-load">
+                        <Card variant="plain" padding="md">
+                            <BarList
+                                columns={{ label: t('ops.analytics.hour'), value: t('ops.analytics.bookings'), secondary: t('ops.analytics.promotions') }}
+                                data={hours.map((row) => ({
+                                    key: String(row.hour),
+                                    label: `${row.hour}:00`,
+                                    value: row.total,
+                                    display: row.total ? formatNumber(row.total, t.locale) : '—',
+                                    secondary: row.promo ? formatNumber(row.promo, t.locale) : '—',
+                                    accessibilityLabel: `${row.hour}:00, ${t('ops.analytics.bookings')} ${row.total}, ${t('ops.analytics.promotions')} ${row.promo}`,
+                                }))}
+                                color={CHART_COLOR.bookings}
+                                axisMax={formatNumber(maxHour, t.locale)}
+                                valueWidth={40}
+                            />
+                        </Card>
+                    </Section>
                 </View>
             ) : null}
-        </ScrollView>
+        </Screen>
     );
 }

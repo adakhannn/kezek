@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
 import SegmentedTabs from '../../../components/SegmentedTabs';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import { colors } from '../../../constants/colors';
+import { layout, space } from '../../../constants/theme';
 import { useLanguage } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import { useCurrentBusinessReady } from '../opsKit/format';
-import { LoadError, ui } from '../opsKit/ui';
+import { LoadError, ScreenSkeleton } from '../opsKit/ui';
 import BookingsCalendarTab from './BookingsCalendarTab';
 import { fetchBookingOptions } from './bookingsData';
 import BookingsListTab from './BookingsListTab';
@@ -33,13 +34,14 @@ export default function ManageBookingsScreen() {
         enabled: business.ready,
     });
 
-    if (business.error) return <LoadError title={t('manager.manage.selectError')} onRetry={business.retry} />;
-    if (!business.ready || options.isLoading) return <LoadingSpinner message={t('common.loading')} />;
-    if (options.error || !options.data) return <LoadError title={t('ops.bookings.optionsError')} onRetry={() => void options.refetch()} />;
+    if (business.error) return <LoadError screen title={t('manager.manage.selectError')} onRetry={business.retry} />;
+    if (!business.ready || options.isLoading) return <ScreenSkeleton testID="manage-bookings-loading" />;
+    if (options.error || !options.data) return <LoadError screen title={t('ops.bookings.optionsError')} onRetry={() => void options.refetch()} />;
 
     return (
-        <View style={ui.screen} testID="manage-bookings-screen">
-            <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+        <View style={styles.page} testID="manage-bookings-screen">
+            {/* The tabs stay on top; each tab scrolls under them with the page gutter. */}
+            <View style={styles.tabs}>
                 <SegmentedTabs
                     tabs={[
                         { key: 'calendar', label: t('ops.bookings.tabs.calendar') },
@@ -61,3 +63,8 @@ export default function ManageBookingsScreen() {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    page: { flex: 1, backgroundColor: colors.surface.page },
+    tabs: { paddingHorizontal: layout.gutter, paddingTop: space.md },
+});

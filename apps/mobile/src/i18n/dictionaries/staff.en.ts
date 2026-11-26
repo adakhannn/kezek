@@ -249,4 +249,6 @@ export const staffEn: Record<keyof typeof staffRu, string> = {
     'staff.shiftQuick.deleteSuccess': 'The client was removed from the shift',
     'staff.shiftQuick.deleteQueued': 'The removal is saved and will be sent when you are online',
     'staff.shiftQuick.deleteError': 'Could not remove the client',
+    'staff.unit.som': 'som',
+    'staff.workspace.placeTitle': 'Workplace',
 };

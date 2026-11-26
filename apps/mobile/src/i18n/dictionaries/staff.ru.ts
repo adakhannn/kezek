@@ -259,4 +259,6 @@ export const staffRu = {
     'staff.shiftQuick.deleteSuccess': 'Клиент удалён из смены',
     'staff.shiftQuick.deleteQueued': 'Удаление сохранено и будет отправлено при подключении',
     'staff.shiftQuick.deleteError': 'Не удалось удалить клиента',
+    'staff.unit.som': 'сом',
+    'staff.workspace.placeTitle': 'Место работы',
 } as const;

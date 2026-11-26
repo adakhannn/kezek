@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,9 +9,13 @@ import { enUS, ru } from 'date-fns/locale';
 
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import MotionPressable from '../../../components/ui/MotionPressable';
+import ListRow, { KeyValueRow, ListGroup } from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import ScreenIntro from '../../../components/ui/ScreenIntro';
+import Section from '../../../components/ui/Section';
+import StatTile, { StatGrid } from '../../../components/ui/StatTile';
 import { colors } from '../../../constants/colors';
+import { radii, space, typeScale } from '../../../constants/theme';
 import { useLanguage, type MobileI18nKey } from '../../../i18n';
 import { formatKyDate } from '../../../i18n/kyDate';
 import type { Locale } from '../../../i18n/locale';
@@ -19,7 +23,7 @@ import { openWebAsCurrentUser } from '../../../lib/webLinks';
 import type { RootStackParamList } from '../../../navigation/types';
 import { MANAGE_MENU, type ManageRouteParams } from '../manageMenu';
 import { useCurrentBusinessReady } from '../opsKit/format';
-import { LoadError, SectionTitle, StatTile, ui } from '../opsKit/ui';
+import { LoadError, ScreenSkeleton, ui } from '../opsKit/ui';
 import { fetchOverview, homeFocus, onboardingItems, SECTION_WEB_PATH, type DashboardOverview, type DashboardSection } from './overviewData';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -54,14 +58,14 @@ const METRICS: { key: keyof Pick<DashboardOverview, 'bookingsToday' | 'staffActi
     { key: 'branchesCount', title: 'ops.home.kpi.branches', hint: 'ops.home.kpi.branchesHint', action: 'ops.home.kpi.branchesList', section: 'branches', icon: 'business' },
 ];
 
-const QUICK_ACTIONS: { key: string; title: MobileI18nKey; hint: MobileI18nKey; emphasis: MobileI18nKey; section: DashboardSection }[] = [
-    { key: 'openCalendar', title: 'ops.home.quick.openCalendar', hint: 'ops.home.quick.openCalendarHint', emphasis: 'ops.home.quick.openCalendarEmphasis', section: 'bookings' },
-    { key: 'addStaff', title: 'ops.home.quick.addStaff', hint: 'ops.home.quick.addStaffHint', emphasis: 'ops.home.quick.addStaffEmphasis', section: 'staffNew' },
-    { key: 'addService', title: 'ops.home.quick.addService', hint: 'ops.home.quick.addServiceHint', emphasis: 'ops.home.quick.addServiceEmphasis', section: 'servicesNew' },
-    { key: 'assignServices', title: 'ops.home.quick.assignServices', hint: 'ops.home.quick.assignServicesHint', emphasis: 'ops.home.quick.assignServicesEmphasis', section: 'staff' },
+const QUICK_ACTIONS: { key: string; title: MobileI18nKey; hint: MobileI18nKey; section: DashboardSection; icon: keyof typeof Ionicons.glyphMap }[] = [
+    { key: 'openCalendar', title: 'ops.home.quick.openCalendar', hint: 'ops.home.quick.openCalendarHint', section: 'bookings', icon: 'calendar-outline' },
+    { key: 'addStaff', title: 'ops.home.quick.addStaff', hint: 'ops.home.quick.addStaffHint', section: 'staffNew', icon: 'person-add-outline' },
+    { key: 'addService', title: 'ops.home.quick.addService', hint: 'ops.home.quick.addServiceHint', section: 'servicesNew', icon: 'add-circle-outline' },
+    { key: 'assignServices', title: 'ops.home.quick.assignServices', hint: 'ops.home.quick.assignServicesHint', section: 'staff', icon: 'git-network-outline' },
 ];
 
-const TONE_COLOR = { warning: colors.status.warning, info: colors.status.info, success: colors.status.success } as const;
+const FOCUS_ICON = { warning: 'alert-circle', info: 'information-circle', success: 'checkmark-circle' } as const;
 
 /** The website's /dashboard: today's numbers, the main focus, quick links, setup steps and the rating formula. */
 export default function ManageOverviewScreen() {
@@ -90,144 +94,157 @@ export default function ManageOverviewScreen() {
         }
     };
 
-    if (business.error) return <LoadError title={t('manager.manage.selectError')} onRetry={business.retry} />;
-    if (!business.ready || query.isLoading) return <LoadingSpinner message={t('common.loading')} />;
-    if (query.error || !query.data) return <LoadError title={t('ops.home.loadError')} onRetry={() => void query.refetch()} />;
+    if (business.error) return <LoadError screen title={t('manager.manage.selectError')} onRetry={business.retry} />;
+    if (!business.ready || query.isLoading) return <ScreenSkeleton testID="manage-overview-loading" />;
+    if (query.error || !query.data) return <LoadError screen title={t('ops.home.loadError')} onRetry={() => void query.refetch()} />;
 
     const data = query.data;
     const focus = homeFocus(data);
     const missing = onboardingItems(data);
+    const tone = colors.tone[focus.tone];
+    const weights = data.ratingWeights;
     const onRefresh = async () => {
         setRefreshing(true);
         try { await query.refetch(); } finally { setRefreshing(false); }
     };
 
     return (
-        <ScrollView
-            style={ui.screen}
-            contentContainerStyle={ui.content}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-            testID="manage-overview-screen"
-        >
-            <Card>
-                <Text style={ui.muted}>{t('ops.home.badge')}</Text>
-                <Text style={ui.title}>{data.bizName || params.bizName || t('ops.home.defaultBizName')}</Text>
-                <Text style={ui.subtitle}>
-                    {longDate(data.formattedDate, locale, data.timezone)}{data.bizCity ? ` · ${data.bizCity}` : ''}
-                </Text>
-                <View style={[ui.tiles, { marginTop: colors.layout.space3 }]}>
-                    <StatTile label={t('ops.home.stats.bookingsToday')} value={String(data.bookingsToday)} hint={t('ops.home.stats.bookingsTodayHint')} />
-                    <StatTile label={t('ops.home.stats.activeStaff')} value={String(data.staffActive)} hint={t('ops.home.stats.activeStaffHint')} />
-                </View>
-            </Card>
-
-            <Card style={{ borderLeftWidth: 4, borderLeftColor: TONE_COLOR[focus.tone] }} testID={`overview-focus-${focus.kind}`}>
-                <Text style={ui.muted}>{t('ops.home.priority')}</Text>
-                <Text style={[ui.sectionTitle, { marginTop: 4 }]}>
-                    {t(focus.titleKey)}{focus.count != null ? ` · ${focus.count}` : ''}
-                </Text>
-                <Text style={[ui.text, { marginTop: 4 }]}>{t(focus.descriptionKey)}</Text>
-                <View style={{ marginTop: colors.layout.space3 }}>
-                    <Button title={t(focus.ctaKey)} onPress={() => void openSection(focus.section)} variant="primary" fullWidth />
-                </View>
-            </Card>
-
-            <SectionTitle>{t('ops.home.quick.title')}</SectionTitle>
-            <Text style={ui.muted}>{t('ops.home.quick.subtitle')}</Text>
-            {QUICK_ACTIONS.map((action) => (
-                <MotionPressable
-                    key={action.key}
-                    onPress={() => void openSection(action.section)}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(action.title)}
-                    accessibilityHint={t(action.hint)}
-                    testID={`overview-quick-${action.key}`}
-                >
-                    <Card padding="md">
-                        <Text style={[ui.muted, { color: colors.accent.indigo }]}>{t(action.emphasis)}</Text>
-                        <View style={ui.rowBetween}>
-                            <Text style={[ui.text, { fontWeight: '600', flexShrink: 1 }]}>{t(action.title)}</Text>
-                            <Ionicons name="chevron-forward" size={18} color={colors.text.secondary} />
-                        </View>
-                        <Text style={ui.muted}>{t(action.hint)}</Text>
-                    </Card>
-                </MotionPressable>
-            ))}
-
-            <SectionTitle>{t('ops.home.metrics')}</SectionTitle>
-            <View style={ui.tiles}>
-                {METRICS.map((metric) => (
-                    <MotionPressable
-                        key={metric.key}
-                        onPress={() => void openSection(metric.section)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${t(metric.title)}: ${data[metric.key]}. ${t(metric.action)}`}
-                        style={[ui.tile, { minHeight: 44 }]}
-                        testID={`overview-metric-${metric.key}`}
-                    >
-                        <Ionicons name={metric.icon} size={20} color={colors.accent.indigo} />
-                        <Text style={ui.tileValue}>{data[metric.key]}</Text>
-                        <Text style={ui.tileLabel}>{t(metric.title)}</Text>
-                        <Text style={ui.tileHint}>{t(metric.hint)}</Text>
-                        <Text style={[ui.tileHint, { color: colors.accent.indigo }]}>{t(metric.action)}</Text>
-                    </MotionPressable>
-                ))}
+        <Screen refreshing={refreshing} onRefresh={onRefresh} testID="manage-overview-screen">
+            {/* The header says "Главная": the business and its day open the page, then today's numbers. */}
+            <View style={styles.hero}>
+                <Text style={styles.heroName} numberOfLines={2}>{data.bizName || params.bizName || t('ops.home.defaultBizName')}</Text>
+                <ScreenIntro>{`${longDate(data.formattedDate, locale, data.timezone)}${data.bizCity ? ` · ${data.bizCity}` : ''}`}</ScreenIntro>
             </View>
 
-            {data.needOnboarding ? (
-                <Card testID="overview-onboarding">
-                    <Text style={ui.sectionTitle}>{t('ops.home.onboarding.title')}</Text>
-                    <Text style={ui.muted}>{t('ops.home.onboarding.summary')} · {t('ops.home.onboarding.remaining', { count: missing.length })}</Text>
-                    {missing.map((item, index) => (
-                        <View key={item} style={[ui.row, { marginTop: colors.layout.space2, alignItems: 'flex-start' }]}>
-                            <Text style={[ui.badgeText, ui.warningText]}>{index + 1}</Text>
-                            <Text style={[ui.text, { flexShrink: 1 }]}>{t(item)}</Text>
-                        </View>
+            <StatGrid>
+                {METRICS.map((metric) => (
+                    <StatTile
+                        key={metric.key}
+                        icon={metric.icon}
+                        tone={metric.key === 'bookingsToday' ? 'accent' : undefined}
+                        label={t(metric.title)}
+                        value={String(data[metric.key])}
+                        hint={t(metric.hint)}
+                        onPress={() => void openSection(metric.section)}
+                        testID={`overview-metric-${metric.key}`}
+                    />
+                ))}
+            </StatGrid>
+
+            <Card variant="plain" padding="md" style={[styles.focus, { borderColor: tone.border }]} testID={`overview-focus-${focus.kind}`}>
+                <View style={styles.focusHead}>
+                    <View style={[styles.focusIcon, { backgroundColor: tone.bg }]}>
+                        <Ionicons name={FOCUS_ICON[focus.tone]} size={20} color={tone.fg} />
+                    </View>
+                    <Text style={[ui.overline, { color: tone.fg }]}>{t('ops.home.priority')}</Text>
+                </View>
+                <Text style={styles.focusTitle} accessibilityRole="header">
+                    {t(focus.titleKey)}{focus.count != null ? ` · ${focus.count}` : ''}
+                </Text>
+                <Text style={ui.muted}>{t(focus.descriptionKey)}</Text>
+                <Button title={t(focus.ctaKey)} onPress={() => void openSection(focus.section)} fullWidth style={styles.focusButton} />
+            </Card>
+
+            <Section title={t('ops.home.quick.title')}>
+                <ListGroup inset>
+                    {QUICK_ACTIONS.map((action) => (
+                        <ListRow
+                            key={action.key}
+                            icon={action.icon}
+                            title={t(action.title)}
+                            subtitle={t(action.hint)}
+                            onPress={() => void openSection(action.section)}
+                            testID={`overview-quick-${action.key}`}
+                        />
                     ))}
-                </Card>
+                </ListGroup>
+            </Section>
+
+            {data.needOnboarding ? (
+                <Section
+                    title={t('ops.home.onboarding.title')}
+                    caption={`${t('ops.home.onboarding.summary')} · ${t('ops.home.onboarding.remaining', { count: missing.length })}`}
+                    testID="overview-onboarding"
+                >
+                    <ListGroup inset>
+                        {missing.map((item, index) => (
+                            <ListRow
+                                key={item}
+                                leading={(
+                                    <View style={styles.stepNumber}>
+                                        <Text style={styles.stepNumberText}>{index + 1}</Text>
+                                    </View>
+                                )}
+                                title={t(item)}
+                                numberOfLines={2}
+                            />
+                        ))}
+                    </ListGroup>
+                </Section>
             ) : null}
 
-            {data.ratingWeights ? (
-                <Card testID="overview-rating">
-                    <Text style={ui.sectionTitle}>{t('ops.home.rating.title')}</Text>
-                    <Text style={ui.muted}>{t('ops.home.rating.subtitle', { days: data.ratingWeights.windowDays })}</Text>
-                    {data.ratingConfigScope ? (
-                        <Text style={[ui.muted, { marginTop: 4 }]}>
-                            {t(data.ratingConfigScope === 'biz' ? 'ops.home.rating.scope.biz' : 'ops.home.rating.scope.global')}
-                        </Text>
-                    ) : null}
-                    <View style={[ui.wrap, { marginTop: colors.layout.space2 }]}>
-                        {([
-                            ['ops.home.rating.factor.reviews', data.ratingWeights.reviews],
-                            ['ops.home.rating.factor.productivity', data.ratingWeights.productivity],
-                            ['ops.home.rating.factor.loyalty', data.ratingWeights.loyalty],
-                            ['ops.home.rating.factor.discipline', data.ratingWeights.discipline],
-                        ] as [MobileI18nKey, number][]).map(([key, value]) => (
-                            <View key={key} style={ui.badge}>
-                                <Text style={ui.badgeText}>{t(key)}: {value}%</Text>
-                            </View>
-                        ))}
-                    </View>
-                    <View style={{ marginTop: colors.layout.space3 }}>
+            {weights ? (
+                <Section
+                    title={t('ops.home.rating.title')}
+                    caption={t('ops.home.rating.subtitle', { days: weights.windowDays })}
+                    actionLabel={t('ops.home.rating.moreInfo')}
+                    onAction={() => void openWebAsCurrentUser('/docs/RATINGS_HOW_IT_WORKS').catch(() => undefined)}
+                    testID="overview-rating"
+                >
+                    <Card variant="plain" padding="md">
                         {data.ratingScore !== null ? (
-                            <View accessible accessibilityLabel={`${t('ops.home.rating.scoreLabel')} ${data.ratingScore.toFixed(1)} / 100`}>
+                            <View accessible accessibilityLabel={`${t('ops.home.rating.scoreLabel')} ${data.ratingScore.toFixed(1)} / 100`} style={styles.score}>
                                 <Text style={ui.muted}>{t('ops.home.rating.scoreLabel')}</Text>
-                                <Text style={ui.tileValue}>{data.ratingScore.toFixed(1)} <Text style={ui.muted}>/ 100</Text></Text>
-                                {data.ratingScore <= 10 ? <Text style={[ui.muted, ui.warningText]}>{t('ops.home.rating.lowRatingHint')}</Text> : null}
+                                <Text style={styles.scoreValue}>
+                                    {data.ratingScore.toFixed(1)}<Text style={styles.scoreMax}> / 100</Text>
+                                </Text>
+                                {data.ratingScore <= 10 ? <Text style={[ui.muted, styles.warning]}>{t('ops.home.rating.lowRatingHint')}</Text> : null}
                             </View>
                         ) : (
-                            <Text style={ui.muted}>{t('ops.home.rating.noRating')}</Text>
+                            <Text style={[ui.muted, styles.score]}>{t('ops.home.rating.noRating')}</Text>
                         )}
-                        <Text style={[ui.hint, { marginTop: colors.layout.space2 }]}>{t('ops.home.rating.hint')}</Text>
-                    </View>
-                    <Button
-                        title={t('ops.home.rating.moreInfo')}
-                        onPress={() => void openWebAsCurrentUser('/docs/RATINGS_HOW_IT_WORKS').catch(() => undefined)}
-                        variant="ghost"
-                        size="sm"
-                    />
-                </Card>
+                        <View style={ui.separator} />
+                        {([
+                            ['ops.home.rating.factor.reviews', weights.reviews],
+                            ['ops.home.rating.factor.productivity', weights.productivity],
+                            ['ops.home.rating.factor.loyalty', weights.loyalty],
+                            ['ops.home.rating.factor.discipline', weights.discipline],
+                        ] as [MobileI18nKey, number][]).map(([key, value]) => (
+                            <KeyValueRow key={key} label={t(key)} value={`${value}%`} />
+                        ))}
+                        {data.ratingConfigScope ? (
+                            <Text style={[ui.hint, styles.ratingNote]}>
+                                {t(data.ratingConfigScope === 'biz' ? 'ops.home.rating.scope.biz' : 'ops.home.rating.scope.global')}
+                            </Text>
+                        ) : null}
+                        <Text style={[ui.hint, styles.ratingNote]}>{t('ops.home.rating.hint')}</Text>
+                    </Card>
+                </Section>
             ) : null}
-        </ScrollView>
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    hero: { gap: space.xs },
+    heroName: { ...typeScale.title, color: colors.text.primary },
+    focus: { borderWidth: 1, gap: space.sm },
+    focusHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    focusIcon: { width: 36, height: 36, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+    focusTitle: { ...typeScale.headline, color: colors.text.primary },
+    focusButton: { marginTop: space.sm },
+    stepNumber: {
+        width: 36,
+        height: 36,
+        borderRadius: radii.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.tone.warning.bg,
+    },
+    stepNumberText: { ...typeScale.callout, fontWeight: '700', color: colors.tone.warning.fg },
+    score: { gap: space.xxs, paddingBottom: space.md },
+    scoreValue: { ...typeScale.display, color: colors.text.primary },
+    scoreMax: { ...typeScale.headline, color: colors.text.tertiary },
+    warning: { color: colors.tone.warning.fg },
+    ratingNote: { marginTop: space.sm },
+});

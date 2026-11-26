@@ -1,20 +1,27 @@
 import { useState } from 'react';
-import { RefreshControl, ScrollView, Switch, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 
+import Avatar from '../../../components/ui/Avatar';
+import Badge, { StatusPill } from '../../../components/ui/Badge';
 import Button from '../../../components/ui/Button';
-import Card from '../../../components/ui/Card';
+import ChipGroup from '../../../components/ui/ChipGroup';
 import EmptyState from '../../../components/ui/EmptyState';
 import FeedbackBanner from '../../../components/ui/FeedbackBanner';
-import Input from '../../../components/ui/Input';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import FormField from '../../../components/ui/FormField';
+import ListRow from '../../../components/ui/ListRow';
+import Screen from '../../../components/ui/Screen';
+import { SwitchRow } from '../../../components/ui/SelectionRow';
+import { SkeletonList } from '../../../components/ui/Skeleton';
 import { colors } from '../../../constants/colors';
+import { radii, space, type Tone } from '../../../constants/theme';
 import { translatePlural, useLanguage, type MobileI18nKey } from '../../../i18n';
 import { getErrorMessage } from '../../../lib/errors';
 import type { RootStackParamList } from '../../../navigation/types';
 import { shortDateTime, useCurrentBusinessReady } from '../opsKit/format';
-import { ChipGroup, Field, LoadError, ui } from '../opsKit/ui';
+import { Field, LoadError, ui } from '../opsKit/ui';
 import {
     decideApplication,
     decisionBody,
@@ -25,11 +32,11 @@ import {
     type RoleApplication,
 } from './roleApplicationsData';
 
-const STATUS_LABEL: Record<ApplicationStatus, MobileI18nKey> = {
-    pending: 'ops.applications.status.pending',
-    approved: 'ops.applications.status.approved',
-    rejected: 'ops.applications.status.rejected',
-    cancelled: 'ops.applications.status.cancelled',
+const STATUS: Record<ApplicationStatus, { key: MobileI18nKey; tone: Tone }> = {
+    pending: { key: 'ops.applications.status.pending', tone: 'warning' },
+    approved: { key: 'ops.applications.status.approved', tone: 'success' },
+    rejected: { key: 'ops.applications.status.rejected', tone: 'danger' },
+    cancelled: { key: 'ops.applications.status.cancelled', tone: 'neutral' },
 };
 
 function HistoryNotice({ application }: { application: RoleApplication }) {
@@ -39,12 +46,15 @@ function HistoryNotice({ application }: { application: RoleApplication }) {
     if (!notice) return null;
     const count = application.prior_submission_count > 0 ? ` · ${t('ops.applications.history.count', { count: application.prior_submission_count })}` : '';
     return (
-        <View style={{ marginTop: colors.layout.space2 }}>
-            <Button
+        <View style={styles.history}>
+            <ListRow
+                icon="time-outline"
+                iconTone="info"
                 title={`${t(notice.titleKey)}${count}`}
+                numberOfLines={2}
+                trailing={<Badge label={t(open ? 'ops.common.collapse' : 'ops.common.expand')} tone="neutral" />}
+                chevron={false}
                 onPress={() => setOpen((value) => !value)}
-                variant="ghost"
-                size="sm"
                 accessibilityHint={t(open ? 'ops.common.collapse' : 'ops.common.expand')}
             />
             {open ? notice.lines.map((line) => <Text key={line} style={ui.muted}>{t(line)}</Text>) : null}
@@ -73,9 +83,9 @@ export default function ManageRoleApplicationsScreen() {
         enabled: business.ready,
     });
 
-    if (business.error) return <LoadError title={t('manager.manage.selectError')} onRetry={business.retry} />;
-    if (!business.ready || query.isLoading) return <LoadingSpinner message={t('ops.applications.loading')} />;
-    if (query.error || !query.data) return <LoadError title={t('ops.applications.loadError')} onRetry={() => void query.refetch()} />;
+    if (business.error) return <LoadError screen title={t('manager.manage.selectError')} onRetry={business.retry} />;
+    if (!business.ready || query.isLoading) return <Screen><SkeletonList rows={3} testID="applications-loading" /></Screen>;
+    if (query.error || !query.data) return <LoadError screen title={t('ops.applications.loadError')} onRetry={() => void query.refetch()} />;
 
     const { items, branches } = query.data;
     const startApproval = (id: string) => {
@@ -130,22 +140,19 @@ export default function ManageRoleApplicationsScreen() {
     };
 
     return (
-        <ScrollView
-            style={ui.screen}
-            contentContainerStyle={ui.content}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-            testID="manage-role-applications-screen"
-        >
-            <Text style={ui.title}>{t('ops.applications.title')}</Text>
-            <Text style={ui.subtitle}>{t('ops.applications.description')}</Text>
+        <Screen refreshing={refreshing} onRefresh={onRefresh} keyboard testID="manage-role-applications-screen">
             {error ? <FeedbackBanner variant="danger" message={error} onClose={() => setError(null)} /> : null}
             {notice ? <FeedbackBanner variant="success" message={notice} onClose={() => setNotice(null)} /> : null}
             {branches.length === 0 ? (
                 <FeedbackBanner variant="warning" title={t('ops.applications.noBranch.title')} message={t('ops.applications.noBranch.message')} />
             ) : null}
             {items.length === 0 ? (
-                <EmptyState icon="person-add" title={t('ops.applications.empty.title')} message={t('ops.applications.empty.description')} />
+                <EmptyState
+                    icon="person-add-outline"
+                    title={t('ops.applications.empty.title')}
+                    message={t('ops.applications.empty.description')}
+                    action={<Button title={t('ops.bookings.refresh')} onPress={() => void onRefresh()} variant="outline" fullWidth />}
+                />
             ) : null}
 
             {items.map((application) => {
@@ -154,52 +161,57 @@ export default function ManageRoleApplicationsScreen() {
                 const rejecting = rejectingId === application.id;
                 const busy = actionId !== null;
                 const contact = [application.applicant_email, application.applicant_phone].filter(Boolean).join(' · ') || application.applicant_user_id;
+                const name = application.applicant_name || t('ops.applications.userFallback');
+                const status = STATUS[application.status];
                 return (
-                    <Card key={application.id} padding="md" testID={`application-${application.id}`}>
-                        <View style={ui.rowBetween}>
-                            <View style={{ flexShrink: 1 }}>
-                                <Text style={[ui.text, { fontWeight: '700' }]}>{application.applicant_name || t('ops.applications.userFallback')}</Text>
-                                <Text style={ui.muted}>{contact}</Text>
-                            </View>
-                            <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                                <View style={ui.badge}><Text style={ui.badgeText}>{t('ops.applications.role.staff')}</Text></View>
-                                <View style={ui.badge}>
-                                    <Text style={[ui.badgeText, application.status === 'approved' ? ui.successText : application.status === 'rejected' ? ui.dangerText : null]}>
-                                        {t(STATUS_LABEL[application.status])}
-                                    </Text>
-                                </View>
-                            </View>
+                    <View key={application.id} style={styles.card} testID={`application-${application.id}`}>
+                        <ListRow
+                            leading={<Avatar name={name} size={44} />}
+                            title={name}
+                            subtitle={contact}
+                            trailing={<StatusPill label={t(status.key)} tone={status.tone} />}
+                        />
+                        <View style={styles.meta}>
+                            <Badge label={t('ops.applications.role.staff')} tone="accent" icon="cut-outline" />
+                            <Text style={ui.hint}>
+                                {t('ops.applications.createdAt', { date: shortDateTime(application.created_at, params.tz) })}
+                                {application.reviewed_at ? ` · ${t('ops.applications.reviewedAt', { date: shortDateTime(application.reviewed_at, params.tz) })}` : ''}
+                            </Text>
                         </View>
-                        {application.message ? <Text style={[ui.text, { marginTop: colors.layout.space2 }]}>{application.message}</Text> : null}
-                        <Text style={[ui.hint, { marginTop: colors.layout.space2 }]}>
-                            {t('ops.applications.createdAt', { date: shortDateTime(application.created_at, params.tz) })}
-                            {application.reviewed_at ? ` · ${t('ops.applications.reviewedAt', { date: shortDateTime(application.reviewed_at, params.tz) })}` : ''}
-                        </Text>
+                        {application.message ? <Text style={[ui.text, styles.quote]}>{application.message}</Text> : null}
                         {application.review_note ? <Text style={ui.muted}>{application.review_note}</Text> : null}
                         <HistoryNotice application={application} />
 
                         {pending && !editing && !rejecting ? (
-                            <View style={[ui.wrap, { marginTop: colors.layout.space2 }]}>
-                                <Button title={t('ops.applications.approveSetup')} onPress={() => startApproval(application.id)} size="sm" disabled={!branches.length || busy} />
+                            <View style={styles.actions}>
+                                <Button
+                                    title={t('ops.applications.approveSetup')}
+                                    onPress={() => startApproval(application.id)}
+                                    size="sm"
+                                    variant="secondary"
+                                    disabled={!branches.length || busy}
+                                    style={styles.grow}
+                                />
                                 <Button
                                     title={t('ops.applications.reject')}
                                     onPress={() => { setRejectingId(application.id); setEditingId(null); setRejectNote(''); }}
                                     size="sm"
-                                    variant="outline"
+                                    variant="ghost"
+                                    textStyle={styles.dangerText}
                                     disabled={busy}
                                 />
                             </View>
                         ) : null}
 
                         {pending && rejecting ? (
-                            <View style={{ marginTop: colors.layout.space2, gap: colors.layout.space2 }}>
-                                <Input
+                            <View style={styles.form}>
+                                <FormField
+                                    label={t('ops.applications.rejectReason')}
+                                    required
                                     value={rejectNote}
                                     onChangeText={setRejectNote}
                                     maxLength={1000}
                                     multiline
-                                    placeholder={t('ops.applications.rejectReason')}
-                                    accessibilityLabel={t('ops.applications.rejectReason')}
                                     testID="application-reject-note"
                                 />
                                 <View style={ui.wrap}>
@@ -224,36 +236,32 @@ export default function ManageRoleApplicationsScreen() {
                         ) : null}
 
                         {pending && editing ? (
-                            <View style={{ marginTop: colors.layout.space2, gap: colors.layout.space2 }}>
+                            <View style={styles.form}>
                                 <Field label={t('ops.applications.branchLabel')} hint={branches.find((branch) => branch.id === branchId)?.address ?? undefined}>
                                     <ChipGroup
                                         options={branches.map((branch) => ({ key: branch.id, label: branch.name }))}
                                         value={branchId || null}
                                         onChange={setBranchId}
                                         disabled={busy}
+                                        accessibilityLabel={t('ops.applications.branchLabel')}
                                         testID="application-branch"
                                     />
                                 </Field>
-                                <View style={[ui.rowBetween, { minHeight: 44 }]}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[ui.text, { fontWeight: '600' }]}>{t('ops.applications.activateNow')}</Text>
-                                        <Text style={ui.hint}>{t('ops.applications.activateNowHint')}</Text>
-                                    </View>
-                                    <Switch
-                                        value={isActive}
-                                        onValueChange={setIsActive}
-                                        disabled={busy}
-                                        accessibilityLabel={t('ops.applications.activateNow')}
-                                        trackColor={{ true: colors.accent.primary, false: colors.border.light }}
-                                    />
-                                </View>
-                                <View style={ui.wrap}>
+                                <SwitchRow
+                                    label={t('ops.applications.activateNow')}
+                                    hint={t('ops.applications.activateNowHint')}
+                                    value={isActive}
+                                    onChange={setIsActive}
+                                    disabled={busy}
+                                />
+                                <View style={styles.actions}>
                                     <Button
                                         title={t('ops.applications.approve')}
                                         onPress={() => void decide(application, 'approve')}
                                         size="sm"
                                         disabled={busy || !branchId}
                                         loading={actionId === `${application.id}:approve`}
+                                        style={styles.grow}
                                     />
                                     <Button title={t('ops.common.cancel')} onPress={() => setEditingId(null)} size="sm" variant="ghost" disabled={busy} />
                                 </View>
@@ -261,8 +269,11 @@ export default function ManageRoleApplicationsScreen() {
                         ) : null}
 
                         {application.active_block_id ? (
-                            <View style={{ marginTop: colors.layout.space2, gap: colors.layout.space2 }}>
-                                <Text style={[ui.muted, ui.warningText]}>{t('ops.applications.blocked')}</Text>
+                            <View style={styles.blocked}>
+                                <View style={styles.blockedText}>
+                                    <Ionicons name="lock-closed-outline" size={16} color={colors.tone.warning.fg} />
+                                    <Text style={[ui.muted, styles.warningText]}>{t('ops.applications.blocked')}</Text>
+                                </View>
                                 <Button
                                     title={t('ops.applications.unblock')}
                                     onPress={() => void decide(application, 'unblock')}
@@ -273,9 +284,52 @@ export default function ManageRoleApplicationsScreen() {
                                 />
                             </View>
                         ) : null}
-                    </Card>
+                    </View>
                 );
             })}
-        </ScrollView>
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    card: {
+        backgroundColor: colors.surface.card,
+        borderRadius: radii.lg,
+        paddingHorizontal: space.lg,
+        paddingBottom: space.lg,
+        gap: space.md,
+    },
+    meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.sm },
+    quote: {
+        padding: space.md,
+        borderRadius: radii.md,
+        backgroundColor: colors.fill.input,
+        borderLeftWidth: 3,
+        borderLeftColor: colors.tone.accent.border,
+    },
+    history: { gap: space.xs },
+    actions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: space.sm,
+        paddingTop: space.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+    },
+    grow: { flex: 1 },
+    dangerText: { color: colors.tone.danger.fg },
+    form: {
+        gap: space.md,
+        paddingTop: space.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+    },
+    blocked: {
+        gap: space.sm,
+        paddingTop: space.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+    },
+    blockedText: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+    warningText: { flex: 1, color: colors.tone.warning.fg },
+});

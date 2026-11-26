@@ -4,8 +4,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
+import Screen from '../components/ui/Screen';
+import { SkeletonBlock, SkeletonCard } from '../components/ui/Skeleton';
+import { StatGrid } from '../components/ui/StatTile';
 import { useConfirm } from '../contexts/ConfirmContext';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useToast } from '../contexts/ToastContext';
 import { useLanguage } from '../i18n';
 import { getErrorMessage } from '../lib/errors';
@@ -251,50 +254,67 @@ export default function ShiftQuickScreen() {
         );
     };
 
+    const loading = (
+        <Screen testID="shift-quick-loading">
+            <SkeletonBlock width="50%" height={14} />
+            <SkeletonCard lines={3} />
+            <StatGrid>
+                <SkeletonBlock height={84} radius={16} />
+                <SkeletonBlock height={84} radius={16} />
+            </StatGrid>
+        </Screen>
+    );
+
     if (staffLoading || (isLoading && !financeData)) {
-        return <LoadingSpinner message={t('common.loading')} />;
+        return loading;
     }
 
     if (needsSelection) {
         return (
-            <EmptyState
-                icon="briefcase"
-                title={t('staff.chooseBusinessOnTab', { tab: t('nav.staffTab') })}
-                message={t('staff.shiftQuick.chooseBusinessMessage')}
-                action={
-                    <Button
-                        title={t('staff.openTab', { tab: t('nav.staffTab') })}
-                        onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
-                        fullWidth
-                    />
-                }
-            />
+            <Screen>
+                <EmptyState
+                    icon="briefcase-outline"
+                    title={t('staff.chooseBusinessOnTab', { tab: t('nav.staffTab') })}
+                    message={t('staff.shiftQuick.chooseBusinessMessage')}
+                    action={
+                        <Button
+                            title={t('staff.openTab', { tab: t('nav.staffTab') })}
+                            onPress={() => navigation.navigate('Main', { screen: 'Staff' })}
+                            fullWidth
+                        />
+                    }
+                />
+            </Screen>
         );
     }
 
     if (!staffInfo) {
         return (
-            <EmptyState
-                icon="briefcase"
-                title={t('staff.notStaff')}
-                message={t('staff.shiftQuick.notStaffMessage')}
-            />
+            <Screen>
+                <EmptyState
+                    icon="briefcase-outline"
+                    title={t('staff.notStaff')}
+                    message={t('staff.shiftQuick.notStaffMessage')}
+                />
+            </Screen>
         );
     }
 
     if (error && !financeData) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('staff.shiftQuick.loadErrorTitle')}
-                message={t('staff.shiftQuick.loadErrorMessage')}
-                action={<Button title={t('staff.shiftQuick.refresh')} onPress={() => void onRefresh()} />}
-            />
+            <Screen refreshing={refreshing} onRefresh={onRefresh}>
+                <ErrorState
+                    title={t('staff.shiftQuick.loadErrorTitle')}
+                    message={t('staff.shiftQuick.loadErrorMessage')}
+                    retryLabel={t('staff.shiftQuick.refresh')}
+                    onRetry={() => void onRefresh()}
+                />
+            </Screen>
         );
     }
 
     if (!financeData) {
-        return <LoadingSpinner message={t('common.loading')} />;
+        return loading;
     }
 
     return (

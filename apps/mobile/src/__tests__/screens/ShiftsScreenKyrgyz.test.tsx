@@ -103,7 +103,9 @@ describe('ShiftsScreen in Kyrgyz', () => {
             </QueryClientProvider>,
         );
 
-        expect(await screen.findByText('Сменалар жана статистика', {}, { timeout: 5000 })).toBeTruthy();
+        // The header carries the title: the screen itself starts with the master and the numbers.
+        expect(await screen.findByText('Айлануу', {}, { timeout: 5000 })).toBeTruthy();
+        expect(screen.queryByText('Сменалар жана статистика')).toBeNull();
         expect(screen.getByText('Ай')).toBeTruthy();
         expect(screen.getByText('Айлануу')).toBeTruthy();
         expect(screen.getByText('Кызматкердин үлүшү')).toBeTruthy();

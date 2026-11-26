@@ -250,4 +250,6 @@ export const staffKy: Record<keyof typeof staffRu, string> = {
     'staff.shiftQuick.deleteSuccess': 'Кардар сменадан өчүрүлдү',
     'staff.shiftQuick.deleteQueued': 'Өчүрүү сакталды жана байланыш болгондо жөнөтүлөт',
     'staff.shiftQuick.deleteError': 'Кардарды өчүрүү мүмкүн болгон жок',
+    'staff.unit.som': 'сом',
+    'staff.workspace.placeTitle': 'Иш орду',
 };

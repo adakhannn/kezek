@@ -1,23 +1,34 @@
 import { useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import SegmentedTabs from '../../components/SegmentedTabs';
+import { StatusPill } from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
-import MotionPressable from '../../components/ui/MotionPressable';
+import Screen from '../../components/ui/Screen';
+import ScreenIntro from '../../components/ui/ScreenIntro';
+import Section from '../../components/ui/Section';
+import StatTile, { StatGrid } from '../../components/ui/StatTile';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
+import { colors } from '../../constants/colors';
+import { space, typeScale } from '../../constants/theme';
 import { translatePlural, useLanguage } from '../../i18n';
 import { formatDate, formatPrice } from '../../utils/format';
-import { styles } from './shiftsScreenStyles';
 import type { Shift, ShiftStats } from './types';
+
+type Period = 'day' | 'month' | 'year';
 
 type Props = {
     staffName: string;
     stats: ShiftStats;
-    period: 'day' | 'month' | 'year';
+    period: Period;
     refreshing: boolean;
-    onPeriodChange: (period: 'day' | 'month' | 'year') => void;
+    onPeriodChange: (period: Period) => void;
     onRefresh: () => Promise<void>;
 };
 
+/** The master's shifts and earnings for a day, month or year (the website's /staff/finance). */
 export function ShiftsScreenSections({
     staffName,
     stats,
@@ -39,244 +50,209 @@ export function ShiftsScreenSections({
     const baseMasterShare = hasBaseShareTotals
         ? stats.totalBaseMasterShare!
         : Math.max(0, stats.totalAmount - baseSalonShare);
+    const percent = (share: number) => stats.totalAmount > 0
+        ? t('staff.shifts.percentOfRevenue', { percent: ((share / stats.totalAmount) * 100).toFixed(1) })
+        : undefined;
 
     return (
-        <ScrollView
-            style={styles.container}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-        >
-            <View style={styles.header}>
-                <Text style={styles.title}>{t('staff.shifts.title')}</Text>
-                <Text style={styles.subtitle}>{staffName}</Text>
-            </View>
+        <Screen refreshing={refreshing} onRefresh={onRefresh} testID="shifts-screen">
+            {/* The header says "Смены и статистика": the screen starts with whose numbers these are. */}
+            <ScreenIntro>{staffName}</ScreenIntro>
 
-            <View style={styles.filters}>
-                <View style={styles.periodButtons}>
-                    {(['day', 'month', 'year'] as const).map((periodValue) => (
-                        <MotionPressable
-                            key={periodValue}
-                            style={[styles.periodButton, period === periodValue && styles.periodButtonActive]}
-                            onPress={() => onPeriodChange(periodValue)}
-                        >
-                            <Text
-                                style={[
-                                    styles.periodButtonText,
-                                    period === periodValue && styles.periodButtonTextActive,
-                                ]}
-                            >
-                                {t(`staff.shifts.period.${periodValue}`)}
-                            </Text>
-                        </MotionPressable>
-                    ))}
-                </View>
-            </View>
+            <SegmentedTabs
+                tabs={(['day', 'month', 'year'] as const).map((key) => ({ key, label: t(`staff.shifts.period.${key}`) }))}
+                value={period}
+                onChange={onPeriodChange}
+                testID="shifts-period"
+            />
 
-            <View style={styles.statsGrid}>
-                <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>{t('staff.turnover')}</Text>
-                    <Text style={styles.statValue}>{money(stats.totalAmount)}</Text>
-                </Card>
-
-                <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>{t('staff.shifts.staffShare')}</Text>
-                    <Text style={[styles.statValue, styles.statValueEmployee]}>
-                        {money(stats.totalMaster)}
-                    </Text>
-                    {stats.totalAmount > 0 ? (
-                        <Text style={styles.statPercent}>
-                            {t('staff.shifts.percentOfRevenue', {
-                                percent: ((baseMasterShare / stats.totalAmount) * 100).toFixed(1),
-                            })}
-                        </Text>
-                    ) : null}
-                </Card>
-
-                <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>{t('staff.shifts.businessShare')}</Text>
-                    <Text style={[styles.statValue, styles.statValueBusiness]}>
-                        {money(stats.totalSalon)}
-                    </Text>
-                    {stats.totalAmount > 0 ? (
-                        <Text style={styles.statPercent}>
-                            {t('staff.shifts.percentOfRevenue', {
-                                percent: ((baseSalonShare / stats.totalAmount) * 100).toFixed(1),
-                            })}
-                        </Text>
-                    ) : null}
-                </Card>
-            </View>
-
-            <View style={styles.additionalStats}>
-                <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>{t('staff.shifts.shiftsCount')}</Text>
-                    <Text style={styles.additionalStatValue}>{stats.shiftsCount}</Text>
-                </Card>
-                <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>{t('staff.consumables')}</Text>
-                    <Text style={styles.additionalStatValue}>{money(stats.totalConsumables)}</Text>
-                </Card>
-                <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>{t('staff.shifts.late')}</Text>
-                    <Text style={styles.additionalStatValue}>{t('staff.minutes', { minutes: stats.totalLateMinutes })}</Text>
-                </Card>
-                <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>{t('staff.shifts.clients')}</Text>
-                    <Text style={styles.additionalStatValue}>{stats.totalClients}</Text>
-                </Card>
+            <View style={styles.kpis}>
+                <StatTile label={t('staff.turnover')} value={money(stats.totalAmount)} icon="wallet-outline" tone="accent" />
+                <StatGrid>
+                    <StatTile
+                        label={t('staff.shifts.staffShare')}
+                        value={money(stats.totalMaster)}
+                        hint={percent(baseMasterShare)}
+                        tone="success"
+                    />
+                    <StatTile
+                        label={t('staff.shifts.businessShare')}
+                        value={money(stats.totalSalon)}
+                        hint={percent(baseSalonShare)}
+                        tone="info"
+                    />
+                </StatGrid>
+                <StatGrid>
+                    <StatTile label={t('staff.shifts.shiftsCount')} value={String(stats.shiftsCount)} icon="time-outline" />
+                    <StatTile label={t('staff.shifts.clients')} value={String(stats.totalClients)} icon="people-outline" />
+                    <StatTile label={t('staff.consumables')} value={money(stats.totalConsumables)} icon="flask-outline" />
+                    <StatTile
+                        label={t('staff.shifts.late')}
+                        value={t('staff.minutes', { minutes: stats.totalLateMinutes })}
+                        icon="alarm-outline"
+                        tone={stats.totalLateMinutes > 0 ? 'warning' : undefined}
+                    />
+                </StatGrid>
             </View>
 
             {stats.shifts.length > 0 ? (
-                <View style={styles.shiftsSection}>
-                    <Text style={styles.sectionTitle}>{t('staff.shifts.periodTitle')}</Text>
+                <Section title={t('staff.shifts.periodTitle')}>
                     {stats.shifts.map((shift) => (
                         <ShiftCard key={shift.id} shift={shift} />
                     ))}
-                </View>
+                </Section>
             ) : (
-                <View style={styles.emptySection}>
-                    <EmptyState
-                        icon="calendar"
-                        title={t('staff.shifts.emptyTitle')}
-                        message={t('staff.shifts.emptyMessage')}
-                    />
-                </View>
+                <EmptyState
+                    icon="calendar-outline"
+                    title={t('staff.shifts.emptyTitle')}
+                    message={t('staff.shifts.emptyMessage')}
+                />
             )}
-        </ScrollView>
+        </Screen>
     );
 }
 
+const clock = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+/** One shift: date, state and total; tap to see the clients of the shift. */
 function ShiftCard({ shift }: { shift: Shift }) {
     const { t, locale } = useLanguage();
     const money = (amount: number) => formatPrice(amount, locale);
     const hours = (value: number) => t('staff.hours', { hours: value.toFixed(1) });
     const [expanded, setExpanded] = useState(shift.status === 'open');
+    const isOpen = shift.status === 'open';
     const hasGuaranteed =
         shift.guaranteed_amount > 0 &&
         !!shift.hourly_rate &&
         shift.guaranteed_amount > shift.base_master_share;
 
     return (
-        <Card style={styles.shiftCard}>
-            <MotionPressable style={styles.shiftHeader} onPress={() => setExpanded(!expanded)}>
-                <View style={styles.shiftHeaderLeft}>
-                    <View style={styles.shiftHeaderTop}>
+        <Card variant="plain" padding="md" style={styles.shift}>
+            <Pressable
+                onPress={() => setExpanded(!expanded)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded }}
+                style={({ pressed }) => [styles.shiftHeader, pressed ? styles.pressed : null]}
+            >
+                <View style={styles.shiftMain}>
+                    <View style={styles.shiftTitleRow}>
                         <Text style={styles.shiftDate}>{formatDate(shift.shift_date, locale)}</Text>
-                        <View
-                            style={[
-                                styles.shiftStatusBadge,
-                                shift.status === 'open' ? styles.shiftStatusOpen : styles.shiftStatusClosed,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.shiftStatusText,
-                                    shift.status === 'open'
-                                        ? styles.shiftStatusTextOpen
-                                        : styles.shiftStatusTextClosed,
-                                ]}
-                            >
-                                {t(shift.status === 'open' ? 'staff.status.open' : 'staff.status.closed')}
-                            </Text>
-                        </View>
+                        <StatusPill
+                            label={t(isOpen ? 'staff.status.open' : 'staff.status.closed')}
+                            tone={isOpen ? 'success' : 'neutral'}
+                        />
+                    </View>
+                    <View style={styles.metaRow}>
+                        {shift.opened_at ? (
+                            <Text style={styles.meta}>{t('staff.shifts.openedAt', { time: clock(shift.opened_at) })}</Text>
+                        ) : null}
                         {shift.items.length > 0 ? (
-                            <Text style={styles.shiftClientsCount}>{translatePlural(t, 'staff.shifts.clientsCount', shift.items.length)}</Text>
+                            <Text style={styles.meta}>{translatePlural(t, 'staff.shifts.clientsCount', shift.items.length)}</Text>
                         ) : null}
                     </View>
-                    {shift.opened_at ? (
-                        <Text style={styles.shiftTime}>
-                            {t('staff.shifts.openedAt', {
-                                time: new Date(shift.opened_at).toLocaleTimeString('ru-RU', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                }),
-                            })}
-                        </Text>
-                    ) : null}
                 </View>
-                <View style={styles.shiftHeaderRight}>
-                    <Text style={styles.shiftTotalAmount}>{money(shift.total_amount)}</Text>
-                    <Text style={styles.shiftConsumables}>
-                        {t('staff.shifts.consumablesAmount', { amount: money(shift.consumables_amount) })}
-                    </Text>
-                    {hasGuaranteed ? (
-                        <View style={styles.shiftFinancials}>
-                            <Text style={styles.shiftMasterShareGuaranteed}>
-                                {t('staff.shifts.toEmployee', { amount: money(shift.guaranteed_amount) })}
-                            </Text>
-                            {shift.hours_worked !== null ? (
-                                <Text style={styles.shiftHours}>
-                                    {t('staff.shifts.perShift', { value: hours(shift.hours_worked) })}
-                                </Text>
-                            ) : null}
-                            <Text style={styles.shiftBaseShareStriked}>
-                                {t('staff.shifts.baseShare', { amount: money(shift.base_master_share) })}
-                            </Text>
-                            <Text style={styles.shiftSalonShare}>
-                                {t('staff.shifts.toBusiness', { amount: money(shift.salon_share) })}
-                            </Text>
-                        </View>
-                    ) : (
-                        <View style={styles.shiftFinancials}>
-                            <Text style={styles.shiftMasterShare}>
-                                {t('staff.shifts.toEmployee', { amount: money(shift.master_share) })}
-                            </Text>
-                            {shift.guaranteed_amount > 0 && shift.hourly_rate ? (
-                                <Text style={styles.shiftGuaranteed}>
-                                    {t('staff.shifts.perShift', { value: money(shift.guaranteed_amount) })}
-                                    {shift.hours_worked !== null ? (
-                                        <Text> ({hours(shift.hours_worked)})</Text>
-                                    ) : null}
-                                </Text>
-                            ) : null}
-                            <Text style={styles.shiftSalonShare}>
-                                {t('staff.shifts.toBusiness', { amount: money(shift.salon_share) })}
-                            </Text>
-                        </View>
-                    )}
+                <View style={styles.shiftTotal}>
+                    <Text style={styles.totalAmount}>{money(shift.total_amount)}</Text>
+                    <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.text.tertiary} />
                 </View>
-            </MotionPressable>
+            </Pressable>
 
-            {expanded && shift.items.length > 0 ? (
-                <View style={styles.shiftItems}>
-                    <Text style={styles.shiftItemsTitle}>{t('staff.shifts.clientList')}</Text>
-                    {shift.items.map((item) => (
-                        <View key={item.id} style={styles.shiftItem}>
-                            <View style={styles.shiftItemLeft}>
-                                {item.booking_id ? <View style={styles.bookingIndicator} /> : null}
-                                <View style={styles.shiftItemInfo}>
-                                    <Text style={styles.shiftItemClient}>
-                                        {item.client_name || t('staff.shifts.clientNotSpecified')}
-                                    </Text>
-                                    <Text style={styles.shiftItemService}>{item.service_name || '—'}</Text>
+            <View style={styles.split}>
+                {hasGuaranteed ? (
+                    <>
+                        <Text style={styles.toMaster}>{t('staff.shifts.toEmployee', { amount: money(shift.guaranteed_amount) })}</Text>
+                        {shift.hours_worked !== null ? (
+                            <Text style={styles.meta}>{t('staff.shifts.perShift', { value: hours(shift.hours_worked) })}</Text>
+                        ) : null}
+                        <Text style={[styles.meta, styles.striked]}>{t('staff.shifts.baseShare', { amount: money(shift.base_master_share) })}</Text>
+                    </>
+                ) : (
+                    <>
+                        <Text style={styles.toMaster}>{t('staff.shifts.toEmployee', { amount: money(shift.master_share) })}</Text>
+                        {shift.guaranteed_amount > 0 && shift.hourly_rate ? (
+                            <Text style={styles.meta}>
+                                {t('staff.shifts.perShift', { value: money(shift.guaranteed_amount) })}
+                                {shift.hours_worked !== null ? <Text> ({hours(shift.hours_worked)})</Text> : null}
+                            </Text>
+                        ) : null}
+                    </>
+                )}
+                <Text style={styles.meta}>{t('staff.shifts.toBusiness', { amount: money(shift.salon_share) })}</Text>
+                <Text style={styles.meta}>{t('staff.shifts.consumablesAmount', { amount: money(shift.consumables_amount) })}</Text>
+            </View>
+
+            {expanded ? (
+                <View style={styles.items}>
+                    {shift.items.length > 0 ? (
+                        <>
+                            <Text style={styles.itemsTitle} accessibilityRole="header">{t('staff.shifts.clientList')}</Text>
+                            {shift.items.map((item) => (
+                                <View key={item.id} style={styles.item}>
+                                    <Ionicons
+                                        name={item.booking_id ? 'calendar-outline' : 'create-outline'}
+                                        size={16}
+                                        color={item.booking_id ? colors.tone.success.fg : colors.text.tertiary}
+                                        style={styles.itemIcon}
+                                    />
+                                    <View style={styles.itemBody}>
+                                        <Text style={styles.itemClient} numberOfLines={1}>
+                                            {item.client_name || t('staff.shifts.clientNotSpecified')}
+                                        </Text>
+                                        <Text style={styles.meta} numberOfLines={1}>{item.service_name || '—'}</Text>
+                                    </View>
+                                    <View style={styles.itemRight}>
+                                        <Text style={styles.itemAmount}>{money(item.service_amount)}</Text>
+                                        {item.consumables_amount > 0 ? (
+                                            <Text style={styles.meta}>
+                                                {t('staff.shifts.consumablesAmount', { amount: money(item.consumables_amount) })}
+                                            </Text>
+                                        ) : null}
+                                        {item.created_at ? <Text style={styles.time}>{clock(item.created_at)}</Text> : null}
+                                    </View>
                                 </View>
-                            </View>
-                            <View style={styles.shiftItemRight}>
-                                <Text style={styles.shiftItemAmount}>{money(item.service_amount)}</Text>
-                                {item.consumables_amount > 0 ? (
-                                    <Text style={styles.shiftItemConsumables}>
-                                        {t('staff.shifts.consumablesAmount', { amount: money(item.consumables_amount) })}
-                                    </Text>
-                                ) : null}
-                                {item.created_at ? (
-                                    <Text style={styles.shiftItemTime}>
-                                        {new Date(item.created_at).toLocaleTimeString('ru-RU', {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </Text>
-                                ) : null}
-                            </View>
-                        </View>
-                    ))}
-                </View>
-            ) : null}
-
-            {expanded && shift.items.length === 0 ? (
-                <View style={styles.shiftItemsEmpty}>
-                    <Text style={styles.shiftItemsEmptyText}>{t('staff.shifts.noClients')}</Text>
+                            ))}
+                        </>
+                    ) : (
+                        <Text style={styles.meta}>{t('staff.shifts.noClients')}</Text>
+                    )}
                 </View>
             ) : null}
         </Card>
     );
 }
 
+const styles = StyleSheet.create({
+    kpis: { gap: space.sm },
+    shift: { gap: space.md },
+    shiftHeader: { minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    shiftMain: { flex: 1, minWidth: 0, gap: space.xs },
+    shiftTitleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm },
+    shiftDate: { ...typeScale.headline, color: colors.text.primary },
+    metaRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.sm },
+    meta: { ...typeScale.caption, color: colors.text.secondary },
+    shiftTotal: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    totalAmount: { ...typeScale.headline, color: colors.text.primary },
+    split: {
+        gap: space.xxs,
+        paddingTop: space.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+    },
+    toMaster: { ...typeScale.callout, fontWeight: '600', color: colors.tone.success.fg },
+    striked: { textDecorationLine: 'line-through', color: colors.text.tertiary },
+    items: {
+        gap: space.sm,
+        paddingTop: space.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+    },
+    itemsTitle: { ...typeScale.overline, color: colors.text.tertiary },
+    item: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingVertical: space.xs },
+    itemIcon: { marginTop: space.xxs },
+    itemBody: { flex: 1, minWidth: 0, gap: space.xxs },
+    itemClient: { ...typeScale.bodyStrong, color: colors.text.primary },
+    itemRight: { alignItems: 'flex-end', gap: space.xxs },
+    itemAmount: { ...typeScale.bodyStrong, color: colors.text.primary },
+    time: { ...typeScale.caption, color: colors.text.tertiary },
+});
