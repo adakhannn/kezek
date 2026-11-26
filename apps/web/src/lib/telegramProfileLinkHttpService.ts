@@ -8,7 +8,12 @@ export async function runTelegramProfileLinkHttp(req: Request): Promise<Response
     if (process.env.NEXT_PUBLIC_TELEGRAM_BOT_LINK_ENABLED !== 'true') {
         return createErrorResponse('service_unavailable', 'Подключение через бота ещё не включено', undefined, 503);
     }
-    if (req.headers.get('origin') !== getLocalAuthPublicOrigin(req.url)) {
+    // The mobile app sends its access token (Authorization: Bearer) and no Origin. A browser always
+    // sends Origin on this cross-site POST and cannot attach the app's token by itself, so the
+    // same-origin (CSRF) check is for the cookie session only.
+    const origin = req.headers.get('origin');
+    const nativeBearer = !origin && /^Bearer\s+\S/.test(req.headers.get('authorization') ?? '');
+    if (!nativeBearer && origin !== getLocalAuthPublicOrigin(req.url)) {
         return createErrorResponse('forbidden', 'Недопустимый источник запроса', undefined, 403);
     }
     const supabase = await createSupabaseServerClient();

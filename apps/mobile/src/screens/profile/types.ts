@@ -13,4 +13,6 @@ export type Profile = {
     telegram_id?: number | null;
     telegram_username?: string | null;
     telegram_verified?: boolean | null;
+    /** Set once Yandex is linked as a sign-in method. */
+    yandex_id?: string | number | null;
 };

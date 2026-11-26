@@ -39,8 +39,11 @@ export function webPageUrl(path: '/privacy' | '/terms' | '/data-deletion'): stri
     return `${getMobileApiUrl()}${path}`;
 }
 
-/** The web profile section where a signed-in user deletes their account. */
-export const ACCOUNT_DELETION_WEB_PATH = '/cabinet/profile#account-deletion';
+/** The web profile: Yandex linking, whose OAuth state lives in a browser cookie, runs there. */
+export const PROFILE_WEB_PATH = '/cabinet/profile';
 
-/** The web profile row where Telegram is linked (login widget or bot link, C12). */
+/**
+ * The web profile row where Telegram is linked with the login widget (C12): the app's fallback
+ * when the server has the bot link switched off.
+ */
 export const TELEGRAM_LINK_WEB_PATH = '/cabinet/profile#telegram-connection';

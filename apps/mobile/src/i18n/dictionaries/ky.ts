@@ -9,6 +9,7 @@ import { discoveryKy } from './discovery.ky';
 import { managerKy } from './manager.ky';
 import { manageCatalogKy } from './manageCatalog.ky';
 import { manageStaffKy } from './manageStaff.ky';
+import { parityKy } from './parity.ky';
 import type { Dictionary } from './ru';
 
 export const ky: Dictionary = {
@@ -23,4 +24,5 @@ export const ky: Dictionary = {
     ...managerKy,
     ...manageCatalogKy,
     ...manageStaffKy,
+    ...parityKy,
 };

@@ -70,6 +70,14 @@ export const linking: LinkingOptions<RootStackParamList> = {
                     id: (id: string) => id,
                 },
             },
+            Promotions: {
+                path: 'b/:slug/promotions',
+                parse: {
+                    slug: (slug: string) => slug,
+                },
+            },
+            BusinessApply: 'business/apply',
+            RoleApply: 'business/role-apply',
             ShiftQuick: 'staff/shift-quick',
             Shifts: 'staff/shifts',
             StaffSchedule: 'staff/schedule',

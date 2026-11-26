@@ -116,6 +116,8 @@ export default function BusinessScreen() {
             onRefresh={() => void query.refetch()}
             onBook={openBooking}
             onOpenMap={() => navigation.navigate('Map')}
+            onOpenPromotions={() =>
+                navigation.navigate('Promotions', { slug: query.data!.business.slug, previewName: query.data!.business.name })}
         />
     );
 }
@@ -126,12 +128,15 @@ export function BusinessPageContent({
     onRefresh,
     onBook,
     onOpenMap,
+    onOpenPromotions,
 }: {
     data: BusinessPageData;
     refreshing?: boolean;
     onRefresh?: () => void;
     onBook: () => void;
     onOpenMap: () => void;
+    /** The website's /b/<slug>/promotions page: every promotion by branch with its dates. */
+    onOpenPromotions?: () => void;
 }) {
     const { t, locale } = useLanguage();
     const { business, branches, services, staff, promotions } = data;
@@ -228,6 +233,16 @@ export function BusinessPageContent({
                             </View>
                         );
                     })}
+                    {onOpenPromotions ? (
+                        <Button
+                            title={t('parity.promotions.openAll')}
+                            onPress={onOpenPromotions}
+                            variant="outline"
+                            size="sm"
+                            fullWidth
+                            accessibilityHint={t('parity.promotions.openAllHint')}
+                        />
+                    ) : null}
                 </Section>
             ) : null}
 

@@ -42,6 +42,16 @@ export type RootStackParamList = {
     ManageStaffSlots: ManageStaffRouteParams;
     ManageStaffFinance: ManageStaffRouteParams;
     ManageStaffFinanceStats: ManageStaffRouteParams;
+    /** The master books a client who calls or walks in (web /staff/bookings "Создать запись"). */
+    StaffCreateBooking: undefined;
+    /** Every active promotion of a business by branch (web /b/<slug>/promotions). */
+    Promotions: { slug: string; previewName?: string };
+    /** Connect a new business to Kezek (web /business/apply). */
+    BusinessApply: undefined;
+    /** Owner or staff application to an existing business (web /business/role-apply). */
+    RoleApply: undefined;
+    /** Web /business/owner-apply and /business/staff-apply. */
+    RoleApplication: { mode: 'owner' | 'staff' };
 };
 
 export type MainTabParamList = {

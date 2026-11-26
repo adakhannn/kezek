@@ -19,6 +19,7 @@ import { useLanguage } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
 import { getServiceName, getStatusColor, getStatusText } from '../../utils/i18n';
 import { styles } from './cabinetScreenStyles';
+import { CabinetWorkspacesBlock } from './CabinetWorkspacesBlock';
 import { StaffInvitationsBlock } from './StaffInvitationsBlock';
 import { bookingTitle, type Booking } from './types';
 import { VisitPackagesBlock } from './VisitPackagesBlock';
@@ -219,6 +220,7 @@ export function CabinetScreenSections({
                 <>
                     <StaffInvitationsBlock userId={userId} />
                     <VisitPackagesBlock userId={userId} />
+                    <CabinetWorkspacesBlock />
                 </>
             ) : null}
 

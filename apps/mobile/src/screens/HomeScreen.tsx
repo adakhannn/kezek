@@ -19,6 +19,7 @@ import {
     SearchSection,
     UpcomingBookingsSection,
 } from './home/HomeScreenSections';
+import { HomeForBusinessCard } from './home/HomeForBusinessCard';
 import { styles } from './home/homeScreenStyles';
 import { useHomeScreenData } from './home/useHomeScreenData';
 import type { HomeBusiness } from './home/types';
@@ -198,7 +199,9 @@ export default function HomeScreen() {
                         <View style={styles.listFooter}>
                             <LoadingSpinner message={t('booking.home.loadingMore')} />
                         </View>
-                    ) : null
+                    ) : hasMoreBusinesses ? null : (
+                        <HomeForBusinessCard />
+                    )
                 }
                 onEndReached={hasMoreBusinesses ? loadMoreBusinesses : undefined}
                 onEndReachedThreshold={0.5}
