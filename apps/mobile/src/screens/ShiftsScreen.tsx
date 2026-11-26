@@ -20,6 +20,10 @@ export default function ShiftsScreen() {
     const {
         period,
         setPeriod,
+        date,
+        setDate,
+        statsFetching,
+        refetch,
         refreshing,
         staffInfo,
         staffLoading,
@@ -90,6 +94,10 @@ export default function ShiftsScreen() {
             staffName={staffInfo.full_name}
             stats={stats}
             period={period}
+            date={date}
+            onDateChange={setDate}
+            loading={statsFetching}
+            onReload={refetch}
             refreshing={refreshing}
             onPeriodChange={setPeriod}
             onRefresh={onRefresh}

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import SegmentedTabs from '../../components/SegmentedTabs';
 import { StatusPill } from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
@@ -15,6 +14,7 @@ import { colors } from '../../constants/colors';
 import { space, typeScale } from '../../constants/theme';
 import { translatePlural, useLanguage } from '../../i18n';
 import { formatDate, formatPrice } from '../../utils/format';
+import FinancePeriodPicker from '../manage/finance/FinancePeriodPicker';
 import type { Shift, ShiftStats } from './types';
 
 type Period = 'day' | 'month' | 'year';
@@ -23,6 +23,11 @@ type Props = {
     staffName: string;
     stats: ShiftStats;
     period: Period;
+    /** The shown day (YYYY-MM-DD); its month or year for those periods. */
+    date: string;
+    onDateChange: (date: string) => void;
+    loading: boolean;
+    onReload: () => void;
     refreshing: boolean;
     onPeriodChange: (period: Period) => void;
     onRefresh: () => Promise<void>;
@@ -33,6 +38,10 @@ export function ShiftsScreenSections({
     staffName,
     stats,
     period,
+    date,
+    onDateChange,
+    loading,
+    onReload,
     refreshing,
     onPeriodChange,
     onRefresh,
@@ -59,11 +68,14 @@ export function ShiftsScreenSections({
             {/* The header says "Смены и статистика": the screen starts with whose numbers these are. */}
             <ScreenIntro>{staffName}</ScreenIntro>
 
-            <SegmentedTabs
-                tabs={(['day', 'month', 'year'] as const).map((key) => ({ key, label: t(`staff.shifts.period.${key}`) }))}
-                value={period}
-                onChange={onPeriodChange}
-                testID="shifts-period"
+            {/* Which day / month / year these are, with arrows and the calendar (the website's period picker). */}
+            <FinancePeriodPicker
+                period={period}
+                anchor={date}
+                loading={loading}
+                onPeriodChange={onPeriodChange}
+                onAnchorChange={onDateChange}
+                onRefresh={onReload}
             />
 
             <View style={styles.kpis}>

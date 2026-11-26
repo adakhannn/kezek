@@ -8,7 +8,7 @@ import type { ShiftStats, StaffInfo } from './types';
 export function useShiftsScreenData() {
     const [refreshing, setRefreshing] = useState(false);
     const [period, setPeriod] = useState<'day' | 'month' | 'year'>('day');
-    const [date] = useState(() => {
+    const [date, setDate] = useState(() => {
         const today = new Date();
         return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     });
@@ -48,7 +48,10 @@ export function useShiftsScreenData() {
         setPeriod,
         refreshing,
         date,
+        setDate,
         staffInfo,
+        statsFetching: statsQuery.isFetching,
+        refetch: () => void statsQuery.refetch(),
         staffLoading: currentStaff.isLoading,
         needsSelection: currentStaff.needsSelection,
         stats: statsQuery.data,

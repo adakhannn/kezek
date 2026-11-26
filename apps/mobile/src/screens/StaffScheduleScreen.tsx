@@ -7,6 +7,7 @@ import Badge, { StatusPill } from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import ErrorState from '../components/ui/ErrorState';
+import FeedbackBanner from '../components/ui/FeedbackBanner';
 import { ListGroup } from '../components/ui/ListRow';
 import Screen from '../components/ui/Screen';
 import Section from '../components/ui/Section';
@@ -112,8 +113,19 @@ export default function StaffScheduleScreen() {
         );
     };
 
+    // Nothing set for both weeks: say so first, not after fourteen identical "not configured" rows.
+    const allUnconfigured = data.weeks.every((week) => week.every((ymd) => (data.days?.get(ymd)?.kind ?? 'unconfigured') === 'unconfigured'));
+
     return (
         <Screen refreshing={data.refreshing} onRefresh={data.onRefresh} testID="staff-schedule-screen">
+            {allUnconfigured ? (
+                <FeedbackBanner
+                    variant="info"
+                    title={t('staff.schedule.notConfigured')}
+                    message={t('staff.schedule.unconfiguredHint')}
+
+                />
+            ) : null}
             {data.weeks.map((week, index) => (
                 <Section
                     key={week[0]}
@@ -123,14 +135,14 @@ export default function StaffScheduleScreen() {
                     <ListGroup>{week.map(renderDay)}</ListGroup>
                 </Section>
             ))}
-            <View style={styles.notes}>
+            {allUnconfigured ? null : <View style={styles.notes}>
                 {(['staff.schedule.managedByOwner', 'staff.schedule.unconfiguredHint'] as const).map((key) => (
                     <View key={key} style={styles.note}>
                         <Ionicons name="information-circle-outline" size={16} color={colors.text.tertiary} />
                         <Text style={styles.noteText}>{t(key)}</Text>
                     </View>
                 ))}
-            </View>
+            </View>}
         </Screen>
     );
 }
