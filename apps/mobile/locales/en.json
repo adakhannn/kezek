@@ -1,4 +1,6 @@
 {
-  "CFBundleDisplayName": "Kezek",
-  "NSLocationWhenInUseUsageDescription": "Kezek uses your location to show nearby branches."
+  "ios": {
+    "CFBundleDisplayName": "Kezek",
+    "NSLocationWhenInUseUsageDescription": "Kezek uses your location to show nearby branches."
+  }
 }

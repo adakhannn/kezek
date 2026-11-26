@@ -69,11 +69,15 @@ describe('app.json native strings per language (C6)', () => {
         expect(appJson.expo.ios?.infoPlist?.CFBundleAllowMixedLocalizations).toBe(true);
         for (const file of Object.values(appJson.expo.locales ?? {})) {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const strings = require(`../../${file.replace('./', '')}`) as Record<string, string>;
+            const json = require(`../../${file.replace('./', '')}`) as { ios?: Record<string, string> } & Record<string, unknown>;
+            // iOS keys only: top-level keys also become Android strings, and lint failed the release
+            // build on translations without a default (EAS build 2b37feb2).
+            expect(Object.keys(json)).toEqual(['ios']);
+            const strings = json.ios ?? {};
             expect(strings.CFBundleDisplayName).toBe('Kezek');
             expect(strings.NSLocationWhenInUseUsageDescription).toMatch(/\S/);
         }
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        expect((require('../../locales/ky.json') as Record<string, string>).NSLocationWhenInUseUsageDescription).toContain('геолокацияны');
+        expect((require('../../locales/ky.json') as { ios: Record<string, string> }).ios.NSLocationWhenInUseUsageDescription).toContain('геолокацияны');
     });
 });

@@ -1,4 +1,6 @@
 {
-  "CFBundleDisplayName": "Kezek",
-  "NSLocationWhenInUseUsageDescription": "Kezek использует геолокацию, чтобы показать ближайшие филиалы."
+  "ios": {
+    "CFBundleDisplayName": "Kezek",
+    "NSLocationWhenInUseUsageDescription": "Kezek использует геолокацию, чтобы показать ближайшие филиалы."
+  }
 }
