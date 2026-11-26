@@ -3,7 +3,6 @@ import { shouldRetryQuery } from '../../lib/retryPolicy';
 describe('query retry policy', () => {
     test.each([
         new TypeError('Network request failed'),
-        new Error('Request timed out'),
         Object.assign(new Error('HTTP 408'), { status: 408 }),
         Object.assign(new Error('HTTP 429'), { status: 429 }),
         Object.assign(new Error('HTTP 503'), { status: 503 }),
@@ -12,6 +11,14 @@ describe('query retry policy', () => {
         expect(shouldRetryQuery(1, error)).toBe(true);
         expect(shouldRetryQuery(2, error)).toBe(false);
     });
+
+    test.each([new Error('Request timed out'), new Error('Supabase request timed out')])(
+        'retries a timed-out request once: it already waited the full bound',
+        (error) => {
+            expect(shouldRetryQuery(0, error)).toBe(true);
+            expect(shouldRetryQuery(1, error)).toBe(false);
+        },
+    );
 
     test.each([
         Object.assign(new Error('HTTP 400'), { status: 400 }),

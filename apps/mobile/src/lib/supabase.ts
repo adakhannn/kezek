@@ -55,5 +55,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
     // R25-30: every Supabase request ends within a bound, so screens show an error instead of spinning.
     global: { fetch: createSupabaseFetch() },
+    // postgrest-js retries failed reads itself (with the 20 s bound: ~90 s per query); react-query
+    // already retries, so a blocked or slow network made screens spin for minutes.
+    db: { retry: false },
 });
 

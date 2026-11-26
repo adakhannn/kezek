@@ -1,4 +1,5 @@
 import { getRawErrorMessage, isNetworkError } from './errors';
+import { isTimeoutError } from './fetchWithTimeout';
 
 const TRANSIENT_HTTP_STATUSES = new Set([408, 425, 429]);
 
@@ -24,5 +25,7 @@ export function isTransientQueryError(error: unknown): boolean {
 }
 
 export function shouldRetryQuery(failureCount: number, error: unknown): boolean {
+    // A timed-out request already waited the full bound (20 s for Supabase): retry it once, not twice.
+    if (/timeout|timed out/i.test(getRawErrorMessage(error)) || isTimeoutError(error)) return failureCount < 1;
     return failureCount < 2 && isTransientQueryError(error);
 }
