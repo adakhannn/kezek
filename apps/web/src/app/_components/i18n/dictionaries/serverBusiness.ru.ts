@@ -90,4 +90,8 @@ export const serverBusinessRu = {
     'server.business.websiteInvalid': 'Сайт должен быть корректной HTTPS-ссылкой',
     'server.business.directoryLinkWrongService': 'Ссылка должна вести на сайт своего сервиса: {services}',
     'server.business.timeZoneInvalid': 'Неизвестный часовой пояс',
+    'server.business.servicesLoadFailed': 'Не удалось загрузить услуги',
+    'server.business.serviceLoadFailed': 'Не удалось загрузить услугу',
+    'server.business.branchLoadFailed': 'Не удалось открыть филиал',
+    'server.business.settingsLoadFailed': 'Не удалось загрузить настройки бизнеса',
 } as const;

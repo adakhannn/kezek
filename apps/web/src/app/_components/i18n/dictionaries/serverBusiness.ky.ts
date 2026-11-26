@@ -90,4 +90,8 @@ export const serverBusinessKy = {
     'server.business.websiteInvalid': 'Сайт туура HTTPS-шилтеме болушу керек',
     'server.business.directoryLinkWrongService': 'Шилтеме өз кызматынын сайтына алып барышы керек: {services}',
     'server.business.timeZoneInvalid': 'Белгисиз саат алкагы',
+    'server.business.servicesLoadFailed': 'Кызматтарды жүктөө мүмкүн болгон жок',
+    'server.business.serviceLoadFailed': 'Кызматты жүктөө мүмкүн болгон жок',
+    'server.business.branchLoadFailed': 'Филиалды ачуу мүмкүн болгон жок',
+    'server.business.settingsLoadFailed': 'Бизнестин жөндөөлөрүн жүктөө мүмкүн болгон жок',
 } as const;

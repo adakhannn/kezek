@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 220,
+  "x-explicit-operation-count": 225,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -3453,6 +3453,54 @@
         "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
       }
     },
+    "/api/dashboard/branches": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BUSINESS_WORKFLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/branches",
+        "x-source-file": "apps/web/src/app/api/dashboard/branches/route.ts",
+        "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
+      }
+    },
+    "/api/dashboard/branches/{branchId}": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BUSINESS_WORKFLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Route segment only; semantic validation is not modeled."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/branches/[branchId]",
+        "x-source-file": "apps/web/src/app/api/dashboard/branches/[branchId]/route.ts",
+        "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
+      }
+    },
     "/api/dashboard/branches/{branchId}/promotions": {
       "get": {
         "tags": [
@@ -3632,6 +3680,23 @@
       }
     },
     "/api/dashboard/contact-settings": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BUSINESS_WORKFLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/contact-settings",
+        "x-source-file": "apps/web/src/app/api/dashboard/contact-settings/route.ts",
+        "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
+      },
       "post": {
         "tags": [
           "Inventory only"
@@ -3696,6 +3761,54 @@
         "x-next-route": "/api/dashboard/finance/all",
         "x-source-file": "apps/web/src/app/api/dashboard/finance/all/route.ts",
         "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
+      }
+    },
+    "/api/dashboard/services": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BUSINESS_WORKFLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/services",
+        "x-source-file": "apps/web/src/app/api/dashboard/services/route.ts",
+        "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
+      }
+    },
+    "/api/dashboard/services/{id}": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BUSINESS_WORKFLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Route segment only; semantic validation is not modeled."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/services/[id]",
+        "x-source-file": "apps/web/src/app/api/dashboard/services/[id]/route.ts",
+        "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
       }
     },
     "/api/dashboard/staff-shifts/{id}/update-hours": {

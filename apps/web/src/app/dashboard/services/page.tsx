@@ -1,6 +1,7 @@
 import ServicesListClient from '@/app/dashboard/services/ServicesListClient';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { groupServicesForManagement, type ServiceRow } from '@/lib/dashboardCatalogReadService';
 import { logError } from '@/lib/log';
 
 
@@ -8,17 +9,6 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 type Branch = { id: string; name: string };
-type ServiceRow = {
-    id: string;
-    name_ru: string;
-    name_ky: string | null;
-    name_en: string | null;
-    duration_min: number;
-    price_from: number;
-    price_to: number;
-    active: boolean | null;
-    branch_id: string;
-};
 
 export default async function ServicesListPage({
                                                    // ВАЖНО: async searchParams — это Promise<...>
@@ -59,56 +49,8 @@ export default async function ServicesListPage({
         return <LoadFailedNotice page />;
     }
 
-    // Группируем услуги по названию (убираем дубли)
-    type GroupedService = {
-        name_ru: string;
-        name_ky: string | null;
-        name_en: string | null;
-        duration_min: number;
-        price_from: number;
-        price_to: number;
-        active: boolean;
-        branch_ids: string[];
-        first_id: string; // ID первой услуги для редактирования
-    };
-
-    const serviceMap = new Map<string, GroupedService>();
-    const activeServiceNames = new Set(
-        (services ?? []).filter((s: ServiceRow) => s.active).map((s: ServiceRow) => s.name_ru),
-    );
-    
-    (services ?? []).forEach((s: ServiceRow) => {
-        // Применяем фильтр по филиалу
-        if (branchFilter && s.branch_id !== branchFilter) return;
-        
-        // Retain fully hidden services for editing/reactivation. When the logical
-        // service still has active copies, keep its existing active-only branch
-        // selection: update currently operates on the name group, not separate IDs.
-        if (!s.active && activeServiceNames.has(s.name_ru)) return;
-        const key = s.name_ru;
-        if (!serviceMap.has(key)) {
-            serviceMap.set(key, {
-                name_ru: s.name_ru,
-                name_ky: s.name_ky,
-                name_en: s.name_en,
-                duration_min: s.duration_min,
-                price_from: s.price_from,
-                price_to: s.price_to,
-                active: s.active ?? false,
-                branch_ids: [s.branch_id],
-                first_id: s.id,
-            });
-        } else {
-            const existing = serviceMap.get(key)!;
-            if (!existing.branch_ids.includes(s.branch_id)) {
-                existing.branch_ids.push(s.branch_id);
-            }
-            // Обновляем статус: активна, если хотя бы в одном филиале активна
-            if (s.active) existing.active = true;
-        }
-    });
-
-    const list = Array.from(serviceMap.values());
+    // One grouping for this page and GET /api/dashboard/services (the mobile app).
+    const list = groupServicesForManagement((services ?? []) as ServiceRow[], branchFilter);
 
     const bizName = business?.name ?? null;
     const bizCity = business?.city ?? null;

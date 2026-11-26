@@ -1,6 +1,6 @@
 # API бизнес-процессов, расписаний и пакетов
 
-Статус: справочник реализации; статическая сверка **1 ноября 2026**. Ответственная роль: разработчик API бизнес-кабинета. Здесь описаны 34 METHOD/path, дополняющие [STAFF_AND_FINANCE](STAFF_AND_FINANCE.md), [BOOKING_AND_CATALOG](BOOKING_AND_CATALOG.md) и [AUTH_AND_INTEGRATIONS](AUTH_AND_INTEGRATIONS.md). Полный список явных route exports — [ROUTE_CATALOG](ROUTE_CATALOG.md); вход в документацию — [API-карта](../../API_DOCUMENTATION.md).
+Статус: справочник реализации; статическая сверка **1 ноября 2026**. Ответственная роль: разработчик API бизнес-кабинета. Здесь описаны 39 METHOD/path, дополняющие [STAFF_AND_FINANCE](STAFF_AND_FINANCE.md), [BOOKING_AND_CATALOG](BOOKING_AND_CATALOG.md) и [AUTH_AND_INTEGRATIONS](AUTH_AND_INTEGRATIONS.md). Полный список явных route exports — [ROUTE_CATALOG](ROUTE_CATALOG.md); вход в документацию — [API-карта](../../API_DOCUMENTATION.md).
 
 Сверены файлы route, вызываемые HTTP/helpers/services и схемы. SQL приведён как определение в репозитории; его применение на сервере не проверено. Первичная сверка 1 ноября не запускала приложение/DB/тесты. Для обновлённого ниже Close 10 ноября выполнены локальные API-тесты и изолированные SQL-регрессии на синтетических данных; live/deployment не проверялись. Это не runtime-верификация окружения и не закрытие [инженерных рисков](../ENGINEERING_FINDINGS.md). WEB-кампания остаётся закрытой, автоматизация PAUSED; границы работы — [handoff](../WEB_AGENT_HANDOFF.md).
 
@@ -78,6 +78,59 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | Ошибки/ограничения | 401/403 контекста; 500 server с details ошибки БД. Нет пагинации, поэтому массив не гарантирует полноту при серверном ограничении строк |
 
 Источники: [route](../../apps/web/src/app/api/dashboard/branches/list/route.ts), [HTTP](../../apps/web/src/lib/dashboardBranchesListHttpService.ts), [service](../../apps/web/src/lib/dashboardBranchesListService.ts).
+
+### Чтения кабинета для мобильного приложения (услуги, филиалы, настройки)
+
+Пять GET отдают JSON тех же страниц `/dashboard/services`, `/dashboard/branches` и `/dashboard/settings` для экранов управления в приложении (запросы с `Authorization: Bearer`, см. [supabaseHelpers](../../apps/web/src/lib/supabaseHelpers.ts)). Все — Manager direct, без limiter, текущий бизнес пользователя; приложение сначала вызывает `POST /api/me/current-business`. Записи не меняются. Сбой чтения — 500 `server` (FE-08: ошибка, а не пустой список). Источники: [routes](../../apps/web/src/app/api/dashboard/services/route.ts), [HTTP](../../apps/web/src/lib/dashboardCatalogReadHttpService.ts), [service](../../apps/web/src/lib/dashboardCatalogReadService.ts); [тест](../../apps/web/src/__tests__/lib/dashboardCatalogReadService.test.ts). Сверка по исходникам и локальным тестам 26 ноября 2026; на сервере не запускалось.
+
+#### GET `/api/dashboard/services`
+
+<!-- api-contract: GET /api/dashboard/services -->
+
+| Часть | Контракт |
+| --- | --- |
+| Вход | Необязательный query `branch` — id филиала: в группы попадают только его копии |
+| Успех | `data: { services, branches, bizName, bizCity }`; `services` — копии услуги, сгруппированные по `name_ru` функцией `groupServicesForManagement` (та же, что у страницы): `{ name_ru, name_ky, name_en, duration_min, price_from, price_to, active, branch_ids, first_id }`; полностью скрытые услуги остаются, скрытая копия активной услуги — нет. `branches` — активные филиалы `{ id, name }` |
+| Ошибки | 401/403 контекста; 500 при сбое чтения филиалов или услуг |
+
+#### GET `/api/dashboard/services/[id]`
+
+<!-- api-contract: GET /api/dashboard/services/[id] -->
+
+| Часть | Контракт |
+| --- | --- |
+| Вход | `id` услуги текущего бизнеса |
+| Успех | `data: { service, branches, serviceBranchIds }`: поля услуги для формы, активные филиалы и филиалы копий с той же видимостью (как страница редактирования) |
+| Ошибки | 401/403; 404 `not_found`, если услуги нет в текущем бизнесе; 500 при сбое чтения. Service-role чтение только с фильтром `biz_id` |
+
+#### GET `/api/dashboard/branches`
+
+<!-- api-contract: GET /api/dashboard/branches -->
+
+| Часть | Контракт |
+| --- | --- |
+| Успех | `data: { branches, branchLimit, isSuperAdmin, canManageBranches, canCreateBranch, businessSlug, businessName, businessContacts }`; `branches` — все филиалы `{ id, name, address, is_active }`. `canManageBranches` — суперадмин или `owner_id` бизнеса (правило `/dashboard/branches/new` и `POST /api/branches/create`); `canCreateBranch` дополнительно требует число филиалов меньше `branch_limit` (по умолчанию 1). `businessContacts` — четыре публичных контакта бизнеса для наследования в форме филиала |
+| Ошибки | 401/403; 500 при сбое чтения филиалов |
+
+#### GET `/api/dashboard/branches/[branchId]`
+
+<!-- api-contract: GET /api/dashboard/branches/[branchId] -->
+
+| Часть | Контракт |
+| --- | --- |
+| Вход | `branchId` — UUID филиала текущего бизнеса (иначе 400) |
+| Успех | `data: { branch, schedule, ratingWeights, isSuperAdmin, bizSlug, bizName, businessContacts }`: поля формы филиала с `rating_score` и `inherit_business_contacts` (null → true), расписание `branch_working_hours` `{ day_of_week, intervals, breaks }`, веса активного `rating_global_config` или null |
+| Ошибки | 401/403; 404 `not_found`, если филиала или бизнеса нет; 500 при сбое чтения филиала, бизнеса или расписания (непрочитанное расписание не выдаётся за «закрыто») |
+
+#### GET `/api/dashboard/contact-settings`
+
+<!-- api-contract: GET /api/dashboard/contact-settings -->
+
+| Часть | Контракт |
+| --- | --- |
+| Доступ | Как у POST: `is_super_admin` либо owner_id/owner-роль текущего бизнеса, иначе 403 `forbidden` |
+| Успех | `data: { contact_phone, contact_whatsapp, contact_email, website_url, tz }`; `tz` уже разрешён (`getBusinessTimezone`: пустой/неизвестный → Asia/Bishkek) |
+| Ошибки | 401/403; 404, если бизнеса нет; 500 при сбое чтения |
 
 ### GET `/api/dashboard/analytics/overview`
 

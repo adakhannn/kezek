@@ -4,11 +4,17 @@ export const dynamic = 'force-dynamic';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { updateBusinessContactSettings } from '@/lib/businessContactSettingsService';
+import { runBusinessSettingsReadHttp } from '@/lib/dashboardCatalogReadHttpService';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { isBusinessOwner } from '@/lib/staffApplicationApprovalService';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { businessSettingsPatchSchema } from '@/lib/validation/businessUpdateSchemas';
+
+/** The settings form's current values (the mobile app; the website page reads them itself). */
+export async function GET() {
+    return withErrorHandler('BusinessContactSettings', async () => runBusinessSettingsReadHttp());
+}
 
 export async function POST(req: Request) {
     return withRateLimit(req, RateLimitConfigs.normal, () =>

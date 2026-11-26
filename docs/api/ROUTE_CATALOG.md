@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **191 route-файлов, 235 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **195 route-файлов, 240 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 564 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `46fefe126e4bcbd88c64b7ed153521213acff88da071a19f4cbb220857492dbd`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 571 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `70a7c07895579038dbe5356a54aeea1baabf40c8059a8c7d20c4158a201f7735`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -134,11 +134,15 @@
 | `/api/dashboard/analytics/overview` | GET | [route](../../apps/web/src/app/api/dashboard/analytics/overview/route.ts) | [runDashboardAnalyticsOverviewHttp](../../apps/web/src/lib/dashboardAnalyticsHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/branches/[branchId]/promotions/[promotionId]` | PATCH, DELETE | [route](../../apps/web/src/app/api/dashboard/branches/[branchId]/promotions/[promotionId]/route.ts) | [runDeleteBranchPromotionHttp, runUpdateBranchPromotionHttp](../../apps/web/src/lib/branchPromotionHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/dashboard/branches/[branchId]/promotions` | GET, POST | [route](../../apps/web/src/app/api/dashboard/branches/[branchId]/promotions/route.ts) | [runCreateBranchPromotionHttp, runListBranchPromotionsHttp](../../apps/web/src/lib/branchPromotionsHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/dashboard/branches/[branchId]` | GET | [route](../../apps/web/src/app/api/dashboard/branches/[branchId]/route.ts) | [runBranchForEditHttp](../../apps/web/src/lib/dashboardCatalogReadHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/branches/list` | GET | [route](../../apps/web/src/app/api/dashboard/branches/list/route.ts) | [runDashboardBranchesListHttp](../../apps/web/src/lib/dashboardBranchesListHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
+| `/api/dashboard/branches` | GET | [route](../../apps/web/src/app/api/dashboard/branches/route.ts) | [runBranchesOverviewHttp](../../apps/web/src/lib/dashboardCatalogReadHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/clients/[clientId]/visit-packages` | POST | [route](../../apps/web/src/app/api/dashboard/clients/[clientId]/visit-packages/route.ts) | [runSellVisitPackageHttp](../../apps/web/src/lib/visitPackagesHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
-| `/api/dashboard/contact-settings` | POST | [route](../../apps/web/src/app/api/dashboard/contact-settings/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
+| `/api/dashboard/contact-settings` | GET, POST | [route](../../apps/web/src/app/api/dashboard/contact-settings/route.ts) | [runBusinessSettingsReadHttp](../../apps/web/src/lib/dashboardCatalogReadHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/finance/[id]/stats` | GET | [route](../../apps/web/src/app/api/dashboard/finance/[id]/stats/route.ts) | [re-export](../../apps/web/src/app/api/dashboard/staff/[id]/finance/stats/route.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/finance/all` | GET | [route](../../apps/web/src/app/api/dashboard/finance/all/route.ts) | [re-export](../../apps/web/src/app/api/dashboard/staff/finance/all/route.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/dashboard/services/[id]` | GET | [route](../../apps/web/src/app/api/dashboard/services/[id]/route.ts) | [runServiceForEditHttp](../../apps/web/src/lib/dashboardCatalogReadHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
+| `/api/dashboard/services` | GET | [route](../../apps/web/src/app/api/dashboard/services/route.ts) | [runServicesOverviewHttp](../../apps/web/src/lib/dashboardCatalogReadHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/staff-shifts/[id]/update-hours` | POST | [route](../../apps/web/src/app/api/dashboard/staff-shifts/[id]/update-hours/route.ts) | [runDashboardStaffShiftUpdateHoursHttp](../../apps/web/src/lib/dashboardStaffShiftUpdateHoursHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/dashboard/staff/[id]/finance/audit-log` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/finance/audit-log/route.ts) | [runStaffFinanceAuditLogHttp](../../apps/web/src/lib/staffFinanceAuditLogHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/staff/[id]/finance` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/finance/route.ts) | [runDeprecatedStaffFinanceHttp](../../apps/web/src/lib/deprecatedStaffFinanceHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |

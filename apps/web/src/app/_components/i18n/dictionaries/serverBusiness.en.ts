@@ -90,4 +90,8 @@ export const serverBusinessEn = {
     'server.business.websiteInvalid': 'The website must be a valid HTTPS link',
     'server.business.directoryLinkWrongService': 'Each link must lead to its own service: {services}',
     'server.business.timeZoneInvalid': 'Unknown time zone',
+    'server.business.servicesLoadFailed': 'Could not load the services',
+    'server.business.serviceLoadFailed': 'Could not load the service',
+    'server.business.branchLoadFailed': 'Could not open the branch',
+    'server.business.settingsLoadFailed': 'Could not load the business settings',
 } as const;
