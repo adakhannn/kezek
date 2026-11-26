@@ -22,20 +22,23 @@ import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import {
+    applyMapPick,
     branchFormFrom,
     buildBranchPayload,
     contactDisplayValue,
     contactHelperKey,
     formatGeocodedAddress,
+    mapPickerPointFrom,
     NEW_BRANCH_FORM,
     parseCoordinates,
     type BranchFormState,
     type ContactField,
 } from './branchForm';
 import { BranchRatingCard } from './BranchRatingCard';
-import { catalogApi, catalogKeys, type BranchForEdit, type ContactFields } from './catalogApi';
+import { catalogApi, catalogKeys, type BranchForEdit, type ContactFields, type ServicesOverview } from './catalogApi';
 import { catalogErrorText, hasBookingsMessage } from './catalogErrors';
 import { QueryState, ui } from './catalogUi';
+import BranchMapPicker, { type MapPick } from './mapPicker/BranchMapPicker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageBranchEdit'>;
 
@@ -144,8 +147,21 @@ function BranchEditor({ bizId, detail, initial, businessContacts, onDone, onOpen
     const [saving, setSaving] = useState(false);
     const [locating, setLocating] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [mapOpen, setMapOpen] = useState(false);
     const branchId = detail?.branch.id;
     const update = (patch: Partial<BranchFormState>) => setForm((current) => ({ ...current, ...patch }));
+
+    // The business city (from the services list, when it was opened) centres a map without a point.
+    const businessCity = queryClient
+        .getQueriesData<ServicesOverview>({ queryKey: ['manage', bizId, 'services'] })
+        .map(([, data]) => data?.bizCity?.trim())
+        .find(Boolean) ?? null;
+
+    const applyPick = (pick: MapPick) => {
+        setForm((current) => applyMapPick(current, pick));
+        setCoordsError(null);
+        setMapOpen(false);
+    };
 
     const locate = async () => {
         setLocating(true);
@@ -254,7 +270,16 @@ function BranchEditor({ bizId, detail, initial, businessContacts, onDone, onOpen
                 />
             </FieldGroup>
 
-            <FieldGroup title={t('catalog.branches.form.addressLabel')} caption={t('catalog.app.locationHintShort')}>
+            <FieldGroup title={t('catalog.branches.form.addressLabel')} caption={t('catalog.app.locationHintMap')}>
+                <Button
+                    title={t('catalog.app.pickOnMap')}
+                    onPress={() => setMapOpen(true)}
+                    variant="outline"
+                    leadingIcon={<Ionicons name="map-outline" size={18} color={colors.text.primary} />}
+                    fullWidth
+                    style={styles.pickOnMap}
+                    testID="branch-pick-on-map"
+                />
                 <Button
                     title={locating ? t('catalog.app.locating') : t('catalog.app.useLocation')}
                     onPress={() => void locate()}
@@ -307,6 +332,14 @@ function BranchEditor({ bizId, detail, initial, businessContacts, onDone, onOpen
                     onChangeText={(address) => update({ address })}
                     multiline
                     testID="branch-address"
+                />
+                <BranchMapPicker
+                    visible={mapOpen}
+                    initialPoint={mapPickerPointFrom(form)}
+                    initialAddress={form.address}
+                    city={businessCity}
+                    onClose={() => setMapOpen(false)}
+                    onConfirm={applyPick}
                 />
             </FieldGroup>
 
@@ -394,6 +427,7 @@ function BranchEditor({ bizId, detail, initial, businessContacts, onDone, onOpen
 }
 
 const styles = StyleSheet.create({
+    pickOnMap: { marginBottom: space.sm },
     locate: { marginBottom: space.lg },
     coordsError: { marginTop: -space.sm, marginBottom: space.md },
     coordsActions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, marginTop: -space.sm, marginBottom: space.sm },

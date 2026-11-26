@@ -122,6 +122,29 @@ export function formatGeocodedAddress(place: GeocodedAddress | null | undefined)
     return [place.city?.trim(), line].filter(Boolean).join(', ');
 }
 
+/** The point the map picker opens on: the form's coordinates when both are set and valid. */
+export function mapPickerPointFrom(form: Pick<BranchFormState, 'lat' | 'lon'>): { lat: number; lon: number } | null {
+    const coords = parseCoordinates(form.lat, form.lon);
+    return coords?.lat != null && coords.lon != null ? { lat: coords.lat, lon: coords.lon } : null;
+}
+
+/**
+ * The form after "Выбрать это место" on the map (the website's BranchMapPickerYandex onPick):
+ * coordinates with 6 decimals; the address only when the geocoder found one, else the typed one stays.
+ */
+export function applyMapPick(
+    form: BranchFormState,
+    pick: { lat: number; lon: number; address: string | null },
+): BranchFormState {
+    const address = pick.address?.trim();
+    return {
+        ...form,
+        lat: pick.lat.toFixed(6),
+        lon: pick.lon.toFixed(6),
+        ...(address ? { address } : {}),
+    };
+}
+
 /** The page clients book a branch from (the website's QR code points here). */
 export function branchBookingUrl(origin: string, businessSlug: string, branchId: string): string {
     return `${origin.replace(/\/+$/, '')}/b/${encodeURIComponent(businessSlug)}/booking?branch=${encodeURIComponent(branchId)}`;
