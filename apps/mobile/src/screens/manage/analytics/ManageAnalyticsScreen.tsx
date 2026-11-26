@@ -5,7 +5,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import Card from '../../../components/ui/Card';
 import EmptyState from '../../../components/ui/EmptyState';
-import Input from '../../../components/ui/Input';
+import { DateRangeField } from '../../../components/ui/DateTimeFields';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { colors } from '../../../constants/colors';
 import { useLanguage } from '../../../i18n';
@@ -95,24 +95,15 @@ export default function ManageAnalyticsScreen() {
                     accessibilityLabel={t('ops.analytics.quick')}
                     testID="analytics-preset"
                 />
-                <View style={[ui.row, { marginTop: colors.layout.space2 }]}>
-                    <Input
-                        label={t('ops.analytics.start')}
-                        value={startDate}
-                        onChangeText={(value) => { setPreset('custom'); setStartDate(value.trim()); }}
-                        placeholder="YYYY-MM-DD"
-                        keyboardType="numbers-and-punctuation"
-                        containerStyle={{ flex: 1 }}
-                        testID="analytics-start"
-                    />
-                    <Input
-                        label={t('ops.analytics.end')}
-                        value={endDate}
-                        onChangeText={(value) => { setPreset('custom'); setEndDate(value.trim()); }}
-                        placeholder="YYYY-MM-DD"
-                        keyboardType="numbers-and-punctuation"
-                        containerStyle={{ flex: 1 }}
-                        testID="analytics-end"
+                <View style={{ marginTop: colors.layout.space3, marginBottom: colors.layout.space2 }}>
+                    <DateRangeField
+                        from={startDate}
+                        to={endDate}
+                        onChange={(range) => { setPreset('custom'); setStartDate(range.from); setEndDate(range.to); }}
+                        timeZone={params.tz}
+                        fromLabel={t('ops.analytics.start')}
+                        toLabel={t('ops.analytics.end')}
+                        testID="analytics-range"
                     />
                 </View>
                 {(branches.data ?? []).length > 0 ? (

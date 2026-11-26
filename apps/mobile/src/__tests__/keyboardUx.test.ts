@@ -19,7 +19,6 @@ describe('keyboard and input UX contracts', () => {
     test.each([
         'src/screens/auth/VerifyScreen.tsx',
         'src/screens/auth/WhatsAppScreen.tsx',
-        'src/screens/profile/ProfileScreenSections.tsx',
         'src/screens/shiftQuick/ShiftQuickSections.tsx',
     ])('%s keeps forms reachable while the keyboard is open', (relativePath) => {
         const source = read(relativePath);
@@ -28,6 +27,19 @@ describe('keyboard and input UX contracts', () => {
         expect(source).toContain('keyboardShouldPersistTaps="handled"');
         expect(source).toContain('keyboardDismissMode="on-drag"');
         expect(source).toContain('automaticallyAdjustKeyboardInsets');
+    });
+
+    test.each([
+        'src/screens/profile/ProfileScreenSections.tsx',
+        'src/screens/manage/catalog/ServiceEditScreen.tsx',
+    ])('%s is a keyboard-aware Screen', (relativePath) => {
+        expect(read(relativePath)).toMatch(/<Screen[^>]*\bkeyboard\b/);
+        // The shared page gives every <Screen keyboard> form the same behavior.
+        const page = read('src/components/ui/Screen.tsx');
+        expect(page).toContain('KeyboardAvoidingView');
+        expect(page).toContain('keyboardShouldPersistTaps="handled"');
+        expect(page).toContain("keyboardDismissMode={keyboard ? 'on-drag' : undefined}");
+        expect(page).toContain('automaticallyAdjustKeyboardInsets={keyboard}');
     });
 
     test('multi-field forms define next/done focus progression', () => {

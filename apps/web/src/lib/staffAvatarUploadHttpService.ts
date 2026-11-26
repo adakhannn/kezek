@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { runStaffAvatarUpload } from '@/lib/staffAvatarUploadService';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function runStaffAvatarUploadHttp(req: Request): Promise<NextResponse> {
-    const { staffId, bizId } = await getStaffContext();
+    // Cookie session (website) or Bearer token (mobile app); X-Kezek-Staff-Id names the card.
+    const { staffId, bizId } = await getStaffContextForRequest(req, 'StaffAvatarUpload');
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;

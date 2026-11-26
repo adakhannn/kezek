@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+import Avatar from '../../../components/ui/Avatar';
 import Card from '../../../components/ui/Card';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import Section from '../../../components/ui/Section';
+import { CheckboxRow } from '../../../components/ui/SelectionRow';
+import { SkeletonList } from '../../../components/ui/Skeleton';
+import { space } from '../../../constants/theme';
 import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
 import { getErrorMessage } from '../../../lib/errors';
 import { supabase } from '../../../lib/supabase';
 import { catalogKeys } from './catalogApi';
-import { CheckRow, SectionTitle, ui } from './catalogUi';
+import { ui } from './catalogUi';
 
-type Staff = { id: string; full_name: string; branch_id: string; is_active: boolean | null };
+type Staff = { id: string; full_name: string; branch_id: string; is_active: boolean | null; avatar_url?: string | null };
 type Masters = { staff: Staff[]; allowed: string[] };
 
 /**
@@ -30,7 +34,7 @@ export function ServiceMastersSection({ bizId, serviceId, branchId }: { bizId: s
         queryKey: key,
         queryFn: async () => {
             const [{ data: staff, error: staffError }, { data: links, error: linksError }] = await Promise.all([
-                supabase.from('staff').select('id,full_name,branch_id,is_active').eq('branch_id', branchId).order('full_name'),
+                supabase.from('staff').select('id,full_name,branch_id,is_active,avatar_url').eq('branch_id', branchId).order('full_name'),
                 supabase.from('service_staff').select('staff_id').eq('service_id', serviceId),
             ]);
             if (staffError) throw staffError;
@@ -61,10 +65,9 @@ export function ServiceMastersSection({ bizId, serviceId, branchId }: { bizId: s
     };
 
     return (
-        <Card padding="md">
-            <SectionTitle title={t('catalog.services.masters.title')} />
+        <Section title={t('catalog.services.masters.title')} gap={0}>
             {query.isLoading ? (
-                <LoadingSpinner size="small" message={t('catalog.services.masters.loading')} />
+                <SkeletonList rows={2} />
             ) : query.error ? (
                 <Text style={ui.error}>
                     {t('catalog.services.masters.error')} {getErrorMessage(query.error, t('catalog.app.loadError'), t)}
@@ -72,22 +75,27 @@ export function ServiceMastersSection({ bizId, serviceId, branchId }: { bizId: s
             ) : (query.data?.staff.length ?? 0) === 0 ? (
                 <Text style={ui.muted}>{t('catalog.services.masters.empty')}</Text>
             ) : (
-                <View>
+                <Card variant="plain" padding="md" style={styles.group}>
                     {query.data!.staff.map((member) => {
                         const checked = query.data!.allowed.includes(member.id);
                         return (
-                            <CheckRow
+                            <CheckboxRow
                                 key={member.id}
                                 label={member.full_name}
                                 checked={checked}
                                 disabled={pending !== null}
                                 onChange={() => void toggle(member.id, checked)}
+                                leading={<Avatar name={member.full_name} uri={member.avatar_url} size={32} />}
                                 testID={`service-master-${member.id}`}
                             />
                         );
                     })}
-                </View>
+                </Card>
             )}
-        </Card>
+        </Section>
     );
 }
+
+const styles = StyleSheet.create({
+    group: { paddingVertical: space.xs },
+});

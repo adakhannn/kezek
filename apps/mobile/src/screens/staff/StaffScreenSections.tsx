@@ -10,6 +10,7 @@ import MotionPressable from '../../components/ui/MotionPressable';
 import { useLanguage } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
 import { getServiceName } from '../../utils/i18n';
+import { StaffAvatarEditor } from './StaffAvatarEditor';
 import { styles } from './staffScreenStyles';
 import type { StaffBookingsTab, StaffInfo, UpcomingBooking } from './types';
 import { staffServicePriceKey, type StaffService } from './useStaffServices';
@@ -68,9 +69,9 @@ export function StaffScreenSections({
             testID="staff-screen"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
+            {/* The header says "Рабочая зона": the screen opens with the master themselves, photo first. */}
             <View style={styles.header}>
-                <Text style={styles.title}>{t('staff.workspace.title')}</Text>
-                <Text style={styles.subtitle}>{staffInfo.full_name}</Text>
+                <StaffAvatarEditor staffId={staffInfo.id} name={staffInfo.full_name} avatarUrl={staffInfo.avatar_url} />
             </View>
 
             {staffInfo.branch && (

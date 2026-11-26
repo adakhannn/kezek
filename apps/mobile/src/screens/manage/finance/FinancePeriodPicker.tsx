@@ -54,6 +54,8 @@ export default function FinancePeriodPicker({
                     prevLabel={t('ops.common.prev')}
                     nextLabel={t('ops.common.next')}
                     disabled={loading}
+                    // Any day of the wanted month or year anchors it, so the calendar serves all periods.
+                    pickDate={{ value: anchor.slice(0, 10), onPick: onAnchorChange }}
                     testID="finance-anchor"
                 />
             ) : null}

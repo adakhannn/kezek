@@ -1,6 +1,7 @@
 {
   "ios": {
     "CFBundleDisplayName": "Kezek",
-    "NSLocationWhenInUseUsageDescription": "Kezek жакынкы филиалдарды көрсөтүү үчүн геолокацияны колдонот."
+    "NSLocationWhenInUseUsageDescription": "Kezek жакынкы филиалдарды көрсөтүү үчүн геолокацияны колдонот.",
+    "NSPhotoLibraryUsageDescription": "Kezek чебердин профиль сүрөтүн тандоо үчүн галереяны ачат."
   }
 }

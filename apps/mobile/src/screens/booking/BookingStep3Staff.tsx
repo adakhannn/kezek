@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
+import Avatar from '../../components/ui/Avatar';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import EmptyState from '../../components/ui/EmptyState';
@@ -147,6 +148,7 @@ export default function BookingStep3Staff() {
                                             style={styles.chipSelected}
                                         >
                                             <View style={styles.chipContent}>
+                                                <Avatar name={staff.full_name} uri={staff.avatar_url} size={32} ring />
                                                 <Text style={styles.chipTextSelected}>{staff.full_name}</Text>
                                                 <RatingBadge rating={staff.rating_score ?? null} size="small" />
                                             </View>
@@ -154,6 +156,7 @@ export default function BookingStep3Staff() {
                                     ) : (
                                         <View style={styles.chip}>
                                             <View style={styles.chipContent}>
+                                                <Avatar name={staff.full_name} uri={staff.avatar_url} size={32} />
                                                 <Text style={styles.chipText}>{staff.full_name}</Text>
                                                 <RatingBadge rating={staff.rating_score ?? null} size="small" />
                                             </View>

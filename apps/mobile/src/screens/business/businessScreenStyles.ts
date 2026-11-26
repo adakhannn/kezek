@@ -210,16 +210,4 @@ export const styles = StyleSheet.create({
         ...typography.label,
         color: colors.status.success,
     },
-    avatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.surface.emphasis,
-    },
-    avatarText: {
-        ...typography.label,
-        color: colors.text.secondary,
-    },
 });

@@ -27,6 +27,7 @@ type ButtonProps = {
     textStyle?: TextStyle;
     accessibilityLabel?: string;
     accessibilityHint?: string;
+    testID?: string;
 };
 
 export default function Button({
@@ -43,6 +44,7 @@ export default function Button({
     textStyle,
     accessibilityLabel,
     accessibilityHint,
+    testID,
 }: ButtonProps) {
     const isDisabled = disabled || loading;
     const sizeStyle = size === 'sm' ? styles.buttonSm : size === 'lg' ? styles.buttonLg : styles.buttonMd;
@@ -113,6 +115,7 @@ export default function Button({
                 disabled={isDisabled}
                 accessibilityLabel={accessibilityLabel ?? title}
                 accessibilityHint={accessibilityHint}
+                testID={testID}
                 accessibilityState={{ disabled: isDisabled, busy: loading }}
                 style={[
                     styles.primaryContainer,
@@ -156,6 +159,7 @@ export default function Button({
             disabled={isDisabled}
             accessibilityLabel={accessibilityLabel ?? title}
             accessibilityHint={accessibilityHint}
+            testID={testID}
             accessibilityState={{ disabled: isDisabled, busy: loading }}
         >
             {content}

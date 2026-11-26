@@ -4,6 +4,8 @@ export type StaffInfo = {
     full_name: string;
     biz_id: string;
     created_at: string | null;
+    /** The master's photo (public URL), set from the staff cabinet; null shows initials. */
+    avatar_url?: string | null;
     branch: {
         id: string;
         name: string;

@@ -7,11 +7,11 @@ import {
     recordQueries,
 } from '../../testHelpers';
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/supabaseService', () => ({
@@ -32,7 +32,7 @@ describe('/api/staff/avatar/upload', () => {
         jest.clearAllMocks();
         db.queries.length = 0;
 
-        (getStaffContext as jest.Mock).mockResolvedValue({
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({
             staffId,
             bizId,
         });

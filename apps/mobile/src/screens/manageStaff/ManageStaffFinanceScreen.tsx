@@ -4,10 +4,12 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatInTimeZone } from 'date-fns-tz';
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
 import SegmentedTabs from '../../components/SegmentedTabs';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { DateNavigator } from '../../components/ui/DateTimeFields';
 import EmptyState from '../../components/ui/EmptyState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import Input from '../../components/ui/Input';
@@ -17,7 +19,7 @@ import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
-import { addDaysYmd } from '../../utils/businessWeek';
+import { businessTodayYmd } from '../../utils/businessWeek';
 import { closeManagedShift, fetchManagedFinance, openManagedShift, saveManagedShiftItems } from './api';
 import { staffErrorMessage } from './errors';
 import {
@@ -304,11 +306,21 @@ export default function ManageStaffFinanceScreen() {
                 ) : null}
                 {status === 'none' ? <Text style={styles.warning}>{t('manageStaff.staff.finance.shift.notCreated')}</Text> : null}
                 {calendarDate ? (
-                    <View style={ui.wrap}>
-                        <Chip label={t('manageStaff.date.previous')} selected={false} disabled={locked} onPress={() => changeDate(addDaysYmd(calendarDate, -1))} />
-                        <Chip label={t('manageStaff.date.today')} selected={date === null} disabled={locked} onPress={() => { if (editor || busy) { showToast(t('manageStaff.staff.finance.draft.saveOrDiscardFirst'), 'error'); return; } setDate(null); }} />
-                        <Chip label={t('manageStaff.date.next')} selected={false} disabled={locked} onPress={() => changeDate(addDaysYmd(calendarDate, 1))} />
-                    </View>
+                    // The website steps the shift day by day; the date itself opens the calendar.
+                    <DateNavigator
+                        value={calendarDate}
+                        onChange={(next) => {
+                            if (next === businessTodayYmd(resolveBusinessTimeZone(timezone))) {
+                                if (editor || busy) { showToast(t('manageStaff.staff.finance.draft.saveOrDiscardFirst'), 'error'); return; }
+                                setDate(null);
+                                return;
+                            }
+                            changeDate(next);
+                        }}
+                        timeZone={timezone}
+                        disabled={locked}
+                        testID="staff-finance-date"
+                    />
                 ) : null}
             </Card>
 

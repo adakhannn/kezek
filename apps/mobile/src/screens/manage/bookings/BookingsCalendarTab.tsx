@@ -101,6 +101,7 @@ export default function BookingsCalendarTab({ bizId, timezone, options }: { bizI
                     onNext={() => setDate((value) => addDaysToDate(value, 1))}
                     prevLabel={t('ops.common.prevDay')}
                     nextLabel={t('ops.common.nextDay')}
+                    pickDate={{ value: date, onPick: setDate }}
                     testID="calendar-date"
                 />
                 <View style={ui.wrap}>

@@ -1,11 +1,13 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Switch, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { TimeField as NativeTimeField, useNativePicker } from '../../components/ui/DateTimeFields';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
 import { useLanguage } from '../../i18n';
 import { addDaysYmd } from '../../utils/businessWeek';
+import { clampYmd, pickerDateToYmd, ymdToPickerDate } from '../../utils/pickerValues';
 import { isTime } from './legacySchedule';
 
 /** dd.mm.yyyy of a business date (YYYY-MM-DD), as the website prints it. */
@@ -108,6 +110,7 @@ export function DateStepper({ value, onChange, min, today, disabled, label, step
     format?: (value: string) => string;
 }) {
     const { t } = useLanguage();
+    const picker = useNativePicker();
     const previous = addDaysYmd(value, -step);
     const canGoBack = !min || previous >= min;
     return (
@@ -123,7 +126,23 @@ export function DateStepper({ value, onChange, min, today, disabled, label, step
                 >
                     <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
                 </Pressable>
-                <Text style={ui.stepperValue} accessibilityLiveRegion="polite">{format(value)}</Text>
+                <Pressable
+                    onPress={() => picker.open({
+                        mode: 'date',
+                        value: ymdToPickerDate(value),
+                        minimumDate: min ? ymdToPickerDate(min) : undefined,
+                        onPick: (date) => onChange(clampYmd(pickerDateToYmd(date), min)),
+                    })}
+                    disabled={disabled}
+                    accessibilityRole="button"
+                    accessibilityLabel={format(value)}
+                    accessibilityHint={t('ui.date.openHint')}
+                    accessibilityLiveRegion="polite"
+                    style={({ pressed }) => [ui.stepperPick, pressed ? ui.pressed : null, disabled ? ui.disabled : null]}
+                >
+                    <Ionicons name="calendar-outline" size={16} color={colors.tone.accent.fg} />
+                    <Text style={ui.stepperValue} numberOfLines={1}>{format(value)}</Text>
+                </Pressable>
                 <Pressable
                     onPress={() => onChange(addDaysYmd(value, step))}
                     disabled={disabled}
@@ -144,14 +163,12 @@ export function DateStepper({ value, onChange, min, today, disabled, label, step
                     </Pressable>
                 ) : null}
             </View>
+            {picker.sheet}
         </View>
     );
 }
 
-/**
- * A time of day (HH:MM). The typed text is kept until it is a valid time, then reported; a
- * shorter entry like "930" is read as 09:30 when the field loses focus.
- */
+/** A time of day (HH:MM) from the native clock, as a compact box for schedule rows. */
 export function TimeField({ value, onChange, label, disabled, testID }: {
     value: string;
     onChange: (value: string) => void;
@@ -159,34 +176,15 @@ export function TimeField({ value, onChange, label, disabled, testID }: {
     disabled?: boolean;
     testID?: string;
 }) {
-    const [text, setText] = useState(value);
-    useEffect(() => setText(value), [value]);
-    const commit = (raw: string) => {
-        const digits = raw.replace(/\D/g, '');
-        const candidate = raw.includes(':') ? raw.padStart(5, '0') : digits.length >= 3 ? `${digits.slice(0, -2).padStart(2, '0')}:${digits.slice(-2)}` : raw;
-        if (isTime(candidate)) {
-            setText(candidate);
-            if (candidate !== value) onChange(candidate);
-        } else {
-            setText(value);
-        }
-    };
     return (
-        <TextInput
-            value={text}
-            onChangeText={(next) => {
-                setText(next);
-                if (isTime(next) && next !== value) onChange(next);
-            }}
-            onBlur={() => commit(text)}
-            editable={!disabled}
-            keyboardType="numbers-and-punctuation"
-            maxLength={5}
-            placeholder="09:00"
-            placeholderTextColor={colors.text.muted}
-            accessibilityLabel={label}
+        <NativeTimeField
+            value={isTime(value) ? value : ''}
+            onChange={onChange}
+            label={label}
+            disabled={disabled}
+            minuteInterval={5}
+            compact
             testID={testID}
-            style={[ui.timeInput, disabled ? ui.disabled : null]}
         />
     );
 }
@@ -299,7 +297,19 @@ export const ui = StyleSheet.create({
         borderColor: colors.border.light,
         backgroundColor: colors.surface.card,
     },
-    stepperValue: { minWidth: 110, textAlign: 'center', fontSize: 16, fontWeight: '600', color: colors.text.primary },
+    stepperPick: {
+        flexGrow: 1,
+        minHeight: MIN_TOUCH_TARGET,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: colors.layout.space2,
+        paddingHorizontal: colors.layout.space3,
+        borderRadius: colors.layout.radiusMd,
+        backgroundColor: colors.surface.card,
+    },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    stepperValue: { minWidth: 96, textAlign: 'center', fontSize: 16, fontWeight: '600', color: colors.text.primary },
     todayButton: {
         minHeight: MIN_TOUCH_TARGET,
         justifyContent: 'center',

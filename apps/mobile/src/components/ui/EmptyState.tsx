@@ -10,6 +10,8 @@ type EmptyStateProps = {
     message?: string;
     action?: ReactNode;
     compact?: boolean;
+    /** danger: a failure (ErrorState); accent (default): nothing here yet. */
+    tone?: 'accent' | 'danger';
     style?: StyleProp<ViewStyle>;
 };
 
@@ -19,6 +21,7 @@ export default function EmptyState({
     message,
     action,
     compact = false,
+    tone = 'accent',
     style,
 }: EmptyStateProps) {
     return (
@@ -31,9 +34,9 @@ export default function EmptyState({
             >
                 <View
                     importantForAccessibility="no"
-                    style={[styles.iconWrap, compact && styles.iconWrapCompact]}
+                    style={[styles.iconWrap, compact && styles.iconWrapCompact, tone === 'danger' && styles.iconWrapDanger]}
                 >
-                    <Ionicons name={icon} size={compact ? 28 : 32} color={colors.text.secondary} />
+                    <Ionicons name={icon} size={compact ? 28 : 32} color={tone === 'danger' ? colors.tone.danger.fg : colors.tone.accent.fg} />
                 </View>
                 <Text importantForAccessibility="no" style={[styles.title, compact && styles.titleCompact]}>
                     {title}
@@ -64,9 +67,10 @@ const styles = StyleSheet.create({
         borderRadius: 36,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.surface.elevated,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
+        backgroundColor: colors.tone.accent.bg,
+    },
+    iconWrapDanger: {
+        backgroundColor: colors.tone.danger.bg,
     },
     iconWrapCompact: {
         width: 64,
@@ -75,7 +79,8 @@ const styles = StyleSheet.create({
     },
     title: {
         marginTop: colors.layout.space4,
-        fontSize: 18,
+        fontSize: 17,
+        lineHeight: 22,
         fontWeight: '600',
         color: colors.text.primary,
         textAlign: 'center',
@@ -84,6 +89,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     message: {
+        maxWidth: 320,
         marginTop: colors.layout.space2,
         fontSize: 14,
         lineHeight: 20,

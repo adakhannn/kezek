@@ -7,11 +7,11 @@ import {
     recordQueries,
 } from '../../testHelpers';
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/supabaseService', () => ({
@@ -58,7 +58,7 @@ describe('/api/staff/avatar/remove', () => {
         jest.clearAllMocks();
         db.queries.length = 0;
 
-        (getStaffContext as jest.Mock).mockResolvedValue({ staffId, bizId });
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({ staffId, bizId });
         (getServiceClient as jest.Mock).mockReturnValue(db.client);
     });
 
@@ -86,6 +86,8 @@ describe('/api/staff/avatar/remove', () => {
         expect(data).toHaveProperty('ok', true);
         expect(mockStorage.remove).toHaveBeenCalled();
         expectBusinessScoped(db, 'staff', bizId);
+        // The mobile app sends a Bearer token: the context comes from the request, not only cookies.
+        expect(getStaffContextForRequest).toHaveBeenCalledWith(req, 'StaffAvatarRemove');
     });
 
     test('returns success when avatar is already absent', async () => {

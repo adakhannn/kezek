@@ -11,6 +11,7 @@ import { manageCatalogEn } from './manageCatalog.en';
 import { manageStaffEn } from './manageStaff.en';
 import { parityEn } from './parity.en';
 import { manageOpsEn } from './manageOps.en';
+import { uiEn } from './ui.en';
 import type { Dictionary } from './ru';
 
 export const en: Dictionary = {
@@ -27,4 +28,5 @@ export const en: Dictionary = {
     ...manageStaffEn,
     ...parityEn,
     ...manageOpsEn,
+    ...uiEn,
 };

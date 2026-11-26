@@ -133,7 +133,9 @@ describe('ProfileScreen', () => {
     test('renders profile data and localized labels', async () => {
         renderWithProviders(<ProfileScreen />);
 
-        expect(await screen.findByText('Профиль')).toBeTruthy();
+        // The navigation header carries "Профиль"; the screen opens with the person and sections.
+        expect(await screen.findByText('Личная информация')).toBeTruthy();
+        expect(screen.queryByText('Профиль')).toBeNull();
         expect(await screen.findByDisplayValue('Test User')).toBeTruthy();
         expect(await screen.findByDisplayValue('+996555000111')).toBeTruthy();
         expect(await screen.findByText('Email нельзя изменить')).toBeTruthy();

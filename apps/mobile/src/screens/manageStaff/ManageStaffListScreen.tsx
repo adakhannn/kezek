@@ -1,17 +1,24 @@
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 
+import Avatar from '../../components/ui/Avatar';
+import Badge, { StatusPill } from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
+import ChipGroup from '../../components/ui/ChipGroup';
 import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import Input from '../../components/ui/Input';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import MotionPressable from '../../components/ui/MotionPressable';
+import ListRow, { ListGroup } from '../../components/ui/ListRow';
+import Screen from '../../components/ui/Screen';
+import ScreenIntro from '../../components/ui/ScreenIntro';
+import Section from '../../components/ui/Section';
+import { SkeletonList } from '../../components/ui/Skeleton';
 import { colors } from '../../constants/colors';
+import { radii, space, typeScale } from '../../constants/theme';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
@@ -20,9 +27,8 @@ import type { RootStackParamList } from '../../navigation/types';
 import { cancelStaffInvitation, fetchStaffList, runStaffAction } from './api';
 import { staffErrorMessage } from './errors';
 import { staffQueryKeys } from './queryKeys';
-import { filterStaffRows, pageOf, staffCounts, staffInitials, type StaffStatusFilter } from './staffForm';
+import { filterStaffRows, pageOf, staffCounts, type StaffStatusFilter } from './staffForm';
 import type { StaffRow } from './types';
-import { Badge, Chip, StatTile, ui } from './ui';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList, 'ManageStaff'>;
 
@@ -112,41 +118,35 @@ export default function ManageStaffListScreen() {
         }
     };
 
-    if (list.isLoading) return <LoadingSpinner message={t('common.loading')} />;
+    if (list.isLoading) {
+        return (
+            <Screen>
+                <SkeletonList rows={5} testID="manage-staff-loading" />
+            </Screen>
+        );
+    }
 
     if (list.error && !list.data) {
         return (
-            <ScrollView style={ui.container} contentContainerStyle={ui.content}>
-                <EmptyState
-                    icon="alert-circle"
+            <Screen>
+                <ErrorState
                     title={t('manageStaff.loadError')}
                     message={staffErrorMessage(list.error, t('staff.checkConnection'), t)}
-                    action={<Button title={t('staff.retry')} onPress={() => void list.refetch()} variant="outline" fullWidth />}
+                    onRetry={() => void list.refetch()}
                 />
-            </ScrollView>
+            </Screen>
         );
     }
 
     const business = list.data?.business;
     const filtering = query.trim() !== '' || status !== 'all';
     const applications = list.data?.staffApplications ?? null;
+    const intro = [business?.name || params.bizName, business?.city].filter(Boolean).join(' · ');
 
     return (
-        <ScrollView
-            style={ui.container}
-            contentContainerStyle={ui.content}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
-            testID="manage-staff-list"
-        >
-            <View>
-                <Text style={ui.title} accessibilityRole="header">{t('manageStaff.staff.title')}</Text>
-                <Text style={ui.subtitle}>{t('manageStaff.staff.subtitle')}</Text>
-                <Text style={ui.muted}>
-                    {t('manageStaff.staff.biz.context')}: {business?.name || params.bizName || t('manageStaff.finance.biz.defaultName')}
-                    {business?.city ? ` · ${business.city}` : ''}
-                </Text>
-            </View>
+        <Screen refreshing={refreshing} onRefresh={refresh} testID="manage-staff-list">
+            {/* The header says "Сотрудники": the screen starts with the business and the one primary action. */}
+            {intro ? <ScreenIntro>{intro}</ScreenIntro> : null}
 
             <Button
                 title={t('manageStaff.staff.addStaff')}
@@ -156,161 +156,134 @@ export default function ManageStaffListScreen() {
             />
 
             {applications ? (
-                <MotionPressable
-                    onPress={() => void openApplications()}
-                    accessibilityRole="link"
-                    accessibilityLabel={t('manageStaff.dashboard.applications.title')}
-                    accessibilityHint={t('manageStaff.opensWebsite')}
-                    style={styles.applications}
-                >
-                    <View style={ui.row}>
-                        <Text style={styles.applicationsTitle}>{t('manageStaff.dashboard.applications.title')}</Text>
-                        {applications.pending !== null && applications.pending > 0 ? (
-                            <Badge label={String(applications.pending)} tone="accent" />
-                        ) : null}
-                    </View>
-                    <Text style={ui.muted}>
-                        {applications.pending === null
+                <ListGroup>
+                    <ListRow
+                        icon="person-add-outline"
+                        title={t('manageStaff.dashboard.applications.title')}
+                        subtitle={applications.pending === null
                             ? t('manageStaff.dashboard.applications.unavailable')
                             : applications.pending > 0
                                 ? t('manageStaff.dashboard.applications.pending')
                                 : t('manageStaff.dashboard.applications.empty')}
-                    </Text>
-                    <Text style={styles.applicationsLink}>{t('manageStaff.dashboard.applications.open')} →</Text>
-                </MotionPressable>
+                        trailing={applications.pending !== null && applications.pending > 0
+                            ? <Badge label={String(applications.pending)} tone="accent" size="md" />
+                            : undefined}
+                        onPress={() => void openApplications()}
+                        accessibilityHint={t('manageStaff.opensWebsite')}
+                        numberOfLines={1}
+                    />
+                </ListGroup>
             ) : null}
 
-            <View style={ui.wrap}>
-                <StatTile label={t('manageStaff.staff.stats.active')} value={String(counts.active)} tone="success" />
-                <StatTile label={t('manageStaff.staff.stats.total')} value={String(counts.total)} />
-                {counts.inactive > 0 ? <StatTile label={t('manageStaff.staff.stats.inactive')} value={String(counts.inactive)} tone="warning" /> : null}
-            </View>
-
-            <Input
-                value={query}
-                onChangeText={(value) => { setQuery(value); setPage(1); }}
-                placeholder={t('manageStaff.staff.search.placeholder')}
-                accessibilityLabel={t('manageStaff.staff.search.placeholder')}
-                leadingIcon={<Ionicons name="search" size={18} color={colors.text.secondary} />}
-                autoCorrect={false}
-                testID="manage-staff-search"
-            />
-            <View style={ui.wrap} accessibilityRole="tablist">
-                {(['all', 'active', 'inactive'] as const).map((value) => (
-                    <Chip
-                        key={value}
-                        label={t(`manageStaff.staff.filter.${value}`)}
-                        selected={status === value}
-                        onPress={() => { setStatus(value); setPage(1); }}
-                        testID={`manage-staff-filter-${value}`}
-                    />
-                ))}
-            </View>
-
-            {filtered.length === 0 ? (
-                <EmptyState
-                    icon="people"
-                    title={t(filtering ? 'manageStaff.staff.empty.notFound' : 'manageStaff.staff.empty.noStaff')}
-                    message={t(filtering ? 'manageStaff.staff.empty.notFoundDesc' : 'manageStaff.staff.empty.noStaffDesc')}
+            <Section gap={space.md}>
+                <Input
+                    value={query}
+                    onChangeText={(value) => { setQuery(value); setPage(1); }}
+                    placeholder={t('manageStaff.staff.search.placeholder')}
+                    accessibilityLabel={t('manageStaff.staff.search.placeholder')}
+                    leadingIcon={<Ionicons name="search" size={18} color={colors.text.secondary} />}
+                    autoCorrect={false}
+                    containerStyle={styles.search}
+                    testID="manage-staff-search"
                 />
-            ) : (
-                <View style={ui.gap}>
-                    {paged.items.map((row) => {
-                        const invited = pending.has(row.id);
-                        const busy = busyId === row.id;
-                        return (
-                            <Card key={row.id} style={[styles.card, row.is_active ? styles.cardActive : styles.cardInactive]} testID={`manage-staff-${row.id}`}>
-                                <MotionPressable
-                                    onPress={() => openCard(row)}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={`${row.full_name}, ${t(row.is_active ? 'manageStaff.staff.card.status.active' : 'manageStaff.staff.card.status.inactive')}`}
-                                    accessibilityHint={t('manageStaff.staff.card.open')}
-                                    style={styles.cardHeader}
-                                    scale="firm"
-                                >
-                                    <View style={styles.avatar}><Text style={styles.avatarText}>{staffInitials(row.full_name)}</Text></View>
-                                    <View style={styles.cardBody}>
-                                        <Text style={styles.name} numberOfLines={1}>{row.full_name}</Text>
-                                        <Text style={ui.muted} numberOfLines={1}>{row.branches?.name ?? t('manageStaff.staff.card.branchNotSet')}</Text>
-                                        {invited ? <View style={styles.badgeRow}><Badge label={t('manageStaff.staff.card.invitationPending')} tone="warning" /></View> : null}
-                                    </View>
-                                    <Badge
-                                        label={t(row.is_active ? 'manageStaff.staff.card.status.active' : 'manageStaff.staff.card.status.inactive')}
-                                        tone={row.is_active ? 'success' : 'muted'}
-                                    />
-                                </MotionPressable>
-                                <View style={styles.actions}>
-                                    <Button title={t('manageStaff.staff.card.open')} onPress={() => openCard(row)} variant="outline" size="sm" style={styles.action} />
-                                    <Button
-                                        title={t(row.is_active ? 'manageStaff.staff.actions.dismiss' : 'manageStaff.staff.actions.restore')}
-                                        onPress={() => void runAction(row, row.is_active ? 'dismiss' : 'restore')}
-                                        variant={row.is_active ? 'danger' : 'secondary'}
-                                        size="sm"
-                                        loading={busy}
-                                        disabled={!!busyId}
-                                        style={styles.action}
-                                    />
-                                </View>
-                                {invited ? (
-                                    <Button
-                                        title={t('manageStaff.staff.card.cancelInvitation')}
-                                        onPress={() => void cancelInvitation(row)}
-                                        variant="ghost"
-                                        size="sm"
-                                        disabled={!!busyId}
-                                        fullWidth
-                                    />
-                                ) : null}
-                            </Card>
-                        );
-                    })}
+                <ChipGroup
+                    options={(['all', 'active', 'inactive'] as const).map((value) => ({
+                        key: value,
+                        label: t(`manageStaff.staff.filter.${value}`),
+                        count: value === 'all' ? counts.total : value === 'active' ? counts.active : counts.inactive,
+                    }))}
+                    value={status}
+                    onChange={(value) => { setStatus(value); setPage(1); }}
+                    accessibilityLabel={t('manageStaff.staff.filter.all')}
+                    testID="manage-staff-filter"
+                />
 
-                    {paged.totalPages > 1 ? (
-                        <View style={styles.pagination}>
-                            <Text style={ui.muted}>
-                                {t('manageStaff.staff.pagination.showing')} {paged.from} - {paged.to} {t('manageStaff.staff.pagination.of')} {filtered.length}
-                            </Text>
-                            <View style={ui.row}>
+                {filtered.length === 0 ? (
+                    <EmptyState
+                        icon="people-outline"
+                        compact
+                        title={t(filtering ? 'manageStaff.staff.empty.notFound' : 'manageStaff.staff.empty.noStaff')}
+                        message={t(filtering ? 'manageStaff.staff.empty.notFoundDesc' : 'manageStaff.staff.empty.noStaffDesc')}
+                    />
+                ) : (
+                    <View style={styles.list}>
+                        {paged.items.map((row) => {
+                            const invited = pending.has(row.id);
+                            const busy = busyId === row.id;
+                            const statusLabel = t(row.is_active ? 'manageStaff.staff.card.status.active' : 'manageStaff.staff.card.status.inactive');
+                            return (
+                                <View key={row.id} style={[styles.item, !row.is_active ? styles.itemInactive : null]} testID={`manage-staff-${row.id}`}>
+                                    <ListRow
+                                        leading={<Avatar name={row.full_name} uri={row.avatar_url} size={44} />}
+                                        title={row.full_name}
+                                        subtitle={row.branches?.name ?? t('manageStaff.staff.card.branchNotSet')}
+                                        trailing={<StatusPill label={statusLabel} tone={row.is_active ? 'success' : 'neutral'} />}
+                                        onPress={() => openCard(row)}
+                                        accessibilityHint={t('manageStaff.staff.card.open')}
+                                    />
+                                    <View style={styles.actions}>
+                                        {invited ? <Badge label={t('manageStaff.staff.card.invitationPending')} tone="warning" style={styles.invited} /> : <View style={styles.spacer} />}
+                                        {invited ? (
+                                            <Button
+                                                title={t('manageStaff.staff.card.cancelInvitation')}
+                                                onPress={() => void cancelInvitation(row)}
+                                                variant="ghost"
+                                                size="sm"
+                                                disabled={!!busyId}
+                                            />
+                                        ) : null}
+                                        <Button
+                                            title={t(row.is_active ? 'manageStaff.staff.actions.dismiss' : 'manageStaff.staff.actions.restore')}
+                                            onPress={() => void runAction(row, row.is_active ? 'dismiss' : 'restore')}
+                                            variant="ghost"
+                                            size="sm"
+                                            loading={busy}
+                                            disabled={!!busyId}
+                                            textStyle={row.is_active ? styles.dangerText : undefined}
+                                        />
+                                    </View>
+                                </View>
+                            );
+                        })}
+
+                        {paged.totalPages > 1 ? (
+                            <View style={styles.pagination}>
                                 <Button title={t('manageStaff.staff.pagination.prev')} onPress={() => setPage(paged.page - 1)} disabled={paged.page === 1} variant="outline" size="sm" />
-                                <Text style={ui.text}>{paged.page} / {paged.totalPages}</Text>
+                                <Text style={styles.pageText}>
+                                    {paged.from}–{paged.to} {t('manageStaff.staff.pagination.of')} {filtered.length}
+                                </Text>
                                 <Button title={t('manageStaff.staff.pagination.next')} onPress={() => setPage(paged.page + 1)} disabled={paged.page === paged.totalPages} variant="outline" size="sm" />
                             </View>
-                        </View>
-                    ) : null}
-                </View>
-            )}
-        </ScrollView>
+                        ) : null}
+                    </View>
+                )}
+            </Section>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    applications: {
-        padding: colors.layout.space4,
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.accent.primary,
-        backgroundColor: colors.surface.emphasis,
-        gap: colors.layout.space1,
+    search: { marginBottom: 0 },
+    list: { gap: space.sm },
+    item: {
+        backgroundColor: colors.surface.card,
+        borderRadius: radii.lg,
+        paddingHorizontal: space.lg,
+        paddingBottom: space.xs,
     },
-    applicationsTitle: { fontSize: 16, fontWeight: '700', color: colors.text.primary },
-    applicationsLink: { fontSize: 14, fontWeight: '600', color: colors.accent.indigo, marginTop: colors.layout.space2 },
-    card: { gap: colors.layout.space3 },
-    cardActive: { borderColor: colors.status.success },
-    cardInactive: { opacity: 0.8 },
-    cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: colors.layout.space3 },
-    avatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+    itemInactive: { opacity: 0.75 },
+    actions: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.accent.primary,
+        justifyContent: 'flex-end',
+        gap: space.xs,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+        paddingTop: space.xs,
     },
-    avatarText: { color: colors.text.light, fontWeight: '700', fontSize: 15 },
-    cardBody: { flex: 1, minWidth: 0 },
-    name: { fontSize: 16, fontWeight: '700', color: colors.text.primary },
-    badgeRow: { marginTop: colors.layout.space1 },
-    actions: { flexDirection: 'row', gap: colors.layout.space2 },
-    action: { flex: 1 },
-    pagination: { gap: colors.layout.space2, alignItems: 'center' },
+    invited: { alignSelf: 'center', marginRight: 'auto' },
+    spacer: { flex: 1 },
+    dangerText: { color: colors.tone.danger.fg },
+    pagination: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, marginTop: space.sm },
+    pageText: { ...typeScale.caption, color: colors.text.secondary },
 });

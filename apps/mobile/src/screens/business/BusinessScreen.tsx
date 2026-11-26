@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, type ReactNode } from 'react';
-import { Image, Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { formatRatingDisplayValue } from '@shared-client/rating';
 
+import Avatar from '../../components/ui/Avatar';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
@@ -286,13 +287,7 @@ export function BusinessPageContent({
                         const branch = branchName(person.branch_id);
                         return (
                             <View key={person.id} style={styles.row}>
-                                {person.avatar_url ? (
-                                    <Image source={{ uri: person.avatar_url }} style={styles.avatar} accessibilityIgnoresInvertColors />
-                                ) : (
-                                    <View style={styles.avatar}>
-                                        <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
-                                    </View>
-                                )}
+                                <Avatar name={name} uri={person.avatar_url} size={44} />
                                 <View style={styles.flex}>
                                     <Text style={styles.itemTitle}>{name}</Text>
                                     {branch ? <Text style={styles.itemMeta}>{branch}</Text> : null}

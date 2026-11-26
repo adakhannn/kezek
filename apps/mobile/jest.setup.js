@@ -105,6 +105,30 @@ jest.mock('expo-linear-gradient', () => {
     };
 });
 
+// Native date/time picker: the Android dialog is imperative; tests drive `open` through
+// DateTimePickerAndroid.open.mock.calls[n][0].onChange({ type: 'set' }, date).
+jest.mock('@react-native-community/datetimepicker', () => {
+    const React = require('react');
+    const { View } = require('react-native');
+    // fireEvent(getByTestId('native-date-time-picker'), 'change', { type: 'set' }, date) picks a value.
+    const DateTimePicker = (props) => React.createElement(View, {
+        testID: props.testID ?? 'native-date-time-picker',
+        onChange: props.onChange,
+        accessibilityValue: { text: props.value instanceof Date ? props.value.toISOString() : String(props.value) },
+    });
+    return {
+        __esModule: true,
+        default: DateTimePicker,
+        DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() },
+    };
+});
+
+jest.mock('expo-image-picker', () => ({
+    requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true, status: 'granted' })),
+    launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: null })),
+    MediaTypeOptions: { Images: 'Images' },
+}));
+
 jest.mock('react-native-webview', () => {
     const React = require('react');
     const { View } = require('react-native');

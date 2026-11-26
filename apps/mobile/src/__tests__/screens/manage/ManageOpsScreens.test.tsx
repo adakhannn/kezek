@@ -149,7 +149,7 @@ describe('business management screens', () => {
         });
         renderScreen(ManageBookingsScreen);
 
-        fireEvent.press(await screen.findByText('История и поиск'));
+        fireEvent.press(await screen.findByText('Список'));
         expect(await screen.findByText('Стрижка')).toBeTruthy();
         expect(rpc).toHaveBeenCalledWith('dashboard_bookings_page', { p_biz_id: 'biz-1', p_status: 'notCancelled', p_limit: 30, p_offset: 0 });
         fireEvent.press(screen.getByText('Только hold/confirmed'));

@@ -8,6 +8,8 @@ export type StaffRow = {
     full_name: string;
     is_active: boolean | null;
     branch_id: string;
+    /** The master's photo; an older server does not send it (initials are shown). */
+    avatar_url?: string | null;
     branches: { name: string } | null;
 };
 

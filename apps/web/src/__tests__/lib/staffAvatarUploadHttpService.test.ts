@@ -1,5 +1,5 @@
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/supabaseService', () => ({
@@ -10,7 +10,7 @@ jest.mock('@/lib/staffAvatarUploadService', () => ({
     runStaffAvatarUpload: jest.fn(),
 }));
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { runStaffAvatarUploadHttp } from '@/lib/staffAvatarUploadHttpService';
 import { runStaffAvatarUpload } from '@/lib/staffAvatarUploadService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -18,7 +18,7 @@ import { getServiceClient } from '@/lib/supabaseService';
 describe('staffAvatarUploadHttpService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getStaffContext as jest.Mock).mockResolvedValue({ staffId: 'staff-id', bizId: 'biz-id' });
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({ staffId: 'staff-id', bizId: 'biz-id' });
         (getServiceClient as jest.Mock).mockReturnValue({ from: jest.fn(), storage: {} });
     });
 
@@ -46,5 +46,7 @@ describe('staffAvatarUploadHttpService', () => {
         });
         expect(response.status).toBe(200);
         expect(body.data.url).toBe('https://cdn/avatar.jpg');
+        // Cookie or mobile Bearer: the staff context is resolved from the request itself.
+        expect(getStaffContextForRequest).toHaveBeenCalledWith(expect.any(Request), 'StaffAvatarUpload');
     });
 });

@@ -400,7 +400,7 @@ Service client ставит `status: cancelled` и `decided_at` ожидающе
 
 <!-- api-contract: GET /api/dashboard/staff -->
 
-`data`: `rows` (`id`, `full_name`, `is_active`, `branch_id`, `branches.name`; сессия менеджера, RLS, по имени), `pendingInvitationStaffIds` (service client, фильтр `biz_id`, статус `pending`; сбой этого чтения только логируется и даёт пустой список), `staffApplications` (`null` — не владелец; `{ pending: null }` — счётчик недоступен) и `business` (`name`, `city`). Ошибка чтения staff — 500 `internal` «Не удалось загрузить данные сотрудника», а не пустая команда (FE-08).
+`data`: `rows` (`id`, `full_name`, `is_active`, `branch_id`, `avatar_url`, `branches.name`; сессия менеджера, RLS, по имени), `pendingInvitationStaffIds` (service client, фильтр `biz_id`, статус `pending`; сбой этого чтения только логируется и даёт пустой список), `staffApplications` (`null` — не владелец; `{ pending: null }` — счётчик недоступен) и `business` (`name`, `city`). Ошибка чтения staff — 500 `internal` «Не удалось загрузить данные сотрудника», а не пустая команда (FE-08).
 
 #### GET `/api/dashboard/staff/[id]`
 
@@ -420,7 +420,7 @@ Service client ставит `status: cancelled` и `decided_at` ожидающе
 
 | Часть | Контракт |
 | --- | --- |
-| Доступ | Staff cookie; меняется аватар сотрудника из контекста |
+| Доступ | Staff cookie или Bearer мобильного приложения ([resolveStaffContextForRequest](../../apps/web/src/lib/staffRoleSync.ts)); карточку называет `X-Kezek-Staff-Id`, иначе запомненная (cookie) или единственная; меняется аватар этой карточки |
 | Вход | `multipart/form-data`, поле `file` |
 | Проверки | Файл присутствует, заявленный MIME начинается с `image/`, размер не более 5 × 1024 × 1024 байт |
 | Limiter | Нет в route |
@@ -437,7 +437,7 @@ Service client ставит `status: cancelled` и `decided_at` ожидающе
 
 | Часть | Контракт |
 | --- | --- |
-| Доступ | Staff cookie; body/query не читаются |
+| Доступ | Staff cookie или Bearer мобильного приложения, карточка — как у upload (`X-Kezek-Staff-Id`); body/query не читаются |
 | Limiter | Нет в route |
 | Успех | Обычно только `{"ok":true}`; если URL не найден — `data: { message: "Аватарка не найдена" }` |
 | Ошибки | 400 validation при ошибке очистки staff.avatar_url; исключения — по общей обёртке |

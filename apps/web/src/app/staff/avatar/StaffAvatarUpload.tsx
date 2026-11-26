@@ -133,12 +133,14 @@ export default function StaffAvatarUpload({
                 throw new Error(result.error || t('staff.avatar.error.upload', 'Upload error'));
             }
 
-            setPreview(result.url);
+            // The route answers { ok, data: { url } } (createSuccessResponse); there is no top-level url.
+            const url: string = result.data?.url ?? result.url;
+            setPreview(url);
             setCroppedFile(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
-            onUploaded?.(result.url);
+            onUploaded?.(url);
             toast.showSuccess(t('staff.avatar.success.uploaded', 'Avatar updated'));
         } catch (error) {
             logError('StaffAvatarUpload', 'Error uploading avatar', error);

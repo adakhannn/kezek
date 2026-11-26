@@ -83,6 +83,35 @@ export const colors = {
         infoSurface: 'rgba(96, 165, 250, 0.16)',
     },
 
+    /*
+     * Design system (docs/mobile/UI_GUIDE.md). One tone = foreground + translucent fill + border,
+     * for badges, banners, stat accents and selected states. Prefer these over raw status colors.
+     */
+    tone: {
+        accent: { fg: '#a5b4fc', bg: 'rgba(99, 102, 241, 0.16)', border: 'rgba(129, 140, 248, 0.45)' },
+        success: { fg: '#34d399', bg: 'rgba(16, 185, 129, 0.14)', border: 'rgba(52, 211, 153, 0.4)' },
+        warning: { fg: '#fbbf24', bg: 'rgba(245, 158, 11, 0.14)', border: 'rgba(251, 191, 36, 0.4)' },
+        danger: { fg: '#f87171', bg: 'rgba(239, 68, 68, 0.14)', border: 'rgba(248, 113, 113, 0.45)' },
+        info: { fg: '#7dd3fc', bg: 'rgba(56, 189, 248, 0.14)', border: 'rgba(125, 211, 252, 0.4)' },
+        neutral: { fg: '#cbd5e1', bg: 'rgba(148, 163, 184, 0.12)', border: 'rgba(148, 163, 184, 0.3)' },
+    },
+
+    /** The brand gradient (primary CTA, active avatar ring, hero accents): [from, to]. */
+    gradient: {
+        accent: ['#4f46e5', '#db2777'] as const,
+        accentSoft: ['rgba(79, 70, 229, 0.22)', 'rgba(219, 39, 119, 0.14)'] as const,
+    },
+
+    /** Fills of controls inside a surface (inputs, tracks, skeleton blocks, pressed rows). */
+    fill: {
+        input: '#0f1729',
+        track: '#1f2937',
+        skeleton: '#1a2235',
+        skeletonHighlight: '#243047',
+        pressed: 'rgba(148, 163, 184, 0.08)',
+        selected: 'rgba(99, 102, 241, 0.14)',
+    },
+
     interactive: {
         focusRing: '#7c78ff',
         disabledOpacity: 0.7,

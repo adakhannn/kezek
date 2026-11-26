@@ -81,6 +81,15 @@
         {
           "locationWhenInUsePermission": "Kezek использует геолокацию, чтобы показать ближайшие филиалы."
         }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kezek открывает галерею, чтобы вы выбрали фото профиля мастера.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "locales": {

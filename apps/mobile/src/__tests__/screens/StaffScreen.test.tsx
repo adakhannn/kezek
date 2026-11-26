@@ -18,7 +18,6 @@ const mockNavigate = jest.fn();
 const TEXT = {
     nonStaffTitle: 'Вы не являетесь сотрудником',
     nonStaffMessage: 'Здесь будут отображаться ваши записи после назначения сотрудником',
-    dashboardTitle: 'Кабинет сотрудника',
     branchName: 'Low Fade Юго-Восток',
     upcomingTitle: 'Предстоящие записи',
     serviceName: 'Взрослая стрижка',
@@ -183,7 +182,7 @@ describe('StaffScreen', () => {
         renderWithProviders(<StaffScreen />);
 
         expect(await screen.findByTestId('staff-screen')).toBeTruthy();
-        expect(await screen.findByText(TEXT.dashboardTitle)).toBeTruthy();
+        expect(await screen.findByTestId('staff-avatar-editor')).toBeTruthy();
         expect(await screen.findByText('Adakhan')).toBeTruthy();
         expect(await screen.findByText(TEXT.branchName)).toBeTruthy();
         expect(await screen.findByText('Low Fade')).toBeTruthy();
@@ -247,7 +246,7 @@ describe('StaffScreen', () => {
             fireEvent.press(screen.getByText('Barber One'));
 
             expect(await screen.findByText('Стрижка в Barber One')).toBeTruthy();
-            expect(screen.getByText(TEXT.dashboardTitle)).toBeTruthy();
+            expect(screen.getByTestId('staff-avatar-editor')).toBeTruthy();
             expect(screen.getByText('Barber One')).toBeTruthy();
             expect(screen.queryByText('Стрижка в Low Fade')).toBeNull();
             expect(screen.getByText(TEXT.changeBusiness)).toBeTruthy();
@@ -281,7 +280,7 @@ describe('StaffScreen', () => {
             renderWithProviders(<StaffScreen />);
 
             expect(await screen.findByText(TEXT.chooseBusiness)).toBeTruthy();
-            expect(screen.queryByText(TEXT.dashboardTitle)).toBeNull();
+            expect(screen.queryByTestId('staff-avatar-editor')).toBeNull();
         });
 
         // Low Fade (staff-a) is the remembered business and has a shift change not sent yet.

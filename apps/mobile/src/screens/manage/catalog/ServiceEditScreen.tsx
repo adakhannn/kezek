@@ -1,18 +1,23 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import Button from '../../../components/ui/Button';
+import ActionBar from '../../../components/ui/ActionBar';
 import Card from '../../../components/ui/Card';
 import FeedbackBanner from '../../../components/ui/FeedbackBanner';
-import Input from '../../../components/ui/Input';
+import FormField, { FieldGroup, FieldRow } from '../../../components/ui/FormField';
+import Screen from '../../../components/ui/Screen';
+import Section from '../../../components/ui/Section';
+import { CheckboxRow, SwitchRow } from '../../../components/ui/SelectionRow';
+import { colors } from '../../../constants/colors';
+import { space } from '../../../constants/theme';
 import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import { catalogApi, catalogKeys, type CatalogBranch } from './catalogApi';
 import { catalogErrorText } from './catalogErrors';
-import { CheckRow, QueryState, SectionTitle, ui } from './catalogUi';
+import { QueryState, ui } from './catalogUi';
 import { ServiceMastersSection } from './ServiceMastersSection';
 import {
     buildServicePayload,
@@ -112,79 +117,99 @@ function ServiceEditor({ bizId, serviceId, serviceBranchId, branches, initial, o
     };
 
     return (
-        <KeyboardAvoidingView style={ui.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ScrollView contentContainerStyle={ui.content} keyboardShouldPersistTaps="handled" testID="manage-service-edit-screen">
-                <View style={ui.header}>
-                    <Text style={ui.title} accessibilityRole="header">
-                        {t(serviceId ? 'catalog.services.edit.title' : 'catalog.services.form.titleNew')}
-                    </Text>
-                    {serviceId ? <Text style={ui.subtitle}>{t('catalog.services.edit.subtitle')}</Text> : null}
-                </View>
-                {formError ? <FeedbackBanner variant="danger" message={formError} compact /> : null}
+        <Screen
+            keyboard
+            testID="manage-service-edit-screen"
+            footer={(
+                <ActionBar
+                    primary={{
+                        title: saving ? t('catalog.services.form.saving') : t('catalog.services.form.save'),
+                        onPress: () => void save(),
+                        loading: saving,
+                        testID: 'service-save',
+                    }}
+                />
+            )}
+        >
+            {/* The header names the screen ("Новая услуга" / "Редактирование услуги"): no second title here. */}
+            {formError ? <FeedbackBanner variant="danger" message={formError} compact /> : null}
 
-                <Card padding="md">
-                    <Input
-                        label={t('catalog.services.form.nameRu')}
-                        value={form.name_ru}
-                        onChangeText={(name_ru) => update({ name_ru }, 'nameRu')}
-                        placeholder={t('catalog.services.form.nameRuPlaceholder')}
-                        error={errors.nameRu}
-                        testID="service-name-ru"
-                    />
-                    <Input
-                        label={t('catalog.services.form.nameKy')}
-                        value={form.name_ky}
-                        onChangeText={(name_ky) => update({ name_ky }, 'nameKy')}
-                        placeholder={t('catalog.services.form.nameKyPlaceholder')}
-                        error={errors.nameKy}
-                    />
-                    <Input
-                        label={t('catalog.services.form.nameEn')}
-                        value={form.name_en}
-                        onChangeText={(name_en) => update({ name_en }, 'nameEn')}
-                        placeholder={t('catalog.services.form.nameEnPlaceholder')}
-                        error={errors.nameEn}
-                    />
-                    <Input
-                        label={t('catalog.services.form.duration')}
-                        value={form.duration_min}
-                        onChangeText={(value) => update({ duration_min: normalizeDurationInput(value) }, 'duration')}
-                        keyboardType="number-pad"
-                        error={errors.duration}
-                        testID="service-duration"
-                    />
-                    <Input
+            <FieldGroup title={t('catalog.services.form.group.name')}>
+                <FormField
+                    label={t('catalog.services.form.langRu')}
+                    required
+                    value={form.name_ru}
+                    onChangeText={(name_ru) => update({ name_ru }, 'nameRu')}
+                    placeholder={t('catalog.services.form.nameRuPlaceholder')}
+                    error={errors.nameRu}
+                    accessibilityLabel={t('catalog.services.form.nameRu')}
+                    testID="service-name-ru"
+                />
+                <FormField
+                    label={t('catalog.services.form.langKy')}
+                    value={form.name_ky}
+                    onChangeText={(name_ky) => update({ name_ky }, 'nameKy')}
+                    placeholder={t('catalog.services.form.nameKyPlaceholder')}
+                    error={errors.nameKy}
+                    accessibilityLabel={t('catalog.services.form.nameKy')}
+                />
+                <FormField
+                    label={t('catalog.services.form.langEn')}
+                    value={form.name_en}
+                    onChangeText={(name_en) => update({ name_en }, 'nameEn')}
+                    placeholder={t('catalog.services.form.nameEnPlaceholder')}
+                    error={errors.nameEn}
+                    accessibilityLabel={t('catalog.services.form.nameEn')}
+                    autoCapitalize="sentences"
+                />
+            </FieldGroup>
+
+            <FieldGroup title={t('catalog.services.form.group.pricing')}>
+                <FormField
+                    label={t('catalog.services.form.durationLabel')}
+                    suffix={t('catalog.services.form.unitMin')}
+                    value={form.duration_min}
+                    onChangeText={(value) => update({ duration_min: normalizeDurationInput(value) }, 'duration')}
+                    keyboardType="number-pad"
+                    error={errors.duration}
+                    testID="service-duration"
+                />
+                <FieldRow>
+                    <FormField
                         label={t('catalog.services.form.priceFrom')}
+                        suffix={t('catalog.services.form.unitSom')}
                         value={form.price_from}
                         onChangeText={(price_from) => update({ price_from }, 'priceFrom', 'priceTo')}
                         keyboardType="decimal-pad"
+                        placeholder="0"
                         error={errors.priceFrom}
+                        testID="service-price-from"
                     />
-                    <Input
+                    <FormField
                         label={t('catalog.services.form.priceTo')}
+                        suffix={t('catalog.services.form.unitSom')}
                         value={form.price_to}
                         onChangeText={(price_to) => update({ price_to }, 'priceFrom', 'priceTo')}
                         keyboardType="decimal-pad"
+                        placeholder="0"
                         error={errors.priceTo}
                         testID="service-price-to"
                     />
-                </Card>
+                </FieldRow>
+            </FieldGroup>
 
-                <Card padding="md">
-                    <View style={ui.rowBetween}>
-                        <SectionTitle title={t('catalog.services.form.branches')} />
-                        {branches.length > 0 ? (
-                            <Button
-                                title={t(allSelected ? 'catalog.services.form.branchesClearAll' : 'catalog.services.form.branchesSelectAll')}
-                                onPress={() => update({ branch_ids: toggleAllIds(form.branch_ids, allIds) }, 'branches')}
-                                variant="ghost"
-                                size="sm"
-                            />
-                        ) : null}
-                    </View>
+            <Section
+                title={t('catalog.services.form.group.availability')}
+                actionLabel={branches.length > 1
+                    ? t(allSelected ? 'catalog.services.form.branchesClearAll' : 'catalog.services.form.branchesSelectAll')
+                    : undefined}
+                onAction={() => update({ branch_ids: toggleAllIds(form.branch_ids, allIds) }, 'branches')}
+                gap={0}
+            >
+                <Card variant="plain" padding="md" style={styles.group}>
                     {branches.length === 0 ? <Text style={ui.muted}>{t('catalog.services.form.noBranches')}</Text> : null}
                     {branches.map((branch) => (
-                        <CheckRow
+                        <CheckboxRow
                             key={branch.id}
                             label={branch.name}
                             checked={form.branch_ids.includes(branch.id)}
@@ -192,29 +217,26 @@ function ServiceEditor({ bizId, serviceId, serviceBranchId, branches, initial, o
                             testID={`service-branch-${branch.id}`}
                         />
                     ))}
-                    {errors.branches ? <Text style={ui.error} accessibilityRole="alert">{errors.branches}</Text> : null}
-                </Card>
-
-                <Card padding="md">
-                    <CheckRow
-                        label={t('catalog.services.form.activeLabel')}
-                        checked={form.active}
+                    <View style={styles.divider} />
+                    <SwitchRow
+                        label={t('catalog.services.form.activeTitle')}
+                        value={form.active}
                         onChange={(active) => update({ active })}
                         testID="service-active"
                     />
                 </Card>
+                {errors.branches ? <Text style={[ui.error, styles.groupError]} accessibilityRole="alert">{errors.branches}</Text> : null}
+            </Section>
 
-                <Button
-                    title={saving ? t('catalog.services.form.saving') : t('catalog.services.form.save')}
-                    onPress={() => void save()}
-                    loading={saving}
-                    fullWidth
-                />
-
-                {serviceId && serviceBranchId ? (
-                    <ServiceMastersSection bizId={bizId} serviceId={serviceId} branchId={serviceBranchId} />
-                ) : null}
-            </ScrollView>
-        </KeyboardAvoidingView>
+            {serviceId && serviceBranchId ? (
+                <ServiceMastersSection bizId={bizId} serviceId={serviceId} branchId={serviceBranchId} />
+            ) : null}
+        </Screen>
     );
 }
+
+const styles = StyleSheet.create({
+    group: { paddingVertical: space.xs },
+    groupError: { marginTop: space.sm },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border.subtle, marginVertical: space.xs },
+});

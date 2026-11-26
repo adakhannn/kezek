@@ -16,7 +16,7 @@ import { getErrorMessage } from '../../../lib/errors';
 import { getServiceName } from '../../../utils/i18n';
 import { addDaysToDate, todayInTz } from '../opsKit/dates';
 import { dayLabel } from '../opsKit/format';
-import { ChipGroup, Field, LoadError, ui } from '../opsKit/ui';
+import { ChipGroup, Field, LoadError, Stepper, ui } from '../opsKit/ui';
 import SellPackageModal from '../visitPackages/SellPackageModal';
 import {
     fetchFreeSlots,
@@ -220,11 +220,16 @@ export default function QuickDeskTab({
                         disabled={creating}
                         testID="desk-day"
                     />
-                    <View style={ui.row}>
-                        <Button title="‹" onPress={() => setDate(addDaysToDate(date, -1))} variant="outline" size="sm" disabled={creating || date <= today} accessibilityLabel={t('ops.common.prevDay')} />
-                        <Text style={[ui.text, { flex: 1, textAlign: 'center' }]}>{dayLabel(date, locale)}</Text>
-                        <Button title="›" onPress={() => setDate(addDaysToDate(date, 1))} variant="outline" size="sm" disabled={creating} accessibilityLabel={t('ops.common.nextDay')} />
-                    </View>
+                    <Stepper
+                        label={dayLabel(date, locale)}
+                        onPrev={() => { if (date > today) setDate(addDaysToDate(date, -1)); }}
+                        onNext={() => setDate(addDaysToDate(date, 1))}
+                        prevLabel={t('ops.common.prevDay')}
+                        nextLabel={t('ops.common.nextDay')}
+                        disabled={creating}
+                        pickDate={{ value: date, onPick: setDate, minDate: today }}
+                        testID="desk-date"
+                    />
                 </Field>
             ) : null}
 

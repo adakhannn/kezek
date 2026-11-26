@@ -6,7 +6,9 @@ import Button from '../../../components/ui/Button';
 import EmptyState from '../../../components/ui/EmptyState';
 import { MIN_TOUCH_TARGET } from '../../../constants/accessibility';
 import { colors } from '../../../constants/colors';
+import { useNativePicker } from '../../../components/ui/DateTimeFields';
 import { useLanguage } from '../../../i18n';
+import { clampYmd, isYmd, pickerDateToYmd, ymdToPickerDate } from '../../../utils/pickerValues';
 
 /* Small building blocks shared by the business management screens (overview, bookings, analytics, finance, packages, applications). */
 
@@ -61,7 +63,10 @@ export function Field({ label, children, hint }: { label: string; children: Reac
     );
 }
 
-/** Previous / next stepper around a value (a day, a month, a year). */
+/**
+ * Previous / next stepper around a value (a day, a month, a year). With `pickDate` the label itself
+ * opens the native calendar, so a far date is one tap away instead of many steps.
+ */
 export function Stepper({
     label,
     onPrev,
@@ -71,6 +76,7 @@ export function Stepper({
     extra,
     disabled,
     testID,
+    pickDate,
 }: {
     label: string;
     onPrev: () => void;
@@ -80,7 +86,18 @@ export function Stepper({
     extra?: ReactNode;
     disabled?: boolean;
     testID?: string;
+    /** The date (YYYY-MM-DD) the label opens in the calendar, and what a picked date does. */
+    pickDate?: { value: string; onPick: (value: string) => void; minDate?: string; maxDate?: string };
 }) {
+    const { t } = useLanguage();
+    const picker = useNativePicker();
+    const openPicker = pickDate && isYmd(pickDate.value) ? () => picker.open({
+        mode: 'date',
+        value: ymdToPickerDate(pickDate.value),
+        minimumDate: pickDate.minDate ? ymdToPickerDate(pickDate.minDate) : undefined,
+        maximumDate: pickDate.maxDate ? ymdToPickerDate(pickDate.maxDate) : undefined,
+        onPick: (date) => pickDate.onPick(clampYmd(pickerDateToYmd(date), pickDate.minDate, pickDate.maxDate)),
+    }) : undefined;
     return (
         <View style={ui.stepper} testID={testID}>
             <Pressable
@@ -93,7 +110,23 @@ export function Stepper({
             >
                 <Ionicons name="chevron-back" size={20} color={colors.text.primary} />
             </Pressable>
-            <Text style={ui.stepperLabel} accessibilityLiveRegion="polite">{label}</Text>
+            {openPicker ? (
+                <Pressable
+                    onPress={openPicker}
+                    disabled={disabled}
+                    accessibilityRole="button"
+                    accessibilityLabel={label}
+                    accessibilityHint={t('ui.date.openHint')}
+                    accessibilityLiveRegion="polite"
+                    style={({ pressed }) => [ui.stepperPick, pressed ? ui.pressed : null]}
+                    testID={testID ? `${testID}-open` : undefined}
+                >
+                    <Ionicons name="calendar-outline" size={16} color={colors.tone.accent.fg} />
+                    <Text style={ui.stepperPickText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{label}</Text>
+                </Pressable>
+            ) : (
+                <Text style={ui.stepperLabel} accessibilityLiveRegion="polite">{label}</Text>
+            )}
             <Pressable
                 onPress={onNext}
                 disabled={disabled}
@@ -105,6 +138,7 @@ export function Stepper({
                 <Ionicons name="chevron-forward" size={20} color={colors.text.primary} />
             </Pressable>
             {extra}
+            {picker.sheet}
         </View>
     );
 }
@@ -186,6 +220,19 @@ export const ui = StyleSheet.create({
         borderColor: colors.border.light,
         backgroundColor: colors.surface.card,
     },
+    stepperPick: {
+        flex: 1,
+        minHeight: MIN_TOUCH_TARGET,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: colors.layout.space2,
+        paddingHorizontal: colors.layout.space3,
+        borderRadius: colors.layout.radiusMd,
+        backgroundColor: colors.surface.card,
+    },
+    stepperPickText: { flexShrink: 1, fontSize: 16, fontWeight: '600', color: colors.text.primary },
+    pressed: { opacity: colors.interactive.pressedOpacity },
     stepperLabel: { flexShrink: 1, fontSize: 16, fontWeight: '600', color: colors.text.primary, textAlign: 'center', minWidth: 120 },
     tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: colors.layout.space2 },
     tile: {

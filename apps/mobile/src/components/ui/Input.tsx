@@ -22,6 +22,12 @@ type InputProps = TextInputProps & {
     style?: StyleProp<TextStyle>;
     leadingIcon?: ReactNode;
     trailingIcon?: ReactNode;
+    /** A unit or sign inside the field, before the value ("+996"). */
+    prefix?: string;
+    /** A unit inside the field, after the value ("сом", "мин", "%"). */
+    suffix?: string;
+    /** Marks the label with an asterisk. */
+    required?: boolean;
 };
 
 const Input = forwardRef<TextInput, InputProps>(function Input({
@@ -33,6 +39,9 @@ const Input = forwardRef<TextInput, InputProps>(function Input({
     inputContainerStyle,
     leadingIcon,
     trailingIcon,
+    prefix,
+    suffix,
+    required,
     style,
     ...props
 }: InputProps, ref) {
@@ -46,27 +55,30 @@ const Input = forwardRef<TextInput, InputProps>(function Input({
 
     return (
         <View style={[styles.container, containerStyle]}>
-            {label ? <Text style={styles.label}>{label}</Text> : null}
+            {label ? <Text style={styles.label}>{label}{required ? <Text style={styles.required}> *</Text> : null}</Text> : null}
             <View
                 style={[
                     styles.inputContainer,
                     sizeStyle,
                     error && styles.inputContainerError,
                     !editable && styles.inputContainerReadOnly,
+                    props.multiline && styles.inputContainerMultiline,
                     inputContainerStyle,
                 ]}
             >
                 {leadingIcon ? <View style={styles.iconWrap}>{leadingIcon}</View> : null}
+                {prefix ? <Text style={styles.affix} importantForAccessibility="no">{prefix}</Text> : null}
                 <TextInput
                     ref={ref}
                     {...props}
-                    style={[styles.input, style]}
+                    style={[styles.input, props.multiline && styles.inputMultiline, style]}
                     placeholderTextColor={colors.text.tertiary}
                     selectionColor={colors.interactive.focusRing}
-                    accessibilityLabel={props.accessibilityLabel ?? label ?? props.placeholder}
+                    accessibilityLabel={props.accessibilityLabel ?? ([label, suffix].filter(Boolean).join(', ') || props.placeholder)}
                     accessibilityHint={props.accessibilityHint ?? error ?? helperText}
                     accessibilityState={accessibilityState}
                 />
+                {suffix ? <Text style={styles.affix} importantForAccessibility="no">{suffix}</Text> : null}
                 {trailingIcon ? <View style={styles.iconWrap}>{trailingIcon}</View> : null}
             </View>
             {error ? (
@@ -119,6 +131,22 @@ const styles = StyleSheet.create({
     },
     inputContainerReadOnly: {
         backgroundColor: colors.surface.elevated,
+    },
+    required: {
+        color: colors.status.danger,
+    },
+    inputContainerMultiline: {
+        alignItems: 'flex-start',
+        minHeight: 104,
+    },
+    inputMultiline: {
+        minHeight: 80,
+        textAlignVertical: 'top',
+    },
+    affix: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: colors.text.tertiary,
     },
     iconWrap: {
         alignItems: 'center',

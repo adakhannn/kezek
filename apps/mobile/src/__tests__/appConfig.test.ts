@@ -76,8 +76,19 @@ describe('app.json native strings per language (C6)', () => {
             const strings = json.ios ?? {};
             expect(strings.CFBundleDisplayName).toBe('Kezek');
             expect(strings.NSLocationWhenInUseUsageDescription).toMatch(/\S/);
+            // The master's photo upload opens the gallery (expo-image-picker).
+            expect(strings.NSPhotoLibraryUsageDescription).toMatch(/\S/);
         }
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         expect((require('../../locales/ky.json') as { ios: Record<string, string> }).ios.NSLocationWhenInUseUsageDescription).toContain('геолокацияны');
+    });
+
+    test('native pickers are configured: date/time picker and the gallery without camera or microphone', () => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const plugins = (require('../../app.json') as { expo: { plugins: (string | [string, Record<string, unknown>])[] } }).expo.plugins;
+        expect(plugins).toContain('@react-native-community/datetimepicker');
+        const imagePicker = plugins.find((plugin) => Array.isArray(plugin) && plugin[0] === 'expo-image-picker') as [string, Record<string, unknown>];
+        expect(imagePicker[1]).toMatchObject({ cameraPermission: false, microphonePermission: false });
+        expect(imagePicker[1].photosPermission).toMatch(/\S/);
     });
 });

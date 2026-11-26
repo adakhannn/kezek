@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
+import { DateField } from '../../../components/ui/DateTimeFields';
 import EmptyState from '../../../components/ui/EmptyState';
 import Input from '../../../components/ui/Input';
 import { useConfirm } from '../../../contexts/ConfirmContext';
@@ -275,23 +276,23 @@ function PromotionForm({ bizId, branchId, promotionId, initial, onCancel, onSave
                         placeholder={t('catalog.branches.promotions.titleRu.placeholder')}
                         testID="promotion-title"
                     />
-                    <Input
+                    <DateField
                         label={t('catalog.branches.promotions.validFrom.label')}
-                        value={form.valid_from}
-                        onChangeText={(valid_from) => { update({ valid_from }); setDateError(false); }}
-                        placeholder={t('catalog.app.datePlaceholder')}
-                        keyboardType="numbers-and-punctuation"
-                        maxLength={10}
+                        value={form.valid_from.trim()}
+                        onChange={(valid_from) => { update({ valid_from }); setDateError(false); }}
+                        maxDate={form.valid_to.trim() || undefined}
+                        clearable
+                        weekday={false}
                         error={dateError && !isOptionalDate(form.valid_from.trim()) ? t('catalog.app.dateInvalid') : undefined}
                         testID="promotion-valid-from"
                     />
-                    <Input
+                    <DateField
                         label={t('catalog.branches.promotions.validTo.label')}
-                        value={form.valid_to}
-                        onChangeText={(valid_to) => { update({ valid_to }); setDateError(false); }}
-                        placeholder={t('catalog.app.datePlaceholder')}
-                        keyboardType="numbers-and-punctuation"
-                        maxLength={10}
+                        value={form.valid_to.trim()}
+                        onChange={(valid_to) => { update({ valid_to }); setDateError(false); }}
+                        minDate={form.valid_from.trim() || undefined}
+                        clearable
+                        weekday={false}
                         error={dateError && !isOptionalDate(form.valid_to.trim()) ? t('catalog.app.dateInvalid') : undefined}
                         testID="promotion-valid-to"
                     />

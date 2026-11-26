@@ -5,12 +5,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
+import { TimeField } from '../../../components/ui/DateTimeFields';
 import FeedbackBanner from '../../../components/ui/FeedbackBanner';
-import Input from '../../../components/ui/Input';
 import { useLanguage, type MobileI18nKey } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import {
-    formatTimeInput,
     isTime,
     isValidWeek,
     MAX_RANGES,
@@ -135,19 +134,15 @@ function RangesEditor({ label, ranges, onChange, disabled, testID }: {
                         const partLabel = t(part === 'start' ? 'catalog.scheduling.start' : 'catalog.scheduling.end');
                         const value = range[part];
                         return (
-                            <Input
+                            <TimeField
                                 key={part}
                                 label={partLabel}
-                                value={value}
-                                onChangeText={(text) => set(index, part, formatTimeInput(text))}
-                                onBlur={() => set(index, part, padTime(value))}
-                                placeholder={t('catalog.app.timePlaceholder')}
-                                keyboardType="numbers-and-punctuation"
-                                maxLength={5}
-                                editable={!disabled}
+                                value={isTime(padTime(value)) ? padTime(value) : ''}
+                                onChange={(next) => set(index, part, next)}
+                                minuteInterval={5}
+                                disabled={disabled}
                                 error={value && !isTime(padTime(value)) ? t('catalog.app.timeInvalid') : undefined}
-                                accessibilityLabel={`${label}: ${partLabel} ${index + 1}`}
-                                containerStyle={{ flex: 1, width: undefined, marginBottom: 0 }}
+                                style={{ flex: 1, marginBottom: 0 }}
                                 testID={`${testID}-${index}-${part}`}
                             />
                         );

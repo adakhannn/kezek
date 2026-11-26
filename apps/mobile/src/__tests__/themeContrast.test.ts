@@ -57,4 +57,12 @@ describe('semantic theme contrast', () => {
     test('disabled controls remain visibly distinct instead of nearly disappearing', () => {
         expect(colors.interactive.disabledOpacity).toBeGreaterThanOrEqual(0.7);
     });
+
+    test.each(Object.entries(colors.tone))('%s tone text is readable on cards and on its own fill', (_name, tone) => {
+        expect(contrastRatio(tone.fg, colors.surface.card)).toBeGreaterThanOrEqual(4.5);
+        const alpha = Number(/,\s*([\d.]+)\)$/.exec(tone.bg)?.[1] ?? 0);
+        const rgb = /rgba\((\d+),\s*(\d+),\s*(\d+)/.exec(tone.bg)!.slice(1).map(Number);
+        const hex = `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+        expect(contrastRatio(tone.fg, composite(hex, colors.surface.card, alpha))).toBeGreaterThanOrEqual(4.5);
+    });
 });
